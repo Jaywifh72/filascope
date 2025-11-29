@@ -1,1 +1,7 @@
 project_id = "cfqfavmhdbyjzejipiwa"
+
+[functions.fetch-prices]
+verify_jwt = false
+
+[functions.estimate-weights]
+verify_jwt = false
