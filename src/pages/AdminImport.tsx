@@ -179,82 +179,100 @@ const AdminImport = () => {
         }
 
         try {
+          // Helper function to safely parse numbers
+          const parseNumber = (value: any): number | null => {
+            if (value === null || value === undefined || value === '') return null;
+            const parsed = parseFloat(value);
+            return isNaN(parsed) ? null : parsed;
+          };
+
+          const parseInt = (value: any): number | null => {
+            if (value === null || value === undefined || value === '') return null;
+            const parsed = Number.parseInt(value);
+            return isNaN(parsed) ? null : parsed;
+          };
+
+          const parseBool = (value: any): boolean | null => {
+            if (value === null || value === undefined || value === '') return null;
+            return value === 'true' || value === '1' || value === 'TRUE' || value === 'True';
+          };
+
           const filamentData: any = {
-            product_id: row.product_id || row.Product_ID || row["Product ID"],
+            product_id: row.product_id || row.Product_ID || row["Product ID"] || null,
             product_title: productTitle.trim(),
-            product_handle: row.product_handle || row.Product_Handle || row["Product Handle"],
-            vendor: row.vendor || row.Vendor,
-            material: row.material || row.Material,
-            featured_image: row.featured_image || row.Featured_Image || row["Featured Image"] || row.image,
-            variant_sku: row.variant_sku || row.Variant_SKU || row["Variant SKU"],
-            product_url: row.product_url || row.Product_URL || row["Product URL"],
-            amazon_link_us: row.amazon_link_us || row.Amazon_Link_US || row["Amazon Link US"],
-            amazon_link_uk: row.amazon_link_uk || row.Amazon_Link_UK || row["Amazon Link UK"],
-            amazon_link_de: row.amazon_link_de || row.Amazon_Link_DE || row["Amazon Link DE"],
-            tds_url: row.tds_url || row.TDS_URL || row["TDS URL"],
+            product_handle: row.product_handle || row.Product_Handle || row["Product Handle"] || null,
+            vendor: row.vendor || row.Vendor || null,
+            material: row.material || row.Material || null,
+            featured_image: row.featured_image || row.Featured_Image || row["Featured Image"] || row.image || null,
+            variant_sku: row.variant_sku || row.Variant_SKU || row["Variant SKU"] || null,
+            product_url: row.product_url || row.Product_URL || row["Product URL"] || null,
+            amazon_link_us: row.amazon_link_us || row.Amazon_Link_US || row["Amazon Link US"] || null,
+            amazon_link_uk: row.amazon_link_uk || row.Amazon_Link_UK || row["Amazon Link UK"] || null,
+            amazon_link_de: row.amazon_link_de || row.Amazon_Link_DE || row["Amazon Link DE"] || null,
+            tds_url: row.tds_url || row.TDS_URL || row["TDS URL"] || null,
             
-            // Numeric fields
-            density_g_cm3: parseFloat(row.density_g_cm3 || row.Density_g_cm3) || null,
-            tensile_strength_xy_mpa: parseFloat(row.tensile_strength_xy_mpa || row.Tensile_Strength_XY_MPa) || null,
-            tensile_modulus_xy_mpa: parseFloat(row.tensile_modulus_xy_mpa || row.Tensile_Modulus_XY_MPa) || null,
-            elongation_break_xy_percent: parseFloat(row.elongation_break_xy_percent || row.Elongation_Break_XY_Percent) || null,
-            flexural_strength_mpa: parseFloat(row.flexural_strength_mpa || row.Flexural_Strength_MPa) || null,
-            shore_hardness_d: parseFloat(row.shore_hardness_d || row.Shore_Hardness_D) || null,
-            tg_c: parseFloat(row.tg_c || row.Tg_C) || null,
-            melt_temp_c: parseFloat(row.melt_temp_c || row.Melt_Temp_C) || null,
+            // Numeric fields with safe parsing
+            density_g_cm3: parseNumber(row.density_g_cm3 || row.Density_g_cm3),
+            tensile_strength_xy_mpa: parseNumber(row.tensile_strength_xy_mpa || row.Tensile_Strength_XY_MPa),
+            tensile_modulus_xy_mpa: parseNumber(row.tensile_modulus_xy_mpa || row.Tensile_Modulus_XY_MPa),
+            elongation_break_xy_percent: parseNumber(row.elongation_break_xy_percent || row.Elongation_Break_XY_Percent),
+            flexural_strength_mpa: parseNumber(row.flexural_strength_mpa || row.Flexural_Strength_MPa),
+            shore_hardness_d: parseNumber(row.shore_hardness_d || row.Shore_Hardness_D),
+            tg_c: parseNumber(row.tg_c || row.Tg_C),
+            melt_temp_c: parseNumber(row.melt_temp_c || row.Melt_Temp_C),
             
             // Temperature settings
-            nozzle_temp_min_c: parseInt(row.nozzle_temp_min_c || row.Nozzle_Temp_Min_C) || null,
-            nozzle_temp_max_c: parseInt(row.nozzle_temp_max_c || row.Nozzle_Temp_Max_C) || null,
-            nozzle_temp_sweetspot_c: parseInt(row.nozzle_temp_sweetspot_c || row.Nozzle_Temp_Sweetspot_C) || null,
-            bed_temp_min_c: parseInt(row.bed_temp_min_c || row.Bed_Temp_Min_C) || null,
-            bed_temp_max_c: parseInt(row.bed_temp_max_c || row.Bed_Temp_Max_C) || null,
+            nozzle_temp_min_c: parseInt(row.nozzle_temp_min_c || row.Nozzle_Temp_Min_C),
+            nozzle_temp_max_c: parseInt(row.nozzle_temp_max_c || row.Nozzle_Temp_Max_C),
+            nozzle_temp_sweetspot_c: parseInt(row.nozzle_temp_sweetspot_c || row.Nozzle_Temp_Sweetspot_C),
+            bed_temp_min_c: parseInt(row.bed_temp_min_c || row.Bed_Temp_Min_C),
+            bed_temp_max_c: parseInt(row.bed_temp_max_c || row.Bed_Temp_Max_C),
             
             // Print settings
-            print_speed_max_mms: parseInt(row.print_speed_max_mms || row.Print_Speed_Max_MMS) || null,
-            fan_min_percent: parseInt(row.fan_min_percent || row.Fan_Min_Percent) || null,
-            fan_max_percent: parseInt(row.fan_max_percent || row.Fan_Max_Percent) || null,
+            print_speed_max_mms: parseInt(row.print_speed_max_mms || row.Print_Speed_Max_MMS),
+            fan_min_percent: parseInt(row.fan_min_percent || row.Fan_Min_Percent),
+            fan_max_percent: parseInt(row.fan_max_percent || row.Fan_Max_Percent),
             
             // Physical properties
-            diameter_nominal_mm: parseFloat(row.diameter_nominal_mm || row.Diameter_Nominal_MM) || null,
-            net_weight_g: parseInt(row.net_weight_g || row.Net_Weight_G) || null,
-            spool_outer_d_mm: parseFloat(row.spool_outer_d_mm || row.Spool_Outer_D_MM) || null,
-            spool_width_mm: parseFloat(row.spool_width_mm || row.Spool_Width_MM) || null,
+            diameter_nominal_mm: parseNumber(row.diameter_nominal_mm || row.Diameter_Nominal_MM),
+            net_weight_g: parseInt(row.net_weight_g || row.Net_Weight_G),
+            spool_outer_d_mm: parseNumber(row.spool_outer_d_mm || row.Spool_Outer_D_MM),
+            spool_width_mm: parseNumber(row.spool_width_mm || row.Spool_Width_MM),
             
             // Color properties
-            color_hex: row.color_hex || row.Color_Hex,
-            color_family: row.color_family || row.Color_Family,
-            finish_type: row.finish_type || row.Finish_Type,
+            color_hex: row.color_hex || row.Color_Hex || null,
+            color_family: row.color_family || row.Color_Family || null,
+            finish_type: row.finish_type || row.Finish_Type || null,
             
             // Care and compatibility
-            recommended_nozzle_type: row.recommended_nozzle_type || row.Recommended_Nozzle_Type,
-            moisture_sensitivity_level: row.moisture_sensitivity_level || row.Moisture_Sensitivity_Level,
-            moisture_care: row.moisture_care || row.Moisture_Care,
-            nozzle_care: row.nozzle_care || row.Nozzle_Care,
-            drying_temp_c: parseInt(row.drying_temp_c || row.Drying_Temp_C) || null,
-            drying_time_hours: parseInt(row.drying_time_hours || row.Drying_Time_Hours) || null,
+            recommended_nozzle_type: row.recommended_nozzle_type || row.Recommended_Nozzle_Type || null,
+            moisture_sensitivity_level: row.moisture_sensitivity_level || row.Moisture_Sensitivity_Level || null,
+            moisture_care: row.moisture_care || row.Moisture_Care || null,
+            nozzle_care: row.nozzle_care || row.Nozzle_Care || null,
+            drying_temp_c: parseInt(row.drying_temp_c || row.Drying_Temp_C),
+            drying_time_hours: parseInt(row.drying_time_hours || row.Drying_Time_Hours),
             
-            // Boolean flags
-            is_nozzle_abrasive: row.is_nozzle_abrasive === 'true' || row.is_nozzle_abrasive === '1' || row.Is_Nozzle_Abrasive === 'true',
-            spool_ams_fit: row.spool_ams_fit === 'true' || row.spool_ams_fit === '1' || row.Spool_AMS_Fit === 'true',
+            // Boolean flags with safe parsing
+            is_nozzle_abrasive: parseBool(row.is_nozzle_abrasive || row.Is_Nozzle_Abrasive),
+            spool_ams_fit: parseBool(row.spool_ams_fit || row.Spool_AMS_Fit),
             variant_available: row.variant_available !== 'false' && row.Variant_Available !== 'false',
             
             // Scores
-            ease_of_printing_score: parseInt(row.ease_of_printing_score || row.Ease_of_Printing_Score) || null,
-            dimensional_accuracy_score: parseInt(row.dimensional_accuracy_score || row.Dimensional_Accuracy_Score) || null,
-            strength_index: parseFloat(row.strength_index || row.Strength_Index) || null,
-            printability_index: parseFloat(row.printability_index || row.Printability_Index) || null,
-            value_score: parseFloat(row.value_score || row.Value_Score) || null,
+            ease_of_printing_score: parseInt(row.ease_of_printing_score || row.Ease_of_Printing_Score),
+            dimensional_accuracy_score: parseInt(row.dimensional_accuracy_score || row.Dimensional_Accuracy_Score),
+            strength_index: parseNumber(row.strength_index || row.Strength_Index),
+            printability_index: parseNumber(row.printability_index || row.Printability_Index),
+            value_score: parseNumber(row.value_score || row.Value_Score),
             
             // Price
-            variant_price: parseFloat(row.variant_price || row.Variant_Price || row["Variant Price"]) || null,
+            variant_price: parseNumber(row.variant_price || row.Variant_Price || row["Variant Price"]),
             
             // Tags and arrays
-            use_case_tags: row.use_case_tags ? (row.use_case_tags.split(';').map((t: string) => t.trim())) : null,
-            industry_tags: row.industry_tags ? (row.industry_tags.split(';').map((t: string) => t.trim())) : null,
+            use_case_tags: row.use_case_tags ? (row.use_case_tags.split(';').map((t: string) => t.trim()).filter((t: string) => t)) : null,
+            industry_tags: row.industry_tags ? (row.industry_tags.split(';').map((t: string) => t.trim()).filter((t: string) => t)) : null,
             
             // Other
-            food_contact_rating: row.food_contact_rating || row.Food_Contact_Rating,
+            food_contact_rating: row.food_contact_rating || row.Food_Contact_Rating || null,
           };
 
           // Remove null/undefined values
@@ -269,7 +287,9 @@ const AdminImport = () => {
             .upsert(filamentData, { onConflict: "product_id" });
 
           if (error) {
-            errors.push(`Row ${i + 2} (${productTitle}): ${error.message}`);
+            // Log detailed error for debugging
+            console.error(`Import error for row ${i + 2}:`, error);
+            errors.push(`Row ${i + 2} (${productTitle}): ${error.message}${error.hint ? ` - ${error.hint}` : ''}`);
             setProgress(prev => ({ ...prev, current: i + 1, errors: prev.errors + 1 }));
           } else {
             successCount++;
