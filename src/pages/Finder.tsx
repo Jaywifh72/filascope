@@ -365,7 +365,7 @@ const Finder = () => {
                           asChild
                         >
                           <a href={filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
-                            <span className="text-xs">Amazon</span>
+                            <span className="text-xs">View on Amazon</span>
                           </a>
                         </Button>
                       )}
