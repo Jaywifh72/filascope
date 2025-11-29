@@ -7,10 +7,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, FileText, ArrowLeft, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { Progress } from "@/components/ui/progress";
 
 const AdminImport = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0, errors: 0 });
+  const [importResults, setImportResults] = useState<{ success: number; errors: string[] } | null>(null);
   const { isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -65,19 +68,45 @@ const AdminImport = () => {
     if (!file) return;
 
     setIsUploading(true);
+    setProgress({ current: 0, total: 0, errors: 0 });
+    setImportResults(null);
+
     try {
       const text = await file.text();
       const rows = parseCSV(text);
+      
+      if (rows.length === 0) {
+        toast({
+          title: "Empty file",
+          description: "The CSV file contains no data rows.",
+          variant: "destructive",
+        });
+        setIsUploading(false);
+        return;
+      }
+
+      setProgress({ current: 0, total: rows.length, errors: 0 });
 
       let successCount = 0;
-      let errorCount = 0;
       const errors: string[] = [];
 
-      for (const row of rows) {
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        
+        // Extract product_title with multiple variations
+        const productTitle = row.product_title || row.Product_Title || row["Product Title"] || row.title;
+        
+        // Skip rows without product_title (required field)
+        if (!productTitle || productTitle.trim() === "") {
+          errors.push(`Row ${i + 2}: Missing required field 'product_title'`);
+          setProgress(prev => ({ ...prev, current: i + 1, errors: prev.errors + 1 }));
+          continue;
+        }
+
         try {
           const filamentData: any = {
             product_id: row.product_id || row.Product_ID || row["Product ID"],
-            product_title: row.product_title || row.Product_Title || row["Product Title"] || row.title,
+            product_title: productTitle.trim(),
             product_handle: row.product_handle || row.Product_Handle || row["Product Handle"],
             vendor: row.vendor || row.Vendor,
             material: row.material || row.Material,
@@ -165,26 +194,32 @@ const AdminImport = () => {
             .upsert(filamentData, { onConflict: "product_id" });
 
           if (error) {
-            errorCount++;
-            errors.push(`${filamentData.product_title || 'Unknown'}: ${error.message}`);
+            errors.push(`Row ${i + 2} (${productTitle}): ${error.message}`);
+            setProgress(prev => ({ ...prev, current: i + 1, errors: prev.errors + 1 }));
           } else {
             successCount++;
+            setProgress(prev => ({ ...prev, current: i + 1 }));
           }
         } catch (rowError: any) {
-          errorCount++;
-          errors.push(`Row error: ${rowError.message}`);
+          errors.push(`Row ${i + 2}: ${rowError.message}`);
+          setProgress(prev => ({ ...prev, current: i + 1, errors: prev.errors + 1 }));
         }
       }
 
-      if (errors.length > 0 && errors.length <= 5) {
-        console.error("Import errors:", errors);
-      }
+      setImportResults({ success: successCount, errors });
 
-      toast({
-        title: "Import Complete",
-        description: `Successfully imported ${successCount} filaments. ${errorCount} errors.`,
-        variant: errorCount > 0 ? "destructive" : "default",
-      });
+      if (successCount > 0) {
+        toast({
+          title: "Import completed",
+          description: `Successfully imported ${successCount} filament(s). ${errors.length} error(s).`,
+        });
+      } else {
+        toast({
+          title: "Import failed",
+          description: `No filaments were imported. Check the error details below.`,
+          variant: "destructive",
+        });
+      }
 
       setFile(null);
     } catch (error: any) {
@@ -257,6 +292,7 @@ const AdminImport = () => {
                   variant="outline"
                   onClick={() => setFile(null)}
                   className="flex-1"
+                  disabled={isUploading}
                 >
                   Cancel
                 </Button>
@@ -265,8 +301,49 @@ const AdminImport = () => {
                   disabled={isUploading}
                   className="flex-1"
                 >
-                  {isUploading ? "Uploading..." : "Import Data"}
+                  {isUploading ? "Importing..." : "Import Data"}
                 </Button>
+              </div>
+            )}
+
+            {/* Progress Indicator */}
+            {isUploading && progress.total > 0 && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Processing rows: {progress.current} / {progress.total}</span>
+                  <span className="text-destructive">{progress.errors} errors</span>
+                </div>
+                <Progress value={(progress.current / progress.total) * 100} />
+              </div>
+            )}
+
+            {/* Import Results */}
+            {importResults && (
+              <div className="space-y-3">
+                <div className="rounded-lg border bg-muted/50 p-4">
+                  <h3 className="font-semibold mb-2">Import Summary</h3>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Successfully imported:</span>
+                      <span className="font-medium text-primary">{importResults.success}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Errors:</span>
+                      <span className="font-medium text-destructive">{importResults.errors.length}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {importResults.errors.length > 0 && (
+                  <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+                    <h3 className="font-semibold mb-2 text-destructive">Error Details</h3>
+                    <div className="max-h-64 overflow-y-auto space-y-1 text-sm">
+                      {importResults.errors.map((error, idx) => (
+                        <div key={idx} className="text-destructive/90">{error}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
