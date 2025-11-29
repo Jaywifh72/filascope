@@ -26,6 +26,8 @@ const AdminImport = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0, errors: 0, warnings: 0 });
   const [importResults, setImportResults] = useState<{ success: number; errors: string[]; warnings: string[] } | null>(null);
+  const [logs, setLogs] = useState<Array<{ type: 'info' | 'success' | 'error' | 'warning'; message: string }>>([]);
+  const [weightStats, setWeightStats] = useState<{ total: number; kg: number; g: number; unchanged: number } | null>(null);
   const { isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -41,6 +43,10 @@ const AdminImport = () => {
     }
   }, [isAdmin, loading, navigate, toast]);
 
+  const addLog = (type: 'info' | 'success' | 'error' | 'warning', message: string) => {
+    setLogs(prev => [...prev, { type, message }]);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile && selectedFile.type === "text/csv") {
@@ -48,6 +54,8 @@ const AdminImport = () => {
       // Reset previous results
       setImportResults(null);
       setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
+      setLogs([]);
+      setWeightStats(null);
     } else {
       toast({
         title: "Invalid file",
@@ -284,6 +292,8 @@ const AdminImport = () => {
     setIsUploading(true);
     setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
     setImportResults(null);
+    setLogs([]);
+    setWeightStats(null);
 
     try {
       const text = await file.text();
@@ -300,20 +310,63 @@ const AdminImport = () => {
       }
 
       console.log(`🚀 Starting NEW import of ${rows.length} rows...`);
+      addLog('info', `🚀 Starting import of ${rows.length} rows`);
       console.log("📋 CSV Headers:", Object.keys(rows[0]));
+      addLog('info', `📋 CSV Headers: ${Object.keys(rows[0]).join(', ')}`);
       
       // Step 1: Normalize weight values across all rows
-      console.log("🔄 Step 1: Normalizing weight values (kg/g → numeric grams)...");
+      console.log("\n" + "=".repeat(80));
+      console.log("🔄 STEP 1: WEIGHT NORMALIZATION (kg/g → numeric grams)");
+      console.log("=".repeat(80));
+      addLog('info', '🔄 Step 1: Analyzing and normalizing weight values...');
+      
+      let kgCount = 0;
+      let gCount = 0;
+      let unchangedCount = 0;
+      let totalWeights = 0;
+      
       rows.forEach((row, idx) => {
         const originalWeight = row['Variant Weight Unit'];
         if (originalWeight) {
+          totalWeights++;
+          const str = String(originalWeight).trim().toLowerCase();
           const normalizedWeight = normalizeWeight(originalWeight);
-          row['Variant Weight Unit'] = normalizedWeight;
-          if (idx < 5) {
-            console.log(`  Row ${idx + 2}: "${originalWeight}" → "${normalizedWeight}"`);
+          
+          if (str.endsWith('kg')) {
+            kgCount++;
+            if (idx < 10) {
+              console.log(`  ✓ Row ${idx + 2}: "${originalWeight}" → "${normalizedWeight}" (kg conversion)`);
+            }
+          } else if (str.endsWith('g')) {
+            gCount++;
+            if (idx < 10) {
+              console.log(`  ✓ Row ${idx + 2}: "${originalWeight}" → "${normalizedWeight}" (stripped 'g')`);
+            }
+          } else {
+            unchangedCount++;
+            if (idx < 10) {
+              console.log(`  → Row ${idx + 2}: "${originalWeight}" (no change needed)`);
+            }
           }
+          
+          row['Variant Weight Unit'] = normalizedWeight;
         }
       });
+      
+      const weightStatsData = { total: totalWeights, kg: kgCount, g: gCount, unchanged: unchangedCount };
+      setWeightStats(weightStatsData);
+      
+      console.log("\n📊 WEIGHT CONVERSION STATISTICS:");
+      console.log(`   Total weight cells processed: ${totalWeights}`);
+      console.log(`   ✓ Converted from kg: ${kgCount} cells`);
+      console.log(`   ✓ Stripped 'g' suffix: ${gCount} cells`);
+      console.log(`   → Unchanged (no unit): ${unchangedCount} cells`);
+      console.log("=".repeat(80) + "\n");
+      
+      addLog('success', `✓ Weight normalization complete: ${totalWeights} cells processed`);
+      addLog('info', `  • ${kgCount} converted from kg to grams`);
+      addLog('info', `  • ${gCount} stripped 'g' suffix`);
+      addLog('info', `  • ${unchangedCount} unchanged (numeric only)`);
       
       console.log("📝 Sample row after normalization:", {
         'Product Title': rows[0]['Product Title'],
@@ -322,6 +375,11 @@ const AdminImport = () => {
         'Variant Weight Unit': rows[0]['Variant Weight Unit'],
         'Variant Price': rows[0]['Variant Price']
       });
+
+      console.log("\n" + "=".repeat(80));
+      console.log("🔄 STEP 2: IMPORTING FILAMENT DATA");
+      console.log("=".repeat(80));
+      addLog('info', '🔄 Step 2: Starting database import...');
 
       setProgress({ current: 0, total: rows.length, errors: 0, warnings: 0 });
 
@@ -335,7 +393,8 @@ const AdminImport = () => {
         const batchEnd = Math.min(batchStart + BATCH_SIZE, rows.length);
         const batch = rows.slice(batchStart, batchEnd);
         
-        console.log(`📦 Processing batch ${Math.floor(batchStart / BATCH_SIZE) + 1} (rows ${batchStart + 1}-${batchEnd})`);
+        console.log(`\n📦 Processing batch ${Math.floor(batchStart / BATCH_SIZE) + 1} (rows ${batchStart + 2}-${batchEnd + 1})`);
+        addLog('info', `📦 Batch ${Math.floor(batchStart / BATCH_SIZE) + 1}: Rows ${batchStart + 2}-${batchEnd + 1}`);
 
         for (let i = 0; i < batch.length; i++) {
           const rowIndex = batchStart + i;
@@ -345,7 +404,9 @@ const AdminImport = () => {
           // Get product title - this is required
           const productTitle = row['Product Title'];
           if (!productTitle || productTitle.trim() === "") {
-            errors.push(`Row ${rowNum}: Missing Product Title`);
+            const errorMsg = `Row ${rowNum}: Missing Product Title`;
+            errors.push(errorMsg);
+            addLog('error', `❌ ${errorMsg}`);
             setProgress(prev => ({ ...prev, current: rowIndex + 1, errors: prev.errors + 1 }));
             continue;
           }
@@ -484,21 +545,33 @@ const AdminImport = () => {
               if (error.hint) errorMsg += ` | Hint: ${error.hint}`;
               
               errors.push(errorMsg);
+              addLog('error', `❌ Row ${rowNum}: ${productTitle} - ${error.message}`);
               setProgress(prev => ({ ...prev, current: rowIndex + 1, errors: prev.errors + 1 }));
             } else {
               console.log(`✅ Row ${rowNum} (${productTitle}) imported successfully`);
+              addLog('success', `✅ Row ${rowNum}: ${productTitle}`);
               successCount++;
               setProgress(prev => ({ ...prev, current: rowIndex + 1 }));
             }
           } catch (rowError: any) {
             console.error(`❌ Exception at row ${rowNum}:`, rowError);
-            errors.push(`Row ${rowNum}: ${rowError.message}`);
+            const errorMsg = `Row ${rowNum}: ${rowError.message}`;
+            errors.push(errorMsg);
+            addLog('error', `❌ ${errorMsg}`);
             setProgress(prev => ({ ...prev, current: rowIndex + 1, errors: prev.errors + 1 }));
           }
         }
       }
 
-      console.log(`\n✅ Import complete: ${successCount} successful, ${errors.length} errors, ${warnings.length} warnings`);
+      console.log("\n" + "=".repeat(80));
+      console.log(`✅ IMPORT COMPLETE`);
+      console.log(`   Successful: ${successCount}`);
+      console.log(`   Errors: ${errors.length}`);
+      console.log(`   Warnings: ${warnings.length}`);
+      console.log("=".repeat(80) + "\n");
+      
+      addLog('info', '');
+      addLog('success', `✅ Import complete: ${successCount} successful, ${errors.length} errors, ${warnings.length} warnings`);
 
       setImportResults({ success: successCount, errors, warnings });
 
@@ -595,6 +668,8 @@ const AdminImport = () => {
                     setFile(null);
                     setImportResults(null);
                     setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
+                    setLogs([]);
+                    setWeightStats(null);
                   }}
                   className="flex-1"
                   disabled={isUploading}
@@ -618,6 +693,51 @@ const AdminImport = () => {
                   <span className="text-destructive">{progress.errors} errors</span>
                 </div>
                 <Progress value={(progress.current / progress.total) * 100} />
+              </div>
+            )}
+
+            {weightStats && (
+              <div className="rounded-lg border bg-blue-500/10 border-blue-500/20 p-4">
+                <h3 className="font-semibold mb-2 text-blue-600 dark:text-blue-400">Weight Conversion Statistics</h3>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>Total weight cells processed:</span>
+                    <span className="font-medium">{weightStats.total}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Converted from kg (× 1000):</span>
+                    <span className="font-medium text-green-600 dark:text-green-400">{weightStats.kg} cells</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Stripped 'g' suffix:</span>
+                    <span className="font-medium text-blue-600 dark:text-blue-400">{weightStats.g} cells</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Unchanged (numeric only):</span>
+                    <span className="font-medium text-muted-foreground">{weightStats.unchanged} cells</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {logs.length > 0 && (
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <h3 className="font-semibold mb-2">Import Log</h3>
+                <div className="max-h-96 overflow-y-auto space-y-0.5 text-xs font-mono">
+                  {logs.map((log, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`
+                        ${log.type === 'success' ? 'text-green-600 dark:text-green-400' : ''}
+                        ${log.type === 'error' ? 'text-red-600 dark:text-red-400' : ''}
+                        ${log.type === 'warning' ? 'text-yellow-600 dark:text-yellow-400' : ''}
+                        ${log.type === 'info' ? 'text-foreground/70' : ''}
+                      `}
+                    >
+                      {log.message}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
