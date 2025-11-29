@@ -100,38 +100,45 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get auth header to verify admin access
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    // Create client for auth check (with anon key + auth header)
     const authHeader = req.headers.get('authorization');
-    if (authHeader) {
-      const supabaseClient = createClient(
-        supabaseUrl,
-        Deno.env.get('SUPABASE_ANON_KEY')!,
-        { global: { headers: { authorization: authHeader } } }
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-      
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) {
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+    }
 
-      // Check admin role
-      const { data: hasAdminRole } = await supabase.rpc('has_role', {
-        _user_id: user.id,
-        _role: 'admin'
-      });
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { authorization: authHeader } }
+    });
 
-      if (!hasAdminRole) {
-        return new Response(
-          JSON.stringify({ error: 'Admin access required' }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+    // Verify user is authenticated and is admin
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+    if (userError || !user) {
+      console.error('Auth error:', userError);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user has admin role using service client
+    const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: isAdmin, error: roleError } = await supabaseService.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin'
+    });
+
+    if (roleError || !isAdmin) {
+      console.error('Role check error:', roleError);
+      return new Response(
+        JSON.stringify({ error: 'Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const { filament_ids } = await req.json();
@@ -139,7 +146,7 @@ Deno.serve(async (req) => {
     console.log(`Fetching prices for ${filament_ids?.length || 'all'} filaments`);
 
     // Fetch filaments that need price updates
-    let query = supabase
+    let query = supabaseService
       .from('filaments')
       .select('id, product_url, amazon_link_us, amazon_link_uk, amazon_link_de, variant_price, product_title');
     
@@ -196,7 +203,7 @@ Deno.serve(async (req) => {
 
       if (prices.length > 0) {
         // Store prices in price_history
-        const { error: priceError } = await supabase
+        const { error: priceError } = await supabaseService
           .from('price_history')
           .insert(prices);
 
@@ -210,7 +217,7 @@ Deno.serve(async (req) => {
                          prices[0]?.price;
 
           if (usPrice) {
-            await supabase
+            await supabaseService
               .from('filaments')
               .update({ variant_price: usPrice })
               .eq('id', filament.id);
