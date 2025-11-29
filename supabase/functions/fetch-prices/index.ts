@@ -129,8 +129,12 @@ function isValidUrl(urlString: string | null): boolean {
   }
 }
 
-// Fetch price and weight from a URL
-async function fetchDataFromUrl(url: string | null, region: string): Promise<{ price: number | null; weight: number | null }> {
+// Fetch price and weight from a URL with retry logic
+async function fetchDataFromUrl(
+  url: string | null, 
+  region: string, 
+  maxRetries: number = 3
+): Promise<{ price: number | null; weight: number | null }> {
   if (!isValidUrl(url)) {
     if (url && url !== 'null') {
       console.log(`Skipping invalid URL for ${region}: ${url}`);
@@ -138,32 +142,57 @@ async function fetchDataFromUrl(url: string | null, region: string): Promise<{ p
     return { price: null, weight: null };
   }
   
-  try {
-    console.log(`✓ Fetching ${region} data from: ${url}`);
-    
-    const response = await fetch(url!, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      },
-    });
-    
-    if (!response.ok) {
-      console.log(`✗ Failed to fetch ${url}: ${response.status}`);
-      return { price: null, weight: null };
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        const backoffMs = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+        console.log(`  ↻ Retry attempt ${attempt + 1}/${maxRetries} after ${backoffMs}ms backoff`);
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+      }
+      
+      console.log(`✓ Fetching ${region} data from: ${url}${attempt > 0 ? ` (attempt ${attempt + 1})` : ''}`);
+      
+      const response = await fetch(url!, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      });
+      
+      if (!response.ok) {
+        // Retry on 5xx errors and 429 (rate limit)
+        if (response.status >= 500 || response.status === 429) {
+          lastError = new Error(`HTTP ${response.status}`);
+          console.log(`  ⚠ Temporary error ${response.status}, will retry...`);
+          continue;
+        }
+        
+        console.log(`✗ Failed to fetch ${url}: ${response.status}`);
+        return { price: null, weight: null };
+      }
+      
+      const html = await response.text();
+      const price = extractPrice(html, url!);
+      const weight = extractWeight(html, url!);
+      
+      console.log(`✓ Scraped ${region}: price=${price ? '$' + price : 'none'}, weight=${weight ? weight + 'g' : 'none'}`);
+      
+      return { price, weight };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Unknown error');
+      
+      // Retry on network errors
+      if (attempt < maxRetries - 1) {
+        console.log(`  ⚠ Network error, will retry: ${lastError.message}`);
+        continue;
+      }
     }
-    
-    const html = await response.text();
-    const price = extractPrice(html, url!);
-    const weight = extractWeight(html, url!);
-    
-    console.log(`✓ Scraped ${region}: price=${price ? '$' + price : 'none'}, weight=${weight ? weight + 'g' : 'none'}`);
-    
-    return { price, weight };
-  } catch (error) {
-    console.log(`✗ Error fetching ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    return { price: null, weight: null };
   }
+  
+  console.log(`✗ All ${maxRetries} attempts failed for ${url}: ${lastError?.message || 'Unknown error'}`);
+  return { price: null, weight: null };
 }
 
 Deno.serve(async (req) => {
