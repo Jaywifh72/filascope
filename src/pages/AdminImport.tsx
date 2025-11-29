@@ -224,13 +224,29 @@ const AdminImport = () => {
     }
   };
 
-  const parseNumber = (value: any): number | null => {
+  // Validate numeric values against PostgreSQL column limits
+  const validateNumeric = (value: number, precision: number, scale: number, fieldName?: string): number | null => {
+    if (!isFinite(value)) return null;
+    // Calculate max value for numeric(precision, scale)
+    // For numeric(10, 2): max is 99999999.99
+    // For numeric(10, 3): max is 9999999.999
+    const maxValue = Math.pow(10, precision - scale) - Math.pow(10, -scale);
+    const minValue = -maxValue;
+    
+    if (value > maxValue || value < minValue) {
+      if (fieldName) {
+        console.warn(`⚠️ ${fieldName}: Value ${value} exceeds numeric(${precision},${scale}) limit [${minValue} to ${maxValue}] - setting to NULL`);
+      }
+      return null;
+    }
+    return value;
+  };
+
+  const parseNumber = (value: any, precision: number = 10, scale: number = 2, fieldName?: string): number | null => {
     if (value === null || value === undefined || value === '') return null;
     const parsed = parseFloat(value);
     if (isNaN(parsed)) return null;
-    // Check for overflow - PostgreSQL numeric type can handle very large values
-    if (!isFinite(parsed)) return null;
-    return parsed;
+    return validateNumeric(parsed, precision, scale, fieldName);
   };
 
   const parseIntSafe = (value: any): number | null => {
@@ -529,29 +545,29 @@ const AdminImport = () => {
               amazon_link_de: row['Amazon Link DE'] || null,
               tds_url: row['TDS URL'] || null,
               
-              // Physical properties
-              density_g_cm3: parseNumber(row['density_g_cm3']),
-              diameter_nominal_mm: parseNumber(row['diameter_nominal_mm']),
+              // Physical properties (with precision/scale validation)
+              density_g_cm3: parseNumber(row['density_g_cm3'], 10, 3),
+              diameter_nominal_mm: parseNumber(row['diameter_nominal_mm'], 10, 3),
               net_weight_g: parseWeight(row['Variant Weight Unit'], rowNum),
-              spool_outer_d_mm: parseNumber(row['spool_outer_d_mm']),
-              spool_width_mm: parseNumber(row['spool_width_mm']),
-              variant_price: parseNumber(row['Variant Price']),
+              spool_outer_d_mm: parseNumber(row['spool_outer_d_mm'], 10, 2),
+              spool_width_mm: parseNumber(row['spool_width_mm'], 10, 2),
+              variant_price: parseNumber(row['Variant Price'], 10, 2),
               
-              // Thermal properties
-              tg_c: parseNumber(row['tg_c']),
-              melt_temp_c: parseNumber(row['melt_temp_c']),
+              // Thermal properties (numeric(10,2))
+              tg_c: parseNumber(row['tg_c'], 10, 2),
+              melt_temp_c: parseNumber(row['melt_temp_c'], 10, 2),
               nozzle_temp_min_c: parseIntSafe(row['nozzle_temp_min_c']),
               nozzle_temp_max_c: parseIntSafe(row['nozzle_temp_max_c']),
               nozzle_temp_sweetspot_c: parseIntSafe(row['nozzle_temp_sweetspot_c']),
               bed_temp_min_c: parseIntSafe(row['bed_temp_min_c']),
               bed_temp_max_c: parseIntSafe(row['bed_temp_max_c']),
               
-              // Mechanical properties
-              tensile_strength_xy_mpa: parseNumber(row['tensile_strength_xy_mpa']),
-              tensile_modulus_xy_mpa: parseNumber(row['tensile_modulus_xy_mpa']),
-              elongation_break_xy_percent: parseNumber(row['elongation_break_xy_percent']),
-              flexural_strength_mpa: parseNumber(row['flexural_strength_mpa']),
-              shore_hardness_d: parseNumber(row['shore_hardness_d']),
+              // Mechanical properties (numeric(10,2))
+              tensile_strength_xy_mpa: parseNumber(row['tensile_strength_xy_mpa'], 10, 2),
+              tensile_modulus_xy_mpa: parseNumber(row['tensile_modulus_xy_mpa'], 10, 2),
+              elongation_break_xy_percent: parseNumber(row['elongation_break_xy_percent'], 10, 2),
+              flexural_strength_mpa: parseNumber(row['flexural_strength_mpa'], 10, 2),
+              shore_hardness_d: parseNumber(row['shore_hardness_d'], 10, 2),
               
               // Print settings
               print_speed_max_mms: parseIntSafe(row['print_speed_max_mms']),
@@ -576,12 +592,12 @@ const AdminImport = () => {
               spool_ams_fit: parseBool(row['spool_ams_fit']),
               variant_available: parseBool(row['Variant Available']) !== false,
               
-              // Scores
+              // Scores (numeric(10,2))
               ease_of_printing_score: parseIntSafe(row['ease_of_printing_score']),
               dimensional_accuracy_score: parseIntSafe(row['dimensional_accuracy_score']),
-              strength_index: parseNumber(row['strength_index']),
-              printability_index: parseNumber(row['printability_index']),
-              value_score: parseNumber(row['value_score']),
+              strength_index: parseNumber(row['strength_index'], 10, 2),
+              printability_index: parseNumber(row['printability_index'], 10, 2),
+              value_score: parseNumber(row['value_score'], 10, 2),
               
               // Tags
               use_case_tags: row['use_case_tags'] ? row['use_case_tags'].split(',').map((t: string) => t.trim()).filter((t: string) => t) : null,
