@@ -28,6 +28,17 @@ const AdminImport = () => {
   const [importResults, setImportResults] = useState<{ success: number; errors: string[]; warnings: string[] } | null>(null);
   const [logs, setLogs] = useState<Array<{ type: 'info' | 'success' | 'error' | 'warning'; message: string }>>([]);
   const [weightStats, setWeightStats] = useState<{ total: number; kg: number; g: number; unchanged: number } | null>(null);
+  const [summaryReport, setSummaryReport] = useState<{
+    totalRows: number;
+    missingRequired: number;
+    invalidWeights: number;
+    outOfRangeNumeric: number;
+    invalidUrls: number;
+    missingPrices: number;
+    issues: Array<{ type: string; count: number; examples: string[] }>;
+  } | null>(null);
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [processedRows, setProcessedRows] = useState<any[]>([]);
   const { isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -56,6 +67,9 @@ const AdminImport = () => {
       setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
       setLogs([]);
       setWeightStats(null);
+      setSummaryReport(null);
+      setAwaitingConfirmation(false);
+      setProcessedRows([]);
     } else {
       toast({
         title: "Invalid file",
@@ -316,6 +330,9 @@ const AdminImport = () => {
     setImportResults(null);
     setLogs([]);
     setWeightStats(null);
+    setSummaryReport(null);
+    setAwaitingConfirmation(false);
+    setProcessedRows([]);
 
     try {
       const text = await file.text();
@@ -493,11 +510,168 @@ const AdminImport = () => {
         addLog('warning', `⚠️ ${invalidWeights} rows have invalid weight values - these will be imported as NULL`);
       }
 
-      // Step 3: Import to database
+      // Step 3: Generate comprehensive pre-import summary report
       console.log("\n" + "=".repeat(80));
-      console.log("🔄 STEP 3: IMPORTING FILAMENT DATA");
+      console.log("📊 STEP 3: PRE-IMPORT ANALYSIS & VALIDATION");
       console.log("=".repeat(80));
-      addLog('info', '🔄 Step 3: Starting database import...');
+      addLog('info', '📊 Step 3: Analyzing all data for potential issues...');
+      
+      let missingRequiredCount = 0;
+      let invalidWeightsCount = 0;
+      let outOfRangeCount = 0;
+      let invalidUrlsCount = 0;
+      let missingPricesCount = 0;
+      const issues: Array<{ type: string; count: number; examples: string[] }> = [];
+      
+      const missingRequiredExamples: string[] = [];
+      const outOfRangeExamples: string[] = [];
+      const invalidUrlExamples: string[] = [];
+      const missingPriceExamples: string[] = [];
+      
+      rows.forEach((row, idx) => {
+        const rowNum = idx + 2;
+        
+        // Check missing required fields
+        if (!row['Product Title'] || row['Product Title'].trim() === '') {
+          missingRequiredCount++;
+          if (missingRequiredExamples.length < 5) {
+            missingRequiredExamples.push(`Row ${rowNum}: Missing Product Title`);
+          }
+        }
+        
+        // Check invalid weights (already validated but count them)
+        const weightValue = row['Variant Weight Unit'];
+        if (weightValue && typeof weightValue !== 'boolean') {
+          const str = String(weightValue).trim();
+          if (str.endsWith('kg') || str.endsWith('g') || isNaN(parseFloat(str))) {
+            invalidWeightsCount++;
+          }
+        }
+        
+        // Check out-of-range numeric values
+        const numericFields = [
+          { field: 'Variant Price', max: 99999999.99, precision: 2 },
+          { field: 'density_g_cm3', max: 9999999.999, precision: 3 },
+          { field: 'diameter_nominal_mm', max: 9999999.999, precision: 3 },
+          { field: 'spool_outer_d_mm', max: 99999999.99, precision: 2 },
+          { field: 'spool_width_mm', max: 99999999.99, precision: 2 },
+          { field: 'tensile_strength_xy_mpa', max: 99999999.99, precision: 2 },
+          { field: 'tensile_modulus_xy_mpa', max: 99999999.99, precision: 2 },
+          { field: 'elongation_break_xy_percent', max: 99999999.99, precision: 2 },
+          { field: 'flexural_strength_mpa', max: 99999999.99, precision: 2 },
+          { field: 'shore_hardness_d', max: 99999999.99, precision: 2 },
+          { field: 'tg_c', max: 99999999.99, precision: 2 },
+          { field: 'melt_temp_c', max: 99999999.99, precision: 2 },
+          { field: 'strength_index', max: 99999999.99, precision: 2 },
+          { field: 'printability_index', max: 99999999.99, precision: 2 },
+          { field: 'value_score', max: 99999999.99, precision: 2 },
+        ];
+        
+        numericFields.forEach(({ field, max }) => {
+          const value = row[field];
+          if (value !== null && value !== undefined && value !== '') {
+            const num = parseFloat(value);
+            if (!isNaN(num) && (num > max || num < -max)) {
+              outOfRangeCount++;
+              if (outOfRangeExamples.length < 5) {
+                outOfRangeExamples.push(`Row ${rowNum}: ${field} = ${value} (max: ${max})`);
+              }
+            }
+          }
+        });
+        
+        // Check invalid URLs
+        const urlFields = ['Product URL', 'Amazon Link US', 'Amazon Link UK', 'Amazon Link DE', 'TDS URL', 'Featured Image'];
+        urlFields.forEach(field => {
+          const url = row[field];
+          if (url && !isURL(url)) {
+            invalidUrlsCount++;
+            if (invalidUrlExamples.length < 5) {
+              invalidUrlExamples.push(`Row ${rowNum}: Invalid ${field} - "${url}"`);
+            }
+          }
+        });
+        
+        // Check missing prices
+        if (!row['Variant Price'] || row['Variant Price'] === '' || row['Variant Price'] === '0') {
+          missingPricesCount++;
+          if (missingPriceExamples.length < 3) {
+            missingPriceExamples.push(`Row ${rowNum}: ${row['Product Title']}`);
+          }
+        }
+      });
+      
+      // Build issues array
+      if (missingRequiredCount > 0) {
+        issues.push({ type: 'Missing Required Fields', count: missingRequiredCount, examples: missingRequiredExamples });
+      }
+      if (invalidWeightsCount > 0) {
+        issues.push({ type: 'Invalid Weights', count: invalidWeightsCount, examples: invalidWeightRows.slice(0, 5).map(({ row, value }) => `Row ${row}: "${value}"`) });
+      }
+      if (outOfRangeCount > 0) {
+        issues.push({ type: 'Out-of-Range Numeric Values', count: outOfRangeCount, examples: outOfRangeExamples });
+      }
+      if (invalidUrlsCount > 0) {
+        issues.push({ type: 'Invalid URLs', count: invalidUrlsCount, examples: invalidUrlExamples });
+      }
+      if (missingPricesCount > 0) {
+        issues.push({ type: 'Missing/Zero Prices', count: missingPricesCount, examples: missingPriceExamples });
+      }
+      
+      const summary = {
+        totalRows: rows.length,
+        missingRequired: missingRequiredCount,
+        invalidWeights: invalidWeightsCount,
+        outOfRangeNumeric: outOfRangeCount,
+        invalidUrls: invalidUrlsCount,
+        missingPrices: missingPricesCount,
+        issues
+      };
+      
+      setSummaryReport(summary);
+      setProcessedRows(rows);
+      setAwaitingConfirmation(true);
+      
+      console.log("\n📊 PRE-IMPORT SUMMARY REPORT:");
+      console.log(`   Total rows to import: ${rows.length}`);
+      console.log(`   ✗ Missing required fields: ${missingRequiredCount}`);
+      console.log(`   ✗ Invalid weight values: ${invalidWeightsCount}`);
+      console.log(`   ✗ Out-of-range numeric values: ${outOfRangeCount}`);
+      console.log(`   ✗ Invalid URLs: ${invalidUrlsCount}`);
+      console.log(`   ⚠️ Missing/zero prices: ${missingPricesCount}`);
+      console.log("=".repeat(80) + "\n");
+      
+      addLog('success', `✓ Pre-import analysis complete`);
+      addLog('info', `📊 Found ${issues.length} types of issues across ${rows.length} rows`);
+      addLog('warning', '⏸️ Import paused - Please review the summary report and confirm to proceed');
+      
+      setIsUploading(false);
+    } catch (error) {
+      console.error("Import error:", error);
+      addLog('error', `❌ Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast({
+        title: "Import failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+      setIsUploading(false);
+    }
+  };
+
+  const confirmAndProceedImport = async () => {
+    if (!processedRows || processedRows.length === 0) return;
+    
+    setAwaitingConfirmation(false);
+    setIsUploading(true);
+    
+    try {
+      const rows = processedRows;
+      
+      // Step 4: Import to database
+      console.log("\n" + "=".repeat(80));
+      console.log("🔄 STEP 4: IMPORTING FILAMENT DATA");
+      console.log("=".repeat(80));
+      addLog('info', '🔄 Step 4: Starting database import...');
 
       setProgress({ current: 0, total: rows.length, errors: 0, warnings: 0 });
 
@@ -788,6 +962,9 @@ const AdminImport = () => {
                     setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
                     setLogs([]);
                     setWeightStats(null);
+                    setSummaryReport(null);
+                    setAwaitingConfirmation(false);
+                    setProcessedRows([]);
                   }}
                   className="flex-1"
                   disabled={isUploading}
@@ -835,6 +1012,100 @@ const AdminImport = () => {
                     <span className="font-medium text-muted-foreground">{weightStats.unchanged} cells</span>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {summaryReport && (
+              <div className="space-y-4">
+                <Alert className="border-blue-500/50 bg-blue-500/10">
+                  <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <AlertTitle className="text-blue-600 dark:text-blue-400">Pre-Import Summary Report</AlertTitle>
+                  <AlertDescription className="text-foreground/80 mt-2 space-y-2">
+                    <p className="font-semibold">Ready to import {summaryReport.totalRows} rows</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex justify-between p-2 rounded bg-background/50">
+                        <span>Missing Required:</span>
+                        <span className={`font-medium ${summaryReport.missingRequired > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                          {summaryReport.missingRequired}
+                        </span>
+                      </div>
+                      <div className="flex justify-between p-2 rounded bg-background/50">
+                        <span>Invalid Weights:</span>
+                        <span className={`font-medium ${summaryReport.invalidWeights > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
+                          {summaryReport.invalidWeights}
+                        </span>
+                      </div>
+                      <div className="flex justify-between p-2 rounded bg-background/50">
+                        <span>Out-of-Range:</span>
+                        <span className={`font-medium ${summaryReport.outOfRangeNumeric > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
+                          {summaryReport.outOfRangeNumeric}
+                        </span>
+                      </div>
+                      <div className="flex justify-between p-2 rounded bg-background/50">
+                        <span>Invalid URLs:</span>
+                        <span className={`font-medium ${summaryReport.invalidUrls > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
+                          {summaryReport.invalidUrls}
+                        </span>
+                      </div>
+                      <div className="flex justify-between p-2 rounded bg-background/50 col-span-2">
+                        <span>Missing/Zero Prices:</span>
+                        <span className={`font-medium ${summaryReport.missingPrices > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}`}>
+                          {summaryReport.missingPrices}
+                        </span>
+                      </div>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+
+                {summaryReport.issues.length > 0 && (
+                  <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4">
+                    <h3 className="font-semibold mb-3 text-yellow-600 dark:text-yellow-400">Issue Details</h3>
+                    <div className="space-y-3">
+                      {summaryReport.issues.map((issue, idx) => (
+                        <div key={idx} className="text-sm">
+                          <p className="font-medium text-foreground mb-1">
+                            {issue.type}: {issue.count} row{issue.count !== 1 ? 's' : ''}
+                          </p>
+                          {issue.examples.length > 0 && (
+                            <div className="ml-4 space-y-0.5 text-xs text-muted-foreground font-mono">
+                              {issue.examples.map((example, exIdx) => (
+                                <div key={exIdx}>• {example}</div>
+                              ))}
+                              {issue.count > issue.examples.length && (
+                                <div className="text-yellow-600/70 dark:text-yellow-400/70">
+                                  ... and {issue.count - issue.examples.length} more
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {awaitingConfirmation && (
+                  <div className="flex gap-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setAwaitingConfirmation(false);
+                        setSummaryReport(null);
+                        setProcessedRows([]);
+                        setIsUploading(false);
+                      }}
+                      className="flex-1"
+                    >
+                      Cancel Import
+                    </Button>
+                    <Button
+                      onClick={confirmAndProceedImport}
+                      className="flex-1 bg-primary"
+                    >
+                      Confirm & Import
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
