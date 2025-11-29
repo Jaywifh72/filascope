@@ -243,35 +243,49 @@ const AdminImport = () => {
     return str === 'true' || str === '1' || str === 'yes';
   };
 
-  const parseWeight = (value: any): number | null => {
-    if (value === null || value === undefined || value === '') return null;
+  const parseWeight = (value: any, rowNum?: number): number | null => {
+    if (value === null || value === undefined || value === '') {
+      console.log(`⚠️ Row ${rowNum}: Empty weight value`);
+      return null;
+    }
     const str = String(value).trim().toLowerCase();
+    
+    console.log(`🔍 Row ${rowNum}: Parsing weight "${value}" (trimmed: "${str}")`);
     
     // Handle kg values (multiply by 1000)
     if (str.endsWith('kg')) {
       const num = parseFloat(str.slice(0, -2));
-      if (isNaN(num)) return null;
-      const result = Math.round(num * 1000);
-      if (result < -2147483648 || result > 2147483647) {
-        console.warn(`Weight overflow for value: ${value} (parsed as ${result})`);
+      if (isNaN(num)) {
+        console.error(`❌ Row ${rowNum}: Failed to parse kg value: ${value}`);
         return null;
       }
+      const result = Math.round(num * 1000);
+      if (result < -2147483648 || result > 2147483647) {
+        console.error(`❌ Row ${rowNum}: Weight overflow for value: ${value} (parsed as ${result})`);
+        return null;
+      }
+      console.log(`✅ Row ${rowNum}: Parsed "${value}" as ${result}g`);
       return result;
     }
     
     // Handle g values (strip the 'g')
     if (str.endsWith('g')) {
       const num = parseFloat(str.slice(0, -1));
-      if (isNaN(num)) return null;
-      const result = Math.round(num);
-      if (result < -2147483648 || result > 2147483647) {
-        console.warn(`Weight overflow for value: ${value} (parsed as ${result})`);
+      if (isNaN(num)) {
+        console.error(`❌ Row ${rowNum}: Failed to parse g value: ${value}`);
         return null;
       }
+      const result = Math.round(num);
+      if (result < -2147483648 || result > 2147483647) {
+        console.error(`❌ Row ${rowNum}: Weight overflow for value: ${value} (parsed as ${result})`);
+        return null;
+      }
+      console.log(`✅ Row ${rowNum}: Parsed "${value}" as ${result}g`);
       return result;
     }
     
     // If no unit, try to parse as number
+    console.log(`⚠️ Row ${rowNum}: No unit found in "${value}", trying to parse as plain number`);
     return parseIntSafe(str);
   };
 
@@ -297,8 +311,14 @@ const AdminImport = () => {
       }
 
       console.log(`🚀 Starting NEW import of ${rows.length} rows...`);
-      console.log("CSV Headers:", Object.keys(rows[0]));
-      console.log("Sample row:", rows[0]);
+      console.log("📋 CSV Headers:", Object.keys(rows[0]));
+      console.log("📝 Sample row (first 5 fields):", {
+        'Product Title': rows[0]['Product Title'],
+        'Vendor': rows[0]['Vendor'],
+        'Material': rows[0]['Material'],
+        'Variant Weight Unit': rows[0]['Variant Weight Unit'],
+        'Variant Price': rows[0]['Variant Price']
+      });
 
       setProgress({ current: 0, total: rows.length, errors: 0, warnings: 0 });
 
@@ -346,7 +366,7 @@ const AdminImport = () => {
               // Physical properties
               density_g_cm3: parseNumber(row['density_g_cm3']),
               diameter_nominal_mm: parseNumber(row['diameter_nominal_mm']),
-              net_weight_g: parseWeight(row['Variant Weight Unit']),
+              net_weight_g: parseWeight(row['Variant Weight Unit'], rowNum),
               spool_outer_d_mm: parseNumber(row['spool_outer_d_mm']),
               spool_width_mm: parseNumber(row['spool_width_mm']),
               variant_price: parseNumber(row['Variant Price']),
