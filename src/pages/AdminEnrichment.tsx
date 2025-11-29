@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, AlertCircle, TrendingUp, Info } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, TrendingUp, Info, Download, Database } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -366,6 +366,62 @@ const AdminEnrichment = () => {
     }
   };
 
+  const [isFetchingPrices, setIsFetchingPrices] = useState(false);
+  
+  const handleFetchPrices = async (filamentIds?: string[]) => {
+    setIsFetchingPrices(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-prices', {
+        body: { filament_ids: filamentIds || filaments.map(f => f.id) },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Prices updated",
+        description: `Updated ${data.updated} prices from ${data.processed} products`,
+      });
+      
+      // Refresh the list
+      fetchFilamentsNeedingWeight();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch prices from product URLs",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingPrices(false);
+    }
+  };
+
+  const handleFetchAllPrices = async () => {
+    setIsFetchingPrices(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-prices', {
+        body: { filament_ids: null },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Database price update complete",
+        description: `Updated ${data.updated} prices from ${data.processed} products`,
+      });
+      
+      // Refresh the list
+      fetchFilamentsNeedingWeight();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to run database price update",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingPrices(false);
+    }
+  };
+
   if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -409,6 +465,22 @@ const AdminEnrichment = () => {
                 disabled={isSaving}
               >
                 Auto-Estimate Visible
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => handleFetchPrices()}
+                disabled={isFetchingPrices || filaments.length === 0}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                {isFetchingPrices ? "Fetching..." : "Fetch Prices (Visible)"}
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={handleFetchAllPrices}
+                disabled={isFetchingPrices}
+              >
+                <Database className="w-4 h-4 mr-2" />
+                {isFetchingPrices ? "Fetching..." : "Fetch All Prices"}
               </Button>
               <Button 
                 onClick={handleBulkSave} 
