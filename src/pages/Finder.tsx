@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -335,6 +336,15 @@ const Finder = () => {
 
                     {/* Actions */}
                     <div className="flex flex-wrap gap-2 self-start lg:self-center">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        asChild
+                      >
+                        <Link to={`/filament/${filament.id}`}>
+                          <span className="text-xs">View</span>
+                        </Link>
+                      </Button>
                       {filament.product_url && (
                         <Button
                           size="sm"
