@@ -43,14 +43,53 @@ const AdminImport = () => {
   };
 
   const parseCSV = (text: string) => {
-    const lines = text.split("\n");
-    const headers = lines[0].split(",");
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      if (lines[i].trim() === "") continue;
+    // Proper CSV parsing that handles quoted fields
+    const lines: string[] = [];
+    let currentLine = '';
+    let insideQuotes = false;
+    
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const nextChar = text[i + 1];
       
-      const values = lines[i].split(",");
+      if (char === '"') {
+        if (insideQuotes && nextChar === '"') {
+          // Escaped quote
+          currentLine += '"';
+          i++; // Skip next quote
+        } else {
+          // Toggle quote state
+          insideQuotes = !insideQuotes;
+        }
+      } else if (char === '\n' && !insideQuotes) {
+        if (currentLine.trim()) {
+          lines.push(currentLine);
+        }
+        currentLine = '';
+      } else if (char === '\r' && nextChar === '\n' && !insideQuotes) {
+        if (currentLine.trim()) {
+          lines.push(currentLine);
+        }
+        currentLine = '';
+        i++; // Skip \n
+      } else {
+        currentLine += char;
+      }
+    }
+    
+    // Add last line if exists
+    if (currentLine.trim()) {
+      lines.push(currentLine);
+    }
+    
+    if (lines.length === 0) return [];
+    
+    // Parse headers
+    const headers = parseCSVLine(lines[0]);
+    const data = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const values = parseCSVLine(lines[i]);
       const row: any = {};
       
       headers.forEach((header, index) => {
@@ -60,8 +99,38 @@ const AdminImport = () => {
       
       data.push(row);
     }
-
+    
     return data;
+  };
+  
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let insideQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+      
+      if (char === '"') {
+        if (insideQuotes && nextChar === '"') {
+          // Escaped quote
+          current += '"';
+          i++;
+        } else {
+          // Toggle quotes
+          insideQuotes = !insideQuotes;
+        }
+      } else if (char === ',' && !insideQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    result.push(current);
+    return result;
   };
 
   const handleUpload = async () => {
@@ -84,6 +153,12 @@ const AdminImport = () => {
         setIsUploading(false);
         return;
       }
+
+      // Log detected headers for debugging
+      const sampleRow = rows[0];
+      const detectedHeaders = Object.keys(sampleRow);
+      console.log("Detected CSV headers:", detectedHeaders);
+      console.log("Sample row:", sampleRow);
 
       setProgress({ current: 0, total: rows.length, errors: 0 });
 
