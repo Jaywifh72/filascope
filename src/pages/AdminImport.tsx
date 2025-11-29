@@ -383,10 +383,75 @@ const AdminImport = () => {
         'Variant Price': rows[0]['Variant Price']
       });
 
+      // Step 2: Validate weight values after preprocessing
       console.log("\n" + "=".repeat(80));
-      console.log("🔄 STEP 2: IMPORTING FILAMENT DATA");
+      console.log("🔍 STEP 2: VALIDATING WEIGHT VALUES");
       console.log("=".repeat(80));
-      addLog('info', '🔄 Step 2: Starting database import...');
+      addLog('info', '🔍 Step 2: Validating preprocessed weight values...');
+      
+      let validWeights = 0;
+      let nullWeights = 0;
+      let invalidWeights = 0;
+      const invalidWeightRows: Array<{ row: number; value: any }> = [];
+      
+      rows.forEach((row, idx) => {
+        const weightValue = row['Variant Weight Unit'];
+        const rowNum = idx + 2;
+        
+        if (weightValue === null || weightValue === undefined || weightValue === '') {
+          nullWeights++;
+        } else {
+          const str = String(weightValue).trim().toLowerCase();
+          
+          // Check if value still contains units (should have been removed)
+          if (str.endsWith('kg') || str.endsWith('g')) {
+            invalidWeights++;
+            invalidWeightRows.push({ row: rowNum, value: weightValue });
+            console.error(`⚠️ Row ${rowNum}: Weight still contains units: "${weightValue}"`);
+            if (invalidWeights <= 5) {
+              addLog('error', `⚠️ Row ${rowNum}: Weight not preprocessed: "${weightValue}"`);
+            }
+          } else if (isNaN(parseFloat(str))) {
+            invalidWeights++;
+            invalidWeightRows.push({ row: rowNum, value: weightValue });
+            console.error(`⚠️ Row ${rowNum}: Weight is not numeric: "${weightValue}"`);
+            if (invalidWeights <= 5) {
+              addLog('error', `⚠️ Row ${rowNum}: Weight not numeric: "${weightValue}"`);
+            }
+          } else {
+            validWeights++;
+          }
+        }
+      });
+      
+      console.log("\n📊 WEIGHT VALIDATION RESULTS:");
+      console.log(`   ✓ Valid numeric weights: ${validWeights}`);
+      console.log(`   ○ Null/empty weights (acceptable): ${nullWeights}`);
+      console.log(`   ✗ Invalid weights: ${invalidWeights}`);
+      
+      if (invalidWeights > 0) {
+        console.log(`\n⚠️ FIRST 10 INVALID WEIGHTS:`);
+        invalidWeightRows.slice(0, 10).forEach(({ row, value }) => {
+          console.log(`   Row ${row}: "${value}"`);
+        });
+        if (invalidWeightRows.length > 10) {
+          console.log(`   ... and ${invalidWeightRows.length - 10} more`);
+        }
+      }
+      console.log("=".repeat(80) + "\n");
+      
+      addLog(invalidWeights > 0 ? 'warning' : 'success', 
+        `✓ Validation complete: ${validWeights} valid, ${nullWeights} empty, ${invalidWeights} invalid`);
+      
+      if (invalidWeights > 0) {
+        addLog('warning', `⚠️ ${invalidWeights} rows have invalid weight values - these will be imported as NULL`);
+      }
+
+      // Step 3: Import to database
+      console.log("\n" + "=".repeat(80));
+      console.log("🔄 STEP 3: IMPORTING FILAMENT DATA");
+      console.log("=".repeat(80));
+      addLog('info', '🔄 Step 3: Starting database import...');
 
       setProgress({ current: 0, total: rows.length, errors: 0, warnings: 0 });
 
