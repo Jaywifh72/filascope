@@ -433,9 +433,11 @@ const FilamentDetail = () => {
                     <div>
                       <span className="text-sm text-muted-foreground block mb-2">Use Cases</span>
                       <div className="flex flex-wrap gap-2">
-                        {filament.use_case_tags.map((tag, index) => (
-                          <Badge key={index} variant="secondary">{tag}</Badge>
-                        ))}
+                        {filament.use_case_tags
+                          .filter((tag) => !tag.startsWith('http') && !tag.startsWith('www.'))
+                          .map((tag, index) => (
+                            <Badge key={index} variant="secondary">{tag}</Badge>
+                          ))}
                       </div>
                     </div>
                   )}
@@ -443,9 +445,11 @@ const FilamentDetail = () => {
                     <div>
                       <span className="text-sm text-muted-foreground block mb-2">Industries</span>
                       <div className="flex flex-wrap gap-2">
-                        {filament.industry_tags.map((tag, index) => (
-                          <Badge key={index} variant="outline">{tag}</Badge>
-                        ))}
+                        {filament.industry_tags
+                          .filter((tag) => !tag.startsWith('http') && !tag.startsWith('www.'))
+                          .map((tag, index) => (
+                            <Badge key={index} variant="outline">{tag}</Badge>
+                          ))}
                       </div>
                     </div>
                   )}
