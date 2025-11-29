@@ -103,8 +103,8 @@ const Finder = () => {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left Sidebar - Hidden on mobile, visible on larger screens */}
-      <aside className="hidden lg:block w-72 border-r border-border bg-card/50 backdrop-blur-sm p-6 space-y-6 sticky top-0 h-screen overflow-y-auto">
+      {/* Left Sidebar */}
+      <aside className="w-72 border-r border-border bg-card/50 backdrop-blur-sm p-6 space-y-6 sticky top-0 h-screen overflow-y-auto shrink-0">
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <span>🖨️</span> Your Printer
@@ -263,7 +263,10 @@ const Finder = () => {
                         <img
                           src={filament.featured_image}
                           alt={filament.product_title}
-                          className="w-16 h-16 rounded-md object-cover flex-shrink-0 border border-border"
+                          className="w-16 h-16 rounded-md object-cover flex-shrink-0 border border-border bg-muted"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
                       )}
                       <div className="min-w-0 flex-1">
@@ -331,7 +334,7 @@ const Finder = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2 self-start lg:self-center">
+                    <div className="flex flex-wrap gap-2 self-start lg:self-center">
                       {filament.product_url && (
                         <Button
                           size="sm"
@@ -340,8 +343,21 @@ const Finder = () => {
                           asChild
                         >
                           <a href={filament.product_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="w-4 h-4 mr-1" />
-                            <span className="hidden sm:inline">View</span>
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            <span className="text-xs">Buy at Store</span>
+                          </a>
+                        </Button>
+                      )}
+                      {filament.amazon_link_us && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                          asChild
+                        >
+                          <a href={filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            <span className="text-xs">Amazon</span>
                           </a>
                         </Button>
                       )}
