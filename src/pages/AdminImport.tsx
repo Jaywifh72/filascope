@@ -296,7 +296,7 @@ const AdminImport = () => {
           }
 
           try {
-            // Map CSV columns to database fields
+            // Map CSV columns to database fields with detailed logging
             const filamentData: any = {
               product_id: row['Product ID'] || null,
               product_title: productTitle.trim(),
@@ -372,6 +372,20 @@ const AdminImport = () => {
               // Other
               food_contact_rating: row['food_contact_rating'] || null,
             };
+
+            // Log sample field values for debugging overflow issues
+            if (rowNum <= 5 || rowNum % 500 === 0) {
+              const debugFields = ['net_weight_g', 'variant_price', 'tensile_modulus_xy_mpa'];
+              const debugInfo: any = {};
+              debugFields.forEach(field => {
+                const csvKey = field === 'variant_price' ? 'Variant Price' : field;
+                debugInfo[field] = {
+                  raw: row[csvKey],
+                  parsed: filamentData[field]
+                };
+              });
+              console.log(`Row ${rowNum} sample values:`, debugInfo);
+            }
 
             // Remove null/undefined/empty values
             Object.keys(filamentData).forEach(key => {
