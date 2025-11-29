@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
 
     const { filament_ids } = await req.json();
     
-    console.log(`Fetching prices for ${filament_ids?.length || 'all'} filaments`);
+    console.log(`Fetching prices for ${filament_ids?.length || 'ALL'} filaments`);
 
     // Fetch filaments that need price updates
     let query = supabaseService
@@ -214,7 +214,8 @@ Deno.serve(async (req) => {
     if (filament_ids && filament_ids.length > 0) {
       query = query.in('id', filament_ids);
     } else {
-      query = query.limit(50);
+      // Fetch ALL filaments when no specific IDs provided
+      query = query.limit(200); // Process in batches of 200
     }
 
     const { data: filaments, error: fetchError } = await query;

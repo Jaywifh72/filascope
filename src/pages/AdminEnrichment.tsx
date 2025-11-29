@@ -368,18 +368,22 @@ const AdminEnrichment = () => {
 
   const [isFetchingPrices, setIsFetchingPrices] = useState(false);
   
-  const handleFetchPrices = async (filamentIds?: string[]) => {
+  const handleMasterFetchPrices = async () => {
     setIsFetchingPrices(true);
     try {
       const { data, error } = await supabase.functions.invoke('fetch-prices', {
-        body: { filament_ids: filamentIds || filaments.map(f => f.id) },
+        body: { filament_ids: null }, // Fetch ALL filaments
       });
       
       if (error) throw error;
       
+      const weightInfo = data.weights_updated > 0 
+        ? ` and ${data.weights_updated} weights` 
+        : '';
+      
       toast({
-        title: "Prices updated",
-        description: `Updated ${data.updated} prices from ${data.processed} products`,
+        title: "Master price fetch complete",
+        description: `Updated ${data.updated} prices${weightInfo} from ${data.processed} products. Found ${data.prices.length} total price points.`,
       });
       
       // Refresh the list
@@ -387,7 +391,7 @@ const AdminEnrichment = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to fetch prices from product URLs",
+        description: error.message || "Failed to fetch prices and weights from all product URLs",
         variant: "destructive",
       });
     } finally {
@@ -395,31 +399,9 @@ const AdminEnrichment = () => {
     }
   };
 
-  const handleFetchAllPrices = async () => {
-    setIsFetchingPrices(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('fetch-prices', {
-        body: { filament_ids: null },
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Database price update complete",
-        description: `Updated ${data.updated} prices from ${data.processed} products`,
-      });
-      
-      // Refresh the list
-      fetchFilamentsNeedingWeight();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to run database price update",
-        variant: "destructive",
-      });
-    } finally {
-      setIsFetchingPrices(false);
-    }
+  const calculatePricePerKg = (price: number, weightG: number | null): number | null => {
+    if (!weightG || weightG <= 0) return null;
+    return (price / weightG) * 1000;
   };
 
   if (loading || isLoading) {
@@ -452,35 +434,28 @@ const AdminEnrichment = () => {
           {filaments.length > 0 && (
             <div className="flex gap-2">
               <Button 
+                size="lg"
+                onClick={handleMasterFetchPrices}
+                disabled={isFetchingPrices}
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+              >
+                <Download className="w-5 h-5 mr-2" />
+                {isFetchingPrices ? "Fetching All Data..." : "Fetch All Prices & Weights"}
+              </Button>
+              <Button 
                 variant="secondary" 
                 onClick={handleServerEstimate} 
                 disabled={isSaving}
               >
                 <TrendingUp className="w-4 h-4 mr-2" />
-                Run Database Estimation
+                Estimate Weights
               </Button>
               <Button 
                 variant="outline" 
                 onClick={handleBulkEstimate} 
                 disabled={isSaving}
               >
-                Auto-Estimate Visible
-              </Button>
-              <Button 
-                variant="secondary" 
-                onClick={() => handleFetchPrices()}
-                disabled={isFetchingPrices || filaments.length === 0}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {isFetchingPrices ? "Fetching..." : "Fetch Prices (Visible)"}
-              </Button>
-              <Button 
-                variant="secondary" 
-                onClick={handleFetchAllPrices}
-                disabled={isFetchingPrices}
-              >
-                <Database className="w-4 h-4 mr-2" />
-                {isFetchingPrices ? "Fetching..." : "Fetch All Prices"}
+                Auto-Fill Visible
               </Button>
               <Button 
                 onClick={handleBulkSave} 
@@ -496,10 +471,10 @@ const AdminEnrichment = () => {
         {/* Info Alert */}
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Automated Weight Estimation</AlertTitle>
+          <AlertTitle>Master Price & Weight Fetching</AlertTitle>
           <AlertDescription>
-            Weights are calculated using material density and filament diameter. Click "Auto-Estimate All" to fill in all weights automatically based on physics calculations, 
-            or use "Use Suggested" for individual items. All estimates can be manually adjusted before saving.
+            Click "Fetch All Prices & Weights" to automatically scrape prices and weight data from all product URLs (brand stores and Amazon links). 
+            The system will calculate price per KG for each filament. Weight estimates can be further refined using material density calculations.
           </AlertDescription>
         </Alert>
 
@@ -539,6 +514,8 @@ const AdminEnrichment = () => {
                 filament.material,
                 suggestedWeight
               );
+              const currentWeight = weights[filament.id] ? parseFloat(weights[filament.id]) : filament.net_weight_g;
+              const pricePerKg = calculatePricePerKg(filament.variant_price, currentWeight);
               
               return (
                 <Card key={filament.id} className="p-4">
@@ -558,9 +535,14 @@ const AdminEnrichment = () => {
                     </div>
 
                     {/* Price Info */}
-                    <div className="text-sm">
+                    <div className="text-sm min-w-[120px]">
                       <p className="text-muted-foreground">Price:</p>
                       <p className="font-semibold text-foreground">${filament.variant_price.toFixed(2)}</p>
+                      {pricePerKg && (
+                        <p className="text-xs text-primary mt-1">
+                          ${pricePerKg.toFixed(2)}/kg
+                        </p>
+                      )}
                     </div>
 
                     {/* Confidence Score */}
