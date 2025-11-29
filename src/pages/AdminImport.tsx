@@ -219,13 +219,22 @@ const AdminImport = () => {
   const parseNumber = (value: any): number | null => {
     if (value === null || value === undefined || value === '') return null;
     const parsed = parseFloat(value);
-    return isNaN(parsed) ? null : parsed;
+    if (isNaN(parsed)) return null;
+    // Check for overflow - PostgreSQL numeric type can handle very large values
+    if (!isFinite(parsed)) return null;
+    return parsed;
   };
 
   const parseIntSafe = (value: any): number | null => {
     if (value === null || value === undefined || value === '') return null;
     const parsed = parseInt(value);
-    return isNaN(parsed) ? null : parsed;
+    if (isNaN(parsed)) return null;
+    // PostgreSQL integer range: -2147483648 to 2147483647
+    if (parsed < -2147483648 || parsed > 2147483647) {
+      console.warn(`Integer overflow for value: ${value} (parsed as ${parsed})`);
+      return null;
+    }
+    return parsed;
   };
 
   const parseBool = (value: any): boolean | null => {
@@ -393,8 +402,19 @@ const AdminImport = () => {
               .upsert(filamentData, { onConflict: "product_id" });
 
             if (error) {
-              console.error(`❌ Row ${rowNum} (${productTitle}):`, error.message);
-              errors.push(`Row ${rowNum} (${productTitle}): ${error.message}`);
+              console.error(`❌ Row ${rowNum} (${productTitle}):`, {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+              });
+              
+              // Enhanced error message with field information
+              let errorMsg = `Row ${rowNum} (${productTitle}): ${error.message}`;
+              if (error.details) errorMsg += ` | Details: ${error.details}`;
+              if (error.hint) errorMsg += ` | Hint: ${error.hint}`;
+              
+              errors.push(errorMsg);
               setProgress(prev => ({ ...prev, current: rowIndex + 1, errors: prev.errors + 1 }));
             } else {
               console.log(`✅ Row ${rowNum} (${productTitle}) imported successfully`);
