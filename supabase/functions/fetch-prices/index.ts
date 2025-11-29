@@ -12,6 +12,53 @@ interface PriceData {
   source: string;
 }
 
+interface WeightData {
+  weight_g: number;
+  source: string;
+}
+
+// Extract weight from HTML content (returns grams)
+function extractWeight(html: string, url: string): number | null {
+  console.log(`Extracting weight from ${url}`);
+  
+  const weightPatterns = [
+    // Match patterns like "1kg", "1000g", "1.75 kg", "2.2 lbs"
+    /(?:net\s+)?weight[:\s]+([0-9.]+)\s*(kg|g|lbs?|pounds?)/i,
+    /([0-9.]+)\s*(kg|g|lbs?|pounds?)\s+(?:net\s+)?(?:weight|spool)/i,
+    /"weight"[:\s"]+([0-9.]+)\s*(kg|g|lbs?|pounds?)/i,
+    /data-weight[=:"]+([0-9.]+)\s*(kg|g|lbs?|pounds?)/i,
+    /<span[^>]*weight[^>]*>.*?([0-9.]+)\s*(kg|g|lbs?|pounds?)/is,
+  ];
+  
+  for (const pattern of weightPatterns) {
+    const match = html.match(pattern);
+    if (match) {
+      const value = parseFloat(match[1]);
+      const unit = match[2].toLowerCase();
+      
+      if (!isNaN(value) && value > 0) {
+        let weightInGrams = value;
+        
+        // Convert to grams
+        if (unit.startsWith('kg')) {
+          weightInGrams = value * 1000;
+        } else if (unit.startsWith('lb') || unit.startsWith('pound')) {
+          weightInGrams = value * 453.592;
+        }
+        
+        // Sanity check: filament spools are typically 250g-5000g
+        if (weightInGrams >= 100 && weightInGrams <= 10000) {
+          console.log(`Found weight: ${weightInGrams}g (original: ${value} ${unit})`);
+          return Math.round(weightInGrams);
+        }
+      }
+    }
+  }
+  
+  console.log('No weight found in HTML');
+  return null;
+}
+
 // Extract price from HTML content
 function extractPrice(html: string, url: string): number | null {
   console.log(`Extracting price from ${url}`);
@@ -64,14 +111,14 @@ function extractPrice(html: string, url: string): number | null {
   return null;
 }
 
-// Fetch price from a URL
-async function fetchPriceFromUrl(url: string | null, region: string): Promise<number | null> {
+// Fetch price and weight from a URL
+async function fetchDataFromUrl(url: string | null, region: string): Promise<{ price: number | null; weight: number | null }> {
   if (!url || url === 'null' || url.length < 10) {
-    return null;
+    return { price: null, weight: null };
   }
   
   try {
-    console.log(`Fetching ${region} price from: ${url}`);
+    console.log(`Fetching ${region} data from: ${url}`);
     
     const response = await fetch(url, {
       headers: {
@@ -82,14 +129,17 @@ async function fetchPriceFromUrl(url: string | null, region: string): Promise<nu
     
     if (!response.ok) {
       console.error(`Failed to fetch ${url}: ${response.status}`);
-      return null;
+      return { price: null, weight: null };
     }
     
     const html = await response.text();
-    return extractPrice(html, url);
+    return {
+      price: extractPrice(html, url),
+      weight: extractWeight(html, url)
+    };
   } catch (error) {
-    console.error(`Error fetching price from ${url}:`, error);
-    return null;
+    console.error(`Error fetching data from ${url}:`, error);
+    return { price: null, weight: null };
   }
 }
 
@@ -180,6 +230,7 @@ Deno.serve(async (req) => {
       updated: 0,
       failed: 0,
       prices: [] as PriceData[],
+      weights_updated: 0,
     };
 
     for (const filament of filaments || []) {
@@ -187,6 +238,7 @@ Deno.serve(async (req) => {
       console.log(`Processing: ${filament.product_title}`);
       
       const prices: PriceData[] = [];
+      let extractedWeight: number | null = null;
       
       // Fetch from all available sources
       const sources = [
@@ -198,7 +250,8 @@ Deno.serve(async (req) => {
 
       for (const { url, region, source } of sources) {
         if (url && url !== 'null') {
-          const price = await fetchPriceFromUrl(url, region);
+          const { price, weight } = await fetchDataFromUrl(url, region);
+          
           if (price !== null) {
             prices.push({
               filament_id: filament.id,
@@ -207,40 +260,77 @@ Deno.serve(async (req) => {
               source,
             });
           }
+          
+          // Store weight from first source that has it (prioritize brand store)
+          if (weight !== null && extractedWeight === null) {
+            extractedWeight = weight;
+          }
+          
           // Add delay to avoid rate limiting
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
 
-      if (prices.length > 0) {
+      if (prices.length > 0 || extractedWeight !== null) {
+        let hasError = false;
+        
         // Store prices in price_history
-        const { error: priceError } = await supabaseService
-          .from('price_history')
-          .insert(prices);
+        if (prices.length > 0) {
+          const { error: priceError } = await supabaseService
+            .from('price_history')
+            .insert(prices);
 
-        if (priceError) {
-          console.error(`Failed to insert prices for ${filament.id}:`, priceError);
-          results.failed++;
-        } else {
+          if (priceError) {
+            console.error(`Failed to insert prices for ${filament.id}:`, priceError);
+            hasError = true;
+          } else {
+            results.prices.push(...prices);
+            console.log(`Updated ${prices.length} prices for ${filament.product_title}`);
+          }
+        }
+        
+        // Update filament with price and/or weight
+        const updates: { variant_price?: number; net_weight_g?: number } = {};
+        
+        if (prices.length > 0) {
           // Update variant_price with US price (prioritize brand store, then Amazon)
           const usPrice = prices.find(p => p.region === 'US' && p.source === 'brand')?.price ||
                          prices.find(p => p.region === 'US')?.price ||
                          prices[0]?.price;
-
           if (usPrice) {
-            await supabaseService
-              .from('filaments')
-              .update({ variant_price: usPrice })
-              .eq('id', filament.id);
+            updates.variant_price = usPrice;
           }
-
+        }
+        
+        if (extractedWeight !== null) {
+          updates.net_weight_g = extractedWeight;
+          console.log(`Found weight: ${extractedWeight}g for ${filament.product_title}`);
+        }
+        
+        if (Object.keys(updates).length > 0) {
+          const { error: updateError } = await supabaseService
+            .from('filaments')
+            .update(updates)
+            .eq('id', filament.id);
+            
+          if (updateError) {
+            console.error(`Failed to update filament ${filament.id}:`, updateError);
+            hasError = true;
+          } else {
+            if (extractedWeight !== null) {
+              results.weights_updated++;
+            }
+          }
+        }
+        
+        if (!hasError) {
           results.updated++;
-          results.prices.push(...prices);
-          console.log(`Updated ${prices.length} prices for ${filament.product_title}`);
+        } else {
+          results.failed++;
         }
       } else {
         results.failed++;
-        console.log(`No prices found for ${filament.product_title}`);
+        console.log(`No data found for ${filament.product_title}`);
       }
     }
 
