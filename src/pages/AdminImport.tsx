@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, ArrowLeft, Shield, AlertCircle } from "lucide-react";
+import { Upload, FileText, ArrowLeft, Shield, AlertCircle, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
@@ -84,6 +84,212 @@ const AdminImport = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const downloadTemplate = () => {
+    // CSV helper function to escape fields containing commas, quotes, or newlines
+    const escapeCSVField = (field: string): string => {
+      if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+        return `"${field.replace(/"/g, '""')}"`;
+      }
+      return field;
+    };
+
+    // Define all column headers
+    const headers = [
+      'product_id',
+      'product_title',
+      'product_handle',
+      'vendor',
+      'material',
+      'featured_image',
+      'variant_sku',
+      'product_url',
+      'amazon_link_us',
+      'amazon_link_uk',
+      'amazon_link_de',
+      'tds_url',
+      'color_hex',
+      'color_family',
+      'finish_type',
+      'diameter_nominal_mm',
+      'net_weight_g',
+      'variant_price',
+      'density_g_cm3',
+      'nozzle_temp_min_c',
+      'nozzle_temp_max_c',
+      'nozzle_temp_sweetspot_c',
+      'bed_temp_min_c',
+      'bed_temp_max_c',
+      'print_speed_max_mms',
+      'fan_min_percent',
+      'fan_max_percent',
+      'tensile_strength_xy_mpa',
+      'tensile_modulus_xy_mpa',
+      'elongation_break_xy_percent',
+      'flexural_strength_mpa',
+      'shore_hardness_d',
+      'tg_c',
+      'melt_temp_c',
+      'spool_outer_d_mm',
+      'spool_width_mm',
+      'recommended_nozzle_type',
+      'moisture_sensitivity_level',
+      'moisture_care',
+      'nozzle_care',
+      'drying_temp_c',
+      'drying_time_hours',
+      'is_nozzle_abrasive',
+      'spool_ams_fit',
+      'variant_available',
+      'ease_of_printing_score',
+      'dimensional_accuracy_score',
+      'strength_index',
+      'printability_index',
+      'value_score',
+      'use_case_tags',
+      'industry_tags',
+      'food_contact_rating'
+    ];
+
+    // Example rows with proper data types
+    const exampleRows = [
+      [
+        'PROD001',
+        'Example PLA Filament 1.75mm White',
+        'pla-white-1-75mm',
+        'Example Manufacturer',
+        'PLA',
+        'https://example.com/images/pla-white.jpg',
+        'SKU-PLA-WHT-175',
+        'https://example.com/products/pla-white',
+        'https://www.amazon.com/dp/EXAMPLE1',
+        'https://www.amazon.co.uk/dp/EXAMPLE1',
+        'https://www.amazon.de/dp/EXAMPLE1',
+        'https://example.com/tds/pla-white.pdf',
+        '#FFFFFF',
+        'White',
+        'Matte',
+        '1.75',
+        '1000',
+        '19.99',
+        '1.24',
+        '190',
+        '220',
+        '205',
+        '50',
+        '60',
+        '60',
+        '0',
+        '100',
+        '50',
+        '3500',
+        '6',
+        '45',
+        '70',
+        '60',
+        '180',
+        '200',
+        '63',
+        'Brass',
+        'Low',
+        'Store in sealed bag with desiccant',
+        'Standard brass nozzle compatible',
+        '50',
+        '4',
+        'false',
+        'true',
+        'true',
+        '9',
+        '8',
+        '7.5',
+        '8.5',
+        '8.0',
+        'Prototypes;Models;Decorative',
+        'Education;Hobbyist;Professional',
+        'not_rated'
+      ],
+      [
+        'PROD002',
+        'Example PETG Filament 1.75mm Black',
+        'petg-black-1-75mm',
+        'Example Manufacturer',
+        'PETG',
+        'https://example.com/images/petg-black.jpg',
+        'SKU-PETG-BLK-175',
+        'https://example.com/products/petg-black',
+        'https://www.amazon.com/dp/EXAMPLE2',
+        '',
+        '',
+        'https://example.com/tds/petg-black.pdf',
+        '#000000',
+        'Black',
+        'Glossy',
+        '1.75',
+        '1000',
+        '24.99',
+        '1.27',
+        '220',
+        '250',
+        '235',
+        '70',
+        '80',
+        '50',
+        '0',
+        '100',
+        '55',
+        '4100',
+        '53',
+        '160',
+        '51',
+        '',
+        '85',
+        '230',
+        '71',
+        'Brass',
+        'Medium',
+        'Dry before use at 65C for 4 hours',
+        'Brass nozzle recommended',
+        '65',
+        '4',
+        'false',
+        'true',
+        'true',
+        '7',
+        '9',
+        '8.5',
+        '8.0',
+        '7.5',
+        'Functional Parts;Outdoor Use',
+        'Professional;Industrial',
+        'approved'
+      ]
+    ];
+
+    // Build CSV content
+    let csvContent = headers.map(escapeCSVField).join(',') + '\n';
+    
+    exampleRows.forEach(row => {
+      csvContent += row.map(field => escapeCSVField(field.toString())).join(',') + '\n';
+    });
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'filament_import_template.csv');
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Template downloaded",
+      description: "CSV template downloaded successfully. Fill in your data and upload.",
+    });
   };
 
   const parseCSV = (text: string) => {
@@ -503,15 +709,21 @@ const AdminImport = () => {
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Button variant="ghost" asChild>
-              <Link to="/admin/dashboard">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Link>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" asChild>
+                <Link to="/admin/dashboard">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Link>
+              </Button>
+              <Shield className="w-8 h-8 text-primary" />
+              <h1 className="text-3xl font-bold text-foreground">CSV Import</h1>
+            </div>
+            <Button onClick={downloadTemplate} variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Download Template
             </Button>
-            <Shield className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">CSV Import</h1>
           </div>
           <p className="text-muted-foreground">
             Upload and manage filament data via CSV import
