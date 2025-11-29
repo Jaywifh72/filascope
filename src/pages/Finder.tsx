@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const Finder = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [materialFilter, setMaterialFilter] = useState<string>("");
+  const [materialFilter, setMaterialFilter] = useState<string>("all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
 
   const { data: filaments, isLoading } = useQuery({
@@ -25,7 +25,7 @@ const Finder = () => {
         query = query.or(`product_title.ilike.%${searchTerm}%,vendor.ilike.%${searchTerm}%`);
       }
 
-      if (materialFilter) {
+      if (materialFilter && materialFilter !== "all") {
         query = query.eq("material", materialFilter);
       }
 
@@ -80,7 +80,7 @@ const Finder = () => {
                 <SelectValue placeholder="Material" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Materials</SelectItem>
+                <SelectItem value="all">All Materials</SelectItem>
                 {materials?.map((material) => (
                   <SelectItem key={material} value={material}>
                     {material}
@@ -89,12 +89,12 @@ const Finder = () => {
               </SelectContent>
             </Select>
 
-            {(searchTerm || materialFilter) && (
+            {(searchTerm || materialFilter !== "all") && (
               <Button
                 variant="outline"
                 onClick={() => {
                   setSearchTerm("");
-                  setMaterialFilter("");
+                  setMaterialFilter("all");
                 }}
               >
                 <X className="mr-2 h-4 w-4" />
