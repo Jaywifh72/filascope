@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -175,17 +175,122 @@ const AdminEnrichment = () => {
     }
   };
 
+  const getMaterialDensity = (material: string | null): number => {
+    // Material densities in g/cm³
+    const densities: { [key: string]: number } = {
+      'PLA': 1.24,
+      'PLA+': 1.24,
+      'PETG': 1.27,
+      'ABS': 1.04,
+      'ASA': 1.07,
+      'TPU': 1.21,
+      'Nylon': 1.14,
+      'PC': 1.20,
+      'PVA': 1.23,
+      'HIPS': 1.04,
+      'PP': 0.90,
+      'PVB': 1.08,
+      'PCTG': 1.23,
+      'Co-Polyester': 1.27,
+      // Composites (higher density due to additives)
+      'Carbon Fiber': 1.30,
+      'Wood Fill': 1.28,
+    };
+
+    if (!material) return 1.24; // Default to PLA density
+    
+    // Check for composite materials
+    if (material.includes('-CF') || material.includes('Carbon')) return 1.30;
+    if (material.includes('-GF') || material.includes('Glass')) return 1.35;
+    if (material.includes('Wood') || material.includes('Bamboo')) return 1.28;
+    
+    return densities[material] || 1.24;
+  };
+
+  const calculateEstimatedWeight = (diameter: number | null, material: string | null): number => {
+    // If no diameter, use standard 1kg
+    if (!diameter || diameter <= 0) return 1000;
+    
+    const density = getMaterialDensity(material);
+    
+    // Calculate weight for standard spool lengths
+    // Formula: Weight = π × (diameter/2)² × length × density
+    // For 1.75mm PLA (density 1.24), 1kg ≈ 330 meters
+    // We'll calculate based on this reference
+    
+    const radius_mm = diameter / 2;
+    const radius_cm = radius_mm / 10;
+    
+    // Standard reference: 1.75mm PLA at 1kg = ~330 meters
+    const referenceDiameter = 1.75;
+    const referenceDensity = 1.24;
+    const referenceWeight = 1000; // grams
+    const referenceLength = 330; // meters
+    
+    // Calculate cross-sectional area ratio
+    const areaRatio = Math.pow(diameter / referenceDiameter, 2);
+    
+    // Calculate density ratio
+    const densityRatio = density / referenceDensity;
+    
+    // Estimated weight for same length
+    const estimatedWeight = referenceWeight * areaRatio * densityRatio;
+    
+    // Round to nearest 50g
+    return Math.round(estimatedWeight / 50) * 50;
+  };
+
   const getSuggestedWeight = (diameter: number | null, material: string | null): number => {
-    // Standard 1kg spool weights based on common sizes
-    if (!diameter) return 1000;
+    const calculated = calculateEstimatedWeight(diameter, material);
     
-    // Most common is 1kg for 1.75mm
-    if (diameter >= 1.7 && diameter <= 1.8) return 1000;
+    // Ensure reasonable bounds (most spools are between 250g and 2000g)
+    if (calculated < 250) return 250;
+    if (calculated > 2000) return 1000;
     
-    // 2.85mm/3.0mm filament is sometimes 750g or 1kg
-    if (diameter >= 2.8 && diameter <= 3.0) return 1000;
+    return calculated;
+  };
+
+  const handleBulkEstimate = async () => {
+    const updates: { [key: string]: string } = {};
     
-    return 1000; // Default to 1kg
+    filaments.forEach(filament => {
+      if (!weights[filament.id]) {
+        const estimated = getSuggestedWeight(filament.diameter_nominal_mm, filament.material);
+        updates[filament.id] = estimated.toString();
+      }
+    });
+    
+    setWeights(prev => ({ ...prev, ...updates }));
+    
+    toast({
+      title: "Weights estimated",
+      description: `Generated ${Object.keys(updates).length} weight estimates based on material density and diameter`,
+    });
+  };
+
+  const handleServerEstimate = async () => {
+    setIsSaving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('estimate-weights');
+      
+      if (error) throw error;
+
+      toast({
+        title: "Server estimation completed",
+        description: data.message || `Updated ${data.updated} filaments`,
+      });
+
+      // Refresh the list
+      fetchFilamentsNeedingWeight();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to run server estimation",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (loading || isLoading) {
@@ -215,20 +320,40 @@ const AdminEnrichment = () => {
             </div>
           </div>
           {filaments.length > 0 && (
-            <Button onClick={handleBulkSave} disabled={isSaving || Object.keys(weights).length === 0}>
-              <Save className="w-4 h-4 mr-2" />
-              Save All ({Object.keys(weights).length})
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="secondary" 
+                onClick={handleServerEstimate} 
+                disabled={isSaving}
+              >
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Run Database Estimation
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleBulkEstimate} 
+                disabled={isSaving}
+              >
+                Auto-Estimate Visible
+              </Button>
+              <Button 
+                onClick={handleBulkSave} 
+                disabled={isSaving || Object.keys(weights).length === 0}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Save All ({Object.keys(weights).length})
+              </Button>
+            </div>
           )}
         </div>
 
         {/* Info Alert */}
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Why is this important?</AlertTitle>
+          <AlertTitle>Automated Weight Estimation</AlertTitle>
           <AlertDescription>
-            Adding weight data allows accurate price per kg calculations, making it easier for users to compare filament values.
-            Currently showing up to 50 filaments with pricing but missing weight data.
+            Weights are calculated using material density and filament diameter. Click "Auto-Estimate All" to fill in all weights automatically based on physics calculations, 
+            or use "Use Suggested" for individual items. All estimates can be manually adjusted before saving.
           </AlertDescription>
         </Alert>
 
@@ -290,10 +415,17 @@ const AdminEnrichment = () => {
                     {/* Weight Input */}
                     <div className="flex items-center gap-2">
                       <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">Weight (g)</label>
+                        <label className="text-xs text-muted-foreground">
+                          Weight (g)
+                          {filament.diameter_nominal_mm && (
+                            <span className="ml-2 text-xs text-primary">
+                              ({filament.diameter_nominal_mm}mm × {getMaterialDensity(filament.material).toFixed(2)} g/cm³)
+                            </span>
+                          )}
+                        </label>
                         <Input
                           type="number"
-                          placeholder={`Suggested: ${suggestedWeight}g`}
+                          placeholder={`Estimated: ${suggestedWeight}g`}
                           value={weights[filament.id] || ""}
                           onChange={(e) => handleWeightChange(filament.id, e.target.value)}
                           className="w-32"
@@ -306,8 +438,9 @@ const AdminEnrichment = () => {
                         variant="outline"
                         onClick={() => handleWeightChange(filament.id, suggestedWeight.toString())}
                         className="mt-5"
+                        title={`Calculated from ${filament.diameter_nominal_mm || 1.75}mm diameter and ${getMaterialDensity(filament.material).toFixed(2)} g/cm³ density`}
                       >
-                        Use Suggested
+                        Use Estimated
                       </Button>
                       <Button
                         size="sm"
