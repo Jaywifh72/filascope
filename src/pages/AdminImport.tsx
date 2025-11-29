@@ -243,50 +243,39 @@ const AdminImport = () => {
     return str === 'true' || str === '1' || str === 'yes';
   };
 
-  const parseWeight = (value: any, rowNum?: number): number | null => {
-    if (value === null || value === undefined || value === '') {
-      console.log(`⚠️ Row ${rowNum}: Empty weight value`);
-      return null;
-    }
+  // Normalize weight values: convert kg/g to numeric grams
+  const normalizeWeight = (value: any): string => {
+    if (value === null || value === undefined || value === '') return '';
     const str = String(value).trim().toLowerCase();
-    
-    console.log(`🔍 Row ${rowNum}: Parsing weight "${value}" (trimmed: "${str}")`);
     
     // Handle kg values (multiply by 1000)
     if (str.endsWith('kg')) {
       const num = parseFloat(str.slice(0, -2));
-      if (isNaN(num)) {
-        console.error(`❌ Row ${rowNum}: Failed to parse kg value: ${value}`);
-        return null;
-      }
-      const result = Math.round(num * 1000);
-      if (result < -2147483648 || result > 2147483647) {
-        console.error(`❌ Row ${rowNum}: Weight overflow for value: ${value} (parsed as ${result})`);
-        return null;
-      }
-      console.log(`✅ Row ${rowNum}: Parsed "${value}" as ${result}g`);
-      return result;
+      if (isNaN(num)) return '';
+      return String(Math.round(num * 1000));
     }
     
     // Handle g values (strip the 'g')
     if (str.endsWith('g')) {
       const num = parseFloat(str.slice(0, -1));
-      if (isNaN(num)) {
-        console.error(`❌ Row ${rowNum}: Failed to parse g value: ${value}`);
-        return null;
-      }
-      const result = Math.round(num);
-      if (result < -2147483648 || result > 2147483647) {
-        console.error(`❌ Row ${rowNum}: Weight overflow for value: ${value} (parsed as ${result})`);
-        return null;
-      }
-      console.log(`✅ Row ${rowNum}: Parsed "${value}" as ${result}g`);
-      return result;
+      if (isNaN(num)) return '';
+      return String(Math.round(num));
     }
     
-    // If no unit, try to parse as number
-    console.log(`⚠️ Row ${rowNum}: No unit found in "${value}", trying to parse as plain number`);
-    return parseIntSafe(str);
+    // Return as-is if no unit
+    return str;
+  };
+
+  const parseWeight = (value: any, rowNum?: number): number | null => {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const str = String(value).trim();
+    const parsed = parseIntSafe(str);
+    if (parsed === null) {
+      console.error(`❌ Row ${rowNum}: Failed to parse weight value: ${value}`);
+    }
+    return parsed;
   };
 
   const handleUpload = async () => {
@@ -312,7 +301,21 @@ const AdminImport = () => {
 
       console.log(`🚀 Starting NEW import of ${rows.length} rows...`);
       console.log("📋 CSV Headers:", Object.keys(rows[0]));
-      console.log("📝 Sample row (first 5 fields):", {
+      
+      // Step 1: Normalize weight values across all rows
+      console.log("🔄 Step 1: Normalizing weight values (kg/g → numeric grams)...");
+      rows.forEach((row, idx) => {
+        const originalWeight = row['Variant Weight Unit'];
+        if (originalWeight) {
+          const normalizedWeight = normalizeWeight(originalWeight);
+          row['Variant Weight Unit'] = normalizedWeight;
+          if (idx < 5) {
+            console.log(`  Row ${idx + 2}: "${originalWeight}" → "${normalizedWeight}"`);
+          }
+        }
+      });
+      
+      console.log("📝 Sample row after normalization:", {
         'Product Title': rows[0]['Product Title'],
         'Vendor': rows[0]['Vendor'],
         'Material': rows[0]['Material'],
