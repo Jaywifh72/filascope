@@ -273,16 +273,12 @@ const Finder = () => {
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-foreground truncate">{filament.product_title}</p>
                         <p className="text-sm text-muted-foreground">{filament.vendor}</p>
-                        <div className="flex items-center gap-3 mt-1">
-                          {filament.material && (
-                            <Badge variant="outline" className="border-primary/30 text-primary text-xs">
-                              {filament.material}
-                            </Badge>
-                          )}
-                          {filament.diameter_nominal_mm && (
-                            <span className="text-xs text-muted-foreground">{filament.diameter_nominal_mm}mm</span>
-                          )}
-                        </div>
+                        {filament.material && (
+                          <p className="text-xs text-primary mt-0.5">{filament.material}</p>
+                        )}
+                        {filament.diameter_nominal_mm && (
+                          <span className="text-xs text-muted-foreground">{filament.diameter_nominal_mm}mm</span>
+                        )}
                       </div>
                     </div>
 
