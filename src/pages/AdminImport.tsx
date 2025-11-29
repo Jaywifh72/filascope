@@ -574,217 +574,240 @@ const AdminImport = () => {
         return value === 'true' || value === '1' || value === 'TRUE' || value === 'True';
       };
 
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        
-        // Extract product_title with multiple variations
-        const productTitle = row.product_title || row.Product_Title || row["Product Title"] || row.title;
-        
-        // Skip rows without product_title (required field)
-        if (!productTitle || productTitle.trim() === "") {
-          errors.push(`Row ${i + 2}: Missing required field 'product_title'`);
-          setProgress(prev => ({ ...prev, current: i + 1, errors: prev.errors + 1 }));
-          continue;
-        }
+      console.log(`Starting import of ${rows.length} rows...`);
 
-        try {
-          // Prepare validation data with material extraction
-          let materialValue = row.material || row.Material || null;
-          
-          // CRITICAL: Extract material from title if not provided in CSV
-          if (!materialValue || materialValue.trim() === '') {
-            materialValue = extractMaterialFromTitle(productTitle);
-            if (materialValue) {
-              warnings.push(`Row ${i + 2} (${productTitle}): Material not in CSV, extracted "${materialValue}" from title`);
-            }
-          }
-          
-          const validationData = {
-            product_title: productTitle,
-            material: materialValue,
-            finish_type: row.finish_type || row.Finish_Type || null,
-            color_family: row.color_family || row.Color_Family || null,
-            amazon_link_us: row.amazon_link_us || row.Amazon_Link_US || row["Amazon Link US"] || null,
-            amazon_link_uk: row.amazon_link_uk || row.Amazon_Link_UK || row["Amazon Link UK"] || null,
-            amazon_link_de: row.amazon_link_de || row.Amazon_Link_DE || row["Amazon Link DE"] || null,
-            product_url: row.product_url || row.Product_URL || row["Product URL"] || null,
-            tds_url: row.tds_url || row.TDS_URL || row["TDS URL"] || null,
-          };
+      // Process ALL rows in batches to avoid timeout and ensure complete processing
+      const BATCH_SIZE = 50;
+      const batches = [];
+      
+      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+        batches.push(rows.slice(i, Math.min(i + BATCH_SIZE, rows.length)));
+      }
 
-          // Validate the row data
-          const validationResult = filamentRowSchema.safeParse(validationData);
+      console.log(`Split into ${batches.length} batches of up to ${BATCH_SIZE} rows each`);
+
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+        const batchStartIdx = batchIndex * BATCH_SIZE;
+        
+        console.log(`Processing batch ${batchIndex + 1}/${batches.length} (rows ${batchStartIdx + 1}-${batchStartIdx + batch.length})`);
+
+        // Process each row in the batch
+        for (let i = 0; i < batch.length; i++) {
+          const globalRowIndex = batchStartIdx + i;
+          const row = batch[i];
           
-          if (!validationResult.success) {
-            const validationErrors = validationResult.error.errors.map(err => 
-              `${err.path.join('.')}: ${err.message}`
-            ).join('; ');
-            errors.push(`Row ${i + 2} (${productTitle}): Validation failed - ${validationErrors}`);
-            setProgress(prev => ({ ...prev, current: i + 1, errors: prev.errors + 1 }));
+          // Extract product_title with multiple variations
+          const productTitle = row.product_title || row.Product_Title || row["Product Title"] || row.title;
+          
+          // Skip rows without product_title (required field)
+          if (!productTitle || productTitle.trim() === "") {
+            errors.push(`Row ${globalRowIndex + 2}: Missing required field 'product_title'`);
+            setProgress(prev => ({ ...prev, current: globalRowIndex + 1, errors: prev.errors + 1 }));
             continue;
           }
 
-          // Check for data quality issues and provide warnings
-          let warningCount = 0;
-          if (isURL(validationData.material)) {
-            warnings.push(`Row ${i + 2} (${productTitle}): Material field contains URL "${validationData.material}" - moving to amazon_link_us`);
-            warningCount++;
-            // Auto-fix: move URL to correct field if amazon_link_us is empty
-            if (!validationData.amazon_link_us) {
-              validationData.amazon_link_us = validationData.material;
+          try {
+            // Prepare validation data with material extraction
+            let materialValue = row.material || row.Material || null;
+            
+            // CRITICAL: Extract material from title if not provided in CSV
+            if (!materialValue || materialValue.trim() === '') {
+              materialValue = extractMaterialFromTitle(productTitle);
+              if (materialValue) {
+                warnings.push(`Row ${globalRowIndex + 2} (${productTitle}): Material not in CSV, extracted "${materialValue}" from title`);
+              }
             }
-            validationData.material = null;
-          }
           
-          if (isURL(validationData.finish_type)) {
-            warnings.push(`Row ${i + 2} (${productTitle}): Finish type contains URL "${validationData.finish_type}" - removing`);
-            warningCount++;
-            validationData.finish_type = null;
-          }
-          
-          if (isURL(validationData.color_family)) {
-            warnings.push(`Row ${i + 2} (${productTitle}): Color family contains URL "${validationData.color_family}" - removing`);
-            warningCount++;
-            validationData.color_family = null;
-          }
-          
-          // CRITICAL: Warn if price exists but weight is missing
-          const priceValue = row.variant_price || row.Variant_Price || row["Variant Price"] || row.price || row.Price;
-          const weightValue = row.net_weight_g || row.Net_Weight_G || row["Net Weight (g)"] || row.net_weight || row.weight || row.Weight || row.spool_weight || row.Spool_Weight;
-          if (priceValue && !weightValue) {
-            warnings.push(`Row ${i + 2} (${productTitle}): Has price but missing weight - cannot calculate price per kg`);
-            warningCount++;
-          }
-          
-          // Update progress with warnings count
-          if (warningCount > 0) {
-            setProgress(prev => ({ ...prev, warnings: prev.warnings + warningCount }));
-          }
+            const validationData = {
+              product_title: productTitle,
+              material: materialValue,
+              finish_type: row.finish_type || row.Finish_Type || null,
+              color_family: row.color_family || row.Color_Family || null,
+              amazon_link_us: row.amazon_link_us || row.Amazon_Link_US || row["Amazon Link US"] || null,
+              amazon_link_uk: row.amazon_link_uk || row.Amazon_Link_UK || row["Amazon Link UK"] || null,
+              amazon_link_de: row.amazon_link_de || row.Amazon_Link_DE || row["Amazon Link DE"] || null,
+              product_url: row.product_url || row.Product_URL || row["Product URL"] || null,
+              tds_url: row.tds_url || row.TDS_URL || row["TDS URL"] || null,
+            };
 
-          // Download and upload image if present
-          const originalImageUrl = row.featured_image || row.Featured_Image || row["Featured Image"] || row.image || null;
-          let storedImageUrl = originalImageUrl;
-          
-          if (originalImageUrl && originalImageUrl.startsWith('http')) {
-            const productId = row.product_id || row.Product_ID || row["Product ID"] || `product-${i}`;
-            const uploadedUrl = await downloadAndUploadImage(originalImageUrl, productId);
-            if (uploadedUrl) {
-              storedImageUrl = uploadedUrl;
+            // Validate the row data
+            const validationResult = filamentRowSchema.safeParse(validationData);
+            
+            if (!validationResult.success) {
+              const validationErrors = validationResult.error.errors.map(err => 
+                `${err.path.join('.')}: ${err.message}`
+              ).join('; ');
+              errors.push(`Row ${globalRowIndex + 2} (${productTitle}): Validation failed - ${validationErrors}`);
+              setProgress(prev => ({ ...prev, current: globalRowIndex + 1, errors: prev.errors + 1 }));
+              continue;
             }
-          }
 
-          const filamentData: any = {
-            product_id: row.product_id || row.Product_ID || row["Product ID"] || null,
-            product_title: productTitle.trim(),
-            product_handle: row.product_handle || row.Product_Handle || row["Product Handle"] || null,
-            vendor: row.vendor || row.Vendor || null,
-            material: validationData.material,
-            featured_image: storedImageUrl,
-            variant_sku: row.variant_sku || row.Variant_SKU || row["Variant SKU"] || null,
-            product_url: validationData.product_url,
-            amazon_link_us: validationData.amazon_link_us,
-            amazon_link_uk: validationData.amazon_link_uk,
-            amazon_link_de: validationData.amazon_link_de,
-            tds_url: validationData.tds_url,
-            
-            // Numeric fields with safe parsing and overflow protection
-            density_g_cm3: parseNumber(row.density_g_cm3 || row.Density_g_cm3, 'density_g_cm3'),
-            tensile_strength_xy_mpa: parseNumber(row.tensile_strength_xy_mpa || row.Tensile_Strength_XY_MPa, 'tensile_strength_xy_mpa'),
-            tensile_modulus_xy_mpa: parseNumber(row.tensile_modulus_xy_mpa || row.Tensile_Modulus_XY_MPa, 'tensile_modulus_xy_mpa'),
-            elongation_break_xy_percent: parseNumber(row.elongation_break_xy_percent || row.Elongation_Break_XY_Percent, 'elongation_break_xy_percent'),
-            flexural_strength_mpa: parseNumber(row.flexural_strength_mpa || row.Flexural_Strength_MPa, 'flexural_strength_mpa'),
-            shore_hardness_d: parseNumber(row.shore_hardness_d || row.Shore_Hardness_D, 'shore_hardness_d'),
-            tg_c: parseNumber(row.tg_c || row.Tg_C, 'tg_c'),
-            melt_temp_c: parseNumber(row.melt_temp_c || row.Melt_Temp_C, 'melt_temp_c'),
-            
-            // Temperature settings
-            nozzle_temp_min_c: parseIntSafe(row.nozzle_temp_min_c || row.Nozzle_Temp_Min_C, 'nozzle_temp_min_c'),
-            nozzle_temp_max_c: parseIntSafe(row.nozzle_temp_max_c || row.Nozzle_Temp_Max_C, 'nozzle_temp_max_c'),
-            nozzle_temp_sweetspot_c: parseIntSafe(row.nozzle_temp_sweetspot_c || row.Nozzle_Temp_Sweetspot_C, 'nozzle_temp_sweetspot_c'),
-            bed_temp_min_c: parseIntSafe(row.bed_temp_min_c || row.Bed_Temp_Min_C, 'bed_temp_min_c'),
-            bed_temp_max_c: parseIntSafe(row.bed_temp_max_c || row.Bed_Temp_Max_C, 'bed_temp_max_c'),
-            
-            // Print settings
-            print_speed_max_mms: parseIntSafe(row.print_speed_max_mms || row.Print_Speed_Max_MMS, 'print_speed_max_mms'),
-            fan_min_percent: parseIntSafe(row.fan_min_percent || row.Fan_Min_Percent, 'fan_min_percent'),
-            fan_max_percent: parseIntSafe(row.fan_max_percent || row.Fan_Max_Percent, 'fan_max_percent'),
-            
-            // Physical properties - add more column name variations
-            diameter_nominal_mm: parseNumber(row.diameter_nominal_mm || row.Diameter_Nominal_MM || row["Diameter (mm)"] || row.diameter, 'diameter_nominal_mm'),
-            net_weight_g: parseIntSafe(
-              row.net_weight_g || 
-              row.Net_Weight_G || 
-              row["Net Weight (g)"] || 
-              row.net_weight || 
-              row.weight || 
-              row.Weight || 
-              row.spool_weight || 
-              row.Spool_Weight,
-              'net_weight_g'
-            ),
-            spool_outer_d_mm: parseNumber(row.spool_outer_d_mm || row.Spool_Outer_D_MM || row["Spool Outer Diameter (mm)"], 'spool_outer_d_mm'),
-            spool_width_mm: parseNumber(row.spool_width_mm || row.Spool_Width_MM || row["Spool Width (mm)"], 'spool_width_mm'),
-            
-            // Color properties
-            color_hex: row.color_hex || row.Color_Hex || null,
-            color_family: validationData.color_family,
-            finish_type: validationData.finish_type,
-            
-            // Care and compatibility
-            recommended_nozzle_type: row.recommended_nozzle_type || row.Recommended_Nozzle_Type || null,
-            moisture_sensitivity_level: row.moisture_sensitivity_level || row.Moisture_Sensitivity_Level || null,
-            moisture_care: row.moisture_care || row.Moisture_Care || null,
-            nozzle_care: row.nozzle_care || row.Nozzle_Care || null,
-            drying_temp_c: parseIntSafe(row.drying_temp_c || row.Drying_Temp_C, 'drying_temp_c'),
-            drying_time_hours: parseIntSafe(row.drying_time_hours || row.Drying_Time_Hours, 'drying_time_hours'),
-            
-            // Boolean flags with safe parsing
-            is_nozzle_abrasive: parseBool(row.is_nozzle_abrasive || row.Is_Nozzle_Abrasive),
-            spool_ams_fit: parseBool(row.spool_ams_fit || row.Spool_AMS_Fit),
-            variant_available: row.variant_available !== 'false' && row.Variant_Available !== 'false',
-            
-            // Scores
-            ease_of_printing_score: parseIntSafe(row.ease_of_printing_score || row.Ease_of_Printing_Score, 'ease_of_printing_score'),
-            dimensional_accuracy_score: parseIntSafe(row.dimensional_accuracy_score || row.Dimensional_Accuracy_Score, 'dimensional_accuracy_score'),
-            strength_index: parseNumber(row.strength_index || row.Strength_Index, 'strength_index'),
-            printability_index: parseNumber(row.printability_index || row.Printability_Index, 'printability_index'),
-            value_score: parseNumber(row.value_score || row.Value_Score, 'value_score'),
-            
-            // Price - use special price parser with validation
-            variant_price: parsePrice(row.variant_price || row.Variant_Price || row["Variant Price"] || row.price || row.Price, 'variant_price'),
-            
-            // Tags and arrays
-            use_case_tags: row.use_case_tags ? (row.use_case_tags.split(';').map((t: string) => t.trim()).filter((t: string) => t)) : null,
-            industry_tags: row.industry_tags ? (row.industry_tags.split(';').map((t: string) => t.trim()).filter((t: string) => t)) : null,
-            
-            // Other
-            food_contact_rating: row.food_contact_rating || row.Food_Contact_Rating || null,
-          };
-
-          // Remove null/undefined values
-          Object.keys(filamentData).forEach(key => {
-            if (filamentData[key] === null || filamentData[key] === undefined || filamentData[key] === '') {
-              delete filamentData[key];
+            // Check for data quality issues and provide warnings
+            let warningCount = 0;
+            if (isURL(validationData.material)) {
+              warnings.push(`Row ${globalRowIndex + 2} (${productTitle}): Material field contains URL "${validationData.material}" - moving to amazon_link_us`);
+              warningCount++;
+              // Auto-fix: move URL to correct field if amazon_link_us is empty
+              if (!validationData.amazon_link_us) {
+                validationData.amazon_link_us = validationData.material;
+              }
+              validationData.material = null;
             }
-          });
+            
+            if (isURL(validationData.finish_type)) {
+              warnings.push(`Row ${globalRowIndex + 2} (${productTitle}): Finish type contains URL "${validationData.finish_type}" - removing`);
+              warningCount++;
+              validationData.finish_type = null;
+            }
+            
+            if (isURL(validationData.color_family)) {
+              warnings.push(`Row ${globalRowIndex + 2} (${productTitle}): Color family contains URL "${validationData.color_family}" - removing`);
+              warningCount++;
+              validationData.color_family = null;
+            }
+            
+            // CRITICAL: Warn if price exists but weight is missing
+            const priceValue = row.variant_price || row.Variant_Price || row["Variant Price"] || row.price || row.Price;
+            const weightValue = row.net_weight_g || row.Net_Weight_G || row["Net Weight (g)"] || row.net_weight || row.weight || row.Weight || row.spool_weight || row.Spool_Weight;
+            if (priceValue && !weightValue) {
+              warnings.push(`Row ${globalRowIndex + 2} (${productTitle}): Has price but missing weight - cannot calculate price per kg`);
+              warningCount++;
+            }
+            
+            // Update progress with warnings count
+            if (warningCount > 0) {
+              setProgress(prev => ({ ...prev, warnings: prev.warnings + warningCount }));
+            }
 
-          const { error } = await supabase
-            .from("filaments")
-            .upsert(filamentData, { onConflict: "product_id" });
+            // Download and upload image if present
+            const originalImageUrl = row.featured_image || row.Featured_Image || row["Featured Image"] || row.image || null;
+            let storedImageUrl = originalImageUrl;
+            
+            if (originalImageUrl && originalImageUrl.startsWith('http')) {
+              const productId = row.product_id || row.Product_ID || row["Product ID"] || `product-${globalRowIndex}`;
+              const uploadedUrl = await downloadAndUploadImage(originalImageUrl, productId);
+              if (uploadedUrl) {
+                storedImageUrl = uploadedUrl;
+              }
+            }
 
-          if (error) {
-            // Log detailed error for debugging
-            console.error(`Import error for row ${i + 2}:`, error);
-            errors.push(`Row ${i + 2} (${productTitle}): ${error.message}${error.hint ? ` - ${error.hint}` : ''}`);
-            setProgress(prev => ({ ...prev, current: i + 1, errors: prev.errors + 1 }));
-          } else {
-            successCount++;
-            setProgress(prev => ({ ...prev, current: i + 1 }));
+            const filamentData: any = {
+              product_id: row.product_id || row.Product_ID || row["Product ID"] || null,
+              product_title: productTitle.trim(),
+              product_handle: row.product_handle || row.Product_Handle || row["Product Handle"] || null,
+              vendor: row.vendor || row.Vendor || null,
+              material: validationData.material,
+              featured_image: storedImageUrl,
+              variant_sku: row.variant_sku || row.Variant_SKU || row["Variant SKU"] || null,
+              product_url: validationData.product_url,
+              amazon_link_us: validationData.amazon_link_us,
+              amazon_link_uk: validationData.amazon_link_uk,
+              amazon_link_de: validationData.amazon_link_de,
+              tds_url: validationData.tds_url,
+              
+              // Numeric fields with safe parsing and overflow protection
+              density_g_cm3: parseNumber(row.density_g_cm3 || row.Density_g_cm3, 'density_g_cm3'),
+              tensile_strength_xy_mpa: parseNumber(row.tensile_strength_xy_mpa || row.Tensile_Strength_XY_MPa, 'tensile_strength_xy_mpa'),
+              tensile_modulus_xy_mpa: parseNumber(row.tensile_modulus_xy_mpa || row.Tensile_Modulus_XY_MPa, 'tensile_modulus_xy_mpa'),
+              elongation_break_xy_percent: parseNumber(row.elongation_break_xy_percent || row.Elongation_Break_XY_Percent, 'elongation_break_xy_percent'),
+              flexural_strength_mpa: parseNumber(row.flexural_strength_mpa || row.Flexural_Strength_MPa, 'flexural_strength_mpa'),
+              shore_hardness_d: parseNumber(row.shore_hardness_d || row.Shore_Hardness_D, 'shore_hardness_d'),
+              tg_c: parseNumber(row.tg_c || row.Tg_C, 'tg_c'),
+              melt_temp_c: parseNumber(row.melt_temp_c || row.Melt_Temp_C, 'melt_temp_c'),
+              
+              // Temperature settings
+              nozzle_temp_min_c: parseIntSafe(row.nozzle_temp_min_c || row.Nozzle_Temp_Min_C, 'nozzle_temp_min_c'),
+              nozzle_temp_max_c: parseIntSafe(row.nozzle_temp_max_c || row.Nozzle_Temp_Max_C, 'nozzle_temp_max_c'),
+              nozzle_temp_sweetspot_c: parseIntSafe(row.nozzle_temp_sweetspot_c || row.Nozzle_Temp_Sweetspot_C, 'nozzle_temp_sweetspot_c'),
+              bed_temp_min_c: parseIntSafe(row.bed_temp_min_c || row.Bed_Temp_Min_C, 'bed_temp_min_c'),
+              bed_temp_max_c: parseIntSafe(row.bed_temp_max_c || row.Bed_Temp_Max_C, 'bed_temp_max_c'),
+              
+              // Print settings
+              print_speed_max_mms: parseIntSafe(row.print_speed_max_mms || row.Print_Speed_Max_MMS, 'print_speed_max_mms'),
+              fan_min_percent: parseIntSafe(row.fan_min_percent || row.Fan_Min_Percent, 'fan_min_percent'),
+              fan_max_percent: parseIntSafe(row.fan_max_percent || row.Fan_Max_Percent, 'fan_max_percent'),
+              
+              // Physical properties - add more column name variations
+              diameter_nominal_mm: parseNumber(row.diameter_nominal_mm || row.Diameter_Nominal_MM || row["Diameter (mm)"] || row.diameter, 'diameter_nominal_mm'),
+              net_weight_g: parseIntSafe(
+                row.net_weight_g || 
+                row.Net_Weight_G || 
+                row["Net Weight (g)"] || 
+                row.net_weight || 
+                row.weight || 
+                row.Weight || 
+                row.spool_weight || 
+                row.Spool_Weight,
+                'net_weight_g'
+              ),
+              spool_outer_d_mm: parseNumber(row.spool_outer_d_mm || row.Spool_Outer_D_MM || row["Spool Outer Diameter (mm)"], 'spool_outer_d_mm'),
+              spool_width_mm: parseNumber(row.spool_width_mm || row.Spool_Width_MM || row["Spool Width (mm)"], 'spool_width_mm'),
+              
+              // Color properties
+              color_hex: row.color_hex || row.Color_Hex || null,
+              color_family: validationData.color_family,
+              finish_type: validationData.finish_type,
+              
+              // Care and compatibility
+              recommended_nozzle_type: row.recommended_nozzle_type || row.Recommended_Nozzle_Type || null,
+              moisture_sensitivity_level: row.moisture_sensitivity_level || row.Moisture_Sensitivity_Level || null,
+              moisture_care: row.moisture_care || row.Moisture_Care || null,
+              nozzle_care: row.nozzle_care || row.Nozzle_Care || null,
+              drying_temp_c: parseIntSafe(row.drying_temp_c || row.Drying_Temp_C, 'drying_temp_c'),
+              drying_time_hours: parseIntSafe(row.drying_time_hours || row.Drying_Time_Hours, 'drying_time_hours'),
+              
+              // Boolean flags with safe parsing
+              is_nozzle_abrasive: parseBool(row.is_nozzle_abrasive || row.Is_Nozzle_Abrasive),
+              spool_ams_fit: parseBool(row.spool_ams_fit || row.Spool_AMS_Fit),
+              variant_available: row.variant_available !== 'false' && row.Variant_Available !== 'false',
+              
+              // Scores
+              ease_of_printing_score: parseIntSafe(row.ease_of_printing_score || row.Ease_of_Printing_Score, 'ease_of_printing_score'),
+              dimensional_accuracy_score: parseIntSafe(row.dimensional_accuracy_score || row.Dimensional_Accuracy_Score, 'dimensional_accuracy_score'),
+              strength_index: parseNumber(row.strength_index || row.Strength_Index, 'strength_index'),
+              printability_index: parseNumber(row.printability_index || row.Printability_Index, 'printability_index'),
+              value_score: parseNumber(row.value_score || row.Value_Score, 'value_score'),
+              
+              // Price - use special price parser with validation
+              variant_price: parsePrice(row.variant_price || row.Variant_Price || row["Variant Price"] || row.price || row.Price, 'variant_price'),
+              
+              // Tags and arrays
+              use_case_tags: row.use_case_tags ? (row.use_case_tags.split(';').map((t: string) => t.trim()).filter((t: string) => t)) : null,
+              industry_tags: row.industry_tags ? (row.industry_tags.split(';').map((t: string) => t.trim()).filter((t: string) => t)) : null,
+              
+              // Other
+              food_contact_rating: row.food_contact_rating || row.Food_Contact_Rating || null,
+            };
+
+            // Remove null/undefined values
+            Object.keys(filamentData).forEach(key => {
+              if (filamentData[key] === null || filamentData[key] === undefined || filamentData[key] === '') {
+                delete filamentData[key];
+              }
+            });
+
+            const { error } = await supabase
+              .from("filaments")
+              .upsert(filamentData, { onConflict: "product_id" });
+
+            if (error) {
+              // Log detailed error for debugging
+              console.error(`Import error for row ${globalRowIndex + 2}:`, error);
+              errors.push(`Row ${globalRowIndex + 2} (${productTitle}): ${error.message}${error.hint ? ` - ${error.hint}` : ''}`);
+              setProgress(prev => ({ ...prev, current: globalRowIndex + 1, errors: prev.errors + 1 }));
+            } else {
+              successCount++;
+              setProgress(prev => ({ ...prev, current: globalRowIndex + 1 }));
+            }
+          } catch (rowError: any) {
+            errors.push(`Row ${globalRowIndex + 2}: ${rowError.message}`);
+            setProgress(prev => ({ ...prev, current: globalRowIndex + 1, errors: prev.errors + 1 }));
           }
-        } catch (rowError: any) {
-          errors.push(`Row ${i + 2}: ${rowError.message}`);
-          setProgress(prev => ({ ...prev, current: i + 1, errors: prev.errors + 1 }));
         }
       }
+
+      console.log(`Completed import: ${successCount} successful, ${errors.length} errors, ${warnings.length} warnings`);
 
       setImportResults({ success: successCount, errors, warnings });
 
