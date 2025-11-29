@@ -275,12 +275,14 @@ const AdminImport = () => {
   };
 
   const parseWeight = (value: any, rowNum?: number): number | null => {
+    // Silently return null for empty values (this is normal - not all products have weights)
     if (value === null || value === undefined || value === '') {
       return null;
     }
     const str = String(value).trim();
     const parsed = parseIntSafe(str);
     if (parsed === null) {
+      // Only log error if there was a value that failed to parse
       console.error(`❌ Row ${rowNum}: Failed to parse weight value: ${value}`);
     }
     return parsed;
@@ -327,6 +329,8 @@ const AdminImport = () => {
       
       rows.forEach((row, idx) => {
         const originalWeight = row['Variant Weight Unit'];
+        
+        // Always normalize the field, even if empty
         if (originalWeight) {
           totalWeights++;
           const str = String(originalWeight).trim().toLowerCase();
@@ -350,6 +354,9 @@ const AdminImport = () => {
           }
           
           row['Variant Weight Unit'] = normalizedWeight;
+        } else {
+          // Set empty/null weights to null explicitly so parseWeight handles them gracefully
+          row['Variant Weight Unit'] = null;
         }
       });
       
