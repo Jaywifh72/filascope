@@ -11,65 +11,6 @@ import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Helper function to extract material type from product title
-const extractMaterialFromTitle = (title: string): string | null => {
-  if (!title) return null;
-  
-  // Material extraction patterns - order matters (check specific before general)
-  // Composite materials first (most specific)
-  if (/ABS-GF/i.test(title)) return 'ABS-GF';
-  if (/ABS-CF/i.test(title)) return 'ABS-CF';
-  if (/PET-GF/i.test(title)) return 'PET-GF';
-  if (/PET-CF|PETG-CF/i.test(title)) return 'PETG-CF';
-  if (/PC-CF/i.test(title)) return 'PC-CF';
-  if (/PAHT-CF/i.test(title)) return 'PAHT-CF';
-  if (/PA-CF/i.test(title)) return 'PA-CF';
-  if (/PPS-CF/i.test(title)) return 'PPS-CF';
-  if (/PPS-GF/i.test(title)) return 'PPS-GF';
-  
-  // PLA variants
-  if (/PLA\+|PLA\s*PLUS/i.test(title)) return 'PLA+';
-  if (/\bPLA\b|^PLA/i.test(title)) return 'PLA';
-  
-  // Standard materials
-  if (/PETG/i.test(title)) return 'PETG';
-  if (/\bABS\b|^ABS/i.test(title)) return 'ABS';
-  if (/\bASA\b|^ASA|ASA\+/i.test(title)) return 'ASA';
-  if (/TPU|TPE|FLEXFILL/i.test(title)) return 'TPU';
-  if (/NYLON|PA\s|PA6|PA12/i.test(title)) return 'Nylon';
-  if (/PA11|PA-11/i.test(title)) return 'PA11';
-  if (/POLYCARBONATE|^PC\s|\sPC\s|\sPC$|PC-PBT|PC-FR/i.test(title)) return 'PC';
-  if (/PVA|POLYCAST/i.test(title)) return 'PVA';
-  if (/PVB|POLYSMOOTH/i.test(title)) return 'PVB';
-  if (/HIPS/i.test(title)) return 'HIPS';
-  if (/\bPP\b|POLYPROPYLENE/i.test(title)) return 'PP';
-  if (/PPS/i.test(title)) return 'PPS';
-  if (/CPE/i.test(title)) return 'CPE';
-  if (/PET\s|^PET$/i.test(title) && !/PETG|PETT/i.test(title)) return 'PET';
-  
-  // High-performance materials
-  if (/PEEK/i.test(title)) return 'PEEK';
-  if (/PEKK/i.test(title)) return 'PEKK';
-  if (/PPSU/i.test(title)) return 'PPSU';
-  if (/PSU/i.test(title) && !/PPSU/i.test(title)) return 'PSU';
-  if (/PEI|ULTEM/i.test(title)) return 'PEI';
-  if (/PEBA/i.test(title)) return 'PEBA';
-  if (/PETT/i.test(title)) return 'PETT';
-  if (/TRITAN|PCTG/i.test(title)) return 'PCTG';
-  if (/allPHA|PHA/i.test(title)) return 'PHA';
-  if (/VINYL|PVC/i.test(title)) return 'PVC';
-  
-  // Specialty/support materials
-  if (/POLYDISSOLVE|BREAKAWAY/i.test(title)) return 'Support';
-  if (/nGen|CO-POLYESTER|COPOLYESTER|RYNO/i.test(title)) return 'Co-Polyester';
-  if (/SEMIFLEX|SEMI-FLEXIBLE/i.test(title)) return 'Semi-Flex';
-  if (/NonOilen/i.test(title)) return 'NonOilen';
-  if (/TIMBERFILL|WOODFILL/i.test(title)) return 'Wood Fill';
-  if (/CARBON\s*FIBER/i.test(title)) return 'Carbon Fiber';
-  
-  return null;
-};
-
 // Validation schema for filament data
 const isURL = (value: string | null): boolean => {
   if (!value) return false;
@@ -77,40 +18,8 @@ const isURL = (value: string | null): boolean => {
 };
 
 const filamentRowSchema = z.object({
-  material: z.string().nullable().refine(
-    (val) => !val || !isURL(val),
-    { message: "Material field should not contain URLs. Please use the amazon_link fields for URLs." }
-  ),
-  finish_type: z.string().nullable().refine(
-    (val) => !val || !isURL(val),
-    { message: "Finish type field should not contain URLs." }
-  ),
-  color_family: z.string().nullable().refine(
-    (val) => !val || !isURL(val),
-    { message: "Color family field should not contain URLs." }
-  ),
-  amazon_link_us: z.string().nullable().refine(
-    (val) => !val || isURL(val),
-    { message: "Amazon US link must be a valid URL starting with http://, https://, or www." }
-  ),
-  amazon_link_uk: z.string().nullable().refine(
-    (val) => !val || isURL(val),
-    { message: "Amazon UK link must be a valid URL starting with http://, https://, or www." }
-  ),
-  amazon_link_de: z.string().nullable().refine(
-    (val) => !val || isURL(val),
-    { message: "Amazon DE link must be a valid URL starting with http://, https://, or www." }
-  ),
-  product_url: z.string().nullable().refine(
-    (val) => !val || isURL(val),
-    { message: "Product URL must be a valid URL starting with http://, https://, or www." }
-  ),
-  tds_url: z.string().nullable().refine(
-    (val) => !val || isURL(val),
-    { message: "TDS URL must be a valid URL starting with http://, https://, or www." }
-  ),
   product_title: z.string().min(1, { message: "Product title is required" }).max(500, { message: "Product title must be less than 500 characters" }),
-}).passthrough(); // Allow other fields to pass through
+}).passthrough();
 
 const AdminImport = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -136,6 +45,9 @@ const AdminImport = () => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile && selectedFile.type === "text/csv") {
       setFile(selectedFile);
+      // Reset previous results
+      setImportResults(null);
+      setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
     } else {
       toast({
         title: "Invalid file",
@@ -146,193 +58,28 @@ const AdminImport = () => {
   };
 
   const downloadTemplate = () => {
-    // CSV helper function to escape fields containing commas, quotes, or newlines
-    const escapeCSVField = (field: string): string => {
-      if (field.includes(',') || field.includes('"') || field.includes('\n')) {
-        return `"${field.replace(/"/g, '""')}"`;
-      }
-      return field;
-    };
-
-    // Define all column headers
     const headers = [
-      'product_id',
-      'product_title',
-      'product_handle',
-      'vendor',
-      'material',
-      'featured_image',
-      'variant_sku',
-      'product_url',
-      'amazon_link_us',
-      'amazon_link_uk',
-      'amazon_link_de',
-      'tds_url',
-      'color_hex',
-      'color_family',
-      'finish_type',
-      'diameter_nominal_mm',
-      'net_weight_g',
-      'variant_price',
-      'density_g_cm3',
-      'nozzle_temp_min_c',
-      'nozzle_temp_max_c',
-      'nozzle_temp_sweetspot_c',
-      'bed_temp_min_c',
-      'bed_temp_max_c',
-      'print_speed_max_mms',
-      'fan_min_percent',
-      'fan_max_percent',
-      'tensile_strength_xy_mpa',
-      'tensile_modulus_xy_mpa',
-      'elongation_break_xy_percent',
-      'flexural_strength_mpa',
-      'shore_hardness_d',
-      'tg_c',
-      'melt_temp_c',
-      'spool_outer_d_mm',
-      'spool_width_mm',
-      'recommended_nozzle_type',
-      'moisture_sensitivity_level',
-      'moisture_care',
-      'nozzle_care',
-      'drying_temp_c',
-      'drying_time_hours',
-      'is_nozzle_abrasive',
-      'spool_ams_fit',
-      'variant_available',
-      'ease_of_printing_score',
-      'dimensional_accuracy_score',
-      'strength_index',
-      'printability_index',
-      'value_score',
-      'use_case_tags',
-      'industry_tags',
-      'food_contact_rating'
+      'Product ID', 'Product Title', 'Vendor', 'Material', 'Featured Image', 
+      'Variant SKU', 'Variant Price', 'Product URL', 'Amazon Link US', 
+      'TDS URL', 'net_weight_g', 'diameter_nominal_mm'
     ];
-
-    // Example rows with proper data types
-    const exampleRows = [
-      [
-        'PROD001',
-        'Example PLA Filament 1.75mm White',
-        'pla-white-1-75mm',
-        'Example Manufacturer',
-        'PLA',
-        'https://example.com/images/pla-white.jpg',
-        'SKU-PLA-WHT-175',
-        'https://example.com/products/pla-white',
-        'https://www.amazon.com/dp/EXAMPLE1',
-        'https://www.amazon.co.uk/dp/EXAMPLE1',
-        'https://www.amazon.de/dp/EXAMPLE1',
-        'https://example.com/tds/pla-white.pdf',
-        '#FFFFFF',
-        'White',
-        'Matte',
-        '1.75',
-        '1000',
-        '19.99',
-        '1.24',
-        '190',
-        '220',
-        '205',
-        '50',
-        '60',
-        '60',
-        '0',
-        '100',
-        '50',
-        '3500',
-        '6',
-        '45',
-        '70',
-        '60',
-        '180',
-        '200',
-        '63',
-        'Brass',
-        'Low',
-        'Store in sealed bag with desiccant',
-        'Standard brass nozzle compatible',
-        '50',
-        '4',
-        'false',
-        'true',
-        'true',
-        '9',
-        '8',
-        '7.5',
-        '8.5',
-        '8.0',
-        'Prototypes;Models;Decorative',
-        'Education;Hobbyist;Professional',
-        'not_rated'
-      ],
-      [
-        'PROD002',
-        'Example PETG Filament 1.75mm Black',
-        'petg-black-1-75mm',
-        'Example Manufacturer',
-        'PETG',
-        'https://example.com/images/petg-black.jpg',
-        'SKU-PETG-BLK-175',
-        'https://example.com/products/petg-black',
-        'https://www.amazon.com/dp/EXAMPLE2',
-        '',
-        '',
-        'https://example.com/tds/petg-black.pdf',
-        '#000000',
-        'Black',
-        'Glossy',
-        '1.75',
-        '1000',
-        '24.99',
-        '1.27',
-        '220',
-        '250',
-        '235',
-        '70',
-        '80',
-        '50',
-        '0',
-        '100',
-        '55',
-        '4100',
-        '53',
-        '160',
-        '51',
-        '',
-        '85',
-        '230',
-        '71',
-        'Brass',
-        'Medium',
-        'Dry before use at 65C for 4 hours',
-        'Brass nozzle recommended',
-        '65',
-        '4',
-        'false',
-        'true',
-        'true',
-        '7',
-        '9',
-        '8.5',
-        '8.0',
-        '7.5',
-        'Functional Parts;Outdoor Use',
-        'Professional;Industrial',
-        'approved'
-      ]
-    ];
-
-    // Build CSV content
-    let csvContent = headers.map(escapeCSVField).join(',') + '\n';
     
-    exampleRows.forEach(row => {
-      csvContent += row.map(field => escapeCSVField(field.toString())).join(',') + '\n';
-    });
+    const exampleRow = [
+      '20000001',
+      'Example PLA Filament Black 1.75mm',
+      'Example Brand',
+      'PLA',
+      'https://example.com/image.jpg',
+      'SKU-001',
+      '19.99',
+      'https://example.com/product',
+      'https://amazon.com/dp/EXAMPLE',
+      'https://example.com/tds.pdf',
+      '1000',
+      '1.75'
+    ];
 
-    // Create blob and download
+    const csvContent = headers.join(',') + '\n' + exampleRow.join(',');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -347,12 +94,11 @@ const AdminImport = () => {
     
     toast({
       title: "Template downloaded",
-      description: "CSV template downloaded successfully. Fill in your data and upload.",
+      description: "CSV template downloaded successfully.",
     });
   };
 
   const parseCSV = (text: string) => {
-    // Proper CSV parsing that handles quoted fields
     const lines: string[] = [];
     let currentLine = '';
     let insideQuotes = false;
@@ -363,11 +109,9 @@ const AdminImport = () => {
       
       if (char === '"') {
         if (insideQuotes && nextChar === '"') {
-          // Escaped quote
           currentLine += '"';
-          i++; // Skip next quote
+          i++;
         } else {
-          // Toggle quote state
           insideQuotes = !insideQuotes;
         }
       } else if (char === '\n' && !insideQuotes) {
@@ -380,20 +124,18 @@ const AdminImport = () => {
           lines.push(currentLine);
         }
         currentLine = '';
-        i++; // Skip \n
+        i++;
       } else {
         currentLine += char;
       }
     }
     
-    // Add last line if exists
     if (currentLine.trim()) {
       lines.push(currentLine);
     }
     
     if (lines.length === 0) return [];
     
-    // Parse headers
     const headers = parseCSVLine(lines[0]);
     const data = [];
     
@@ -423,11 +165,9 @@ const AdminImport = () => {
       
       if (char === '"') {
         if (insideQuotes && nextChar === '"') {
-          // Escaped quote
           current += '"';
           i++;
         } else {
-          // Toggle quotes
           insideQuotes = !insideQuotes;
         }
       } else if (char === ',' && !insideQuotes) {
@@ -442,22 +182,17 @@ const AdminImport = () => {
     return result;
   };
 
-  // Helper function to download and upload image to storage
   const downloadAndUploadImage = async (imageUrl: string, productId: string): Promise<string | null> => {
     try {
-      // Download the image
       const response = await fetch(imageUrl);
       if (!response.ok) return null;
       
       const blob = await response.blob();
-      
-      // Generate a filename from the URL
       const urlParts = imageUrl.split('/');
       const originalFilename = urlParts[urlParts.length - 1].split('?')[0];
       const extension = originalFilename.split('.').pop() || 'jpg';
       const filename = `${productId}-${Date.now()}.${extension}`;
       
-      // Upload to Supabase storage
       const { data, error } = await supabase.storage
         .from('filament-images')
         .upload(filename, blob, {
@@ -470,7 +205,6 @@ const AdminImport = () => {
         return null;
       }
       
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('filament-images')
         .getPublicUrl(data.path);
@@ -480,6 +214,24 @@ const AdminImport = () => {
       console.error('Image download error:', error);
       return null;
     }
+  };
+
+  const parseNumber = (value: any): number | null => {
+    if (value === null || value === undefined || value === '') return null;
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? null : parsed;
+  };
+
+  const parseIntSafe = (value: any): number | null => {
+    if (value === null || value === undefined || value === '') return null;
+    const parsed = parseInt(value);
+    return isNaN(parsed) ? null : parsed;
+  };
+
+  const parseBool = (value: any): boolean | null => {
+    if (value === null || value === undefined || value === '') return null;
+    const str = String(value).toLowerCase();
+    return str === 'true' || str === '1' || str === 'yes';
   };
 
   const handleUpload = async () => {
@@ -503,11 +255,9 @@ const AdminImport = () => {
         return;
       }
 
-      // Log detected headers for debugging
-      const sampleRow = rows[0];
-      const detectedHeaders = Object.keys(sampleRow);
-      console.log("Detected CSV headers:", detectedHeaders);
-      console.log("Sample row:", sampleRow);
+      console.log(`🚀 Starting NEW import of ${rows.length} rows...`);
+      console.log("CSV Headers:", Object.keys(rows[0]));
+      console.log("Sample row:", rows[0]);
 
       setProgress({ current: 0, total: rows.length, errors: 0, warnings: 0 });
 
@@ -515,337 +265,170 @@ const AdminImport = () => {
       const errors: string[] = [];
       const warnings: string[] = [];
 
-      // Helper functions to safely parse numbers with database constraint validation
-      const MAX_NUMERIC_VALUE = 99999999.99;
-      
-      const parseNumber = (value: any, fieldName?: string): number | null => {
-        if (value === null || value === undefined || value === '') return null;
-        const parsed = parseFloat(value);
-        if (isNaN(parsed)) return null;
-        
-        if (Math.abs(parsed) > MAX_NUMERIC_VALUE) {
-          console.warn(`${fieldName || 'numeric field'} value ${parsed} exceeds max (${MAX_NUMERIC_VALUE}), skipping field`);
-          return null;
-        }
-        
-        return parsed;
-      };
-
-      const parsePrice = (value: any, fieldName?: string): number | null => {
-        if (value === null || value === undefined || value === '') return null;
-        const parsed = parseFloat(value);
-        if (isNaN(parsed)) return null;
-        
-        // Price validation: should be between $0.01 and $10,000
-        // If price is > 10000, it might be in cents, try dividing by 100
-        if (parsed > 10000) {
-          const priceInDollars = parsed / 100;
-          if (priceInDollars <= 10000) {
-            console.warn(`${fieldName || 'price'} value ${parsed} appears to be in cents, converting to ${priceInDollars}`);
-            return priceInDollars;
-          }
-          console.warn(`${fieldName || 'price'} value ${parsed} exceeds reasonable max (10000), skipping field`);
-          return null;
-        }
-        
-        // Warn if price seems too low (less than $0.01)
-        if (parsed < 0.01 && parsed > 0) {
-          console.warn(`${fieldName || 'price'} value ${parsed} seems too low, might be data error`);
-        }
-        
-        return parsed;
-      };
-
-      const parseIntSafe = (value: any, fieldName?: string): number | null => {
-        if (value === null || value === undefined || value === '') return null;
-        const parsed = Number.parseInt(value);
-        if (isNaN(parsed)) return null;
-        
-        if (Math.abs(parsed) > MAX_NUMERIC_VALUE) {
-          console.warn(`${fieldName || 'integer field'} value ${parsed} exceeds max (${MAX_NUMERIC_VALUE}), skipping field`);
-          return null;
-        }
-        
-        return parsed;
-      };
-
-      const parseBool = (value: any): boolean | null => {
-        if (value === null || value === undefined || value === '') return null;
-        return value === 'true' || value === '1' || value === 'TRUE' || value === 'True';
-      };
-
-      console.log(`Starting import of ${rows.length} rows...`);
-
-      // Process ALL rows in batches to avoid timeout and ensure complete processing
+      // Process rows in batches
       const BATCH_SIZE = 50;
-      const batches = [];
-      
-      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-        batches.push(rows.slice(i, Math.min(i + BATCH_SIZE, rows.length)));
-      }
-
-      console.log(`Split into ${batches.length} batches of up to ${BATCH_SIZE} rows each`);
-
-      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-        const batch = batches[batchIndex];
-        const batchStartIdx = batchIndex * BATCH_SIZE;
+      for (let batchStart = 0; batchStart < rows.length; batchStart += BATCH_SIZE) {
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, rows.length);
+        const batch = rows.slice(batchStart, batchEnd);
         
-        console.log(`Processing batch ${batchIndex + 1}/${batches.length} (rows ${batchStartIdx + 1}-${batchStartIdx + batch.length})`);
+        console.log(`📦 Processing batch ${Math.floor(batchStart / BATCH_SIZE) + 1} (rows ${batchStart + 1}-${batchEnd})`);
 
-        // Process each row in the batch
         for (let i = 0; i < batch.length; i++) {
-          const globalRowIndex = batchStartIdx + i;
+          const rowIndex = batchStart + i;
           const row = batch[i];
+          const rowNum = rowIndex + 2; // +2 for header and 1-indexed
           
-          // Extract product_title with multiple variations
-          const productTitle = row.product_title || row.Product_Title || row["Product Title"] || row.title;
-          
-          // Skip rows without product_title (required field)
+          // Get product title - this is required
+          const productTitle = row['Product Title'];
           if (!productTitle || productTitle.trim() === "") {
-            errors.push(`Row ${globalRowIndex + 2}: Missing required field 'product_title'`);
-            setProgress(prev => ({ ...prev, current: globalRowIndex + 1, errors: prev.errors + 1 }));
+            errors.push(`Row ${rowNum}: Missing Product Title`);
+            setProgress(prev => ({ ...prev, current: rowIndex + 1, errors: prev.errors + 1 }));
             continue;
           }
 
           try {
-            // Prepare validation data with material extraction
-            let materialValue = row.material || row.Material || null;
-            
-            // CRITICAL: Extract material from title if not provided in CSV
-            if (!materialValue || materialValue.trim() === '') {
-              materialValue = extractMaterialFromTitle(productTitle);
-              if (materialValue) {
-                warnings.push(`Row ${globalRowIndex + 2} (${productTitle}): Material not in CSV, extracted "${materialValue}" from title`);
-              }
-            }
-          
-            const validationData = {
-              product_title: productTitle,
-              material: materialValue,
-              finish_type: row.finish_type || row.Finish_Type || null,
-              color_family: row.color_family || row.Color_Family || null,
-              amazon_link_us: row.amazon_link_us || row.Amazon_Link_US || row["Amazon Link US"] || null,
-              amazon_link_uk: row.amazon_link_uk || row.Amazon_Link_UK || row["Amazon Link UK"] || null,
-              amazon_link_de: row.amazon_link_de || row.Amazon_Link_DE || row["Amazon Link DE"] || null,
-              product_url: row.product_url || row.Product_URL || row["Product URL"] || null,
-              tds_url: row.tds_url || row.TDS_URL || row["TDS URL"] || null,
-            };
-
-            // Validate the row data
-            const validationResult = filamentRowSchema.safeParse(validationData);
-            
-            if (!validationResult.success) {
-              const validationErrors = validationResult.error.errors.map(err => 
-                `${err.path.join('.')}: ${err.message}`
-              ).join('; ');
-              errors.push(`Row ${globalRowIndex + 2} (${productTitle}): Validation failed - ${validationErrors}`);
-              setProgress(prev => ({ ...prev, current: globalRowIndex + 1, errors: prev.errors + 1 }));
-              continue;
-            }
-
-            // Check for data quality issues and provide warnings
-            let warningCount = 0;
-            if (isURL(validationData.material)) {
-              warnings.push(`Row ${globalRowIndex + 2} (${productTitle}): Material field contains URL "${validationData.material}" - moving to amazon_link_us`);
-              warningCount++;
-              // Auto-fix: move URL to correct field if amazon_link_us is empty
-              if (!validationData.amazon_link_us) {
-                validationData.amazon_link_us = validationData.material;
-              }
-              validationData.material = null;
-            }
-            
-            if (isURL(validationData.finish_type)) {
-              warnings.push(`Row ${globalRowIndex + 2} (${productTitle}): Finish type contains URL "${validationData.finish_type}" - removing`);
-              warningCount++;
-              validationData.finish_type = null;
-            }
-            
-            if (isURL(validationData.color_family)) {
-              warnings.push(`Row ${globalRowIndex + 2} (${productTitle}): Color family contains URL "${validationData.color_family}" - removing`);
-              warningCount++;
-              validationData.color_family = null;
-            }
-            
-            // CRITICAL: Warn if price exists but weight is missing
-            const priceValue = row.variant_price || row.Variant_Price || row["Variant Price"] || row.price || row.Price;
-            const weightValue = row.net_weight_g || row.Net_Weight_G || row["Net Weight (g)"] || row.net_weight || row.weight || row.Weight || row.spool_weight || row.Spool_Weight;
-            if (priceValue && !weightValue) {
-              warnings.push(`Row ${globalRowIndex + 2} (${productTitle}): Has price but missing weight - cannot calculate price per kg`);
-              warningCount++;
-            }
-            
-            // Update progress with warnings count
-            if (warningCount > 0) {
-              setProgress(prev => ({ ...prev, warnings: prev.warnings + warningCount }));
-            }
-
-            // Download and upload image if present
-            const originalImageUrl = row.featured_image || row.Featured_Image || row["Featured Image"] || row.image || null;
-            let storedImageUrl = originalImageUrl;
-            
-            if (originalImageUrl && originalImageUrl.startsWith('http')) {
-              const productId = row.product_id || row.Product_ID || row["Product ID"] || `product-${globalRowIndex}`;
-              const uploadedUrl = await downloadAndUploadImage(originalImageUrl, productId);
-              if (uploadedUrl) {
-                storedImageUrl = uploadedUrl;
-              }
-            }
-
+            // Map CSV columns to database fields
             const filamentData: any = {
-              product_id: row.product_id || row.Product_ID || row["Product ID"] || null,
+              product_id: row['Product ID'] || null,
               product_title: productTitle.trim(),
-              product_handle: row.product_handle || row.Product_Handle || row["Product Handle"] || null,
-              vendor: row.vendor || row.Vendor || null,
-              material: validationData.material,
-              featured_image: storedImageUrl,
-              variant_sku: row.variant_sku || row.Variant_SKU || row["Variant SKU"] || null,
-              product_url: validationData.product_url,
-              amazon_link_us: validationData.amazon_link_us,
-              amazon_link_uk: validationData.amazon_link_uk,
-              amazon_link_de: validationData.amazon_link_de,
-              tds_url: validationData.tds_url,
+              product_handle: row['Product Handle'] || null,
+              vendor: row['Vendor'] || null,
+              material: row['Material'] || null,
+              featured_image: row['Featured Image'] || null,
+              variant_sku: row['Variant SKU'] || null,
+              product_url: row['Product URL'] || null,
+              amazon_link_us: row['Amazon Link US'] || null,
+              amazon_link_uk: row['Amazon Link UK'] || null,
+              amazon_link_de: row['Amazon Link DE'] || null,
+              tds_url: row['TDS URL'] || null,
               
-              // Numeric fields with safe parsing and overflow protection
-              density_g_cm3: parseNumber(row.density_g_cm3 || row.Density_g_cm3, 'density_g_cm3'),
-              tensile_strength_xy_mpa: parseNumber(row.tensile_strength_xy_mpa || row.Tensile_Strength_XY_MPa, 'tensile_strength_xy_mpa'),
-              tensile_modulus_xy_mpa: parseNumber(row.tensile_modulus_xy_mpa || row.Tensile_Modulus_XY_MPa, 'tensile_modulus_xy_mpa'),
-              elongation_break_xy_percent: parseNumber(row.elongation_break_xy_percent || row.Elongation_Break_XY_Percent, 'elongation_break_xy_percent'),
-              flexural_strength_mpa: parseNumber(row.flexural_strength_mpa || row.Flexural_Strength_MPa, 'flexural_strength_mpa'),
-              shore_hardness_d: parseNumber(row.shore_hardness_d || row.Shore_Hardness_D, 'shore_hardness_d'),
-              tg_c: parseNumber(row.tg_c || row.Tg_C, 'tg_c'),
-              melt_temp_c: parseNumber(row.melt_temp_c || row.Melt_Temp_C, 'melt_temp_c'),
+              // Physical properties
+              density_g_cm3: parseNumber(row['density_g_cm3']),
+              diameter_nominal_mm: parseNumber(row['diameter_nominal_mm']),
+              net_weight_g: parseIntSafe(row['net_weight_g']),
+              spool_outer_d_mm: parseNumber(row['spool_outer_d_mm']),
+              spool_width_mm: parseNumber(row['spool_width_mm']),
+              variant_price: parseNumber(row['Variant Price']),
               
-              // Temperature settings
-              nozzle_temp_min_c: parseIntSafe(row.nozzle_temp_min_c || row.Nozzle_Temp_Min_C, 'nozzle_temp_min_c'),
-              nozzle_temp_max_c: parseIntSafe(row.nozzle_temp_max_c || row.Nozzle_Temp_Max_C, 'nozzle_temp_max_c'),
-              nozzle_temp_sweetspot_c: parseIntSafe(row.nozzle_temp_sweetspot_c || row.Nozzle_Temp_Sweetspot_C, 'nozzle_temp_sweetspot_c'),
-              bed_temp_min_c: parseIntSafe(row.bed_temp_min_c || row.Bed_Temp_Min_C, 'bed_temp_min_c'),
-              bed_temp_max_c: parseIntSafe(row.bed_temp_max_c || row.Bed_Temp_Max_C, 'bed_temp_max_c'),
+              // Thermal properties
+              tg_c: parseNumber(row['tg_c']),
+              melt_temp_c: parseNumber(row['melt_temp_c']),
+              nozzle_temp_min_c: parseIntSafe(row['nozzle_temp_min_c']),
+              nozzle_temp_max_c: parseIntSafe(row['nozzle_temp_max_c']),
+              nozzle_temp_sweetspot_c: parseIntSafe(row['nozzle_temp_sweetspot_c']),
+              bed_temp_min_c: parseIntSafe(row['bed_temp_min_c']),
+              bed_temp_max_c: parseIntSafe(row['bed_temp_max_c']),
+              
+              // Mechanical properties
+              tensile_strength_xy_mpa: parseNumber(row['tensile_strength_xy_mpa']),
+              tensile_modulus_xy_mpa: parseNumber(row['tensile_modulus_xy_mpa']),
+              elongation_break_xy_percent: parseNumber(row['elongation_break_xy_percent']),
+              flexural_strength_mpa: parseNumber(row['flexural_strength_mpa']),
+              shore_hardness_d: parseNumber(row['shore_hardness_d']),
               
               // Print settings
-              print_speed_max_mms: parseIntSafe(row.print_speed_max_mms || row.Print_Speed_Max_MMS, 'print_speed_max_mms'),
-              fan_min_percent: parseIntSafe(row.fan_min_percent || row.Fan_Min_Percent, 'fan_min_percent'),
-              fan_max_percent: parseIntSafe(row.fan_max_percent || row.Fan_Max_Percent, 'fan_max_percent'),
+              print_speed_max_mms: parseIntSafe(row['print_speed_max_mms']),
+              fan_min_percent: parseIntSafe(row['fan_min_percent']),
+              fan_max_percent: parseIntSafe(row['fan_max_percent']),
               
-              // Physical properties - add more column name variations
-              diameter_nominal_mm: parseNumber(row.diameter_nominal_mm || row.Diameter_Nominal_MM || row["Diameter (mm)"] || row.diameter, 'diameter_nominal_mm'),
-              net_weight_g: parseIntSafe(
-                row.net_weight_g || 
-                row.Net_Weight_G || 
-                row["Net Weight (g)"] || 
-                row.net_weight || 
-                row.weight || 
-                row.Weight || 
-                row.spool_weight || 
-                row.Spool_Weight,
-                'net_weight_g'
-              ),
-              spool_outer_d_mm: parseNumber(row.spool_outer_d_mm || row.Spool_Outer_D_MM || row["Spool Outer Diameter (mm)"], 'spool_outer_d_mm'),
-              spool_width_mm: parseNumber(row.spool_width_mm || row.Spool_Width_MM || row["Spool Width (mm)"], 'spool_width_mm'),
+              // Color and appearance
+              color_hex: row['color_hex'] || null,
+              color_family: row['color_family'] || null,
+              finish_type: row['finish_type'] || null,
               
-              // Color properties
-              color_hex: row.color_hex || row.Color_Hex || null,
-              color_family: validationData.color_family,
-              finish_type: validationData.finish_type,
+              // Care and handling
+              moisture_sensitivity_level: row['moisture_sensitivity_level'] || null,
+              moisture_care: row['moisture_care'] || null,
+              nozzle_care: row['nozzle_care'] || null,
+              drying_temp_c: parseIntSafe(row['drying_temp_c']),
+              drying_time_hours: parseIntSafe(row['drying_time_hours']),
+              recommended_nozzle_type: row['recommended_nozzle_type'] || null,
               
-              // Care and compatibility
-              recommended_nozzle_type: row.recommended_nozzle_type || row.Recommended_Nozzle_Type || null,
-              moisture_sensitivity_level: row.moisture_sensitivity_level || row.Moisture_Sensitivity_Level || null,
-              moisture_care: row.moisture_care || row.Moisture_Care || null,
-              nozzle_care: row.nozzle_care || row.Nozzle_Care || null,
-              drying_temp_c: parseIntSafe(row.drying_temp_c || row.Drying_Temp_C, 'drying_temp_c'),
-              drying_time_hours: parseIntSafe(row.drying_time_hours || row.Drying_Time_Hours, 'drying_time_hours'),
-              
-              // Boolean flags with safe parsing
-              is_nozzle_abrasive: parseBool(row.is_nozzle_abrasive || row.Is_Nozzle_Abrasive),
-              spool_ams_fit: parseBool(row.spool_ams_fit || row.Spool_AMS_Fit),
-              variant_available: row.variant_available !== 'false' && row.Variant_Available !== 'false',
+              // Flags
+              is_nozzle_abrasive: parseBool(row['is_nozzle_abrasive']),
+              spool_ams_fit: parseBool(row['spool_ams_fit']),
+              variant_available: parseBool(row['Variant Available']) !== false,
               
               // Scores
-              ease_of_printing_score: parseIntSafe(row.ease_of_printing_score || row.Ease_of_Printing_Score, 'ease_of_printing_score'),
-              dimensional_accuracy_score: parseIntSafe(row.dimensional_accuracy_score || row.Dimensional_Accuracy_Score, 'dimensional_accuracy_score'),
-              strength_index: parseNumber(row.strength_index || row.Strength_Index, 'strength_index'),
-              printability_index: parseNumber(row.printability_index || row.Printability_Index, 'printability_index'),
-              value_score: parseNumber(row.value_score || row.Value_Score, 'value_score'),
+              ease_of_printing_score: parseIntSafe(row['ease_of_printing_score']),
+              dimensional_accuracy_score: parseIntSafe(row['dimensional_accuracy_score']),
+              strength_index: parseNumber(row['strength_index']),
+              printability_index: parseNumber(row['printability_index']),
+              value_score: parseNumber(row['value_score']),
               
-              // Price - use special price parser with validation
-              variant_price: parsePrice(row.variant_price || row.Variant_Price || row["Variant Price"] || row.price || row.Price, 'variant_price'),
-              
-              // Tags and arrays
-              use_case_tags: row.use_case_tags ? (row.use_case_tags.split(';').map((t: string) => t.trim()).filter((t: string) => t)) : null,
-              industry_tags: row.industry_tags ? (row.industry_tags.split(';').map((t: string) => t.trim()).filter((t: string) => t)) : null,
+              // Tags
+              use_case_tags: row['use_case_tags'] ? row['use_case_tags'].split(',').map((t: string) => t.trim()).filter((t: string) => t) : null,
+              industry_tags: row['industry_tags'] ? row['industry_tags'].split(',').map((t: string) => t.trim()).filter((t: string) => t) : null,
               
               // Other
-              food_contact_rating: row.food_contact_rating || row.Food_Contact_Rating || null,
+              food_contact_rating: row['food_contact_rating'] || null,
             };
 
-            // Remove null/undefined values
+            // Remove null/undefined/empty values
             Object.keys(filamentData).forEach(key => {
               if (filamentData[key] === null || filamentData[key] === undefined || filamentData[key] === '') {
                 delete filamentData[key];
               }
             });
 
-            // Generate product_id if missing - use a hash of vendor + title for uniqueness
+            // Generate product_id if missing
             if (!filamentData.product_id) {
               const vendor = filamentData.vendor || 'unknown';
               const title = productTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50);
-              filamentData.product_id = `${vendor.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${title}-${globalRowIndex}`;
-              console.log(`Generated product_id: ${filamentData.product_id} for row ${globalRowIndex + 2}`);
+              filamentData.product_id = `${vendor.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${title}-${Date.now()}-${rowIndex}`;
+              console.log(`🔑 Generated product_id: ${filamentData.product_id}`);
             }
 
+            // Download and upload image if it's an external URL
+            if (filamentData.featured_image && filamentData.featured_image.startsWith('http')) {
+              const uploadedUrl = await downloadAndUploadImage(filamentData.featured_image, filamentData.product_id);
+              if (uploadedUrl) {
+                filamentData.featured_image = uploadedUrl;
+              }
+            }
+
+            // Insert/update in database
             const { error } = await supabase
               .from("filaments")
               .upsert(filamentData, { onConflict: "product_id" });
 
             if (error) {
-              // Log detailed error for debugging with full context
-              console.error(`❌ Import error for row ${globalRowIndex + 2} (${productTitle}):`, {
-                error: error.message,
-                hint: error.hint,
-                details: error.details,
-                code: error.code,
-                filamentData: filamentData
-              });
-              const errorMsg = `Row ${globalRowIndex + 2} (${productTitle}): ${error.message}${error.hint ? ` - ${error.hint}` : ''}${error.details ? ` - ${error.details}` : ''}`;
-              errors.push(errorMsg);
-              console.error(errorMsg);
-              setProgress(prev => ({ ...prev, current: globalRowIndex + 1, errors: prev.errors + 1 }));
+              console.error(`❌ Row ${rowNum} (${productTitle}):`, error.message);
+              errors.push(`Row ${rowNum} (${productTitle}): ${error.message}`);
+              setProgress(prev => ({ ...prev, current: rowIndex + 1, errors: prev.errors + 1 }));
             } else {
-              console.log(`✅ Successfully imported row ${globalRowIndex + 2} (${productTitle})`);
+              console.log(`✅ Row ${rowNum} (${productTitle}) imported successfully`);
               successCount++;
-              setProgress(prev => ({ ...prev, current: globalRowIndex + 1 }));
+              setProgress(prev => ({ ...prev, current: rowIndex + 1 }));
             }
           } catch (rowError: any) {
-            console.error(`❌ Exception processing row ${globalRowIndex + 2}:`, rowError);
-            const errorMsg = `Row ${globalRowIndex + 2}: ${rowError.message}`;
-            errors.push(errorMsg);
-            console.error(errorMsg);
-            setProgress(prev => ({ ...prev, current: globalRowIndex + 1, errors: prev.errors + 1 }));
+            console.error(`❌ Exception at row ${rowNum}:`, rowError);
+            errors.push(`Row ${rowNum}: ${rowError.message}`);
+            setProgress(prev => ({ ...prev, current: rowIndex + 1, errors: prev.errors + 1 }));
           }
         }
       }
 
-      console.log(`Completed import: ${successCount} successful, ${errors.length} errors, ${warnings.length} warnings`);
+      console.log(`\n✅ Import complete: ${successCount} successful, ${errors.length} errors, ${warnings.length} warnings`);
 
       setImportResults({ success: successCount, errors, warnings });
 
       if (successCount > 0) {
         toast({
           title: "Import completed",
-          description: `Successfully imported ${successCount} filament(s). ${errors.length} error(s), ${warnings.length} warning(s).`,
+          description: `Successfully imported ${successCount} filament(s). ${errors.length} error(s).`,
         });
       } else {
         toast({
           title: "Import failed",
-          description: `No filaments were imported. Check the error details below.`,
+          description: `No filaments were imported. Check error details below.`,
           variant: "destructive",
         });
       }
 
       setFile(null);
     } catch (error: any) {
+      console.error("Import error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to import CSV",
@@ -881,7 +464,7 @@ const AdminImport = () => {
             </Button>
           </div>
           <p className="text-muted-foreground">
-            Upload and manage filament data via CSV import
+            Upload filament data via CSV - new standardized format
           </p>
         </div>
 
@@ -919,7 +502,11 @@ const AdminImport = () => {
               <div className="flex gap-4">
                 <Button
                   variant="outline"
-                  onClick={() => setFile(null)}
+                  onClick={() => {
+                    setFile(null);
+                    setImportResults(null);
+                    setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
+                  }}
                   className="flex-1"
                   disabled={isUploading}
                 >
@@ -935,23 +522,16 @@ const AdminImport = () => {
               </div>
             )}
 
-            {/* Progress Indicator */}
             {isUploading && progress.total > 0 && (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Processing rows: {progress.current} / {progress.total}</span>
-                  <div className="flex gap-3">
-                    {progress.warnings > 0 && (
-                      <span className="text-yellow-600">{progress.warnings} warnings</span>
-                    )}
-                    <span className="text-destructive">{progress.errors} errors</span>
-                  </div>
+                  <span>Processing: {progress.current} / {progress.total}</span>
+                  <span className="text-destructive">{progress.errors} errors</span>
                 </div>
                 <Progress value={(progress.current / progress.total) * 100} />
               </div>
             )}
 
-            {/* Import Results */}
             {importResults && (
               <div className="space-y-3">
                 <div className="rounded-lg border bg-muted/50 p-4">
@@ -961,12 +541,6 @@ const AdminImport = () => {
                       <span>Successfully imported:</span>
                       <span className="font-medium text-primary">{importResults.success}</span>
                     </div>
-                    {importResults.warnings.length > 0 && (
-                      <div className="flex justify-between">
-                        <span>Warnings:</span>
-                        <span className="font-medium text-yellow-600">{importResults.warnings.length}</span>
-                      </div>
-                    )}
                     <div className="flex justify-between">
                       <span>Errors:</span>
                       <span className="font-medium text-destructive">{importResults.errors.length}</span>
@@ -974,27 +548,16 @@ const AdminImport = () => {
                   </div>
                 </div>
 
-                {importResults.warnings.length > 0 && (
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Data Quality Warnings</AlertTitle>
-                    <AlertDescription>
-                      <div className="max-h-48 overflow-y-auto space-y-1 text-sm mt-2">
-                        {importResults.warnings.map((warning, idx) => (
-                          <div key={idx} className="text-muted-foreground">{warning}</div>
-                        ))}
-                      </div>
-                    </AlertDescription>
-                  </Alert>
-                )}
-
                 {importResults.errors.length > 0 && (
                   <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
-                    <h3 className="font-semibold mb-2 text-destructive">Error Details</h3>
+                    <h3 className="font-semibold mb-2 text-destructive">Error Details (first 50)</h3>
                     <div className="max-h-64 overflow-y-auto space-y-1 text-sm">
-                      {importResults.errors.map((error, idx) => (
+                      {importResults.errors.slice(0, 50).map((error, idx) => (
                         <div key={idx} className="text-destructive/90">{error}</div>
                       ))}
+                      {importResults.errors.length > 50 && (
+                        <div className="text-destructive/70 italic">... and {importResults.errors.length - 50} more errors</div>
+                      )}
                     </div>
                   </div>
                 )}
