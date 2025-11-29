@@ -134,7 +134,7 @@ const FilamentDetail = () => {
                       <Button asChild variant="amazon" size="lg">
                         <a href={filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
                           <ShoppingCart className="w-4 h-4 mr-2" />
-                          Amazon
+                          View on Amazon
                         </a>
                       </Button>
                     )}
