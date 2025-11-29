@@ -71,102 +71,119 @@ const AdminImport = () => {
 
       let successCount = 0;
       let errorCount = 0;
+      const errors: string[] = [];
 
       for (const row of rows) {
         try {
-          const filamentData = {
-            product_id: row["Product ID"],
-            product_title: row["Product Title"],
-            product_handle: row["Product Handle"],
-            vendor: row["Vendor"],
-            material: row["Material"],
-            variant_sku: row["Variant SKU"],
-            variant_price: row["Variant Price"] ? parseFloat(row["Variant Price"]) : null,
-            variant_available: row["Variant Available"] === "true",
-            product_url: row["Product URL"],
-            amazon_link_us: row["Amazon Link US"],
-            amazon_link_uk: row["Amazon Link UK"],
-            amazon_link_de: row["Amazon Link DE"],
-            featured_image: row["Featured Image"],
-            tds_url: row["TDS URL"],
+          const filamentData: any = {
+            product_id: row.product_id || row.Product_ID || row["Product ID"],
+            product_title: row.product_title || row.Product_Title || row["Product Title"] || row.title,
+            product_handle: row.product_handle || row.Product_Handle || row["Product Handle"],
+            vendor: row.vendor || row.Vendor,
+            material: row.material || row.Material,
+            featured_image: row.featured_image || row.Featured_Image || row["Featured Image"] || row.image,
+            variant_sku: row.variant_sku || row.Variant_SKU || row["Variant SKU"],
+            product_url: row.product_url || row.Product_URL || row["Product URL"],
+            amazon_link_us: row.amazon_link_us || row.Amazon_Link_US || row["Amazon Link US"],
+            amazon_link_uk: row.amazon_link_uk || row.Amazon_Link_UK || row["Amazon Link UK"],
+            amazon_link_de: row.amazon_link_de || row.Amazon_Link_DE || row["Amazon Link DE"],
+            tds_url: row.tds_url || row.TDS_URL || row["TDS URL"],
             
-            // Mechanical properties
-            density_g_cm3: row["density_g_cm3"] ? parseFloat(row["density_g_cm3"]) : null,
-            tensile_strength_xy_mpa: row["tensile_strength_xy_mpa"] ? parseFloat(row["tensile_strength_xy_mpa"]) : null,
-            tensile_modulus_xy_mpa: row["tensile_modulus_xy_mpa"] ? parseFloat(row["tensile_modulus_xy_mpa"]) : null,
-            elongation_break_xy_percent: row["elongation_break_xy_percent"] ? parseFloat(row["elongation_break_xy_percent"]) : null,
-            flexural_strength_mpa: row["flexural_strength_mpa"] ? parseFloat(row["flexural_strength_mpa"]) : null,
-            shore_hardness_d: row["shore_hardness_d"] ? parseFloat(row["shore_hardness_d"]) : null,
+            // Numeric fields
+            density_g_cm3: parseFloat(row.density_g_cm3 || row.Density_g_cm3) || null,
+            tensile_strength_xy_mpa: parseFloat(row.tensile_strength_xy_mpa || row.Tensile_Strength_XY_MPa) || null,
+            tensile_modulus_xy_mpa: parseFloat(row.tensile_modulus_xy_mpa || row.Tensile_Modulus_XY_MPa) || null,
+            elongation_break_xy_percent: parseFloat(row.elongation_break_xy_percent || row.Elongation_Break_XY_Percent) || null,
+            flexural_strength_mpa: parseFloat(row.flexural_strength_mpa || row.Flexural_Strength_MPa) || null,
+            shore_hardness_d: parseFloat(row.shore_hardness_d || row.Shore_Hardness_D) || null,
+            tg_c: parseFloat(row.tg_c || row.Tg_C) || null,
+            melt_temp_c: parseFloat(row.melt_temp_c || row.Melt_Temp_C) || null,
             
-            // Thermal properties
-            tg_c: row["tg_c"] ? parseFloat(row["tg_c"]) : null,
-            melt_temp_c: row["melt_temp_c"] ? parseFloat(row["melt_temp_c"]) : null,
-            nozzle_temp_min_c: row["nozzle_temp_min_c"] ? parseInt(row["nozzle_temp_min_c"]) : null,
-            nozzle_temp_max_c: row["nozzle_temp_max_c"] ? parseInt(row["nozzle_temp_max_c"]) : null,
-            nozzle_temp_sweetspot_c: row["nozzle_temp_sweetspot_c"] ? parseInt(row["nozzle_temp_sweetspot_c"]) : null,
-            bed_temp_min_c: row["bed_temp_min_c"] ? parseInt(row["bed_temp_min_c"]) : null,
-            bed_temp_max_c: row["bed_temp_max_c"] ? parseInt(row["bed_temp_max_c"]) : null,
+            // Temperature settings
+            nozzle_temp_min_c: parseInt(row.nozzle_temp_min_c || row.Nozzle_Temp_Min_C) || null,
+            nozzle_temp_max_c: parseInt(row.nozzle_temp_max_c || row.Nozzle_Temp_Max_C) || null,
+            nozzle_temp_sweetspot_c: parseInt(row.nozzle_temp_sweetspot_c || row.Nozzle_Temp_Sweetspot_C) || null,
+            bed_temp_min_c: parseInt(row.bed_temp_min_c || row.Bed_Temp_Min_C) || null,
+            bed_temp_max_c: parseInt(row.bed_temp_max_c || row.Bed_Temp_Max_C) || null,
             
             // Print settings
-            print_speed_max_mms: row["print_speed_max_mms"] ? parseInt(row["print_speed_max_mms"]) : null,
-            fan_min_percent: row["fan_min_percent"] ? parseInt(row["fan_min_percent"]) : null,
-            fan_max_percent: row["fan_max_percent"] ? parseInt(row["fan_max_percent"]) : null,
+            print_speed_max_mms: parseInt(row.print_speed_max_mms || row.Print_Speed_Max_MMS) || null,
+            fan_min_percent: parseInt(row.fan_min_percent || row.Fan_Min_Percent) || null,
+            fan_max_percent: parseInt(row.fan_max_percent || row.Fan_Max_Percent) || null,
             
             // Physical properties
-            diameter_nominal_mm: row["diameter_nominal_mm"] ? parseFloat(row["diameter_nominal_mm"]) : null,
-            net_weight_g: row["net_weight_g"] ? parseInt(row["net_weight_g"]) : null,
-            spool_outer_d_mm: row["spool_outer_d_mm"] ? parseFloat(row["spool_outer_d_mm"]) : null,
-            spool_width_mm: row["spool_width_mm"] ? parseFloat(row["spool_width_mm"]) : null,
+            diameter_nominal_mm: parseFloat(row.diameter_nominal_mm || row.Diameter_Nominal_MM) || null,
+            net_weight_g: parseInt(row.net_weight_g || row.Net_Weight_G) || null,
+            spool_outer_d_mm: parseFloat(row.spool_outer_d_mm || row.Spool_Outer_D_MM) || null,
+            spool_width_mm: parseFloat(row.spool_width_mm || row.Spool_Width_MM) || null,
             
-            // Appearance
-            color_hex: row["color_hex"],
-            color_family: row["color_family"],
-            finish_type: row["finish_type"],
+            // Color properties
+            color_hex: row.color_hex || row.Color_Hex,
+            color_family: row.color_family || row.Color_Family,
+            finish_type: row.finish_type || row.Finish_Type,
             
-            // Compatibility
-            is_nozzle_abrasive: row["is_nozzle_abrasive"] === "true",
-            recommended_nozzle_type: row["recommended_nozzle_type"],
-            spool_ams_fit: row["spool_ams_fit"] === "true",
+            // Care and compatibility
+            recommended_nozzle_type: row.recommended_nozzle_type || row.Recommended_Nozzle_Type,
+            moisture_sensitivity_level: row.moisture_sensitivity_level || row.Moisture_Sensitivity_Level,
+            moisture_care: row.moisture_care || row.Moisture_Care,
+            nozzle_care: row.nozzle_care || row.Nozzle_Care,
+            drying_temp_c: parseInt(row.drying_temp_c || row.Drying_Temp_C) || null,
+            drying_time_hours: parseInt(row.drying_time_hours || row.Drying_Time_Hours) || null,
             
-            // Ratings
-            ease_of_printing_score: row["ease_of_printing_score"] ? parseInt(row["ease_of_printing_score"]) : null,
-            dimensional_accuracy_score: row["dimensional_accuracy_score"] ? parseInt(row["dimensional_accuracy_score"]) : null,
-            strength_index: row["strength_index"] ? parseFloat(row["strength_index"]) : null,
-            printability_index: row["printability_index"] ? parseFloat(row["printability_index"]) : null,
-            value_score: row["value_score"] ? parseFloat(row["value_score"]) : null,
+            // Boolean flags
+            is_nozzle_abrasive: row.is_nozzle_abrasive === 'true' || row.is_nozzle_abrasive === '1' || row.Is_Nozzle_Abrasive === 'true',
+            spool_ams_fit: row.spool_ams_fit === 'true' || row.spool_ams_fit === '1' || row.Spool_AMS_Fit === 'true',
+            variant_available: row.variant_available !== 'false' && row.Variant_Available !== 'false',
             
-            // Care
-            moisture_sensitivity_level: row["moisture_sensitivity_level"],
-            drying_temp_c: row["drying_temp_c"] ? parseInt(row["drying_temp_c"]) : null,
-            drying_time_hours: row["drying_time_hours"] ? parseInt(row["drying_time_hours"]) : null,
-            nozzle_care: row["nozzle_care"],
-            moisture_care: row["moisture_care"],
+            // Scores
+            ease_of_printing_score: parseInt(row.ease_of_printing_score || row.Ease_of_Printing_Score) || null,
+            dimensional_accuracy_score: parseInt(row.dimensional_accuracy_score || row.Dimensional_Accuracy_Score) || null,
+            strength_index: parseFloat(row.strength_index || row.Strength_Index) || null,
+            printability_index: parseFloat(row.printability_index || row.Printability_Index) || null,
+            value_score: parseFloat(row.value_score || row.Value_Score) || null,
             
-            // Use cases
-            use_case_tags: row["use_case_tags"] ? row["use_case_tags"].split(";") : null,
-            industry_tags: row["industry_tags"] ? row["industry_tags"].split(";") : null,
-            food_contact_rating: row["food_contact_rating"],
+            // Price
+            variant_price: parseFloat(row.variant_price || row.Variant_Price || row["Variant Price"]) || null,
+            
+            // Tags and arrays
+            use_case_tags: row.use_case_tags ? (row.use_case_tags.split(';').map((t: string) => t.trim())) : null,
+            industry_tags: row.industry_tags ? (row.industry_tags.split(';').map((t: string) => t.trim())) : null,
+            
+            // Other
+            food_contact_rating: row.food_contact_rating || row.Food_Contact_Rating,
           };
+
+          // Remove null/undefined values
+          Object.keys(filamentData).forEach(key => {
+            if (filamentData[key] === null || filamentData[key] === undefined || filamentData[key] === '') {
+              delete filamentData[key];
+            }
+          });
 
           const { error } = await supabase
             .from("filaments")
             .upsert(filamentData, { onConflict: "product_id" });
 
           if (error) {
-            console.error("Error inserting row:", error);
             errorCount++;
+            errors.push(`${filamentData.product_title || 'Unknown'}: ${error.message}`);
           } else {
             successCount++;
           }
-        } catch (error) {
-          console.error("Error processing row:", error);
+        } catch (rowError: any) {
           errorCount++;
+          errors.push(`Row error: ${rowError.message}`);
         }
+      }
+
+      if (errors.length > 0 && errors.length <= 5) {
+        console.error("Import errors:", errors);
       }
 
       toast({
         title: "Import Complete",
         description: `Successfully imported ${successCount} filaments. ${errorCount} errors.`,
+        variant: errorCount > 0 ? "destructive" : "default",
       });
 
       setFile(null);

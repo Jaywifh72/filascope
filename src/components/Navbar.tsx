@@ -80,6 +80,15 @@ const Navbar = () => {
               Diagnose
             </Link>
           </Button>
+          
+          {isAdmin && (
+            <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+              <Link to="/admin/dashboard" className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                Admin
+              </Link>
+            </Button>
+          )}
         </div>
 
         {/* Right Actions */}
