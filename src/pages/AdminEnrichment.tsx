@@ -4,11 +4,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, AlertCircle, TrendingUp } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, TrendingUp, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface FilamentToEnrich {
   id: string;
@@ -175,6 +176,78 @@ const AdminEnrichment = () => {
     }
   };
 
+  const calculateConfidence = (
+    diameter: number | null,
+    material: string | null,
+    estimatedWeight: number
+  ): { score: number; label: string; color: string; reasons: string[] } => {
+    let score = 100;
+    const reasons: string[] = [];
+
+    // Diameter impact (40% of confidence)
+    if (!diameter || diameter <= 0) {
+      score -= 40;
+      reasons.push('No diameter data - using default 1.75mm');
+    } else if (diameter < 1.5 || diameter > 3.5) {
+      score -= 20;
+      reasons.push('Unusual diameter - may be specialty filament');
+    }
+
+    // Material impact (40% of confidence)
+    if (!material) {
+      score -= 40;
+      reasons.push('No material data - assuming PLA density');
+    } else {
+      const densities: { [key: string]: number } = {
+        'PLA': 1.24, 'PLA+': 1.24, 'PETG': 1.27, 'ABS': 1.04, 'ASA': 1.07,
+        'TPU': 1.21, 'Nylon': 1.14, 'PC': 1.20, 'PVA': 1.23, 'HIPS': 1.04,
+        'PP': 0.90, 'PVB': 1.08, 'PCTG': 1.23, 'Co-Polyester': 1.27,
+        'PEEK': 1.32, 'PPSU': 1.29, 'PEI': 1.27, 'PEBA': 1.01,
+      };
+
+      const isComposite = material.includes('-CF') || material.includes('-GF') || 
+                         material.includes('Carbon') || material.includes('Glass');
+      
+      if (isComposite) {
+        score -= 15;
+        reasons.push('Composite material - density may vary by fiber content');
+      } else if (!densities[material]) {
+        score -= 25;
+        reasons.push('Unknown material - using estimated density');
+      }
+    }
+
+    // Weight bounds check (20% of confidence)
+    if (estimatedWeight === 1000 && !diameter) {
+      score -= 20;
+      reasons.push('Default weight used - no specific calculation possible');
+    } else if (estimatedWeight < 300 || estimatedWeight > 1500) {
+      score -= 10;
+      reasons.push('Unusual weight - verify against manufacturer specs');
+    }
+
+    // Determine label and color
+    let label: string;
+    let color: string;
+    
+    if (score >= 85) {
+      label = 'High';
+      color = 'text-green-600';
+    } else if (score >= 65) {
+      label = 'Medium';
+      color = 'text-yellow-600';
+    } else {
+      label = 'Low';
+      color = 'text-orange-600';
+    }
+
+    if (reasons.length === 0) {
+      reasons.push('Complete data with standard material and diameter');
+    }
+
+    return { score, label, color, reasons };
+  };
+
   const getMaterialDensity = (material: string | null): number => {
     // Material densities in g/cm³
     const densities: { [key: string]: number } = {
@@ -304,10 +377,11 @@ const AdminEnrichment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+    <TooltipProvider>
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
               <Link to="/admin">
@@ -388,6 +462,11 @@ const AdminEnrichment = () => {
           ) : (
             filaments.map((filament) => {
               const suggestedWeight = getSuggestedWeight(filament.diameter_nominal_mm, filament.material);
+              const confidence = calculateConfidence(
+                filament.diameter_nominal_mm,
+                filament.material,
+                suggestedWeight
+              );
               
               return (
                 <Card key={filament.id} className="p-4">
@@ -410,6 +489,31 @@ const AdminEnrichment = () => {
                     <div className="text-sm">
                       <p className="text-muted-foreground">Price:</p>
                       <p className="font-semibold text-foreground">${filament.variant_price.toFixed(2)}</p>
+                    </div>
+
+                    {/* Confidence Score */}
+                    <div className="text-sm min-w-[100px]">
+                      <p className="text-xs text-muted-foreground mb-1">Confidence</p>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-2 cursor-help">
+                            <span className={`font-semibold ${confidence.color}`}>
+                              {confidence.score}% {confidence.label}
+                            </span>
+                            <Info className="w-3 h-3 text-muted-foreground" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <div className="space-y-1">
+                            <p className="font-semibold text-xs">Estimation Factors:</p>
+                            <ul className="text-xs space-y-0.5">
+                              {confidence.reasons.map((reason, idx) => (
+                                <li key={idx}>• {reason}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
 
                     {/* Weight Input */}
@@ -459,6 +563,7 @@ const AdminEnrichment = () => {
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 };
 
