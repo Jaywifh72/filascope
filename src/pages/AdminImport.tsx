@@ -346,7 +346,7 @@ const AdminImport = () => {
               // Physical properties
               density_g_cm3: parseNumber(row['density_g_cm3']),
               diameter_nominal_mm: parseNumber(row['diameter_nominal_mm']),
-              net_weight_g: parseWeight(row['Variant Weight']),
+              net_weight_g: parseWeight(row['Variant Weight Unit']),
               spool_outer_d_mm: parseNumber(row['spool_outer_d_mm']),
               spool_width_mm: parseNumber(row['spool_width_mm']),
               variant_price: parseNumber(row['Variant Price']),
