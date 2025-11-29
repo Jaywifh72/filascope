@@ -787,6 +787,14 @@ const AdminImport = () => {
               }
             });
 
+            // Generate product_id if missing - use a hash of vendor + title for uniqueness
+            if (!filamentData.product_id) {
+              const vendor = filamentData.vendor || 'unknown';
+              const title = productTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50);
+              filamentData.product_id = `${vendor.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${title}-${globalRowIndex}`;
+              console.log(`Generated product_id: ${filamentData.product_id} for row ${globalRowIndex + 2}`);
+            }
+
             const { error } = await supabase
               .from("filaments")
               .upsert(filamentData, { onConflict: "product_id" });
