@@ -361,12 +361,10 @@ const Finder = () => {
                       {filament.amazon_link_us && (
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                          variant="amazon"
                           asChild
                         >
                           <a href={filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="w-3 h-3 mr-1" />
                             <span className="text-xs">Amazon</span>
                           </a>
                         </Button>

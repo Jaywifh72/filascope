@@ -131,9 +131,9 @@ const FilamentDetail = () => {
                       </Button>
                     )}
                     {filament.amazon_link_us && (
-                      <Button asChild variant="outline" size="lg">
+                      <Button asChild variant="amazon" size="lg">
                         <a href={filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4 mr-2" />
+                          <ShoppingCart className="w-4 h-4 mr-2" />
                           Amazon
                         </a>
                       </Button>
