@@ -133,6 +133,46 @@ const AdminImport = () => {
     return result;
   };
 
+  // Helper function to download and upload image to storage
+  const downloadAndUploadImage = async (imageUrl: string, productId: string): Promise<string | null> => {
+    try {
+      // Download the image
+      const response = await fetch(imageUrl);
+      if (!response.ok) return null;
+      
+      const blob = await response.blob();
+      
+      // Generate a filename from the URL
+      const urlParts = imageUrl.split('/');
+      const originalFilename = urlParts[urlParts.length - 1].split('?')[0];
+      const extension = originalFilename.split('.').pop() || 'jpg';
+      const filename = `${productId}-${Date.now()}.${extension}`;
+      
+      // Upload to Supabase storage
+      const { data, error } = await supabase.storage
+        .from('filament-images')
+        .upload(filename, blob, {
+          contentType: blob.type,
+          upsert: true
+        });
+      
+      if (error) {
+        console.error('Storage upload error:', error);
+        return null;
+      }
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('filament-images')
+        .getPublicUrl(data.path);
+      
+      return publicUrl;
+    } catch (error) {
+      console.error('Image download error:', error);
+      return null;
+    }
+  };
+
   const handleUpload = async () => {
     if (!file) return;
 
@@ -216,13 +256,25 @@ const AdminImport = () => {
             return value === 'true' || value === '1' || value === 'TRUE' || value === 'True';
           };
 
+          // Download and upload image if present
+          const originalImageUrl = row.featured_image || row.Featured_Image || row["Featured Image"] || row.image || null;
+          let storedImageUrl = originalImageUrl;
+          
+          if (originalImageUrl && originalImageUrl.startsWith('http')) {
+            const productId = row.product_id || row.Product_ID || row["Product ID"] || `product-${i}`;
+            const uploadedUrl = await downloadAndUploadImage(originalImageUrl, productId);
+            if (uploadedUrl) {
+              storedImageUrl = uploadedUrl;
+            }
+          }
+
           const filamentData: any = {
             product_id: row.product_id || row.Product_ID || row["Product ID"] || null,
             product_title: productTitle.trim(),
             product_handle: row.product_handle || row.Product_Handle || row["Product Handle"] || null,
             vendor: row.vendor || row.Vendor || null,
             material: row.material || row.Material || null,
-            featured_image: row.featured_image || row.Featured_Image || row["Featured Image"] || row.image || null,
+            featured_image: storedImageUrl,
             variant_sku: row.variant_sku || row.Variant_SKU || row["Variant SKU"] || null,
             product_url: row.product_url || row.Product_URL || row["Product URL"] || null,
             amazon_link_us: row.amazon_link_us || row.Amazon_Link_US || row["Amazon Link US"] || null,
