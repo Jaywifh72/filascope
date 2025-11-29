@@ -9,7 +9,6 @@ interface PriceData {
   filament_id: string;
   region: string;
   price: number;
-  source: string;
 }
 
 interface WeightData {
@@ -111,16 +110,38 @@ function extractPrice(html: string, url: string): number | null {
   return null;
 }
 
+// Validate if a string is a valid URL
+function isValidUrl(urlString: string | null): boolean {
+  if (!urlString || urlString === 'null' || urlString.length < 10) {
+    return false;
+  }
+  
+  // Check if it starts with http:// or https://
+  if (!urlString.startsWith('http://') && !urlString.startsWith('https://')) {
+    return false;
+  }
+  
+  try {
+    new URL(urlString);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Fetch price and weight from a URL
 async function fetchDataFromUrl(url: string | null, region: string): Promise<{ price: number | null; weight: number | null }> {
-  if (!url || url === 'null' || url.length < 10) {
+  if (!isValidUrl(url)) {
+    if (url && url !== 'null') {
+      console.log(`Skipping invalid URL for ${region}: ${url}`);
+    }
     return { price: null, weight: null };
   }
   
   try {
-    console.log(`Fetching ${region} data from: ${url}`);
+    console.log(`✓ Fetching ${region} data from: ${url}`);
     
-    const response = await fetch(url, {
+    const response = await fetch(url!, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -128,17 +149,19 @@ async function fetchDataFromUrl(url: string | null, region: string): Promise<{ p
     });
     
     if (!response.ok) {
-      console.error(`Failed to fetch ${url}: ${response.status}`);
+      console.log(`✗ Failed to fetch ${url}: ${response.status}`);
       return { price: null, weight: null };
     }
     
     const html = await response.text();
-    return {
-      price: extractPrice(html, url),
-      weight: extractWeight(html, url)
-    };
+    const price = extractPrice(html, url!);
+    const weight = extractWeight(html, url!);
+    
+    console.log(`✓ Scraped ${region}: price=${price ? '$' + price : 'none'}, weight=${weight ? weight + 'g' : 'none'}`);
+    
+    return { price, weight };
   } catch (error) {
-    console.error(`Error fetching data from ${url}:`, error);
+    console.log(`✗ Error fetching ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return { price: null, weight: null };
   }
 }
@@ -232,25 +255,36 @@ Deno.serve(async (req) => {
       failed: 0,
       prices: [] as PriceData[],
       weights_updated: 0,
+      details: [] as Array<{
+        filament_id: string;
+        product_title: string;
+        status: 'success' | 'partial' | 'failed';
+        prices_found: number;
+        weight_found: boolean;
+        sources_checked: number;
+      }>,
     };
 
     for (const filament of filaments || []) {
       results.processed++;
-      console.log(`Processing: ${filament.product_title}`);
+      console.log(`\n========== Processing [${results.processed}/${filaments?.length}]: ${filament.product_title} ==========`);
       
       const prices: PriceData[] = [];
       let extractedWeight: number | null = null;
+      let sourcesChecked = 0;
       
       // Fetch from all available sources
       const sources = [
-        { url: filament.product_url, region: 'US', source: 'brand' },
-        { url: filament.amazon_link_us, region: 'US', source: 'amazon' },
-        { url: filament.amazon_link_uk, region: 'UK', source: 'amazon' },
-        { url: filament.amazon_link_de, region: 'DE', source: 'amazon' },
+        { url: filament.product_url, region: 'US', label: 'Brand Store' },
+        { url: filament.amazon_link_us, region: 'US', label: 'Amazon US' },
+        { url: filament.amazon_link_uk, region: 'UK', label: 'Amazon UK' },
+        { url: filament.amazon_link_de, region: 'DE', label: 'Amazon DE' },
       ];
 
-      for (const { url, region, source } of sources) {
-        if (url && url !== 'null') {
+      for (const { url, region, label } of sources) {
+        if (isValidUrl(url)) {
+          sourcesChecked++;
+          console.log(`  → Checking ${label}...`);
           const { price, weight } = await fetchDataFromUrl(url, region);
           
           if (price !== null) {
@@ -258,13 +292,14 @@ Deno.serve(async (req) => {
               filament_id: filament.id,
               region,
               price,
-              source,
             });
+            console.log(`  ✓ Price found: $${price}`);
           }
           
           // Store weight from first source that has it (prioritize brand store)
           if (weight !== null && extractedWeight === null) {
             extractedWeight = weight;
+            console.log(`  ✓ Weight found: ${weight}g`);
           }
           
           // Add delay to avoid rate limiting
@@ -272,6 +307,14 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Determine status
+      let status: 'success' | 'partial' | 'failed' = 'failed';
+      if (prices.length > 0 || extractedWeight !== null) {
+        status = (prices.length > 0 && extractedWeight !== null) ? 'success' : 'partial';
+      }
+      
+      console.log(`  Summary: ${prices.length} prices, ${extractedWeight ? 'weight found' : 'no weight'}, ${sourcesChecked} sources checked`);
+      
       if (prices.length > 0 || extractedWeight !== null) {
         let hasError = false;
         
@@ -282,11 +325,11 @@ Deno.serve(async (req) => {
             .insert(prices);
 
           if (priceError) {
-            console.error(`Failed to insert prices for ${filament.id}:`, priceError);
+            console.log(`  ✗ DB Error inserting prices: ${priceError.message}`);
             hasError = true;
           } else {
             results.prices.push(...prices);
-            console.log(`Updated ${prices.length} prices for ${filament.product_title}`);
+            console.log(`  ✓ DB: Saved ${prices.length} price records`);
           }
         }
         
@@ -294,10 +337,8 @@ Deno.serve(async (req) => {
         const updates: { variant_price?: number; net_weight_g?: number } = {};
         
         if (prices.length > 0) {
-          // Update variant_price with US price (prioritize brand store, then Amazon)
-          const usPrice = prices.find(p => p.region === 'US' && p.source === 'brand')?.price ||
-                         prices.find(p => p.region === 'US')?.price ||
-                         prices[0]?.price;
+          // Update variant_price with US price (prefer first US price found)
+          const usPrice = prices.find(p => p.region === 'US')?.price || prices[0]?.price;
           if (usPrice) {
             updates.variant_price = usPrice;
           }
@@ -305,7 +346,6 @@ Deno.serve(async (req) => {
         
         if (extractedWeight !== null) {
           updates.net_weight_g = extractedWeight;
-          console.log(`Found weight: ${extractedWeight}g for ${filament.product_title}`);
         }
         
         if (Object.keys(updates).length > 0) {
@@ -315,9 +355,10 @@ Deno.serve(async (req) => {
             .eq('id', filament.id);
             
           if (updateError) {
-            console.error(`Failed to update filament ${filament.id}:`, updateError);
+            console.log(`  ✗ DB Error updating filament: ${updateError.message}`);
             hasError = true;
           } else {
+            console.log(`  ✓ DB: Updated filament (price=${updates.variant_price ? '$' + updates.variant_price : 'no'}, weight=${updates.net_weight_g ? updates.net_weight_g + 'g' : 'no'})`);
             if (extractedWeight !== null) {
               results.weights_updated++;
             }
@@ -328,14 +369,29 @@ Deno.serve(async (req) => {
           results.updated++;
         } else {
           results.failed++;
+          status = 'failed';
         }
       } else {
         results.failed++;
-        console.log(`No data found for ${filament.product_title}`);
+        console.log(`  ✗ No data extracted from any source`);
       }
+      
+      // Add to details
+      results.details.push({
+        filament_id: filament.id,
+        product_title: filament.product_title,
+        status,
+        prices_found: prices.length,
+        weight_found: extractedWeight !== null,
+        sources_checked: sourcesChecked,
+      });
     }
 
-    console.log(`Complete: ${results.updated} updated, ${results.failed} failed`);
+    console.log(`\n========== COMPLETE ==========`);
+    console.log(`✓ Successfully updated: ${results.updated}`);
+    console.log(`✗ Failed: ${results.failed}`);
+    console.log(`📊 Total prices found: ${results.prices.length}`);
+    console.log(`⚖️  Weights updated: ${results.weights_updated}`);
 
     return new Response(
       JSON.stringify(results),
