@@ -367,9 +367,21 @@ const AdminEnrichment = () => {
   };
 
   const [isFetchingPrices, setIsFetchingPrices] = useState(false);
+  const [scrapingStatus, setScrapingStatus] = useState<Array<{
+    filament_id: string;
+    product_title: string;
+    status: 'success' | 'partial' | 'failed';
+    prices_found: number;
+    weight_found: boolean;
+    sources_checked: number;
+  }>>([]);
+  const [showScrapingResults, setShowScrapingResults] = useState(false);
   
   const handleMasterFetchPrices = async () => {
     setIsFetchingPrices(true);
+    setScrapingStatus([]);
+    setShowScrapingResults(false);
+    
     try {
       const { data, error } = await supabase.functions.invoke('fetch-prices', {
         body: { filament_ids: null }, // Fetch ALL filaments
@@ -381,9 +393,14 @@ const AdminEnrichment = () => {
         ? ` and ${data.weights_updated} weights` 
         : '';
       
+      if (data.details) {
+        setScrapingStatus(data.details);
+        setShowScrapingResults(true);
+      }
+      
       toast({
         title: "Master price fetch complete",
-        description: `Updated ${data.updated} prices${weightInfo} from ${data.processed} products. Found ${data.prices.length} total price points.`,
+        description: `Updated ${data.updated} products${weightInfo}. Found ${data.prices.length} total price points from ${data.processed} products.`,
       });
       
       // Refresh the list
@@ -477,6 +494,75 @@ const AdminEnrichment = () => {
             The system will calculate price per KG for each filament. Weight estimates can be further refined using material density calculations.
           </AlertDescription>
         </Alert>
+
+        {/* Scraping Results */}
+        {showScrapingResults && scrapingStatus.length > 0 && (
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Scraping Results</h3>
+              <Button variant="ghost" size="sm" onClick={() => setShowScrapingResults(false)}>
+                Dismiss
+              </Button>
+            </div>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {scrapingStatus.map((item) => (
+                <div
+                  key={item.filament_id}
+                  className="flex items-center justify-between p-3 border border-border rounded-lg"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-foreground truncate">
+                      {item.product_title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.sources_checked} sources checked
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 ml-4">
+                    <Badge
+                      variant={
+                        item.status === 'success'
+                          ? 'default'
+                          : item.status === 'partial'
+                          ? 'secondary'
+                          : 'destructive'
+                      }
+                      className="text-xs"
+                    >
+                      {item.status === 'success' && '✓ Success'}
+                      {item.status === 'partial' && '⚠ Partial'}
+                      {item.status === 'failed' && '✗ Failed'}
+                    </Badge>
+                    <div className="text-xs text-muted-foreground">
+                      {item.prices_found} price{item.prices_found !== 1 ? 's' : ''}
+                      {item.weight_found && ' • weight ✓'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-4 text-center pt-4 border-t border-border">
+              <div>
+                <p className="text-2xl font-bold text-green-600">
+                  {scrapingStatus.filter(s => s.status === 'success').length}
+                </p>
+                <p className="text-xs text-muted-foreground">Complete</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {scrapingStatus.filter(s => s.status === 'partial').length}
+                </p>
+                <p className="text-xs text-muted-foreground">Partial</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-red-600">
+                  {scrapingStatus.filter(s => s.status === 'failed').length}
+                </p>
+                <p className="text-xs text-muted-foreground">Failed</p>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Stats */}
         <Card className="p-6">
