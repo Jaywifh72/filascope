@@ -349,9 +349,14 @@ const Finder = () => {
             <div className="text-center py-16 text-muted-foreground">Loading filaments...</div>
           ) : filteredFilaments && filteredFilaments.length > 0 ? (
             filteredFilaments.map((filament) => {
-              const pricePerKg = filament.variant_price && filament.net_weight_g 
+              // Calculate price per kg if both price and weight are available
+              const pricePerKg = filament.variant_price && filament.net_weight_g && filament.net_weight_g > 0
                 ? ((filament.variant_price / filament.net_weight_g) * 1000).toFixed(2)
                 : null;
+              
+              // Use raw price if per-kg calculation isn't possible
+              const displayPrice = pricePerKg || (filament.variant_price ? filament.variant_price.toFixed(2) : null);
+              const priceLabel = pricePerKg ? '/kg' : (filament.variant_price ? 'ea' : null);
               
               const overallScore = filament.value_score || 7.0;
 
@@ -423,10 +428,10 @@ const Finder = () => {
                     {/* Price */}
                     <div className="flex items-center gap-4 lg:flex-col lg:gap-0 lg:text-center">
                       <span className="text-xs text-muted-foreground lg:mb-1">Price</span>
-                      {pricePerKg ? (
+                      {displayPrice ? (
                         <div>
-                          <p className="font-semibold text-foreground">${pricePerKg}</p>
-                          <p className="text-xs text-muted-foreground">/kg</p>
+                          <p className="font-semibold text-foreground">${displayPrice}</p>
+                          <p className="text-xs text-muted-foreground">{priceLabel}</p>
                         </div>
                       ) : (
                         <p className="text-sm text-muted-foreground">—</p>
