@@ -105,16 +105,16 @@ const FilamentDetail = () => {
                   </div>
 
                   <div className="flex gap-2 flex-wrap mb-6">
-                    {filament.material && !filament.material.startsWith('http') && !filament.material.startsWith('www.') && (
+                    {filament.material && (
                       <Badge variant="default" className="text-sm px-3 py-1">{filament.material}</Badge>
                     )}
                     {filament.diameter_nominal_mm && (
                       <Badge variant="outline" className="text-sm px-3 py-1">{filament.diameter_nominal_mm}mm</Badge>
                     )}
-                    {filament.color_family && !filament.color_family.startsWith('http') && !filament.color_family.startsWith('www.') && (
+                    {filament.color_family && (
                       <Badge variant="outline" className="text-sm px-3 py-1">{filament.color_family}</Badge>
                     )}
-                    {filament.finish_type && !filament.finish_type.startsWith('http') && !filament.finish_type.startsWith('www.') && !isFinite(Number(filament.finish_type)) && (
+                    {filament.finish_type && (
                       <Badge variant="outline" className="text-sm px-3 py-1">{filament.finish_type}</Badge>
                     )}
                     {filament.is_nozzle_abrasive && (
@@ -132,18 +132,9 @@ const FilamentDetail = () => {
                         </a>
                       </Button>
                     )}
-                    {/* Check multiple fields for Amazon URL due to data inconsistency */}
-                    {(filament.amazon_link_us || 
-                      (filament.material?.startsWith('http') && filament.material.includes('amazon')) ||
-                      (filament.color_family?.startsWith('http') && filament.color_family.includes('amazon')) ||
-                      (filament.finish_type?.startsWith('http') && filament.finish_type.includes('amazon'))) && (
+                    {filament.amazon_link_us && (
                       <Button asChild variant="amazon" size="lg">
-                        <a href={
-                          filament.amazon_link_us || 
-                          (filament.material?.startsWith('http') ? filament.material : '') ||
-                          (filament.color_family?.startsWith('http') ? filament.color_family : '') ||
-                          (filament.finish_type?.startsWith('http') ? filament.finish_type : '')
-                        } target="_blank" rel="noopener noreferrer">
+                        <a href={filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
                           <ShoppingCart className="w-4 h-4 mr-2" />
                           View on Amazon
                         </a>
@@ -444,11 +435,9 @@ const FilamentDetail = () => {
                     <div>
                       <span className="text-sm text-muted-foreground block mb-2">Use Cases</span>
                       <div className="flex flex-wrap gap-2">
-                        {filament.use_case_tags
-                          .filter((tag) => !tag.startsWith('http') && !tag.startsWith('www.'))
-                          .map((tag, index) => (
-                            <Badge key={index} variant="secondary">{tag}</Badge>
-                          ))}
+                        {filament.use_case_tags.map((tag, index) => (
+                          <Badge key={index} variant="secondary">{tag}</Badge>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -456,11 +445,9 @@ const FilamentDetail = () => {
                     <div>
                       <span className="text-sm text-muted-foreground block mb-2">Industries</span>
                       <div className="flex flex-wrap gap-2">
-                        {filament.industry_tags
-                          .filter((tag) => !tag.startsWith('http') && !tag.startsWith('www.'))
-                          .map((tag, index) => (
-                            <Badge key={index} variant="outline">{tag}</Badge>
-                          ))}
+                        {filament.industry_tags.map((tag, index) => (
+                          <Badge key={index} variant="outline">{tag}</Badge>
+                        ))}
                       </div>
                     </div>
                   )}
