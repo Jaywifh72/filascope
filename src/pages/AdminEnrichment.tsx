@@ -398,9 +398,16 @@ const AdminEnrichment = () => {
         setShowScrapingResults(true);
       }
       
+      let description = `Updated ${data.updated} products${weightInfo}. Found ${data.prices.length} total price points from ${data.processed} products.`;
+      
+      if (data.timeout_reached) {
+        description += ` Processing was limited to avoid timeout. Click "Fetch All Prices & Weights" again to continue with the next batch.`;
+      }
+      
       toast({
-        title: "Master price fetch complete",
-        description: `Updated ${data.updated} products${weightInfo}. Found ${data.prices.length} total price points from ${data.processed} products.`,
+        title: data.timeout_reached ? "Batch complete (more remain)" : "Master price fetch complete",
+        description,
+        duration: data.timeout_reached ? 8000 : 5000,
       });
       
       // Refresh the list

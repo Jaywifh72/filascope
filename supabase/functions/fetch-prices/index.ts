@@ -256,7 +256,7 @@ Deno.serve(async (req) => {
 
     const { filament_ids } = await req.json();
     
-    console.log(`Fetching prices for ${filament_ids?.length || 'ALL'} filaments`);
+    console.log(`Fetching prices for ${filament_ids?.length || 'batch'} filaments`);
 
     // Fetch filaments that need price updates
     let query = supabaseService
@@ -266,8 +266,12 @@ Deno.serve(async (req) => {
     if (filament_ids && filament_ids.length > 0) {
       query = query.in('id', filament_ids);
     } else {
-      // Fetch ALL filaments when no specific IDs provided
-      query = query.limit(200); // Process in batches of 200
+      // Fetch filaments in smaller batches to avoid timeout
+      // Process 20 at a time, prioritizing those missing weight data
+      query = query
+        .or('net_weight_g.is.null,net_weight_g.eq.0')
+        .not('product_url', 'is', null)
+        .limit(20);
     }
 
     const { data: filaments, error: fetchError } = await query;
@@ -284,6 +288,7 @@ Deno.serve(async (req) => {
       failed: 0,
       prices: [] as PriceData[],
       weights_updated: 0,
+      timeout_reached: false,
       details: [] as Array<{
         filament_id: string;
         product_title: string;
@@ -294,7 +299,18 @@ Deno.serve(async (req) => {
       }>,
     };
 
+    // Set a timeout to prevent function from running too long (90 seconds max)
+    const startTime = Date.now();
+    const MAX_EXECUTION_TIME = 90000; // 90 seconds
+
     for (const filament of filaments || []) {
+      // Check if we're approaching timeout
+      if (Date.now() - startTime > MAX_EXECUTION_TIME) {
+        console.log(`\n⏱️  Timeout reached after processing ${results.processed} filaments`);
+        results.timeout_reached = true;
+        break;
+      }
+
       results.processed++;
       console.log(`\n========== Processing [${results.processed}/${filaments?.length}]: ${filament.product_title} ==========`);
       
@@ -421,6 +437,9 @@ Deno.serve(async (req) => {
     console.log(`✗ Failed: ${results.failed}`);
     console.log(`📊 Total prices found: ${results.prices.length}`);
     console.log(`⚖️  Weights updated: ${results.weights_updated}`);
+    if (results.timeout_reached) {
+      console.log(`⏱️  Note: Batch limit reached, more filaments may need processing`);
+    }
 
     return new Response(
       JSON.stringify(results),
