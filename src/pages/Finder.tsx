@@ -69,9 +69,24 @@ const Finder = () => {
       
       if (error) throw error;
       
-      // Get unique materials and sort them
+      // Get unique materials
       const uniqueMaterials = Array.from(new Set(data.map(f => f.material))).sort();
-      return ["All", ...uniqueMaterials];
+      
+      // Categorize materials
+      const standard = ['PLA', 'PLA+', 'PETG', 'ABS', 'ASA', 'TPU', 'HIPS'];
+      const composites = uniqueMaterials.filter(m => 
+        m.includes('-CF') || m.includes('-GF') || m.includes('Carbon Fiber') || m.includes('Wood Fill')
+      );
+      const specialty = uniqueMaterials.filter(m => 
+        !standard.includes(m) && !composites.includes(m)
+      );
+      
+      return {
+        all: uniqueMaterials,
+        standard: standard.filter(m => uniqueMaterials.includes(m)),
+        composites: composites,
+        specialty: specialty
+      };
     },
   });
 
@@ -151,24 +166,101 @@ const Finder = () => {
               <ChevronDown className={`w-4 h-4 transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-6">
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Material Type</h4>
-                <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto">
-                  {materials?.map((material) => (
-                    <Badge
-                      key={material}
-                      variant={selectedMaterials.includes(material) ? "default" : "outline"}
-                      className={`cursor-pointer text-xs transition-all ${
-                        selectedMaterials.includes(material)
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-                      }`}
-                      onClick={() => toggleMaterial(material)}
-                    >
-                      {material}
-                    </Badge>
-                  ))}
+                
+                {/* All Materials Option */}
+                <div className="pb-2 border-b border-border">
+                  <Badge
+                    variant={selectedMaterials.includes("All") ? "default" : "outline"}
+                    className={`cursor-pointer text-xs transition-all ${
+                      selectedMaterials.includes("All")
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                    }`}
+                    onClick={() => toggleMaterial("All")}
+                  >
+                    All Materials
+                  </Badge>
                 </div>
+
+                {/* Standard Materials */}
+                {materials?.standard && materials.standard.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground">Standard</span>
+                      <div className="h-px flex-1 bg-border"></div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {materials.standard.map((material) => (
+                        <Badge
+                          key={material}
+                          variant={selectedMaterials.includes(material) ? "default" : "outline"}
+                          className={`cursor-pointer text-xs transition-all ${
+                            selectedMaterials.includes(material)
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                          }`}
+                          onClick={() => toggleMaterial(material)}
+                        >
+                          {material}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Composites */}
+                {materials?.composites && materials.composites.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground">Composites</span>
+                      <div className="h-px flex-1 bg-border"></div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {materials.composites.map((material) => (
+                        <Badge
+                          key={material}
+                          variant={selectedMaterials.includes(material) ? "default" : "outline"}
+                          className={`cursor-pointer text-xs transition-all ${
+                            selectedMaterials.includes(material)
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                          }`}
+                          onClick={() => toggleMaterial(material)}
+                        >
+                          {material}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Specialty Materials */}
+                {materials?.specialty && materials.specialty.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground">Specialty</span>
+                      <div className="h-px flex-1 bg-border"></div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                      {materials.specialty.map((material) => (
+                        <Badge
+                          key={material}
+                          variant={selectedMaterials.includes(material) ? "default" : "outline"}
+                          className={`cursor-pointer text-xs transition-all ${
+                            selectedMaterials.includes(material)
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                          }`}
+                          onClick={() => toggleMaterial(material)}
+                        >
+                          {material}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3">
