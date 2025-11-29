@@ -12,7 +12,9 @@ import Deals from "./pages/Deals";
 import Wizard from "./pages/Wizard";
 import Diagnose from "./pages/Diagnose";
 import Auth from "./pages/Auth";
-import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminImport from "./pages/AdminImport";
+import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,7 +35,12 @@ const App = () => (
           <Route path="/wizard" element={<Wizard />} />
           <Route path="/diagnose" element={<Diagnose />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/import" element={<AdminImport />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/filaments" element={<AdminDashboard />} />
+          <Route path="/admin/deals" element={<AdminDashboard />} />
+          <Route path="/admin/printers" element={<AdminDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

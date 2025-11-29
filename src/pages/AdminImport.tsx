@@ -1,42 +1,30 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText } from "lucide-react";
+import { Upload, FileText, ArrowLeft, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/hooks/useAuth";
 
-const Admin = () => {
+const AdminImport = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check authentication
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setUser(session.user);
-      }
-      setIsLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setUser(session.user);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    if (!loading && !isAdmin) {
+      toast({
+        title: "Access Denied",
+        description: "You must be an admin to access this page",
+        variant: "destructive",
+      });
+      navigate("/");
+    }
+  }, [isAdmin, loading, navigate, toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -193,38 +181,36 @@ const Admin = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
-
-  if (!user) {
+  if (loading || !isAdmin) {
     return null;
   }
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        <Card className="p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Admin Panel</h1>
-            <p className="text-muted-foreground">
-              Upload CSV file to import filament data
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Signed in as: {user.email}
-            </p>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <Button variant="ghost" asChild>
+              <Link to="/admin/dashboard">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Link>
+            </Button>
+            <Shield className="w-8 h-8 text-primary" />
+            <h1 className="text-3xl font-bold text-foreground">CSV Import</h1>
           </div>
+          <p className="text-muted-foreground">
+            Upload and manage filament data via CSV import
+          </p>
+        </div>
 
+        <Card className="p-8 bg-card border-border">
           <div className="space-y-6">
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
               {file ? (
                 <div className="space-y-4">
                   <FileText className="h-12 w-12 text-primary mx-auto" />
-                  <p className="font-medium">{file.name}</p>
+                  <p className="font-medium text-foreground">{file.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {(file.size / 1024).toFixed(2)} KB
                   </p>
@@ -273,4 +259,4 @@ const Admin = () => {
   );
 };
 
-export default Admin;
+export default AdminImport;
