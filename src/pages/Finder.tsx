@@ -10,8 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ExternalLink, ChevronDown, Star } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-const materialTypes = ["All", "PLA", "PLA+", "PETG", "ABS", "ASA", "TPU", "Nylon", "PC"];
-
 const Finder = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>(["All"]);
@@ -56,6 +54,24 @@ const Finder = () => {
       const { data, error } = await query;
       if (error) throw error;
       return data;
+    },
+  });
+
+  // Fetch unique materials for filters
+  const { data: materials } = useQuery({
+    queryKey: ["materials"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("filaments")
+        .select("material")
+        .not("material", "is", null)
+        .order("material");
+      
+      if (error) throw error;
+      
+      // Get unique materials and sort them
+      const uniqueMaterials = Array.from(new Set(data.map(f => f.material))).sort();
+      return ["All", ...uniqueMaterials];
     },
   });
 
@@ -137,8 +153,8 @@ const Finder = () => {
             <CollapsibleContent className="space-y-6">
               <div className="space-y-3">
                 <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Material Type</h4>
-                <div className="flex flex-wrap gap-2">
-                  {materialTypes.map((material) => (
+                <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto">
+                  {materials?.map((material) => (
                     <Badge
                       key={material}
                       variant={selectedMaterials.includes(material) ? "default" : "outline"}
