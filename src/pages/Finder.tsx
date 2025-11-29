@@ -277,7 +277,9 @@ const Finder = () => {
                           <Badge variant="outline" className="border-primary/30 text-primary text-xs">
                             {filament.material}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">{filament.diameter_nominal_mm}mm</span>
+                          {filament.diameter_nominal_mm && (
+                            <span className="text-xs text-muted-foreground">{filament.diameter_nominal_mm}mm</span>
+                          )}
                         </div>
                       </div>
                     </div>
