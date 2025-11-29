@@ -103,17 +103,17 @@ const Finder = () => {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left Sidebar */}
-      <aside className="w-64 border-r border-border bg-card p-4 space-y-4 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+      {/* Left Sidebar - Hidden on mobile, visible on larger screens */}
+      <aside className="hidden lg:block w-72 border-r border-border bg-card/50 backdrop-blur-sm p-6 space-y-6 sticky top-0 h-screen overflow-y-auto">
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <span>🖨️</span> Your Printer
           </h3>
           <Select defaultValue="all">
             <SelectTrigger className="bg-background border-border">
               <SelectValue placeholder="Brand" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border">
+            <SelectContent className="bg-popover border-border z-50">
               <SelectItem value="all">All Brands</SelectItem>
             </SelectContent>
           </Select>
@@ -121,100 +121,103 @@ const Finder = () => {
             <SelectTrigger className="bg-background border-border">
               <SelectValue placeholder="Model" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border">
+            <SelectContent className="bg-popover border-border z-50">
               <SelectItem value="all">All Models</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
-          <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-foreground hover:text-primary transition-colors">
-            <span>Filters</span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-4 mt-3">
-            <div className="space-y-2">
-              <h4 className="text-xs font-medium text-muted-foreground">Material Type</h4>
-              <div className="flex flex-wrap gap-1.5">
-                {materialTypes.map((material) => (
-                  <Badge
-                    key={material}
-                    variant={selectedMaterials.includes(material) ? "default" : "outline"}
-                    className={`cursor-pointer text-xs ${
-                      selectedMaterials.includes(material)
-                        ? "bg-primary text-primary-foreground"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    }`}
-                    onClick={() => toggleMaterial(material)}
-                  >
-                    {material}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <Checkbox checked={brassOnly} onCheckedChange={(checked) => setBrassOnly(checked as boolean)} />
-                <span className="text-muted-foreground">Brass nozzle safe only</span>
-              </label>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <Checkbox checked={foodContact} onCheckedChange={(checked) => setFoodContact(checked as boolean)} />
-                <span className="text-muted-foreground">Food contact rated</span>
-              </label>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <Checkbox checked={amsOnly} onCheckedChange={(checked) => setAmsOnly(checked as boolean)} />
-                <span className="text-muted-foreground">AMS/MMU friendly only</span>
-              </label>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="text-xs font-medium text-muted-foreground">Filament Brand</h4>
-              <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue placeholder="All Brands" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="all">All Brands</SelectItem>
-                  {brands?.map((brand) => (
-                    <SelectItem key={brand} value={brand}>
-                      {brand}
-                    </SelectItem>
+        <div className="border-t border-border pt-6">
+          <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-semibold text-foreground hover:text-primary transition-colors mb-4">
+              <span>Filters</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-6">
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Material Type</h4>
+                <div className="flex flex-wrap gap-2">
+                  {materialTypes.map((material) => (
+                    <Badge
+                      key={material}
+                      variant={selectedMaterials.includes(material) ? "default" : "outline"}
+                      className={`cursor-pointer text-xs transition-all ${
+                        selectedMaterials.includes(material)
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                      }`}
+                      onClick={() => toggleMaterial(material)}
+                    >
+                      {material}
+                    </Badge>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <h4 className="text-xs font-medium text-muted-foreground">Price & Rating</h4>
-              <Input
-                type="number"
-                placeholder="Max Price (per kg)"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-                className="bg-background border-border"
-              />
-              <Select value={minRating} onValueChange={setMinRating}>
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue placeholder="Minimum Rating" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="all">Any Rating</SelectItem>
-                  <SelectItem value="4">4+ Stars</SelectItem>
-                  <SelectItem value="4.5">4.5+ Stars</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Compatibility</h4>
+                <label className="flex items-center gap-3 text-sm cursor-pointer group">
+                  <Checkbox checked={brassOnly} onCheckedChange={(checked) => setBrassOnly(checked as boolean)} />
+                  <span className="text-muted-foreground group-hover:text-foreground transition-colors">Brass nozzle safe</span>
+                </label>
+                <label className="flex items-center gap-3 text-sm cursor-pointer group">
+                  <Checkbox checked={foodContact} onCheckedChange={(checked) => setFoodContact(checked as boolean)} />
+                  <span className="text-muted-foreground group-hover:text-foreground transition-colors">Food contact rated</span>
+                </label>
+                <label className="flex items-center gap-3 text-sm cursor-pointer group">
+                  <Checkbox checked={amsOnly} onCheckedChange={(checked) => setAmsOnly(checked as boolean)} />
+                  <span className="text-muted-foreground group-hover:text-foreground transition-colors">AMS/MMU friendly</span>
+                </label>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Brand</h4>
+                <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue placeholder="All Brands" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border z-50 max-h-[300px]">
+                    <SelectItem value="all">All Brands</SelectItem>
+                    {brands?.map((brand) => (
+                      <SelectItem key={brand} value={brand}>
+                        {brand}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Price & Rating</h4>
+                <Input
+                  type="number"
+                  placeholder="Max price per kg"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="bg-background border-border"
+                />
+                <Select value={minRating} onValueChange={setMinRating}>
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue placeholder="Min rating" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border z-50">
+                    <SelectItem value="all">Any Rating</SelectItem>
+                    <SelectItem value="4">4+ Stars</SelectItem>
+                    <SelectItem value="4.5">4.5+ Stars</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold">{filteredFilaments?.length || 0} filaments</h1>
-          </div>
+      <main className="flex-1 p-4 lg:p-8 max-w-[1600px] mx-auto w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <h1 className="text-3xl font-bold text-foreground">
+            {filteredFilaments?.length || 0} <span className="text-muted-foreground font-normal">filaments</span>
+          </h1>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">🇺🇸 United States</span>
           </div>
@@ -227,14 +230,14 @@ const Finder = () => {
             placeholder="Search filaments by name or vendor..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md bg-background border-border"
+            className="max-w-xl bg-background border-border"
           />
         </div>
 
-        {/* Filaments Table */}
-        <div className="space-y-2">
+        {/* Filaments List */}
+        <div className="space-y-3">
           {isLoading ? (
-            <div className="text-center py-12 text-muted-foreground">Loading filaments...</div>
+            <div className="text-center py-16 text-muted-foreground">Loading filaments...</div>
           ) : filteredFilaments && filteredFilaments.length > 0 ? (
             filteredFilaments.map((filament) => {
               const pricePerKg = filament.variant_price && filament.net_weight_g 
@@ -246,53 +249,51 @@ const Finder = () => {
               return (
                 <div
                   key={filament.id}
-                  className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-all"
+                  className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-md transition-all"
                 >
-                  <div className="grid grid-cols-12 gap-4 items-center">
-                    {/* Checkbox */}
-                    <div className="col-span-1">
+                  <div className="flex flex-col lg:grid lg:grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-4 lg:gap-6 items-start lg:items-center">
+                    {/* Checkbox - Hidden on mobile */}
+                    <div className="hidden lg:block">
                       <Checkbox />
                     </div>
 
                     {/* Filament Info */}
-                    <div className="col-span-3 flex items-center gap-3">
+                    <div className="flex items-start gap-4 min-w-0 flex-1">
                       {filament.featured_image && (
                         <img
                           src={filament.featured_image}
                           alt={filament.product_title}
-                          className="w-12 h-12 rounded object-cover"
+                          className="w-16 h-16 rounded-md object-cover flex-shrink-0 border border-border"
                         />
                       )}
-                      <div>
-                        <p className="font-medium text-foreground">{filament.product_title}</p>
-                        <p className="text-xs text-muted-foreground">{filament.vendor}</p>
-                        <p className="text-xs text-muted-foreground">{filament.diameter_nominal_mm}mm</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-foreground truncate">{filament.product_title}</p>
+                        <p className="text-sm text-muted-foreground">{filament.vendor}</p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <Badge variant="outline" className="border-primary/30 text-primary text-xs">
+                            {filament.material}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">{filament.diameter_nominal_mm}mm</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Material */}
-                    <div className="col-span-2">
-                      <Badge variant="outline" className="border-primary/30 text-primary">
-                        {filament.material}
-                      </Badge>
-                    </div>
-
                     {/* Scores */}
-                    <div className="col-span-2 space-y-1">
+                    <div className="space-y-1.5 w-full lg:w-40">
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-muted-foreground w-8">Print</span>
+                        <span className="text-muted-foreground w-12 flex-shrink-0">Print</span>
                         <div className="score-bar flex-1">
                           <div className="score-fill print" style={{ width: `${(filament.ease_of_printing_score || 7) * 10}%` }} />
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-muted-foreground w-8">Str</span>
+                        <span className="text-muted-foreground w-12 flex-shrink-0">Strength</span>
                         <div className="score-bar flex-1">
                           <div className="score-fill strength" style={{ width: `${(filament.strength_index || 7) * 10}%` }} />
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-muted-foreground w-8">Heat</span>
+                        <span className="text-muted-foreground w-12 flex-shrink-0">Heat</span>
                         <div className="score-bar flex-1">
                           <div className="score-fill heat" style={{ width: `${Math.min((filament.tg_c || 70) / 2, 100)}%` }} />
                         </div>
@@ -300,43 +301,47 @@ const Finder = () => {
                     </div>
 
                     {/* Overall Score */}
-                    <div className="col-span-1 text-center">
+                    <div className="flex items-center gap-4 lg:flex-col lg:gap-0">
+                      <span className="text-xs text-muted-foreground lg:mb-1">Score</span>
                       <span className={`text-3xl font-bold ${getScoreColor(overallScore)}`}>
                         {overallScore.toFixed(1)}
                       </span>
                     </div>
 
                     {/* Price */}
-                    <div className="col-span-1 text-center">
+                    <div className="flex items-center gap-4 lg:flex-col lg:gap-0 lg:text-center">
+                      <span className="text-xs text-muted-foreground lg:mb-1">Price</span>
                       {pricePerKg ? (
-                        <>
+                        <div>
                           <p className="font-semibold text-foreground">${pricePerKg}</p>
                           <p className="text-xs text-muted-foreground">/kg</p>
-                        </>
+                        </div>
                       ) : (
-                        <p className="text-xs text-muted-foreground">—</p>
+                        <p className="text-sm text-muted-foreground">—</p>
                       )}
                     </div>
 
                     {/* Rating */}
-                    <div className="col-span-1 text-center">
-                      <div className="flex items-center justify-center gap-1">
+                    <div className="flex items-center gap-4 lg:flex-col lg:gap-1">
+                      <span className="text-xs text-muted-foreground">Rating</span>
+                      <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm">—</span>
+                        <span className="text-sm text-muted-foreground">—</span>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="col-span-1 flex gap-1">
+                    <div className="flex gap-2 self-start lg:self-center">
                       {filament.product_url && (
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                          className="border-primary/30 text-primary hover:bg-primary/10"
                           asChild
                         >
                           <a href={filament.product_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="w-3 h-3" />
+                            <ExternalLink className="w-4 h-4 mr-1" />
+                            <span className="hidden sm:inline">View</span>
                           </a>
                         </Button>
                       )}
@@ -346,8 +351,8 @@ const Finder = () => {
               );
             })
           ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No filaments found</p>
+            <div className="text-center py-16">
+              <p className="text-muted-foreground text-lg">No filaments found</p>
             </div>
           )}
         </div>
