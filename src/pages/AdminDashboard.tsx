@@ -168,6 +168,18 @@ const AdminDashboard = () => {
               </p>
             </Link>
           </Card>
+
+          <Card className="p-6 bg-card border-border hover:border-primary transition-colors">
+            <Link to="/admin/enrichment" className="block">
+              <div className="flex items-center gap-3 mb-3">
+                <TrendingUp className="w-6 h-6 text-green-500" />
+                <h3 className="text-lg font-semibold text-foreground">Data Enrichment</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Add missing weight data for better price calculations
+              </p>
+            </Link>
+          </Card>
         </div>
       </div>
     </div>
