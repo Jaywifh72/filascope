@@ -243,6 +243,38 @@ const AdminImport = () => {
     return str === 'true' || str === '1' || str === 'yes';
   };
 
+  const parseWeight = (value: any): number | null => {
+    if (value === null || value === undefined || value === '') return null;
+    const str = String(value).trim().toLowerCase();
+    
+    // Handle kg values (multiply by 1000)
+    if (str.endsWith('kg')) {
+      const num = parseFloat(str.slice(0, -2));
+      if (isNaN(num)) return null;
+      const result = Math.round(num * 1000);
+      if (result < -2147483648 || result > 2147483647) {
+        console.warn(`Weight overflow for value: ${value} (parsed as ${result})`);
+        return null;
+      }
+      return result;
+    }
+    
+    // Handle g values (strip the 'g')
+    if (str.endsWith('g')) {
+      const num = parseFloat(str.slice(0, -1));
+      if (isNaN(num)) return null;
+      const result = Math.round(num);
+      if (result < -2147483648 || result > 2147483647) {
+        console.warn(`Weight overflow for value: ${value} (parsed as ${result})`);
+        return null;
+      }
+      return result;
+    }
+    
+    // If no unit, try to parse as number
+    return parseIntSafe(str);
+  };
+
   const handleUpload = async () => {
     if (!file) return;
 
@@ -314,7 +346,7 @@ const AdminImport = () => {
               // Physical properties
               density_g_cm3: parseNumber(row['density_g_cm3']),
               diameter_nominal_mm: parseNumber(row['diameter_nominal_mm']),
-              net_weight_g: parseIntSafe(row['net_weight_g']),
+              net_weight_g: parseWeight(row['Variant Weight']),
               spool_outer_d_mm: parseNumber(row['spool_outer_d_mm']),
               spool_width_mm: parseNumber(row['spool_width_mm']),
               variant_price: parseNumber(row['Variant Price']),
