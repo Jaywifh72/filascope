@@ -792,16 +792,28 @@ const AdminImport = () => {
               .upsert(filamentData, { onConflict: "product_id" });
 
             if (error) {
-              // Log detailed error for debugging
-              console.error(`Import error for row ${globalRowIndex + 2}:`, error);
-              errors.push(`Row ${globalRowIndex + 2} (${productTitle}): ${error.message}${error.hint ? ` - ${error.hint}` : ''}`);
+              // Log detailed error for debugging with full context
+              console.error(`❌ Import error for row ${globalRowIndex + 2} (${productTitle}):`, {
+                error: error.message,
+                hint: error.hint,
+                details: error.details,
+                code: error.code,
+                filamentData: filamentData
+              });
+              const errorMsg = `Row ${globalRowIndex + 2} (${productTitle}): ${error.message}${error.hint ? ` - ${error.hint}` : ''}${error.details ? ` - ${error.details}` : ''}`;
+              errors.push(errorMsg);
+              console.error(errorMsg);
               setProgress(prev => ({ ...prev, current: globalRowIndex + 1, errors: prev.errors + 1 }));
             } else {
+              console.log(`✅ Successfully imported row ${globalRowIndex + 2} (${productTitle})`);
               successCount++;
               setProgress(prev => ({ ...prev, current: globalRowIndex + 1 }));
             }
           } catch (rowError: any) {
-            errors.push(`Row ${globalRowIndex + 2}: ${rowError.message}`);
+            console.error(`❌ Exception processing row ${globalRowIndex + 2}:`, rowError);
+            const errorMsg = `Row ${globalRowIndex + 2}: ${rowError.message}`;
+            errors.push(errorMsg);
+            console.error(errorMsg);
             setProgress(prev => ({ ...prev, current: globalRowIndex + 1, errors: prev.errors + 1 }));
           }
         }
