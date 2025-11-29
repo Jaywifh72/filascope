@@ -4,16 +4,60 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, ArrowLeft, Shield } from "lucide-react";
+import { Upload, FileText, ArrowLeft, Shield, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
+import { z } from "zod";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+// Validation schema for filament data
+const isURL = (value: string | null): boolean => {
+  if (!value) return false;
+  return value.startsWith('http://') || value.startsWith('https://') || value.startsWith('www.');
+};
+
+const filamentRowSchema = z.object({
+  material: z.string().nullable().refine(
+    (val) => !val || !isURL(val),
+    { message: "Material field should not contain URLs. Please use the amazon_link fields for URLs." }
+  ),
+  finish_type: z.string().nullable().refine(
+    (val) => !val || !isURL(val),
+    { message: "Finish type field should not contain URLs." }
+  ),
+  color_family: z.string().nullable().refine(
+    (val) => !val || !isURL(val),
+    { message: "Color family field should not contain URLs." }
+  ),
+  amazon_link_us: z.string().nullable().refine(
+    (val) => !val || isURL(val),
+    { message: "Amazon US link must be a valid URL starting with http://, https://, or www." }
+  ),
+  amazon_link_uk: z.string().nullable().refine(
+    (val) => !val || isURL(val),
+    { message: "Amazon UK link must be a valid URL starting with http://, https://, or www." }
+  ),
+  amazon_link_de: z.string().nullable().refine(
+    (val) => !val || isURL(val),
+    { message: "Amazon DE link must be a valid URL starting with http://, https://, or www." }
+  ),
+  product_url: z.string().nullable().refine(
+    (val) => !val || isURL(val),
+    { message: "Product URL must be a valid URL starting with http://, https://, or www." }
+  ),
+  tds_url: z.string().nullable().refine(
+    (val) => !val || isURL(val),
+    { message: "TDS URL must be a valid URL starting with http://, https://, or www." }
+  ),
+  product_title: z.string().min(1, { message: "Product title is required" }).max(500, { message: "Product title must be less than 500 characters" }),
+}).passthrough(); // Allow other fields to pass through
 
 const AdminImport = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState({ current: 0, total: 0, errors: 0 });
-  const [importResults, setImportResults] = useState<{ success: number; errors: string[] } | null>(null);
+  const [progress, setProgress] = useState({ current: 0, total: 0, errors: 0, warnings: 0 });
+  const [importResults, setImportResults] = useState<{ success: number; errors: string[]; warnings: string[] } | null>(null);
   const { isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -177,7 +221,7 @@ const AdminImport = () => {
     if (!file) return;
 
     setIsUploading(true);
-    setProgress({ current: 0, total: 0, errors: 0 });
+    setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
     setImportResults(null);
 
     try {
@@ -200,10 +244,45 @@ const AdminImport = () => {
       console.log("Detected CSV headers:", detectedHeaders);
       console.log("Sample row:", sampleRow);
 
-      setProgress({ current: 0, total: rows.length, errors: 0 });
+      setProgress({ current: 0, total: rows.length, errors: 0, warnings: 0 });
 
       let successCount = 0;
       const errors: string[] = [];
+      const warnings: string[] = [];
+
+      // Helper functions to safely parse numbers with database constraint validation
+      const MAX_NUMERIC_VALUE = 99999999.99;
+      
+      const parseNumber = (value: any, fieldName?: string): number | null => {
+        if (value === null || value === undefined || value === '') return null;
+        const parsed = parseFloat(value);
+        if (isNaN(parsed)) return null;
+        
+        if (Math.abs(parsed) > MAX_NUMERIC_VALUE) {
+          console.warn(`${fieldName || 'numeric field'} value ${parsed} exceeds max (${MAX_NUMERIC_VALUE}), skipping field`);
+          return null;
+        }
+        
+        return parsed;
+      };
+
+      const parseIntSafe = (value: any, fieldName?: string): number | null => {
+        if (value === null || value === undefined || value === '') return null;
+        const parsed = Number.parseInt(value);
+        if (isNaN(parsed)) return null;
+        
+        if (Math.abs(parsed) > MAX_NUMERIC_VALUE) {
+          console.warn(`${fieldName || 'integer field'} value ${parsed} exceeds max (${MAX_NUMERIC_VALUE}), skipping field`);
+          return null;
+        }
+        
+        return parsed;
+      };
+
+      const parseBool = (value: any): boolean | null => {
+        if (value === null || value === undefined || value === '') return null;
+        return value === 'true' || value === '1' || value === 'TRUE' || value === 'True';
+      };
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -219,42 +298,59 @@ const AdminImport = () => {
         }
 
         try {
-          // Helper function to safely parse numbers with database constraint validation
-          // Database NUMERIC(10,2) fields can have max value of 99,999,999.99
-          const MAX_NUMERIC_VALUE = 99999999.99;
+          // Prepare validation data
+          const validationData = {
+            product_title: productTitle,
+            material: row.material || row.Material || null,
+            finish_type: row.finish_type || row.Finish_Type || null,
+            color_family: row.color_family || row.Color_Family || null,
+            amazon_link_us: row.amazon_link_us || row.Amazon_Link_US || row["Amazon Link US"] || null,
+            amazon_link_uk: row.amazon_link_uk || row.Amazon_Link_UK || row["Amazon Link UK"] || null,
+            amazon_link_de: row.amazon_link_de || row.Amazon_Link_DE || row["Amazon Link DE"] || null,
+            product_url: row.product_url || row.Product_URL || row["Product URL"] || null,
+            tds_url: row.tds_url || row.TDS_URL || row["TDS URL"] || null,
+          };
+
+          // Validate the row data
+          const validationResult = filamentRowSchema.safeParse(validationData);
           
-          const parseNumber = (value: any, fieldName?: string): number | null => {
-            if (value === null || value === undefined || value === '') return null;
-            const parsed = parseFloat(value);
-            if (isNaN(parsed)) return null;
-            
-            // Check for overflow - log but return null to skip the field
-            if (Math.abs(parsed) > MAX_NUMERIC_VALUE) {
-              console.warn(`Row ${i + 2}: ${fieldName || 'numeric field'} value ${parsed} exceeds max (${MAX_NUMERIC_VALUE}), skipping field`);
-              return null;
-            }
-            
-            return parsed;
-          };
+          if (!validationResult.success) {
+            const validationErrors = validationResult.error.errors.map(err => 
+              `${err.path.join('.')}: ${err.message}`
+            ).join('; ');
+            errors.push(`Row ${i + 2} (${productTitle}): Validation failed - ${validationErrors}`);
+            setProgress(prev => ({ ...prev, current: i + 1, errors: prev.errors + 1 }));
+            continue;
+          }
 
-          const parseInt = (value: any, fieldName?: string): number | null => {
-            if (value === null || value === undefined || value === '') return null;
-            const parsed = Number.parseInt(value);
-            if (isNaN(parsed)) return null;
-            
-            // Check for overflow
-            if (Math.abs(parsed) > MAX_NUMERIC_VALUE) {
-              console.warn(`Row ${i + 2}: ${fieldName || 'integer field'} value ${parsed} exceeds max (${MAX_NUMERIC_VALUE}), skipping field`);
-              return null;
+          // Check for data quality issues and provide warnings
+          let warningCount = 0;
+          if (isURL(validationData.material)) {
+            warnings.push(`Row ${i + 2} (${productTitle}): Material field contains URL "${validationData.material}" - moving to amazon_link_us`);
+            warningCount++;
+            // Auto-fix: move URL to correct field if amazon_link_us is empty
+            if (!validationData.amazon_link_us) {
+              validationData.amazon_link_us = validationData.material;
             }
-            
-            return parsed;
-          };
-
-          const parseBool = (value: any): boolean | null => {
-            if (value === null || value === undefined || value === '') return null;
-            return value === 'true' || value === '1' || value === 'TRUE' || value === 'True';
-          };
+            validationData.material = null;
+          }
+          
+          if (isURL(validationData.finish_type)) {
+            warnings.push(`Row ${i + 2} (${productTitle}): Finish type contains URL "${validationData.finish_type}" - removing`);
+            warningCount++;
+            validationData.finish_type = null;
+          }
+          
+          if (isURL(validationData.color_family)) {
+            warnings.push(`Row ${i + 2} (${productTitle}): Color family contains URL "${validationData.color_family}" - removing`);
+            warningCount++;
+            validationData.color_family = null;
+          }
+          
+          // Update progress with warnings count
+          if (warningCount > 0) {
+            setProgress(prev => ({ ...prev, warnings: prev.warnings + warningCount }));
+          }
 
           // Download and upload image if present
           const originalImageUrl = row.featured_image || row.Featured_Image || row["Featured Image"] || row.image || null;
@@ -273,14 +369,14 @@ const AdminImport = () => {
             product_title: productTitle.trim(),
             product_handle: row.product_handle || row.Product_Handle || row["Product Handle"] || null,
             vendor: row.vendor || row.Vendor || null,
-            material: row.material || row.Material || null,
+            material: validationData.material,
             featured_image: storedImageUrl,
             variant_sku: row.variant_sku || row.Variant_SKU || row["Variant SKU"] || null,
-            product_url: row.product_url || row.Product_URL || row["Product URL"] || null,
-            amazon_link_us: row.amazon_link_us || row.Amazon_Link_US || row["Amazon Link US"] || null,
-            amazon_link_uk: row.amazon_link_uk || row.Amazon_Link_UK || row["Amazon Link UK"] || null,
-            amazon_link_de: row.amazon_link_de || row.Amazon_Link_DE || row["Amazon Link DE"] || null,
-            tds_url: row.tds_url || row.TDS_URL || row["TDS URL"] || null,
+            product_url: validationData.product_url,
+            amazon_link_us: validationData.amazon_link_us,
+            amazon_link_uk: validationData.amazon_link_uk,
+            amazon_link_de: validationData.amazon_link_de,
+            tds_url: validationData.tds_url,
             
             // Numeric fields with safe parsing and overflow protection
             density_g_cm3: parseNumber(row.density_g_cm3 || row.Density_g_cm3, 'density_g_cm3'),
@@ -293,35 +389,35 @@ const AdminImport = () => {
             melt_temp_c: parseNumber(row.melt_temp_c || row.Melt_Temp_C, 'melt_temp_c'),
             
             // Temperature settings
-            nozzle_temp_min_c: parseInt(row.nozzle_temp_min_c || row.Nozzle_Temp_Min_C, 'nozzle_temp_min_c'),
-            nozzle_temp_max_c: parseInt(row.nozzle_temp_max_c || row.Nozzle_Temp_Max_C, 'nozzle_temp_max_c'),
-            nozzle_temp_sweetspot_c: parseInt(row.nozzle_temp_sweetspot_c || row.Nozzle_Temp_Sweetspot_C, 'nozzle_temp_sweetspot_c'),
-            bed_temp_min_c: parseInt(row.bed_temp_min_c || row.Bed_Temp_Min_C, 'bed_temp_min_c'),
-            bed_temp_max_c: parseInt(row.bed_temp_max_c || row.Bed_Temp_Max_C, 'bed_temp_max_c'),
+            nozzle_temp_min_c: parseIntSafe(row.nozzle_temp_min_c || row.Nozzle_Temp_Min_C, 'nozzle_temp_min_c'),
+            nozzle_temp_max_c: parseIntSafe(row.nozzle_temp_max_c || row.Nozzle_Temp_Max_C, 'nozzle_temp_max_c'),
+            nozzle_temp_sweetspot_c: parseIntSafe(row.nozzle_temp_sweetspot_c || row.Nozzle_Temp_Sweetspot_C, 'nozzle_temp_sweetspot_c'),
+            bed_temp_min_c: parseIntSafe(row.bed_temp_min_c || row.Bed_Temp_Min_C, 'bed_temp_min_c'),
+            bed_temp_max_c: parseIntSafe(row.bed_temp_max_c || row.Bed_Temp_Max_C, 'bed_temp_max_c'),
             
             // Print settings
-            print_speed_max_mms: parseInt(row.print_speed_max_mms || row.Print_Speed_Max_MMS, 'print_speed_max_mms'),
-            fan_min_percent: parseInt(row.fan_min_percent || row.Fan_Min_Percent, 'fan_min_percent'),
-            fan_max_percent: parseInt(row.fan_max_percent || row.Fan_Max_Percent, 'fan_max_percent'),
+            print_speed_max_mms: parseIntSafe(row.print_speed_max_mms || row.Print_Speed_Max_MMS, 'print_speed_max_mms'),
+            fan_min_percent: parseIntSafe(row.fan_min_percent || row.Fan_Min_Percent, 'fan_min_percent'),
+            fan_max_percent: parseIntSafe(row.fan_max_percent || row.Fan_Max_Percent, 'fan_max_percent'),
             
             // Physical properties
             diameter_nominal_mm: parseNumber(row.diameter_nominal_mm || row.Diameter_Nominal_MM, 'diameter_nominal_mm'),
-            net_weight_g: parseInt(row.net_weight_g || row.Net_Weight_G, 'net_weight_g'),
+            net_weight_g: parseIntSafe(row.net_weight_g || row.Net_Weight_G, 'net_weight_g'),
             spool_outer_d_mm: parseNumber(row.spool_outer_d_mm || row.Spool_Outer_D_MM, 'spool_outer_d_mm'),
             spool_width_mm: parseNumber(row.spool_width_mm || row.Spool_Width_MM, 'spool_width_mm'),
             
             // Color properties
             color_hex: row.color_hex || row.Color_Hex || null,
-            color_family: row.color_family || row.Color_Family || null,
-            finish_type: row.finish_type || row.Finish_Type || null,
+            color_family: validationData.color_family,
+            finish_type: validationData.finish_type,
             
             // Care and compatibility
             recommended_nozzle_type: row.recommended_nozzle_type || row.Recommended_Nozzle_Type || null,
             moisture_sensitivity_level: row.moisture_sensitivity_level || row.Moisture_Sensitivity_Level || null,
             moisture_care: row.moisture_care || row.Moisture_Care || null,
             nozzle_care: row.nozzle_care || row.Nozzle_Care || null,
-            drying_temp_c: parseInt(row.drying_temp_c || row.Drying_Temp_C, 'drying_temp_c'),
-            drying_time_hours: parseInt(row.drying_time_hours || row.Drying_Time_Hours, 'drying_time_hours'),
+            drying_temp_c: parseIntSafe(row.drying_temp_c || row.Drying_Temp_C, 'drying_temp_c'),
+            drying_time_hours: parseIntSafe(row.drying_time_hours || row.Drying_Time_Hours, 'drying_time_hours'),
             
             // Boolean flags with safe parsing
             is_nozzle_abrasive: parseBool(row.is_nozzle_abrasive || row.Is_Nozzle_Abrasive),
@@ -329,8 +425,8 @@ const AdminImport = () => {
             variant_available: row.variant_available !== 'false' && row.Variant_Available !== 'false',
             
             // Scores
-            ease_of_printing_score: parseInt(row.ease_of_printing_score || row.Ease_of_Printing_Score, 'ease_of_printing_score'),
-            dimensional_accuracy_score: parseInt(row.dimensional_accuracy_score || row.Dimensional_Accuracy_Score, 'dimensional_accuracy_score'),
+            ease_of_printing_score: parseIntSafe(row.ease_of_printing_score || row.Ease_of_Printing_Score, 'ease_of_printing_score'),
+            dimensional_accuracy_score: parseIntSafe(row.dimensional_accuracy_score || row.Dimensional_Accuracy_Score, 'dimensional_accuracy_score'),
             strength_index: parseNumber(row.strength_index || row.Strength_Index, 'strength_index'),
             printability_index: parseNumber(row.printability_index || row.Printability_Index, 'printability_index'),
             value_score: parseNumber(row.value_score || row.Value_Score, 'value_score'),
@@ -372,12 +468,12 @@ const AdminImport = () => {
         }
       }
 
-      setImportResults({ success: successCount, errors });
+      setImportResults({ success: successCount, errors, warnings });
 
       if (successCount > 0) {
         toast({
           title: "Import completed",
-          description: `Successfully imported ${successCount} filament(s). ${errors.length} error(s).`,
+          description: `Successfully imported ${successCount} filament(s). ${errors.length} error(s), ${warnings.length} warning(s).`,
         });
       } else {
         toast({
@@ -477,7 +573,12 @@ const AdminImport = () => {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Processing rows: {progress.current} / {progress.total}</span>
-                  <span className="text-destructive">{progress.errors} errors</span>
+                  <div className="flex gap-3">
+                    {progress.warnings > 0 && (
+                      <span className="text-yellow-600">{progress.warnings} warnings</span>
+                    )}
+                    <span className="text-destructive">{progress.errors} errors</span>
+                  </div>
                 </div>
                 <Progress value={(progress.current / progress.total) * 100} />
               </div>
@@ -493,12 +594,32 @@ const AdminImport = () => {
                       <span>Successfully imported:</span>
                       <span className="font-medium text-primary">{importResults.success}</span>
                     </div>
+                    {importResults.warnings.length > 0 && (
+                      <div className="flex justify-between">
+                        <span>Warnings:</span>
+                        <span className="font-medium text-yellow-600">{importResults.warnings.length}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span>Errors:</span>
                       <span className="font-medium text-destructive">{importResults.errors.length}</span>
                     </div>
                   </div>
                 </div>
+
+                {importResults.warnings.length > 0 && (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Data Quality Warnings</AlertTitle>
+                    <AlertDescription>
+                      <div className="max-h-48 overflow-y-auto space-y-1 text-sm mt-2">
+                        {importResults.warnings.map((warning, idx) => (
+                          <div key={idx} className="text-muted-foreground">{warning}</div>
+                        ))}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
 
                 {importResults.errors.length > 0 && (
                   <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
