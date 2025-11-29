@@ -11,6 +11,65 @@ import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+// Helper function to extract material type from product title
+const extractMaterialFromTitle = (title: string): string | null => {
+  if (!title) return null;
+  
+  // Material extraction patterns - order matters (check specific before general)
+  // Composite materials first (most specific)
+  if (/ABS-GF/i.test(title)) return 'ABS-GF';
+  if (/ABS-CF/i.test(title)) return 'ABS-CF';
+  if (/PET-GF/i.test(title)) return 'PET-GF';
+  if (/PET-CF|PETG-CF/i.test(title)) return 'PETG-CF';
+  if (/PC-CF/i.test(title)) return 'PC-CF';
+  if (/PAHT-CF/i.test(title)) return 'PAHT-CF';
+  if (/PA-CF/i.test(title)) return 'PA-CF';
+  if (/PPS-CF/i.test(title)) return 'PPS-CF';
+  if (/PPS-GF/i.test(title)) return 'PPS-GF';
+  
+  // PLA variants
+  if (/PLA\+|PLA\s*PLUS/i.test(title)) return 'PLA+';
+  if (/\bPLA\b|^PLA/i.test(title)) return 'PLA';
+  
+  // Standard materials
+  if (/PETG/i.test(title)) return 'PETG';
+  if (/\bABS\b|^ABS/i.test(title)) return 'ABS';
+  if (/\bASA\b|^ASA|ASA\+/i.test(title)) return 'ASA';
+  if (/TPU|TPE|FLEXFILL/i.test(title)) return 'TPU';
+  if (/NYLON|PA\s|PA6|PA12/i.test(title)) return 'Nylon';
+  if (/PA11|PA-11/i.test(title)) return 'PA11';
+  if (/POLYCARBONATE|^PC\s|\sPC\s|\sPC$|PC-PBT|PC-FR/i.test(title)) return 'PC';
+  if (/PVA|POLYCAST/i.test(title)) return 'PVA';
+  if (/PVB|POLYSMOOTH/i.test(title)) return 'PVB';
+  if (/HIPS/i.test(title)) return 'HIPS';
+  if (/\bPP\b|POLYPROPYLENE/i.test(title)) return 'PP';
+  if (/PPS/i.test(title)) return 'PPS';
+  if (/CPE/i.test(title)) return 'CPE';
+  if (/PET\s|^PET$/i.test(title) && !/PETG|PETT/i.test(title)) return 'PET';
+  
+  // High-performance materials
+  if (/PEEK/i.test(title)) return 'PEEK';
+  if (/PEKK/i.test(title)) return 'PEKK';
+  if (/PPSU/i.test(title)) return 'PPSU';
+  if (/PSU/i.test(title) && !/PPSU/i.test(title)) return 'PSU';
+  if (/PEI|ULTEM/i.test(title)) return 'PEI';
+  if (/PEBA/i.test(title)) return 'PEBA';
+  if (/PETT/i.test(title)) return 'PETT';
+  if (/TRITAN|PCTG/i.test(title)) return 'PCTG';
+  if (/allPHA|PHA/i.test(title)) return 'PHA';
+  if (/VINYL|PVC/i.test(title)) return 'PVC';
+  
+  // Specialty/support materials
+  if (/POLYDISSOLVE|BREAKAWAY/i.test(title)) return 'Support';
+  if (/nGen|CO-POLYESTER|COPOLYESTER|RYNO/i.test(title)) return 'Co-Polyester';
+  if (/SEMIFLEX|SEMI-FLEXIBLE/i.test(title)) return 'Semi-Flex';
+  if (/NonOilen/i.test(title)) return 'NonOilen';
+  if (/TIMBERFILL|WOODFILL/i.test(title)) return 'Wood Fill';
+  if (/CARBON\s*FIBER/i.test(title)) return 'Carbon Fiber';
+  
+  return null;
+};
+
 // Validation schema for filament data
 const isURL = (value: string | null): boolean => {
   if (!value) return false;
@@ -504,10 +563,20 @@ const AdminImport = () => {
         }
 
         try {
-          // Prepare validation data
+          // Prepare validation data with material extraction
+          let materialValue = row.material || row.Material || null;
+          
+          // CRITICAL: Extract material from title if not provided in CSV
+          if (!materialValue || materialValue.trim() === '') {
+            materialValue = extractMaterialFromTitle(productTitle);
+            if (materialValue) {
+              warnings.push(`Row ${i + 2} (${productTitle}): Material not in CSV, extracted "${materialValue}" from title`);
+            }
+          }
+          
           const validationData = {
             product_title: productTitle,
-            material: row.material || row.Material || null,
+            material: materialValue,
             finish_type: row.finish_type || row.Finish_Type || null,
             color_family: row.color_family || row.Color_Family || null,
             amazon_link_us: row.amazon_link_us || row.Amazon_Link_US || row["Amazon Link US"] || null,
