@@ -101,45 +101,56 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
-    // Create client for auth check (with anon key + auth header)
+    // Get the JWT from the request (already validated by platform when verify_jwt = true)
     const authHeader = req.headers.get('authorization');
+    
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
+        JSON.stringify({ error: 'No authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { authorization: authHeader } }
-    });
+    // Extract user ID from JWT (JWT is already validated by platform)
+    const jwt = authHeader.replace('Bearer ', '');
+    const payload = JSON.parse(atob(jwt.split('.')[1]));
+    const userId = payload.sub;
 
-    // Verify user is authenticated and is admin
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
-    if (userError || !user) {
-      console.error('Auth error:', userError);
+    if (!userId) {
+      console.error('No user ID in JWT payload');
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Invalid token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Check if user has admin role using service client
+    console.log(`Request from user: ${userId}`);
+
+    // Check if user has admin role
     const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
     const { data: isAdmin, error: roleError } = await supabaseService.rpc('has_role', {
-      _user_id: user.id,
+      _user_id: userId,
       _role: 'admin'
     });
 
-    if (roleError || !isAdmin) {
+    if (roleError) {
       console.error('Role check error:', roleError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify admin status', details: roleError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!isAdmin) {
+      console.log(`User ${userId} is not an admin`);
       return new Response(
         JSON.stringify({ error: 'Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log(`Admin ${userId} authorized, proceeding with price fetch`);
 
     const { filament_ids } = await req.json();
     
