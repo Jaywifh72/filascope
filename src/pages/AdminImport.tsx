@@ -279,12 +279,16 @@ const AdminImport = () => {
     if (value === null || value === undefined || value === '') {
       return null;
     }
+    
+    // Handle booleans (shouldn't happen after preprocessing, but just in case)
+    if (typeof value === 'boolean') {
+      return null;
+    }
+    
     const str = String(value).trim();
     const parsed = parseIntSafe(str);
-    if (parsed === null) {
-      // Only log error if there was a value that failed to parse
-      console.error(`❌ Row ${rowNum}: Failed to parse weight value: ${value}`);
-    }
+    
+    // Don't log errors here - validation step already caught issues
     return parsed;
   };
 
@@ -325,13 +329,21 @@ const AdminImport = () => {
       let kgCount = 0;
       let gCount = 0;
       let unchangedCount = 0;
+      let booleanCount = 0;
       let totalWeights = 0;
       
       rows.forEach((row, idx) => {
         const originalWeight = row['Variant Weight Unit'];
         
-        // Always normalize the field, even if empty
-        if (originalWeight) {
+        // Handle boolean values (data quality issue)
+        if (typeof originalWeight === 'boolean') {
+          booleanCount++;
+          if (booleanCount <= 10) {
+            console.log(`  → Row ${idx + 2}: Boolean value "${originalWeight}" → null`);
+            addLog('warning', `⚠️ Row ${idx + 2}: Weight is boolean "${originalWeight}" - setting to null`);
+          }
+          row['Variant Weight Unit'] = null;
+        } else if (originalWeight) {
           totalWeights++;
           const str = String(originalWeight).trim().toLowerCase();
           const normalizedWeight = normalizeWeight(originalWeight);
@@ -368,12 +380,18 @@ const AdminImport = () => {
       console.log(`   ✓ Converted from kg: ${kgCount} cells`);
       console.log(`   ✓ Stripped 'g' suffix: ${gCount} cells`);
       console.log(`   → Unchanged (no unit): ${unchangedCount} cells`);
+      if (booleanCount > 0) {
+        console.log(`   ⚠️ Boolean values converted to null: ${booleanCount} cells`);
+      }
       console.log("=".repeat(80) + "\n");
       
       addLog('success', `✓ Weight normalization complete: ${totalWeights} cells processed`);
       addLog('info', `  • ${kgCount} converted from kg to grams`);
       addLog('info', `  • ${gCount} stripped 'g' suffix`);
       addLog('info', `  • ${unchangedCount} unchanged (numeric only)`);
+      if (booleanCount > 0) {
+        addLog('warning', `  • ${booleanCount} boolean values set to null`);
+      }
       
       console.log("📝 Sample row after normalization:", {
         'Product Title': rows[0]['Product Title'],
@@ -392,7 +410,7 @@ const AdminImport = () => {
       let validWeights = 0;
       let nullWeights = 0;
       let invalidWeights = 0;
-      const invalidWeightRows: Array<{ row: number; value: any }> = [];
+      const invalidWeightRows: Array<{ row: number; value: any; type: string }> = [];
       
       rows.forEach((row, idx) => {
         const weightValue = row['Variant Weight Unit'];
@@ -400,21 +418,29 @@ const AdminImport = () => {
         
         if (weightValue === null || weightValue === undefined || weightValue === '') {
           nullWeights++;
+        } else if (typeof weightValue === 'boolean') {
+          // Should have been caught in preprocessing, but double-check
+          invalidWeights++;
+          invalidWeightRows.push({ row: rowNum, value: weightValue, type: 'boolean' });
+          console.error(`⚠️ Row ${rowNum}: Weight is boolean: ${weightValue}`);
+          if (invalidWeights <= 5) {
+            addLog('error', `⚠️ Row ${rowNum}: Weight is boolean: ${weightValue}`);
+          }
         } else {
           const str = String(weightValue).trim().toLowerCase();
           
           // Check if value still contains units (should have been removed)
           if (str.endsWith('kg') || str.endsWith('g')) {
             invalidWeights++;
-            invalidWeightRows.push({ row: rowNum, value: weightValue });
+            invalidWeightRows.push({ row: rowNum, value: weightValue, type: 'has-unit' });
             console.error(`⚠️ Row ${rowNum}: Weight still contains units: "${weightValue}"`);
             if (invalidWeights <= 5) {
               addLog('error', `⚠️ Row ${rowNum}: Weight not preprocessed: "${weightValue}"`);
             }
           } else if (isNaN(parseFloat(str))) {
             invalidWeights++;
-            invalidWeightRows.push({ row: rowNum, value: weightValue });
-            console.error(`⚠️ Row ${rowNum}: Weight is not numeric: "${weightValue}"`);
+            invalidWeightRows.push({ row: rowNum, value: weightValue, type: 'non-numeric' });
+            console.error(`⚠️ Row ${rowNum}: Weight is not numeric: "${weightValue}" (type: ${typeof weightValue})`);
             if (invalidWeights <= 5) {
               addLog('error', `⚠️ Row ${rowNum}: Weight not numeric: "${weightValue}"`);
             }
@@ -430,9 +456,13 @@ const AdminImport = () => {
       console.log(`   ✗ Invalid weights: ${invalidWeights}`);
       
       if (invalidWeights > 0) {
-        console.log(`\n⚠️ FIRST 10 INVALID WEIGHTS:`);
-        invalidWeightRows.slice(0, 10).forEach(({ row, value }) => {
-          console.log(`   Row ${row}: "${value}"`);
+        console.log(`\n⚠️ FIRST 10 INVALID WEIGHTS WITH DETAILS:`);
+        invalidWeightRows.slice(0, 10).forEach(({ row, value, type }) => {
+          const rowData = rows[row - 2]; // row is 1-indexed with header
+          console.log(`   Row ${row} [${type}]:`);
+          console.log(`     Weight value: "${value}" (type: ${typeof value})`);
+          console.log(`     Product: ${rowData['Product Title']}`);
+          console.log(`     Vendor: ${rowData['Vendor']}`);
         });
         if (invalidWeightRows.length > 10) {
           console.log(`   ... and ${invalidWeightRows.length - 10} more`);
