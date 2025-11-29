@@ -179,17 +179,36 @@ const AdminImport = () => {
         }
 
         try {
-          // Helper function to safely parse numbers
-          const parseNumber = (value: any): number | null => {
+          // Helper function to safely parse numbers with database constraint validation
+          // Database NUMERIC(10,2) fields can have max value of 99,999,999.99
+          const MAX_NUMERIC_VALUE = 99999999.99;
+          
+          const parseNumber = (value: any, fieldName?: string): number | null => {
             if (value === null || value === undefined || value === '') return null;
             const parsed = parseFloat(value);
-            return isNaN(parsed) ? null : parsed;
+            if (isNaN(parsed)) return null;
+            
+            // Check for overflow - log but return null to skip the field
+            if (Math.abs(parsed) > MAX_NUMERIC_VALUE) {
+              console.warn(`Row ${i + 2}: ${fieldName || 'numeric field'} value ${parsed} exceeds max (${MAX_NUMERIC_VALUE}), skipping field`);
+              return null;
+            }
+            
+            return parsed;
           };
 
-          const parseInt = (value: any): number | null => {
+          const parseInt = (value: any, fieldName?: string): number | null => {
             if (value === null || value === undefined || value === '') return null;
             const parsed = Number.parseInt(value);
-            return isNaN(parsed) ? null : parsed;
+            if (isNaN(parsed)) return null;
+            
+            // Check for overflow
+            if (Math.abs(parsed) > MAX_NUMERIC_VALUE) {
+              console.warn(`Row ${i + 2}: ${fieldName || 'integer field'} value ${parsed} exceeds max (${MAX_NUMERIC_VALUE}), skipping field`);
+              return null;
+            }
+            
+            return parsed;
           };
 
           const parseBool = (value: any): boolean | null => {
@@ -211,33 +230,33 @@ const AdminImport = () => {
             amazon_link_de: row.amazon_link_de || row.Amazon_Link_DE || row["Amazon Link DE"] || null,
             tds_url: row.tds_url || row.TDS_URL || row["TDS URL"] || null,
             
-            // Numeric fields with safe parsing
-            density_g_cm3: parseNumber(row.density_g_cm3 || row.Density_g_cm3),
-            tensile_strength_xy_mpa: parseNumber(row.tensile_strength_xy_mpa || row.Tensile_Strength_XY_MPa),
-            tensile_modulus_xy_mpa: parseNumber(row.tensile_modulus_xy_mpa || row.Tensile_Modulus_XY_MPa),
-            elongation_break_xy_percent: parseNumber(row.elongation_break_xy_percent || row.Elongation_Break_XY_Percent),
-            flexural_strength_mpa: parseNumber(row.flexural_strength_mpa || row.Flexural_Strength_MPa),
-            shore_hardness_d: parseNumber(row.shore_hardness_d || row.Shore_Hardness_D),
-            tg_c: parseNumber(row.tg_c || row.Tg_C),
-            melt_temp_c: parseNumber(row.melt_temp_c || row.Melt_Temp_C),
+            // Numeric fields with safe parsing and overflow protection
+            density_g_cm3: parseNumber(row.density_g_cm3 || row.Density_g_cm3, 'density_g_cm3'),
+            tensile_strength_xy_mpa: parseNumber(row.tensile_strength_xy_mpa || row.Tensile_Strength_XY_MPa, 'tensile_strength_xy_mpa'),
+            tensile_modulus_xy_mpa: parseNumber(row.tensile_modulus_xy_mpa || row.Tensile_Modulus_XY_MPa, 'tensile_modulus_xy_mpa'),
+            elongation_break_xy_percent: parseNumber(row.elongation_break_xy_percent || row.Elongation_Break_XY_Percent, 'elongation_break_xy_percent'),
+            flexural_strength_mpa: parseNumber(row.flexural_strength_mpa || row.Flexural_Strength_MPa, 'flexural_strength_mpa'),
+            shore_hardness_d: parseNumber(row.shore_hardness_d || row.Shore_Hardness_D, 'shore_hardness_d'),
+            tg_c: parseNumber(row.tg_c || row.Tg_C, 'tg_c'),
+            melt_temp_c: parseNumber(row.melt_temp_c || row.Melt_Temp_C, 'melt_temp_c'),
             
             // Temperature settings
-            nozzle_temp_min_c: parseInt(row.nozzle_temp_min_c || row.Nozzle_Temp_Min_C),
-            nozzle_temp_max_c: parseInt(row.nozzle_temp_max_c || row.Nozzle_Temp_Max_C),
-            nozzle_temp_sweetspot_c: parseInt(row.nozzle_temp_sweetspot_c || row.Nozzle_Temp_Sweetspot_C),
-            bed_temp_min_c: parseInt(row.bed_temp_min_c || row.Bed_Temp_Min_C),
-            bed_temp_max_c: parseInt(row.bed_temp_max_c || row.Bed_Temp_Max_C),
+            nozzle_temp_min_c: parseInt(row.nozzle_temp_min_c || row.Nozzle_Temp_Min_C, 'nozzle_temp_min_c'),
+            nozzle_temp_max_c: parseInt(row.nozzle_temp_max_c || row.Nozzle_Temp_Max_C, 'nozzle_temp_max_c'),
+            nozzle_temp_sweetspot_c: parseInt(row.nozzle_temp_sweetspot_c || row.Nozzle_Temp_Sweetspot_C, 'nozzle_temp_sweetspot_c'),
+            bed_temp_min_c: parseInt(row.bed_temp_min_c || row.Bed_Temp_Min_C, 'bed_temp_min_c'),
+            bed_temp_max_c: parseInt(row.bed_temp_max_c || row.Bed_Temp_Max_C, 'bed_temp_max_c'),
             
             // Print settings
-            print_speed_max_mms: parseInt(row.print_speed_max_mms || row.Print_Speed_Max_MMS),
-            fan_min_percent: parseInt(row.fan_min_percent || row.Fan_Min_Percent),
-            fan_max_percent: parseInt(row.fan_max_percent || row.Fan_Max_Percent),
+            print_speed_max_mms: parseInt(row.print_speed_max_mms || row.Print_Speed_Max_MMS, 'print_speed_max_mms'),
+            fan_min_percent: parseInt(row.fan_min_percent || row.Fan_Min_Percent, 'fan_min_percent'),
+            fan_max_percent: parseInt(row.fan_max_percent || row.Fan_Max_Percent, 'fan_max_percent'),
             
             // Physical properties
-            diameter_nominal_mm: parseNumber(row.diameter_nominal_mm || row.Diameter_Nominal_MM),
-            net_weight_g: parseInt(row.net_weight_g || row.Net_Weight_G),
-            spool_outer_d_mm: parseNumber(row.spool_outer_d_mm || row.Spool_Outer_D_MM),
-            spool_width_mm: parseNumber(row.spool_width_mm || row.Spool_Width_MM),
+            diameter_nominal_mm: parseNumber(row.diameter_nominal_mm || row.Diameter_Nominal_MM, 'diameter_nominal_mm'),
+            net_weight_g: parseInt(row.net_weight_g || row.Net_Weight_G, 'net_weight_g'),
+            spool_outer_d_mm: parseNumber(row.spool_outer_d_mm || row.Spool_Outer_D_MM, 'spool_outer_d_mm'),
+            spool_width_mm: parseNumber(row.spool_width_mm || row.Spool_Width_MM, 'spool_width_mm'),
             
             // Color properties
             color_hex: row.color_hex || row.Color_Hex || null,
@@ -249,8 +268,8 @@ const AdminImport = () => {
             moisture_sensitivity_level: row.moisture_sensitivity_level || row.Moisture_Sensitivity_Level || null,
             moisture_care: row.moisture_care || row.Moisture_Care || null,
             nozzle_care: row.nozzle_care || row.Nozzle_Care || null,
-            drying_temp_c: parseInt(row.drying_temp_c || row.Drying_Temp_C),
-            drying_time_hours: parseInt(row.drying_time_hours || row.Drying_Time_Hours),
+            drying_temp_c: parseInt(row.drying_temp_c || row.Drying_Temp_C, 'drying_temp_c'),
+            drying_time_hours: parseInt(row.drying_time_hours || row.Drying_Time_Hours, 'drying_time_hours'),
             
             // Boolean flags with safe parsing
             is_nozzle_abrasive: parseBool(row.is_nozzle_abrasive || row.Is_Nozzle_Abrasive),
@@ -258,14 +277,14 @@ const AdminImport = () => {
             variant_available: row.variant_available !== 'false' && row.Variant_Available !== 'false',
             
             // Scores
-            ease_of_printing_score: parseInt(row.ease_of_printing_score || row.Ease_of_Printing_Score),
-            dimensional_accuracy_score: parseInt(row.dimensional_accuracy_score || row.Dimensional_Accuracy_Score),
-            strength_index: parseNumber(row.strength_index || row.Strength_Index),
-            printability_index: parseNumber(row.printability_index || row.Printability_Index),
-            value_score: parseNumber(row.value_score || row.Value_Score),
+            ease_of_printing_score: parseInt(row.ease_of_printing_score || row.Ease_of_Printing_Score, 'ease_of_printing_score'),
+            dimensional_accuracy_score: parseInt(row.dimensional_accuracy_score || row.Dimensional_Accuracy_Score, 'dimensional_accuracy_score'),
+            strength_index: parseNumber(row.strength_index || row.Strength_Index, 'strength_index'),
+            printability_index: parseNumber(row.printability_index || row.Printability_Index, 'printability_index'),
+            value_score: parseNumber(row.value_score || row.Value_Score, 'value_score'),
             
             // Price
-            variant_price: parseNumber(row.variant_price || row.Variant_Price || row["Variant Price"]),
+            variant_price: parseNumber(row.variant_price || row.Variant_Price || row["Variant Price"], 'variant_price'),
             
             // Tags and arrays
             use_case_tags: row.use_case_tags ? (row.use_case_tags.split(';').map((t: string) => t.trim()).filter((t: string) => t)) : null,
