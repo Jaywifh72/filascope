@@ -531,6 +531,31 @@ const AdminImport = () => {
         return parsed;
       };
 
+      const parsePrice = (value: any, fieldName?: string): number | null => {
+        if (value === null || value === undefined || value === '') return null;
+        const parsed = parseFloat(value);
+        if (isNaN(parsed)) return null;
+        
+        // Price validation: should be between $0.01 and $10,000
+        // If price is > 10000, it might be in cents, try dividing by 100
+        if (parsed > 10000) {
+          const priceInDollars = parsed / 100;
+          if (priceInDollars <= 10000) {
+            console.warn(`${fieldName || 'price'} value ${parsed} appears to be in cents, converting to ${priceInDollars}`);
+            return priceInDollars;
+          }
+          console.warn(`${fieldName || 'price'} value ${parsed} exceeds reasonable max (10000), skipping field`);
+          return null;
+        }
+        
+        // Warn if price seems too low (less than $0.01)
+        if (parsed < 0.01 && parsed > 0) {
+          console.warn(`${fieldName || 'price'} value ${parsed} seems too low, might be data error`);
+        }
+        
+        return parsed;
+      };
+
       const parseIntSafe = (value: any, fieldName?: string): number | null => {
         if (value === null || value === undefined || value === '') return null;
         const parsed = Number.parseInt(value);
@@ -622,6 +647,14 @@ const AdminImport = () => {
             validationData.color_family = null;
           }
           
+          // CRITICAL: Warn if price exists but weight is missing
+          const priceValue = row.variant_price || row.Variant_Price || row["Variant Price"] || row.price || row.Price;
+          const weightValue = row.net_weight_g || row.Net_Weight_G || row["Net Weight (g)"] || row.net_weight || row.weight || row.Weight || row.spool_weight || row.Spool_Weight;
+          if (priceValue && !weightValue) {
+            warnings.push(`Row ${i + 2} (${productTitle}): Has price but missing weight - cannot calculate price per kg`);
+            warningCount++;
+          }
+          
           // Update progress with warnings count
           if (warningCount > 0) {
             setProgress(prev => ({ ...prev, warnings: prev.warnings + warningCount }));
@@ -675,11 +708,21 @@ const AdminImport = () => {
             fan_min_percent: parseIntSafe(row.fan_min_percent || row.Fan_Min_Percent, 'fan_min_percent'),
             fan_max_percent: parseIntSafe(row.fan_max_percent || row.Fan_Max_Percent, 'fan_max_percent'),
             
-            // Physical properties
-            diameter_nominal_mm: parseNumber(row.diameter_nominal_mm || row.Diameter_Nominal_MM, 'diameter_nominal_mm'),
-            net_weight_g: parseIntSafe(row.net_weight_g || row.Net_Weight_G, 'net_weight_g'),
-            spool_outer_d_mm: parseNumber(row.spool_outer_d_mm || row.Spool_Outer_D_MM, 'spool_outer_d_mm'),
-            spool_width_mm: parseNumber(row.spool_width_mm || row.Spool_Width_MM, 'spool_width_mm'),
+            // Physical properties - add more column name variations
+            diameter_nominal_mm: parseNumber(row.diameter_nominal_mm || row.Diameter_Nominal_MM || row["Diameter (mm)"] || row.diameter, 'diameter_nominal_mm'),
+            net_weight_g: parseIntSafe(
+              row.net_weight_g || 
+              row.Net_Weight_G || 
+              row["Net Weight (g)"] || 
+              row.net_weight || 
+              row.weight || 
+              row.Weight || 
+              row.spool_weight || 
+              row.Spool_Weight,
+              'net_weight_g'
+            ),
+            spool_outer_d_mm: parseNumber(row.spool_outer_d_mm || row.Spool_Outer_D_MM || row["Spool Outer Diameter (mm)"], 'spool_outer_d_mm'),
+            spool_width_mm: parseNumber(row.spool_width_mm || row.Spool_Width_MM || row["Spool Width (mm)"], 'spool_width_mm'),
             
             // Color properties
             color_hex: row.color_hex || row.Color_Hex || null,
@@ -706,8 +749,8 @@ const AdminImport = () => {
             printability_index: parseNumber(row.printability_index || row.Printability_Index, 'printability_index'),
             value_score: parseNumber(row.value_score || row.Value_Score, 'value_score'),
             
-            // Price
-            variant_price: parseNumber(row.variant_price || row.Variant_Price || row["Variant Price"], 'variant_price'),
+            // Price - use special price parser with validation
+            variant_price: parsePrice(row.variant_price || row.Variant_Price || row["Variant Price"] || row.price || row.Price, 'variant_price'),
             
             // Tags and arrays
             use_case_tags: row.use_case_tags ? (row.use_case_tags.split(';').map((t: string) => t.trim()).filter((t: string) => t)) : null,
