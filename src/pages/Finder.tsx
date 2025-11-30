@@ -23,7 +23,7 @@ const Finder = () => {
   const [filtersOpen, setFiltersOpen] = useState(true);
 
   const { data: filaments, isLoading } = useQuery({
-    queryKey: ["filaments", searchTerm, selectedMaterials, brassOnly, foodContact, amsOnly, selectedBrand],
+    queryKey: ["filaments", searchTerm, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrand],
     queryFn: async () => {
       let query = supabase.from("filaments").select("*");
 
