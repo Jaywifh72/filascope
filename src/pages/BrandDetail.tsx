@@ -106,22 +106,31 @@ const BrandDetail = () => {
               >
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    <div className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-muted/30 to-muted/50 flex items-center justify-center relative">
+                    <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center relative">
                       {filament.featured_image && filament.featured_image.startsWith('http') ? (
                         <img
                           src={filament.featured_image}
                           alt={filament.product_title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          loading="lazy"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
                             const parent = target.parentElement;
-                            if (parent && brandLogo) {
-                              const placeholder = document.createElement('img');
-                              placeholder.src = brandLogo;
-                              placeholder.alt = decodedBrand;
-                              placeholder.className = 'max-w-[60%] max-h-[60%] object-contain opacity-20';
-                              parent.appendChild(placeholder);
+                            if (parent) {
+                              target.remove();
+                              // Create proper fallback
+                              const fallbackDiv = document.createElement('div');
+                              fallbackDiv.className = 'w-full h-full flex items-center justify-center relative';
+                              fallbackDiv.innerHTML = `
+                                ${brandLogo ? `<img src="${brandLogo}" alt="${decodedBrand}" class="max-w-[60%] max-h-[60%] object-contain opacity-20 absolute" />` : ''}
+                                <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                                  <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
+                                    <span class="text-2xl font-bold text-primary">${filament.material?.charAt(0) || '📦'}</span>
+                                  </div>
+                                  <div class="text-xs text-muted-foreground font-medium">${filament.material || 'Filament'}</div>
+                                </div>
+                              `;
+                              parent.appendChild(fallbackDiv);
                             }
                           }}
                         />
