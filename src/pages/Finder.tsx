@@ -379,15 +379,12 @@ const Finder = () => {
 
                     {/* Filament Info */}
                     <div className="flex items-start gap-4 min-w-0 flex-1">
-                      {filament.featured_image && (
-                        <img
-                          src={filament.featured_image}
-                          alt={filament.product_title}
-                          className="w-16 h-16 rounded-md object-cover flex-shrink-0 border border-border bg-muted"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
+                      {filament.vendor && (
+                        <div className="w-16 h-16 rounded-md flex items-center justify-center flex-shrink-0 border border-border bg-muted">
+                          <span className="text-xs font-bold text-muted-foreground text-center px-1 leading-tight">
+                            {filament.vendor}
+                          </span>
+                        </div>
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-foreground truncate">{filament.product_title}</p>
