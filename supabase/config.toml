@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.estimate-weights]
 verify_jwt = false
+
+[functions.cleanup-images]
+verify_jwt = true
