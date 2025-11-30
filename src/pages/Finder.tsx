@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ExternalLink, ChevronDown, Star } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { getBrandLogo } from "@/lib/brandLogos";
 
 const Finder = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -379,13 +380,28 @@ const Finder = () => {
 
                     {/* Filament Info */}
                     <div className="flex items-start gap-4 min-w-0 flex-1">
-                      {filament.vendor && (
-                        <div className="w-16 h-16 rounded-md flex items-center justify-center flex-shrink-0 border border-border bg-muted">
-                          <span className="text-xs font-bold text-muted-foreground text-center px-1 leading-tight">
-                            {filament.vendor}
-                          </span>
-                        </div>
-                      )}
+                      {filament.vendor && (() => {
+                        const logoPath = getBrandLogo(filament.vendor);
+                        return logoPath ? (
+                          <img
+                            src={logoPath}
+                            alt={`${filament.vendor} logo`}
+                            className="w-16 h-16 rounded-md object-contain flex-shrink-0 border border-border bg-muted p-1"
+                            onError={(e) => {
+                              // Fallback to text if image fails to load
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-md flex items-center justify-center flex-shrink-0 border border-border bg-muted">
+                            <span className="text-xs font-bold text-muted-foreground text-center px-1 leading-tight">
+                              {filament.vendor}
+                            </span>
+                          </div>
+                        );
+                      })()}
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-foreground truncate">{filament.product_title}</p>
                         <p className="text-sm text-muted-foreground">{filament.vendor}</p>
