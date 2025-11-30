@@ -126,12 +126,12 @@ Deno.serve(async (req) => {
     }
     const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
 
-    // Get filaments without valid images that have product URLs
+    // Get filaments without featured images that have product URLs
     const { data: filaments, error: fetchError } = await supabase
       .from('filaments')
       .select('id, product_title, vendor, product_url, featured_image')
       .not('product_url', 'is', null)
-      .or('featured_image.is.null,featured_image.not.like.http%')
+      .is('featured_image', null)
       .limit(limit)
 
     if (fetchError) {
