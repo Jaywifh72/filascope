@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Search, Tag, GitCompare, Grid3x3, Sparkles, Wrench, LogIn, LogOut, User, Shield, Archive } from "lucide-react";
+import { Search, Tag, GitCompare, Grid3x3, Sparkles, Wrench, LogIn, LogOut, User, Shield, Archive, Database } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
@@ -135,6 +135,12 @@ const Navbar = () => {
                       <Link to="/admin/dashboard" className="flex items-center">
                         <Shield className="w-4 h-4 mr-2" />
                         Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/maintenance" className="flex items-center">
+                        <Database className="w-4 h-4 mr-2" />
+                        Maintenance
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
