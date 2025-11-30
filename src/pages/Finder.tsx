@@ -710,6 +710,139 @@ const Finder = () => {
           </Select>
         </div>
 
+        {/* Active Filter Chips */}
+        {(searchTerm || maxPrice || (selectedMaterials.length > 1 || (selectedMaterials.length === 1 && selectedMaterials[0] !== "All")) || Object.keys(selectedVariants).length > 0 || selectedBrand !== "all" || brassOnly || foodContact || amsOnly) && (
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            <span className="text-sm text-muted-foreground">Active filters:</span>
+            
+            {searchTerm && (
+              <Badge variant="secondary" className="gap-1">
+                Search: {searchTerm}
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            
+            {maxPrice && (
+              <Badge variant="secondary" className="gap-1">
+                Max Price: ${maxPrice}/kg
+                <button
+                  onClick={() => setMaxPrice("")}
+                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            
+            {selectedMaterials.filter(m => m !== "All").map(material => (
+              <Badge key={material} variant="secondary" className="gap-1">
+                {material}
+                <button
+                  onClick={() => {
+                    const newMaterials = selectedMaterials.filter(m => m !== material);
+                    setSelectedMaterials(newMaterials.length === 0 ? ["All"] : newMaterials);
+                  }}
+                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            
+            {Object.entries(selectedVariants).map(([material, variants]) => 
+              variants.map(variant => (
+                <Badge key={`${material}-${variant}`} variant="secondary" className="gap-1">
+                  {variant}
+                  <button
+                    onClick={() => {
+                      const newVariants = { ...selectedVariants };
+                      newVariants[material] = newVariants[material].filter(v => v !== variant);
+                      if (newVariants[material].length === 0) {
+                        delete newVariants[material];
+                      }
+                      setSelectedVariants(newVariants);
+                    }}
+                    className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))
+            )}
+            
+            {selectedBrand !== "all" && (
+              <Badge variant="secondary" className="gap-1">
+                Brand: {selectedBrand}
+                <button
+                  onClick={() => setSelectedBrand("all")}
+                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            
+            {brassOnly && (
+              <Badge variant="secondary" className="gap-1">
+                Brass Safe
+                <button
+                  onClick={() => setBrassOnly(false)}
+                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            
+            {foodContact && (
+              <Badge variant="secondary" className="gap-1">
+                Food Contact
+                <button
+                  onClick={() => setFoodContact(false)}
+                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            
+            {amsOnly && (
+              <Badge variant="secondary" className="gap-1">
+                AMS Compatible
+                <button
+                  onClick={() => setAmsOnly(false)}
+                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchTerm("");
+                setMaxPrice("");
+                setSelectedMaterials(["All"]);
+                setSelectedVariants({});
+                setSelectedBrand("all");
+                setBrassOnly(false);
+                setFoodContact(false);
+                setAmsOnly(false);
+              }}
+              className="h-7 text-xs"
+            >
+              Clear all
+            </Button>
+          </div>
+        )}
+
         {/* Filaments List */}
         <div className="space-y-3">
           {isLoading ? (
