@@ -717,20 +717,53 @@ const AdminImport = () => {
           // Delete filaments whose product_id is not in the CSV with retry mechanism
           const deleteResult = await retryWithBackoff(
             async () => {
-              const { error, count } = await supabase
+              // First, fetch all existing filaments to determine which ones to delete
+              const { data: allFilaments, error: fetchError } = await supabase
+                .from('filaments')
+                .select('id, product_id');
+              
+              if (fetchError) {
+                console.error('Fetch error:', fetchError);
+                throw fetchError;
+              }
+              
+              if (!allFilaments || allFilaments.length === 0) {
+                console.log('No existing filaments to check');
+                return 0;
+              }
+              
+              // Find IDs of filaments NOT in the CSV
+              const csvProductIdSet = new Set(csvProductIds);
+              const idsToDelete = allFilaments
+                .filter(filament => !csvProductIdSet.has(filament.product_id))
+                .map(filament => filament.id);
+              
+              console.log(`Found ${idsToDelete.length} filaments to delete (not in CSV)`);
+              
+              if (idsToDelete.length === 0) {
+                return 0;
+              }
+              
+              // Delete by ID using proper Supabase syntax
+              const { error: deleteError, count } = await supabase
                 .from('filaments')
                 .delete({ count: 'exact' })
-                .not('product_id', 'in', `(${csvProductIds.map(id => `"${id}"`).join(',')})`);
+                .in('id', idsToDelete);
               
-              if (error) throw error;
-              return count;
+              if (deleteError) {
+                console.error('Delete error:', deleteError);
+                throw deleteError;
+              }
+              
+              return count || 0;
             },
             3, // Max 3 retries
             1000, // Start with 1 second delay
             (attempt, error) => {
               // Log retry attempts
-              console.log(`Retry attempt ${attempt}/3 for deletion`);
-              addLog('warning', `⚠️ Deletion failed, retrying (attempt ${attempt}/3)...`);
+              const errorMsg = error instanceof Error ? error.message : String(error);
+              console.log(`Retry attempt ${attempt}/3 for deletion. Error: ${errorMsg}`);
+              addLog('warning', `⚠️ Deletion failed (${errorMsg}), retrying (attempt ${attempt}/3)...`);
             }
           );
           
