@@ -148,46 +148,133 @@ Deno.serve(async (req) => {
 
         const html = scrapeResult.html
 
+        // Helper function to check if URL looks like a product image
+        const isProductImage = (url: string, imgTag?: string): boolean => {
+          const urlLower = url.toLowerCase()
+          
+          // Exclude common non-product images
+          const excludePatterns = [
+            'icon', 'logo', 'thumb', 'banner', 'header', 'footer',
+            'badge', 'seal', 'award', 'button', 'background', 'bg',
+            'sprite', 'placeholder', 'avatar', 'social'
+          ]
+          
+          if (excludePatterns.some(pattern => urlLower.includes(pattern))) {
+            return false
+          }
+          
+          // Exclude GIFs (often animations, not product photos)
+          if (urlLower.endsWith('.gif')) {
+            return false
+          }
+          
+          // Prioritize URLs with product-related keywords
+          const productKeywords = ['product', 'filament', 'spool', 'item', 'variant']
+          const hasProductKeyword = productKeywords.some(keyword => urlLower.includes(keyword))
+          
+          // Check alt text if available in imgTag
+          if (imgTag) {
+            const altMatch = imgTag.match(/alt=["']([^"']+)["']/i)
+            if (altMatch) {
+              const altLower = altMatch[1].toLowerCase()
+              if (productKeywords.some(keyword => altLower.includes(keyword))) {
+                return true
+              }
+            }
+          }
+          
+          return hasProductKeyword || !excludePatterns.some(pattern => urlLower.includes(pattern))
+        }
+
         // Extract image URL using various strategies
         let imageUrl: string | null = null
 
-        // Strategy 1: Look for og:image meta tag
-        const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i)
-        if (ogImageMatch) {
-          imageUrl = ogImageMatch[1]
-        }
-
-        // Strategy 2: Look for twitter:image meta tag
-        if (!imageUrl) {
-          const twitterImageMatch = html.match(/<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i)
-          if (twitterImageMatch) {
-            imageUrl = twitterImageMatch[1]
+        // Strategy 1: Look for product gallery or main product image in HTML structure
+        const galleryPatterns = [
+          /<div[^>]*class=["'][^"']*product[^"']*gallery[^"']*["'][^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["']/i,
+          /<div[^>]*class=["'][^"']*product[^"']*image[^"']*["'][^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["']/i,
+          /<img[^>]*class=["'][^"']*product[^"']*featured[^"']*["'][^>]*src=["']([^"']+)["']/i,
+          /<img[^>]*class=["'][^"']*main[^"']*product[^"']*["'][^>]*src=["']([^"']+)["']/i
+        ]
+        
+        for (const pattern of galleryPatterns) {
+          const match = html.match(pattern)
+          if (match && match[1] && isProductImage(match[1])) {
+            imageUrl = match[1]
+            break
           }
         }
 
-        // Strategy 3: Look for product image in common patterns
+        // Strategy 2: Look for og:image meta tag (but validate it's a product image)
         if (!imageUrl) {
-          const productImageMatch = html.match(/<img[^>]*class=["'][^"']*product[^"']*["'][^>]*src=["']([^"']+)["']/i) ||
-                                     html.match(/<img[^>]*src=["']([^"']+)["'][^>]*class=["'][^"']*product[^"']*["']/i)
-          if (productImageMatch) {
-            imageUrl = productImageMatch[1]
+          const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i)
+          if (ogImageMatch && isProductImage(ogImageMatch[1])) {
+            imageUrl = ogImageMatch[1]
           }
         }
 
-        // Strategy 4: Look for first large image
+        // Strategy 3: Look for images with "product" in class or data attributes
+        if (!imageUrl) {
+          const productImagePatterns = [
+            /<img[^>]*class=["'][^"']*product[^"']*["'][^>]*src=["']([^"']+)["']/i,
+            /<img[^>]*src=["']([^"']+)["'][^>]*class=["'][^"']*product[^"']*["']/i,
+            /<img[^>]*data-[^=]*product[^=]*=["'][^"']*["'][^>]*src=["']([^"']+)["']/i
+          ]
+          
+          for (const pattern of productImagePatterns) {
+            const match = html.match(pattern)
+            if (match && match[1] && isProductImage(match[1])) {
+              imageUrl = match[1]
+              break
+            }
+          }
+        }
+
+        // Strategy 4: Look through all images for best product image candidate
         if (!imageUrl) {
           const imgMatches = html.match(/<img[^>]*src=["']([^"']+)["'][^>]*/gi)
           if (imgMatches) {
+            // Score each image and pick the best
+            let bestImage = { url: '', score: 0 }
+            
             for (const imgTag of imgMatches) {
               const srcMatch = imgTag.match(/src=["']([^"']+)["']/)
               if (srcMatch && srcMatch[1]) {
                 const src = srcMatch[1]
-                // Skip tiny images, icons, and logos
-                if (!src.includes('icon') && !src.includes('logo') && !src.includes('thumb')) {
-                  imageUrl = src
-                  break
+                
+                if (!isProductImage(src, imgTag)) continue
+                
+                let score = 0
+                const srcLower = src.toLowerCase()
+                
+                // Prioritize images with product-related keywords in URL
+                if (srcLower.includes('product')) score += 10
+                if (srcLower.includes('filament')) score += 8
+                if (srcLower.includes('spool')) score += 6
+                if (srcLower.includes('variant')) score += 5
+                if (srcLower.includes('item')) score += 4
+                
+                // Check for high-res indicators
+                if (srcLower.includes('large') || srcLower.includes('1214') || srcLower.includes('1920')) score += 3
+                
+                // Prefer jpg/png over webp/avif
+                if (srcLower.endsWith('.jpg') || srcLower.endsWith('.jpeg') || srcLower.endsWith('.png')) score += 2
+                
+                // Check alt text
+                const altMatch = imgTag.match(/alt=["']([^"']+)["']/i)
+                if (altMatch) {
+                  const altLower = altMatch[1].toLowerCase()
+                  if (altLower.includes('product') || altLower.includes('filament')) score += 5
+                }
+                
+                if (score > bestImage.score) {
+                  bestImage = { url: src, score }
                 }
               }
+            }
+            
+            if (bestImage.score > 0) {
+              imageUrl = bestImage.url
             }
           }
         }
