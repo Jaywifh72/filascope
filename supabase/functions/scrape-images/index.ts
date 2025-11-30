@@ -186,14 +186,28 @@ async function scrapeVendorCollection(
         for (const match of productCards) {
           const cardHtml = match[0]
           
-          // Check if this card matches the filament title
-          const titleMatch = cardHtml.match(/<h[23][^>]*class=["'][^"']*title[^"']*["'][^>]*>([\s\S]*?)<\/h[23]>/i)
+          // Log first card HTML sample for debugging (only once)
+          if (productCards.indexOf(match) === 0) {
+            console.log(`Sample card HTML (first 500 chars): ${cardHtml.substring(0, 500)}`)
+          }
+          
+          // Check if this card matches the filament title - try multiple patterns
+          let titleMatch = cardHtml.match(/<h[23][^>]*class=["'][^"']*title[^"']*["'][^>]*>([\s\S]*?)<\/h[23]>/i) ||
+                          cardHtml.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i) || // Any h2-h4
+                          cardHtml.match(/<a[^>]*class=["'][^"']*title[^"']*["'][^>]*>([\s\S]*?)<\/a>/i) || // Link with title class
+                          cardHtml.match(/<div[^>]*class=["'][^"']*title[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) // Div with title class
+          
           if (titleMatch) {
             const cardTitle = titleMatch[1]
               .replace(/<[^>]+>/g, '')
               .toLowerCase()
               .replace(/[^a-z0-9\s]/g, '')
               .trim()
+            
+            // Log first few characters of card title for debugging
+            if (cardTitle) {
+              console.log(`  Card title extracted: "${cardTitle.substring(0, 50)}..."`)
+            }
             
             // Check for title match with more flexible requirements
             const titleWords = simplifiedTitle.split(/\s+/).filter((w: string) => w.length > 2)
