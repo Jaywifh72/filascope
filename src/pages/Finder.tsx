@@ -14,6 +14,7 @@ import { getBrandLogo } from "@/lib/brandLogos";
 const Finder = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>(["All"]);
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string[]>>({});
   const [brassOnly, setBrassOnly] = useState(false);
   const [foodContact, setFoodContact] = useState(false);
   const [amsOnly, setAmsOnly] = useState(false);
@@ -31,8 +32,24 @@ const Finder = () => {
       }
 
       if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
-        const materialFilters = selectedMaterials.map(m => `material.ilike.%${m}%`).join(",");
-        query = query.or(materialFilters);
+        // Check if any base materials have specific variants selected
+        const allSelectedVariants: string[] = [];
+        selectedMaterials.forEach(baseMaterial => {
+          const variants = selectedVariants[baseMaterial];
+          if (variants && variants.length > 0) {
+            allSelectedVariants.push(...variants);
+          }
+        });
+        
+        // If specific variants are selected, filter by those variants
+        // Otherwise filter by base materials
+        if (allSelectedVariants.length > 0) {
+          const materialFilters = allSelectedVariants.map(m => `material.ilike.%${m}%`).join(",");
+          query = query.or(materialFilters);
+        } else {
+          const materialFilters = selectedMaterials.map(m => `material.ilike.%${m}%`).join(",");
+          query = query.or(materialFilters);
+        }
       }
 
       if (brassOnly) {
@@ -57,7 +74,7 @@ const Finder = () => {
     },
   });
 
-  // Fetch unique materials for filters
+  // Fetch unique materials for filters with variants
   const { data: materials } = useQuery({
     queryKey: ["materials"],
     queryFn: async () => {
@@ -72,20 +89,46 @@ const Finder = () => {
       // Get unique materials
       const uniqueMaterials = Array.from(new Set(data.map(f => f.material))).sort();
       
-      // Categorize materials
-      const standard = ['PLA', 'PLA+', 'PETG', 'ABS', 'ASA', 'TPU', 'HIPS'];
-      const composites = uniqueMaterials.filter(m => 
-        m.includes('-CF') || m.includes('-GF') || m.includes('Carbon Fiber') || m.includes('Wood Fill')
-      );
-      const specialty = uniqueMaterials.filter(m => 
-        !standard.includes(m) && !composites.includes(m)
-      );
+      // Define base standard materials that can have variants
+      const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA'];
+      const otherStandards = ['PLA+', 'TPU', 'HIPS', 'Nylon', 'PC', 'PEEK'];
+      
+      // Function to check if a material is a variant of a base material
+      const getBaseMaterial = (material: string): string | null => {
+        for (const base of baseStandards) {
+          // Match patterns like "PLA-CF", "PLA Carbon Fiber", "ABS-GF", etc.
+          if (material !== base && (
+            material.startsWith(base + '-') ||
+            material.startsWith(base + ' ') ||
+            (material.includes(base) && material.length > base.length + 1)
+          )) {
+            return base;
+          }
+        }
+        return null;
+      };
+      
+      // Group materials by their base
+      const materialsByBase: Record<string, string[]> = {};
+      const standalone: string[] = [];
+      
+      uniqueMaterials.forEach(material => {
+        const base = getBaseMaterial(material);
+        if (base) {
+          if (!materialsByBase[base]) {
+            materialsByBase[base] = [];
+          }
+          materialsByBase[base].push(material);
+        } else if (baseStandards.includes(material) || otherStandards.includes(material)) {
+          standalone.push(material);
+        }
+      });
       
       return {
         all: uniqueMaterials,
-        standard: standard.filter(m => uniqueMaterials.includes(m)),
-        composites: composites,
-        specialty: specialty
+        baseStandards: baseStandards.filter(m => uniqueMaterials.includes(m) || materialsByBase[m]?.length > 0),
+        otherStandards: otherStandards.filter(m => uniqueMaterials.includes(m)),
+        variantsByBase: materialsByBase
       };
     },
   });
@@ -108,6 +151,7 @@ const Finder = () => {
   const toggleMaterial = (material: string) => {
     if (material === "All") {
       setSelectedMaterials(["All"]);
+      setSelectedVariants({});
     } else {
       const newMaterials = selectedMaterials.includes("All") 
         ? [material]
@@ -115,8 +159,27 @@ const Finder = () => {
           ? selectedMaterials.filter(m => m !== material)
           : [...selectedMaterials, material];
       
+      // Clear variants for deselected materials
+      if (!newMaterials.includes(material)) {
+        const newVariants = { ...selectedVariants };
+        delete newVariants[material];
+        setSelectedVariants(newVariants);
+      }
+      
       setSelectedMaterials(newMaterials.length === 0 ? ["All"] : newMaterials);
     }
+  };
+
+  const toggleVariant = (baseMaterial: string, variant: string) => {
+    const currentVariants = selectedVariants[baseMaterial] || [];
+    const newVariants = currentVariants.includes(variant)
+      ? currentVariants.filter(v => v !== variant)
+      : [...currentVariants, variant];
+    
+    setSelectedVariants({
+      ...selectedVariants,
+      [baseMaterial]: newVariants
+    });
   };
 
   const getScoreColor = (score: number) => {
@@ -184,67 +247,77 @@ const Finder = () => {
                   </Badge>
                 </div>
 
-                {/* Standard Materials */}
-                {materials?.standard && materials.standard.length > 0 && (
-                  <div className="space-y-2">
+                {/* Base Standard Materials with Variants */}
+                {materials?.baseStandards && materials.baseStandards.length > 0 && (
+                  <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-muted-foreground">Standard</span>
                       <div className="h-px flex-1 bg-border"></div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {materials.standard.map((material) => (
-                        <Badge
-                          key={material}
-                          variant={selectedMaterials.includes(material) ? "default" : "outline"}
-                          className={`cursor-pointer text-xs transition-all ${
-                            selectedMaterials.includes(material)
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-                          }`}
-                          onClick={() => toggleMaterial(material)}
-                        >
-                          {material}
-                        </Badge>
-                      ))}
+                    <div className="space-y-2">
+                      {materials.baseStandards.map((baseMaterial) => {
+                        const variants = materials.variantsByBase?.[baseMaterial] || [];
+                        const isSelected = selectedMaterials.includes(baseMaterial);
+                        const selectedVariantsList = selectedVariants[baseMaterial] || [];
+                        
+                        return (
+                          <div key={baseMaterial} className="space-y-1">
+                            <Badge
+                              variant={isSelected ? "default" : "outline"}
+                              className={`cursor-pointer text-xs transition-all ${
+                                isSelected
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                              }`}
+                              onClick={() => toggleMaterial(baseMaterial)}
+                            >
+                              {baseMaterial}
+                              {variants.length > 0 && ` (${variants.length} variants)`}
+                            </Badge>
+                            
+                            {/* Variants Dropdown */}
+                            {isSelected && variants.length > 0 && (
+                              <Collapsible>
+                                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pl-4">
+                                  <ChevronDown className="w-3 h-3" />
+                                  <span>Show variants</span>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="pl-4 pt-2 space-y-1">
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {variants.map((variant) => (
+                                      <Badge
+                                        key={variant}
+                                        variant={selectedVariantsList.includes(variant) ? "default" : "outline"}
+                                        className={`cursor-pointer text-xs transition-all ${
+                                          selectedVariantsList.includes(variant)
+                                            ? "bg-secondary text-secondary-foreground shadow-sm"
+                                            : "border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
+                                        }`}
+                                        onClick={() => toggleVariant(baseMaterial, variant)}
+                                      >
+                                        {variant}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </CollapsibleContent>
+                              </Collapsible>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
-                {/* Composites */}
-                {materials?.composites && materials.composites.length > 0 && (
+                {/* Other Standard Materials (no variants) */}
+                {materials?.otherStandards && materials.otherStandards.length > 0 && (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">Composites</span>
+                      <span className="text-xs font-medium text-muted-foreground">Other Materials</span>
                       <div className="h-px flex-1 bg-border"></div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {materials.composites.map((material) => (
-                        <Badge
-                          key={material}
-                          variant={selectedMaterials.includes(material) ? "default" : "outline"}
-                          className={`cursor-pointer text-xs transition-all ${
-                            selectedMaterials.includes(material)
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-                          }`}
-                          onClick={() => toggleMaterial(material)}
-                        >
-                          {material}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Specialty Materials */}
-                {materials?.specialty && materials.specialty.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">Specialty</span>
-                      <div className="h-px flex-1 bg-border"></div>
-                    </div>
-                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-                      {materials.specialty.map((material) => (
+                      {materials.otherStandards.map((material) => (
                         <Badge
                           key={material}
                           variant={selectedMaterials.includes(material) ? "default" : "outline"}
