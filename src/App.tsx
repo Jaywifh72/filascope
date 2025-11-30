@@ -16,6 +16,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminImport from "./pages/AdminImport";
 import AdminUsers from "./pages/AdminUsers";
 import AdminEnrichment from "./pages/AdminEnrichment";
+import AdminAffiliates from "./pages/AdminAffiliates";
 import FilamentDetail from "./pages/FilamentDetail";
 import BrandDetail from "./pages/BrandDetail";
 import NotFound from "./pages/NotFound";
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/admin/import" element={<AdminImport />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/enrichment" element={<AdminEnrichment />} />
+          <Route path="/admin/affiliates" element={<AdminAffiliates />} />
           <Route path="/filament/:id" element={<FilamentDetail />} />
           <Route path="/admin/filaments" element={<AdminDashboard />} />
           <Route path="/admin/deals" element={<AdminDashboard />} />
