@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { retryWithBackoff } from "@/lib/retryWithBackoff";
 
 // Validation schema for filament data
 const isURL = (value: string | null): boolean => {
@@ -713,42 +714,59 @@ const AdminImport = () => {
           console.log(`Found ${csvProductIds.length} product IDs in CSV`);
           addLog('info', `Found ${csvProductIds.length} product IDs in CSV`);
           
-          // Delete filaments whose product_id is not in the CSV
-          const { error: deleteError, count } = await supabase
-            .from('filaments')
-            .delete({ count: 'exact' })
-            .not('product_id', 'in', `(${csvProductIds.map(id => `"${id}"`).join(',')})`);
+          // Delete filaments whose product_id is not in the CSV with retry mechanism
+          const deleteResult = await retryWithBackoff(
+            async () => {
+              const { error, count } = await supabase
+                .from('filaments')
+                .delete({ count: 'exact' })
+                .not('product_id', 'in', `(${csvProductIds.map(id => `"${id}"`).join(',')})`);
+              
+              if (error) throw error;
+              return count;
+            },
+            3, // Max 3 retries
+            1000, // Start with 1 second delay
+            (attempt, error) => {
+              // Log retry attempts
+              console.log(`Retry attempt ${attempt}/3 for deletion`);
+              addLog('warning', `⚠️ Deletion failed, retrying (attempt ${attempt}/3)...`);
+            }
+          );
           
-          if (deleteError) {
-            const errorDetails = {
-              message: deleteError.message,
-              code: deleteError.code,
-              details: deleteError.details,
-              hint: deleteError.hint,
-            };
-            console.error('Error deleting non-CSV filaments:', errorDetails);
-            addLog('error', `❌ Failed to clean up old filaments: ${deleteError.message} (Code: ${deleteError.code || 'N/A'})`);
-            addLog('error', `Error details: ${JSON.stringify(errorDetails)}`);
-            toast({
-              title: "Cleanup Warning",
-              description: `Failed to delete old filaments: ${deleteError.message}. Import will continue.`,
-              variant: "destructive",
-            });
-          } else {
-            console.log(`✓ Deleted ${count} filaments not in CSV`);
-            addLog('success', `✓ Deleted ${count || 0} filaments not in CSV`);
-            toast({
-              title: "Cleanup Complete",
-              description: `Removed ${count || 0} filaments not in CSV`,
-            });
-          }
+          console.log(`✓ Deleted ${deleteResult} filaments not in CSV`);
+          addLog('success', `✓ Deleted ${deleteResult || 0} filaments not in CSV`);
+          toast({
+            title: "Cleanup Complete",
+            description: `Removed ${deleteResult || 0} filaments not in CSV`,
+          });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           const errorStack = error instanceof Error ? error.stack : 'No stack trace';
-          console.error('Error during cleanup:', error);
+          const errorDetails = error && typeof error === 'object' ? {
+            message: (error as any).message,
+            code: (error as any).code,
+            details: (error as any).details,
+            hint: (error as any).hint,
+          } : null;
+          
+          console.error('Error during cleanup after all retries:', error);
           console.error('Stack trace:', errorStack);
-          addLog('error', `❌ Cleanup error: ${errorMessage}`);
+          if (errorDetails) {
+            console.error('Error details:', errorDetails);
+          }
+          
+          addLog('error', `❌ Cleanup failed after all retry attempts: ${errorMessage}`);
+          if (errorDetails) {
+            addLog('error', `Error code: ${errorDetails.code || 'N/A'}, Details: ${JSON.stringify(errorDetails)}`);
+          }
           addLog('error', `Stack trace: ${errorStack}`);
+          
+          toast({
+            title: "Cleanup Failed",
+            description: `Failed to delete old filaments after retries: ${errorMessage}. Import will continue.`,
+            variant: "destructive",
+          });
         }
       }
       
