@@ -131,12 +131,38 @@ async function scrapeVendorCollection(
     
     const html = scrapeResult.html
     console.log('Successfully scraped collection page')
+    console.log(`HTML length: ${html.length} characters`)
     
-    // Extract product cards - Shopify typically uses product-card or product-item classes
-    const productCardPattern = /<div[^>]*class=["'][^"']*product[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi
-    const productCards = Array.from(html.matchAll(productCardPattern))
+    // Extract product cards - try multiple patterns for different site structures
+    const patterns = [
+      // Shopify product cards
+      /<div[^>]*class=["'][^"']*product[^"']*card[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi,
+      /<div[^>]*class=["'][^"']*product[^"']*item[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi,
+      // Generic product containers
+      /<article[^>]*class=["'][^"']*product[^"']*["'][^>]*>([\s\S]*?)<\/article>/gi,
+      /<li[^>]*class=["'][^"']*product[^"']*["'][^>]*>([\s\S]*?)<\/li>/gi,
+      // WooCommerce patterns
+      /<li[^>]*class=["'][^"']*woocommerce[^"']*product[^"']*["'][^>]*>([\s\S]*?)<\/li>/gi,
+    ]
     
-    console.log(`Found ${productCards.length} product cards on page`)
+    let productCards: RegExpMatchArray[] = []
+    for (const pattern of patterns) {
+      productCards = Array.from(html.matchAll(pattern))
+      if (productCards.length > 0) {
+        console.log(`Found ${productCards.length} product cards using pattern`)
+        break
+      }
+    }
+    
+    if (productCards.length === 0) {
+      console.log('No product cards found with standard patterns, trying fallback')
+      // Fallback: look for any divs/articles with images and titles together
+      const fallbackPattern = /<(?:div|article|li)[^>]*>([\s\S]*?)<img[^>]*>([\s\S]*?)<\/(?:div|article|li)>/gi
+      productCards = Array.from(html.matchAll(fallbackPattern))
+      console.log(`Fallback found ${productCards.length} potential product containers`)
+    }
+    
+    console.log(`Total product cards to process: ${productCards.length}`)
     
     // Process each filament
     for (const filament of filaments || []) {
@@ -169,33 +195,37 @@ async function scrapeVendorCollection(
               .replace(/[^a-z0-9\s]/g, '')
               .trim()
             
-            // Check for title match with stricter requirements
+            // Check for title match with more flexible requirements
             const titleWords = simplifiedTitle.split(/\s+/).filter((w: string) => w.length > 2)
             const matchingWords = titleWords.filter((word: string) => cardTitle.includes(word))
             const matchCount = matchingWords.length
             
-            // Require at least 70% of words to match and minimum 3 words for better specificity
-            const matchThreshold = Math.max(3, Math.ceil(titleWords.length * 0.7))
+            // More flexible matching: require at least 50% match OR at least 2 matching words
+            const matchThreshold = Math.max(2, Math.ceil(titleWords.length * 0.5))
             
-            if (matchCount >= matchThreshold && titleWords.length >= 2) {
+            console.log(`Comparing "${simplifiedTitle}" vs "${cardTitle}" - ${matchCount}/${titleWords.length} words match`)
+            
+            if (matchCount >= matchThreshold && titleWords.length >= 1) {
               // Calculate match score for this card
               let matchScore = matchCount * 10
               
               // Bonus points for exact phrase matches
               const longestPhrase = matchingWords.join(' ')
               if (cardTitle.includes(longestPhrase)) {
-                matchScore += 20
+                matchScore += 15
               }
               
               // Bonus for matching color/material terms
-              const specialTerms = ['pla', 'petg', 'abs', 'tpu', 'nylon', 'carbon', 'wood', 'metal', 'silk', 'matte']
+              const specialTerms = ['pla', 'petg', 'abs', 'tpu', 'nylon', 'carbon', 'wood', 'metal', 'silk', 'matte', 'translucent', 'opaque', 'marble', 'metallic', 'pearlescent']
               const specialMatches = specialTerms.filter(term => 
                 simplifiedTitle.includes(term) && cardTitle.includes(term)
               )
               matchScore += specialMatches.length * 5
               
-              // Only use this match if score is high enough
-              if (matchScore >= 30) {
+              console.log(`  Match score: ${matchScore} (threshold: 15)`)
+              
+              // Lower threshold to be more permissive
+              if (matchScore >= 15) {
                 // Found a match! Extract the image
                 const imgMatches = cardHtml.match(/<img[^>]*src=["']([^"']+)["'][^>]*>/gi)
                 if (imgMatches && imgMatches.length > 0) {
@@ -236,7 +266,7 @@ async function scrapeVendorCollection(
         }
         
         if (!imageUrl) {
-          console.log(`No image found for ${filament.product_title}`)
+          console.log(`No image found for ${filament.product_title} (processed ${productCards.length} cards)`)
           record.status = 'no_image_found'
           result.processed_records.push(record)
           continue
