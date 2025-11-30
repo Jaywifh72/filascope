@@ -54,6 +54,13 @@ const Finder = () => {
         "Space Grade": ["PC Space Grade"],
         "PBT": ["PC-PBT"],
         "TPE": ["PCTPE"],
+      },
+      "Co-Polyester": {
+        "CF": ["Co-Polyester CF"],
+        "HT": ["HT"],
+        "XT": ["XT"],
+        "nGen": ["nGen"],
+        "nGen Flex": ["nGen_FLEX"],
       }
     };
 
@@ -85,11 +92,11 @@ const Finder = () => {
       const uniqueMaterials = Array.from(new Set(data.map(f => f.material))).sort();
       
       // Define base standard materials that can have variants
-      const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon', 'PC'];
+      const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon', 'PC', 'Co-Polyester'];
       const otherStandards = ['PLA+', 'HIPS', 'PEEK', 'TPE'];
       
       // Materials that should appear in specialty despite supporting variants
-      const specialtyWithVariants = ['TPU', 'Nylon', 'PC'];
+      const specialtyWithVariants = ['TPU', 'Nylon', 'PC', 'Co-Polyester'];
       
       // Function to check if a material is a variant of a base material
       const getBaseMaterial = (material: string): string | null => {
