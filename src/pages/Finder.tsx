@@ -26,6 +26,7 @@ const Finder = () => {
   const normalizeVariantName = (material: string, base: string): string => {
     const variantPatterns: Record<string, Record<string, string[]>> = {
       PLA: {
+        "+": ["PLA+"],
         "Carbon Fiber": ["PLA Carbon Fiber", "PLA CF", "PLA-CF", "PLA CF03"],
         "Glow": ["Glow PLA", "PLA Glow", "PLA Glow in Dark", "PLA-Luminous"],
         "Silk": ["Silk PLA", "PLA Silk", "PLA-Silk", "Silky PLA", "Silk PLA+"],
@@ -99,7 +100,7 @@ const Finder = () => {
       
       // Define base standard materials that can have variants
       const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon', 'PC', 'Co-Polyester'];
-      const otherStandards = ['PLA+', 'HIPS', 'PEEK', 'TPE'];
+      const otherStandards = ['HIPS', 'PEEK', 'TPE'];
       
       // Materials that should appear in specialty despite supporting variants
       const specialtyWithVariants = ['TPU', 'Nylon', 'PC', 'Co-Polyester'];
