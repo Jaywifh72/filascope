@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -396,6 +396,79 @@ const Finder = () => {
     return "text-orange-400";
   };
 
+  // Calculate filter counts for each option
+  const filterCounts = useMemo(() => {
+    if (!filaments) return {};
+
+    const counts: Record<string, number> = {};
+
+    // Count filaments by material
+    filaments.forEach(f => {
+      const material = f.material;
+      if (material) {
+        // Count by base material
+        const baseMaterial = material.split(' ')[0];
+        counts[`material_${baseMaterial}`] = (counts[`material_${baseMaterial}`] || 0) + 1;
+        
+        // Count by full material name (for variants)
+        counts[`material_${material}`] = (counts[`material_${material}`] || 0) + 1;
+      }
+      
+      // Count by brand
+      if (f.vendor) {
+        counts[`brand_${f.vendor}`] = (counts[`brand_${f.vendor}`] || 0) + 1;
+      }
+      
+      // Count compatibility options
+      if (f.is_nozzle_abrasive === false) {
+        counts['brass_safe'] = (counts['brass_safe'] || 0) + 1;
+      }
+      if (f.food_contact_rating) {
+        counts['food_contact'] = (counts['food_contact'] || 0) + 1;
+      }
+      if (f.spool_ams_fit === true) {
+        counts['ams_fit'] = (counts['ams_fit'] || 0) + 1;
+      }
+    });
+
+    return counts;
+  }, [filaments]);
+
+  // Helper function to get count for a material (checks both base and variants)
+  const getMaterialCount = (baseMaterial: string) => {
+    if (!materials || !filaments) return 0;
+    
+    // Check if this material has variants
+    const variants = materials.variantsByBase?.[baseMaterial] || [];
+    const normalizedToRaw = materials.normalizedToRaw?.[baseMaterial] || {};
+    
+    let count = 0;
+    
+    // If it has variants, count all raw materials under this base
+    if (variants.length > 0) {
+      Object.values(normalizedToRaw).forEach(rawMaterials => {
+        rawMaterials.forEach(rawMaterial => {
+          count += filterCounts[`material_${rawMaterial}`] || 0;
+        });
+      });
+    } else {
+      // Otherwise count materials that match the base
+      count = filaments.filter(f => f.material?.includes(baseMaterial)).length;
+    }
+    
+    return count;
+  };
+
+  // Helper function to get count for a specific variant
+  const getVariantCount = (baseMaterial: string, variant: string) => {
+    if (!materials || !filaments) return 0;
+    
+    const rawMaterials = materials.normalizedToRaw?.[baseMaterial]?.[variant] || [];
+    return rawMaterials.reduce((sum, rawMaterial) => {
+      return sum + (filterCounts[`material_${rawMaterial}`] || 0);
+    }, 0);
+  };
+
   const filteredAndSortedFilaments = filaments?.filter(f => {
     if (maxPrice && f.variant_price && f.net_weight_g) {
       const pricePerKg = (f.variant_price / f.net_weight_g) * 1000;
@@ -509,7 +582,7 @@ const Finder = () => {
                               onClick={() => toggleMaterial(baseMaterial)}
                             >
                               {baseMaterial}
-                              {variants.length > 0 && ` (${variants.length} variants)`}
+                              <span className="ml-1 opacity-60">({getMaterialCount(baseMaterial)})</span>
                             </Badge>
                             
                             {/* Variants Dropdown */}
@@ -521,7 +594,7 @@ const Finder = () => {
                                 </CollapsibleTrigger>
                                 <CollapsibleContent className="pl-4 pt-2 space-y-1">
                                   <div className="flex flex-wrap gap-1.5">
-                                    {variants.map((variant) => (
+                                     {variants.map((variant) => (
                                       <Badge
                                         key={variant}
                                         variant={selectedVariantsList.includes(variant) ? "default" : "outline"}
@@ -533,6 +606,7 @@ const Finder = () => {
                                         onClick={() => toggleVariant(baseMaterial, variant)}
                                       >
                                         {variant}
+                                        <span className="ml-1 opacity-60">({getVariantCount(baseMaterial, variant)})</span>
                                       </Badge>
                                     ))}
                                   </div>
@@ -566,6 +640,7 @@ const Finder = () => {
                           onClick={() => toggleMaterial(material)}
                         >
                           {material}
+                          <span className="ml-1 opacity-60">({getMaterialCount(material)})</span>
                         </Badge>
                       ))}
                     </div>
@@ -592,6 +667,7 @@ const Finder = () => {
                           onClick={() => toggleMaterial(material)}
                         >
                           {material}
+                          <span className="ml-1 opacity-60">({getMaterialCount(material)})</span>
                         </Badge>
                       ))}
                     </div>
@@ -618,6 +694,7 @@ const Finder = () => {
                           onClick={() => toggleMaterial(material)}
                         >
                           {material}
+                          <span className="ml-1 opacity-60">({getMaterialCount(material)})</span>
                         </Badge>
                       ))}
                     </div>
@@ -627,17 +704,26 @@ const Finder = () => {
 
               <div className="space-y-3">
                 <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Compatibility</h4>
-                <label className="flex items-center gap-3 text-sm cursor-pointer group">
-                  <Checkbox checked={brassOnly} onCheckedChange={(checked) => setBrassOnly(checked as boolean)} />
-                  <span className="text-muted-foreground group-hover:text-foreground transition-colors">Brass nozzle safe</span>
+                <label className="flex items-center justify-between gap-3 text-sm cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <Checkbox checked={brassOnly} onCheckedChange={(checked) => setBrassOnly(checked as boolean)} />
+                    <span className="text-muted-foreground group-hover:text-foreground transition-colors">Brass nozzle safe</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">({filterCounts['brass_safe'] || 0})</span>
                 </label>
-                <label className="flex items-center gap-3 text-sm cursor-pointer group">
-                  <Checkbox checked={foodContact} onCheckedChange={(checked) => setFoodContact(checked as boolean)} />
-                  <span className="text-muted-foreground group-hover:text-foreground transition-colors">Food contact rated</span>
+                <label className="flex items-center justify-between gap-3 text-sm cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <Checkbox checked={foodContact} onCheckedChange={(checked) => setFoodContact(checked as boolean)} />
+                    <span className="text-muted-foreground group-hover:text-foreground transition-colors">Food contact rated</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">({filterCounts['food_contact'] || 0})</span>
                 </label>
-                <label className="flex items-center gap-3 text-sm cursor-pointer group">
-                  <Checkbox checked={amsOnly} onCheckedChange={(checked) => setAmsOnly(checked as boolean)} />
-                  <span className="text-muted-foreground group-hover:text-foreground transition-colors">AMS/MMU friendly</span>
+                <label className="flex items-center justify-between gap-3 text-sm cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <Checkbox checked={amsOnly} onCheckedChange={(checked) => setAmsOnly(checked as boolean)} />
+                    <span className="text-muted-foreground group-hover:text-foreground transition-colors">AMS/MMU friendly</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">({filterCounts['ams_fit'] || 0})</span>
                 </label>
               </div>
 
@@ -651,7 +737,10 @@ const Finder = () => {
                     <SelectItem value="all">All Brands</SelectItem>
                     {brands?.map((brand) => (
                       <SelectItem key={brand} value={brand}>
-                        {brand}
+                        <div className="flex items-center justify-between w-full gap-2">
+                          <span>{brand}</span>
+                          <span className="text-muted-foreground text-xs">({filterCounts[`brand_${brand}`] || 0})</span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
