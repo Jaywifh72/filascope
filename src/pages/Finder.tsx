@@ -71,8 +71,8 @@ const Finder = () => {
       const uniqueMaterials = Array.from(new Set(data.map(f => f.material))).sort();
       
       // Define base standard materials that can have variants
-      const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU'];
-      const otherStandards = ['PLA+', 'HIPS', 'Nylon', 'PC', 'PEEK', 'TPE'];
+      const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon'];
+      const otherStandards = ['PLA+', 'HIPS', 'PC', 'PEEK', 'TPE'];
       
       // Function to check if a material is a variant of a base material
       const getBaseMaterial = (material: string): string | null => {
