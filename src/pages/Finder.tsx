@@ -41,6 +41,12 @@ const Finder = () => {
         "Steel": ["PLA Steel Composite"],
         "Stone": ["PLA Stone Composite"],
       },
+      ABS: {
+        "+": ["ABS+"],
+      },
+      ASA: {
+        "+": ["ASA+"],
+      },
       Nylon: {
         "NylonG": ["NylonG"],
         "NylonX": ["NylonX"],
