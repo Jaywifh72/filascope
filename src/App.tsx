@@ -19,6 +19,7 @@ import AdminEnrichment from "./pages/AdminEnrichment";
 import AdminAffiliates from "./pages/AdminAffiliates";
 import FilamentDetail from "./pages/FilamentDetail";
 import BrandDetail from "./pages/BrandDetail";
+import Vault from "./pages/Vault";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/wizard" element={<Wizard />} />
           <Route path="/diagnose" element={<Diagnose />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/vault" element={<Vault />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/import" element={<AdminImport />} />
           <Route path="/admin/users" element={<AdminUsers />} />

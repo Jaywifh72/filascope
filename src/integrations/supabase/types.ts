@@ -94,6 +94,51 @@ export type Database = {
           },
         ]
       }
+      filament_comments: {
+        Row: {
+          comment_text: string
+          created_at: string | null
+          filament_id: string
+          id: string
+          is_private: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment_text: string
+          created_at?: string | null
+          filament_id: string
+          id?: string
+          is_private?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment_text?: string
+          created_at?: string | null
+          filament_id?: string
+          id?: string
+          is_private?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filament_comments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filaments: {
         Row: {
           amazon_link_de: string | null
@@ -399,6 +444,77 @@ export type Database = {
         }
         Relationships: []
       }
+      project_filaments: {
+        Row: {
+          added_at: string | null
+          filament_id: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          filament_id: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          added_at?: string | null
+          filament_id?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_filaments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_filaments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_favorites: {
         Row: {
           created_at: string | null
@@ -428,6 +544,48 @@ export type Database = {
           },
           {
             foreignKeyName: "user_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_purchases: {
+        Row: {
+          created_at: string | null
+          filament_id: string
+          id: string
+          notes: string | null
+          purchase_date: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          filament_id: string
+          id?: string
+          notes?: string | null
+          purchase_date?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          filament_id?: string
+          id?: string
+          notes?: string | null
+          purchase_date?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_purchases_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_purchases_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
