@@ -1,6 +1,57 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.86.0'
 import FirecrawlApp from 'https://esm.sh/@mendable/firecrawl-js@1.10.1'
 
+// Helper function to validate if a string is a valid URL
+const isValidUrl = (urlString: string): boolean => {
+  try {
+    const url = new URL(urlString)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+// Helper function to convert thumbnail URLs to full-size
+const getFullSizeImageUrl = (imageUrl: string): string => {
+  // Remove size parameters like _150x150, _200x200, etc.
+  let fullSizeUrl = imageUrl.replace(/_\d+x\d+\.(png|jpg|jpeg|webp|gif)/i, '.$1')
+  
+  // Remove size query parameters for Shopify CDN
+  if (fullSizeUrl.includes('cdn.shop')) {
+    fullSizeUrl = fullSizeUrl.replace(/([?&])width=\d+/gi, '')
+    fullSizeUrl = fullSizeUrl.replace(/([?&])height=\d+/gi, '')
+    // Clean up double && or trailing ? or &
+    fullSizeUrl = fullSizeUrl.replace(/&&/g, '&').replace(/\?&/g, '?').replace(/[?&]$/g, '')
+  }
+  
+  return fullSizeUrl
+}
+
+// Retry function with exponential backoff
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 2,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: any
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error
+      
+      if (attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt)
+        console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms delay`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+    }
+  }
+  
+  throw lastError
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -115,23 +166,31 @@ Deno.serve(async (req) => {
       }
 
       try {
-        if (!filament.product_url) {
+        if (!filament.product_url || !isValidUrl(filament.product_url)) {
           record.status = 'no_url'
+          if (filament.product_url) {
+            console.log(`Invalid URL for ${filament.product_title}: ${filament.product_url}`)
+            result.errors.push(`${filament.product_title}: Invalid URL - ${filament.product_url}`)
+          }
           result.processed_records.push(record)
           continue
         }
 
         console.log(`Scraping with Firecrawl: ${filament.vendor} - ${filament.product_title}`)
 
-        // Use Firecrawl to scrape the product page
+        // Use Firecrawl to scrape the product page with retry logic
         let scrapeResult
         try {
-          scrapeResult = await firecrawl.scrapeUrl(filament.product_url, {
-            formats: ['html'],
-            onlyMainContent: false
-          })
+          scrapeResult = await retryWithBackoff(
+            () => firecrawl.scrapeUrl(filament.product_url, {
+              formats: ['html'],
+              onlyMainContent: false
+            }),
+            2, // max 2 retries
+            1000 // 1 second base delay
+          )
         } catch (error) {
-          console.error(`Firecrawl error for ${filament.product_url}:`, error)
+          console.error(`Firecrawl error for ${filament.product_title}:`, error)
           record.status = 'error'
           result.errors.push(`${filament.product_title}: ${error instanceof Error ? error.message : 'Firecrawl error'}`)
           result.processed_records.push(record)
@@ -298,6 +357,11 @@ Deno.serve(async (req) => {
         }
 
         console.log(`Found image: ${imageUrl}`)
+        
+        // Convert to full-size image URL
+        imageUrl = getFullSizeImageUrl(imageUrl)
+        console.log(`Full-size image URL: ${imageUrl}`)
+        
         result.images_found++
         record.image_url = imageUrl
 
