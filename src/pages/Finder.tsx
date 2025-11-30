@@ -144,10 +144,11 @@ const Finder = () => {
       // Function to check if a material is a variant of a base material
       const getBaseMaterial = (material: string): string | null => {
         for (const base of baseStandards) {
-          // Match patterns like "PLA-CF", "PLA Carbon Fiber", "ABS-GF", etc.
+          // Match patterns like "PLA-CF", "PLA Carbon Fiber", "ABS+", "ABS-GF", etc.
           if (material !== base && (
             material.startsWith(base + '-') ||
             material.startsWith(base + ' ') ||
+            material.startsWith(base + '+') ||
             (material.includes(base) && material.length > base.length + 1)
           )) {
             return base;
