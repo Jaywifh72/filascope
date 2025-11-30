@@ -46,7 +46,7 @@ const AdminMaintenance = () => {
   const [scrapeResult, setScrapeResult] = useState<ScrapeResult | null>(null);
   const [scrapeLimit, setScrapeLimit] = useState("50");
   const [forceRescrape, setForceRescrape] = useState(false);
-  const [vendorFilter, setVendorFilter] = useState("");
+  const [vendorFilter, setVendorFilter] = useState("all");
   const { toast } = useToast();
 
   // Fetch vendors with missing images
@@ -110,7 +110,7 @@ const AdminMaintenance = () => {
         body: { 
           limit: parseInt(scrapeLimit),
           forceRescrape: forceRescrape,
-          vendor: vendorFilter || null
+          vendor: vendorFilter === "all" ? null : vendorFilter
         }
       });
 
@@ -285,7 +285,7 @@ const AdminMaintenance = () => {
                   <SelectValue placeholder="All vendors" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
-                  <SelectItem value="">All vendors</SelectItem>
+                  <SelectItem value="all">All vendors</SelectItem>
                   {vendorsWithMissingImages?.map((vendor) => (
                     <SelectItem key={vendor} value={vendor}>
                       {vendor}
