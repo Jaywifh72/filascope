@@ -143,7 +143,7 @@ const Finder = () => {
       
       // Define base standard materials that can have variants
       const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon', 'PC', 'Co-Polyester', 'PA', 'CPE', 'PET', 'PEEK', 'PP', 'Support'];
-      const otherStandards = ['HIPS', 'TPE'];
+      const otherStandards = ['HIPS', 'TPE', 'CO-PE'];
       
       // Materials that should appear in specialty despite supporting variants
       const specialtyWithVariants: string[] = [];
