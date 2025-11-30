@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Search, Tag, GitCompare, Grid3x3, Sparkles, Wrench, LogIn, LogOut, User, Shield } from "lucide-react";
+import { Search, Tag, GitCompare, Grid3x3, Sparkles, Wrench, LogIn, LogOut, User, Shield, Archive } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
@@ -81,6 +81,15 @@ const Navbar = () => {
             </Link>
           </Button>
           
+          {user && (
+            <Button variant="ghost" asChild className="bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300">
+              <Link to="/vault" className="flex items-center gap-2">
+                <Archive className="w-4 h-4" />
+                Vault
+              </Link>
+            </Button>
+          )}
+          
           {isAdmin && (
             <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
               <Link to="/admin/dashboard" className="flex items-center gap-2">
@@ -112,6 +121,13 @@ const Navbar = () => {
                 <div className="px-2 py-1.5 text-sm text-muted-foreground">
                   {user.email}
                 </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/vault" className="flex items-center">
+                    <Archive className="w-4 h-4 mr-2" />
+                    My Vault
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {isAdmin && (
                   <>

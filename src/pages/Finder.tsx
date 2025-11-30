@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ExternalLink, ChevronDown, GitCompare, X } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { LikeButton } from "@/components/LikeButton";
 
 const Finder = () => {
   const navigate = useNavigate();
@@ -782,6 +783,7 @@ const Finder = () => {
 
                     {/* Actions */}
                     <div className="flex flex-wrap gap-2 self-start lg:self-center">
+                      <LikeButton filamentId={filament.id} size="sm" />
                       <Button
                         size="sm"
                         variant="default"

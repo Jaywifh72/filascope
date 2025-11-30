@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { LikeButton } from "@/components/LikeButton";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -210,6 +211,7 @@ const FilamentDetail = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3">
+                  <LikeButton filamentId={filament.id} size="lg" />
                   {filament.product_url && (
                     <Button asChild variant="default" size="lg" className="hover:scale-105 transition-transform">
                       <a href={filament.product_url} target="_blank" rel="noopener noreferrer">
