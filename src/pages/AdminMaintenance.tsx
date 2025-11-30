@@ -47,6 +47,7 @@ const AdminMaintenance = () => {
   const [scrapeLimit, setScrapeLimit] = useState("50");
   const [forceRescrape, setForceRescrape] = useState(false);
   const [vendorFilter, setVendorFilter] = useState("all");
+  const [selectedFilaments, setSelectedFilaments] = useState<string[]>([]);
   const { toast } = useToast();
 
   // Fetch all vendors
@@ -65,6 +66,24 @@ const AdminMaintenance = () => {
       const uniqueVendors = [...new Set(data.map(f => f.vendor))].filter(Boolean) as string[];
       return uniqueVendors.sort();
     },
+  });
+
+  // Fetch filaments for selected vendor
+  const { data: vendorFilaments } = useQuery({
+    queryKey: ['vendor-filaments', vendorFilter],
+    queryFn: async () => {
+      if (vendorFilter === "all") return [];
+      
+      const { data, error } = await supabase
+        .from('filaments')
+        .select('id, product_title, featured_image, vendor')
+        .eq('vendor', vendorFilter)
+        .order('product_title');
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: vendorFilter !== "all",
   });
 
   const runImageCleanup = async () => {
@@ -107,9 +126,10 @@ const AdminMaintenance = () => {
       const { data, error } = await supabase.functions.invoke('scrape-images', {
         method: 'POST',
         body: { 
-          limit: parseInt(scrapeLimit),
+          limit: selectedFilaments.length > 0 ? selectedFilaments.length : parseInt(scrapeLimit),
           forceRescrape: forceRescrape,
-          vendor: vendorFilter === "all" ? null : vendorFilter
+          vendor: vendorFilter === "all" ? null : vendorFilter,
+          filamentIds: selectedFilaments.length > 0 ? selectedFilaments : undefined
         }
       });
 
@@ -271,9 +291,13 @@ const AdminMaintenance = () => {
                 min="1"
                 max="200"
                 className="w-full"
+                disabled={selectedFilaments.length > 0}
               />
               <p className="text-xs text-muted-foreground">
-                Processing many filaments may take several minutes
+                {selectedFilaments.length > 0 
+                  ? `${selectedFilaments.length} filament(s) selected`
+                  : "Processing many filaments may take several minutes"
+                }
               </p>
             </div>
 
@@ -324,10 +348,80 @@ const AdminMaintenance = () => {
             ) : (
               <>
                 <Download className="w-4 h-4 mr-2" />
-                Scrape & Download Images
+                {selectedFilaments.length > 0 
+                  ? `Scrape ${selectedFilaments.length} Selected`
+                  : "Scrape & Download Images"
+                }
               </>
             )}
           </Button>
+
+          {vendorFilter !== "all" && vendorFilaments && vendorFilaments.length > 0 && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm">Filaments for {vendorFilter}</h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedFilaments(vendorFilaments.map(f => f.id))}
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedFilaments([])}
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
+                {vendorFilaments.map((filament) => (
+                  <div
+                    key={filament.id}
+                    className={`relative rounded-lg border-2 p-2 cursor-pointer transition-all ${
+                      selectedFilaments.includes(filament.id)
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                    onClick={() => {
+                      setSelectedFilaments(prev =>
+                        prev.includes(filament.id)
+                          ? prev.filter(id => id !== filament.id)
+                          : [...prev, filament.id]
+                      );
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedFilaments.includes(filament.id)}
+                      onChange={() => {}}
+                      className="absolute top-2 right-2 w-4 h-4 z-10"
+                    />
+                    <div className="aspect-square bg-muted rounded overflow-hidden mb-2">
+                      {filament.featured_image ? (
+                        <img
+                          src={filament.featured_image}
+                          alt={filament.product_title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder.svg';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <Image className="w-8 h-8" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs line-clamp-2 text-center">{filament.product_title}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {scrapeResult && (
             <div className="space-y-4 pt-4 border-t">
