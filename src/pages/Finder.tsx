@@ -23,7 +23,7 @@ const Finder = () => {
   const [filtersOpen, setFiltersOpen] = useState(true);
 
   // Normalize variant names to group similar variants
-  const normalizeVariantName = (material: string, base: string): string => {
+   const normalizeVariantName = (material: string, base: string): string => {
     const variantPatterns: Record<string, Record<string, string[]>> = {
       PLA: {
         "Carbon Fiber": ["PLA Carbon Fiber", "PLA CF", "PLA-CF", "PLA CF03"],
@@ -40,6 +40,10 @@ const Finder = () => {
         "Cork": ["PLA Cork Composite"],
         "Steel": ["PLA Steel Composite"],
         "Stone": ["PLA Stone Composite"],
+      },
+      Nylon: {
+        "NylonG": ["NylonG"],
+        "NylonX": ["NylonX"],
       }
     };
 
