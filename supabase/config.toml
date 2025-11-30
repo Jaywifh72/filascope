@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.cleanup-images]
 verify_jwt = true
+
+[functions.scrape-images]
+verify_jwt = true

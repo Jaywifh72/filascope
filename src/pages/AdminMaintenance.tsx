@@ -4,8 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe } from "lucide-react";
 
 interface CleanupResult {
   total_checked: number;
@@ -20,9 +22,27 @@ interface CleanupResult {
   }>;
 }
 
+interface ScrapeResult {
+  total_processed: number;
+  images_found: number;
+  images_uploaded: number;
+  images_updated: number;
+  errors: string[];
+  processed_records: Array<{
+    id: string;
+    product_title: string;
+    vendor: string;
+    status: 'success' | 'no_url' | 'no_image_found' | 'upload_failed' | 'error';
+    image_url?: string;
+  }>;
+}
+
 const AdminMaintenance = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<CleanupResult | null>(null);
+  const [isScraping, setIsScraping] = useState(false);
+  const [scrapeResult, setScrapeResult] = useState<ScrapeResult | null>(null);
+  const [scrapeLimit, setScrapeLimit] = useState("50");
   const { toast } = useToast();
 
   const runImageCleanup = async () => {
@@ -54,6 +74,39 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsRunning(false);
+    }
+  };
+
+  const runImageScraper = async () => {
+    setIsScraping(true);
+    setScrapeResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-images', {
+        method: 'POST',
+        body: { limit: parseInt(scrapeLimit) }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.result) {
+        setScrapeResult(data.result);
+        toast({
+          title: "Scraping Complete",
+          description: data.message,
+        });
+      }
+    } catch (error) {
+      console.error('Scraping error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to run scraper",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScraping(false);
     }
   };
 
@@ -157,6 +210,140 @@ const AdminMaintenance = () => {
                           </div>
                           <div className="text-xs text-muted-foreground font-mono max-w-xs truncate">
                             {record.featured_image}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Image Scraper Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Globe className="w-5 h-5" />
+            <CardTitle>Product Image Scraper</CardTitle>
+          </div>
+          <CardDescription>
+            Automatically scrape and download product images from vendor websites for filaments with missing images
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="scrape-limit">Number of filaments to process</Label>
+            <Input
+              id="scrape-limit"
+              type="number"
+              value={scrapeLimit}
+              onChange={(e) => setScrapeLimit(e.target.value)}
+              min="1"
+              max="200"
+              className="w-40"
+            />
+            <p className="text-xs text-muted-foreground">
+              Processing many filaments may take several minutes
+            </p>
+          </div>
+
+          <Button 
+            onClick={runImageScraper} 
+            disabled={isScraping}
+            className="w-full sm:w-auto"
+          >
+            {isScraping ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Scraping Images...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                Scrape & Download Images
+              </>
+            )}
+          </Button>
+
+          {scrapeResult && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{scrapeResult.total_processed}</div>
+                  <div className="text-sm text-muted-foreground">Processed</div>
+                </div>
+                <div className="bg-blue-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <Image className="w-5 h-5 text-blue-500" />
+                    <div className="text-2xl font-bold">{scrapeResult.images_found}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Images Found</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{scrapeResult.images_updated}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Updated</div>
+                </div>
+                <div className="bg-red-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <div className="text-2xl font-bold">{scrapeResult.errors.length}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Errors</div>
+                </div>
+              </div>
+
+              {scrapeResult.errors.length > 0 && (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    <div className="font-semibold mb-2">Errors encountered:</div>
+                    <ul className="list-disc list-inside space-y-1 max-h-40 overflow-y-auto">
+                      {scrapeResult.errors.slice(0, 10).map((error, i) => (
+                        <li key={i} className="text-sm">{error}</li>
+                      ))}
+                      {scrapeResult.errors.length > 10 && (
+                        <li className="text-sm">... and {scrapeResult.errors.length - 10} more</li>
+                      )}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {scrapeResult.processed_records.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Processing Results:</h3>
+                  <div className="max-h-96 overflow-y-auto space-y-2">
+                    {scrapeResult.processed_records.map((record) => (
+                      <div key={record.id} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-1">
+                            <div className="font-medium">{record.product_title}</div>
+                            <div className="flex gap-2">
+                              <Badge variant="outline" className="text-xs">{record.vendor}</Badge>
+                              <Badge 
+                                variant={
+                                  record.status === 'success' ? 'default' : 
+                                  record.status === 'no_url' || record.status === 'no_image_found' ? 'secondary' : 
+                                  'destructive'
+                                } 
+                                className="text-xs"
+                              >
+                                {record.status === 'success' && <CheckCircle className="w-3 h-3 mr-1" />}
+                                {record.status === 'error' && <XCircle className="w-3 h-3 mr-1" />}
+                                {record.status === 'no_image_found' && <AlertTriangle className="w-3 h-3 mr-1" />}
+                                {record.status.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                            {record.image_url && (
+                              <div className="text-xs text-muted-foreground font-mono truncate max-w-md">
+                                {record.image_url}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
