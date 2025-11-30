@@ -26,6 +26,8 @@ export const brandLogos: Record<string, string> = {
   "Atomic Filament": "/images/brands/atomic.png",
   "QIDI": "/images/brands/qidi.png",
   "Phaetus": "/images/brands/phaetus.jpg",
+  "Gizmo Dorks": "/images/brands/gizmo-dorks.png",
+  "GizmoDorks": "/images/brands/gizmo-dorks.png",
 };
 
 // Helper function to get brand logo with fallback
