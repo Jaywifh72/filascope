@@ -56,6 +56,13 @@ const Finder = () => {
       ASA: {
         "+": ["ASA+"],
       },
+      TPU: {
+        "95A": ["TPU 95A", "TPU-95A", "TPU95A"],
+        "85A": ["TPU 85A", "TPU-85A", "TPU85A"],
+        "98A": ["TPU 98A", "TPU-98A", "TPU98A"],
+        "60D": ["TPU 60D", "TPU-60D", "TPU60D"],
+        "Flex": ["TPU Flex", "TPU-Flex"],
+      },
       Nylon: {
         "NylonG": ["NylonG"],
         "NylonX": ["NylonX"],
