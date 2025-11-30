@@ -110,7 +110,10 @@ const Finder = () => {
       const otherStandards = ['HIPS', 'PEEK', 'TPE'];
       
       // Materials that should appear in specialty despite supporting variants
-      const specialtyWithVariants = ['Nylon', 'PC', 'Co-Polyester', 'PA'];
+      const specialtyWithVariants = ['Nylon'];
+      
+      // Materials that should appear in composites despite supporting variants
+      const compositeWithVariants = ['PC', 'Co-Polyester', 'PA'];
       
       // Function to check if a material is a variant of a base material
       const getBaseMaterial = (material: string): string | null => {
@@ -186,16 +189,22 @@ const Finder = () => {
         uniqueMaterials.includes(m) || materialsByBase[m]?.length > 0
       );
       
+      // Add composite materials that support variants
+      const compositeWithVariantsList = compositeWithVariants.filter(m => 
+        uniqueMaterials.includes(m) || materialsByBase[m]?.length > 0
+      );
+      
       return {
         all: uniqueMaterials,
         baseStandards: baseStandards.filter(m => 
           !specialtyWithVariants.includes(m) && 
+          !compositeWithVariants.includes(m) &&
           (uniqueMaterials.includes(m) || materialsByBase[m]?.length > 0)
         ),
         otherStandards: otherStandards.filter(m => uniqueMaterials.includes(m)),
         variantsByBase: materialsByBase,
         normalizedToRaw: normalizedToRaw,
-        composites: composites,
+        composites: [...composites, ...compositeWithVariantsList],
         specialty: [...specialty, ...specialtyWithVariantsList]
       };
     },
