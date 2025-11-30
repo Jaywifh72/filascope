@@ -174,29 +174,35 @@ const FilamentDetail = () => {
             </CardContent>
           </Card>
 
-          {/* Scores Card */}
+          {/* Amazon Ratings Card */}
           <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Star className="w-5 h-5" />
-                Performance Scores
+                Amazon Ratings
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {filament.ease_of_printing_score && (
-                <ScoreBar label="Ease of Printing" score={filament.ease_of_printing_score} />
+              {filament.amazon_rating_us !== null && filament.amazon_link_us && (
+                <div>
+                  <div className="text-sm text-muted-foreground mb-1">United States</div>
+                  <StarRating rating={filament.amazon_rating_us} reviewCount={filament.amazon_review_count_us} />
+                </div>
               )}
-              {filament.strength_index && (
-                <ScoreBar label="Strength Index" score={filament.strength_index} />
+              {filament.amazon_rating_uk !== null && filament.amazon_link_uk && (
+                <div>
+                  <div className="text-sm text-muted-foreground mb-1">United Kingdom</div>
+                  <StarRating rating={filament.amazon_rating_uk} reviewCount={filament.amazon_review_count_uk} />
+                </div>
               )}
-              {filament.printability_index && (
-                <ScoreBar label="Printability" score={filament.printability_index} />
+              {filament.amazon_rating_de !== null && filament.amazon_link_de && (
+                <div>
+                  <div className="text-sm text-muted-foreground mb-1">Germany</div>
+                  <StarRating rating={filament.amazon_rating_de} reviewCount={filament.amazon_review_count_de} />
+                </div>
               )}
-              {filament.dimensional_accuracy_score && (
-                <ScoreBar label="Dimensional Accuracy" score={filament.dimensional_accuracy_score} />
-              )}
-              {filament.value_score && (
-                <ScoreBar label="Value Score" score={filament.value_score} />
+              {!filament.amazon_rating_us && !filament.amazon_rating_uk && !filament.amazon_rating_de && (
+                <div className="text-sm text-muted-foreground">No Amazon ratings available</div>
               )}
             </CardContent>
           </Card>
@@ -518,6 +524,35 @@ const FilamentDetail = () => {
           </TabsContent>
         </Tabs>
       </div>
+    </div>
+  );
+};
+
+const StarRating = ({ rating, reviewCount }: { rating: number; reviewCount?: number | null }) => {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex items-center">
+        {[...Array(fullStars)].map((_, i) => (
+          <Star key={`full-${i}`} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+        ))}
+        {hasHalfStar && (
+          <div className="relative">
+            <Star className="w-5 h-5 text-muted" />
+            <Star className="w-5 h-5 fill-yellow-400 text-yellow-400 absolute top-0 left-0" style={{ clipPath: 'inset(0 50% 0 0)' }} />
+          </div>
+        )}
+        {[...Array(emptyStars)].map((_, i) => (
+          <Star key={`empty-${i}`} className="w-5 h-5 text-muted" />
+        ))}
+      </div>
+      <span className="text-sm font-semibold text-foreground">{rating.toFixed(1)}</span>
+      {reviewCount !== null && reviewCount !== undefined && (
+        <span className="text-sm text-muted-foreground">({reviewCount.toLocaleString()} reviews)</span>
+      )}
     </div>
   );
 };
