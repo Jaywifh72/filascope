@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExternalLink, ChevronDown, Star } from "lucide-react";
+import { ExternalLink, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
 
@@ -19,7 +19,6 @@ const Finder = () => {
   const [amsOnly, setAmsOnly] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState("all");
   const [maxPrice, setMaxPrice] = useState("");
-  const [minRating, setMinRating] = useState("all");
   const [filtersOpen, setFiltersOpen] = useState(true);
 
   const { data: filaments, isLoading } = useQuery({
@@ -298,7 +297,7 @@ const Finder = () => {
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Price & Rating</h4>
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Price</h4>
                 <Input
                   type="number"
                   placeholder="Max price per kg"
@@ -306,16 +305,6 @@ const Finder = () => {
                   onChange={(e) => setMaxPrice(e.target.value)}
                   className="bg-background border-border"
                 />
-                <Select value={minRating} onValueChange={setMinRating}>
-                  <SelectTrigger className="bg-background border-border">
-                    <SelectValue placeholder="Min rating" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border-border z-50">
-                    <SelectItem value="all">Any Rating</SelectItem>
-                    <SelectItem value="4">4+ Stars</SelectItem>
-                    <SelectItem value="4.5">4.5+ Stars</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -372,7 +361,7 @@ const Finder = () => {
                   key={filament.id}
                   className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-md transition-all"
                 >
-                  <div className="flex flex-col lg:grid lg:grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-4 lg:gap-6 items-start lg:items-center">
+                  <div className="flex flex-col lg:grid lg:grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 lg:gap-6 items-start lg:items-center">
                     {/* Checkbox - Hidden on mobile */}
                     <div className="hidden lg:block">
                       <Checkbox />
@@ -455,15 +444,6 @@ const Finder = () => {
                       ) : (
                         <p className="text-sm text-muted-foreground">—</p>
                       )}
-                    </div>
-
-                    {/* Rating */}
-                    <div className="flex items-center gap-4 lg:flex-col lg:gap-1">
-                      <span className="text-xs text-muted-foreground">Rating</span>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm text-muted-foreground">—</span>
-                      </div>
                     </div>
 
                     {/* Actions */}
