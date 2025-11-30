@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe } from "lucide-react";
+import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe, Upload, Link as LinkIcon } from "lucide-react";
 
 interface CleanupResult {
   total_checked: number;
@@ -48,7 +49,12 @@ const AdminMaintenance = () => {
   const [forceRescrape, setForceRescrape] = useState(false);
   const [vendorFilter, setVendorFilter] = useState("all");
   const [selectedFilaments, setSelectedFilaments] = useState<string[]>([]);
+  const [manualVendorFilter, setManualVendorFilter] = useState("all");
+  const [editingFilament, setEditingFilament] = useState<{ id: string; title: string; currentImage: string | null } | null>(null);
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch all vendors
   const { data: vendors } = useQuery({
@@ -68,7 +74,7 @@ const AdminMaintenance = () => {
     },
   });
 
-  // Fetch filaments for selected vendor
+  // Fetch filaments for selected vendor (scraper)
   const { data: vendorFilaments } = useQuery({
     queryKey: ['vendor-filaments', vendorFilter],
     queryFn: async () => {
@@ -84,6 +90,24 @@ const AdminMaintenance = () => {
       return data;
     },
     enabled: vendorFilter !== "all",
+  });
+
+  // Fetch filaments for manual management
+  const { data: manualFilaments } = useQuery({
+    queryKey: ['manual-filaments', manualVendorFilter],
+    queryFn: async () => {
+      if (manualVendorFilter === "all") return [];
+      
+      const { data, error } = await supabase
+        .from('filaments')
+        .select('id, product_title, featured_image, vendor')
+        .eq('vendor', manualVendorFilter)
+        .order('product_title');
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: manualVendorFilter !== "all",
   });
 
   const runImageCleanup = async () => {
@@ -115,6 +139,65 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsRunning(false);
+    }
+  };
+
+  const updateImageMutation = useMutation({
+    mutationFn: async ({ filamentId, imageUrl }: { filamentId: string; imageUrl: string }) => {
+      const { error } = await supabase
+        .from('filaments')
+        .update({ featured_image: imageUrl })
+        .eq('id', filamentId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['manual-filaments'] });
+      toast({
+        title: "Success",
+        description: "Image updated successfully",
+      });
+      setEditingFilament(null);
+      setNewImageUrl("");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update image",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleImageUpload = async (filamentId: string, file: File) => {
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${filamentId}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('filament-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('filament-images')
+        .getPublicUrl(filePath);
+
+      await updateImageMutation.mutateAsync({ filamentId, imageUrl: publicUrl });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -510,6 +593,192 @@ const AdminMaintenance = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Manual Image Management Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Upload className="w-5 h-5" />
+            <CardTitle>Manual Image Management</CardTitle>
+          </div>
+          <CardDescription>
+            Manually upload or link images for individual filaments
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="manual-vendor-filter">Select vendor</Label>
+            <Select value={manualVendorFilter} onValueChange={setManualVendorFilter}>
+              <SelectTrigger id="manual-vendor-filter" className="w-full bg-background">
+                <SelectValue placeholder="Select a vendor" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border shadow-lg z-50">
+                <SelectItem value="all">Select a vendor</SelectItem>
+                {vendors?.map((vendor) => (
+                  <SelectItem key={vendor} value={vendor}>
+                    {vendor}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {manualVendorFilter !== "all" && manualFilaments && manualFilaments.length > 0 && (
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="font-semibold text-sm">Filaments for {manualVendorFilter} ({manualFilaments.length})</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto">
+                {manualFilaments.map((filament) => (
+                  <div
+                    key={filament.id}
+                    className="rounded-lg border p-4 space-y-3"
+                  >
+                    <div className="aspect-square bg-muted rounded overflow-hidden">
+                      {filament.featured_image ? (
+                        <img
+                          src={filament.featured_image}
+                          alt={filament.product_title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder.svg';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <Image className="w-12 h-12" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium line-clamp-2">{filament.product_title}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => setEditingFilament({
+                          id: filament.id,
+                          title: filament.product_title,
+                          currentImage: filament.featured_image
+                        })}
+                      >
+                        <LinkIcon className="w-3 h-3 mr-1" />
+                        Link URL
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        disabled={uploadingImage}
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) {
+                              handleImageUpload(filament.id, file);
+                            }
+                          };
+                          input.click();
+                        }}
+                      >
+                        <Upload className="w-3 h-3 mr-1" />
+                        Upload
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Link Image Dialog */}
+      <Dialog open={!!editingFilament} onOpenChange={(open) => {
+        if (!open) {
+          setEditingFilament(null);
+          setNewImageUrl("");
+        }
+      }}>
+        <DialogContent className="bg-background">
+          <DialogHeader>
+            <DialogTitle>Link New Image URL</DialogTitle>
+            <DialogDescription>
+              {editingFilament?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {editingFilament?.currentImage && (
+              <div>
+                <Label className="text-sm">Current Image</Label>
+                <div className="mt-2 aspect-video bg-muted rounded overflow-hidden">
+                  <img
+                    src={editingFilament.currentImage}
+                    alt="Current"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="new-image-url">New Image URL</Label>
+              <Input
+                id="new-image-url"
+                type="url"
+                placeholder="https://example.com/image.jpg"
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+              />
+            </div>
+            {newImageUrl && (
+              <div>
+                <Label className="text-sm">Preview</Label>
+                <div className="mt-2 aspect-video bg-muted rounded overflow-hidden">
+                  <img
+                    src={newImageUrl}
+                    alt="Preview"
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditingFilament(null);
+                setNewImageUrl("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (editingFilament && newImageUrl) {
+                  updateImageMutation.mutate({
+                    filamentId: editingFilament.id,
+                    imageUrl: newImageUrl
+                  });
+                }
+              }}
+              disabled={!newImageUrl || updateImageMutation.isPending}
+            >
+              {updateImageMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Update Image"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
