@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.86.0'
+import FirecrawlApp from 'https://esm.sh/@mendable/firecrawl-js@1.10.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -66,6 +67,14 @@ Deno.serve(async (req) => {
 
     console.log(`Starting image scraping for up to ${limit} filaments...`)
 
+    // Initialize Firecrawl
+    const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY')
+    if (!firecrawlApiKey) {
+      console.error('FIRECRAWL_API_KEY not found')
+      throw new Error('Firecrawl API key not configured')
+    }
+    const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
+
     // Get filaments without valid images that have product URLs
     const { data: filaments, error: fetchError } = await supabase
       .from('filaments')
@@ -112,24 +121,32 @@ Deno.serve(async (req) => {
           continue
         }
 
-        console.log(`Scraping: ${filament.vendor} - ${filament.product_title}`)
+        console.log(`Scraping with Firecrawl: ${filament.vendor} - ${filament.product_title}`)
 
-        // Fetch the product page
-        const response = await fetch(filament.product_url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; FilamentBot/1.0)'
-          }
-        })
-
-        if (!response.ok) {
-          console.error(`Failed to fetch ${filament.product_url}: ${response.status}`)
+        // Use Firecrawl to scrape the product page
+        let scrapeResult
+        try {
+          scrapeResult = await firecrawl.scrapeUrl(filament.product_url, {
+            formats: ['html'],
+            onlyMainContent: false
+          })
+        } catch (error) {
+          console.error(`Firecrawl error for ${filament.product_url}:`, error)
           record.status = 'error'
-          result.errors.push(`${filament.product_title}: HTTP ${response.status}`)
+          result.errors.push(`${filament.product_title}: ${error instanceof Error ? error.message : 'Firecrawl error'}`)
           result.processed_records.push(record)
           continue
         }
 
-        const html = await response.text()
+        if (!scrapeResult.success || !scrapeResult.html) {
+          console.error(`Failed to scrape ${filament.product_url}`)
+          record.status = 'error'
+          result.errors.push(`${filament.product_title}: Scraping failed`)
+          result.processed_records.push(record)
+          continue
+        }
+
+        const html = scrapeResult.html
 
         // Extract image URL using various strategies
         let imageUrl: string | null = null
