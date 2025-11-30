@@ -29,9 +29,20 @@ const FilamentDetail = () => {
         .from("filaments")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      
+      if (!data) {
+        toast({
+          title: "Not Found",
+          description: "Filament not found",
+          variant: "destructive",
+        });
+        navigate("/");
+        return;
+      }
+      
       setFilament(data);
     } catch (error: any) {
       toast({
@@ -74,18 +85,27 @@ const FilamentDetail = () => {
           <Card className="bg-card border-border">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-6">
-                {filament.featured_image && (
-                  <div className="w-full md:w-48 h-48 flex-shrink-0">
+                <div className="w-full md:w-48 h-48 flex-shrink-0">
+                  {filament.featured_image ? (
                     <img
                       src={filament.featured_image}
                       alt={filament.product_title}
-                      className="w-full h-full object-contain rounded-lg bg-muted border border-border"
+                      className="w-full h-full object-contain rounded-lg bg-muted border border-border p-2"
                       onError={(e) => {
-                        e.currentTarget.src = "https://via.placeholder.com/200?text=No+Image";
+                        // Hide broken image and show placeholder
+                        e.currentTarget.style.display = 'none';
+                        const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (placeholder) placeholder.style.display = 'flex';
                       }}
                     />
+                  ) : null}
+                  <div 
+                    className="w-full h-full rounded-lg bg-muted border border-border flex items-center justify-center"
+                    style={{ display: filament.featured_image ? 'none' : 'flex' }}
+                  >
+                    <span className="text-muted-foreground text-sm">No Image Available</span>
                   </div>
-                )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div>
