@@ -208,7 +208,8 @@ const Finder = () => {
         !Object.keys(rawToNormalized).includes(m) &&
         !baseStandards.includes(m) &&
         !otherStandards.includes(m) &&
-        (m.includes('-CF') || m.includes('-GF') || m.includes('Carbon Fiber') || m.includes('Wood Fill'))
+        (m.includes('-CF') || m.includes('-GF') || m.includes('Carbon Fiber') || m.includes('Wood Fill') || 
+         m === 'PPS' || m === 'PSU' || m.startsWith('PPS ') || m.startsWith('PSU '))
       );
       
       const specialty = uniqueMaterials.filter(m => 
