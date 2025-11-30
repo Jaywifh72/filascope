@@ -194,8 +194,11 @@ async function scrapeVendorCollection(
           // Check if this card matches the filament title - try multiple patterns
           let titleMatch = cardHtml.match(/<h[23][^>]*class=["'][^"']*title[^"']*["'][^>]*>([\s\S]*?)<\/h[23]>/i) ||
                           cardHtml.match(/<h[234][^>]*>([\s\S]*?)<\/h[234]>/i) || // Any h2-h4
+                          cardHtml.match(/<a[^>]*class=["'][^"']*product[^"']*name[^"']*["'][^>]*>([\s\S]*?)<\/a>/i) || // Product name link
                           cardHtml.match(/<a[^>]*class=["'][^"']*title[^"']*["'][^>]*>([\s\S]*?)<\/a>/i) || // Link with title class
-                          cardHtml.match(/<div[^>]*class=["'][^"']*title[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) // Div with title class
+                          cardHtml.match(/<div[^>]*class=["'][^"']*product[^"']*name[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) || // Product name div
+                          cardHtml.match(/<div[^>]*class=["'][^"']*title[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) || // Div with title class
+                          cardHtml.match(/<span[^>]*class=["'][^"']*product[^"']*name[^"']*["'][^>]*>([\s\S]*?)<\/span>/i) // Product name span
           
           if (titleMatch) {
             const cardTitle = titleMatch[1]
@@ -214,10 +217,13 @@ async function scrapeVendorCollection(
             const matchingWords = titleWords.filter((word: string) => cardTitle.includes(word))
             const matchCount = matchingWords.length
             
-            // More flexible matching: require at least 50% match OR at least 2 matching words
-            const matchThreshold = Math.max(2, Math.ceil(titleWords.length * 0.5))
+            // For ColorFabb, be even more flexible since product names may differ significantly
+            const isColorFabb = vendorName.toLowerCase().includes('colorfabb')
+            const matchThreshold = isColorFabb ? 
+              Math.max(1, Math.ceil(titleWords.length * 0.3)) : // 30% for ColorFabb
+              Math.max(2, Math.ceil(titleWords.length * 0.5))   // 50% for others
             
-            console.log(`Comparing "${simplifiedTitle}" vs "${cardTitle}" - ${matchCount}/${titleWords.length} words match`)
+            console.log(`Comparing "${simplifiedTitle}" vs "${cardTitle}" - ${matchCount}/${titleWords.length} words match (threshold: ${matchThreshold})`)
             
             if (matchCount >= matchThreshold && titleWords.length >= 1) {
               // Calculate match score for this card
@@ -243,11 +249,20 @@ async function scrapeVendorCollection(
                 // Found a match! Extract the image
                 const imgMatches = cardHtml.match(/<img[^>]*src=["']([^"']+)["'][^>]*>/gi)
                 if (imgMatches && imgMatches.length > 0) {
-                  // Try to find the best image (not logo/icon)
+                // Try to find the best image (not logo/icon)
                   for (const imgTag of imgMatches) {
                     const srcMatch = imgTag.match(/src=["']([^"']+)["']/)
                     if (srcMatch) {
                       const tempUrl = srcMatch[1]
+                      
+                      // For ColorFabb, prioritize /media/catalog/product/ images
+                      if (vendorName.toLowerCase().includes('colorfabb') && 
+                          tempUrl.includes('/media/catalog/product/')) {
+                        imageUrl = tempUrl
+                        console.log(`  Found ColorFabb catalog image: ${tempUrl}`)
+                        break
+                      }
+                      
                       // Skip obvious non-product images
                       if (tempUrl.toLowerCase().includes('logo') || 
                           tempUrl.toLowerCase().includes('icon') ||
