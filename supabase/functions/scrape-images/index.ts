@@ -169,31 +169,66 @@ async function scrapeVendorCollection(
               .replace(/[^a-z0-9\s]/g, '')
               .trim()
             
-            // Check for title match
+            // Check for title match with stricter requirements
             const titleWords = simplifiedTitle.split(/\s+/).filter((w: string) => w.length > 2)
-            const matchCount = titleWords.filter((word: string) => cardTitle.includes(word)).length
+            const matchingWords = titleWords.filter((word: string) => cardTitle.includes(word))
+            const matchCount = matchingWords.length
             
-            if (matchCount >= Math.min(3, titleWords.length)) {
-              // Found a match! Extract the image
-              const imgMatches = cardHtml.match(/<img[^>]*src=["']([^"']+)["'][^>]*>/gi)
-              if (imgMatches && imgMatches.length > 0) {
-                const srcMatch = imgMatches[0].match(/src=["']([^"']+)["']/)
-                if (srcMatch) {
-                  imageUrl = srcMatch[1]
-                  // Make URL absolute
-                  if (imageUrl && imageUrl.startsWith('//')) {
-                    imageUrl = 'https:' + imageUrl
-                  } else if (imageUrl && imageUrl.startsWith('/')) {
-                    const baseUrl = new URL(collectionUrl)
-                    imageUrl = `${baseUrl.protocol}//${baseUrl.host}${imageUrl}`
+            // Require at least 70% of words to match and minimum 3 words for better specificity
+            const matchThreshold = Math.max(3, Math.ceil(titleWords.length * 0.7))
+            
+            if (matchCount >= matchThreshold && titleWords.length >= 2) {
+              // Calculate match score for this card
+              let matchScore = matchCount * 10
+              
+              // Bonus points for exact phrase matches
+              const longestPhrase = matchingWords.join(' ')
+              if (cardTitle.includes(longestPhrase)) {
+                matchScore += 20
+              }
+              
+              // Bonus for matching color/material terms
+              const specialTerms = ['pla', 'petg', 'abs', 'tpu', 'nylon', 'carbon', 'wood', 'metal', 'silk', 'matte']
+              const specialMatches = specialTerms.filter(term => 
+                simplifiedTitle.includes(term) && cardTitle.includes(term)
+              )
+              matchScore += specialMatches.length * 5
+              
+              // Only use this match if score is high enough
+              if (matchScore >= 30) {
+                // Found a match! Extract the image
+                const imgMatches = cardHtml.match(/<img[^>]*src=["']([^"']+)["'][^>]*>/gi)
+                if (imgMatches && imgMatches.length > 0) {
+                  // Try to find the best image (not logo/icon)
+                  for (const imgTag of imgMatches) {
+                    const srcMatch = imgTag.match(/src=["']([^"']+)["']/)
+                    if (srcMatch) {
+                      const tempUrl = srcMatch[1]
+                      // Skip obvious non-product images
+                      if (tempUrl.toLowerCase().includes('logo') || 
+                          tempUrl.toLowerCase().includes('icon') ||
+                          tempUrl.toLowerCase().includes('badge')) {
+                        continue
+                      }
+                      
+                      imageUrl = tempUrl
+                      // Make URL absolute
+                      if (imageUrl && imageUrl.startsWith('//')) {
+                        imageUrl = 'https:' + imageUrl
+                      } else if (imageUrl && imageUrl.startsWith('/')) {
+                        const baseUrl = new URL(collectionUrl)
+                        imageUrl = `${baseUrl.protocol}//${baseUrl.host}${imageUrl}`
+                      }
+                      
+                      // Remove size parameters for full-size image
+                      if (imageUrl) {
+                        imageUrl = getFullSizeImageUrl(imageUrl)
+                        console.log(`Found image for ${filament.product_title} (score: ${matchScore}): ${imageUrl}`)
+                      }
+                      break
+                    }
                   }
-                  
-                  // Remove size parameters for full-size image
-                  if (imageUrl) {
-                    imageUrl = getFullSizeImageUrl(imageUrl)
-                    console.log(`Found image for ${filament.product_title}: ${imageUrl}`)
-                  }
-                  break
+                  if (imageUrl) break
                 }
               }
             }
