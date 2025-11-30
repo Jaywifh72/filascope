@@ -117,10 +117,14 @@ Deno.serve(async (req) => {
     const limit = body.limit || 50 // Process 50 at a time to avoid timeouts
     const forceRescrape = body.forceRescrape || false
     const vendor = body.vendor || null
+    const filamentIds = body.filamentIds || null // Array of specific filament IDs to process
 
     console.log(`Starting image scraping for up to ${limit} filaments...`)
     if (forceRescrape) {
       console.log(`Force rescraping enabled${vendor ? ` for vendor: ${vendor}` : ''}`)
+    }
+    if (filamentIds && filamentIds.length > 0) {
+      console.log(`Processing ${filamentIds.length} specific filaments`)
     }
 
     // Initialize Firecrawl
@@ -131,23 +135,31 @@ Deno.serve(async (req) => {
     }
     const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
 
-    // Get filaments to process based on force rescrape mode
+    // Get filaments to process
     let query = supabase
       .from('filaments')
       .select('id, product_title, vendor, product_url, featured_image')
       .not('product_url', 'is', null)
     
-    // Add vendor filter if specified
-    if (vendor) {
-      query = query.eq('vendor', vendor)
+    // If specific filament IDs provided, only process those
+    if (filamentIds && filamentIds.length > 0) {
+      query = query.in('id', filamentIds)
+    } else {
+      // Otherwise use the normal filters
+      // Add vendor filter if specified
+      if (vendor) {
+        query = query.eq('vendor', vendor)
+      }
+      
+      // If not force rescraping, only get filaments without images
+      if (!forceRescrape) {
+        query = query.is('featured_image', null)
+      }
+      
+      query = query.limit(limit)
     }
     
-    // If not force rescraping, only get filaments without images
-    if (!forceRescrape) {
-      query = query.is('featured_image', null)
-    }
-    
-    const { data: filaments, error: fetchError } = await query.limit(limit)
+    const { data: filaments, error: fetchError } = await query
 
     if (fetchError) {
       console.error('Error fetching filaments:', fetchError)
