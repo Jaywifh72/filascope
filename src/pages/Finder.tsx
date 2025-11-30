@@ -24,6 +24,7 @@ const Finder = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string>("score-desc");
 
   // Normalize variant names to group similar variants
   const normalizeVariantName = (material: string, base: string): string => {
@@ -395,12 +396,41 @@ const Finder = () => {
     return "text-orange-400";
   };
 
-  const filteredFilaments = filaments?.filter(f => {
+  const filteredAndSortedFilaments = filaments?.filter(f => {
     if (maxPrice && f.variant_price && f.net_weight_g) {
       const pricePerKg = (f.variant_price / f.net_weight_g) * 1000;
       if (pricePerKg > parseFloat(maxPrice)) return false;
     }
     return true;
+  }).sort((a, b) => {
+    // Helper to calculate price per kg
+    const getPricePerKg = (filament: typeof a) => {
+      if (!filament.variant_price || !filament.net_weight_g || filament.net_weight_g === 0) {
+        return filament.variant_price || 999999;
+      }
+      return (filament.variant_price / filament.net_weight_g) * 1000;
+    };
+
+    switch (sortBy) {
+      case "price-asc":
+        return getPricePerKg(a) - getPricePerKg(b);
+      case "price-desc":
+        return getPricePerKg(b) - getPricePerKg(a);
+      case "score-desc":
+        return (b.value_score || 0) - (a.value_score || 0);
+      case "score-asc":
+        return (a.value_score || 0) - (b.value_score || 0);
+      case "name-asc":
+        return (a.product_title || "").localeCompare(b.product_title || "");
+      case "name-desc":
+        return (b.product_title || "").localeCompare(a.product_title || "");
+      case "brand-asc":
+        return (a.vendor || "").localeCompare(b.vendor || "");
+      case "brand-desc":
+        return (b.vendor || "").localeCompare(a.vendor || "");
+      default:
+        return 0;
+    }
   });
 
   return (
@@ -647,30 +677,45 @@ const Finder = () => {
       <main className="flex-1 p-4 lg:p-8 max-w-[1600px] mx-auto w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <h1 className="text-3xl font-bold text-foreground">
-            {filteredFilaments?.length || 0} <span className="text-muted-foreground font-normal">filaments</span>
+            {filteredAndSortedFilaments?.length || 0} <span className="text-muted-foreground font-normal">filaments</span>
           </h1>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">🇺🇸 United States</span>
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-6">
+        {/* Search Bar and Sort */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
           <Input
             type="text"
             placeholder="Search filaments by name or vendor..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-xl bg-background border-border"
+            className="flex-1 max-w-xl bg-background border-border"
           />
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-full sm:w-[200px] bg-background border-border">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border-border z-50">
+              <SelectItem value="score-desc">Score: High to Low</SelectItem>
+              <SelectItem value="score-asc">Score: Low to High</SelectItem>
+              <SelectItem value="price-asc">Price: Low to High</SelectItem>
+              <SelectItem value="price-desc">Price: High to Low</SelectItem>
+              <SelectItem value="name-asc">Name: A to Z</SelectItem>
+              <SelectItem value="name-desc">Name: Z to A</SelectItem>
+              <SelectItem value="brand-asc">Brand: A to Z</SelectItem>
+              <SelectItem value="brand-desc">Brand: Z to A</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Filaments List */}
         <div className="space-y-3">
           {isLoading ? (
             <div className="text-center py-16 text-muted-foreground">Loading filaments...</div>
-          ) : filteredFilaments && filteredFilaments.length > 0 ? (
-            filteredFilaments.map((filament) => {
+          ) : filteredAndSortedFilaments && filteredAndSortedFilaments.length > 0 ? (
+            filteredAndSortedFilaments.map((filament) => {
               // Filter out corrupted prices (likely data import errors)
               // Valid filament prices are typically $10-$200 per kg or $10-$100 per spool
               const isValidPrice = filament.variant_price && filament.variant_price > 5 && filament.variant_price < 500;
