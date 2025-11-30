@@ -694,7 +694,7 @@ const AdminImport = () => {
           const rowNum = rowIndex + 2; // +2 for header and 1-indexed
           
           // Get product title - this is required
-          const productTitle = row['Product Title'];
+          let productTitle = row['Product Title'];
           if (!productTitle || productTitle.trim() === "") {
             const errorMsg = `Row ${rowNum}: Missing Product Title`;
             errors.push(errorMsg);
@@ -702,6 +702,12 @@ const AdminImport = () => {
             setProgress(prev => ({ ...prev, current: rowIndex + 1, errors: prev.errors + 1 }));
             continue;
           }
+
+          // Clean up product title by removing redundant phrases
+          productTitle = productTitle
+            .replace(/3D Printer Filament 1\.75mm/gi, '')
+            .replace(/Filament 1\.75mm/gi, '')
+            .trim();
 
           try {
             // Map CSV columns to database fields with detailed logging
