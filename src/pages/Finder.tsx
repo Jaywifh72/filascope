@@ -76,6 +76,7 @@ const Finder = () => {
         "XT": ["XT"],
         "nGen": ["nGen"],
         "nGen Flex": ["nGen_FLEX"],
+        "PE": ["PE Co-Polymer"],
       },
       PA: {
         "CF": ["PA-CF"],
