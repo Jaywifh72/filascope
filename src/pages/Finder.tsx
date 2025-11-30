@@ -396,14 +396,34 @@ const Finder = () => {
     return "text-orange-400";
   };
 
-  // Calculate filter counts for each option
+  // Calculate filter counts based on currently applied filters (excluding the filter being counted)
   const filterCounts = useMemo(() => {
     if (!filaments) return {};
 
     const counts: Record<string, number> = {};
 
-    // Count filaments by material
-    filaments.forEach(f => {
+    // Apply base filters (search, price, compatibility, brand) to get filtered set
+    const baseFiltered = filaments.filter(f => {
+      // Apply search filter
+      if (searchTerm && f.product_title && f.vendor) {
+        const searchLower = searchTerm.toLowerCase();
+        if (!f.product_title.toLowerCase().includes(searchLower) && 
+            !f.vendor.toLowerCase().includes(searchLower)) {
+          return false;
+        }
+      }
+      
+      // Apply price filter
+      if (maxPrice && f.variant_price && f.net_weight_g) {
+        const pricePerKg = (f.variant_price / f.net_weight_g) * 1000;
+        if (pricePerKg > parseFloat(maxPrice)) return false;
+      }
+      
+      return true;
+    });
+
+    // Count by material (excluding material filter itself to show total available)
+    baseFiltered.forEach(f => {
       const material = f.material;
       if (material) {
         // Count by base material
@@ -413,13 +433,75 @@ const Finder = () => {
         // Count by full material name (for variants)
         counts[`material_${material}`] = (counts[`material_${material}`] || 0) + 1;
       }
+    });
+
+    // Count by brand (apply all filters except brand)
+    const forBrandCount = baseFiltered.filter(f => {
+      // Apply material filters
+      if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
+        const allRawMaterials: string[] = [];
+        selectedMaterials.forEach(baseMaterial => {
+          const selectedNormalizedVariants = selectedVariants[baseMaterial];
+          if (selectedNormalizedVariants && selectedNormalizedVariants.length > 0) {
+            selectedNormalizedVariants.forEach(normalizedVariant => {
+              const rawMaterials = materials?.normalizedToRaw?.[baseMaterial]?.[normalizedVariant] || [];
+              allRawMaterials.push(...rawMaterials);
+            });
+          }
+        });
+        
+        if (allRawMaterials.length > 0) {
+          if (!allRawMaterials.includes(f.material || '')) return false;
+        } else {
+          const matchesMaterial = selectedMaterials.some(m => f.material?.includes(m));
+          if (!matchesMaterial) return false;
+        }
+      }
       
-      // Count by brand
+      // Apply compatibility filters
+      if (brassOnly && f.is_nozzle_abrasive !== false) return false;
+      if (foodContact && !f.food_contact_rating) return false;
+      if (amsOnly && f.spool_ams_fit !== true) return false;
+      
+      return true;
+    });
+    
+    forBrandCount.forEach(f => {
       if (f.vendor) {
         counts[`brand_${f.vendor}`] = (counts[`brand_${f.vendor}`] || 0) + 1;
       }
+    });
+
+    // Count compatibility options (apply all filters except the compatibility filter being counted)
+    const forCompatCount = baseFiltered.filter(f => {
+      // Apply material filters
+      if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
+        const allRawMaterials: string[] = [];
+        selectedMaterials.forEach(baseMaterial => {
+          const selectedNormalizedVariants = selectedVariants[baseMaterial];
+          if (selectedNormalizedVariants && selectedNormalizedVariants.length > 0) {
+            selectedNormalizedVariants.forEach(normalizedVariant => {
+              const rawMaterials = materials?.normalizedToRaw?.[baseMaterial]?.[normalizedVariant] || [];
+              allRawMaterials.push(...rawMaterials);
+            });
+          }
+        });
+        
+        if (allRawMaterials.length > 0) {
+          if (!allRawMaterials.includes(f.material || '')) return false;
+        } else {
+          const matchesMaterial = selectedMaterials.some(m => f.material?.includes(m));
+          if (!matchesMaterial) return false;
+        }
+      }
       
-      // Count compatibility options
+      // Apply brand filter
+      if (selectedBrand !== "all" && f.vendor !== selectedBrand) return false;
+      
+      return true;
+    });
+    
+    forCompatCount.forEach(f => {
       if (f.is_nozzle_abrasive === false) {
         counts['brass_safe'] = (counts['brass_safe'] || 0) + 1;
       }
@@ -432,7 +514,7 @@ const Finder = () => {
     });
 
     return counts;
-  }, [filaments]);
+  }, [filaments, searchTerm, maxPrice, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrand, materials]);
 
   // Helper function to get count for a material (checks both base and variants)
   const getMaterialCount = (baseMaterial: string) => {
