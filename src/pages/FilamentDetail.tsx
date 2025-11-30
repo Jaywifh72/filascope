@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Star } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -174,38 +174,6 @@ const FilamentDetail = () => {
             </CardContent>
           </Card>
 
-          {/* Amazon Ratings Card */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Star className="w-5 h-5" />
-                Amazon Ratings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {filament.amazon_rating_us !== null && filament.amazon_link_us && (
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">United States</div>
-                  <StarRating rating={filament.amazon_rating_us} reviewCount={filament.amazon_review_count_us} />
-                </div>
-              )}
-              {filament.amazon_rating_uk !== null && filament.amazon_link_uk && (
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">United Kingdom</div>
-                  <StarRating rating={filament.amazon_rating_uk} reviewCount={filament.amazon_review_count_uk} />
-                </div>
-              )}
-              {filament.amazon_rating_de !== null && filament.amazon_link_de && (
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">Germany</div>
-                  <StarRating rating={filament.amazon_rating_de} reviewCount={filament.amazon_review_count_de} />
-                </div>
-              )}
-              {!filament.amazon_rating_us && !filament.amazon_rating_uk && !filament.amazon_rating_de && (
-                <div className="text-sm text-muted-foreground">No Amazon ratings available</div>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* Tabs Section */}
@@ -528,58 +496,6 @@ const FilamentDetail = () => {
   );
 };
 
-const StarRating = ({ rating, reviewCount }: { rating: number; reviewCount?: number | null }) => {
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.5;
-  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center">
-        {[...Array(fullStars)].map((_, i) => (
-          <Star key={`full-${i}`} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-        ))}
-        {hasHalfStar && (
-          <div className="relative">
-            <Star className="w-5 h-5 text-muted" />
-            <Star className="w-5 h-5 fill-yellow-400 text-yellow-400 absolute top-0 left-0" style={{ clipPath: 'inset(0 50% 0 0)' }} />
-          </div>
-        )}
-        {[...Array(emptyStars)].map((_, i) => (
-          <Star key={`empty-${i}`} className="w-5 h-5 text-muted" />
-        ))}
-      </div>
-      <span className="text-sm font-semibold text-foreground">{rating.toFixed(1)}</span>
-      {reviewCount !== null && reviewCount !== undefined && (
-        <span className="text-sm text-muted-foreground">({reviewCount.toLocaleString()} reviews)</span>
-      )}
-    </div>
-  );
-};
-
-const ScoreBar = ({ label, score }: { label: string; score: number }) => {
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return "from-emerald-500 to-green-500";
-    if (score >= 6) return "from-blue-500 to-cyan-500";
-    if (score >= 4) return "from-yellow-500 to-orange-500";
-    return "from-red-500 to-rose-500";
-  };
-
-  return (
-    <div>
-      <div className="flex justify-between mb-2">
-        <span className="text-sm text-muted-foreground">{label}</span>
-        <span className="text-sm font-semibold text-foreground">{score.toFixed(1)}/10</span>
-      </div>
-      <div className="h-3 bg-muted rounded-full overflow-hidden">
-        <div
-          className={`h-full bg-gradient-to-r ${getScoreColor(score)} transition-all`}
-          style={{ width: `${(score / 10) * 100}%` }}
-        />
-      </div>
-    </div>
-  );
-};
 
 const PropertyRow = ({ 
   label, 
