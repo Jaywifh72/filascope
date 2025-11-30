@@ -83,6 +83,10 @@ const Finder = () => {
         "12-CF": ["PA12-CF"],
         "6-CF": ["PA6-CF"],
         "6-GF": ["PA6-GF"],
+      },
+      CPE: {
+        "+": ["CPE+"],
+        "HG100": ["CPE HG100"],
       }
     };
 
@@ -114,14 +118,14 @@ const Finder = () => {
       const uniqueMaterials = Array.from(new Set(data.map(f => f.material))).sort();
       
       // Define base standard materials that can have variants
-      const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon', 'PC', 'Co-Polyester', 'PA'];
+      const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon', 'PC', 'Co-Polyester', 'PA', 'CPE'];
       const otherStandards = ['HIPS', 'PEEK', 'TPE'];
       
       // Materials that should appear in specialty despite supporting variants
       const specialtyWithVariants = ['Nylon'];
       
       // Materials that should appear in composites despite supporting variants
-      const compositeWithVariants = ['PC', 'Co-Polyester', 'PA'];
+      const compositeWithVariants = ['PC', 'Co-Polyester', 'PA', 'CPE'];
       
       // Function to check if a material is a variant of a base material
       const getBaseMaterial = (material: string): string | null => {
