@@ -24,6 +24,7 @@ const filamentRowSchema = z.object({
 const AdminImport = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [deleteNonCsv, setDeleteNonCsv] = useState(true);
   const [progress, setProgress] = useState({ current: 0, total: 0, errors: 0, warnings: 0 });
   const [importResults, setImportResults] = useState<{ success: number; errors: string[]; warnings: string[] } | null>(null);
   const [logs, setLogs] = useState<Array<{ type: 'info' | 'success' | 'error' | 'warning'; message: string }>>([]);
@@ -667,6 +668,49 @@ const AdminImport = () => {
     try {
       const rows = processedRows;
       
+      // Step 3.5: Delete filaments not in CSV (if enabled)
+      if (deleteNonCsv) {
+        console.log("\n" + "=".repeat(80));
+        console.log("🗑️ STEP 3.5: CLEANING UP NON-CSV FILAMENTS");
+        console.log("=".repeat(80));
+        addLog('info', '🗑️ Step 3.5: Deleting filaments not in CSV...');
+        
+        try {
+          const csvProductIds = rows
+            .map(row => row['Product ID'])
+            .filter(id => id && id.trim() !== '');
+          
+          console.log(`Found ${csvProductIds.length} product IDs in CSV`);
+          addLog('info', `Found ${csvProductIds.length} product IDs in CSV`);
+          
+          // Delete filaments whose product_id is not in the CSV
+          const { error: deleteError, count } = await supabase
+            .from('filaments')
+            .delete({ count: 'exact' })
+            .not('product_id', 'in', `(${csvProductIds.map(id => `"${id}"`).join(',')})`);
+          
+          if (deleteError) {
+            console.error('Error deleting non-CSV filaments:', deleteError);
+            addLog('error', `❌ Failed to clean up old filaments: ${deleteError.message}`);
+            toast({
+              title: "Cleanup Warning",
+              description: "Failed to delete old filaments, but import will continue",
+              variant: "destructive",
+            });
+          } else {
+            console.log(`✓ Deleted ${count} filaments not in CSV`);
+            addLog('success', `✓ Deleted ${count || 0} filaments not in CSV`);
+            toast({
+              title: "Cleanup Complete",
+              description: `Removed ${count || 0} filaments not in CSV`,
+            });
+          }
+        } catch (error) {
+          console.error('Error during cleanup:', error);
+          addLog('error', `❌ Cleanup error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+      
       // Step 4: Import to database
       console.log("\n" + "=".repeat(80));
       console.log("🔄 STEP 4: IMPORTING FILAMENT DATA");
@@ -959,31 +1003,47 @@ const AdminImport = () => {
             </div>
 
             {file && (
-              <div className="flex gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setFile(null);
-                    setImportResults(null);
-                    setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
-                    setLogs([]);
-                    setWeightStats(null);
-                    setSummaryReport(null);
-                    setAwaitingConfirmation(false);
-                    setProcessedRows([]);
-                  }}
-                  className="flex-1"
-                  disabled={isUploading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleUpload}
-                  disabled={isUploading}
-                  className="flex-1"
-                >
-                  {isUploading ? "Importing..." : "Import Data"}
-                </Button>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 p-3 rounded-lg border bg-muted/30">
+                  <input
+                    type="checkbox"
+                    id="delete-non-csv"
+                    checked={deleteNonCsv}
+                    onChange={(e) => setDeleteNonCsv(e.target.checked)}
+                    disabled={isUploading}
+                    className="h-4 w-4 rounded border-border cursor-pointer"
+                  />
+                  <label htmlFor="delete-non-csv" className="text-sm cursor-pointer select-none">
+                    Delete filaments not in CSV before import
+                  </label>
+                </div>
+                
+                <div className="flex gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setFile(null);
+                      setImportResults(null);
+                      setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
+                      setLogs([]);
+                      setWeightStats(null);
+                      setSummaryReport(null);
+                      setAwaitingConfirmation(false);
+                      setProcessedRows([]);
+                    }}
+                    className="flex-1"
+                    disabled={isUploading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleUpload}
+                    disabled={isUploading}
+                    className="flex-1"
+                  >
+                    {isUploading ? "Importing..." : "Import Data"}
+                  </Button>
+                </div>
               </div>
             )}
 
