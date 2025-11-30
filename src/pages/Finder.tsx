@@ -22,57 +22,31 @@ const Finder = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(true);
 
-  const { data: filaments, isLoading } = useQuery({
-    queryKey: ["filaments", searchTerm, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrand],
-    queryFn: async () => {
-      let query = supabase.from("filaments").select("*");
-
-      if (searchTerm) {
-        query = query.or(`product_title.ilike.%${searchTerm}%,vendor.ilike.%${searchTerm}%`);
+  // Normalize variant names to group similar variants
+  const normalizeVariantName = (material: string, base: string): string => {
+    const variantPatterns: Record<string, Record<string, string[]>> = {
+      PLA: {
+        "Marble": ["Marble PLA", "PLA Marble", "PLA-Marble"],
+        "Metallic": ["Metallic PLA", "PLA Metal", "PLA-Metal"],
+        "Carbon Fiber": ["PLA Carbon Fiber", "PLA CF", "PLA-CF"],
+        "Matte": ["PLA Matte", "Matte PLA", "PLA-Matte"],
+        "Lightweight": ["LW-PLA", "PLA Lightweight"],
+        "Wood": ["PLA Wood", "Wood PLA", "PLA-WoodComposite"],
+        "Silk": ["Silky PLA", "Silk PLA", "PLA Silk"],
       }
+    };
 
-      if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
-        // Check if any base materials have specific variants selected
-        const allSelectedVariants: string[] = [];
-        selectedMaterials.forEach(baseMaterial => {
-          const variants = selectedVariants[baseMaterial];
-          if (variants && variants.length > 0) {
-            allSelectedVariants.push(...variants);
-          }
-        });
-        
-        // If specific variants are selected, filter by those variants
-        // Otherwise filter by base materials
-        if (allSelectedVariants.length > 0) {
-          const materialFilters = allSelectedVariants.map(m => `material.ilike.%${m}%`).join(",");
-          query = query.or(materialFilters);
-        } else {
-          const materialFilters = selectedMaterials.map(m => `material.ilike.%${m}%`).join(",");
-          query = query.or(materialFilters);
+    const patterns = variantPatterns[base];
+    if (patterns) {
+      for (const [canonical, alternatives] of Object.entries(patterns)) {
+        if (alternatives.includes(material)) {
+          return canonical;
         }
       }
-
-      if (brassOnly) {
-        query = query.eq("is_nozzle_abrasive", false);
-      }
-
-      if (foodContact) {
-        query = query.not("food_contact_rating", "is", null);
-      }
-
-      if (amsOnly) {
-        query = query.eq("spool_ams_fit", true);
-      }
-
-      if (selectedBrand !== "all") {
-        query = query.eq("vendor", selectedBrand);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
+    }
+    
+    return material;
+  };
 
   // Fetch unique materials for filters with variants
   const { data: materials } = useQuery({
@@ -108,17 +82,37 @@ const Finder = () => {
         return null;
       };
       
-      // Group materials by their base
+      // Group materials by their base with normalized names
+      // Keep track of raw material names that map to each normalized variant
       const materialsByBase: Record<string, string[]> = {};
+      const rawToNormalized: Record<string, { base: string; normalized: string }> = {};
+      const normalizedToRaw: Record<string, Record<string, string[]>> = {};
       const standalone: string[] = [];
       
       uniqueMaterials.forEach(material => {
         const base = getBaseMaterial(material);
         if (base) {
+          const normalized = normalizeVariantName(material, base);
+          
+          // Track raw to normalized mapping
+          rawToNormalized[material] = { base, normalized };
+          
+          // Track normalized to raw mappings
+          if (!normalizedToRaw[base]) {
+            normalizedToRaw[base] = {};
+          }
+          if (!normalizedToRaw[base][normalized]) {
+            normalizedToRaw[base][normalized] = [];
+          }
+          normalizedToRaw[base][normalized].push(material);
+          
+          // Add normalized variant to base material
           if (!materialsByBase[base]) {
             materialsByBase[base] = [];
           }
-          materialsByBase[base].push(material);
+          if (!materialsByBase[base].includes(normalized)) {
+            materialsByBase[base].push(normalized);
+          }
         } else if (baseStandards.includes(material) || otherStandards.includes(material)) {
           standalone.push(material);
         }
@@ -129,14 +123,14 @@ const Finder = () => {
       
       // Categorize remaining materials (not variants)
       const composites = uniqueMaterials.filter(m => 
-        !allVariants.includes(m) &&
+        !Object.keys(rawToNormalized).includes(m) &&
         !baseStandards.includes(m) &&
         !otherStandards.includes(m) &&
         (m.includes('-CF') || m.includes('-GF') || m.includes('Carbon Fiber') || m.includes('Wood Fill'))
       );
       
       const specialty = uniqueMaterials.filter(m => 
-        !allVariants.includes(m) &&
+        !Object.keys(rawToNormalized).includes(m) &&
         !baseStandards.includes(m) &&
         !otherStandards.includes(m) &&
         !composites.includes(m)
@@ -147,9 +141,67 @@ const Finder = () => {
         baseStandards: baseStandards.filter(m => uniqueMaterials.includes(m) || materialsByBase[m]?.length > 0),
         otherStandards: otherStandards.filter(m => uniqueMaterials.includes(m)),
         variantsByBase: materialsByBase,
+        normalizedToRaw: normalizedToRaw,
         composites: composites,
         specialty: specialty
       };
+    },
+  });
+
+  const { data: filaments, isLoading } = useQuery({
+    queryKey: ["filaments", searchTerm, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrand, materials],
+    enabled: !!materials, // Wait for materials to load first
+    queryFn: async () => {
+      let query = supabase.from("filaments").select("*");
+
+      if (searchTerm) {
+        query = query.or(`product_title.ilike.%${searchTerm}%,vendor.ilike.%${searchTerm}%`);
+      }
+
+      if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
+        // Check if any base materials have specific variants selected
+        const allRawMaterials: string[] = [];
+        selectedMaterials.forEach(baseMaterial => {
+          const selectedNormalizedVariants = selectedVariants[baseMaterial];
+          if (selectedNormalizedVariants && selectedNormalizedVariants.length > 0) {
+            // Expand normalized variants to raw material names
+            selectedNormalizedVariants.forEach(normalizedVariant => {
+              const rawMaterials = materials?.normalizedToRaw?.[baseMaterial]?.[normalizedVariant] || [];
+              allRawMaterials.push(...rawMaterials);
+            });
+          }
+        });
+        
+        // If specific variants are selected, filter by those raw material names
+        // Otherwise filter by base materials
+        if (allRawMaterials.length > 0) {
+          const materialFilters = allRawMaterials.map(m => `material.eq.${m}`).join(",");
+          query = query.or(materialFilters);
+        } else {
+          const materialFilters = selectedMaterials.map(m => `material.ilike.%${m}%`).join(",");
+          query = query.or(materialFilters);
+        }
+      }
+
+      if (brassOnly) {
+        query = query.eq("is_nozzle_abrasive", false);
+      }
+
+      if (foodContact) {
+        query = query.not("food_contact_rating", "is", null);
+      }
+
+      if (amsOnly) {
+        query = query.eq("spool_ams_fit", true);
+      }
+
+      if (selectedBrand !== "all") {
+        query = query.eq("vendor", selectedBrand);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
     },
   });
 
