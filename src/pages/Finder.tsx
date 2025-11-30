@@ -103,7 +103,7 @@ const Finder = () => {
       const otherStandards = ['HIPS', 'PEEK', 'TPE'];
       
       // Materials that should appear in specialty despite supporting variants
-      const specialtyWithVariants = ['TPU', 'Nylon', 'PC', 'Co-Polyester'];
+      const specialtyWithVariants = ['Nylon', 'PC', 'Co-Polyester'];
       
       // Function to check if a material is a variant of a base material
       const getBaseMaterial = (material: string): string | null => {
