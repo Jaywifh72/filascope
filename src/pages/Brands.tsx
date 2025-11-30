@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 
 const Brands = () => {
+  const navigate = useNavigate();
   const { data: brands, isLoading } = useQuery({
     queryKey: ["brands-page"],
     queryFn: async () => {
@@ -41,7 +43,11 @@ const Brands = () => {
             {brands?.map((brand) => {
               const logoUrl = getBrandLogo(brand.name);
               return (
-                <Card key={brand.name} className="bg-card border-border hover:border-primary/50 transition-all cursor-pointer group">
+                <Card 
+                  key={brand.name} 
+                  className="bg-card border-border hover:border-primary/50 transition-all cursor-pointer group"
+                  onClick={() => navigate(`/brands/${encodeURIComponent(brand.name)}`)}
+                >
                   <CardContent className="p-6">
                     <div className="flex flex-col items-center space-y-4">
                       <div className="w-full h-24 flex items-center justify-center bg-background rounded-lg p-4">
