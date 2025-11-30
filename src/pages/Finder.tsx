@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExternalLink, ChevronDown } from "lucide-react";
+import { ExternalLink, ChevronDown, GitCompare, X } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
 
 const Finder = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>(["All"]);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string[]>>({});
@@ -21,6 +22,7 @@ const Finder = () => {
   const [selectedBrand, setSelectedBrand] = useState("all");
   const [maxPrice, setMaxPrice] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(true);
+  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
 
   // Normalize variant names to group similar variants
   const normalizeVariantName = (material: string, base: string): string => {
@@ -368,6 +370,24 @@ const Finder = () => {
     });
   };
 
+  const toggleCompareSelection = (filamentId: string) => {
+    setSelectedForCompare(prev => 
+      prev.includes(filamentId)
+        ? prev.filter(id => id !== filamentId)
+        : [...prev, filamentId]
+    );
+  };
+
+  const handleCompare = () => {
+    if (selectedForCompare.length > 0) {
+      navigate(`/compare?ids=${selectedForCompare.join(',')}`);
+    }
+  };
+
+  const clearCompareSelection = () => {
+    setSelectedForCompare([]);
+  };
+
   const getScoreColor = (score: number) => {
     if (score >= 8) return "text-green-400";
     if (score >= 6) return "text-cyan-400";
@@ -673,9 +693,12 @@ const Finder = () => {
                   className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-md transition-all"
                 >
                   <div className="flex flex-col lg:grid lg:grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 lg:gap-6 items-start lg:items-center">
-                    {/* Checkbox - Hidden on mobile */}
-                    <div className="hidden lg:block">
-                      <Checkbox />
+                    {/* Checkbox */}
+                    <div className="self-start lg:self-center">
+                      <Checkbox 
+                        checked={selectedForCompare.includes(filament.id)}
+                        onCheckedChange={() => toggleCompareSelection(filament.id)}
+                      />
                     </div>
 
                     {/* Filament Info */}
@@ -804,6 +827,39 @@ const Finder = () => {
           )}
         </div>
       </main>
+
+      {/* Floating Compare Bar */}
+      {selectedForCompare.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50">
+          <div className="max-w-[1600px] mx-auto px-4 py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <GitCompare className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium">
+                {selectedForCompare.length} filament{selectedForCompare.length > 1 ? 's' : ''} selected
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearCompareSelection}
+              >
+                <X className="w-4 h-4 mr-1" />
+                Clear
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleCompare}
+                disabled={selectedForCompare.length < 2}
+              >
+                <GitCompare className="w-4 h-4 mr-2" />
+                Compare ({selectedForCompare.length})
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
