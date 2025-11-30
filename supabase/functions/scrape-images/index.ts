@@ -369,6 +369,7 @@ Deno.serve(async (req) => {
     const vendorCollections: Record<string, string> = {
       'Amolen': 'https://www.amolen.com/collections/all-product',
       'Anycubic': 'https://ca.anycubic.com/collections/filaments',
+      'Atomic Filament': 'https://atomicfilament.com/',
       'Bambu Lab': 'https://us.store.bambulab.com/collections/filament',
       'eSun': 'https://www.esun3d.com/3d-printing-filament-c0001',
       'Polymaker': 'https://us.polymaker.com/collections/all-filaments'
