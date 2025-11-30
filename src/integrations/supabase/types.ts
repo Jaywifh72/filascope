@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_configs: {
+        Row: {
+          affiliate_url_pattern: string | null
+          amazon_de_tag: string | null
+          amazon_uk_tag: string | null
+          amazon_us_tag: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          updated_at: string | null
+          vendor_name: string
+        }
+        Insert: {
+          affiliate_url_pattern?: string | null
+          amazon_de_tag?: string | null
+          amazon_uk_tag?: string | null
+          amazon_us_tag?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string | null
+          vendor_name: string
+        }
+        Update: {
+          affiliate_url_pattern?: string | null
+          amazon_de_tag?: string | null
+          amazon_uk_tag?: string | null
+          amazon_us_tag?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string | null
+          vendor_name?: string
+        }
+        Relationships: []
+      }
       deals: {
         Row: {
           affiliate_link: string | null

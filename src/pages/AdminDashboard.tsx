@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Database, Users, Package, Upload, TrendingUp, Shield } from "lucide-react";
+import { Database, Users, Package, Upload, TrendingUp, Shield, ExternalLink } from "lucide-react";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -177,6 +177,18 @@ const AdminDashboard = () => {
               </div>
               <p className="text-sm text-muted-foreground">
                 Add missing weight data for better price calculations
+              </p>
+            </Link>
+          </Card>
+
+          <Card className="p-6 bg-card border-border hover:border-primary transition-colors">
+            <Link to="/admin/affiliates" className="block">
+              <div className="flex items-center gap-3 mb-3">
+                <ExternalLink className="w-6 h-6 text-primary" />
+                <h3 className="text-lg font-semibold text-foreground">Affiliate Links</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Configure affiliate URL patterns and Amazon tags
               </p>
             </Link>
           </Card>
