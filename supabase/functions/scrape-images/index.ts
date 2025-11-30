@@ -72,6 +72,233 @@ interface ScrapeResult {
   }>
 }
 
+// Special handler for Amolen collection page
+async function scrapeAmolenCollection(
+  supabase: any,
+  firecrawl: any,
+  filamentIds: string[] | null,
+  forceRescrape: boolean,
+  corsHeaders: any
+) {
+  console.log('Scraping Amolen collection page: https://www.amolen.com/collections/all-product')
+  
+  // Get Amolen filaments from database
+  let query = supabase
+    .from('filaments')
+    .select('id, product_title, vendor, product_url, featured_image')
+    .eq('vendor', 'Amolen')
+  
+  if (filamentIds && filamentIds.length > 0) {
+    query = query.in('id', filamentIds)
+  } else if (!forceRescrape) {
+    query = query.is('featured_image', null)
+  }
+  
+  const { data: filaments, error: fetchError } = await query
+  
+  if (fetchError) {
+    console.error('Error fetching Amolen filaments:', fetchError)
+    throw fetchError
+  }
+  
+  console.log(`Found ${filaments?.length || 0} Amolen filaments to process`)
+  
+  const result: ScrapeResult = {
+    total_processed: filaments?.length || 0,
+    images_found: 0,
+    images_uploaded: 0,
+    images_updated: 0,
+    errors: [],
+    processed_records: []
+  }
+  
+  try {
+    // Scrape the collection page
+    const scrapeResult = await retryWithBackoff(
+      () => firecrawl.scrapeUrl('https://www.amolen.com/collections/all-product', {
+        formats: ['html'],
+        onlyMainContent: false
+      }),
+      2,
+      1000
+    ) as { success: boolean; html?: string }
+    
+    if (!scrapeResult.success || !scrapeResult.html) {
+      throw new Error('Failed to scrape Amolen collection page')
+    }
+    
+    const html = scrapeResult.html
+    console.log('Successfully scraped collection page')
+    
+    // Extract product cards - Shopify typically uses product-card or product-item classes
+    const productCardPattern = /<div[^>]*class=["'][^"']*product[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi
+    const productCards = Array.from(html.matchAll(productCardPattern))
+    
+    console.log(`Found ${productCards.length} product cards on page`)
+    
+    // Process each filament
+    for (const filament of filaments || []) {
+      const record: any = {
+        id: filament.id,
+        product_title: filament.product_title,
+        vendor: 'Amolen',
+        status: 'no_image_found',
+        image_url: undefined
+      }
+      
+      try {
+        // Find matching product by title
+        let imageUrl: string | null = null
+        const simplifiedTitle = filament.product_title
+          .toLowerCase()
+          .replace(/amolen/gi, '')
+          .replace(/[^a-z0-9\s]/g, '')
+          .trim()
+        
+        for (const match of productCards) {
+          const cardHtml = match[0]
+          
+          // Check if this card matches the filament title
+          const titleMatch = cardHtml.match(/<h[23][^>]*class=["'][^"']*title[^"']*["'][^>]*>([\s\S]*?)<\/h[23]>/i)
+          if (titleMatch) {
+            const cardTitle = titleMatch[1]
+              .replace(/<[^>]+>/g, '')
+              .toLowerCase()
+              .replace(/[^a-z0-9\s]/g, '')
+              .trim()
+            
+            // Check for title match
+            const titleWords = simplifiedTitle.split(/\s+/).filter((w: string) => w.length > 2)
+            const matchCount = titleWords.filter((word: string) => cardTitle.includes(word)).length
+            
+            if (matchCount >= Math.min(3, titleWords.length)) {
+              // Found a match! Extract the image
+              const imgMatches = cardHtml.match(/<img[^>]*src=["']([^"']+)["'][^>]*>/gi)
+              if (imgMatches && imgMatches.length > 0) {
+                const srcMatch = imgMatches[0].match(/src=["']([^"']+)["']/)
+                if (srcMatch) {
+                  imageUrl = srcMatch[1]
+                  // Make URL absolute
+                  if (imageUrl && imageUrl.startsWith('//')) {
+                    imageUrl = 'https:' + imageUrl
+                  } else if (imageUrl && imageUrl.startsWith('/')) {
+                    imageUrl = 'https://www.amolen.com' + imageUrl
+                  }
+                  
+                  // Remove size parameters for full-size image
+                  if (imageUrl) {
+                    imageUrl = getFullSizeImageUrl(imageUrl)
+                    console.log(`Found image for ${filament.product_title}: ${imageUrl}`)
+                  }
+                  break
+                }
+              }
+            }
+          }
+        }
+        
+        if (!imageUrl) {
+          console.log(`No image found for ${filament.product_title}`)
+          record.status = 'no_image_found'
+          result.processed_records.push(record)
+          continue
+        }
+        
+        result.images_found++
+        record.image_url = imageUrl
+        
+        // Download and upload the image
+        const imageResponse = await fetch(imageUrl)
+        if (!imageResponse.ok) {
+          console.error(`Failed to download image: ${imageResponse.status}`)
+          record.status = 'upload_failed'
+          result.errors.push(`${filament.product_title}: Failed to download image`)
+          result.processed_records.push(record)
+          continue
+        }
+        
+        const imageBlob = await imageResponse.blob()
+        const imageBuffer = await imageBlob.arrayBuffer()
+        
+        const fileExt = imageUrl.split('.').pop()?.split('?')[0] || 'jpg'
+        const fileName = `${filament.id}.${fileExt}`
+        const filePath = `product-images/${fileName}`
+        
+        const { error: uploadError } = await supabase.storage
+          .from('filament-images')
+          .upload(filePath, imageBuffer, {
+            contentType: imageResponse.headers.get('content-type') || 'image/jpeg',
+            upsert: true
+          })
+        
+        if (uploadError) {
+          console.error(`Upload error for ${filament.product_title}:`, uploadError)
+          record.status = 'upload_failed'
+          result.errors.push(`${filament.product_title}: ${uploadError.message}`)
+          result.processed_records.push(record)
+          continue
+        }
+        
+        result.images_uploaded++
+        
+        const { data: publicUrlData } = supabase.storage
+          .from('filament-images')
+          .getPublicUrl(filePath)
+        
+        const { error: updateError } = await supabase
+          .from('filaments')
+          .update({ featured_image: publicUrlData.publicUrl })
+          .eq('id', filament.id)
+        
+        if (updateError) {
+          console.error(`Database update error:`, updateError)
+          record.status = 'error'
+          result.errors.push(`${filament.product_title}: ${updateError.message}`)
+        } else {
+          result.images_updated++
+          record.status = 'success'
+          console.log(`✓ Success: ${filament.product_title}`)
+        }
+        
+        result.processed_records.push(record)
+        
+      } catch (error) {
+        console.error(`Error processing ${filament.product_title}:`, error)
+        record.status = 'error'
+        result.errors.push(`${filament.product_title}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        result.processed_records.push(record)
+      }
+      
+      // Small delay between processing
+      await new Promise(resolve => setTimeout(resolve, 200))
+    }
+    
+  } catch (error) {
+    console.error('Error scraping Amolen collection:', error)
+    throw error
+  }
+  
+  console.log('Amolen scraping complete:', {
+    total_processed: result.total_processed,
+    images_found: result.images_found,
+    images_uploaded: result.images_uploaded,
+    images_updated: result.images_updated,
+    errors_count: result.errors.length
+  })
+  
+  return new Response(
+    JSON.stringify({
+      success: true,
+      message: `Processed ${result.total_processed} Amolen filaments, updated ${result.images_updated} images`,
+      result
+    }),
+    { 
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    }
+  )
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -134,6 +361,11 @@ Deno.serve(async (req) => {
       throw new Error('Firecrawl API key not configured')
     }
     const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
+
+    // Special handling for Amolen - scrape from collection page
+    if (vendor === 'Amolen') {
+      return await scrapeAmolenCollection(supabase, firecrawl, filamentIds, forceRescrape, corsHeaders)
+    }
 
     // Get filaments to process
     let query = supabase
