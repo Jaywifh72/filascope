@@ -72,21 +72,23 @@ interface ScrapeResult {
   }>
 }
 
-// Special handler for Amolen collection page
-async function scrapeAmolenCollection(
+// Special handler for vendor collection pages
+async function scrapeVendorCollection(
   supabase: any,
   firecrawl: any,
   filamentIds: string[] | null,
   forceRescrape: boolean,
-  corsHeaders: any
+  corsHeaders: any,
+  vendorName: string,
+  collectionUrl: string
 ) {
-  console.log('Scraping Amolen collection page: https://www.amolen.com/collections/all-product')
+  console.log(`Scraping ${vendorName} collection page: ${collectionUrl}`)
   
-  // Get Amolen filaments from database
+  // Get vendor filaments from database
   let query = supabase
     .from('filaments')
     .select('id, product_title, vendor, product_url, featured_image')
-    .eq('vendor', 'Amolen')
+    .eq('vendor', vendorName)
   
   if (filamentIds && filamentIds.length > 0) {
     query = query.in('id', filamentIds)
@@ -97,11 +99,11 @@ async function scrapeAmolenCollection(
   const { data: filaments, error: fetchError } = await query
   
   if (fetchError) {
-    console.error('Error fetching Amolen filaments:', fetchError)
+    console.error(`Error fetching ${vendorName} filaments:`, fetchError)
     throw fetchError
   }
   
-  console.log(`Found ${filaments?.length || 0} Amolen filaments to process`)
+  console.log(`Found ${filaments?.length || 0} ${vendorName} filaments to process`)
   
   const result: ScrapeResult = {
     total_processed: filaments?.length || 0,
@@ -115,7 +117,7 @@ async function scrapeAmolenCollection(
   try {
     // Scrape the collection page
     const scrapeResult = await retryWithBackoff(
-      () => firecrawl.scrapeUrl('https://www.amolen.com/collections/all-product', {
+      () => firecrawl.scrapeUrl(collectionUrl, {
         formats: ['html'],
         onlyMainContent: false
       }),
@@ -124,7 +126,7 @@ async function scrapeAmolenCollection(
     ) as { success: boolean; html?: string }
     
     if (!scrapeResult.success || !scrapeResult.html) {
-      throw new Error('Failed to scrape Amolen collection page')
+      throw new Error(`Failed to scrape ${vendorName} collection page`)
     }
     
     const html = scrapeResult.html
@@ -141,7 +143,7 @@ async function scrapeAmolenCollection(
       const record: any = {
         id: filament.id,
         product_title: filament.product_title,
-        vendor: 'Amolen',
+        vendor: vendorName,
         status: 'no_image_found',
         image_url: undefined
       }
@@ -151,7 +153,7 @@ async function scrapeAmolenCollection(
         let imageUrl: string | null = null
         const simplifiedTitle = filament.product_title
           .toLowerCase()
-          .replace(/amolen/gi, '')
+          .replace(new RegExp(vendorName, 'gi'), '')
           .replace(/[^a-z0-9\s]/g, '')
           .trim()
         
@@ -182,7 +184,8 @@ async function scrapeAmolenCollection(
                   if (imageUrl && imageUrl.startsWith('//')) {
                     imageUrl = 'https:' + imageUrl
                   } else if (imageUrl && imageUrl.startsWith('/')) {
-                    imageUrl = 'https://www.amolen.com' + imageUrl
+                    const baseUrl = new URL(collectionUrl)
+                    imageUrl = `${baseUrl.protocol}//${baseUrl.host}${imageUrl}`
                   }
                   
                   // Remove size parameters for full-size image
@@ -274,11 +277,11 @@ async function scrapeAmolenCollection(
     }
     
   } catch (error) {
-    console.error('Error scraping Amolen collection:', error)
+    console.error(`Error scraping ${vendorName} collection:`, error)
     throw error
   }
   
-  console.log('Amolen scraping complete:', {
+  console.log(`${vendorName} scraping complete:`, {
     total_processed: result.total_processed,
     images_found: result.images_found,
     images_uploaded: result.images_uploaded,
@@ -289,7 +292,7 @@ async function scrapeAmolenCollection(
   return new Response(
     JSON.stringify({
       success: true,
-      message: `Processed ${result.total_processed} Amolen filaments, updated ${result.images_updated} images`,
+      message: `Processed ${result.total_processed} ${vendorName} filaments, updated ${result.images_updated} images`,
       result
     }),
     { 
@@ -362,9 +365,12 @@ Deno.serve(async (req) => {
     }
     const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
 
-    // Special handling for Amolen - scrape from collection page
+    // Special handling for vendor collection pages
     if (vendor === 'Amolen') {
-      return await scrapeAmolenCollection(supabase, firecrawl, filamentIds, forceRescrape, corsHeaders)
+      return await scrapeVendorCollection(supabase, firecrawl, filamentIds, forceRescrape, corsHeaders, 'Amolen', 'https://www.amolen.com/collections/all-product')
+    }
+    if (vendor === 'Anycubic') {
+      return await scrapeVendorCollection(supabase, firecrawl, filamentIds, forceRescrape, corsHeaders, 'Anycubic', 'https://ca.anycubic.com/collections/filaments')
     }
 
     // Get filaments to process
