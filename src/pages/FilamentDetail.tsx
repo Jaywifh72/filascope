@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
+import { getBrandLogo } from "@/lib/brandLogos";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -92,7 +93,7 @@ const FilamentDetail = () => {
                       alt={filament.product_title}
                       className="w-full h-full object-contain rounded-lg bg-muted border border-border p-2"
                       onError={(e) => {
-                        // Hide broken image and show placeholder
+                        // Hide broken image and show brand logo if available
                         e.currentTarget.style.display = 'none';
                         const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
                         if (placeholder) placeholder.style.display = 'flex';
@@ -100,10 +101,18 @@ const FilamentDetail = () => {
                     />
                   ) : null}
                   <div 
-                    className="w-full h-full rounded-lg bg-muted border border-border flex items-center justify-center"
+                    className="w-full h-full rounded-lg bg-muted border border-border flex items-center justify-center p-4"
                     style={{ display: filament.featured_image ? 'none' : 'flex' }}
                   >
-                    <span className="text-muted-foreground text-sm">No Image Available</span>
+                    {getBrandLogo(filament.vendor) ? (
+                      <img
+                        src={getBrandLogo(filament.vendor)!}
+                        alt={filament.vendor || 'Brand logo'}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-muted-foreground text-sm">No Image Available</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
