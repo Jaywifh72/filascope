@@ -49,14 +49,13 @@ const AdminMaintenance = () => {
   const [vendorFilter, setVendorFilter] = useState("all");
   const { toast } = useToast();
 
-  // Fetch vendors with missing images
-  const { data: vendorsWithMissingImages } = useQuery({
-    queryKey: ['vendors-missing-images'],
+  // Fetch all vendors
+  const { data: vendors } = useQuery({
+    queryKey: ['all-vendors'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('filaments')
         .select('vendor')
-        .is('featured_image', null)
         .not('vendor', 'is', null)
         .order('vendor');
       
@@ -286,7 +285,7 @@ const AdminMaintenance = () => {
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
                   <SelectItem value="all">All vendors</SelectItem>
-                  {vendorsWithMissingImages?.map((vendor) => (
+                  {vendors?.map((vendor) => (
                     <SelectItem key={vendor} value={vendor}>
                       {vendor}
                     </SelectItem>
@@ -294,7 +293,7 @@ const AdminMaintenance = () => {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Only showing vendors with missing images
+                Select a specific vendor or leave as "All vendors"
               </p>
             </div>
           </div>
