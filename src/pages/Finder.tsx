@@ -42,6 +42,14 @@ const Finder = () => {
         "Steel": ["PLA Steel Composite"],
         "Stone": ["PLA Stone Composite"],
       },
+      PETG: {
+        "Carbon Fiber": ["PETG-CF", "PETG Carbon Fiber", "PETG CF"],
+        "Wood": ["PETG Wood", "PETG-Wood"],
+        "Silk": ["PETG Silk", "Silk PETG", "PETG-Silk"],
+        "Matte": ["PETG Matte", "Matte PETG", "PETG-Matte"],
+        "Pro": ["PETG Pro"],
+        "HF": ["PETG HF"],
+      },
       ABS: {
         "+": ["ABS+"],
       },
