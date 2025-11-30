@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe } from "lucide-react";
 
@@ -46,6 +48,25 @@ const AdminMaintenance = () => {
   const [forceRescrape, setForceRescrape] = useState(false);
   const [vendorFilter, setVendorFilter] = useState("");
   const { toast } = useToast();
+
+  // Fetch vendors with missing images
+  const { data: vendorsWithMissingImages } = useQuery({
+    queryKey: ['vendors-missing-images'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('filaments')
+        .select('vendor')
+        .is('featured_image', null)
+        .not('vendor', 'is', null)
+        .order('vendor');
+      
+      if (error) throw error;
+      
+      // Get unique vendors
+      const uniqueVendors = [...new Set(data.map(f => f.vendor))].filter(Boolean) as string[];
+      return uniqueVendors.sort();
+    },
+  });
 
   const runImageCleanup = async () => {
     setIsRunning(true);
@@ -89,7 +110,7 @@ const AdminMaintenance = () => {
         body: { 
           limit: parseInt(scrapeLimit),
           forceRescrape: forceRescrape,
-          vendor: vendorFilter.trim() || null
+          vendor: vendorFilter || null
         }
       });
 
@@ -259,16 +280,21 @@ const AdminMaintenance = () => {
 
             <div className="space-y-2">
               <Label htmlFor="vendor-filter">Vendor filter (optional)</Label>
-              <Input
-                id="vendor-filter"
-                type="text"
-                value={vendorFilter}
-                onChange={(e) => setVendorFilter(e.target.value)}
-                placeholder="e.g. Overture 3D"
-                className="w-full"
-              />
+              <Select value={vendorFilter} onValueChange={setVendorFilter}>
+                <SelectTrigger id="vendor-filter" className="w-full bg-background">
+                  <SelectValue placeholder="All vendors" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  <SelectItem value="">All vendors</SelectItem>
+                  {vendorsWithMissingImages?.map((vendor) => (
+                    <SelectItem key={vendor} value={vendor}>
+                      {vendor}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
-                Leave empty to scrape all vendors
+                Only showing vendors with missing images
               </p>
             </div>
           </div>
