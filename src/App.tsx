@@ -17,6 +17,7 @@ import AdminImport from "./pages/AdminImport";
 import AdminUsers from "./pages/AdminUsers";
 import AdminEnrichment from "./pages/AdminEnrichment";
 import FilamentDetail from "./pages/FilamentDetail";
+import BrandDetail from "./pages/BrandDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Finder />} />
           <Route path="/brands" element={<Brands />} />
+          <Route path="/brands/:brand" element={<BrandDetail />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/matrix" element={<Matrix />} />
           <Route path="/deals" element={<Deals />} />
