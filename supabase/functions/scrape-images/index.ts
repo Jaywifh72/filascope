@@ -436,6 +436,7 @@ Deno.serve(async (req) => {
       'Anycubic': 'https://ca.anycubic.com/collections/filaments',
       'Atomic Filament': 'https://atomicfilament.com/collections/all-products',
       'Bambu Lab': 'https://us.store.bambulab.com/collections/filament',
+      'ColorFabb': 'https://colorfabb.us/filaments/materials',
       'eSun': 'https://www.esun3d.com/3d-printing-filament-c0001',
       'Polymaker': 'https://us.polymaker.com/collections/all-filaments'
     }
