@@ -720,11 +720,18 @@ const AdminImport = () => {
             .not('product_id', 'in', `(${csvProductIds.map(id => `"${id}"`).join(',')})`);
           
           if (deleteError) {
-            console.error('Error deleting non-CSV filaments:', deleteError);
-            addLog('error', `❌ Failed to clean up old filaments: ${deleteError.message}`);
+            const errorDetails = {
+              message: deleteError.message,
+              code: deleteError.code,
+              details: deleteError.details,
+              hint: deleteError.hint,
+            };
+            console.error('Error deleting non-CSV filaments:', errorDetails);
+            addLog('error', `❌ Failed to clean up old filaments: ${deleteError.message} (Code: ${deleteError.code || 'N/A'})`);
+            addLog('error', `Error details: ${JSON.stringify(errorDetails)}`);
             toast({
               title: "Cleanup Warning",
-              description: "Failed to delete old filaments, but import will continue",
+              description: `Failed to delete old filaments: ${deleteError.message}. Import will continue.`,
               variant: "destructive",
             });
           } else {
@@ -736,8 +743,12 @@ const AdminImport = () => {
             });
           }
         } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorStack = error instanceof Error ? error.stack : 'No stack trace';
           console.error('Error during cleanup:', error);
-          addLog('error', `❌ Cleanup error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          console.error('Stack trace:', errorStack);
+          addLog('error', `❌ Cleanup error: ${errorMessage}`);
+          addLog('error', `Stack trace: ${errorStack}`);
         }
       }
       
