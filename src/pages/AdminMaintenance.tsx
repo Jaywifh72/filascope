@@ -43,6 +43,8 @@ const AdminMaintenance = () => {
   const [isScraping, setIsScraping] = useState(false);
   const [scrapeResult, setScrapeResult] = useState<ScrapeResult | null>(null);
   const [scrapeLimit, setScrapeLimit] = useState("50");
+  const [forceRescrape, setForceRescrape] = useState(false);
+  const [vendorFilter, setVendorFilter] = useState("");
   const { toast } = useToast();
 
   const runImageCleanup = async () => {
@@ -84,7 +86,11 @@ const AdminMaintenance = () => {
     try {
       const { data, error } = await supabase.functions.invoke('scrape-images', {
         method: 'POST',
-        body: { limit: parseInt(scrapeLimit) }
+        body: { 
+          limit: parseInt(scrapeLimit),
+          forceRescrape: forceRescrape,
+          vendor: vendorFilter.trim() || null
+        }
       });
 
       if (error) {
@@ -234,20 +240,50 @@ const AdminMaintenance = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="scrape-limit">Number of filaments to process</Label>
-            <Input
-              id="scrape-limit"
-              type="number"
-              value={scrapeLimit}
-              onChange={(e) => setScrapeLimit(e.target.value)}
-              min="1"
-              max="200"
-              className="w-40"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="scrape-limit">Number of filaments to process</Label>
+              <Input
+                id="scrape-limit"
+                type="number"
+                value={scrapeLimit}
+                onChange={(e) => setScrapeLimit(e.target.value)}
+                min="1"
+                max="200"
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Processing many filaments may take several minutes
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="vendor-filter">Vendor filter (optional)</Label>
+              <Input
+                id="vendor-filter"
+                type="text"
+                value={vendorFilter}
+                onChange={(e) => setVendorFilter(e.target.value)}
+                placeholder="e.g. Overture 3D"
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave empty to scrape all vendors
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="force-rescrape"
+              checked={forceRescrape}
+              onChange={(e) => setForceRescrape(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300"
             />
-            <p className="text-xs text-muted-foreground">
-              Processing many filaments may take several minutes
-            </p>
+            <Label htmlFor="force-rescrape" className="cursor-pointer">
+              Force rescrape (overwrite existing images)
+            </Label>
           </div>
 
           <Button 

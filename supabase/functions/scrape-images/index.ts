@@ -115,8 +115,13 @@ Deno.serve(async (req) => {
 
     const body = await req.json()
     const limit = body.limit || 50 // Process 50 at a time to avoid timeouts
+    const forceRescrape = body.forceRescrape || false
+    const vendor = body.vendor || null
 
     console.log(`Starting image scraping for up to ${limit} filaments...`)
+    if (forceRescrape) {
+      console.log(`Force rescraping enabled${vendor ? ` for vendor: ${vendor}` : ''}`)
+    }
 
     // Initialize Firecrawl
     const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY')
@@ -126,13 +131,23 @@ Deno.serve(async (req) => {
     }
     const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
 
-    // Get filaments without featured images that have product URLs
-    const { data: filaments, error: fetchError } = await supabase
+    // Get filaments to process based on force rescrape mode
+    let query = supabase
       .from('filaments')
       .select('id, product_title, vendor, product_url, featured_image')
       .not('product_url', 'is', null)
-      .is('featured_image', null)
-      .limit(limit)
+    
+    // Add vendor filter if specified
+    if (vendor) {
+      query = query.eq('vendor', vendor)
+    }
+    
+    // If not force rescraping, only get filaments without images
+    if (!forceRescrape) {
+      query = query.is('featured_image', null)
+    }
+    
+    const { data: filaments, error: fetchError } = await query.limit(limit)
 
     if (fetchError) {
       console.error('Error fetching filaments:', fetchError)
