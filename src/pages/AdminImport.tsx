@@ -36,6 +36,8 @@ const AdminImport = () => {
     outOfRangeNumeric: number;
     invalidUrls: number;
     missingPrices: number;
+    toDeleteCount?: number;
+    toDeleteExamples?: string[];
     issues: Array<{ type: string; count: number; examples: string[] }>;
   } | null>(null);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
@@ -619,6 +621,29 @@ const AdminImport = () => {
         issues.push({ type: 'Missing/Zero Prices', count: missingPricesCount, examples: missingPriceExamples });
       }
       
+      // Calculate filaments to delete if deleteNonCsv is enabled
+      let toDeleteCount = 0;
+      const toDeleteExamples: string[] = [];
+      
+      if (deleteNonCsv) {
+        addLog('info', '🔍 Checking for filaments to delete...');
+        const csvProductIds = rows
+          .map(row => row['Product ID'])
+          .filter(id => id && id.trim() !== '');
+        
+        const { data: existingFilaments } = await supabase
+          .from('filaments')
+          .select('id, product_title, product_id')
+          .not('product_id', 'in', `(${csvProductIds.map(id => `"${id}"`).join(',')})`);
+        
+        toDeleteCount = existingFilaments?.length || 0;
+        if (existingFilaments && existingFilaments.length > 0) {
+          existingFilaments.slice(0, 5).forEach(f => {
+            toDeleteExamples.push(`${f.product_title} (ID: ${f.product_id})`);
+          });
+        }
+      }
+      
       const summary = {
         totalRows: rows.length,
         missingRequired: missingRequiredCount,
@@ -626,6 +651,8 @@ const AdminImport = () => {
         outOfRangeNumeric: outOfRangeCount,
         invalidUrls: invalidUrlsCount,
         missingPrices: missingPricesCount,
+        toDeleteCount,
+        toDeleteExamples,
         issues
       };
       
@@ -640,6 +667,9 @@ const AdminImport = () => {
       console.log(`   ✗ Out-of-range numeric values: ${outOfRangeCount}`);
       console.log(`   ✗ Invalid URLs: ${invalidUrlsCount}`);
       console.log(`   ⚠️ Missing/zero prices: ${missingPricesCount}`);
+      if (deleteNonCsv && toDeleteCount > 0) {
+        console.log(`   🗑️ Filaments to delete: ${toDeleteCount}`);
+      }
       console.log("=".repeat(80) + "\n");
       
       addLog('success', `✓ Pre-import analysis complete`);
@@ -1119,14 +1149,41 @@ const AdminImport = () => {
                           {summaryReport.missingPrices}
                         </span>
                       </div>
+                      {summaryReport.toDeleteCount !== undefined && summaryReport.toDeleteCount > 0 && (
+                        <div className="flex justify-between p-2 rounded bg-background/50 col-span-2">
+                          <span>Filaments to Delete:</span>
+                          <span className="font-medium text-red-600 dark:text-red-400">
+                            {summaryReport.toDeleteCount}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </AlertDescription>
                 </Alert>
 
-                {summaryReport.issues.length > 0 && (
+                {(summaryReport.issues.length > 0 || (summaryReport.toDeleteCount && summaryReport.toDeleteCount > 0)) && (
                   <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4">
-                    <h3 className="font-semibold mb-3 text-yellow-600 dark:text-yellow-400">Issue Details</h3>
+                    <h3 className="font-semibold mb-3 text-yellow-600 dark:text-yellow-400">Details</h3>
                     <div className="space-y-3">
+                      {summaryReport.toDeleteCount !== undefined && summaryReport.toDeleteCount > 0 && (
+                        <div className="text-sm">
+                          <p className="font-medium text-red-600 dark:text-red-400 mb-1">
+                            🗑️ Filaments to Delete: {summaryReport.toDeleteCount}
+                          </p>
+                          {summaryReport.toDeleteExamples && summaryReport.toDeleteExamples.length > 0 && (
+                            <div className="ml-4 space-y-0.5 text-xs text-muted-foreground font-mono">
+                              {summaryReport.toDeleteExamples.map((example, exIdx) => (
+                                <div key={exIdx}>• {example}</div>
+                              ))}
+                              {summaryReport.toDeleteCount > summaryReport.toDeleteExamples.length && (
+                                <div className="text-red-600/70 dark:text-red-400/70">
+                                  ... and {summaryReport.toDeleteCount - summaryReport.toDeleteExamples.length} more
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                       {summaryReport.issues.map((issue, idx) => (
                         <div key={idx} className="text-sm">
                           <p className="font-medium text-foreground mb-1">
