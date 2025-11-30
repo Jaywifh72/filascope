@@ -91,6 +91,11 @@ const Finder = () => {
       PET: {
         "GF": ["PET-GF"],
         "CF": ["PET-CF"],
+      },
+      PEEK: {
+        "CF": ["PEEK-CF", "Peek CF"],
+        "GF": ["PEEK-GF", "Peek GF"],
+        "A": ["PEEK A", "Peek A"],
       }
     };
 
@@ -122,8 +127,8 @@ const Finder = () => {
       const uniqueMaterials = Array.from(new Set(data.map(f => f.material))).sort();
       
       // Define base standard materials that can have variants
-      const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon', 'PC', 'Co-Polyester', 'PA', 'CPE', 'PET'];
-      const otherStandards = ['HIPS', 'PEEK', 'TPE'];
+      const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon', 'PC', 'Co-Polyester', 'PA', 'CPE', 'PET', 'PEEK'];
+      const otherStandards = ['HIPS', 'TPE'];
       
       // Materials that should appear in specialty despite supporting variants
       const specialtyWithVariants = ['Nylon'];
