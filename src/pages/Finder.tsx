@@ -83,6 +83,8 @@ const Finder = () => {
         "XT": ["XT"],
         "nGen": ["nGen"],
         "nGen Flex": ["nGen_FLEX"],
+      },
+      "Co-Polymer": {
         "PE": ["PE Co-Polymer"],
       },
       PA: {
@@ -145,14 +147,14 @@ const Finder = () => {
       const uniqueMaterials = Array.from(new Set(data.map(f => f.material))).sort();
       
       // Define base standard materials that can have variants
-      const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon', 'PC', 'Co-Polyester', 'PA', 'CPE', 'PET', 'PEEK', 'PP', 'Support', 'PEBA'];
+      const baseStandards = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon', 'PC', 'Co-Polyester', 'PA', 'CPE', 'PET', 'PEEK', 'PP', 'Support', 'PEBA', 'Co-Polymer'];
       const otherStandards = ['HIPS', 'TPE', 'CO-PE'];
       
       // Materials that should appear in specialty despite supporting variants
       const specialtyWithVariants: string[] = [];
       
       // Materials that should appear in composites despite supporting variants
-      const compositeWithVariants = ['PC', 'Co-Polyester', 'PA', 'CPE', 'PET', 'PP', 'Nylon'];
+      const compositeWithVariants = ['PC', 'Co-Polyester', 'PA', 'CPE', 'PET', 'PP', 'Nylon', 'Co-Polymer'];
       
       // Materials that should appear in other materials despite supporting variants
       const otherWithVariants = ['Support', 'PEBA'];
@@ -218,8 +220,7 @@ const Finder = () => {
         !baseStandards.includes(m) &&
         !otherStandards.includes(m) &&
         (m.includes('-CF') || m.includes('-GF') || m.includes('Carbon Fiber') || m.includes('Wood Fill') || 
-         m === 'PPS' || m === 'PSU' || m.startsWith('PPS ') || m.startsWith('PSU ') ||
-         m === 'Co-Polymer' || m.startsWith('Co-Polymer '))
+         m === 'PPS' || m === 'PSU' || m.startsWith('PPS ') || m.startsWith('PSU '))
       );
       
       const specialty = uniqueMaterials.filter(m => 
