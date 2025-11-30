@@ -349,14 +349,20 @@ const Finder = () => {
             <div className="text-center py-16 text-muted-foreground">Loading filaments...</div>
           ) : filteredFilaments && filteredFilaments.length > 0 ? (
             filteredFilaments.map((filament) => {
+              // Filter out corrupted prices (likely data import errors)
+              // Valid filament prices are typically $10-$200 per kg or $10-$100 per spool
+              const isValidPrice = filament.variant_price && filament.variant_price > 5 && filament.variant_price < 500;
+              
               // Calculate price per kg if both price and weight are available
-              const pricePerKg = filament.variant_price && filament.net_weight_g && filament.net_weight_g > 0
+              const pricePerKg = isValidPrice && filament.net_weight_g && filament.net_weight_g > 0
                 ? ((filament.variant_price / filament.net_weight_g) * 1000).toFixed(2)
                 : null;
               
               // Use raw price if per-kg calculation isn't possible
-              const displayPrice = pricePerKg || (filament.variant_price ? filament.variant_price.toFixed(2) : null);
-              const priceLabel = pricePerKg ? '/kg' : (filament.variant_price ? 'ea' : null);
+              const displayPrice = isValidPrice 
+                ? (pricePerKg || filament.variant_price.toFixed(2))
+                : null;
+              const priceLabel = pricePerKg ? '/kg' : (isValidPrice ? 'ea' : null);
               
               const overallScore = filament.value_score || 7.0;
 
