@@ -246,49 +246,63 @@ async function scrapeVendorCollection(
               
               // Lower threshold to be more permissive
               if (matchScore >= 15) {
-                // Found a match! Extract the image
-                const imgMatches = cardHtml.match(/<img[^>]*src=["']([^"']+)["'][^>]*>/gi)
-                if (imgMatches && imgMatches.length > 0) {
-                // Try to find the best image (not logo/icon)
-                  for (const imgTag of imgMatches) {
-                    const srcMatch = imgTag.match(/src=["']([^"']+)["']/)
-                    if (srcMatch) {
-                      const tempUrl = srcMatch[1]
-                      
-                      // For ColorFabb, prioritize /media/catalog/product/ images
-                      if (vendorName.toLowerCase().includes('colorfabb') && 
-                          tempUrl.includes('/media/catalog/product/')) {
+                // For ColorFabb, check data-hover-image attribute first
+                if (vendorName.toLowerCase().includes('colorfabb')) {
+                  const dataImageMatch = cardHtml.match(/data-hover-image=["']([^"']+)["']/)
+                  if (dataImageMatch) {
+                    imageUrl = dataImageMatch[1]
+                      .replace(/&amp;/g, '&') // Decode HTML entities
+                      .split('?')[0] // Remove query params for full size
+                    console.log(`  Found ColorFabb data-hover-image: ${imageUrl}`)
+                  }
+                }
+                
+                // If no image found yet, try standard img tags
+                if (!imageUrl) {
+                  // Found a match! Extract the image
+                  const imgMatches = cardHtml.match(/<img[^>]*src=["']([^"']+)["'][^>]*>/gi)
+                  if (imgMatches && imgMatches.length > 0) {
+                    // Try to find the best image (not logo/icon)
+                    for (const imgTag of imgMatches) {
+                      const srcMatch = imgTag.match(/src=["']([^"']+)["']/)
+                      if (srcMatch) {
+                        const tempUrl = srcMatch[1]
+                        
+                        // For ColorFabb, prioritize /media/catalog/product/ images
+                        if (vendorName.toLowerCase().includes('colorfabb') && 
+                            tempUrl.includes('/media/catalog/product/')) {
+                          imageUrl = tempUrl
+                          console.log(`  Found ColorFabb catalog image: ${tempUrl}`)
+                          break
+                        }
+                        
+                        // Skip obvious non-product images
+                        if (tempUrl.toLowerCase().includes('logo') || 
+                            tempUrl.toLowerCase().includes('icon') ||
+                            tempUrl.toLowerCase().includes('badge')) {
+                          continue
+                        }
+                        
                         imageUrl = tempUrl
-                        console.log(`  Found ColorFabb catalog image: ${tempUrl}`)
+                        // Make URL absolute
+                        if (imageUrl && imageUrl.startsWith('//')) {
+                          imageUrl = 'https:' + imageUrl
+                        } else if (imageUrl && imageUrl.startsWith('/')) {
+                          const baseUrl = new URL(collectionUrl)
+                          imageUrl = `${baseUrl.protocol}//${baseUrl.host}${imageUrl}`
+                        }
+                        
+                        // Remove size parameters for full-size image
+                        if (imageUrl) {
+                          imageUrl = getFullSizeImageUrl(imageUrl)
+                          console.log(`Found image for ${filament.product_title} (score: ${matchScore}): ${imageUrl}`)
+                        }
                         break
                       }
-                      
-                      // Skip obvious non-product images
-                      if (tempUrl.toLowerCase().includes('logo') || 
-                          tempUrl.toLowerCase().includes('icon') ||
-                          tempUrl.toLowerCase().includes('badge')) {
-                        continue
-                      }
-                      
-                      imageUrl = tempUrl
-                      // Make URL absolute
-                      if (imageUrl && imageUrl.startsWith('//')) {
-                        imageUrl = 'https:' + imageUrl
-                      } else if (imageUrl && imageUrl.startsWith('/')) {
-                        const baseUrl = new URL(collectionUrl)
-                        imageUrl = `${baseUrl.protocol}//${baseUrl.host}${imageUrl}`
-                      }
-                      
-                      // Remove size parameters for full-size image
-                      if (imageUrl) {
-                        imageUrl = getFullSizeImageUrl(imageUrl)
-                        console.log(`Found image for ${filament.product_title} (score: ${matchScore}): ${imageUrl}`)
-                      }
-                      break
                     }
                   }
-                  if (imageUrl) break
                 }
+                if (imageUrl) break
               }
             }
           }
