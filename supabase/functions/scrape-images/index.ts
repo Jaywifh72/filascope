@@ -366,11 +366,24 @@ Deno.serve(async (req) => {
     const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
 
     // Special handling for vendor collection pages
-    if (vendor === 'Amolen') {
-      return await scrapeVendorCollection(supabase, firecrawl, filamentIds, forceRescrape, corsHeaders, 'Amolen', 'https://www.amolen.com/collections/all-product')
+    const vendorCollections: Record<string, string> = {
+      'Amolen': 'https://www.amolen.com/collections/all-product',
+      'Anycubic': 'https://ca.anycubic.com/collections/filaments',
+      'Bambu Lab': 'https://us.store.bambulab.com/collections/filament',
+      'eSun': 'https://www.esun3d.com/3d-printing-filament-c0001',
+      'Polymaker': 'https://us.polymaker.com/collections/all-filaments'
     }
-    if (vendor === 'Anycubic') {
-      return await scrapeVendorCollection(supabase, firecrawl, filamentIds, forceRescrape, corsHeaders, 'Anycubic', 'https://ca.anycubic.com/collections/filaments')
+    
+    if (vendor && vendorCollections[vendor]) {
+      return await scrapeVendorCollection(
+        supabase, 
+        firecrawl, 
+        filamentIds, 
+        forceRescrape, 
+        corsHeaders, 
+        vendor, 
+        vendorCollections[vendor]
+      )
     }
 
     // Get filaments to process
