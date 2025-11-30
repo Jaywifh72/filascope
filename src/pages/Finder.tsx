@@ -26,13 +26,20 @@ const Finder = () => {
   const normalizeVariantName = (material: string, base: string): string => {
     const variantPatterns: Record<string, Record<string, string[]>> = {
       PLA: {
+        "Carbon Fiber": ["PLA Carbon Fiber", "PLA CF", "PLA-CF", "PLA CF03"],
+        "Glow": ["Glow PLA", "PLA Glow", "PLA Glow in Dark", "PLA-Luminous"],
+        "Silk": ["Silk PLA", "PLA Silk", "PLA-Silk", "Silky PLA", "Silk PLA+"],
         "Marble": ["Marble PLA", "PLA Marble", "PLA-Marble"],
+        "Matte": ["Matte PLA", "PLA Matte", "PLA-Matte"],
         "Metallic": ["Metallic PLA", "PLA Metal", "PLA-Metal"],
-        "Carbon Fiber": ["PLA Carbon Fiber", "PLA CF", "PLA-CF"],
-        "Matte": ["PLA Matte", "Matte PLA", "PLA-Matte"],
-        "Lightweight": ["LW-PLA", "PLA Lightweight"],
-        "Wood": ["PLA Wood", "Wood PLA", "PLA-WoodComposite"],
-        "Silk": ["Silky PLA", "Silk PLA", "PLA Silk"],
+        "Wood": ["PLA Wood", "Wood PLA", "PLA-Wood", "PLA Wood Composite"],
+        "Lightweight": ["LW-PLA", "PLA Lightweight", "LW-PLA-HT"],
+        "Crystal": ["PLA Crystal", "PLA Crystal Clear"],
+        "Bronze": ["PLA Bronze Composite"],
+        "Copper": ["PLA Copper Composite"],
+        "Cork": ["PLA Cork Composite"],
+        "Steel": ["PLA Steel Composite"],
+        "Stone": ["PLA Stone Composite"],
       }
     };
 
