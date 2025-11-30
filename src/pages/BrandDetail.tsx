@@ -106,15 +106,34 @@ const BrandDetail = () => {
               >
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    {filament.featured_image && (
-                      <div className="aspect-square rounded-lg overflow-hidden bg-background">
+                    <div className="aspect-square rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center">
+                      {filament.featured_image && filament.featured_image.startsWith('http') ? (
                         <img
                           src={filament.featured_image}
                           alt={filament.product_title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              const placeholder = document.createElement('div');
+                              placeholder.className = 'w-full h-full flex flex-col items-center justify-center p-6 text-center';
+                              placeholder.innerHTML = `
+                                <div class="text-4xl mb-2">${filament.material?.charAt(0) || '📦'}</div>
+                                <div class="text-xs text-muted-foreground">${filament.material || 'Filament'}</div>
+                              `;
+                              parent.appendChild(placeholder);
+                            }
+                          }}
                         />
-                      </div>
-                    )}
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center">
+                          <div className="text-4xl mb-2">{filament.material?.charAt(0) || '📦'}</div>
+                          <div className="text-xs text-muted-foreground">{filament.material || 'Filament'}</div>
+                        </div>
+                      )}
+                    </div>
                     <div className="space-y-2">
                       <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
                         {filament.product_title}
