@@ -63,12 +63,6 @@ export type Database = {
           amazon_link_de: string | null
           amazon_link_uk: string | null
           amazon_link_us: string | null
-          amazon_rating_de: number | null
-          amazon_rating_uk: number | null
-          amazon_rating_us: number | null
-          amazon_review_count_de: number | null
-          amazon_review_count_uk: number | null
-          amazon_review_count_us: number | null
           bed_temp_max_c: number | null
           bed_temp_min_c: number | null
           color_family: string | null
@@ -128,12 +122,6 @@ export type Database = {
           amazon_link_de?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
-          amazon_rating_de?: number | null
-          amazon_rating_uk?: number | null
-          amazon_rating_us?: number | null
-          amazon_review_count_de?: number | null
-          amazon_review_count_uk?: number | null
-          amazon_review_count_us?: number | null
           bed_temp_max_c?: number | null
           bed_temp_min_c?: number | null
           color_family?: string | null
@@ -193,12 +181,6 @@ export type Database = {
           amazon_link_de?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
-          amazon_rating_de?: number | null
-          amazon_rating_uk?: number | null
-          amazon_rating_us?: number | null
-          amazon_review_count_de?: number | null
-          amazon_review_count_uk?: number | null
-          amazon_review_count_us?: number | null
           bed_temp_max_c?: number | null
           bed_temp_min_c?: number | null
           color_family?: string | null
