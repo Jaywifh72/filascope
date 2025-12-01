@@ -128,6 +128,41 @@ export default function AdminPrinters() {
     },
   });
 
+  // Re-scrape mutation (resets status and triggers new scrape)
+  const rescrapeM = useMutation({
+    mutationFn: async (printerId: string) => {
+      // Reset scrape status
+      const { error: resetError } = await supabase
+        .from('printers')
+        .update({ 
+          scrape_status: 'not_started', 
+          scraped_data: null, 
+          scrape_error: null 
+        })
+        .eq('id', printerId);
+      
+      if (resetError) throw resetError;
+
+      // Trigger new scrape
+      const { data, error } = await supabase.functions.invoke('deep-scrape-printer', {
+        body: { printerId },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Re-scraping started" });
+      queryClient.invalidateQueries({ queryKey: ["pending-printers"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Re-scrape failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Approve printer mutation
   const approveMutation = useMutation({
     mutationFn: async (printerIds: string[]) => {
@@ -855,10 +890,20 @@ export default function AdminPrinters() {
                                 </Badge>
                               )}
                               {printer.scrape_status === 'completed' && (
-                                <Badge variant="default" className="gap-1">
-                                  <CheckCircle className="h-3 w-3" />
-                                  Scrape Complete
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="default" className="gap-1">
+                                    <CheckCircle className="h-3 w-3" />
+                                    Scrape Complete
+                                  </Badge>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => rescrapeM.mutate(printer.id)}
+                                    disabled={rescrapeM.isPending}
+                                  >
+                                    Re-Scrape
+                                  </Button>
+                                </div>
                               )}
                               {printer.scrape_status === 'failed' && (
                                 <div className="flex items-center gap-2">
