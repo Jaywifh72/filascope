@@ -794,6 +794,13 @@ Deno.serve(async (req) => {
             // Skip if title is too short after cleaning
             if (cleanTitle.length < 2) continue;
             
+            // Validate it's an actual printer model (starts with "Pro" or "E" followed by number)
+            const isValidModel = /^(Pro|E)\d+/i.test(cleanTitle);
+            if (!isValidModel) {
+              console.log(`Skipping non-printer item: ${cleanTitle}`);
+              continue;
+            }
+            
             modelMap.set(cleanTitle, fullUrl);
             console.log(`Found Raise3D printer: ${cleanTitle} at ${fullUrl}`);
           }
