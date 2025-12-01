@@ -580,14 +580,36 @@ Deno.serve(async (req) => {
           for (const [url, title] of finalUrls) {
             const fullUrl = url.startsWith('http') ? url : `${scrapeConfig.product_url_base}${url}`;
             
-            // Clean up title - normalize Prusa naming
+            // Clean up title - normalize Prusa naming and remove extra info
             let cleanTitle = title;
+            
+            // Remove price information (e.g., "$1,799.00", "€999", "£599")
+            cleanTitle = cleanTitle.replace(/[\$€£¥]\s?\d+[,.]?\d*/g, '').trim();
+            
+            // Remove lead time information (e.g., "Estimated leadtime 5-6weeks", "Ships in 2-3 weeks")
+            cleanTitle = cleanTitle.replace(/estimated\s+lead\s?time\s+[\d-]+\s*weeks?/gi, '').trim();
+            cleanTitle = cleanTitle.replace(/ships?\s+in\s+[\d-]+\s*weeks?/gi, '').trim();
+            
+            // Remove availability messages
+            cleanTitle = cleanTitle.replace(/this product is available on request/gi, '').trim();
+            cleanTitle = cleanTitle.replace(/available on request/gi, '').trim();
+            cleanTitle = cleanTitle.replace(/in stock/gi, '').trim();
+            cleanTitle = cleanTitle.replace(/out of stock/gi, '').trim();
+            cleanTitle = cleanTitle.replace(/pre-?order/gi, '').trim();
+            
             // Remove "Original Prusa" prefix if present for consistency (we know it's Prusa)
             if (cleanTitle.toLowerCase().startsWith('original prusa ')) {
               cleanTitle = cleanTitle.substring(15).trim();
             } else if (cleanTitle.toLowerCase().startsWith('prusa ')) {
               cleanTitle = cleanTitle.substring(6).trim();
             }
+            
+            // Remove any trailing/leading special characters and multiple spaces
+            cleanTitle = cleanTitle.replace(/[,\-–—]+$/, '').trim();
+            cleanTitle = cleanTitle.replace(/\s+/g, ' ');
+            
+            // Skip if title is too short after cleaning
+            if (cleanTitle.length < 2) continue;
             
             modelMap.set(cleanTitle, fullUrl);
             console.log(`Found Prusa printer: ${cleanTitle} at ${fullUrl}`);
