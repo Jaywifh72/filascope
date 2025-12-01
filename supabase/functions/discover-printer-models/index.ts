@@ -168,8 +168,8 @@ Deno.serve(async (req) => {
 
         // Brand-specific model extraction
         if (brand.brand.toLowerCase() === 'anycubic') {
-          // Anycubic has two main printer lines: Kobra (FDM) and Photon (Resin)
-          // Extract from product links in HTML
+          // Anycubic: ONLY scrape Kobra series (all FDM printers)
+          // Photon series = resin (skip all)
           const linkMatches = html.matchAll(/href="([^"]*\/products\/[^"]+)"/gi);
           const productUrls = new Set<string>();
           
@@ -177,50 +177,44 @@ Deno.serve(async (req) => {
             const url = match[1];
             const urlLower = url.toLowerCase();
             
-            // Skip ALL resin printers - Photon series is resin only
-            if (urlLower.includes('photon')) {
-              console.log(`Skipping resin printer: ${url}`);
+            // ONLY include Kobra printers - all other Anycubic printers are resin or accessories
+            if (!urlLower.includes('kobra')) {
               continue;
             }
             
-            // Only include Kobra (FDM) line
-            if (urlLower.includes('kobra')) {
-              // Skip accessories, filaments, etc.
-              if (urlLower.includes('resin')) continue;
-              if (urlLower.includes('filament')) continue;
-              if (urlLower.includes('wash')) continue;
-              if (urlLower.includes('cure')) continue;
-              if (urlLower.includes('accessory') || urlLower.includes('accessories')) continue;
-              if (urlLower.includes('plate')) continue;
-              if (urlLower.includes('nozzle')) continue;
-              if (urlLower.includes('tool')) continue;
-              
-              productUrls.add(url);
-            }
+            // Skip accessories even within Kobra line
+            if (urlLower.includes('accessory') || urlLower.includes('accessories')) continue;
+            if (urlLower.includes('plate')) continue;
+            if (urlLower.includes('nozzle')) continue;
+            if (urlLower.includes('tool')) continue;
+            if (urlLower.includes('filament')) continue;
+            
+            productUrls.add(url);
+            console.log(`Found Kobra printer URL: ${url}`);
           }
           
-          console.log(`Found ${productUrls.size} potential Anycubic FDM printer product URLs`);
+          console.log(`Found ${productUrls.size} Anycubic Kobra (FDM) printer URLs`);
           
           // Extract model names from URLs
           for (const url of productUrls) {
             const pathMatch = url.match(/\/products\/([^\/\?#]+)/);
             if (pathMatch) {
               const slug = pathMatch[1];
+              
               // Convert slug to readable name (e.g., "kobra-2-pro" -> "Kobra 2 Pro")
               const modelName = slug
                 .split('-')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ');
               
-              // Additional safety check: skip any models with resin indicators
-              const modelNameLower = modelName.toLowerCase();
-              if (modelNameLower.includes('photon') || modelNameLower.includes('resin')) {
-                console.log(`Skipping resin printer model: ${modelName}`);
+              // Final safety check: must contain "Kobra"
+              if (!modelName.toLowerCase().includes('kobra')) {
+                console.log(`Skipping non-Kobra model: ${modelName}`);
                 continue;
               }
               
               modelNames.push(modelName);
-              console.log(`Extracted FDM model: ${modelName} from ${url}`);
+              console.log(`Extracted Kobra FDM model: ${modelName}`);
             }
           }
         } else {
