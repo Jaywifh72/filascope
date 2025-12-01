@@ -583,20 +583,6 @@ Deno.serve(async (req) => {
             // Clean up title - normalize Prusa naming and remove extra info
             let cleanTitle = title;
             
-            // Remove price information (e.g., "$1,799.00", "€999", "£599")
-            cleanTitle = cleanTitle.replace(/[\$€£¥]\s?\d+[,.]?\d*/g, '').trim();
-            
-            // Remove lead time information (e.g., "Estimated leadtime 5-6weeks", "Ships in 2-3 weeks")
-            cleanTitle = cleanTitle.replace(/estimated\s+lead\s?time\s+[\d-]+\s*weeks?/gi, '').trim();
-            cleanTitle = cleanTitle.replace(/ships?\s+in\s+[\d-]+\s*weeks?/gi, '').trim();
-            
-            // Remove availability messages
-            cleanTitle = cleanTitle.replace(/this product is available on request/gi, '').trim();
-            cleanTitle = cleanTitle.replace(/available on request/gi, '').trim();
-            cleanTitle = cleanTitle.replace(/in stock/gi, '').trim();
-            cleanTitle = cleanTitle.replace(/out of stock/gi, '').trim();
-            cleanTitle = cleanTitle.replace(/pre-?order/gi, '').trim();
-            
             // Remove "Original Prusa" prefix if present for consistency (we know it's Prusa)
             if (cleanTitle.toLowerCase().startsWith('original prusa ')) {
               cleanTitle = cleanTitle.substring(15).trim();
@@ -604,8 +590,20 @@ Deno.serve(async (req) => {
               cleanTitle = cleanTitle.substring(6).trim();
             }
             
+            // Remove everything after certain markers that indicate extra info
+            // This handles prices, lead times, and other suffixes more reliably
+            cleanTitle = cleanTitle.split(/[\$€£¥]/)[0].trim(); // Remove from currency symbols onward
+            cleanTitle = cleanTitle.split(/estimated\s+lead/i)[0].trim(); // Remove from "Estimated lead" onward
+            cleanTitle = cleanTitle.split(/ships?\s+in/i)[0].trim(); // Remove from "Ships in" onward
+            cleanTitle = cleanTitle.split(/available\s+on\s+request/i)[0].trim();
+            cleanTitle = cleanTitle.split(/this product is/i)[0].trim();
+            
+            // Remove common suffix patterns
+            cleanTitle = cleanTitle.replace(/\+\s*$/i, '').trim(); // Remove trailing "+"
+            
             // Remove any trailing/leading special characters and multiple spaces
-            cleanTitle = cleanTitle.replace(/[,\-–—]+$/, '').trim();
+            cleanTitle = cleanTitle.replace(/[,\-–—\+]+$/, '').trim();
+            cleanTitle = cleanTitle.replace(/^\+\s*/, '').trim();
             cleanTitle = cleanTitle.replace(/\s+/g, ' ');
             
             // Skip if title is too short after cleaning
