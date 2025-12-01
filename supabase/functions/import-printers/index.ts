@@ -337,17 +337,14 @@ serve(async (req) => {
           }
         } else {
           // Insert new printer
+          console.log(`Inserting new printer ${row.printer_id}`);
           const { error: insertError } = await supabaseClient
             .from("printers")
             .insert(printerData);
 
           if (insertError) {
             console.error(`Insert error for ${row.printer_id}:`, insertError);
-            console.error('Problematic data:', JSON.stringify({
-              msrp_usd: printerData.msrp_usd,
-              msrp_cad: printerData.msrp_cad,
-              screen_size_inch: printerData.screen_size_inch
-            }));
+            console.error('Full printer data:', JSON.stringify(printerData, null, 2));
             stats.errors.push(`Insert error for ${row.printer_id}: ${insertError.message}`);
           } else {
             stats.printers_created++;
