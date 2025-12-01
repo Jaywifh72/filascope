@@ -113,10 +113,22 @@ const AdminDashboard = () => {
             <Link to="/admin/import" className="block">
               <div className="flex items-center gap-3 mb-3">
                 <Upload className="w-6 h-6 text-primary" />
-                <h3 className="text-lg font-semibold text-foreground">CSV Import</h3>
+                <h3 className="text-lg font-semibold text-foreground">Import Filaments</h3>
               </div>
               <p className="text-sm text-muted-foreground">
                 Upload and import filament data from CSV files
+              </p>
+            </Link>
+          </Card>
+
+          <Card className="p-6 bg-card border-border hover:border-primary transition-colors">
+            <Link to="/admin/printers" className="block">
+              <div className="flex items-center gap-3 mb-3">
+                <Database className="w-6 h-6 text-primary" />
+                <h3 className="text-lg font-semibold text-foreground">Import Printers</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Upload and import printer data from CSV files
               </p>
             </Link>
           </Card>
