@@ -45,6 +45,12 @@ const Navbar = () => {
             </Link>
           </Button>
           <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+            <Link to="/printers" className="flex items-center gap-2">
+              <Database className="w-4 h-4" />
+              Printers
+            </Link>
+          </Button>
+          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
             <Link to="/brands" className="flex items-center gap-2">
               <Tag className="w-4 h-4" />
               Brands

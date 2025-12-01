@@ -26,6 +26,8 @@ const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Printers = lazy(() => import("./pages/Printers"));
+const PrinterCompare = lazy(() => import("./pages/PrinterCompare"));
 
 const queryClient = new QueryClient();
 
@@ -42,6 +44,8 @@ const App = () => (
             <Route path="/brands" element={<Brands />} />
             <Route path="/brands/:brand" element={<BrandDetail />} />
             <Route path="/compare" element={<Compare />} />
+            <Route path="/printers" element={<Printers />} />
+            <Route path="/printers/compare" element={<PrinterCompare />} />
             <Route path="/matrix" element={<Matrix />} />
             <Route path="/deals" element={<Deals />} />
             <Route path="/wizard" element={<Wizard />} />
