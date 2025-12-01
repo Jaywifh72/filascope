@@ -134,9 +134,7 @@ Include any other specifications you find. Be precise with units. Return null fo
       firecrawlApiKey,
       [{
         type: 'json',
-        jsonOptions: {
-          prompt: extractionPrompt
-        }
+        prompt: extractionPrompt
       }]
     );
 
