@@ -709,6 +709,96 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} QIDI printer URLs after deduplication`);
+        } else if (brand.brand.toLowerCase() === 'raise3d') {
+          // Raise3D: Extract printers from product listing page
+          console.log('Extracting Raise3D printer models from product listing page');
+          
+          // Look for links that contain printer model identifiers
+          const linkPattern = /<a[^>]+href="([^"]*(?:pro|e2|rme|forge|raise3d)[^"]*)"[^>]*>([^<]*(?:<[^>]+>[^<]*)*?)<\/a>/gi;
+          const linkMatches = html.matchAll(linkPattern);
+          const productUrls = new Map<string, string>(); // url -> title
+          
+          for (const match of linkMatches) {
+            const url = match[1];
+            let title = match[2].replace(/<[^>]+>/g, '').trim(); // Strip HTML tags
+            
+            // Skip empty titles
+            if (!title || title.length < 3) continue;
+            
+            // Skip navigation/UI links
+            if (title.toLowerCase().includes('skip to') || 
+                title.toLowerCase().includes('search') ||
+                title.toLowerCase().includes('cart') ||
+                title.toLowerCase().includes('account') ||
+                title.toLowerCase().includes('menu') ||
+                title.toLowerCase().includes('learn more') ||
+                title.toLowerCase().includes('shop now')) {
+              continue;
+            }
+            
+            // Skip non-printer products
+            if (title.toLowerCase().includes('accessory') ||
+                title.toLowerCase().includes('filament') ||
+                title.toLowerCase().includes('support') ||
+                title.toLowerCase().includes('news') ||
+                title.toLowerCase().includes('download') ||
+                title.toLowerCase().includes('software')) {
+              continue;
+            }
+            
+            // Filter for actual printer product pages
+            if (url.includes('/3d-printers/') || 
+                url.match(/\/(pro|e2|rme|forge)/i)) {
+              productUrls.set(url, title);
+            }
+          }
+          
+          console.log(`Found ${productUrls.size} potential Raise3D printer URLs from HTML parsing`);
+          
+          // Deduplicate by URL
+          const finalUrls = new Map<string, string>();
+          for (const [url, title] of productUrls) {
+            const normalizedUrl = url.split('?')[0]; // Remove query params
+            
+            if (!finalUrls.has(normalizedUrl) || title.length > finalUrls.get(normalizedUrl)!.length) {
+              finalUrls.set(normalizedUrl, title);
+            }
+          }
+          
+          // Store in modelMap with cleaned titles
+          for (const [url, title] of finalUrls) {
+            const fullUrl = url.startsWith('http') ? url : `${scrapeConfig.product_url_base}${url}`;
+            
+            // Clean up title to extract only the model name
+            let cleanTitle = title;
+            
+            // Remove status prefixes
+            cleanTitle = cleanTitle.replace(/^(New|Sale|Available|Coming\s*Soon)\s*/i, '').trim();
+            
+            // Remove brand name
+            cleanTitle = cleanTitle.replace(/\b(Raise3D|Raise)\s*/gi, '').trim();
+            
+            // Remove "3D Printer" suffix
+            cleanTitle = cleanTitle.replace(/\s*3D\s*Printer\s*$/i, '').trim();
+            
+            // Remove pricing and marketing info
+            cleanTitle = cleanTitle.split(/[\$€£¥]/)[0].trim();
+            cleanTitle = cleanTitle.split(/from\s+[\$€£¥]/i)[0].trim();
+            cleanTitle = cleanTitle.split(/learn\s*more/i)[0].trim();
+            cleanTitle = cleanTitle.split(/shop\s*now/i)[0].trim();
+            
+            // Remove common suffix patterns
+            cleanTitle = cleanTitle.replace(/[,\-–—\+]+$/, '').trim();
+            cleanTitle = cleanTitle.replace(/\s+/g, ' ').trim();
+            
+            // Skip if title is too short after cleaning
+            if (cleanTitle.length < 2) continue;
+            
+            modelMap.set(cleanTitle, fullUrl);
+            console.log(`Found Raise3D printer: ${cleanTitle} at ${fullUrl}`);
+          }
+          
+          console.log(`Found ${modelMap.size} Raise3D printer URLs after deduplication`);
         } else {
           // Generic extraction for other brands
           const lines = markdown.split('\n');
