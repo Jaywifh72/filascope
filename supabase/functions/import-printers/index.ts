@@ -94,6 +94,15 @@ function convertValue(value: string, type: "boolean" | "number" | "date" | "text
   }
 }
 
+/**
+ * Convert and round integer fields
+ * Auto-handles decimal values that should be integers
+ */
+function convertInteger(value: string): number | null {
+  const num = convertValue(value, "number");
+  return num !== null ? Math.round(num) : null;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -244,7 +253,7 @@ serve(async (req) => {
           input_shaping_supported: convertValue(row.input_shaping_supported, "boolean"),
           linear_rails_on_axes: convertValue(row.linear_rails_on_axes, "text"),
           motion_system_notes: convertValue(row.motion_system_notes, "text"),
-          extruder_count: convertValue(row.extruder_count, "number") ? Math.round(convertValue(row.extruder_count, "number")) : null,
+          extruder_count: convertInteger(row.extruder_count),
           extruder_type: convertValue(row.extruder_type, "text"),
           extruder_drive_type: convertValue(row.extruder_drive_type, "text"),
           filament_diameter_mm: convertValue(row.filament_diameter_mm, "number"),
@@ -283,7 +292,7 @@ serve(async (req) => {
           multi_material_supported: convertValue(row.multi_material_supported, "boolean"),
           native_multi_material_system: convertValue(row.native_multi_material_system, "boolean"),
           compatible_multi_material_systems: convertValue(row.compatible_multi_material_systems, "text"),
-          multi_material_max_spools: convertValue(row.multi_material_max_spools, "number") ? Math.round(convertValue(row.multi_material_max_spools, "number")) : null,
+          multi_material_max_spools: convertInteger(row.multi_material_max_spools),
           multi_material_spool_chamber_max_temp_c: convertValue(row.multi_material_spool_chamber_max_temp_c, "number"),
           multi_material_drying_capability: convertValue(row.multi_material_drying_capability, "boolean"),
           multi_material_limitations_notes: convertValue(row.multi_material_limitations_notes, "text"),
@@ -294,7 +303,7 @@ serve(async (req) => {
           has_usb_c_port: convertValue(row.has_usb_c_port, "boolean"),
           has_sd_card: convertValue(row.has_sd_card, "boolean"),
           has_micro_sd_card: convertValue(row.has_micro_sd_card, "boolean"),
-          onboard_storage_gb: convertValue(row.onboard_storage_gb, "number"),
+          onboard_storage_gb: convertInteger(row.onboard_storage_gb),
           cloud_platforms: convertValue(row.cloud_platforms, "text"),
           remote_monitoring_supported: convertValue(row.remote_monitoring_supported, "boolean"),
           remote_control_supported: convertValue(row.remote_control_supported, "boolean"),
@@ -334,7 +343,7 @@ serve(async (req) => {
           rating_print_quality: convertValue(row.rating_print_quality, "number"),
           rating_reliability: convertValue(row.rating_reliability, "number"),
           rating_value_for_money: convertValue(row.rating_value_for_money, "number"),
-          review_count_aggregated: convertValue(row.review_count_aggregated, "number") ? Math.floor(convertValue(row.review_count_aggregated, "number")) : null,
+          review_count_aggregated: convertInteger(row.review_count_aggregated),
           community_popularity_score: convertValue(row.community_popularity_score, "number"),
           common_mods_tags: convertValue(row.common_mods_tags, "text"),
           compatible_plate_types: convertValue(row.compatible_plate_types, "text"),
