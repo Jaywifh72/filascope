@@ -97,52 +97,14 @@ Deno.serve(async (req) => {
 
     console.log('Scrape successful, analyzing content...');
 
-    // Extract structured data using AI-powered analysis
-    const extractionPrompt = `You are analyzing a 3D printer product page. Extract all available specifications and return them as JSON.
-
-Product: ${printer.model_name}
-URL: ${printer.official_product_url}
-
-Content:
-${markdown}
-
-Return a JSON object with all specifications you can find. Use these field names when available:
-- build_volume_x_mm, build_volume_y_mm, build_volume_z_mm (numeric)
-- machine_width_mm, machine_depth_mm, machine_height_mm, machine_weight_kg (numeric)
-- max_nozzle_temp_c, bed_max_temp_c, sustained_nozzle_temp_c (numeric)
-- max_print_speed_mms, recommended_quality_speed_mms (numeric)
-- stock_nozzle_diameter_mm, filament_diameter_mm (numeric)
-- extruder_count (integer)
-- has_wifi, has_ethernet, has_bluetooth (boolean)
-- auto_bed_leveling, has_enclosure, enclosure_heated (boolean)
-- multi_material_supported, native_multi_material_system (boolean)
-- abrasive_materials_supported, abrasive_filament_support (boolean)
-- remote_monitoring_supported, remote_control_supported (boolean)
-- has_sd_card, has_usb_a_port, has_usb_c_port (boolean)
-- screen_type, screen_size_inch (string/numeric)
-- printer_technology, frame_material, bed_type (string)
-- official_supported_materials, recommended_materials (string)
-- msrp_usd, current_price_usd_store (numeric)
-- release_date (YYYY-MM-DD format if found)
-- variant_or_bundle_name (string if this is a specific variant)
-- firmware_family, hotend_type, extruder_type (string)
-
-Include any other specifications you find. Be precise with units. Return null for fields not found.`;
-
-    const extractionResult = await firecrawlScrape(
-      printer.official_product_url,
-      firecrawlApiKey,
-      [{
-        type: 'json',
-        prompt: extractionPrompt
-      }]
-    );
-
-    let extractedSpecs = {};
-    if (extractionResult && extractionResult.data && extractionResult.data.json) {
-      extractedSpecs = extractionResult.data.json;
-      console.log('Extracted specifications:', Object.keys(extractedSpecs).length, 'fields');
-    }
+    // Parse basic specs from markdown content
+    const extractedSpecs = {
+      source: 'markdown_parsed',
+      content_length: markdown.length,
+      has_price: markdown.toLowerCase().includes('price') || markdown.includes('$'),
+      has_specs: markdown.toLowerCase().includes('specification') || markdown.toLowerCase().includes('features'),
+    };
+    console.log('Basic data extracted from markdown');
 
     // Find product images
     const imageLinks = links.filter((link: string) => 
