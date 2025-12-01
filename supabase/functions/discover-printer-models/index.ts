@@ -770,9 +770,8 @@ Deno.serve(async (req) => {
               continue;
             }
             
-            // Validate it's a V-Core model
-            const isValidModel = /v-?core/i.test(cleanTitle);
-            if (!isValidModel) {
+            // Validate it contains "V-Core" in the name
+            if (!cleanTitle.toLowerCase().includes('v-core') && !cleanTitle.toLowerCase().includes('vcore')) {
               console.log(`Skipping non-V-Core item: ${cleanTitle}`);
               continue;
             }
