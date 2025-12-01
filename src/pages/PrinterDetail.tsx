@@ -21,6 +21,8 @@ import {
   Wifi,
   Monitor,
   Package,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 
 const PrinterDetail = () => {
@@ -323,13 +325,61 @@ const PrinterDetail = () => {
               <SpecRow label="Max Material Temp" value={printer.max_recommended_material_temp_c} unit="°C" />
             </SpecSection>
 
-            <SpecSection title="Multi-Material" icon={Layers}>
-              <SpecRow label="Multi-Material Supported" value={printer.multi_material_supported} />
-              <SpecRow label="Native Multi-Material System" value={printer.native_multi_material_system} />
-              <SpecRow label="Compatible Systems" value={printer.compatible_multi_material_systems} />
-              <SpecRow label="Max Spools" value={printer.multi_material_max_spools} />
-              <SpecRow label="Spool Chamber Max Temp" value={printer.multi_material_spool_chamber_max_temp_c} unit="°C" />
-              <SpecRow label="Drying Capability" value={printer.multi_material_drying_capability} />
+            <SpecSection title="Multi-Material System Compatibility" icon={Layers}>
+              <div className="space-y-3">
+                {(() => {
+                  const compatibleSystems = printer.compatible_multi_material_systems 
+                    ? printer.compatible_multi_material_systems.toLowerCase().split(/[,;|]/).map(s => s.trim())
+                    : [];
+                  
+                  const allSystems = [
+                    { name: "Bambu Lab AMS", key: "ams" },
+                    { name: "Bambu Lab AMS Lite", key: "ams lite" },
+                    { name: "Prusa MMU2S", key: "mmu2s" },
+                    { name: "Prusa MMU3", key: "mmu3" },
+                    { name: "E3D ToolChanger", key: "toolchanger" },
+                    { name: "Mosaic Palette", key: "palette" },
+                    { name: "ERCF (Enraged Rabbit)", key: "ercf" },
+                    { name: "3DChameleon", key: "3dchameleon" },
+                  ];
+
+                  return allSystems.map(system => {
+                    const isCompatible = compatibleSystems.some(cs => 
+                      cs.includes(system.key.toLowerCase()) || 
+                      system.key.toLowerCase().includes(cs)
+                    );
+
+                    return (
+                      <div key={system.key} className="flex items-center justify-between py-2 border-b border-border/50">
+                        <span className="text-muted-foreground">{system.name}</span>
+                        <div className="flex items-center gap-2">
+                          {isCompatible ? (
+                            <>
+                              <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              <span className="font-medium text-green-600">Compatible</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="h-5 w-5 text-destructive" />
+                              <span className="font-medium text-muted-foreground">Not Compatible</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+              
+              <Separator className="my-4" />
+              
+              <div className="space-y-1 mt-4">
+                <SpecRow label="Multi-Material Supported" value={printer.multi_material_supported} />
+                <SpecRow label="Native Multi-Material System" value={printer.native_multi_material_system} />
+                <SpecRow label="Max Spools" value={printer.multi_material_max_spools} />
+                <SpecRow label="Spool Chamber Max Temp" value={printer.multi_material_spool_chamber_max_temp_c} unit="°C" />
+                <SpecRow label="Drying Capability" value={printer.multi_material_drying_capability} />
+              </div>
             </SpecSection>
           </TabsContent>
 
