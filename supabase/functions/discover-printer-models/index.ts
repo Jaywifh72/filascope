@@ -517,6 +517,83 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} FLSUN printer URLs after deduplication`);
+        } else if (brand.brand.toLowerCase() === 'prusa research') {
+          // Prusa Research: Extract printers from WordPress-based site
+          // Look for product links in HTML
+          const linkPattern = /<a[^>]+href="([^"]*\/product\/[^"]+)"[^>]*>([^<]*(?:<[^>]+>[^<]*)*?)<\/a>/gi;
+          const linkMatches = html.matchAll(linkPattern);
+          const productUrls = new Map<string, string>(); // url -> title
+          
+          for (const match of linkMatches) {
+            const url = match[1];
+            let title = match[2].replace(/<[^>]+>/g, '').trim(); // Strip HTML tags
+            
+            // Skip empty titles
+            if (!title || title.length < 3) continue;
+            
+            // Skip navigation/UI links
+            if (title.toLowerCase().includes('skip to') || 
+                title.toLowerCase().includes('search') ||
+                title.toLowerCase().includes('cart') ||
+                title.toLowerCase().includes('account') ||
+                title.toLowerCase().includes('menu') ||
+                title.toLowerCase().includes('compare')) {
+              continue;
+            }
+            
+            // Skip non-printer products (accessories, upgrades, kits)
+            if (title.toLowerCase().includes('upgrade') ||
+                title.toLowerCase().includes('spare') ||
+                title.toLowerCase().includes('accessory') ||
+                title.toLowerCase().includes('filament') ||
+                title.toLowerCase().includes('nozzle') ||
+                title.toLowerCase().includes('sheet') ||
+                title.toLowerCase().includes('enclosure') ||
+                title.toLowerCase().includes('tool') ||
+                title.toLowerCase().includes('kit') && !title.toLowerCase().includes('3d printer kit')) {
+              continue;
+            }
+            
+            // Must contain printer-related keywords or known Prusa model names
+            const isPrinterLike = title.toLowerCase().includes('printer') ||
+                                 title.toLowerCase().includes('3d') ||
+                                 title.toLowerCase().match(/\b(mk[234]s?|xl|mini|core one|i3)\b/i); // Common Prusa models
+            
+            if (!isPrinterLike) continue;
+            
+            productUrls.set(url, title);
+          }
+          
+          console.log(`Found ${productUrls.size} potential Prusa printer URLs from HTML parsing`);
+          
+          // Deduplicate by URL and take the longest/most descriptive title
+          const finalUrls = new Map<string, string>();
+          for (const [url, title] of productUrls) {
+            const normalizedUrl = url.split('?')[0]; // Remove query params
+            
+            if (!finalUrls.has(normalizedUrl) || title.length > finalUrls.get(normalizedUrl)!.length) {
+              finalUrls.set(normalizedUrl, title);
+            }
+          }
+          
+          // Store in modelMap
+          for (const [url, title] of finalUrls) {
+            const fullUrl = url.startsWith('http') ? url : `${scrapeConfig.product_url_base}${url}`;
+            
+            // Clean up title - normalize Prusa naming
+            let cleanTitle = title;
+            // Remove "Original Prusa" prefix if present for consistency (we know it's Prusa)
+            if (cleanTitle.toLowerCase().startsWith('original prusa ')) {
+              cleanTitle = cleanTitle.substring(15).trim();
+            } else if (cleanTitle.toLowerCase().startsWith('prusa ')) {
+              cleanTitle = cleanTitle.substring(6).trim();
+            }
+            
+            modelMap.set(cleanTitle, fullUrl);
+            console.log(`Found Prusa printer: ${cleanTitle} at ${fullUrl}`);
+          }
+          
+          console.log(`Found ${modelMap.size} Prusa printer URLs after deduplication`);
         } else {
           // Generic extraction for other brands
           const lines = markdown.split('\n');
