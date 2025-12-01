@@ -326,6 +326,29 @@ export default function AdminPrinters() {
 
   const selectedBrandData = brands?.find(b => b.id === selectedBrand);
 
+  // Helper to render spec fields with status indicator
+  const renderSpecField = (label: string, value: any, unit?: string) => {
+    const hasValue = value !== null && value !== undefined && value !== '';
+    const displayValue = typeof value === 'boolean' 
+      ? (value ? 'Yes' : 'No')
+      : value !== null && value !== undefined && value !== ''
+        ? `${value}${unit ? ' ' + unit : ''}`
+        : 'Not found';
+    
+    return (
+      <div className="flex items-center gap-2 py-1">
+        {hasValue ? (
+          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+        ) : (
+          <XCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+        )}
+        <span className={hasValue ? 'text-foreground' : 'text-muted-foreground'}>
+          <span className="font-medium">{label}:</span> {displayValue}
+        </span>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -873,12 +896,92 @@ export default function AdminPrinters() {
                                     </div>
                                   </div>
                                   
-                                  {(printer.scraped_data as any)?.extracted_specs && Object.keys((printer.scraped_data as any).extracted_specs).length > 0 && (
-                                    <div>
+                                  {(printer.scraped_data as any)?.extracted_specs && (
+                                    <div className="space-y-4">
                                       <div className="font-semibold mb-2">Extracted Specifications</div>
-                                      <pre className="p-3 bg-muted rounded text-xs overflow-auto max-h-60">
-                                        {JSON.stringify((printer.scraped_data as any).extracted_specs, null, 2)}
-                                      </pre>
+                                      
+                                      {/* Dimensions */}
+                                      <div>
+                                        <h5 className="text-sm font-medium mb-2">Build Volume & Dimensions</h5>
+                                        <div className="grid grid-cols-2 gap-1 text-sm">
+                                          {renderSpecField('Build Volume X', (printer.scraped_data as any).extracted_specs.build_volume_x_mm, 'mm')}
+                                          {renderSpecField('Build Volume Y', (printer.scraped_data as any).extracted_specs.build_volume_y_mm, 'mm')}
+                                          {renderSpecField('Build Volume Z', (printer.scraped_data as any).extracted_specs.build_volume_z_mm, 'mm')}
+                                          {renderSpecField('Machine Width', (printer.scraped_data as any).extracted_specs.machine_width_mm, 'mm')}
+                                          {renderSpecField('Machine Depth', (printer.scraped_data as any).extracted_specs.machine_depth_mm, 'mm')}
+                                          {renderSpecField('Machine Height', (printer.scraped_data as any).extracted_specs.machine_height_mm, 'mm')}
+                                          {renderSpecField('Weight', (printer.scraped_data as any).extracted_specs.machine_weight_kg, 'kg')}
+                                        </div>
+                                      </div>
+
+                                      {/* Temperatures */}
+                                      <div>
+                                        <h5 className="text-sm font-medium mb-2">Temperature Capabilities</h5>
+                                        <div className="grid grid-cols-2 gap-1 text-sm">
+                                          {renderSpecField('Max Nozzle Temp', (printer.scraped_data as any).extracted_specs.max_nozzle_temp_c, '°C')}
+                                          {renderSpecField('Bed Max Temp', (printer.scraped_data as any).extracted_specs.bed_max_temp_c, '°C')}
+                                          {renderSpecField('Sustained Temp', (printer.scraped_data as any).extracted_specs.sustained_nozzle_temp_c, '°C')}
+                                        </div>
+                                      </div>
+
+                                      {/* Speed & Performance */}
+                                      <div>
+                                        <h5 className="text-sm font-medium mb-2">Speed & Performance</h5>
+                                        <div className="grid grid-cols-2 gap-1 text-sm">
+                                          {renderSpecField('Max Print Speed', (printer.scraped_data as any).extracted_specs.max_print_speed_mms, 'mm/s')}
+                                          {renderSpecField('Recommended Speed', (printer.scraped_data as any).extracted_specs.recommended_quality_speed_mms, 'mm/s')}
+                                          {renderSpecField('Acceleration', (printer.scraped_data as any).extracted_specs.max_acceleration_xy_mmss, 'mm/s²')}
+                                        </div>
+                                      </div>
+
+                                      {/* Extruder & Nozzle */}
+                                      <div>
+                                        <h5 className="text-sm font-medium mb-2">Extruder & Nozzle</h5>
+                                        <div className="grid grid-cols-2 gap-1 text-sm">
+                                          {renderSpecField('Nozzle Diameter', (printer.scraped_data as any).extracted_specs.stock_nozzle_diameter_mm, 'mm')}
+                                          {renderSpecField('Filament Diameter', (printer.scraped_data as any).extracted_specs.filament_diameter_mm, 'mm')}
+                                          {renderSpecField('Extruder Count', (printer.scraped_data as any).extracted_specs.extruder_count)}
+                                        </div>
+                                      </div>
+
+                                      {/* Connectivity */}
+                                      <div>
+                                        <h5 className="text-sm font-medium mb-2">Connectivity</h5>
+                                        <div className="grid grid-cols-2 gap-1 text-sm">
+                                          {renderSpecField('WiFi', (printer.scraped_data as any).extracted_specs.has_wifi)}
+                                          {renderSpecField('Ethernet', (printer.scraped_data as any).extracted_specs.has_ethernet)}
+                                          {renderSpecField('Bluetooth', (printer.scraped_data as any).extracted_specs.has_bluetooth)}
+                                          {renderSpecField('USB-A Port', (printer.scraped_data as any).extracted_specs.has_usb_a_port)}
+                                          {renderSpecField('USB-C Port', (printer.scraped_data as any).extracted_specs.has_usb_c_port)}
+                                          {renderSpecField('SD Card', (printer.scraped_data as any).extracted_specs.has_sd_card)}
+                                        </div>
+                                      </div>
+
+                                      {/* Features */}
+                                      <div>
+                                        <h5 className="text-sm font-medium mb-2">Features</h5>
+                                        <div className="grid grid-cols-2 gap-1 text-sm">
+                                          {renderSpecField('Auto Bed Leveling', (printer.scraped_data as any).extracted_specs.auto_bed_leveling)}
+                                          {renderSpecField('Enclosure', (printer.scraped_data as any).extracted_specs.has_enclosure)}
+                                          {renderSpecField('Heated Enclosure', (printer.scraped_data as any).extracted_specs.enclosure_heated)}
+                                          {renderSpecField('Multi-Material', (printer.scraped_data as any).extracted_specs.multi_material_supported)}
+                                          {renderSpecField('Abrasive Support', (printer.scraped_data as any).extracted_specs.abrasive_materials_supported)}
+                                          {renderSpecField('Remote Monitoring', (printer.scraped_data as any).extracted_specs.remote_monitoring_supported)}
+                                          {renderSpecField('Remote Control', (printer.scraped_data as any).extracted_specs.remote_control_supported)}
+                                          {renderSpecField('Input Shaping', (printer.scraped_data as any).extracted_specs.input_shaping_supported)}
+                                        </div>
+                                      </div>
+
+                                      {/* Display & Other */}
+                                      <div>
+                                        <h5 className="text-sm font-medium mb-2">Display & Other</h5>
+                                        <div className="grid grid-cols-2 gap-1 text-sm">
+                                          {renderSpecField('Screen Type', (printer.scraped_data as any).extracted_specs.screen_type)}
+                                          {renderSpecField('Screen Size', (printer.scraped_data as any).extracted_specs.screen_size_inch, '"')}
+                                          {renderSpecField('Technology', (printer.scraped_data as any).extracted_specs.printer_technology)}
+                                          {renderSpecField('MSRP', (printer.scraped_data as any).extracted_specs.msrp_usd, 'USD')}
+                                        </div>
+                                      </div>
                                     </div>
                                   )}
                                   
