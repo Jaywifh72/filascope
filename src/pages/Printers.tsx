@@ -269,12 +269,13 @@ export default function Printers() {
               <Card key={printer.id} className="p-6 space-y-4 relative">
                 {/* Compare Checkbox, View Button, and Rescrape Button */}
                 <div className="absolute top-4 right-4 flex gap-2">
-                  {isAdmin && (
+                  {isAdmin && printer.official_product_url && (
                     <Button 
                       variant="ghost" 
                       size="icon"
                       onClick={() => rescrapeMutation.mutate(printer.id)}
                       disabled={rescrapeMutation.isPending}
+                      title="Re-scrape printer data from official product page"
                     >
                       <RefreshCw className={`h-4 w-4 ${rescrapeMutation.isPending ? 'animate-spin' : ''}`} />
                     </Button>
