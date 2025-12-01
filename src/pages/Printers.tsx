@@ -141,6 +141,7 @@ export default function Printers() {
       const { error } = await supabase
         .from("printers")
         .update({
+          status: "pending",
           scrape_status: "not_started",
           scraped_data: null,
           scrape_error: null,
