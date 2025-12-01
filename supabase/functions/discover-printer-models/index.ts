@@ -675,17 +675,19 @@ Deno.serve(async (req) => {
           for (const [url, title] of finalUrls) {
             const fullUrl = url.startsWith('http') ? url : `${scrapeConfig.product_url_base}${url}`;
             
-            // Clean up title - remove "QIDI" prefix and extra info
+            // Clean up title to extract only the model name
             let cleanTitle = title;
             
-            // Remove "QIDI" or "QIDI Tech" prefix if present
-            if (cleanTitle.toLowerCase().startsWith('qidi tech ')) {
-              cleanTitle = cleanTitle.substring(10).trim();
-            } else if (cleanTitle.toLowerCase().startsWith('qidi ')) {
-              cleanTitle = cleanTitle.substring(5).trim();
-            }
+            // Remove status prefixes first (Sale, Sold out, etc.)
+            cleanTitle = cleanTitle.replace(/^(Sale|Sold\s*out)\s*/i, '').trim();
             
-            // Remove everything after certain markers
+            // Remove brand names (QIDI, Qidi, Qidi Tech)
+            cleanTitle = cleanTitle.replace(/\b(QIDI|Qidi)(\s*Tech)?\s*/gi, '').trim();
+            
+            // Remove "3D Printer" suffix
+            cleanTitle = cleanTitle.replace(/\s*3D\s*Printer\s*$/i, '').trim();
+            
+            // Remove everything after certain markers (pricing, stock info)
             cleanTitle = cleanTitle.split(/[\$€£¥]/)[0].trim(); // Remove from currency symbols onward
             cleanTitle = cleanTitle.split(/from\s+[\$€£¥]/i)[0].trim(); // Remove "from $X" pricing
             cleanTitle = cleanTitle.split(/in\s*stock/i)[0].trim(); // Remove "In stock"
@@ -693,7 +695,7 @@ Deno.serve(async (req) => {
             cleanTitle = cleanTitle.split(/pre-?order/i)[0].trim(); // Remove "Pre-order"
             cleanTitle = cleanTitle.split(/ships?\s+in/i)[0].trim(); // Remove shipping info
             
-            // Remove common suffix patterns
+            // Remove common suffix patterns and extra whitespace
             cleanTitle = cleanTitle.replace(/\+\s*$/i, '').trim(); // Remove trailing "+"
             cleanTitle = cleanTitle.replace(/[,\-–—\+]+$/, '').trim();
             cleanTitle = cleanTitle.replace(/^\+\s*/, '').trim();
