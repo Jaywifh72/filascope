@@ -1,14 +1,16 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GitCompare, X, ExternalLink, Eye } from "lucide-react";
+import { GitCompare, X, ExternalLink, Eye, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
@@ -18,6 +20,7 @@ type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
 
 export default function Printers() {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
   const [selectedMaterial, setSelectedMaterial] = useState("all");
@@ -133,6 +136,28 @@ export default function Printers() {
     setSelectedForCompare([]);
   };
 
+  const rescrapeMutation = useMutation({
+    mutationFn: async (printerId: string) => {
+      const { error } = await supabase
+        .from("printers")
+        .update({
+          scrape_status: "not_started",
+          scraped_data: null,
+          scrape_error: null,
+        })
+        .eq("id", printerId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Printer queued for rescraping");
+    },
+    onError: (error) => {
+      toast.error("Failed to queue printer for rescraping");
+      console.error(error);
+    },
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-[1800px] mx-auto p-6 space-y-6">
@@ -241,8 +266,18 @@ export default function Printers() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPrinters.map((printer) => (
               <Card key={printer.id} className="p-6 space-y-4 relative">
-                {/* Compare Checkbox and View Button */}
+                {/* Compare Checkbox, View Button, and Rescrape Button */}
                 <div className="absolute top-4 right-4 flex gap-2">
+                  {isAdmin && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => rescrapeMutation.mutate(printer.id)}
+                      disabled={rescrapeMutation.isPending}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${rescrapeMutation.isPending ? 'animate-spin' : ''}`} />
+                    </Button>
+                  )}
                   <Link to={`/printers/${printer.id}`}>
                     <Button variant="ghost" size="icon">
                       <Eye className="h-4 w-4" />
