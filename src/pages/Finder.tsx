@@ -11,6 +11,10 @@ import { ExternalLink, ChevronDown, GitCompare, X } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "@/components/LikeButton";
+import { PrinterSelector } from "@/components/PrinterSelector";
+import { usePrinterSelection } from "@/hooks/usePrinterSelection";
+import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
+import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 
 const Finder = () => {
   const navigate = useNavigate();
@@ -25,6 +29,9 @@ const Finder = () => {
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("score-desc");
+  
+  // Printer selection hook
+  const { selectedPrinter } = usePrinterSelection();
 
   // Normalize variant names to group similar variants
   const normalizeVariantName = (material: string, base: string): string => {
@@ -592,18 +599,12 @@ const Finder = () => {
     <div className="flex min-h-screen">
       {/* Left Sidebar */}
       <aside className="w-72 border-r border-border bg-card/50 backdrop-blur-sm p-6 space-y-6 sticky top-0 h-screen overflow-y-auto shrink-0">
+        <PrinterSelector />
+        
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <span>🖨️</span> Your Printer
+            <span>🖨️</span> Compatibility Filters
           </h3>
-          <Select defaultValue="all">
-            <SelectTrigger className="bg-background border-border">
-              <SelectValue placeholder="Brand" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border-border z-50">
-              <SelectItem value="all">All Brands</SelectItem>
-            </SelectContent>
-          </Select>
           <Select defaultValue="all">
             <SelectTrigger className="bg-background border-border">
               <SelectValue placeholder="Model" />

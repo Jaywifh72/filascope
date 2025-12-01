@@ -351,6 +351,27 @@ export type Database = {
           },
         ]
       }
+      printer_brands: {
+        Row: {
+          brand: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          brand: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          brand?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       printer_compatibility: {
         Row: {
           ams_fit: boolean | null
@@ -387,35 +408,495 @@ export type Database = {
             referencedRelation: "filaments"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      printer_series: {
+        Row: {
+          brand_id: string | null
+          created_at: string | null
+          id: string
+          series_name: string
+        }
+        Insert: {
+          brand_id?: string | null
+          created_at?: string | null
+          id?: string
+          series_name: string
+        }
+        Update: {
+          brand_id?: string | null
+          created_at?: string | null
+          id?: string
+          series_name?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "printer_compatibility_printer_id_fkey"
-            columns: ["printer_id"]
+            foreignKeyName: "printer_series_brand_id_fkey"
+            columns: ["brand_id"]
             isOneToOne: false
-            referencedRelation: "printers"
+            referencedRelation: "printer_brands"
             referencedColumns: ["id"]
           },
         ]
       }
       printers: {
         Row: {
-          brand: string
+          abl_technique: string | null
+          abrasive_filament_support: boolean | null
+          abrasive_materials_supported: boolean | null
+          amazon_url_ca: string | null
+          amazon_url_uk: string | null
+          amazon_url_us: string | null
+          assembly_required: boolean | null
+          auto_bed_leveling: boolean | null
+          auto_bed_leveling_method: string | null
+          average_assembly_time_min: number | null
+          bed_heated: boolean | null
+          bed_heater_power_w: number | null
+          bed_max_temp_c: number | null
+          bed_size_x_mm: number | null
+          bed_size_y_mm: number | null
+          bed_type: string | null
+          belt_tensioning_method: string | null
+          brand_id: string | null
+          build_volume_shape: string | null
+          build_volume_x_mm: number | null
+          build_volume_y_mm: number | null
+          build_volume_z_mm: number | null
+          cloud_platforms: string | null
+          common_failure_points: string | null
+          common_mods_tags: string | null
+          community_popularity_score: number | null
+          compatible_multi_material_systems: string | null
+          compatible_plate_types: string | null
+          control_knob: boolean | null
           created_at: string | null
+          current_price_usd_amazon: number | null
+          current_price_usd_store: number | null
+          data_quality_notes: string | null
+          data_source_priority: string | null
+          data_source_urls: string | null
+          default_plate_type: string | null
+          discontinued: boolean | null
+          discontinued_date: string | null
+          door_sensor: boolean | null
+          ean_upc: string | null
+          enclosure_heated: boolean | null
+          enclosure_max_temp_c: number | null
+          enclosure_type: string | null
+          extruder_count: number | null
+          extruder_drive_type: string | null
+          extruder_notes: string | null
+          extruder_type: string | null
+          filament_diameter_mm: number | null
+          filter_type: string | null
+          firmware_family: string | null
+          firmware_open_source: boolean | null
+          first_layer_assist_features: string | null
+          frame_material: string | null
+          has_bluetooth: boolean | null
+          has_enclosure: boolean | null
+          has_ethernet: boolean | null
+          has_micro_sd_card: boolean | null
+          has_sd_card: boolean | null
+          has_usb_a_port: boolean | null
+          has_usb_c_port: boolean | null
+          has_wifi: boolean | null
+          hotend_brand_model: string | null
+          hotend_type: string | null
           id: string
-          model: string
+          input_shaping_supported: boolean | null
+          internal_lighting: boolean | null
+          last_verified_utc: string | null
+          linear_rails_on_axes: string | null
+          machine_depth_mm: number | null
+          machine_height_mm: number | null
+          machine_style: string | null
+          machine_weight_kg: number | null
+          machine_width_mm: number | null
+          maintenance_interval_hours: number | null
+          marketing_tags: string | null
+          materials_notes: string | null
+          max_acceleration_xy_mmss: number | null
+          max_acceleration_z_mmss: number | null
+          max_build_height_with_ams_mm: number | null
+          max_flow_rate_mm3s: number | null
+          max_nozzle_temp_c: number | null
+          max_print_speed_mms: number | null
+          max_recommended_material_temp_c: number | null
+          max_travel_speed_xy_mms: number | null
+          model_name: string
+          motion_system_notes: string | null
+          msrp_cad: number | null
+          msrp_eur: number | null
+          msrp_usd: number | null
+          multi_material_drying_capability: boolean | null
+          multi_material_limitations_notes: string | null
+          multi_material_max_spools: number | null
+          multi_material_spool_chamber_max_temp_c: number | null
+          multi_material_supported: boolean | null
+          native_multi_material_system: boolean | null
+          noise_level_idle_db: number | null
+          noise_level_printing_db: number | null
+          nozzle_change_ease: string | null
+          nozzle_material: string | null
+          official_product_url: string | null
+          official_store_url: string | null
+          official_supported_materials: string | null
+          onboard_storage_gb: number | null
+          other_retailer_urls: string | null
+          power_input_voltage: string | null
+          power_loss_recovery: boolean | null
+          power_supply_type: string | null
+          price_tier: string | null
+          printer_id: string
+          printer_profile_slug_in_slicers: string | null
+          printer_technology: string | null
+          rated_power_w: number | null
+          rating_community_overall: number | null
+          rating_ease_of_use: number | null
+          rating_print_quality: number | null
+          rating_reliability: number | null
+          rating_value_for_money: number | null
+          recommended_materials: string | null
+          recommended_quality_speed_mms: number | null
+          recommended_upgrades: string | null
+          release_date: string | null
+          remote_control_supported: boolean | null
+          remote_monitoring_supported: boolean | null
+          review_count_aggregated: number | null
+          safety_certifications: string | null
+          safety_notes: string | null
+          screen_resolution: string | null
+          screen_size_inch: number | null
+          screen_type: string | null
+          series_id: string | null
+          sku: string | null
+          smoke_sensor: boolean | null
+          stock_nozzle_diameter_mm: number | null
+          stock_plate_types: string | null
+          supported_nozzle_diameters_mm: string | null
+          supported_plate_types: string | null
+          sustained_nozzle_temp_c: number | null
+          target_user_segment: string | null
+          temperature_sensors: string | null
+          thermal_runaway_protection: boolean | null
+          typical_power_abs_w: number | null
+          typical_power_pla_w: number | null
+          ui_language_options: string | null
+          updated_at: string | null
+          variant_or_bundle_name: string | null
         }
         Insert: {
-          brand: string
+          abl_technique?: string | null
+          abrasive_filament_support?: boolean | null
+          abrasive_materials_supported?: boolean | null
+          amazon_url_ca?: string | null
+          amazon_url_uk?: string | null
+          amazon_url_us?: string | null
+          assembly_required?: boolean | null
+          auto_bed_leveling?: boolean | null
+          auto_bed_leveling_method?: string | null
+          average_assembly_time_min?: number | null
+          bed_heated?: boolean | null
+          bed_heater_power_w?: number | null
+          bed_max_temp_c?: number | null
+          bed_size_x_mm?: number | null
+          bed_size_y_mm?: number | null
+          bed_type?: string | null
+          belt_tensioning_method?: string | null
+          brand_id?: string | null
+          build_volume_shape?: string | null
+          build_volume_x_mm?: number | null
+          build_volume_y_mm?: number | null
+          build_volume_z_mm?: number | null
+          cloud_platforms?: string | null
+          common_failure_points?: string | null
+          common_mods_tags?: string | null
+          community_popularity_score?: number | null
+          compatible_multi_material_systems?: string | null
+          compatible_plate_types?: string | null
+          control_knob?: boolean | null
           created_at?: string | null
+          current_price_usd_amazon?: number | null
+          current_price_usd_store?: number | null
+          data_quality_notes?: string | null
+          data_source_priority?: string | null
+          data_source_urls?: string | null
+          default_plate_type?: string | null
+          discontinued?: boolean | null
+          discontinued_date?: string | null
+          door_sensor?: boolean | null
+          ean_upc?: string | null
+          enclosure_heated?: boolean | null
+          enclosure_max_temp_c?: number | null
+          enclosure_type?: string | null
+          extruder_count?: number | null
+          extruder_drive_type?: string | null
+          extruder_notes?: string | null
+          extruder_type?: string | null
+          filament_diameter_mm?: number | null
+          filter_type?: string | null
+          firmware_family?: string | null
+          firmware_open_source?: boolean | null
+          first_layer_assist_features?: string | null
+          frame_material?: string | null
+          has_bluetooth?: boolean | null
+          has_enclosure?: boolean | null
+          has_ethernet?: boolean | null
+          has_micro_sd_card?: boolean | null
+          has_sd_card?: boolean | null
+          has_usb_a_port?: boolean | null
+          has_usb_c_port?: boolean | null
+          has_wifi?: boolean | null
+          hotend_brand_model?: string | null
+          hotend_type?: string | null
           id?: string
-          model: string
+          input_shaping_supported?: boolean | null
+          internal_lighting?: boolean | null
+          last_verified_utc?: string | null
+          linear_rails_on_axes?: string | null
+          machine_depth_mm?: number | null
+          machine_height_mm?: number | null
+          machine_style?: string | null
+          machine_weight_kg?: number | null
+          machine_width_mm?: number | null
+          maintenance_interval_hours?: number | null
+          marketing_tags?: string | null
+          materials_notes?: string | null
+          max_acceleration_xy_mmss?: number | null
+          max_acceleration_z_mmss?: number | null
+          max_build_height_with_ams_mm?: number | null
+          max_flow_rate_mm3s?: number | null
+          max_nozzle_temp_c?: number | null
+          max_print_speed_mms?: number | null
+          max_recommended_material_temp_c?: number | null
+          max_travel_speed_xy_mms?: number | null
+          model_name: string
+          motion_system_notes?: string | null
+          msrp_cad?: number | null
+          msrp_eur?: number | null
+          msrp_usd?: number | null
+          multi_material_drying_capability?: boolean | null
+          multi_material_limitations_notes?: string | null
+          multi_material_max_spools?: number | null
+          multi_material_spool_chamber_max_temp_c?: number | null
+          multi_material_supported?: boolean | null
+          native_multi_material_system?: boolean | null
+          noise_level_idle_db?: number | null
+          noise_level_printing_db?: number | null
+          nozzle_change_ease?: string | null
+          nozzle_material?: string | null
+          official_product_url?: string | null
+          official_store_url?: string | null
+          official_supported_materials?: string | null
+          onboard_storage_gb?: number | null
+          other_retailer_urls?: string | null
+          power_input_voltage?: string | null
+          power_loss_recovery?: boolean | null
+          power_supply_type?: string | null
+          price_tier?: string | null
+          printer_id: string
+          printer_profile_slug_in_slicers?: string | null
+          printer_technology?: string | null
+          rated_power_w?: number | null
+          rating_community_overall?: number | null
+          rating_ease_of_use?: number | null
+          rating_print_quality?: number | null
+          rating_reliability?: number | null
+          rating_value_for_money?: number | null
+          recommended_materials?: string | null
+          recommended_quality_speed_mms?: number | null
+          recommended_upgrades?: string | null
+          release_date?: string | null
+          remote_control_supported?: boolean | null
+          remote_monitoring_supported?: boolean | null
+          review_count_aggregated?: number | null
+          safety_certifications?: string | null
+          safety_notes?: string | null
+          screen_resolution?: string | null
+          screen_size_inch?: number | null
+          screen_type?: string | null
+          series_id?: string | null
+          sku?: string | null
+          smoke_sensor?: boolean | null
+          stock_nozzle_diameter_mm?: number | null
+          stock_plate_types?: string | null
+          supported_nozzle_diameters_mm?: string | null
+          supported_plate_types?: string | null
+          sustained_nozzle_temp_c?: number | null
+          target_user_segment?: string | null
+          temperature_sensors?: string | null
+          thermal_runaway_protection?: boolean | null
+          typical_power_abs_w?: number | null
+          typical_power_pla_w?: number | null
+          ui_language_options?: string | null
+          updated_at?: string | null
+          variant_or_bundle_name?: string | null
         }
         Update: {
-          brand?: string
+          abl_technique?: string | null
+          abrasive_filament_support?: boolean | null
+          abrasive_materials_supported?: boolean | null
+          amazon_url_ca?: string | null
+          amazon_url_uk?: string | null
+          amazon_url_us?: string | null
+          assembly_required?: boolean | null
+          auto_bed_leveling?: boolean | null
+          auto_bed_leveling_method?: string | null
+          average_assembly_time_min?: number | null
+          bed_heated?: boolean | null
+          bed_heater_power_w?: number | null
+          bed_max_temp_c?: number | null
+          bed_size_x_mm?: number | null
+          bed_size_y_mm?: number | null
+          bed_type?: string | null
+          belt_tensioning_method?: string | null
+          brand_id?: string | null
+          build_volume_shape?: string | null
+          build_volume_x_mm?: number | null
+          build_volume_y_mm?: number | null
+          build_volume_z_mm?: number | null
+          cloud_platforms?: string | null
+          common_failure_points?: string | null
+          common_mods_tags?: string | null
+          community_popularity_score?: number | null
+          compatible_multi_material_systems?: string | null
+          compatible_plate_types?: string | null
+          control_knob?: boolean | null
           created_at?: string | null
+          current_price_usd_amazon?: number | null
+          current_price_usd_store?: number | null
+          data_quality_notes?: string | null
+          data_source_priority?: string | null
+          data_source_urls?: string | null
+          default_plate_type?: string | null
+          discontinued?: boolean | null
+          discontinued_date?: string | null
+          door_sensor?: boolean | null
+          ean_upc?: string | null
+          enclosure_heated?: boolean | null
+          enclosure_max_temp_c?: number | null
+          enclosure_type?: string | null
+          extruder_count?: number | null
+          extruder_drive_type?: string | null
+          extruder_notes?: string | null
+          extruder_type?: string | null
+          filament_diameter_mm?: number | null
+          filter_type?: string | null
+          firmware_family?: string | null
+          firmware_open_source?: boolean | null
+          first_layer_assist_features?: string | null
+          frame_material?: string | null
+          has_bluetooth?: boolean | null
+          has_enclosure?: boolean | null
+          has_ethernet?: boolean | null
+          has_micro_sd_card?: boolean | null
+          has_sd_card?: boolean | null
+          has_usb_a_port?: boolean | null
+          has_usb_c_port?: boolean | null
+          has_wifi?: boolean | null
+          hotend_brand_model?: string | null
+          hotend_type?: string | null
           id?: string
-          model?: string
+          input_shaping_supported?: boolean | null
+          internal_lighting?: boolean | null
+          last_verified_utc?: string | null
+          linear_rails_on_axes?: string | null
+          machine_depth_mm?: number | null
+          machine_height_mm?: number | null
+          machine_style?: string | null
+          machine_weight_kg?: number | null
+          machine_width_mm?: number | null
+          maintenance_interval_hours?: number | null
+          marketing_tags?: string | null
+          materials_notes?: string | null
+          max_acceleration_xy_mmss?: number | null
+          max_acceleration_z_mmss?: number | null
+          max_build_height_with_ams_mm?: number | null
+          max_flow_rate_mm3s?: number | null
+          max_nozzle_temp_c?: number | null
+          max_print_speed_mms?: number | null
+          max_recommended_material_temp_c?: number | null
+          max_travel_speed_xy_mms?: number | null
+          model_name?: string
+          motion_system_notes?: string | null
+          msrp_cad?: number | null
+          msrp_eur?: number | null
+          msrp_usd?: number | null
+          multi_material_drying_capability?: boolean | null
+          multi_material_limitations_notes?: string | null
+          multi_material_max_spools?: number | null
+          multi_material_spool_chamber_max_temp_c?: number | null
+          multi_material_supported?: boolean | null
+          native_multi_material_system?: boolean | null
+          noise_level_idle_db?: number | null
+          noise_level_printing_db?: number | null
+          nozzle_change_ease?: string | null
+          nozzle_material?: string | null
+          official_product_url?: string | null
+          official_store_url?: string | null
+          official_supported_materials?: string | null
+          onboard_storage_gb?: number | null
+          other_retailer_urls?: string | null
+          power_input_voltage?: string | null
+          power_loss_recovery?: boolean | null
+          power_supply_type?: string | null
+          price_tier?: string | null
+          printer_id?: string
+          printer_profile_slug_in_slicers?: string | null
+          printer_technology?: string | null
+          rated_power_w?: number | null
+          rating_community_overall?: number | null
+          rating_ease_of_use?: number | null
+          rating_print_quality?: number | null
+          rating_reliability?: number | null
+          rating_value_for_money?: number | null
+          recommended_materials?: string | null
+          recommended_quality_speed_mms?: number | null
+          recommended_upgrades?: string | null
+          release_date?: string | null
+          remote_control_supported?: boolean | null
+          remote_monitoring_supported?: boolean | null
+          review_count_aggregated?: number | null
+          safety_certifications?: string | null
+          safety_notes?: string | null
+          screen_resolution?: string | null
+          screen_size_inch?: number | null
+          screen_type?: string | null
+          series_id?: string | null
+          sku?: string | null
+          smoke_sensor?: boolean | null
+          stock_nozzle_diameter_mm?: number | null
+          stock_plate_types?: string | null
+          supported_nozzle_diameters_mm?: string | null
+          supported_plate_types?: string | null
+          sustained_nozzle_temp_c?: number | null
+          target_user_segment?: string | null
+          temperature_sensors?: string | null
+          thermal_runaway_protection?: boolean | null
+          typical_power_abs_w?: number | null
+          typical_power_pla_w?: number | null
+          ui_language_options?: string | null
+          updated_at?: string | null
+          variant_or_bundle_name?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "printers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "printer_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printers_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "printer_series"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

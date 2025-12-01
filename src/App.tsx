@@ -21,6 +21,7 @@ const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminEnrichment = lazy(() => import("./pages/AdminEnrichment"));
 const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
 const AdminMaintenance = lazy(() => import("./pages/AdminMaintenance"));
+const AdminPrinters = lazy(() => import("./pages/AdminPrinters"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
@@ -53,10 +54,8 @@ const App = () => (
             <Route path="/admin/enrichment" element={<AdminEnrichment />} />
             <Route path="/admin/affiliates" element={<AdminAffiliates />} />
             <Route path="/admin/maintenance" element={<AdminMaintenance />} />
+            <Route path="/admin/printers" element={<AdminPrinters />} />
             <Route path="/filament/:id" element={<FilamentDetail />} />
-            <Route path="/admin/filaments" element={<AdminDashboard />} />
-            <Route path="/admin/deals" element={<AdminDashboard />} />
-            <Route path="/admin/printers" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
