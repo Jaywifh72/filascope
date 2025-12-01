@@ -1,10 +1,30 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.86.0';
-import FirecrawlApp from "https://esm.sh/@mendable/firecrawl-js@4.7.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Direct Firecrawl API calls to avoid library compatibility issues
+async function firecrawlScrape(url: string, apiKey: string, options: any) {
+  const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      url,
+      ...options,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Firecrawl API error: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
 
 interface DeepScrapeRequest {
   printerId: string;
@@ -50,25 +70,23 @@ Deno.serve(async (req) => {
       .update({ scrape_status: 'in_progress', scrape_error: null })
       .eq('id', printerId);
 
-    // Initialize Firecrawl
-    const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey });
-
     // Scrape the product page with all formats
     console.log('Scraping URL:', printer.official_product_url);
-    const scrapeResult = await firecrawl.scrape(printer.official_product_url, {
+    const scrapeResult = await firecrawlScrape(printer.official_product_url, firecrawlApiKey, {
       formats: ['markdown', 'html', 'links', 'screenshot'],
       onlyMainContent: true,
       waitFor: 3000,
     });
 
-    if (!scrapeResult) {
+    if (!scrapeResult || !scrapeResult.data) {
       throw new Error('Failed to scrape product page');
     }
 
-    const markdown = scrapeResult.markdown || '';
-    const html = scrapeResult.html || '';
-    const links = scrapeResult.links || [];
-    const screenshot = scrapeResult.screenshot || '';
+    const data = scrapeResult.data;
+    const markdown = data.markdown || '';
+    const html = data.html || '';
+    const links = data.links || [];
+    const screenshot = data.screenshot || '';
 
     console.log('Scrape successful, analyzing content...');
 
@@ -104,7 +122,7 @@ Return a JSON object with all specifications you can find. Use these field names
 
 Include any other specifications you find. Be precise with units. Return null for fields not found.`;
 
-    const extractionResult = await firecrawl.scrape(printer.official_product_url, {
+    const extractionResult = await firecrawlScrape(printer.official_product_url, firecrawlApiKey, {
       formats: [{ 
         type: 'json', 
         prompt: extractionPrompt 
@@ -112,8 +130,8 @@ Include any other specifications you find. Be precise with units. Return null fo
     });
 
     let extractedSpecs = {};
-    if (extractionResult && extractionResult.json) {
-      extractedSpecs = extractionResult.json;
+    if (extractionResult && extractionResult.data && extractionResult.data.json) {
+      extractedSpecs = extractionResult.data.json;
       console.log('Extracted specifications:', Object.keys(extractedSpecs).length, 'fields');
     }
 
