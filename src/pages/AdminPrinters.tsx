@@ -182,10 +182,14 @@ export default function AdminPrinters() {
         
         if (printer?.scrape_status === 'completed' && printer?.scraped_data) {
           const specs = (printer.scraped_data as any).extracted_specs || {};
+          
+          // Filter out metadata fields that aren't database columns
+          const { content_length, extraction_confidence, ...validSpecs } = specs;
+          
           const { error } = await supabase
             .from("printers")
             .update({ 
-              ...specs,
+              ...validSpecs,
               status: "active",
               scraped_data: null,
               scrape_status: "imported",
