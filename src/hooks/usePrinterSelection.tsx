@@ -7,9 +7,12 @@ type Printer = Database["public"]["Tables"]["printers"]["Row"];
 type PrinterBrand = Database["public"]["Tables"]["printer_brands"]["Row"];
 
 export function usePrinterSelection() {
-  const [selectedBrand, setSelectedBrand] = useState<string>("");
-  const [selectedPrinterId, setSelectedPrinterId] = useState<string>("");
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState<string>(() => {
+    return localStorage.getItem("selected_printer_brand") || "";
+  });
+  const [selectedPrinterId, setSelectedPrinterId] = useState<string>(() => {
+    return localStorage.getItem("selected_printer_id") || "";
+  });
 
   // Fetch brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -93,15 +96,6 @@ export function usePrinterSelection() {
     }
   }, [selectedPrinterId]);
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedBrand = localStorage.getItem("selected_printer_brand");
-    const savedPrinterId = localStorage.getItem("selected_printer_id");
-    
-    if (savedBrand) setSelectedBrand(savedBrand);
-    if (savedPrinterId) setSelectedPrinterId(savedPrinterId);
-    setIsInitialized(true);
-  }, []);
 
   return {
     brands,
@@ -114,6 +108,5 @@ export function usePrinterSelection() {
     setSelectedPrinterId,
     selectedPrinter,
     printerLoading,
-    isInitialized,
   };
 }
