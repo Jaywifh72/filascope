@@ -13,6 +13,7 @@ export function usePrinterSelection() {
   const [selectedPrinterId, setSelectedPrinterId] = useState<string>(() => {
     return localStorage.getItem("selected_printer_id") || "";
   });
+  const [isInitialMount, setIsInitialMount] = useState(true);
 
   // Fetch brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -78,9 +79,13 @@ export function usePrinterSelection() {
     },
   });
 
-  // Clear model selection when brand changes
+  // Clear model selection when brand changes (but not on initial mount)
   useEffect(() => {
-    setSelectedPrinterId("");
+    if (isInitialMount) {
+      setIsInitialMount(false);
+    } else {
+      setSelectedPrinterId("");
+    }
   }, [selectedBrand]);
 
   // Store selection in localStorage
