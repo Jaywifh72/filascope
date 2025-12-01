@@ -157,7 +157,7 @@ const Matrix = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3">
                   <Grid3x3 className="w-5 h-5 text-primary" />
-                  Filament Compatibility for {selectedPrinter.brand?.brand} {selectedPrinter.model_name}
+                  Filament Compatibility for {typeof selectedPrinter.brand === 'object' && selectedPrinter.brand !== null && 'brand' in selectedPrinter.brand ? selectedPrinter.brand.brand : 'Unknown'} {selectedPrinter.model_name}
                 </CardTitle>
               </CardHeader>
               <CardContent>
