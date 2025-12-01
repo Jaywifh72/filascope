@@ -615,6 +615,98 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} Prusa printer URLs after deduplication`);
+        } else if (brand.brand.toLowerCase() === 'qidi tech') {
+          // QIDI Tech: Extract printers from Shopify collection page
+          // Look for product links in HTML with proper titles
+          const linkPattern = /<a[^>]+href="([^"]*\/products\/[^"]+)"[^>]*>([^<]*(?:<[^>]+>[^<]*)*?)<\/a>/gi;
+          const linkMatches = html.matchAll(linkPattern);
+          const productUrls = new Map<string, string>(); // url -> title
+          
+          for (const match of linkMatches) {
+            const url = match[1];
+            let title = match[2].replace(/<[^>]+>/g, '').trim(); // Strip HTML tags
+            
+            // Skip empty titles
+            if (!title || title.length < 3) continue;
+            
+            // Skip navigation/UI links
+            if (title.toLowerCase().includes('skip to') || 
+                title.toLowerCase().includes('search') ||
+                title.toLowerCase().includes('cart') ||
+                title.toLowerCase().includes('account') ||
+                title.toLowerCase().includes('menu')) {
+              continue;
+            }
+            
+            // Skip non-printer products
+            if (title.toLowerCase().includes('spare part') ||
+                title.toLowerCase().includes('accessory') ||
+                title.toLowerCase().includes('filament') ||
+                title.toLowerCase().includes('nozzle') ||
+                title.toLowerCase().includes('bed') ||
+                title.toLowerCase().includes('tool') ||
+                title.toLowerCase().includes('kit') && !title.toLowerCase().includes('printer')) {
+              continue;
+            }
+            
+            // Must contain printer-related keywords or known Qidi model names
+            const isPrinterLike = title.toLowerCase().includes('printer') ||
+                                 title.toLowerCase().includes('3d') ||
+                                 title.toLowerCase().match(/\b(max|plus|x-max|i-fast|q1|smart)\b/i); // Common QIDI models
+            
+            if (!isPrinterLike) continue;
+            
+            productUrls.set(url, title);
+          }
+          
+          console.log(`Found ${productUrls.size} potential QIDI printer URLs from HTML parsing`);
+          
+          // Deduplicate by URL and take the longest/most descriptive title
+          const finalUrls = new Map<string, string>();
+          for (const [url, title] of productUrls) {
+            const normalizedUrl = url.split('?')[0]; // Remove query params
+            
+            if (!finalUrls.has(normalizedUrl) || title.length > finalUrls.get(normalizedUrl)!.length) {
+              finalUrls.set(normalizedUrl, title);
+            }
+          }
+          
+          // Store in modelMap
+          for (const [url, title] of finalUrls) {
+            const fullUrl = url.startsWith('http') ? url : `${scrapeConfig.product_url_base}${url}`;
+            
+            // Clean up title - remove "QIDI" prefix and extra info
+            let cleanTitle = title;
+            
+            // Remove "QIDI" or "QIDI Tech" prefix if present
+            if (cleanTitle.toLowerCase().startsWith('qidi tech ')) {
+              cleanTitle = cleanTitle.substring(10).trim();
+            } else if (cleanTitle.toLowerCase().startsWith('qidi ')) {
+              cleanTitle = cleanTitle.substring(5).trim();
+            }
+            
+            // Remove everything after certain markers
+            cleanTitle = cleanTitle.split(/[\$€£¥]/)[0].trim(); // Remove from currency symbols onward
+            cleanTitle = cleanTitle.split(/from\s+[\$€£¥]/i)[0].trim(); // Remove "from $X" pricing
+            cleanTitle = cleanTitle.split(/in\s*stock/i)[0].trim(); // Remove "In stock"
+            cleanTitle = cleanTitle.split(/out\s+of\s+stock/i)[0].trim(); // Remove "Out of stock"
+            cleanTitle = cleanTitle.split(/pre-?order/i)[0].trim(); // Remove "Pre-order"
+            cleanTitle = cleanTitle.split(/ships?\s+in/i)[0].trim(); // Remove shipping info
+            
+            // Remove common suffix patterns
+            cleanTitle = cleanTitle.replace(/\+\s*$/i, '').trim(); // Remove trailing "+"
+            cleanTitle = cleanTitle.replace(/[,\-–—\+]+$/, '').trim();
+            cleanTitle = cleanTitle.replace(/^\+\s*/, '').trim();
+            cleanTitle = cleanTitle.replace(/\s+/g, ' ');
+            
+            // Skip if title is too short after cleaning
+            if (cleanTitle.length < 2) continue;
+            
+            modelMap.set(cleanTitle, fullUrl);
+            console.log(`Found QIDI printer: ${cleanTitle} at ${fullUrl}`);
+          }
+          
+          console.log(`Found ${modelMap.size} QIDI printer URLs after deduplication`);
         } else {
           // Generic extraction for other brands
           const lines = markdown.split('\n');
