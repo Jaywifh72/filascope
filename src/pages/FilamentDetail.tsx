@@ -314,160 +314,212 @@ const FilamentDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Printer Compatibility Section */}
-        {selectedPrinter && compatibility && (
-          <Card className="bg-gradient-to-br from-card via-card/95 to-primary/5 border-primary/20 shadow-lg animate-fade-in">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Printer className="w-6 h-6 text-primary" />
-                Compatibility with {typeof selectedPrinter.brand === 'object' && selectedPrinter.brand !== null && 'brand' in selectedPrinter.brand ? selectedPrinter.brand.brand : 'Selected Printer'} {selectedPrinter.model_name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Compatibility Status */}
-              <div className="flex items-center justify-between p-4 bg-background/50 rounded-lg border border-border">
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">Compatibility Status</h3>
-                  <p className="text-sm text-muted-foreground">Based on printer specifications and filament requirements</p>
+        {/* Printer Compatibility Section - Featured & Dynamic */}
+        {selectedPrinter && compatibility ? (
+          <Card className="bg-gradient-to-br from-primary/10 via-card to-primary/5 border-primary/30 shadow-xl mb-8 animate-fade-in">
+            <CardHeader className="bg-gradient-to-r from-primary/20 to-transparent border-b border-primary/20 pb-4">
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <Printer className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-xl font-bold">Print Settings for Your Printer</div>
+                  <div className="text-sm font-normal text-muted-foreground">
+                    {typeof selectedPrinter.brand === 'object' && selectedPrinter.brand !== null && 'brand' in selectedPrinter.brand ? selectedPrinter.brand.brand : 'Selected Printer'} {selectedPrinter.model_name}
+                  </div>
                 </div>
                 <CompatibilityBadge compatibility={compatibility} showIcon={true} />
-              </div>
-
-              {/* Limitations */}
-              {compatibility.limitations.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-destructive" />
-                    Limitations
-                  </h3>
-                  <ul className="space-y-1">
-                    {compatibility.limitations.map((limitation, index) => (
-                      <li key={index} className="text-sm text-muted-foreground pl-4 flex items-start gap-2">
-                        <span className="text-destructive mt-0.5">•</span>
-                        <span>{limitation}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Warnings */}
-              {compatibility.recommendations.warnings.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                    Warnings
-                  </h3>
-                  <ul className="space-y-1">
-                    {compatibility.recommendations.warnings.map((warning, index) => (
-                      <li key={index} className="text-sm text-muted-foreground pl-4 flex items-start gap-2">
-                        <span className="text-yellow-600 mt-0.5">•</span>
-                        <span>{warning}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Recommended Settings */}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              {/* Quick Settings Grid - Most Important Info First */}
               <div className="grid md:grid-cols-3 gap-4">
-                {/* Nozzle Recommendations */}
-                <Card className="bg-background/50 border-border">
+                {/* Temperature Card */}
+                <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Settings className="w-4 h-4 text-primary" />
-                      Nozzle
+                      <Flame className="w-5 h-5 text-orange-500" />
+                      Temperature
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
+                  <CardContent className="space-y-3">
+                    <div className="p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                      <div className="text-xs text-muted-foreground mb-1">🌡️ Nozzle</div>
+                      <div className="text-2xl font-bold text-orange-500">
+                        {compatibility.recommendations.slicer.nozzle_temp_range}
+                      </div>
+                    </div>
+                    <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                      <div className="text-xs text-muted-foreground mb-1">🔥 Bed</div>
+                      <div className="text-2xl font-bold text-blue-500">
+                        {compatibility.recommendations.slicer.bed_temp_range}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Nozzle Card */}
+                <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Settings className="w-5 h-5 text-primary" />
+                      Nozzle Setup
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
                     <div>
-                      <span className="text-muted-foreground">Size: </span>
-                      <span className="font-medium">{compatibility.recommendations.nozzle.size.join(", ")}</span>
+                      <div className="text-xs text-muted-foreground mb-2">Recommended Sizes</div>
+                      <div className="flex gap-2 flex-wrap">
+                        {compatibility.recommendations.nozzle.size.map((size, i) => (
+                          <Badge key={i} variant="secondary" className="text-base font-bold px-3 py-1">
+                            {size}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Material: </span>
-                      <span className="font-medium">{compatibility.recommendations.nozzle.material}</span>
+                      <div className="text-xs text-muted-foreground mb-2">Material Required</div>
+                      <Badge variant="default" className="text-sm font-semibold">
+                        {compatibility.recommendations.nozzle.material}
+                      </Badge>
                     </div>
                     {compatibility.recommendations.nozzle.notes && (
-                      <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
-                        {compatibility.recommendations.nozzle.notes}
+                      <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+                        💡 {compatibility.recommendations.nozzle.notes}
                       </p>
                     )}
                   </CardContent>
                 </Card>
 
-                {/* Bed Recommendations */}
-                <Card className="bg-background/50 border-border">
+                {/* Build Plate Card */}
+                <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Package className="w-4 h-4 text-primary" />
+                      <Package className="w-5 h-5 text-primary" />
                       Build Plate
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
+                  <CardContent className="space-y-3">
                     <div>
-                      <span className="text-muted-foreground">Types: </span>
-                      <span className="font-medium">{compatibility.recommendations.bed.plate_types.join(", ")}</span>
+                      <div className="text-xs text-muted-foreground mb-2">Recommended Types</div>
+                      <div className="flex gap-2 flex-wrap">
+                        {compatibility.recommendations.bed.plate_types.map((type, i) => (
+                          <Badge key={i} variant="outline" className="text-sm">
+                            {type}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                     {compatibility.recommendations.bed.notes && (
-                      <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
-                        {compatibility.recommendations.bed.notes}
+                      <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+                        💡 {compatibility.recommendations.bed.notes}
                       </p>
                     )}
                   </CardContent>
                 </Card>
-
-                {/* Temperature Settings */}
-                <Card className="bg-background/50 border-border">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Flame className="w-4 h-4 text-primary" />
-                      Temperatures
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Nozzle: </span>
-                      <span className="font-medium">{compatibility.recommendations.slicer.nozzle_temp_range}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Bed: </span>
-                      <span className="font-medium">{compatibility.recommendations.slicer.bed_temp_range}</span>
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
 
-              {/* Additional Slicer Notes */}
-              {compatibility.recommendations.slicer.notes.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-primary" />
-                    Slicer Settings Notes
-                  </h3>
-                  <ul className="space-y-1">
-                    {compatibility.recommendations.slicer.notes.map((note, index) => (
-                      <li key={index} className="text-sm text-muted-foreground pl-4 flex items-start gap-2">
-                        <span className="text-primary mt-0.5">•</span>
-                        <span>{note}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {/* Limitations & Warnings */}
+              {(compatibility.limitations.length > 0 || compatibility.recommendations.warnings.length > 0) && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {compatibility.limitations.length > 0 && (
+                    <Card className="bg-destructive/5 border-destructive/20">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex items-center gap-2 text-destructive">
+                          <AlertTriangle className="w-5 h-5" />
+                          Limitations
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {compatibility.limitations.map((limitation, index) => (
+                            <li key={index} className="text-sm flex items-start gap-2">
+                              <span className="text-destructive mt-0.5 font-bold">✗</span>
+                              <span>{limitation}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {compatibility.recommendations.warnings.length > 0 && (
+                    <Card className="bg-yellow-500/5 border-yellow-500/20">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex items-center gap-2 text-yellow-600">
+                          <AlertTriangle className="w-5 h-5" />
+                          Warnings
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {compatibility.recommendations.warnings.map((warning, index) => (
+                            <li key={index} className="text-sm flex items-start gap-2">
+                              <span className="text-yellow-600 mt-0.5 font-bold">⚠</span>
+                              <span>{warning}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               )}
 
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/printers">
+              {/* Slicer Notes */}
+              {compatibility.recommendations.slicer.notes.length > 0 && (
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Settings className="w-5 h-5 text-primary" />
+                      Additional Slicer Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {compatibility.recommendations.slicer.notes.map((note, index) => (
+                        <li key={index} className="text-sm flex items-start gap-2">
+                          <span className="text-primary mt-0.5 font-bold">•</span>
+                          <span>{note}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2 flex-wrap">
+                <Button variant="outline" asChild>
+                  <Link to="/">
+                    <Printer className="w-4 h-4 mr-2" />
                     Change Printer
                   </Link>
                 </Button>
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="outline" asChild>
                   <Link to="/matrix">
                     View Full Compatibility Matrix
                   </Link>
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        ) : !selectedPrinter && (
+          <Card className="bg-gradient-to-br from-muted/30 to-muted/10 border-dashed border-2 border-border mb-8 animate-fade-in hover:border-primary/30 transition-colors">
+            <CardContent className="p-8 text-center">
+              <div className="p-4 bg-primary/10 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <Printer className="w-10 h-10 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Select Your Printer for Custom Settings</h3>
+              <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+                Get personalized temperature ranges, nozzle recommendations, and build plate suggestions specifically for this filament
+              </p>
+              <Button size="lg" asChild className="hover:scale-105 transition-transform">
+                <Link to="/">
+                  <Printer className="w-4 h-4 mr-2" />
+                  Select Your Printer
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         )}
