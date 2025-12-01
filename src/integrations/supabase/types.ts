@@ -356,18 +356,27 @@ export type Database = {
           brand: string
           created_at: string | null
           id: string
+          last_discovery_run_at: string | null
+          new_models_found_count: number | null
+          scrape_config: Json | null
           updated_at: string | null
         }
         Insert: {
           brand: string
           created_at?: string | null
           id?: string
+          last_discovery_run_at?: string | null
+          new_models_found_count?: number | null
+          scrape_config?: Json | null
           updated_at?: string | null
         }
         Update: {
           brand?: string
           created_at?: string | null
           id?: string
+          last_discovery_run_at?: string | null
+          new_models_found_count?: number | null
+          scrape_config?: Json | null
           updated_at?: string | null
         }
         Relationships: []
@@ -573,6 +582,7 @@ export type Database = {
           series_id: string | null
           sku: string | null
           smoke_sensor: boolean | null
+          status: string | null
           stock_nozzle_diameter_mm: number | null
           stock_plate_types: string | null
           supported_nozzle_diameters_mm: string | null
@@ -720,6 +730,7 @@ export type Database = {
           series_id?: string | null
           sku?: string | null
           smoke_sensor?: boolean | null
+          status?: string | null
           stock_nozzle_diameter_mm?: number | null
           stock_plate_types?: string | null
           supported_nozzle_diameters_mm?: string | null
@@ -867,6 +878,7 @@ export type Database = {
           series_id?: string | null
           sku?: string | null
           smoke_sensor?: boolean | null
+          status?: string | null
           stock_nozzle_diameter_mm?: number | null
           stock_plate_types?: string | null
           supported_nozzle_diameters_mm?: string | null
