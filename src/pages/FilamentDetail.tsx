@@ -23,7 +23,7 @@ const FilamentDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAdmin } = useAuth();
-  const { selectedPrinter } = usePrinterSelection();
+  const { selectedPrinter, printerLoading } = usePrinterSelection();
   const [filament, setFilament] = useState<Filament | null>(null);
   const [loading, setLoading] = useState(true);
   const [rescrapingImage, setRescrapingImage] = useState(false);
@@ -504,7 +504,7 @@ const FilamentDetail = () => {
               </div>
             </CardContent>
           </Card>
-        ) : !selectedPrinter && (
+        ) : !printerLoading && !selectedPrinter && (
           <Card className="bg-gradient-to-br from-muted/30 to-muted/10 border-dashed border-2 border-border mb-8 animate-fade-in hover:border-primary/30 transition-colors">
             <CardContent className="p-8 text-center">
               <div className="p-4 bg-primary/10 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
