@@ -94,6 +94,95 @@ export type Database = {
           },
         ]
       }
+      discovery_models: {
+        Row: {
+          created_at: string | null
+          discovered_at: string
+          discovery_run_id: string
+          id: string
+          model_name: string
+          printer_id: string | null
+          was_new: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          discovered_at?: string
+          discovery_run_id: string
+          id?: string
+          model_name: string
+          printer_id?: string | null
+          was_new?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          discovered_at?: string
+          discovery_run_id?: string
+          id?: string
+          model_name?: string
+          printer_id?: string | null
+          was_new?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_models_discovery_run_id_fkey"
+            columns: ["discovery_run_id"]
+            isOneToOne: false
+            referencedRelation: "discovery_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovery_models_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discovery_runs: {
+        Row: {
+          brand_id: string
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          models_added: number | null
+          models_found: number | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          brand_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          models_added?: number | null
+          models_found?: number | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          brand_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          models_added?: number | null
+          models_found?: number | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_runs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "printer_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filament_comments: {
         Row: {
           comment_text: string
