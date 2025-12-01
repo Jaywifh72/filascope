@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
         // Step 2: Extract model names from the page with brand-specific intelligence
         const markdown = modelsPageResult.markdown || '';
         const html = modelsPageResult.html || '';
-        const modelNames: string[] = [];
+        const modelMap = new Map<string, string>(); // modelName -> productUrl
 
         console.log('Extracting model names for brand:', brand.brand);
 
@@ -213,10 +213,41 @@ Deno.serve(async (req) => {
                 continue;
               }
               
-              modelNames.push(modelName);
+              modelMap.set(modelName, url);
               console.log(`Extracted Kobra FDM model: ${modelName}`);
             }
           }
+        } else if (brand.brand.toLowerCase() === 'ankermake') {
+          // AnkerMake: Extract FDM printers only (exclude UV printers)
+          // Look for links matching /s/product/ pattern with "AnkerMake" in the text
+          const linkPattern = /\[([^\]]+)\]\(([^)]*\/s\/product\/[^)]+)\)/g;
+          const linkMatches = markdown.matchAll(linkPattern);
+          
+          for (const match of linkMatches) {
+            const title = match[1].trim();
+            const url = match[2];
+            
+            // ONLY include AnkerMake FDM printers (not UV printers)
+            if (!title.toLowerCase().includes('ankermake')) {
+              continue;
+            }
+            
+            // Skip UV printers
+            if (title.toLowerCase().includes('uv')) {
+              console.log(`Skipping UV printer: ${title}`);
+              continue;
+            }
+            
+            // Extract model name from title (e.g., "AnkerMake M5 3D Printer" -> "M5")
+            const modelMatch = title.match(/AnkerMake\s+([^\s]+)/i);
+            if (modelMatch) {
+              const modelName = modelMatch[1];
+              modelMap.set(modelName, url);
+              console.log(`Found AnkerMake FDM printer: ${modelName} at ${url}`);
+            }
+          }
+          
+          console.log(`Found ${modelMap.size} AnkerMake FDM printer URLs`);
         } else {
           // Generic extraction for other brands
           const lines = markdown.split('\n');
@@ -225,13 +256,15 @@ Deno.serve(async (req) => {
             if (trimmedLine && !trimmedLine.startsWith('#') && !trimmedLine.startsWith('-')) {
               const match = trimmedLine.match(/([A-Z0-9\s\-]+\s+[A-Z0-9]+)/);
               if (match) {
-                modelNames.push(match[1].trim());
+                const modelName = match[1].trim();
+                // For generic brands, we'll construct the URL later
+                modelMap.set(modelName, '');
               }
             }
           }
         }
 
-        modelsFound = modelNames.length;
+        modelsFound = modelMap.size;
         console.log(`Found ${modelsFound} potential model names`);
 
         // Step 3: Check which models already exist
@@ -245,7 +278,7 @@ Deno.serve(async (req) => {
         );
 
         // Step 4: For each new model, scrape details and create entry
-        for (const modelName of modelNames) {
+        for (const [modelName, productUrl] of modelMap) {
           const wasNew = !existingModelNames.has(modelName.toLowerCase());
           
           if (!wasNew) {
@@ -263,9 +296,17 @@ Deno.serve(async (req) => {
           }
 
           try {
-            // Construct model URL from base + model name pattern
-            const modelSlug = modelName.toLowerCase().replace(/\s+/g, '-');
-            const modelUrl = `${scrapeConfig.product_url_base}/products/${modelSlug}`;
+            // Construct model URL
+            let modelUrl: string;
+            
+            if (productUrl) {
+              // Use the provided URL (for brands like AnkerMake with ID-based URLs)
+              modelUrl = productUrl;
+            } else {
+              // Construct from slug (for brands like Anycubic with slug-based URLs)
+              const modelSlug = modelName.toLowerCase().replace(/\s+/g, '-');
+              modelUrl = `${scrapeConfig.product_url_base}/products/${modelSlug}`;
+            }
 
             console.log(`Scraping model details for: ${modelName} from ${modelUrl}`);
 
@@ -293,10 +334,11 @@ Deno.serve(async (req) => {
             const pageHtml = (modelPageResult.html || '').toLowerCase();
             
             // Check for resin printer indicators - SKIP ALL RESIN PRINTERS
-            // BUT: Skip this check for Anycubic Kobra models since they're already filtered to FDM-only
+            // BUT: Skip this check for brands that already filter FDM-only in extraction
             const isAnycubicKobra = brand.brand.toLowerCase() === 'anycubic' && modelName.toLowerCase().includes('kobra');
+            const isAnkerMake = brand.brand.toLowerCase() === 'ankermake';
             
-            const isResinPrinter = !isAnycubicKobra && (
+            const isResinPrinter = !isAnycubicKobra && !isAnkerMake && (
               pageMarkdown.includes('resin') ||
               pageMarkdown.includes('photon') ||
               pageMarkdown.includes('sla') ||
