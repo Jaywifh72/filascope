@@ -248,6 +248,22 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} AnkerMake FDM printer URLs`);
+        } else if (brand.brand.toLowerCase() === 'bambu lab') {
+          // Bambu Lab: Extract all FDM printers from collection page
+          // Look for links matching /products/ pattern with "Bambu Lab" in the title
+          const linkPattern = /##\s+\[Bambu Lab ([^\]]+)\]\(([^)]+)\)/g;
+          const linkMatches = markdown.matchAll(linkPattern);
+          
+          for (const match of linkMatches) {
+            const modelName = match[1].trim();
+            const url = match[2];
+            
+            // Store model with its URL
+            modelMap.set(modelName, url);
+            console.log(`Found Bambu Lab printer: ${modelName} at ${url}`);
+          }
+          
+          console.log(`Found ${modelMap.size} Bambu Lab printer URLs`);
         } else {
           // Generic extraction for other brands
           const lines = markdown.split('\n');
@@ -337,8 +353,9 @@ Deno.serve(async (req) => {
             // BUT: Skip this check for brands that already filter FDM-only in extraction
             const isAnycubicKobra = brand.brand.toLowerCase() === 'anycubic' && modelName.toLowerCase().includes('kobra');
             const isAnkerMake = brand.brand.toLowerCase() === 'ankermake';
+            const isBambuLab = brand.brand.toLowerCase() === 'bambu lab';
             
-            const isResinPrinter = !isAnycubicKobra && !isAnkerMake && (
+            const isResinPrinter = !isAnycubicKobra && !isAnkerMake && !isBambuLab && (
               pageMarkdown.includes('resin') ||
               pageMarkdown.includes('photon') ||
               pageMarkdown.includes('sla') ||
