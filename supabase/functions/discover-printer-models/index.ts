@@ -351,50 +351,86 @@ Deno.serve(async (req) => {
           console.log(`Found ${modelMap.size} Elegoo printer URLs after deduplication`);
         } else if (brand.brand.toLowerCase() === 'flashforge') {
           // FlashForge: Extract FDM printers from collection page
-          // Look for product links with proper titles
-          const linkPattern = /<a[^>]+href="([^"]*\/products\/[^"]+)"[^>]*>([^<]*(?:<[^>]+>[^<]*)*?)<\/a>/gi;
-          const linkMatches = html.matchAll(linkPattern);
+          // Look for product card containers specifically
+          const productCardPattern = /<div[^>]+class="[^"]*product-card[^"]*"[^>]*>[\s\S]*?<a[^>]+href="([^"]*\/products\/[^"]+)"[^>]*>[\s\S]*?<h3[^>]*>([^<]+)<\/h3>[\s\S]*?<\/div>/gi;
           const productUrls = new Map<string, string>(); // url -> title
           
-          for (const match of linkMatches) {
+          let cardMatches = html.matchAll(productCardPattern);
+          for (const match of cardMatches) {
             const url = match[1];
-            let title = match[2].replace(/<[^>]+>/g, '').trim(); // Strip HTML tags
+            let title = match[2].trim();
             
-            // Skip empty titles
-            if (!title || title.length < 3) continue;
-            
-            // Skip navigation/UI links
-            if (title.toLowerCase().includes('skip to') || 
-                title.toLowerCase().includes('search') ||
-                title.toLowerCase().includes('cart') ||
-                title.toLowerCase().includes('account') ||
-                title.toLowerCase().includes('view all')) {
-              continue;
+            if (title && url) {
+              productUrls.set(url, title);
             }
-            
-            // Skip accessories and non-printer products
-            if (title.toLowerCase().includes('filament') ||
-                title.toLowerCase().includes('nozzle') ||
-                title.toLowerCase().includes('build plate') ||
-                title.toLowerCase().includes('spare part') ||
-                title.toLowerCase().includes('accessory') ||
-                title.toLowerCase().includes('cartridge')) {
-              continue;
-            }
-            
-            // Extract model name from title if it starts with "FlashForge"
-            if (title.toLowerCase().startsWith('flashforge ')) {
-              title = title.substring(11).trim(); // Remove "FlashForge " prefix
-            }
-            
-            productUrls.set(url, title);
           }
           
-          console.log(`Found ${productUrls.size} potential FlashForge printer URLs from HTML parsing`);
+          // If no product cards found, try alternative pattern for product grid items
+          if (productUrls.size === 0) {
+            const gridPattern = /<div[^>]+class="[^"]*grid__item[^"]*"[^>]*>[\s\S]*?<a[^>]+href="([^"]*\/products\/[^"]+)"[^>]*>[\s\S]*?<div[^>]+class="[^"]*card-information[^"]*"[^>]*>[\s\S]*?<h3[^>]*>([^<]+)<\/h3>/gi;
+            const gridMatches = html.matchAll(gridPattern);
+            
+            for (const match of gridMatches) {
+              const url = match[1];
+              let title = match[2].trim();
+              
+              if (title && url) {
+                productUrls.set(url, title);
+              }
+            }
+          }
           
-          // Deduplicate by URL and take the longest/most descriptive title
-          const finalUrls = new Map<string, string>();
+          console.log(`Found ${productUrls.size} potential FlashForge products from structured HTML`);
+          
+          // Filter to only actual printers
+          const filteredUrls = new Map<string, string>();
+          
           for (const [url, title] of productUrls) {
+            const titleLower = title.toLowerCase();
+            
+            // Skip review text
+            if (titleLower.includes('review')) continue;
+            
+            // Skip filament materials
+            if (titleLower.match(/\b(pla|abs|petg|asa|tpu|nylon|pc|pva|hips)\b/)) continue;
+            
+            // Skip filament-related products
+            if (titleLower.includes('filament') || 
+                titleLower.includes('spool') ||
+                titleLower.includes('lucky box')) continue;
+            
+            // Skip accessories and kits
+            if (titleLower.includes('kit') ||
+                titleLower.includes('camera') ||
+                titleLower.includes('enclosure') ||
+                titleLower.includes('nozzle') ||
+                titleLower.includes('build plate') ||
+                titleLower.includes('spare') ||
+                titleLower.includes('accessory')) continue;
+            
+            // Must contain printer-related keywords or be a known FlashForge printer model
+            const isPrinterLike = titleLower.includes('printer') ||
+                                 titleLower.includes('3d') ||
+                                 titleLower.match(/\b(adventurer|guider|creator|dreamer|finder|inventor)\b/i) ||
+                                 titleLower.match(/\b(ad\d+[xm]?|g\d+u?)\b/i); // Model codes like AD5X, G3U
+            
+            if (isPrinterLike) {
+              // Clean up title - remove "FlashForge" prefix if present
+              let cleanTitle = title;
+              if (cleanTitle.toLowerCase().startsWith('flashforge ')) {
+                cleanTitle = cleanTitle.substring(11).trim();
+              }
+              
+              filteredUrls.set(url, cleanTitle);
+              console.log(`Identified FlashForge printer: ${cleanTitle} at ${url}`);
+            }
+          }
+          
+          console.log(`Filtered to ${filteredUrls.size} actual FlashForge printers`);
+          
+          // Deduplicate by URL
+          const finalUrls = new Map<string, string>();
+          for (const [url, title] of filteredUrls) {
             const normalizedUrl = url.split('?')[0]; // Remove query params
             
             if (!finalUrls.has(normalizedUrl) || title.length > finalUrls.get(normalizedUrl)!.length) {
