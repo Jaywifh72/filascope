@@ -186,6 +186,17 @@ export default function AdminPrinters() {
           // Filter out metadata fields that aren't database columns
           const { content_length, extraction_confidence, ...validSpecs } = specs;
           
+          // Sanitize integer fields by rounding decimal values
+          const integerFields = ['extruder_count', 'multi_material_max_spools', 'review_count_aggregated', 'onboard_storage_gb'];
+          for (const field of integerFields) {
+            if (validSpecs[field] !== null && validSpecs[field] !== undefined) {
+              const value = parseFloat(validSpecs[field]);
+              if (!isNaN(value)) {
+                validSpecs[field] = Math.round(value);
+              }
+            }
+          }
+          
           const { error } = await supabase
             .from("printers")
             .update({ 
