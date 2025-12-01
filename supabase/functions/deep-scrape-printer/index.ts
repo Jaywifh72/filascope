@@ -279,19 +279,60 @@ Deno.serve(async (req) => {
 
     console.log('Scrape complete. Quality:', scrapedData.extraction_quality);
 
-    // Update printer with scraped data
-    const { error: updateError } = await supabase
-      .from('printers')
-      .update({
-        scraped_data: scrapedData,
-        scrape_status: 'completed',
-        scrape_completed_at: new Date().toISOString(),
-        scrape_error: null,
-      })
-      .eq('id', printerId);
+    // Update printer with scraped data - with retry logic
+    console.log('Updating database for printer:', printerId);
+    let updateAttempts = 0;
+    const maxAttempts = 3;
+    let lastError: any = null;
 
-    if (updateError) {
-      throw updateError;
+    while (updateAttempts < maxAttempts) {
+      updateAttempts++;
+      console.log(`Database update attempt ${updateAttempts}/${maxAttempts}`);
+      
+      const { data: updateData, error: updateError } = await supabase
+        .from('printers')
+        .update({
+          scraped_data: scrapedData,
+          scrape_status: 'completed',
+          scrape_completed_at: new Date().toISOString(),
+          scrape_error: null,
+        })
+        .eq('id', printerId)
+        .select();
+
+      if (!updateError) {
+        console.log('Database update successful:', updateData);
+        
+        // Verify the update
+        const { data: verifyData } = await supabase
+          .from('printers')
+          .select('scrape_status, scraped_data')
+          .eq('id', printerId)
+          .single();
+        
+        if (verifyData?.scrape_status === 'completed' && verifyData?.scraped_data) {
+          console.log('Update verified successfully');
+          break;
+        } else {
+          console.warn('Update verification failed, retrying...', verifyData);
+          lastError = new Error('Update verification failed');
+        }
+      } else {
+        console.error(`Update attempt ${updateAttempts} failed:`, updateError);
+        lastError = updateError;
+      }
+
+      if (updateAttempts < maxAttempts) {
+        // Wait with exponential backoff before retrying
+        const delay = 1000 * Math.pow(2, updateAttempts - 1);
+        console.log(`Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    if (updateAttempts >= maxAttempts && lastError) {
+      console.error('All update attempts failed');
+      throw new Error(`Failed to update database after ${maxAttempts} attempts: ${lastError.message || lastError}`);
     }
 
     return new Response(
