@@ -330,6 +330,7 @@ serve(async (req) => {
             .eq("printer_id", row.printer_id);
 
           if (updateError) {
+            console.error(`Update error for ${row.printer_id}:`, updateError);
             stats.errors.push(`Update error for ${row.printer_id}: ${updateError.message}`);
           } else {
             stats.printers_updated++;
@@ -341,6 +342,12 @@ serve(async (req) => {
             .insert(printerData);
 
           if (insertError) {
+            console.error(`Insert error for ${row.printer_id}:`, insertError);
+            console.error('Problematic data:', JSON.stringify({
+              msrp_usd: printerData.msrp_usd,
+              msrp_cad: printerData.msrp_cad,
+              screen_size_inch: printerData.screen_size_inch
+            }));
             stats.errors.push(`Insert error for ${row.printer_id}: ${insertError.message}`);
           } else {
             stats.printers_created++;
