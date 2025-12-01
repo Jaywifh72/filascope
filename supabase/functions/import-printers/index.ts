@@ -108,6 +108,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  console.log("[import-printers] Function invoked");
+
   try {
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -365,31 +367,65 @@ serve(async (req) => {
         if (existingPrinter) {
           // Update existing printer
           console.log(`Updating existing printer ${row.printer_id}`);
-          const { error: updateError } = await supabaseClient
-            .from("printers")
-            .update(printerData)
-            .eq("printer_id", row.printer_id);
+          
+          try {
+            const { error: updateError } = await supabaseClient
+              .from("printers")
+              .update(printerData)
+              .eq("printer_id", row.printer_id);
 
-          if (updateError) {
-            console.error(`Update error for ${row.printer_id}:`, updateError);
-            console.error('Full update data:', JSON.stringify(printerData, null, 2));
-            stats.errors.push(`Update error for ${row.printer_id}: ${updateError.message}`);
-          } else {
-            stats.printers_updated++;
+            if (updateError) {
+              console.error(`Update error for ${row.printer_id}:`, updateError);
+              console.error('Error details:', JSON.stringify({
+                message: updateError.message,
+                details: updateError.details,
+                hint: updateError.hint,
+                code: updateError.code
+              }));
+              console.error('Problematic fields:', JSON.stringify({
+                extruder_count: printerData.extruder_count,
+                multi_material_max_spools: printerData.multi_material_max_spools,
+                review_count_aggregated: printerData.review_count_aggregated,
+                onboard_storage_gb: printerData.onboard_storage_gb
+              }));
+              stats.errors.push(`Update error for ${row.printer_id}: ${updateError.message}`);
+            } else {
+              stats.printers_updated++;
+            }
+          } catch (updateException: any) {
+            console.error(`Exception during update for ${row.printer_id}:`, updateException);
+            stats.errors.push(`Update exception for ${row.printer_id}: ${updateException.message}`);
           }
         } else {
           // Insert new printer
           console.log(`Inserting new printer ${row.printer_id}`);
-          const { error: insertError } = await supabaseClient
-            .from("printers")
-            .insert(printerData);
+          
+          try {
+            const { error: insertError } = await supabaseClient
+              .from("printers")
+              .insert(printerData);
 
-          if (insertError) {
-            console.error(`Insert error for ${row.printer_id}:`, insertError);
-            console.error('Full printer data:', JSON.stringify(printerData, null, 2));
-            stats.errors.push(`Insert error for ${row.printer_id}: ${insertError.message}`);
-          } else {
-            stats.printers_created++;
+            if (insertError) {
+              console.error(`Insert error for ${row.printer_id}:`, insertError);
+              console.error('Error details:', JSON.stringify({
+                message: insertError.message,
+                details: insertError.details,
+                hint: insertError.hint,
+                code: insertError.code
+              }));
+              console.error('Problematic fields:', JSON.stringify({
+                extruder_count: printerData.extruder_count,
+                multi_material_max_spools: printerData.multi_material_max_spools,
+                review_count_aggregated: printerData.review_count_aggregated,
+                onboard_storage_gb: printerData.onboard_storage_gb
+              }));
+              stats.errors.push(`Insert error for ${row.printer_id}: ${insertError.message}`);
+            } else {
+              stats.printers_created++;
+            }
+          } catch (insertException: any) {
+            console.error(`Exception during insert for ${row.printer_id}:`, insertException);
+            stats.errors.push(`Insert exception for ${row.printer_id}: ${insertException.message}`);
           }
         }
       } catch (rowError: any) {
