@@ -53,13 +53,16 @@ Deno.serve(async (req) => {
     }
 
     // Check if user is admin
-    const { data: roleData } = await supabase
+    const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .single();
+      .eq('role', 'admin')
+      .maybeSingle();
 
-    if (roleData?.role !== 'admin') {
+    console.log('Role check:', { userId: user.id, roleData, roleError });
+
+    if (roleError || !roleData) {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
