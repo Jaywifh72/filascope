@@ -20,6 +20,7 @@ export default function Printers() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
+  const [selectedMaterial, setSelectedMaterial] = useState("all");
   const [hasEnclosure, setHasEnclosure] = useState(false);
   const [multiMaterial, setMultiMaterial] = useState(false);
   const [minBuildVolume, setMinBuildVolume] = useState("");
@@ -41,7 +42,7 @@ export default function Printers() {
 
   // Fetch printers
   const { data: printers, isLoading } = useQuery({
-    queryKey: ["printers-list", searchTerm, selectedBrand, hasEnclosure, multiMaterial],
+    queryKey: ["printers-list", searchTerm, selectedBrand, selectedMaterial, hasEnclosure, multiMaterial],
     queryFn: async () => {
       let query = supabase
         .from("printers")
@@ -70,13 +71,35 @@ export default function Printers() {
     },
   });
 
-  // Filter by brand and build volume on client side
+  // Extract unique materials from all printers
+  const availableMaterials = useMemo(() => {
+    if (!printers) return [];
+    
+    const materialsSet = new Set<string>();
+    printers.forEach(printer => {
+      const supported = printer.official_supported_materials || printer.recommended_materials || "";
+      const materials = supported.split(/[,;|]/).map(m => m.trim()).filter(m => m.length > 0);
+      materials.forEach(m => materialsSet.add(m));
+    });
+    
+    return Array.from(materialsSet).sort();
+  }, [printers]);
+
+  // Filter by brand, material, and build volume on client side
   const filteredPrinters = useMemo(() => {
     if (!printers) return [];
 
     return printers.filter(printer => {
       if (selectedBrand !== "all" && printer.brand?.brand !== selectedBrand) {
         return false;
+      }
+
+      if (selectedMaterial !== "all") {
+        const supported = printer.official_supported_materials || printer.recommended_materials || "";
+        const materials = supported.split(/[,;|]/).map(m => m.trim().toLowerCase());
+        if (!materials.some(m => m.includes(selectedMaterial.toLowerCase()))) {
+          return false;
+        }
       }
 
       if (minBuildVolume) {
@@ -90,7 +113,7 @@ export default function Printers() {
 
       return true;
     });
-  }, [printers, selectedBrand, minBuildVolume]);
+  }, [printers, selectedBrand, selectedMaterial, minBuildVolume]);
 
   const toggleCompareSelection = (printerId: string) => {
     setSelectedForCompare(prev => 
@@ -122,7 +145,7 @@ export default function Printers() {
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Input
             type="text"
             placeholder="Search by model or brand..."
@@ -139,6 +162,18 @@ export default function Printers() {
               <SelectItem value="all">All Brands</SelectItem>
               {brands?.map(brand => (
                 <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedMaterial} onValueChange={setSelectedMaterial}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by material" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Materials</SelectItem>
+              {availableMaterials.map(material => (
+                <SelectItem key={material} value={material}>{material}</SelectItem>
               ))}
             </SelectContent>
           </Select>
