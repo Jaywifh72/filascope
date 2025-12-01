@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GitCompare, X, ExternalLink } from "lucide-react";
+import { GitCompare, X, ExternalLink, Eye } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
@@ -206,8 +206,13 @@ export default function Printers() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPrinters.map((printer) => (
               <Card key={printer.id} className="p-6 space-y-4 relative">
-                {/* Compare Checkbox */}
-                <div className="absolute top-4 right-4">
+                {/* Compare Checkbox and View Button */}
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <Link to={`/printers/${printer.id}`}>
+                    <Button variant="ghost" size="icon">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </Link>
                   <Checkbox
                     checked={selectedForCompare.includes(printer.printer_id)}
                     onCheckedChange={() => toggleCompareSelection(printer.printer_id)}
@@ -215,7 +220,7 @@ export default function Printers() {
                 </div>
 
                 {/* Header */}
-                <div className="space-y-2 pr-8">
+                <div className="space-y-2 pr-16">
                   <div className="text-sm text-muted-foreground">
                     {printer.brand?.brand}
                   </div>

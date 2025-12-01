@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Eye } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -105,9 +105,16 @@ const PrinterCompare = () => {
           <div></div>
           {printers.map((printer) => (
             <Card key={printer.id} className="p-4 space-y-2">
-              <h3 className="font-bold text-lg">
-                {printer.brand?.brand} {printer.model_name}
-              </h3>
+              <div className="flex items-start justify-between">
+                <h3 className="font-bold text-lg">
+                  {printer.brand?.brand} {printer.model_name}
+                </h3>
+                <Link to={`/printers/${printer.id}`}>
+                  <Button variant="ghost" size="icon">
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
               {printer.series?.series_name && (
                 <p className="text-sm text-muted-foreground">{printer.series.series_name}</p>
               )}
