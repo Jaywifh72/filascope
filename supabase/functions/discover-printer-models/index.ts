@@ -713,28 +713,34 @@ Deno.serve(async (req) => {
           // Ratrig: Extract printers from Shopify collection page
           console.log('Extracting Ratrig printer models from product listing page');
           
-          // Ratrig uses Shopify, look for product card links
-          const linkPattern = /<a[^>]+href="(\/products\/[^"]*)"[^>]*class="[^"]*card[^"]*"[^>]*>[\s\S]*?<h3[^>]*>(.*?)<\/h3>/gi;
+          // Ratrig uses product-item-meta__title class for product links
+          const linkPattern = /<a[^>]+href="(\/products\/[^"]+)"[^>]*class="product-item-meta__title"[^>]*>([^<]+)<\/a>/gi;
           const linkMatches = html.matchAll(linkPattern);
           const productUrls = new Map<string, string>();
           
           for (const match of linkMatches) {
             const path = match[1];
-            let title = match[2].replace(/<[^>]+>/g, '').trim();
+            let title = match[2].trim();
             
             if (!title || title.length < 3) continue;
             
-            // Skip non-printer items
-            if (title.toLowerCase().includes('accessory') ||
-                title.toLowerCase().includes('spare') ||
-                title.toLowerCase().includes('kit') && !title.toLowerCase().includes('v-core') ||
-                title.toLowerCase().includes('upgrade')) {
+            // Skip obvious non-printer items
+            if (title.toLowerCase().includes('flexplate') ||
+                title.toLowerCase().includes('extruder') ||
+                title.toLowerCase().includes('pulley') ||
+                title.toLowerCase().includes('led light') ||
+                title.toLowerCase().includes('stepper motor') ||
+                title.toLowerCase().includes('hub hat') ||
+                title.toLowerCase().includes('splitter') ||
+                title.toLowerCase().includes('toolboard') ||
+                title.toLowerCase().includes('plate set') && !title.toLowerCase().includes('v-core')) {
               console.log(`Skipping non-printer item: ${title}`);
               continue;
             }
             
             const fullUrl = `${scrapeConfig.product_url_base}${path}`;
             productUrls.set(fullUrl, title);
+            console.log(`Found potential Ratrig product: ${title} at ${fullUrl}`);
           }
           
           console.log(`Found ${productUrls.size} potential Ratrig printer URLs from HTML parsing`);
@@ -750,15 +756,18 @@ Deno.serve(async (req) => {
             cleanTitle = cleanTitle.replace(/\s*-\s*Ratrig\s*/gi, '').trim();
             cleanTitle = cleanTitle.replace(/^(Ratrig|Rat\s*Rig)\s*/gi, '').trim();
             
+            // Remove common suffixes like "- US" or "- EU"
+            cleanTitle = cleanTitle.replace(/\s*-\s*(US|EU|UK|CA)\s*$/i, '').trim();
+            
             // Remove "3D Printer" suffix
             cleanTitle = cleanTitle.replace(/\s*3D\s*Printer\s*$/i, '').trim();
+            
+            // Remove upgrade/kit suffixes for filtering but keep for actual name
+            const isUpgradeKit = /upgrade|kit/i.test(cleanTitle);
             
             // Remove pricing and marketing info
             cleanTitle = cleanTitle.split(/[\$€£¥]/)[0].trim();
             cleanTitle = cleanTitle.split(/from\s+[\$€£¥]/i)[0].trim();
-            cleanTitle = cleanTitle.split(/in\s*stock/i)[0].trim();
-            cleanTitle = cleanTitle.split(/out\s+of\s+stock/i)[0].trim();
-            cleanTitle = cleanTitle.split(/estimated\s+leadtime/i)[0].trim();
             
             // Clean up extra characters and whitespace
             cleanTitle = cleanTitle.replace(/[,\-–—]+$/, '').trim();
@@ -767,6 +776,13 @@ Deno.serve(async (req) => {
             // Skip if title is too short
             if (cleanTitle.length < 3) {
               console.log(`Skipping short title: ${cleanTitle}`);
+              continue;
+            }
+            
+            // Only include items that are actual printers or printer kits
+            // Look for V-Core in the name as those are the main printer lines
+            if (!cleanTitle.toLowerCase().includes('v-core')) {
+              console.log(`Skipping non-V-Core item: ${cleanTitle}`);
               continue;
             }
             
