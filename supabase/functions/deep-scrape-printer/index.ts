@@ -131,40 +131,48 @@ Deno.serve(async (req) => {
 
     console.log('Scrape successful, analyzing content...');
 
-    // Check if this is a resin printer - SKIP ALL RESIN PRINTERS
     const lowerMarkdown = markdown.toLowerCase();
-    const isResinPrinter = (
-      lowerMarkdown.includes('resin') ||
-      lowerMarkdown.includes('photon') ||
-      lowerMarkdown.includes('sla') ||
-      lowerMarkdown.includes('dlp') ||
-      lowerMarkdown.includes('msla') ||
-      (lowerMarkdown.includes('lcd screen') && lowerMarkdown.includes('uv')) ||
-      lowerMarkdown.includes('monochrome lcd') ||
-      lowerMarkdown.includes('photopolymer') ||
-      lowerMarkdown.includes('405nm') || // UV wavelength used in resin printers
-      lowerMarkdown.includes('vat polymerization')
-    );
     
-    if (isResinPrinter) {
-      console.log('Detected resin printer - marking as invalid (FDM only)');
-      
-      await supabase
-        .from('printers')
-        .update({
-          scrape_status: 'failed',
-          scrape_error: 'Resin printer detected - only FDM printers are supported',
-        })
-        .eq('id', printerId);
-      
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Resin printer detected - only FDM printers are supported',
-          printerId,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    // Skip resin detection for Anycubic Kobra printers (all FDM)
+    const isAnycubicKobra = printer.model_name?.toLowerCase().includes('kobra');
+    
+    if (!isAnycubicKobra) {
+      // Check if this is a resin printer - SKIP ALL RESIN PRINTERS
+      const isResinPrinter = (
+        lowerMarkdown.includes('resin') ||
+        lowerMarkdown.includes('photon') ||
+        lowerMarkdown.includes('sla') ||
+        lowerMarkdown.includes('dlp') ||
+        lowerMarkdown.includes('msla') ||
+        (lowerMarkdown.includes('lcd screen') && lowerMarkdown.includes('uv')) ||
+        lowerMarkdown.includes('monochrome lcd') ||
+        lowerMarkdown.includes('photopolymer') ||
+        lowerMarkdown.includes('405nm') || // UV wavelength used in resin printers
+        lowerMarkdown.includes('vat polymerization')
       );
+      
+      if (isResinPrinter) {
+        console.log('Detected resin printer - marking as invalid (FDM only)');
+        
+        await supabase
+          .from('printers')
+          .update({
+            scrape_status: 'failed',
+            scrape_error: 'Resin printer detected - only FDM printers are supported',
+          })
+          .eq('id', printerId);
+        
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Resin printer detected - only FDM printers are supported',
+            printerId,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else {
+      console.log('Skipping resin detection for Anycubic Kobra (known FDM)');
     }
 
     // Extract comprehensive specifications from markdown
