@@ -159,22 +159,67 @@ Deno.serve(async (req) => {
 
         console.log('Models list page scraped successfully');
 
-        // Step 2: Extract model names from the page
-        // This is a simplified extraction - in production, you'd parse the HTML based on selectors
+        // Step 2: Extract model names from the page with brand-specific intelligence
         const markdown = modelsPageResult.markdown || '';
+        const html = modelsPageResult.html || '';
         const modelNames: string[] = [];
 
-        // Extract model names using regex patterns based on brand
-        // This is a basic implementation - customize based on actual brand pages
-        const lines = markdown.split('\n');
-        for (const line of lines) {
-          const trimmedLine = line.trim();
-          // Look for lines that might contain model names
-          if (trimmedLine && !trimmedLine.startsWith('#') && !trimmedLine.startsWith('-')) {
-            // Basic model name detection (customize per brand)
-            const match = trimmedLine.match(/([A-Z0-9\s\-]+\s+[A-Z0-9]+)/);
-            if (match) {
-              modelNames.push(match[1].trim());
+        console.log('Extracting model names for brand:', brand.brand);
+
+        // Brand-specific model extraction
+        if (brand.brand.toLowerCase() === 'anycubic') {
+          // Anycubic has two main printer lines: Kobra (FDM) and Photon (Resin)
+          // Extract from product links in HTML
+          const linkMatches = html.matchAll(/href="([^"]*\/products\/[^"]+)"/gi);
+          const productUrls = new Set<string>();
+          
+          for (const match of linkMatches) {
+            const url = match[1];
+            const urlLower = url.toLowerCase();
+            
+            // Only include links that contain printer line names
+            if (urlLower.includes('kobra') || urlLower.includes('photon')) {
+              // Skip accessories, filaments, resins, etc.
+              if (urlLower.includes('resin') && !urlLower.includes('photon')) continue;
+              if (urlLower.includes('filament')) continue;
+              if (urlLower.includes('wash')) continue;
+              if (urlLower.includes('cure')) continue;
+              if (urlLower.includes('accessory') || urlLower.includes('accessories')) continue;
+              if (urlLower.includes('plate')) continue;
+              if (urlLower.includes('nozzle')) continue;
+              if (urlLower.includes('tool')) continue;
+              
+              productUrls.add(url);
+            }
+          }
+          
+          console.log(`Found ${productUrls.size} potential Anycubic printer product URLs`);
+          
+          // Extract model names from URLs
+          for (const url of productUrls) {
+            const pathMatch = url.match(/\/products\/([^\/\?#]+)/);
+            if (pathMatch) {
+              const slug = pathMatch[1];
+              // Convert slug to readable name (e.g., "kobra-2-pro" -> "Kobra 2 Pro")
+              const modelName = slug
+                .split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+              
+              modelNames.push(modelName);
+              console.log(`Extracted model: ${modelName} from ${url}`);
+            }
+          }
+        } else {
+          // Generic extraction for other brands
+          const lines = markdown.split('\n');
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (trimmedLine && !trimmedLine.startsWith('#') && !trimmedLine.startsWith('-')) {
+              const match = trimmedLine.match(/([A-Z0-9\s\-]+\s+[A-Z0-9]+)/);
+              if (match) {
+                modelNames.push(match[1].trim());
+              }
             }
           }
         }
@@ -224,12 +269,62 @@ Deno.serve(async (req) => {
 
             if (!modelPageResult.success) {
               console.error(`Failed to scrape model page for ${modelName}`);
+              
+              // Log failed discovery attempt
+              await supabase.from('discovery_models').insert({
+                discovery_run_id: discoveryRunId,
+                model_name: modelName,
+                was_new: false,
+                discovered_at: new Date().toISOString(),
+              });
+              
               continue;
             }
 
-            // Parse specs from markdown (simplified - customize based on brand pages)
-            const modelMarkdown = modelPageResult.markdown || '';
-            const specs = parseModelSpecs(modelMarkdown, modelName);
+            // Validate that this is actually a printer product page
+            const pageMarkdown = (modelPageResult.markdown || '').toLowerCase();
+            const pageHtml = (modelPageResult.html || '').toLowerCase();
+            
+            // Check for printer-related keywords
+            const isPrinterPage = (
+              pageMarkdown.includes('printer') ||
+              pageMarkdown.includes('build volume') ||
+              pageMarkdown.includes('nozzle') ||
+              pageMarkdown.includes('extruder') ||
+              pageMarkdown.includes('print speed') ||
+              pageHtml.includes('3d printer')
+            );
+            
+            // Check for non-printer keywords (accessories, consumables)
+            const isNonPrinter = (
+              pageMarkdown.includes('wash and cure') ||
+              pageMarkdown.includes('resin bottle') ||
+              pageMarkdown.includes('build plate only') ||
+              pageMarkdown.includes('replacement part') ||
+              pageMarkdown.includes('accessory kit')
+            );
+            
+            if (!isPrinterPage || isNonPrinter) {
+              console.log(`Skipping ${modelName} - does not appear to be a printer product`);
+              
+              // Log non-printer discovery
+              await supabase.from('discovery_models').insert({
+                discovery_run_id: discoveryRunId,
+                model_name: modelName,
+                was_new: false,
+                discovered_at: new Date().toISOString(),
+              });
+              
+              continue;
+            }
+            
+            console.log(`Validated ${modelName} as a printer product`)
+
+            
+            console.log(`Validated ${modelName} as a printer product`);
+
+            // Parse specs from markdown
+            const specs = parseModelSpecs(pageMarkdown, modelName);
 
             // Insert new printer with pending status
             const { data: newPrinter, error: insertError } = await supabase
