@@ -1019,6 +1019,8 @@ export default function AdminPrinters() {
                                         <h5 className="text-sm font-medium mb-2">Features</h5>
                                         <div className="grid grid-cols-2 gap-1 text-sm">
                                           {renderSpecField('Auto Bed Leveling', (printer.scraped_data as any).extracted_specs.auto_bed_leveling)}
+                                          {renderSpecField('ABL Method', (printer.scraped_data as any).extracted_specs.auto_bed_leveling_method)}
+                                          {renderSpecField('Z-Offset Support', (printer.scraped_data as any).extracted_specs.z_offset_supported)}
                                           {renderSpecField('Enclosure', (printer.scraped_data as any).extracted_specs.has_enclosure)}
                                           {renderSpecField('Heated Enclosure', (printer.scraped_data as any).extracted_specs.enclosure_heated)}
                                           {renderSpecField('Multi-Material', (printer.scraped_data as any).extracted_specs.multi_material_supported)}
@@ -1026,16 +1028,59 @@ export default function AdminPrinters() {
                                           {renderSpecField('Remote Monitoring', (printer.scraped_data as any).extracted_specs.remote_monitoring_supported)}
                                           {renderSpecField('Remote Control', (printer.scraped_data as any).extracted_specs.remote_control_supported)}
                                           {renderSpecField('Input Shaping', (printer.scraped_data as any).extracted_specs.input_shaping_supported)}
+                                          {renderSpecField('Power Loss Recovery', (printer.scraped_data as any).extracted_specs.power_loss_recovery)}
                                         </div>
                                       </div>
 
-                                      {/* Display & Other */}
+                                      {/* Advanced Features */}
                                       <div>
-                                        <h5 className="text-sm font-medium mb-2">Display & Other</h5>
+                                        <h5 className="text-sm font-medium mb-2">Advanced Features</h5>
+                                        <div className="grid grid-cols-2 gap-1 text-sm">
+                                          {renderSpecField('Pressure Advance', (printer.scraped_data as any).extracted_specs.pressure_advance_supported)}
+                                          {renderSpecField('Flow Calibration', (printer.scraped_data as any).extracted_specs.flow_calibration_supported)}
+                                          {renderSpecField('Filament Runout', (printer.scraped_data as any).extracted_specs.filament_runout_detection)}
+                                          {renderSpecField('Entanglement Detect', (printer.scraped_data as any).extracted_specs.filament_entanglement_detection)}
+                                          {renderSpecField('AI Spaghetti Detect', (printer.scraped_data as any).extracted_specs.ai_spaghetti_detection)}
+                                          {renderSpecField('Object Skip', (printer.scraped_data as any).extracted_specs.object_skip_supported)}
+                                          {renderSpecField('Area Leveling', (printer.scraped_data as any).extracted_specs.area_leveling_supported)}
+                                        </div>
+                                      </div>
+
+                                      {/* Hotend Details */}
+                                      <div>
+                                        <h5 className="text-sm font-medium mb-2">Hotend Details</h5>
+                                        <div className="grid grid-cols-2 gap-1 text-sm">
+                                          {renderSpecField('Hotend Type', (printer.scraped_data as any).extracted_specs.hotend_type)}
+                                          {renderSpecField('Material Composition', (printer.scraped_data as any).extracted_specs.hotend_material_composition)}
+                                          {renderSpecField('Quick Release', (printer.scraped_data as any).extracted_specs.quick_release_hotend)}
+                                          {renderSpecField('Supported Nozzles', (printer.scraped_data as any).extracted_specs.supported_nozzle_diameters_mm)}
+                                          {renderSpecField('Extruder Type', (printer.scraped_data as any).extracted_specs.extruder_type)}
+                                        </div>
+                                      </div>
+
+                                      {/* Package Specifications */}
+                                      <div>
+                                        <h5 className="text-sm font-medium mb-2">Package Specifications</h5>
+                                        <div className="grid grid-cols-2 gap-1 text-sm">
+                                          {renderSpecField('Package Width', (printer.scraped_data as any).extracted_specs.package_width_mm, 'mm')}
+                                          {renderSpecField('Package Depth', (printer.scraped_data as any).extracted_specs.package_depth_mm, 'mm')}
+                                          {renderSpecField('Package Height', (printer.scraped_data as any).extracted_specs.package_height_mm, 'mm')}
+                                          {renderSpecField('Package Weight', (printer.scraped_data as any).extracted_specs.package_weight_kg, 'kg')}
+                                        </div>
+                                      </div>
+
+                                      {/* Display & System */}
+                                      <div>
+                                        <h5 className="text-sm font-medium mb-2">Display & System</h5>
                                         <div className="grid grid-cols-2 gap-1 text-sm">
                                           {renderSpecField('Screen Type', (printer.scraped_data as any).extracted_specs.screen_type)}
                                           {renderSpecField('Screen Size', (printer.scraped_data as any).extracted_specs.screen_size_inch, '"')}
+                                          {renderSpecField('Bed Type', (printer.scraped_data as any).extracted_specs.bed_type)}
+                                          {renderSpecField('Firmware', (printer.scraped_data as any).extracted_specs.firmware_family)}
+                                          {renderSpecField('Languages', (printer.scraped_data as any).extracted_specs.ui_language_options)}
+                                          {renderSpecField('Noise Level', (printer.scraped_data as any).extracted_specs.noise_level_printing_db, 'dB')}
                                           {renderSpecField('Technology', (printer.scraped_data as any).extracted_specs.printer_technology)}
+                                          {renderSpecField('Supported Materials', (printer.scraped_data as any).extracted_specs.official_supported_materials)}
                                           {renderSpecField('MSRP', (printer.scraped_data as any).extracted_specs.msrp_usd, 'USD')}
                                         </div>
                                       </div>
