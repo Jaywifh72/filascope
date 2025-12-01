@@ -377,38 +377,6 @@ Deno.serve(async (req) => {
             const pageMarkdown = (modelPageResult.markdown || '').toLowerCase();
             const pageHtml = (modelPageResult.html || '').toLowerCase();
             
-            // Check for resin printer indicators - SKIP ALL RESIN PRINTERS
-            // BUT: Skip this check for brands that already filter FDM-only in extraction
-            const isAnycubicKobra = brand.brand.toLowerCase() === 'anycubic' && modelName.toLowerCase().includes('kobra');
-            const isAnkerMake = brand.brand.toLowerCase() === 'ankermake';
-            const isBambuLab = brand.brand.toLowerCase() === 'bambu lab';
-            const isCreality = brand.brand.toLowerCase() === 'creality';
-            
-            const isResinPrinter = !isAnycubicKobra && !isAnkerMake && !isBambuLab && !isCreality && (
-              pageMarkdown.includes('resin') ||
-              pageMarkdown.includes('photon') ||
-              pageMarkdown.includes('sla') ||
-              pageMarkdown.includes('dlp') ||
-              pageMarkdown.includes('msla') ||
-              pageMarkdown.includes('lcd screen') && pageMarkdown.includes('uv') ||
-              pageMarkdown.includes('monochrome lcd') ||
-              pageMarkdown.includes('photopolymer')
-            );
-            
-            if (isResinPrinter) {
-              console.log(`Skipping ${modelName} - detected as resin printer (FDM only)`);
-              
-              // Log resin printer discovery
-              await supabase.from('discovery_models').insert({
-                discovery_run_id: discoveryRunId,
-                model_name: modelName,
-                was_new: false,
-                discovered_at: new Date().toISOString(),
-              });
-              
-              continue;
-            }
-            
             // Check for printer-related keywords
             const isPrinterPage = (
               pageMarkdown.includes('printer') ||
