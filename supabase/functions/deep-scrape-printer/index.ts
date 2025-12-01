@@ -131,8 +131,43 @@ Deno.serve(async (req) => {
 
     console.log('Scrape successful, analyzing content...');
 
-    // Extract comprehensive specifications from markdown
+    // Check if this is a resin printer - SKIP ALL RESIN PRINTERS
     const lowerMarkdown = markdown.toLowerCase();
+    const isResinPrinter = (
+      lowerMarkdown.includes('resin') ||
+      lowerMarkdown.includes('photon') ||
+      lowerMarkdown.includes('sla') ||
+      lowerMarkdown.includes('dlp') ||
+      lowerMarkdown.includes('msla') ||
+      (lowerMarkdown.includes('lcd screen') && lowerMarkdown.includes('uv')) ||
+      lowerMarkdown.includes('monochrome lcd') ||
+      lowerMarkdown.includes('photopolymer') ||
+      lowerMarkdown.includes('405nm') || // UV wavelength used in resin printers
+      lowerMarkdown.includes('vat polymerization')
+    );
+    
+    if (isResinPrinter) {
+      console.log('Detected resin printer - marking as invalid (FDM only)');
+      
+      await supabase
+        .from('printers')
+        .update({
+          scrape_status: 'failed',
+          scrape_error: 'Resin printer detected - only FDM printers are supported',
+        })
+        .eq('id', printerId);
+      
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Resin printer detected - only FDM printers are supported',
+          printerId,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Extract comprehensive specifications from markdown
     const extractedSpecs = {
       // Dimensions
       build_volume_x_mm: extractNumber(markdown, ['build volume', 'print volume', 'x:', 'width']),
@@ -181,7 +216,7 @@ Deno.serve(async (req) => {
       screen_size_inch: extractNumber(markdown, ['screen', 'display', 'inch', '"']),
       
       // Materials
-      printer_technology: lowerMarkdown.includes('fdm') ? 'FDM' : lowerMarkdown.includes('resin') ? 'Resin' : null,
+      printer_technology: lowerMarkdown.includes('fdm') ? 'FDM' : lowerMarkdown.includes('fff') ? 'FFF' : null,
       official_supported_materials: extractText(markdown, ['materials', 'filament', 'pla', 'abs', 'petg']),
       
       // Pricing

@@ -177,10 +177,16 @@ Deno.serve(async (req) => {
             const url = match[1];
             const urlLower = url.toLowerCase();
             
-            // Only include links that contain printer line names
-            if (urlLower.includes('kobra') || urlLower.includes('photon')) {
-              // Skip accessories, filaments, resins, etc.
-              if (urlLower.includes('resin') && !urlLower.includes('photon')) continue;
+            // Skip ALL resin printers - Photon series is resin only
+            if (urlLower.includes('photon')) {
+              console.log(`Skipping resin printer: ${url}`);
+              continue;
+            }
+            
+            // Only include Kobra (FDM) line
+            if (urlLower.includes('kobra')) {
+              // Skip accessories, filaments, etc.
+              if (urlLower.includes('resin')) continue;
               if (urlLower.includes('filament')) continue;
               if (urlLower.includes('wash')) continue;
               if (urlLower.includes('cure')) continue;
@@ -193,7 +199,7 @@ Deno.serve(async (req) => {
             }
           }
           
-          console.log(`Found ${productUrls.size} potential Anycubic printer product URLs`);
+          console.log(`Found ${productUrls.size} potential Anycubic FDM printer product URLs`);
           
           // Extract model names from URLs
           for (const url of productUrls) {
@@ -206,8 +212,15 @@ Deno.serve(async (req) => {
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ');
               
+              // Additional safety check: skip any models with resin indicators
+              const modelNameLower = modelName.toLowerCase();
+              if (modelNameLower.includes('photon') || modelNameLower.includes('resin')) {
+                console.log(`Skipping resin printer model: ${modelName}`);
+                continue;
+              }
+              
               modelNames.push(modelName);
-              console.log(`Extracted model: ${modelName} from ${url}`);
+              console.log(`Extracted FDM model: ${modelName} from ${url}`);
             }
           }
         } else {
@@ -284,6 +297,32 @@ Deno.serve(async (req) => {
             // Validate that this is actually a printer product page
             const pageMarkdown = (modelPageResult.markdown || '').toLowerCase();
             const pageHtml = (modelPageResult.html || '').toLowerCase();
+            
+            // Check for resin printer indicators - SKIP ALL RESIN PRINTERS
+            const isResinPrinter = (
+              pageMarkdown.includes('resin') ||
+              pageMarkdown.includes('photon') ||
+              pageMarkdown.includes('sla') ||
+              pageMarkdown.includes('dlp') ||
+              pageMarkdown.includes('msla') ||
+              pageMarkdown.includes('lcd screen') && pageMarkdown.includes('uv') ||
+              pageMarkdown.includes('monochrome lcd') ||
+              pageMarkdown.includes('photopolymer')
+            );
+            
+            if (isResinPrinter) {
+              console.log(`Skipping ${modelName} - detected as resin printer (FDM only)`);
+              
+              // Log resin printer discovery
+              await supabase.from('discovery_models').insert({
+                discovery_run_id: discoveryRunId,
+                model_name: modelName,
+                was_new: false,
+                discovered_at: new Date().toISOString(),
+              });
+              
+              continue;
+            }
             
             // Check for printer-related keywords
             const isPrinterPage = (
