@@ -292,6 +292,63 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} Creality printer URLs`);
+        } else if (brand.brand.toLowerCase() === 'elegoo') {
+          // Elegoo: Extract FDM printers from Shopify collection page
+          // Look for product links in HTML with proper titles
+          const linkPattern = /<a[^>]+href="([^"]*\/products\/[^"]+)"[^>]*>([^<]*(?:<[^>]+>[^<]*)*?)<\/a>/gi;
+          const linkMatches = html.matchAll(linkPattern);
+          const productUrls = new Map<string, string>(); // url -> title
+          
+          for (const match of linkMatches) {
+            const url = match[1];
+            let title = match[2].replace(/<[^>]+>/g, '').trim(); // Strip HTML tags
+            
+            // Skip empty titles
+            if (!title || title.length < 3) continue;
+            
+            // Skip navigation/UI links
+            if (title.toLowerCase().includes('skip to') || 
+                title.toLowerCase().includes('search') ||
+                title.toLowerCase().includes('cart') ||
+                title.toLowerCase().includes('account')) {
+              continue;
+            }
+            
+            // Skip non-printer products
+            if (title.toLowerCase().includes('resin') ||
+                title.toLowerCase().includes('wash') ||
+                title.toLowerCase().includes('cure') ||
+                title.toLowerCase().includes('filament') ||
+                title.toLowerCase().includes('build plate') ||
+                title.toLowerCase().includes('spare') ||
+                title.toLowerCase().includes('accessory')) {
+              continue;
+            }
+            
+            // For Elegoo, we want the full product name as it appears
+            productUrls.set(url, title);
+          }
+          
+          console.log(`Found ${productUrls.size} potential Elegoo printer URLs from HTML parsing`);
+          
+          // Deduplicate by URL and take the longest/most descriptive title
+          const finalUrls = new Map<string, string>();
+          for (const [url, title] of productUrls) {
+            const normalizedUrl = url.split('?')[0]; // Remove query params
+            
+            if (!finalUrls.has(normalizedUrl) || title.length > finalUrls.get(normalizedUrl)!.length) {
+              finalUrls.set(normalizedUrl, title);
+            }
+          }
+          
+          // Store in modelMap
+          for (const [url, title] of finalUrls) {
+            const fullUrl = url.startsWith('http') ? url : `${scrapeConfig.product_url_base}${url}`;
+            modelMap.set(title, fullUrl);
+            console.log(`Found Elegoo printer: ${title} at ${fullUrl}`);
+          }
+          
+          console.log(`Found ${modelMap.size} Elegoo printer URLs after deduplication`);
         } else {
           // Generic extraction for other brands
           const lines = markdown.split('\n');
