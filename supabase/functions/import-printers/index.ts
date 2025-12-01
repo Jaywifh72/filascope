@@ -334,7 +334,7 @@ serve(async (req) => {
           rating_print_quality: convertValue(row.rating_print_quality, "number"),
           rating_reliability: convertValue(row.rating_reliability, "number"),
           rating_value_for_money: convertValue(row.rating_value_for_money, "number"),
-          review_count_aggregated: convertValue(row.review_count_aggregated, "number"),
+          review_count_aggregated: convertValue(row.review_count_aggregated, "number") ? Math.floor(convertValue(row.review_count_aggregated, "number")) : null,
           community_popularity_score: convertValue(row.community_popularity_score, "number"),
           common_mods_tags: convertValue(row.common_mods_tags, "text"),
           compatible_plate_types: convertValue(row.compatible_plate_types, "text"),
