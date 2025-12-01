@@ -26,14 +26,14 @@ interface CSVRow {
   [key: string]: string;
 }
 
-// Parse CSV string to array of objects
+// Parse CSV string to array of objects with proper quote handling
 function parseCSV(csvData: string): CSVRow[] {
   const lines = csvData.trim().split("\n");
-  const headers = lines[0].split(",").map(h => h.trim());
+  const headers = parseCSVLine(lines[0]);
   
   const rows: CSVRow[] = [];
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(",");
+    const values = parseCSVLine(lines[i]);
     const row: CSVRow = {};
     headers.forEach((header, index) => {
       row[header] = values[index]?.trim() || "";
@@ -42,6 +42,37 @@ function parseCSV(csvData: string): CSVRow[] {
   }
   
   return rows;
+}
+
+// Properly parse a CSV line handling quoted fields
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    
+    if (char === '"') {
+      // Handle escaped quotes ("")
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  
+  // Push the last field
+  result.push(current);
+  
+  return result;
 }
 
 // Convert string values to appropriate types
