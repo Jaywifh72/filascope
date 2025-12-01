@@ -6,7 +6,9 @@ const corsHeaders = {
 };
 
 // Direct Firecrawl API calls to avoid library compatibility issues
-async function firecrawlScrape(url: string, apiKey: string, options: any) {
+async function firecrawlScrape(url: string, apiKey: string, formats: any[]) {
+  console.log('Calling Firecrawl API for:', url, 'with formats:', formats);
+  
   const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
     method: 'POST',
     headers: {
@@ -14,16 +16,21 @@ async function firecrawlScrape(url: string, apiKey: string, options: any) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      url,
-      ...options,
+      url: url,
+      formats: formats,
+      onlyMainContent: true,
     }),
   });
 
+  const responseData = await response.json();
+  console.log('Firecrawl response status:', response.status);
+  
   if (!response.ok) {
-    throw new Error(`Firecrawl API error: ${response.statusText}`);
+    console.error('Firecrawl error response:', responseData);
+    throw new Error(`Firecrawl API error: ${response.statusText} - ${JSON.stringify(responseData)}`);
   }
 
-  return await response.json();
+  return responseData;
 }
 
 interface DeepScrapeRequest {
@@ -72,14 +79,14 @@ Deno.serve(async (req) => {
 
     // Scrape the product page with all formats
     console.log('Scraping URL:', printer.official_product_url);
-    const scrapeResult = await firecrawlScrape(printer.official_product_url, firecrawlApiKey, {
-      formats: ['markdown', 'html', 'links', 'screenshot'],
-      onlyMainContent: true,
-      waitFor: 3000,
-    });
+    const scrapeResult = await firecrawlScrape(
+      printer.official_product_url, 
+      firecrawlApiKey,
+      ['markdown', 'html', 'links', 'screenshot']
+    );
 
     if (!scrapeResult || !scrapeResult.data) {
-      throw new Error('Failed to scrape product page');
+      throw new Error('Failed to scrape product page - no data returned');
     }
 
     const data = scrapeResult.data;
@@ -122,12 +129,16 @@ Return a JSON object with all specifications you can find. Use these field names
 
 Include any other specifications you find. Be precise with units. Return null for fields not found.`;
 
-    const extractionResult = await firecrawlScrape(printer.official_product_url, firecrawlApiKey, {
-      formats: [{ 
-        type: 'json', 
-        prompt: extractionPrompt 
-      }],
-    });
+    const extractionResult = await firecrawlScrape(
+      printer.official_product_url,
+      firecrawlApiKey,
+      [{
+        type: 'json',
+        jsonOptions: {
+          prompt: extractionPrompt
+        }
+      }]
+    );
 
     let extractedSpecs = {};
     if (extractionResult && extractionResult.data && extractionResult.data.json) {
