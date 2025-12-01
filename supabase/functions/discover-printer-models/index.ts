@@ -709,6 +709,79 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} QIDI printer URLs after deduplication`);
+        } else if (brand.brand.toLowerCase() === 'ratrig') {
+          // Ratrig: Extract printers from Shopify collection page
+          console.log('Extracting Ratrig printer models from product listing page');
+          
+          // Ratrig uses Shopify, look for product card links
+          const linkPattern = /<a[^>]+href="(\/products\/[^"]*)"[^>]*class="[^"]*card[^"]*"[^>]*>[\s\S]*?<h3[^>]*>(.*?)<\/h3>/gi;
+          const linkMatches = html.matchAll(linkPattern);
+          const productUrls = new Map<string, string>();
+          
+          for (const match of linkMatches) {
+            const path = match[1];
+            let title = match[2].replace(/<[^>]+>/g, '').trim();
+            
+            if (!title || title.length < 3) continue;
+            
+            // Skip non-printer items
+            if (title.toLowerCase().includes('accessory') ||
+                title.toLowerCase().includes('spare') ||
+                title.toLowerCase().includes('kit') && !title.toLowerCase().includes('v-core') ||
+                title.toLowerCase().includes('upgrade')) {
+              console.log(`Skipping non-printer item: ${title}`);
+              continue;
+            }
+            
+            const fullUrl = `${scrapeConfig.product_url_base}${path}`;
+            productUrls.set(fullUrl, title);
+          }
+          
+          console.log(`Found ${productUrls.size} potential Ratrig printer URLs from HTML parsing`);
+          
+          // Process and clean titles
+          for (const [url, title] of productUrls) {
+            let cleanTitle = title;
+            
+            // Remove status prefixes
+            cleanTitle = cleanTitle.replace(/^(Sale|Sold out|New|Pre-order)\s*/i, '').trim();
+            
+            // Remove brand names
+            cleanTitle = cleanTitle.replace(/\s*-\s*Ratrig\s*/gi, '').trim();
+            cleanTitle = cleanTitle.replace(/^(Ratrig|Rat\s*Rig)\s*/gi, '').trim();
+            
+            // Remove "3D Printer" suffix
+            cleanTitle = cleanTitle.replace(/\s*3D\s*Printer\s*$/i, '').trim();
+            
+            // Remove pricing and marketing info
+            cleanTitle = cleanTitle.split(/[\$€£¥]/)[0].trim();
+            cleanTitle = cleanTitle.split(/from\s+[\$€£¥]/i)[0].trim();
+            cleanTitle = cleanTitle.split(/in\s*stock/i)[0].trim();
+            cleanTitle = cleanTitle.split(/out\s+of\s+stock/i)[0].trim();
+            cleanTitle = cleanTitle.split(/estimated\s+leadtime/i)[0].trim();
+            
+            // Clean up extra characters and whitespace
+            cleanTitle = cleanTitle.replace(/[,\-–—]+$/, '').trim();
+            cleanTitle = cleanTitle.replace(/\s+/g, ' ').trim();
+            
+            // Skip if title is too short
+            if (cleanTitle.length < 3) {
+              console.log(`Skipping short title: ${cleanTitle}`);
+              continue;
+            }
+            
+            // Validate it's a V-Core model
+            const isValidModel = /v-?core/i.test(cleanTitle);
+            if (!isValidModel) {
+              console.log(`Skipping non-V-Core item: ${cleanTitle}`);
+              continue;
+            }
+            
+            modelMap.set(cleanTitle, url);
+            console.log(`Found Ratrig printer: ${cleanTitle} at ${url}`);
+          }
+          
+          console.log(`Found ${modelMap.size} Ratrig printer URLs after deduplication`);
         } else if (brand.brand.toLowerCase() === 'raise3d') {
           // Raise3D: Extract printers from product listing page
           console.log('Extracting Raise3D printer models from product listing page');
