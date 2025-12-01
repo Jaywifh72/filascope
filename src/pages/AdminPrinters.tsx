@@ -131,10 +131,21 @@ export default function AdminPrinters() {
   // Approve printer mutation
   const approveMutation = useMutation({
     mutationFn: async (printerIds: string[]) => {
+      // Check for printers that are still being scraped
+      const inProgressPrinters = printerIds.filter(id => {
+        const printer = pendingPrinters?.find(p => p.id === id);
+        return printer?.scrape_status === 'in_progress';
+      });
+
+      if (inProgressPrinters.length > 0) {
+        throw new Error(`Cannot approve: ${inProgressPrinters.length} printer(s) are still being scraped. Please wait for scraping to complete.`);
+      }
+
       // For each printer, merge scraped_data with the existing record
       for (const printerId of printerIds) {
         const printer = pendingPrinters?.find(p => p.id === printerId);
-        if (printer?.scraped_data) {
+        
+        if (printer?.scrape_status === 'completed' && printer?.scraped_data) {
           const specs = (printer.scraped_data as any).extracted_specs || {};
           const { error } = await supabase
             .from("printers")
@@ -147,6 +158,7 @@ export default function AdminPrinters() {
             .eq("id", printerId);
           if (error) throw error;
         } else {
+          // Approve without scraped data (e.g., for printers that don't need scraping)
           const { error } = await supabase
             .from("printers")
             .update({ status: "active" })
