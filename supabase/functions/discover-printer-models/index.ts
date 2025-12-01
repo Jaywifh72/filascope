@@ -597,6 +597,7 @@ Deno.serve(async (req) => {
             cleanTitle = cleanTitle.split(/ships?\s+in/i)[0].trim(); // Remove from "Ships in" onward
             cleanTitle = cleanTitle.split(/available\s+on\s+request/i)[0].trim();
             cleanTitle = cleanTitle.split(/this product is/i)[0].trim();
+            cleanTitle = cleanTitle.split(/in\s*stock/i)[0].trim(); // Remove "In stock" suffix
             
             // Remove common suffix patterns
             cleanTitle = cleanTitle.replace(/\+\s*$/i, '').trim(); // Remove trailing "+"
