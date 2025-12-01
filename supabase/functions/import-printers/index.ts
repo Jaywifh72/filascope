@@ -355,6 +355,7 @@ serve(async (req) => {
 
         if (existingPrinter) {
           // Update existing printer
+          console.log(`Updating existing printer ${row.printer_id}`);
           const { error: updateError } = await supabaseClient
             .from("printers")
             .update(printerData)
@@ -362,6 +363,7 @@ serve(async (req) => {
 
           if (updateError) {
             console.error(`Update error for ${row.printer_id}:`, updateError);
+            console.error('Full update data:', JSON.stringify(printerData, null, 2));
             stats.errors.push(`Update error for ${row.printer_id}: ${updateError.message}`);
           } else {
             stats.printers_updated++;
