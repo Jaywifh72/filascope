@@ -349,6 +349,67 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} Elegoo printer URLs after deduplication`);
+        } else if (brand.brand.toLowerCase() === 'flashforge') {
+          // FlashForge: Extract FDM printers from collection page
+          // Look for product links with proper titles
+          const linkPattern = /<a[^>]+href="([^"]*\/products\/[^"]+)"[^>]*>([^<]*(?:<[^>]+>[^<]*)*?)<\/a>/gi;
+          const linkMatches = html.matchAll(linkPattern);
+          const productUrls = new Map<string, string>(); // url -> title
+          
+          for (const match of linkMatches) {
+            const url = match[1];
+            let title = match[2].replace(/<[^>]+>/g, '').trim(); // Strip HTML tags
+            
+            // Skip empty titles
+            if (!title || title.length < 3) continue;
+            
+            // Skip navigation/UI links
+            if (title.toLowerCase().includes('skip to') || 
+                title.toLowerCase().includes('search') ||
+                title.toLowerCase().includes('cart') ||
+                title.toLowerCase().includes('account') ||
+                title.toLowerCase().includes('view all')) {
+              continue;
+            }
+            
+            // Skip accessories and non-printer products
+            if (title.toLowerCase().includes('filament') ||
+                title.toLowerCase().includes('nozzle') ||
+                title.toLowerCase().includes('build plate') ||
+                title.toLowerCase().includes('spare part') ||
+                title.toLowerCase().includes('accessory') ||
+                title.toLowerCase().includes('cartridge')) {
+              continue;
+            }
+            
+            // Extract model name from title if it starts with "FlashForge"
+            if (title.toLowerCase().startsWith('flashforge ')) {
+              title = title.substring(11).trim(); // Remove "FlashForge " prefix
+            }
+            
+            productUrls.set(url, title);
+          }
+          
+          console.log(`Found ${productUrls.size} potential FlashForge printer URLs from HTML parsing`);
+          
+          // Deduplicate by URL and take the longest/most descriptive title
+          const finalUrls = new Map<string, string>();
+          for (const [url, title] of productUrls) {
+            const normalizedUrl = url.split('?')[0]; // Remove query params
+            
+            if (!finalUrls.has(normalizedUrl) || title.length > finalUrls.get(normalizedUrl)!.length) {
+              finalUrls.set(normalizedUrl, title);
+            }
+          }
+          
+          // Store in modelMap
+          for (const [url, title] of finalUrls) {
+            const fullUrl = url.startsWith('http') ? url : `${scrapeConfig.product_url_base}${url}`;
+            modelMap.set(title, fullUrl);
+            console.log(`Found FlashForge printer: ${title} at ${fullUrl}`);
+          }
+          
+          console.log(`Found ${modelMap.size} FlashForge printer URLs after deduplication`);
         } else {
           // Generic extraction for other brands
           const lines = markdown.split('\n');
