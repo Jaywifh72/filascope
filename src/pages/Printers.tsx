@@ -47,12 +47,12 @@ export default function Printers() {
         .from("printers")
         .select(`
           *,
-          brand:printer_brands(brand),
-          series:printer_series(series_name)
+          brand:printer_brands!brand_id(brand),
+          series:printer_series!series_id(series_name)
         `);
 
       if (searchTerm) {
-        query = query.or(`model_name.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%`);
+        query = query.or(`model_name.ilike.%${searchTerm}%,variant_or_bundle_name.ilike.%${searchTerm}%`);
       }
 
       if (hasEnclosure) {
