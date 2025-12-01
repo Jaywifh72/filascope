@@ -1,0 +1,20 @@
+-- Convert all numeric measurement columns to NUMERIC for decimal precision
+ALTER TABLE public.printers
+  ALTER COLUMN build_volume_x_mm TYPE NUMERIC USING build_volume_x_mm::NUMERIC,
+  ALTER COLUMN build_volume_y_mm TYPE NUMERIC USING build_volume_y_mm::NUMERIC,
+  ALTER COLUMN build_volume_z_mm TYPE NUMERIC USING build_volume_z_mm::NUMERIC,
+  ALTER COLUMN max_build_height_with_ams_mm TYPE NUMERIC USING max_build_height_with_ams_mm::NUMERIC,
+  ALTER COLUMN bed_heater_power_w TYPE NUMERIC USING bed_heater_power_w::NUMERIC,
+  ALTER COLUMN bed_max_temp_c TYPE NUMERIC USING bed_max_temp_c::NUMERIC,
+  ALTER COLUMN enclosure_max_temp_c TYPE NUMERIC USING enclosure_max_temp_c::NUMERIC,
+  ALTER COLUMN max_acceleration_xy_mmss TYPE NUMERIC USING max_acceleration_xy_mmss::NUMERIC,
+  ALTER COLUMN max_acceleration_z_mmss TYPE NUMERIC USING max_acceleration_z_mmss::NUMERIC,
+  ALTER COLUMN max_nozzle_temp_c TYPE NUMERIC USING max_nozzle_temp_c::NUMERIC,
+  ALTER COLUMN sustained_nozzle_temp_c TYPE NUMERIC USING sustained_nozzle_temp_c::NUMERIC,
+  ALTER COLUMN max_recommended_material_temp_c TYPE NUMERIC USING max_recommended_material_temp_c::NUMERIC,
+  ALTER COLUMN multi_material_spool_chamber_max_temp_c TYPE NUMERIC USING multi_material_spool_chamber_max_temp_c::NUMERIC,
+  ALTER COLUMN rated_power_w TYPE NUMERIC USING rated_power_w::NUMERIC,
+  ALTER COLUMN typical_power_pla_w TYPE NUMERIC USING typical_power_pla_w::NUMERIC,
+  ALTER COLUMN typical_power_abs_w TYPE NUMERIC USING typical_power_abs_w::NUMERIC,
+  ALTER COLUMN average_assembly_time_min TYPE NUMERIC USING average_assembly_time_min::NUMERIC,
+  ALTER COLUMN maintenance_interval_hours TYPE NUMERIC USING maintenance_interval_hours::NUMERIC;
