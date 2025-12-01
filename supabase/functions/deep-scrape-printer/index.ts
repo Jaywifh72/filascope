@@ -178,54 +178,91 @@ Deno.serve(async (req) => {
     // Extract comprehensive specifications from markdown
     const extractedSpecs = {
       // Dimensions
-      build_volume_x_mm: extractNumber(markdown, ['build volume', 'print volume', 'x:', 'width']),
-      build_volume_y_mm: extractNumber(markdown, ['build volume', 'print volume', 'y:', 'depth']),
-      build_volume_z_mm: extractNumber(markdown, ['build volume', 'print volume', 'z:', 'height']),
-      machine_width_mm: extractNumber(markdown, ['machine size', 'dimensions', 'width']),
-      machine_depth_mm: extractNumber(markdown, ['machine size', 'dimensions', 'depth']),
-      machine_height_mm: extractNumber(markdown, ['machine size', 'dimensions', 'height']),
-      machine_weight_kg: extractNumber(markdown, ['weight', 'kg']),
+      build_volume_x_mm: extractNumber(markdown, ['build volume', 'print volume', 'printing volume', 'x:', 'width']),
+      build_volume_y_mm: extractNumber(markdown, ['build volume', 'print volume', 'printing volume', 'y:', 'depth']),
+      build_volume_z_mm: extractNumber(markdown, ['build volume', 'print volume', 'printing volume', 'z:', 'height']),
+      machine_width_mm: extractNumber(markdown, ['machine size', 'machine dimension', 'dimensions', 'width']),
+      machine_depth_mm: extractNumber(markdown, ['machine size', 'machine dimension', 'dimensions', 'depth']),
+      machine_height_mm: extractNumber(markdown, ['machine size', 'machine dimension', 'dimensions', 'height']),
+      machine_weight_kg: extractNumber(markdown, ['machine weight', 'weight', 'kg']),
+      
+      // Package Specifications
+      package_width_mm: extractNumber(markdown, ['package', 'packaging dimension', 'box size', 'width']),
+      package_depth_mm: extractNumber(markdown, ['package', 'packaging dimension', 'box size', 'depth']),
+      package_height_mm: extractNumber(markdown, ['package', 'packaging dimension', 'box size', 'height']),
+      package_weight_kg: extractNumber(markdown, ['package weight', 'packaging weight', 'box weight']),
       
       // Temperatures
-      max_nozzle_temp_c: extractNumber(markdown, ['nozzle temp', 'hotend temp', 'max temp', '°c']),
-      bed_max_temp_c: extractNumber(markdown, ['bed temp', 'heated bed', 'plate temp']),
+      max_nozzle_temp_c: extractNumber(markdown, ['nozzle temp', 'hotend temp', 'max temp', 'max temperature', '°c', 'celsius']),
+      bed_max_temp_c: extractNumber(markdown, ['bed temp', 'hotbed', 'heated bed', 'plate temp', 'build plate']),
       sustained_nozzle_temp_c: extractNumber(markdown, ['sustained temp', 'continuous temp']),
       
       // Speed & Performance
-      max_print_speed_mms: extractNumber(markdown, ['max speed', 'print speed', 'mm/s']),
-      recommended_quality_speed_mms: extractNumber(markdown, ['recommended speed', 'quality speed']),
-      max_acceleration_xy_mmss: extractNumber(markdown, ['acceleration', 'mm/s²']),
+      max_print_speed_mms: extractNumber(markdown, ['max speed', 'maximum speed', 'print speed', 'mm/s', 'speed']),
+      recommended_quality_speed_mms: extractNumber(markdown, ['recommended speed', 'quality speed', 'standard speed']),
+      max_acceleration_xy_mmss: extractNumber(markdown, ['acceleration', 'mm/s²', 'mm/s2']),
       
       // Extruder & Nozzle
-      stock_nozzle_diameter_mm: extractNumber(markdown, ['nozzle', 'diameter', 'mm']),
+      stock_nozzle_diameter_mm: extractNumber(markdown, ['nozzle', 'diameter', 'standard', 'mm']),
       filament_diameter_mm: extractNumber(markdown, ['filament diameter', '1.75', '2.85']),
       extruder_count: extractNumber(markdown, ['extruder', 'count', 'dual']),
+      supported_nozzle_diameters_mm: extractText(markdown, ['nozzle diameter', 'expandable', 'compatible nozzle']),
+      
+      // Hotend Details
+      hotend_type: extractText(markdown, ['hotend', 'hot end', 'extruder type']),
+      hotend_material_composition: extractText(markdown, ['ceramic', 'throat tube', 'hotend material', 'aerospace grade']),
+      quick_release_hotend: lowerMarkdown.includes('quick release') || lowerMarkdown.includes('quick-release') || lowerMarkdown.includes('tool-free hotend'),
       
       // Connectivity
       has_wifi: lowerMarkdown.includes('wifi') || lowerMarkdown.includes('wi-fi'),
       has_ethernet: lowerMarkdown.includes('ethernet') || lowerMarkdown.includes('lan'),
       has_bluetooth: lowerMarkdown.includes('bluetooth'),
-      has_usb_a_port: lowerMarkdown.includes('usb-a') || lowerMarkdown.includes('usb port'),
+      has_usb_a_port: lowerMarkdown.includes('usb-a') || lowerMarkdown.includes('usb port') || lowerMarkdown.includes('usb (print only)'),
       has_usb_c_port: lowerMarkdown.includes('usb-c') || lowerMarkdown.includes('usb type-c'),
       has_sd_card: lowerMarkdown.includes('sd card') || lowerMarkdown.includes('microsd'),
       
-      // Features
-      auto_bed_leveling: lowerMarkdown.includes('auto bed level') || lowerMarkdown.includes('abl'),
+      // Basic Features
+      auto_bed_leveling: lowerMarkdown.includes('auto bed level') || lowerMarkdown.includes('abl') || lowerMarkdown.includes('auto-leveling'),
+      auto_bed_leveling_method: extractText(markdown, ['leveling', 'leviq', 'abl', 'z-offset']),
+      z_offset_supported: lowerMarkdown.includes('z-offset') || lowerMarkdown.includes('z offset'),
       has_enclosure: lowerMarkdown.includes('enclosure') || lowerMarkdown.includes('enclosed'),
       enclosure_heated: lowerMarkdown.includes('heated enclosure') || lowerMarkdown.includes('heated chamber'),
-      multi_material_supported: lowerMarkdown.includes('multi material') || lowerMarkdown.includes('ams'),
+      multi_material_supported: lowerMarkdown.includes('multi material') || lowerMarkdown.includes('multicolor') || lowerMarkdown.includes('ams') || lowerMarkdown.includes('ace pro'),
       abrasive_materials_supported: lowerMarkdown.includes('hardened') || lowerMarkdown.includes('abrasive'),
-      remote_monitoring_supported: lowerMarkdown.includes('camera') || lowerMarkdown.includes('monitoring'),
-      remote_control_supported: lowerMarkdown.includes('remote control') || lowerMarkdown.includes('cloud'),
+      remote_monitoring_supported: lowerMarkdown.includes('camera') || lowerMarkdown.includes('monitoring') || lowerMarkdown.includes('video monitoring'),
+      remote_control_supported: lowerMarkdown.includes('remote control') || lowerMarkdown.includes('cloud') || lowerMarkdown.includes('app control'),
       input_shaping_supported: lowerMarkdown.includes('input shaping') || lowerMarkdown.includes('resonance'),
+      power_loss_recovery: lowerMarkdown.includes('power loss') || lowerMarkdown.includes('power resume'),
+      
+      // Advanced Features
+      pressure_advance_supported: lowerMarkdown.includes('pressure advance') || lowerMarkdown.includes('flow calibration'),
+      flow_calibration_supported: lowerMarkdown.includes('flow calibration') || lowerMarkdown.includes('pressure advance'),
+      filament_runout_detection: lowerMarkdown.includes('filament detection') || lowerMarkdown.includes('runout detection') || lowerMarkdown.includes('auto resume'),
+      filament_entanglement_detection: lowerMarkdown.includes('entanglement detection') || lowerMarkdown.includes('filament tangle'),
+      ai_spaghetti_detection: lowerMarkdown.includes('spaghetti detection') || lowerMarkdown.includes('ai detection') || lowerMarkdown.includes('failure detection'),
+      object_skip_supported: lowerMarkdown.includes('object-skip') || lowerMarkdown.includes('object skip') || lowerMarkdown.includes('skip object'),
+      area_leveling_supported: lowerMarkdown.includes('area leveling') || lowerMarkdown.includes('zone leveling'),
       
       // Display
-      screen_type: extractText(markdown, ['screen', 'display', 'touchscreen', 'lcd']),
-      screen_size_inch: extractNumber(markdown, ['screen', 'display', 'inch', '"']),
+      screen_type: extractText(markdown, ['screen', 'display', 'touchscreen', 'capacitive', 'lcd']),
+      screen_size_inch: extractNumber(markdown, ['screen', 'display', 'inch', '"', 'touchscreen']),
+      
+      // Bed Type
+      bed_type: extractText(markdown, ['bed type', 'build plate', 'pei', 'spring steel', 'hotbed']),
+      
+      // Firmware
+      firmware_family: extractText(markdown, ['firmware', 'kobra os', 'marlin', 'klipper']),
       
       // Materials
       printer_technology: lowerMarkdown.includes('fdm') ? 'FDM' : lowerMarkdown.includes('fff') ? 'FFF' : null,
-      official_supported_materials: extractText(markdown, ['materials', 'filament', 'pla', 'abs', 'petg']),
+      official_supported_materials: extractText(markdown, ['supporting filaments', 'materials', 'filament', 'pla', 'abs', 'petg', 'tpu']),
+      extruder_type: extractText(markdown, ['extruder type', 'extrusion', 'direct drive', 'bowden']),
+      
+      // Noise
+      noise_level_printing_db: extractNumber(markdown, ['noise', 'db', 'decibel', 'sound']),
+      
+      // Language Support
+      ui_language_options: extractText(markdown, ['language', 'multilingual', 'en', 'cn', 'de', 'fr']),
       
       // Pricing
       msrp_usd: extractPrice(markdown),
