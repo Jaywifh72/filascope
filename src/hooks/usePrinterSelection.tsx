@@ -9,6 +9,7 @@ type PrinterBrand = Database["public"]["Tables"]["printer_brands"]["Row"];
 export function usePrinterSelection() {
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [selectedPrinterId, setSelectedPrinterId] = useState<string>("");
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Fetch brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -99,6 +100,7 @@ export function usePrinterSelection() {
     
     if (savedBrand) setSelectedBrand(savedBrand);
     if (savedPrinterId) setSelectedPrinterId(savedPrinterId);
+    setIsInitialized(true);
   }, []);
 
   return {
@@ -112,5 +114,6 @@ export function usePrinterSelection() {
     setSelectedPrinterId,
     selectedPrinter,
     printerLoading,
+    isInitialized,
   };
 }
