@@ -11,12 +11,14 @@ interface DiscoverRequest {
 }
 
 interface ScrapeConfig {
-  models_list_url: string;
-  model_url_pattern: string;
-  selectors: {
-    model_list: string;
-    model_name?: string;
-    specs?: Record<string, string>;
+  model_list_url: string;
+  product_url_base: string;
+  list_page: {
+    product_links_pattern: string;
+  };
+  product_page: {
+    title_pattern?: string;
+    specs_mapping?: Record<string, string>;
   };
 }
 
@@ -112,8 +114,28 @@ Deno.serve(async (req) => {
 
     // Start background task
     const backgroundTask = async () => {
+      let discoveryRunId: string | null = null;
+      
       try {
         console.log('Background task started for brand:', brand.brand);
+        
+        // Create discovery run record
+        const { data: discoveryRun, error: runError } = await supabase
+          .from('discovery_runs')
+          .insert({
+            brand_id: brand_id,
+            status: 'running',
+            started_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (runError || !discoveryRun) {
+          throw new Error(`Failed to create discovery run: ${runError?.message}`);
+        }
+
+        discoveryRunId = discoveryRun.id;
+        console.log('Discovery run created:', discoveryRunId);
         
         // Initialize Firecrawl
         const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
@@ -123,10 +145,11 @@ Deno.serve(async (req) => {
 
         const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey });
         let newModelsCount = 0;
+        let modelsFound = 0;
 
         // Step 1: Scrape the models list page
-        console.log('Scraping models list from:', scrapeConfig.models_list_url);
-        const modelsPageResult = await firecrawl.scrapeUrl(scrapeConfig.models_list_url, {
+        console.log('Scraping models list from:', scrapeConfig.model_list_url);
+        const modelsPageResult = await firecrawl.scrapeUrl(scrapeConfig.model_list_url, {
           formats: ['markdown', 'html'],
         });
 
@@ -156,7 +179,8 @@ Deno.serve(async (req) => {
           }
         }
 
-        console.log(`Found ${modelNames.length} potential model names`);
+        modelsFound = modelNames.length;
+        console.log(`Found ${modelsFound} potential model names`);
 
         // Step 3: Check which models already exist
         const { data: existingPrinters } = await supabase
@@ -170,17 +194,26 @@ Deno.serve(async (req) => {
 
         // Step 4: For each new model, scrape details and create entry
         for (const modelName of modelNames) {
-          if (existingModelNames.has(modelName.toLowerCase())) {
+          const wasNew = !existingModelNames.has(modelName.toLowerCase());
+          
+          if (!wasNew) {
             console.log(`Model ${modelName} already exists, skipping`);
+            
+            // Log that we found it but it wasn't new
+            await supabase.from('discovery_models').insert({
+              discovery_run_id: discoveryRunId,
+              model_name: modelName,
+              was_new: false,
+              discovered_at: new Date().toISOString(),
+            });
+            
             continue;
           }
 
           try {
-            // Construct model URL
-            const modelUrl = scrapeConfig.model_url_pattern.replace(
-              '{model}',
-              modelName.toLowerCase().replace(/\s+/g, '-')
-            );
+            // Construct model URL from base + model name pattern
+            const modelSlug = modelName.toLowerCase().replace(/\s+/g, '-');
+            const modelUrl = `${scrapeConfig.product_url_base}/products/${modelSlug}`;
 
             console.log(`Scraping model details for: ${modelName} from ${modelUrl}`);
 
@@ -199,7 +232,7 @@ Deno.serve(async (req) => {
             const specs = parseModelSpecs(modelMarkdown, modelName);
 
             // Insert new printer with pending status
-            const { error: insertError } = await supabase
+            const { data: newPrinter, error: insertError } = await supabase
               .from('printers')
               .insert({
                 brand_id: brand_id,
@@ -208,13 +241,24 @@ Deno.serve(async (req) => {
                 status: 'pending',
                 official_product_url: modelUrl,
                 ...specs,
-              });
+              })
+              .select()
+              .single();
 
             if (insertError) {
               console.error(`Error inserting model ${modelName}:`, insertError);
             } else {
               console.log(`Successfully added pending model: ${modelName}`);
               newModelsCount++;
+              
+              // Log the discovered model
+              await supabase.from('discovery_models').insert({
+                discovery_run_id: discoveryRunId,
+                printer_id: newPrinter.id,
+                model_name: modelName,
+                was_new: true,
+                discovered_at: new Date().toISOString(),
+              });
             }
 
             // Rate limiting - wait between requests
@@ -225,8 +269,19 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Step 5: Update brand with discovery stats
-        const { error: updateError } = await supabase
+        // Step 5: Update discovery run as completed
+        await supabase
+          .from('discovery_runs')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            models_found: modelsFound,
+            models_added: newModelsCount,
+          })
+          .eq('id', discoveryRunId!);
+
+        // Update brand with discovery stats
+        await supabase
           .from('printer_brands')
           .update({
             last_discovery_run_at: new Date().toISOString(),
@@ -234,14 +289,22 @@ Deno.serve(async (req) => {
           })
           .eq('id', brand_id);
 
-        if (updateError) {
-          console.error('Error updating brand stats:', updateError);
-        }
-
-        console.log(`Discovery complete. Found ${newModelsCount} new models.`);
+        console.log(`Discovery complete. Found ${modelsFound} models, added ${newModelsCount} new ones.`);
 
       } catch (error) {
         console.error('Background task error:', error);
+        
+        // Update discovery run as failed
+        if (discoveryRunId) {
+          await supabase
+            .from('discovery_runs')
+            .update({
+              status: 'failed',
+              completed_at: new Date().toISOString(),
+              error_message: error instanceof Error ? error.message : 'Unknown error',
+            })
+            .eq('id', discoveryRunId);
+        }
       }
     };
 
