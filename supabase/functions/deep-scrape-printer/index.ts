@@ -5,6 +5,40 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper functions for data extraction
+function extractNumber(text: string, keywords: string[]): number | null {
+  const lines = text.split('\n');
+  for (const line of lines) {
+    const lowerLine = line.toLowerCase();
+    if (keywords.some(kw => lowerLine.includes(kw))) {
+      const numbers = line.match(/\d+\.?\d*/g);
+      if (numbers && numbers.length > 0) {
+        return parseFloat(numbers[0]);
+      }
+    }
+  }
+  return null;
+}
+
+function extractText(text: string, keywords: string[]): string | null {
+  const lines = text.split('\n');
+  for (const line of lines) {
+    const lowerLine = line.toLowerCase();
+    if (keywords.some(kw => lowerLine.includes(kw))) {
+      return line.trim();
+    }
+  }
+  return null;
+}
+
+function extractPrice(text: string): number | null {
+  const priceMatch = text.match(/\$\s*(\d+(?:,\d{3})*(?:\.\d{2})?)/);
+  if (priceMatch) {
+    return parseFloat(priceMatch[1].replace(/,/g, ''));
+  }
+  return null;
+}
+
 // Direct Firecrawl API calls to avoid library compatibility issues
 async function firecrawlScrape(url: string, apiKey: string, formats: any[]) {
   console.log('Calling Firecrawl API for:', url, 'with formats:', formats);
@@ -97,14 +131,71 @@ Deno.serve(async (req) => {
 
     console.log('Scrape successful, analyzing content...');
 
-    // Parse basic specs from markdown content
+    // Extract comprehensive specifications from markdown
+    const lowerMarkdown = markdown.toLowerCase();
     const extractedSpecs = {
-      source: 'markdown_parsed',
+      // Dimensions
+      build_volume_x_mm: extractNumber(markdown, ['build volume', 'print volume', 'x:', 'width']),
+      build_volume_y_mm: extractNumber(markdown, ['build volume', 'print volume', 'y:', 'depth']),
+      build_volume_z_mm: extractNumber(markdown, ['build volume', 'print volume', 'z:', 'height']),
+      machine_width_mm: extractNumber(markdown, ['machine size', 'dimensions', 'width']),
+      machine_depth_mm: extractNumber(markdown, ['machine size', 'dimensions', 'depth']),
+      machine_height_mm: extractNumber(markdown, ['machine size', 'dimensions', 'height']),
+      machine_weight_kg: extractNumber(markdown, ['weight', 'kg']),
+      
+      // Temperatures
+      max_nozzle_temp_c: extractNumber(markdown, ['nozzle temp', 'hotend temp', 'max temp', '°c']),
+      bed_max_temp_c: extractNumber(markdown, ['bed temp', 'heated bed', 'plate temp']),
+      sustained_nozzle_temp_c: extractNumber(markdown, ['sustained temp', 'continuous temp']),
+      
+      // Speed & Performance
+      max_print_speed_mms: extractNumber(markdown, ['max speed', 'print speed', 'mm/s']),
+      recommended_quality_speed_mms: extractNumber(markdown, ['recommended speed', 'quality speed']),
+      max_acceleration_xy_mmss: extractNumber(markdown, ['acceleration', 'mm/s²']),
+      
+      // Extruder & Nozzle
+      stock_nozzle_diameter_mm: extractNumber(markdown, ['nozzle', 'diameter', 'mm']),
+      filament_diameter_mm: extractNumber(markdown, ['filament diameter', '1.75', '2.85']),
+      extruder_count: extractNumber(markdown, ['extruder', 'count', 'dual']),
+      
+      // Connectivity
+      has_wifi: lowerMarkdown.includes('wifi') || lowerMarkdown.includes('wi-fi'),
+      has_ethernet: lowerMarkdown.includes('ethernet') || lowerMarkdown.includes('lan'),
+      has_bluetooth: lowerMarkdown.includes('bluetooth'),
+      has_usb_a_port: lowerMarkdown.includes('usb-a') || lowerMarkdown.includes('usb port'),
+      has_usb_c_port: lowerMarkdown.includes('usb-c') || lowerMarkdown.includes('usb type-c'),
+      has_sd_card: lowerMarkdown.includes('sd card') || lowerMarkdown.includes('microsd'),
+      
+      // Features
+      auto_bed_leveling: lowerMarkdown.includes('auto bed level') || lowerMarkdown.includes('abl'),
+      has_enclosure: lowerMarkdown.includes('enclosure') || lowerMarkdown.includes('enclosed'),
+      enclosure_heated: lowerMarkdown.includes('heated enclosure') || lowerMarkdown.includes('heated chamber'),
+      multi_material_supported: lowerMarkdown.includes('multi material') || lowerMarkdown.includes('ams'),
+      abrasive_materials_supported: lowerMarkdown.includes('hardened') || lowerMarkdown.includes('abrasive'),
+      remote_monitoring_supported: lowerMarkdown.includes('camera') || lowerMarkdown.includes('monitoring'),
+      remote_control_supported: lowerMarkdown.includes('remote control') || lowerMarkdown.includes('cloud'),
+      input_shaping_supported: lowerMarkdown.includes('input shaping') || lowerMarkdown.includes('resonance'),
+      
+      // Display
+      screen_type: extractText(markdown, ['screen', 'display', 'touchscreen', 'lcd']),
+      screen_size_inch: extractNumber(markdown, ['screen', 'display', 'inch', '"']),
+      
+      // Materials
+      printer_technology: lowerMarkdown.includes('fdm') ? 'FDM' : lowerMarkdown.includes('resin') ? 'Resin' : null,
+      official_supported_materials: extractText(markdown, ['materials', 'filament', 'pla', 'abs', 'petg']),
+      
+      // Pricing
+      msrp_usd: extractPrice(markdown),
+      
+      // Metadata
       content_length: markdown.length,
-      has_price: markdown.toLowerCase().includes('price') || markdown.includes('$'),
-      has_specs: markdown.toLowerCase().includes('specification') || markdown.toLowerCase().includes('features'),
+      extraction_confidence: 'basic_pattern_matching'
     };
-    console.log('Basic data extracted from markdown');
+    
+    console.log('Extracted specifications:', Object.keys(extractedSpecs).filter(k => {
+      const value = extractedSpecs[k as keyof typeof extractedSpecs];
+      return value !== null;
+    }).length, 'of', Object.keys(extractedSpecs).length, 'fields');
 
     // Find product images
     const imageLinks = links.filter((link: string) => 
