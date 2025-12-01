@@ -293,7 +293,10 @@ Deno.serve(async (req) => {
             const pageHtml = (modelPageResult.html || '').toLowerCase();
             
             // Check for resin printer indicators - SKIP ALL RESIN PRINTERS
-            const isResinPrinter = (
+            // BUT: Skip this check for Anycubic Kobra models since they're already filtered to FDM-only
+            const isAnycubicKobra = brand.brand.toLowerCase() === 'anycubic' && modelName.toLowerCase().includes('kobra');
+            
+            const isResinPrinter = !isAnycubicKobra && (
               pageMarkdown.includes('resin') ||
               pageMarkdown.includes('photon') ||
               pageMarkdown.includes('sla') ||
