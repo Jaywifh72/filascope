@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft, Database } from "lucide-react";
+import { Upload, ArrowLeft, Database, Search, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 /**
  * Admin page for importing printer data from CSV
@@ -26,6 +29,22 @@ export default function AdminPrinters() {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [stats, setStats] = useState<any>(null);
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [discovering, setDiscovering] = useState(false);
+
+  // Fetch printer brands
+  const { data: brands, isLoading: brandsLoading } = useQuery({
+    queryKey: ["printer-brands-admin"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("printer_brands")
+        .select("*")
+        .order("brand");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -78,6 +97,48 @@ export default function AdminPrinters() {
     }
   };
 
+  const handleDiscoverModels = async () => {
+    if (!selectedBrand) {
+      toast({
+        title: "No brand selected",
+        description: "Please select a brand to discover models for",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setDiscovering(true);
+      
+      // Call edge function
+      const { data, error } = await supabase.functions.invoke("discover-printer-models", {
+        body: { brand_id: selectedBrand },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "Discovery started",
+          description: `Model discovery for ${data.brand} has been started in the background. Check back in a few minutes.`,
+        });
+      } else {
+        throw new Error(data.error || "Discovery failed");
+      }
+    } catch (error: any) {
+      console.error("Discovery error:", error);
+      toast({
+        title: "Discovery failed",
+        description: error.message || "An error occurred during discovery",
+        variant: "destructive",
+      });
+    } finally {
+      setDiscovering(false);
+    }
+  };
+
+  const selectedBrandData = brands?.find(b => b.id === selectedBrand);
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -95,11 +156,108 @@ export default function AdminPrinters() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">Printer Database Import</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Manage Printers</h1>
           <p className="text-muted-foreground">
-            Import or update printer data from CSV file
+            Import printer data from CSV or discover new models from brand websites
           </p>
         </div>
+
+        {/* Model Discovery Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Discover New Models
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Automatically discover new printer models from brand websites. Select a brand and click discover to scrape their product pages for new models.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Select Brand</label>
+                <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a brand..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brandsLoading ? (
+                      <div className="p-2 text-center text-sm text-muted-foreground">
+                        Loading brands...
+                      </div>
+                    ) : brands && brands.length > 0 ? (
+                      brands.map((brand) => (
+                        <SelectItem key={brand.id} value={brand.id}>
+                          {brand.brand}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="p-2 text-center text-sm text-muted-foreground">
+                        No brands found
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Action</label>
+                <Button
+                  onClick={handleDiscoverModels}
+                  disabled={!selectedBrand || discovering || brandsLoading}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  {discovering ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Discovering...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4" />
+                      Discover New Models
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {selectedBrandData && (
+              <div className="mt-4 p-4 bg-muted rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Last Discovery Run:</span>
+                  <span className="font-medium">
+                    {selectedBrandData.last_discovery_run_at 
+                      ? new Date(selectedBrandData.last_discovery_run_at).toLocaleString()
+                      : "Never"}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">New Models Found:</span>
+                  <span className="font-medium">
+                    {selectedBrandData.new_models_found_count || 0}
+                  </span>
+                </div>
+                {!selectedBrandData.scrape_config && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertDescription className="text-xs">
+                      No scrape configuration found for this brand. Add scrape_config to the brand record first.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Separator />
+
+        {/* CSV Import Section */}
 
         {/* Instructions */}
         <Card className="p-6 space-y-4">
