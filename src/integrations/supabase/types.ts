@@ -542,9 +542,11 @@ export type Database = {
           abl_technique: string | null
           abrasive_filament_support: boolean | null
           abrasive_materials_supported: boolean | null
+          ai_spaghetti_detection: boolean | null
           amazon_url_ca: string | null
           amazon_url_uk: string | null
           amazon_url_us: string | null
+          area_leveling_supported: boolean | null
           assembly_required: boolean | null
           auto_bed_leveling: boolean | null
           auto_bed_leveling_method: string | null
@@ -587,10 +589,13 @@ export type Database = {
           extruder_notes: string | null
           extruder_type: string | null
           filament_diameter_mm: number | null
+          filament_entanglement_detection: boolean | null
+          filament_runout_detection: boolean | null
           filter_type: string | null
           firmware_family: string | null
           firmware_open_source: boolean | null
           first_layer_assist_features: string | null
+          flow_calibration_supported: boolean | null
           frame_material: string | null
           has_bluetooth: boolean | null
           has_enclosure: boolean | null
@@ -601,6 +606,7 @@ export type Database = {
           has_usb_c_port: boolean | null
           has_wifi: boolean | null
           hotend_brand_model: string | null
+          hotend_material_composition: string | null
           hotend_type: string | null
           id: string
           input_shaping_supported: boolean | null
@@ -638,18 +644,25 @@ export type Database = {
           noise_level_printing_db: number | null
           nozzle_change_ease: string | null
           nozzle_material: string | null
+          object_skip_supported: boolean | null
           official_product_url: string | null
           official_store_url: string | null
           official_supported_materials: string | null
           onboard_storage_gb: number | null
           other_retailer_urls: string | null
+          package_depth_mm: number | null
+          package_height_mm: number | null
+          package_weight_kg: number | null
+          package_width_mm: number | null
           power_input_voltage: string | null
           power_loss_recovery: boolean | null
           power_supply_type: string | null
+          pressure_advance_supported: boolean | null
           price_tier: string | null
           printer_id: string
           printer_profile_slug_in_slicers: string | null
           printer_technology: string | null
+          quick_release_hotend: boolean | null
           rated_power_w: number | null
           rating_community_overall: number | null
           rating_ease_of_use: number | null
@@ -689,14 +702,17 @@ export type Database = {
           ui_language_options: string | null
           updated_at: string | null
           variant_or_bundle_name: string | null
+          z_offset_supported: boolean | null
         }
         Insert: {
           abl_technique?: string | null
           abrasive_filament_support?: boolean | null
           abrasive_materials_supported?: boolean | null
+          ai_spaghetti_detection?: boolean | null
           amazon_url_ca?: string | null
           amazon_url_uk?: string | null
           amazon_url_us?: string | null
+          area_leveling_supported?: boolean | null
           assembly_required?: boolean | null
           auto_bed_leveling?: boolean | null
           auto_bed_leveling_method?: string | null
@@ -739,10 +755,13 @@ export type Database = {
           extruder_notes?: string | null
           extruder_type?: string | null
           filament_diameter_mm?: number | null
+          filament_entanglement_detection?: boolean | null
+          filament_runout_detection?: boolean | null
           filter_type?: string | null
           firmware_family?: string | null
           firmware_open_source?: boolean | null
           first_layer_assist_features?: string | null
+          flow_calibration_supported?: boolean | null
           frame_material?: string | null
           has_bluetooth?: boolean | null
           has_enclosure?: boolean | null
@@ -753,6 +772,7 @@ export type Database = {
           has_usb_c_port?: boolean | null
           has_wifi?: boolean | null
           hotend_brand_model?: string | null
+          hotend_material_composition?: string | null
           hotend_type?: string | null
           id?: string
           input_shaping_supported?: boolean | null
@@ -790,18 +810,25 @@ export type Database = {
           noise_level_printing_db?: number | null
           nozzle_change_ease?: string | null
           nozzle_material?: string | null
+          object_skip_supported?: boolean | null
           official_product_url?: string | null
           official_store_url?: string | null
           official_supported_materials?: string | null
           onboard_storage_gb?: number | null
           other_retailer_urls?: string | null
+          package_depth_mm?: number | null
+          package_height_mm?: number | null
+          package_weight_kg?: number | null
+          package_width_mm?: number | null
           power_input_voltage?: string | null
           power_loss_recovery?: boolean | null
           power_supply_type?: string | null
+          pressure_advance_supported?: boolean | null
           price_tier?: string | null
           printer_id: string
           printer_profile_slug_in_slicers?: string | null
           printer_technology?: string | null
+          quick_release_hotend?: boolean | null
           rated_power_w?: number | null
           rating_community_overall?: number | null
           rating_ease_of_use?: number | null
@@ -841,14 +868,17 @@ export type Database = {
           ui_language_options?: string | null
           updated_at?: string | null
           variant_or_bundle_name?: string | null
+          z_offset_supported?: boolean | null
         }
         Update: {
           abl_technique?: string | null
           abrasive_filament_support?: boolean | null
           abrasive_materials_supported?: boolean | null
+          ai_spaghetti_detection?: boolean | null
           amazon_url_ca?: string | null
           amazon_url_uk?: string | null
           amazon_url_us?: string | null
+          area_leveling_supported?: boolean | null
           assembly_required?: boolean | null
           auto_bed_leveling?: boolean | null
           auto_bed_leveling_method?: string | null
@@ -891,10 +921,13 @@ export type Database = {
           extruder_notes?: string | null
           extruder_type?: string | null
           filament_diameter_mm?: number | null
+          filament_entanglement_detection?: boolean | null
+          filament_runout_detection?: boolean | null
           filter_type?: string | null
           firmware_family?: string | null
           firmware_open_source?: boolean | null
           first_layer_assist_features?: string | null
+          flow_calibration_supported?: boolean | null
           frame_material?: string | null
           has_bluetooth?: boolean | null
           has_enclosure?: boolean | null
@@ -905,6 +938,7 @@ export type Database = {
           has_usb_c_port?: boolean | null
           has_wifi?: boolean | null
           hotend_brand_model?: string | null
+          hotend_material_composition?: string | null
           hotend_type?: string | null
           id?: string
           input_shaping_supported?: boolean | null
@@ -942,18 +976,25 @@ export type Database = {
           noise_level_printing_db?: number | null
           nozzle_change_ease?: string | null
           nozzle_material?: string | null
+          object_skip_supported?: boolean | null
           official_product_url?: string | null
           official_store_url?: string | null
           official_supported_materials?: string | null
           onboard_storage_gb?: number | null
           other_retailer_urls?: string | null
+          package_depth_mm?: number | null
+          package_height_mm?: number | null
+          package_weight_kg?: number | null
+          package_width_mm?: number | null
           power_input_voltage?: string | null
           power_loss_recovery?: boolean | null
           power_supply_type?: string | null
+          pressure_advance_supported?: boolean | null
           price_tier?: string | null
           printer_id?: string
           printer_profile_slug_in_slicers?: string | null
           printer_technology?: string | null
+          quick_release_hotend?: boolean | null
           rated_power_w?: number | null
           rating_community_overall?: number | null
           rating_ease_of_use?: number | null
@@ -993,6 +1034,7 @@ export type Database = {
           ui_language_options?: string | null
           updated_at?: string | null
           variant_or_bundle_name?: string | null
+          z_offset_supported?: boolean | null
         }
         Relationships: [
           {
