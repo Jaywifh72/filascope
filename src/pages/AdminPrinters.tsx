@@ -228,25 +228,53 @@ export default function AdminPrinters() {
             </div>
 
             {selectedBrandData && (
-              <div className="mt-4 p-4 bg-muted rounded-lg space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Last Discovery Run:</span>
-                  <span className="font-medium">
-                    {selectedBrandData.last_discovery_run_at 
-                      ? new Date(selectedBrandData.last_discovery_run_at).toLocaleString()
-                      : "Never"}
-                  </span>
+              <div className="mt-4 space-y-4">
+                <div className="p-4 bg-muted rounded-lg space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Last Discovery Run:</span>
+                    <span className="font-medium">
+                      {selectedBrandData.last_discovery_run_at 
+                        ? new Date(selectedBrandData.last_discovery_run_at).toLocaleString()
+                        : "Never"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">New Models Found:</span>
+                    <span className="font-medium">
+                      {selectedBrandData.new_models_found_count || 0}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">New Models Found:</span>
-                  <span className="font-medium">
-                    {selectedBrandData.new_models_found_count || 0}
-                  </span>
-                </div>
+
                 {!selectedBrandData.scrape_config && (
-                  <Alert variant="destructive" className="mt-2">
-                    <AlertDescription className="text-xs">
-                      No scrape configuration found for this brand. Add scrape_config to the brand record first.
+                  <Alert variant="destructive">
+                    <AlertDescription className="space-y-3">
+                      <div className="font-semibold">Setup Required: Configure Scraping</div>
+                      <p className="text-sm">
+                        To discover models, you need to add a <code className="bg-background/50 px-1 py-0.5 rounded">scrape_config</code> JSON to this brand's database record.
+                      </p>
+                      <div className="space-y-2 text-xs">
+                        <div className="font-medium">Example configuration:</div>
+                        <pre className="bg-background/50 p-2 rounded overflow-x-auto">
+{`{
+  "model_list_url": "https://brand.com/products",
+  "model_url_pattern": "https://brand.com/product/{model}",
+  "selectors": {
+    "model_name": ".product-title",
+    "model_link": "a.product-link",
+    "specs": {
+      "build_volume": ".spec-build-volume",
+      "max_temp": ".spec-temperature"
+    }
+  }
+}`}
+                        </pre>
+                      </div>
+                      <p className="text-xs">
+                        Add this via SQL: <code className="bg-background/50 px-1 py-0.5 rounded text-xs">
+                          UPDATE printer_brands SET scrape_config = '...' WHERE id = '{selectedBrandData.id}'
+                        </code>
+                      </p>
                     </AlertDescription>
                   </Alert>
                 )}
