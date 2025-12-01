@@ -770,12 +770,6 @@ Deno.serve(async (req) => {
               continue;
             }
             
-            // Validate it contains "V-Core" in the name
-            if (!cleanTitle.toLowerCase().includes('v-core') && !cleanTitle.toLowerCase().includes('vcore')) {
-              console.log(`Skipping non-V-Core item: ${cleanTitle}`);
-              continue;
-            }
-            
             modelMap.set(cleanTitle, url);
             console.log(`Found Ratrig printer: ${cleanTitle} at ${url}`);
           }
