@@ -456,13 +456,18 @@ Deno.serve(async (req) => {
     const forceRescrape = body.forceRescrape || false
     const vendor = body.vendor || null
     const filamentIds = body.filamentIds || null // Array of specific filament IDs to process
+    const singleFilamentMode = filamentIds && filamentIds.length === 1
 
-    console.log(`Starting image scraping for up to ${limit} filaments...`)
-    if (forceRescrape) {
-      console.log(`Force rescraping enabled${vendor ? ` for vendor: ${vendor}` : ''}`)
-    }
-    if (filamentIds && filamentIds.length > 0) {
-      console.log(`Processing ${filamentIds.length} specific filaments`)
+    console.log('=== IMAGE SCRAPE REQUEST ===')
+    console.log(`Mode: ${singleFilamentMode ? 'SINGLE FILAMENT' : 'BATCH'}`)
+    console.log(`Limit: ${limit}`)
+    console.log(`Force rescrape: ${forceRescrape}`)
+    console.log(`Vendor filter: ${vendor || 'none'}`)
+    console.log(`Filament IDs: ${filamentIds ? filamentIds.join(', ') : 'none'}`)
+    console.log('===========================')
+
+    if (singleFilamentMode) {
+      console.log(`🔍 SINGLE FILAMENT DETAILED MODE: ${filamentIds[0]}`)
     }
 
     // Initialize Firecrawl
@@ -539,6 +544,14 @@ Deno.serve(async (req) => {
     }
 
     for (const filament of filaments || []) {
+      if (singleFilamentMode) {
+        console.log(`\n━━━ Processing: ${filament.product_title} ━━━`)
+        console.log(`ID: ${filament.id}`)
+        console.log(`Vendor: ${filament.vendor}`)
+        console.log(`Product URL: ${filament.product_url}`)
+        console.log(`Current image: ${filament.featured_image || 'none'}`)
+      }
+      
       const record: {
         id: string;
         product_title: string;
@@ -564,6 +577,9 @@ Deno.serve(async (req) => {
           continue
         }
 
+        if (singleFilamentMode) {
+          console.log(`\n[STEP 1] Scraping URL with Firecrawl...`)
+        }
         console.log(`Scraping with Firecrawl: ${filament.vendor} - ${filament.product_title}`)
 
         // Use Firecrawl to scrape the product page with retry logic
@@ -636,6 +652,11 @@ Deno.serve(async (req) => {
         // Extract image URL using various strategies
         let imageUrl: string | null = null
 
+        if (singleFilamentMode) {
+          console.log(`\n[STEP 2] Extracting image from HTML...`)
+          console.log(`HTML length: ${html.length} characters`)
+        }
+
         // Strategy 1: Look for product gallery or main product image in HTML structure
         const galleryPatterns = [
           /<div[^>]*class=["'][^"']*product[^"']*gallery[^"']*["'][^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["']/i,
@@ -648,6 +669,9 @@ Deno.serve(async (req) => {
           const match = html.match(pattern)
           if (match && match[1] && isProductImage(match[1])) {
             imageUrl = match[1]
+            if (singleFilamentMode) {
+              console.log(`✓ Strategy 1 (Gallery): Found image in product gallery`)
+            }
             break
           }
         }
@@ -657,6 +681,9 @@ Deno.serve(async (req) => {
           const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i)
           if (ogImageMatch && isProductImage(ogImageMatch[1])) {
             imageUrl = ogImageMatch[1]
+            if (singleFilamentMode) {
+              console.log(`✓ Strategy 2 (OG): Found image in og:image meta tag`)
+            }
           }
         }
 
@@ -672,6 +699,9 @@ Deno.serve(async (req) => {
             const match = html.match(pattern)
             if (match && match[1] && isProductImage(match[1])) {
               imageUrl = match[1]
+              if (singleFilamentMode) {
+                console.log(`✓ Strategy 3 (Class): Found image with product class`)
+              }
               break
             }
           }
@@ -679,10 +709,17 @@ Deno.serve(async (req) => {
 
         // Strategy 4: Look through all images for best product image candidate
         if (!imageUrl) {
+          if (singleFilamentMode) {
+            console.log(`  Trying Strategy 4: Scoring all images...`)
+          }
           const imgMatches = html.match(/<img[^>]*src=["']([^"']+)["'][^>]*/gi)
           if (imgMatches) {
             // Score each image and pick the best
             let bestImage = { url: '', score: 0 }
+            
+            if (singleFilamentMode) {
+              console.log(`  Found ${imgMatches.length} total images to evaluate`)
+            }
             
             for (const imgTag of imgMatches) {
               const srcMatch = imgTag.match(/src=["']([^"']+)["']/)
@@ -722,15 +759,28 @@ Deno.serve(async (req) => {
             
             if (bestImage.score > 0) {
               imageUrl = bestImage.url
+              if (singleFilamentMode) {
+                console.log(`✓ Strategy 4 (Score): Best image found with score ${bestImage.score}`)
+              }
+            } else if (singleFilamentMode) {
+              console.log(`✗ No suitable images found after scoring`)
             }
           }
         }
 
         if (!imageUrl) {
           console.log(`No image found for ${filament.product_title}`)
+          if (singleFilamentMode) {
+            console.log(`\n[RESULT] No image URL extracted from page`)
+            console.log(`Try checking the product page manually: ${filament.product_url}`)
+          }
           record.status = 'no_image_found'
           result.processed_records.push(record)
           continue
+        }
+
+        if (singleFilamentMode) {
+          console.log(`\n[STEP 3] Processing image URL: ${imageUrl}`)
         }
 
         // Make URL absolute if relative
@@ -748,15 +798,23 @@ Deno.serve(async (req) => {
         
         // Convert to full-size image URL
         imageUrl = getFullSizeImageUrl(imageUrl)
-        console.log(`Full-size image URL: ${imageUrl}`)
+        if (singleFilamentMode) {
+          console.log(`Full-size image URL: ${imageUrl}`)
+        }
         
         result.images_found++
         record.image_url = imageUrl
 
         // Download the image
+        if (singleFilamentMode) {
+          console.log(`\n[STEP 4] Downloading image...`)
+        }
         const imageResponse = await fetch(imageUrl)
         if (!imageResponse.ok) {
           console.error(`Failed to download image: ${imageResponse.status}`)
+          if (singleFilamentMode) {
+            console.log(`HTTP Status: ${imageResponse.status} ${imageResponse.statusText}`)
+          }
           record.status = 'upload_failed'
           result.errors.push(`${filament.product_title}: Failed to download image`)
           result.processed_records.push(record)
@@ -766,12 +824,20 @@ Deno.serve(async (req) => {
         const imageBlob = await imageResponse.blob()
         const imageBuffer = await imageBlob.arrayBuffer()
         
+        if (singleFilamentMode) {
+          console.log(`✓ Downloaded ${imageBuffer.byteLength} bytes`)
+          console.log(`Content-Type: ${imageResponse.headers.get('content-type')}`)
+        }
+        
         // Generate filename
         const fileExt = imageUrl.split('.').pop()?.split('?')[0] || 'jpg'
         const fileName = `${filament.id}.${fileExt}`
         const filePath = `product-images/${fileName}`
 
         // Upload to Supabase Storage
+        if (singleFilamentMode) {
+          console.log(`\n[STEP 5] Uploading to storage: ${filePath}`)
+        }
         const { error: uploadError } = await supabase.storage
           .from('filament-images')
           .upload(filePath, imageBuffer, {
@@ -781,6 +847,9 @@ Deno.serve(async (req) => {
 
         if (uploadError) {
           console.error(`Upload error for ${filament.product_title}:`, uploadError)
+          if (singleFilamentMode) {
+            console.log(`Upload error details:`, uploadError)
+          }
           record.status = 'upload_failed'
           result.errors.push(`${filament.product_title}: ${uploadError.message}`)
           result.processed_records.push(record)
@@ -788,11 +857,19 @@ Deno.serve(async (req) => {
         }
 
         result.images_uploaded++
+        if (singleFilamentMode) {
+          console.log(`✓ Upload successful`)
+        }
 
         // Get public URL
         const { data: publicUrlData } = supabase.storage
           .from('filament-images')
           .getPublicUrl(filePath)
+
+        if (singleFilamentMode) {
+          console.log(`\n[STEP 6] Updating database...`)
+          console.log(`Public URL: ${publicUrlData.publicUrl}`)
+        }
 
         // Update database
         const { error: updateError } = await supabase
@@ -802,12 +879,18 @@ Deno.serve(async (req) => {
 
         if (updateError) {
           console.error(`Database update error:`, updateError)
+          if (singleFilamentMode) {
+            console.log(`Database error details:`, updateError)
+          }
           record.status = 'error'
           result.errors.push(`${filament.product_title}: ${updateError.message}`)
         } else {
           result.images_updated++
           record.status = 'success'
           console.log(`✓ Success: ${filament.vendor} - ${filament.product_title}`)
+          if (singleFilamentMode) {
+            console.log(`\n[✓ COMPLETE] Image successfully scraped and stored`)
+          }
         }
 
         result.processed_records.push(record)
