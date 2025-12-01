@@ -106,27 +106,66 @@ export default function AdminPrinters() {
     enabled: activeTab === "review",
   });
 
+  // Deep scrape mutation
+  const deepScrapeMutation = useMutation({
+    mutationFn: async (printerId: string) => {
+      const { data, error } = await supabase.functions.invoke('deep-scrape-printer', {
+        body: { printerId },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Deep scrape completed" });
+      queryClient.invalidateQueries({ queryKey: ["pending-printers"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Deep scrape failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Approve printer mutation
   const approveMutation = useMutation({
     mutationFn: async (printerIds: string[]) => {
-      const { error } = await supabase
-        .from("printers")
-        .update({ status: "active" })
-        .in("id", printerIds);
-      
-      if (error) throw error;
+      // For each printer, merge scraped_data with the existing record
+      for (const printerId of printerIds) {
+        const printer = pendingPrinters?.find(p => p.id === printerId);
+        if (printer?.scraped_data) {
+          const specs = (printer.scraped_data as any).extracted_specs || {};
+          const { error } = await supabase
+            .from("printers")
+            .update({ 
+              ...specs,
+              status: "active",
+              scraped_data: null,
+              scrape_status: "imported",
+            })
+            .eq("id", printerId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("printers")
+            .update({ status: "active" })
+            .eq("id", printerId);
+          if (error) throw error;
+        }
+      }
     },
     onSuccess: (_, printerIds) => {
       queryClient.invalidateQueries({ queryKey: ["pending-printers"] });
       setSelectedPrinters(new Set());
       toast({ 
-        title: "Printers approved", 
-        description: `${printerIds.length} printer(s) are now active.` 
+        title: "Printers imported", 
+        description: `${printerIds.length} printer(s) imported with specifications.` 
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to approve",
+        title: "Failed to import",
         description: error.message,
         variant: "destructive",
       });
@@ -739,7 +778,7 @@ export default function AdminPrinters() {
                             onChange={() => handleTogglePrinter(printer.id)}
                             className="h-5 w-5 rounded border-input mt-1"
                           />
-                          <div className="flex-1 space-y-3">
+                           <div className="flex-1 space-y-3">
                             <div className="space-y-1">
                               <div className="font-semibold text-lg">
                                 {printer.model_name}
@@ -751,19 +790,132 @@ export default function AdminPrinters() {
                                 Discovered: {new Date(printer.created_at).toLocaleString()}
                               </div>
                               {printer.official_product_url && (
+                                <a
+                                  href={printer.official_product_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                                >
+                                  View Product Page →
+                                </a>
+                              )}
+                            </div>
+
+                            {/* Deep Scrape Actions */}
+                            <div className="flex items-center gap-2 pt-2">
+                              {printer.scrape_status === 'not_started' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => deepScrapeMutation.mutate(printer.id)}
+                                  disabled={deepScrapeMutation.isPending}
+                                >
+                                  {deepScrapeMutation.isPending ? 'Scraping...' : 'Deep Scrape'}
+                                </Button>
+                              )}
+                              {printer.scrape_status === 'in_progress' && (
+                                <Badge variant="secondary" className="gap-1">
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                  Scraping...
+                                </Badge>
+                              )}
+                              {printer.scrape_status === 'completed' && (
+                                <Badge variant="default" className="gap-1">
+                                  <CheckCircle className="h-3 w-3" />
+                                  Scrape Complete
+                                </Badge>
+                              )}
+                              {printer.scrape_status === 'failed' && (
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm text-muted-foreground">Product URL:</span>
-                                  <a
-                                    href={printer.official_product_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm text-primary hover:underline break-all"
+                                  <Badge variant="destructive" className="gap-1">
+                                    <XCircle className="h-3 w-3" />
+                                    Failed
+                                  </Badge>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => deepScrapeMutation.mutate(printer.id)}
                                   >
-                                    {printer.official_product_url}
-                                  </a>
+                                    Retry
+                                  </Button>
                                 </div>
                               )}
                             </div>
+
+                            {/* Scrape Report */}
+                            {printer.scrape_status === 'completed' && printer.scraped_data && (
+                              <details className="border rounded-lg">
+                                <summary className="cursor-pointer p-3 hover:bg-muted/50 font-medium text-sm">
+                                  📊 Scrape Report ({(printer.scraped_data as any)?.extraction_quality?.specs_found || 0} specs found)
+                                </summary>
+                                <div className="p-4 space-y-3 border-t">
+                                  <div>
+                                    <div className="font-semibold mb-2">Extraction Quality</div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                      <div className="bg-muted p-2 rounded">
+                                        <div className="text-xs text-muted-foreground">Specs</div>
+                                        <div className="text-lg font-bold">
+                                          {(printer.scraped_data as any)?.extraction_quality?.specs_found || 0}
+                                        </div>
+                                      </div>
+                                      <div className="bg-muted p-2 rounded">
+                                        <div className="text-xs text-muted-foreground">Images</div>
+                                        <div className="text-lg font-bold">
+                                          {(printer.scraped_data as any)?.extraction_quality?.images_found || 0}
+                                        </div>
+                                      </div>
+                                      <div className="bg-muted p-2 rounded">
+                                        <div className="text-xs text-muted-foreground">Docs</div>
+                                        <div className="text-lg font-bold">
+                                          {(printer.scraped_data as any)?.extraction_quality?.documents_found || 0}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  {(printer.scraped_data as any)?.extracted_specs && Object.keys((printer.scraped_data as any).extracted_specs).length > 0 && (
+                                    <div>
+                                      <div className="font-semibold mb-2">Extracted Specifications</div>
+                                      <pre className="p-3 bg-muted rounded text-xs overflow-auto max-h-60">
+                                        {JSON.stringify((printer.scraped_data as any).extracted_specs, null, 2)}
+                                      </pre>
+                                    </div>
+                                  )}
+                                  
+                                  {(printer.scraped_data as any)?.images?.product_images?.length > 0 && (
+                                    <div>
+                                      <div className="font-semibold mb-2">Product Images Found</div>
+                                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                                        {(printer.scraped_data as any).images.product_images.slice(0, 5).map((img: string, i: number) => (
+                                          <a 
+                                            key={i}
+                                            href={img} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            className="block text-xs text-primary hover:underline truncate"
+                                          >
+                                            {img}
+                                          </a>
+                                        ))}
+                                        {(printer.scraped_data as any).images.product_images.length > 5 && (
+                                          <div className="text-xs text-muted-foreground">
+                                            + {(printer.scraped_data as any).images.product_images.length - 5} more
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </details>
+                            )}
+
+                            {printer.scrape_error && (
+                              <Alert variant="destructive">
+                                <AlertDescription className="text-sm">
+                                  {printer.scrape_error}
+                                </AlertDescription>
+                              </Alert>
+                            )}
 
                             {/* Specs Preview */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">

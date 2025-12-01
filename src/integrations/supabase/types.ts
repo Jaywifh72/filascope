@@ -665,6 +665,10 @@ export type Database = {
           review_count_aggregated: number | null
           safety_certifications: string | null
           safety_notes: string | null
+          scrape_completed_at: string | null
+          scrape_error: string | null
+          scrape_status: string | null
+          scraped_data: Json | null
           screen_resolution: string | null
           screen_size_inch: number | null
           screen_type: string | null
@@ -813,6 +817,10 @@ export type Database = {
           review_count_aggregated?: number | null
           safety_certifications?: string | null
           safety_notes?: string | null
+          scrape_completed_at?: string | null
+          scrape_error?: string | null
+          scrape_status?: string | null
+          scraped_data?: Json | null
           screen_resolution?: string | null
           screen_size_inch?: number | null
           screen_type?: string | null
@@ -961,6 +969,10 @@ export type Database = {
           review_count_aggregated?: number | null
           safety_certifications?: string | null
           safety_notes?: string | null
+          scrape_completed_at?: string | null
+          scrape_error?: string | null
+          scrape_status?: string | null
+          scraped_data?: Json | null
           screen_resolution?: string | null
           screen_size_inch?: number | null
           screen_type?: string | null
