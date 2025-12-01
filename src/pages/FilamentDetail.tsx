@@ -23,7 +23,7 @@ const FilamentDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAdmin } = useAuth();
-  const { selectedPrinter, printerLoading } = usePrinterSelection();
+  const { selectedPrinter, printerLoading, selectedPrinterId } = usePrinterSelection();
   const [filament, setFilament] = useState<Filament | null>(null);
   const [loading, setLoading] = useState(true);
   const [rescrapingImage, setRescrapingImage] = useState(false);
@@ -31,6 +31,19 @@ const FilamentDetail = () => {
   const compatibility = selectedPrinter && filament 
     ? checkPrinterFilamentCompatibility(selectedPrinter, filament)
     : null;
+
+  // Debug logging
+  useEffect(() => {
+    console.log("FilamentDetail - Printer Selection State:", {
+      selectedPrinterId,
+      printerLoading,
+      hasSelectedPrinter: !!selectedPrinter,
+      selectedPrinter: selectedPrinter ? {
+        model_name: selectedPrinter.model_name,
+        brand: selectedPrinter.brand
+      } : null
+    });
+  }, [selectedPrinterId, printerLoading, selectedPrinter]);
 
   useEffect(() => {
     fetchFilament();
