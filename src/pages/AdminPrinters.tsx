@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft, Database, Search, Loader2 } from "lucide-react";
+import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 /**
  * Admin page for importing printer data from CSV
@@ -26,11 +28,13 @@ import { Separator } from "@/components/ui/separator";
 export default function AdminPrinters() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [discovering, setDiscovering] = useState(false);
+  const [activeTab, setActiveTab] = useState("discover");
 
   // Fetch printer brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -43,6 +47,107 @@ export default function AdminPrinters() {
       
       if (error) throw error;
       return data;
+    },
+  });
+
+  // Fetch discovery runs with models
+  const { data: discoveryRuns, isLoading: runsLoading } = useQuery({
+    queryKey: ["discovery-runs", selectedBrand],
+    queryFn: async () => {
+      let query = supabase
+        .from("discovery_runs")
+        .select(`
+          *,
+          printer_brands!inner(brand),
+          discovery_models(
+            id,
+            model_name,
+            was_new,
+            discovered_at,
+            printer_id
+          )
+        `)
+        .order("started_at", { ascending: false })
+        .limit(10);
+
+      if (selectedBrand) {
+        query = query.eq("brand_id", selectedBrand);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    enabled: activeTab === "history",
+  });
+
+  // Fetch pending printers
+  const { data: pendingPrinters, isLoading: pendingLoading } = useQuery({
+    queryKey: ["pending-printers", selectedBrand],
+    queryFn: async () => {
+      let query = supabase
+        .from("printers")
+        .select(`
+          *,
+          printer_brands!inner(brand)
+        `)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+
+      if (selectedBrand) {
+        query = query.eq("brand_id", selectedBrand);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    enabled: activeTab === "review",
+  });
+
+  // Approve printer mutation
+  const approveMutation = useMutation({
+    mutationFn: async (printerId: string) => {
+      const { error } = await supabase
+        .from("printers")
+        .update({ status: "active" })
+        .eq("id", printerId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-printers"] });
+      toast({ title: "Printer approved", description: "The printer is now active." });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to approve",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Reject printer mutation
+  const rejectMutation = useMutation({
+    mutationFn: async (printerId: string) => {
+      const { error } = await supabase
+        .from("printers")
+        .delete()
+        .eq("id", printerId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-printers"] });
+      toast({ title: "Printer rejected", description: "The printer has been deleted." });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to reject",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -118,9 +223,11 @@ export default function AdminPrinters() {
       if (error) throw error;
 
       if (data.success) {
+        queryClient.invalidateQueries({ queryKey: ["discovery-runs"] });
+        setActiveTab("history");
         toast({
           title: "Discovery started",
-          description: `Model discovery for ${data.brand} has been started in the background. Check back in a few minutes.`,
+          description: `Model discovery for ${data.brand} has been started in the background. Check the History tab for progress.`,
         });
       } else {
         throw new Error(data.error || "Discovery failed");
@@ -162,8 +269,23 @@ export default function AdminPrinters() {
           </p>
         </div>
 
-        {/* Model Discovery Section */}
-        <Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="discover">Discover</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
+            <TabsTrigger value="review">
+              Review
+              {pendingPrinters && pendingPrinters.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {pendingPrinters.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="discover" className="space-y-6">
+            {/* Model Discovery Section */}
+            <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Search className="h-5 w-5" />
@@ -277,13 +399,13 @@ export default function AdminPrinters() {
                       </p>
                     </AlertDescription>
                   </Alert>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </div>
+          )}
+            </CardContent>
+            </Card>
 
-        <Separator />
+            <Separator />
 
         {/* CSV Import Section */}
 
@@ -408,6 +530,217 @@ export default function AdminPrinters() {
             )}
           </Card>
         )}
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Discovery History
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {runsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
+                ) : discoveryRuns && discoveryRuns.length > 0 ? (
+                  <div className="space-y-4">
+                    {discoveryRuns.map((run) => (
+                      <div key={run.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">
+                                {run.printer_brands?.brand}
+                              </span>
+                              {run.status === "completed" && (
+                                <Badge variant="default" className="gap-1">
+                                  <CheckCircle className="h-3 w-3" />
+                                  Completed
+                                </Badge>
+                              )}
+                              {run.status === "failed" && (
+                                <Badge variant="destructive" className="gap-1">
+                                  <XCircle className="h-3 w-3" />
+                                  Failed
+                                </Badge>
+                              )}
+                              {run.status === "running" && (
+                                <Badge variant="secondary" className="gap-1">
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                  Running
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Started: {new Date(run.started_at).toLocaleString()}
+                            </div>
+                            {run.completed_at && (
+                              <div className="text-sm text-muted-foreground">
+                                Completed: {new Date(run.completed_at).toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right space-y-1">
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">Found:</span>{" "}
+                              <span className="font-semibold">{run.models_found || 0}</span>
+                            </div>
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">Added:</span>{" "}
+                              <span className="font-semibold text-green-600">{run.models_added || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {run.error_message && (
+                          <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription className="text-sm">
+                              {run.error_message}
+                            </AlertDescription>
+                          </Alert>
+                        )}
+
+                        {run.discovery_models && run.discovery_models.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="text-sm font-medium">Discovered Models:</div>
+                            <div className="max-h-40 overflow-y-auto space-y-1">
+                              {run.discovery_models.map((model) => (
+                                <div
+                                  key={model.id}
+                                  className="flex items-center justify-between text-sm py-1 px-2 bg-muted rounded"
+                                >
+                                  <span>{model.model_name}</span>
+                                  {model.was_new ? (
+                                    <Badge variant="default" className="text-xs">New</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-xs">Existing</Badge>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No discovery runs yet. Start a discovery to see logs here.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="review" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" />
+                  Review Pending Printers
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {pendingLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
+                ) : pendingPrinters && pendingPrinters.length > 0 ? (
+                  <div className="space-y-4">
+                    {pendingPrinters.map((printer) => (
+                      <div key={printer.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1 flex-1">
+                            <div className="font-semibold text-lg">
+                              {printer.model_name}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Brand: {printer.printer_brands?.brand}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Discovered: {new Date(printer.created_at).toLocaleString()}
+                            </div>
+                            {printer.official_product_url && (
+                              <a
+                                href={printer.official_product_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary hover:underline"
+                              >
+                                View Product Page →
+                              </a>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Specs Preview */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                          {printer.build_volume_x_mm && (
+                            <div className="bg-muted p-2 rounded">
+                              <div className="text-xs text-muted-foreground">Build Volume</div>
+                              <div className="font-medium">
+                                {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
+                              </div>
+                            </div>
+                          )}
+                          {printer.max_nozzle_temp_c && (
+                            <div className="bg-muted p-2 rounded">
+                              <div className="text-xs text-muted-foreground">Max Nozzle Temp</div>
+                              <div className="font-medium">{printer.max_nozzle_temp_c}°C</div>
+                            </div>
+                          )}
+                          {printer.bed_max_temp_c && (
+                            <div className="bg-muted p-2 rounded">
+                              <div className="text-xs text-muted-foreground">Max Bed Temp</div>
+                              <div className="font-medium">{printer.bed_max_temp_c}°C</div>
+                            </div>
+                          )}
+                          {printer.has_enclosure !== null && (
+                            <div className="bg-muted p-2 rounded">
+                              <div className="text-xs text-muted-foreground">Enclosure</div>
+                              <div className="font-medium">
+                                {printer.has_enclosure ? "Yes" : "No"}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            onClick={() => approveMutation.mutate(printer.id)}
+                            disabled={approveMutation.isPending}
+                            className="gap-2"
+                            variant="default"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            Approve
+                          </Button>
+                          <Button
+                            onClick={() => rejectMutation.mutate(printer.id)}
+                            disabled={rejectMutation.isPending}
+                            className="gap-2"
+                            variant="destructive"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No pending printers to review. All discovered models have been processed.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
