@@ -7,10 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "@/components/LikeButton";
+import { useAuth } from "@/hooks/useAuth";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -18,8 +19,10 @@ const FilamentDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAdmin } = useAuth();
   const [filament, setFilament] = useState<Filament | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rescrapingImage, setRescrapingImage] = useState(false);
 
   useEffect(() => {
     fetchFilament();
@@ -58,6 +61,40 @@ const FilamentDetail = () => {
     }
   };
 
+  const handleRescrapeImage = async () => {
+    if (!id) return;
+    
+    setRescrapingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-images', {
+        body: { 
+          filamentIds: [id],
+          forceRescrape: true
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Image rescrape completed",
+        description: data.message || "Image rescraped successfully. Check edge function logs for details.",
+        duration: 5000,
+      });
+
+      // Refresh filament data
+      await fetchFilament();
+    } catch (error: any) {
+      toast({
+        title: "Rescrape failed",
+        description: error.message || "Failed to rescrape image. Check edge function logs for details.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setRescrapingImage(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -87,7 +124,7 @@ const FilamentDetail = () => {
           <CardContent className="p-8">
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Product Image */}
-              <div className="w-full lg:w-72 h-72 flex-shrink-0">
+              <div className="w-full lg:w-72 h-72 flex-shrink-0 relative">
                 {filament.featured_image ? (
                   <img
                     src={filament.featured_image}
@@ -114,6 +151,19 @@ const FilamentDetail = () => {
                     <Package className="w-16 h-16 text-muted-foreground/30" />
                   )}
                 </div>
+                {isAdmin && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={handleRescrapeImage}
+                    disabled={rescrapingImage}
+                    className="absolute bottom-2 right-2 gap-2"
+                    title="Rescrape product image with detailed logging"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${rescrapingImage ? 'animate-spin' : ''}`} />
+                    {rescrapingImage ? 'Scraping...' : 'Rescrape Image'}
+                  </Button>
+                )}
               </div>
 
               {/* Product Info */}
