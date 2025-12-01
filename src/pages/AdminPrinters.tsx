@@ -35,6 +35,7 @@ export default function AdminPrinters() {
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [discovering, setDiscovering] = useState(false);
   const [activeTab, setActiveTab] = useState("discover");
+  const [selectedPrinters, setSelectedPrinters] = useState<Set<string>>(new Set());
 
   // Fetch printer brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -107,17 +108,21 @@ export default function AdminPrinters() {
 
   // Approve printer mutation
   const approveMutation = useMutation({
-    mutationFn: async (printerId: string) => {
+    mutationFn: async (printerIds: string[]) => {
       const { error } = await supabase
         .from("printers")
         .update({ status: "active" })
-        .eq("id", printerId);
+        .in("id", printerIds);
       
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, printerIds) => {
       queryClient.invalidateQueries({ queryKey: ["pending-printers"] });
-      toast({ title: "Printer approved", description: "The printer is now active." });
+      setSelectedPrinters(new Set());
+      toast({ 
+        title: "Printers approved", 
+        description: `${printerIds.length} printer(s) are now active.` 
+      });
     },
     onError: (error: any) => {
       toast({
@@ -130,17 +135,21 @@ export default function AdminPrinters() {
 
   // Reject printer mutation
   const rejectMutation = useMutation({
-    mutationFn: async (printerId: string) => {
+    mutationFn: async (printerIds: string[]) => {
       const { error } = await supabase
         .from("printers")
         .delete()
-        .eq("id", printerId);
+        .in("id", printerIds);
       
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, printerIds) => {
       queryClient.invalidateQueries({ queryKey: ["pending-printers"] });
-      toast({ title: "Printer rejected", description: "The printer has been deleted." });
+      setSelectedPrinters(new Set());
+      toast({ 
+        title: "Printers rejected", 
+        description: `${printerIds.length} printer(s) have been deleted.` 
+      });
     },
     onError: (error: any) => {
       toast({
@@ -150,6 +159,38 @@ export default function AdminPrinters() {
       });
     },
   });
+
+  const handleTogglePrinter = (printerId: string) => {
+    setSelectedPrinters(prev => {
+      const next = new Set(prev);
+      if (next.has(printerId)) {
+        next.delete(printerId);
+      } else {
+        next.add(printerId);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleAll = () => {
+    if (!pendingPrinters) return;
+    
+    if (selectedPrinters.size === pendingPrinters.length) {
+      setSelectedPrinters(new Set());
+    } else {
+      setSelectedPrinters(new Set(pendingPrinters.map(p => p.id)));
+    }
+  };
+
+  const handleBulkApprove = () => {
+    if (selectedPrinters.size === 0) return;
+    approveMutation.mutate(Array.from(selectedPrinters));
+  };
+
+  const handleBulkReject = () => {
+    if (selectedPrinters.size === 0) return;
+    rejectMutation.mutate(Array.from(selectedPrinters));
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -639,10 +680,36 @@ export default function AdminPrinters() {
           <TabsContent value="review" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5" />
-                  Review Pending Printers
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5" />
+                    Review Pending Printers
+                  </CardTitle>
+                  {pendingPrinters && pendingPrinters.length > 0 && (
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleBulkApprove}
+                        disabled={selectedPrinters.size === 0 || approveMutation.isPending}
+                        variant="default"
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        Approve Selected ({selectedPrinters.size})
+                      </Button>
+                      <Button
+                        onClick={handleBulkReject}
+                        disabled={selectedPrinters.size === 0 || rejectMutation.isPending}
+                        variant="destructive"
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <XCircle className="h-4 w-4" />
+                        Reject Selected ({selectedPrinters.size})
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 {pendingLoading ? (
@@ -651,83 +718,85 @@ export default function AdminPrinters() {
                   </div>
                 ) : pendingPrinters && pendingPrinters.length > 0 ? (
                   <div className="space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b">
+                      <input
+                        type="checkbox"
+                        checked={selectedPrinters.size === pendingPrinters.length}
+                        onChange={handleToggleAll}
+                        className="h-4 w-4 rounded border-input"
+                      />
+                      <span className="text-sm font-medium">
+                        Select All ({pendingPrinters.length} printers)
+                      </span>
+                    </div>
+
                     {pendingPrinters.map((printer) => (
                       <div key={printer.id} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-1 flex-1">
-                            <div className="font-semibold text-lg">
-                              {printer.model_name}
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedPrinters.has(printer.id)}
+                            onChange={() => handleTogglePrinter(printer.id)}
+                            className="h-5 w-5 rounded border-input mt-1"
+                          />
+                          <div className="flex-1 space-y-3">
+                            <div className="space-y-1">
+                              <div className="font-semibold text-lg">
+                                {printer.model_name}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                Brand: {printer.printer_brands?.brand}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                Discovered: {new Date(printer.created_at).toLocaleString()}
+                              </div>
+                              {printer.official_product_url && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-muted-foreground">Product URL:</span>
+                                  <a
+                                    href={printer.official_product_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-primary hover:underline break-all"
+                                  >
+                                    {printer.official_product_url}
+                                  </a>
+                                </div>
+                              )}
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              Brand: {printer.printer_brands?.brand}
+
+                            {/* Specs Preview */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                              {printer.build_volume_x_mm && (
+                                <div className="bg-muted p-2 rounded">
+                                  <div className="text-xs text-muted-foreground">Build Volume</div>
+                                  <div className="font-medium">
+                                    {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
+                                  </div>
+                                </div>
+                              )}
+                              {printer.max_nozzle_temp_c && (
+                                <div className="bg-muted p-2 rounded">
+                                  <div className="text-xs text-muted-foreground">Max Nozzle Temp</div>
+                                  <div className="font-medium">{printer.max_nozzle_temp_c}°C</div>
+                                </div>
+                              )}
+                              {printer.bed_max_temp_c && (
+                                <div className="bg-muted p-2 rounded">
+                                  <div className="text-xs text-muted-foreground">Max Bed Temp</div>
+                                  <div className="font-medium">{printer.bed_max_temp_c}°C</div>
+                                </div>
+                              )}
+                              {printer.has_enclosure !== null && (
+                                <div className="bg-muted p-2 rounded">
+                                  <div className="text-xs text-muted-foreground">Enclosure</div>
+                                  <div className="font-medium">
+                                    {printer.has_enclosure ? "Yes" : "No"}
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              Discovered: {new Date(printer.created_at).toLocaleString()}
-                            </div>
-                            {printer.official_product_url && (
-                              <a
-                                href={printer.official_product_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline"
-                              >
-                                View Product Page →
-                              </a>
-                            )}
                           </div>
-                        </div>
-
-                        {/* Specs Preview */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                          {printer.build_volume_x_mm && (
-                            <div className="bg-muted p-2 rounded">
-                              <div className="text-xs text-muted-foreground">Build Volume</div>
-                              <div className="font-medium">
-                                {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
-                              </div>
-                            </div>
-                          )}
-                          {printer.max_nozzle_temp_c && (
-                            <div className="bg-muted p-2 rounded">
-                              <div className="text-xs text-muted-foreground">Max Nozzle Temp</div>
-                              <div className="font-medium">{printer.max_nozzle_temp_c}°C</div>
-                            </div>
-                          )}
-                          {printer.bed_max_temp_c && (
-                            <div className="bg-muted p-2 rounded">
-                              <div className="text-xs text-muted-foreground">Max Bed Temp</div>
-                              <div className="font-medium">{printer.bed_max_temp_c}°C</div>
-                            </div>
-                          )}
-                          {printer.has_enclosure !== null && (
-                            <div className="bg-muted p-2 rounded">
-                              <div className="text-xs text-muted-foreground">Enclosure</div>
-                              <div className="font-medium">
-                                {printer.has_enclosure ? "Yes" : "No"}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex gap-2 pt-2">
-                          <Button
-                            onClick={() => approveMutation.mutate(printer.id)}
-                            disabled={approveMutation.isPending}
-                            className="gap-2"
-                            variant="default"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                            Approve
-                          </Button>
-                          <Button
-                            onClick={() => rejectMutation.mutate(printer.id)}
-                            disabled={rejectMutation.isPending}
-                            className="gap-2"
-                            variant="destructive"
-                          >
-                            <XCircle className="h-4 w-4" />
-                            Reject
-                          </Button>
                         </div>
                       </div>
                     ))}
