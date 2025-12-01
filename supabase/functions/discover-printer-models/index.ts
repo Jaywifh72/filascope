@@ -264,6 +264,34 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} Bambu Lab printer URLs`);
+        } else if (brand.brand.toLowerCase() === 'creality') {
+          // Creality: Extract FDM printers from three series (Flagship, Ender, Hi)
+          // Look for /products/ links that match their naming patterns
+          const linkPattern = /##\s+\[([^\]]+)\]\((https:\/\/www\.creality\.com\/products\/[^)]+)\)/g;
+          const linkMatches = markdown.matchAll(linkPattern);
+          
+          for (const match of linkMatches) {
+            const modelName = match[1].trim();
+            const url = match[2];
+            
+            // Filter out non-printer products (accessories, parts, etc.)
+            const isAccessory = modelName.toLowerCase().includes('filament') ||
+                              modelName.toLowerCase().includes('nozzle') ||
+                              modelName.toLowerCase().includes('extruder kit') ||
+                              modelName.toLowerCase().includes('upgrade kit') ||
+                              modelName.toLowerCase().includes('bed');
+            
+            if (isAccessory) {
+              console.log(`Skipping Creality accessory: ${modelName}`);
+              continue;
+            }
+            
+            // Store model with its URL
+            modelMap.set(modelName, url);
+            console.log(`Found Creality printer: ${modelName} at ${url}`);
+          }
+          
+          console.log(`Found ${modelMap.size} Creality printer URLs`);
         } else {
           // Generic extraction for other brands
           const lines = markdown.split('\n');
@@ -354,8 +382,9 @@ Deno.serve(async (req) => {
             const isAnycubicKobra = brand.brand.toLowerCase() === 'anycubic' && modelName.toLowerCase().includes('kobra');
             const isAnkerMake = brand.brand.toLowerCase() === 'ankermake';
             const isBambuLab = brand.brand.toLowerCase() === 'bambu lab';
+            const isCreality = brand.brand.toLowerCase() === 'creality';
             
-            const isResinPrinter = !isAnycubicKobra && !isAnkerMake && !isBambuLab && (
+            const isResinPrinter = !isAnycubicKobra && !isAnkerMake && !isBambuLab && !isCreality && (
               pageMarkdown.includes('resin') ||
               pageMarkdown.includes('photon') ||
               pageMarkdown.includes('sla') ||
