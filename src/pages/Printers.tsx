@@ -32,7 +32,7 @@ export default function Printers() {
 
   // Fetch brands
   const { data: brands } = useQuery({
-    queryKey: ["printer-brands"],
+    queryKey: ["printer-brands-list"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("printer_brands")
