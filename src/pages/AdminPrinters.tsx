@@ -62,31 +62,45 @@ export default function AdminPrinters() {
   const { data: allPrinters, refetch: refetchAllPrinters } = useQuery({
     queryKey: ["all-printers-for-count"],
     queryFn: async () => {
+      console.log('🔄 Fetching all printers for price count...');
       const { data, error } = await supabase
         .from("printers")
         .select("id, msrp_usd, current_price_usd_store, current_price_usd_amazon");
       
       if (error) {
-        console.error('Error fetching printers for count:', error);
+        console.error('❌ Error fetching printers for count:', error);
         throw error;
       }
       
+      console.log(`✅ Fetched ${data?.length || 0} printers for counting`);
       return data || [];
     },
     staleTime: 0,
+    gcTime: 0, // Don't cache
     refetchInterval: fetchingPrices || aiSearching ? 2000 : false,
   });
 
   // Calculate price coverage from the actual printer data
-  const priceProgressData = allPrinters ? {
-    total: allPrinters.length,
-    withoutPrice: allPrinters.filter(p => 
+  const priceProgressData = allPrinters ? (() => {
+    const withoutPrice = allPrinters.filter(p => 
       !p.msrp_usd && !p.current_price_usd_store && !p.current_price_usd_amazon
-    ).length,
-    withPrice: allPrinters.filter(p => 
+    );
+    const withPrice = allPrinters.filter(p => 
       p.msrp_usd || p.current_price_usd_store || p.current_price_usd_amazon
-    ).length,
-  } : null;
+    );
+    
+    console.log('📊 Price coverage:', {
+      total: allPrinters.length,
+      withPrice: withPrice.length,
+      withoutPrice: withoutPrice.length,
+    });
+    
+    return {
+      total: allPrinters.length,
+      withoutPrice: withoutPrice.length,
+      withPrice: withPrice.length,
+    };
+  })() : null;
 
   // Fetch printer brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -591,7 +605,9 @@ export default function AdminPrinters() {
           title: "Batch completed",
           description: `Processed ${data.total_processed} printers: ${data.successful} successful, ${data.failed} failed. Run again to process more.`,
         });
+        console.log('🔄 Invalidating queries and refetching printer counts...');
         await queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
+        await queryClient.invalidateQueries({ queryKey: ["all-printers-for-count"] });
         await refetchAllPrinters();
       } else {
         toast({
@@ -599,6 +615,8 @@ export default function AdminPrinters() {
           description: `Processed ${data.total_processed} printers but found no prices. Run again to continue.`,
           variant: "destructive",
         });
+        console.log('🔄 Refetching printer counts after failed batch...');
+        await queryClient.invalidateQueries({ queryKey: ["all-printers-for-count"] });
         await refetchAllPrinters();
       }
     } catch (error: any) {
@@ -645,14 +663,19 @@ export default function AdminPrinters() {
           title: "AI search completed",
           description: `Found MSRP for ${data.successful} out of ${data.total_processed} printers. Run again to process more.`,
         });
+        console.log('🔄 Invalidating queries and refetching printer counts...');
         await queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
-        await refetchAllPrinters();
+        await queryClient.invalidateQueries({ queryKey: ["all-printers-for-count"] });
+        const result = await refetchAllPrinters();
+        console.log('✅ Refetch complete, new data:', result.data?.length);
       } else {
         toast({
           title: "AI search completed",
           description: `Processed ${data.total_processed} printers but found no prices. Run again to continue.`,
           variant: "destructive",
         });
+        console.log('🔄 Refetching printer counts after failed batch...');
+        await queryClient.invalidateQueries({ queryKey: ["all-printers-for-count"] });
         await refetchAllPrinters();
       }
     } catch (error: any) {
