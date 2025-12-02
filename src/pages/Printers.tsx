@@ -10,12 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, CircleDot, Square } from "lucide-react";
+import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, CircleDot, Square, Layers } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import NozzleList from "@/components/NozzleList";
 import BuildPlateList from "@/components/BuildPlateList";
+import AMSList from "@/components/AMSList";
 
 // Brand wiki/documentation URLs
 const BRAND_WIKI_URLS: Record<string, string> = {
@@ -205,7 +206,7 @@ export default function Printers() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="printers" className="gap-2">
               <PrinterIcon className="h-4 w-4" />
               Printers
@@ -217,6 +218,10 @@ export default function Printers() {
             <TabsTrigger value="build-plates" className="gap-2">
               <Square className="h-4 w-4" />
               Build Plates
+            </TabsTrigger>
+            <TabsTrigger value="ams" className="gap-2">
+              <Layers className="h-4 w-4" />
+              AMS/MMU
             </TabsTrigger>
           </TabsList>
 
@@ -473,6 +478,11 @@ export default function Printers() {
           {/* Build Plates Tab */}
           <TabsContent value="build-plates" className="mt-6">
             <BuildPlateList />
+          </TabsContent>
+
+          {/* AMS/MMU Tab */}
+          <TabsContent value="ams" className="mt-6">
+            <AMSList />
           </TabsContent>
         </Tabs>
       </div>
