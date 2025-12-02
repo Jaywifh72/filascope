@@ -178,7 +178,7 @@ function correctUrlForPricing(url: string, brand: string): string | null {
   }
 }
 
-// Direct Firecrawl API call
+// Direct Firecrawl API call with enhanced options
 async function firecrawlScrape(url: string, apiKey: string) {
   console.log('Scraping price from:', url);
   
@@ -190,8 +190,19 @@ async function firecrawlScrape(url: string, apiKey: string) {
     },
     body: JSON.stringify({
       url: url,
-      formats: ['markdown'],
+      formats: ['markdown', 'html'],
       onlyMainContent: true,
+      waitFor: 3000, // Wait 3 seconds for dynamic content to load
+      skipTlsVerification: false,
+      location: {
+        country: 'US',
+        languages: ['en-US', 'en']
+      },
+      headers: {
+        'Accept': 'text/html,application/xhtml+xml,application/xml',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache'
+      }
     }),
   });
 
@@ -200,6 +211,23 @@ async function firecrawlScrape(url: string, apiKey: string) {
   if (!response.ok) {
     console.error('Firecrawl error:', responseData);
     throw new Error(`Firecrawl API error: ${response.statusText}`);
+  }
+
+  // Check if we got a valid response with actual content
+  if (responseData?.data?.markdown) {
+    const markdown = responseData.data.markdown;
+    
+    // Detect if we got a cookie consent page or redirect
+    if (markdown.includes('cookie') && markdown.includes('consent') && markdown.length < 1000) {
+      console.log('⚠️ Detected cookie consent page, content too short');
+      throw new Error('Cookie consent page detected');
+    }
+    
+    // Detect if we got binary/image data
+    if (markdown.includes('JFIF') || markdown.includes('ExifMM') || markdown.includes('����')) {
+      console.log('⚠️ Detected binary/image data instead of HTML');
+      throw new Error('Binary data received instead of HTML');
+    }
   }
 
   return responseData;
@@ -303,30 +331,39 @@ Deno.serve(async (req) => {
           console.log(`URL corrected: ${printer.official_product_url} → ${correctedUrl}`);
         }
 
-        // Scrape the product page
-        const scrapeResult = await firecrawlScrape(
-          urlToScrape,
-          firecrawlApiKey
-        );
-
-        if (!scrapeResult?.data?.markdown) {
-          console.log('No markdown data returned');
-          failCount++;
-          results.push({
-            printer_id: printer.id,
-            model_name: printer.model_name,
-            success: false,
-            error: 'No data returned'
-          });
-          continue;
+        // Scrape the product page with retry logic
+        let scrapeResult;
+        let scrapeError = null;
+        
+        try {
+          scrapeResult = await firecrawlScrape(urlToScrape, firecrawlApiKey);
+          
+          if (!scrapeResult?.data?.markdown) {
+            throw new Error('No markdown data returned');
+          }
+        } catch (error) {
+          scrapeError = error instanceof Error ? error.message : 'Unknown scrape error';
+          console.log(`Failed to scrape ${urlToScrape}: ${scrapeError}`);
+          
+          // If official URL failed, don't continue - go straight to Amazon fallback
+          scrapeResult = null;
         }
 
-        const markdown = scrapeResult.data.markdown;
-        const prices = extractPrices(markdown);
+        let prices: { msrp_usd: number | null; current_price_usd_store: number | null } = { 
+          msrp_usd: null, 
+          current_price_usd_store: null 
+        };
+        
+        // Only extract prices if we successfully scraped the official store
+        if (scrapeResult?.data?.markdown) {
+          const markdown = scrapeResult.data.markdown;
+          prices = extractPrices(markdown);
+          console.log('Extracted prices from official store:', prices);
+        } else {
+          console.log('No valid official store data, skipping to Amazon');
+        }
 
-        console.log('Extracted prices:', prices);
-
-        // If no prices found, try Amazon as fallback
+        // If no prices found from official store, try Amazon as fallback
         if (!prices.msrp_usd && !prices.current_price_usd_store) {
           console.log('No prices from official store, trying Amazon fallback...');
           
