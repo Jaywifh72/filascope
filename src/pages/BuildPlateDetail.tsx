@@ -145,12 +145,14 @@ export default function BuildPlateDetail() {
                   alt={buildPlate.name}
                   className="w-full h-full object-contain"
                   onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                    const fallback = target.parentElement?.querySelector('.image-fallback');
+                    if (fallback) fallback.classList.remove('hidden');
                   }}
                 />
               ) : null}
-              <div className={`flex flex-col items-center justify-center text-muted-foreground ${buildPlate.image_url ? 'hidden' : ''}`}>
+              <div className={`image-fallback flex flex-col items-center justify-center text-muted-foreground ${buildPlate.image_url ? 'hidden' : ''}`}>
                 <Square className="h-24 w-24 mb-4 opacity-30" />
                 <span className="text-lg">No image available</span>
               </div>
