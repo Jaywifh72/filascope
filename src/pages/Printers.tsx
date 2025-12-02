@@ -294,7 +294,7 @@ export default function Printers() {
 
                 {/* Brand Logo */}
                 {getBrandLogo(printer.brand?.brand || null) && (
-                  <div className="absolute top-4 left-4">
+                  <div className="absolute top-4 left-4 p-2 bg-muted/30 rounded-lg border border-border/50 backdrop-blur-sm">
                     <img 
                       src={getBrandLogo(printer.brand?.brand || null)!} 
                       alt={`${printer.brand?.brand} logo`}
