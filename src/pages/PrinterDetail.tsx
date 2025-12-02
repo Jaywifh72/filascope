@@ -206,11 +206,19 @@ const PrinterDetail = () => {
                   )}
                 </div>
 
-                {(printer.official_store_url || printer.amazon_url_us) && (
+                {(printer.official_product_url || printer.official_store_url || printer.amazon_url_us) && (
                   <div className="flex flex-wrap gap-3 pt-2">
+                    {printer.official_product_url && (
+                      <a href={printer.official_product_url} target="_blank" rel="noopener noreferrer">
+                        <Button size="lg" className="gap-2">
+                          <ExternalLink className="h-4 w-4" />
+                          View Product
+                        </Button>
+                      </a>
+                    )}
                     {printer.official_store_url && (
                       <a href={printer.official_store_url} target="_blank" rel="noopener noreferrer">
-                        <Button size="lg" className="gap-2">
+                        <Button size="lg" variant="outline" className="gap-2">
                           <ExternalLink className="h-4 w-4" />
                           Official Store
                         </Button>
