@@ -733,24 +733,25 @@ const PrinterDetail = () => {
                             .map((acc) => {
                               const specs = acc.specs as any;
                               return (
-                              <Card key={acc.id} className="hover:shadow-lg transition-shadow overflow-hidden">
-                                <CardContent className="p-0">
+                              <Card key={acc.id} className="hover:shadow-lg transition-shadow overflow-hidden flex flex-col h-[340px]">
+                                <CardContent className="p-0 flex flex-col h-full">
                                   {/* Header with brand badge */}
-                                  <div className="relative">
+                                  <div className="relative h-28 flex-shrink-0">
                                     {acc.image_url ? (
-                                      <div className="aspect-square bg-muted/30 flex items-center justify-center p-4">
+                                      <div className="h-full bg-muted/30 flex items-center justify-center p-3">
                                         <img 
                                           src={acc.image_url} 
                                           alt={acc.name}
                                           className="max-h-full max-w-full object-contain"
                                           onError={(e) => {
                                             e.currentTarget.style.display = 'none';
+                                            e.currentTarget.parentElement!.innerHTML = '<div class="h-12 w-12 text-muted-foreground/30"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg></div>';
                                           }}
                                         />
                                       </div>
                                     ) : (
-                                      <div className="aspect-square bg-muted/30 flex items-center justify-center">
-                                        <Cpu className="h-16 w-16 text-muted-foreground/30" />
+                                      <div className="h-full bg-muted/30 flex items-center justify-center">
+                                        <Cpu className="h-12 w-12 text-muted-foreground/30" />
                                       </div>
                                     )}
                                     {acc.brand && (
@@ -761,9 +762,9 @@ const PrinterDetail = () => {
                                   </div>
                                   
                                   {/* Content */}
-                                  <div className="p-4 space-y-2">
-                                    <h5 className="font-semibold text-sm line-clamp-2">{acc.name}</h5>
-                                    <div className="space-y-1 text-xs">
+                                  <div className="p-3 flex flex-col flex-1">
+                                    <h5 className="font-semibold text-sm line-clamp-2 mb-2">{acc.name}</h5>
+                                    <div className="space-y-1 text-xs flex-1">
                                       {specs?.diameter_mm && (
                                         <div className="flex justify-between">
                                           <span className="text-muted-foreground">Diameter:</span>
@@ -783,36 +784,16 @@ const PrinterDetail = () => {
                                         </div>
                                       )}
                                       {acc.price && (
-                                        <div className="flex justify-between pt-2 border-t">
+                                        <div className="flex justify-between pt-1 border-t mt-1">
                                           <span className="text-muted-foreground">Price:</span>
                                           <span className="font-bold text-primary">${acc.price}</span>
                                         </div>
                                       )}
-                                      {acc.price_change_percent !== null && acc.price_change_percent !== undefined && (
-                                        <div className="flex items-center justify-between text-xs">
-                                          <span className="text-muted-foreground">Change:</span>
-                                          <span className={`flex items-center gap-1 font-semibold ${
-                                            acc.price_change_percent > 0 ? 'text-red-500' : 
-                                            acc.price_change_percent < 0 ? 'text-green-500' : 
-                                            'text-muted-foreground'
-                                          }`}>
-                                            {acc.price_change_percent > 0 ? <TrendingUp className="h-3 w-3" /> : 
-                                             acc.price_change_percent < 0 ? <TrendingDown className="h-3 w-3" /> : null}
-                                            {acc.price_change_percent > 0 ? '+' : ''}{acc.price_change_percent.toFixed(1)}%
-                                          </span>
-                                        </div>
-                                      )}
                                     </div>
                                     
-                                    <AccessoryPriceChart 
-                                      accessoryId={acc.id} 
-                                      currentPrice={acc.price}
-                                      currency={acc.currency || 'USD'}
-                                    />
-                                    
                                     {acc.product_url && (
-                                      <a href={acc.product_url} target="_blank" rel="noopener noreferrer">
-                                        <Button size="sm" variant="outline" className="w-full mt-2 gap-2">
+                                      <a href={acc.product_url} target="_blank" rel="noopener noreferrer" className="mt-auto pt-2">
+                                        <Button size="sm" variant="outline" className="w-full gap-2">
                                           <ExternalLink className="h-3 w-3" />
                                           View Product
                                         </Button>
