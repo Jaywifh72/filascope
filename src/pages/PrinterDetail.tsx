@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
@@ -25,8 +24,12 @@ import {
   Package,
   CheckCircle2,
   XCircle,
-  MessageSquare,
   Flame,
+  Activity,
+  Ruler,
+  Wind,
+  Power,
+  Blend,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -134,173 +137,294 @@ const PrinterDetail = () => {
       ? (value ? "Yes" : "No")
       : `${value}${unit}`;
 
+    const icon = typeof value === "boolean" 
+      ? (value ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-muted" />)
+      : null;
+
     return (
-      <div className="flex justify-between py-2 border-b border-border/50">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium">{displayValue}</span>
+      <div className="flex justify-between items-center py-3 border-b border-border/30 last:border-0 hover:bg-muted/30 px-3 rounded transition-colors">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-sm">{displayValue}</span>
+          {icon}
+        </div>
       </div>
     );
   };
 
   const SpecSection = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
-    <Card className="p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Icon className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold">{title}</h3>
+    <Card className="overflow-hidden border-2">
+      <div className="bg-gradient-to-r from-muted/50 to-background p-4 border-b">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Icon className="h-5 w-5 text-primary" />
+          </div>
+          <h3 className="text-lg font-semibold">{title}</h3>
+        </div>
       </div>
-      <div className="space-y-1">{children}</div>
+      <div className="p-6 space-y-1">{children}</div>
     </Card>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
-      <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-primary/5">
+      <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-8">
+        {/* Navigation */}
         <div className="flex items-center gap-4">
           <Link to="/printers">
-            <Button variant="outline" size="icon">
-              <ArrowLeft className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant="secondary">{brand}</Badge>
-              {series && <Badge variant="outline">{series}</Badge>}
-              {printer.discontinued && <Badge variant="destructive">Discontinued</Badge>}
+        </div>
+
+        {/* Hero Section */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-border/50 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
+          <div className="relative p-8 md:p-12">
+            <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
+              <div className="flex-1 space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="secondary" className="text-sm px-3 py-1">{brand}</Badge>
+                  {series && <Badge variant="outline" className="text-sm px-3 py-1">{series}</Badge>}
+                  {printer.discontinued && <Badge variant="destructive" className="text-sm px-3 py-1">Discontinued</Badge>}
+                </div>
+                <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-br from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent tracking-tight">
+                  {printer.model_name}
+                </h1>
+                {printer.variant_or_bundle_name && (
+                  <p className="text-lg text-muted-foreground">{printer.variant_or_bundle_name}</p>
+                )}
+                
+                {/* Price & Buy Buttons */}
+                <div className="flex flex-wrap items-center gap-4 pt-4">
+                  {printer.msrp_usd && (
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold text-primary">${printer.msrp_usd}</span>
+                      <span className="text-sm text-muted-foreground">MSRP</span>
+                    </div>
+                  )}
+                </div>
+
+                {(printer.official_store_url || printer.amazon_url_us) && (
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    {printer.official_store_url && (
+                      <a href={printer.official_store_url} target="_blank" rel="noopener noreferrer">
+                        <Button size="lg" className="gap-2">
+                          <ExternalLink className="h-4 w-4" />
+                          Official Store
+                        </Button>
+                      </a>
+                    )}
+                    {printer.amazon_url_us && (
+                      <a href={printer.amazon_url_us} target="_blank" rel="noopener noreferrer">
+                        <Button size="lg" variant="outline" className="gap-2">
+                          <ExternalLink className="h-4 w-4" />
+                          Amazon US
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Quick Stats Card */}
+              <Card className="w-full md:w-auto md:min-w-[320px] bg-background/80 backdrop-blur-sm border-2">
+                <CardContent className="p-6 space-y-4">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Key Specs</h3>
+                  <div className="space-y-3">
+                    {printer.build_volume_x_mm && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Box className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">Build Volume</span>
+                        </div>
+                        <span className="font-semibold">
+                          {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
+                        </span>
+                      </div>
+                    )}
+                    {printer.max_print_speed_mms && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Gauge className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">Max Speed</span>
+                        </div>
+                        <span className="font-semibold">{printer.max_print_speed_mms} mm/s</span>
+                      </div>
+                    )}
+                    {printer.max_nozzle_temp_c && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Thermometer className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">Max Nozzle</span>
+                        </div>
+                        <span className="font-semibold">{printer.max_nozzle_temp_c}°C</span>
+                      </div>
+                    )}
+                    {printer.bed_max_temp_c && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Flame className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">Max Bed</span>
+                        </div>
+                        <span className="font-semibold">{printer.bed_max_temp_c}°C</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              {printer.model_name}
-            </h1>
-            {printer.variant_or_bundle_name && (
-              <p className="text-muted-foreground mt-1">{printer.variant_or_bundle_name}</p>
-            )}
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {printer.build_volume_x_mm && (
-            <Card className="p-4 text-center">
-              <Box className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-2xl font-bold">
-                {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}
-              </div>
-              <div className="text-sm text-muted-foreground">Build Volume (mm)</div>
+        {/* Feature Highlights */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {printer.has_enclosure && (
+            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
+              <Package className="h-6 w-6 mx-auto mb-2 text-primary" />
+              <div className="text-sm font-medium">Enclosure</div>
             </Card>
           )}
-          {printer.max_print_speed_mms && (
-            <Card className="p-4 text-center">
-              <Gauge className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-2xl font-bold">{printer.max_print_speed_mms}</div>
-              <div className="text-sm text-muted-foreground">Max Speed (mm/s)</div>
+          {printer.auto_bed_leveling && (
+            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
+              <Activity className="h-6 w-6 mx-auto mb-2 text-primary" />
+              <div className="text-sm font-medium">Auto Leveling</div>
             </Card>
           )}
-          {printer.max_nozzle_temp_c && (
-            <Card className="p-4 text-center">
-              <Thermometer className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-2xl font-bold">{printer.max_nozzle_temp_c}°C</div>
-              <div className="text-sm text-muted-foreground">Max Nozzle Temp</div>
+          {printer.multi_material_supported && (
+            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
+              <Blend className="h-6 w-6 mx-auto mb-2 text-primary" />
+              <div className="text-sm font-medium">Multi-Material</div>
             </Card>
           )}
-          {printer.msrp_usd && (
-            <Card className="p-4 text-center">
-              <DollarSign className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-2xl font-bold">${printer.msrp_usd}</div>
-              <div className="text-sm text-muted-foreground">MSRP</div>
+          {printer.has_wifi && (
+            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
+              <Wifi className="h-6 w-6 mx-auto mb-2 text-primary" />
+              <div className="text-sm font-medium">WiFi</div>
+            </Card>
+          )}
+          {printer.input_shaping_supported && (
+            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
+              <Wind className="h-6 w-6 mx-auto mb-2 text-primary" />
+              <div className="text-sm font-medium">Input Shaping</div>
+            </Card>
+          )}
+          {printer.abrasive_materials_supported && (
+            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
+              <Layers className="h-6 w-6 mx-auto mb-2 text-primary" />
+              <div className="text-sm font-medium">Abrasive Safe</div>
             </Card>
           )}
         </div>
 
-        {/* Purchase Links */}
-        {(printer.official_store_url || printer.amazon_url_us || printer.amazon_url_uk || printer.amazon_url_ca) && (
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Where to Buy</h3>
-            <div className="flex flex-wrap gap-3">
-              {printer.official_store_url && (
-                <a href={printer.official_store_url} target="_blank" rel="noopener noreferrer">
-                  <Button variant="default">
-                    Official Store <ExternalLink className="ml-2 h-4 w-4" />
-                  </Button>
-                </a>
-              )}
-              {printer.amazon_url_us && (
-                <a href={printer.amazon_url_us} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline">
-                    Amazon US <ExternalLink className="ml-2 h-4 w-4" />
-                  </Button>
-                </a>
-              )}
-              {printer.amazon_url_uk && (
-                <a href={printer.amazon_url_uk} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline">
-                    Amazon UK <ExternalLink className="ml-2 h-4 w-4" />
-                  </Button>
-                </a>
-              )}
-              {printer.amazon_url_ca && (
-                <a href={printer.amazon_url_ca} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline">
-                    Amazon CA <ExternalLink className="ml-2 h-4 w-4" />
-                  </Button>
-                </a>
-              )}
-            </div>
-          </Card>
-        )}
-
         {/* Ratings */}
         {(printer.rating_community_overall || printer.rating_ease_of_use || printer.rating_print_quality) && (
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Star className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold">Community Ratings</h3>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {printer.rating_community_overall && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">{printer.rating_community_overall.toFixed(1)}</div>
-                  <div className="text-sm text-muted-foreground">Overall</div>
+          <Card className="overflow-hidden border-2">
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 rounded-full bg-primary/20">
+                  <Star className="h-6 w-6 text-primary" />
                 </div>
-              )}
-              {printer.rating_ease_of_use && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{printer.rating_ease_of_use.toFixed(1)}</div>
-                  <div className="text-sm text-muted-foreground">Ease of Use</div>
+                <div>
+                  <h3 className="text-xl font-bold">Community Ratings</h3>
+                  {printer.review_count_aggregated && (
+                    <p className="text-sm text-muted-foreground">Based on {printer.review_count_aggregated} reviews</p>
+                  )}
                 </div>
-              )}
-              {printer.rating_print_quality && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{printer.rating_print_quality.toFixed(1)}</div>
-                  <div className="text-sm text-muted-foreground">Print Quality</div>
-                </div>
-              )}
-              {printer.rating_reliability && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{printer.rating_reliability.toFixed(1)}</div>
-                  <div className="text-sm text-muted-foreground">Reliability</div>
-                </div>
-              )}
-              {printer.rating_value_for_money && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{printer.rating_value_for_money.toFixed(1)}</div>
-                  <div className="text-sm text-muted-foreground">Value</div>
-                </div>
-              )}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                {printer.rating_community_overall && (
+                  <div className="text-center space-y-2">
+                    <div className="text-4xl font-bold text-primary">{printer.rating_community_overall.toFixed(1)}</div>
+                    <div className="flex justify-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`h-4 w-4 ${i < Math.round(printer.rating_community_overall || 0) ? 'fill-primary text-primary' : 'text-muted'}`} />
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Overall</div>
+                  </div>
+                )}
+                {printer.rating_ease_of_use && (
+                  <div className="text-center space-y-2">
+                    <div className="text-4xl font-bold">{printer.rating_ease_of_use.toFixed(1)}</div>
+                    <div className="flex justify-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`h-4 w-4 ${i < Math.round(printer.rating_ease_of_use || 0) ? 'fill-primary text-primary' : 'text-muted'}`} />
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Ease of Use</div>
+                  </div>
+                )}
+                {printer.rating_print_quality && (
+                  <div className="text-center space-y-2">
+                    <div className="text-4xl font-bold">{printer.rating_print_quality.toFixed(1)}</div>
+                    <div className="flex justify-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`h-4 w-4 ${i < Math.round(printer.rating_print_quality || 0) ? 'fill-primary text-primary' : 'text-muted'}`} />
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Print Quality</div>
+                  </div>
+                )}
+                {printer.rating_reliability && (
+                  <div className="text-center space-y-2">
+                    <div className="text-4xl font-bold">{printer.rating_reliability.toFixed(1)}</div>
+                    <div className="flex justify-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`h-4 w-4 ${i < Math.round(printer.rating_reliability || 0) ? 'fill-primary text-primary' : 'text-muted'}`} />
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Reliability</div>
+                  </div>
+                )}
+                {printer.rating_value_for_money && (
+                  <div className="text-center space-y-2">
+                    <div className="text-4xl font-bold">{printer.rating_value_for_money.toFixed(1)}</div>
+                    <div className="flex justify-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`h-4 w-4 ${i < Math.round(printer.rating_value_for_money || 0) ? 'fill-primary text-primary' : 'text-muted'}`} />
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Value</div>
+                  </div>
+                )}
+              </div>
             </div>
           </Card>
         )}
 
         {/* Detailed Specs Tabs */}
         <Tabs defaultValue="compatible" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-8 lg:grid-cols-8">
-            <TabsTrigger value="compatible">Compatible Filaments</TabsTrigger>
-            <TabsTrigger value="build">Build</TabsTrigger>
-            <TabsTrigger value="print">Print</TabsTrigger>
-            <TabsTrigger value="materials">Materials</TabsTrigger>
-            <TabsTrigger value="connectivity">Connect</TabsTrigger>
-            <TabsTrigger value="power">Power</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
-            <TabsTrigger value="other">Other</TabsTrigger>
+          <TabsList className="inline-flex w-full md:w-auto flex-wrap h-auto gap-2 bg-muted/50 p-2 rounded-xl">
+            <TabsTrigger value="compatible" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Flame className="h-4 w-4 mr-2" />
+              Compatible Filaments
+            </TabsTrigger>
+            <TabsTrigger value="build" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Box className="h-4 w-4 mr-2" />
+              Build
+            </TabsTrigger>
+            <TabsTrigger value="print" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Gauge className="h-4 w-4 mr-2" />
+              Print
+            </TabsTrigger>
+            <TabsTrigger value="materials" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Layers className="h-4 w-4 mr-2" />
+              Materials
+            </TabsTrigger>
+            <TabsTrigger value="connectivity" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Wifi className="h-4 w-4 mr-2" />
+              Connect
+            </TabsTrigger>
+            <TabsTrigger value="power" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Zap className="h-4 w-4 mr-2" />
+              Power
+            </TabsTrigger>
+            <TabsTrigger value="other" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Other
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="compatible" className="space-y-4 mt-6">
@@ -492,7 +616,7 @@ const PrinterDetail = () => {
                 })()}
               </div>
               
-              <Separator className="my-4" />
+              <div className="h-px bg-border my-4" />
               
               <div className="space-y-1 mt-4">
                 <SpecRow label="Multi-Material Supported" value={printer.multi_material_supported} />
@@ -547,28 +671,6 @@ const PrinterDetail = () => {
             </SpecSection>
           </TabsContent>
 
-          <TabsContent value="reviews" className="space-y-4 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  Community Reviews
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-                  <h3 className="text-lg font-semibold mb-2">Reviews Coming Soon</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    User reviews and detailed feedback will be available here soon.
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    In the meantime, check the community ratings above for overall feedback.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="other" className="space-y-4 mt-6">
             <SpecSection title="General Info" icon={Settings}>
