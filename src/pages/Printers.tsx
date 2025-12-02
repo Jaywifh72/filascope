@@ -9,10 +9,32 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GitCompare, X, Eye, RefreshCw } from "lucide-react";
+import { GitCompare, X, Eye, RefreshCw, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
+
+// Brand wiki/documentation URLs
+const BRAND_WIKI_URLS: Record<string, string> = {
+  "Bambu Lab": "https://wiki.bambulab.com",
+  "Creality": "https://en.wikipedia.org/wiki/Creality",
+  "Snapmaker": "https://wiki.snapmaker.com/Snapmaker_2",
+  "FLSUN": "https://flsun3d.com",
+  "Anycubic": "https://www.anycubic.com",
+  "FlashForge": "https://wiki.flashforge.com/en/guider_series/guider_4/guider_4",
+  "Elegoo": "https://wiki.elegoo.com/en/jupiter",
+  "AnkerMake": "https://www.eufymake.com/blogs/news/ankermake-rebranding-to-eufymake",
+  "eufyMake": "https://www.eufymake.com/blogs/news/ankermake-rebranding-to-eufymake",
+  "Markforged": "https://markforged.com",
+  "Raise3D": "https://www.raise3d.com",
+  "Prusa Research": "https://www.prusa3d.com/category/3d-printers",
+  "UltiMaker": "https://ultimaker.com/3d-printers",
+  "Sovol": "https://www.sovol3d.com/collections/3d-printer",
+  "Rat Rig": "https://ratrig.com/collections/3d-printers",
+  "Voron Design": "https://vorondesign.com",
+  "QIDI": "https://ca.qidi3d.com/collections/3d-printers",
+  "QIDI Tech": "https://ca.qidi3d.com/collections/3d-printers",
+};
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -370,6 +392,18 @@ export default function Printers() {
 
                 {/* Interactive Controls - Positioned absolutely over the card */}
                 <div className="absolute top-10 right-10 flex gap-2 z-10">
+                  {BRAND_WIKI_URLS[printer.brand?.brand || ""] && (
+                    <a
+                      href={BRAND_WIKI_URLS[printer.brand?.brand || ""]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      title={`${printer.brand?.brand} Wiki`}
+                      className="bg-background/80 backdrop-blur-sm rounded-md p-2 hover:bg-background transition-colors"
+                    >
+                      <BookOpen className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                    </a>
+                  )}
                   {isAdmin && printer.official_product_url && (
                     <Button 
                       variant="ghost" 
