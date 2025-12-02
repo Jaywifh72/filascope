@@ -5,6 +5,48 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Try Shopify JSON API first for stores that use Shopify
+async function tryShopifyJson(url: string): Promise<{ msrp_usd: number | null; current_price_usd_store: number | null } | null> {
+  try {
+    // Convert product URL to .json endpoint
+    const jsonUrl = url.replace(/\/$/, '') + '.json';
+    console.log(`Trying Shopify JSON API: ${jsonUrl}`);
+    
+    const response = await fetch(jsonUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      console.log(`Shopify JSON API returned ${response.status}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    if (data?.product?.variants && Array.isArray(data.product.variants)) {
+      const variant = data.product.variants[0];
+      const price = parseFloat(variant.price);
+      const comparePrice = variant.compare_at_price ? parseFloat(variant.compare_at_price) : null;
+      
+      if (!isNaN(price) && price > 0) {
+        console.log(`✓ Found price via Shopify JSON: $${price}${comparePrice ? ` (was $${comparePrice})` : ''}`);
+        return {
+          msrp_usd: comparePrice,
+          current_price_usd_store: price
+        };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.log('Shopify JSON attempt failed:', error instanceof Error ? error.message : 'Unknown error');
+    return null;
+  }
+}
+
 // Enhanced price extraction with multiple pattern matching and debugging
 function extractPrices(markdown: string): {
   msrp_usd: number | null;
@@ -178,6 +220,7 @@ function correctUrlForPricing(url: string, brand: string): string | null {
   }
 }
 
+
 // Direct Firecrawl API call with enhanced options
 async function firecrawlScrape(url: string, apiKey: string) {
   console.log('Scraping price from:', url);
@@ -331,39 +374,60 @@ Deno.serve(async (req) => {
           console.log(`URL corrected: ${printer.official_product_url} → ${correctedUrl}`);
         }
 
-        // Scrape the product page with retry logic
-        let scrapeResult;
-        let scrapeError = null;
-        
-        try {
-          scrapeResult = await firecrawlScrape(urlToScrape, firecrawlApiKey);
-          
-          if (!scrapeResult?.data?.markdown) {
-            throw new Error('No markdown data returned');
-          }
-        } catch (error) {
-          scrapeError = error instanceof Error ? error.message : 'Unknown scrape error';
-          console.log(`Failed to scrape ${urlToScrape}: ${scrapeError}`);
-          
-          // If official URL failed, don't continue - go straight to Amazon fallback
-          scrapeResult = null;
-        }
-
         let prices: { msrp_usd: number | null; current_price_usd_store: number | null } = { 
           msrp_usd: null, 
           current_price_usd_store: null 
         };
+
+        // Step 1: Try Shopify JSON API first (faster and more reliable for Shopify stores)
+        const hostname = new URL(urlToScrape).hostname.toLowerCase();
+        const isLikelyShopify = hostname.includes('store.') || hostname.includes('shop.') || 
+                                urlToScrape.includes('/products/');
         
-        // Only extract prices if we successfully scraped the official store
-        if (scrapeResult?.data?.markdown) {
-          const markdown = scrapeResult.data.markdown;
-          prices = extractPrices(markdown);
-          console.log('Extracted prices from official store:', prices);
-        } else {
-          console.log('No valid official store data, skipping to Amazon');
+        if (isLikelyShopify) {
+          console.log('Detected potential Shopify store, trying JSON API first...');
+          const shopifyPrices = await tryShopifyJson(urlToScrape);
+          if (shopifyPrices && shopifyPrices.current_price_usd_store) {
+            prices = shopifyPrices;
+            console.log('✓ Successfully extracted prices via Shopify JSON API');
+          }
         }
 
-        // If no prices found from official store, try Amazon as fallback
+        // Step 2: If Shopify didn't work, try Firecrawl scraping
+        if (!prices.current_price_usd_store) {
+          console.log('Attempting Firecrawl scrape...');
+          let scrapeResult;
+          let scrapeError = null;
+          
+          try {
+            scrapeResult = await firecrawlScrape(urlToScrape, firecrawlApiKey);
+            
+            if (!scrapeResult?.data?.markdown) {
+              throw new Error('No markdown data returned');
+            }
+            
+            console.log(`✓ Scraped ${scrapeResult.data.markdown.length} chars of content`);
+          } catch (error) {
+            scrapeError = error instanceof Error ? error.message : 'Unknown scrape error';
+            console.log(`✗ Failed to scrape ${urlToScrape}: ${scrapeError}`);
+            scrapeResult = null;
+          }
+
+          // Extract prices from scraped content
+          if (scrapeResult?.data?.markdown) {
+            const markdown = scrapeResult.data.markdown;
+            const extractedPrices = extractPrices(markdown);
+            
+            if (extractedPrices.current_price_usd_store || extractedPrices.msrp_usd) {
+              prices = extractedPrices;
+              console.log('✓ Extracted prices from official store:', prices);
+            } else {
+              console.log('✗ No prices found in scraped content');
+            }
+          }
+        }
+
+        // Step 3: If still no prices, try Amazon as fallback
         if (!prices.msrp_usd && !prices.current_price_usd_store) {
           console.log('No prices from official store, trying Amazon fallback...');
           
