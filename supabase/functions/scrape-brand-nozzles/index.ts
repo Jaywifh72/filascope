@@ -175,20 +175,38 @@ Deno.serve(async (req) => {
     console.log(`Found ${printers?.length || 0} printers in database`);
 
     for (const { name: currentBrandName, isOEM } of brandsToProcess) {
+      console.log(`\n========================================`);
+      console.log(`PROCESSING BRAND: ${currentBrandName} (${isOEM ? 'OEM' : '3rd Party'})`);
+      console.log(`========================================`);
+      
       const brandData = isOEM 
         ? OEM_NOZZLES[currentBrandName] 
         : THIRD_PARTY_NOZZLES[currentBrandName];
       
       if (!brandData) {
-        console.log(`No nozzle data for brand: ${currentBrandName}`);
+        console.log(`⚠️ No nozzle data found for brand: ${currentBrandName}`);
         continue;
       }
 
       const allNozzles = brandData.nozzles;
       totalNozzlesFound += allNozzles.length;
-      console.log(`Processing ${allNozzles.length} nozzles for ${currentBrandName}`);
+      console.log(`📦 Found ${allNozzles.length} nozzle definitions for ${currentBrandName}`);
 
-      for (const nozzle of allNozzles) {
+      let brandAccessoriesCreated = 0;
+      let brandErrors = 0;
+
+      for (let i = 0; i < allNozzles.length; i++) {
+        const nozzle = allNozzles[i];
+        console.log(`\n--- Nozzle ${i + 1}/${allNozzles.length}: ${nozzle.name} ---`);
+        console.log(`  Brand: ${nozzle.brand}`);
+        console.log(`  Model: ${nozzle.model}`);
+        console.log(`  Specs: diameter=${nozzle.specs.diameter_mm}mm, material=${nozzle.specs.material}, max_temp=${nozzle.specs.max_temp_c || 'N/A'}°C, hardened=${nozzle.specs.hardened}`);
+        console.log(`  Price: ${nozzle.price ? `$${nozzle.price} ${nozzle.currency || 'USD'}` : 'N/A'}`);
+        console.log(`  Product URL: ${nozzle.product_url || 'NOT SET'}`);
+        console.log(`  Image URL: ${nozzle.image_url || 'NOT SET'}`);
+        console.log(`  Compatible Brands: ${nozzle.compatible_printer_brands?.join(', ') || 'N/A'}`);
+        console.log(`  Compatible Hotends: ${nozzle.compatible_hotend_types?.join(', ') || 'N/A'}`);
+
         // Determine compatible printers
         const compatiblePrinters = (printers || []).filter((printer: any) => {
           // For OEM nozzles, match by brand pattern
@@ -206,37 +224,58 @@ Deno.serve(async (req) => {
           return false;
         });
 
-        console.log(`Nozzle "${nozzle.name}" compatible with ${compatiblePrinters.length} printers`);
+        console.log(`  ✅ Matched ${compatiblePrinters.length} compatible printers`);
+        if (compatiblePrinters.length > 0 && compatiblePrinters.length <= 10) {
+          console.log(`  Printers: ${compatiblePrinters.map((p: any) => p.model_name).join(', ')}`);
+        } else if (compatiblePrinters.length > 10) {
+          console.log(`  First 10 printers: ${compatiblePrinters.slice(0, 10).map((p: any) => p.model_name).join(', ')}...`);
+        }
 
+        let nozzleInsertCount = 0;
+        let nozzleErrorCount = 0;
+        
         for (const printer of compatiblePrinters) {
+          const upsertData = {
+            printer_id: printer.id,
+            accessory_type: 'nozzle',
+            name: nozzle.name,
+            brand: nozzle.brand,
+            model: nozzle.model,
+            specs: nozzle.specs,
+            product_url: nozzle.product_url,
+            image_url: nozzle.image_url,
+            price: nozzle.price,
+            currency: nozzle.currency || 'USD',
+            description: nozzle.description,
+            compatible_printer_brands: nozzle.compatible_printer_brands,
+            compatible_hotend_types: nozzle.compatible_hotend_types,
+          };
+
           const { error: insertError } = await supabase
             .from('printer_accessories')
-            .upsert({
-              printer_id: printer.id,
-              accessory_type: 'nozzle',
-              name: nozzle.name,
-              brand: nozzle.brand,
-              model: nozzle.model,
-              specs: nozzle.specs,
-              product_url: nozzle.product_url,
-              image_url: nozzle.image_url,
-              price: nozzle.price,
-              currency: nozzle.currency || 'USD',
-              description: nozzle.description,
-              compatible_printer_brands: nozzle.compatible_printer_brands,
-              compatible_hotend_types: nozzle.compatible_hotend_types,
-            }, {
+            .upsert(upsertData, {
               onConflict: 'printer_id,name',
               ignoreDuplicates: false,
             });
 
           if (!insertError) {
             totalAccessoriesCreated++;
+            brandAccessoriesCreated++;
+            nozzleInsertCount++;
           } else {
-            console.error(`Error inserting nozzle ${nozzle.name} for printer ${printer.model_name}:`, insertError);
+            nozzleErrorCount++;
+            brandErrors++;
+            console.error(`  ❌ Error inserting for printer "${printer.model_name}": ${insertError.message}`);
           }
         }
+        
+        console.log(`  📊 Results: ${nozzleInsertCount} inserted/updated, ${nozzleErrorCount} errors`);
       }
+      
+      console.log(`\n📈 Brand Summary for ${currentBrandName}:`);
+      console.log(`   - Nozzles processed: ${allNozzles.length}`);
+      console.log(`   - Accessories created/updated: ${brandAccessoriesCreated}`);
+      console.log(`   - Errors: ${brandErrors}`);
     }
 
     console.log(`Complete: ${totalNozzlesFound} nozzles found, ${totalAccessoriesCreated} accessories created`);
