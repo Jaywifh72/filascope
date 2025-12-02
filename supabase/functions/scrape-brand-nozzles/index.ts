@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.86.0';
-import FirecrawlApp from 'https://esm.sh/@mendable/firecrawl-js@4.7.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,7 +14,6 @@ interface NozzleData {
     max_temp_c?: number;
     hardened?: boolean;
     compatible_printers?: string[];
-    [key: string]: any;
   };
   product_url: string;
   price?: number;
@@ -25,180 +23,121 @@ interface NozzleData {
 // Brand-specific nozzle scraping configurations
 const BRAND_CONFIGS: Record<string, {
   collection_url?: string;
-  product_urls?: string[];
-  search_keywords?: string[];
   compatibility_pattern?: RegExp;
 }> = {
   'Bambu Lab': {
     collection_url: 'https://us.store.bambulab.com/collections/nozzle',
-    search_keywords: ['nozzle', 'hotend'],
     compatibility_pattern: /X1|P1|A1|H2/i,
   },
   'Prusa Research': {
     collection_url: 'https://www.prusa3d.com/category/nozzles/',
-    search_keywords: ['nozzle'],
     compatibility_pattern: /MK4|MK3|MINI|XL/i,
   },
   'Creality': {
     collection_url: 'https://store.creality.com/collections/nozzles',
-    search_keywords: ['nozzle'],
     compatibility_pattern: /K1|Ender|CR-/i,
   },
   'Anycubic': {
     collection_url: 'https://www.anycubic.com/collections/nozzles',
-    search_keywords: ['nozzle'],
-    compatibility_pattern: /Kobra|Vyper|Photon/i,
+    compatibility_pattern: /Kobra|Vyper/i,
   },
   'Voron Design': {
-    product_urls: [
-      'https://kb.vorondesign.com/build/startup/#hotend-nozzles',
-    ],
+    collection_url: 'https://kb.vorondesign.com/build/startup/#hotend-nozzles',
     compatibility_pattern: /Voron/i,
   },
 };
 
-async function extractNozzlesFromPage(
-  firecrawl: FirecrawlApp,
-  url: string,
-  brand: string
-): Promise<NozzleData[]> {
-  console.log(`Scraping nozzles from: ${url}`);
+async function scrapeWithFirecrawl(url: string, apiKey: string): Promise<{ markdown?: string; links?: string[] } | null> {
+  console.log(`Scraping URL: ${url}`);
   
   try {
-    const response = await firecrawl.scrape(url, {
-      formats: ['markdown', 'links'],
-      onlyMainContent: true,
-      waitFor: 2000,
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown', 'links'],
+        onlyMainContent: true,
+        waitFor: 2000,
+      }),
     });
 
-    if (!response || !response.markdown) {
-      console.error(`Failed to scrape ${url}`);
-      return [];
+    if (!response.ok) {
+      console.error(`Firecrawl API error: ${response.status} ${response.statusText}`);
+      return null;
     }
 
-    const markdown = response.markdown || '';
-    const links = (response.links as string[]) || [];
-    const nozzles: NozzleData[] = [];
-
-    // Extract product links that contain nozzle keywords
-    const nozzleLinks = links.filter((link: string) =>
-      link.toLowerCase().includes('nozzle') || 
-      link.toLowerCase().includes('hotend')
-    );
-
-    // Parse markdown for nozzle information
-    const lines = markdown.split('\n');
-    let currentNozzle: Partial<NozzleData> | null = null;
-
-    for (const line of lines) {
-      // Look for nozzle product names
-      const nozzleMatch = line.match(/(?:^|\s)([\d.]+\s*mm|brass|steel|hardened|nozzle)/i);
-      if (nozzleMatch) {
-        // Extract diameter
-        const diameterMatch = line.match(/(0\.\d+)\s*mm/);
-        const diameter = diameterMatch ? parseFloat(diameterMatch[1]) : undefined;
-
-        // Extract material
-        let material = 'brass';
-        if (line.toLowerCase().includes('hardened') || line.toLowerCase().includes('steel')) {
-          material = 'hardened steel';
-        } else if (line.toLowerCase().includes('tungsten')) {
-          material = 'tungsten carbide';
-        }
-
-        // Extract price
-        const priceMatch = line.match(/\$\s*([\d.]+)/);
-        const price = priceMatch ? parseFloat(priceMatch[1]) : undefined;
-
-        if (diameter) {
-          currentNozzle = {
-            name: line.trim().substring(0, 100),
-            brand,
-            specs: {
-              diameter_mm: diameter,
-              material,
-              hardened: material.includes('hardened') || material.includes('steel'),
-            },
-            product_url: url,
-            price,
-            currency: 'USD',
-          };
-        }
-      }
+    const data = await response.json();
+    
+    if (!data.success) {
+      console.error('Firecrawl scrape failed:', data.error);
+      return null;
     }
 
-    // Scrape individual nozzle product pages
-    for (const link of nozzleLinks.slice(0, 20)) {
-      try {
-        const productResponse = await firecrawl.scrape(link, {
-          formats: ['markdown'],
-          onlyMainContent: true,
-        });
-
-        if (productResponse && productResponse.markdown) {
-          const productData = parseNozzleProduct(productResponse.markdown, link, brand);
-          if (productData) {
-            nozzles.push(productData);
-          }
-        }
-      } catch (error) {
-        console.error(`Error scraping nozzle product ${link}:`, error);
-      }
-    }
-
-    return nozzles;
+    return {
+      markdown: data.data?.markdown,
+      links: data.data?.links,
+    };
   } catch (error) {
-    console.error(`Error extracting nozzles from ${url}:`, error);
-    return [];
+    console.error(`Error scraping ${url}:`, error);
+    return null;
   }
 }
 
-function parseNozzleProduct(markdown: string, url: string, brand: string): NozzleData | null {
-  // Extract diameter
-  const diameterMatch = markdown.match(/(0\.\d+)\s*mm/);
-  const diameter = diameterMatch ? parseFloat(diameterMatch[1]) : undefined;
-
-  if (!diameter) return null;
-
-  // Extract material
-  let material = 'brass';
-  let hardened = false;
-  if (markdown.toLowerCase().includes('hardened steel')) {
-    material = 'hardened steel';
-    hardened = true;
-  } else if (markdown.toLowerCase().includes('stainless')) {
-    material = 'stainless steel';
-    hardened = true;
-  } else if (markdown.toLowerCase().includes('tungsten')) {
-    material = 'tungsten carbide';
-    hardened = true;
+function parseNozzlesFromMarkdown(markdown: string, brand: string, sourceUrl: string): NozzleData[] {
+  const nozzles: NozzleData[] = [];
+  const lines = markdown.split('\n');
+  
+  for (const line of lines) {
+    // Look for nozzle-related content
+    const lowerLine = line.toLowerCase();
+    if (!lowerLine.includes('nozzle') && !lowerLine.includes('hotend')) continue;
+    
+    // Extract diameter
+    const diameterMatch = line.match(/(0\.\d+)\s*mm/);
+    const diameter = diameterMatch ? parseFloat(diameterMatch[1]) : undefined;
+    
+    if (!diameter) continue;
+    
+    // Extract material
+    let material = 'brass';
+    let hardened = false;
+    if (lowerLine.includes('hardened') || lowerLine.includes('steel')) {
+      material = 'hardened steel';
+      hardened = true;
+    } else if (lowerLine.includes('tungsten')) {
+      material = 'tungsten carbide';
+      hardened = true;
+    } else if (lowerLine.includes('stainless')) {
+      material = 'stainless steel';
+      hardened = true;
+    }
+    
+    // Extract price
+    const priceMatch = line.match(/\$\s*([\d.]+)/);
+    const price = priceMatch ? parseFloat(priceMatch[1]) : undefined;
+    
+    // Create nozzle name
+    const name = `${diameter}mm ${material} nozzle`.replace(/\s+/g, ' ').trim();
+    
+    nozzles.push({
+      name: line.trim().substring(0, 100) || name,
+      brand,
+      specs: {
+        diameter_mm: diameter,
+        material,
+        hardened,
+      },
+      product_url: sourceUrl,
+      price,
+      currency: 'USD',
+    });
   }
-
-  // Extract max temp
-  const tempMatch = markdown.match(/(\d+)\s*°?C/);
-  const max_temp_c = tempMatch ? parseInt(tempMatch[1]) : undefined;
-
-  // Extract price
-  const priceMatch = markdown.match(/\$\s*([\d.]+)/);
-  const price = priceMatch ? parseFloat(priceMatch[1]) : undefined;
-
-  // Extract title/name
-  const titleMatch = markdown.match(/^#\s+(.+)$/m);
-  const name = titleMatch ? titleMatch[1].trim() : `${diameter}mm ${material} nozzle`;
-
-  return {
-    name,
-    brand,
-    specs: {
-      diameter_mm: diameter,
-      material,
-      max_temp_c,
-      hardened,
-    },
-    product_url: url,
-    price,
-    currency: 'USD',
-  };
+  
+  return nozzles;
 }
 
 Deno.serve(async (req) => {
@@ -212,7 +151,6 @@ Deno.serve(async (req) => {
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const firecrawl = new FirecrawlApp({ apiKey: firecrawlKey });
 
     const { brandId, brandName } = await req.json();
 
@@ -237,14 +175,9 @@ Deno.serve(async (req) => {
 
     // Scrape from collection URL
     if (config.collection_url) {
-      const nozzles = await extractNozzlesFromPage(firecrawl, config.collection_url, brandName);
-      allNozzles.push(...nozzles);
-    }
-
-    // Scrape from specific product URLs
-    if (config.product_urls) {
-      for (const url of config.product_urls) {
-        const nozzles = await extractNozzlesFromPage(firecrawl, url, brandName);
+      const scraped = await scrapeWithFirecrawl(config.collection_url, firecrawlKey);
+      if (scraped?.markdown) {
+        const nozzles = parseNozzlesFromMarkdown(scraped.markdown, brandName, config.collection_url);
         allNozzles.push(...nozzles);
       }
     }
