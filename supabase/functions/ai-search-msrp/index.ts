@@ -63,9 +63,9 @@ serve(async (req) => {
     // Process each printer with AI search
     for (const printer of printers) {
       const brandName = (printer.printer_brands as any)?.brand || 'Unknown';
-      const searchQuery = `What is the MSRP (manufacturer's suggested retail price) in USD for the ${brandName} ${printer.model_name} 3D printer? Please provide only the price as a number, without currency symbols.`;
+      const searchQuery = `What is the current price in USD from the official store for the ${brandName} ${printer.model_name} 3D printer? If official store price is not available, what is the MSRP (manufacturer's suggested retail price)? Please provide only the price as a number, without currency symbols. Indicate if it's a store price or MSRP.`;
 
-      console.log(`AI searching MSRP for: ${brandName} ${printer.model_name}`);
+      console.log(`AI searching price for: ${brandName} ${printer.model_name}`);
 
       try {
         // Call Lovable AI Gateway
@@ -79,8 +79,8 @@ serve(async (req) => {
             model: 'google/gemini-2.5-flash',
             messages: [
               {
-                role: 'system',
-                content: 'You are a helpful assistant that finds accurate MSRP pricing information for 3D printers. Always provide prices in USD. If you cannot find exact pricing, provide the best estimate from official sources and indicate it is an estimate. Return only the numeric price value.'
+              role: 'system',
+              content: 'You are a helpful assistant that finds accurate pricing information for 3D printers. PRIORITY: Always try to find the current official store price first from the manufacturer\'s website. Only provide MSRP if the store price is unavailable. Always provide prices in USD. If you cannot find exact pricing, provide the best estimate from official sources and indicate it is an estimate. In your response, clearly state whether you found a "store price" or "MSRP". Return the price and type in format: "PRICE_VALUE (store price)" or "PRICE_VALUE (MSRP)".'
               },
               {
                 role: 'user',
@@ -100,16 +100,24 @@ serve(async (req) => {
         
         console.log(`AI response for ${printer.model_name}:`, priceText);
 
+        // Determine if it's a store price or MSRP
+        const isStorePrice = priceText.toLowerCase().includes('store price');
+        const isMSRP = priceText.toLowerCase().includes('msrp');
+
         // Extract numeric price from response
         const priceMatch = priceText.match(/[\d,]+\.?\d*/);
         if (priceMatch) {
           const price = parseFloat(priceMatch[0].replace(/,/g, ''));
           
           if (price > 0 && price < 100000) { // Sanity check
-            // Update the printer with MSRP
+            // Determine which field to update based on price type
+            const updateField = isStorePrice ? 'current_price_usd_store' : 'msrp_usd';
+            const priceType = isStorePrice ? 'store price' : 'MSRP';
+            
+            // Update the printer with the appropriate price field
             const { error: updateError } = await supabase
               .from('printers')
-              .update({ msrp_usd: price })
+              .update({ [updateField]: price })
               .eq('id', printer.id);
 
             if (updateError) {
@@ -123,7 +131,7 @@ serve(async (req) => {
                 error: 'Database update failed',
               });
             } else {
-              console.log(`Successfully updated MSRP for ${printer.model_name}: $${price}`);
+              console.log(`Successfully updated ${priceType} for ${printer.model_name}: $${price}`);
               successful++;
               results.push({
                 printer_id: printer.printer_id,
@@ -131,7 +139,7 @@ serve(async (req) => {
                 brand: brandName,
                 success: true,
                 msrp_usd: price,
-                ai_response: priceText.substring(0, 100),
+                ai_response: `${priceType}: $${price}`,
               });
             }
           } else {
