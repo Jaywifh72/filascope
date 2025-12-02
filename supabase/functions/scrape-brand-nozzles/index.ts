@@ -192,11 +192,17 @@ async function scrapeShopifyNozzles(
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NozzleScraper/1.0)' }
     });
     
+    console.log(`📡 Shopify API response status: ${response.status}`);
+    
     if (response.ok) {
       const data = await response.json();
       const products = data.products || [];
       
       console.log(`📦 Found ${products.length} total products in Shopify collection`);
+      
+      if (products.length === 0) {
+        console.log(`⚠️ Shopify JSON API returned empty products array`);
+      }
       
       // Filter products using regex
       const matchingProducts = products.filter((p: any) => {
@@ -207,7 +213,12 @@ async function scrapeShopifyNozzles(
         return filterRegex.test(combined);
       });
       
-      console.log(`✅ ${matchingProducts.length} products match filter "${productFilter || 'nozzle'}"`);
+      console.log(`✅ ${matchingProducts.length} products match filter "${productFilter || 'nozzle|hotend'}"`);
+      
+      // Log first few matching product titles for debugging
+      matchingProducts.slice(0, 5).forEach((p: any, i: number) => {
+        console.log(`   ${i + 1}. ${p.title}`);
+      });
       
       for (const product of matchingProducts) {
         const title = product.title || '';
@@ -255,6 +266,8 @@ async function scrapeShopifyNozzles(
       }
       
       return nozzles;
+    } else {
+      console.log(`⚠️ Shopify JSON API failed with status ${response.status}`);
     }
   } catch (error) {
     console.log(`⚠️ Shopify JSON API failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -285,12 +298,17 @@ async function scrapeShopifyNozzles(
       
       console.log(`📄 Firecrawl found ${links.length} links`);
       
-      // Filter for product links
+      // Filter for product links using the same regex (includes hotend)
       const productLinks = links.filter((link: string) => 
-        link.includes('/products/') && link.toLowerCase().includes('nozzle')
+        link.includes('/products/') && filterRegex.test(link)
       );
       
-      console.log(`🔗 Found ${productLinks.length} nozzle product links`);
+      console.log(`🔗 Found ${productLinks.length} nozzle/hotend product links`);
+      
+      // Log matched links for debugging
+      productLinks.slice(0, 5).forEach((link: string, i: number) => {
+        console.log(`   ${i + 1}. ${link}`);
+      });
       
       // For each product link, scrape details
       for (const productUrl of productLinks.slice(0, 20)) { // Limit to 20
