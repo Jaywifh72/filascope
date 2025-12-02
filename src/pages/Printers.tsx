@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GitCompare, X, Eye, RefreshCw, BookOpen } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, CircleDot } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
+import NozzleList from "@/components/NozzleList";
 
 // Brand wiki/documentation URLs
 const BRAND_WIKI_URLS: Record<string, string> = {
@@ -43,6 +45,7 @@ type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
 
 export default function Printers() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
@@ -51,6 +54,12 @@ export default function Printers() {
   const [multiMaterial, setMultiMaterial] = useState(false);
   const [minBuildVolume, setMinBuildVolume] = useState("");
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
+
+  const activeTab = searchParams.get("tab") || "printers";
+  
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
 
   // Fetch brands
   const { data: brands } = useQuery({
@@ -187,108 +196,123 @@ export default function Printers() {
       <div className="max-w-[1800px] mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">3D Printers</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Hardware</h1>
           <p className="text-muted-foreground">
-            Browse and compare 3D printers
+            Browse and compare 3D printers and nozzles
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Input
-            type="text"
-            placeholder="Search by model or brand..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="md:col-span-2"
-          />
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="printers" className="gap-2">
+              <PrinterIcon className="h-4 w-4" />
+              Printers
+            </TabsTrigger>
+            <TabsTrigger value="nozzles" className="gap-2">
+              <CircleDot className="h-4 w-4" />
+              Nozzles
+            </TabsTrigger>
+          </TabsList>
 
-          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select brand" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Brands</SelectItem>
-              {brands?.map(brand => (
-                <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Printers Tab */}
+          <TabsContent value="printers" className="space-y-6 mt-6">
+            {/* Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <Input
+                type="text"
+                placeholder="Search by model or brand..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="md:col-span-2"
+              />
 
-          <Select value={selectedMaterial} onValueChange={setSelectedMaterial}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by material" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Materials</SelectItem>
-              {availableMaterials.map(material => (
-                <SelectItem key={material} value={material}>{material}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Brands</SelectItem>
+                  {brands?.map(brand => (
+                    <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <Input
-            type="number"
-            placeholder="Min volume (liters)"
-            value={minBuildVolume}
-            onChange={(e) => setMinBuildVolume(e.target.value)}
-          />
-        </div>
+              <Select value={selectedMaterial} onValueChange={setSelectedMaterial}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by material" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Materials</SelectItem>
+                  {availableMaterials.map(material => (
+                    <SelectItem key={material} value={material}>{material}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-        {/* Feature Filters */}
-        <div className="flex flex-wrap gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox 
-              checked={hasEnclosure} 
-              onCheckedChange={(checked) => setHasEnclosure(checked as boolean)} 
-            />
-            <span className="text-sm">Has Enclosure</span>
-          </label>
+              <Input
+                type="number"
+                placeholder="Min volume (liters)"
+                value={minBuildVolume}
+                onChange={(e) => setMinBuildVolume(e.target.value)}
+              />
+            </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox 
-              checked={multiMaterial} 
-              onCheckedChange={(checked) => setMultiMaterial(checked as boolean)} 
-            />
-            <span className="text-sm">Multi-Material Support</span>
-          </label>
-        </div>
+            {/* Feature Filters */}
+            <div className="flex flex-wrap gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox 
+                  checked={hasEnclosure} 
+                  onCheckedChange={(checked) => setHasEnclosure(checked as boolean)} 
+                />
+                <span className="text-sm">Has Enclosure</span>
+              </label>
 
-        {/* Results Count */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">
-            {filteredPrinters?.length || 0} <span className="text-muted-foreground font-normal">printers</span>
-          </h2>
-        </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox 
+                  checked={multiMaterial} 
+                  onCheckedChange={(checked) => setMultiMaterial(checked as boolean)} 
+                />
+                <span className="text-sm">Multi-Material Support</span>
+              </label>
+            </div>
 
-        {/* Compare Bar */}
-        {selectedForCompare.length > 0 && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-card border rounded-lg shadow-lg p-4 flex items-center gap-4 z-50">
-            <span className="text-sm font-medium">
-              {selectedForCompare.length} printer{selectedForCompare.length !== 1 ? 's' : ''} selected
-            </span>
-            <Button onClick={handleCompare} size="sm" className="gap-2">
-              <GitCompare className="h-4 w-4" />
-              Compare
-            </Button>
-            <Button onClick={clearCompareSelection} variant="ghost" size="sm">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+            {/* Results Count */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">
+                {filteredPrinters?.length || 0} <span className="text-muted-foreground font-normal">printers</span>
+              </h2>
+            </div>
 
-        {/* Printer Grid */}
-        {isLoading ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Loading printers...</p>
-          </div>
-        ) : filteredPrinters.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No printers found matching your criteria</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPrinters.map((printer) => (
+            {/* Compare Bar */}
+            {selectedForCompare.length > 0 && (
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-card border rounded-lg shadow-lg p-4 flex items-center gap-4 z-50">
+                <span className="text-sm font-medium">
+                  {selectedForCompare.length} printer{selectedForCompare.length !== 1 ? 's' : ''} selected
+                </span>
+                <Button onClick={handleCompare} size="sm" className="gap-2">
+                  <GitCompare className="h-4 w-4" />
+                  Compare
+                </Button>
+                <Button onClick={clearCompareSelection} variant="ghost" size="sm">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Printer Grid */}
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Loading printers...</p>
+              </div>
+            ) : filteredPrinters.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No printers found matching your criteria</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPrinters.map((printer) => (
               <div key={printer.id} className="relative">
                 <Link to={`/printers/${printer.id}`}>
                   <Card className="p-6 space-y-4 relative hover:shadow-lg transition-shadow cursor-pointer">
@@ -434,6 +458,13 @@ export default function Printers() {
             ))}
           </div>
         )}
+          </TabsContent>
+
+          {/* Nozzles Tab */}
+          <TabsContent value="nozzles" className="mt-6">
+            <NozzleList />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
