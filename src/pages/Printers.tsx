@@ -9,9 +9,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GitCompare, X, ExternalLink, Eye, RefreshCw } from "lucide-react";
+import { GitCompare, X, Eye, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { getBrandLogo } from "@/lib/brandLogos";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -290,6 +291,17 @@ export default function Printers() {
                     onCheckedChange={() => toggleCompareSelection(printer.printer_id)}
                   />
                 </div>
+
+                {/* Brand Logo */}
+                {getBrandLogo(printer.brand?.brand || null) && (
+                  <div className="flex justify-center py-4">
+                    <img 
+                      src={getBrandLogo(printer.brand?.brand || null)!} 
+                      alt={`${printer.brand?.brand} logo`}
+                      className="h-16 w-auto object-contain"
+                    />
+                  </div>
+                )}
 
                 {/* Header */}
                 <div className="space-y-2 pr-16">
