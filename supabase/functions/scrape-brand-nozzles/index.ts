@@ -1050,7 +1050,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
         currency: 'USD',
         description: 'Brass nozzle for Ender-3 V3 series printers',
         compatible_printer_brands: ['Creality'],
-        printer_compatibility_pattern: /Ender-3 V3|Ender-3V3/i,
+        printer_compatibility_pattern: /Ender[- ]?3 V3|Ender-3V3/i,
       },
       {
         name: '0.2mm Brass Nozzle (Ender-3 V3 Series)',
@@ -1078,7 +1078,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
         currency: 'USD',
         description: 'Fine detail brass nozzle for Ender-3 V3 series',
         compatible_printer_brands: ['Creality'],
-        printer_compatibility_pattern: /Ender-3 V3|Ender-3V3/i,
+        printer_compatibility_pattern: /Ender[- ]?3 V3|Ender-3V3/i,
       },
       {
         name: '0.6mm Brass Nozzle (Ender-3 V3 Series)',
@@ -1106,7 +1106,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
         currency: 'USD',
         description: 'Fast printing brass nozzle for Ender-3 V3 series',
         compatible_printer_brands: ['Creality'],
-        printer_compatibility_pattern: /Ender-3 V3|Ender-3V3/i,
+        printer_compatibility_pattern: /Ender[- ]?3 V3|Ender-3V3/i,
       },
       // ========== LEGACY ENDER-3/CR SERIES (MK8 NOZZLES) ==========
       {
