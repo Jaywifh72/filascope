@@ -20,3 +20,15 @@ verify_jwt = true
 
 [functions.discover-printer-models]
 verify_jwt = true
+
+[functions.scrape-brand-nozzles]
+verify_jwt = true
+
+[functions.deep-scrape-printer]
+verify_jwt = true
+
+[functions.import-printers]
+verify_jwt = true
+
+[functions.fetch-accessory-prices]
+verify_jwt = true
