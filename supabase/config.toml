@@ -35,3 +35,6 @@ verify_jwt = true
 
 [functions.rescrape-nozzle-images]
 verify_jwt = false
+
+[functions.scrape-accessory-images]
+verify_jwt = true
