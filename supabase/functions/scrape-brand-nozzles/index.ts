@@ -47,12 +47,15 @@ const BRAND_STORE_CONFIGS: Record<string, {
   compatibility_pattern: RegExp;
   compatible_hotend_types: string[];
   brand_filter?: string;
+  product_filter?: string; // Keywords to filter products (nozzle OR hotend)
 }> = {
   'Bambu Lab': {
-    nozzle_collection_url: 'https://us.store.bambulab.com/collections/nozzle',
+    // Bambu Lab sells hotends with nozzles, not standalone nozzles
+    nozzle_collection_url: 'https://us.store.bambulab.com/collections/all',
     is_shopify: true,
-    compatibility_pattern: /X1|P1|A1/i,
+    compatibility_pattern: /X1|P1|A1|H2/i,
     compatible_hotend_types: ['Bambu Lab Hotend'],
+    product_filter: 'nozzle|hotend|hardened|stainless',
   },
   'Prusa Research': {
     nozzle_collection_url: 'https://www.prusa3d.com/category/nozzles/',
@@ -65,6 +68,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
     is_shopify: true,
     compatibility_pattern: /K1|K2|Ender|CR-|Sermoon/i,
     compatible_hotend_types: ['MK8', 'Creality Spider', 'Creality Unicorn'],
+    product_filter: 'nozzle',
   },
   'E3D': {
     nozzle_collection_url: 'https://e3d-online.com/collections/nozzles',
@@ -165,13 +169,21 @@ function extractNozzleSpecs(title: string, description?: string): Partial<Nozzle
 async function scrapeShopifyNozzles(
   collectionUrl: string, 
   brandName: string,
-  firecrawlApiKey: string
+  firecrawlApiKey: string,
+  productFilter?: string
 ): Promise<NozzleData[]> {
   const nozzles: NozzleData[] = [];
   
+  // Build filter regex from productFilter (e.g., "nozzle|hotend|hardened")
+  const filterRegex = productFilter 
+    ? new RegExp(productFilter, 'i') 
+    : /nozzle/i;
+  
+  console.log(`\n🔍 Product filter: ${filterRegex}`);
+  
   // Try Shopify JSON API first
   const jsonUrl = collectionUrl.replace(/\/?$/, '') + '/products.json?limit=250';
-  console.log(`\n🔍 Attempting Shopify JSON API: ${jsonUrl}`);
+  console.log(`🔍 Attempting Shopify JSON API: ${jsonUrl}`);
   
   try {
     const response = await fetch(jsonUrl, {
@@ -182,18 +194,24 @@ async function scrapeShopifyNozzles(
       const data = await response.json();
       const products = data.products || [];
       
-      console.log(`📦 Found ${products.length} products in Shopify collection`);
+      console.log(`📦 Found ${products.length} total products in Shopify collection`);
       
-      for (const product of products) {
+      // Filter products using regex
+      const matchingProducts = products.filter((p: any) => {
+        const title = (p.title || '').toLowerCase();
+        const tags = (p.tags || []).join(' ').toLowerCase();
+        const productType = (p.product_type || '').toLowerCase();
+        const combined = `${title} ${tags} ${productType}`;
+        return filterRegex.test(combined);
+      });
+      
+      console.log(`✅ ${matchingProducts.length} products match filter "${productFilter || 'nozzle'}"`);
+      
+      for (const product of matchingProducts) {
         const title = product.title || '';
         const handle = product.handle || '';
         
-        // Filter for nozzle products
-        if (!title.toLowerCase().includes('nozzle')) {
-          continue;
-        }
-        
-        // Skip multi-packs, kits, and non-individual nozzles
+        // Skip multi-packs, kits (unless they're individual nozzle variants)
         if (title.toLowerCase().includes('pack') && !title.toLowerCase().includes('4-pack')) {
           continue;
         }
@@ -444,7 +462,8 @@ Deno.serve(async (req) => {
       discoveredNozzles = await scrapeShopifyNozzles(
         brandConfig.nozzle_collection_url,
         brandName,
-        firecrawlApiKey
+        firecrawlApiKey,
+        brandConfig.product_filter
       );
     } else {
       // Non-Shopify scraping (use Firecrawl directly)
