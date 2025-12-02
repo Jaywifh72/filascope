@@ -297,9 +297,23 @@ export default function Printers() {
                     </div>
 
                     {/* Price */}
-                    {printer.current_price_usd_store && (
-                      <div className="text-2xl font-bold text-primary">
-                        ${printer.current_price_usd_store}
+                    {(printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd) && (
+                      <div className="space-y-1">
+                        {printer.current_price_usd_store ? (
+                          <div className="text-2xl font-bold text-primary">
+                            ${printer.current_price_usd_store}
+                          </div>
+                        ) : printer.current_price_usd_amazon ? (
+                          <div className="text-2xl font-bold text-primary">
+                            ${printer.current_price_usd_amazon}
+                            <span className="text-xs text-muted-foreground ml-1">(Amazon)</span>
+                          </div>
+                        ) : printer.msrp_usd ? (
+                          <div className="text-2xl font-bold text-muted-foreground">
+                            ${printer.msrp_usd}
+                            <span className="text-xs ml-1">(MSRP)</span>
+                          </div>
+                        ) : null}
                       </div>
                     )}
 
