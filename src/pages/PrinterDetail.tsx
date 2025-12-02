@@ -71,6 +71,23 @@ const PrinterDetail = () => {
     },
   });
 
+  // Fetch printer accessories
+  const { data: accessories } = useQuery({
+    queryKey: ["printer-accessories", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("printer_accessories")
+        .select("*")
+        .eq("printer_id", id)
+        .order("accessory_type", { ascending: true })
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Calculate compatibility for each filament
   const compatibleFilaments = filaments && printer
     ? filaments
@@ -433,6 +450,10 @@ const PrinterDetail = () => {
               <Settings className="h-4 w-4 mr-2" />
               Other
             </TabsTrigger>
+            <TabsTrigger value="accessories" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <Package className="h-4 w-4 mr-2" />
+              Accessories
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="compatible" className="space-y-4 mt-6">
@@ -708,6 +729,185 @@ const PrinterDetail = () => {
               <SpecRow label="Current Price (Store)" value={printer.current_price_usd_store} unit=" USD" />
               <SpecRow label="Current Price (Amazon)" value={printer.current_price_usd_amazon} unit=" USD" />
             </SpecSection>
+          </TabsContent>
+
+          <TabsContent value="accessories" className="space-y-4 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-primary" />
+                  Official Accessories
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Nozzles, build plates, and multi-material systems sold by {brand} for this printer
+                </p>
+              </CardHeader>
+              <CardContent>
+                {!accessories || accessories.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No accessories found. Accessories are automatically discovered when the printer is scraped.
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Nozzles Section */}
+                    {accessories.filter(a => a.accessory_type === 'nozzle').length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <Cpu className="h-5 w-5 text-primary" />
+                          Nozzles ({accessories.filter(a => a.accessory_type === 'nozzle').length})
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {accessories
+                            .filter(a => a.accessory_type === 'nozzle')
+                            .map((acc) => {
+                              const specs = acc.specs as any;
+                              return (
+                              <Card key={acc.id} className="hover:shadow-lg transition-shadow">
+                                <CardContent className="p-4 space-y-2">
+                                  <h5 className="font-semibold text-sm capitalize">{acc.name}</h5>
+                                  <div className="space-y-1 text-xs">
+                                    {specs?.diameter_mm && (
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Diameter:</span>
+                                        <span className="font-medium">{specs.diameter_mm}mm</span>
+                                      </div>
+                                    )}
+                                    {specs?.material && (
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Material:</span>
+                                        <span className="font-medium">{specs.material}</span>
+                                      </div>
+                                    )}
+                                    {acc.price && (
+                                      <div className="flex justify-between pt-2 border-t">
+                                        <span className="text-muted-foreground">Price:</span>
+                                        <span className="font-bold text-primary">${acc.price}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {acc.product_url && (
+                                    <a href={acc.product_url} target="_blank" rel="noopener noreferrer">
+                                      <Button size="sm" variant="outline" className="w-full mt-2 gap-2">
+                                        <ExternalLink className="h-3 w-3" />
+                                        View Product
+                                      </Button>
+                                    </a>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            );
+                            })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Build Plates Section */}
+                    {accessories.filter(a => a.accessory_type === 'build_plate').length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <Layers className="h-5 w-5 text-primary" />
+                          Build Plates ({accessories.filter(a => a.accessory_type === 'build_plate').length})
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {accessories
+                            .filter(a => a.accessory_type === 'build_plate')
+                            .map((acc) => {
+                              const specs = acc.specs as any;
+                              return (
+                              <Card key={acc.id} className="hover:shadow-lg transition-shadow">
+                                <CardContent className="p-4 space-y-2">
+                                  <h5 className="font-semibold text-sm capitalize">{acc.name}</h5>
+                                  <div className="space-y-1 text-xs">
+                                    {specs?.surface && (
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Surface:</span>
+                                        <span className="font-medium">{specs.surface}</span>
+                                      </div>
+                                    )}
+                                    {specs?.magnetic !== undefined && (
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Magnetic:</span>
+                                        <span className="font-medium">{specs.magnetic ? 'Yes' : 'No'}</span>
+                                      </div>
+                                    )}
+                                    {acc.price && (
+                                      <div className="flex justify-between pt-2 border-t">
+                                        <span className="text-muted-foreground">Price:</span>
+                                        <span className="font-bold text-primary">${acc.price}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {acc.product_url && (
+                                    <a href={acc.product_url} target="_blank" rel="noopener noreferrer">
+                                      <Button size="sm" variant="outline" className="w-full mt-2 gap-2">
+                                        <ExternalLink className="h-3 w-3" />
+                                        View Product
+                                      </Button>
+                                    </a>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            );
+                            })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* AMS/MMU Section */}
+                    {accessories.filter(a => a.accessory_type === 'ams_mmu').length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <Blend className="h-5 w-5 text-primary" />
+                          Multi-Material Systems ({accessories.filter(a => a.accessory_type === 'ams_mmu').length})
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {accessories
+                            .filter(a => a.accessory_type === 'ams_mmu')
+                            .map((acc) => {
+                              const specs = acc.specs as any;
+                              return (
+                              <Card key={acc.id} className="hover:shadow-lg transition-shadow">
+                                <CardContent className="p-4 space-y-2">
+                                  <h5 className="font-semibold text-sm capitalize">{acc.name}</h5>
+                                  <div className="space-y-1 text-xs">
+                                    {specs?.spool_capacity && (
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Capacity:</span>
+                                        <span className="font-medium">{specs.spool_capacity} spools</span>
+                                      </div>
+                                    )}
+                                    {specs?.heated !== undefined && (
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Heated:</span>
+                                        <span className="font-medium">{specs.heated ? 'Yes' : 'No'}</span>
+                                      </div>
+                                    )}
+                                    {acc.price && (
+                                      <div className="flex justify-between pt-2 border-t">
+                                        <span className="text-muted-foreground">Price:</span>
+                                        <span className="font-bold text-primary">${acc.price}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {acc.product_url && (
+                                    <a href={acc.product_url} target="_blank" rel="noopener noreferrer">
+                                      <Button size="sm" variant="outline" className="w-full mt-2 gap-2">
+                                        <ExternalLink className="h-3 w-3" />
+                                        View Product
+                                      </Button>
+                                    </a>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            );
+                            })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

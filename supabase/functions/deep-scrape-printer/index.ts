@@ -250,6 +250,97 @@ Deno.serve(async (req) => {
       link.toLowerCase().includes('spec')
     );
 
+    // Extract accessories from markdown and links
+    const accessories: Array<{
+      type: 'nozzle' | 'build_plate' | 'ams_mmu';
+      name: string;
+      specs: any;
+      price: number | null;
+      url: string;
+    }> = [];
+
+    // Extract nozzles
+    const nozzleKeywords = ['nozzle', 'hardened', 'brass', '0.2mm', '0.4mm', '0.6mm', '0.8mm'];
+    for (const link of links) {
+      const lowerLink = link.toLowerCase();
+      if (nozzleKeywords.some(kw => lowerLink.includes(kw)) && 
+          (lowerLink.includes('/products/') || lowerLink.includes('/shop/'))) {
+        // Extract name from URL
+        const urlParts = link.split('/');
+        const productSlug = urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
+        const name = productSlug.replace(/-/g, ' ').replace(/\?.*$/, '');
+        
+        // Look for diameter in name
+        const diameterMatch = name.match(/(\d+\.?\d*)\s*mm/i);
+        
+        accessories.push({
+          type: 'nozzle',
+          name: name,
+          specs: {
+            diameter_mm: diameterMatch ? parseFloat(diameterMatch[1]) : null,
+            material: lowerLink.includes('hardened') ? 'Hardened Steel' : 
+                     lowerLink.includes('brass') ? 'Brass' : null
+          },
+          price: null, // Will be extracted if available
+          url: link
+        });
+      }
+    }
+
+    // Extract build plates
+    const plateKeywords = ['build plate', 'pei', 'bed', 'sheet', 'magnetic', 'textured', 'smooth'];
+    for (const link of links) {
+      const lowerLink = link.toLowerCase();
+      if (plateKeywords.some(kw => lowerLink.includes(kw)) && 
+          (lowerLink.includes('/products/') || lowerLink.includes('/shop/')) &&
+          !lowerLink.includes('nozzle')) {
+        const urlParts = link.split('/');
+        const productSlug = urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
+        const name = productSlug.replace(/-/g, ' ').replace(/\?.*$/, '');
+        
+        accessories.push({
+          type: 'build_plate',
+          name: name,
+          specs: {
+            surface: lowerLink.includes('textured') ? 'Textured' : 
+                    lowerLink.includes('smooth') ? 'Smooth' : 
+                    lowerLink.includes('pei') ? 'PEI' : null,
+            magnetic: lowerLink.includes('magnetic')
+          },
+          price: null,
+          url: link
+        });
+      }
+    }
+
+    // Extract AMS/MMU systems
+    const amsKeywords = ['ams', 'mmu', 'multi material', 'multicolor', 'ace', 'ace pro'];
+    for (const link of links) {
+      const lowerLink = link.toLowerCase();
+      if (amsKeywords.some(kw => lowerLink.includes(kw)) && 
+          (lowerLink.includes('/products/') || lowerLink.includes('/shop/'))) {
+        const urlParts = link.split('/');
+        const productSlug = urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
+        const name = productSlug.replace(/-/g, ' ').replace(/\?.*$/, '');
+        
+        // Look for spool capacity
+        const spoolMatch = name.match(/(\d+)\s*(spool|color)/i);
+        
+        accessories.push({
+          type: 'ams_mmu',
+          name: name,
+          specs: {
+            spool_capacity: spoolMatch ? parseInt(spoolMatch[1]) : null,
+            heated: lowerLink.includes('heated') || lowerLink.includes('dryer')
+          },
+          price: null,
+          url: link
+        });
+      }
+    }
+
+    console.log(`Found ${accessories.length} accessories: ${accessories.filter(a => a.type === 'nozzle').length} nozzles, ${accessories.filter(a => a.type === 'build_plate').length} plates, ${accessories.filter(a => a.type === 'ams_mmu').length} AMS/MMU`);
+
     // Compile scraped data
     const scrapedData = {
       timestamp: new Date().toISOString(),
@@ -273,6 +364,36 @@ Deno.serve(async (req) => {
     };
 
     console.log('Scrape complete. Quality:', scrapedData.extraction_quality);
+
+    // Delete existing accessories for this printer
+    console.log('Clearing old accessories for printer:', printerId);
+    await supabase
+      .from('printer_accessories')
+      .delete()
+      .eq('printer_id', printerId);
+
+    // Insert new accessories
+    if (accessories.length > 0) {
+      console.log('Inserting', accessories.length, 'accessories');
+      const accessoryInserts = accessories.map(acc => ({
+        printer_id: printerId,
+        accessory_type: acc.type,
+        name: acc.name,
+        specs: acc.specs,
+        price: acc.price,
+        product_url: acc.url,
+      }));
+
+      const { error: accessoryError } = await supabase
+        .from('printer_accessories')
+        .insert(accessoryInserts);
+
+      if (accessoryError) {
+        console.error('Error inserting accessories:', accessoryError);
+      } else {
+        console.log('Successfully inserted accessories');
+      }
+    }
 
     // Update printer with scraped data - with retry logic
     console.log('Updating database for printer:', printerId);

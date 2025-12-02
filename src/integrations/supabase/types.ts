@@ -440,6 +440,53 @@ export type Database = {
           },
         ]
       }
+      printer_accessories: {
+        Row: {
+          accessory_type: string
+          created_at: string | null
+          currency: string | null
+          id: string
+          name: string
+          price: number | null
+          printer_id: string | null
+          product_url: string | null
+          specs: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          accessory_type: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          name: string
+          price?: number | null
+          printer_id?: string | null
+          product_url?: string | null
+          specs?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          accessory_type?: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          name?: string
+          price?: number | null
+          printer_id?: string | null
+          product_url?: string | null
+          specs?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_accessories_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       printer_brands: {
         Row: {
           brand: string
