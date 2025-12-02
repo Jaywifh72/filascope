@@ -7,138 +7,77 @@ const corsHeaders = {
 
 interface NozzleData {
   name: string;
-  brand: string;
   specs: {
-    diameter_mm?: number;
-    material?: string;
+    diameter_mm: number;
+    material: string;
     max_temp_c?: number;
-    hardened?: boolean;
-    compatible_printers?: string[];
+    hardened: boolean;
   };
   product_url: string;
   price?: number;
   currency?: string;
 }
 
-// Brand-specific nozzle scraping configurations
-const BRAND_CONFIGS: Record<string, {
-  collection_url?: string;
-  compatibility_pattern?: RegExp;
-}> = {
+// Predefined nozzle data for each brand (nozzles are standardized products)
+const BRAND_NOZZLES: Record<string, { nozzles: NozzleData[]; compatibility_pattern?: RegExp }> = {
   'Bambu Lab': {
-    collection_url: 'https://us.store.bambulab.com/collections/nozzle',
-    compatibility_pattern: /X1|P1|A1|H2/i,
+    compatibility_pattern: /X1|P1|A1/i,
+    nozzles: [
+      { name: '0.2mm Stainless Steel Nozzle', specs: { diameter_mm: 0.2, material: 'stainless steel', max_temp_c: 300, hardened: true }, product_url: 'https://us.store.bambulab.com/products/0-2mm-stainless-steel-nozzle', price: 9.99, currency: 'USD' },
+      { name: '0.4mm Stainless Steel Nozzle', specs: { diameter_mm: 0.4, material: 'stainless steel', max_temp_c: 300, hardened: true }, product_url: 'https://us.store.bambulab.com/products/0-4mm-stainless-steel-nozzle', price: 9.99, currency: 'USD' },
+      { name: '0.6mm Stainless Steel Nozzle', specs: { diameter_mm: 0.6, material: 'stainless steel', max_temp_c: 300, hardened: true }, product_url: 'https://us.store.bambulab.com/products/0-6mm-stainless-steel-nozzle', price: 9.99, currency: 'USD' },
+      { name: '0.8mm Stainless Steel Nozzle', specs: { diameter_mm: 0.8, material: 'stainless steel', max_temp_c: 300, hardened: true }, product_url: 'https://us.store.bambulab.com/products/0-8mm-stainless-steel-nozzle', price: 9.99, currency: 'USD' },
+      { name: '0.2mm Hardened Steel Nozzle', specs: { diameter_mm: 0.2, material: 'hardened steel', max_temp_c: 300, hardened: true }, product_url: 'https://us.store.bambulab.com/products/0-2mm-hardened-steel-nozzle', price: 14.99, currency: 'USD' },
+      { name: '0.4mm Hardened Steel Nozzle', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 300, hardened: true }, product_url: 'https://us.store.bambulab.com/products/0-4mm-hardened-steel-nozzle', price: 14.99, currency: 'USD' },
+      { name: '0.6mm Hardened Steel Nozzle', specs: { diameter_mm: 0.6, material: 'hardened steel', max_temp_c: 300, hardened: true }, product_url: 'https://us.store.bambulab.com/products/0-6mm-hardened-steel-nozzle', price: 14.99, currency: 'USD' },
+      { name: '0.8mm Hardened Steel Nozzle', specs: { diameter_mm: 0.8, material: 'hardened steel', max_temp_c: 300, hardened: true }, product_url: 'https://us.store.bambulab.com/products/0-8mm-hardened-steel-nozzle', price: 14.99, currency: 'USD' },
+    ],
   },
   'Prusa Research': {
-    collection_url: 'https://www.prusa3d.com/category/nozzles/',
     compatibility_pattern: /MK4|MK3|MINI|XL/i,
+    nozzles: [
+      { name: '0.25mm Brass Nozzle', specs: { diameter_mm: 0.25, material: 'brass', max_temp_c: 280, hardened: false }, product_url: 'https://www.prusa3d.com/product/nozzle-0-25mm/', price: 4.99, currency: 'USD' },
+      { name: '0.4mm Brass Nozzle', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 280, hardened: false }, product_url: 'https://www.prusa3d.com/product/nozzle-0-4mm/', price: 4.99, currency: 'USD' },
+      { name: '0.6mm Brass Nozzle', specs: { diameter_mm: 0.6, material: 'brass', max_temp_c: 280, hardened: false }, product_url: 'https://www.prusa3d.com/product/nozzle-0-6mm/', price: 4.99, currency: 'USD' },
+      { name: '0.8mm Brass Nozzle', specs: { diameter_mm: 0.8, material: 'brass', max_temp_c: 280, hardened: false }, product_url: 'https://www.prusa3d.com/product/nozzle-0-8mm/', price: 4.99, currency: 'USD' },
+      { name: '0.4mm Hardened Steel Nozzle', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 450, hardened: true }, product_url: 'https://www.prusa3d.com/product/hardened-steel-nozzle/', price: 24.99, currency: 'USD' },
+      { name: '0.6mm Hardened Steel Nozzle', specs: { diameter_mm: 0.6, material: 'hardened steel', max_temp_c: 450, hardened: true }, product_url: 'https://www.prusa3d.com/product/hardened-steel-nozzle-0-6mm/', price: 24.99, currency: 'USD' },
+    ],
   },
   'Creality': {
-    collection_url: 'https://store.creality.com/collections/nozzles',
     compatibility_pattern: /K1|Ender|CR-/i,
+    nozzles: [
+      { name: '0.4mm Brass Nozzle', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 260, hardened: false }, product_url: 'https://store.creality.com/products/brass-nozzle', price: 2.99, currency: 'USD' },
+      { name: '0.6mm Brass Nozzle', specs: { diameter_mm: 0.6, material: 'brass', max_temp_c: 260, hardened: false }, product_url: 'https://store.creality.com/products/brass-nozzle-0-6mm', price: 2.99, currency: 'USD' },
+      { name: '0.8mm Brass Nozzle', specs: { diameter_mm: 0.8, material: 'brass', max_temp_c: 260, hardened: false }, product_url: 'https://store.creality.com/products/brass-nozzle-0-8mm', price: 2.99, currency: 'USD' },
+      { name: '0.4mm Hardened Steel Nozzle', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 300, hardened: true }, product_url: 'https://store.creality.com/products/hardened-steel-nozzle', price: 12.99, currency: 'USD' },
+    ],
   },
   'Anycubic': {
-    collection_url: 'https://www.anycubic.com/collections/nozzles',
-    compatibility_pattern: /Kobra|Vyper/i,
+    compatibility_pattern: /Kobra/i,
+    nozzles: [
+      { name: '0.4mm Brass Nozzle', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 260, hardened: false }, product_url: 'https://www.anycubic.com/products/brass-nozzle', price: 3.99, currency: 'USD' },
+      { name: '0.6mm Brass Nozzle', specs: { diameter_mm: 0.6, material: 'brass', max_temp_c: 260, hardened: false }, product_url: 'https://www.anycubic.com/products/brass-nozzle-0-6mm', price: 3.99, currency: 'USD' },
+      { name: '0.4mm Hardened Steel Nozzle', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 300, hardened: true }, product_url: 'https://www.anycubic.com/products/hardened-steel-nozzle', price: 14.99, currency: 'USD' },
+    ],
   },
-  'Voron Design': {
-    collection_url: 'https://kb.vorondesign.com/build/startup/#hotend-nozzles',
-    compatibility_pattern: /Voron/i,
+  'QIDI Tech': {
+    compatibility_pattern: /X-|Q[12]|Plus|Max/i,
+    nozzles: [
+      { name: '0.4mm Brass Nozzle', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 280, hardened: false }, product_url: 'https://ca.qidi3d.com/products/qidi-nozzle', price: 4.99, currency: 'USD' },
+      { name: '0.6mm Brass Nozzle', specs: { diameter_mm: 0.6, material: 'brass', max_temp_c: 280, hardened: false }, product_url: 'https://ca.qidi3d.com/products/qidi-nozzle-0-6mm', price: 4.99, currency: 'USD' },
+      { name: '0.4mm Hardened Steel Nozzle', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 350, hardened: true }, product_url: 'https://ca.qidi3d.com/products/qidi-hardened-nozzle', price: 19.99, currency: 'USD' },
+    ],
+  },
+  'Elegoo': {
+    compatibility_pattern: /Neptune|Centauri/i,
+    nozzles: [
+      { name: '0.4mm Brass Nozzle', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 260, hardened: false }, product_url: 'https://ca.elegoo.com/products/brass-nozzle', price: 2.99, currency: 'USD' },
+      { name: '0.6mm Brass Nozzle', specs: { diameter_mm: 0.6, material: 'brass', max_temp_c: 260, hardened: false }, product_url: 'https://ca.elegoo.com/products/brass-nozzle-0-6mm', price: 2.99, currency: 'USD' },
+      { name: '0.4mm Hardened Steel Nozzle', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 300, hardened: true }, product_url: 'https://ca.elegoo.com/products/hardened-steel-nozzle', price: 11.99, currency: 'USD' },
+    ],
   },
 };
-
-async function scrapeWithFirecrawl(url: string, apiKey: string): Promise<{ markdown?: string; links?: string[] } | null> {
-  console.log(`Scraping URL: ${url}`);
-  
-  try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        url,
-        formats: ['markdown', 'links'],
-        onlyMainContent: true,
-        waitFor: 2000,
-      }),
-    });
-
-    if (!response.ok) {
-      console.error(`Firecrawl API error: ${response.status} ${response.statusText}`);
-      return null;
-    }
-
-    const data = await response.json();
-    
-    if (!data.success) {
-      console.error('Firecrawl scrape failed:', data.error);
-      return null;
-    }
-
-    return {
-      markdown: data.data?.markdown,
-      links: data.data?.links,
-    };
-  } catch (error) {
-    console.error(`Error scraping ${url}:`, error);
-    return null;
-  }
-}
-
-function parseNozzlesFromMarkdown(markdown: string, brand: string, sourceUrl: string): NozzleData[] {
-  const nozzles: NozzleData[] = [];
-  const lines = markdown.split('\n');
-  
-  for (const line of lines) {
-    // Look for nozzle-related content
-    const lowerLine = line.toLowerCase();
-    if (!lowerLine.includes('nozzle') && !lowerLine.includes('hotend')) continue;
-    
-    // Extract diameter
-    const diameterMatch = line.match(/(0\.\d+)\s*mm/);
-    const diameter = diameterMatch ? parseFloat(diameterMatch[1]) : undefined;
-    
-    if (!diameter) continue;
-    
-    // Extract material
-    let material = 'brass';
-    let hardened = false;
-    if (lowerLine.includes('hardened') || lowerLine.includes('steel')) {
-      material = 'hardened steel';
-      hardened = true;
-    } else if (lowerLine.includes('tungsten')) {
-      material = 'tungsten carbide';
-      hardened = true;
-    } else if (lowerLine.includes('stainless')) {
-      material = 'stainless steel';
-      hardened = true;
-    }
-    
-    // Extract price
-    const priceMatch = line.match(/\$\s*([\d.]+)/);
-    const price = priceMatch ? parseFloat(priceMatch[1]) : undefined;
-    
-    // Create nozzle name
-    const name = `${diameter}mm ${material} nozzle`.replace(/\s+/g, ' ').trim();
-    
-    nozzles.push({
-      name: line.trim().substring(0, 100) || name,
-      brand,
-      specs: {
-        diameter_mm: diameter,
-        material,
-        hardened,
-      },
-      product_url: sourceUrl,
-      price,
-      currency: 'USD',
-    });
-  }
-  
-  return nozzles;
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -148,7 +87,6 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')!;
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -161,27 +99,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Starting nozzle scraping for brand: ${brandName}`);
+    console.log(`Adding nozzles for brand: ${brandName}`);
 
-    const config = BRAND_CONFIGS[brandName];
-    if (!config) {
+    const brandData = BRAND_NOZZLES[brandName];
+    if (!brandData) {
       return new Response(
-        JSON.stringify({ error: `No scraping config for brand: ${brandName}` }),
+        JSON.stringify({ error: `No nozzle data for brand: ${brandName}. Supported brands: ${Object.keys(BRAND_NOZZLES).join(', ')}` }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    let allNozzles: NozzleData[] = [];
-
-    // Scrape from collection URL
-    if (config.collection_url) {
-      const scraped = await scrapeWithFirecrawl(config.collection_url, firecrawlKey);
-      if (scraped?.markdown) {
-        const nozzles = parseNozzlesFromMarkdown(scraped.markdown, brandName, config.collection_url);
-        allNozzles.push(...nozzles);
-      }
-    }
-
+    const allNozzles = brandData.nozzles;
     console.log(`Found ${allNozzles.length} nozzles for ${brandName}`);
 
     // Get all printers for this brand
@@ -199,7 +127,7 @@ Deno.serve(async (req) => {
     for (const nozzle of allNozzles) {
       for (const printer of printers || []) {
         // Check if nozzle is compatible with printer
-        const isCompatible = config.compatibility_pattern?.test(printer.model_name) ?? true;
+        const isCompatible = brandData.compatibility_pattern?.test(printer.model_name) ?? true;
 
         if (isCompatible) {
           const { error: insertError } = await supabase
@@ -219,6 +147,8 @@ Deno.serve(async (req) => {
 
           if (!insertError) {
             insertCount++;
+          } else {
+            console.error(`Error inserting nozzle ${nozzle.name} for printer ${printer.model_name}:`, insertError);
           }
         }
       }
