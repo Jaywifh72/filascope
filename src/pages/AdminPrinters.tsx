@@ -65,7 +65,7 @@ export default function AdminPrinters() {
       console.log('🔄 Fetching all printers for price count...');
       const { data, error } = await supabase
         .from("printers")
-        .select("id, current_price_usd_store");
+        .select("id, current_price_usd_store, current_price_usd_amazon, msrp_usd");
       
       if (error) {
         console.error('❌ Error fetching printers for count:', error);
@@ -80,21 +80,27 @@ export default function AdminPrinters() {
     refetchInterval: fetchingPrices || aiSearching ? 2000 : false,
   });
 
-  // Calculate price coverage based on STORE PRICES (priority)
+  // Calculate price coverage for all price sources
   const priceProgressData = allPrinters ? (() => {
-    const withoutPrice = allPrinters.filter(p => !p.current_price_usd_store);
-    const withPrice = allPrinters.filter(p => p.current_price_usd_store);
+    const withStorePrice = allPrinters.filter(p => p.current_price_usd_store);
+    const withAmazonPrice = allPrinters.filter(p => p.current_price_usd_amazon);
+    const withMSRP = allPrinters.filter(p => p.msrp_usd);
+    const withAnyPrice = allPrinters.filter(p => p.current_price_usd_store || p.current_price_usd_amazon || p.msrp_usd);
     
-    console.log('📊 Store price coverage:', {
+    console.log('📊 Price coverage:', {
       total: allPrinters.length,
-      withPrice: withPrice.length,
-      withoutPrice: withoutPrice.length,
+      withStorePrice: withStorePrice.length,
+      withAmazonPrice: withAmazonPrice.length,
+      withMSRP: withMSRP.length,
+      withAnyPrice: withAnyPrice.length,
     });
     
     return {
       total: allPrinters.length,
-      withoutPrice: withoutPrice.length,
-      withPrice: withPrice.length,
+      withStorePrice: withStorePrice.length,
+      withAmazonPrice: withAmazonPrice.length,
+      withMSRP: withMSRP.length,
+      withAnyPrice: withAnyPrice.length,
     };
   })() : null;
 
@@ -1051,20 +1057,52 @@ export default function AdminPrinters() {
                   </p>
                 </div>
 
-                {priceProgressData && priceProgressData.withoutPrice > 0 && (
-                  <div className="space-y-2 p-4 bg-muted rounded-lg">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">Printers with store prices:</span>
-                      <span className="text-muted-foreground">
-                        {priceProgressData.withPrice} / {priceProgressData.total}
-                      </span>
+                {priceProgressData && priceProgressData.total > 0 && (
+                  <div className="space-y-4 p-4 bg-muted rounded-lg">
+                    {/* Store Prices */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">Printers with store prices:</span>
+                        <span className="text-muted-foreground">
+                          {priceProgressData.withStorePrice} / {priceProgressData.total}
+                        </span>
+                      </div>
+                      <Progress 
+                        value={(priceProgressData.withStorePrice / priceProgressData.total) * 100} 
+                        className="h-2"
+                      />
                     </div>
-                    <Progress 
-                      value={(priceProgressData.withPrice / priceProgressData.total) * 100} 
-                      className="h-2"
-                    />
-                    <div className="text-xs text-muted-foreground">
-                      {priceProgressData.withoutPrice} printers still need store pricing data
+
+                    {/* Amazon Prices */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">Printers with Amazon prices:</span>
+                        <span className="text-muted-foreground">
+                          {priceProgressData.withAmazonPrice} / {priceProgressData.total}
+                        </span>
+                      </div>
+                      <Progress 
+                        value={(priceProgressData.withAmazonPrice / priceProgressData.total) * 100} 
+                        className="h-2"
+                      />
+                    </div>
+
+                    {/* MSRP Data */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">Printers with MSRP data:</span>
+                        <span className="text-muted-foreground">
+                          {priceProgressData.withMSRP} / {priceProgressData.total}
+                        </span>
+                      </div>
+                      <Progress 
+                        value={(priceProgressData.withMSRP / priceProgressData.total) * 100} 
+                        className="h-2"
+                      />
+                    </div>
+
+                    <div className="text-xs text-muted-foreground pt-2 border-t border-border">
+                      {priceProgressData.withAnyPrice} printers have at least one price source
                     </div>
                   </div>
                 )}
