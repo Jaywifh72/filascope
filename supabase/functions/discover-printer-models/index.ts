@@ -553,6 +553,39 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} Snapmaker printer URLs`);
+        } else if (brand.brand.toLowerCase() === 'sovol') {
+          // Sovol: Extract from /collections/3d-printer (Shopify-based)
+          const linkPattern = /\/products\/sovol-[^"'\s]+/gi;
+          const linkMatches = html.matchAll(linkPattern);
+          
+          for (const match of linkMatches) {
+            const url = match[0];
+            
+            // Extract model name from URL slug
+            const pathMatch = url.match(/\/products\/sovol-([^\/\?#]+)/);
+            if (pathMatch) {
+              const slug = pathMatch[1];
+              
+              // Convert slug to readable name (e.g., "sv08-3d-printer" -> "Sovol SV08")
+              let modelName = slug
+                .replace(/-3d-printer.*$/i, '')
+                .replace(/-/g, ' ')
+                .toUpperCase()
+                .replace(/\s+/g, ' ')
+                .trim();
+              
+              // Add "Sovol" prefix if not present
+              if (!modelName.toLowerCase().startsWith('sovol')) {
+                modelName = `Sovol ${modelName}`;
+              }
+              
+              const fullUrl = url.startsWith('http') ? url : `${scrapeConfig.product_url_base}${url}`;
+              modelMap.set(modelName, fullUrl);
+              console.log(`Found Sovol printer: ${modelName} at ${fullUrl}`);
+            }
+          }
+          
+          console.log(`Found ${modelMap.size} Sovol printer URLs`);
         } else if (brand.brand.toLowerCase() === 'prusa research') {
           // Prusa Research: Extract printers from WordPress-based site
           // Look for product links in HTML
