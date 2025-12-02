@@ -66,19 +66,47 @@ const PrinterDetail = () => {
   });
 
 
+  // Extract brand name for accessory query
+  const printerBrand = typeof printer?.brand === 'object' && printer?.brand !== null && 'brand' in printer.brand 
+    ? printer.brand.brand 
+    : null;
+
   const { data: accessories } = useQuery({
-    queryKey: ["printer-accessories", printer?.id],
+    queryKey: ["printer-accessories", printer?.id, printerBrand],
     enabled: !!printer?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch printer-specific accessories
+      const { data: printerSpecific, error: error1 } = await supabase
         .from("printer_accessories")
         .select("*")
-        .eq("printer_id", printer!.id)
-        .order("accessory_type", { ascending: true })
-        .order("name", { ascending: true });
+        .eq("printer_id", printer!.id);
 
-      if (error) throw error;
-      return data;
+      if (error1) throw error1;
+
+      // Fetch brand-compatible accessories (where brand is in compatible_printer_brands array)
+      let brandCompatible: typeof printerSpecific = [];
+      if (printerBrand) {
+        const { data: brandData, error: error2 } = await supabase
+          .from("printer_accessories")
+          .select("*")
+          .contains("compatible_printer_brands", [printerBrand]);
+
+        if (error2) throw error2;
+        brandCompatible = brandData || [];
+      }
+
+      // Merge and deduplicate by id
+      const allAccessories = [...(printerSpecific || []), ...brandCompatible];
+      const uniqueAccessories = allAccessories.filter(
+        (acc, index, self) => index === self.findIndex((a) => a.id === acc.id)
+      );
+
+      // Sort by accessory_type then name
+      return uniqueAccessories.sort((a, b) => {
+        const typeCompare = (a.accessory_type || "").localeCompare(b.accessory_type || "");
+        if (typeCompare !== 0) return typeCompare;
+        return (a.name || "").localeCompare(b.name || "");
+      });
     },
   });
 
