@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
+import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -36,6 +36,8 @@ export default function AdminPrinters() {
   const [discovering, setDiscovering] = useState(false);
   const [activeTab, setActiveTab] = useState("discover");
   const [selectedPrinters, setSelectedPrinters] = useState<Set<string>>(new Set());
+  const [massRescraping, setMassRescraping] = useState(false);
+  const [massRescrapeStats, setMassRescrapeStats] = useState<{ total: number; completed: number } | null>(null);
 
   // Fetch printer brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -388,6 +390,91 @@ export default function AdminPrinters() {
 
   const selectedBrandData = brands?.find(b => b.id === selectedBrand);
 
+  const handleMassRescrape = async () => {
+    try {
+      setMassRescraping(true);
+      setMassRescrapeStats(null);
+
+      // Fetch all printers with official_product_url
+      const { data: printersToScrape, error: fetchError } = await supabase
+        .from('printers')
+        .select('id, model_name, official_product_url')
+        .not('official_product_url', 'is', null);
+
+      if (fetchError) throw fetchError;
+
+      if (!printersToScrape || printersToScrape.length === 0) {
+        toast({
+          title: "No printers to scrape",
+          description: "No printers found with product URLs",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setMassRescrapeStats({ total: printersToScrape.length, completed: 0 });
+
+      toast({
+        title: "Mass re-scrape started",
+        description: `Scraping ${printersToScrape.length} printers for product images...`,
+      });
+
+      // Process printers in batches to avoid overwhelming the system
+      const batchSize = 5;
+      let completed = 0;
+
+      for (let i = 0; i < printersToScrape.length; i += batchSize) {
+        const batch = printersToScrape.slice(i, i + batchSize);
+        
+        await Promise.all(
+          batch.map(async (printer) => {
+            try {
+              // Reset scrape status
+              await supabase
+                .from('printers')
+                .update({ 
+                  scrape_status: 'not_started', 
+                  scrape_error: null 
+                })
+                .eq('id', printer.id);
+
+              // Trigger deep scrape
+              await supabase.functions.invoke('deep-scrape-printer', {
+                body: { printerId: printer.id },
+              });
+
+              completed++;
+              setMassRescrapeStats({ total: printersToScrape.length, completed });
+            } catch (error) {
+              console.error(`Failed to scrape ${printer.model_name}:`, error);
+            }
+          })
+        );
+
+        // Small delay between batches
+        if (i + batchSize < printersToScrape.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      toast({
+        title: "Mass re-scrape completed",
+        description: `Successfully triggered scraping for ${completed} printers`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["pending-printers"] });
+    } catch (error: any) {
+      console.error("Mass rescrape error:", error);
+      toast({
+        title: "Mass re-scrape failed",
+        description: error.message || "An error occurred during mass re-scrape",
+        variant: "destructive",
+      });
+    } finally {
+      setMassRescraping(false);
+    }
+  };
+
   // Helper to render spec fields with status indicator
   const renderSpecField = (label: string, value: any, unit?: string) => {
     const hasValue = value !== null && value !== undefined && value !== '';
@@ -568,6 +655,62 @@ export default function AdminPrinters() {
             </div>
           )}
             </CardContent>
+            </Card>
+
+            <Separator />
+
+            {/* Mass Re-scrape Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <RefreshCw className="h-5 w-5" />
+                  Mass Re-scrape Product Images
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Re-scrape all printers to extract product images using the improved image detection logic. This will update the scraped_data for all printers with official product URLs.
+                  </p>
+                </div>
+
+                {massRescrapeStats && (
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Progress:</span>
+                      <span className="text-sm">
+                        {massRescrapeStats.completed} / {massRescrapeStats.total}
+                      </span>
+                    </div>
+                    <div className="mt-2 w-full bg-secondary rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(massRescrapeStats.completed / massRescrapeStats.total) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleMassRescrape}
+                  disabled={massRescraping}
+                  className="w-full gap-2"
+                  size="lg"
+                  variant="secondary"
+                >
+                  {massRescraping ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Re-scraping... {massRescrapeStats && `(${massRescrapeStats.completed}/${massRescrapeStats.total})`}
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4" />
+                      Re-scrape All Printers
+                    </>
+                  )}
+                </Button>
+              </CardContent>
             </Card>
 
             <Separator />
