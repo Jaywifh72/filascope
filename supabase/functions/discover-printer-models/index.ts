@@ -586,6 +586,38 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} Sovol printer URLs`);
+        } else if (brand.brand.toLowerCase() === 'ultimaker') {
+          // Ultimaker: Extract from /3d-printers/ with nested series structure
+          // URL pattern: /3d-printers/[series]/[model-name]/
+          const linkPattern = /\/3d-printers\/[^\/]+\/ultimaker-[^\/\?#"']+\//gi;
+          const linkMatches = html.matchAll(linkPattern);
+          
+          for (const match of linkMatches) {
+            const url = match[0];
+            
+            // Extract model name from URL (e.g., "/3d-printers/method-series/ultimaker-method-xl/" -> "Ultimaker Method XL")
+            const pathMatch = url.match(/\/ultimaker-([^\/\?#]+)/);
+            if (pathMatch) {
+              const slug = pathMatch[1];
+              
+              // Convert slug to readable name (e.g., "method-xl" -> "Ultimaker Method XL")
+              let modelName = slug
+                .replace(/-/g, ' ')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ')
+                .trim();
+              
+              // Add "Ultimaker" prefix
+              modelName = `Ultimaker ${modelName}`;
+              
+              const fullUrl = url.startsWith('http') ? url : `${scrapeConfig.product_url_base}${url}`;
+              modelMap.set(modelName, fullUrl);
+              console.log(`Found Ultimaker printer: ${modelName} at ${fullUrl}`);
+            }
+          }
+          
+          console.log(`Found ${modelMap.size} Ultimaker printer URLs`);
         } else if (brand.brand.toLowerCase() === 'prusa research') {
           // Prusa Research: Extract printers from WordPress-based site
           // Look for product links in HTML
