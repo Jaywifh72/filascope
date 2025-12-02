@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 /**
  * Admin page for importing printer data from CSV
@@ -38,6 +41,7 @@ export default function AdminPrinters() {
   const [selectedPrinters, setSelectedPrinters] = useState<Set<string>>(new Set());
   const [massRescraping, setMassRescraping] = useState(false);
   const [massRescrapeStats, setMassRescrapeStats] = useState<{ total: number; completed: number } | null>(null);
+  const [editingUrl, setEditingUrl] = useState<{ printerId: string; url: string } | null>(null);
 
   // Fetch printer brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -389,6 +393,54 @@ export default function AdminPrinters() {
   };
 
   const selectedBrandData = brands?.find(b => b.id === selectedBrand);
+
+  const validateUrl = (url: string): boolean => {
+    if (!url) return false;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const { data: invalidUrlPrinters } = useQuery({
+    queryKey: ['invalid-url-printers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('printers')
+        .select('id, model_name, official_product_url, brand_id')
+        .not('official_product_url', 'is', null);
+
+      if (error) throw error;
+
+      return data?.filter(printer => !validateUrl(printer.official_product_url || '')) || [];
+    }
+  });
+
+  const updateUrlMutation = useMutation({
+    mutationFn: async ({ printerId, newUrl }: { printerId: string; newUrl: string }) => {
+      const { error } = await supabase
+        .from('printers')
+        .update({ official_product_url: newUrl })
+        .eq('id', printerId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invalid-url-printers'] });
+      toast({ title: "URL updated successfully" });
+      setEditingUrl(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update URL",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
 
   const handleMassRescrape = async () => {
     try {
@@ -745,6 +797,117 @@ export default function AdminPrinters() {
                     </>
                   )}
                 </Button>
+              </CardContent>
+            </Card>
+
+            <Separator />
+
+            {/* URL Cleanup Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" />
+                  Fix Invalid URLs
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Find and fix printers with invalid official product URLs. Invalid URLs prevent proper scraping and data enrichment.
+                  </p>
+                </div>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      size="lg"
+                    >
+                      <AlertCircle className="h-4 w-4" />
+                      View Invalid URLs ({invalidUrlPrinters?.length || 0})
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Printers with Invalid URLs</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      {invalidUrlPrinters && invalidUrlPrinters.length > 0 ? (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Model Name</TableHead>
+                              <TableHead>Current URL</TableHead>
+                              <TableHead>Action</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {invalidUrlPrinters.map(printer => (
+                              <TableRow key={printer.id}>
+                                <TableCell className="font-medium">{printer.model_name}</TableCell>
+                                <TableCell>
+                                  {editingUrl?.printerId === printer.id ? (
+                                    <Input
+                                      value={editingUrl.url}
+                                      onChange={(e) => setEditingUrl({ ...editingUrl, url: e.target.value })}
+                                      placeholder="https://example.com/product"
+                                      className="max-w-md"
+                                    />
+                                  ) : (
+                                    <span className="text-destructive">{printer.official_product_url}</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {editingUrl?.printerId === printer.id ? (
+                                    <div className="flex gap-2">
+                                      <Button
+                                        size="sm"
+                                        onClick={() => {
+                                          if (validateUrl(editingUrl.url)) {
+                                            updateUrlMutation.mutate({ printerId: printer.id, newUrl: editingUrl.url });
+                                          } else {
+                                            toast({
+                                              title: "Invalid URL",
+                                              description: "Please enter a valid URL starting with http:// or https://",
+                                              variant: "destructive",
+                                            });
+                                          }
+                                        }}
+                                        disabled={updateUrlMutation.isPending}
+                                      >
+                                        Save
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => setEditingUrl(null)}
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setEditingUrl({ printerId: printer.id, url: printer.official_product_url || '' })}
+                                    >
+                                      Edit
+                                    </Button>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <p className="text-center text-muted-foreground py-8">
+                          No printers with invalid URLs found
+                        </p>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </CardContent>
             </Card>
 
