@@ -3,6 +3,9 @@ project_id = "cfqfavmhdbyjzejipiwa"
 [functions.fetch-prices]
 verify_jwt = true
 
+[functions.fetch-printer-prices]
+verify_jwt = true
+
 [functions.estimate-weights]
 verify_jwt = false
 
