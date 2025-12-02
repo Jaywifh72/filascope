@@ -64,16 +64,11 @@ serve(async (req) => {
     for (const printer of printers) {
       const brandName = (printer.printer_brands as any)?.brand || 'Unknown';
       
-      // Build search query - include official store URL if available
-      let searchQuery = '';
-      if (printer.official_store_url || printer.official_product_url) {
-        const storeUrl = printer.official_store_url || printer.official_product_url;
-        searchQuery = `Check this official store page: ${storeUrl} - What is the current price in USD for the ${brandName} ${printer.model_name} 3D printer? If you cannot access that page or find the price there, search for the official store price elsewhere. If no store price is available anywhere, provide the MSRP (manufacturer's suggested retail price). Please provide only the price as a number, without currency symbols. Indicate if it's a store price or MSRP.`;
-      } else {
-        searchQuery = `What is the current price in USD from the official store for the ${brandName} ${printer.model_name} 3D printer? If official store price is not available, what is the MSRP (manufacturer's suggested retail price)? Please provide only the price as a number, without currency symbols. Indicate if it's a store price or MSRP.`;
-      }
+      // Build search query - AI can only search training data, not access live URLs
+      const storeUrl = printer.official_store_url || printer.official_product_url;
+      const searchQuery = `Based on your training data, what is the typical retail price or MSRP in USD for the ${brandName} ${printer.model_name} 3D printer${storeUrl ? ` (product page: ${storeUrl})` : ''}? Provide your best estimate from manufacturer's official pricing information. Please provide only the price as a number, without currency symbols. If you found recent store pricing, indicate "store price", otherwise indicate "MSRP".`;
 
-      console.log(`AI searching price for: ${brandName} ${printer.model_name}`, printer.official_store_url || printer.official_product_url ? `(URL: ${printer.official_store_url || printer.official_product_url})` : '');
+      console.log(`AI searching price for: ${brandName} ${printer.model_name}`, storeUrl ? `(Reference URL: ${storeUrl})` : '');
 
       try {
         // Call Lovable AI Gateway
@@ -87,8 +82,8 @@ serve(async (req) => {
             model: 'google/gemini-2.5-flash',
             messages: [
               {
-              role: 'system',
-              content: 'You are a helpful assistant that finds accurate pricing information for 3D printers. PRIORITY: Always try to find the current official store price first from the manufacturer\'s website. Only provide MSRP if the store price is unavailable. Always provide prices in USD. If you cannot find exact pricing, provide the best estimate from official sources and indicate it is an estimate. In your response, clearly state whether you found a "store price" or "MSRP". Return the price and type in format: "PRICE_VALUE (store price)" or "PRICE_VALUE (MSRP)".'
+                role: 'system',
+                content: 'You are a helpful assistant that provides MSRP and retail pricing estimates for 3D printers based on your training data. Note: You cannot access live websites. Provide pricing information from your knowledge of manufacturer MSRPs and typical retail prices. Always provide prices in USD. State whether you found typical "store price" information or "MSRP" in your training data. Format: "PRICE_VALUE (store price)" or "PRICE_VALUE (MSRP)". If uncertain, provide your best estimate and indicate it.'
               },
               {
                 role: 'user',
