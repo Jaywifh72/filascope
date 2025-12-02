@@ -54,7 +54,7 @@ const PrinterDetail = () => {
           brand:printer_brands!brand_id(brand),
           series:printer_series!series_id(series_name)
         `)
-        .eq("id", id)
+        .eq("printer_id", id)
         .maybeSingle();
 
       if (error) throw error;
@@ -64,13 +64,13 @@ const PrinterDetail = () => {
 
 
   const { data: accessories } = useQuery({
-    queryKey: ["printer-accessories", id],
-    enabled: !!id,
+    queryKey: ["printer-accessories", printer?.id],
+    enabled: !!printer?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("printer_accessories")
         .select("*")
-        .eq("printer_id", id)
+        .eq("printer_id", printer!.id)
         .order("accessory_type", { ascending: true })
         .order("name", { ascending: true });
 
