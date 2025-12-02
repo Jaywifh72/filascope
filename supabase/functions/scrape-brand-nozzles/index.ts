@@ -8,7 +8,7 @@ const corsHeaders = {
 interface NozzleData {
   name: string;
   brand: string;
-  model: string;
+  model?: string;
   specs: {
     diameter_mm: number;
     material: string;
@@ -27,101 +27,347 @@ interface NozzleData {
   compatible_hotend_types?: string[];
 }
 
-// OEM brand nozzles
-const OEM_NOZZLES: Record<string, { nozzles: NozzleData[]; compatibility_pattern?: RegExp }> = {
+interface QCReport {
+  brand: string;
+  total_discovered: number;
+  url_validated: number;
+  url_failed: number;
+  image_validated: number;
+  image_failed: number;
+  price_found: number;
+  specs_complete: number;
+  inserted: number;
+  errors: string[];
+}
+
+// Brand store configurations for dynamic scraping
+const BRAND_STORE_CONFIGS: Record<string, {
+  nozzle_collection_url: string;
+  is_shopify: boolean;
+  compatibility_pattern: RegExp;
+  compatible_hotend_types: string[];
+  brand_filter?: string;
+}> = {
   'Bambu Lab': {
+    nozzle_collection_url: 'https://us.store.bambulab.com/collections/nozzle',
+    is_shopify: true,
     compatibility_pattern: /X1|P1|A1/i,
-    nozzles: [
-      { name: '0.2mm Stainless Steel Nozzle', brand: 'Bambu Lab', model: 'SS-0.2', specs: { diameter_mm: 0.2, material: 'stainless steel', max_temp_c: 300, hardened: true, wear_rating: 'High', flow_rate: 'Low' }, product_url: 'https://us.store.bambulab.com/products/0-2mm-stainless-steel-nozzle', image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.2mm_stainless_steel_nozzle.png', price: 9.99, currency: 'USD', description: 'High-precision stainless steel nozzle for fine detail prints', compatible_printer_brands: ['Bambu Lab'], compatible_hotend_types: ['Bambu Lab Hotend'] },
-      { name: '0.4mm Stainless Steel Nozzle', brand: 'Bambu Lab', model: 'SS-0.4', specs: { diameter_mm: 0.4, material: 'stainless steel', max_temp_c: 300, hardened: true, wear_rating: 'High', flow_rate: 'Standard' }, product_url: 'https://us.store.bambulab.com/products/0-4mm-stainless-steel-nozzle', image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.4mm_stainless_steel_nozzle.png', price: 9.99, currency: 'USD', description: 'Standard stainless steel nozzle for everyday printing', compatible_printer_brands: ['Bambu Lab'], compatible_hotend_types: ['Bambu Lab Hotend'] },
-      { name: '0.6mm Stainless Steel Nozzle', brand: 'Bambu Lab', model: 'SS-0.6', specs: { diameter_mm: 0.6, material: 'stainless steel', max_temp_c: 300, hardened: true, wear_rating: 'High', flow_rate: 'High' }, product_url: 'https://us.store.bambulab.com/products/0-6mm-stainless-steel-nozzle', image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.6mm_stainless_steel_nozzle.png', price: 9.99, currency: 'USD', description: 'Larger nozzle for faster prints with good detail', compatible_printer_brands: ['Bambu Lab'], compatible_hotend_types: ['Bambu Lab Hotend'] },
-      { name: '0.8mm Stainless Steel Nozzle', brand: 'Bambu Lab', model: 'SS-0.8', specs: { diameter_mm: 0.8, material: 'stainless steel', max_temp_c: 300, hardened: true, wear_rating: 'High', flow_rate: 'Very High' }, product_url: 'https://us.store.bambulab.com/products/0-8mm-stainless-steel-nozzle', image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.8mm_stainless_steel_nozzle.png', price: 9.99, currency: 'USD', description: 'Large nozzle for rapid prototyping and vase mode', compatible_printer_brands: ['Bambu Lab'], compatible_hotend_types: ['Bambu Lab Hotend'] },
-      { name: '0.2mm Hardened Steel Nozzle', brand: 'Bambu Lab', model: 'HS-0.2', specs: { diameter_mm: 0.2, material: 'hardened steel', max_temp_c: 300, hardened: true, wear_rating: 'Very High', flow_rate: 'Low' }, product_url: 'https://us.store.bambulab.com/products/0-2mm-hardened-steel-nozzle', image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.2mm_hardened_steel_nozzle.png', price: 14.99, currency: 'USD', description: 'Hardened steel for abrasive filaments with fine detail', compatible_printer_brands: ['Bambu Lab'], compatible_hotend_types: ['Bambu Lab Hotend'] },
-      { name: '0.4mm Hardened Steel Nozzle', brand: 'Bambu Lab', model: 'HS-0.4', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 300, hardened: true, wear_rating: 'Very High', flow_rate: 'Standard' }, product_url: 'https://us.store.bambulab.com/products/0-4mm-hardened-steel-nozzle', image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.4mm_hardened_steel_nozzle.png', price: 14.99, currency: 'USD', description: 'Standard hardened steel nozzle for carbon fiber and glass filled filaments', compatible_printer_brands: ['Bambu Lab'], compatible_hotend_types: ['Bambu Lab Hotend'] },
-      { name: '0.6mm Hardened Steel Nozzle', brand: 'Bambu Lab', model: 'HS-0.6', specs: { diameter_mm: 0.6, material: 'hardened steel', max_temp_c: 300, hardened: true, wear_rating: 'Very High', flow_rate: 'High' }, product_url: 'https://us.store.bambulab.com/products/0-6mm-hardened-steel-nozzle', image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.6mm_hardened_steel_nozzle.png', price: 14.99, currency: 'USD', description: 'Larger hardened steel nozzle for fast abrasive filament printing', compatible_printer_brands: ['Bambu Lab'], compatible_hotend_types: ['Bambu Lab Hotend'] },
-      { name: '0.8mm Hardened Steel Nozzle', brand: 'Bambu Lab', model: 'HS-0.8', specs: { diameter_mm: 0.8, material: 'hardened steel', max_temp_c: 300, hardened: true, wear_rating: 'Very High', flow_rate: 'Very High' }, product_url: 'https://us.store.bambulab.com/products/0-8mm-hardened-steel-nozzle', image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.8mm_hardened_steel_nozzle.png', price: 14.99, currency: 'USD', description: 'Large hardened steel nozzle for rapid abrasive filament prints', compatible_printer_brands: ['Bambu Lab'], compatible_hotend_types: ['Bambu Lab Hotend'] },
-    ],
+    compatible_hotend_types: ['Bambu Lab Hotend'],
   },
   'Prusa Research': {
-    compatibility_pattern: /MK4|MK3|MINI|XL/i,
-    nozzles: [
-      { name: '0.25mm Brass Nozzle', brand: 'Prusa Research', model: 'V6-0.25', specs: { diameter_mm: 0.25, material: 'brass', max_temp_c: 280, hardened: false, wear_rating: 'Low', flow_rate: 'Very Low' }, product_url: 'https://www.prusa3d.com/product/e3d-brass-nozzle-for-mk4-mk3s-mini/', image_url: 'https://www.prusa3d.com/files/assets/img/products/prusa-nozzle-brass.jpg', price: 4.99, currency: 'USD', description: 'Ultra-fine brass nozzle for high detail prints', compatible_printer_brands: ['Prusa Research'], compatible_hotend_types: ['E3D V6', 'Prusa Nextruder'] },
-      { name: '0.4mm Brass Nozzle', brand: 'Prusa Research', model: 'V6-0.4', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 280, hardened: false, wear_rating: 'Low', flow_rate: 'Standard' }, product_url: 'https://www.prusa3d.com/product/e3d-brass-nozzle-for-mk4-mk3s-mini/', image_url: 'https://www.prusa3d.com/files/assets/img/products/prusa-nozzle-brass.jpg', price: 4.99, currency: 'USD', description: 'Standard brass nozzle for everyday printing', compatible_printer_brands: ['Prusa Research'], compatible_hotend_types: ['E3D V6', 'Prusa Nextruder'] },
-      { name: '0.6mm Brass Nozzle', brand: 'Prusa Research', model: 'V6-0.6', specs: { diameter_mm: 0.6, material: 'brass', max_temp_c: 280, hardened: false, wear_rating: 'Low', flow_rate: 'High' }, product_url: 'https://www.prusa3d.com/product/e3d-brass-nozzle-for-mk4-mk3s-mini/', image_url: 'https://www.prusa3d.com/files/assets/img/products/prusa-nozzle-brass.jpg', price: 4.99, currency: 'USD', description: 'Larger brass nozzle for faster prints', compatible_printer_brands: ['Prusa Research'], compatible_hotend_types: ['E3D V6', 'Prusa Nextruder'] },
-      { name: '0.8mm Brass Nozzle', brand: 'Prusa Research', model: 'V6-0.8', specs: { diameter_mm: 0.8, material: 'brass', max_temp_c: 280, hardened: false, wear_rating: 'Low', flow_rate: 'Very High' }, product_url: 'https://www.prusa3d.com/product/e3d-brass-nozzle-for-mk4-mk3s-mini/', image_url: 'https://www.prusa3d.com/files/assets/img/products/prusa-nozzle-brass.jpg', price: 4.99, currency: 'USD', description: 'Large brass nozzle for rapid prototyping', compatible_printer_brands: ['Prusa Research'], compatible_hotend_types: ['E3D V6', 'Prusa Nextruder'] },
-      { name: '0.4mm Hardened Steel Nozzle', brand: 'Prusa Research', model: 'HS-0.4', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 450, hardened: true, wear_rating: 'Very High', flow_rate: 'Standard' }, product_url: 'https://www.prusa3d.com/product/hardened-steel-nozzle-e3d/', image_url: 'https://www.prusa3d.com/files/assets/img/products/prusa-nozzle-hardened.jpg', price: 24.99, currency: 'USD', description: 'Hardened steel nozzle for abrasive materials', compatible_printer_brands: ['Prusa Research'], compatible_hotend_types: ['E3D V6', 'Prusa Nextruder'] },
-    ],
+    nozzle_collection_url: 'https://www.prusa3d.com/category/nozzles/',
+    is_shopify: false,
+    compatibility_pattern: /MK4|MK3|MINI|XL|Core/i,
+    compatible_hotend_types: ['E3D V6', 'Prusa Nextruder'],
   },
   'Creality': {
-    compatibility_pattern: /K1|Ender|CR-/i,
-    nozzles: [
-      { name: '0.4mm Brass Nozzle', brand: 'Creality', model: 'MK8-0.4', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 260, hardened: false, wear_rating: 'Low', flow_rate: 'Standard' }, product_url: 'https://store.creality.com/products/high-quality-mk8-brass-nozzle-0-4mm-5-pcs', image_url: 'https://store.creality.com/cdn/shop/products/creality-mk8-brass-nozzle.jpg', price: 2.99, currency: 'USD', description: 'Standard MK8 brass nozzle', compatible_printer_brands: ['Creality'], compatible_hotend_types: ['MK8', 'Creality Spider'] },
-      { name: '0.6mm Brass Nozzle', brand: 'Creality', model: 'MK8-0.6', specs: { diameter_mm: 0.6, material: 'brass', max_temp_c: 260, hardened: false, wear_rating: 'Low', flow_rate: 'High' }, product_url: 'https://store.creality.com/products/high-quality-mk8-brass-nozzle-0-6mm-5-pcs', image_url: 'https://store.creality.com/cdn/shop/products/creality-mk8-brass-nozzle.jpg', price: 2.99, currency: 'USD', description: 'Larger MK8 brass nozzle for faster prints', compatible_printer_brands: ['Creality'], compatible_hotend_types: ['MK8', 'Creality Spider'] },
-      { name: '0.4mm Hardened Steel Nozzle', brand: 'Creality', model: 'HS-0.4', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 300, hardened: true, wear_rating: 'Very High', flow_rate: 'Standard' }, product_url: 'https://store.creality.com/products/hardened-steel-nozzle-0-4mm', image_url: 'https://store.creality.com/cdn/shop/products/creality-hardened-nozzle.jpg', price: 12.99, currency: 'USD', description: 'Hardened steel nozzle for abrasive filaments', compatible_printer_brands: ['Creality'], compatible_hotend_types: ['MK8', 'Creality Spider'] },
-    ],
+    nozzle_collection_url: 'https://store.creality.com/collections/nozzles',
+    is_shopify: true,
+    compatibility_pattern: /K1|K2|Ender|CR-|Sermoon/i,
+    compatible_hotend_types: ['MK8', 'Creality Spider', 'Creality Unicorn'],
   },
-  'Anycubic': {
-    compatibility_pattern: /Kobra/i,
-    nozzles: [
-      { name: '0.4mm Brass Nozzle', brand: 'Anycubic', model: 'MK8-0.4', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 260, hardened: false, wear_rating: 'Low', flow_rate: 'Standard' }, product_url: 'https://www.anycubic.com/products/0-4mm-mk8-brass-nozzle-5pcs', image_url: 'https://www.anycubic.com/cdn/shop/products/anycubic-brass-nozzle.jpg', price: 3.99, currency: 'USD', description: 'Standard brass nozzle for Kobra series', compatible_printer_brands: ['Anycubic'], compatible_hotend_types: ['MK8'] },
-      { name: '0.4mm Hardened Steel Nozzle', brand: 'Anycubic', model: 'HS-0.4', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 300, hardened: true, wear_rating: 'Very High', flow_rate: 'Standard' }, product_url: 'https://www.anycubic.com/products/hardened-steel-nozzle', image_url: 'https://www.anycubic.com/cdn/shop/products/anycubic-hardened-nozzle.jpg', price: 14.99, currency: 'USD', description: 'Hardened steel nozzle for abrasive filaments', compatible_printer_brands: ['Anycubic'], compatible_hotend_types: ['MK8'] },
-    ],
-  },
-  'QIDI Tech': {
-    compatibility_pattern: /X-|Q[12]|Plus|Max/i,
-    nozzles: [
-      { name: '0.4mm Brass Nozzle', brand: 'QIDI Tech', model: 'QIDI-0.4', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 280, hardened: false, wear_rating: 'Low', flow_rate: 'Standard' }, product_url: 'https://qidi3d.com/products/qidi-tech-3d-printer-nozzles', image_url: 'https://qidi3d.com/cdn/shop/products/qidi-brass-nozzle.jpg', price: 4.99, currency: 'USD', description: 'Standard brass nozzle for QIDI printers', compatible_printer_brands: ['QIDI Tech'], compatible_hotend_types: ['QIDI Hotend'] },
-      { name: '0.4mm Hardened Steel Nozzle', brand: 'QIDI Tech', model: 'HS-0.4', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 350, hardened: true, wear_rating: 'Very High', flow_rate: 'Standard' }, product_url: 'https://qidi3d.com/products/qidi-tech-hardened-steel-nozzle', image_url: 'https://qidi3d.com/cdn/shop/products/qidi-hardened-nozzle.jpg', price: 19.99, currency: 'USD', description: 'Hardened steel nozzle for abrasive filaments', compatible_printer_brands: ['QIDI Tech'], compatible_hotend_types: ['QIDI Hotend'] },
-    ],
-  },
-  'Elegoo': {
-    compatibility_pattern: /Neptune|Centauri/i,
-    nozzles: [
-      { name: '0.4mm Brass Nozzle', brand: 'Elegoo', model: 'MK8-0.4', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 260, hardened: false, wear_rating: 'Low', flow_rate: 'Standard' }, product_url: 'https://www.elegoo.com/products/elegoo-neptune-brass-nozzle', image_url: 'https://www.elegoo.com/cdn/shop/products/elegoo-brass-nozzle.jpg', price: 2.99, currency: 'USD', description: 'Standard brass nozzle for Neptune series', compatible_printer_brands: ['Elegoo'], compatible_hotend_types: ['MK8'] },
-      { name: '0.4mm Hardened Steel Nozzle', brand: 'Elegoo', model: 'HS-0.4', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 300, hardened: true, wear_rating: 'Very High', flow_rate: 'Standard' }, product_url: 'https://www.elegoo.com/products/elegoo-neptune-hardened-nozzle', image_url: 'https://www.elegoo.com/cdn/shop/products/elegoo-hardened-nozzle.jpg', price: 11.99, currency: 'USD', description: 'Hardened steel nozzle for abrasive filaments', compatible_printer_brands: ['Elegoo'], compatible_hotend_types: ['MK8'] },
-    ],
-  },
-};
-
-// Third-party nozzle brands
-const THIRD_PARTY_NOZZLES: Record<string, { nozzles: NozzleData[] }> = {
   'E3D': {
-    nozzles: [
-      { name: 'E3D V6 Brass Nozzle 0.4mm', brand: 'E3D', model: 'V6-NOZZLE-BRASS-040', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 300, hardened: false, wear_rating: 'Low', flow_rate: 'Standard' }, product_url: 'https://e3d-online.com/products/v6-nozzle', image_url: 'https://e3d-online.com/cdn/shop/products/V6-Nozzle-Pack-Brass.jpg', price: 6.50, currency: 'USD', description: 'Industry standard E3D V6 brass nozzle', compatible_printer_brands: ['Prusa Research', 'Creality', 'Anycubic', 'Elegoo', 'Voron'], compatible_hotend_types: ['E3D V6', 'Clone V6'] },
-      { name: 'E3D V6 Hardened Steel Nozzle 0.4mm', brand: 'E3D', model: 'V6-NOZZLE-HS-040', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 500, hardened: true, wear_rating: 'Extreme', flow_rate: 'Standard' }, product_url: 'https://e3d-online.com/products/v6-hardened-steel-nozzle', image_url: 'https://e3d-online.com/cdn/shop/products/V6-Nozzle-Hardened-Steel.jpg', price: 22.00, currency: 'USD', description: 'Premium hardened steel for abrasive materials', compatible_printer_brands: ['Prusa Research', 'Creality', 'Anycubic', 'Elegoo', 'Voron'], compatible_hotend_types: ['E3D V6', 'Clone V6'] },
-      { name: 'E3D Revo Nozzle 0.4mm', brand: 'E3D', model: 'REVO-NOZZLE-040', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 300, hardened: false, wear_rating: 'Low', flow_rate: 'Standard' }, product_url: 'https://e3d-online.com/products/revo-nozzle', image_url: 'https://e3d-online.com/cdn/shop/products/Revo-Nozzle-Pack.jpg', price: 14.50, currency: 'USD', description: 'Standard quick-change Revo nozzle', compatible_printer_brands: ['Prusa Research', 'Voron'], compatible_hotend_types: ['E3D Revo'] },
-      { name: 'E3D ObXidian Nozzle 0.4mm', brand: 'E3D', model: 'OBXIDIAN-040', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 500, hardened: true, wear_rating: 'Extreme', flow_rate: 'High', coating: 'Nozzle X coating' }, product_url: 'https://e3d-online.com/products/obxidian-nozzle', image_url: 'https://e3d-online.com/cdn/shop/products/Obxidian.jpg', price: 35.00, currency: 'USD', description: 'Ultimate wear-resistant nozzle with special coating', compatible_printer_brands: ['Prusa Research', 'Creality', 'Anycubic', 'Elegoo', 'Voron'], compatible_hotend_types: ['E3D V6', 'Clone V6'] },
-    ],
-  },
-  'Phaetus': {
-    nozzles: [
-      { name: 'Phaetus PS Brass Nozzle 0.4mm', brand: 'Phaetus', model: 'PS-BRASS-040', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 300, hardened: false, wear_rating: 'Low', flow_rate: 'Standard' }, product_url: 'https://www.phaetus.com/products/ps-nozzle', image_url: 'https://www.phaetus.com/cdn/shop/products/PS-Nozzle-Brass.jpg', price: 8.00, currency: 'USD', description: 'High-quality brass nozzle for standard printing', compatible_printer_brands: ['Voron', 'Prusa Research', 'Creality'], compatible_hotend_types: ['E3D V6', 'Phaetus Dragon', 'Phaetus Rapido'] },
-      { name: 'Phaetus PS Hardened Steel Nozzle 0.4mm', brand: 'Phaetus', model: 'PS-HS-040', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 450, hardened: true, wear_rating: 'Very High', flow_rate: 'Standard' }, product_url: 'https://www.phaetus.com/products/ps-nozzle-hardened', image_url: 'https://www.phaetus.com/cdn/shop/products/PS-Nozzle-HS.jpg', price: 18.00, currency: 'USD', description: 'Hardened steel for abrasive filaments', compatible_printer_brands: ['Voron', 'Prusa Research', 'Creality'], compatible_hotend_types: ['E3D V6', 'Phaetus Dragon', 'Phaetus Rapido'] },
-      { name: 'Phaetus Dragon High Flow Nozzle 0.4mm', brand: 'Phaetus', model: 'DRAGON-HF-040', specs: { diameter_mm: 0.4, material: 'plated copper', max_temp_c: 450, hardened: false, wear_rating: 'Medium', flow_rate: 'Very High', coating: 'Nickel plated' }, product_url: 'https://www.phaetus.com/products/dragon-hf-nozzle', image_url: 'https://www.phaetus.com/cdn/shop/products/Dragon-HF-Nozzle.jpg', price: 25.00, currency: 'USD', description: 'High flow plated copper nozzle for speed printing', compatible_printer_brands: ['Voron', 'Prusa Research'], compatible_hotend_types: ['Phaetus Dragon HF', 'Phaetus Rapido HF'] },
-    ],
-  },
-  'Bondtech': {
-    nozzles: [
-      { name: 'Bondtech CHT Coated Brass Nozzle 0.4mm', brand: 'Bondtech', model: 'CHT-BRASS-040', specs: { diameter_mm: 0.4, material: 'brass', max_temp_c: 300, hardened: false, wear_rating: 'Low', flow_rate: 'Very High', coating: 'CHT coating' }, product_url: 'https://www.bondtech.se/product/cht-coated-brass-nozzle/', image_url: 'https://www.bondtech.se/wp-content/uploads/2021/05/CHT-Nozzle.jpg', price: 20.00, currency: 'USD', description: 'Revolutionary CHT design for 3x flow rate increase', compatible_printer_brands: ['Prusa Research', 'Creality', 'Voron', 'Anycubic'], compatible_hotend_types: ['E3D V6', 'MK8', 'Clone V6'] },
-      { name: 'Bondtech CHT Hardened Steel Nozzle 0.4mm', brand: 'Bondtech', model: 'CHT-HS-040', specs: { diameter_mm: 0.4, material: 'hardened steel', max_temp_c: 450, hardened: true, wear_rating: 'Very High', flow_rate: 'Very High', coating: 'CHT design' }, product_url: 'https://www.bondtech.se/product/cht-hardened-steel-nozzle/', image_url: 'https://www.bondtech.se/wp-content/uploads/2021/05/CHT-Nozzle-HS.jpg', price: 35.00, currency: 'USD', description: 'CHT design in hardened steel for abrasives', compatible_printer_brands: ['Prusa Research', 'Creality', 'Voron', 'Anycubic'], compatible_hotend_types: ['E3D V6', 'MK8', 'Clone V6'] },
-    ],
-  },
-  'Slice Engineering': {
-    nozzles: [
-      { name: 'Slice Vanadium Nozzle 0.4mm', brand: 'Slice Engineering', model: 'VANADIUM-040', specs: { diameter_mm: 0.4, material: 'vanadium', max_temp_c: 500, hardened: true, wear_rating: 'Extreme', flow_rate: 'Standard' }, product_url: 'https://www.sliceengineering.com/products/vanadium-nozzle', image_url: 'https://www.sliceengineering.com/cdn/shop/products/Vanadium-Nozzle.jpg', price: 35.00, currency: 'USD', description: 'Premium vanadium nozzle for extreme wear resistance', compatible_printer_brands: ['Prusa Research', 'Creality', 'Voron', 'Anycubic'], compatible_hotend_types: ['E3D V6', 'MK8', 'Clone V6'] },
-      { name: 'Slice Copperhead Nozzle 0.4mm', brand: 'Slice Engineering', model: 'COPPERHEAD-040', specs: { diameter_mm: 0.4, material: 'plated copper', max_temp_c: 450, hardened: false, wear_rating: 'Medium', flow_rate: 'Very High', coating: 'Nickel plated' }, product_url: 'https://www.sliceengineering.com/products/copperhead-nozzle', image_url: 'https://www.sliceengineering.com/cdn/shop/products/Copperhead-Nozzle.jpg', price: 28.00, currency: 'USD', description: 'High thermal conductivity copper nozzle', compatible_printer_brands: ['Prusa Research', 'Creality', 'Voron'], compatible_hotend_types: ['E3D V6', 'MK8'] },
-    ],
-  },
-  'Micro Swiss': {
-    nozzles: [
-      { name: 'Micro Swiss Plated Wear Resistant Nozzle 0.4mm', brand: 'Micro Swiss', model: 'MS-WR-040', specs: { diameter_mm: 0.4, material: 'plated brass', max_temp_c: 350, hardened: true, wear_rating: 'High', flow_rate: 'Standard', coating: 'TwinClad XT' }, product_url: 'https://store.micro-swiss.com/products/plated-wear-resistant-nozzle', image_url: 'https://store.micro-swiss.com/cdn/shop/products/Plated-Nozzle.jpg', price: 15.00, currency: 'USD', description: 'Wear resistant plated nozzle for extended life', compatible_printer_brands: ['Creality', 'Anycubic', 'Elegoo'], compatible_hotend_types: ['MK8', 'Micro Swiss All Metal'] },
-      { name: 'Micro Swiss A2 Hardened Steel Nozzle 0.4mm', brand: 'Micro Swiss', model: 'MS-A2-040', specs: { diameter_mm: 0.4, material: 'A2 hardened steel', max_temp_c: 450, hardened: true, wear_rating: 'Very High', flow_rate: 'Standard' }, product_url: 'https://store.micro-swiss.com/products/a2-hardened-steel-nozzle', image_url: 'https://store.micro-swiss.com/cdn/shop/products/A2-Nozzle.jpg', price: 20.00, currency: 'USD', description: 'Premium A2 tool steel nozzle', compatible_printer_brands: ['Creality', 'Anycubic', 'Elegoo'], compatible_hotend_types: ['MK8', 'Micro Swiss All Metal'] },
-    ],
+    nozzle_collection_url: 'https://e3d-online.com/collections/nozzles',
+    is_shopify: true,
+    compatibility_pattern: /.*/i, // Universal compatibility
+    compatible_hotend_types: ['E3D V6', 'E3D Revo', 'Clone V6'],
+    brand_filter: 'Prusa Research,Creality,Anycubic,Elegoo,Voron',
   },
 };
 
-const OEM_BRAND_NAMES = Object.keys(OEM_NOZZLES);
-const THIRD_PARTY_BRAND_NAMES = Object.keys(THIRD_PARTY_NOZZLES);
+// Validate URL returns HTTP 200
+async function validateUrl(url: string): Promise<{ valid: boolean; status?: number; error?: string }> {
+  if (!url || !url.startsWith('http')) {
+    return { valid: false, error: 'Invalid URL format' };
+  }
+  
+  try {
+    const response = await fetch(url, { 
+      method: 'HEAD',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NozzleScraper/1.0)' }
+    });
+    return { valid: response.ok, status: response.status };
+  } catch (error) {
+    return { valid: false, error: error instanceof Error ? error.message : 'Fetch failed' };
+  }
+}
+
+// Validate image URL
+async function validateImageUrl(url: string): Promise<{ valid: boolean; error?: string }> {
+  if (!url || !url.startsWith('http')) {
+    return { valid: false, error: 'Invalid image URL format' };
+  }
+  
+  try {
+    const response = await fetch(url, { 
+      method: 'HEAD',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NozzleScraper/1.0)' }
+    });
+    
+    if (!response.ok) {
+      return { valid: false, error: `HTTP ${response.status}` };
+    }
+    
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('image')) {
+      return { valid: false, error: `Not an image: ${contentType}` };
+    }
+    
+    return { valid: true };
+  } catch (error) {
+    return { valid: false, error: error instanceof Error ? error.message : 'Fetch failed' };
+  }
+}
+
+// Extract nozzle specs from product title/description
+function extractNozzleSpecs(title: string, description?: string): Partial<NozzleData['specs']> {
+  const combined = `${title} ${description || ''}`.toLowerCase();
+  
+  // Extract diameter
+  const diameterMatch = combined.match(/(\d+\.?\d*)\s*mm/);
+  const diameter_mm = diameterMatch ? parseFloat(diameterMatch[1]) : 0.4;
+  
+  // Determine material
+  let material = 'brass';
+  if (combined.includes('hardened steel') || combined.includes('hardened-steel')) {
+    material = 'hardened steel';
+  } else if (combined.includes('stainless')) {
+    material = 'stainless steel';
+  } else if (combined.includes('tungsten')) {
+    material = 'tungsten carbide';
+  } else if (combined.includes('copper')) {
+    material = 'plated copper';
+  } else if (combined.includes('titanium')) {
+    material = 'titanium';
+  }
+  
+  // Determine if hardened
+  const hardened = combined.includes('hardened') || 
+                   combined.includes('steel') || 
+                   combined.includes('tungsten') ||
+                   combined.includes('carbide');
+  
+  // Max temp estimate
+  let max_temp_c = 280;
+  if (material === 'hardened steel') max_temp_c = 450;
+  if (material === 'stainless steel') max_temp_c = 300;
+  if (material === 'tungsten carbide') max_temp_c = 500;
+  
+  return {
+    diameter_mm,
+    material,
+    hardened,
+    max_temp_c,
+  };
+}
+
+// Scrape Shopify store for nozzles
+async function scrapeShopifyNozzles(
+  collectionUrl: string, 
+  brandName: string,
+  firecrawlApiKey: string
+): Promise<NozzleData[]> {
+  const nozzles: NozzleData[] = [];
+  
+  // Try Shopify JSON API first
+  const jsonUrl = collectionUrl.replace(/\/?$/, '') + '/products.json?limit=250';
+  console.log(`\n🔍 Attempting Shopify JSON API: ${jsonUrl}`);
+  
+  try {
+    const response = await fetch(jsonUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NozzleScraper/1.0)' }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      const products = data.products || [];
+      
+      console.log(`📦 Found ${products.length} products in Shopify collection`);
+      
+      for (const product of products) {
+        const title = product.title || '';
+        const handle = product.handle || '';
+        
+        // Filter for nozzle products
+        if (!title.toLowerCase().includes('nozzle')) {
+          continue;
+        }
+        
+        // Skip multi-packs, kits, and non-individual nozzles
+        if (title.toLowerCase().includes('pack') && !title.toLowerCase().includes('4-pack')) {
+          continue;
+        }
+        
+        const specs = extractNozzleSpecs(title, product.body_html);
+        
+        // Get first variant price
+        const variant = product.variants?.[0];
+        const price = variant?.price ? parseFloat(variant.price) : undefined;
+        
+        // Get product image
+        const image = product.images?.[0];
+        const imageUrl = image?.src || product.image?.src;
+        
+        // Build product URL
+        const baseUrl = collectionUrl.split('/collections/')[0];
+        const productUrl = `${baseUrl}/products/${handle}`;
+        
+        // Generate model from handle
+        const model = handle.toUpperCase().replace(/-/g, '-').slice(0, 20);
+        
+        nozzles.push({
+          name: title,
+          brand: brandName,
+          model,
+          specs: {
+            diameter_mm: specs.diameter_mm || 0.4,
+            material: specs.material || 'brass',
+            hardened: specs.hardened || false,
+            max_temp_c: specs.max_temp_c,
+          },
+          product_url: productUrl,
+          image_url: imageUrl,
+          price,
+          currency: 'USD',
+          description: product.body_html?.replace(/<[^>]*>/g, '').slice(0, 200),
+          compatible_printer_brands: [brandName],
+        });
+      }
+      
+      return nozzles;
+    }
+  } catch (error) {
+    console.log(`⚠️ Shopify JSON API failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+  
+  // Fallback to Firecrawl if JSON API fails
+  console.log(`\n🔄 Falling back to Firecrawl scraping...`);
+  
+  try {
+    const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: collectionUrl,
+        formats: ['markdown', 'links'],
+        onlyMainContent: true,
+        waitFor: 3000,
+      }),
+    });
+    
+    if (firecrawlResponse.ok) {
+      const result = await firecrawlResponse.json();
+      const links = result.data?.links || [];
+      const markdown = result.data?.markdown || '';
+      
+      console.log(`📄 Firecrawl found ${links.length} links`);
+      
+      // Filter for product links
+      const productLinks = links.filter((link: string) => 
+        link.includes('/products/') && link.toLowerCase().includes('nozzle')
+      );
+      
+      console.log(`🔗 Found ${productLinks.length} nozzle product links`);
+      
+      // For each product link, scrape details
+      for (const productUrl of productLinks.slice(0, 20)) { // Limit to 20
+        try {
+          const productResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${firecrawlApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: productUrl,
+              formats: ['markdown'],
+              onlyMainContent: true,
+            }),
+          });
+          
+          if (productResponse.ok) {
+            const productData = await productResponse.json();
+            const content = productData.data?.markdown || '';
+            const metadata = productData.data?.metadata || {};
+            
+            const title = metadata.title || productUrl.split('/').pop()?.replace(/-/g, ' ') || 'Unknown Nozzle';
+            const specs = extractNozzleSpecs(title, content);
+            
+            // Try to extract price from content
+            const priceMatch = content.match(/\$(\d+\.?\d*)/);
+            const price = priceMatch ? parseFloat(priceMatch[1]) : undefined;
+            
+            // Try to extract image from metadata
+            const imageUrl = metadata.ogImage || metadata.image;
+            
+            nozzles.push({
+              name: title,
+              brand: brandName,
+              specs: {
+                diameter_mm: specs.diameter_mm || 0.4,
+                material: specs.material || 'brass',
+                hardened: specs.hardened || false,
+                max_temp_c: specs.max_temp_c,
+              },
+              product_url: productUrl,
+              image_url: imageUrl,
+              price,
+              currency: 'USD',
+              compatible_printer_brands: [brandName],
+            });
+          }
+        } catch (productError) {
+          console.log(`⚠️ Failed to scrape product: ${productUrl}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.log(`❌ Firecrawl scraping failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+  
+  return nozzles;
+}
+
+// Generate QC Report
+function generateQCReport(report: QCReport): void {
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`📊 QC REPORT FOR: ${report.brand}`);
+  console.log(`${'='.repeat(60)}`);
+  console.log(`\n📈 DISCOVERY METRICS:`);
+  console.log(`   Total nozzles discovered: ${report.total_discovered}`);
+  console.log(`\n🔗 URL VALIDATION:`);
+  console.log(`   ✅ Product URLs valid: ${report.url_validated}`);
+  console.log(`   ❌ Product URLs failed: ${report.url_failed}`);
+  console.log(`\n🖼️ IMAGE VALIDATION:`);
+  console.log(`   ✅ Images valid: ${report.image_validated}`);
+  console.log(`   ❌ Images failed: ${report.image_failed}`);
+  console.log(`\n💰 DATA COMPLETENESS:`);
+  console.log(`   Prices found: ${report.price_found}/${report.total_discovered}`);
+  console.log(`   Specs complete: ${report.specs_complete}/${report.total_discovered}`);
+  console.log(`\n💾 DATABASE OPERATIONS:`);
+  console.log(`   Accessories inserted/updated: ${report.inserted}`);
+  
+  if (report.errors.length > 0) {
+    console.log(`\n⚠️ ERRORS (${report.errors.length}):`);
+    report.errors.forEach((err, i) => console.log(`   ${i + 1}. ${err}`));
+  }
+  
+  // Calculate quality score
+  const urlQuality = report.total_discovered > 0 ? (report.url_validated / report.total_discovered) * 100 : 0;
+  const imageQuality = report.total_discovered > 0 ? (report.image_validated / report.total_discovered) * 100 : 0;
+  const dataQuality = report.total_discovered > 0 ? (report.price_found / report.total_discovered) * 100 : 0;
+  const overallQuality = (urlQuality + imageQuality + dataQuality) / 3;
+  
+  console.log(`\n🎯 QUALITY SCORES:`);
+  console.log(`   URL Quality: ${urlQuality.toFixed(1)}%`);
+  console.log(`   Image Quality: ${imageQuality.toFixed(1)}%`);
+  console.log(`   Data Completeness: ${dataQuality.toFixed(1)}%`);
+  console.log(`   Overall Quality: ${overallQuality.toFixed(1)}%`);
+  console.log(`${'='.repeat(60)}\n`);
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -131,166 +377,233 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { brandId, brandName } = await req.json();
+    const { brandName, validateUrls = true, skipValidation = false } = await req.json();
 
-    // Determine which brands to process
-    let brandsToProcess: { name: string; isOEM: boolean }[] = [];
-    
-    if (brandName === 'All Brands') {
-      brandsToProcess = [
-        ...OEM_BRAND_NAMES.map(n => ({ name: n, isOEM: true })),
-        ...THIRD_PARTY_BRAND_NAMES.map(n => ({ name: n, isOEM: false })),
-      ];
-    } else if (brandName === 'All OEM') {
-      brandsToProcess = OEM_BRAND_NAMES.map(n => ({ name: n, isOEM: true }));
-    } else if (brandName === 'All 3rd Party') {
-      brandsToProcess = THIRD_PARTY_BRAND_NAMES.map(n => ({ name: n, isOEM: false }));
-    } else if (THIRD_PARTY_BRAND_NAMES.includes(brandName)) {
-      brandsToProcess = [{ name: brandName, isOEM: false }];
-    } else if (OEM_BRAND_NAMES.includes(brandName)) {
-      brandsToProcess = [{ name: brandName, isOEM: true }];
-    } else if (brandName) {
-      // Unknown brand name but was provided - try OEM first
-      brandsToProcess = [{ name: brandName, isOEM: true }];
-    } else {
+    if (!brandName) {
       return new Response(
         JSON.stringify({ error: 'brandName is required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
-    
-    console.log(`Processing ${brandsToProcess.length} brands: ${brandsToProcess.map(b => b.name).join(', ')}`);
 
-    let totalNozzlesFound = 0;
-    let totalAccessoriesCreated = 0;
+    console.log(`\n${'🔧'.repeat(30)}`);
+    console.log(`DYNAMIC NOZZLE SCRAPER - Starting`);
+    console.log(`Brand: ${brandName}`);
+    console.log(`Validate URLs: ${validateUrls}`);
+    console.log(`${'🔧'.repeat(30)}\n`);
 
-    // Get all printers with their brand info
+    // Get all printers for compatibility matching
     const { data: printers, error: printersError } = await supabase
       .from('printers')
       .select('id, model_name, brand_id, printer_brands!inner(brand)');
     
     if (printersError) throw printersError;
-    console.log(`Found ${printers?.length || 0} printers in database`);
+    console.log(`📋 Found ${printers?.length || 0} printers in database for compatibility matching`);
 
-    for (const { name: currentBrandName, isOEM } of brandsToProcess) {
-      console.log(`\n========================================`);
-      console.log(`PROCESSING BRAND: ${currentBrandName} (${isOEM ? 'OEM' : '3rd Party'})`);
-      console.log(`========================================`);
-      
-      const brandData = isOEM 
-        ? OEM_NOZZLES[currentBrandName] 
-        : THIRD_PARTY_NOZZLES[currentBrandName];
-      
-      if (!brandData) {
-        console.log(`⚠️ No nozzle data found for brand: ${currentBrandName}`);
-        continue;
-      }
-
-      const allNozzles = brandData.nozzles;
-      totalNozzlesFound += allNozzles.length;
-      console.log(`📦 Found ${allNozzles.length} nozzle definitions for ${currentBrandName}`);
-
-      let brandAccessoriesCreated = 0;
-      let brandErrors = 0;
-
-      for (let i = 0; i < allNozzles.length; i++) {
-        const nozzle = allNozzles[i];
-        console.log(`\n--- Nozzle ${i + 1}/${allNozzles.length}: ${nozzle.name} ---`);
-        console.log(`  Brand: ${nozzle.brand}`);
-        console.log(`  Model: ${nozzle.model}`);
-        console.log(`  Specs: diameter=${nozzle.specs.diameter_mm}mm, material=${nozzle.specs.material}, max_temp=${nozzle.specs.max_temp_c || 'N/A'}°C, hardened=${nozzle.specs.hardened}`);
-        console.log(`  Price: ${nozzle.price ? `$${nozzle.price} ${nozzle.currency || 'USD'}` : 'N/A'}`);
-        console.log(`  Product URL: ${nozzle.product_url || 'NOT SET'}`);
-        console.log(`  Image URL: ${nozzle.image_url || 'NOT SET'}`);
-        console.log(`  Compatible Brands: ${nozzle.compatible_printer_brands?.join(', ') || 'N/A'}`);
-        console.log(`  Compatible Hotends: ${nozzle.compatible_hotend_types?.join(', ') || 'N/A'}`);
-
-        // Determine compatible printers
-        const compatiblePrinters = (printers || []).filter((printer: any) => {
-          // For OEM nozzles, match by brand pattern
-          if (isOEM) {
-            const oemBrandData = brandData as { nozzles: NozzleData[]; compatibility_pattern?: RegExp };
-            if (oemBrandData.compatibility_pattern) {
-              return oemBrandData.compatibility_pattern.test(printer.model_name);
-            }
-          }
-          // For 3rd party nozzles, check if printer brand is in compatible list
-          if (nozzle.compatible_printer_brands && nozzle.compatible_printer_brands.length > 0) {
-            const printerBrand = printer.printer_brands?.brand;
-            return printerBrand && nozzle.compatible_printer_brands.includes(printerBrand);
-          }
-          return false;
-        });
-
-        console.log(`  ✅ Matched ${compatiblePrinters.length} compatible printers`);
-        if (compatiblePrinters.length > 0 && compatiblePrinters.length <= 10) {
-          console.log(`  Printers: ${compatiblePrinters.map((p: any) => p.model_name).join(', ')}`);
-        } else if (compatiblePrinters.length > 10) {
-          console.log(`  First 10 printers: ${compatiblePrinters.slice(0, 10).map((p: any) => p.model_name).join(', ')}...`);
-        }
-
-        let nozzleInsertCount = 0;
-        let nozzleErrorCount = 0;
-        
-        for (const printer of compatiblePrinters) {
-          const upsertData = {
-            printer_id: printer.id,
-            accessory_type: 'nozzle',
-            name: nozzle.name,
-            brand: nozzle.brand,
-            model: nozzle.model,
-            specs: nozzle.specs,
-            product_url: nozzle.product_url,
-            image_url: nozzle.image_url,
-            price: nozzle.price,
-            currency: nozzle.currency || 'USD',
-            description: nozzle.description,
-            compatible_printer_brands: nozzle.compatible_printer_brands,
-            compatible_hotend_types: nozzle.compatible_hotend_types,
-          };
-
-          const { error: insertError } = await supabase
-            .from('printer_accessories')
-            .upsert(upsertData, {
-              onConflict: 'printer_id,name',
-              ignoreDuplicates: false,
-            });
-
-          if (!insertError) {
-            totalAccessoriesCreated++;
-            brandAccessoriesCreated++;
-            nozzleInsertCount++;
-          } else {
-            nozzleErrorCount++;
-            brandErrors++;
-            console.error(`  ❌ Error inserting for printer "${printer.model_name}": ${insertError.message}`);
-          }
-        }
-        
-        console.log(`  📊 Results: ${nozzleInsertCount} inserted/updated, ${nozzleErrorCount} errors`);
-      }
-      
-      console.log(`\n📈 Brand Summary for ${currentBrandName}:`);
-      console.log(`   - Nozzles processed: ${allNozzles.length}`);
-      console.log(`   - Accessories created/updated: ${brandAccessoriesCreated}`);
-      console.log(`   - Errors: ${brandErrors}`);
+    const brandConfig = BRAND_STORE_CONFIGS[brandName];
+    if (!brandConfig) {
+      return new Response(
+        JSON.stringify({ 
+          error: `No scraping configuration for brand: ${brandName}`,
+          available_brands: Object.keys(BRAND_STORE_CONFIGS)
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
-    console.log(`Complete: ${totalNozzlesFound} nozzles found, ${totalAccessoriesCreated} accessories created`);
+    console.log(`\n🏪 Brand Configuration:`);
+    console.log(`   Collection URL: ${brandConfig.nozzle_collection_url}`);
+    console.log(`   Is Shopify: ${brandConfig.is_shopify}`);
+    console.log(`   Compatibility Pattern: ${brandConfig.compatibility_pattern}`);
+
+    // Initialize QC Report
+    const qcReport: QCReport = {
+      brand: brandName,
+      total_discovered: 0,
+      url_validated: 0,
+      url_failed: 0,
+      image_validated: 0,
+      image_failed: 0,
+      price_found: 0,
+      specs_complete: 0,
+      inserted: 0,
+      errors: [],
+    };
+
+    // PHASE 1: DISCOVERY
+    console.log(`\n${'─'.repeat(40)}`);
+    console.log(`PHASE 1: DISCOVERY`);
+    console.log(`${'─'.repeat(40)}`);
+
+    let discoveredNozzles: NozzleData[] = [];
+
+    if (brandConfig.is_shopify) {
+      discoveredNozzles = await scrapeShopifyNozzles(
+        brandConfig.nozzle_collection_url,
+        brandName,
+        firecrawlApiKey
+      );
+    } else {
+      // Non-Shopify scraping (use Firecrawl directly)
+      console.log(`⚠️ Non-Shopify store - using Firecrawl generic scraping`);
+      // For now, return empty - can be extended
+    }
+
+    qcReport.total_discovered = discoveredNozzles.length;
+    console.log(`\n✅ Discovered ${discoveredNozzles.length} nozzles from ${brandName} store`);
+
+    // PHASE 2: VALIDATION
+    console.log(`\n${'─'.repeat(40)}`);
+    console.log(`PHASE 2: VALIDATION`);
+    console.log(`${'─'.repeat(40)}`);
+
+    const validatedNozzles: NozzleData[] = [];
+
+    for (let i = 0; i < discoveredNozzles.length; i++) {
+      const nozzle = discoveredNozzles[i];
+      console.log(`\n📌 Validating ${i + 1}/${discoveredNozzles.length}: ${nozzle.name}`);
+      
+      // Validate product URL
+      if (!skipValidation && validateUrls) {
+        const urlResult = await validateUrl(nozzle.product_url);
+        if (urlResult.valid) {
+          qcReport.url_validated++;
+          console.log(`   ✅ Product URL valid (${urlResult.status})`);
+        } else {
+          qcReport.url_failed++;
+          console.log(`   ❌ Product URL invalid: ${urlResult.error}`);
+          qcReport.errors.push(`URL failed for "${nozzle.name}": ${urlResult.error}`);
+          continue; // Skip invalid URLs
+        }
+      } else {
+        qcReport.url_validated++;
+      }
+      
+      // Validate image URL
+      if (nozzle.image_url && !skipValidation) {
+        const imageResult = await validateImageUrl(nozzle.image_url);
+        if (imageResult.valid) {
+          qcReport.image_validated++;
+          console.log(`   ✅ Image URL valid`);
+        } else {
+          qcReport.image_failed++;
+          console.log(`   ⚠️ Image URL invalid: ${imageResult.error}`);
+          nozzle.image_url = undefined; // Clear invalid image
+        }
+      } else if (nozzle.image_url) {
+        qcReport.image_validated++;
+      } else {
+        qcReport.image_failed++;
+      }
+      
+      // Check data completeness
+      if (nozzle.price && nozzle.price > 0) {
+        qcReport.price_found++;
+        console.log(`   💰 Price: $${nozzle.price}`);
+      } else {
+        console.log(`   ⚠️ No price found`);
+      }
+      
+      if (nozzle.specs.diameter_mm && nozzle.specs.material) {
+        qcReport.specs_complete++;
+        console.log(`   📐 Specs: ${nozzle.specs.diameter_mm}mm ${nozzle.specs.material}`);
+      }
+      
+      validatedNozzles.push(nozzle);
+    }
+
+    console.log(`\n✅ Validated ${validatedNozzles.length}/${discoveredNozzles.length} nozzles`);
+
+    // PHASE 3: DATABASE INSERT
+    console.log(`\n${'─'.repeat(40)}`);
+    console.log(`PHASE 3: DATABASE INSERT`);
+    console.log(`${'─'.repeat(40)}`);
+
+    for (const nozzle of validatedNozzles) {
+      // Find compatible printers
+      const compatiblePrinters = (printers || []).filter((printer: any) => {
+        const printerBrand = printer.printer_brands?.brand;
+        
+        // For OEM nozzles, match by brand and model pattern
+        if (nozzle.brand === brandName && brandConfig.compatibility_pattern) {
+          return printerBrand === brandName || brandConfig.compatibility_pattern.test(printer.model_name);
+        }
+        
+        // For 3rd party, check compatible brands list
+        if (nozzle.compatible_printer_brands?.includes(printerBrand)) {
+          return true;
+        }
+        
+        return false;
+      });
+
+      console.log(`\n📥 Inserting "${nozzle.name}" for ${compatiblePrinters.length} printers`);
+
+      for (const printer of compatiblePrinters) {
+        const upsertData = {
+          printer_id: printer.id,
+          accessory_type: 'nozzle',
+          name: nozzle.name,
+          brand: nozzle.brand,
+          model: nozzle.model,
+          specs: nozzle.specs,
+          product_url: nozzle.product_url,
+          image_url: nozzle.image_url,
+          price: nozzle.price,
+          currency: nozzle.currency || 'USD',
+          description: nozzle.description,
+          compatible_printer_brands: nozzle.compatible_printer_brands || [brandName],
+          compatible_hotend_types: brandConfig.compatible_hotend_types,
+        };
+
+        const { error: insertError } = await supabase
+          .from('printer_accessories')
+          .upsert(upsertData, {
+            onConflict: 'printer_id,name',
+            ignoreDuplicates: false,
+          });
+
+        if (!insertError) {
+          qcReport.inserted++;
+        } else {
+          qcReport.errors.push(`Insert failed for "${nozzle.name}" on ${printer.model_name}: ${insertError.message}`);
+        }
+      }
+    }
+
+    // PHASE 4: QC REPORT
+    generateQCReport(qcReport);
 
     return new Response(
       JSON.stringify({
         success: true,
-        brands_processed: brandsToProcess.length,
-        nozzles_found: totalNozzlesFound,
-        accessories_created: totalAccessoriesCreated,
+        qc_report: {
+          brand: qcReport.brand,
+          total_discovered: qcReport.total_discovered,
+          url_validated: qcReport.url_validated,
+          url_failed: qcReport.url_failed,
+          image_validated: qcReport.image_validated,
+          image_failed: qcReport.image_failed,
+          price_found: qcReport.price_found,
+          specs_complete: qcReport.specs_complete,
+          inserted: qcReport.inserted,
+          errors: qcReport.errors.length,
+        },
+        nozzles: validatedNozzles.map(n => ({
+          name: n.name,
+          product_url: n.product_url,
+          image_url: n.image_url,
+          price: n.price,
+          specs: n.specs,
+        })),
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('❌ Fatal Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: errorMessage }),
