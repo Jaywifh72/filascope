@@ -54,23 +54,36 @@ export default function AdminPrinters() {
     queryKey: ["printers-price-progress"],
     queryFn: async () => {
       // Count printers that have NO price data at all (all three fields are null)
-      const { count: withoutPrice } = await supabase
+      const { data: printersWithoutPrice, error: countError } = await supabase
         .from("printers")
-        .select("*", { count: "exact", head: true })
+        .select("id, msrp_usd, current_price_usd_store, current_price_usd_amazon")
         .is('current_price_usd_store', null)
         .is('current_price_usd_amazon', null)
         .is('msrp_usd', null);
+      
+      if (countError) {
+        console.error('Error counting printers without price:', countError);
+      }
       
       const { count: total } = await supabase
         .from("printers")
         .select("*", { count: "exact", head: true });
       
-      return {
-        withoutPrice: withoutPrice || 0,
+      const withoutPrice = printersWithoutPrice?.length || 0;
+      
+      console.log('Price progress update:', {
         total: total || 0,
-        withPrice: (total || 0) - (withoutPrice || 0),
+        withoutPrice,
+        withPrice: (total || 0) - withoutPrice,
+      });
+      
+      return {
+        withoutPrice,
+        total: total || 0,
+        withPrice: (total || 0) - withoutPrice,
       };
     },
+    staleTime: 0, // Always fetch fresh data
     refetchInterval: fetchingPrices || aiSearching ? 2000 : false, // Refresh every 2 seconds while fetching
   });
 
