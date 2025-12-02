@@ -53,10 +53,13 @@ export default function AdminPrinters() {
   const { data: priceProgressData } = useQuery({
     queryKey: ["printers-price-progress"],
     queryFn: async () => {
+      // Count printers that have NO price data at all (all three fields are null)
       const { count: withoutPrice } = await supabase
         .from("printers")
         .select("*", { count: "exact", head: true })
-        .or('current_price_usd_store.is.null,current_price_usd_amazon.is.null');
+        .is('current_price_usd_store', null)
+        .is('current_price_usd_amazon', null)
+        .is('msrp_usd', null);
       
       const { count: total } = await supabase
         .from("printers")
