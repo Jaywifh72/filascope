@@ -166,50 +166,99 @@ function extractPrices(markdown: string): {
   return { msrp_usd, current_price_usd_store };
 }
 
-// Intelligent URL correction: convert marketing pages to store pages
+// SOLUTION 1: Aggressive URL correction - convert marketing pages to store pages
 function correctUrlForPricing(url: string, brand: string): string | null {
   try {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
     const pathname = urlObj.pathname.toLowerCase();
+    const brandLower = brand.toLowerCase();
 
-    // Bambu Lab: convert /products/ to /us/products/ (US store)
+    // Bambu Lab: multiple patterns
     if (hostname.includes('bambulab.com')) {
+      // Pattern 1: /products/ → /us/products/
       if (pathname.startsWith('/products/') && !pathname.startsWith('/us/products/')) {
         return `https://us.store.bambulab.com${pathname}`;
       }
-    }
-
-    // Creality: convert /products/ to /collections/fdm-3d-printers/products/
-    if (hostname.includes('creality.com') || hostname.includes('creality3d.shop')) {
-      if (pathname.includes('/products/') && !pathname.includes('/collections/')) {
-        const productSlug = pathname.split('/products/')[1];
-        return `https://store.creality.com/collections/fdm-3d-printers/products/${productSlug}`;
+      // Pattern 2: /en/x1 → us.store.bambulab.com/products/x1-carbon-combo
+      if (pathname.includes('/en/')) {
+        const modelSlug = pathname.split('/en/')[1]?.split('/')[0];
+        if (modelSlug) {
+          return `https://us.store.bambulab.com/products/${modelSlug}`;
+        }
+      }
+      // Pattern 3: bambulab.com domain → us.store.bambulab.com
+      if (!hostname.includes('store.bambulab.com')) {
+        return url.replace(/^https?:\/\/[^\/]+/, 'https://us.store.bambulab.com');
       }
     }
 
-    // Prusa Research: ensure it's the shop domain
-    if (hostname.includes('prusa3d.com') && !hostname.includes('shop.prusa3d.com')) {
-      return url.replace('www.prusa3d.com', 'shop.prusa3d.com').replace('prusa3d.com', 'shop.prusa3d.com');
+    // Creality: multiple patterns
+    if (hostname.includes('creality.com') || hostname.includes('creality3d.shop')) {
+      if (pathname.includes('/products/')) {
+        const productSlug = pathname.split('/products/')[1]?.split('/')[0];
+        return `https://store.creality.com/collections/fdm-3d-printers/products/${productSlug}`;
+      }
+      // Ensure store domain
+      if (!hostname.includes('store.creality.com')) {
+        return url.replace(/^https?:\/\/[^\/]+/, 'https://store.creality.com');
+      }
     }
 
-    // Anycubic: convert /products/ to store subdomain
-    if (hostname.includes('anycubic.com') && !hostname.includes('store.anycubic.com')) {
-      if (pathname.includes('/products/')) {
+    // Prusa Research: ensure shop domain
+    if (hostname.includes('prusa3d.com')) {
+      if (!hostname.includes('shop.prusa3d.com')) {
+        return url.replace(/prusa3d\.com/, 'shop.prusa3d.com');
+      }
+    }
+
+    // Anycubic: convert to store subdomain
+    if (hostname.includes('anycubic.com')) {
+      if (!hostname.includes('store.anycubic.com')) {
+        if (pathname.includes('/products/')) {
+          const productSlug = pathname.split('/products/')[1]?.split('/')[0];
+          return `https://store.anycubic.com/products/${productSlug}`;
+        }
         return url.replace(/^https?:\/\/[^\/]+/, 'https://store.anycubic.com');
       }
     }
 
-    // Elegoo: ensure store domain
-    if (hostname.includes('elegoo.com') && !hostname.includes('www.elegoo.com')) {
-      return url.replace(/^https?:\/\/[^\/]+/, 'https://www.elegoo.com');
+    // Elegoo: ensure www domain (store)
+    if (hostname.includes('elegoo.com')) {
+      if (!hostname.includes('www.elegoo.com')) {
+        return url.replace(/^https?:\/\/[^\/]+/, 'https://www.elegoo.com');
+      }
     }
 
-    // QIDI: convert to official store
-    if (hostname.includes('qidi') && !hostname.includes('qidi3d.com')) {
-      if (pathname.includes('/products/')) {
-        const productSlug = pathname.split('/products/')[1]?.split('/')[0];
-        return `https://qidi3d.com/products/${productSlug}`;
+    // QIDI: ensure qidi3d.com
+    if (brandLower.includes('qidi')) {
+      if (!hostname.includes('qidi3d.com')) {
+        if (pathname.includes('/products/')) {
+          const productSlug = pathname.split('/products/')[1]?.split('/')[0];
+          return `https://qidi3d.com/products/${productSlug}`;
+        }
+      }
+    }
+
+    // UltiMaker/Ultimaker: ensure ultimaker.com
+    if (brandLower.includes('ultimaker')) {
+      if (!hostname.includes('ultimaker.com')) {
+        return url.replace(/^https?:\/\/[^\/]+/, 'https://ultimaker.com');
+      }
+    }
+
+    // Snapmaker: ensure www.snapmaker.com
+    if (brandLower.includes('snapmaker')) {
+      if (!hostname.includes('www.snapmaker.com')) {
+        return url.replace(/^https?:\/\/[^\/]+/, 'https://www.snapmaker.com');
+      }
+    }
+
+    // FLSUN: ensure store domain
+    if (brandLower.includes('flsun')) {
+      if (hostname.includes('flsun3d.com') && pathname.includes('/product/')) {
+        const productSlug = pathname.split('/product/')[1]?.split('.html')[0];
+        return `https://flsun3d.com/products/${productSlug}`;
       }
     }
 
@@ -220,10 +269,41 @@ function correctUrlForPricing(url: string, brand: string): string | null {
   }
 }
 
+// SOLUTION 2: Extract "Buy Now" / "Add to Cart" URLs from marketing pages
+async function extractPurchaseUrls(markdown: string, baseUrl: string): Promise<string[]> {
+  const purchaseUrls: string[] = [];
+  
+  try {
+    // Look for common purchase-related link patterns
+    const purchasePatterns = [
+      /\[.*?(?:buy|shop|purchase|add to cart|order now).*?\]\((https?:\/\/[^\)]+)\)/gi,
+      /href=["'](https?:\/\/[^"']*(?:store|shop|cart|checkout|buy)[^"']*)['"]/gi,
+    ];
 
-// Direct Firecrawl API call with enhanced options
-async function firecrawlScrape(url: string, apiKey: string) {
-  console.log('Scraping price from:', url);
+    for (const pattern of purchasePatterns) {
+      const matches = markdown.matchAll(pattern);
+      for (const match of matches) {
+        const url = match[1];
+        if (url && url.startsWith('http')) {
+          purchaseUrls.push(url);
+        }
+      }
+    }
+
+    // Remove duplicates
+    return [...new Set(purchaseUrls)];
+  } catch (error) {
+    console.error('Error extracting purchase URLs:', error);
+    return [];
+  }
+}
+
+// SOLUTION 4: Enhanced scraping with longer wait times and retries
+async function firecrawlScrapeEnhanced(url: string, apiKey: string, attempt: number = 1) {
+  const maxAttempts = 2;
+  const waitTimes = [3000, 6000]; // Progressive wait times
+  
+  console.log(`Scraping attempt ${attempt}/${maxAttempts} with ${waitTimes[attempt - 1]}ms wait time`);
   
   const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
     method: 'POST',
@@ -235,7 +315,7 @@ async function firecrawlScrape(url: string, apiKey: string) {
       url: url,
       formats: ['markdown', 'html'],
       onlyMainContent: true,
-      waitFor: 3000, // Wait 3 seconds for dynamic content to load
+      waitFor: waitTimes[attempt - 1],
       skipTlsVerification: false,
       location: {
         country: 'US',
@@ -244,7 +324,8 @@ async function firecrawlScrape(url: string, apiKey: string) {
       headers: {
         'Accept': 'text/html,application/xhtml+xml,application/xml',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'no-cache',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
     }),
   });
@@ -252,21 +333,33 @@ async function firecrawlScrape(url: string, apiKey: string) {
   const responseData = await response.json();
   
   if (!response.ok) {
-    console.error('Firecrawl error:', responseData);
+    console.error(`Firecrawl error (attempt ${attempt}):`, responseData);
+    
+    // Retry with longer wait time if available
+    if (attempt < maxAttempts) {
+      console.log(`Retrying with longer wait time...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return firecrawlScrapeEnhanced(url, apiKey, attempt + 1);
+    }
+    
     throw new Error(`Firecrawl API error: ${response.statusText}`);
   }
 
-  // Check if we got a valid response with actual content
+  // Validate content
   if (responseData?.data?.markdown) {
     const markdown = responseData.data.markdown;
     
-    // Detect if we got a cookie consent page or redirect
+    // Detect problematic content
     if (markdown.includes('cookie') && markdown.includes('consent') && markdown.length < 1000) {
-      console.log('⚠️ Detected cookie consent page, content too short');
+      console.log(`⚠️ Detected cookie consent page (attempt ${attempt})`);
+      if (attempt < maxAttempts) {
+        console.log(`Retrying with longer wait time...`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return firecrawlScrapeEnhanced(url, apiKey, attempt + 1);
+      }
       throw new Error('Cookie consent page detected');
     }
     
-    // Detect if we got binary/image data
     if (markdown.includes('JFIF') || markdown.includes('ExifMM') || markdown.includes('����')) {
       console.log('⚠️ Detected binary/image data instead of HTML');
       throw new Error('Binary data received instead of HTML');
@@ -275,6 +368,9 @@ async function firecrawlScrape(url: string, apiKey: string) {
 
   return responseData;
 }
+
+
+// Legacy simple scraper (removed - use firecrawlScrapeEnhanced instead)
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -393,41 +489,71 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Step 2: If Shopify didn't work, try Firecrawl scraping
+        // Step 2: If Shopify didn't work, try Firecrawl scraping with SOLUTION 2 (extract purchase URLs)
         if (!prices.current_price_usd_store) {
           console.log('Attempting Firecrawl scrape...');
           let scrapeResult;
           let scrapeError = null;
           
           try {
-            scrapeResult = await firecrawlScrape(urlToScrape, firecrawlApiKey);
+            scrapeResult = await firecrawlScrapeEnhanced(urlToScrape, firecrawlApiKey);
             
             if (!scrapeResult?.data?.markdown) {
               throw new Error('No markdown data returned');
             }
             
             console.log(`✓ Scraped ${scrapeResult.data.markdown.length} chars of content`);
-          } catch (error) {
-            scrapeError = error instanceof Error ? error.message : 'Unknown scrape error';
-            console.log(`✗ Failed to scrape ${urlToScrape}: ${scrapeError}`);
-            scrapeResult = null;
-          }
-
-          // Extract prices from scraped content
-          if (scrapeResult?.data?.markdown) {
-            const markdown = scrapeResult.data.markdown;
-            const extractedPrices = extractPrices(markdown);
+            
+            // First, try to extract prices from the current page
+            const extractedPrices = extractPrices(scrapeResult.data.markdown);
             
             if (extractedPrices.current_price_usd_store || extractedPrices.msrp_usd) {
               prices = extractedPrices;
               console.log('✓ Extracted prices from official store:', prices);
             } else {
-              console.log('✗ No prices found in scraped content');
+              // SOLUTION 2: No prices found, try extracting purchase URLs
+              console.log('No prices on marketing page, extracting purchase URLs...');
+              const purchaseUrls = await extractPurchaseUrls(scrapeResult.data.markdown, urlToScrape);
+              
+              if (purchaseUrls.length > 0) {
+                console.log(`Found ${purchaseUrls.length} potential purchase URLs:`, purchaseUrls.slice(0, 3));
+                
+                // Try each purchase URL until we find prices
+                for (const purchaseUrl of purchaseUrls.slice(0, 3)) { // Try up to 3 URLs
+                  try {
+                    console.log(`Trying purchase URL: ${purchaseUrl}`);
+                    const purchasePageResult = await firecrawlScrapeEnhanced(purchaseUrl, firecrawlApiKey);
+                    
+                    if (purchasePageResult?.data?.markdown) {
+                      const purchasePagePrices = extractPrices(purchasePageResult.data.markdown);
+                      
+                      if (purchasePagePrices.current_price_usd_store || purchasePagePrices.msrp_usd) {
+                        prices = purchasePagePrices;
+                        console.log(`✓ Found prices on purchase URL: ${purchaseUrl}`, prices);
+                        break;
+                      }
+                    }
+                  } catch (purchaseUrlError) {
+                    console.log(`Failed to scrape purchase URL ${purchaseUrl}:`, purchaseUrlError);
+                  }
+                  
+                  // Rate limiting between purchase URL attempts
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+              }
+              
+              if (!prices.current_price_usd_store) {
+                console.log('✗ No prices found in scraped content or purchase URLs');
+              }
             }
+          } catch (error) {
+            scrapeError = error instanceof Error ? error.message : 'Unknown scrape error';
+            console.log(`✗ Failed to scrape ${urlToScrape}: ${scrapeError}`);
+            scrapeResult = null;
           }
         }
 
-        // Step 3: If still no prices, try Amazon as fallback
+        // Step 3: If still no prices, try Amazon as fallback (SOLUTION 3)
         if (!prices.msrp_usd && !prices.current_price_usd_store) {
           console.log('No prices from official store, trying Amazon fallback...');
           
@@ -441,7 +567,7 @@ Deno.serve(async (req) => {
           for (const amazonUrl of amazonUrls) {
             try {
               console.log(`Trying Amazon URL: ${amazonUrl}`);
-              const amazonResult = await firecrawlScrape(amazonUrl, firecrawlApiKey);
+              const amazonResult = await firecrawlScrapeEnhanced(amazonUrl, firecrawlApiKey);
               
               if (amazonResult?.data?.markdown) {
                 const amazonPrices = extractPrices(amazonResult.data.markdown);
