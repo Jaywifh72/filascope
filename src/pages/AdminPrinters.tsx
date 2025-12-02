@@ -42,6 +42,7 @@ export default function AdminPrinters() {
   const [massRescraping, setMassRescraping] = useState(false);
   const [massRescrapeStats, setMassRescrapeStats] = useState<{ total: number; completed: number } | null>(null);
   const [editingUrl, setEditingUrl] = useState<{ printerId: string; url: string } | null>(null);
+  const [cleaningDuplicates, setCleaningDuplicates] = useState(false);
 
   // Fetch printer brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -419,6 +420,82 @@ export default function AdminPrinters() {
     }
   });
 
+  const { data: duplicatePrinters, refetch: refetchDuplicates } = useQuery({
+    queryKey: ['duplicate-printers'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_duplicate_printers_with_3d_printer_suffix' as any);
+      
+      if (error) {
+        // Fallback to manual query if RPC doesn't exist
+        const { data: allPrinters, error: fetchError } = await supabase
+          .from('printers')
+          .select('id, model_name, brand_id')
+          .like('model_name', '% 3D Printer');
+
+        if (fetchError) throw fetchError;
+
+        const duplicates = [];
+        for (const printer of allPrinters || []) {
+          const baseModelName = printer.model_name.replace(' 3D Printer', '');
+          const { data: matchingPrinters, error: matchError } = await supabase
+            .from('printers')
+            .select('id, model_name')
+            .eq('brand_id', printer.brand_id)
+            .eq('model_name', baseModelName);
+
+          if (!matchError && matchingPrinters && matchingPrinters.length > 0) {
+            duplicates.push({
+              id_with_suffix: printer.id,
+              name_with_suffix: printer.model_name,
+              id_without_suffix: matchingPrinters[0].id,
+              name_without_suffix: matchingPrinters[0].model_name,
+            });
+          }
+        }
+        return duplicates;
+      }
+
+      return data || [];
+    }
+  });
+
+  const removeDuplicatesMutation = useMutation({
+    mutationFn: async (printerIds: string[]) => {
+      const { error } = await supabase
+        .from('printers')
+        .delete()
+        .in('id', printerIds);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, printerIds) => {
+      refetchDuplicates();
+      toast({ 
+        title: "Duplicates removed", 
+        description: `${printerIds.length} duplicate printer(s) have been deleted.` 
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to remove duplicates",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleRemoveAllDuplicates = async () => {
+    if (!duplicatePrinters || duplicatePrinters.length === 0) return;
+
+    setCleaningDuplicates(true);
+    try {
+      const idsToRemove = duplicatePrinters.map((dup: any) => dup.id_with_suffix);
+      await removeDuplicatesMutation.mutateAsync(idsToRemove);
+    } finally {
+      setCleaningDuplicates(false);
+    }
+  };
+
   const updateUrlMutation = useMutation({
     mutationFn: async ({ printerId, newUrl }: { printerId: string; newUrl: string }) => {
       const { error } = await supabase
@@ -794,6 +871,60 @@ export default function AdminPrinters() {
                     <>
                       <RefreshCw className="h-4 w-4" />
                       Re-scrape All Printers
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Separator />
+
+            {/* Duplicate Cleanup Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" />
+                  Remove Duplicate Printers
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Find and remove duplicate printers where one version has "3D Printer" suffix. The system will keep the cleaner name version.
+                  </p>
+                </div>
+
+                {duplicatePrinters && duplicatePrinters.length > 0 && (
+                  <div className="p-4 bg-muted rounded-lg space-y-2">
+                    <div className="text-sm font-medium">Found {duplicatePrinters.length} duplicate(s):</div>
+                    <div className="space-y-1 text-sm">
+                      {duplicatePrinters.map((dup: any) => (
+                        <div key={dup.id_with_suffix} className="flex items-center gap-2">
+                          <span className="text-destructive line-through">{dup.name_with_suffix}</span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-green-600">{dup.name_without_suffix}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleRemoveAllDuplicates}
+                  disabled={!duplicatePrinters || duplicatePrinters.length === 0 || cleaningDuplicates}
+                  className="w-full gap-2"
+                  size="lg"
+                  variant={duplicatePrinters && duplicatePrinters.length > 0 ? "destructive" : "outline"}
+                >
+                  {cleaningDuplicates ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Removing Duplicates...
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-4 w-4" />
+                      Remove All Duplicates ({duplicatePrinters?.length || 0})
                     </>
                   )}
                 </Button>
