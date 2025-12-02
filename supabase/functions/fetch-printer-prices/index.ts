@@ -228,7 +228,7 @@ Deno.serve(async (req) => {
     // Get printers without prices
     let query = supabase
       .from('printers')
-      .select('id, model_name, official_product_url, printer_brands!brand_id(brand)')
+      .select('id, model_name, official_product_url, amazon_url_us, amazon_url_ca, amazon_url_uk, printer_brands!brand_id(brand)')
       .eq('status', 'active')
       .not('official_product_url', 'is', null);
 
@@ -326,6 +326,41 @@ Deno.serve(async (req) => {
 
         console.log('Extracted prices:', prices);
 
+        // If no prices found, try Amazon as fallback
+        if (!prices.msrp_usd && !prices.current_price_usd_store) {
+          console.log('No prices from official store, trying Amazon fallback...');
+          
+          // Try Amazon URLs in order of preference: US, CA, UK
+          const amazonUrls = [
+            printer.amazon_url_us,
+            printer.amazon_url_ca,
+            printer.amazon_url_uk
+          ].filter(url => url && url.startsWith('http'));
+          
+          for (const amazonUrl of amazonUrls) {
+            try {
+              console.log(`Trying Amazon URL: ${amazonUrl}`);
+              const amazonResult = await firecrawlScrape(amazonUrl, firecrawlApiKey);
+              
+              if (amazonResult?.data?.markdown) {
+                const amazonPrices = extractPrices(amazonResult.data.markdown);
+                
+                if (amazonPrices.current_price_usd_store) {
+                  console.log(`✓ Found Amazon price: $${amazonPrices.current_price_usd_store}`);
+                  // Use Amazon price as current store price
+                  prices.current_price_usd_store = amazonPrices.current_price_usd_store;
+                  if (amazonPrices.msrp_usd) {
+                    prices.msrp_usd = amazonPrices.msrp_usd;
+                  }
+                  break;
+                }
+              }
+            } catch (amazonError) {
+              console.log(`Amazon scrape failed for ${amazonUrl}:`, amazonError);
+            }
+          }
+        }
+
         if (prices.msrp_usd || prices.current_price_usd_store) {
           // Update the printer with found prices
           const updateData: any = {};
@@ -357,7 +392,7 @@ Deno.serve(async (req) => {
             });
           }
         } else {
-          console.log('No prices found in content');
+          console.log('No prices found in official store or Amazon');
           failCount++;
           results.push({
             printer_id: printer.id,
