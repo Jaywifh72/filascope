@@ -1,6 +1,7 @@
 // Brand logo mapping - maps vendor names to their logo paths
 // All images optimized to 128x128px WebP format for performance
 export const brandLogos: Record<string, string> = {
+  // Filament brands
   "Bambu Lab": "/images/brands/bambu-lab.webp",
   "Overture": "/images/brands/overture.webp",
   "Overture 3D": "/images/brands/overture.webp",
@@ -25,11 +26,28 @@ export const brandLogos: Record<string, string> = {
   "MatterHackers": "/images/brands/matterhackers.webp",
   "Printed Solid": "/images/brands/printed-solid.webp",
   "Atomic Filament": "/images/brands/atomic.webp",
-  "QIDI": "/images/brands/qidi.webp",
   "Phaetus": "/images/brands/phaetus.webp",
   "Gizmo Dorks": "/images/brands/gizmo-dorks.webp",
   "GizmoDorks": "/images/brands/gizmo-dorks.webp",
   "Polymaker": "/images/brands/polymaker.webp",
+  
+  // Printer brands
+  "AnkerMake": "/images/brands/ankermake.png",
+  "Anycubic": "/images/brands/anycubic.png",
+  "Creality": "/images/brands/creality.png",
+  "Elegoo": "/images/brands/elegoo.png",
+  "FlashForge": "/images/brands/flashforge.png",
+  "FLSUN": "/images/brands/flsun.png",
+  "LDO Motors": "/images/brands/ldo-motors.png",
+  "Markforged": "/images/brands/markforged.png",
+  "Prusa Research": "/images/brands/prusa-research.png",
+  "QIDI Tech": "/images/brands/qidi.webp",
+  "QIDI": "/images/brands/qidi.webp",
+  "Raise3D": "/images/brands/raise3d.png",
+  "Snapmaker": "/images/brands/snapmaker.png",
+  "Sovol": "/images/brands/sovol.png",
+  "UltiMaker": "/images/brands/ultimaker.webp",
+  "Voron Design": "/images/brands/voron-design.png",
 };
 
 // Helper function to get brand logo with fallback
