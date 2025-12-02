@@ -105,6 +105,18 @@ Deno.serve(async (req) => {
       throw new Error('Printer has no official_product_url to scrape');
     }
 
+    // Validate URL is properly formatted
+    try {
+      new URL(printer.official_product_url);
+    } catch {
+      throw new Error(`Invalid URL format: ${printer.official_product_url}`);
+    }
+
+    // Check if URL is just a word or invalid value
+    if (!printer.official_product_url.startsWith('http://') && !printer.official_product_url.startsWith('https://')) {
+      throw new Error(`URL must start with http:// or https://: ${printer.official_product_url}`);
+    }
+
     // Update status to in_progress
     await supabase
       .from('printers')

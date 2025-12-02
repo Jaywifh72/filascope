@@ -396,20 +396,55 @@ export default function AdminPrinters() {
       setMassRescrapeStats(null);
 
       // Fetch all printers with official_product_url
-      const { data: printersToScrape, error: fetchError } = await supabase
+      const { data: allPrinters, error: fetchError } = await supabase
         .from('printers')
         .select('id, model_name, official_product_url')
         .not('official_product_url', 'is', null);
 
       if (fetchError) throw fetchError;
 
-      if (!printersToScrape || printersToScrape.length === 0) {
+      if (!allPrinters || allPrinters.length === 0) {
         toast({
           title: "No printers to scrape",
           description: "No printers found with product URLs",
           variant: "destructive",
         });
         return;
+      }
+
+      // Filter for valid URLs only
+      const printersToScrape = allPrinters.filter(printer => {
+        const url = printer.official_product_url;
+        if (!url) return false;
+        
+        // Check if URL starts with http:// or https://
+        if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+        
+        // Try to parse as URL
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          console.log(`Skipping printer ${printer.model_name} - invalid URL: ${url}`);
+          return false;
+        }
+      });
+
+      if (printersToScrape.length === 0) {
+        toast({
+          title: "No valid URLs found",
+          description: "All printers have invalid product URLs",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const skippedCount = allPrinters.length - printersToScrape.length;
+      if (skippedCount > 0) {
+        toast({
+          title: "Invalid URLs detected",
+          description: `Skipping ${skippedCount} printer(s) with invalid URLs`,
+        });
       }
 
       setMassRescrapeStats({ total: printersToScrape.length, completed: 0 });
