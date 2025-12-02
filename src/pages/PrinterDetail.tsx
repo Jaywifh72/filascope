@@ -864,19 +864,19 @@ const PrinterDetail = () => {
                           <Blend className="h-5 w-5 text-primary" />
                           Multi-Material Systems ({accessories.filter(a => a.accessory_type === 'ams_mmu').length})
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {accessories
                             .filter(a => a.accessory_type === 'ams_mmu')
                             .map((acc) => {
                               const specs = acc.specs as any;
                               return (
                               <Card key={acc.id} className="hover:shadow-lg transition-shadow">
-                                <CardContent className="p-4 space-y-2">
-                                  <h5 className="font-semibold text-sm capitalize">{acc.name}</h5>
-                                  <div className="space-y-1 text-xs">
+                                <CardContent className="p-4 space-y-3">
+                                  <h5 className="font-semibold capitalize">{acc.name}</h5>
+                                  <div className="space-y-2 text-sm">
                                     {specs?.spool_capacity && (
                                       <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Capacity:</span>
+                                        <span className="text-muted-foreground">Spool Capacity:</span>
                                         <span className="font-medium">{specs.spool_capacity} spools</span>
                                       </div>
                                     )}
@@ -884,6 +884,24 @@ const PrinterDetail = () => {
                                       <div className="flex justify-between">
                                         <span className="text-muted-foreground">Heated:</span>
                                         <span className="font-medium">{specs.heated ? 'Yes' : 'No'}</span>
+                                      </div>
+                                    )}
+                                    {specs?.max_temp_c && (
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Max Temperature:</span>
+                                        <span className="font-medium">{specs.max_temp_c}°C</span>
+                                      </div>
+                                    )}
+                                    {specs?.power_requirements && (
+                                      <div className="flex flex-col gap-1">
+                                        <span className="text-muted-foreground">Power:</span>
+                                        <span className="font-medium text-xs bg-muted/50 p-2 rounded">{specs.power_requirements}</span>
+                                      </div>
+                                    )}
+                                    {specs?.filament_drying !== undefined && (
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Filament Drying:</span>
+                                        <span className="font-medium">{specs.filament_drying ? 'Yes' : 'No'}</span>
                                       </div>
                                     )}
                                     {acc.price && (
