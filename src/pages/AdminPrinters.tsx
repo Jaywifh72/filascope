@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
 
 /**
  * Admin page for importing printer data from CSV
@@ -45,6 +46,28 @@ export default function AdminPrinters() {
   const [cleaningDuplicates, setCleaningDuplicates] = useState(false);
   const [fetchingPrices, setFetchingPrices] = useState(false);
   const [priceStats, setPriceStats] = useState<{ total: number; successful: number; failed: number } | null>(null);
+
+  // Query to count printers without price data
+  const { data: priceProgressData } = useQuery({
+    queryKey: ["printers-price-progress"],
+    queryFn: async () => {
+      const { count: withoutPrice } = await supabase
+        .from("printers")
+        .select("*", { count: "exact", head: true })
+        .or('current_price_usd_store.is.null,current_price_usd_amazon.is.null');
+      
+      const { count: total } = await supabase
+        .from("printers")
+        .select("*", { count: "exact", head: true });
+      
+      return {
+        withoutPrice: withoutPrice || 0,
+        total: total || 0,
+        withPrice: (total || 0) - (withoutPrice || 0),
+      };
+    },
+    refetchInterval: fetchingPrices ? 3000 : false, // Refresh every 3 seconds while fetching
+  });
 
   // Fetch printer brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -550,6 +573,7 @@ export default function AdminPrinters() {
           description: `Processed ${data.total_processed} printers: ${data.successful} successful, ${data.failed} failed. Run again to process more.`,
         });
         queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
+        queryClient.invalidateQueries({ queryKey: ["printers-price-progress"] });
       } else {
         toast({
           title: "Batch completed",
@@ -930,6 +954,24 @@ export default function AdminPrinters() {
                     Automatically scrape current prices from official product pages for printers without price data. This will update MSRP and store prices where available.
                   </p>
                 </div>
+
+                {priceProgressData && priceProgressData.withoutPrice > 0 && (
+                  <div className="space-y-2 p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">Printers with prices:</span>
+                      <span className="text-muted-foreground">
+                        {priceProgressData.withPrice} / {priceProgressData.total}
+                      </span>
+                    </div>
+                    <Progress 
+                      value={(priceProgressData.withPrice / priceProgressData.total) * 100} 
+                      className="h-2"
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      {priceProgressData.withoutPrice} printers still need pricing data
+                    </div>
+                  </div>
+                )}
 
                 {priceStats && (
                   <Alert>
