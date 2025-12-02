@@ -304,7 +304,7 @@ export default function Printers() {
                 )}
 
                 {/* Header */}
-                <div className="space-y-2 pr-16 pt-12">
+                <div className="space-y-2 pr-16 pt-36">
                   <h3 className="text-xl font-bold">
                     {printer.model_name}
                   </h3>
