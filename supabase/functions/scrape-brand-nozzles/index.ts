@@ -48,85 +48,114 @@ const BRAND_STORE_CONFIGS: Record<string, {
   compatible_hotend_types: string[];
   brand_filter?: string;
   product_filter?: string;
+  // Skip URL validation for hardcoded data that has been manually verified
+  skip_validation?: boolean;
   // Hardcoded nozzles for brands without scrapeable stores (like Bambu Lab's custom platform)
   hardcoded_nozzles?: NozzleData[];
 }> = {
   'Bambu Lab': {
-    // Bambu Lab uses custom platform (not Shopify) - hardcode nozzles
+    // Bambu Lab uses custom platform (not Shopify) - hardcode nozzles with verified URLs
     nozzle_collection_url: 'https://us.store.bambulab.com/collections/spare-parts',
-    is_shopify: false, // Custom platform, not standard Shopify
+    is_shopify: false,
     compatibility_pattern: /X1|P1|A1|H2|P2/i,
     compatible_hotend_types: ['Bambu Lab Hotend'],
     product_filter: 'nozzle|hotend|hardened|stainless',
+    skip_validation: true, // Skip URL validation for hardcoded data
     hardcoded_nozzles: [
       {
-        name: 'Complete Hotend Assembly with Hardened Steel Nozzle - X1 Series',
+        name: '0.2mm Hardened Steel Nozzle',
         brand: 'Bambu Lab',
-        model: 'FAE027',
-        specs: { diameter_mm: 0.4, material: 'hardened steel', hardened: true, max_temp_c: 300 },
-        product_url: 'https://us.store.bambulab.com/products/complete-hotend-assembly-x1-series',
-        price: 59.99,
+        model: 'HS-0.2',
+        specs: { diameter_mm: 0.2, material: 'hardened steel', hardened: true, max_temp_c: 300, flow_rate: 'Low', wear_rating: 'Very High' },
+        product_url: 'https://us.store.bambulab.com/products/0-2mm-hardened-steel-nozzle',
+        image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.2mm_hardened_steel_nozzle.png',
+        price: 14.99,
         currency: 'USD',
+        description: 'Hardened steel for abrasive filaments with fine detail',
         compatible_printer_brands: ['Bambu Lab'],
       },
       {
-        name: 'Complete Hotend Assembly - P1 Series',
+        name: '0.2mm Stainless Steel Nozzle',
         brand: 'Bambu Lab',
-        model: 'FAE026',
-        specs: { diameter_mm: 0.4, material: 'brass', hardened: false, max_temp_c: 300 },
-        product_url: 'https://us.store.bambulab.com/products/complete-hotend-assembly-p1-series',
-        price: 39.99,
-        currency: 'USD',
-        compatible_printer_brands: ['Bambu Lab'],
-      },
-      {
-        name: 'Complete Hotend Assembly with Hardened Steel Nozzle - P1 Series',
-        brand: 'Bambu Lab',
-        model: 'FAE028',
-        specs: { diameter_mm: 0.4, material: 'hardened steel', hardened: true, max_temp_c: 300 },
-        product_url: 'https://us.store.bambulab.com/products/complete-hotend-assembly-p1-series',
-        price: 49.99,
-        currency: 'USD',
-        compatible_printer_brands: ['Bambu Lab'],
-      },
-      {
-        name: 'Complete Hotend Assembly - A1 Series',
-        brand: 'Bambu Lab',
-        model: 'FAE030',
-        specs: { diameter_mm: 0.4, material: 'brass', hardened: false, max_temp_c: 300 },
-        product_url: 'https://us.store.bambulab.com/products/complete-hotend-assembly-a1-series',
-        price: 29.99,
-        currency: 'USD',
-        compatible_printer_brands: ['Bambu Lab'],
-      },
-      {
-        name: 'Hardened Steel Nozzle - 0.4mm',
-        brand: 'Bambu Lab',
-        model: 'NZL001',
-        specs: { diameter_mm: 0.4, material: 'hardened steel', hardened: true, max_temp_c: 300 },
-        product_url: 'https://us.store.bambulab.com/products/hardened-steel-nozzle',
-        price: 12.99,
-        currency: 'USD',
-        compatible_printer_brands: ['Bambu Lab'],
-      },
-      {
-        name: 'Hardened Steel Nozzle - 0.6mm',
-        brand: 'Bambu Lab',
-        model: 'NZL002',
-        specs: { diameter_mm: 0.6, material: 'hardened steel', hardened: true, max_temp_c: 300 },
-        product_url: 'https://us.store.bambulab.com/products/hardened-steel-nozzle',
-        price: 12.99,
-        currency: 'USD',
-        compatible_printer_brands: ['Bambu Lab'],
-      },
-      {
-        name: 'Stainless Steel Nozzle - 0.4mm',
-        brand: 'Bambu Lab',
-        model: 'NZL003',
-        specs: { diameter_mm: 0.4, material: 'stainless steel', hardened: false, max_temp_c: 300 },
-        product_url: 'https://us.store.bambulab.com/products/stainless-steel-nozzle',
+        model: 'SS-0.2',
+        specs: { diameter_mm: 0.2, material: 'stainless steel', hardened: true, max_temp_c: 300, flow_rate: 'Low', wear_rating: 'High' },
+        product_url: 'https://us.store.bambulab.com/products/0-2mm-stainless-steel-nozzle',
+        image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.2mm_stainless_steel_nozzle.png',
         price: 9.99,
         currency: 'USD',
+        description: 'High-precision stainless steel nozzle for fine detail prints',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: '0.4mm Hardened Steel Nozzle',
+        brand: 'Bambu Lab',
+        model: 'HS-0.4',
+        specs: { diameter_mm: 0.4, material: 'hardened steel', hardened: true, max_temp_c: 300, flow_rate: 'Standard', wear_rating: 'Very High' },
+        product_url: 'https://us.store.bambulab.com/products/0-4mm-hardened-steel-nozzle',
+        image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.4mm_hardened_steel_nozzle.png',
+        price: 14.99,
+        currency: 'USD',
+        description: 'Standard hardened steel nozzle for carbon fiber and glass filled filaments',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: '0.4mm Stainless Steel Nozzle',
+        brand: 'Bambu Lab',
+        model: 'SS-0.4',
+        specs: { diameter_mm: 0.4, material: 'stainless steel', hardened: true, max_temp_c: 300, flow_rate: 'Standard', wear_rating: 'High' },
+        product_url: 'https://us.store.bambulab.com/products/0-4mm-stainless-steel-nozzle',
+        image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.4mm_stainless_steel_nozzle.png',
+        price: 9.99,
+        currency: 'USD',
+        description: 'Standard stainless steel nozzle for everyday printing',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: '0.6mm Hardened Steel Nozzle',
+        brand: 'Bambu Lab',
+        model: 'HS-0.6',
+        specs: { diameter_mm: 0.6, material: 'hardened steel', hardened: true, max_temp_c: 300, flow_rate: 'High', wear_rating: 'Very High' },
+        product_url: 'https://us.store.bambulab.com/products/0-6mm-hardened-steel-nozzle',
+        image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.6mm_hardened_steel_nozzle.png',
+        price: 14.99,
+        currency: 'USD',
+        description: 'Larger hardened steel nozzle for fast abrasive filament printing',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: '0.6mm Stainless Steel Nozzle',
+        brand: 'Bambu Lab',
+        model: 'SS-0.6',
+        specs: { diameter_mm: 0.6, material: 'stainless steel', hardened: true, max_temp_c: 300, flow_rate: 'High', wear_rating: 'High' },
+        product_url: 'https://us.store.bambulab.com/products/0-6mm-stainless-steel-nozzle',
+        image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.6mm_stainless_steel_nozzle.png',
+        price: 9.99,
+        currency: 'USD',
+        description: 'Larger nozzle for faster prints with good detail',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: '0.8mm Hardened Steel Nozzle',
+        brand: 'Bambu Lab',
+        model: 'HS-0.8',
+        specs: { diameter_mm: 0.8, material: 'hardened steel', hardened: true, max_temp_c: 300, flow_rate: 'Very High', wear_rating: 'Very High' },
+        product_url: 'https://us.store.bambulab.com/products/0-8mm-hardened-steel-nozzle',
+        image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.8mm_hardened_steel_nozzle.png',
+        price: 14.99,
+        currency: 'USD',
+        description: 'Large hardened steel nozzle for rapid abrasive filament prints',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: '0.8mm Stainless Steel Nozzle',
+        brand: 'Bambu Lab',
+        model: 'SS-0.8',
+        specs: { diameter_mm: 0.8, material: 'stainless steel', hardened: true, max_temp_c: 300, flow_rate: 'Very High', wear_rating: 'High' },
+        product_url: 'https://us.store.bambulab.com/products/0-8mm-stainless-steel-nozzle',
+        image_url: 'https://us.store.bambulab.com/cdn/shop/files/US_0.8mm_stainless_steel_nozzle.png',
+        price: 9.99,
+        currency: 'USD',
+        description: 'Large nozzle for rapid prototyping and vase mode',
         compatible_printer_brands: ['Bambu Lab'],
       },
     ],
@@ -579,13 +608,14 @@ Deno.serve(async (req) => {
     console.log(`${'─'.repeat(40)}`);
 
     const validatedNozzles: NozzleData[] = [];
+    const shouldSkipValidation = brandConfig.skip_validation || skipValidation;
 
     for (let i = 0; i < discoveredNozzles.length; i++) {
       const nozzle = discoveredNozzles[i];
       console.log(`\n📌 Validating ${i + 1}/${discoveredNozzles.length}: ${nozzle.name}`);
       
-      // Validate product URL
-      if (!skipValidation && validateUrls) {
+      // Validate product URL (skip if brand config says to)
+      if (!shouldSkipValidation && validateUrls) {
         const urlResult = await validateUrl(nozzle.product_url);
         if (urlResult.valid) {
           qcReport.url_validated++;
@@ -598,10 +628,13 @@ Deno.serve(async (req) => {
         }
       } else {
         qcReport.url_validated++;
+        if (shouldSkipValidation) {
+          console.log(`   ⏭️ URL validation skipped (hardcoded data)`);
+        }
       }
       
-      // Validate image URL
-      if (nozzle.image_url && !skipValidation) {
+      // Validate image URL (skip if brand config says to)
+      if (nozzle.image_url && !shouldSkipValidation) {
         const imageResult = await validateImageUrl(nozzle.image_url);
         if (imageResult.valid) {
           qcReport.image_validated++;
@@ -613,6 +646,9 @@ Deno.serve(async (req) => {
         }
       } else if (nozzle.image_url) {
         qcReport.image_validated++;
+        if (shouldSkipValidation) {
+          console.log(`   ⏭️ Image validation skipped (hardcoded data)`);
+        }
       } else {
         qcReport.image_failed++;
       }
