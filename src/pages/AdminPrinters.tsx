@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles } from "lucide-react";
+import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles, Cpu } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -1241,7 +1241,103 @@ export default function AdminPrinters() {
 
             <Separator />
 
-            {/* Mass Re-scrape Section */}
+            {/* Brand Nozzle Scraping Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Cpu className="h-5 w-5" />
+                  Scrape Brand Nozzles
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Scrape nozzle data (specs, pricing, compatibility) from brand websites and automatically link compatible nozzles to all printers of that brand.
+                  </p>
+                  <p className="text-xs text-muted-foreground italic">
+                    Supported brands: Bambu Lab, Prusa Research, Creality, Anycubic, Voron Design
+                  </p>
+                </div>
+
+                {brands && brands.length > 0 && (
+                  <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a brand..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {brands
+                        .filter(b => ['Bambu Lab', 'Prusa Research', 'Creality', 'Anycubic', 'Voron Design'].includes(b.brand))
+                        .map((brand) => (
+                          <SelectItem key={brand.id} value={brand.id}>
+                            {brand.brand}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                <Button
+                  onClick={async () => {
+                    if (!selectedBrand) {
+                      toast({
+                        title: "No brand selected",
+                        description: "Please select a brand first",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+
+                    const brand = brands?.find(b => b.id === selectedBrand);
+                    if (!brand) return;
+
+                    try {
+                      setDiscovering(true);
+                      const { data, error } = await supabase.functions.invoke('scrape-brand-nozzles', {
+                        body: { 
+                          brandId: selectedBrand,
+                          brandName: brand.brand
+                        },
+                      });
+
+                      if (error) throw error;
+
+                      toast({
+                        title: "Nozzle scraping complete",
+                        description: `Found ${data.nozzles_found} nozzles, created ${data.accessories_created} accessory records across ${data.printers_updated} printers`,
+                      });
+
+                      queryClient.invalidateQueries({ queryKey: ["brands"] });
+                    } catch (error: any) {
+                      console.error('Nozzle scrape error:', error);
+                      toast({
+                        title: "Scraping failed",
+                        description: error.message || "Failed to scrape nozzles",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setDiscovering(false);
+                    }
+                  }}
+                  disabled={!selectedBrand || discovering}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  {discovering ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Scraping Nozzles...
+                    </>
+                  ) : (
+                    <>
+                      <Cpu className="h-4 w-4" />
+                      Scrape Nozzles for Selected Brand
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Separator />
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
