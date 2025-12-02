@@ -65,7 +65,7 @@ export default function AdminPrinters() {
       console.log('🔄 Fetching all printers for price count...');
       const { data, error } = await supabase
         .from("printers")
-        .select("id, msrp_usd, current_price_usd_store, current_price_usd_amazon");
+        .select("id, current_price_usd_store");
       
       if (error) {
         console.error('❌ Error fetching printers for count:', error);
@@ -80,16 +80,12 @@ export default function AdminPrinters() {
     refetchInterval: fetchingPrices || aiSearching ? 2000 : false,
   });
 
-  // Calculate price coverage from the actual printer data
+  // Calculate price coverage based on STORE PRICES (priority)
   const priceProgressData = allPrinters ? (() => {
-    const withoutPrice = allPrinters.filter(p => 
-      !p.msrp_usd && !p.current_price_usd_store && !p.current_price_usd_amazon
-    );
-    const withPrice = allPrinters.filter(p => 
-      p.msrp_usd || p.current_price_usd_store || p.current_price_usd_amazon
-    );
+    const withoutPrice = allPrinters.filter(p => !p.current_price_usd_store);
+    const withPrice = allPrinters.filter(p => p.current_price_usd_store);
     
-    console.log('📊 Price coverage:', {
+    console.log('📊 Store price coverage:', {
       total: allPrinters.length,
       withPrice: withPrice.length,
       withoutPrice: withoutPrice.length,
@@ -1050,12 +1046,15 @@ export default function AdminPrinters() {
                   <p className="text-sm text-muted-foreground">
                     Automatically scrape current prices from official product pages for printers without price data. This will update MSRP and store prices where available.
                   </p>
+                  <p className="text-xs text-muted-foreground italic">
+                    Note: Store prices are the primary price source. AI MSRP search only runs on printers missing store prices.
+                  </p>
                 </div>
 
                 {priceProgressData && priceProgressData.withoutPrice > 0 && (
                   <div className="space-y-2 p-4 bg-muted rounded-lg">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">Printers with prices:</span>
+                      <span className="font-medium">Printers with store prices:</span>
                       <span className="text-muted-foreground">
                         {priceProgressData.withPrice} / {priceProgressData.total}
                       </span>
@@ -1065,7 +1064,7 @@ export default function AdminPrinters() {
                       className="h-2"
                     />
                     <div className="text-xs text-muted-foreground">
-                      {priceProgressData.withoutPrice} printers still need pricing data
+                      {priceProgressData.withoutPrice} printers still need store pricing data
                     </div>
                   </div>
                 )}
