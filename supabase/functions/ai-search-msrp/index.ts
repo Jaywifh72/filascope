@@ -22,13 +22,11 @@ serve(async (req) => {
     
     console.log(`Starting AI MSRP search for ${printerIds?.length || 'all'} printers`);
 
-    // Fetch printers without price data
+    // Fetch printers WITHOUT store prices (store price is the priority)
     let query = supabase
       .from('printers')
       .select('id, printer_id, brand_id, model_name, official_product_url, printer_brands(brand)')
-      .is('msrp_usd', null)
       .is('current_price_usd_store', null)
-      .is('current_price_usd_amazon', null)
       .limit(5); // Process 5 at a time to avoid timeouts
 
     if (printerIds && printerIds.length > 0) {
