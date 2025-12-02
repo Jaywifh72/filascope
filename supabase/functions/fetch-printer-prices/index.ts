@@ -10,60 +10,66 @@ function extractPrices(markdown: string): {
   msrp_usd: number | null;
   current_price_usd_store: number | null;
 } {
-  const lines = markdown.split('\n');
   let msrp_usd: number | null = null;
   let current_price_usd_store: number | null = null;
 
-  // Pattern 1: Standard USD price ($XXX.XX or $X,XXX.XX)
-  const usdPriceRegex = /\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/g;
+  // Extract ALL USD prices from the entire markdown (not just specific lines)
+  const usdPriceRegex = /\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s*(?:USD)?/gi;
+  const allMatches = markdown.matchAll(usdPriceRegex);
   const allPrices: number[] = [];
   
-  for (const line of lines) {
-    const matches = line.matchAll(usdPriceRegex);
-    for (const match of matches) {
-      const price = parseFloat(match[1].replace(/,/g, ''));
-      if (price >= 50 && price <= 50000) { // Reasonable printer price range
-        allPrices.push(price);
-      }
+  for (const match of allMatches) {
+    const price = parseFloat(match[1].replace(/,/g, ''));
+    if (price >= 100 && price <= 50000) { // Reasonable printer price range
+      allPrices.push(price);
     }
   }
 
-  // Pattern 2: Look for MSRP/RRP specifically
-  for (const line of lines) {
-    const lowerLine = line.toLowerCase();
-    if (lowerLine.includes('msrp') || lowerLine.includes('rrp') || lowerLine.includes('retail')) {
-      const match = line.match(/\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/);
-      if (match) {
-        msrp_usd = parseFloat(match[1].replace(/,/g, ''));
-      }
+  console.log(`Found ${allPrices.length} prices in range: ${allPrices.slice(0, 5).join(', ')}`);
+
+  if (allPrices.length === 0) {
+    return { msrp_usd: null, current_price_usd_store: null };
+  }
+
+  // Look for explicit MSRP/RRP mentions
+  const msrpMatch = markdown.match(/(?:MSRP|RRP|Retail\s+Price)[:\s]*\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i);
+  if (msrpMatch) {
+    msrp_usd = parseFloat(msrpMatch[1].replace(/,/g, ''));
+  }
+
+  // Look for "from" prices (usually base/starting prices)
+  const fromPriceMatch = markdown.match(/(?:from|starting\s+at)[:\s]*\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i);
+  if (fromPriceMatch) {
+    const fromPrice = parseFloat(fromPriceMatch[1].replace(/,/g, ''));
+    if (!current_price_usd_store) {
+      current_price_usd_store = fromPrice;
     }
   }
 
-  // Pattern 3: Look for price with "price:", "cost:", etc.
-  for (const line of lines) {
-    const lowerLine = line.toLowerCase();
-    if ((lowerLine.includes('price:') || lowerLine.includes('cost:')) && 
-        !lowerLine.includes('starting at')) {
-      const match = line.match(/\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/);
-      if (match) {
-        current_price_usd_store = parseFloat(match[1].replace(/,/g, ''));
+  // Strategy: Use the first significant price we find as the current store price
+  if (!current_price_usd_store && allPrices.length > 0) {
+    // Use the most common price (or first if all unique)
+    const priceFrequency = new Map<number, number>();
+    for (const price of allPrices) {
+      priceFrequency.set(price, (priceFrequency.get(price) || 0) + 1);
+    }
+    
+    // Get the price that appears most frequently
+    let maxCount = 0;
+    let mostCommonPrice = allPrices[0];
+    for (const [price, count] of priceFrequency.entries()) {
+      if (count > maxCount) {
+        maxCount = count;
+        mostCommonPrice = price;
       }
     }
+    
+    current_price_usd_store = mostCommonPrice;
   }
 
-  // If we found prices but couldn't distinguish MSRP from current, use the first found price
-  if (allPrices.length > 0) {
-    if (!msrp_usd && !current_price_usd_store) {
-      current_price_usd_store = allPrices[0];
-    } else if (!current_price_usd_store && msrp_usd) {
-      // If we have MSRP but no current price, look for a different price
-      const otherPrices = allPrices.filter(p => p !== msrp_usd);
-      if (otherPrices.length > 0) {
-        current_price_usd_store = otherPrices[0];
-      } else {
-        current_price_usd_store = msrp_usd;
-      }
-    }
+  // If we found MSRP and it's the same as current price, clear MSRP
+  if (msrp_usd && current_price_usd_store && msrp_usd === current_price_usd_store) {
+    msrp_usd = null;
   }
 
   return { msrp_usd, current_price_usd_store };
@@ -159,6 +165,19 @@ Deno.serve(async (req) => {
       try {
         const brand = (printer as any).printer_brands?.brand || 'Unknown';
         console.log(`\n=== Processing: ${brand} ${printer.model_name} ===`);
+
+        // Skip DIY kit brands (Voron, etc.)
+        if (brand.toLowerCase().includes('voron') || 
+            brand.toLowerCase().includes('ldo motors')) {
+          console.log(`Skipping - ${brand} is a DIY kit brand with no official pricing`);
+          results.push({
+            printer_id: printer.id,
+            model_name: printer.model_name,
+            success: false,
+            error: 'DIY kit - no official pricing'
+          });
+          continue;
+        }
 
         if (!printer.official_product_url || 
             !printer.official_product_url.startsWith('http')) {
