@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign } from "lucide-react";
+import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -46,6 +46,8 @@ export default function AdminPrinters() {
   const [cleaningDuplicates, setCleaningDuplicates] = useState(false);
   const [fetchingPrices, setFetchingPrices] = useState(false);
   const [priceStats, setPriceStats] = useState<{ total: number; successful: number; failed: number } | null>(null);
+  const [aiSearching, setAiSearching] = useState(false);
+  const [aiSearchStats, setAiSearchStats] = useState<{ total: number; successful: number; failed: number } | null>(null);
 
   // Query to count printers without price data
   const { data: priceProgressData } = useQuery({
@@ -66,7 +68,7 @@ export default function AdminPrinters() {
         withPrice: (total || 0) - (withoutPrice || 0),
       };
     },
-    refetchInterval: fetchingPrices ? 3000 : false, // Refresh every 3 seconds while fetching
+    refetchInterval: fetchingPrices || aiSearching ? 3000 : false, // Refresh every 3 seconds while fetching
   });
 
   // Fetch printer brands
@@ -593,6 +595,55 @@ export default function AdminPrinters() {
     }
   };
 
+  const handleAiSearchMsrp = async () => {
+    try {
+      setAiSearching(true);
+      setAiSearchStats(null);
+
+      toast({
+        title: "AI searching for MSRP (batch mode)",
+        description: "Using AI to find MSRP for 5 printers at a time. Run multiple times to process all printers.",
+      });
+
+      // Call the ai-search-msrp edge function
+      const { data, error } = await supabase.functions.invoke('ai-search-msrp', {
+        body: {},
+      });
+
+      if (error) throw error;
+
+      setAiSearchStats({
+        total: data.total_processed || 0,
+        successful: data.successful || 0,
+        failed: data.failed || 0,
+      });
+
+      if (data.successful > 0) {
+        toast({
+          title: "AI search completed",
+          description: `Found MSRP for ${data.successful} out of ${data.total_processed} printers. Run again to process more.`,
+        });
+        queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
+        queryClient.invalidateQueries({ queryKey: ["printers-price-progress"] });
+      } else {
+        toast({
+          title: "AI search completed",
+          description: `Processed ${data.total_processed} printers but found no prices. Run again to continue.`,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("AI search error:", error);
+      toast({
+        title: "AI search failed",
+        description: error.message || "An error occurred during AI search",
+        variant: "destructive",
+      });
+    } finally {
+      setAiSearching(false);
+    }
+  };
+
   const handleMassRescrape = async () => {
     try {
       setMassRescraping(true);
@@ -989,9 +1040,45 @@ export default function AdminPrinters() {
                   </Alert>
                 )}
 
+                {aiSearchStats && (
+                  <Alert>
+                    <AlertDescription>
+                      <div className="space-y-1">
+                        <div className="font-semibold">AI MSRP Search Results:</div>
+                        <div className="text-sm">
+                          <span className="text-green-600">✓ {aiSearchStats.successful} successful</span>
+                          {aiSearchStats.failed > 0 && (
+                            <span className="text-destructive ml-3">✗ {aiSearchStats.failed} failed</span>
+                          )}
+                        </div>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <Button
+                  onClick={handleAiSearchMsrp}
+                  disabled={aiSearching || fetchingPrices}
+                  className="w-full gap-2"
+                  size="lg"
+                  variant="secondary"
+                >
+                  {aiSearching ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      AI Searching MSRP...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      AI Search MSRP
+                    </>
+                  )}
+                </Button>
+
                 <Button
                   onClick={handleFetchPrices}
-                  disabled={fetchingPrices}
+                  disabled={fetchingPrices || aiSearching}
                   className="w-full gap-2"
                   size="lg"
                   variant="default"
@@ -1004,7 +1091,7 @@ export default function AdminPrinters() {
                   ) : (
                     <>
                       <DollarSign className="h-4 w-4" />
-                      Fetch Prices for Printers
+                      Scrape Prices from Product Pages
                     </>
                   )}
                 </Button>
