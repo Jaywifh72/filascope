@@ -791,6 +791,79 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} Ratrig printer URLs after deduplication`);
+        } else if (brand.brand.toLowerCase() === 'snapmaker') {
+          // Snapmaker: Extract printers from Shopify collection page
+          console.log('Extracting Snapmaker printer models from product listing page');
+          
+          // Snapmaker uses product-item__title for product links
+          const linkPattern = /<a[^>]+href="(\/products\/[^"]+)"[^>]*class="[^"]*product-item__title[^"]*"[^>]*>([^<]+)<\/a>/gi;
+          const linkMatches = html.matchAll(linkPattern);
+          const productUrls = new Map<string, string>();
+          
+          for (const match of linkMatches) {
+            const path = match[1];
+            let title = match[2].trim();
+            
+            if (!title || title.length < 3) continue;
+            
+            // Skip obvious non-printer items
+            if (title.toLowerCase().includes('filament') ||
+                title.toLowerCase().includes('material') ||
+                title.toLowerCase().includes('enclosure') ||
+                title.toLowerCase().includes('accessory') ||
+                title.toLowerCase().includes('addon') ||
+                title.toLowerCase().includes('upgrade kit') && !title.toLowerCase().includes('snapmaker')) {
+              console.log(`Skipping non-printer item: ${title}`);
+              continue;
+            }
+            
+            const fullUrl = `${scrapeConfig.product_url_base}${path}`;
+            productUrls.set(fullUrl, title);
+            console.log(`Found potential Snapmaker product: ${title} at ${fullUrl}`);
+          }
+          
+          console.log(`Found ${productUrls.size} potential Snapmaker printer URLs from HTML parsing`);
+          
+          // Process and clean titles
+          for (const [url, title] of productUrls) {
+            let cleanTitle = title;
+            
+            // Remove status prefixes
+            cleanTitle = cleanTitle.replace(/^(Sale|Sold out|New|Pre-order)\s*/i, '').trim();
+            
+            // Remove brand name at start
+            cleanTitle = cleanTitle.replace(/^Snapmaker\s*/gi, '').trim();
+            
+            // Remove "3D Printer" and related suffixes
+            cleanTitle = cleanTitle.replace(/\s*3D\s*Printer\s*$/i, '').trim();
+            cleanTitle = cleanTitle.replace(/\s*-\s*3-in-1\s*3D\s*Printer\s*$/i, '').trim();
+            cleanTitle = cleanTitle.replace(/\s*Modular\s*3-in-1\s*3D\s*Printer\s*$/i, '').trim();
+            
+            // Remove pricing and marketing info
+            cleanTitle = cleanTitle.split(/[\$€£¥]/)[0].trim();
+            cleanTitle = cleanTitle.split(/from\s+[\$€£¥]/i)[0].trim();
+            
+            // Clean up extra characters and whitespace
+            cleanTitle = cleanTitle.replace(/[,\-–—]+$/, '').trim();
+            cleanTitle = cleanTitle.replace(/\s+/g, ' ').trim();
+            
+            // Skip if title is too short
+            if (cleanTitle.length < 2) {
+              console.log(`Skipping short title: ${cleanTitle}`);
+              continue;
+            }
+            
+            // Only include Snapmaker printer models (they typically have version numbers)
+            if (!cleanTitle.match(/\d/)) {
+              console.log(`Skipping item without model number: ${cleanTitle}`);
+              continue;
+            }
+            
+            modelMap.set(cleanTitle, url);
+            console.log(`Found Snapmaker printer: ${cleanTitle} at ${url}`);
+          }
+          
+          console.log(`Found ${modelMap.size} Snapmaker printer URLs after deduplication`);
         } else if (brand.brand.toLowerCase() === 'raise3d') {
           // Raise3D: Extract printers from product listing page
           console.log('Extracting Raise3D printer models from product listing page');
