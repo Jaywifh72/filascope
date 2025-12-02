@@ -1045,7 +1045,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Sprite extruder compatible', 'All-metal design']
         },
         product_url: 'https://store.creality.com/products/ender-3-v3-se-nozzle-kit',
-        image_url: 'https://img.staticdj.com/1f55c6a3dbc2cd1a21e11dcc7f4e91b9_1080x.jpg',
+        image_url: 'https://img.staticdj.com/b02bfb72e8d41d9ff4d02f00ba3bad9d_1080x.jpg',
         price: 8.99,
         currency: 'USD',
         description: 'Brass nozzle for Ender-3 V3 series printers',
@@ -1073,7 +1073,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Sprite extruder compatible', 'Fine detail', 'All-metal design']
         },
         product_url: 'https://store.creality.com/products/ender-3-v3-se-nozzle-kit',
-        image_url: 'https://img.staticdj.com/1f55c6a3dbc2cd1a21e11dcc7f4e91b9_1080x.jpg',
+        image_url: 'https://img.staticdj.com/b02bfb72e8d41d9ff4d02f00ba3bad9d_1080x.jpg',
         price: 8.99,
         currency: 'USD',
         description: 'Fine detail brass nozzle for Ender-3 V3 series',
@@ -1101,7 +1101,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Sprite extruder compatible', 'High flow', 'All-metal design']
         },
         product_url: 'https://store.creality.com/products/ender-3-v3-se-nozzle-kit',
-        image_url: 'https://img.staticdj.com/1f55c6a3dbc2cd1a21e11dcc7f4e91b9_1080x.jpg',
+        image_url: 'https://img.staticdj.com/b02bfb72e8d41d9ff4d02f00ba3bad9d_1080x.jpg',
         price: 8.99,
         currency: 'USD',
         description: 'Fast printing brass nozzle for Ender-3 V3 series',
