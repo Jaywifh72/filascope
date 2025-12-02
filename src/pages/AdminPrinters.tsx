@@ -527,8 +527,8 @@ export default function AdminPrinters() {
       setPriceStats(null);
 
       toast({
-        title: "Fetching prices",
-        description: "Scraping prices for printers without price data...",
+        title: "Fetching prices (batch mode)",
+        description: "Processing 5 printers at a time. Run multiple times to process all printers.",
       });
 
       // Call the fetch-printer-prices edge function
@@ -546,14 +546,14 @@ export default function AdminPrinters() {
 
       if (data.successful > 0) {
         toast({
-          title: "Price fetch completed",
-          description: `Successfully fetched prices for ${data.successful} printers`,
+          title: "Batch completed",
+          description: `Processed ${data.total_processed} printers: ${data.successful} successful, ${data.failed} failed. Run again to process more.`,
         });
         queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
       } else {
         toast({
-          title: "No prices found",
-          description: "Could not extract prices from product pages",
+          title: "Batch completed",
+          description: `Processed ${data.total_processed} printers but found no prices. Run again to continue.`,
           variant: "destructive",
         });
       }
