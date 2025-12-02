@@ -30,6 +30,7 @@ const Printers = lazy(() => import("./pages/Printers"));
 const PrinterCompare = lazy(() => import("./pages/PrinterCompare"));
 const PrinterDetail = lazy(() => import("./pages/PrinterDetail"));
 const NozzleDetail = lazy(() => import("./pages/NozzleDetail"));
+const BuildPlateDetail = lazy(() => import("./pages/BuildPlateDetail"));
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/printers/:id" element={<PrinterDetail />} />
           <Route path="/printers/compare" element={<PrinterCompare />} />
           <Route path="/nozzles/:id" element={<NozzleDetail />} />
+          <Route path="/build-plates/:id" element={<BuildPlateDetail />} />
             <Route path="/matrix" element={<Matrix />} />
             <Route path="/deals" element={<Deals />} />
             <Route path="/wizard" element={<Wizard />} />

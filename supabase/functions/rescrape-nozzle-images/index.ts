@@ -46,20 +46,17 @@ function extractProductImage(html: string, markdown: string, productUrl: string)
     
     // Positive signals
     if (imgLower.includes('product')) score += 20;
-    if (imgLower.includes('nozzle')) score += 30;
-    if (imgLower.includes('hotend')) score += 30;
+    if (imgLower.includes('plate') || imgLower.includes('platform') || imgLower.includes('bed')) score += 30;
+    if (imgLower.includes('pei') || imgLower.includes('magnetic')) score += 25;
     if (imgLower.includes('main') || imgLower.includes('hero')) score += 15;
     if (imgLower.includes('featured')) score += 15;
     if (imgLower.includes('large') || imgLower.includes('big')) score += 10;
     if (imgLower.includes('1024') || imgLower.includes('800') || imgLower.includes('600')) score += 10;
-    if (alt.includes('nozzle') || alt.includes('hotend')) score += 25;
+    if (alt.includes('plate') || alt.includes('platform') || alt.includes('bed')) score += 25;
     
     // Shopify CDN patterns (high quality product images)
     if (imgLower.includes('cdn.shopify.com') && imgLower.includes('products')) score += 25;
     if (imgLower.includes('files/') && (imgLower.includes('.png') || imgLower.includes('.jpg'))) score += 15;
-    
-    // Bambu Lab CDN
-    if (imgLower.includes('bblcdn.com')) score += 20;
     
     // Negative signals
     if (imgLower.includes('thumb') || imgLower.includes('small')) score -= 10;
@@ -71,27 +68,6 @@ function extractProductImage(html: string, markdown: string, productUrl: string)
     if (score > 0) {
       images.push({ url: imgUrl, score });
     }
-  }
-  
-  // Also try to extract from markdown image syntax
-  const mdImgRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
-  while ((match = mdImgRegex.exec(markdown)) !== null) {
-    let imgUrl = match[1];
-    if (!imgUrl || imgUrl.includes('data:')) continue;
-    
-    if (imgUrl.startsWith('//')) {
-      imgUrl = 'https:' + imgUrl;
-    } else if (imgUrl.startsWith('/')) {
-      imgUrl = baseUrl + imgUrl;
-    }
-    
-    const imgLower = imgUrl.toLowerCase();
-    let score = 5; // Base score for markdown images
-    if (imgLower.includes('product') || imgLower.includes('nozzle') || imgLower.includes('hotend')) {
-      score += 20;
-    }
-    
-    images.push({ url: imgUrl, score });
   }
   
   // Sort by score and return best match
@@ -187,37 +163,46 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Get all nozzles with product URLs
-    const { data: nozzles, error: fetchError } = await supabase
+    // Parse request body for accessory type filter
+    let accessoryType = 'nozzle';
+    try {
+      const body = await req.json();
+      if (body.accessory_type) {
+        accessoryType = body.accessory_type;
+      }
+    } catch {}
+    
+    // Get all accessories with product URLs
+    const { data: accessories, error: fetchError } = await supabase
       .from('printer_accessories')
       .select('id, name, brand, product_url, image_url')
-      .eq('accessory_type', 'nozzle')
+      .eq('accessory_type', accessoryType)
       .not('product_url', 'is', null)
       .order('brand');
     
     if (fetchError) {
-      throw new Error(`Failed to fetch nozzles: ${fetchError.message}`);
+      throw new Error(`Failed to fetch accessories: ${fetchError.message}`);
     }
     
-    console.log(`Found ${nozzles?.length || 0} nozzles with product URLs`);
+    console.log(`Found ${accessories?.length || 0} ${accessoryType}s with product URLs`);
     
     const results: { id: string; name: string; brand: string; success: boolean; newImageUrl?: string; error?: string }[] = [];
     
-    for (const nozzle of nozzles || []) {
-      const productUrl = nozzle.product_url;
+    for (const accessory of accessories || []) {
+      const productUrl = accessory.product_url;
       
       if (!productUrl || !productUrl.startsWith('http')) {
         results.push({
-          id: nozzle.id,
-          name: nozzle.name,
-          brand: nozzle.brand || 'Unknown',
+          id: accessory.id,
+          name: accessory.name,
+          brand: accessory.brand || 'Unknown',
           success: false,
           error: 'Invalid product URL'
         });
         continue;
       }
       
-      console.log(`Processing: ${nozzle.name} (${nozzle.brand}) - ${productUrl}`);
+      console.log(`Processing: ${accessory.name} (${accessory.brand}) - ${productUrl}`);
       
       let newImageUrl: string | null = null;
       
@@ -248,30 +233,30 @@ Deno.serve(async (req) => {
         const { error: updateError } = await supabase
           .from('printer_accessories')
           .update({ image_url: newImageUrl })
-          .eq('id', nozzle.id);
+          .eq('id', accessory.id);
         
         if (updateError) {
           results.push({
-            id: nozzle.id,
-            name: nozzle.name,
-            brand: nozzle.brand || 'Unknown',
+            id: accessory.id,
+            name: accessory.name,
+            brand: accessory.brand || 'Unknown',
             success: false,
             error: `Update failed: ${updateError.message}`
           });
         } else {
           results.push({
-            id: nozzle.id,
-            name: nozzle.name,
-            brand: nozzle.brand || 'Unknown',
+            id: accessory.id,
+            name: accessory.name,
+            brand: accessory.brand || 'Unknown',
             success: true,
             newImageUrl
           });
         }
       } else {
         results.push({
-          id: nozzle.id,
-          name: nozzle.name,
-          brand: nozzle.brand || 'Unknown',
+          id: accessory.id,
+          name: accessory.name,
+          brand: accessory.brand || 'Unknown',
           success: false,
           error: 'Could not extract image from product page'
         });
@@ -289,6 +274,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        accessoryType,
         total: results.length,
         updated: successCount,
         failed: failCount,
