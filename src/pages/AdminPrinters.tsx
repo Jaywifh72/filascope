@@ -50,7 +50,7 @@ export default function AdminPrinters() {
   const [aiSearchStats, setAiSearchStats] = useState<{ total: number; successful: number; failed: number } | null>(null);
 
   // Query to count printers without price data
-  const { data: priceProgressData } = useQuery({
+  const { data: priceProgressData, refetch: refetchPriceProgress } = useQuery({
     queryKey: ["printers-price-progress"],
     queryFn: async () => {
       // Count printers that have NO price data at all (all three fields are null)
@@ -71,7 +71,7 @@ export default function AdminPrinters() {
         withPrice: (total || 0) - (withoutPrice || 0),
       };
     },
-    refetchInterval: fetchingPrices || aiSearching ? 3000 : false, // Refresh every 3 seconds while fetching
+    refetchInterval: fetchingPrices || aiSearching ? 2000 : false, // Refresh every 2 seconds while fetching
   });
 
   // Fetch printer brands
@@ -577,14 +577,15 @@ export default function AdminPrinters() {
           title: "Batch completed",
           description: `Processed ${data.total_processed} printers: ${data.successful} successful, ${data.failed} failed. Run again to process more.`,
         });
-        queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
-        queryClient.invalidateQueries({ queryKey: ["printers-price-progress"] });
+        await queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
+        await refetchPriceProgress();
       } else {
         toast({
           title: "Batch completed",
           description: `Processed ${data.total_processed} printers but found no prices. Run again to continue.`,
           variant: "destructive",
         });
+        await refetchPriceProgress();
       }
     } catch (error: any) {
       console.error("Price fetch error:", error);
@@ -626,14 +627,15 @@ export default function AdminPrinters() {
           title: "AI search completed",
           description: `Found MSRP for ${data.successful} out of ${data.total_processed} printers. Run again to process more.`,
         });
-        queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
-        queryClient.invalidateQueries({ queryKey: ["printers-price-progress"] });
+        await queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
+        await refetchPriceProgress();
       } else {
         toast({
           title: "AI search completed",
           description: `Processed ${data.total_processed} printers but found no prices. Run again to continue.`,
           variant: "destructive",
         });
+        await refetchPriceProgress();
       }
     } catch (error: any) {
       console.error("AI search error:", error);
