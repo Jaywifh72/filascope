@@ -48,6 +48,15 @@ export default function AdminPrinters() {
   const [priceStats, setPriceStats] = useState<{ total: number; successful: number; failed: number } | null>(null);
   const [aiSearching, setAiSearching] = useState(false);
   const [aiSearchStats, setAiSearchStats] = useState<{ total: number; successful: number; failed: number } | null>(null);
+  const [aiSearchResults, setAiSearchResults] = useState<Array<{
+    printer_id: string;
+    model_name: string;
+    brand: string;
+    success: boolean;
+    msrp_usd?: number;
+    error?: string;
+    ai_response?: string;
+  }>>([]);
 
   // Query to count printers without price data
   const { data: priceProgressData, refetch: refetchPriceProgress } = useQuery({
@@ -616,6 +625,7 @@ export default function AdminPrinters() {
     try {
       setAiSearching(true);
       setAiSearchStats(null);
+      setAiSearchResults([]);
 
       toast({
         title: "AI searching for MSRP (batch mode)",
@@ -634,6 +644,9 @@ export default function AdminPrinters() {
         successful: data.successful || 0,
         failed: data.failed || 0,
       });
+      
+      // Store the results for display
+      setAiSearchResults(data.results || []);
 
       if (data.successful > 0) {
         toast({
@@ -1072,6 +1085,47 @@ export default function AdminPrinters() {
                       </div>
                     </AlertDescription>
                   </Alert>
+                )}
+
+                {aiSearchResults.length > 0 && (
+                  <Card className="bg-muted/50">
+                    <CardHeader>
+                      <CardTitle className="text-sm font-medium">Processed Printers</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {aiSearchResults.map((result, index) => (
+                        <div
+                          key={`${result.printer_id}-${index}`}
+                          className="flex items-center justify-between p-3 rounded-lg bg-background border"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              {result.success ? (
+                                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                              ) : (
+                                <XCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+                              )}
+                              <div>
+                                <div className="font-medium text-sm">
+                                  {result.brand} {result.model_name}
+                                </div>
+                                {result.success && result.msrp_usd && (
+                                  <div className="text-xs text-green-600 font-semibold">
+                                    MSRP: ${result.msrp_usd.toFixed(2)}
+                                  </div>
+                                )}
+                                {!result.success && result.error && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {result.error}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
                 )}
 
                 <Button
