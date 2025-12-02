@@ -1505,13 +1505,23 @@ Deno.serve(async (req) => {
         // Use nozzle-specific pattern if defined, otherwise fall back to brand pattern
         const compatPattern = nozzle.printer_compatibility_pattern || brandConfig.compatibility_pattern;
         
+        // Check if this is a third-party nozzle (compatible with multiple brands beyond its own)
+        const isThirdPartyNozzle = nozzle.compatible_printer_brands && 
+          nozzle.compatible_printer_brands.length > 1 &&
+          nozzle.compatible_printer_brands.some((b: string) => b !== nozzle.brand);
+        
+        // For third-party nozzles (like E3D), match against compatible_printer_brands list
+        if (isThirdPartyNozzle && nozzle.compatible_printer_brands) {
+          return nozzle.compatible_printer_brands.includes(printerBrand);
+        }
+        
         // For OEM nozzles, match by brand AND model pattern
         if (nozzle.brand === brandName && compatPattern) {
           // Must be same brand AND match the compatibility pattern
           return printerBrand === brandName && compatPattern.test(printer.model_name);
         }
         
-        // For 3rd party, check compatible brands list
+        // Fallback: check compatible brands list
         if (nozzle.compatible_printer_brands?.includes(printerBrand)) {
           return true;
         }
