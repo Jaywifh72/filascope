@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      accessory_price_history: {
+        Row: {
+          accessory_id: string | null
+          currency: string
+          id: string
+          price: number
+          recorded_at: string | null
+          source: string | null
+        }
+        Insert: {
+          accessory_id?: string | null
+          currency?: string
+          id?: string
+          price: number
+          recorded_at?: string | null
+          source?: string | null
+        }
+        Update: {
+          accessory_id?: string | null
+          currency?: string
+          id?: string
+          price?: number
+          recorded_at?: string | null
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accessory_price_history_accessory_id_fkey"
+            columns: ["accessory_id"]
+            isOneToOne: false
+            referencedRelation: "printer_accessories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_configs: {
         Row: {
           affiliate_url_pattern: string | null
@@ -446,8 +481,10 @@ export type Database = {
           created_at: string | null
           currency: string | null
           id: string
+          last_price_check: string | null
           name: string
           price: number | null
+          price_change_percent: number | null
           printer_id: string | null
           product_url: string | null
           specs: Json | null
@@ -458,8 +495,10 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           id?: string
+          last_price_check?: string | null
           name: string
           price?: number | null
+          price_change_percent?: number | null
           printer_id?: string | null
           product_url?: string | null
           specs?: Json | null
@@ -470,8 +509,10 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           id?: string
+          last_price_check?: string | null
           name?: string
           price?: number | null
+          price_change_percent?: number | null
           printer_id?: string | null
           product_url?: string | null
           specs?: Json | null

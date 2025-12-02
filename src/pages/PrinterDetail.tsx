@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
+import { AccessoryPriceChart } from "@/components/AccessoryPriceChart";
 import {
   ArrowLeft,
   Box,
@@ -30,6 +31,8 @@ import {
   Wind,
   Power,
   Blend,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -778,13 +781,34 @@ const PrinterDetail = () => {
                                         <span className="font-medium">{specs.material}</span>
                                       </div>
                                     )}
-                                    {acc.price && (
+                                     {acc.price && (
                                       <div className="flex justify-between pt-2 border-t">
                                         <span className="text-muted-foreground">Price:</span>
                                         <span className="font-bold text-primary">${acc.price}</span>
                                       </div>
                                     )}
+                                    {acc.price_change_percent !== null && acc.price_change_percent !== undefined && (
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-muted-foreground">Change:</span>
+                                        <span className={`flex items-center gap-1 font-semibold ${
+                                          acc.price_change_percent > 0 ? 'text-red-500' : 
+                                          acc.price_change_percent < 0 ? 'text-green-500' : 
+                                          'text-muted-foreground'
+                                        }`}>
+                                          {acc.price_change_percent > 0 ? <TrendingUp className="h-3 w-3" /> : 
+                                           acc.price_change_percent < 0 ? <TrendingDown className="h-3 w-3" /> : null}
+                                          {acc.price_change_percent > 0 ? '+' : ''}{acc.price_change_percent.toFixed(1)}%
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
+                                  
+                                  <AccessoryPriceChart 
+                                    accessoryId={acc.id} 
+                                    currentPrice={acc.price}
+                                    currency={acc.currency || 'USD'}
+                                  />
+                                  
                                   {acc.product_url && (
                                     <a href={acc.product_url} target="_blank" rel="noopener noreferrer">
                                       <Button size="sm" variant="outline" className="w-full mt-2 gap-2">
@@ -836,7 +860,28 @@ const PrinterDetail = () => {
                                         <span className="font-bold text-primary">${acc.price}</span>
                                       </div>
                                     )}
+                                    {acc.price_change_percent !== null && acc.price_change_percent !== undefined && (
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-muted-foreground">Change:</span>
+                                        <span className={`flex items-center gap-1 font-semibold ${
+                                          acc.price_change_percent > 0 ? 'text-red-500' : 
+                                          acc.price_change_percent < 0 ? 'text-green-500' : 
+                                          'text-muted-foreground'
+                                        }`}>
+                                          {acc.price_change_percent > 0 ? <TrendingUp className="h-3 w-3" /> : 
+                                           acc.price_change_percent < 0 ? <TrendingDown className="h-3 w-3" /> : null}
+                                          {acc.price_change_percent > 0 ? '+' : ''}{acc.price_change_percent.toFixed(1)}%
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
+                                  
+                                  <AccessoryPriceChart 
+                                    accessoryId={acc.id} 
+                                    currentPrice={acc.price}
+                                    currency={acc.currency || 'USD'}
+                                  />
+                                  
                                   {acc.product_url && (
                                     <a href={acc.product_url} target="_blank" rel="noopener noreferrer">
                                       <Button size="sm" variant="outline" className="w-full mt-2 gap-2">
@@ -888,7 +933,28 @@ const PrinterDetail = () => {
                                         <span className="font-bold text-primary">${acc.price}</span>
                                       </div>
                                     )}
+                                    {acc.price_change_percent !== null && acc.price_change_percent !== undefined && (
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="text-muted-foreground">Change:</span>
+                                        <span className={`flex items-center gap-1 font-semibold ${
+                                          acc.price_change_percent > 0 ? 'text-red-500' : 
+                                          acc.price_change_percent < 0 ? 'text-green-500' : 
+                                          'text-muted-foreground'
+                                        }`}>
+                                          {acc.price_change_percent > 0 ? <TrendingUp className="h-3 w-3" /> : 
+                                           acc.price_change_percent < 0 ? <TrendingDown className="h-3 w-3" /> : null}
+                                          {acc.price_change_percent > 0 ? '+' : ''}{acc.price_change_percent.toFixed(1)}%
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
+                                  
+                                  <AccessoryPriceChart 
+                                    accessoryId={acc.id} 
+                                    currentPrice={acc.price}
+                                    currency={acc.currency || 'USD'}
+                                  />
+                                  
                                   {acc.product_url && (
                                     <a href={acc.product_url} target="_blank" rel="noopener noreferrer">
                                       <Button size="sm" variant="outline" className="w-full mt-2 gap-2">
