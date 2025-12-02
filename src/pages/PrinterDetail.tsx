@@ -47,6 +47,9 @@ const PrinterDetail = () => {
   const { data: printer, isLoading } = useQuery({
     queryKey: ["printer-detail", id],
     queryFn: async () => {
+      // Try by printer_id slug first, then by UUID
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
+      
       const { data, error } = await supabase
         .from("printers")
         .select(`
@@ -54,7 +57,7 @@ const PrinterDetail = () => {
           brand:printer_brands!brand_id(brand),
           series:printer_series!series_id(series_name)
         `)
-        .eq("printer_id", id)
+        .eq(isUUID ? "id" : "printer_id", id)
         .maybeSingle();
 
       if (error) throw error;
