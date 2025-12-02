@@ -86,6 +86,7 @@ export default function AdminPrinters() {
     const withAmazonPrice = allPrinters.filter(p => p.current_price_usd_amazon);
     const withMSRP = allPrinters.filter(p => p.msrp_usd);
     const withAnyPrice = allPrinters.filter(p => p.current_price_usd_store || p.current_price_usd_amazon || p.msrp_usd);
+    const withNoPricing = allPrinters.filter(p => !p.current_price_usd_store && !p.current_price_usd_amazon && !p.msrp_usd);
     
     console.log('📊 Price coverage:', {
       total: allPrinters.length,
@@ -93,6 +94,7 @@ export default function AdminPrinters() {
       withAmazonPrice: withAmazonPrice.length,
       withMSRP: withMSRP.length,
       withAnyPrice: withAnyPrice.length,
+      withNoPricing: withNoPricing.length,
     });
     
     return {
@@ -101,6 +103,7 @@ export default function AdminPrinters() {
       withAmazonPrice: withAmazonPrice.length,
       withMSRP: withMSRP.length,
       withAnyPrice: withAnyPrice.length,
+      withNoPricing: withNoPricing.length,
     };
   })() : null;
 
@@ -1098,6 +1101,20 @@ export default function AdminPrinters() {
                       <Progress 
                         value={(priceProgressData.withMSRP / priceProgressData.total) * 100} 
                         className="h-2"
+                      />
+                    </div>
+
+                    {/* No Pricing */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-destructive">Printers with no pricing at all:</span>
+                        <span className="text-muted-foreground">
+                          {priceProgressData.withNoPricing} / {priceProgressData.total}
+                        </span>
+                      </div>
+                      <Progress 
+                        value={(priceProgressData.withNoPricing / priceProgressData.total) * 100} 
+                        className="h-2 [&>div]:bg-destructive"
                       />
                     </div>
 
