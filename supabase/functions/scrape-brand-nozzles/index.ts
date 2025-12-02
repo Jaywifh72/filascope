@@ -47,15 +47,89 @@ const BRAND_STORE_CONFIGS: Record<string, {
   compatibility_pattern: RegExp;
   compatible_hotend_types: string[];
   brand_filter?: string;
-  product_filter?: string; // Keywords to filter products (nozzle OR hotend)
+  product_filter?: string;
+  // Hardcoded nozzles for brands without scrapeable stores (like Bambu Lab's custom platform)
+  hardcoded_nozzles?: NozzleData[];
 }> = {
   'Bambu Lab': {
-    // Bambu Lab sells hotends with nozzles, not standalone nozzles
-    nozzle_collection_url: 'https://us.store.bambulab.com/collections/all',
-    is_shopify: true,
-    compatibility_pattern: /X1|P1|A1|H2/i,
+    // Bambu Lab uses custom platform (not Shopify) - hardcode nozzles
+    nozzle_collection_url: 'https://us.store.bambulab.com/collections/spare-parts',
+    is_shopify: false, // Custom platform, not standard Shopify
+    compatibility_pattern: /X1|P1|A1|H2|P2/i,
     compatible_hotend_types: ['Bambu Lab Hotend'],
     product_filter: 'nozzle|hotend|hardened|stainless',
+    hardcoded_nozzles: [
+      {
+        name: 'Complete Hotend Assembly with Hardened Steel Nozzle - X1 Series',
+        brand: 'Bambu Lab',
+        model: 'FAE027',
+        specs: { diameter_mm: 0.4, material: 'hardened steel', hardened: true, max_temp_c: 300 },
+        product_url: 'https://us.store.bambulab.com/products/complete-hotend-assembly-x1-series',
+        price: 59.99,
+        currency: 'USD',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: 'Complete Hotend Assembly - P1 Series',
+        brand: 'Bambu Lab',
+        model: 'FAE026',
+        specs: { diameter_mm: 0.4, material: 'brass', hardened: false, max_temp_c: 300 },
+        product_url: 'https://us.store.bambulab.com/products/complete-hotend-assembly-p1-series',
+        price: 39.99,
+        currency: 'USD',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: 'Complete Hotend Assembly with Hardened Steel Nozzle - P1 Series',
+        brand: 'Bambu Lab',
+        model: 'FAE028',
+        specs: { diameter_mm: 0.4, material: 'hardened steel', hardened: true, max_temp_c: 300 },
+        product_url: 'https://us.store.bambulab.com/products/complete-hotend-assembly-p1-series',
+        price: 49.99,
+        currency: 'USD',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: 'Complete Hotend Assembly - A1 Series',
+        brand: 'Bambu Lab',
+        model: 'FAE030',
+        specs: { diameter_mm: 0.4, material: 'brass', hardened: false, max_temp_c: 300 },
+        product_url: 'https://us.store.bambulab.com/products/complete-hotend-assembly-a1-series',
+        price: 29.99,
+        currency: 'USD',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: 'Hardened Steel Nozzle - 0.4mm',
+        brand: 'Bambu Lab',
+        model: 'NZL001',
+        specs: { diameter_mm: 0.4, material: 'hardened steel', hardened: true, max_temp_c: 300 },
+        product_url: 'https://us.store.bambulab.com/products/hardened-steel-nozzle',
+        price: 12.99,
+        currency: 'USD',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: 'Hardened Steel Nozzle - 0.6mm',
+        brand: 'Bambu Lab',
+        model: 'NZL002',
+        specs: { diameter_mm: 0.6, material: 'hardened steel', hardened: true, max_temp_c: 300 },
+        product_url: 'https://us.store.bambulab.com/products/hardened-steel-nozzle',
+        price: 12.99,
+        currency: 'USD',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+      {
+        name: 'Stainless Steel Nozzle - 0.4mm',
+        brand: 'Bambu Lab',
+        model: 'NZL003',
+        specs: { diameter_mm: 0.4, material: 'stainless steel', hardened: false, max_temp_c: 300 },
+        product_url: 'https://us.store.bambulab.com/products/stainless-steel-nozzle',
+        price: 9.99,
+        currency: 'USD',
+        compatible_printer_brands: ['Bambu Lab'],
+      },
+    ],
   },
   'Prusa Research': {
     nozzle_collection_url: 'https://www.prusa3d.com/category/nozzles/',
@@ -73,7 +147,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
   'E3D': {
     nozzle_collection_url: 'https://e3d-online.com/collections/nozzles',
     is_shopify: true,
-    compatibility_pattern: /.*/i, // Universal compatibility
+    compatibility_pattern: /.*/i,
     compatible_hotend_types: ['E3D V6', 'E3D Revo', 'Clone V6'],
     brand_filter: 'Prusa Research,Creality,Anycubic,Elegoo,Voron',
     product_filter: 'nozzle|hotend|revo',
@@ -478,7 +552,12 @@ Deno.serve(async (req) => {
 
     let discoveredNozzles: NozzleData[] = [];
 
-    if (brandConfig.is_shopify) {
+    // Check for hardcoded nozzles first (for brands with non-scrapeable stores)
+    if (brandConfig.hardcoded_nozzles && brandConfig.hardcoded_nozzles.length > 0) {
+      console.log(`📦 Using hardcoded nozzle data for ${brandName} (non-Shopify platform)`);
+      discoveredNozzles = brandConfig.hardcoded_nozzles;
+      console.log(`   Found ${discoveredNozzles.length} hardcoded nozzles`);
+    } else if (brandConfig.is_shopify) {
       discoveredNozzles = await scrapeShopifyNozzles(
         brandConfig.nozzle_collection_url,
         brandName,
@@ -487,7 +566,7 @@ Deno.serve(async (req) => {
       );
     } else {
       // Non-Shopify scraping (use Firecrawl directly)
-      console.log(`⚠️ Non-Shopify store - using Firecrawl generic scraping`);
+      console.log(`⚠️ Non-Shopify store without hardcoded data - using Firecrawl generic scraping`);
       // For now, return empty - can be extended
     }
 
