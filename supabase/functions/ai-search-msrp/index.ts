@@ -25,7 +25,7 @@ serve(async (req) => {
     // Fetch printers WITHOUT store prices (store price is the priority)
     let query = supabase
       .from('printers')
-      .select('id, printer_id, brand_id, model_name, official_product_url, printer_brands(brand)')
+      .select('id, printer_id, brand_id, model_name, official_product_url, official_store_url, printer_brands(brand)')
       .is('current_price_usd_store', null)
       .limit(5); // Process 5 at a time to avoid timeouts
 
@@ -63,9 +63,17 @@ serve(async (req) => {
     // Process each printer with AI search
     for (const printer of printers) {
       const brandName = (printer.printer_brands as any)?.brand || 'Unknown';
-      const searchQuery = `What is the current price in USD from the official store for the ${brandName} ${printer.model_name} 3D printer? If official store price is not available, what is the MSRP (manufacturer's suggested retail price)? Please provide only the price as a number, without currency symbols. Indicate if it's a store price or MSRP.`;
+      
+      // Build search query - include official store URL if available
+      let searchQuery = '';
+      if (printer.official_store_url || printer.official_product_url) {
+        const storeUrl = printer.official_store_url || printer.official_product_url;
+        searchQuery = `Check this official store page: ${storeUrl} - What is the current price in USD for the ${brandName} ${printer.model_name} 3D printer? If you cannot access that page or find the price there, search for the official store price elsewhere. If no store price is available anywhere, provide the MSRP (manufacturer's suggested retail price). Please provide only the price as a number, without currency symbols. Indicate if it's a store price or MSRP.`;
+      } else {
+        searchQuery = `What is the current price in USD from the official store for the ${brandName} ${printer.model_name} 3D printer? If official store price is not available, what is the MSRP (manufacturer's suggested retail price)? Please provide only the price as a number, without currency symbols. Indicate if it's a store price or MSRP.`;
+      }
 
-      console.log(`AI searching price for: ${brandName} ${printer.model_name}`);
+      console.log(`AI searching price for: ${brandName} ${printer.model_name}`, printer.official_store_url || printer.official_product_url ? `(URL: ${printer.official_store_url || printer.official_product_url})` : '');
 
       try {
         // Call Lovable AI Gateway
