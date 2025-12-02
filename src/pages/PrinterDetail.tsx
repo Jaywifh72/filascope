@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
-import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { AccessoryPriceChart } from "@/components/AccessoryPriceChart";
 import { useState, useEffect } from "react";
 import {
@@ -39,9 +37,6 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
-
-type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
 const PrinterDetail = () => {
   const { id } = useParams();
@@ -67,20 +62,6 @@ const PrinterDetail = () => {
     },
   });
 
-  // Fetch compatible filaments
-  const { data: filaments } = useQuery({
-    queryKey: ["printer-compatible-filaments", id],
-    enabled: !!printer,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("filaments")
-        .select("*")
-        .limit(100);
-
-      if (error) throw error;
-      return data as Filament[];
-    },
-  });
 
   const { data: accessories } = useQuery({
     queryKey: ["printer-accessories", id],
@@ -122,27 +103,6 @@ const PrinterDetail = () => {
     setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
   };
 
-  // Calculate compatibility for each filament
-  const compatibleFilaments = filaments && printer
-    ? filaments
-        .map(filament => ({
-          filament,
-          compatibility: checkPrinterFilamentCompatibility(printer, filament),
-        }))
-        .filter(item => item.compatibility.is_supported)
-        .sort((a, b) => {
-          // Map ease ratings to numbers for sorting
-          const easeRatingScore = { "Easy": 3, "Medium": 2, "Hard": 1, "Not Possible": 0 };
-          const scoreA = easeRatingScore[a.compatibility.ease_rating] || 0;
-          const scoreB = easeRatingScore[b.compatibility.ease_rating] || 0;
-          
-          // Sort by ease rating (higher first), then by material
-          if (scoreA !== scoreB) {
-            return scoreB - scoreA;
-          }
-          return (a.filament.material || "").localeCompare(b.filament.material || "");
-        })
-    : [];
 
   if (isLoading) {
     return (
@@ -497,12 +457,8 @@ const PrinterDetail = () => {
         )}
 
         {/* Detailed Specs Tabs */}
-        <Tabs defaultValue="compatible" className="w-full">
+        <Tabs defaultValue="build" className="w-full">
           <TabsList className="inline-flex w-full md:w-auto flex-wrap h-auto gap-2 bg-muted/50 p-2 rounded-xl">
-            <TabsTrigger value="compatible" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <Flame className="h-4 w-4 mr-2" />
-              Compatible Filaments
-            </TabsTrigger>
             <TabsTrigger value="build" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
               <Box className="h-4 w-4 mr-2" />
               Build
@@ -532,77 +488,6 @@ const PrinterDetail = () => {
               Accessories
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="compatible" className="space-y-4 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Flame className="h-5 w-5 text-primary" />
-                  Compatible Filaments ({compatibleFilaments.length})
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Filaments that work well with this printer based on temperature capabilities and features
-                </p>
-              </CardHeader>
-              <CardContent>
-                {compatibleFilaments.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Loading compatible filaments...
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {compatibleFilaments.map(({ filament, compatibility }) => (
-                      <Link key={filament.id} to={`/filament/${filament.id}`}>
-                        <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-                          <CardContent className="p-4 space-y-3">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-sm line-clamp-2">{filament.product_title}</h4>
-                                <p className="text-xs text-muted-foreground">{filament.vendor}</p>
-                              </div>
-                              <CompatibilityBadge compatibility={compatibility} showIcon={false} />
-                            </div>
-                            
-                            <div className="flex gap-2 flex-wrap">
-                              {filament.material && (
-                                <Badge variant="default" className="text-xs">{filament.material}</Badge>
-                              )}
-                              {filament.diameter_nominal_mm && (
-                                <Badge variant="outline" className="text-xs">{filament.diameter_nominal_mm}mm</Badge>
-                              )}
-                            </div>
-
-                            {compatibility.recommendations && (
-                              <div className="text-xs space-y-1">
-                                {compatibility.recommendations.slicer?.nozzle_temp_range && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Nozzle:</span>
-                                    <span className="font-medium">{compatibility.recommendations.slicer.nozzle_temp_range}</span>
-                                  </div>
-                                )}
-                                {compatibility.recommendations.slicer?.bed_temp_range && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Bed:</span>
-                                    <span className="font-medium">{compatibility.recommendations.slicer.bed_temp_range}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {compatibility.limitations && compatibility.limitations.length > 0 && (
-                              <div className="text-xs text-yellow-600 dark:text-yellow-500">
-                                ⚠ {compatibility.limitations.length} limitation{compatibility.limitations.length !== 1 ? 's' : ''}
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="build" className="space-y-4 mt-6">
             <SpecSection title="Build Volume & Dimensions" icon={Box}>
