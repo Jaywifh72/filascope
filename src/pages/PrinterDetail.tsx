@@ -733,58 +733,92 @@ const PrinterDetail = () => {
                             .map((acc) => {
                               const specs = acc.specs as any;
                               return (
-                              <Card key={acc.id} className="hover:shadow-lg transition-shadow">
-                                <CardContent className="p-4 space-y-2">
-                                  <h5 className="font-semibold text-sm capitalize">{acc.name}</h5>
-                                  <div className="space-y-1 text-xs">
-                                    {specs?.diameter_mm && (
-                                      <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Diameter:</span>
-                                        <span className="font-medium">{specs.diameter_mm}mm</span>
+                              <Card key={acc.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+                                <CardContent className="p-0">
+                                  {/* Header with brand badge */}
+                                  <div className="relative">
+                                    {acc.image_url ? (
+                                      <div className="aspect-square bg-muted/30 flex items-center justify-center p-4">
+                                        <img 
+                                          src={acc.image_url} 
+                                          alt={acc.name}
+                                          className="max-h-full max-w-full object-contain"
+                                          onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                          }}
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="aspect-square bg-muted/30 flex items-center justify-center">
+                                        <Cpu className="h-16 w-16 text-muted-foreground/30" />
                                       </div>
                                     )}
-                                    {specs?.material && (
-                                      <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Material:</span>
-                                        <span className="font-medium">{specs.material}</span>
-                                      </div>
-                                    )}
-                                     {acc.price && (
-                                      <div className="flex justify-between pt-2 border-t">
-                                        <span className="text-muted-foreground">Price:</span>
-                                        <span className="font-bold text-primary">${acc.price}</span>
-                                      </div>
-                                    )}
-                                    {acc.price_change_percent !== null && acc.price_change_percent !== undefined && (
-                                      <div className="flex items-center justify-between text-xs">
-                                        <span className="text-muted-foreground">Change:</span>
-                                        <span className={`flex items-center gap-1 font-semibold ${
-                                          acc.price_change_percent > 0 ? 'text-red-500' : 
-                                          acc.price_change_percent < 0 ? 'text-green-500' : 
-                                          'text-muted-foreground'
-                                        }`}>
-                                          {acc.price_change_percent > 0 ? <TrendingUp className="h-3 w-3" /> : 
-                                           acc.price_change_percent < 0 ? <TrendingDown className="h-3 w-3" /> : null}
-                                          {acc.price_change_percent > 0 ? '+' : ''}{acc.price_change_percent.toFixed(1)}%
-                                        </span>
-                                      </div>
+                                    {acc.brand && (
+                                      <Badge className="absolute top-2 right-2 text-xs" variant="secondary">
+                                        {acc.brand}
+                                      </Badge>
                                     )}
                                   </div>
                                   
-                                  <AccessoryPriceChart 
-                                    accessoryId={acc.id} 
-                                    currentPrice={acc.price}
-                                    currency={acc.currency || 'USD'}
-                                  />
-                                  
-                                  {acc.product_url && (
-                                    <a href={acc.product_url} target="_blank" rel="noopener noreferrer">
-                                      <Button size="sm" variant="outline" className="w-full mt-2 gap-2">
-                                        <ExternalLink className="h-3 w-3" />
-                                        View Product
-                                      </Button>
-                                    </a>
-                                  )}
+                                  {/* Content */}
+                                  <div className="p-4 space-y-2">
+                                    <h5 className="font-semibold text-sm line-clamp-2">{acc.name}</h5>
+                                    <div className="space-y-1 text-xs">
+                                      {specs?.diameter_mm && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Diameter:</span>
+                                          <span className="font-medium">{specs.diameter_mm}mm</span>
+                                        </div>
+                                      )}
+                                      {specs?.material && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Material:</span>
+                                          <span className="font-medium capitalize">{specs.material}</span>
+                                        </div>
+                                      )}
+                                      {specs?.max_temp_c && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">Max Temp:</span>
+                                          <span className="font-medium">{specs.max_temp_c}°C</span>
+                                        </div>
+                                      )}
+                                      {acc.price && (
+                                        <div className="flex justify-between pt-2 border-t">
+                                          <span className="text-muted-foreground">Price:</span>
+                                          <span className="font-bold text-primary">${acc.price}</span>
+                                        </div>
+                                      )}
+                                      {acc.price_change_percent !== null && acc.price_change_percent !== undefined && (
+                                        <div className="flex items-center justify-between text-xs">
+                                          <span className="text-muted-foreground">Change:</span>
+                                          <span className={`flex items-center gap-1 font-semibold ${
+                                            acc.price_change_percent > 0 ? 'text-red-500' : 
+                                            acc.price_change_percent < 0 ? 'text-green-500' : 
+                                            'text-muted-foreground'
+                                          }`}>
+                                            {acc.price_change_percent > 0 ? <TrendingUp className="h-3 w-3" /> : 
+                                             acc.price_change_percent < 0 ? <TrendingDown className="h-3 w-3" /> : null}
+                                            {acc.price_change_percent > 0 ? '+' : ''}{acc.price_change_percent.toFixed(1)}%
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    <AccessoryPriceChart 
+                                      accessoryId={acc.id} 
+                                      currentPrice={acc.price}
+                                      currency={acc.currency || 'USD'}
+                                    />
+                                    
+                                    {acc.product_url && (
+                                      <a href={acc.product_url} target="_blank" rel="noopener noreferrer">
+                                        <Button size="sm" variant="outline" className="w-full mt-2 gap-2">
+                                          <ExternalLink className="h-3 w-3" />
+                                          View Product
+                                        </Button>
+                                      </a>
+                                    )}
+                                  </div>
                                 </CardContent>
                               </Card>
                             );
