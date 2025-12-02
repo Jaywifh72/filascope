@@ -68,7 +68,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
     is_shopify: true,
     compatibility_pattern: /K1|K2|Ender|CR-|Sermoon/i,
     compatible_hotend_types: ['MK8', 'Creality Spider', 'Creality Unicorn'],
-    product_filter: 'nozzle',
+    product_filter: 'nozzle|hotend',
   },
   'E3D': {
     nozzle_collection_url: 'https://e3d-online.com/collections/nozzles',
@@ -76,6 +76,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
     compatibility_pattern: /.*/i, // Universal compatibility
     compatible_hotend_types: ['E3D V6', 'E3D Revo', 'Clone V6'],
     brand_filter: 'Prusa Research,Creality,Anycubic,Elegoo,Voron',
+    product_filter: 'nozzle|hotend|revo',
   },
 };
 
@@ -175,9 +176,10 @@ async function scrapeShopifyNozzles(
   const nozzles: NozzleData[] = [];
   
   // Build filter regex from productFilter (e.g., "nozzle|hotend|hardened")
+  // Default includes both "nozzle" and "hotend" as synonyms
   const filterRegex = productFilter 
     ? new RegExp(productFilter, 'i') 
-    : /nozzle/i;
+    : /nozzle|hotend/i;
   
   console.log(`\n🔍 Product filter: ${filterRegex}`);
   
