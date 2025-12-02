@@ -1252,66 +1252,88 @@ export default function AdminPrinters() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    Scrape nozzle data (specs, pricing, compatibility) from brand websites and automatically link compatible nozzles to all printers of that brand.
+                    Add nozzle data (specs, pricing, compatibility, images) from OEM and 3rd party brands to all compatible printers.
                   </p>
                   <p className="text-xs text-muted-foreground italic">
-                    Supported brands: Bambu Lab, Prusa Research, Creality, Anycubic, Voron Design
+                    OEM: Bambu Lab, Prusa Research, Creality, Anycubic, QIDI Tech, Elegoo | 3rd Party: E3D, Phaetus, Bondtech, Slice Engineering, Micro Swiss
                   </p>
                 </div>
 
-                {brands && brands.length > 0 && (
-                  <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a brand..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {brands
-                        .filter(b => ['Bambu Lab', 'Prusa Research', 'Creality', 'Anycubic', 'Voron Design'].includes(b.brand))
-                        .map((brand) => (
-                          <SelectItem key={brand.id} value={brand.id}>
-                            {brand.brand}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a brand or All Brands..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Brands (OEM + 3rd Party)</SelectItem>
+                    <SelectItem value="all-oem">All OEM Brands Only</SelectItem>
+                    <SelectItem value="all-3rdparty">All 3rd Party Brands Only</SelectItem>
+                    <SelectItem disabled value="separator-1">──────────────</SelectItem>
+                    {brands
+                      ?.filter(b => ['Bambu Lab', 'Prusa Research', 'Creality', 'Anycubic', 'QIDI Tech', 'Elegoo'].includes(b.brand))
+                      .map((brand) => (
+                        <SelectItem key={brand.id} value={brand.id}>
+                          {brand.brand} (OEM)
+                        </SelectItem>
+                      ))}
+                    <SelectItem disabled value="separator-2">──────────────</SelectItem>
+                    <SelectItem value="E3D">E3D (3rd Party)</SelectItem>
+                    <SelectItem value="Phaetus">Phaetus (3rd Party)</SelectItem>
+                    <SelectItem value="Bondtech">Bondtech (3rd Party)</SelectItem>
+                    <SelectItem value="Slice Engineering">Slice Engineering (3rd Party)</SelectItem>
+                    <SelectItem value="Micro Swiss">Micro Swiss (3rd Party)</SelectItem>
+                  </SelectContent>
+                </Select>
 
                 <Button
                   onClick={async () => {
                     if (!selectedBrand) {
                       toast({
                         title: "No brand selected",
-                        description: "Please select a brand first",
+                        description: "Please select a brand or 'All Brands' first",
                         variant: "destructive",
                       });
                       return;
                     }
 
-                    const brand = brands?.find(b => b.id === selectedBrand);
-                    if (!brand) return;
-
                     try {
                       setDiscovering(true);
+                      
+                      let brandName = selectedBrand;
+                      let brandId = null;
+                      
+                      // Handle special cases
+                      if (selectedBrand === 'all') {
+                        brandName = 'All Brands';
+                      } else if (selectedBrand === 'all-oem') {
+                        brandName = 'All OEM';
+                      } else if (selectedBrand === 'all-3rdparty') {
+                        brandName = 'All 3rd Party';
+                      } else if (!['E3D', 'Phaetus', 'Bondtech', 'Slice Engineering', 'Micro Swiss'].includes(selectedBrand)) {
+                        // It's an OEM brand ID from the database
+                        const brand = brands?.find(b => b.id === selectedBrand);
+                        if (brand) {
+                          brandName = brand.brand;
+                          brandId = selectedBrand;
+                        }
+                      }
+                      
                       const { data, error } = await supabase.functions.invoke('scrape-brand-nozzles', {
-                        body: { 
-                          brandId: selectedBrand,
-                          brandName: brand.brand
-                        },
+                        body: { brandId, brandName },
                       });
 
                       if (error) throw error;
 
                       toast({
-                        title: "Nozzle scraping complete",
-                        description: `Found ${data.nozzles_found} nozzles, created ${data.accessories_created} accessory records across ${data.printers_updated} printers`,
+                        title: "Nozzle import complete",
+                        description: `Processed ${data.brands_processed || 1} brands, found ${data.nozzles_found} nozzles, created ${data.accessories_created} accessory records`,
                       });
 
                       queryClient.invalidateQueries({ queryKey: ["brands"] });
                     } catch (error: any) {
-                      console.error('Nozzle scrape error:', error);
+                      console.error('Nozzle import error:', error);
                       toast({
-                        title: "Scraping failed",
-                        description: error.message || "Failed to scrape nozzles",
+                        title: "Import failed",
+                        description: error.message || "Failed to import nozzles",
                         variant: "destructive",
                       });
                     } finally {
@@ -1325,12 +1347,12 @@ export default function AdminPrinters() {
                   {discovering ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Scraping Nozzles...
+                      Importing Nozzles...
                     </>
                   ) : (
                     <>
                       <Cpu className="h-4 w-4" />
-                      Scrape Nozzles for Selected Brand
+                      Import Nozzles
                     </>
                   )}
                 </Button>

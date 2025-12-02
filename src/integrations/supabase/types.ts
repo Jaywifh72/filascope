@@ -478,10 +478,16 @@ export type Database = {
       printer_accessories: {
         Row: {
           accessory_type: string
+          brand: string | null
+          compatible_hotend_types: string[] | null
+          compatible_printer_brands: string[] | null
           created_at: string | null
           currency: string | null
+          description: string | null
           id: string
+          image_url: string | null
           last_price_check: string | null
+          model: string | null
           name: string
           price: number | null
           price_change_percent: number | null
@@ -492,10 +498,16 @@ export type Database = {
         }
         Insert: {
           accessory_type: string
+          brand?: string | null
+          compatible_hotend_types?: string[] | null
+          compatible_printer_brands?: string[] | null
           created_at?: string | null
           currency?: string | null
+          description?: string | null
           id?: string
+          image_url?: string | null
           last_price_check?: string | null
+          model?: string | null
           name: string
           price?: number | null
           price_change_percent?: number | null
@@ -506,10 +518,16 @@ export type Database = {
         }
         Update: {
           accessory_type?: string
+          brand?: string | null
+          compatible_hotend_types?: string[] | null
+          compatible_printer_brands?: string[] | null
           created_at?: string | null
           currency?: string | null
+          description?: string | null
           id?: string
+          image_url?: string | null
           last_price_check?: string | null
+          model?: string | null
           name?: string
           price?: number | null
           price_change_percent?: number | null
