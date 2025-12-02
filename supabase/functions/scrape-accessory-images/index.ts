@@ -18,38 +18,64 @@ async function findBestProductImage(
   // Filter out obviously bad images
   const filteredImages = images.filter(img => {
     const lower = img.toLowerCase();
-    return !lower.includes('icon') &&
-           !lower.includes('logo') &&
-           !lower.includes('favicon') &&
-           !lower.includes('sprite') &&
-           !lower.includes('placeholder') &&
-           !lower.includes('loading') &&
-           !lower.includes('avatar') &&
-           !lower.includes('badge') &&
-           !lower.includes('banner') &&
-           !lower.includes('/flags/') &&
-           !lower.includes('payment') &&
-           !lower.includes('social') &&
-           !lower.includes('facebook') &&
-           !lower.includes('twitter') &&
-           !lower.includes('instagram') &&
-           !lower.includes('youtube') &&
-           !lower.includes('1x1') &&
-           !lower.includes('pixel') &&
-           !lower.includes('tracking') &&
-           (lower.includes('.jpg') || 
-            lower.includes('.jpeg') || 
-            lower.includes('.png') || 
-            lower.includes('.webp') ||
-            lower.includes('cdn') ||
-            lower.includes('product') ||
-            lower.includes('image'));
+    
+    // Exclude small images, icons, logos, etc.
+    const badPatterns = [
+      'icon', 'logo', 'favicon', 'sprite', 'placeholder', 'loading',
+      'avatar', 'badge', 'banner', '/flags/', 'payment', 'social',
+      'facebook', 'twitter', 'instagram', 'youtube', '1x1', 'pixel',
+      'tracking', 'country', 'flag', 'store.png', 'global_store',
+      'height=28', 'width=28', 'height=32', 'width=32', 'height=16', 'width=16',
+      'height=24', 'width=24', 'height=48', 'width=48', 'height=64', 'width=64',
+      '/flag', 'currency', 'shipping', 'trust', 'secure', 'ssl', 'cart',
+      'checkout', 'email', 'newsletter', 'footer', 'header', 'nav',
+      'menu', 'button', 'arrow', 'chevron', 'close', 'search', 'user'
+    ];
+    
+    if (badPatterns.some(p => lower.includes(p))) return false;
+    
+    // Must have valid image extension or be from CDN/product paths
+    const goodPatterns = [
+      '.jpg', '.jpeg', '.png', '.webp',
+      '/products/', '/product/', '/images/product', 'cdn.shopify',
+      'media.', 'static.', 'assets.', 'img.', '/gallery/',
+      'bambulab', 'prusa', 'creality', 'anycubic', 'elegoo', 'qidi',
+      'mosaic', 'sovol', 'snapmaker', 'biqu', 'trianglelab', 'fysetc'
+    ];
+    
+    return goodPatterns.some(p => lower.includes(p));
   });
 
-  if (filteredImages.length === 0) return images[0] || null;
-  if (filteredImages.length === 1) return filteredImages[0];
+  // Sort by likelihood of being a product image (larger URLs often indicate larger images)
+  const scoredImages = filteredImages.map(img => {
+    let score = 0;
+    const lower = img.toLowerCase();
+    
+    // Prefer product-specific paths
+    if (lower.includes('/products/') || lower.includes('/product/')) score += 10;
+    if (lower.includes('main') || lower.includes('hero') || lower.includes('primary')) score += 5;
+    if (lower.includes('_1.') || lower.includes('-1.') || lower.includes('_01.')) score += 3;
+    
+    // Prefer larger images
+    const sizeMatch = lower.match(/(\d{3,4})x(\d{3,4})|width[=:](\d{3,4})|height[=:](\d{3,4})/);
+    if (sizeMatch) {
+      const size = parseInt(sizeMatch[1] || sizeMatch[3] || sizeMatch[4] || '0');
+      if (size >= 500) score += 5;
+      if (size >= 800) score += 3;
+    }
+    
+    // Prefer CDN images
+    if (lower.includes('cdn.')) score += 2;
+    
+    return { img, score };
+  }).sort((a, b) => b.score - a.score);
 
-  // Use AI to select the best product image
+  const sortedImages = scoredImages.map(s => s.img);
+  
+  if (sortedImages.length === 0) return null;
+  if (sortedImages.length === 1) return sortedImages[0];
+
+  // Use AI to select the best product image from top candidates
   try {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -62,14 +88,19 @@ async function findBestProductImage(
         messages: [
           {
             role: "system",
-            content: `You are an expert at identifying product images. You will be given a list of image URLs and product information. Select the URL that is most likely to be the main product image showing the actual physical product.
-            
-Prefer images that:
-- Show the complete product clearly
-- Are high resolution (look for larger dimensions in URL)
-- Are from CDN or product image paths
-- Have product-related keywords in the URL
-- Are PNG, JPG, or WEBP format
+            content: `You are an expert at identifying product images for 3D printer accessories. Select the URL most likely to be a MAIN PRODUCT IMAGE showing the physical product.
+
+REJECT images that are:
+- Country flags, shipping icons, payment logos
+- Small thumbnails (look for small dimensions in URL)
+- Navigation or UI elements
+- Store logos or branding
+
+PREFER images that:
+- Show the actual ${accessoryType.replace('_', ' ')} product
+- Are from /products/ or /gallery/ paths
+- Have large dimensions (500px+)
+- Are main/hero/primary images
 
 Return ONLY the URL, nothing else.`
           },
@@ -77,12 +108,12 @@ Return ONLY the URL, nothing else.`
             role: "user",
             content: `Product: ${productName}
 Brand: ${brand || 'Unknown'}
-Type: ${accessoryType}
+Type: ${accessoryType.replace('_', ' ')}
 
-Select the best product image URL from these options:
-${filteredImages.slice(0, 15).map((img, i) => `${i + 1}. ${img}`).join('\n')}
+Select the best product image URL:
+${sortedImages.slice(0, 10).map((img, i) => `${i + 1}. ${img}`).join('\n')}
 
-Return ONLY the best URL:`
+Return ONLY the URL:`
           }
         ],
         max_tokens: 500,
@@ -92,24 +123,24 @@ Return ONLY the best URL:`
 
     if (!response.ok) {
       console.error("AI API error:", await response.text());
-      return filteredImages[0];
+      return sortedImages[0];
     }
 
     const data = await response.json();
     const selectedUrl = data.choices?.[0]?.message?.content?.trim();
     
     // Validate the response is actually a URL from our list
-    if (selectedUrl && filteredImages.some(img => img === selectedUrl || selectedUrl.includes(img) || img.includes(selectedUrl))) {
+    if (selectedUrl && sortedImages.some(img => img === selectedUrl || selectedUrl.includes(img) || img.includes(selectedUrl))) {
       return selectedUrl;
     }
     
     // If AI returned something not in list, find closest match
-    const match = filteredImages.find(img => selectedUrl?.includes(img) || img.includes(selectedUrl || ''));
-    return match || filteredImages[0];
+    const match = sortedImages.find(img => selectedUrl?.includes(img) || img.includes(selectedUrl || ''));
+    return match || sortedImages[0];
     
   } catch (error) {
     console.error("AI selection error:", error);
-    return filteredImages[0];
+    return sortedImages[0];
   }
 }
 
@@ -245,7 +276,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { accessoryType, accessoryId, forceUpdate } = await req.json();
+    const { accessoryType, accessoryId, forceUpdate, limit = 5 } = await req.json();
 
     // Build query based on parameters
     let query = supabase
@@ -262,6 +293,9 @@ serve(async (req) => {
     if (!forceUpdate) {
       query = query.or("image_url.is.null,image_url.eq.,image_url.ilike.%placeholder%");
     }
+
+    // Limit results to avoid timeout
+    query = query.limit(limit);
 
     const { data: accessories, error: fetchError } = await query;
 
