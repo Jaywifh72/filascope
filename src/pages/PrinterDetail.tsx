@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { AccessoryPriceChart } from "@/components/AccessoryPriceChart";
+import { useState } from "react";
 import {
   ArrowLeft,
   Box,
@@ -33,6 +35,9 @@ import {
   Blend,
   TrendingUp,
   TrendingDown,
+  ChevronLeft,
+  ChevronRight,
+  X,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -40,6 +45,9 @@ type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
 const PrinterDetail = () => {
   const { id } = useParams();
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [productImages, setProductImages] = useState<string[]>([]);
 
   const { data: printer, isLoading } = useQuery({
     queryKey: ["printer-detail", id],
@@ -74,7 +82,6 @@ const PrinterDetail = () => {
     },
   });
 
-  // Fetch printer accessories
   const { data: accessories } = useQuery({
     queryKey: ["printer-accessories", id],
     enabled: !!id,
@@ -90,6 +97,26 @@ const PrinterDetail = () => {
       return data;
     },
   });
+
+  // Extract product images when printer data changes
+  const scrapedData = printer?.scraped_data as any;
+  const images = scrapedData?.images?.product_images;
+  if (Array.isArray(images) && images.length > 0 && productImages.length === 0) {
+    setProductImages(images);
+  }
+
+  const openLightbox = (index: number) => {
+    setCurrentImageIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+  };
 
   // Calculate compatibility for each filament
   const compatibleFilaments = filaments && printer
@@ -210,7 +237,10 @@ const PrinterDetail = () => {
                 if (Array.isArray(productImages) && productImages.length > 0) {
                   return (
                     <div className="w-full lg:w-auto lg:min-w-[400px]">
-                      <Card className="overflow-hidden border-2 bg-background/80 backdrop-blur-sm">
+                      <Card 
+                        className="overflow-hidden border-2 bg-background/80 backdrop-blur-sm cursor-pointer hover:shadow-xl transition-shadow"
+                        onClick={() => openLightbox(0)}
+                      >
                         <CardContent className="p-0">
                           <img 
                             src={productImages[0]} 
@@ -225,7 +255,11 @@ const PrinterDetail = () => {
                       {productImages.length > 1 && (
                         <div className="grid grid-cols-4 gap-2 mt-2">
                           {productImages.slice(1, 5).map((img: string, idx: number) => (
-                            <Card key={idx} className="overflow-hidden border bg-background/80 backdrop-blur-sm">
+                            <Card 
+                              key={idx} 
+                              className="overflow-hidden border bg-background/80 backdrop-blur-sm cursor-pointer hover:shadow-lg transition-shadow"
+                              onClick={() => openLightbox(idx + 1)}
+                            >
                               <CardContent className="p-1">
                                 <img 
                                   src={img} 
@@ -1019,6 +1053,87 @@ const PrinterDetail = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Image Lightbox Modal */}
+        <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-black/95 border-none">
+            <div className="relative w-full h-full flex items-center justify-center">
+              {/* Close Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
+                onClick={() => setLightboxOpen(false)}
+              >
+                <X className="h-6 w-6" />
+              </Button>
+
+              {/* Image Counter */}
+              {productImages.length > 1 && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-black/60 text-white px-4 py-2 rounded-full text-sm">
+                  {currentImageIndex + 1} / {productImages.length}
+                </div>
+              )}
+
+              {/* Previous Button */}
+              {productImages.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-4 z-50 text-white hover:bg-white/20 h-12 w-12"
+                  onClick={prevImage}
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </Button>
+              )}
+
+              {/* Main Image */}
+              <img
+                src={productImages[currentImageIndex]}
+                alt={`${printer?.model_name} - Image ${currentImageIndex + 1}`}
+                className="max-w-full max-h-[90vh] object-contain animate-fade-in"
+                onError={(e) => {
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
+              />
+
+              {/* Next Button */}
+              {productImages.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-4 z-50 text-white hover:bg-white/20 h-12 w-12"
+                  onClick={nextImage}
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </Button>
+              )}
+
+              {/* Thumbnail Navigation */}
+              {productImages.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex gap-2 max-w-[90vw] overflow-x-auto p-2 bg-black/60 rounded-lg">
+                  {productImages.map((img: string, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentImageIndex(idx)}
+                      className={`flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition-all ${
+                        idx === currentImageIndex 
+                          ? 'border-primary scale-110' 
+                          : 'border-white/30 opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`Thumbnail ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
