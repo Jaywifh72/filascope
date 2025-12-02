@@ -75,6 +75,60 @@ function extractPrices(markdown: string): {
   return { msrp_usd, current_price_usd_store };
 }
 
+// Intelligent URL correction: convert marketing pages to store pages
+function correctUrlForPricing(url: string, brand: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
+    const pathname = urlObj.pathname.toLowerCase();
+
+    // Bambu Lab: convert /products/ to /us/products/ (US store)
+    if (hostname.includes('bambulab.com')) {
+      if (pathname.startsWith('/products/') && !pathname.startsWith('/us/products/')) {
+        return `https://us.store.bambulab.com${pathname}`;
+      }
+    }
+
+    // Creality: convert /products/ to /collections/fdm-3d-printers/products/
+    if (hostname.includes('creality.com') || hostname.includes('creality3d.shop')) {
+      if (pathname.includes('/products/') && !pathname.includes('/collections/')) {
+        const productSlug = pathname.split('/products/')[1];
+        return `https://store.creality.com/collections/fdm-3d-printers/products/${productSlug}`;
+      }
+    }
+
+    // Prusa Research: ensure it's the shop domain
+    if (hostname.includes('prusa3d.com') && !hostname.includes('shop.prusa3d.com')) {
+      return url.replace('www.prusa3d.com', 'shop.prusa3d.com').replace('prusa3d.com', 'shop.prusa3d.com');
+    }
+
+    // Anycubic: convert /products/ to store subdomain
+    if (hostname.includes('anycubic.com') && !hostname.includes('store.anycubic.com')) {
+      if (pathname.includes('/products/')) {
+        return url.replace(/^https?:\/\/[^\/]+/, 'https://store.anycubic.com');
+      }
+    }
+
+    // Elegoo: ensure store domain
+    if (hostname.includes('elegoo.com') && !hostname.includes('www.elegoo.com')) {
+      return url.replace(/^https?:\/\/[^\/]+/, 'https://www.elegoo.com');
+    }
+
+    // QIDI: convert to official store
+    if (hostname.includes('qidi') && !hostname.includes('qidi3d.com')) {
+      if (pathname.includes('/products/')) {
+        const productSlug = pathname.split('/products/')[1]?.split('/')[0];
+        return `https://qidi3d.com/products/${productSlug}`;
+      }
+    }
+
+    return null; // No correction needed
+  } catch (error) {
+    console.error('URL correction error:', error);
+    return null;
+  }
+}
+
 // Direct Firecrawl API call
 async function firecrawlScrape(url: string, apiKey: string) {
   console.log('Scraping price from:', url);
@@ -192,9 +246,17 @@ Deno.serve(async (req) => {
           continue;
         }
 
+        // Try URL correction first
+        const correctedUrl = correctUrlForPricing(printer.official_product_url, brand);
+        const urlToScrape = correctedUrl || printer.official_product_url;
+        
+        if (correctedUrl) {
+          console.log(`URL corrected: ${printer.official_product_url} → ${correctedUrl}`);
+        }
+
         // Scrape the product page
         const scrapeResult = await firecrawlScrape(
-          printer.official_product_url,
+          urlToScrape,
           firecrawlApiKey
         );
 
