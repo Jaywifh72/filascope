@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw } from "lucide-react";
+import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -43,6 +43,8 @@ export default function AdminPrinters() {
   const [massRescrapeStats, setMassRescrapeStats] = useState<{ total: number; completed: number } | null>(null);
   const [editingUrl, setEditingUrl] = useState<{ printerId: string; url: string } | null>(null);
   const [cleaningDuplicates, setCleaningDuplicates] = useState(false);
+  const [fetchingPrices, setFetchingPrices] = useState(false);
+  const [priceStats, setPriceStats] = useState<{ total: number; successful: number; failed: number } | null>(null);
 
   // Fetch printer brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -519,6 +521,54 @@ export default function AdminPrinters() {
     }
   });
 
+  const handleFetchPrices = async () => {
+    try {
+      setFetchingPrices(true);
+      setPriceStats(null);
+
+      toast({
+        title: "Fetching prices",
+        description: "Scraping prices for printers without price data...",
+      });
+
+      // Call the fetch-printer-prices edge function
+      const { data, error } = await supabase.functions.invoke('fetch-printer-prices', {
+        body: {},
+      });
+
+      if (error) throw error;
+
+      setPriceStats({
+        total: data.total_processed || 0,
+        successful: data.successful || 0,
+        failed: data.failed || 0,
+      });
+
+      if (data.successful > 0) {
+        toast({
+          title: "Price fetch completed",
+          description: `Successfully fetched prices for ${data.successful} printers`,
+        });
+        queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
+      } else {
+        toast({
+          title: "No prices found",
+          description: "Could not extract prices from product pages",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Price fetch error:", error);
+      toast({
+        title: "Price fetch failed",
+        description: error.message || "An error occurred while fetching prices",
+        variant: "destructive",
+      });
+    } finally {
+      setFetchingPrices(false);
+    }
+  };
+
   const handleMassRescrape = async () => {
     try {
       setMassRescraping(true);
@@ -862,6 +912,61 @@ export default function AdminPrinters() {
             </div>
           )}
             </CardContent>
+            </Card>
+
+            <Separator />
+
+            {/* Mass Re-scrape Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <RefreshCw className="h-5 w-5" />
+                  Fetch Missing Prices
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Automatically scrape current prices from official product pages for printers without price data. This will update MSRP and store prices where available.
+                  </p>
+                </div>
+
+                {priceStats && (
+                  <Alert>
+                    <AlertDescription>
+                      <div className="space-y-1">
+                        <div className="font-semibold">Price Fetch Results:</div>
+                        <div className="text-sm">
+                          <span className="text-green-600">✓ {priceStats.successful} successful</span>
+                          {priceStats.failed > 0 && (
+                            <span className="text-destructive ml-3">✗ {priceStats.failed} failed</span>
+                          )}
+                        </div>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <Button
+                  onClick={handleFetchPrices}
+                  disabled={fetchingPrices}
+                  className="w-full gap-2"
+                  size="lg"
+                  variant="default"
+                >
+                  {fetchingPrices ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Fetching Prices...
+                    </>
+                  ) : (
+                    <>
+                      <DollarSign className="h-4 w-4" />
+                      Fetch Prices for Printers
+                    </>
+                  )}
+                </Button>
+              </CardContent>
             </Card>
 
             <Separator />
