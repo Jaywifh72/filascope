@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe, Upload, Link as LinkIcon } from "lucide-react";
+import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe, Upload, Link as LinkIcon, Sparkles, Package } from "lucide-react";
 
 interface CleanupResult {
   total_checked: number;
@@ -53,6 +53,15 @@ const AdminMaintenance = () => {
   const [editingFilament, setEditingFilament] = useState<{ id: string; title: string; currentImage: string | null } | null>(null);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [accessoryImageType, setAccessoryImageType] = useState("all");
+  const [isScrapingAccessoryImages, setIsScrapingAccessoryImages] = useState(false);
+  const [accessoryImageResult, setAccessoryImageResult] = useState<{
+    updated: number;
+    failed: number;
+    skipped: number;
+    details: Array<{ name: string; status: string; image?: string }>;
+  } | null>(null);
+  const [forceAccessoryUpdate, setForceAccessoryUpdate] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -236,6 +245,40 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsScraping(false);
+    }
+  };
+
+  const runAccessoryImageScraper = async () => {
+    setIsScrapingAccessoryImages(true);
+    setAccessoryImageResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-accessory-images', {
+        method: 'POST',
+        body: { 
+          accessoryType: accessoryImageType === "all" ? null : accessoryImageType,
+          forceUpdate: forceAccessoryUpdate
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setAccessoryImageResult(data);
+      toast({
+        title: "AI Image Scraping Complete",
+        description: `Updated ${data.updated} accessories, ${data.skipped} skipped, ${data.failed} failed`,
+      });
+    } catch (error) {
+      console.error('Accessory image scraping error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to run AI image scraper",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScrapingAccessoryImages(false);
     }
   };
 
@@ -583,6 +626,121 @@ const AdminMaintenance = () => {
                               </div>
                             )}
                           </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* AI Accessory Image Scraper Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <CardTitle>AI Accessory Image Finder</CardTitle>
+          </div>
+          <CardDescription>
+            Uses AI to intelligently find and assign the perfect product images for nozzles, build plates, and AMS/MMU systems
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="accessory-type-filter">Accessory Type</Label>
+              <Select value={accessoryImageType} onValueChange={setAccessoryImageType}>
+                <SelectTrigger id="accessory-type-filter" className="w-full bg-background">
+                  <SelectValue placeholder="All accessories" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  <SelectItem value="all">All Accessories</SelectItem>
+                  <SelectItem value="nozzle">Nozzles</SelectItem>
+                  <SelectItem value="build_plate">Build Plates</SelectItem>
+                  <SelectItem value="ams_mmu">AMS/MMU Systems</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center space-x-2 pt-6">
+              <input
+                type="checkbox"
+                id="force-accessory-update"
+                checked={forceAccessoryUpdate}
+                onChange={(e) => setForceAccessoryUpdate(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300"
+              />
+              <Label htmlFor="force-accessory-update" className="cursor-pointer">
+                Force update (replace existing images)
+              </Label>
+            </div>
+          </div>
+
+          <Button 
+            onClick={runAccessoryImageScraper} 
+            disabled={isScrapingAccessoryImages}
+            className="w-full sm:w-auto"
+          >
+            {isScrapingAccessoryImages ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                AI Finding Images...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Find & Assign Images with AI
+              </>
+            )}
+          </Button>
+
+          {accessoryImageResult && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{accessoryImageResult.updated}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Updated</div>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{accessoryImageResult.skipped}</div>
+                  <div className="text-sm text-muted-foreground">Skipped (no image found)</div>
+                </div>
+                <div className="bg-red-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <div className="text-2xl font-bold">{accessoryImageResult.failed}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Failed</div>
+                </div>
+              </div>
+
+              {accessoryImageResult.details.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Processing Details:</h3>
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {accessoryImageResult.details.map((detail, idx) => (
+                      <div key={idx} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="font-medium">{detail.name}</div>
+                            {detail.image && detail.status === "updated" && (
+                              <div className="text-xs text-muted-foreground font-mono truncate max-w-md">
+                                {detail.image}
+                              </div>
+                            )}
+                          </div>
+                          <Badge variant={
+                            detail.status === "updated" ? "default" :
+                            detail.status === "no_image_found" ? "secondary" : "destructive"
+                          }>
+                            {detail.status.replace(/_/g, ' ')}
+                          </Badge>
                         </div>
                       </div>
                     ))}
