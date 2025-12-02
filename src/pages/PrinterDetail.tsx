@@ -202,7 +202,50 @@ const PrinterDetail = () => {
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-border/50 backdrop-blur-sm">
           <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
           <div className="relative p-8 md:p-12">
-            <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
+              {/* Product Images */}
+              {(() => {
+                const scrapedData = printer.scraped_data as any;
+                const productImages = scrapedData?.images?.product_images;
+                if (Array.isArray(productImages) && productImages.length > 0) {
+                  return (
+                    <div className="w-full lg:w-auto lg:min-w-[400px]">
+                      <Card className="overflow-hidden border-2 bg-background/80 backdrop-blur-sm">
+                        <CardContent className="p-0">
+                          <img 
+                            src={productImages[0]} 
+                            alt={`${printer.model_name} product image`}
+                            className="w-full h-auto object-contain max-h-[500px]"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </CardContent>
+                      </Card>
+                      {productImages.length > 1 && (
+                        <div className="grid grid-cols-4 gap-2 mt-2">
+                          {productImages.slice(1, 5).map((img: string, idx: number) => (
+                            <Card key={idx} className="overflow-hidden border bg-background/80 backdrop-blur-sm">
+                              <CardContent className="p-1">
+                                <img 
+                                  src={img} 
+                                  alt={`${printer.model_name} image ${idx + 2}`}
+                                  className="w-full h-20 object-cover rounded"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
               <div className="flex-1 space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="secondary" className="text-sm px-3 py-1">{brand}</Badge>
