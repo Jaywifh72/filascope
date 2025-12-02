@@ -298,7 +298,7 @@ export default function Printers() {
                     <img 
                       src={getBrandLogo(printer.brand?.brand || null)!} 
                       alt={`${printer.brand?.brand} logo`}
-                      className="h-24 w-auto object-contain"
+                      className="h-24 w-auto object-contain max-w-[120px] max-h-24"
                     />
                   </div>
                 )}
