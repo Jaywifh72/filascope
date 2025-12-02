@@ -6,6 +6,72 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function searchPriceWithAI(
+  brandName: string,
+  modelName: string,
+  storeUrl: string | null,
+  priceType: 'store' | 'amazon',
+  lovableApiKey: string
+): Promise<{ success: boolean; price?: number; response?: string }> {
+  const priceTypeLabel = priceType === 'store' ? 'official store price' : 'Amazon price';
+  const searchQuery = `Based on your training data, what is the ${priceTypeLabel} in USD for the ${brandName} ${modelName} 3D printer${storeUrl ? ` (reference: ${storeUrl})` : ''}? Provide only the numeric price value, without currency symbols. If you cannot find this specific price type, respond with "NOT FOUND".`;
+
+  console.log(`AI searching ${priceType} price for: ${brandName} ${modelName}`, storeUrl ? `(Reference: ${storeUrl})` : '');
+
+  try {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a helpful assistant that provides pricing information for 3D printers based on your training data. Note: You cannot access live websites. Provide pricing from your knowledge of manufacturer prices and Amazon listings. Always provide prices in USD as numeric values only. If you cannot find the SPECIFIC price type requested (store vs Amazon), respond with "NOT FOUND".`
+          },
+          {
+            role: 'user',
+            content: searchQuery
+          }
+        ],
+        temperature: 0.3,
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      throw new Error(`AI Gateway error: ${aiResponse.status}`);
+    }
+
+    const aiData = await aiResponse.json();
+    const priceText = aiData.choices[0]?.message?.content || '';
+    
+    console.log(`AI response for ${modelName} (${priceType}):`, priceText);
+
+    // Check if not found
+    if (priceText.toUpperCase().includes('NOT FOUND')) {
+      return { success: false, response: priceText };
+    }
+
+    // Extract numeric price
+    const priceMatch = priceText.match(/[\d,]+\.?\d*/);
+    if (priceMatch) {
+      const price = parseFloat(priceMatch[0].replace(/,/g, ''));
+      
+      if (price > 0 && price < 100000) {
+        return { success: true, price, response: priceText };
+      }
+    }
+
+    return { success: false, response: priceText };
+  } catch (error) {
+    console.error(`Error searching ${priceType} price:`, error);
+    return { success: false, response: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -20,31 +86,178 @@ serve(async (req) => {
 
     const { printerIds } = await req.json();
     
-    console.log(`Starting AI MSRP search for ${printerIds?.length || 'all'} printers`);
+    console.log(`Starting AI price search with priority: store → amazon (no prices) → amazon (missing)`);
 
-    // Fetch printers with NO price data at all (neither store price nor MSRP)
-    let query = supabase
+    const results = [];
+    let successful = 0;
+    let failed = 0;
+
+    // PRIORITY 1 & 2: Printers with NO prices at all - try store first, then Amazon
+    let noPriceQuery = supabase
       .from('printers')
-      .select('id, printer_id, brand_id, model_name, official_product_url, official_store_url, printer_brands(brand)')
+      .select('id, printer_id, brand_id, model_name, official_product_url, official_store_url, current_price_usd_store, current_price_usd_amazon, msrp_usd, printer_brands(brand)')
       .is('current_price_usd_store', null)
+      .is('current_price_usd_amazon', null)
       .is('msrp_usd', null)
-      .limit(5); // Process 5 at a time to avoid timeouts
+      .limit(3); // Process 3 at a time for priority 1+2
 
     if (printerIds && printerIds.length > 0) {
-      query = query.in('id', printerIds);
+      noPriceQuery = noPriceQuery.in('id', printerIds);
     }
 
-    const { data: printers, error: fetchError } = await query;
+    const { data: noPricePrinters, error: noPriceError } = await noPriceQuery;
 
-    if (fetchError) {
-      console.error('Error fetching printers:', fetchError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch printers' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
+    if (noPriceError) {
+      console.error('Error fetching no-price printers:', noPriceError);
+    } else if (noPricePrinters && noPricePrinters.length > 0) {
+      console.log(`\n=== PRIORITY 1 & 2: Processing ${noPricePrinters.length} printers with NO prices ===`);
+      
+      for (const printer of noPricePrinters) {
+        const brandName = (printer.printer_brands as any)?.brand || 'Unknown';
+        const storeUrl = printer.official_store_url || printer.official_product_url;
+
+        // Priority 1: Try store price first
+        const storeResult = await searchPriceWithAI(brandName, printer.model_name, storeUrl, 'store', lovableApiKey);
+        
+        if (storeResult.success && storeResult.price) {
+          const { error: updateError } = await supabase
+            .from('printers')
+            .update({ current_price_usd_store: storeResult.price })
+            .eq('id', printer.id);
+
+          if (!updateError) {
+            console.log(`✓ Priority 1 SUCCESS: Store price for ${printer.model_name}: $${storeResult.price}`);
+            successful++;
+            results.push({
+              printer_id: printer.printer_id,
+              model_name: printer.model_name,
+              brand: brandName,
+              success: true,
+              price_type: 'store',
+              price: storeResult.price,
+            });
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+        }
+
+        // Priority 2: Store failed, try Amazon price
+        console.log(`Store price not found, trying Amazon for ${printer.model_name}...`);
+        const amazonResult = await searchPriceWithAI(brandName, printer.model_name, storeUrl, 'amazon', lovableApiKey);
+        
+        if (amazonResult.success && amazonResult.price) {
+          const { error: updateError } = await supabase
+            .from('printers')
+            .update({ current_price_usd_amazon: amazonResult.price })
+            .eq('id', printer.id);
+
+          if (!updateError) {
+            console.log(`✓ Priority 2 SUCCESS: Amazon price for ${printer.model_name}: $${amazonResult.price}`);
+            successful++;
+            results.push({
+              printer_id: printer.printer_id,
+              model_name: printer.model_name,
+              brand: brandName,
+              success: true,
+              price_type: 'amazon',
+              price: amazonResult.price,
+            });
+          } else {
+            failed++;
+            results.push({
+              printer_id: printer.printer_id,
+              model_name: printer.model_name,
+              brand: brandName,
+              success: false,
+              error: 'Database update failed',
+            });
+          }
+        } else {
+          console.warn(`✗ Both store and Amazon prices not found for ${printer.model_name}`);
+          failed++;
+          results.push({
+            printer_id: printer.printer_id,
+            model_name: printer.model_name,
+            brand: brandName,
+            success: false,
+            error: 'No prices found',
+          });
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
 
-    if (!printers || printers.length === 0) {
+    // PRIORITY 3: Printers missing Amazon price (but may have other prices)
+    let noAmazonQuery = supabase
+      .from('printers')
+      .select('id, printer_id, brand_id, model_name, official_product_url, official_store_url, current_price_usd_amazon, printer_brands(brand)')
+      .is('current_price_usd_amazon', null)
+      .limit(2); // Process 2 more for priority 3
+
+    if (printerIds && printerIds.length > 0) {
+      noAmazonQuery = noAmazonQuery.in('id', printerIds);
+    }
+
+    const { data: noAmazonPrinters, error: noAmazonError } = await noAmazonQuery;
+
+    if (noAmazonError) {
+      console.error('Error fetching no-amazon printers:', noAmazonError);
+    } else if (noAmazonPrinters && noAmazonPrinters.length > 0) {
+      console.log(`\n=== PRIORITY 3: Processing ${noAmazonPrinters.length} printers missing Amazon prices ===`);
+      
+      for (const printer of noAmazonPrinters) {
+        const brandName = (printer.printer_brands as any)?.brand || 'Unknown';
+        const storeUrl = printer.official_store_url || printer.official_product_url;
+
+        const amazonResult = await searchPriceWithAI(brandName, printer.model_name, storeUrl, 'amazon', lovableApiKey);
+        
+        if (amazonResult.success && amazonResult.price) {
+          const { error: updateError } = await supabase
+            .from('printers')
+            .update({ current_price_usd_amazon: amazonResult.price })
+            .eq('id', printer.id);
+
+          if (!updateError) {
+            console.log(`✓ Priority 3 SUCCESS: Amazon price for ${printer.model_name}: $${amazonResult.price}`);
+            successful++;
+            results.push({
+              printer_id: printer.printer_id,
+              model_name: printer.model_name,
+              brand: brandName,
+              success: true,
+              price_type: 'amazon',
+              price: amazonResult.price,
+            });
+          } else {
+            failed++;
+            results.push({
+              printer_id: printer.printer_id,
+              model_name: printer.model_name,
+              brand: brandName,
+              success: false,
+              error: 'Database update failed',
+            });
+          }
+        } else {
+          console.warn(`✗ Amazon price not found for ${printer.model_name}`);
+          failed++;
+          results.push({
+            printer_id: printer.printer_id,
+            model_name: printer.model_name,
+            brand: brandName,
+            success: false,
+            error: 'Amazon price not found',
+          });
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    const totalProcessed = (noPricePrinters?.length || 0) + (noAmazonPrinters?.length || 0);
+
+    if (totalProcessed === 0) {
       return new Response(
         JSON.stringify({ 
           message: 'No printers need price data',
@@ -57,138 +270,10 @@ serve(async (req) => {
       );
     }
 
-    const results = [];
-    let successful = 0;
-    let failed = 0;
-
-    // Process each printer with AI search
-    for (const printer of printers) {
-      const brandName = (printer.printer_brands as any)?.brand || 'Unknown';
-      
-      // Build search query - AI can only search training data, not access live URLs
-      const storeUrl = printer.official_store_url || printer.official_product_url;
-      const searchQuery = `Based on your training data, what is the typical retail price or MSRP in USD for the ${brandName} ${printer.model_name} 3D printer${storeUrl ? ` (product page: ${storeUrl})` : ''}? Provide your best estimate from manufacturer's official pricing information. Please provide only the price as a number, without currency symbols. If you found recent store pricing, indicate "store price", otherwise indicate "MSRP".`;
-
-      console.log(`AI searching price for: ${brandName} ${printer.model_name}`, storeUrl ? `(Reference URL: ${storeUrl})` : '');
-
-      try {
-        // Call Lovable AI Gateway
-        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${lovableApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            messages: [
-              {
-                role: 'system',
-                content: 'You are a helpful assistant that provides MSRP and retail pricing estimates for 3D printers based on your training data. Note: You cannot access live websites. Provide pricing information from your knowledge of manufacturer MSRPs and typical retail prices. Always provide prices in USD. State whether you found typical "store price" information or "MSRP" in your training data. Format: "PRICE_VALUE (store price)" or "PRICE_VALUE (MSRP)". If uncertain, provide your best estimate and indicate it.'
-              },
-              {
-                role: 'user',
-                content: searchQuery
-              }
-            ],
-            temperature: 0.3,
-          }),
-        });
-
-        if (!aiResponse.ok) {
-          throw new Error(`AI Gateway error: ${aiResponse.status}`);
-        }
-
-        const aiData = await aiResponse.json();
-        const priceText = aiData.choices[0]?.message?.content || '';
-        
-        console.log(`AI response for ${printer.model_name}:`, priceText);
-
-        // Determine if it's a store price or MSRP
-        const isStorePrice = priceText.toLowerCase().includes('store price');
-        const isMSRP = priceText.toLowerCase().includes('msrp');
-
-        // Extract numeric price from response
-        const priceMatch = priceText.match(/[\d,]+\.?\d*/);
-        if (priceMatch) {
-          const price = parseFloat(priceMatch[0].replace(/,/g, ''));
-          
-          if (price > 0 && price < 100000) { // Sanity check
-            // Determine which field to update based on price type
-            const updateField = isStorePrice ? 'current_price_usd_store' : 'msrp_usd';
-            const priceType = isStorePrice ? 'store price' : 'MSRP';
-            
-            // Update the printer with the appropriate price field
-            const { error: updateError } = await supabase
-              .from('printers')
-              .update({ [updateField]: price })
-              .eq('id', printer.id);
-
-            if (updateError) {
-              console.error(`Error updating printer ${printer.model_name}:`, updateError);
-              failed++;
-              results.push({
-                printer_id: printer.printer_id,
-                model_name: printer.model_name,
-                brand: brandName,
-                success: false,
-                error: 'Database update failed',
-              });
-            } else {
-              console.log(`Successfully updated ${priceType} for ${printer.model_name}: $${price}`);
-              successful++;
-              results.push({
-                printer_id: printer.printer_id,
-                model_name: printer.model_name,
-                brand: brandName,
-                success: true,
-                msrp_usd: price,
-                ai_response: `${priceType}: $${price}`,
-              });
-            }
-          } else {
-            console.warn(`Invalid price for ${printer.model_name}: ${price}`);
-            failed++;
-            results.push({
-              printer_id: printer.printer_id,
-              model_name: printer.model_name,
-              brand: brandName,
-              success: false,
-              error: 'Invalid price value',
-            });
-          }
-        } else {
-          console.warn(`No price found in AI response for ${printer.model_name}`);
-          failed++;
-          results.push({
-            printer_id: printer.printer_id,
-            model_name: printer.model_name,
-            brand: brandName,
-            success: false,
-            error: 'No price found in AI response',
-          });
-        }
-
-        // Rate limiting delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-      } catch (error) {
-        console.error(`Error processing ${printer.model_name}:`, error);
-        failed++;
-        results.push({
-          printer_id: printer.printer_id,
-          model_name: printer.model_name,
-          brand: brandName,
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-      }
-    }
-
     return new Response(
       JSON.stringify({
-        message: `AI MSRP search completed: ${successful} successful, ${failed} failed`,
-        total_processed: printers.length,
+        message: `AI price search completed: ${successful} successful, ${failed} failed`,
+        total_processed: totalProcessed,
         successful,
         failed,
         results,
