@@ -58,43 +58,35 @@ export default function AdminPrinters() {
     ai_response?: string;
   }>>([]);
 
-  // Query to count printers without price data
-  const { data: priceProgressData, refetch: refetchPriceProgress } = useQuery({
-    queryKey: ["printers-price-progress"],
+  // Query ALL printers and count pricing status in memory for accuracy
+  const { data: allPrinters, refetch: refetchAllPrinters } = useQuery({
+    queryKey: ["all-printers-for-count"],
     queryFn: async () => {
-      // Count printers that have NO price data at all (all three fields are null)
-      const { data: printersWithoutPrice, error: countError } = await supabase
+      const { data, error } = await supabase
         .from("printers")
-        .select("id, msrp_usd, current_price_usd_store, current_price_usd_amazon")
-        .is('current_price_usd_store', null)
-        .is('current_price_usd_amazon', null)
-        .is('msrp_usd', null);
+        .select("id, msrp_usd, current_price_usd_store, current_price_usd_amazon");
       
-      if (countError) {
-        console.error('Error counting printers without price:', countError);
+      if (error) {
+        console.error('Error fetching printers for count:', error);
+        throw error;
       }
       
-      const { count: total } = await supabase
-        .from("printers")
-        .select("*", { count: "exact", head: true });
-      
-      const withoutPrice = printersWithoutPrice?.length || 0;
-      
-      console.log('Price progress update:', {
-        total: total || 0,
-        withoutPrice,
-        withPrice: (total || 0) - withoutPrice,
-      });
-      
-      return {
-        withoutPrice,
-        total: total || 0,
-        withPrice: (total || 0) - withoutPrice,
-      };
+      return data || [];
     },
-    staleTime: 0, // Always fetch fresh data
-    refetchInterval: fetchingPrices || aiSearching ? 2000 : false, // Refresh every 2 seconds while fetching
+    staleTime: 0,
+    refetchInterval: fetchingPrices || aiSearching ? 2000 : false,
   });
+
+  // Calculate price coverage from the actual printer data
+  const priceProgressData = allPrinters ? {
+    total: allPrinters.length,
+    withoutPrice: allPrinters.filter(p => 
+      !p.msrp_usd && !p.current_price_usd_store && !p.current_price_usd_amazon
+    ).length,
+    withPrice: allPrinters.filter(p => 
+      p.msrp_usd || p.current_price_usd_store || p.current_price_usd_amazon
+    ).length,
+  } : null;
 
   // Fetch printer brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -600,14 +592,14 @@ export default function AdminPrinters() {
           description: `Processed ${data.total_processed} printers: ${data.successful} successful, ${data.failed} failed. Run again to process more.`,
         });
         await queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
-        await refetchPriceProgress();
+        await refetchAllPrinters();
       } else {
         toast({
           title: "Batch completed",
           description: `Processed ${data.total_processed} printers but found no prices. Run again to continue.`,
           variant: "destructive",
         });
-        await refetchPriceProgress();
+        await refetchAllPrinters();
       }
     } catch (error: any) {
       console.error("Price fetch error:", error);
@@ -654,14 +646,14 @@ export default function AdminPrinters() {
           description: `Found MSRP for ${data.successful} out of ${data.total_processed} printers. Run again to process more.`,
         });
         await queryClient.invalidateQueries({ queryKey: ["printer-detail"] });
-        await refetchPriceProgress();
+        await refetchAllPrinters();
       } else {
         toast({
           title: "AI search completed",
           description: `Processed ${data.total_processed} printers but found no prices. Run again to continue.`,
           variant: "destructive",
         });
-        await refetchPriceProgress();
+        await refetchAllPrinters();
       }
     } catch (error: any) {
       console.error("AI search error:", error);
