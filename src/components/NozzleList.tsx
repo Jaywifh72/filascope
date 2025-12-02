@@ -161,15 +161,23 @@ export default function NozzleList() {
                     <Link key={nozzle.id} to={`/nozzles/${nozzle.id}`}>
                       <Card className="p-4 hover:shadow-lg transition-shadow cursor-pointer h-full">
                         {/* Image */}
-                        {nozzle.image_url && (
-                          <div className="aspect-square mb-4 rounded-lg overflow-hidden bg-muted">
+                        <div className="aspect-square mb-4 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+                          {nozzle.image_url ? (
                             <img
                               src={nozzle.image_url}
                               alt={nozzle.name}
                               className="w-full h-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                              }}
                             />
+                          ) : null}
+                          <div className={`flex flex-col items-center justify-center text-muted-foreground ${nozzle.image_url ? 'hidden' : ''}`}>
+                            <CircleDot className="h-12 w-12 mb-2 opacity-30" />
+                            <span className="text-xs">No image</span>
                           </div>
-                        )}
+                        </div>
 
                         {/* Name */}
                         <h4 className="font-semibold text-sm line-clamp-2 mb-2">{nozzle.name}</h4>
