@@ -5,19 +5,55 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Expanded specs interface for comprehensive nozzle/hotend data
+interface NozzleSpecs {
+  // Core nozzle specs
+  diameter_mm: number;
+  material: string;
+  max_temp_c?: number;
+  hardened: boolean;
+  wear_rating?: string;
+  flow_rate?: string;
+  coating?: string;
+  
+  // Thread and geometry
+  thread_type?: string; // M6, V6, MK8, Volcano, proprietary
+  orifice_geometry?: string; // Standard, CHT (triple-bore), pointed tip, flat tip
+  tip_geometry?: string; // Conical, flat, extended
+  inner_diameter_mm?: number; // Melt zone inner diameter
+  
+  // Thermal properties
+  thermal_conductivity_notes?: string; // e.g., "High conductivity plated copper core"
+  sustained_temp_c?: number; // Max sustained operating temp vs burst
+  
+  // Hotend/assembly specs (when nozzle is part of assembly)
+  heater_cartridge?: {
+    voltage?: number; // 12V, 24V
+    wattage?: number; // 40W, 50W, 60W
+    diameter_mm?: number; // 6mm cartridge
+  };
+  thermistor_type?: string; // NTC 100K, PT1000, ATC Semitec 104GT-2
+  heatbreak_material?: string; // stainless steel, titanium, bi-metal, all-metal
+  cooling_method?: string; // passive, active fan, water-cooled
+  
+  // Compatibility
+  supported_filament_types?: string[]; // PLA, ABS, PETG, TPU, CF, GF, metal-filled
+  mounting_interface?: string; // V6-style, MK8, Volcano, proprietary
+  hotend_system?: string; // E3D V6, Revo, Dragon, Rapido, Mosquito
+  
+  // Special features
+  special_features?: string[]; // ruby tip, sapphire tip, quick-swap, CHT, high-flow
+  
+  // Data quality
+  confidence_score?: number; // 0-1, how confident we are in extracted data
+  extraction_notes?: string; // Notes about uncertain or inferred values
+}
+
 interface NozzleData {
   name: string;
   brand: string;
   model?: string;
-  specs: {
-    diameter_mm: number;
-    material: string;
-    max_temp_c?: number;
-    hardened: boolean;
-    wear_rating?: string;
-    flow_rate?: string;
-    coating?: string;
-  };
+  specs: NozzleSpecs;
   product_url: string;
   image_url?: string;
   price?: number;
@@ -1004,6 +1040,406 @@ const BRAND_STORE_CONFIGS: Record<string, {
   },
 };
 
+// ========== NORMALIZATION UTILITIES ==========
+
+// Standardize material names
+function normalizeMaterial(input: string): string {
+  const normalized = input.toLowerCase().trim();
+  
+  const materialMap: Record<string, string> = {
+    'brass': 'brass',
+    'bronze': 'brass',
+    'hardened steel': 'hardened steel',
+    'hardened-steel': 'hardened steel',
+    'tool steel': 'hardened steel',
+    'a2 steel': 'hardened steel',
+    'stainless': 'stainless steel',
+    'stainless steel': 'stainless steel',
+    'ss': 'stainless steel',
+    'tungsten': 'tungsten carbide',
+    'tungsten carbide': 'tungsten carbide',
+    'tc': 'tungsten carbide',
+    'copper': 'copper',
+    'plated copper': 'plated copper',
+    'nickel plated copper': 'nickel-plated copper',
+    'titanium': 'titanium',
+    'ti': 'titanium',
+    'ruby': 'ruby-tipped brass',
+    'sapphire': 'sapphire-tipped brass',
+    'diamond': 'diamond-tipped',
+    'bi-metal': 'bi-metal',
+    'bimetal': 'bi-metal',
+  };
+  
+  for (const [key, value] of Object.entries(materialMap)) {
+    if (normalized.includes(key)) {
+      return value;
+    }
+  }
+  return normalized || 'brass';
+}
+
+// Standardize thread types
+function normalizeThreadType(input: string): string | undefined {
+  if (!input) return undefined;
+  const normalized = input.toLowerCase().trim();
+  
+  const threadMap: Record<string, string> = {
+    'm6': 'M6',
+    'm6x1': 'M6x1',
+    'v6': 'V6-style',
+    'e3d v6': 'V6-style',
+    'mk8': 'MK8',
+    'mk10': 'MK10',
+    'volcano': 'Volcano',
+    'supervolcano': 'SuperVolcano',
+    'revo': 'Revo (proprietary)',
+    'rapido': 'Rapido (proprietary)',
+    'dragon': 'Dragon (proprietary)',
+    'mosquito': 'Mosquito (proprietary)',
+  };
+  
+  for (const [key, value] of Object.entries(threadMap)) {
+    if (normalized.includes(key)) {
+      return value;
+    }
+  }
+  return input;
+}
+
+// Standardize hotend systems
+function normalizeHotendSystem(input: string): string | undefined {
+  if (!input) return undefined;
+  const normalized = input.toLowerCase().trim();
+  
+  const systemMap: Record<string, string> = {
+    'v6': 'E3D V6',
+    'e3d v6': 'E3D V6',
+    'revo': 'E3D Revo',
+    'volcano': 'E3D Volcano',
+    'dragon': 'Phaetus Dragon',
+    'dragonfly': 'Phaetus Dragonfly',
+    'rapido': 'Phaetus Rapido',
+    'mosquito': 'Slice Mosquito',
+    'copperhead': 'Slice Copperhead',
+    'bambu': 'Bambu Lab Hotend',
+    'prusa': 'Prusa Hotend',
+    'mk4': 'Prusa MK4 Nextruder',
+    'nextruder': 'Prusa Nextruder',
+  };
+  
+  for (const [key, value] of Object.entries(systemMap)) {
+    if (normalized.includes(key)) {
+      return value;
+    }
+  }
+  return input;
+}
+
+// Standardize thermistor types
+function normalizeThermistorType(input: string): string | undefined {
+  if (!input) return undefined;
+  const normalized = input.toLowerCase().trim();
+  
+  const thermistorMap: Record<string, string> = {
+    'ntc 100k': 'NTC 100K',
+    '100k': 'NTC 100K',
+    'pt1000': 'PT1000',
+    'pt100': 'PT100',
+    'semitec': 'ATC Semitec 104GT-2',
+    '104gt': 'ATC Semitec 104GT-2',
+    'epcos': 'EPCOS 100K',
+  };
+  
+  for (const [key, value] of Object.entries(thermistorMap)) {
+    if (normalized.includes(key)) {
+      return value;
+    }
+  }
+  return input;
+}
+
+// Convert temperature to Celsius if needed
+function normalizeTemperature(value: string | number, unit?: string): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  
+  let temp = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(temp)) return undefined;
+  
+  // Convert Fahrenheit to Celsius if unit indicates or value is suspiciously high
+  if (unit?.toLowerCase().includes('f') || temp > 600) {
+    temp = Math.round((temp - 32) * 5 / 9);
+  }
+  
+  return temp;
+}
+
+// Extract special features from text
+function extractSpecialFeatures(text: string): string[] {
+  const features: string[] = [];
+  const normalized = text.toLowerCase();
+  
+  const featurePatterns: [RegExp, string][] = [
+    [/ruby\s*(tip|nozzle)?/i, 'Ruby tip'],
+    [/sapphire\s*(tip|nozzle)?/i, 'Sapphire tip'],
+    [/diamond/i, 'Diamond tip'],
+    [/cht|clone hot-end tip|triple.?bore/i, 'CHT (high-flow triple-bore)'],
+    [/high.?flow/i, 'High-flow design'],
+    [/quick.?swap|rapid.?change|tool.?less/i, 'Quick-swap'],
+    [/plated/i, 'Plated surface'],
+    [/polished/i, 'Polished bore'],
+    [/wear.?resistant|abrasive.?resistant/i, 'Abrasive-resistant'],
+    [/all.?metal/i, 'All-metal construction'],
+    [/bi.?metal/i, 'Bi-metal heatbreak'],
+    [/thermal.?break|heat.?break/i, 'Optimized thermal break'],
+  ];
+  
+  for (const [pattern, feature] of featurePatterns) {
+    if (pattern.test(normalized) && !features.includes(feature)) {
+      features.push(feature);
+    }
+  }
+  
+  return features;
+}
+
+// Extract supported filament types from text
+function extractSupportedFilaments(text: string, isHardened: boolean): string[] {
+  const filaments: string[] = ['PLA', 'PETG', 'ABS'];
+  const normalized = text.toLowerCase();
+  
+  // Add TPU if flexible mentioned
+  if (/flex|tpu|tpe|soft/i.test(normalized)) {
+    filaments.push('TPU', 'TPE');
+  }
+  
+  // Hardened nozzles support abrasives
+  if (isHardened || /abrasive|carbon|glass|glow|metal.?fill/i.test(normalized)) {
+    filaments.push('Carbon Fiber', 'Glass Fiber', 'Glow-in-dark', 'Metal-filled');
+  }
+  
+  // High temp materials
+  if (/nylon|pa|pc|polycarbonate|peek|pei|ultem/i.test(normalized)) {
+    filaments.push('Nylon/PA', 'PC', 'PEEK', 'PEI');
+  }
+  
+  // ASA
+  if (/asa/i.test(normalized)) {
+    filaments.push('ASA');
+  }
+  
+  return [...new Set(filaments)]; // Remove duplicates
+}
+
+// ========== SPEC EXTRACTION ==========
+
+// Extract nozzle specs from product title/description
+function extractNozzleSpecs(title: string, description?: string): NozzleSpecs {
+  const combined = `${title} ${description || ''}`.toLowerCase();
+  const combinedOriginal = `${title} ${description || ''}`;
+  let confidence = 1.0;
+  const extractionNotes: string[] = [];
+  
+  // Extract diameter
+  const diameterMatch = combined.match(/(\d+\.?\d*)\s*mm/);
+  const diameter_mm = diameterMatch ? parseFloat(diameterMatch[1]) : 0.4;
+  if (!diameterMatch) {
+    confidence -= 0.1;
+    extractionNotes.push('Diameter defaulted to 0.4mm');
+  }
+  
+  // Determine material (normalized)
+  let material = 'brass';
+  if (combined.includes('hardened steel') || combined.includes('hardened-steel') || combined.includes('tool steel')) {
+    material = 'hardened steel';
+  } else if (combined.includes('stainless')) {
+    material = 'stainless steel';
+  } else if (combined.includes('tungsten') || combined.includes('carbide')) {
+    material = 'tungsten carbide';
+  } else if (combined.includes('nickel') && combined.includes('copper')) {
+    material = 'nickel-plated copper';
+  } else if (combined.includes('plated copper') || combined.includes('copper plated')) {
+    material = 'plated copper';
+  } else if (combined.includes('copper')) {
+    material = 'copper';
+  } else if (combined.includes('titanium')) {
+    material = 'titanium';
+  } else if (combined.includes('ruby')) {
+    material = 'ruby-tipped brass';
+  } else if (combined.includes('sapphire')) {
+    material = 'sapphire-tipped brass';
+  } else if (!combined.includes('brass')) {
+    confidence -= 0.05;
+    extractionNotes.push('Material inferred as brass (default)');
+  }
+  
+  // Determine if hardened
+  const hardened = combined.includes('hardened') || 
+                   material.includes('steel') || 
+                   material.includes('tungsten') ||
+                   material.includes('carbide') ||
+                   combined.includes('abrasive');
+  
+  // Max temp estimate based on material
+  let max_temp_c = 280;
+  const tempMatch = combined.match(/(\d{3})\s*°?\s*c/i) || combined.match(/max\.?\s*temp\.?:?\s*(\d{3})/i);
+  if (tempMatch) {
+    max_temp_c = parseInt(tempMatch[1]);
+  } else {
+    // Estimate based on material
+    if (material === 'hardened steel') max_temp_c = 450;
+    else if (material === 'stainless steel') max_temp_c = 300;
+    else if (material === 'tungsten carbide') max_temp_c = 500;
+    else if (material.includes('copper')) max_temp_c = 350;
+    else if (material.includes('ruby') || material.includes('sapphire')) max_temp_c = 500;
+    
+    confidence -= 0.05;
+    extractionNotes.push(`Max temp estimated from material (${max_temp_c}°C)`);
+  }
+  
+  // Extract thread type
+  let thread_type: string | undefined;
+  const threadMatch = combined.match(/m6|mk8|mk10|volcano|v6|revo/i);
+  if (threadMatch) {
+    thread_type = normalizeThreadType(threadMatch[0]);
+  }
+  
+  // Extract orifice geometry
+  let orifice_geometry: string | undefined;
+  if (/cht|triple.?bore|3.?hole/i.test(combined)) {
+    orifice_geometry = 'CHT (triple-bore high-flow)';
+  } else if (/pointed|sharp\s*tip/i.test(combined)) {
+    orifice_geometry = 'Pointed tip';
+  } else if (/flat\s*tip/i.test(combined)) {
+    orifice_geometry = 'Flat tip';
+  } else {
+    orifice_geometry = 'Standard';
+  }
+  
+  // Extract hotend system
+  let hotend_system: string | undefined;
+  const hotendMatch = combined.match(/v6|revo|volcano|dragon|dragonfly|rapido|mosquito|copperhead/i);
+  if (hotendMatch) {
+    hotend_system = normalizeHotendSystem(hotendMatch[0]);
+  }
+  
+  // Extract heater cartridge specs
+  let heater_cartridge: NozzleSpecs['heater_cartridge'] | undefined;
+  const voltageMatch = combined.match(/(\d{1,2})\s*v\s/i);
+  const wattageMatch = combined.match(/(\d{2,3})\s*w/i);
+  if (voltageMatch || wattageMatch) {
+    heater_cartridge = {
+      voltage: voltageMatch ? parseInt(voltageMatch[1]) : undefined,
+      wattage: wattageMatch ? parseInt(wattageMatch[1]) : undefined,
+    };
+  }
+  
+  // Extract thermistor type
+  let thermistor_type: string | undefined;
+  const thermistorMatch = combined.match(/ntc\s*100k|pt1000|pt100|semitec|104gt|epcos/i);
+  if (thermistorMatch) {
+    thermistor_type = normalizeThermistorType(thermistorMatch[0]);
+  }
+  
+  // Extract heatbreak material
+  let heatbreak_material: string | undefined;
+  if (/bi.?metal\s*(heat)?break/i.test(combined)) {
+    heatbreak_material = 'bi-metal';
+  } else if (/titanium\s*(heat)?break/i.test(combined) || /ti\s*(heat)?break/i.test(combined)) {
+    heatbreak_material = 'titanium';
+  } else if (/all.?metal/i.test(combined)) {
+    heatbreak_material = 'all-metal stainless';
+  } else if (/ptfe\s*(lined|tube)/i.test(combined)) {
+    heatbreak_material = 'PTFE-lined';
+  }
+  
+  // Extract cooling method
+  let cooling_method: string | undefined;
+  if (/water.?cool/i.test(combined)) {
+    cooling_method = 'water-cooled';
+  } else if (/active\s*cool|fan\s*cool/i.test(combined)) {
+    cooling_method = 'active fan cooling';
+  } else if (/passive/i.test(combined)) {
+    cooling_method = 'passive';
+  }
+  
+  // Extract mounting interface
+  let mounting_interface: string | undefined;
+  if (/v6.?style|e3d\s*v6/i.test(combined)) {
+    mounting_interface = 'V6-style';
+  } else if (/volcano/i.test(combined)) {
+    mounting_interface = 'Volcano';
+  } else if (/mk8/i.test(combined)) {
+    mounting_interface = 'MK8';
+  } else if (/revo/i.test(combined)) {
+    mounting_interface = 'Revo (quick-swap)';
+  }
+  
+  // Extract special features
+  const special_features = extractSpecialFeatures(combinedOriginal);
+  
+  // Extract supported filaments
+  const supported_filament_types = extractSupportedFilaments(combinedOriginal, hardened);
+  
+  // Estimate flow rate based on diameter
+  let flow_rate: string;
+  if (diameter_mm <= 0.25) flow_rate = 'Low';
+  else if (diameter_mm <= 0.4) flow_rate = 'Standard';
+  else if (diameter_mm <= 0.6) flow_rate = 'High';
+  else flow_rate = 'Very High';
+  
+  // CHT nozzles have higher flow
+  if (orifice_geometry?.includes('CHT')) {
+    flow_rate = flow_rate === 'Standard' ? 'High' : 'Very High';
+  }
+  
+  // Estimate wear rating
+  let wear_rating: string;
+  if (material.includes('tungsten') || material.includes('ruby') || material.includes('sapphire')) {
+    wear_rating = 'Extreme';
+  } else if (hardened) {
+    wear_rating = 'Very High';
+  } else if (material.includes('steel')) {
+    wear_rating = 'High';
+  } else {
+    wear_rating = 'Standard';
+  }
+  
+  // Build final specs object
+  const specs: NozzleSpecs = {
+    diameter_mm,
+    material,
+    max_temp_c,
+    hardened,
+    wear_rating,
+    flow_rate,
+  };
+  
+  // Add optional fields only if extracted
+  if (thread_type) specs.thread_type = thread_type;
+  if (orifice_geometry && orifice_geometry !== 'Standard') specs.orifice_geometry = orifice_geometry;
+  if (heater_cartridge) specs.heater_cartridge = heater_cartridge;
+  if (thermistor_type) specs.thermistor_type = thermistor_type;
+  if (heatbreak_material) specs.heatbreak_material = heatbreak_material;
+  if (cooling_method) specs.cooling_method = cooling_method;
+  if (mounting_interface) specs.mounting_interface = mounting_interface;
+  if (hotend_system) specs.hotend_system = hotend_system;
+  if (special_features.length > 0) specs.special_features = special_features;
+  if (supported_filament_types.length > 3) specs.supported_filament_types = supported_filament_types;
+  
+  // Add confidence and notes if any issues
+  if (confidence < 1.0) {
+    specs.confidence_score = Math.round(confidence * 100) / 100;
+  }
+  if (extractionNotes.length > 0) {
+    specs.extraction_notes = extractionNotes.join('; ');
+  }
+  
+  return specs;
+}
+
+// ========== VALIDATION UTILITIES ==========
+
 // Validate URL returns HTTP 200
 async function validateUrl(url: string): Promise<{ valid: boolean; status?: number; error?: string }> {
   if (!url || !url.startsWith('http')) {
@@ -1048,47 +1484,7 @@ async function validateImageUrl(url: string): Promise<{ valid: boolean; error?: 
   }
 }
 
-// Extract nozzle specs from product title/description
-function extractNozzleSpecs(title: string, description?: string): Partial<NozzleData['specs']> {
-  const combined = `${title} ${description || ''}`.toLowerCase();
-  
-  // Extract diameter
-  const diameterMatch = combined.match(/(\d+\.?\d*)\s*mm/);
-  const diameter_mm = diameterMatch ? parseFloat(diameterMatch[1]) : 0.4;
-  
-  // Determine material
-  let material = 'brass';
-  if (combined.includes('hardened steel') || combined.includes('hardened-steel')) {
-    material = 'hardened steel';
-  } else if (combined.includes('stainless')) {
-    material = 'stainless steel';
-  } else if (combined.includes('tungsten')) {
-    material = 'tungsten carbide';
-  } else if (combined.includes('copper')) {
-    material = 'plated copper';
-  } else if (combined.includes('titanium')) {
-    material = 'titanium';
-  }
-  
-  // Determine if hardened
-  const hardened = combined.includes('hardened') || 
-                   combined.includes('steel') || 
-                   combined.includes('tungsten') ||
-                   combined.includes('carbide');
-  
-  // Max temp estimate
-  let max_temp_c = 280;
-  if (material === 'hardened steel') max_temp_c = 450;
-  if (material === 'stainless steel') max_temp_c = 300;
-  if (material === 'tungsten carbide') max_temp_c = 500;
-  
-  return {
-    diameter_mm,
-    material,
-    hardened,
-    max_temp_c,
-  };
-}
+// ========== SCRAPING FUNCTIONS ==========
 
 // Scrape Shopify store for nozzles
 async function scrapeShopifyNozzles(
