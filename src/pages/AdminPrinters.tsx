@@ -1053,7 +1053,7 @@ export default function AdminPrinters() {
                     Automatically scrape current prices from official product pages for printers without price data. This will update MSRP and store prices where available.
                   </p>
                   <p className="text-xs text-muted-foreground italic">
-                    Priority: Store prices → MSRP. AI search tries official store prices first, then falls back to MSRP.
+                    <strong>AI Search Priority:</strong> 1) Store price for printers with no prices → 2) Amazon price if store fails → 3) Amazon price for printers missing Amazon data.
                   </p>
                 </div>
 
