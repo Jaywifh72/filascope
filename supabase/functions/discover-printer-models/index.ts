@@ -521,7 +521,7 @@ Deno.serve(async (req) => {
         } else if (brand.brand.toLowerCase() === 'snapmaker') {
           // Snapmaker: Extract from /collections/best-selling-3d-printed-items
           // Filter to only actual printers using product URL patterns
-          const linkPattern = /\/products\/(snapmaker-2-0|snapmaker-artisan|snapmaker-j1s|snapmaker-u1)/i;
+          const linkPattern = /\/products\/(snapmaker-2-0|snapmaker-artisan|snapmaker-j1s|snapmaker-u1)/gi;
           const linkMatches = html.matchAll(linkPattern);
           
           for (const match of linkMatches) {
