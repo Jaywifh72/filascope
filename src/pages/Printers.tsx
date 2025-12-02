@@ -267,113 +267,122 @@ export default function Printers() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPrinters.map((printer) => (
-              <Card key={printer.id} className="p-6 space-y-4 relative">
-                {/* Compare Checkbox, View Button, and Rescrape Button */}
-                <div className="absolute top-4 right-4 flex gap-2">
+              <div key={printer.id} className="relative">
+                <Link to={`/printers/${printer.id}`}>
+                  <Card className="p-6 space-y-4 relative hover:shadow-lg transition-shadow cursor-pointer">
+                    {/* Brand Logo */}
+                    {getBrandLogo(printer.brand?.brand || null) && (
+                      <div className="absolute top-4 left-4 p-2 bg-muted/30 rounded-lg border border-border/50 backdrop-blur-sm">
+                        <img 
+                          src={getBrandLogo(printer.brand?.brand || null)!} 
+                          alt={`${printer.brand?.brand} logo`}
+                          className="h-24 w-auto object-contain max-w-[120px] max-h-24"
+                        />
+                      </div>
+                    )}
+
+                    {/* Header */}
+                    <div className="space-y-2 pr-16 pt-36">
+                      <h3 className="text-xl font-bold">
+                        {printer.model_name}
+                      </h3>
+                      {printer.series?.series_name && (
+                        <Badge variant="secondary">{printer.series.series_name}</Badge>
+                      )}
+                      {printer.variant_or_bundle_name && (
+                        <p className="text-sm text-muted-foreground">
+                          {printer.variant_or_bundle_name}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Price */}
+                    {printer.current_price_usd_store && (
+                      <div className="text-2xl font-bold text-primary">
+                        ${printer.current_price_usd_store}
+                      </div>
+                    )}
+
+                    {/* Key Specs */}
+                    <div className="space-y-2 text-sm">
+                      {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Build Volume:</span>
+                          <span className="font-medium">
+                            {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
+                          </span>
+                        </div>
+                      )}
+                      
+                      {printer.max_nozzle_temp_c && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Max Nozzle Temp:</span>
+                          <span className="font-medium">{printer.max_nozzle_temp_c}°C</span>
+                        </div>
+                      )}
+
+                      {printer.bed_max_temp_c && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Max Bed Temp:</span>
+                          <span className="font-medium">{printer.bed_max_temp_c}°C</span>
+                        </div>
+                      )}
+
+                      {printer.max_print_speed_mms && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Max Speed:</span>
+                          <span className="font-medium">{printer.max_print_speed_mms} mm/s</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Features */}
+                    <div className="flex flex-wrap gap-2">
+                      {printer.has_enclosure && (
+                        <Badge variant="outline">Enclosure</Badge>
+                      )}
+                      {printer.auto_bed_leveling && (
+                        <Badge variant="outline">Auto Leveling</Badge>
+                      )}
+                      {printer.multi_material_supported && (
+                        <Badge variant="outline">Multi-Material</Badge>
+                      )}
+                      {printer.has_wifi && (
+                        <Badge variant="outline">WiFi</Badge>
+                      )}
+                    </div>
+                  </Card>
+                </Link>
+
+                {/* Interactive Controls - Positioned absolutely over the card */}
+                <div className="absolute top-10 right-10 flex gap-2 z-10">
                   {isAdmin && printer.official_product_url && (
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      onClick={() => rescrapeMutation.mutate(printer.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        rescrapeMutation.mutate(printer.id);
+                      }}
                       disabled={rescrapeMutation.isPending}
                       title="Re-scrape printer data from official product page"
+                      className="bg-background/80 backdrop-blur-sm hover:bg-background"
                     >
                       <RefreshCw className={`h-4 w-4 ${rescrapeMutation.isPending ? 'animate-spin' : ''}`} />
                     </Button>
                   )}
-                  <Link to={`/printers/${printer.id}`}>
-                    <Button variant="ghost" size="icon">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Checkbox
-                    checked={selectedForCompare.includes(printer.printer_id)}
-                    onCheckedChange={() => toggleCompareSelection(printer.printer_id)}
-                  />
-                </div>
-
-                {/* Brand Logo */}
-                {getBrandLogo(printer.brand?.brand || null) && (
-                  <div className="absolute top-4 left-4 p-2 bg-muted/30 rounded-lg border border-border/50 backdrop-blur-sm">
-                    <img 
-                      src={getBrandLogo(printer.brand?.brand || null)!} 
-                      alt={`${printer.brand?.brand} logo`}
-                      className="h-24 w-auto object-contain max-w-[120px] max-h-24"
+                  <div 
+                    className="bg-background/80 backdrop-blur-sm rounded-md p-2 hover:bg-background transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Checkbox
+                      checked={selectedForCompare.includes(printer.printer_id)}
+                      onCheckedChange={() => toggleCompareSelection(printer.printer_id)}
                     />
                   </div>
-                )}
-
-                {/* Header */}
-                <div className="space-y-2 pr-16 pt-36">
-                  <h3 className="text-xl font-bold">
-                    {printer.model_name}
-                  </h3>
-                  {printer.series?.series_name && (
-                    <Badge variant="secondary">{printer.series.series_name}</Badge>
-                  )}
-                  {printer.variant_or_bundle_name && (
-                    <p className="text-sm text-muted-foreground">
-                      {printer.variant_or_bundle_name}
-                    </p>
-                  )}
                 </div>
-
-                {/* Price */}
-                {printer.current_price_usd_store && (
-                  <div className="text-2xl font-bold text-primary">
-                    ${printer.current_price_usd_store}
-                  </div>
-                )}
-
-                {/* Key Specs */}
-                <div className="space-y-2 text-sm">
-                  {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Build Volume:</span>
-                      <span className="font-medium">
-                        {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
-                      </span>
-                    </div>
-                  )}
-                  
-                  {printer.max_nozzle_temp_c && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Max Nozzle Temp:</span>
-                      <span className="font-medium">{printer.max_nozzle_temp_c}°C</span>
-                    </div>
-                  )}
-
-                  {printer.bed_max_temp_c && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Max Bed Temp:</span>
-                      <span className="font-medium">{printer.bed_max_temp_c}°C</span>
-                    </div>
-                  )}
-
-                  {printer.max_print_speed_mms && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Max Speed:</span>
-                      <span className="font-medium">{printer.max_print_speed_mms} mm/s</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Features */}
-                <div className="flex flex-wrap gap-2">
-                  {printer.has_enclosure && (
-                    <Badge variant="outline">Enclosure</Badge>
-                  )}
-                  {printer.auto_bed_leveling && (
-                    <Badge variant="outline">Auto Leveling</Badge>
-                  )}
-                  {printer.multi_material_supported && (
-                    <Badge variant="outline">Multi-Material</Badge>
-                  )}
-                  {printer.has_wifi && (
-                    <Badge variant="outline">WiFi</Badge>
-                  )}
-                </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
