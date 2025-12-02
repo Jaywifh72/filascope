@@ -159,12 +159,14 @@ export default function BuildPlateList() {
                               alt={plate.name}
                               className="w-full h-full object-contain"
                               onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                const target = e.currentTarget;
+                                target.style.display = 'none';
+                                const fallback = target.parentElement?.querySelector('.image-fallback');
+                                if (fallback) fallback.classList.remove('hidden');
                               }}
                             />
                           ) : null}
-                          <div className={`flex flex-col items-center justify-center text-muted-foreground ${plate.image_url ? 'hidden' : ''}`}>
+                          <div className={`image-fallback flex flex-col items-center justify-center text-muted-foreground ${plate.image_url ? 'hidden' : ''}`}>
                             <Square className="h-12 w-12 mb-2 opacity-30" />
                             <span className="text-xs">No image</span>
                           </div>
