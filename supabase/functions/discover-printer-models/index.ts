@@ -619,44 +619,21 @@ Deno.serve(async (req) => {
           
           console.log(`Found ${modelMap.size} Ultimaker printer URLs`);
         } else if (brand.brand.toLowerCase() === 'voron design') {
-          // Voron Design: Extract from simple URL structure
-          // URL pattern: /voron[model] (e.g., /voron0.2, /voron2.4, /vorontrident)
-          const linkPattern = /\/voron[^\/\s"'<>]+/gi;
-          const linkMatches = html.matchAll(linkPattern);
+          // Voron Design has fixed URLs for each model - no collection page to scrape
+          const voronModels = [
+            { name: 'Voron 0.2', url: 'https://vorondesign.com/voron0.2' },
+            { name: 'Voron 2.4', url: 'https://vorondesign.com/voron2.4' },
+            { name: 'Voron Trident', url: 'https://vorondesign.com/voron_trident' },
+            { name: 'Voron Switchwire', url: 'https://vorondesign.com/voron_switchwire' },
+            { name: 'Voron Legacy', url: 'https://vorondesign.com/voron_legacy' }
+          ];
           
-          for (const match of linkMatches) {
-            const url = match[0];
-            
-            // Extract model name from URL (e.g., "/voron0.2" -> "Voron 0.2")
-            const pathMatch = url.match(/\/voron(.+)/i);
-            if (pathMatch) {
-              let modelPart = pathMatch[1];
-              
-              // Clean up model name
-              // Handle special cases: "trident", "legacy", "switchwire"
-              if (modelPart.toLowerCase() === 'trident') {
-                modelPart = 'Trident';
-              } else if (modelPart.toLowerCase() === 'switchwire') {
-                modelPart = 'Switchwire';
-              } else if (modelPart.toLowerCase() === 'legacy') {
-                modelPart = 'Legacy';
-              } else {
-                // For numbered versions like "0.2", "1.8", "2.4"
-                modelPart = modelPart.replace(/(\d)\.(\d)/, '$1.$2');
-              }
-              
-              const modelName = `Voron ${modelPart}`;
-              const fullUrl = url.startsWith('http') ? url : `${scrapeConfig.product_url_base}${url}`;
-              
-              // Only add if it looks like a valid model (contains digits or known model names)
-              if (/\d|trident|switchwire|legacy/i.test(modelPart)) {
-                modelMap.set(modelName, fullUrl);
-                console.log(`Found Voron printer: ${modelName} at ${fullUrl}`);
-              }
-            }
+          for (const model of voronModels) {
+            modelMap.set(model.name, model.url);
+            console.log(`Added Voron model: ${model.name} at ${model.url}`);
           }
           
-          console.log(`Found ${modelMap.size} Voron printer URLs`);
+          console.log(`Added ${modelMap.size} Voron Design printer URLs`);
         } else if (brand.brand.toLowerCase() === 'prusa research') {
           // Prusa Research: Extract printers from WordPress-based site
           // Look for product links in HTML
