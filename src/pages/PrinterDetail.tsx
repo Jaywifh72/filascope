@@ -81,12 +81,17 @@ const PrinterDetail = () => {
 
   // Extract product images when printer data changes
   useEffect(() => {
-    if (printer?.scraped_data) {
-      const scrapedData = printer.scraped_data as any;
-      const images = scrapedData?.images?.product_images;
-      if (Array.isArray(images) && images.length > 0) {
-        setProductImages(images);
+    try {
+      if (printer?.scraped_data) {
+        const scrapedData = printer.scraped_data as any;
+        const images = scrapedData?.images?.product_images;
+        if (Array.isArray(images) && images.length > 0) {
+          setProductImages(images);
+        }
       }
+    } catch (error) {
+      console.error("Error extracting product images:", error);
+      setProductImages([]);
     }
   }, [printer]);
 
@@ -96,11 +101,15 @@ const PrinterDetail = () => {
   };
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
+    if (productImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
+    }
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+    if (productImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+    }
   };
 
 
@@ -864,41 +873,41 @@ const PrinterDetail = () => {
                           <Blend className="h-5 w-5 text-primary" />
                           Multi-Material Systems ({accessories.filter(a => a.accessory_type === 'ams_mmu').length})
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {accessories
                             .filter(a => a.accessory_type === 'ams_mmu')
                             .map((acc) => {
-                              const specs = acc.specs as any;
+                              const specs = (acc.specs || {}) as any;
                               return (
                               <Card key={acc.id} className="hover:shadow-lg transition-shadow">
                                 <CardContent className="p-4 space-y-3">
-                                  <h5 className="font-semibold capitalize">{acc.name}</h5>
+                                  <h5 className="font-semibold capitalize">{acc.name || 'Unknown'}</h5>
                                   <div className="space-y-2 text-sm">
-                                    {specs?.spool_capacity && (
+                                    {specs.spool_capacity != null && (
                                       <div className="flex justify-between">
                                         <span className="text-muted-foreground">Spool Capacity:</span>
                                         <span className="font-medium">{specs.spool_capacity} spools</span>
                                       </div>
                                     )}
-                                    {specs?.heated !== undefined && (
+                                    {specs.heated !== undefined && specs.heated !== null && (
                                       <div className="flex justify-between">
                                         <span className="text-muted-foreground">Heated:</span>
                                         <span className="font-medium">{specs.heated ? 'Yes' : 'No'}</span>
                                       </div>
                                     )}
-                                    {specs?.max_temp_c && (
+                                    {specs.max_temp_c != null && (
                                       <div className="flex justify-between">
                                         <span className="text-muted-foreground">Max Temperature:</span>
                                         <span className="font-medium">{specs.max_temp_c}°C</span>
                                       </div>
                                     )}
-                                    {specs?.power_requirements && (
+                                    {specs.power_requirements && (
                                       <div className="flex flex-col gap-1">
                                         <span className="text-muted-foreground">Power:</span>
                                         <span className="font-medium text-xs bg-muted/50 p-2 rounded">{specs.power_requirements}</span>
                                       </div>
                                     )}
-                                    {specs?.filament_drying !== undefined && (
+                                    {specs.filament_drying !== undefined && specs.filament_drying !== null && (
                                       <div className="flex justify-between">
                                         <span className="text-muted-foreground">Filament Drying:</span>
                                         <span className="font-medium">{specs.filament_drying ? 'Yes' : 'No'}</span>
