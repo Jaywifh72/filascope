@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Enhanced price extraction with multiple pattern matching
+// Enhanced price extraction with multiple pattern matching and debugging
 function extractPrices(markdown: string): {
   msrp_usd: number | null;
   current_price_usd_store: number | null;
@@ -13,48 +13,95 @@ function extractPrices(markdown: string): {
   let msrp_usd: number | null = null;
   let current_price_usd_store: number | null = null;
 
-  // Extract ALL USD prices from the entire markdown (not just specific lines)
-  const usdPriceRegex = /\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s*(?:USD)?/gi;
-  const allMatches = markdown.matchAll(usdPriceRegex);
+  // Multiple price regex patterns to catch different formats
+  const pricePatterns = [
+    /\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/gi,  // $1,234.56 or $1234.56
+    /\$\s*(\d{1,3}(?:,\d{3})*)/gi,               // $1,234 or $1234 (no decimals)
+    /USD\s*\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/gi, // USD $1,234.56
+    /(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s*USD/gi,  // 1,234.56 USD
+    /Price[:\s]*\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/gi, // Price: $1,234
+    /(?:from|starting\s+at)[:\s]*\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/gi, // from $1,234
+  ];
+
   const allPrices: number[] = [];
+  const priceContexts: string[] = [];
   
-  for (const match of allMatches) {
-    const price = parseFloat(match[1].replace(/,/g, ''));
-    if (price >= 100 && price <= 50000) { // Reasonable printer price range
-      allPrices.push(price);
+  // Try all patterns
+  for (const pattern of pricePatterns) {
+    const matches = markdown.matchAll(pattern);
+    for (const match of matches) {
+      const priceStr = match[1].replace(/,/g, '');
+      const price = parseFloat(priceStr);
+      
+      if (!isNaN(price) && price >= 100 && price <= 50000) {
+        allPrices.push(price);
+        // Extract context around the price (50 chars before and after)
+        const matchIndex = match.index || 0;
+        const contextStart = Math.max(0, matchIndex - 50);
+        const contextEnd = Math.min(markdown.length, matchIndex + match[0].length + 50);
+        priceContexts.push(markdown.substring(contextStart, contextEnd).replace(/\n/g, ' '));
+      }
     }
   }
 
-  console.log(`Found ${allPrices.length} prices in range: ${allPrices.slice(0, 5).join(', ')}`);
-
+  console.log(`Found ${allPrices.length} prices in range: [${allPrices.slice(0, 10).join(', ')}]`);
+  
   if (allPrices.length === 0) {
+    // Debug: Show first 500 chars of markdown to understand what we're getting
+    console.log('No prices found. Markdown preview:', markdown.substring(0, 500).replace(/\n/g, ' '));
+    
+    // Try to find any dollar signs or number patterns
+    const dollarSigns = (markdown.match(/\$/g) || []).length;
+    const numberPatterns = (markdown.match(/\d{3,}/g) || []).length;
+    console.log(`Debug: Found ${dollarSigns} dollar signs, ${numberPatterns} number sequences`);
+    
     return { msrp_usd: null, current_price_usd_store: null };
   }
 
-  // Look for explicit MSRP/RRP mentions
-  const msrpMatch = markdown.match(/(?:MSRP|RRP|Retail\s+Price)[:\s]*\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i);
-  if (msrpMatch) {
-    msrp_usd = parseFloat(msrpMatch[1].replace(/,/g, ''));
+  // Log some price contexts for debugging
+  if (priceContexts.length > 0) {
+    console.log('Price contexts:', priceContexts.slice(0, 3).join(' | '));
   }
 
-  // Look for "from" prices (usually base/starting prices)
-  const fromPriceMatch = markdown.match(/(?:from|starting\s+at)[:\s]*\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i);
-  if (fromPriceMatch) {
-    const fromPrice = parseFloat(fromPriceMatch[1].replace(/,/g, ''));
-    if (!current_price_usd_store) {
-      current_price_usd_store = fromPrice;
+  // Look for explicit MSRP/RRP/Retail mentions
+  const msrpPatterns = [
+    /(?:MSRP|RRP|Retail\s+Price|Original\s+Price)[:\s]*\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i,
+    /(?:was|originally)[:\s]*\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i,
+  ];
+  
+  for (const pattern of msrpPatterns) {
+    const msrpMatch = markdown.match(pattern);
+    if (msrpMatch) {
+      msrp_usd = parseFloat(msrpMatch[1].replace(/,/g, ''));
+      console.log(`Found MSRP: $${msrp_usd}`);
+      break;
     }
   }
 
-  // Strategy: Use the first significant price we find as the current store price
+  // Look for current price indicators
+  const currentPricePatterns = [
+    /(?:current\s+price|now|sale\s+price|special\s+price)[:\s]*\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i,
+    /(?:from|starting\s+at)[:\s]*\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i,
+    /(?:buy\s+for|purchase\s+for)[:\s]*\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i,
+  ];
+  
+  for (const pattern of currentPricePatterns) {
+    const priceMatch = markdown.match(pattern);
+    if (priceMatch) {
+      current_price_usd_store = parseFloat(priceMatch[1].replace(/,/g, ''));
+      console.log(`Found current price via pattern: $${current_price_usd_store}`);
+      break;
+    }
+  }
+
+  // If no current price found yet, use frequency-based approach
   if (!current_price_usd_store && allPrices.length > 0) {
-    // Use the most common price (or first if all unique)
     const priceFrequency = new Map<number, number>();
     for (const price of allPrices) {
       priceFrequency.set(price, (priceFrequency.get(price) || 0) + 1);
     }
     
-    // Get the price that appears most frequently
+    // Get the most frequent price
     let maxCount = 0;
     let mostCommonPrice = allPrices[0];
     for (const [price, count] of priceFrequency.entries()) {
@@ -65,10 +112,12 @@ function extractPrices(markdown: string): {
     }
     
     current_price_usd_store = mostCommonPrice;
+    console.log(`Using most common price: $${current_price_usd_store} (appeared ${maxCount} times)`);
   }
 
   // If we found MSRP and it's the same as current price, clear MSRP
   if (msrp_usd && current_price_usd_store && msrp_usd === current_price_usd_store) {
+    console.log('MSRP equals current price, clearing MSRP');
     msrp_usd = null;
   }
 
