@@ -518,6 +518,41 @@ Deno.serve(async (req) => {
           }
           
           console.log(`Found ${modelMap.size} FLSUN printer URLs after deduplication`);
+        } else if (brand.brand.toLowerCase() === 'snapmaker') {
+          // Snapmaker: Extract from /collections/best-selling-3d-printed-items
+          // Filter to only actual printers using product URL patterns
+          const linkPattern = /\/products\/(snapmaker-2-0|snapmaker-artisan|snapmaker-j1s|snapmaker-u1)/i;
+          const linkMatches = html.matchAll(linkPattern);
+          
+          for (const match of linkMatches) {
+            const url = match[0];
+            
+            // Extract model name from URL slug
+            const pathMatch = url.match(/\/products\/([^\/\?#]+)/);
+            if (pathMatch) {
+              const slug = pathMatch[1];
+              
+              // Convert slug to readable name (e.g., "snapmaker-2-0-modular-3-in-1-3d-printer-a250t" -> "Snapmaker 2.0 A250T")
+              let modelName = slug
+                .split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ')
+                .replace(/\s+3d\s+printer/i, '')
+                .replace(/modular\s+3\s+in\s+1/i, '')
+                .trim();
+              
+              // Clean up common patterns
+              modelName = modelName
+                .replace(/Snapmaker\s+2\s+0/i, 'Snapmaker 2.0')
+                .replace(/\s+/g, ' ');
+              
+              const fullUrl = url.startsWith('http') ? url : `${scrapeConfig.product_url_base}${url}`;
+              modelMap.set(modelName, fullUrl);
+              console.log(`Found Snapmaker printer: ${modelName} at ${fullUrl}`);
+            }
+          }
+          
+          console.log(`Found ${modelMap.size} Snapmaker printer URLs`);
         } else if (brand.brand.toLowerCase() === 'prusa research') {
           // Prusa Research: Extract printers from WordPress-based site
           // Look for product links in HTML
