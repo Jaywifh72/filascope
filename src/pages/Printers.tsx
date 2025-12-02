@@ -364,18 +364,6 @@ export default function Printers() {
                     <Badge variant="outline">WiFi</Badge>
                   )}
                 </div>
-
-                {/* Link */}
-                {printer.official_product_url && (
-                  <a
-                    href={printer.official_product_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline flex items-center gap-1"
-                  >
-                    View Product <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
               </Card>
             ))}
           </div>
