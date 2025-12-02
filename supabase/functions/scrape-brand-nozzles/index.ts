@@ -875,7 +875,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Quick-swap hotend', 'High flow', 'Tool-less installation']
         },
         product_url: 'https://store.creality.com/products/unicorn-quick-swap-nozzle-for-k1-k1-max-k1c',
-        image_url: 'https://img.staticdj.com/b02bfb72e8d41d9ff4d02f00ba3bad9d_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 15.99,
         currency: 'USD',
         description: 'Quick-swap Unicorn hotend for K1 series with 0.4mm brass nozzle',
@@ -903,7 +903,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Quick-swap hotend', 'High flow', 'Abrasive-resistant', 'Tool-less installation']
         },
         product_url: 'https://store.creality.com/products/unicorn-quick-swap-nozzle-for-k1-k1-max-k1c',
-        image_url: 'https://img.staticdj.com/b02bfb72e8d41d9ff4d02f00ba3bad9d_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 22.99,
         currency: 'USD',
         description: 'Quick-swap Unicorn hotend for K1 series with hardened steel for abrasives',
@@ -931,7 +931,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Quick-swap hotend', 'Very high flow', 'Tool-less installation']
         },
         product_url: 'https://store.creality.com/products/unicorn-quick-swap-nozzle-for-k1-k1-max-k1c',
-        image_url: 'https://img.staticdj.com/b02bfb72e8d41d9ff4d02f00ba3bad9d_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 15.99,
         currency: 'USD',
         description: 'Quick-swap Unicorn hotend for fast K1 prints',
@@ -959,7 +959,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Quick-swap hotend', 'Ultra high flow', 'Tool-less installation']
         },
         product_url: 'https://store.creality.com/products/unicorn-quick-swap-nozzle-for-k1-k1-max-k1c',
-        image_url: 'https://img.staticdj.com/b02bfb72e8d41d9ff4d02f00ba3bad9d_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 15.99,
         currency: 'USD',
         description: 'Quick-swap Unicorn hotend for rapid prototyping',
@@ -988,7 +988,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Quick-swap hotend', 'High flow', 'Enclosed chamber compatible']
         },
         product_url: 'https://store.creality.com/products/creality-k2-plus-nozzle-kit',
-        image_url: 'https://img.staticdj.com/e8e7e0c5ba5c4e4a8e9c6b3a1d2f4e7a_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 12.99,
         currency: 'USD',
         description: 'Standard brass nozzle for K2 Plus',
@@ -1016,7 +1016,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Quick-swap hotend', 'High flow', 'Abrasive-resistant', 'Enclosed chamber compatible']
         },
         product_url: 'https://store.creality.com/products/creality-k2-plus-nozzle-kit',
-        image_url: 'https://img.staticdj.com/e8e7e0c5ba5c4e4a8e9c6b3a1d2f4e7a_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 19.99,
         currency: 'USD',
         description: 'Hardened steel nozzle for K2 Plus abrasive filaments',
@@ -1045,7 +1045,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Sprite extruder compatible', 'All-metal design']
         },
         product_url: 'https://store.creality.com/products/ender-3-v3-se-nozzle-kit',
-        image_url: 'https://img.staticdj.com/b02bfb72e8d41d9ff4d02f00ba3bad9d_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 8.99,
         currency: 'USD',
         description: 'Brass nozzle for Ender-3 V3 series printers',
@@ -1073,7 +1073,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Sprite extruder compatible', 'Fine detail', 'All-metal design']
         },
         product_url: 'https://store.creality.com/products/ender-3-v3-se-nozzle-kit',
-        image_url: 'https://img.staticdj.com/b02bfb72e8d41d9ff4d02f00ba3bad9d_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 8.99,
         currency: 'USD',
         description: 'Fine detail brass nozzle for Ender-3 V3 series',
@@ -1101,7 +1101,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Sprite extruder compatible', 'High flow', 'All-metal design']
         },
         product_url: 'https://store.creality.com/products/ender-3-v3-se-nozzle-kit',
-        image_url: 'https://img.staticdj.com/b02bfb72e8d41d9ff4d02f00ba3bad9d_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 8.99,
         currency: 'USD',
         description: 'Fast printing brass nozzle for Ender-3 V3 series',
@@ -1130,7 +1130,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Industry standard', 'Widely compatible', 'Easy replacement']
         },
         product_url: 'https://store.creality.com/products/mk8-brass-nozzle-kit',
-        image_url: 'https://img.staticdj.com/mk8-nozzle-kit_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 6.99,
         currency: 'USD',
         description: 'MK8 brass nozzle for Ender-3/CR-10 series',
@@ -1158,7 +1158,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Industry standard', 'Fine detail', 'Easy replacement']
         },
         product_url: 'https://store.creality.com/products/mk8-brass-nozzle-kit',
-        image_url: 'https://img.staticdj.com/mk8-nozzle-kit_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 6.99,
         currency: 'USD',
         description: 'Fine detail MK8 nozzle for Ender-3/CR-10 series',
@@ -1186,7 +1186,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Industry standard', 'High flow', 'Easy replacement']
         },
         product_url: 'https://store.creality.com/products/mk8-brass-nozzle-kit',
-        image_url: 'https://img.staticdj.com/mk8-nozzle-kit_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 6.99,
         currency: 'USD',
         description: 'Fast printing MK8 nozzle for Ender-3/CR-10 series',
@@ -1214,7 +1214,7 @@ const BRAND_STORE_CONFIGS: Record<string, {
           special_features: ['Industry standard', 'Very high flow', 'Easy replacement']
         },
         product_url: 'https://store.creality.com/products/mk8-brass-nozzle-kit',
-        image_url: 'https://img.staticdj.com/mk8-nozzle-kit_1080x.jpg',
+        image_url: 'https://store.creality.com/cdn/shop/files/2_5d84bdba-81fd-4aad-b01d-bfe62a0c06bf.jpg',
         price: 6.99,
         currency: 'USD',
         description: 'Rapid prototyping MK8 nozzle for Ender-3/CR-10 series',
