@@ -524,18 +524,19 @@ export default function AdminPrinters() {
       setMassRescraping(true);
       setMassRescrapeStats(null);
 
-      // Fetch all printers with official_product_url
+      // Fetch all ACTIVE printers with official_product_url (not pending ones)
       const { data: allPrinters, error: fetchError } = await supabase
         .from('printers')
-        .select('id, model_name, official_product_url')
-        .not('official_product_url', 'is', null);
+        .select('id, model_name, official_product_url, status')
+        .not('official_product_url', 'is', null)
+        .eq('status', 'active');
 
       if (fetchError) throw fetchError;
 
       if (!allPrinters || allPrinters.length === 0) {
         toast({
           title: "No printers to scrape",
-          description: "No printers found with product URLs",
+          description: "No active printers found with product URLs",
           variant: "destructive",
         });
         return;
@@ -580,12 +581,13 @@ export default function AdminPrinters() {
 
       toast({
         title: "Mass re-scrape started",
-        description: `Scraping ${printersToScrape.length} printers for product images...`,
+        description: `Updating ${printersToScrape.length} existing printers with fresh data...`,
       });
 
       // Process printers in batches to avoid overwhelming the system
       const batchSize = 5;
       let completed = 0;
+      let updated = 0;
 
       for (let i = 0; i < printersToScrape.length; i += batchSize) {
         const batch = printersToScrape.slice(i, i + batchSize);
@@ -603,9 +605,50 @@ export default function AdminPrinters() {
                 .eq('id', printer.id);
 
               // Trigger deep scrape
-              await supabase.functions.invoke('deep-scrape-printer', {
-                body: { printerId: printer.id },
+              const { data: scrapeResult } = await supabase.functions.invoke('deep-scrape-printer', {
+                body: { printerId: printer.id, autoApply: true },
               });
+
+              // Wait a bit for scraping to complete
+              await new Promise(resolve => setTimeout(resolve, 2000));
+
+              // Fetch the scraped data
+              const { data: scrapedPrinter } = await supabase
+                .from('printers')
+                .select('scraped_data, scrape_status')
+                .eq('id', printer.id)
+                .single();
+
+              // If scraping completed successfully, auto-apply the data
+              if (scrapedPrinter?.scrape_status === 'completed' && scrapedPrinter?.scraped_data) {
+                const specs = (scrapedPrinter.scraped_data as any).extracted_specs || {};
+                
+                // Filter out metadata fields
+                const { content_length, extraction_confidence, ...validSpecs } = specs;
+                
+                // Sanitize integer fields
+                const integerFields = ['extruder_count', 'multi_material_max_spools', 'review_count_aggregated', 'onboard_storage_gb'];
+                for (const field of integerFields) {
+                  if (validSpecs[field] !== null && validSpecs[field] !== undefined) {
+                    const value = parseFloat(validSpecs[field]);
+                    if (!isNaN(value)) {
+                      validSpecs[field] = Math.round(value);
+                    }
+                  }
+                }
+                
+                // Update printer with scraped data (keep status as active, clear scraped_data)
+                await supabase
+                  .from('printers')
+                  .update({ 
+                    ...validSpecs,
+                    scraped_data: null,
+                    scrape_status: 'imported',
+                  })
+                  .eq('id', printer.id);
+
+                updated++;
+              }
 
               completed++;
               setMassRescrapeStats({ total: printersToScrape.length, completed });
@@ -623,7 +666,7 @@ export default function AdminPrinters() {
 
       toast({
         title: "Mass re-scrape completed",
-        description: `Successfully triggered scraping for ${completed} printers`,
+        description: `Successfully updated ${updated} existing printers with fresh data`,
       });
 
       queryClient.invalidateQueries({ queryKey: ["pending-printers"] });
