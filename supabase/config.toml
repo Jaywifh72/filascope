@@ -6,6 +6,9 @@ verify_jwt = true
 [functions.fetch-printer-prices]
 verify_jwt = true
 
+[functions.ai-search-msrp]
+verify_jwt = true
+
 [functions.estimate-weights]
 verify_jwt = false
 
