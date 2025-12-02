@@ -99,7 +99,7 @@ serve(async (req) => {
       .is('current_price_usd_store', null)
       .is('current_price_usd_amazon', null)
       .is('msrp_usd', null)
-      .limit(3); // Process 3 at a time for priority 1+2
+      .limit(7); // Process 7 at a time for priority 1+2
 
     if (printerIds && printerIds.length > 0) {
       noPriceQuery = noPriceQuery.in('id', printerIds);
@@ -193,7 +193,7 @@ serve(async (req) => {
       .from('printers')
       .select('id, printer_id, brand_id, model_name, official_product_url, official_store_url, current_price_usd_amazon, printer_brands(brand)')
       .is('current_price_usd_amazon', null)
-      .limit(2); // Process 2 more for priority 3
+      .limit(3); // Process 3 more for priority 3
 
     if (printerIds && printerIds.length > 0) {
       noAmazonQuery = noAmazonQuery.in('id', printerIds);
