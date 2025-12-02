@@ -235,12 +235,51 @@ Deno.serve(async (req) => {
       return value !== null;
     }).length, 'of', Object.keys(extractedSpecs).length, 'fields');
 
-    // Find product images
-    const imageLinks = links.filter((link: string) => 
-      /\.(jpg|jpeg|png|webp|gif)$/i.test(link) ||
-      link.includes('/products/') ||
-      link.includes('/images/')
-    );
+    // Find product images from HTML - look for actual image tags and their src attributes
+    let productImages: string[] = [];
+    
+    // Extract images from HTML using regex patterns for common product image structures
+    if (html) {
+      // Look for img tags with src attributes
+      const imgTagRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
+      const imgMatches: IterableIterator<RegExpMatchArray> = html.matchAll(imgTagRegex);
+      
+      for (const match of imgMatches) {
+        const imgSrc = match[1] as string;
+        // Filter for product images - exclude icons, logos, small images
+        if (imgSrc && 
+            /\.(jpg|jpeg|png|webp)$/i.test(imgSrc) &&
+            !imgSrc.includes('icon') &&
+            !imgSrc.includes('logo') &&
+            !imgSrc.includes('favicon') &&
+            !imgSrc.includes('thumbnail') &&
+            (imgSrc.includes('product') || imgSrc.includes('cdn') || imgSrc.includes('assets') || imgSrc.includes('uploads'))) {
+          // Make URL absolute if it's relative
+          let fullUrl = imgSrc;
+          if (imgSrc.startsWith('//')) {
+            fullUrl = 'https:' + imgSrc;
+          } else if (imgSrc.startsWith('/')) {
+            const urlObj = new URL(printer.official_product_url);
+            fullUrl = urlObj.origin + imgSrc;
+          }
+          productImages.push(fullUrl);
+        }
+      }
+    }
+    
+    // Fallback: also check links array for direct image URLs (but be more selective)
+    const imageLinks = links.filter((link: string) => {
+      const lowerLink = link.toLowerCase();
+      return /\.(jpg|jpeg|png|webp)$/i.test(link) &&
+        !lowerLink.includes('/products/') && // Exclude product page links
+        !lowerLink.includes('icon') &&
+        !lowerLink.includes('logo') &&
+        (lowerLink.includes('cdn') || lowerLink.includes('assets') || lowerLink.includes('uploads') || lowerLink.includes('image'));
+    });
+    
+    productImages = [...new Set([...productImages, ...imageLinks])]; // Remove duplicates
+    
+    console.log(`Found ${productImages.length} product images`);
 
     // Find document links
     const documentLinks = links.filter((link: string) => 
@@ -348,7 +387,7 @@ Deno.serve(async (req) => {
       extracted_specs: extractedSpecs,
       images: {
         screenshot: screenshot ? 'data:image/png;base64,...' : null, // Truncated for storage
-        product_images: imageLinks.slice(0, 10), // First 10 image URLs
+        product_images: productImages.slice(0, 10), // First 10 image URLs
       },
       documents: documentLinks.slice(0, 5), // First 5 document links
       raw_content: {
@@ -358,7 +397,7 @@ Deno.serve(async (req) => {
       },
       extraction_quality: {
         specs_found: Object.keys(extractedSpecs).length,
-        images_found: imageLinks.length,
+        images_found: productImages.length,
         documents_found: documentLinks.length,
       }
     };
