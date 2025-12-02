@@ -25,6 +25,8 @@ interface NozzleData {
   description?: string;
   compatible_printer_brands?: string[];
   compatible_hotend_types?: string[];
+  // Per-nozzle compatibility pattern (overrides brand-level pattern)
+  printer_compatibility_pattern?: RegExp;
 }
 
 interface QCReport {
@@ -57,12 +59,78 @@ const BRAND_STORE_CONFIGS: Record<string, {
     // Bambu Lab uses custom platform (not Shopify) - hardcode nozzles with verified URLs
     nozzle_collection_url: 'https://us.store.bambulab.com/collections/spare-parts',
     is_shopify: false,
-    compatibility_pattern: /X1|P1|A1|H2|P2/i,
+    compatibility_pattern: /X1|P1|A1|H2|P2/i, // Fallback only
     compatible_hotend_types: ['Bambu Lab Hotend'],
     product_filter: 'nozzle|hotend|hardened|stainless',
-    skip_validation: true, // Skip URL validation for hardcoded data
+    skip_validation: true,
     hardcoded_nozzles: [
-      // H2/P2S Series Hotends (sold as complete assemblies)
+      // ========== A1 SERIES HOTENDS (A1, A1 Mini) ==========
+      {
+        name: '0.2mm Stainless Steel Hotend (A1)',
+        brand: 'Bambu Lab',
+        model: 'Hotend-A1-SS-0.2',
+        specs: { diameter_mm: 0.2, material: 'stainless steel', hardened: false, max_temp_c: 300, flow_rate: 'Low', wear_rating: 'High' },
+        product_url: 'https://us.store.bambulab.com/products/bambu-hotend-a1-series',
+        image_url: 'https://store.bblcdn.com/s7/default/0f775f9301174a67b80759d324061e51/0.4.png',
+        price: 10.99,
+        currency: 'USD',
+        description: 'Quick-swap hotend for A1 series with 0.2mm stainless steel nozzle',
+        compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /^A1/i, // A1, A1 Mini
+      },
+      {
+        name: '0.4mm Stainless Steel Hotend (A1)',
+        brand: 'Bambu Lab',
+        model: 'Hotend-A1-SS-0.4',
+        specs: { diameter_mm: 0.4, material: 'stainless steel', hardened: false, max_temp_c: 300, flow_rate: 'Standard', wear_rating: 'High' },
+        product_url: 'https://us.store.bambulab.com/products/bambu-hotend-a1-series',
+        image_url: 'https://store.bblcdn.com/s7/default/0f775f9301174a67b80759d324061e51/0.4.png',
+        price: 10.99,
+        currency: 'USD',
+        description: 'Quick-swap hotend for A1 series with 0.4mm stainless steel nozzle',
+        compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /^A1/i,
+      },
+      {
+        name: '0.4mm Hardened Steel Hotend (A1)',
+        brand: 'Bambu Lab',
+        model: 'Hotend-A1-HS-0.4',
+        specs: { diameter_mm: 0.4, material: 'hardened steel', hardened: true, max_temp_c: 300, flow_rate: 'Standard', wear_rating: 'Very High' },
+        product_url: 'https://us.store.bambulab.com/products/bambu-hotend-a1-series',
+        image_url: 'https://store.bblcdn.com/s7/default/0f775f9301174a67b80759d324061e51/0.4.png',
+        price: 12.99,
+        currency: 'USD',
+        description: 'Quick-swap hotend for A1 series with 0.4mm hardened steel for abrasive filaments',
+        compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /^A1/i,
+      },
+      {
+        name: '0.6mm Hardened Steel Hotend (A1)',
+        brand: 'Bambu Lab',
+        model: 'Hotend-A1-HS-0.6',
+        specs: { diameter_mm: 0.6, material: 'hardened steel', hardened: true, max_temp_c: 300, flow_rate: 'High', wear_rating: 'Very High' },
+        product_url: 'https://us.store.bambulab.com/products/bambu-hotend-a1-series',
+        image_url: 'https://store.bblcdn.com/s7/default/0f775f9301174a67b80759d324061e51/0.4.png',
+        price: 12.99,
+        currency: 'USD',
+        description: 'Quick-swap hotend for A1 series with 0.6mm hardened steel for fast printing',
+        compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /^A1/i,
+      },
+      {
+        name: '0.8mm Hardened Steel Hotend (A1)',
+        brand: 'Bambu Lab',
+        model: 'Hotend-A1-HS-0.8',
+        specs: { diameter_mm: 0.8, material: 'hardened steel', hardened: true, max_temp_c: 300, flow_rate: 'Very High', wear_rating: 'Very High' },
+        product_url: 'https://us.store.bambulab.com/products/bambu-hotend-a1-series',
+        image_url: 'https://store.bblcdn.com/s7/default/0f775f9301174a67b80759d324061e51/0.4.png',
+        price: 12.99,
+        currency: 'USD',
+        description: 'Quick-swap hotend for A1 series with 0.8mm hardened steel for rapid prints',
+        compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /^A1/i,
+      },
+      // ========== H2/P2S SERIES HOTENDS (H2D, H2C, H2S, P2S) ==========
       {
         name: '0.2mm Stainless Steel Hotend (H2/P2S)',
         brand: 'Bambu Lab',
@@ -72,8 +140,9 @@ const BRAND_STORE_CONFIGS: Record<string, {
         image_url: 'https://store.bblcdn.com/s7/default/e7253f40ef9140d4b4956cc15f5839b5/hotend-1.png',
         price: 20.99,
         currency: 'USD',
-        description: 'Quick-swap hotend assembly with 0.2mm stainless steel nozzle for fine detail prints',
+        description: 'Quick-swap hotend assembly for H2D/H2C/H2S/P2S with 0.2mm stainless steel nozzle',
         compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /H2D|H2C|H2S|P2S/i,
       },
       {
         name: '0.4mm Hardened Steel Hotend (H2/P2S)',
@@ -84,8 +153,9 @@ const BRAND_STORE_CONFIGS: Record<string, {
         image_url: 'https://store.bblcdn.com/s7/default/e7253f40ef9140d4b4956cc15f5839b5/hotend-1.png',
         price: 20.99,
         currency: 'USD',
-        description: 'Quick-swap hotend assembly with 0.4mm hardened steel nozzle for abrasive filaments',
+        description: 'Quick-swap hotend assembly for H2D/H2C/H2S/P2S with 0.4mm hardened steel nozzle',
         compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /H2D|H2C|H2S|P2S/i,
       },
       {
         name: '0.6mm Hardened Steel Hotend (H2/P2S)',
@@ -96,8 +166,9 @@ const BRAND_STORE_CONFIGS: Record<string, {
         image_url: 'https://store.bblcdn.com/s7/default/e7253f40ef9140d4b4956cc15f5839b5/hotend-1.png',
         price: 20.99,
         currency: 'USD',
-        description: 'Quick-swap hotend assembly with 0.6mm hardened steel nozzle for fast printing',
+        description: 'Quick-swap hotend assembly for H2D/H2C/H2S/P2S with 0.6mm hardened steel nozzle',
         compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /H2D|H2C|H2S|P2S/i,
       },
       {
         name: '0.8mm Hardened Steel Hotend (H2/P2S)',
@@ -108,10 +179,11 @@ const BRAND_STORE_CONFIGS: Record<string, {
         image_url: 'https://store.bblcdn.com/s7/default/e7253f40ef9140d4b4956cc15f5839b5/hotend-1.png',
         price: 20.99,
         currency: 'USD',
-        description: 'Quick-swap hotend assembly with 0.8mm hardened steel nozzle for rapid prints',
+        description: 'Quick-swap hotend assembly for H2D/H2C/H2S/P2S with 0.8mm hardened steel nozzle',
         compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /H2D|H2C|H2S|P2S/i,
       },
-      // X1C/P1 Series Hotends
+      // ========== X1/P1 SERIES HOTENDS (X1C, X1E, P1P, P1S) ==========
       {
         name: '0.2mm Stainless Steel Hotend (X1/P1)',
         brand: 'Bambu Lab',
@@ -121,8 +193,9 @@ const BRAND_STORE_CONFIGS: Record<string, {
         image_url: 'https://store.bblcdn.com/s7/default/7fb1a1dd8bff49da9a2b41b34f64015b/hotend-1.png',
         price: 19.99,
         currency: 'USD',
-        description: 'Complete hotend assembly for X1C/P1P/P1S with 0.2mm stainless steel nozzle',
+        description: 'Complete hotend assembly for X1C/X1E/P1P/P1S with 0.2mm stainless steel nozzle',
         compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /X1|P1P|P1S/i,
       },
       {
         name: '0.4mm Hardened Steel Hotend (X1/P1)',
@@ -133,8 +206,9 @@ const BRAND_STORE_CONFIGS: Record<string, {
         image_url: 'https://store.bblcdn.com/s7/default/7fb1a1dd8bff49da9a2b41b34f64015b/hotend-1.png',
         price: 19.99,
         currency: 'USD',
-        description: 'Complete hotend assembly for X1C/P1P/P1S with 0.4mm hardened steel nozzle',
+        description: 'Complete hotend assembly for X1C/X1E/P1P/P1S with 0.4mm hardened steel nozzle',
         compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /X1|P1P|P1S/i,
       },
       {
         name: '0.6mm Hardened Steel Hotend (X1/P1)',
@@ -145,8 +219,9 @@ const BRAND_STORE_CONFIGS: Record<string, {
         image_url: 'https://store.bblcdn.com/s7/default/7fb1a1dd8bff49da9a2b41b34f64015b/hotend-1.png',
         price: 19.99,
         currency: 'USD',
-        description: 'Complete hotend assembly for X1C/P1P/P1S with 0.6mm hardened steel nozzle',
+        description: 'Complete hotend assembly for X1C/X1E/P1P/P1S with 0.6mm hardened steel nozzle',
         compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /X1|P1P|P1S/i,
       },
       {
         name: '0.8mm Hardened Steel Hotend (X1/P1)',
@@ -157,8 +232,9 @@ const BRAND_STORE_CONFIGS: Record<string, {
         image_url: 'https://store.bblcdn.com/s7/default/7fb1a1dd8bff49da9a2b41b34f64015b/hotend-1.png',
         price: 19.99,
         currency: 'USD',
-        description: 'Complete hotend assembly for X1C/P1P/P1S with 0.8mm hardened steel nozzle',
+        description: 'Complete hotend assembly for X1C/X1E/P1P/P1S with 0.8mm hardened steel nozzle',
         compatible_printer_brands: ['Bambu Lab'],
+        printer_compatibility_pattern: /X1|P1P|P1S/i,
       },
     ],
   },
@@ -679,13 +755,17 @@ Deno.serve(async (req) => {
     console.log(`${'─'.repeat(40)}`);
 
     for (const nozzle of validatedNozzles) {
-      // Find compatible printers
+      // Find compatible printers using nozzle-specific pattern if available
       const compatiblePrinters = (printers || []).filter((printer: any) => {
         const printerBrand = printer.printer_brands?.brand;
         
-        // For OEM nozzles, match by brand and model pattern
-        if (nozzle.brand === brandName && brandConfig.compatibility_pattern) {
-          return printerBrand === brandName || brandConfig.compatibility_pattern.test(printer.model_name);
+        // Use nozzle-specific pattern if defined, otherwise fall back to brand pattern
+        const compatPattern = nozzle.printer_compatibility_pattern || brandConfig.compatibility_pattern;
+        
+        // For OEM nozzles, match by brand AND model pattern
+        if (nozzle.brand === brandName && compatPattern) {
+          // Must be same brand AND match the compatibility pattern
+          return printerBrand === brandName && compatPattern.test(printer.model_name);
         }
         
         // For 3rd party, check compatible brands list
