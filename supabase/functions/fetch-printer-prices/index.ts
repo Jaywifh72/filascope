@@ -409,7 +409,7 @@ Deno.serve(async (req) => {
         .is('current_price_usd_amazon', null);
     }
 
-    const { data: printers, error: fetchError } = await query.limit(20);
+    const { data: printers, error: fetchError } = await query.limit(5);
 
     if (fetchError) {
       throw fetchError;
@@ -518,8 +518,8 @@ Deno.serve(async (req) => {
               if (purchaseUrls.length > 0) {
                 console.log(`Found ${purchaseUrls.length} potential purchase URLs:`, purchaseUrls.slice(0, 3));
                 
-                // Try each purchase URL until we find prices
-                for (const purchaseUrl of purchaseUrls.slice(0, 3)) { // Try up to 3 URLs
+                // Try each purchase URL until we find prices (max 1 URL to avoid timeout)
+                for (const purchaseUrl of purchaseUrls.slice(0, 1)) { // Try only 1 URL
                   try {
                     console.log(`Trying purchase URL: ${purchaseUrl}`);
                     const purchasePageResult = await firecrawlScrapeEnhanced(purchaseUrl, firecrawlApiKey);
@@ -629,8 +629,8 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Rate limiting - wait 2 seconds between requests
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Rate limiting - wait 1 second between requests
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
       } catch (error) {
         console.error(`Error processing ${printer.model_name}:`, error);
