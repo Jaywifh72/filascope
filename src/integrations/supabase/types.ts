@@ -614,6 +614,44 @@ export type Database = {
           },
         ]
       }
+      printer_price_history: {
+        Row: {
+          currency: string
+          id: string
+          price: number
+          price_type: string
+          printer_id: string | null
+          recorded_at: string | null
+          source: string | null
+        }
+        Insert: {
+          currency?: string
+          id?: string
+          price: number
+          price_type?: string
+          printer_id?: string | null
+          recorded_at?: string | null
+          source?: string | null
+        }
+        Update: {
+          currency?: string
+          id?: string
+          price?: number
+          price_type?: string
+          printer_id?: string | null
+          recorded_at?: string | null
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_price_history_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       printer_series: {
         Row: {
           brand_id: string | null

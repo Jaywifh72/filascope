@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AccessoryPriceChart } from "@/components/AccessoryPriceChart";
+import { PrinterPriceChart } from "@/components/PrinterPriceChart";
 import { useState, useEffect } from "react";
 import {
   ArrowLeft,
@@ -353,52 +354,63 @@ const PrinterDetail = () => {
                 )}
               </div>
               
-              {/* Quick Stats Card */}
-              <Card className="w-full md:w-auto md:min-w-[320px] bg-background/80 backdrop-blur-sm border-2">
-                <CardContent className="p-6 space-y-4">
-                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Key Specs</h3>
-                  <div className="space-y-3">
-                    {printer.build_volume_x_mm && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Box className="h-4 w-4 text-primary" />
-                          <span className="text-sm text-muted-foreground">Build Volume</span>
+              {/* Quick Stats & Price Cards */}
+              <div className="w-full md:w-auto md:min-w-[320px] space-y-4">
+                {/* Key Specs Card */}
+                <Card className="bg-background/80 backdrop-blur-sm border-2">
+                  <CardContent className="p-6 space-y-4">
+                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Key Specs</h3>
+                    <div className="space-y-3">
+                      {printer.build_volume_x_mm && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Box className="h-4 w-4 text-primary" />
+                            <span className="text-sm text-muted-foreground">Build Volume</span>
+                          </div>
+                          <span className="font-semibold">
+                            {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
+                          </span>
                         </div>
-                        <span className="font-semibold">
-                          {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
-                        </span>
-                      </div>
-                    )}
-                    {printer.max_print_speed_mms && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Gauge className="h-4 w-4 text-primary" />
-                          <span className="text-sm text-muted-foreground">Max Speed</span>
+                      )}
+                      {printer.max_print_speed_mms && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Gauge className="h-4 w-4 text-primary" />
+                            <span className="text-sm text-muted-foreground">Max Speed</span>
+                          </div>
+                          <span className="font-semibold">{printer.max_print_speed_mms} mm/s</span>
                         </div>
-                        <span className="font-semibold">{printer.max_print_speed_mms} mm/s</span>
-                      </div>
-                    )}
-                    {printer.max_nozzle_temp_c && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Thermometer className="h-4 w-4 text-primary" />
-                          <span className="text-sm text-muted-foreground">Max Nozzle</span>
+                      )}
+                      {printer.max_nozzle_temp_c && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Thermometer className="h-4 w-4 text-primary" />
+                            <span className="text-sm text-muted-foreground">Max Nozzle</span>
+                          </div>
+                          <span className="font-semibold">{printer.max_nozzle_temp_c}°C</span>
                         </div>
-                        <span className="font-semibold">{printer.max_nozzle_temp_c}°C</span>
-                      </div>
-                    )}
-                    {printer.bed_max_temp_c && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Flame className="h-4 w-4 text-primary" />
-                          <span className="text-sm text-muted-foreground">Max Bed</span>
+                      )}
+                      {printer.bed_max_temp_c && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Flame className="h-4 w-4 text-primary" />
+                            <span className="text-sm text-muted-foreground">Max Bed</span>
+                          </div>
+                          <span className="font-semibold">{printer.bed_max_temp_c}°C</span>
                         </div>
-                        <span className="font-semibold">{printer.bed_max_temp_c}°C</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Price Tracker Card */}
+                <PrinterPriceChart
+                  printerId={printer.id}
+                  currentStorePrice={printer.current_price_usd_store}
+                  currentAmazonPrice={printer.current_price_usd_amazon}
+                  msrp={printer.msrp_usd}
+                />
+              </div>
             </div>
           </div>
         </div>
