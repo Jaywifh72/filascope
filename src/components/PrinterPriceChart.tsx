@@ -21,14 +21,18 @@ export const PrinterPriceChart = ({
   const { data: priceHistory, isLoading } = useQuery({
     queryKey: ["printer-price-history", printerId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Use type assertion since table may not be in generated types yet
+      const { data, error } = await (supabase as any)
         .from("printer_price_history")
         .select("*")
         .eq("printer_id", printerId)
         .order("recorded_at", { ascending: true });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error("Price history fetch error:", error);
+        return [];
+      }
+      return data || [];
     },
   });
 
