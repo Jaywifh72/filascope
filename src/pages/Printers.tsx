@@ -211,7 +211,7 @@ export default function Printers() {
               <PrinterIcon className="h-4 w-4" />
               Printers
             </TabsTrigger>
-            <TabsTrigger value="nozzles" className="gap-2">
+            <TabsTrigger value="hotends" className="gap-2">
               <CircleDot className="h-4 w-4" />
               Hotends
             </TabsTrigger>
@@ -470,8 +470,8 @@ export default function Printers() {
         )}
           </TabsContent>
 
-          {/* Nozzles Tab */}
-          <TabsContent value="nozzles" className="mt-6">
+          {/* Hotends Tab */}
+          <TabsContent value="hotends" className="mt-6">
             <NozzleList />
           </TabsContent>
 

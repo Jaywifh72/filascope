@@ -158,7 +158,7 @@ export default function NozzleList() {
                   const specs = nozzle.specs as Record<string, unknown> | null;
                   
                   return (
-                    <Link key={nozzle.id} to={`/nozzles/${nozzle.id}`}>
+                    <Link key={nozzle.id} to={`/hotends/${nozzle.id}`}>
                       <Card className="p-4 hover:shadow-lg transition-shadow cursor-pointer h-full">
                         {/* Image */}
                         <div className="aspect-square mb-4 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
