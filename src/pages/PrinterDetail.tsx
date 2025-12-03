@@ -72,7 +72,7 @@ const PrinterDetail = () => {
     : null;
 
   const { data: accessories } = useQuery({
-    queryKey: ["printer-accessories", printer?.id, printerBrand],
+    queryKey: ["printer-accessories", printer?.id, printerBrand, printer?.model_name],
     enabled: !!printer?.id,
     queryFn: async () => {
       // Fetch printer-specific accessories
@@ -101,8 +101,31 @@ const PrinterDetail = () => {
         (acc, index, self) => index === self.findIndex((a) => a.id === acc.id)
       );
 
+      // Filter accessories by model-level compatibility using specs.compatible_printers
+      const modelFilteredAccessories = uniqueAccessories.filter(acc => {
+        const specs = acc.specs as Record<string, unknown> | null;
+        const compatiblePrintersStr = specs?.compatible_printers as string | undefined;
+        
+        // If no specific models listed, include for brand-level match
+        if (!compatiblePrintersStr) return true;
+        
+        // Check if this printer's model name matches any pattern in compatible_printers
+        const modelPatterns = compatiblePrintersStr
+          .split(/[,;]/)
+          .map(m => m.trim())
+          .filter(Boolean);
+        
+        const printerModelLower = printer!.model_name.toLowerCase();
+        
+        return modelPatterns.some(pattern => {
+          const patternLower = pattern.toLowerCase();
+          // Check if printer model contains the pattern or vice versa
+          return printerModelLower.includes(patternLower) || patternLower.includes(printerModelLower);
+        });
+      });
+
       // Sort by accessory_type then name
-      return uniqueAccessories.sort((a, b) => {
+      return modelFilteredAccessories.sort((a, b) => {
         const typeCompare = (a.accessory_type || "").localeCompare(b.accessory_type || "");
         if (typeCompare !== 0) return typeCompare;
         return (a.name || "").localeCompare(b.name || "");

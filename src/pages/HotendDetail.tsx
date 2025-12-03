@@ -29,16 +29,49 @@ export default function NozzleDetail() {
     },
   });
 
-  // Fetch compatible printers based on brand
+  // Fetch compatible printers based on specs.compatible_printers field (model-level matching)
   const { data: compatiblePrinters } = useQuery({
-    queryKey: ["compatible-printers", nozzle?.brand, nozzle?.compatible_printer_brands],
+    queryKey: ["compatible-printers", nozzle?.id, nozzle?.specs],
     enabled: !!nozzle,
     queryFn: async () => {
       if (!nozzle) return [];
 
-      // Get printers that match the nozzle brand or compatible_printer_brands
-      const brandsToMatch = nozzle.compatible_printer_brands || [nozzle.brand].filter(Boolean);
+      const specs = nozzle.specs as Record<string, unknown> | null;
+      const compatiblePrintersStr = specs?.compatible_printers as string | undefined;
       
+      // If no specific printer models listed, fall back to brand-level matching
+      if (!compatiblePrintersStr) {
+        const brandsToMatch = nozzle.compatible_printer_brands || [nozzle.brand].filter(Boolean);
+        if (brandsToMatch.length === 0) return [];
+
+        const { data: brands } = await supabase
+          .from("printer_brands")
+          .select("id, brand")
+          .in("brand", brandsToMatch);
+
+        if (!brands || brands.length === 0) return [];
+        const brandIds = brands.map(b => b.id);
+        
+        const { data: printers, error } = await supabase
+          .from("printers")
+          .select(`id, model_name, brand:printer_brands!brand_id(brand)`)
+          .in("brand_id", brandIds)
+          .eq("status", "active")
+          .order("model_name")
+          .limit(50);
+
+        if (error) throw error;
+        return printers || [];
+      }
+
+      // Parse compatible printer models from specs (e.g., "Snapmaker U1" or "Snapmaker J1, J1s")
+      const modelPatterns = compatiblePrintersStr
+        .split(/[,;]/)
+        .map(m => m.trim())
+        .filter(Boolean);
+
+      // Fetch all active printers from compatible brands
+      const brandsToMatch = nozzle.compatible_printer_brands || [nozzle.brand].filter(Boolean);
       if (brandsToMatch.length === 0) return [];
 
       const { data: brands } = await supabase
@@ -47,23 +80,29 @@ export default function NozzleDetail() {
         .in("brand", brandsToMatch);
 
       if (!brands || brands.length === 0) return [];
-
       const brandIds = brands.map(b => b.id);
-      
-      const { data: printers, error } = await supabase
+
+      const { data: allPrinters, error } = await supabase
         .from("printers")
-        .select(`
-          id,
-          model_name,
-          brand:printer_brands!brand_id(brand)
-        `)
+        .select(`id, model_name, brand:printer_brands!brand_id(brand)`)
         .in("brand_id", brandIds)
         .eq("status", "active")
-        .order("model_name")
-        .limit(50);
+        .order("model_name");
 
       if (error) throw error;
-      return printers || [];
+      if (!allPrinters) return [];
+
+      // Filter printers that match any of the model patterns
+      const matchingPrinters = allPrinters.filter(printer => {
+        const modelName = printer.model_name.toLowerCase();
+        return modelPatterns.some(pattern => {
+          const patternLower = pattern.toLowerCase();
+          // Check if printer model contains the pattern or vice versa
+          return modelName.includes(patternLower) || patternLower.includes(modelName);
+        });
+      });
+
+      return matchingPrinters.slice(0, 50);
     },
   });
 
