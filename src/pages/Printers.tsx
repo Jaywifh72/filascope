@@ -14,7 +14,7 @@ import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, CircleDot, 
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
-import NozzleList from "@/components/NozzleList";
+import HotendList from "@/components/HotendList";
 import BuildPlateList from "@/components/BuildPlateList";
 import AMSList from "@/components/AMSList";
 
@@ -472,7 +472,7 @@ export default function Printers() {
 
           {/* Hotends Tab */}
           <TabsContent value="hotends" className="mt-6">
-            <NozzleList />
+            <HotendList />
           </TabsContent>
 
           {/* Build Plates Tab */}
