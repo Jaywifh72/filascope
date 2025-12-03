@@ -1,13 +1,17 @@
 import { useParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { AccessoryPriceChart } from "@/components/AccessoryPriceChart";
 import { PrinterPriceChart } from "@/components/PrinterPriceChart";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import {
   ArrowLeft,
@@ -37,15 +41,23 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  ImagePlus,
 } from "lucide-react";
 
 const PrinterDetail = () => {
   const { id } = useParams();
+  const { isAdmin } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [productImages, setProductImages] = useState<string[]>([]);
   const [validImages, setValidImages] = useState<Set<string>>(new Set());
   const [checkedImages, setCheckedImages] = useState<Set<string>>(new Set());
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [imagePreviewError, setImagePreviewError] = useState(false);
 
   const { data: printer, isLoading } = useQuery({
     queryKey: ["printer-detail", id],
@@ -134,6 +146,39 @@ const PrinterDetail = () => {
         return (a.name || "").localeCompare(b.name || "");
       });
     },
+  });
+
+  // Mutation to update printer product images
+  const updateImageMutation = useMutation({
+    mutationFn: async (imageUrl: string) => {
+      const { error } = await supabase
+        .from("printers")
+        .update({
+          scraped_data: {
+            ...(printer?.scraped_data as object || {}),
+            images: {
+              ...((printer?.scraped_data as any)?.images || {}),
+              product_images: [imageUrl]
+            }
+          }
+        })
+        .eq("id", printer!.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Product image updated" });
+      queryClient.invalidateQueries({ queryKey: ["printer-detail", id] });
+      setImageDialogOpen(false);
+      setNewImageUrl("");
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to update image",
+        variant: "destructive"
+      });
+    }
   });
 
   // Extract product images when printer data changes and validate them
@@ -348,6 +393,22 @@ const PrinterDetail = () => {
                   </div>
                 );
               })()}
+              
+              {/* Admin: Update Image Button */}
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="absolute top-4 left-4 gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setImageDialogOpen(true);
+                  }}
+                >
+                  <ImagePlus className="h-4 w-4" />
+                  Update Image
+                </Button>
+              )}
 
               <div className="flex-1 space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
@@ -1169,6 +1230,59 @@ const PrinterDetail = () => {
                 </div>
               )}
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Admin: Update Image Dialog */}
+        <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Update Product Image</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="image-url">Image URL</Label>
+                <Input
+                  id="image-url"
+                  placeholder="https://example.com/image.png"
+                  value={newImageUrl}
+                  onChange={(e) => {
+                    setNewImageUrl(e.target.value);
+                    setImagePreviewError(false);
+                  }}
+                />
+              </div>
+              {newImageUrl && (
+                <div className="space-y-2">
+                  <Label>Preview</Label>
+                  <div className="border rounded-lg p-2 bg-muted/50">
+                    {!imagePreviewError ? (
+                      <img
+                        src={newImageUrl}
+                        alt="Preview"
+                        className="w-full h-48 object-contain"
+                        onError={() => setImagePreviewError(true)}
+                      />
+                    ) : (
+                      <div className="w-full h-48 flex items-center justify-center text-muted-foreground">
+                        Failed to load image preview
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setImageDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => updateImageMutation.mutate(newImageUrl)}
+                disabled={!newImageUrl || imagePreviewError || updateImageMutation.isPending}
+              >
+                {updateImageMutation.isPending ? "Saving..." : "Save Image"}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
