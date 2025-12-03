@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.scrape-accessory-images]
 verify_jwt = false
+
+[functions.log-printer-prices]
+verify_jwt = false
