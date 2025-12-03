@@ -11,13 +11,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Thermometer, CircleDot, Package, Trash2, ImageIcon, X } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Thermometer, CircleDot, Package, Trash2, ImageIcon, X, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useAuth } from "@/hooks/useAuth";
 
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
+
+interface ScrapeResult {
+  success: boolean;
+  message: string;
+  updated: number;
+  failed: number;
+  skipped: number;
+  details: { name: string; status: string; image?: string }[];
+}
 
 export default function HotendList() {
   const { isAdmin } = useAuth();
@@ -27,6 +37,8 @@ export default function HotendList() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingHotend, setEditingHotend] = useState<Accessory | null>(null);
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [isScraping, setIsScraping] = useState(false);
+  const [scrapeProgress, setScrapeProgress] = useState<ScrapeResult | null>(null);
 
   // Fetch all nozzles
   const { data: nozzles, isLoading } = useQuery({
@@ -169,6 +181,96 @@ export default function HotendList() {
     updateImageMutation.mutate({ id: editingHotend.id, imageUrl: newImageUrl });
   };
 
+  // Count hotends missing images
+  const missingImageCount = useMemo(() => {
+    if (!nozzles) return 0;
+    return nozzles.filter(n => !n.image_url || n.image_url === '').length;
+  }, [nozzles]);
+
+  // Bulk scrape images
+  const handleBulkScrape = async () => {
+    setIsScraping(true);
+    setScrapeProgress(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-accessory-images', {
+        body: {
+          accessoryType: 'nozzle',
+          forceUpdate: false,
+          limit: 10
+        }
+      });
+
+      if (error) throw error;
+      
+      setScrapeProgress(data as ScrapeResult);
+      
+      if (data.updated > 0) {
+        toast.success(`Updated ${data.updated} hotend images`);
+        queryClient.invalidateQueries({ queryKey: ["nozzles-list"] });
+      } else {
+        toast.info(data.message || "No images needed updating");
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to scrape images";
+      toast.error(msg);
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
+  // Scrape images for selected hotends
+  const handleScrapeSelected = async () => {
+    if (selectedIds.size === 0) return;
+    
+    setIsScraping(true);
+    setScrapeProgress(null);
+    
+    const allResults: ScrapeResult = {
+      success: true,
+      message: "",
+      updated: 0,
+      failed: 0,
+      skipped: 0,
+      details: []
+    };
+
+    try {
+      for (const id of selectedIds) {
+        const { data, error } = await supabase.functions.invoke('scrape-accessory-images', {
+          body: {
+            accessoryId: id,
+            forceUpdate: true,
+            limit: 1
+          }
+        });
+
+        if (error) {
+          allResults.failed++;
+          allResults.details.push({ name: id, status: "error" });
+        } else if (data) {
+          allResults.updated += data.updated || 0;
+          allResults.failed += data.failed || 0;
+          allResults.skipped += data.skipped || 0;
+          allResults.details.push(...(data.details || []));
+        }
+      }
+
+      setScrapeProgress(allResults);
+      
+      if (allResults.updated > 0) {
+        toast.success(`Updated ${allResults.updated} hotend images`);
+        queryClient.invalidateQueries({ queryKey: ["nozzles-list"] });
+      }
+      setSelectedIds(new Set());
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to scrape images";
+      toast.error(msg);
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -212,12 +314,33 @@ export default function HotendList() {
 
       {/* Results Count & Admin Actions */}
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h2 className="text-2xl font-bold">
-          {filteredNozzles.length} <span className="text-muted-foreground font-normal">hotends</span>
-        </h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold">
+            {filteredNozzles.length} <span className="text-muted-foreground font-normal">hotends</span>
+          </h2>
+          {missingImageCount > 0 && (
+            <Badge variant="outline" className="text-muted-foreground">
+              {missingImageCount} missing images
+            </Badge>
+          )}
+        </div>
 
         {isAdmin && (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBulkScrape}
+              disabled={isScraping || missingImageCount === 0}
+            >
+              {isScraping ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-1" />
+              )}
+              Scrape Missing Images
+            </Button>
+
             <Button
               variant="outline"
               size="sm"
@@ -227,15 +350,30 @@ export default function HotendList() {
             </Button>
             
             {selectedIds.size > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDelete}
-                disabled={deleteMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete ({selectedIds.size})
-              </Button>
+              <>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleScrapeSelected}
+                  disabled={isScraping}
+                >
+                  {isScraping ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-1" />
+                  )}
+                  Scrape Selected ({selectedIds.size})
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete ({selectedIds.size})
+                </Button>
+              </>
             )}
           </div>
         )}
@@ -430,6 +568,58 @@ export default function HotendList() {
               disabled={updateImageMutation.isPending}
             >
               Save Image
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Scrape Progress Dialog */}
+      <Dialog open={!!scrapeProgress} onOpenChange={(open) => !open && setScrapeProgress(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Image Scrape Results</DialogTitle>
+          </DialogHeader>
+          
+          {scrapeProgress && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="p-3 bg-green-500/10 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{scrapeProgress.updated}</div>
+                  <div className="text-xs text-muted-foreground">Updated</div>
+                </div>
+                <div className="p-3 bg-yellow-500/10 rounded-lg">
+                  <div className="text-2xl font-bold text-yellow-600">{scrapeProgress.skipped}</div>
+                  <div className="text-xs text-muted-foreground">Skipped</div>
+                </div>
+                <div className="p-3 bg-red-500/10 rounded-lg">
+                  <div className="text-2xl font-bold text-red-600">{scrapeProgress.failed}</div>
+                  <div className="text-xs text-muted-foreground">Failed</div>
+                </div>
+              </div>
+
+              {scrapeProgress.details.length > 0 && (
+                <div className="max-h-[200px] overflow-y-auto border rounded-lg">
+                  <div className="p-2 space-y-1">
+                    {scrapeProgress.details.map((detail, i) => (
+                      <div key={i} className="flex items-center justify-between text-sm py-1 px-2 rounded hover:bg-muted/50">
+                        <span className="truncate flex-1 mr-2">{detail.name}</span>
+                        <Badge 
+                          variant={detail.status === "updated" ? "default" : detail.status === "no_image_found" ? "secondary" : "destructive"}
+                          className="text-xs"
+                        >
+                          {detail.status.replace(/_/g, ' ')}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setScrapeProgress(null)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
