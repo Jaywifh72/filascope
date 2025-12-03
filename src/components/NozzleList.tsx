@@ -104,7 +104,7 @@ export default function NozzleList() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Input
           type="text"
-          placeholder="Search nozzles..."
+          placeholder="Search hotends..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="md:col-span-2"
@@ -126,14 +126,14 @@ export default function NozzleList() {
       {/* Results Count */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">
-          {filteredNozzles.length} <span className="text-muted-foreground font-normal">nozzles</span>
+          {filteredNozzles.length} <span className="text-muted-foreground font-normal">hotends</span>
         </h2>
       </div>
 
-      {/* Nozzles by Brand */}
+      {/* Hotends by Brand */}
       {filteredNozzles.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No nozzles found matching your criteria</p>
+          <p className="text-muted-foreground">No hotends found matching your criteria</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -152,7 +152,7 @@ export default function NozzleList() {
                 <Badge variant="secondary">{nozzlesByBrand[brand].length}</Badge>
               </div>
 
-              {/* Nozzle Grid */}
+              {/* Hotend Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {nozzlesByBrand[brand].map(nozzle => {
                   const specs = nozzle.specs as Record<string, unknown> | null;
