@@ -44,6 +44,8 @@ const PrinterDetail = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [productImages, setProductImages] = useState<string[]>([]);
+  const [validImages, setValidImages] = useState<Set<string>>(new Set());
+  const [checkedImages, setCheckedImages] = useState<Set<string>>(new Set());
 
   const { data: printer, isLoading } = useQuery({
     queryKey: ["printer-detail", id],
@@ -134,19 +136,51 @@ const PrinterDetail = () => {
     },
   });
 
-  // Extract product images when printer data changes
+  // Extract product images when printer data changes and validate them
   useEffect(() => {
+    const validateImages = async (images: string[]) => {
+      const valid = new Set<string>();
+      const checked = new Set<string>();
+      
+      await Promise.all(
+        images.map(async (url) => {
+          checked.add(url);
+          try {
+            const img = new Image();
+            await new Promise<void>((resolve, reject) => {
+              img.onload = () => resolve();
+              img.onerror = () => reject();
+              img.src = url;
+            });
+            valid.add(url);
+          } catch {
+            // Image failed to load
+          }
+        })
+      );
+      
+      setValidImages(valid);
+      setCheckedImages(checked);
+    };
+
     try {
       if (printer?.scraped_data) {
         const scrapedData = printer.scraped_data as any;
         const images = scrapedData?.images?.product_images;
         if (Array.isArray(images) && images.length > 0) {
           setProductImages(images);
+          validateImages(images);
+        } else {
+          setProductImages([]);
+          setValidImages(new Set());
+          setCheckedImages(new Set());
         }
       }
     } catch (error) {
       console.error("Error extracting product images:", error);
       setProductImages([]);
+      setValidImages(new Set());
+      setCheckedImages(new Set());
     }
   }, [printer]);
 
@@ -155,15 +189,18 @@ const PrinterDetail = () => {
     setLightboxOpen(true);
   };
 
+  // Use only validated images for lightbox navigation
+  const displayImages = productImages.filter(img => validImages.has(img));
+
   const nextImage = () => {
-    if (productImages.length > 0) {
-      setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
+    if (displayImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % displayImages.length);
     }
   };
 
   const prevImage = () => {
-    if (productImages.length > 0) {
-      setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+    if (displayImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
     }
   };
 
@@ -259,47 +296,58 @@ const PrinterDetail = () => {
           <div className="relative p-8 md:p-12">
             <div className="flex flex-col lg:flex-row gap-8 items-start">
               {/* Product Images */}
-              {productImages.length > 0 && (
-                <div className="w-full lg:w-auto lg:min-w-[400px]">
-                  <Card 
-                    className="overflow-hidden border-2 bg-background/80 backdrop-blur-sm cursor-pointer hover:shadow-xl transition-shadow"
-                    onClick={() => openLightbox(0)}
-                  >
-                    <CardContent className="p-0">
-                      <img 
-                        src={productImages[0]} 
-                        alt={`${printer.model_name} product image`}
-                        className="w-full h-auto object-contain max-h-[500px]"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </CardContent>
-                  </Card>
-                  {productImages.length > 1 && (
-                    <div className="grid grid-cols-4 gap-2 mt-2">
-                      {productImages.slice(1, 5).map((img: string, idx: number) => (
-                        <Card 
-                          key={idx} 
-                          className="overflow-hidden border bg-background/80 backdrop-blur-sm cursor-pointer hover:shadow-lg transition-shadow"
-                          onClick={() => openLightbox(idx + 1)}
-                        >
-                          <CardContent className="p-1">
-                            <img 
-                              src={img} 
-                              alt={`${printer.model_name} image ${idx + 2}`}
-                              className="w-full h-20 object-cover rounded"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          </CardContent>
-                        </Card>
-                      ))}
+              {(() => {
+                const displayImages = productImages.filter(img => validImages.has(img));
+                const isLoading = productImages.length > 0 && checkedImages.size < productImages.length;
+                
+                if (isLoading) {
+                  return (
+                    <div className="w-full lg:w-auto lg:min-w-[400px]">
+                      <div className="h-[400px] bg-muted/50 rounded-lg animate-pulse flex items-center justify-center">
+                        <span className="text-muted-foreground">Loading images...</span>
+                      </div>
                     </div>
-                  )}
-                </div>
-              )}
+                  );
+                }
+                
+                if (displayImages.length === 0) return null;
+                
+                return (
+                  <div className="w-full lg:w-auto lg:min-w-[400px]">
+                    <Card 
+                      className="overflow-hidden border-2 bg-background/80 backdrop-blur-sm cursor-pointer hover:shadow-xl transition-shadow"
+                      onClick={() => openLightbox(0)}
+                    >
+                      <CardContent className="p-0">
+                        <img 
+                          src={displayImages[0]} 
+                          alt={`${printer.model_name} product image`}
+                          className="w-full h-auto object-contain max-h-[500px]"
+                        />
+                      </CardContent>
+                    </Card>
+                    {displayImages.length > 1 && (
+                      <div className="grid grid-cols-4 gap-2 mt-2">
+                        {displayImages.slice(1, 5).map((img: string, idx: number) => (
+                          <Card 
+                            key={idx} 
+                            className="overflow-hidden border bg-background/80 backdrop-blur-sm cursor-pointer hover:shadow-lg transition-shadow"
+                            onClick={() => openLightbox(idx + 1)}
+                          >
+                            <CardContent className="p-1">
+                              <img 
+                                src={img} 
+                                alt={`${printer.model_name} image ${idx + 2}`}
+                                className="w-full h-20 object-cover rounded"
+                              />
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="flex-1 space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
@@ -1059,14 +1107,14 @@ const PrinterDetail = () => {
               </Button>
 
               {/* Image Counter */}
-              {productImages.length > 1 && (
+              {displayImages.length > 1 && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-black/60 text-white px-4 py-2 rounded-full text-sm">
-                  {currentImageIndex + 1} / {productImages.length}
+                  {currentImageIndex + 1} / {displayImages.length}
                 </div>
               )}
 
               {/* Previous Button */}
-              {productImages.length > 1 && (
+              {displayImages.length > 1 && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -1078,17 +1126,16 @@ const PrinterDetail = () => {
               )}
 
               {/* Main Image */}
-              <img
-                src={productImages[currentImageIndex]}
-                alt={`${printer?.model_name} - Image ${currentImageIndex + 1}`}
-                className="max-w-full max-h-[90vh] object-contain animate-fade-in"
-                onError={(e) => {
-                  e.currentTarget.src = '/placeholder.svg';
-                }}
-              />
+              {displayImages[currentImageIndex] && (
+                <img
+                  src={displayImages[currentImageIndex]}
+                  alt={`${printer?.model_name} - Image ${currentImageIndex + 1}`}
+                  className="max-w-full max-h-[90vh] object-contain animate-fade-in"
+                />
+              )}
 
               {/* Next Button */}
-              {productImages.length > 1 && (
+              {displayImages.length > 1 && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -1100,9 +1147,9 @@ const PrinterDetail = () => {
               )}
 
               {/* Thumbnail Navigation */}
-              {productImages.length > 1 && (
+              {displayImages.length > 1 && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex gap-2 max-w-[90vw] overflow-x-auto p-2 bg-black/60 rounded-lg">
-                  {productImages.map((img: string, idx: number) => (
+                  {displayImages.map((img: string, idx: number) => (
                     <button
                       key={idx}
                       onClick={() => setCurrentImageIndex(idx)}
