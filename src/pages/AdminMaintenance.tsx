@@ -10,7 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe, Upload, Link as LinkIcon, Sparkles, Package } from "lucide-react";
+import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe, Upload, Link as LinkIcon, Sparkles, Package, Printer } from "lucide-react";
+
+interface PrinterImageResult {
+  printerId: string;
+  printerName: string;
+  status: "success" | "failed" | "skipped";
+  imagesFound: number;
+  error?: string;
+}
 
 interface CleanupResult {
   total_checked: number;
@@ -62,6 +70,16 @@ const AdminMaintenance = () => {
     details: Array<{ name: string; status: string; image?: string }>;
   } | null>(null);
   const [forceAccessoryUpdate, setForceAccessoryUpdate] = useState(false);
+  const [isScrapingPrinterImages, setIsScrapingPrinterImages] = useState(false);
+  const [printerImageLimit, setPrinterImageLimit] = useState("10");
+  const [forcePrinterRescrape, setForcePrinterRescrape] = useState(false);
+  const [printerImageResult, setPrinterImageResult] = useState<{
+    total: number;
+    success: number;
+    failed: number;
+    skipped: number;
+    results: PrinterImageResult[];
+  } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -279,6 +297,40 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsScrapingAccessoryImages(false);
+    }
+  };
+
+  const runPrinterImageScraper = async () => {
+    setIsScrapingPrinterImages(true);
+    setPrinterImageResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-printer-images', {
+        method: 'POST',
+        body: { 
+          limit: parseInt(printerImageLimit),
+          forceRescrape: forcePrinterRescrape
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setPrinterImageResult(data.summary ? { ...data.summary, results: data.results } : data);
+      toast({
+        title: "Printer Image Scraping Complete",
+        description: `Success: ${data.summary?.success || 0}, Failed: ${data.summary?.failed || 0}, Skipped: ${data.summary?.skipped || 0}`,
+      });
+    } catch (error) {
+      console.error('Printer image scraping error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to run printer image scraper",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScrapingPrinterImages(false);
     }
   };
 
@@ -740,6 +792,134 @@ const AdminMaintenance = () => {
                             detail.status === "no_image_found" ? "secondary" : "destructive"
                           }>
                             {detail.status.replace(/_/g, ' ')}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Printer Image Scraper Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Printer className="w-5 h-5" />
+            <CardTitle>Printer Image Scraper</CardTitle>
+          </div>
+          <CardDescription>
+            Automatically scrape product images from official printer pages for printers missing images
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="printer-limit">Number of printers to process</Label>
+              <Input
+                id="printer-limit"
+                type="number"
+                value={printerImageLimit}
+                onChange={(e) => setPrinterImageLimit(e.target.value)}
+                min="1"
+                max="50"
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Processing many printers may take several minutes
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-2 pt-6">
+              <input
+                type="checkbox"
+                id="force-printer-rescrape"
+                checked={forcePrinterRescrape}
+                onChange={(e) => setForcePrinterRescrape(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300"
+              />
+              <Label htmlFor="force-printer-rescrape" className="cursor-pointer">
+                Force rescrape (overwrite existing images)
+              </Label>
+            </div>
+          </div>
+
+          <Button 
+            onClick={runPrinterImageScraper} 
+            disabled={isScrapingPrinterImages}
+            className="w-full sm:w-auto"
+          >
+            {isScrapingPrinterImages ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Scraping Printer Images...
+              </>
+            ) : (
+              <>
+                <Printer className="w-4 h-4 mr-2" />
+                Scrape Printer Images
+              </>
+            )}
+          </Button>
+
+          {printerImageResult && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{printerImageResult.total}</div>
+                  <div className="text-sm text-muted-foreground">Total Processed</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{printerImageResult.success}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Success</div>
+                </div>
+                <div className="bg-orange-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-orange-500" />
+                    <div className="text-2xl font-bold">{printerImageResult.skipped}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Skipped</div>
+                </div>
+                <div className="bg-red-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <div className="text-2xl font-bold">{printerImageResult.failed}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Failed</div>
+                </div>
+              </div>
+
+              {printerImageResult.results && printerImageResult.results.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Processing Details:</h3>
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {printerImageResult.results.map((result, idx) => (
+                      <div key={idx} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="font-medium">{result.printerName}</div>
+                            {result.imagesFound > 0 && (
+                              <div className="text-xs text-muted-foreground">
+                                {result.imagesFound} images found
+                              </div>
+                            )}
+                            {result.error && (
+                              <div className="text-xs text-red-500">
+                                {result.error}
+                              </div>
+                            )}
+                          </div>
+                          <Badge variant={
+                            result.status === "success" ? "default" :
+                            result.status === "skipped" ? "secondary" : "destructive"
+                          }>
+                            {result.status}
                           </Badge>
                         </div>
                       </div>
