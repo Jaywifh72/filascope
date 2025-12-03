@@ -200,7 +200,7 @@ export default function Printers() {
         <div className="space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">Hardware</h1>
           <p className="text-muted-foreground">
-            Browse and compare 3D printers, nozzles, and build plates
+            Browse and compare 3D printers, hotends, and build plates
           </p>
         </div>
 
@@ -213,7 +213,7 @@ export default function Printers() {
             </TabsTrigger>
             <TabsTrigger value="nozzles" className="gap-2">
               <CircleDot className="h-4 w-4" />
-              Nozzles
+              Hotends
             </TabsTrigger>
             <TabsTrigger value="build-plates" className="gap-2">
               <Square className="h-4 w-4" />

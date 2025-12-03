@@ -741,7 +741,7 @@ const PrinterDetail = () => {
                   Official Accessories
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Nozzles, build plates, and multi-material systems sold by {brand} for this printer
+                  Hotends, build plates, and multi-material systems sold by {brand} for this printer
                 </p>
               </CardHeader>
               <CardContent>
@@ -751,12 +751,12 @@ const PrinterDetail = () => {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* Nozzles Section */}
+                    {/* Hotends Section */}
                     {accessories.filter(a => a.accessory_type === 'nozzle').length > 0 && (
                       <div>
                         <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
                           <Cpu className="h-5 w-5 text-primary" />
-                          Nozzles ({accessories.filter(a => a.accessory_type === 'nozzle').length})
+                          Hotends ({accessories.filter(a => a.accessory_type === 'nozzle').length})
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {accessories

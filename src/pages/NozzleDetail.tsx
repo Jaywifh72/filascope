@@ -88,11 +88,11 @@ export default function NozzleDetail() {
           <Link to="/printers?tab=nozzles">
             <Button variant="ghost" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Back to Nozzles
+              Back to Hotends
             </Button>
           </Link>
           <div className="text-center py-12">
-            <p className="text-muted-foreground">Nozzle not found</p>
+            <p className="text-muted-foreground">Hotend not found</p>
           </div>
         </div>
       </div>
@@ -106,7 +106,7 @@ export default function NozzleDetail() {
         <Link to="/printers?tab=nozzles">
           <Button variant="ghost" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Back to Nozzles
+            Back to Hotends
           </Button>
         </Link>
 
