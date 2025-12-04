@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, CircleDot, Square, Layers } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, CircleDot, Square, Layers, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -47,6 +49,7 @@ type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
 
 export default function Printers() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,6 +59,10 @@ export default function Printers() {
   const [multiMaterial, setMultiMaterial] = useState(false);
   const [minBuildVolume, setMinBuildVolume] = useState("");
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
+  
+  // Image edit dialog state
+  const [imageEditPrinter, setImageEditPrinter] = useState<Printer | null>(null);
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   const activeTab = searchParams.get("tab") || "printers";
   
@@ -192,6 +199,56 @@ export default function Printers() {
       console.error(error);
     },
   });
+
+  const updateImageMutation = useMutation({
+    mutationFn: async ({ printerId, imageUrl }: { printerId: string; imageUrl: string }) => {
+      // Get current scraped_data
+      const { data: printer, error: fetchError } = await supabase
+        .from("printers")
+        .select("scraped_data")
+        .eq("id", printerId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update scraped_data with new image
+      const currentData = (printer?.scraped_data as Record<string, unknown>) || {};
+      const updatedData = {
+        ...currentData,
+        images: {
+          ...(currentData.images as Record<string, unknown> || {}),
+          product_images: [imageUrl],
+        },
+      };
+
+      const { error } = await supabase
+        .from("printers")
+        .update({ scraped_data: updatedData })
+        .eq("id", printerId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Printer image updated");
+      queryClient.invalidateQueries({ queryKey: ["printers-list"] });
+      setImageEditPrinter(null);
+      setNewImageUrl("");
+    },
+    onError: (error) => {
+      toast.error("Failed to update printer image");
+      console.error(error);
+    },
+  });
+
+  const openImageEditDialog = (printer: Printer, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setImageEditPrinter(printer);
+    // Pre-fill with existing image if available
+    const existingImages = (printer.scraped_data as Record<string, unknown>)?.images as Record<string, unknown>;
+    const productImages = existingImages?.product_images as string[] | undefined;
+    setNewImageUrl(productImages?.[0] || "");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -438,6 +495,17 @@ export default function Printers() {
                       <BookOpen className="h-4 w-4 text-muted-foreground hover:text-primary" />
                     </a>
                   )}
+                  {isAdmin && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={(e) => openImageEditDialog(printer, e)}
+                      title="Edit printer image"
+                      className="bg-background/80 backdrop-blur-sm hover:bg-background"
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                    </Button>
+                  )}
                   {isAdmin && printer.official_product_url && (
                     <Button 
                       variant="ghost" 
@@ -485,6 +553,55 @@ export default function Printers() {
             <AMSList />
           </TabsContent>
         </Tabs>
+
+        {/* Image Edit Dialog */}
+        <Dialog open={!!imageEditPrinter} onOpenChange={(open) => !open && setImageEditPrinter(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Printer Image</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="image-url">Image URL</Label>
+                <Input
+                  id="image-url"
+                  placeholder="https://example.com/image.jpg"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                />
+              </div>
+              {newImageUrl && (
+                <div className="space-y-2">
+                  <Label>Preview</Label>
+                  <div className="border rounded-lg p-2 bg-muted/50">
+                    <img
+                      src={newImageUrl}
+                      alt="Preview"
+                      className="max-h-48 mx-auto object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setImageEditPrinter(null)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => imageEditPrinter && updateImageMutation.mutate({ 
+                  printerId: imageEditPrinter.id, 
+                  imageUrl: newImageUrl 
+                })}
+                disabled={!newImageUrl || updateImageMutation.isPending}
+              >
+                {updateImageMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
