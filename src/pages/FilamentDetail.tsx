@@ -782,12 +782,12 @@ const FilamentDetail = () => {
                       </div>
                     </TooltipProvider>
                     {compatibleHotends.length > 12 && (
-                      <Link 
-                        to="/accessories?tab=hotends"
-                        className="text-sm text-primary hover:underline mt-4 block text-center"
+                      <button 
+                        onClick={() => navigate('/accessories?tab=hotends')}
+                        className="text-sm text-primary hover:underline mt-4 block text-center w-full"
                       >
                         View all {compatibleHotends.length} compatible hotends →
-                      </Link>
+                      </button>
                     )}
                   </CardContent>
                 </Card>
