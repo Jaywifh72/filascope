@@ -82,15 +82,55 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Create client for auth check
     const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
+
+    // Verify user authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authorization header required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid authentication token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check admin role
+    const { data: hasAdminRole, error: roleError } = await supabaseClient.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin'
+    });
+
+    if (roleError || !hasAdminRole) {
+      console.log(`Access denied for user ${user.id} - not an admin`);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create service role client for database operations
+    const serviceClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Starting weight estimation process...');
+    console.log(`Admin ${user.id} starting weight estimation process...`);
 
     // Fetch all filaments with missing weight data
-    const { data: filaments, error: fetchError } = await supabaseClient
+    const { data: filaments, error: fetchError } = await serviceClient
       .from('filaments')
       .select('id, diameter_nominal_mm, material, net_weight_g')
       .or('net_weight_g.is.null,net_weight_g.eq.0');
@@ -130,7 +170,7 @@ Deno.serve(async (req) => {
     const errors: string[] = [];
 
     for (const update of updates) {
-      const { error: updateError } = await supabaseClient
+      const { error: updateError } = await serviceClient
         .from('filaments')
         .update({ net_weight_g: update.net_weight_g })
         .eq('id', update.id);
