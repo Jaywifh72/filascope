@@ -124,7 +124,7 @@ export default function NozzleDetail() {
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-5xl mx-auto p-6 space-y-6">
-          <Link to={{ pathname: "/printers", search: "?tab=hotends" }}>
+          <Link to="/printers?tab=hotends">
             <Button variant="ghost" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Hotends
@@ -142,7 +142,7 @@ export default function NozzleDetail() {
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto p-6 space-y-6">
         {/* Back Button */}
-        <Link to={{ pathname: "/printers", search: "?tab=hotends" }}>
+        <Link to="/printers?tab=hotends">
           <Button variant="ghost" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Hotends

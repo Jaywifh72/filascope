@@ -152,7 +152,7 @@ export default function AMSDetail() {
         <div className="text-center space-y-4">
           <Layers className="h-16 w-16 mx-auto text-muted-foreground" />
           <h1 className="text-2xl font-bold">AMS/MMU Not Found</h1>
-          <Link to={{ pathname: "/printers", search: "?tab=ams" }}>
+          <Link to="/printers?tab=ams">
             <Button variant="outline">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to AMS/MMU List
@@ -178,7 +178,7 @@ export default function AMSDetail() {
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Back Button */}
-        <Link to={{ pathname: "/printers", search: "?tab=ams" }}>
+        <Link to="/printers?tab=ams">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to AMS/MMU Systems
