@@ -26,37 +26,81 @@ interface HotendWithRating extends Accessory {
   ratingReason: string;
 }
 
-// Rate hotend compatibility with filament
+// Rate hotend compatibility with filament - scoring system for recommendation level
 const rateHotend = (hotend: Accessory, filament: Filament): { rating: "green" | "orange" | "red"; reason: string } => {
   const specs = hotend.specs as Record<string, any> | null;
   const maxTemp = specs?.max_temp || specs?.max_temp_c || 0;
-  const isHardened = specs?.hardened || specs?.material?.toLowerCase()?.includes("hardened") || 
+  const isHardened = specs?.hardened || 
+                     specs?.material?.toLowerCase()?.includes("hardened") || 
                      specs?.material?.toLowerCase()?.includes("steel") ||
-                     hotend.name?.toLowerCase()?.includes("hardened");
+                     specs?.material?.toLowerCase()?.includes("tungsten") ||
+                     specs?.material?.toLowerCase()?.includes("ruby") ||
+                     hotend.name?.toLowerCase()?.includes("hardened") ||
+                     hotend.name?.toLowerCase()?.includes("steel");
+  const isBrass = specs?.material?.toLowerCase()?.includes("brass") || 
+                  hotend.name?.toLowerCase()?.includes("brass") ||
+                  (!specs?.material && !isHardened);
   
   const requiredTemp = filament.nozzle_temp_sweetspot_c || filament.nozzle_temp_max_c || 0;
   const isAbrasive = filament.is_nozzle_abrasive || false;
+  
+  let score = 50; // Start at neutral
+  const reasons: string[] = [];
 
-  // Check temperature capability
-  if (maxTemp > 0 && requiredTemp > maxTemp) {
-    return { rating: "red", reason: `Max temp ${maxTemp}°C below required ${requiredTemp}°C` };
+  // Temperature check - critical factor
+  if (maxTemp > 0) {
+    if (requiredTemp > maxTemp) {
+      score -= 50; // Can't handle temp - major penalty
+      reasons.push(`Max temp ${maxTemp}°C below required ${requiredTemp}°C`);
+    } else if (maxTemp - requiredTemp >= 50) {
+      score += 20; // Good thermal headroom
+      reasons.push("Excellent thermal headroom");
+    } else if (maxTemp - requiredTemp >= 20) {
+      score += 10; // Adequate headroom
+    }
   }
 
-  // Check abrasive compatibility
-  if (isAbrasive && !isHardened) {
-    return { rating: "orange", reason: "Not hardened - will wear with abrasive filament" };
+  // Abrasive filament handling
+  if (isAbrasive) {
+    if (isHardened) {
+      score += 30; // Perfect for abrasive
+      reasons.push("Hardened - ideal for abrasive material");
+    } else if (isBrass) {
+      score -= 30; // Brass will wear quickly
+      reasons.push("Brass nozzle will wear quickly");
+    } else {
+      score -= 15; // Unknown material, caution
+      reasons.push("Material may wear with abrasive filament");
+    }
+  } else {
+    // Non-abrasive filament
+    if (isBrass) {
+      score += 15; // Brass is great for non-abrasive (good thermal, cheap)
+      reasons.push("Brass - excellent for this material");
+    } else if (isHardened) {
+      score += 5; // Hardened works but overkill
+      reasons.push("Hardened - works well, may be overkill");
+    }
   }
 
-  // Perfect match
-  if (isAbrasive && isHardened) {
-    return { rating: "green", reason: "Hardened nozzle ideal for abrasive material" };
+  // Price consideration (lower price = slight bonus for similar performance)
+  if (hotend.price && hotend.price < 20) {
+    score += 5;
   }
 
-  if (!isAbrasive) {
-    return { rating: "green", reason: "Compatible with this filament" };
+  // Determine rating based on score
+  let rating: "green" | "orange" | "red";
+  if (score >= 60) {
+    rating = "green";
+  } else if (score >= 35) {
+    rating = "orange";
+  } else {
+    rating = "red";
   }
 
-  return { rating: "green", reason: "Compatible" };
+  const reason = reasons.length > 0 ? reasons[0] : (rating === "green" ? "Compatible" : rating === "orange" ? "Usable with limitations" : "Not recommended");
+  
+  return { rating, reason };
 };
 
 const FilamentDetail = () => {
