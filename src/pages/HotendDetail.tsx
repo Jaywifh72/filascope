@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,8 +11,27 @@ import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
 
+// Extract base name by removing diameter patterns
+const getBaseName = (name: string): string => {
+  return name
+    .replace(/\b0\.\d+\s*mm\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Extract diameter from name or specs
+const getDiameter = (hotend: Accessory): number | null => {
+  const specs = hotend.specs as Record<string, unknown> | null;
+  if (specs?.diameter) {
+    return parseFloat(String(specs.diameter));
+  }
+  const match = hotend.name.match(/\b(0\.\d+)\s*mm\b/i);
+  return match ? parseFloat(match[1]) : null;
+};
+
 export default function NozzleDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { getAffiliateUrl } = useAffiliateLinks();
 
   // Fetch nozzle details
@@ -28,6 +47,38 @@ export default function NozzleDetail() {
 
       if (error) throw error;
       return data as Accessory | null;
+    },
+  });
+
+  // Fetch diameter variants (same hotend, different diameters)
+  const { data: diameterVariants } = useQuery({
+    queryKey: ["hotend-variants", nozzle?.brand, nozzle?.name],
+    enabled: !!nozzle,
+    queryFn: async () => {
+      if (!nozzle) return [];
+      
+      const baseName = getBaseName(nozzle.name);
+      
+      // Fetch all hotends from same brand
+      const { data, error } = await supabase
+        .from("printer_accessories")
+        .select("*")
+        .eq("accessory_type", "hotend")
+        .eq("brand", nozzle.brand)
+        .order("name");
+      
+      if (error) throw error;
+      if (!data) return [];
+      
+      // Filter to those with matching base name
+      const variants = data.filter(h => getBaseName(h.name) === baseName);
+      
+      // Sort by diameter
+      return variants.sort((a, b) => {
+        const dA = getDiameter(a) || 0;
+        const dB = getDiameter(b) || 0;
+        return dA - dB;
+      });
     },
   });
 
@@ -199,7 +250,7 @@ export default function NozzleDetail() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
-                    <CardTitle className="text-2xl">{nozzle.name}</CardTitle>
+                    <CardTitle className="text-2xl">{getBaseName(nozzle.name)}</CardTitle>
                     {nozzle.brand && (
                       <Badge variant="secondary" className="text-sm">
                         {nozzle.brand}
@@ -210,8 +261,39 @@ export default function NozzleDetail() {
                     <Badge variant="outline">{nozzle.model}</Badge>
                   )}
                 </div>
+                
+                {/* Diameter Variants */}
+                {diameterVariants && diameterVariants.length > 1 && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm text-muted-foreground mb-2">Available Sizes</p>
+                    <div className="flex flex-wrap gap-2">
+                      {diameterVariants.map(variant => {
+                        const diameter = getDiameter(variant);
+                        const isSelected = variant.id === nozzle.id;
+                        return (
+                          <Button
+                            key={variant.id}
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => navigate(`/hotends/${variant.id}`)}
+                            className={isSelected ? "" : "hover:bg-muted"}
+                          >
+                            <CircleDot className="h-3.5 w-3.5 mr-1.5" />
+                            {diameter ? `${diameter}mm` : "Unknown"}
+                            {variant.price && (
+                              <span className="ml-2 text-xs opacity-70">
+                                ${variant.price.toFixed(2)}
+                              </span>
+                            )}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
                 {nozzle.description && (
-                  <p className="text-muted-foreground mt-2">{nozzle.description}</p>
+                  <p className="text-muted-foreground mt-4">{nozzle.description}</p>
                 )}
               </CardHeader>
             </Card>
