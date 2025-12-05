@@ -788,62 +788,6 @@ const Finder = () => {
                   </div>
                 )}
               </div>
-
-              <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Compatibility</h4>
-                <label className="flex items-center justify-between gap-3 text-sm cursor-pointer group">
-                  <div className="flex items-center gap-3">
-                    <Checkbox checked={brassOnly} onCheckedChange={(checked) => setBrassOnly(checked as boolean)} />
-                    <span className="text-muted-foreground group-hover:text-foreground transition-colors">Brass nozzle safe</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">({filterCounts['brass_safe'] || 0})</span>
-                </label>
-                <label className="flex items-center justify-between gap-3 text-sm cursor-pointer group">
-                  <div className="flex items-center gap-3">
-                    <Checkbox checked={foodContact} onCheckedChange={(checked) => setFoodContact(checked as boolean)} />
-                    <span className="text-muted-foreground group-hover:text-foreground transition-colors">Food contact rated</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">({filterCounts['food_contact'] || 0})</span>
-                </label>
-                <label className="flex items-center justify-between gap-3 text-sm cursor-pointer group">
-                  <div className="flex items-center gap-3">
-                    <Checkbox checked={amsOnly} onCheckedChange={(checked) => setAmsOnly(checked as boolean)} />
-                    <span className="text-muted-foreground group-hover:text-foreground transition-colors">AMS/MMU friendly</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">({filterCounts['ams_fit'] || 0})</span>
-                </label>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Brand</h4>
-                <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-                  <SelectTrigger className="bg-background border-border">
-                    <SelectValue placeholder="All Brands" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border-border z-50 max-h-[300px]">
-                    <SelectItem value="all">All Brands</SelectItem>
-                    {brands?.map((brand) => (
-                      <SelectItem key={brand} value={brand}>
-                        <div className="flex items-center justify-between w-full gap-2">
-                          <span>{brand}</span>
-                          <span className="text-muted-foreground text-xs">({filterCounts[`brand_${brand}`] || 0})</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Price</h4>
-                <Input
-                  type="number"
-                  placeholder="Max price per kg"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  className="bg-background border-border"
-                />
-              </div>
             </CollapsibleContent>
           </Collapsible>
         </div>
@@ -861,7 +805,7 @@ const Finder = () => {
         </div>
 
         {/* Search Bar and Sort */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        <div className="mb-4 flex flex-col sm:flex-row gap-4">
           <Input
             type="text"
             placeholder="Search filaments by name or vendor..."
@@ -884,6 +828,65 @@ const Finder = () => {
               <SelectItem value="brand-desc">Brand: Z to A</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Top Filters - Brand, Price, Compatibility */}
+        <div className="mb-6 flex flex-wrap items-center gap-4 p-4 bg-card/50 rounded-lg border border-border">
+          {/* Brand */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Brand:</span>
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger className="w-[160px] h-9 bg-background border-border text-sm">
+                <SelectValue placeholder="All Brands" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border z-50 max-h-[300px]">
+                <SelectItem value="all">All Brands</SelectItem>
+                {brands?.map((brand) => (
+                  <SelectItem key={brand} value={brand}>
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span>{brand}</span>
+                      <span className="text-muted-foreground text-xs">({filterCounts[`brand_${brand}`] || 0})</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-px h-6 bg-border hidden sm:block" />
+
+          {/* Price */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Max $/kg:</span>
+            <Input
+              type="number"
+              placeholder="Any"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              className="w-24 h-9 bg-background border-border text-sm"
+            />
+          </div>
+
+          <div className="w-px h-6 bg-border hidden sm:block" />
+
+          {/* Compatibility */}
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm cursor-pointer group">
+              <Checkbox checked={brassOnly} onCheckedChange={(checked) => setBrassOnly(checked as boolean)} />
+              <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">Brass safe</span>
+              <span className="text-xs text-muted-foreground">({filterCounts['brass_safe'] || 0})</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer group">
+              <Checkbox checked={foodContact} onCheckedChange={(checked) => setFoodContact(checked as boolean)} />
+              <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">Food safe</span>
+              <span className="text-xs text-muted-foreground">({filterCounts['food_contact'] || 0})</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer group">
+              <Checkbox checked={amsOnly} onCheckedChange={(checked) => setAmsOnly(checked as boolean)} />
+              <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">AMS/MMU</span>
+              <span className="text-xs text-muted-foreground">({filterCounts['ams_fit'] || 0})</span>
+            </label>
+          </div>
         </div>
 
         {/* Active Filter Chips */}
