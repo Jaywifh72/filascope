@@ -5,23 +5,9 @@ import HotendList from "@/components/HotendList";
 import BuildPlateList from "@/components/BuildPlateList";
 import AMSList from "@/components/AMSList";
 
-// Get initial tab from URL on page load
-function getInitialTab(): string {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("tab") || "hotends";
-}
-
 export default function Accessories() {
-  const [activeTab, setActiveTab] = useState(getInitialTab);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    // Use native history API to avoid React Router URL encoding issues
-    const newUrl = value === "hotends" 
-      ? "/accessories" 
-      : `/accessories?tab=${value}`;
-    window.history.replaceState(null, "", newUrl);
-  };
+  // Simple state - no URL syncing to avoid encoding issues
+  const [activeTab, setActiveTab] = useState("hotends");
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,7 +21,7 @@ export default function Accessories() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="hotends" className="gap-2">
               <CircleDot className="h-4 w-4" />
