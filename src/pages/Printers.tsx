@@ -67,11 +67,11 @@ export default function Printers() {
   const activeTab = searchParams.get("tab") || "printers";
   
   const handleTabChange = (value: string) => {
-    // Use navigate with explicit search params to avoid URL encoding issues
+    // Use setSearchParams to properly handle query params without encoding issues
     if (value === "printers") {
-      navigate("/printers", { replace: true });
+      setSearchParams({}, { replace: true });
     } else {
-      navigate(`/printers?tab=${value}`, { replace: true });
+      setSearchParams({ tab: value }, { replace: true });
     }
   };
 
