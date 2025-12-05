@@ -15,6 +15,7 @@ import { PrinterSelector } from "@/components/PrinterSelector";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 const Finder = () => {
   const navigate = useNavigate();
@@ -32,6 +33,9 @@ const Finder = () => {
   
   // Printer selection hook
   const { selectedPrinter } = usePrinterSelection();
+  
+  // Affiliate links hook
+  const { getAffiliateUrl } = useAffiliateLinks();
 
   // Normalize variant names to group similar variants
   const normalizeVariantName = (material: string, base: string): string => {
@@ -1150,7 +1154,7 @@ const Finder = () => {
                           className="border-primary/30 text-primary hover:bg-primary/10"
                           asChild
                         >
-                          <a href={filament.product_url} target="_blank" rel="noopener noreferrer">
+                          <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="w-3 h-3 mr-1" />
                             <span className="text-xs">Buy at Store</span>
                           </a>
@@ -1162,7 +1166,7 @@ const Finder = () => {
                           variant="amazon"
                           asChild
                         >
-                          <a href={filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
+                          <a href={getAffiliateUrl(filament.amazon_link_us, "Amazon") || filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
                             <span className="text-xs">View on Amazon</span>
                           </a>
                         </Button>
