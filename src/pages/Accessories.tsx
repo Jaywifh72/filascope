@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useSearchParams, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleDot, Square, Layers } from "lucide-react";
 import HotendList from "@/components/HotendList";
@@ -8,51 +8,20 @@ import AMSList from "@/components/AMSList";
 
 export default function Accessories() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
-  const initialTab = searchParams.get("tab") || "hotends";
-  const [activeTab, setActiveTab] = useState(initialTab);
-
-  // Log on mount
-  useEffect(() => {
-    console.log("[Accessories] MOUNTED - location:", location.pathname, location.search);
-    console.log("[Accessories] Initial tab from URL:", initialTab);
-    return () => {
-      console.log("[Accessories] UNMOUNTED");
-    };
-  }, []);
-
-  // Log tab state changes
-  useEffect(() => {
-    console.log("[Accessories] activeTab state changed to:", activeTab);
-  }, [activeTab]);
-
-  // Log location changes
-  useEffect(() => {
-    console.log("[Accessories] Location changed:", location.pathname, location.search);
-  }, [location]);
-
-  // Sync URL when tab changes (without causing navigation)
-  useEffect(() => {
-    const currentTab = searchParams.get("tab") || "hotends";
-    console.log("[Accessories] URL sync effect - currentTab from URL:", currentTab, "activeTab state:", activeTab);
-    
-    if (currentTab !== activeTab) {
-      console.log("[Accessories] Syncing URL - calling setSearchParams with tab:", activeTab);
-      if (activeTab === "hotends") {
-        setSearchParams({}, { replace: true });
-      } else {
-        setSearchParams({ tab: activeTab }, { replace: true });
-      }
-      console.log("[Accessories] setSearchParams called");
-    }
-  }, [activeTab, searchParams, setSearchParams]);
+  // Read initial tab from URL only once
+  const [activeTab, setActiveTab] = useState(() => {
+    return searchParams.get("tab") || "hotends";
+  });
 
   const handleTabChange = (value: string) => {
-    console.log("[Accessories] TAB CLICKED - changing from", activeTab, "to", value);
     setActiveTab(value);
+    // Update URL directly in the handler, not via effect
+    if (value === "hotends") {
+      setSearchParams({}, { replace: true });
+    } else {
+      setSearchParams({ tab: value }, { replace: true });
+    }
   };
-
-  console.log("[Accessories] RENDER - activeTab:", activeTab, "location:", location.pathname + location.search);
 
   return (
     <div className="min-h-screen bg-background">
