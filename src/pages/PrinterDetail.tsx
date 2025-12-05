@@ -118,8 +118,10 @@ const PrinterDetail = () => {
 
       // Filter accessories by model-level compatibility using specs.compatible_printers
       // AND size-based compatibility for build plates
+      // AND model-specific compatibility for AMS/MMU
       const modelFilteredAccessories = uniqueAccessories.filter(acc => {
         const specs = acc.specs as Record<string, unknown> | null;
+        const printerModelLower = printer!.model_name.toLowerCase();
         
         // For build plates, check size compatibility
         if (acc.accessory_type === 'build_plate') {
@@ -143,10 +145,29 @@ const PrinterDetail = () => {
           }
         }
         
-        // Check model-level compatibility using specs.compatible_printers
+        // For AMS/MMU systems, check model-specific compatibility using specs.compatible_models array
+        if (acc.accessory_type === 'ams_mmu') {
+          const compatibleModels = specs?.compatible_models as string[] | undefined;
+          
+          // If compatible_models is specified, check for model match
+          if (compatibleModels && Array.isArray(compatibleModels) && compatibleModels.length > 0) {
+            const hasModelMatch = compatibleModels.some(model => {
+              const modelLower = model.toLowerCase();
+              // Check if printer model contains the compatible model name or vice versa
+              return printerModelLower.includes(modelLower) || modelLower.includes(printerModelLower);
+            });
+            
+            if (!hasModelMatch) {
+              return false; // Model mismatch - not compatible
+            }
+          }
+          // If no compatible_models specified, fall through to brand-level matching
+        }
+        
+        // Check model-level compatibility using specs.compatible_printers (for hotends)
         const compatiblePrintersStr = specs?.compatible_printers as string | undefined;
         
-        // If no specific models listed, include for brand-level match (already passed size check for build plates)
+        // If no specific models listed, include for brand-level match (already passed checks above)
         if (!compatiblePrintersStr) return true;
         
         // Check if this printer's model name matches any pattern in compatible_printers
@@ -154,8 +175,6 @@ const PrinterDetail = () => {
           .split(/[,;]/)
           .map(m => m.trim())
           .filter(Boolean);
-        
-        const printerModelLower = printer!.model_name.toLowerCase();
         
         return modelPatterns.some(pattern => {
           const patternLower = pattern.toLowerCase();
