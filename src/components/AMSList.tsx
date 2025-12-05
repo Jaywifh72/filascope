@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -33,12 +33,29 @@ interface AMS {
 }
 
 export default function AMSList() {
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
 
-  const { data: amsSystems, isLoading } = useQuery({
+  // Log on mount/unmount
+  useEffect(() => {
+    console.log("[AMSList] MOUNTED - location:", location.pathname, location.search);
+    return () => {
+      console.log("[AMSList] UNMOUNTED");
+    };
+  }, []);
+
+  // Log location changes
+  useEffect(() => {
+    console.log("[AMSList] Location changed:", location.pathname, location.search);
+  }, [location]);
+
+  console.log("[AMSList] RENDER - location:", location.pathname + location.search);
+
+  const { data: amsSystems, isLoading, error } = useQuery({
     queryKey: ["ams-systems"],
     queryFn: async () => {
+      console.log("[AMSList] Fetching AMS systems...");
       const { data, error } = await supabase
         .from("printer_accessories")
         .select("*")
@@ -46,10 +63,19 @@ export default function AMSList() {
         .order("brand", { ascending: true })
         .order("name", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("[AMSList] Fetch ERROR:", error);
+        throw error;
+      }
+      console.log("[AMSList] Fetched", data?.length, "AMS systems");
       return data as unknown as AMS[];
     },
   });
+
+  // Log query state
+  useEffect(() => {
+    console.log("[AMSList] Query state - isLoading:", isLoading, "error:", error, "count:", amsSystems?.length);
+  }, [isLoading, error, amsSystems]);
 
   const brands = useMemo(() => {
     if (!amsSystems) return [];
