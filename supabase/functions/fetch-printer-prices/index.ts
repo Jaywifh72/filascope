@@ -33,6 +33,7 @@ async function tryShopifyJson(url: string): Promise<{ msrp_usd: number | null; c
       
       if (!isNaN(price) && price > 0) {
         console.log(`✓ Found price via Shopify JSON: $${price}${comparePrice ? ` (was $${comparePrice})` : ''}`);
+        // Note: Validation will be applied after this returns
         return {
           msrp_usd: comparePrice,
           current_price_usd_store: price
@@ -45,6 +46,53 @@ async function tryShopifyJson(url: string): Promise<{ msrp_usd: number | null; c
     console.log('Shopify JSON attempt failed:', error instanceof Error ? error.message : 'Unknown error');
     return null;
   }
+}
+
+// Validate price to reject obviously incorrect values
+// - Prices below $150 (no real 3D printer costs less)
+// - Common promotional discount amounts ($50, $60, $70, $80, $90, $100 off patterns)
+function isValidPrinterPrice(price: number | null): boolean {
+  if (price === null || price === undefined) return false;
+  
+  // Reject prices below $150
+  if (price < 150) {
+    console.log(`⚠️ Rejected price $${price} - below minimum threshold ($150)`);
+    return false;
+  }
+  
+  // Reject common promotional discount amounts (within $5 tolerance)
+  const discountAmounts = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140];
+  for (const discount of discountAmounts) {
+    if (Math.abs(price - discount) <= 5) {
+      console.log(`⚠️ Rejected price $${price} - matches common discount pattern (~$${discount} off)`);
+      return false;
+    }
+  }
+  
+  // Reject suspiciously low round numbers that look like accessory prices
+  const accessoryPrices = [13.99, 14.99, 19.99, 24.99, 29.99, 39.99, 49.99];
+  for (const accessoryPrice of accessoryPrices) {
+    if (Math.abs(price - accessoryPrice) < 1) {
+      console.log(`⚠️ Rejected price $${price} - looks like accessory price`);
+      return false;
+    }
+  }
+  
+  // Reject single-digit prices (obvious errors)
+  if (price < 10) {
+    console.log(`⚠️ Rejected price $${price} - single digit error`);
+    return false;
+  }
+  
+  return true;
+}
+
+// Sanitize price result - only return valid prices
+function sanitizePrices(prices: { msrp_usd: number | null; current_price_usd_store: number | null }): { msrp_usd: number | null; current_price_usd_store: number | null } {
+  return {
+    msrp_usd: isValidPrinterPrice(prices.msrp_usd) ? prices.msrp_usd : null,
+    current_price_usd_store: isValidPrinterPrice(prices.current_price_usd_store) ? prices.current_price_usd_store : null
+  };
 }
 
 // Enhanced price extraction with multiple pattern matching and debugging
@@ -483,9 +531,14 @@ Deno.serve(async (req) => {
         if (isLikelyShopify) {
           console.log('Detected potential Shopify store, trying JSON API first...');
           const shopifyPrices = await tryShopifyJson(urlToScrape);
-          if (shopifyPrices && shopifyPrices.current_price_usd_store) {
-            prices = shopifyPrices;
-            console.log('✓ Successfully extracted prices via Shopify JSON API');
+          if (shopifyPrices) {
+            const sanitized = sanitizePrices(shopifyPrices);
+            if (sanitized.current_price_usd_store || sanitized.msrp_usd) {
+              prices = sanitized;
+              console.log('✓ Successfully extracted prices via Shopify JSON API (validated)');
+            } else {
+              console.log('⚠️ Shopify prices rejected by validation');
+            }
           }
         }
 
@@ -505,11 +558,11 @@ Deno.serve(async (req) => {
             console.log(`✓ Scraped ${scrapeResult.data.markdown.length} chars of content`);
             
             // First, try to extract prices from the current page
-            const extractedPrices = extractPrices(scrapeResult.data.markdown);
+            const extractedPrices = sanitizePrices(extractPrices(scrapeResult.data.markdown));
             
             if (extractedPrices.current_price_usd_store || extractedPrices.msrp_usd) {
               prices = extractedPrices;
-              console.log('✓ Extracted prices from official store:', prices);
+              console.log('✓ Extracted prices from official store (validated):', prices);
             } else {
               // SOLUTION 2: No prices found, try extracting purchase URLs
               console.log('No prices on marketing page, extracting purchase URLs...');
@@ -525,11 +578,11 @@ Deno.serve(async (req) => {
                     const purchasePageResult = await firecrawlScrapeEnhanced(purchaseUrl, firecrawlApiKey);
                     
                     if (purchasePageResult?.data?.markdown) {
-                      const purchasePagePrices = extractPrices(purchasePageResult.data.markdown);
+                      const purchasePagePrices = sanitizePrices(extractPrices(purchasePageResult.data.markdown));
                       
                       if (purchasePagePrices.current_price_usd_store || purchasePagePrices.msrp_usd) {
                         prices = purchasePagePrices;
-                        console.log(`✓ Found prices on purchase URL: ${purchaseUrl}`, prices);
+                        console.log(`✓ Found prices on purchase URL (validated): ${purchaseUrl}`, prices);
                         break;
                       }
                     }
@@ -570,10 +623,10 @@ Deno.serve(async (req) => {
               const amazonResult = await firecrawlScrapeEnhanced(amazonUrl, firecrawlApiKey);
               
               if (amazonResult?.data?.markdown) {
-                const amazonPrices = extractPrices(amazonResult.data.markdown);
+                const amazonPrices = sanitizePrices(extractPrices(amazonResult.data.markdown));
                 
                 if (amazonPrices.current_price_usd_store) {
-                  console.log(`✓ Found Amazon price: $${amazonPrices.current_price_usd_store}`);
+                  console.log(`✓ Found Amazon price (validated): $${amazonPrices.current_price_usd_store}`);
                   // Use Amazon price as current store price
                   prices.current_price_usd_store = amazonPrices.current_price_usd_store;
                   if (amazonPrices.msrp_usd) {
