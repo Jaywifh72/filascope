@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleDot, Square, Layers } from "lucide-react";
 import HotendList from "@/components/HotendList";
@@ -6,7 +6,12 @@ import BuildPlateList from "@/components/BuildPlateList";
 import AMSList from "@/components/AMSList";
 
 export default function Accessories() {
-  const [activeTab, setActiveTab] = useState("hotends");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "hotends";
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -20,7 +25,7 @@ export default function Accessories() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="hotends" className="gap-2">
               <CircleDot className="h-4 w-4" />
