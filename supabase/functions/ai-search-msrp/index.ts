@@ -6,6 +6,45 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Validate price to reject obviously incorrect values
+// - Prices below $150 (no real 3D printer costs less)
+// - Common promotional discount amounts ($50, $60, $70, $80, $90, $100 off patterns)
+function isValidPrinterPrice(price: number | null | undefined): boolean {
+  if (price === null || price === undefined) return false;
+  
+  // Reject prices below $150
+  if (price < 150) {
+    console.log(`⚠️ Rejected price $${price} - below minimum threshold ($150)`);
+    return false;
+  }
+  
+  // Reject common promotional discount amounts (within $5 tolerance)
+  const discountAmounts = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140];
+  for (const discount of discountAmounts) {
+    if (Math.abs(price - discount) <= 5) {
+      console.log(`⚠️ Rejected price $${price} - matches common discount pattern (~$${discount} off)`);
+      return false;
+    }
+  }
+  
+  // Reject suspiciously low round numbers that look like accessory prices
+  const accessoryPrices = [13.99, 14.99, 19.99, 24.99, 29.99, 39.99, 49.99];
+  for (const accessoryPrice of accessoryPrices) {
+    if (Math.abs(price - accessoryPrice) < 1) {
+      console.log(`⚠️ Rejected price $${price} - looks like accessory price`);
+      return false;
+    }
+  }
+  
+  // Reject single-digit prices (obvious errors)
+  if (price < 10) {
+    console.log(`⚠️ Rejected price $${price} - single digit error`);
+    return false;
+  }
+  
+  return true;
+}
+
 async function searchPriceWithAI(
   brandName: string,
   modelName: string,
@@ -60,8 +99,11 @@ async function searchPriceWithAI(
     if (priceMatch) {
       const price = parseFloat(priceMatch[0].replace(/,/g, ''));
       
-      if (price > 0 && price < 100000) {
+      // Use enhanced validation to reject invalid prices
+      if (price > 0 && price < 100000 && isValidPrinterPrice(price)) {
         return { success: true, price, response: priceText };
+      } else {
+        console.log(`⚠️ AI returned price $${price} but failed validation`);
       }
     }
 
