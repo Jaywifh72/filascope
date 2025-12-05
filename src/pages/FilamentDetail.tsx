@@ -151,35 +151,93 @@ const FilamentDetail = () => {
           ? (selectedPrinter.brand as { brand: string }).brand 
           : null;
 
-        // Query hotends compatible with this printer (by brand or model)
-        const { data: hotends, error } = await supabase
+        const printerModel = selectedPrinter.model_name?.toLowerCase() || '';
+
+        // Query all hotends for the printer's brand (no limit to get all compatible)
+        let query = supabase
           .from("printer_accessories")
           .select("*")
-          .eq("accessory_type", "hotend")
-          .limit(20);
+          .eq("accessory_type", "hotend");
+        
+        // If we know the brand, filter by it
+        if (printerBrand) {
+          query = query.or(`compatible_printer_brands.cs.{${printerBrand}},brand.eq.${printerBrand}`);
+        }
+
+        const { data: hotends, error } = await query.limit(100);
 
         if (error) throw error;
 
-        // Filter to those compatible with this printer
-        const compatible = (hotends || []).filter(hotend => {
+        // Helper to check if hotend is compatible with printer model
+        const isCompatibleWithPrinter = (hotend: Accessory): boolean => {
           const specs = hotend.specs as Record<string, any> | null;
-          const compatibleModels = specs?.compatible_models || specs?.compatible_printers || [];
+          const compatibleModels = specs?.compatible_models || specs?.compatible_printers || '';
           const compatibleBrands = hotend.compatible_printer_brands || [];
+          const hotendTypes = hotend.compatible_hotend_types || [];
+          const hotendName = hotend.name?.toLowerCase() || '';
           
-          // Check if hotend is compatible with this printer's brand or model
-          const modelMatch = Array.isArray(compatibleModels) && compatibleModels.some((model: string) => 
-            selectedPrinter.model_name?.toLowerCase().includes(model.toLowerCase()) ||
-            model.toLowerCase().includes(selectedPrinter.model_name?.toLowerCase() || '')
-          );
+          // 1. Check specs.compatible_models (string or array)
+          if (compatibleModels) {
+            const modelsStr = Array.isArray(compatibleModels) ? compatibleModels.join(' ') : String(compatibleModels);
+            const modelsLower = modelsStr.toLowerCase();
+            
+            // Check for model name match
+            if (printerModel && (
+              modelsLower.includes(printerModel) ||
+              printerModel.split(/[\s-]+/).some(part => part.length > 1 && modelsLower.includes(part))
+            )) {
+              return true;
+            }
+          }
           
-          const brandMatch = printerBrand && Array.isArray(compatibleBrands) && 
-            compatibleBrands.some((brand: string) => 
+          // 2. Parse series from hotend NAME - e.g., "(H2/P2S)", "(X1/P1)", "(A1)"
+          // This is crucial for Bambu Lab OEM hotends
+          const seriesMatch = hotendName.match(/\(([^)]+)\)/);
+          if (seriesMatch) {
+            const seriesParts = seriesMatch[1].toLowerCase().split(/[\/,\s]+/);
+            // Check if printer model matches any series part
+            for (const part of seriesParts) {
+              if (part.length >= 2 && (
+                printerModel.includes(part) ||
+                printerModel.replace(/[\s-]+/g, '').includes(part.replace(/[\s-]+/g, ''))
+              )) {
+                return true;
+              }
+            }
+          }
+          
+          // 3. Check compatible_hotend_types for series hints like "Bambu-H2", "Bambu-X1"
+          for (const hType of hotendTypes) {
+            const typeLower = String(hType).toLowerCase();
+            // Extract model identifiers from type strings like "Bambu-H2", "Bambu-X1", "Bambu-P1"
+            const typeMatch = typeLower.match(/(h2|p2s|x1|p1|a1|mini)/gi);
+            if (typeMatch) {
+              for (const tm of typeMatch) {
+                if (printerModel.includes(tm.toLowerCase())) {
+                  return true;
+                }
+              }
+            }
+          }
+          
+          // 4. Brand-only match (fallback for third-party universal hotends)
+          // Only if no series-specific info is found
+          if (printerBrand && !seriesMatch && !compatibleModels) {
+            const brandMatch = compatibleBrands.some((brand: string) => 
               brand.toLowerCase().includes(printerBrand.toLowerCase()) ||
               printerBrand.toLowerCase().includes(brand.toLowerCase())
             );
+            // For brand-only matches, also check if hotend name mentions the brand
+            if (brandMatch && hotendName.includes(printerBrand.toLowerCase())) {
+              return true;
+            }
+          }
 
-          return modelMatch || brandMatch;
-        });
+          return false;
+        };
+
+        // Filter to those compatible with this printer
+        const compatible = (hotends || []).filter(isCompatibleWithPrinter);
 
         // Rate each hotend for this filament
         const rated: HotendWithRating[] = compatible.map(hotend => {
@@ -194,6 +252,7 @@ const FilamentDetail = () => {
         });
 
         setCompatibleHotends(rated);
+        console.log(`Found ${rated.length} compatible hotends for ${printerModel}:`, rated.map(h => h.name));
       } catch (error) {
         console.error("Error fetching compatible hotends:", error);
       }
