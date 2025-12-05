@@ -1,17 +1,27 @@
 import { useParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ExternalLink, Square, Check, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ArrowLeft, ExternalLink, Square, Check, X, ImageIcon } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export default function BuildPlateDetail() {
   const { id } = useParams<{ id: string }>();
   const { getAffiliateUrl } = useAffiliateLinks();
+  const { isAdmin } = useAuth();
+  const queryClient = useQueryClient();
+  
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   const { data: buildPlate, isLoading } = useQuery({
     queryKey: ["build-plate-detail", id],
@@ -79,6 +89,39 @@ export default function BuildPlateDetail() {
     enabled: !!buildPlate,
   });
 
+  // Mutation for updating image
+  const updateImageMutation = useMutation({
+    mutationFn: async (imageUrl: string) => {
+      const { error } = await supabase
+        .from("printer_accessories")
+        .update({ image_url: imageUrl })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["build-plate-detail", id] });
+      toast.success("Image updated successfully");
+      setImageDialogOpen(false);
+      setNewImageUrl("");
+    },
+    onError: (error) => {
+      toast.error("Failed to update image: " + error.message);
+    },
+  });
+
+  const handleSaveImage = () => {
+    if (!newImageUrl.trim()) {
+      toast.error("Please enter an image URL");
+      return;
+    }
+    updateImageMutation.mutate(newImageUrl.trim());
+  };
+
+  const openImageDialog = () => {
+    setNewImageUrl(buildPlate?.image_url || "");
+    setImageDialogOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-6">
@@ -139,7 +182,7 @@ export default function BuildPlateDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Image */}
-          <Card className="p-6">
+          <Card className="p-6 relative">
             <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center">
               {buildPlate.image_url ? (
                 <img
@@ -159,6 +202,17 @@ export default function BuildPlateDetail() {
                 <span className="text-lg">No image available</span>
               </div>
             </div>
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="absolute top-8 right-8 gap-1.5"
+                onClick={openImageDialog}
+              >
+                <ImageIcon className="h-4 w-4" />
+                Edit Image
+              </Button>
+            )}
           </Card>
 
           {/* Details */}
@@ -290,6 +344,45 @@ export default function BuildPlateDetail() {
             </div>
           </Card>
         )}
+
+        {/* Image Edit Dialog */}
+        <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Update Build Plate Image</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                placeholder="Enter image URL..."
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+              />
+              {newImageUrl && (
+                <div className="border rounded-lg p-2 bg-muted">
+                  <img
+                    src={newImageUrl}
+                    alt="Preview"
+                    className="w-full h-48 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setImageDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveImage}
+                disabled={updateImageMutation.isPending}
+              >
+                {updateImageMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
