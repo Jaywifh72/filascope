@@ -29,6 +29,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Printers = lazy(() => import("./pages/Printers"));
 const PrinterCompare = lazy(() => import("./pages/PrinterCompare"));
 const PrinterDetail = lazy(() => import("./pages/PrinterDetail"));
+const Accessories = lazy(() => import("./pages/Accessories"));
 const HotendDetail = lazy(() => import("./pages/HotendDetail"));
 const BuildPlateDetail = lazy(() => import("./pages/BuildPlateDetail"));
 const AMSDetail = lazy(() => import("./pages/AMSDetail"));
@@ -51,6 +52,7 @@ const App = () => (
           <Route path="/printers" element={<Printers />} />
           <Route path="/printers/:id" element={<PrinterDetail />} />
           <Route path="/printers/compare" element={<PrinterCompare />} />
+          <Route path="/accessories" element={<Accessories />} />
           <Route path="/hotends/:id" element={<HotendDetail />} />
           <Route path="/build-plates/:id" element={<BuildPlateDetail />} />
           <Route path="/ams/:id" element={<AMSDetail />} />

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
@@ -9,16 +9,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, CircleDot, Square, Layers, ImageIcon, Store, ShoppingCart, Tag } from "lucide-react";
+import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, ImageIcon, Store, ShoppingCart, Tag } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
-import HotendList from "@/components/HotendList";
-import BuildPlateList from "@/components/BuildPlateList";
-import AMSList from "@/components/AMSList";
 
 // Brand wiki/documentation URLs
 const BRAND_WIKI_URLS: Record<string, string> = {
@@ -50,7 +46,6 @@ type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
 export default function Printers() {
   const navigate = useNavigate(); 
   const queryClient = useQueryClient();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
@@ -63,17 +58,6 @@ export default function Printers() {
   // Image edit dialog state
   const [imageEditPrinter, setImageEditPrinter] = useState<Printer | null>(null);
   const [newImageUrl, setNewImageUrl] = useState("");
-
-  const activeTab = searchParams.get("tab") || "printers";
-  
-  const handleTabChange = (value: string) => {
-    // Use setSearchParams to properly handle query params without encoding issues
-    if (value === "printers") {
-      setSearchParams({}, { replace: true });
-    } else {
-      setSearchParams({ tab: value }, { replace: true });
-    }
-  };
 
   // Fetch brands
   const { data: brands } = useQuery({
@@ -539,48 +523,6 @@ export default function Printers() {
             })}
           </div>
         )}
-        </section>
-
-        {/* Divider */}
-        <div className="border-t border-border" />
-
-        {/* Accessories Section */}
-        <section className="space-y-4">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tight">Accessories</h2>
-            <p className="text-muted-foreground">
-              Browse hotends, build plates, and multi-material systems
-            </p>
-          </div>
-
-          <Tabs value={activeTab === "printers" || !activeTab ? "hotends" : activeTab} onValueChange={handleTabChange}>
-            <TabsList className="grid w-full max-w-lg grid-cols-3">
-              <TabsTrigger value="hotends" className="gap-2">
-                <CircleDot className="h-4 w-4" />
-                Hotends
-              </TabsTrigger>
-              <TabsTrigger value="build-plates" className="gap-2">
-                <Square className="h-4 w-4" />
-                Build Plates
-              </TabsTrigger>
-              <TabsTrigger value="ams" className="gap-2">
-                <Layers className="h-4 w-4" />
-                AMS/MMU
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="hotends" className="mt-6">
-              <HotendList />
-            </TabsContent>
-
-            <TabsContent value="build-plates" className="mt-6">
-              <BuildPlateList />
-            </TabsContent>
-
-            <TabsContent value="ams" className="mt-6">
-              <AMSList />
-            </TabsContent>
-          </Tabs>
         </section>
 
         {/* Image Edit Dialog */}

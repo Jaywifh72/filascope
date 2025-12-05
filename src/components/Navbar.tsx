@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Search, Tag, GitCompare, Grid3x3, Sparkles, Wrench, LogIn, LogOut, User, Shield, Archive, Database, CircleDot, Square, Layers, ChevronDown } from "lucide-react";
+import { Search, Tag, GitCompare, Grid3x3, Sparkles, Wrench, LogIn, LogOut, User, Shield, Archive, Database, Layers } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
@@ -50,35 +50,12 @@ const Navbar = () => {
               Printers
             </Link>
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground flex items-center gap-1">
-                <Layers className="w-4 h-4" />
-                Accessories
-                <ChevronDown className="w-3 h-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="bg-popover border-border">
-              <DropdownMenuItem asChild>
-                <Link to="/printers?tab=hotends" className="flex items-center">
-                  <CircleDot className="w-4 h-4 mr-2" />
-                  Hotends
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/printers?tab=build-plates" className="flex items-center">
-                  <Square className="w-4 h-4 mr-2" />
-                  Build Plates
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/printers?tab=ams" className="flex items-center">
-                  <Layers className="w-4 h-4 mr-2" />
-                  AMS/MMU
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+            <Link to="/accessories" className="flex items-center gap-2">
+              <Layers className="w-4 h-4" />
+              Accessories
+            </Link>
+          </Button>
           <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
             <Link to="/brands" className="flex items-center gap-2">
               <Tag className="w-4 h-4" />
