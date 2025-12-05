@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, CircleDot, Square, Layers, ImageIcon } from "lucide-react";
+import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, CircleDot, Square, Layers, ImageIcon, Store, ShoppingCart, Tag } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -441,18 +441,19 @@ export default function Printers() {
                     {(printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd) && (
                       <div className="space-y-1">
                         {printer.current_price_usd_store ? (
-                          <div className="text-2xl font-bold text-primary">
+                          <div className="text-2xl font-bold text-primary flex items-center gap-1.5">
+                            <Store className="h-4 w-4" />
                             ${printer.current_price_usd_store}
                           </div>
                         ) : printer.current_price_usd_amazon ? (
-                          <div className="text-2xl font-bold text-primary">
+                          <div className="text-2xl font-bold text-primary flex items-center gap-1.5">
+                            <ShoppingCart className="h-4 w-4" />
                             ${printer.current_price_usd_amazon}
-                            <span className="text-xs text-muted-foreground ml-1">(Amazon)</span>
                           </div>
                         ) : printer.msrp_usd ? (
-                          <div className="text-2xl font-bold text-muted-foreground">
+                          <div className="text-2xl font-bold text-primary flex items-center gap-1.5">
+                            <Tag className="h-4 w-4" />
                             ${printer.msrp_usd}
-                            <span className="text-xs ml-1">(MSRP)</span>
                           </div>
                         ) : null}
                       </div>
