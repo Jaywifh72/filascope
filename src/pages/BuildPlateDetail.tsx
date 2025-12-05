@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,7 @@ import { toast } from "sonner";
 
 export default function BuildPlateDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { getAffiliateUrl } = useAffiliateLinks();
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
@@ -145,12 +146,13 @@ export default function BuildPlateDetail() {
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-6xl mx-auto text-center py-12">
           <h1 className="text-2xl font-bold mb-4">Build Plate Not Found</h1>
-          <Link to="/accessories?tab=build-plates">
-            <Button variant="outline">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Build Plates
-            </Button>
-          </Link>
+          <Button 
+            variant="outline"
+            onClick={() => navigate({ pathname: "/accessories", search: "?tab=build-plates" })}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Build Plates
+          </Button>
         </div>
       </div>
     );
@@ -173,12 +175,14 @@ export default function BuildPlateDetail() {
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Back button */}
-        <Link to="/accessories?tab=build-plates">
-          <Button variant="ghost" className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Build Plates
-          </Button>
-        </Link>
+        <Button 
+          variant="ghost" 
+          className="gap-2"
+          onClick={() => navigate({ pathname: "/accessories", search: "?tab=build-plates" })}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Build Plates
+        </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Image */}

@@ -220,12 +220,14 @@ export default function NozzleDetail() {
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-5xl mx-auto p-6 space-y-6">
-          <Link to="/accessories?tab=hotends">
-            <Button variant="ghost" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Hotends
-            </Button>
-          </Link>
+          <Button 
+            variant="ghost" 
+            className="gap-2"
+            onClick={() => navigate({ pathname: "/accessories", search: "?tab=hotends" })}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Hotends
+          </Button>
           <div className="text-center py-12">
             <p className="text-muted-foreground">Hotend not found</p>
           </div>
@@ -238,12 +240,14 @@ export default function NozzleDetail() {
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto p-6 space-y-6">
         {/* Back Button */}
-        <Link to="/accessories?tab=hotends">
-          <Button variant="ghost" className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Hotends
-          </Button>
-        </Link>
+        <Button 
+          variant="ghost" 
+          className="gap-2"
+          onClick={() => navigate({ pathname: "/accessories", search: "?tab=hotends" })}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Hotends
+        </Button>
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

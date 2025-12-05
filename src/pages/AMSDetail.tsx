@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +37,7 @@ interface AMSSpecs {
 
 export default function AMSDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -154,12 +155,13 @@ export default function AMSDetail() {
         <div className="text-center space-y-4">
           <Layers className="h-16 w-16 mx-auto text-muted-foreground" />
           <h1 className="text-2xl font-bold">AMS/MMU Not Found</h1>
-          <Link to="/accessories?tab=ams">
-            <Button variant="outline">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to AMS/MMU List
-            </Button>
-          </Link>
+          <Button 
+            variant="outline"
+            onClick={() => navigate({ pathname: "/accessories", search: "?tab=ams" })}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to AMS/MMU List
+          </Button>
         </div>
       </div>
     );
@@ -180,12 +182,14 @@ export default function AMSDetail() {
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Back Button */}
-        <Link to="/accessories?tab=ams">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to AMS/MMU Systems
-          </Button>
-        </Link>
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => navigate({ pathname: "/accessories", search: "?tab=ams" })}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to AMS/MMU Systems
+        </Button>
 
         {/* Main Content */}
         <div className="grid md:grid-cols-2 gap-8">
