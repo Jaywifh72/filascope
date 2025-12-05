@@ -117,11 +117,36 @@ const PrinterDetail = () => {
       );
 
       // Filter accessories by model-level compatibility using specs.compatible_printers
+      // AND size-based compatibility for build plates
       const modelFilteredAccessories = uniqueAccessories.filter(acc => {
         const specs = acc.specs as Record<string, unknown> | null;
+        
+        // For build plates, check size compatibility
+        if (acc.accessory_type === 'build_plate') {
+          const plateSizeX = specs?.size_x_mm as number | undefined;
+          const plateSizeY = specs?.size_y_mm as number | undefined;
+          
+          // Use build_volume as proxy for bed size (usually build volume ≈ bed size)
+          const printerBedX = printer!.bed_size_x_mm || printer!.build_volume_x_mm;
+          const printerBedY = printer!.bed_size_y_mm || printer!.build_volume_y_mm;
+          
+          if (plateSizeX && plateSizeY && printerBedX && printerBedY) {
+            // Build plates are typically 5-20mm larger than build volume
+            // Allow tolerance of 25mm for size matching
+            const tolerance = 25;
+            const xMatch = Math.abs(plateSizeX - printerBedX) <= tolerance;
+            const yMatch = Math.abs(plateSizeY - printerBedY) <= tolerance;
+            
+            if (!xMatch || !yMatch) {
+              return false; // Size mismatch - not compatible
+            }
+          }
+        }
+        
+        // Check model-level compatibility using specs.compatible_printers
         const compatiblePrintersStr = specs?.compatible_printers as string | undefined;
         
-        // If no specific models listed, include for brand-level match
+        // If no specific models listed, include for brand-level match (already passed size check for build plates)
         if (!compatiblePrintersStr) return true;
         
         // Check if this printer's model name matches any pattern in compatible_printers
