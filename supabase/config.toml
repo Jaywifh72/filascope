@@ -37,7 +37,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.scrape-accessory-images]
-verify_jwt = false
+verify_jwt = true
 
 [functions.log-printer-prices]
 verify_jwt = false
