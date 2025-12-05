@@ -194,23 +194,120 @@ async function scrapeProductImages(
       images.add(match[1]);
     }
 
-    // Convert relative URLs to absolute
+    // Convert relative URLs to absolute and decode HTML entities
     const baseUrl = new URL(productUrl);
     const absoluteImages = Array.from(images).map(img => {
       try {
-        if (img.startsWith('//')) return `https:${img}`;
-        if (img.startsWith('/')) return `${baseUrl.origin}${img}`;
-        if (!img.startsWith('http')) return new URL(img, productUrl).href;
-        return img;
+        // Decode HTML entities
+        let decoded = img
+          .replace(/&amp;/g, '&')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>');
+        
+        // Skip malformed URLs that contain quotes
+        if (decoded.includes('"') || decoded.includes("'")) {
+          return null;
+        }
+        
+        if (decoded.startsWith('//')) return `https:${decoded}`;
+        if (decoded.startsWith('/')) return `${baseUrl.origin}${decoded}`;
+        if (!decoded.startsWith('http')) return new URL(decoded, productUrl).href;
+        return decoded;
       } catch {
-        return img;
+        return null;
       }
-    });
+    }).filter((img): img is string => img !== null);
 
     return absoluteImages;
   } catch (error) {
     console.error("Error scraping images:", error);
     return [];
+  }
+}
+
+async function validateProductUrl(
+  productName: string,
+  brand: string | null,
+  currentUrl: string,
+  lovableApiKey: string,
+  firecrawlApiKey: string
+): Promise<{ isValid: boolean; correctUrl?: string; reason?: string }> {
+  try {
+    const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${firecrawlApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url: currentUrl,
+        formats: ["markdown"],
+        waitFor: 2000,
+        onlyMainContent: true,
+      })
+    });
+
+    if (!response.ok) {
+      return { isValid: false, reason: "URL not accessible" };
+    }
+
+    const result = await response.json();
+    const markdown = result.data?.markdown || '';
+    
+    if (!markdown || markdown.length < 100) {
+      return { isValid: false, reason: "Page has no content" };
+    }
+
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: `Validate if this URL is the correct product page for a 3D printer build plate.
+Return JSON: {"isValid": true/false, "reason": "brief explanation"}
+Be strict: must be a direct product page for this specific build plate.`
+          },
+          {
+            role: "user",
+            content: `Product: ${productName}
+Brand: ${brand || 'Unknown'}
+URL: ${currentUrl}
+
+Page Content:
+${markdown.slice(0, 1500)}
+
+Return JSON only.`
+          }
+        ],
+        max_tokens: 150,
+        temperature: 0.1
+      })
+    });
+
+    if (!aiResponse.ok) {
+      return { isValid: true, reason: "AI validation unavailable" };
+    }
+
+    const aiData = await aiResponse.json();
+    const aiContent = aiData.choices?.[0]?.message?.content?.trim() || '';
+    
+    try {
+      const parsed = JSON.parse(aiContent.replace(/```json\n?|\n?```/g, ''));
+      return { isValid: parsed.isValid === true, reason: parsed.reason };
+    } catch {
+      return { isValid: true, reason: "Page accessible" };
+    }
+  } catch (error) {
+    console.error("URL validation error:", error);
+    return { isValid: false, reason: `Error: ${error}` };
   }
 }
 
@@ -245,7 +342,6 @@ async function searchForProductImage(
       return null;
     }
 
-    // Look for image URLs in search results
     for (const item of result.data) {
       if (item.url && (
         item.url.includes('.jpg') ||
@@ -276,7 +372,12 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { accessoryType, accessoryId, forceUpdate, limit = 5 } = await req.json();
+    const body = await req.json();
+    const accessoryType = body.accessoryType || body.accessory_type;
+    const accessoryId = body.accessoryId || body.accessory_id;
+    const forceUpdate = body.forceUpdate || body.force_update;
+    const validateUrls = body.validateUrls || body.validate_urls;
+    const limit = body.limit || 10;
 
     // Build query based on parameters
     let query = supabase
@@ -316,7 +417,9 @@ serve(async (req) => {
       updated: 0,
       failed: 0,
       skipped: 0,
-      details: [] as { name: string; status: string; image?: string }[]
+      urlsValidated: 0,
+      urlsInvalid: 0,
+      details: [] as { name: string; status: string; image?: string; urlValid?: boolean; urlReason?: string }[]
     };
 
     for (const accessory of accessories) {
@@ -324,6 +427,26 @@ serve(async (req) => {
         console.log(`Processing: ${accessory.name}`);
 
         let bestImage: string | null = null;
+        let urlValidation: { isValid: boolean; reason?: string } | null = null;
+
+        // Validate URL if requested
+        if (validateUrls && accessory.product_url && accessory.product_url.startsWith('http')) {
+          console.log(`Validating URL: ${accessory.product_url}`);
+          urlValidation = await validateProductUrl(
+            accessory.name,
+            accessory.brand,
+            accessory.product_url,
+            lovableApiKey,
+            firecrawlApiKey
+          );
+          if (urlValidation.isValid) {
+            results.urlsValidated++;
+            console.log(`URL valid: ${urlValidation.reason}`);
+          } else {
+            results.urlsInvalid++;
+            console.log(`URL INVALID: ${urlValidation.reason}`);
+          }
+        }
 
         // Strategy 1: Scrape product URL if available
         if (accessory.product_url && accessory.product_url.startsWith('http')) {
@@ -361,16 +484,16 @@ serve(async (req) => {
           if (updateError) {
             console.error(`Failed to update ${accessory.name}:`, updateError);
             results.failed++;
-            results.details.push({ name: accessory.name, status: "update_failed" });
+            results.details.push({ name: accessory.name, status: "update_failed", urlValid: urlValidation?.isValid, urlReason: urlValidation?.reason });
           } else {
             console.log(`Updated image for ${accessory.name}: ${bestImage}`);
             results.updated++;
-            results.details.push({ name: accessory.name, status: "updated", image: bestImage });
+            results.details.push({ name: accessory.name, status: "updated", image: bestImage, urlValid: urlValidation?.isValid, urlReason: urlValidation?.reason });
           }
         } else {
           console.log(`No image found for ${accessory.name}`);
           results.skipped++;
-          results.details.push({ name: accessory.name, status: "no_image_found" });
+          results.details.push({ name: accessory.name, status: "no_image_found", urlValid: urlValidation?.isValid, urlReason: urlValidation?.reason });
         }
 
         // Small delay to avoid rate limiting
