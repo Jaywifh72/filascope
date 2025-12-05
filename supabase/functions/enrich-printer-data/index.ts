@@ -149,7 +149,15 @@ Return ONLY the JSON object, no explanation or markdown.`;
     jsonStr = jsonStr.trim();
 
     const specs = JSON.parse(jsonStr) as PrinterSpecs;
-    console.log(`Successfully enriched ${brandName} ${modelName}:`, Object.keys(specs).length, "fields");
+    const fieldCount = Object.keys(specs).length;
+    console.log(`Successfully enriched ${brandName} ${modelName}: ${fieldCount} fields`);
+    console.log(`  AI extracted fields: ${Object.keys(specs).join(', ')}`);
+    
+    // Log each extracted value
+    for (const [key, value] of Object.entries(specs)) {
+      console.log(`    ${key}: ${JSON.stringify(value)}`);
+    }
+    
     return specs;
   } catch (error) {
     console.error(`Error enriching ${brandName} ${modelName}:`, error);
@@ -251,6 +259,8 @@ serve(async (req) => {
       brand: string;
       status: string;
       fields_updated: number;
+      fields_detail?: Record<string, { old: any; new: any }>;
+      ai_extracted_fields?: string[];
       error?: string;
     }> = [];
 
@@ -284,8 +294,12 @@ serve(async (req) => {
 
       // Build update object with only valid new values
       const updateData: Record<string, any> = {};
+      const fieldsDetail: Record<string, { old: any; new: any }> = {};
+      const aiExtractedFields = Object.keys(specs);
       let fieldsUpdated = 0;
 
+      console.log(`  AI returned ${aiExtractedFields.length} fields for ${brandName} ${modelName}`);
+      
       for (const [key, value] of Object.entries(specs)) {
         // Only update if:
         // 1. forceUpdate is true, OR
@@ -296,7 +310,13 @@ serve(async (req) => {
 
         if (newIsValid && (forceUpdate || currentIsInvalid)) {
           updateData[key] = value;
+          fieldsDetail[key] = { old: currentValue ?? null, new: value };
           fieldsUpdated++;
+          console.log(`    [UPDATE] ${key}: ${currentValue ?? 'null'} → ${value}`);
+        } else if (!newIsValid) {
+          console.log(`    [SKIP] ${key}: invalid value ${JSON.stringify(value)}`);
+        } else {
+          console.log(`    [KEEP] ${key}: existing value ${currentValue} (AI suggested: ${value})`);
         }
       }
 
@@ -317,6 +337,7 @@ serve(async (req) => {
             brand: brandName,
             status: 'update_failed',
             fields_updated: 0,
+            ai_extracted_fields: aiExtractedFields,
             error: updateError.message
           });
         } else {
@@ -326,9 +347,11 @@ serve(async (req) => {
             model_name: modelName,
             brand: brandName,
             status: 'enriched',
-            fields_updated: fieldsUpdated
+            fields_updated: fieldsUpdated,
+            fields_detail: fieldsDetail,
+            ai_extracted_fields: aiExtractedFields
           });
-          console.log(`Updated ${brandName} ${modelName}: ${fieldsUpdated} fields`);
+          console.log(`Updated ${brandName} ${modelName}: ${fieldsUpdated} fields\n`);
         }
       } else {
         results.push({
@@ -336,8 +359,10 @@ serve(async (req) => {
           model_name: modelName,
           brand: brandName,
           status: 'no_updates_needed',
-          fields_updated: 0
+          fields_updated: 0,
+          ai_extracted_fields: aiExtractedFields
         });
+        console.log(`  No updates needed for ${brandName} ${modelName}\n`);
       }
     }
 
