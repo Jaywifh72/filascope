@@ -1,5 +1,4 @@
 import { useSearchParams } from "react-router-dom";
-import { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleDot, Square, Layers } from "lucide-react";
 import HotendList from "@/components/HotendList";
@@ -10,35 +9,7 @@ export default function Accessories() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "hotends";
 
-  // Debug: Log page load and URL state
-  useEffect(() => {
-    console.log("[Accessories] Page mounted", {
-      fullUrl: window.location.href,
-      pathname: window.location.pathname,
-      search: window.location.search,
-      activeTab,
-      searchParamsTab: searchParams.get("tab"),
-    });
-    
-    return () => {
-      console.log("[Accessories] Page unmounting");
-    };
-  }, []);
-
-  // Debug: Log tab changes
-  useEffect(() => {
-    console.log("[Accessories] Active tab changed", {
-      activeTab,
-      searchParamsTab: searchParams.get("tab"),
-      fullUrl: window.location.href,
-    });
-  }, [activeTab, searchParams]);
-
   const handleTabChange = (value: string) => {
-    console.log("[Accessories] handleTabChange called", {
-      newTab: value,
-      previousTab: activeTab,
-    });
     setSearchParams({ tab: value });
   };
 
@@ -71,42 +42,18 @@ export default function Accessories() {
           </TabsList>
 
           <TabsContent value="hotends" className="mt-6">
-            {activeTab === "hotends" && (
-              <DebugWrapper name="HotendList">
-                <HotendList />
-              </DebugWrapper>
-            )}
+            <HotendList />
           </TabsContent>
 
           <TabsContent value="build-plates" className="mt-6">
-            {activeTab === "build-plates" && (
-              <DebugWrapper name="BuildPlateList">
-                <BuildPlateList />
-              </DebugWrapper>
-            )}
+            <BuildPlateList />
           </TabsContent>
 
           <TabsContent value="ams" className="mt-6">
-            {activeTab === "ams" && (
-              <DebugWrapper name="AMSList">
-                <AMSList />
-              </DebugWrapper>
-            )}
+            <AMSList />
           </TabsContent>
         </Tabs>
       </div>
     </div>
   );
-}
-
-// Debug wrapper to log component mounting
-function DebugWrapper({ name, children }: { name: string; children: React.ReactNode }) {
-  useEffect(() => {
-    console.log(`[Accessories] ${name} component mounted`);
-    return () => {
-      console.log(`[Accessories] ${name} component unmounting`);
-    };
-  }, [name]);
-
-  return <>{children}</>;
 }
