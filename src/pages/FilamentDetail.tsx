@@ -26,21 +26,38 @@ interface HotendWithRating extends Accessory {
   ratingReason: string;
 }
 
-// Rate hotend compatibility with filament - scoring system for recommendation level
+// Rate hotend compatibility with filament - based on material and specs
 // Green = Best choice, Orange = Acceptable, Red = Not recommended
 const rateHotend = (hotend: Accessory, filament: Filament): { rating: "green" | "orange" | "red"; reason: string } => {
   const specs = hotend.specs as Record<string, any> | null;
-  const maxTemp = specs?.max_temp || specs?.max_temp_c || 0;
-  const material = (specs?.material || hotend.name || "").toLowerCase();
+  const maxTemp = specs?.max_temp_c || specs?.max_temp || 0;
+  const nozzleMaterial = (specs?.nozzle_material || "").toLowerCase();
+  const nameAndDesc = (hotend.name + " " + (hotend.description || "")).toLowerCase();
+  const isAbrasionResistant = specs?.abrasion_resistant === true;
+  const diameter = specs?.diameter_mm || specs?.diameter || 0;
   
-  // Detect nozzle material type
-  const isHardened = material.includes("hardened") || 
-                     material.includes("tungsten") ||
-                     material.includes("ruby") ||
-                     material.includes("sapphire");
-  const isSteel = material.includes("steel") && !isHardened;
-  const isBrass = material.includes("brass") || 
-                  (!material.includes("steel") && !isHardened && !material.includes("tungsten") && !material.includes("ruby"));
+  // Detect material type from specs and name
+  const isHardened = isAbrasionResistant ||
+                     nozzleMaterial.includes("hardened") ||
+                     nozzleMaterial.includes("obxidian") || // E3D's hardened material
+                     nozzleMaterial.includes("hta") || // High Temp Alloy
+                     nozzleMaterial.includes("diamondback") ||
+                     nozzleMaterial.includes("tungsten") ||
+                     nozzleMaterial.includes("ruby") ||
+                     nozzleMaterial.includes("sapphire") ||
+                     nameAndDesc.includes("hardened") ||
+                     nameAndDesc.includes("obxidian") ||
+                     nameAndDesc.includes("diamondback") ||
+                     nameAndDesc.includes("hta ");
+  
+  const isStainless = nozzleMaterial.includes("stainless") ||
+                      nameAndDesc.includes("stainless");
+  
+  const isBrass = nozzleMaterial.includes("brass") ||
+                  nameAndDesc.includes("brass");
+  
+  // If no material indicators found, check if it's likely a standard hotend
+  const hasKnownMaterial = isHardened || isStainless || isBrass || nozzleMaterial.length > 0;
   
   const requiredTemp = filament.nozzle_temp_sweetspot_c || filament.nozzle_temp_max_c || 0;
   const isAbrasive = filament.is_nozzle_abrasive || false;
@@ -50,28 +67,41 @@ const rateHotend = (hotend: Accessory, filament: Filament): { rating: "green" | 
     return { rating: "red", reason: `Max temp ${maxTemp}°C below required ${requiredTemp}°C` };
   }
 
+  // Build reason with diameter info if available
+  const diameterInfo = diameter > 0 ? ` (${diameter}mm)` : "";
+
   // For ABRASIVE filaments (CF, GF, etc.)
   if (isAbrasive) {
     if (isHardened) {
-      return { rating: "green", reason: "Hardened nozzle - best for abrasive filament" };
+      // Larger diameters are better for abrasive filaments
+      if (diameter >= 0.6) {
+        return { rating: "green", reason: `Hardened + larger nozzle${diameterInfo} - ideal for abrasive filament` };
+      }
+      return { rating: "green", reason: `Hardened material${diameterInfo} - best for abrasive filament` };
     }
-    if (isSteel) {
-      return { rating: "orange", reason: "Steel nozzle - acceptable but will wear over time" };
+    if (isStainless) {
+      return { rating: "orange", reason: `Stainless steel${diameterInfo} - acceptable, will wear over time` };
     }
-    // Brass or unknown material
-    return { rating: "red", reason: "Brass/soft nozzle - will wear rapidly with abrasive filament" };
+    if (isBrass) {
+      return { rating: "red", reason: `Brass nozzle${diameterInfo} - will wear rapidly with abrasive filament` };
+    }
+    // Unknown material - assume not ideal for abrasives
+    if (!hasKnownMaterial) {
+      return { rating: "orange", reason: `Material unknown${diameterInfo} - verify hardened for abrasive use` };
+    }
+    return { rating: "orange", reason: `Check material specs${diameterInfo} - ensure suitable for abrasives` };
   }
 
-  // For NON-ABRASIVE filaments
+  // For NON-ABRASIVE filaments - most hotends work well
   if (isBrass) {
-    return { rating: "green", reason: "Brass nozzle - excellent thermal properties for this material" };
+    return { rating: "green", reason: `Brass${diameterInfo} - excellent thermal conductivity` };
   }
-  if (isSteel || isHardened) {
-    return { rating: "green", reason: "Compatible - works well with this material" };
+  if (isStainless || isHardened) {
+    return { rating: "green", reason: `Compatible${diameterInfo} - works great with this material` };
   }
   
-  // Default - unknown material but temp is ok
-  return { rating: "orange", reason: "Compatible - material type unknown" };
+  // Default - temp is ok, material unknown but should work for non-abrasive
+  return { rating: "green", reason: `Compatible${diameterInfo}` };
 };
 
 const FilamentDetail = () => {
