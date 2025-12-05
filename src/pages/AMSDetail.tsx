@@ -1,11 +1,17 @@
 import { useParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ExternalLink, Layers, Check, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, ExternalLink, Layers, Check, X, ImageIcon } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface AMSSpecs {
   max_spools?: number;
@@ -30,6 +36,10 @@ interface AMSSpecs {
 
 export default function AMSDetail() {
   const { id } = useParams<{ id: string }>();
+  const { isAdmin } = useAuth();
+  const queryClient = useQueryClient();
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   const { data: ams, isLoading } = useQuery({
     queryKey: ["ams-detail", id],
@@ -92,6 +102,32 @@ export default function AMSDetail() {
     enabled: !!ams,
   });
 
+  // Mutation for updating AMS image
+  const updateImageMutation = useMutation({
+    mutationFn: async (imageUrl: string) => {
+      const { error } = await supabase
+        .from("printer_accessories")
+        .update({ image_url: imageUrl })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ams-detail", id] });
+      toast.success("Image updated successfully");
+      setImageDialogOpen(false);
+      setNewImageUrl("");
+    },
+    onError: (error) => {
+      toast.error("Failed to update image: " + error.message);
+    },
+  });
+
+  const handleUpdateImage = () => {
+    if (newImageUrl.trim()) {
+      updateImageMutation.mutate(newImageUrl.trim());
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -152,7 +188,7 @@ export default function AMSDetail() {
         {/* Main Content */}
         <div className="grid md:grid-cols-2 gap-8">
           {/* Image */}
-          <div className="aspect-square bg-muted/30 rounded-xl flex items-center justify-center overflow-hidden border">
+          <div className="relative aspect-square bg-muted/30 rounded-xl flex items-center justify-center overflow-hidden border">
             {ams.image_url ? (
               <img
                 src={ams.image_url}
@@ -168,8 +204,59 @@ export default function AMSDetail() {
             ) : null}
             <div className={`image-fallback flex flex-col items-center justify-center text-muted-foreground ${ams.image_url ? 'hidden' : ''}`}>
               <Layers className="h-24 w-24 mb-4 opacity-30" />
-              <span className="text-lg">No image available</span>
             </div>
+            
+            {/* Admin Image Edit Button */}
+            {isAdmin && (
+              <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="absolute top-3 right-3"
+                    onClick={() => setNewImageUrl(ams.image_url || "")}
+                  >
+                    <ImageIcon className="h-4 w-4 mr-1" />
+                    Update Image
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Update AMS/MMU Image</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="imageUrl">Image URL</Label>
+                      <Input
+                        id="imageUrl"
+                        value={newImageUrl}
+                        onChange={(e) => setNewImageUrl(e.target.value)}
+                        placeholder="https://example.com/image.png"
+                      />
+                    </div>
+                    {newImageUrl && (
+                      <div className="aspect-square max-h-48 bg-muted/30 rounded-lg overflow-hidden">
+                        <img
+                          src={newImageUrl}
+                          alt="Preview"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <Button
+                      onClick={handleUpdateImage}
+                      disabled={!newImageUrl.trim() || updateImageMutation.isPending}
+                      className="w-full"
+                    >
+                      {updateImageMutation.isPending ? "Updating..." : "Save Image"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
 
           {/* Info */}
