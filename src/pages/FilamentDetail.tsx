@@ -27,80 +27,51 @@ interface HotendWithRating extends Accessory {
 }
 
 // Rate hotend compatibility with filament - scoring system for recommendation level
+// Green = Best choice, Orange = Acceptable, Red = Not recommended
 const rateHotend = (hotend: Accessory, filament: Filament): { rating: "green" | "orange" | "red"; reason: string } => {
   const specs = hotend.specs as Record<string, any> | null;
   const maxTemp = specs?.max_temp || specs?.max_temp_c || 0;
-  const isHardened = specs?.hardened || 
-                     specs?.material?.toLowerCase()?.includes("hardened") || 
-                     specs?.material?.toLowerCase()?.includes("steel") ||
-                     specs?.material?.toLowerCase()?.includes("tungsten") ||
-                     specs?.material?.toLowerCase()?.includes("ruby") ||
-                     hotend.name?.toLowerCase()?.includes("hardened") ||
-                     hotend.name?.toLowerCase()?.includes("steel");
-  const isBrass = specs?.material?.toLowerCase()?.includes("brass") || 
-                  hotend.name?.toLowerCase()?.includes("brass") ||
-                  (!specs?.material && !isHardened);
+  const material = (specs?.material || hotend.name || "").toLowerCase();
+  
+  // Detect nozzle material type
+  const isHardened = material.includes("hardened") || 
+                     material.includes("tungsten") ||
+                     material.includes("ruby") ||
+                     material.includes("sapphire");
+  const isSteel = material.includes("steel") && !isHardened;
+  const isBrass = material.includes("brass") || 
+                  (!material.includes("steel") && !isHardened && !material.includes("tungsten") && !material.includes("ruby"));
   
   const requiredTemp = filament.nozzle_temp_sweetspot_c || filament.nozzle_temp_max_c || 0;
   const isAbrasive = filament.is_nozzle_abrasive || false;
   
-  let score = 50; // Start at neutral
-  const reasons: string[] = [];
-
-  // Temperature check - critical factor
-  if (maxTemp > 0) {
-    if (requiredTemp > maxTemp) {
-      score -= 50; // Can't handle temp - major penalty
-      reasons.push(`Max temp ${maxTemp}°C below required ${requiredTemp}°C`);
-    } else if (maxTemp - requiredTemp >= 50) {
-      score += 20; // Good thermal headroom
-      reasons.push("Excellent thermal headroom");
-    } else if (maxTemp - requiredTemp >= 20) {
-      score += 10; // Adequate headroom
-    }
+  // Temperature check - if can't handle temp, it's not recommended
+  if (maxTemp > 0 && requiredTemp > maxTemp) {
+    return { rating: "red", reason: `Max temp ${maxTemp}°C below required ${requiredTemp}°C` };
   }
 
-  // Abrasive filament handling
+  // For ABRASIVE filaments (CF, GF, etc.)
   if (isAbrasive) {
     if (isHardened) {
-      score += 30; // Perfect for abrasive
-      reasons.push("Hardened - ideal for abrasive material");
-    } else if (isBrass) {
-      score -= 30; // Brass will wear quickly
-      reasons.push("Brass nozzle will wear quickly");
-    } else {
-      score -= 15; // Unknown material, caution
-      reasons.push("Material may wear with abrasive filament");
+      return { rating: "green", reason: "Hardened nozzle - best for abrasive filament" };
     }
-  } else {
-    // Non-abrasive filament
-    if (isBrass) {
-      score += 15; // Brass is great for non-abrasive (good thermal, cheap)
-      reasons.push("Brass - excellent for this material");
-    } else if (isHardened) {
-      score += 5; // Hardened works but overkill
-      reasons.push("Hardened - works well, may be overkill");
+    if (isSteel) {
+      return { rating: "orange", reason: "Steel nozzle - acceptable but will wear over time" };
     }
+    // Brass or unknown material
+    return { rating: "red", reason: "Brass/soft nozzle - will wear rapidly with abrasive filament" };
   }
 
-  // Price consideration (lower price = slight bonus for similar performance)
-  if (hotend.price && hotend.price < 20) {
-    score += 5;
+  // For NON-ABRASIVE filaments
+  if (isBrass) {
+    return { rating: "green", reason: "Brass nozzle - excellent thermal properties for this material" };
   }
-
-  // Determine rating based on score
-  let rating: "green" | "orange" | "red";
-  if (score >= 60) {
-    rating = "green";
-  } else if (score >= 35) {
-    rating = "orange";
-  } else {
-    rating = "red";
+  if (isSteel || isHardened) {
+    return { rating: "green", reason: "Compatible - works well with this material" };
   }
-
-  const reason = reasons.length > 0 ? reasons[0] : (rating === "green" ? "Compatible" : rating === "orange" ? "Usable with limitations" : "Not recommended");
   
-  return { rating, reason };
+  // Default - unknown material but temp is ok
+  return { rating: "orange", reason: "Compatible - material type unknown" };
 };
 
 const FilamentDetail = () => {
