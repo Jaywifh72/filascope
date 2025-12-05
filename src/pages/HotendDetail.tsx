@@ -1,13 +1,18 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ExternalLink, Thermometer, CircleDot, Wrench, Package, Printer } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ArrowLeft, ExternalLink, Thermometer, CircleDot, Wrench, Package, Printer, ImageIcon } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
 
@@ -33,6 +38,11 @@ export default function NozzleDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getAffiliateUrl } = useAffiliateLinks();
+  const { isAdmin } = useAuth();
+  const queryClient = useQueryClient();
+  
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   // Fetch nozzle details
   const { data: nozzle, isLoading } = useQuery({
@@ -162,6 +172,39 @@ export default function NozzleDetail() {
   // Parse specs from JSONB
   const specs = nozzle?.specs as Record<string, unknown> | null;
 
+  // Mutation to update image
+  const updateImageMutation = useMutation({
+    mutationFn: async (imageUrl: string) => {
+      const { error } = await supabase
+        .from("printer_accessories")
+        .update({ image_url: imageUrl })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nozzle-detail", id] });
+      toast.success("Image updated successfully");
+      setImageDialogOpen(false);
+      setNewImageUrl("");
+    },
+    onError: (error) => {
+      toast.error("Failed to update image: " + error.message);
+    },
+  });
+
+  const handleSaveImage = () => {
+    if (!newImageUrl.trim()) {
+      toast.error("Please enter an image URL");
+      return;
+    }
+    updateImageMutation.mutate(newImageUrl.trim());
+  };
+
+  const openImageDialog = () => {
+    setNewImageUrl(nozzle?.image_url || "");
+    setImageDialogOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -207,17 +250,32 @@ export default function NozzleDetail() {
           {/* Image & Basic Info */}
           <div className="lg:col-span-1 space-y-4">
             {/* Product Image */}
-            {nozzle.image_url && (
-              <Card>
-                <CardContent className="p-4">
+            <Card>
+              <CardContent className="p-4 relative">
+                {nozzle.image_url ? (
                   <img
                     src={nozzle.image_url}
                     alt={nozzle.name}
                     className="w-full h-auto rounded-lg object-contain bg-muted"
                   />
-                </CardContent>
-              </Card>
-            )}
+                ) : (
+                  <div className="w-full h-48 bg-muted rounded-lg flex items-center justify-center">
+                    <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                )}
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-6 right-6 gap-1.5"
+                    onClick={openImageDialog}
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    Edit Image
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Price & Purchase */}
             <Card>
@@ -533,6 +591,45 @@ export default function NozzleDetail() {
             )}
           </div>
         </div>
+
+        {/* Image Edit Dialog */}
+        <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Update Hotend Image</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                placeholder="Enter image URL..."
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+              />
+              {newImageUrl && (
+                <div className="border rounded-lg p-2 bg-muted">
+                  <img
+                    src={newImageUrl}
+                    alt="Preview"
+                    className="w-full h-48 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setImageDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveImage}
+                disabled={updateImageMutation.isPending}
+              >
+                {updateImageMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
