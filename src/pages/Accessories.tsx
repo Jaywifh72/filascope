@@ -5,9 +5,24 @@ import HotendList from "@/components/HotendList";
 import BuildPlateList from "@/components/BuildPlateList";
 import AMSList from "@/components/AMSList";
 
+// Read tab from URL on initial load only
+const getInitialTab = () => {
+  if (typeof window === "undefined") return "hotends";
+  const params = new URLSearchParams(window.location.search);
+  return params.get("tab") || "hotends";
+};
+
 export default function Accessories() {
-  // Simple state - no URL syncing to avoid encoding issues
-  const [activeTab, setActiveTab] = useState("hotends");
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // Update URL without causing navigation - use requestAnimationFrame to ensure it happens after render
+    requestAnimationFrame(() => {
+      const url = value === "hotends" ? "/accessories" : `/accessories?tab=${value}`;
+      window.history.replaceState({}, "", url);
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -21,7 +36,7 @@ export default function Accessories() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="hotends" className="gap-2">
               <CircleDot className="h-4 w-4" />
