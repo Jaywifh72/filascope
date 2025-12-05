@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, CheckCircle, AlertCircle, XCircle, RefreshCw, Database, Printer, TestTube } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, XCircle, RefreshCw, Database, Printer, TestTube, Wrench } from "lucide-react";
 
 interface DataQualityMetrics {
   total: number;
@@ -34,14 +34,22 @@ interface ItemWithIssues {
   issueCount: number;
 }
 
+interface AccessoryMetrics {
+  hotends: DataQualityMetrics | null;
+  buildPlates: DataQualityMetrics | null;
+  amsMmu: DataQualityMetrics | null;
+}
+
 const AdminDataQuality = () => {
   const navigate = useNavigate();
   const { isAdmin, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("printers");
   const [printerMetrics, setPrinterMetrics] = useState<DataQualityMetrics | null>(null);
   const [filamentMetrics, setFilamentMetrics] = useState<DataQualityMetrics | null>(null);
+  const [accessoryMetrics, setAccessoryMetrics] = useState<AccessoryMetrics>({ hotends: null, buildPlates: null, amsMmu: null });
   const [printersWithIssues, setPrintersWithIssues] = useState<ItemWithIssues[]>([]);
   const [filamentsWithIssues, setFilamentsWithIssues] = useState<ItemWithIssues[]>([]);
+  const [accessoriesWithIssues, setAccessoriesWithIssues] = useState<ItemWithIssues[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -58,7 +66,7 @@ const AdminDataQuality = () => {
 
   const fetchAllData = async () => {
     setIsLoading(true);
-    await Promise.all([fetchPrinterData(), fetchFilamentData()]);
+    await Promise.all([fetchPrinterData(), fetchFilamentData(), fetchAccessoryData()]);
     setIsLoading(false);
   };
 
@@ -239,6 +247,102 @@ const AdminDataQuality = () => {
 
     setFilamentMetrics({ total, fields, inconsistencies });
     setFilamentsWithIssues(filamentsIssues);
+  };
+
+  const fetchAccessoryData = async () => {
+    const { data: accessories, error } = await supabase
+      .from("printer_accessories")
+      .select("*");
+
+    if (error || !accessories) return;
+
+    const hotends = accessories.filter((a: any) => a.accessory_type === "hotend");
+    const buildPlates = accessories.filter((a: any) => a.accessory_type === "build_plate");
+    const amsMmu = accessories.filter((a: any) => a.accessory_type === "ams_mmu");
+
+    const processAccessoryType = (items: any[], type: string) => {
+      const total = items.length;
+      if (total === 0) return null;
+
+      const fieldChecks = [
+        { name: "name", label: "Name", priority: "critical" as const },
+        { name: "brand", label: "Brand", priority: "critical" as const },
+        { name: "price", label: "Price", priority: "critical" as const },
+        { name: "image_url", label: "Product Image", priority: "critical" as const },
+        { name: "product_url", label: "Product URL", priority: "important" as const },
+        { name: "compatible_printer_brands", label: "Compatible Brands", priority: "important" as const },
+        { name: "description", label: "Description", priority: "nice-to-have" as const },
+        { name: "specs", label: "Specifications", priority: "important" as const },
+      ];
+
+      const fields = fieldChecks.map(field => {
+        let filled = 0;
+        items.forEach((a: any) => {
+          if (field.name === "specs") {
+            if (a.specs && Object.keys(a.specs).length > 0) filled++;
+          } else if (field.name === "compatible_printer_brands") {
+            if (a.compatible_printer_brands && a.compatible_printer_brands.length > 0) filled++;
+          } else {
+            const value = a[field.name];
+            if (value !== null && value !== undefined && value !== "") filled++;
+          }
+        });
+        return { ...field, filled, percentage: total > 0 ? Math.round((filled / total) * 100) : 0 };
+      });
+
+      const inconsistencies: DataQualityMetrics["inconsistencies"] = [];
+      
+      const priceIssues = items.filter((a: any) => a.price && a.price < 1);
+      if (priceIssues.length > 0) {
+        inconsistencies.push({ issue: "Suspiciously low price (<$1)", count: priceIssues.length, items: priceIssues.map((a: any) => a.name) });
+      }
+
+      const noBrandNoCompat = items.filter((a: any) => !a.brand && (!a.compatible_printer_brands || a.compatible_printer_brands.length === 0));
+      if (noBrandNoCompat.length > 0) {
+        inconsistencies.push({ issue: "Missing both brand and compatible brands", count: noBrandNoCompat.length, items: noBrandNoCompat.map((a: any) => a.name) });
+      }
+
+      const brokenImages = items.filter((a: any) => a.image_url && (a.image_url.includes("placeholder") || !a.image_url.startsWith("http")));
+      if (brokenImages.length > 0) {
+        inconsistencies.push({ issue: "Potentially broken/placeholder image", count: brokenImages.length, items: brokenImages.map((a: any) => a.name) });
+      }
+
+      return { total, fields, inconsistencies };
+    };
+
+    const hotendMetrics = processAccessoryType(hotends, "hotend");
+    const buildPlateMetrics = processAccessoryType(buildPlates, "build_plate");
+    const amsMmuMetrics = processAccessoryType(amsMmu, "ams_mmu");
+
+    setAccessoryMetrics({
+      hotends: hotendMetrics,
+      buildPlates: buildPlateMetrics,
+      amsMmu: amsMmuMetrics,
+    });
+
+    // Build combined issues list
+    const allAccessories = [...hotends, ...buildPlates, ...amsMmu];
+    const accessoryIssues: ItemWithIssues[] = allAccessories
+      .map((a: any) => {
+        const missingFields: string[] = [];
+        if (!a.name) missingFields.push("Name");
+        if (!a.brand) missingFields.push("Brand");
+        if (!a.price) missingFields.push("Price");
+        if (!a.image_url) missingFields.push("Image");
+        if (!a.product_url) missingFields.push("URL");
+        if (!a.specs || Object.keys(a.specs).length === 0) missingFields.push("Specs");
+        return { 
+          id: a.id, 
+          name: a.name || "Unnamed", 
+          secondary: `${a.brand || "Unknown"} (${a.accessory_type})`, 
+          missingFields, 
+          issueCount: missingFields.length 
+        };
+      })
+      .filter(a => a.issueCount > 0)
+      .sort((a, b) => b.issueCount - a.issueCount);
+
+    setAccessoriesWithIssues(accessoryIssues);
   };
 
   const getProgressColor = (percentage: number) => {
@@ -430,6 +534,196 @@ const AdminDataQuality = () => {
     );
   };
 
+  const renderAccessoriesContent = () => {
+    const totalAccessories = (accessoryMetrics.hotends?.total || 0) + 
+                             (accessoryMetrics.buildPlates?.total || 0) + 
+                             (accessoryMetrics.amsMmu?.total || 0);
+
+    const getCombinedCompleteness = () => {
+      const allMetrics = [accessoryMetrics.hotends, accessoryMetrics.buildPlates, accessoryMetrics.amsMmu].filter(Boolean);
+      if (allMetrics.length === 0) return 0;
+      const totalPercentage = allMetrics.reduce((sum, m) => {
+        const avg = m!.fields.reduce((s, f) => s + f.percentage, 0) / m!.fields.length;
+        return sum + avg;
+      }, 0);
+      return Math.round(totalPercentage / allMetrics.length);
+    };
+
+    const getCriticalCompleteness = () => {
+      const allMetrics = [accessoryMetrics.hotends, accessoryMetrics.buildPlates, accessoryMetrics.amsMmu].filter(Boolean);
+      if (allMetrics.length === 0) return 0;
+      const totalPercentage = allMetrics.reduce((sum, m) => {
+        const criticals = m!.fields.filter(f => f.priority === "critical");
+        const avg = criticals.reduce((s, f) => s + f.percentage, 0) / (criticals.length || 1);
+        return sum + avg;
+      }, 0);
+      return Math.round(totalPercentage / allMetrics.length);
+    };
+
+    const overallCompleteness = getCombinedCompleteness();
+    const criticalCompleteness = getCriticalCompleteness();
+
+    const renderAccessoryTypeCard = (metrics: DataQualityMetrics | null, title: string, detailPath: string) => {
+      if (!metrics) return null;
+      const avg = Math.round(metrics.fields.reduce((s, f) => s + f.percentage, 0) / metrics.fields.length);
+      return (
+        <Card className="p-4 bg-card border-border">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-foreground">{title}</h3>
+            <Badge variant={avg >= 80 ? "default" : avg >= 60 ? "secondary" : "destructive"}>
+              {avg}%
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mb-3">{metrics.total} items</p>
+          <div className="space-y-2">
+            {metrics.fields.slice(0, 5).map((field) => (
+              <div key={field.name} className="flex items-center gap-2 text-xs">
+                <span className="w-24 truncate">{field.label}</span>
+                <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className={`h-full ${getProgressColor(field.percentage)}`}
+                    style={{ width: `${field.percentage}%` }}
+                  />
+                </div>
+                <span className="w-8 text-right text-muted-foreground">{field.percentage}%</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      );
+    };
+
+    return (
+      <div className="space-y-8">
+        {/* Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="p-6 bg-card border-border">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">Overall Completeness</span>
+              {overallCompleteness >= 80 ? (
+                <CheckCircle className="w-5 h-5 text-green-500" />
+              ) : overallCompleteness >= 60 ? (
+                <AlertCircle className="w-5 h-5 text-yellow-500" />
+              ) : (
+                <XCircle className="w-5 h-5 text-red-500" />
+              )}
+            </div>
+            <p className="text-4xl font-bold text-foreground mb-2">{overallCompleteness}%</p>
+            <Progress value={overallCompleteness} className="h-2" />
+          </Card>
+
+          <Card className="p-6 bg-card border-border">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">Critical Fields</span>
+              <Badge variant="destructive">Critical</Badge>
+            </div>
+            <p className="text-4xl font-bold text-foreground mb-2">{criticalCompleteness}%</p>
+            <Progress value={criticalCompleteness} className="h-2" />
+          </Card>
+
+          <Card className="p-6 bg-card border-border">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">Accessories with Issues</span>
+              <AlertCircle className="w-5 h-5 text-orange-500" />
+            </div>
+            <p className="text-4xl font-bold text-foreground mb-2">{accessoriesWithIssues.length}</p>
+            <p className="text-xs text-muted-foreground">
+              {totalAccessories > 0 ? Math.round((accessoriesWithIssues.length / totalAccessories) * 100) : 0}% need attention
+            </p>
+          </Card>
+        </div>
+
+        {/* Accessory Type Breakdown */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {renderAccessoryTypeCard(accessoryMetrics.hotends, "Hotends", "/hotends")}
+          {renderAccessoryTypeCard(accessoryMetrics.buildPlates, "Build Plates", "/build-plates")}
+          {renderAccessoryTypeCard(accessoryMetrics.amsMmu, "AMS/MMU", "/ams")}
+        </div>
+
+        {/* Combined Inconsistencies */}
+        {(() => {
+          const allInconsistencies = [
+            ...(accessoryMetrics.hotends?.inconsistencies?.map(i => ({ ...i, type: "Hotend" })) || []),
+            ...(accessoryMetrics.buildPlates?.inconsistencies?.map(i => ({ ...i, type: "Build Plate" })) || []),
+            ...(accessoryMetrics.amsMmu?.inconsistencies?.map(i => ({ ...i, type: "AMS/MMU" })) || []),
+          ];
+          if (allInconsistencies.length === 0) return null;
+          return (
+            <Card className="p-6 bg-card border-border">
+              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-orange-500" />
+                Data Inconsistencies
+              </h2>
+              <div className="space-y-3">
+                {allInconsistencies.map((issue, idx) => (
+                  <div key={idx} className="flex items-start gap-3 p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                    <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-foreground">
+                        <Badge variant="outline" className="mr-2 text-xs">{issue.type}</Badge>
+                        {issue.issue}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {issue.count} item(s): {issue.items.slice(0, 5).join(", ")}
+                        {issue.items.length > 5 && ` +${issue.items.length - 5} more`}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          );
+        })()}
+
+        {/* Accessories Needing Attention */}
+        <Card className="p-6 bg-card border-border">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
+            Accessories Missing Critical Data ({accessoriesWithIssues.length})
+          </h2>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Accessory</TableHead>
+                  <TableHead>Brand / Type</TableHead>
+                  <TableHead>Missing Fields</TableHead>
+                  <TableHead className="text-right">Issues</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {accessoriesWithIssues.slice(0, 20).map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{item.secondary}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {item.missingFields.map((field) => (
+                          <Badge key={field} variant="outline" className="text-xs">
+                            {field}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={item.issueCount >= 3 ? "destructive" : "secondary"}>
+                        {item.issueCount}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {accessoriesWithIssues.length > 20 && (
+              <p className="text-sm text-muted-foreground mt-4 text-center">
+                Showing 20 of {accessoriesWithIssues.length} accessories with issues
+              </p>
+            )}
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
   if (loading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -454,7 +748,7 @@ const AdminDataQuality = () => {
             <div>
               <h1 className="text-3xl font-bold text-foreground">Data Quality Dashboard</h1>
               <p className="text-muted-foreground">
-                {printerMetrics?.total || 0} printers • {filamentMetrics?.total || 0} filaments
+                {printerMetrics?.total || 0} printers • {filamentMetrics?.total || 0} filaments • {(accessoryMetrics.hotends?.total || 0) + (accessoryMetrics.buildPlates?.total || 0) + (accessoryMetrics.amsMmu?.total || 0)} accessories
               </p>
             </div>
           </div>
@@ -465,7 +759,7 @@ const AdminDataQuality = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="printers" className="flex items-center gap-2">
               <Printer className="w-4 h-4" />
               Printers
@@ -473,6 +767,10 @@ const AdminDataQuality = () => {
             <TabsTrigger value="filaments" className="flex items-center gap-2">
               <TestTube className="w-4 h-4" />
               Filaments
+            </TabsTrigger>
+            <TabsTrigger value="accessories" className="flex items-center gap-2">
+              <Wrench className="w-4 h-4" />
+              Accessories
             </TabsTrigger>
           </TabsList>
 
@@ -482,6 +780,10 @@ const AdminDataQuality = () => {
 
           <TabsContent value="filaments">
             {renderMetricsContent(filamentMetrics, filamentsWithIssues, "filament")}
+          </TabsContent>
+
+          <TabsContent value="accessories">
+            {renderAccessoriesContent()}
           </TabsContent>
         </Tabs>
       </div>
