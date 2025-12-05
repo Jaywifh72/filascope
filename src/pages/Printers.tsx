@@ -267,31 +267,23 @@ export default function Printers() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid w-full max-w-2xl grid-cols-4">
-            <TabsTrigger value="printers" asChild>
-              <Link to="/printers" className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
-                <PrinterIcon className="h-4 w-4" />
-                Printers
-              </Link>
+            <TabsTrigger value="printers" className="gap-2">
+              <PrinterIcon className="h-4 w-4" />
+              Printers
             </TabsTrigger>
-            <TabsTrigger value="hotends" asChild>
-              <Link to={{ pathname: "/printers", search: "?tab=hotends" }} className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
-                <CircleDot className="h-4 w-4" />
-                Hotends
-              </Link>
+            <TabsTrigger value="hotends" className="gap-2">
+              <CircleDot className="h-4 w-4" />
+              Hotends
             </TabsTrigger>
-            <TabsTrigger value="build-plates" asChild>
-              <Link to={{ pathname: "/printers", search: "?tab=build-plates" }} className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
-                <Square className="h-4 w-4" />
-                Build Plates
-              </Link>
+            <TabsTrigger value="build-plates" className="gap-2">
+              <Square className="h-4 w-4" />
+              Build Plates
             </TabsTrigger>
-            <TabsTrigger value="ams" asChild>
-              <Link to={{ pathname: "/printers", search: "?tab=ams" }} className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2">
-                <Layers className="h-4 w-4" />
-                AMS/MMU
-              </Link>
+            <TabsTrigger value="ams" className="gap-2">
+              <Layers className="h-4 w-4" />
+              AMS/MMU
             </TabsTrigger>
           </TabsList>
 
