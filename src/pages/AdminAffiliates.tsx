@@ -12,13 +12,14 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, 
   Shield, 
-  ExternalLink, 
   Pencil, 
   Save,
   X,
   CheckCircle2,
   AlertCircle,
-  Store
+  Store,
+  Printer,
+  Cylinder
 } from "lucide-react";
 import {
   Dialog,
@@ -27,6 +28,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 interface AffiliateConfig {
   id: string;
@@ -40,17 +47,13 @@ interface AffiliateConfig {
   updated_at: string;
 }
 
-interface BrandWithConfig {
-  brand: string;
-  config: AffiliateConfig | null;
-}
-
 const AdminAffiliates = () => {
   const navigate = useNavigate();
   const { isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const [configs, setConfigs] = useState<AffiliateConfig[]>([]);
-  const [brands, setBrands] = useState<string[]>([]);
+  const [printerBrands, setPrinterBrands] = useState<string[]>([]);
+  const [filamentVendors, setFilamentVendors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
   const [editingBrand, setEditingBrand] = useState<string | null>(null);
@@ -64,7 +67,7 @@ const AdminAffiliates = () => {
   });
 
   // All brands including Amazon at the top
-  const allBrands = ["Amazon", ...brands];
+  const allPrinterBrands = ["Amazon", ...printerBrands];
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -86,30 +89,25 @@ const AdminAffiliates = () => {
   const fetchData = async () => {
     setIsLoading(true);
     
-    // Fetch brands and configs in parallel
-    const [brandsResult, configsResult] = await Promise.all([
+    // Fetch brands, vendors, and configs in parallel
+    const [brandsResult, vendorsResult, configsResult] = await Promise.all([
       supabase.from("printer_brands").select("brand").order("brand"),
+      supabase.from("filaments").select("vendor").not("vendor", "is", null),
       supabase.from("affiliate_configs").select("*").order("vendor_name"),
     ]);
 
-    if (brandsResult.error) {
-      toast({
-        title: "Error",
-        description: "Failed to load brands",
-        variant: "destructive",
-      });
-    } else {
-      setBrands(brandsResult.data?.map(b => b.brand) || []);
+    if (brandsResult.data) {
+      setPrinterBrands(brandsResult.data.map(b => b.brand));
     }
 
-    if (configsResult.error) {
-      toast({
-        title: "Error",
-        description: "Failed to load affiliate configurations",
-        variant: "destructive",
-      });
-    } else {
-      setConfigs(configsResult.data || []);
+    if (vendorsResult.data) {
+      // Get unique vendors
+      const uniqueVendors = [...new Set(vendorsResult.data.map(v => v.vendor))].filter(Boolean).sort();
+      setFilamentVendors(uniqueVendors as string[]);
+    }
+
+    if (configsResult.data) {
+      setConfigs(configsResult.data);
     }
     
     setIsLoading(false);
@@ -204,7 +202,82 @@ const AdminAffiliates = () => {
     }
   };
 
-  const configuredCount = allBrands.filter(b => hasAnyConfig(b)).length;
+  const printerConfiguredCount = allPrinterBrands.filter(b => hasAnyConfig(b)).length;
+  const filamentConfiguredCount = filamentVendors.filter(b => hasAnyConfig(b)).length;
+  const totalBrands = allPrinterBrands.length + filamentVendors.length;
+  const totalConfigured = printerConfiguredCount + filamentConfiguredCount;
+
+  const renderBrandCard = (brand: string, type: "printer" | "filament" | "marketplace") => {
+    const config = getConfigForBrand(brand);
+    const isConfigured = hasAnyConfig(brand);
+
+    return (
+      <Card 
+        key={brand} 
+        className={`p-4 bg-card border-border transition-all hover:border-primary/50 ${
+          type === "marketplace" ? "ring-2 ring-primary/20" : ""
+        }`}
+      >
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-foreground">{brand}</h3>
+            {type === "marketplace" && (
+              <Badge variant="secondary" className="text-xs">Marketplace</Badge>
+            )}
+          </div>
+          <Badge 
+            variant={isConfigured ? "default" : "outline"} 
+            className={isConfigured ? "bg-green-500/10 text-green-600 border-green-500/30" : ""}
+          >
+            {isConfigured ? "Configured" : "Not Set"}
+          </Badge>
+        </div>
+
+        <div className="space-y-2 text-sm mb-4">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">URL Pattern:</span>
+            <span className={config?.affiliate_url_pattern ? "text-foreground" : "text-muted-foreground/50"}>
+              {config?.affiliate_url_pattern ? "Set" : "Not set"}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Amazon US:</span>
+            <span className={config?.amazon_us_tag ? "text-foreground font-mono text-xs" : "text-muted-foreground/50"}>
+              {config?.amazon_us_tag || "Not set"}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Amazon UK:</span>
+            <span className={config?.amazon_uk_tag ? "text-foreground font-mono text-xs" : "text-muted-foreground/50"}>
+              {config?.amazon_uk_tag || "Not set"}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Amazon DE:</span>
+            <span className={config?.amazon_de_tag ? "text-foreground font-mono text-xs" : "text-muted-foreground/50"}>
+              {config?.amazon_de_tag || "Not set"}
+            </span>
+          </div>
+        </div>
+
+        {config?.notes && (
+          <p className="text-xs text-muted-foreground mb-3 italic truncate">
+            {config.notes}
+          </p>
+        )}
+
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full"
+          onClick={() => handleEdit(brand)}
+        >
+          <Pencil className="w-3 h-3 mr-2" />
+          {isConfigured ? "Edit" : "Configure"}
+        </Button>
+      </Card>
+    );
+  };
 
   if (loading || isLoading) {
     return (
@@ -232,29 +305,38 @@ const AdminAffiliates = () => {
             <div>
               <h1 className="text-3xl font-bold text-foreground">Affiliate Link Setup</h1>
               <p className="text-muted-foreground text-sm">
-                {configuredCount} of {allBrands.length} brands configured
+                {totalConfigured} of {totalBrands} brands configured
               </p>
             </div>
           </div>
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card className="p-4 bg-card border-border">
             <div className="flex items-center gap-3">
               <Store className="w-8 h-8 text-primary" />
               <div>
-                <p className="text-2xl font-bold">{allBrands.length}</p>
+                <p className="text-2xl font-bold">{totalBrands}</p>
                 <p className="text-sm text-muted-foreground">Total Brands</p>
               </div>
             </div>
           </Card>
           <Card className="p-4 bg-card border-border">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-8 h-8 text-green-500" />
+              <Printer className="w-8 h-8 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{configuredCount}</p>
-                <p className="text-sm text-muted-foreground">Configured</p>
+                <p className="text-2xl font-bold">{printerConfiguredCount}/{allPrinterBrands.length}</p>
+                <p className="text-sm text-muted-foreground">Printer Brands</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4 bg-card border-border">
+            <div className="flex items-center gap-3">
+              <Cylinder className="w-8 h-8 text-orange-500" />
+              <div>
+                <p className="text-2xl font-bold">{filamentConfiguredCount}/{filamentVendors.length}</p>
+                <p className="text-sm text-muted-foreground">Filament Vendors</p>
               </div>
             </div>
           </Card>
@@ -262,7 +344,7 @@ const AdminAffiliates = () => {
             <div className="flex items-center gap-3">
               <AlertCircle className="w-8 h-8 text-yellow-500" />
               <div>
-                <p className="text-2xl font-bold">{allBrands.length - configuredCount}</p>
+                <p className="text-2xl font-bold">{totalBrands - totalConfigured}</p>
                 <p className="text-sm text-muted-foreground">Not Configured</p>
               </div>
             </div>
@@ -278,81 +360,33 @@ const AdminAffiliates = () => {
           </p>
         </Card>
 
-        {/* Brands Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {allBrands.map((brand) => {
-            const config = getConfigForBrand(brand);
-            const isConfigured = hasAnyConfig(brand);
-            const isAmazon = brand === "Amazon";
+        {/* Tabs for Printer Brands and Filament Vendors */}
+        <Tabs defaultValue="printers" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="printers" className="flex items-center gap-2">
+              <Printer className="w-4 h-4" />
+              Printer Brands ({allPrinterBrands.length})
+            </TabsTrigger>
+            <TabsTrigger value="filaments" className="flex items-center gap-2">
+              <Cylinder className="w-4 h-4" />
+              Filament Vendors ({filamentVendors.length})
+            </TabsTrigger>
+          </TabsList>
 
-            return (
-              <Card 
-                key={brand} 
-                className={`p-4 bg-card border-border transition-all hover:border-primary/50 ${
-                  isAmazon ? "ring-2 ring-primary/20" : ""
-                }`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-foreground">{brand}</h3>
-                    {isAmazon && (
-                      <Badge variant="secondary" className="text-xs">Marketplace</Badge>
-                    )}
-                  </div>
-                  <Badge 
-                    variant={isConfigured ? "default" : "outline"} 
-                    className={isConfigured ? "bg-green-500/10 text-green-600 border-green-500/30" : ""}
-                  >
-                    {isConfigured ? "Configured" : "Not Set"}
-                  </Badge>
-                </div>
+          <TabsContent value="printers">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {allPrinterBrands.map((brand) => 
+                renderBrandCard(brand, brand === "Amazon" ? "marketplace" : "printer")
+              )}
+            </div>
+          </TabsContent>
 
-                <div className="space-y-2 text-sm mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">URL Pattern:</span>
-                    <span className={config?.affiliate_url_pattern ? "text-foreground" : "text-muted-foreground/50"}>
-                      {config?.affiliate_url_pattern ? "Set" : "Not set"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Amazon US:</span>
-                    <span className={config?.amazon_us_tag ? "text-foreground font-mono text-xs" : "text-muted-foreground/50"}>
-                      {config?.amazon_us_tag || "Not set"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Amazon UK:</span>
-                    <span className={config?.amazon_uk_tag ? "text-foreground font-mono text-xs" : "text-muted-foreground/50"}>
-                      {config?.amazon_uk_tag || "Not set"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Amazon DE:</span>
-                    <span className={config?.amazon_de_tag ? "text-foreground font-mono text-xs" : "text-muted-foreground/50"}>
-                      {config?.amazon_de_tag || "Not set"}
-                    </span>
-                  </div>
-                </div>
-
-                {config?.notes && (
-                  <p className="text-xs text-muted-foreground mb-3 italic truncate">
-                    {config.notes}
-                  </p>
-                )}
-
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => handleEdit(brand)}
-                >
-                  <Pencil className="w-3 h-3 mr-2" />
-                  {isConfigured ? "Edit" : "Configure"}
-                </Button>
-              </Card>
-            );
-          })}
-        </div>
+          <TabsContent value="filaments">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filamentVendors.map((vendor) => renderBrandCard(vendor, "filament"))}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl">
