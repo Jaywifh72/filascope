@@ -43,6 +43,8 @@ interface PrinterSpecs {
   pressure_advance_supported?: boolean;
   multi_material_supported?: boolean;
   native_multi_material_system?: boolean;
+  ui_language_options?: string;
+  firmware_family?: string;
 }
 
 async function enrichPrinterWithAI(
@@ -101,7 +103,9 @@ Return a JSON object with these fields (only include fields you're confident abo
   "input_shaping_supported": boolean,
   "pressure_advance_supported": boolean,
   "multi_material_supported": boolean,
-  "native_multi_material_system": boolean
+  "native_multi_material_system": boolean,
+  "ui_language_options": string (comma-separated list of supported UI languages like "English, Chinese, German, French, Spanish"),
+  "firmware_family": string (name of firmware like "Klipper", "Marlin", "RepRap", "Prusa Firmware", "Bambu Studio", etc.)
 }
 
 Return ONLY the JSON object, no explanation or markdown.`;
@@ -176,6 +180,21 @@ function isValidValue(value: any, fieldName: string): boolean {
     if (fieldName === 'msrp_usd' && (value < 50 || value > 100000)) return false;
     if (fieldName === 'filament_diameter_mm' && value !== 1.75 && value !== 2.85) return false;
     if (fieldName === 'stock_nozzle_diameter_mm' && (value < 0.1 || value > 2)) return false;
+  }
+  
+  // Validate string fields for garbage content
+  if (typeof value === 'string') {
+    const lowerVal = value.toLowerCase();
+    // Reject scraped garbage patterns
+    if (lowerVal.includes('skip to') || lowerVal.includes('http') || 
+        lowerVal.includes('click') || lowerVal.includes('subscribe') ||
+        lowerVal.includes('cookie') || lowerVal.includes('sale') ||
+        lowerVal.includes('![') || lowerVal.includes('](') ||
+        lowerVal.includes('bundle') || lowerVal.includes('order')) {
+      return false;
+    }
+    // ui_language_options should be a reasonable list
+    if (fieldName === 'ui_language_options' && value.length > 200) return false;
   }
   
   return true;
