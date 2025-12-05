@@ -257,38 +257,65 @@ export default function Printers() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-[1800px] mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">Hardware</h1>
-          <p className="text-muted-foreground">
-            Browse and compare 3D printers, hotends, and build plates
-          </p>
-        </div>
+      <div className="max-w-[1800px] mx-auto p-6 space-y-8">
+        {/* Accessories Section */}
+        <section className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight">Accessories</h2>
+            <p className="text-muted-foreground">
+              Browse hotends, build plates, and multi-material systems
+            </p>
+          </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
-            <TabsTrigger value="printers" className="gap-2">
-              <PrinterIcon className="h-4 w-4" />
+          <Tabs value={activeTab === "printers" ? "hotends" : activeTab} onValueChange={handleTabChange}>
+            <TabsList className="grid w-full max-w-lg grid-cols-3">
+              <TabsTrigger value="hotends" className="gap-2">
+                <CircleDot className="h-4 w-4" />
+                Hotends
+              </TabsTrigger>
+              <TabsTrigger value="build-plates" className="gap-2">
+                <Square className="h-4 w-4" />
+                Build Plates
+              </TabsTrigger>
+              <TabsTrigger value="ams" className="gap-2">
+                <Layers className="h-4 w-4" />
+                AMS/MMU
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Hotends Tab */}
+            <TabsContent value="hotends" className="mt-6">
+              <HotendList />
+            </TabsContent>
+
+            {/* Build Plates Tab */}
+            <TabsContent value="build-plates" className="mt-6">
+              <BuildPlateList />
+            </TabsContent>
+
+            {/* AMS/MMU Tab */}
+            <TabsContent value="ams" className="mt-6">
+              <AMSList />
+            </TabsContent>
+          </Tabs>
+        </section>
+
+        {/* Divider */}
+        <div className="border-t border-border" />
+
+        {/* Printers Section */}
+        <section className="space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+              <PrinterIcon className="h-8 w-8" />
               Printers
-            </TabsTrigger>
-            <TabsTrigger value="hotends" className="gap-2">
-              <CircleDot className="h-4 w-4" />
-              Hotends
-            </TabsTrigger>
-            <TabsTrigger value="build-plates" className="gap-2">
-              <Square className="h-4 w-4" />
-              Build Plates
-            </TabsTrigger>
-            <TabsTrigger value="ams" className="gap-2">
-              <Layers className="h-4 w-4" />
-              AMS/MMU
-            </TabsTrigger>
-          </TabsList>
+            </h2>
+            <p className="text-muted-foreground">
+              Browse and compare 3D printers from all major brands
+            </p>
+          </div>
 
-          {/* Printers Tab */}
-          <TabsContent value="printers" className="space-y-6 mt-6">
+          {/* Printers Content */}
             {/* Filters */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <Input
@@ -560,23 +587,7 @@ export default function Printers() {
             })}
           </div>
         )}
-          </TabsContent>
-
-          {/* Hotends Tab */}
-          <TabsContent value="hotends" className="mt-6">
-            <HotendList />
-          </TabsContent>
-
-          {/* Build Plates Tab */}
-          <TabsContent value="build-plates" className="mt-6">
-            <BuildPlateList />
-          </TabsContent>
-
-          {/* AMS/MMU Tab */}
-          <TabsContent value="ams" className="mt-6">
-            <AMSList />
-          </TabsContent>
-        </Tabs>
+        </section>
 
         {/* Image Edit Dialog */}
         <Dialog open={!!imageEditPrinter} onOpenChange={(open) => !open && setImageEditPrinter(null)}>
