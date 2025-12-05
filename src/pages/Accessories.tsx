@@ -1,4 +1,5 @@
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleDot, Square, Layers } from "lucide-react";
 import HotendList from "@/components/HotendList";
@@ -6,17 +7,21 @@ import BuildPlateList from "@/components/BuildPlateList";
 import AMSList from "@/components/AMSList";
 
 export default function Accessories() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const activeTab = searchParams.get("tab") || "hotends";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "hotends";
+  const [activeTab, setActiveTab] = useState(initialTab);
 
-  const handleTabChange = (value: string) => {
-    if (value === "hotends") {
-      navigate("/accessories", { replace: true });
-    } else {
-      navigate(`/accessories?tab=${value}`, { replace: true });
+  // Sync URL when tab changes (without causing navigation)
+  useEffect(() => {
+    const currentTab = searchParams.get("tab") || "hotends";
+    if (currentTab !== activeTab) {
+      if (activeTab === "hotends") {
+        setSearchParams({}, { replace: true });
+      } else {
+        setSearchParams({ tab: activeTab }, { replace: true });
+      }
     }
-  };
+  }, [activeTab, searchParams, setSearchParams]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,7 +35,7 @@ export default function Accessories() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="hotends" className="gap-2">
               <CircleDot className="h-4 w-4" />
