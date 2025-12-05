@@ -604,22 +604,8 @@ const Finder = () => {
       {/* Left Sidebar */}
       <aside className="w-72 border-r border-border bg-card/50 backdrop-blur-sm p-6 space-y-6 sticky top-0 h-screen overflow-y-auto shrink-0">
         <PrinterSelector />
-        
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <span>🖨️</span> Compatibility Filters
-          </h3>
-          <Select defaultValue="all">
-            <SelectTrigger className="bg-background border-border">
-              <SelectValue placeholder="Model" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border-border z-50">
-              <SelectItem value="all">All Models</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
 
-        <div className="border-t border-border pt-6">
+        <div className="border-t border-border pt-6 mt-6">
           <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
             <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-semibold text-foreground hover:text-primary transition-colors mb-4">
               <span>Filters</span>
