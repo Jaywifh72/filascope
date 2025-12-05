@@ -9,9 +9,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, ImageIcon, Store, ShoppingCart, Tag } from "lucide-react";
+import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, CircleDot, Square, Layers, ImageIcon, Store, ShoppingCart, Tag } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -254,67 +255,19 @@ export default function Printers() {
     setNewImageUrl(productImages?.[0] || "");
   };
 
-  // If viewing an accessory tab, render that component
-  if (activeTab === "hotends") {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-[1800px] mx-auto p-6 space-y-6">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">Hotends</h1>
-            <p className="text-muted-foreground">
-              Browse hotends and nozzles for your 3D printer
-            </p>
-          </div>
-          <HotendList />
-        </div>
-      </div>
-    );
-  }
-
-  if (activeTab === "build-plates") {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-[1800px] mx-auto p-6 space-y-6">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">Build Plates</h1>
-            <p className="text-muted-foreground">
-              Browse build plates and print surfaces
-            </p>
-          </div>
-          <BuildPlateList />
-        </div>
-      </div>
-    );
-  }
-
-  if (activeTab === "ams") {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-[1800px] mx-auto p-6 space-y-6">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">AMS/MMU Systems</h1>
-            <p className="text-muted-foreground">
-              Browse multi-material and automatic material systems
-            </p>
-          </div>
-          <AMSList />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-[1800px] mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">Printers</h1>
-          <p className="text-muted-foreground">
-            Browse and compare 3D printers from all major brands
-          </p>
-        </div>
+      <div className="max-w-[1800px] mx-auto p-6 space-y-8">
+        {/* Printers Section */}
+        <section className="space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">Printers</h1>
+            <p className="text-muted-foreground">
+              Browse and compare 3D printers from all major brands
+            </p>
+          </div>
 
-        {/* Printers Content */}
+          {/* Printers Content */}
             {/* Filters */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <Input
@@ -586,6 +539,49 @@ export default function Printers() {
             })}
           </div>
         )}
+        </section>
+
+        {/* Divider */}
+        <div className="border-t border-border" />
+
+        {/* Accessories Section */}
+        <section className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight">Accessories</h2>
+            <p className="text-muted-foreground">
+              Browse hotends, build plates, and multi-material systems
+            </p>
+          </div>
+
+          <Tabs value={activeTab === "printers" || !activeTab ? "hotends" : activeTab} onValueChange={handleTabChange}>
+            <TabsList className="grid w-full max-w-lg grid-cols-3">
+              <TabsTrigger value="hotends" className="gap-2">
+                <CircleDot className="h-4 w-4" />
+                Hotends
+              </TabsTrigger>
+              <TabsTrigger value="build-plates" className="gap-2">
+                <Square className="h-4 w-4" />
+                Build Plates
+              </TabsTrigger>
+              <TabsTrigger value="ams" className="gap-2">
+                <Layers className="h-4 w-4" />
+                AMS/MMU
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="hotends" className="mt-6">
+              <HotendList />
+            </TabsContent>
+
+            <TabsContent value="build-plates" className="mt-6">
+              <BuildPlateList />
+            </TabsContent>
+
+            <TabsContent value="ams" className="mt-6">
+              <AMSList />
+            </TabsContent>
+          </Tabs>
+        </section>
 
         {/* Image Edit Dialog */}
         <Dialog open={!!imageEditPrinter} onOpenChange={(open) => !open && setImageEditPrinter(null)}>
