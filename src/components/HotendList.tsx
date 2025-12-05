@@ -29,6 +29,32 @@ interface ScrapeResult {
   details: { name: string; status: string; image?: string }[];
 }
 
+// Extract base name by removing diameter patterns like "0.2mm", "0.4 mm", etc.
+const getBaseName = (name: string): string => {
+  return name
+    .replace(/\b0\.\d+\s*mm\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Extract diameter from name or specs
+const getDiameter = (hotend: Accessory): number | null => {
+  const specs = hotend.specs as Record<string, unknown> | null;
+  if (specs?.diameter) {
+    return parseFloat(String(specs.diameter));
+  }
+  const match = hotend.name.match(/\b(0\.\d+)\s*mm\b/i);
+  return match ? parseFloat(match[1]) : null;
+};
+
+interface GroupedHotend {
+  baseName: string;
+  brand: string;
+  variants: Accessory[];
+  diameters: number[];
+  primaryVariant: Accessory;
+}
+
 export default function HotendList() {
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
@@ -127,22 +153,68 @@ export default function HotendList() {
     });
   }, [nozzles, searchTerm, selectedBrand]);
 
-  // Group nozzles by brand
-  const nozzlesByBrand = useMemo(() => {
-    const grouped: Record<string, Accessory[]> = {};
+  // Group hotends by base name (combining diameter variants)
+  const groupedHotends = useMemo(() => {
+    const groups: Record<string, GroupedHotend> = {};
     
     filteredNozzles.forEach(nozzle => {
       const brand = nozzle.brand || "Unknown";
-      if (!grouped[brand]) {
-        grouped[brand] = [];
+      const baseName = getBaseName(nozzle.name);
+      const key = `${brand}::${baseName}`;
+      const diameter = getDiameter(nozzle);
+      
+      if (!groups[key]) {
+        groups[key] = {
+          baseName,
+          brand,
+          variants: [],
+          diameters: [],
+          primaryVariant: nozzle, // Use first found as primary (will be updated to 0.4mm if available)
+        };
       }
-      grouped[brand].push(nozzle);
+      
+      groups[key].variants.push(nozzle);
+      if (diameter !== null && !groups[key].diameters.includes(diameter)) {
+        groups[key].diameters.push(diameter);
+      }
+      
+      // Prefer 0.4mm as primary variant (most common)
+      if (diameter === 0.4) {
+        groups[key].primaryVariant = nozzle;
+      }
     });
-
-    return grouped;
+    
+    // Sort diameters for each group
+    Object.values(groups).forEach(group => {
+      group.diameters.sort((a, b) => a - b);
+    });
+    
+    return groups;
   }, [filteredNozzles]);
 
-  const sortedBrands = Object.keys(nozzlesByBrand).sort();
+  // Group by brand for display
+  const groupedByBrand = useMemo(() => {
+    const byBrand: Record<string, GroupedHotend[]> = {};
+    
+    Object.values(groupedHotends).forEach(group => {
+      if (!byBrand[group.brand]) {
+        byBrand[group.brand] = [];
+      }
+      byBrand[group.brand].push(group);
+    });
+    
+    // Sort groups within each brand by base name
+    Object.values(byBrand).forEach(groups => {
+      groups.sort((a, b) => a.baseName.localeCompare(b.baseName));
+    });
+    
+    return byBrand;
+  }, [groupedHotends]);
+
+  const sortedBrands = Object.keys(groupedByBrand).sort();
+  
+  // Count unique grouped hotends
+  const groupedCount = Object.keys(groupedHotends).length;
 
   const toggleSelection = (id: string) => {
     const newSet = new Set(selectedIds);
@@ -316,7 +388,8 @@ export default function HotendList() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold">
-            {filteredNozzles.length} <span className="text-muted-foreground font-normal">hotends</span>
+            {groupedCount} <span className="text-muted-foreground font-normal">hotends</span>
+            <span className="text-sm text-muted-foreground font-normal ml-2">({filteredNozzles.length} variants)</span>
           </h2>
           {missingImageCount > 0 && (
             <Badge variant="outline" className="text-muted-foreground">
@@ -398,23 +471,33 @@ export default function HotendList() {
                   />
                 )}
                 <h3 className="text-xl font-semibold">{brand}</h3>
-                <Badge variant="secondary">{nozzlesByBrand[brand].length}</Badge>
+                <Badge variant="secondary">{groupedByBrand[brand].length}</Badge>
               </div>
 
               {/* Hotend Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {nozzlesByBrand[brand].map(nozzle => {
+                {groupedByBrand[brand].map(group => {
+                  const nozzle = group.primaryVariant;
                   const specs = nozzle.specs as Record<string, unknown> | null;
-                  const isSelected = selectedIds.has(nozzle.id);
+                  const isSelected = group.variants.some(v => selectedIds.has(v.id));
                   
                   return (
-                    <div key={nozzle.id} className="relative">
+                    <div key={`${group.brand}::${group.baseName}`} className="relative">
                       {/* Admin Controls */}
                       {isAdmin && (
                         <div className="absolute top-2 left-2 right-2 z-10 flex items-center justify-between">
                           <Checkbox
                             checked={isSelected}
-                            onCheckedChange={() => toggleSelection(nozzle.id)}
+                            onCheckedChange={() => {
+                              // Toggle all variants
+                              const newSet = new Set(selectedIds);
+                              if (isSelected) {
+                                group.variants.forEach(v => newSet.delete(v.id));
+                              } else {
+                                group.variants.forEach(v => newSet.add(v.id));
+                              }
+                              setSelectedIds(newSet);
+                            }}
                             onClick={(e) => e.stopPropagation()}
                             className="bg-background/80 backdrop-blur-sm"
                           />
@@ -450,18 +533,26 @@ export default function HotendList() {
                             </div>
                           </div>
 
-                          {/* Name */}
-                          <h4 className="font-semibold text-sm line-clamp-2 mb-2">{nozzle.name}</h4>
+                          {/* Name - Use base name */}
+                          <h4 className="font-semibold text-sm line-clamp-2 mb-2">{group.baseName}</h4>
+
+                          {/* Available Diameters */}
+                          {group.diameters.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {group.diameters.map(d => (
+                                <Badge 
+                                  key={d} 
+                                  variant="secondary" 
+                                  className="text-xs px-2 py-0.5"
+                                >
+                                  {d}mm
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
 
                           {/* Quick Specs */}
                           <div className="space-y-1.5 text-xs">
-                            {specs?.diameter && (
-                              <div className="flex items-center gap-1.5 text-muted-foreground">
-                                <CircleDot className="h-3.5 w-3.5" />
-                                <span>{String(specs.diameter)}mm</span>
-                              </div>
-                            )}
-                            
                             {specs?.material && (
                               <div className="flex items-center gap-1.5 text-muted-foreground">
                                 <Package className="h-3.5 w-3.5" />
@@ -487,12 +578,21 @@ export default function HotendList() {
                             )}
                           </div>
 
-                          {/* Price */}
-                          {nozzle.price && (
+                          {/* Price Range */}
+                          {group.variants.some(v => v.price) && (
                             <div className="mt-3 pt-3 border-t">
-                              <span className="font-bold text-primary">
-                                ${nozzle.price.toFixed(2)}
-                              </span>
+                              {(() => {
+                                const prices = group.variants.filter(v => v.price).map(v => v.price!);
+                                const minPrice = Math.min(...prices);
+                                const maxPrice = Math.max(...prices);
+                                return (
+                                  <span className="font-bold text-primary">
+                                    {minPrice === maxPrice 
+                                      ? `$${minPrice.toFixed(2)}` 
+                                      : `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`}
+                                  </span>
+                                );
+                              })()}
                             </div>
                           )}
                         </Card>
