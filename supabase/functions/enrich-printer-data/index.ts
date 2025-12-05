@@ -11,6 +11,8 @@ interface PrinterSpecs {
   build_volume_x_mm?: number;
   build_volume_y_mm?: number;
   build_volume_z_mm?: number;
+  bed_size_x_mm?: number;
+  bed_size_y_mm?: number;
   max_nozzle_temp_c?: number;
   bed_max_temp_c?: number;
   max_print_speed_mms?: number;
@@ -75,6 +77,8 @@ Return a JSON object with these fields (only include fields you're confident abo
   "build_volume_x_mm": number (X axis build volume in mm),
   "build_volume_y_mm": number (Y axis build volume in mm),
   "build_volume_z_mm": number (Z axis build volume in mm),
+  "bed_size_x_mm": number (actual heated bed X dimension in mm - usually slightly larger than build volume),
+  "bed_size_y_mm": number (actual heated bed Y dimension in mm - usually slightly larger than build volume),
   "max_nozzle_temp_c": number (maximum nozzle/hotend temperature in Celsius),
   "bed_max_temp_c": number (maximum heated bed temperature in Celsius),
   "max_print_speed_mms": number (maximum print speed in mm/s),
@@ -182,6 +186,7 @@ function isValidValue(value: any, fieldName: string): boolean {
   if (typeof value === 'number') {
     if (fieldName.includes('temp') && (value < 20 || value > 500)) return false;
     if (fieldName.includes('volume') && (value < 50 || value > 2000)) return false;
+    if (fieldName.includes('bed_size') && (value < 50 || value > 1000)) return false;
     if (fieldName.includes('speed') && (value < 10 || value > 2000)) return false;
     if (fieldName === 'msrp_usd' && (value < 50 || value > 100000)) return false;
     if (fieldName === 'filament_diameter_mm' && value !== 1.75 && value !== 2.85) return false;
@@ -250,9 +255,10 @@ serve(async (req) => {
     if (printerIds && printerIds.length > 0) {
       query = query.in('id', printerIds);
     } else if (!forceUpdate) {
-      // Find printers with missing critical data including hardware specs
+      // Find printers with missing critical data including hardware specs and bed size
       query = query.or(
         'build_volume_x_mm.is.null,build_volume_y_mm.is.null,build_volume_z_mm.is.null,' +
+        'bed_size_x_mm.is.null,bed_size_y_mm.is.null,' +
         'max_nozzle_temp_c.is.null,bed_max_temp_c.is.null,max_print_speed_mms.is.null,' +
         'printer_technology.is.null,filament_diameter_mm.is.null,' +
         'bed_type.is.null,hotend_type.is.null,nozzle_material.is.null'
