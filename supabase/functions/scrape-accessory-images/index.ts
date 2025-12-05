@@ -366,11 +366,49 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY")!;
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Create client for auth check
+    const authClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY") ?? "");
+
+    // Verify user authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Authorization header required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid authentication token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check admin role
+    const { data: hasAdminRole, error: roleError } = await authClient.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin"
+    });
+
+    if (roleError || !hasAdminRole) {
+      console.log(`Access denied for user ${user.id} - not an admin`);
+      return new Response(
+        JSON.stringify({ success: false, error: "Admin access required" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create service role client for database operations
+    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    console.log(`Admin ${user.id} starting accessory image scraping...`);
 
     const body = await req.json();
     const accessoryType = body.accessoryType || body.accessory_type;
