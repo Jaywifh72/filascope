@@ -16,6 +16,7 @@ import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { isAMSCompatible } from "@/lib/amsCompatibility";
 
 const Finder = () => {
   const navigate = useNavigate();
@@ -320,9 +321,7 @@ const Finder = () => {
         query = query.not("food_contact_rating", "is", null);
       }
 
-      if (amsOnly) {
-        query = query.eq("spool_ams_fit", true);
-      }
+      // AMS filtering is done client-side using isAMSCompatible function
 
       if (selectedBrand !== "all") {
         query = query.eq("vendor", selectedBrand);
@@ -472,7 +471,7 @@ const Finder = () => {
       // Apply compatibility filters
       if (brassOnly && f.is_nozzle_abrasive !== false) return false;
       if (foodContact && !f.food_contact_rating) return false;
-      if (amsOnly && f.spool_ams_fit !== true) return false;
+      if (amsOnly && !isAMSCompatible(f)) return false;
       
       return true;
     });
@@ -519,7 +518,7 @@ const Finder = () => {
       if (f.food_contact_rating) {
         counts['food_contact'] = (counts['food_contact'] || 0) + 1;
       }
-      if (f.spool_ams_fit === true) {
+      if (isAMSCompatible(f)) {
         counts['ams_fit'] = (counts['ams_fit'] || 0) + 1;
       }
     });
@@ -563,10 +562,13 @@ const Finder = () => {
   };
 
   const filteredAndSortedFilaments = filaments?.filter(f => {
+    // Apply price filter
     if (maxPrice && f.variant_price && f.net_weight_g) {
       const pricePerKg = (f.variant_price / f.net_weight_g) * 1000;
       if (pricePerKg > parseFloat(maxPrice)) return false;
     }
+    // Apply AMS filter client-side (since it's calculated dynamically)
+    if (amsOnly && !isAMSCompatible(f)) return false;
     return true;
   }).sort((a, b) => {
     // Helper to calculate price per kg
