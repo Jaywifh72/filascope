@@ -43,7 +43,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.scrape-printer-images]
-verify_jwt = false
+verify_jwt = true
 
 [functions.enrich-printer-data]
 verify_jwt = true
