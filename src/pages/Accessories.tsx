@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleDot, Square, Layers } from "lucide-react";
 import HotendList from "@/components/HotendList";
@@ -6,14 +6,15 @@ import BuildPlateList from "@/components/BuildPlateList";
 import AMSList from "@/components/AMSList";
 
 export default function Accessories() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const activeTab = searchParams.get("tab") || "hotends";
 
   const handleTabChange = (value: string) => {
     if (value === "hotends") {
-      setSearchParams({}, { replace: true });
+      navigate("/accessories", { replace: true });
     } else {
-      setSearchParams({ tab: value }, { replace: true });
+      navigate(`/accessories?tab=${value}`, { replace: true });
     }
   };
 
