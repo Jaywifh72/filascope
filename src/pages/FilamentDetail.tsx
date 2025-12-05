@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "@/components/LikeButton";
@@ -18,6 +18,45 @@ import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
+type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
+
+interface HotendWithRating extends Accessory {
+  rating: "green" | "orange" | "red";
+  ratingReason: string;
+}
+
+// Rate hotend compatibility with filament
+const rateHotend = (hotend: Accessory, filament: Filament): { rating: "green" | "orange" | "red"; reason: string } => {
+  const specs = hotend.specs as Record<string, any> | null;
+  const maxTemp = specs?.max_temp || specs?.max_temp_c || 0;
+  const isHardened = specs?.hardened || specs?.material?.toLowerCase()?.includes("hardened") || 
+                     specs?.material?.toLowerCase()?.includes("steel") ||
+                     hotend.name?.toLowerCase()?.includes("hardened");
+  
+  const requiredTemp = filament.nozzle_temp_sweetspot_c || filament.nozzle_temp_max_c || 0;
+  const isAbrasive = filament.is_nozzle_abrasive || false;
+
+  // Check temperature capability
+  if (maxTemp > 0 && requiredTemp > maxTemp) {
+    return { rating: "red", reason: `Max temp ${maxTemp}°C below required ${requiredTemp}°C` };
+  }
+
+  // Check abrasive compatibility
+  if (isAbrasive && !isHardened) {
+    return { rating: "orange", reason: "Not hardened - will wear with abrasive filament" };
+  }
+
+  // Perfect match
+  if (isAbrasive && isHardened) {
+    return { rating: "green", reason: "Hardened nozzle ideal for abrasive material" };
+  }
+
+  if (!isAbrasive) {
+    return { rating: "green", reason: "Compatible with this filament" };
+  }
+
+  return { rating: "green", reason: "Compatible" };
+};
 
 const FilamentDetail = () => {
   const { id } = useParams();
@@ -28,6 +67,7 @@ const FilamentDetail = () => {
   const [filament, setFilament] = useState<Filament | null>(null);
   const [loading, setLoading] = useState(true);
   const [rescrapingImage, setRescrapingImage] = useState(false);
+  const [compatibleHotends, setCompatibleHotends] = useState<HotendWithRating[]>([]);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
 
   const compatibility = selectedPrinter && filament 
@@ -50,6 +90,71 @@ const FilamentDetail = () => {
   useEffect(() => {
     fetchFilament();
   }, [id]);
+
+  // Fetch compatible hotends when printer is selected
+  useEffect(() => {
+    const fetchCompatibleHotends = async () => {
+      if (!selectedPrinter || !filament) {
+        setCompatibleHotends([]);
+        return;
+      }
+
+      try {
+        // Get printer brand name
+        const printerBrand = typeof selectedPrinter.brand === 'object' && selectedPrinter.brand !== null && 'brand' in selectedPrinter.brand 
+          ? (selectedPrinter.brand as { brand: string }).brand 
+          : null;
+
+        // Query hotends compatible with this printer (by brand or model)
+        const { data: hotends, error } = await supabase
+          .from("printer_accessories")
+          .select("*")
+          .eq("accessory_type", "hotend")
+          .limit(20);
+
+        if (error) throw error;
+
+        // Filter to those compatible with this printer
+        const compatible = (hotends || []).filter(hotend => {
+          const specs = hotend.specs as Record<string, any> | null;
+          const compatibleModels = specs?.compatible_models || specs?.compatible_printers || [];
+          const compatibleBrands = hotend.compatible_printer_brands || [];
+          
+          // Check if hotend is compatible with this printer's brand or model
+          const modelMatch = Array.isArray(compatibleModels) && compatibleModels.some((model: string) => 
+            selectedPrinter.model_name?.toLowerCase().includes(model.toLowerCase()) ||
+            model.toLowerCase().includes(selectedPrinter.model_name?.toLowerCase() || '')
+          );
+          
+          const brandMatch = printerBrand && Array.isArray(compatibleBrands) && 
+            compatibleBrands.some((brand: string) => 
+              brand.toLowerCase().includes(printerBrand.toLowerCase()) ||
+              printerBrand.toLowerCase().includes(brand.toLowerCase())
+            );
+
+          return modelMatch || brandMatch;
+        });
+
+        // Rate each hotend for this filament
+        const rated: HotendWithRating[] = compatible.map(hotend => {
+          const { rating, reason } = rateHotend(hotend, filament);
+          return { ...hotend, rating, ratingReason: reason };
+        });
+
+        // Sort: green first, then orange, then red
+        rated.sort((a, b) => {
+          const order = { green: 0, orange: 1, red: 2 };
+          return order[a.rating] - order[b.rating];
+        });
+
+        setCompatibleHotends(rated);
+      } catch (error) {
+        console.error("Error fetching compatible hotends:", error);
+      }
+    };
+
+    fetchCompatibleHotends();
+  }, [selectedPrinter, filament]);
 
   const fetchFilament = async () => {
     try {
@@ -348,60 +453,139 @@ const FilamentDetail = () => {
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               {/* Quick Settings Grid - Most Important Info First */}
-              <div className="grid md:grid-cols-3 gap-4">
-                {/* Temperature Card */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Temperature & Nozzle Setup Combined */}
                 <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Flame className="w-5 h-5 text-orange-500" />
-                      Temperature
+                      Temperature & Nozzle Setup
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
-                      <div className="text-xs text-muted-foreground mb-1">🌡️ Nozzle</div>
-                      <div className="text-2xl font-bold text-orange-500">
-                        {compatibility.recommendations.slicer.nozzle_temp_range}
+                  <CardContent className="space-y-4">
+                    {/* Temperature Settings */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                        <div className="text-xs text-muted-foreground mb-1">🌡️ Nozzle</div>
+                        <div className="text-xl font-bold text-orange-500">
+                          {compatibility.recommendations.slicer.nozzle_temp_range}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                        <div className="text-xs text-muted-foreground mb-1">🔥 Bed</div>
+                        <div className="text-xl font-bold text-blue-500">
+                          {compatibility.recommendations.slicer.bed_temp_range}
+                        </div>
                       </div>
                     </div>
-                    <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                      <div className="text-xs text-muted-foreground mb-1">🔥 Bed</div>
-                      <div className="text-2xl font-bold text-blue-500">
-                        {compatibility.recommendations.slicer.bed_temp_range}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
 
-                {/* Nozzle Card */}
-                <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Settings className="w-5 h-5 text-primary" />
-                      Nozzle Setup
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <div className="text-xs text-muted-foreground mb-2">Recommended Sizes</div>
-                      <div className="flex gap-2 flex-wrap">
-                        {compatibility.recommendations.nozzle.size.map((size, i) => (
-                          <Badge key={i} variant="secondary" className="text-base font-bold px-3 py-1">
-                            {size}
+                    {/* Nozzle Recommendations */}
+                    <div className="pt-3 border-t border-border space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-1">Recommended Sizes</div>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {compatibility.recommendations.nozzle.size.map((size, i) => (
+                              <Badge key={i} variant="secondary" className="text-sm font-bold px-2 py-0.5">
+                                {size}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-muted-foreground mb-1">Material</div>
+                          <Badge variant="default" className="text-xs font-semibold">
+                            {compatibility.recommendations.nozzle.material}
                           </Badge>
-                        ))}
+                        </div>
                       </div>
+                      {compatibility.recommendations.nozzle.notes && (
+                        <p className="text-xs text-muted-foreground">
+                          💡 {compatibility.recommendations.nozzle.notes}
+                        </p>
+                      )}
                     </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground mb-2">Material Required</div>
-                      <Badge variant="default" className="text-sm font-semibold">
-                        {compatibility.recommendations.nozzle.material}
-                      </Badge>
-                    </div>
-                    {compatibility.recommendations.nozzle.notes && (
-                      <p className="text-xs text-muted-foreground pt-2 border-t border-border">
-                        💡 {compatibility.recommendations.nozzle.notes}
-                      </p>
+
+                    {/* Compatible Hotends */}
+                    {compatibleHotends.length > 0 && (
+                      <div className="pt-3 border-t border-border">
+                        <div className="text-xs text-muted-foreground mb-2 flex items-center justify-between">
+                          <span>Compatible Hotends</span>
+                          <span className="text-[10px]">🟢 Best • 🟠 Caution • 🔴 Not Recommended</span>
+                        </div>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {compatibleHotends.slice(0, 6).map((hotend) => (
+                            <div 
+                              key={hotend.id} 
+                              className={`flex items-center gap-2 p-2 rounded-lg border ${
+                                hotend.rating === 'green' ? 'bg-green-500/5 border-green-500/20' :
+                                hotend.rating === 'orange' ? 'bg-orange-500/5 border-orange-500/20' :
+                                'bg-red-500/5 border-red-500/20'
+                              }`}
+                            >
+                              {/* Rating indicator */}
+                              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                hotend.rating === 'green' ? 'bg-green-500' :
+                                hotend.rating === 'orange' ? 'bg-orange-500' :
+                                'bg-red-500'
+                              }`} />
+                              
+                              {/* Hotend image */}
+                              <div className="w-8 h-8 flex-shrink-0 rounded bg-muted/50 overflow-hidden">
+                                {hotend.image_url ? (
+                                  <img 
+                                    src={hotend.image_url} 
+                                    alt={hotend.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Settings className="w-4 h-4 text-muted-foreground/50" />
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Hotend info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-medium truncate">{hotend.name}</div>
+                                <div className="text-[10px] text-muted-foreground truncate">
+                                  {hotend.brand} • {hotend.ratingReason}
+                                </div>
+                              </div>
+
+                              {/* Action links */}
+                              <div className="flex gap-1 flex-shrink-0">
+                                <Link 
+                                  to={`/hotends/${hotend.id}`}
+                                  className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                  title="View details"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                </Link>
+                                {hotend.product_url && (
+                                  <a 
+                                    href={getAffiliateUrl(hotend.product_url, hotend.brand) || hotend.product_url}
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                    title="View in store"
+                                  >
+                                    <Store className="w-3 h-3" />
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {compatibleHotends.length > 6 && (
+                          <Link 
+                            to="/accessories?tab=hotends"
+                            className="text-xs text-primary hover:underline mt-2 block"
+                          >
+                            View all {compatibleHotends.length} compatible hotends →
+                          </Link>
+                        )}
+                      </div>
                     )}
                   </CardContent>
                 </Card>
