@@ -1,26 +1,26 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleDot, Square, Layers } from "lucide-react";
 import HotendList from "@/components/HotendList";
 import BuildPlateList from "@/components/BuildPlateList";
 import AMSList from "@/components/AMSList";
 
+// Get initial tab from URL on page load
+function getInitialTab(): string {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("tab") || "hotends";
+}
+
 export default function Accessories() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  // Read initial tab from URL only once
-  const [activeTab, setActiveTab] = useState(() => {
-    return searchParams.get("tab") || "hotends";
-  });
+  const [activeTab, setActiveTab] = useState(getInitialTab);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    // Update URL directly in the handler, not via effect
-    if (value === "hotends") {
-      setSearchParams({}, { replace: true });
-    } else {
-      setSearchParams({ tab: value }, { replace: true });
-    }
+    // Use native history API to avoid React Router URL encoding issues
+    const newUrl = value === "hotends" 
+      ? "/accessories" 
+      : `/accessories?tab=${value}`;
+    window.history.replaceState(null, "", newUrl);
   };
 
   return (
