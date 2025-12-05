@@ -100,7 +100,7 @@ export default function BuildPlateDetail() {
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-6xl mx-auto text-center py-12">
           <h1 className="text-2xl font-bold mb-4">Build Plate Not Found</h1>
-          <Link to="/printers?tab=build-plates">
+          <Link to={{ pathname: "/printers", search: "?tab=build-plates" }}>
             <Button variant="outline">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Build Plates
@@ -128,7 +128,7 @@ export default function BuildPlateDetail() {
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Back button */}
-        <Link to="/printers?tab=build-plates">
+        <Link to={{ pathname: "/printers", search: "?tab=build-plates" }}>
           <Button variant="ghost" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Build Plates
