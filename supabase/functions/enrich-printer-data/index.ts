@@ -1,0 +1,364 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface PrinterSpecs {
+  build_volume_x_mm?: number;
+  build_volume_y_mm?: number;
+  build_volume_z_mm?: number;
+  max_nozzle_temp_c?: number;
+  bed_max_temp_c?: number;
+  max_print_speed_mms?: number;
+  max_travel_speed_xy_mms?: number;
+  max_acceleration_xy_mmss?: number;
+  has_wifi?: boolean;
+  has_ethernet?: boolean;
+  has_enclosure?: boolean;
+  enclosure_heated?: boolean;
+  auto_bed_leveling?: boolean;
+  filament_runout_detection?: boolean;
+  power_loss_recovery?: boolean;
+  msrp_usd?: number;
+  release_date?: string;
+  printer_technology?: string;
+  extruder_type?: string;
+  extruder_drive_type?: string;
+  filament_diameter_mm?: number;
+  stock_nozzle_diameter_mm?: number;
+  screen_type?: string;
+  screen_size_inch?: number;
+  machine_weight_kg?: number;
+  machine_width_mm?: number;
+  machine_depth_mm?: number;
+  machine_height_mm?: number;
+  rated_power_w?: number;
+  noise_level_printing_db?: number;
+  max_flow_rate_mm3s?: number;
+  input_shaping_supported?: boolean;
+  pressure_advance_supported?: boolean;
+  multi_material_supported?: boolean;
+  native_multi_material_system?: boolean;
+}
+
+async function enrichPrinterWithAI(
+  brandName: string,
+  modelName: string,
+  apiKey: string
+): Promise<PrinterSpecs | null> {
+  const systemPrompt = `You are a 3D printer specifications expert. Your task is to provide accurate, verified technical specifications for 3D printers.
+
+IMPORTANT RULES:
+1. Only provide data you are confident about from official sources or well-known specifications
+2. If you're not sure about a value, omit it (don't guess)
+3. Return ONLY a valid JSON object with no additional text
+4. Use metric units (mm, °C, mm/s, kg, W, dB)
+5. For boolean fields, use true/false
+6. For dates, use YYYY-MM-DD format
+7. For printer_technology, use: FDM, FFF, SLA, MSLA, DLP, or SLS
+8. For extruder_type, use: Direct Drive, Bowden, or similar standard terms
+9. For screen_type, use: LCD, TFT, IPS, Touchscreen, etc.`;
+
+  const userPrompt = `Provide technical specifications for the ${brandName} ${modelName} 3D printer.
+
+Return a JSON object with these fields (only include fields you're confident about):
+{
+  "build_volume_x_mm": number (X axis build volume in mm),
+  "build_volume_y_mm": number (Y axis build volume in mm),
+  "build_volume_z_mm": number (Z axis build volume in mm),
+  "max_nozzle_temp_c": number (maximum nozzle/hotend temperature in Celsius),
+  "bed_max_temp_c": number (maximum heated bed temperature in Celsius),
+  "max_print_speed_mms": number (maximum print speed in mm/s),
+  "max_travel_speed_xy_mms": number (maximum travel speed in mm/s),
+  "max_acceleration_xy_mmss": number (maximum acceleration in mm/s²),
+  "has_wifi": boolean,
+  "has_ethernet": boolean,
+  "has_enclosure": boolean,
+  "enclosure_heated": boolean,
+  "auto_bed_leveling": boolean,
+  "filament_runout_detection": boolean,
+  "power_loss_recovery": boolean,
+  "msrp_usd": number (original retail price in USD),
+  "release_date": string (YYYY-MM-DD format),
+  "printer_technology": string (FDM, FFF, SLA, etc.),
+  "extruder_type": string (Direct Drive, Bowden, etc.),
+  "extruder_drive_type": string (Direct, Bowden),
+  "filament_diameter_mm": number (1.75 or 2.85),
+  "stock_nozzle_diameter_mm": number (typically 0.4),
+  "screen_type": string,
+  "screen_size_inch": number,
+  "machine_weight_kg": number,
+  "machine_width_mm": number,
+  "machine_depth_mm": number,
+  "machine_height_mm": number,
+  "rated_power_w": number,
+  "noise_level_printing_db": number,
+  "max_flow_rate_mm3s": number,
+  "input_shaping_supported": boolean,
+  "pressure_advance_supported": boolean,
+  "multi_material_supported": boolean,
+  "native_multi_material_system": boolean
+}
+
+Return ONLY the JSON object, no explanation or markdown.`;
+
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`AI API error for ${brandName} ${modelName}:`, response.status, errorText);
+      return null;
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) {
+      console.error(`No content in AI response for ${brandName} ${modelName}`);
+      return null;
+    }
+
+    // Extract JSON from response (handle markdown code blocks)
+    let jsonStr = content.trim();
+    if (jsonStr.startsWith("```json")) {
+      jsonStr = jsonStr.slice(7);
+    } else if (jsonStr.startsWith("```")) {
+      jsonStr = jsonStr.slice(3);
+    }
+    if (jsonStr.endsWith("```")) {
+      jsonStr = jsonStr.slice(0, -3);
+    }
+    jsonStr = jsonStr.trim();
+
+    const specs = JSON.parse(jsonStr) as PrinterSpecs;
+    console.log(`Successfully enriched ${brandName} ${modelName}:`, Object.keys(specs).length, "fields");
+    return specs;
+  } catch (error) {
+    console.error(`Error enriching ${brandName} ${modelName}:`, error);
+    return null;
+  }
+}
+
+function isValidValue(value: any, fieldName: string): boolean {
+  if (value === null || value === undefined) return false;
+  
+  // Check for obviously bad numeric values
+  if (typeof value === 'number') {
+    if (fieldName.includes('temp') && (value < 20 || value > 500)) return false;
+    if (fieldName.includes('volume') && (value < 50 || value > 2000)) return false;
+    if (fieldName.includes('speed') && (value < 10 || value > 2000)) return false;
+    if (fieldName === 'msrp_usd' && (value < 50 || value > 100000)) return false;
+    if (fieldName === 'filament_diameter_mm' && value !== 1.75 && value !== 2.85) return false;
+    if (fieldName === 'stock_nozzle_diameter_mm' && (value < 0.1 || value > 2)) return false;
+  }
+  
+  return true;
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { printerIds, limit = 10, forceUpdate = false } = await req.json();
+
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch printers to enrich
+    let query = supabase
+      .from('printers')
+      .select(`
+        id,
+        model_name,
+        brand:printer_brands(brand),
+        build_volume_x_mm,
+        build_volume_y_mm,
+        build_volume_z_mm,
+        max_nozzle_temp_c,
+        bed_max_temp_c,
+        max_print_speed_mms,
+        has_wifi,
+        has_enclosure,
+        auto_bed_leveling,
+        msrp_usd,
+        release_date,
+        printer_technology,
+        extruder_type,
+        filament_diameter_mm
+      `)
+      .eq('status', 'active');
+
+    if (printerIds && printerIds.length > 0) {
+      query = query.in('id', printerIds);
+    } else if (!forceUpdate) {
+      // Find printers with missing critical data
+      query = query.or(
+        'build_volume_x_mm.is.null,build_volume_y_mm.is.null,build_volume_z_mm.is.null,' +
+        'max_nozzle_temp_c.is.null,bed_max_temp_c.is.null,max_print_speed_mms.is.null,' +
+        'printer_technology.is.null,filament_diameter_mm.is.null'
+      );
+    }
+
+    const { data: printers, error: fetchError } = await query.limit(limit);
+
+    if (fetchError) {
+      throw new Error(`Failed to fetch printers: ${fetchError.message}`);
+    }
+
+    if (!printers || printers.length === 0) {
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'No printers need enrichment',
+        enriched: 0,
+        failed: 0,
+        results: []
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`Processing ${printers.length} printers for enrichment`);
+
+    const results: Array<{
+      id: string;
+      model_name: string;
+      brand: string;
+      status: string;
+      fields_updated: number;
+      error?: string;
+    }> = [];
+
+    let enrichedCount = 0;
+    let failedCount = 0;
+
+    for (const printer of printers) {
+      const brandObj = Array.isArray(printer.brand) ? printer.brand[0] : printer.brand;
+      const brandName = brandObj?.brand || 'Unknown';
+      const modelName = printer.model_name;
+
+      console.log(`Enriching: ${brandName} ${modelName}`);
+
+      // Add delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const specs = await enrichPrinterWithAI(brandName, modelName, LOVABLE_API_KEY);
+
+      if (!specs) {
+        failedCount++;
+        results.push({
+          id: printer.id,
+          model_name: modelName,
+          brand: brandName,
+          status: 'failed',
+          fields_updated: 0,
+          error: 'AI enrichment failed'
+        });
+        continue;
+      }
+
+      // Build update object with only valid new values
+      const updateData: Record<string, any> = {};
+      let fieldsUpdated = 0;
+
+      for (const [key, value] of Object.entries(specs)) {
+        // Only update if:
+        // 1. forceUpdate is true, OR
+        // 2. Current value is null/invalid AND new value is valid
+        const currentValue = (printer as any)[key];
+        const currentIsInvalid = !isValidValue(currentValue, key);
+        const newIsValid = isValidValue(value, key);
+
+        if (newIsValid && (forceUpdate || currentIsInvalid)) {
+          updateData[key] = value;
+          fieldsUpdated++;
+        }
+      }
+
+      if (fieldsUpdated > 0) {
+        updateData.updated_at = new Date().toISOString();
+
+        const { error: updateError } = await supabase
+          .from('printers')
+          .update(updateData)
+          .eq('id', printer.id);
+
+        if (updateError) {
+          console.error(`Failed to update ${modelName}:`, updateError);
+          failedCount++;
+          results.push({
+            id: printer.id,
+            model_name: modelName,
+            brand: brandName,
+            status: 'update_failed',
+            fields_updated: 0,
+            error: updateError.message
+          });
+        } else {
+          enrichedCount++;
+          results.push({
+            id: printer.id,
+            model_name: modelName,
+            brand: brandName,
+            status: 'enriched',
+            fields_updated: fieldsUpdated
+          });
+          console.log(`Updated ${brandName} ${modelName}: ${fieldsUpdated} fields`);
+        }
+      } else {
+        results.push({
+          id: printer.id,
+          model_name: modelName,
+          brand: brandName,
+          status: 'no_updates_needed',
+          fields_updated: 0
+        });
+      }
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      enriched: enrichedCount,
+      failed: failedCount,
+      total_processed: printers.length,
+      results
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Enrichment error:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});

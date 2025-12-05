@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.scrape-printer-images]
 verify_jwt = false
+
+[functions.enrich-printer-data]
+verify_jwt = true

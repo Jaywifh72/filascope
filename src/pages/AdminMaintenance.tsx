@@ -80,6 +80,23 @@ const AdminMaintenance = () => {
     skipped: number;
     results: PrinterImageResult[];
   } | null>(null);
+  const [isEnrichingPrinters, setIsEnrichingPrinters] = useState(false);
+  const [printerEnrichLimit, setPrinterEnrichLimit] = useState("10");
+  const [forceEnrichUpdate, setForceEnrichUpdate] = useState(false);
+  const [printerEnrichResult, setPrinterEnrichResult] = useState<{
+    success: boolean;
+    total_processed: number;
+    enriched: number;
+    failed: number;
+    results: Array<{
+      id: string;
+      model_name: string;
+      brand: string;
+      status: string;
+      fields_updated: number;
+      error?: string;
+    }>;
+  } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -331,6 +348,40 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsScrapingPrinterImages(false);
+    }
+  };
+
+  const runPrinterEnrichment = async () => {
+    setIsEnrichingPrinters(true);
+    setPrinterEnrichResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('enrich-printer-data', {
+        method: 'POST',
+        body: { 
+          limit: parseInt(printerEnrichLimit),
+          forceUpdate: forceEnrichUpdate
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setPrinterEnrichResult(data);
+      toast({
+        title: "Printer Enrichment Complete",
+        description: `Enriched: ${data.enriched}, Failed: ${data.failed}`,
+      });
+    } catch (error) {
+      console.error('Printer enrichment error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to run printer enrichment",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEnrichingPrinters(false);
     }
   };
 
@@ -1026,6 +1077,123 @@ const AdminMaintenance = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Printer Data AI Enrichment Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            <CardTitle>AI Printer Data Enrichment</CardTitle>
+          </div>
+          <CardDescription>
+            Use AI to automatically fill in missing printer specifications (build volume, temps, speeds, features)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="enrich-limit">Number of printers to process</Label>
+              <Input
+                id="enrich-limit"
+                type="number"
+                value={printerEnrichLimit}
+                onChange={(e) => setPrinterEnrichLimit(e.target.value)}
+                min="1"
+                max="50"
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Each printer requires an AI call, processing may take time
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={forceEnrichUpdate}
+                  onChange={(e) => setForceEnrichUpdate(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                Force update (overwrite existing data)
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                By default, only missing fields are filled in
+              </p>
+            </div>
+          </div>
+
+          <Button 
+            onClick={runPrinterEnrichment} 
+            disabled={isEnrichingPrinters}
+            className="w-full sm:w-auto"
+          >
+            {isEnrichingPrinters ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Enriching Printers with AI...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Enrich Printer Data with AI
+              </>
+            )}
+          </Button>
+
+          {printerEnrichResult && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{printerEnrichResult.total_processed}</div>
+                  <div className="text-sm text-muted-foreground">Total Processed</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{printerEnrichResult.enriched}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Enriched</div>
+                </div>
+                <div className="bg-red-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <div className="text-2xl font-bold">{printerEnrichResult.failed}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Failed</div>
+                </div>
+              </div>
+
+              {printerEnrichResult.results && printerEnrichResult.results.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Enrichment Results:</h3>
+                  <div className="max-h-96 overflow-y-auto space-y-2">
+                    {printerEnrichResult.results.map((result, idx) => (
+                      <div key={idx} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-1">
+                            <div className="font-medium">{result.brand} {result.model_name}</div>
+                            <Badge 
+                              variant={result.status === 'enriched' ? 'default' : result.status === 'no_updates_needed' ? 'secondary' : 'destructive'}
+                              className="text-xs"
+                            >
+                              {result.status} {result.fields_updated > 0 && `(${result.fields_updated} fields)`}
+                            </Badge>
+                          </div>
+                          {result.error && (
+                            <div className="text-xs text-destructive max-w-xs truncate">
+                              {result.error}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
