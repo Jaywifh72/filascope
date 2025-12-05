@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, ExternalLink, Square, Check, X } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 export default function BuildPlateDetail() {
   const { id } = useParams<{ id: string }>();
+  const { getAffiliateUrl } = useAffiliateLinks();
 
   const { data: buildPlate, isLoading } = useQuery({
     queryKey: ["build-plate-detail", id],
@@ -196,7 +198,7 @@ export default function BuildPlateDetail() {
             {/* Buy button */}
             {buildPlate.product_url && (
               <a 
-                href={buildPlate.product_url} 
+                href={getAffiliateUrl(buildPlate.product_url, buildPlate.brand) || buildPlate.product_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
               >

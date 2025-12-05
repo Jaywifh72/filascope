@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -27,6 +28,7 @@ const FilamentDetail = () => {
   const [filament, setFilament] = useState<Filament | null>(null);
   const [loading, setLoading] = useState(true);
   const [rescrapingImage, setRescrapingImage] = useState(false);
+  const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
 
   const compatibility = selectedPrinter && filament 
     ? checkPrinterFilamentCompatibility(selectedPrinter, filament)
@@ -285,7 +287,7 @@ const FilamentDetail = () => {
                   <LikeButton filamentId={filament.id} size="lg" />
                   {filament.product_url && (
                     <Button asChild variant="default" size="lg" className="hover:scale-105 transition-transform">
-                      <a href={filament.product_url} target="_blank" rel="noopener noreferrer">
+                      <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
                         <ShoppingCart className="w-4 h-4 mr-2" />
                         Buy from {filament.vendor}
                       </a>
@@ -293,7 +295,7 @@ const FilamentDetail = () => {
                   )}
                   {filament.amazon_link_us && (
                     <Button asChild variant="outline" size="lg" className="hover:scale-105 transition-transform">
-                      <a href={filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
+                      <a href={getAmazonUrl(filament.amazon_link_us, "us") || filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
                         <ShoppingCart className="w-4 h-4 mr-2" />
                         Amazon US
                       </a>
@@ -301,14 +303,14 @@ const FilamentDetail = () => {
                   )}
                   {filament.amazon_link_uk && (
                     <Button asChild variant="outline" size="lg" className="hover:scale-105 transition-transform">
-                      <a href={filament.amazon_link_uk} target="_blank" rel="noopener noreferrer">
+                      <a href={getAmazonUrl(filament.amazon_link_uk, "uk") || filament.amazon_link_uk} target="_blank" rel="noopener noreferrer">
                         Amazon UK
                       </a>
                     </Button>
                   )}
                   {filament.amazon_link_de && (
                     <Button asChild variant="outline" size="lg" className="hover:scale-105 transition-transform">
-                      <a href={filament.amazon_link_de} target="_blank" rel="noopener noreferrer">
+                      <a href={getAmazonUrl(filament.amazon_link_de, "de") || filament.amazon_link_de} target="_blank" rel="noopener noreferrer">
                         Amazon DE
                       </a>
                     </Button>
