@@ -42,12 +42,12 @@ export default function HotendList() {
 
   // Fetch all nozzles
   const { data: nozzles, isLoading } = useQuery({
-    queryKey: ["nozzles-list"],
+    queryKey: ["hotends-list"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("printer_accessories")
         .select("*")
-        .eq("accessory_type", "nozzle")
+        .eq("accessory_type", "hotend")
         .order("brand")
         .order("name");
 
