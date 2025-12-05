@@ -48,7 +48,7 @@ type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
 };
 
 export default function Printers() {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin } = useAuth();
