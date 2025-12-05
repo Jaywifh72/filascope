@@ -378,11 +378,14 @@ serve(async (req) => {
     const forceUpdate = body.forceUpdate || body.force_update;
     const validateUrls = body.validateUrls || body.validate_urls;
     const limit = body.limit || 10;
+    const offset = body.offset || 0;
 
     // Build query based on parameters
     let query = supabase
       .from("printer_accessories")
-      .select("id, name, brand, product_url, accessory_type, image_url");
+      .select("id, name, brand, product_url, accessory_type, image_url")
+      .order("brand", { ascending: true })
+      .order("name", { ascending: true });
 
     if (accessoryId) {
       query = query.eq("id", accessoryId);
@@ -395,8 +398,8 @@ serve(async (req) => {
       query = query.or("image_url.is.null,image_url.eq.,image_url.ilike.%placeholder%");
     }
 
-    // Limit results to avoid timeout
-    query = query.limit(limit);
+    // Apply offset and limit for pagination
+    query = query.range(offset, offset + limit - 1);
 
     const { data: accessories, error: fetchError } = await query;
 
