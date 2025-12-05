@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, ExternalLink, Layers, Check, X, ImageIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 interface AMSSpecs {
   max_spools?: number;
@@ -40,6 +41,7 @@ export default function AMSDetail() {
   const queryClient = useQueryClient();
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
+  const { getAffiliateUrl } = useAffiliateLinks();
 
   const { data: ams, isLoading } = useQuery({
     queryKey: ["ams-detail", id],
@@ -320,7 +322,7 @@ export default function AMSDetail() {
             {/* Store Link */}
             {ams.product_url && (
               <a
-                href={ams.product_url}
+                href={getAffiliateUrl(ams.product_url, ams.brand) || ams.product_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >

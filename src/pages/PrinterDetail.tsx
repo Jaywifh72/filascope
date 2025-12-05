@@ -13,6 +13,7 @@ import { PrinterPriceChart } from "@/components/PrinterPriceChart";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import {
   ArrowLeft,
   Box,
@@ -49,6 +50,7 @@ const PrinterDetail = () => {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
   
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -480,7 +482,7 @@ const PrinterDetail = () => {
                 {(printer.official_product_url || printer.official_store_url || printer.amazon_url_us) && (
                   <div className="flex flex-wrap gap-3 pt-2">
                     {printer.official_product_url && (
-                      <a href={printer.official_product_url} target="_blank" rel="noopener noreferrer">
+                      <a href={getAffiliateUrl(printer.official_product_url, printerBrand) || printer.official_product_url} target="_blank" rel="noopener noreferrer">
                         <Button size="lg" className="gap-2">
                           <ExternalLink className="h-4 w-4" />
                           View Product
@@ -488,7 +490,7 @@ const PrinterDetail = () => {
                       </a>
                     )}
                     {printer.official_store_url && (
-                      <a href={printer.official_store_url} target="_blank" rel="noopener noreferrer">
+                      <a href={getAffiliateUrl(printer.official_store_url, printerBrand) || printer.official_store_url} target="_blank" rel="noopener noreferrer">
                         <Button size="lg" variant="outline" className="gap-2">
                           <ExternalLink className="h-4 w-4" />
                           Official Store
@@ -496,7 +498,7 @@ const PrinterDetail = () => {
                       </a>
                     )}
                     {printer.amazon_url_us && (
-                      <a href={printer.amazon_url_us} target="_blank" rel="noopener noreferrer">
+                      <a href={getAmazonUrl(printer.amazon_url_us, "us") || printer.amazon_url_us} target="_blank" rel="noopener noreferrer">
                         <Button size="lg" variant="outline" className="gap-2">
                           <ExternalLink className="h-4 w-4" />
                           Amazon US

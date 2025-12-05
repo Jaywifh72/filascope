@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, ExternalLink, Thermometer, CircleDot, Wrench, Package, Printer } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
 
 export default function NozzleDetail() {
   const { id } = useParams<{ id: string }>();
+  const { getAffiliateUrl } = useAffiliateLinks();
 
   // Fetch nozzle details
   const { data: nozzle, isLoading } = useQuery({
@@ -176,7 +178,7 @@ export default function NozzleDetail() {
                 )}
                 {nozzle.product_url && (
                   <a
-                    href={nozzle.product_url}
+                    href={getAffiliateUrl(nozzle.product_url, nozzle.brand) || nozzle.product_url}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
