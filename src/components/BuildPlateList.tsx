@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -22,12 +22,29 @@ interface BuildPlate {
 }
 
 export default function BuildPlateList() {
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
 
-  const { data: buildPlates, isLoading } = useQuery({
+  // Log on mount/unmount
+  useEffect(() => {
+    console.log("[BuildPlateList] MOUNTED - location:", location.pathname, location.search);
+    return () => {
+      console.log("[BuildPlateList] UNMOUNTED");
+    };
+  }, []);
+
+  // Log location changes
+  useEffect(() => {
+    console.log("[BuildPlateList] Location changed:", location.pathname, location.search);
+  }, [location]);
+
+  console.log("[BuildPlateList] RENDER - location:", location.pathname + location.search);
+
+  const { data: buildPlates, isLoading, error } = useQuery({
     queryKey: ["build-plates-list"],
     queryFn: async () => {
+      console.log("[BuildPlateList] Fetching build plates...");
       const { data, error } = await supabase
         .from("printer_accessories")
         .select("id, name, brand, price, currency, image_url, product_url, specs")
@@ -35,10 +52,19 @@ export default function BuildPlateList() {
         .order("brand")
         .order("name");
       
-      if (error) throw error;
+      if (error) {
+        console.error("[BuildPlateList] Fetch ERROR:", error);
+        throw error;
+      }
+      console.log("[BuildPlateList] Fetched", data?.length, "build plates");
       return data as BuildPlate[];
     },
   });
+
+  // Log query state
+  useEffect(() => {
+    console.log("[BuildPlateList] Query state - isLoading:", isLoading, "error:", error, "count:", buildPlates?.length);
+  }, [isLoading, error, buildPlates]);
 
   // Get unique brands
   const brands = useMemo(() => {
