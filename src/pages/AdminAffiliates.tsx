@@ -7,25 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, 
   Shield, 
   ExternalLink, 
-  Plus, 
   Pencil, 
-  Trash2, 
   Save,
-  X
+  X,
+  CheckCircle2,
+  AlertCircle,
+  Store
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -46,14 +40,20 @@ interface AffiliateConfig {
   updated_at: string;
 }
 
+interface BrandWithConfig {
+  brand: string;
+  config: AffiliateConfig | null;
+}
+
 const AdminAffiliates = () => {
   const navigate = useNavigate();
   const { isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const [configs, setConfigs] = useState<AffiliateConfig[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
-  const [editingConfig, setEditingConfig] = useState<AffiliateConfig | null>(null);
+  const [editingBrand, setEditingBrand] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     vendor_name: "",
     affiliate_url_pattern: "",
@@ -62,6 +62,9 @@ const AdminAffiliates = () => {
     amazon_de_tag: "",
     notes: "",
   });
+
+  // All brands including Amazon at the top
+  const allBrands = ["Amazon", ...brands];
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -76,76 +79,64 @@ const AdminAffiliates = () => {
 
   useEffect(() => {
     if (isAdmin) {
-      fetchConfigs();
+      fetchData();
     }
   }, [isAdmin]);
 
-  const fetchConfigs = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("affiliate_configs")
-      .select("*")
-      .order("vendor_name");
+    
+    // Fetch brands and configs in parallel
+    const [brandsResult, configsResult] = await Promise.all([
+      supabase.from("printer_brands").select("brand").order("brand"),
+      supabase.from("affiliate_configs").select("*").order("vendor_name"),
+    ]);
 
-    if (error) {
+    if (brandsResult.error) {
+      toast({
+        title: "Error",
+        description: "Failed to load brands",
+        variant: "destructive",
+      });
+    } else {
+      setBrands(brandsResult.data?.map(b => b.brand) || []);
+    }
+
+    if (configsResult.error) {
       toast({
         title: "Error",
         description: "Failed to load affiliate configurations",
         variant: "destructive",
       });
     } else {
-      setConfigs(data || []);
+      setConfigs(configsResult.data || []);
     }
+    
     setIsLoading(false);
   };
 
-  const handleAdd = () => {
-    setEditingConfig(null);
-    setFormData({
-      vendor_name: "",
-      affiliate_url_pattern: "",
-      amazon_us_tag: "",
-      amazon_uk_tag: "",
-      amazon_de_tag: "",
-      notes: "",
-    });
-    setShowDialog(true);
+  const getConfigForBrand = (brand: string): AffiliateConfig | null => {
+    return configs.find(c => c.vendor_name.toLowerCase() === brand.toLowerCase()) || null;
   };
 
-  const handleEdit = (config: AffiliateConfig) => {
-    setEditingConfig(config);
-    setFormData({
-      vendor_name: config.vendor_name,
-      affiliate_url_pattern: config.affiliate_url_pattern || "",
-      amazon_us_tag: config.amazon_us_tag || "",
-      amazon_uk_tag: config.amazon_uk_tag || "",
-      amazon_de_tag: config.amazon_de_tag || "",
-      notes: config.notes || "",
-    });
-    setShowDialog(true);
+  const hasAnyConfig = (brand: string): boolean => {
+    const config = getConfigForBrand(brand);
+    if (!config) return false;
+    return !!(config.affiliate_url_pattern || config.amazon_us_tag || config.amazon_uk_tag || config.amazon_de_tag);
   };
 
-  const handleDelete = async (id: string, vendorName: string) => {
-    if (!confirm(`Delete affiliate config for ${vendorName}?`)) return;
-
-    const { error } = await supabase
-      .from("affiliate_configs")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete configuration",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Configuration deleted successfully",
-      });
-      fetchConfigs();
-    }
+  const handleEdit = (brand: string) => {
+    const config = getConfigForBrand(brand);
+    setEditingBrand(brand);
+    setFormData({
+      vendor_name: brand,
+      affiliate_url_pattern: config?.affiliate_url_pattern || "",
+      amazon_us_tag: config?.amazon_us_tag || "",
+      amazon_uk_tag: config?.amazon_uk_tag || "",
+      amazon_de_tag: config?.amazon_de_tag || "",
+      notes: config?.notes || "",
+    });
+    setShowDialog(true);
   };
 
   const handleSave = async () => {
@@ -167,11 +158,13 @@ const AdminAffiliates = () => {
       notes: formData.notes.trim() || null,
     };
 
-    if (editingConfig) {
+    const existingConfig = getConfigForBrand(formData.vendor_name);
+
+    if (existingConfig) {
       const { error } = await supabase
         .from("affiliate_configs")
         .update(payload)
-        .eq("id", editingConfig.id);
+        .eq("id", existingConfig.id);
 
       if (error) {
         toast({
@@ -185,7 +178,7 @@ const AdminAffiliates = () => {
           description: "Configuration updated successfully",
         });
         setShowDialog(false);
-        fetchConfigs();
+        fetchData();
       }
     } else {
       const { error } = await supabase
@@ -206,10 +199,12 @@ const AdminAffiliates = () => {
           description: "Configuration created successfully",
         });
         setShowDialog(false);
-        fetchConfigs();
+        fetchData();
       }
     }
   };
+
+  const configuredCount = allBrands.filter(b => hasAnyConfig(b)).length;
 
   if (loading || isLoading) {
     return (
@@ -234,115 +229,144 @@ const AdminAffiliates = () => {
               </Button>
             </Link>
             <Shield className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Affiliate Link Setup</h1>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Affiliate Link Setup</h1>
+              <p className="text-muted-foreground text-sm">
+                {configuredCount} of {allBrands.length} brands configured
+              </p>
+            </div>
           </div>
-          <Button onClick={handleAdd}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Configuration
-          </Button>
         </div>
 
-        <Card className="p-6 bg-card border-border">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              Affiliate Link Configurations
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Configure affiliate URL patterns and Amazon tags for different brands. Use{" "}
-              <code className="px-1 py-0.5 bg-muted rounded text-xs">{"{{url}}"}</code> in patterns
-              as a placeholder for the original product URL.
-            </p>
-          </div>
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Card className="p-4 bg-card border-border">
+            <div className="flex items-center gap-3">
+              <Store className="w-8 h-8 text-primary" />
+              <div>
+                <p className="text-2xl font-bold">{allBrands.length}</p>
+                <p className="text-sm text-muted-foreground">Total Brands</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4 bg-card border-border">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="w-8 h-8 text-green-500" />
+              <div>
+                <p className="text-2xl font-bold">{configuredCount}</p>
+                <p className="text-sm text-muted-foreground">Configured</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4 bg-card border-border">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-8 h-8 text-yellow-500" />
+              <div>
+                <p className="text-2xl font-bold">{allBrands.length - configuredCount}</p>
+                <p className="text-sm text-muted-foreground">Not Configured</p>
+              </div>
+            </div>
+          </Card>
+        </div>
 
-          {configs.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <ExternalLink className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No affiliate configurations yet.</p>
-              <p className="text-sm">Click "Add Configuration" to create your first one.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Vendor Name</TableHead>
-                    <TableHead>URL Pattern</TableHead>
-                    <TableHead>Amazon US</TableHead>
-                    <TableHead>Amazon UK</TableHead>
-                    <TableHead>Amazon DE</TableHead>
-                    <TableHead>Notes</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {configs.map((config) => (
-                    <TableRow key={config.id}>
-                      <TableCell className="font-medium">{config.vendor_name}</TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {config.affiliate_url_pattern || (
-                          <span className="text-muted-foreground italic">Not set</span>
-                        )}
-                      </TableCell>
-                      <TableCell>{config.amazon_us_tag || "-"}</TableCell>
-                      <TableCell>{config.amazon_uk_tag || "-"}</TableCell>
-                      <TableCell>{config.amazon_de_tag || "-"}</TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {config.notes || (
-                          <span className="text-muted-foreground italic">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(config)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(config.id, config.vendor_name)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+        {/* Instructions */}
+        <Card className="p-4 mb-6 bg-muted/30 border-border">
+          <p className="text-sm text-muted-foreground">
+            Configure affiliate URL patterns and Amazon tags for each brand. Use{" "}
+            <code className="px-1 py-0.5 bg-muted rounded text-xs">{"{{url}}"}</code> in patterns
+            as a placeholder for the original product URL. Amazon tags are appended automatically to Amazon links.
+          </p>
         </Card>
+
+        {/* Brands Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {allBrands.map((brand) => {
+            const config = getConfigForBrand(brand);
+            const isConfigured = hasAnyConfig(brand);
+            const isAmazon = brand === "Amazon";
+
+            return (
+              <Card 
+                key={brand} 
+                className={`p-4 bg-card border-border transition-all hover:border-primary/50 ${
+                  isAmazon ? "ring-2 ring-primary/20" : ""
+                }`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-foreground">{brand}</h3>
+                    {isAmazon && (
+                      <Badge variant="secondary" className="text-xs">Marketplace</Badge>
+                    )}
+                  </div>
+                  <Badge 
+                    variant={isConfigured ? "default" : "outline"} 
+                    className={isConfigured ? "bg-green-500/10 text-green-600 border-green-500/30" : ""}
+                  >
+                    {isConfigured ? "Configured" : "Not Set"}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2 text-sm mb-4">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">URL Pattern:</span>
+                    <span className={config?.affiliate_url_pattern ? "text-foreground" : "text-muted-foreground/50"}>
+                      {config?.affiliate_url_pattern ? "Set" : "Not set"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Amazon US:</span>
+                    <span className={config?.amazon_us_tag ? "text-foreground font-mono text-xs" : "text-muted-foreground/50"}>
+                      {config?.amazon_us_tag || "Not set"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Amazon UK:</span>
+                    <span className={config?.amazon_uk_tag ? "text-foreground font-mono text-xs" : "text-muted-foreground/50"}>
+                      {config?.amazon_uk_tag || "Not set"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Amazon DE:</span>
+                    <span className={config?.amazon_de_tag ? "text-foreground font-mono text-xs" : "text-muted-foreground/50"}>
+                      {config?.amazon_de_tag || "Not set"}
+                    </span>
+                  </div>
+                </div>
+
+                {config?.notes && (
+                  <p className="text-xs text-muted-foreground mb-3 italic truncate">
+                    {config.notes}
+                  </p>
+                )}
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => handleEdit(brand)}
+                >
+                  <Pencil className="w-3 h-3 mr-2" />
+                  {isConfigured ? "Edit" : "Configure"}
+                </Button>
+              </Card>
+            );
+          })}
+        </div>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
-                {editingConfig ? "Edit" : "Add"} Affiliate Configuration
+                Configure {editingBrand}
               </DialogTitle>
               <DialogDescription>
-                Configure affiliate links for a brand or vendor. Amazon tags will be appended
+                Set up affiliate links for {editingBrand}. Amazon tags will be appended
                 to Amazon links automatically.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 mt-4">
-              <div>
-                <Label htmlFor="vendor_name">Vendor Name *</Label>
-                <Input
-                  id="vendor_name"
-                  value={formData.vendor_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, vendor_name: e.target.value })
-                  }
-                  placeholder="e.g., Polymaker, Bambu Lab"
-                  disabled={!!editingConfig}
-                />
-              </div>
-
               <div>
                 <Label htmlFor="affiliate_url_pattern">
                   Affiliate URL Pattern
