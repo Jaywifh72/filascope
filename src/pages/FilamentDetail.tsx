@@ -642,148 +642,198 @@ const FilamentDetail = () => {
               </div>
 
               {/* Compatible Hotends - Full Width */}
-              {compatibleHotends.length > 0 && (
-                <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Settings className="w-5 h-5 text-primary" />
-                        Compatible Hotends
-                      </div>
-                      <span className="text-xs font-normal text-muted-foreground">🟢 Best • 🟠 Caution • 🔴 Not Recommended</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TooltipProvider delayDuration={200}>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {compatibleHotends.map((hotend) => {
-                          const specs = hotend.specs as Record<string, any> | null;
+              {compatibleHotends.length > 0 && (() => {
+                // Group hotends by diameter
+                const getDiameter = (hotend: typeof compatibleHotends[0]): string => {
+                  const specs = hotend.specs as Record<string, any> | null;
+                  if (specs?.diameter) {
+                    const d = parseFloat(specs.diameter);
+                    if (d === 0.2) return '0.2';
+                    if (d === 0.4) return '0.4';
+                    if (d === 0.6) return '0.6';
+                    if (d === 0.8) return '0.8';
+                    return 'other';
+                  }
+                  // Try to extract from name
+                  const name = hotend.name.toLowerCase();
+                  if (name.includes('0.2mm') || name.includes('0.2 mm')) return '0.2';
+                  if (name.includes('0.4mm') || name.includes('0.4 mm')) return '0.4';
+                  if (name.includes('0.6mm') || name.includes('0.6 mm')) return '0.6';
+                  if (name.includes('0.8mm') || name.includes('0.8 mm')) return '0.8';
+                  return 'other';
+                };
+
+                const grouped = compatibleHotends.reduce((acc, hotend) => {
+                  const diameter = getDiameter(hotend);
+                  if (!acc[diameter]) acc[diameter] = [];
+                  acc[diameter].push(hotend);
+                  return acc;
+                }, {} as Record<string, typeof compatibleHotends>);
+
+                const diameterOrder = ['0.2', '0.4', '0.6', '0.8', 'other'];
+                const diameterLabels: Record<string, string> = {
+                  '0.2': '0.2mm Nozzles',
+                  '0.4': '0.4mm Nozzles',
+                  '0.6': '0.6mm Nozzles',
+                  '0.8': '0.8mm Nozzles',
+                  'other': 'Other Sizes'
+                };
+
+                return (
+                  <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Settings className="w-5 h-5 text-primary" />
+                          Compatible Hotends
+                        </div>
+                        <span className="text-xs font-normal text-muted-foreground">🟢 Best • 🟠 Caution • 🔴 Not Recommended</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <TooltipProvider delayDuration={200}>
+                        {diameterOrder.map((diameter) => {
+                          const hotends = grouped[diameter];
+                          if (!hotends || hotends.length === 0) return null;
+                          
                           return (
-                            <Tooltip key={hotend.id}>
-                              <TooltipTrigger asChild>
-                                <div 
-                                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${
-                                    hotend.rating === 'green' ? 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10' :
-                                    hotend.rating === 'orange' ? 'bg-orange-500/5 border-orange-500/20 hover:bg-orange-500/10' :
-                                    'bg-red-500/5 border-red-500/20 hover:bg-red-500/10'
-                                  } transition-colors`}
-                                >
-                                  {/* Rating indicator */}
-                                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                                    hotend.rating === 'green' ? 'bg-green-500' :
-                                    hotend.rating === 'orange' ? 'bg-orange-500' :
-                                    'bg-red-500'
-                                  }`} />
-                                  
-                                  {/* Hotend image */}
-                                  <div className="w-12 h-12 flex-shrink-0 rounded bg-muted/50 overflow-hidden">
-                                    {hotend.image_url ? (
-                                      <img 
-                                        src={hotend.image_url} 
-                                        alt={hotend.name}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center">
-                                        <Settings className="w-5 h-5 text-muted-foreground/50" />
-                                      </div>
-                                    )}
-                                  </div>
+                            <div key={diameter} className="space-y-3">
+                              <h4 className="text-sm font-semibold text-muted-foreground border-b border-border pb-2">
+                                {diameterLabels[diameter]} ({hotends.length})
+                              </h4>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {hotends.map((hotend) => {
+                                  const specs = hotend.specs as Record<string, any> | null;
+                                  return (
+                                    <Tooltip key={hotend.id}>
+                                      <TooltipTrigger asChild>
+                                        <div 
+                                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${
+                                            hotend.rating === 'green' ? 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10' :
+                                            hotend.rating === 'orange' ? 'bg-orange-500/5 border-orange-500/20 hover:bg-orange-500/10' :
+                                            'bg-red-500/5 border-red-500/20 hover:bg-red-500/10'
+                                          } transition-colors`}
+                                        >
+                                          {/* Rating indicator */}
+                                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                                            hotend.rating === 'green' ? 'bg-green-500' :
+                                            hotend.rating === 'orange' ? 'bg-orange-500' :
+                                            'bg-red-500'
+                                          }`} />
+                                          
+                                          {/* Hotend image */}
+                                          <div className="w-12 h-12 flex-shrink-0 rounded bg-muted/50 overflow-hidden">
+                                            {hotend.image_url ? (
+                                              <img 
+                                                src={hotend.image_url} 
+                                                alt={hotend.name}
+                                                className="w-full h-full object-cover"
+                                              />
+                                            ) : (
+                                              <div className="w-full h-full flex items-center justify-center">
+                                                <Settings className="w-5 h-5 text-muted-foreground/50" />
+                                              </div>
+                                            )}
+                                          </div>
 
-                                  {/* Hotend info */}
-                                  <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-medium truncate">{hotend.name}</div>
-                                    <div className="text-xs text-muted-foreground truncate">
-                                      {hotend.brand}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground/80 truncate">
-                                      {hotend.ratingReason}
-                                    </div>
-                                  </div>
+                                          {/* Hotend info */}
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium truncate">{hotend.name}</div>
+                                            <div className="text-xs text-muted-foreground truncate">
+                                              {hotend.brand}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground/80 truncate">
+                                              {hotend.ratingReason}
+                                            </div>
+                                          </div>
 
-                                  {/* Action links */}
-                                  <div className="flex flex-col gap-1 flex-shrink-0">
-                                    <Link 
-                                      to={`/hotends/${hotend.id}`}
-                                      className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <ExternalLink className="w-4 h-4" />
-                                    </Link>
-                                    {hotend.product_url && (
-                                      <a 
-                                        href={getAffiliateUrl(hotend.product_url, hotend.brand) || hotend.product_url}
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <Store className="w-4 h-4" />
-                                      </a>
-                                    )}
-                                  </div>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-xs p-3">
-                                <div className="space-y-2">
-                                  <div className="font-semibold text-sm">{hotend.name}</div>
-                                  <div className={`text-xs font-medium ${
-                                    hotend.rating === 'green' ? 'text-green-500' :
-                                    hotend.rating === 'orange' ? 'text-orange-500' :
-                                    'text-red-500'
-                                  }`}>
-                                    {hotend.rating === 'green' ? '✓ Recommended' : 
-                                     hotend.rating === 'orange' ? '⚠ Use with caution' : 
-                                     '✗ Not recommended'}
-                                  </div>
-                                  <p className="text-xs text-muted-foreground">{hotend.ratingReason}</p>
-                                  {specs && (
-                                    <div className="pt-2 border-t border-border space-y-1">
-                                      <div className="text-[10px] text-muted-foreground font-medium uppercase">Specifications</div>
-                                      {specs.max_temp && (
-                                        <div className="text-xs flex justify-between">
-                                          <span className="text-muted-foreground">Max Temp:</span>
-                                          <span>{specs.max_temp}°C</span>
+                                          {/* Action links */}
+                                          <div className="flex flex-col gap-1 flex-shrink-0">
+                                            <Link 
+                                              to={`/hotends/${hotend.id}`}
+                                              className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              <ExternalLink className="w-4 h-4" />
+                                            </Link>
+                                            {hotend.product_url && (
+                                              <a 
+                                                href={getAffiliateUrl(hotend.product_url, hotend.brand) || hotend.product_url}
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                <Store className="w-4 h-4" />
+                                              </a>
+                                            )}
+                                          </div>
                                         </div>
-                                      )}
-                                      {specs.diameter && (
-                                        <div className="text-xs flex justify-between">
-                                          <span className="text-muted-foreground">Diameter:</span>
-                                          <span>{specs.diameter}mm</span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="max-w-xs p-3">
+                                        <div className="space-y-2">
+                                          <div className="font-semibold text-sm">{hotend.name}</div>
+                                          <div className={`text-xs font-medium ${
+                                            hotend.rating === 'green' ? 'text-green-500' :
+                                            hotend.rating === 'orange' ? 'text-orange-500' :
+                                            'text-red-500'
+                                          }`}>
+                                            {hotend.rating === 'green' ? '✓ Recommended' : 
+                                             hotend.rating === 'orange' ? '⚠ Use with caution' : 
+                                             '✗ Not recommended'}
+                                          </div>
+                                          <p className="text-xs text-muted-foreground">{hotend.ratingReason}</p>
+                                          {specs && (
+                                            <div className="pt-2 border-t border-border space-y-1">
+                                              <div className="text-[10px] text-muted-foreground font-medium uppercase">Specifications</div>
+                                              {specs.max_temp && (
+                                                <div className="text-xs flex justify-between">
+                                                  <span className="text-muted-foreground">Max Temp:</span>
+                                                  <span>{specs.max_temp}°C</span>
+                                                </div>
+                                              )}
+                                              {specs.diameter && (
+                                                <div className="text-xs flex justify-between">
+                                                  <span className="text-muted-foreground">Diameter:</span>
+                                                  <span>{specs.diameter}mm</span>
+                                                </div>
+                                              )}
+                                              {specs.material && (
+                                                <div className="text-xs flex justify-between">
+                                                  <span className="text-muted-foreground">Material:</span>
+                                                  <span>{specs.material}</span>
+                                                </div>
+                                              )}
+                                              {specs.hardened !== undefined && (
+                                                <div className="text-xs flex justify-between">
+                                                  <span className="text-muted-foreground">Hardened:</span>
+                                                  <span>{specs.hardened ? 'Yes' : 'No'}</span>
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                          {hotend.price && (
+                                            <div className="pt-2 border-t border-border">
+                                              <div className="text-xs flex justify-between">
+                                                <span className="text-muted-foreground">Price:</span>
+                                                <span className="font-medium">${hotend.price}</span>
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
-                                      )}
-                                      {specs.material && (
-                                        <div className="text-xs flex justify-between">
-                                          <span className="text-muted-foreground">Material:</span>
-                                          <span>{specs.material}</span>
-                                        </div>
-                                      )}
-                                      {specs.hardened !== undefined && (
-                                        <div className="text-xs flex justify-between">
-                                          <span className="text-muted-foreground">Hardened:</span>
-                                          <span>{specs.hardened ? 'Yes' : 'No'}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                  {hotend.price && (
-                                    <div className="pt-2 border-t border-border">
-                                      <div className="text-xs flex justify-between">
-                                        <span className="text-muted-foreground">Price:</span>
-                                        <span className="font-medium">${hotend.price}</span>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           );
                         })}
-                      </div>
-                    </TooltipProvider>
-                  </CardContent>
-                </Card>
-              )}
+                      </TooltipProvider>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
 
               {/* Limitations & Warnings */}
               {(compatibility.limitations.length > 0 || compatibility.recommendations.warnings.length > 0) && (
