@@ -45,6 +45,9 @@ interface PrinterSpecs {
   native_multi_material_system?: boolean;
   ui_language_options?: string;
   firmware_family?: string;
+  bed_type?: string;
+  hotend_type?: string;
+  nozzle_material?: string;
 }
 
 async function enrichPrinterWithAI(
@@ -105,7 +108,10 @@ Return a JSON object with these fields (only include fields you're confident abo
   "multi_material_supported": boolean,
   "native_multi_material_system": boolean,
   "ui_language_options": string (comma-separated list of supported UI languages like "English, Chinese, German, French, Spanish"),
-  "firmware_family": string (name of firmware like "Klipper", "Marlin", "RepRap", "Prusa Firmware", "Bambu Studio", etc.)
+  "firmware_family": string (name of firmware like "Klipper", "Marlin", "RepRap", "Prusa Firmware", "Bambu Lab Firmware", etc.),
+  "bed_type": string (build plate type like "PEI Spring Steel", "Glass Bed", "PEI", "Textured PEI", "Smooth PEI", "Segmented PEI", "Magnetic PEI"),
+  "hotend_type": string (hotend type like "All-Metal", "PTFE-lined", "V6", "Volcano", "Quick-Release", "Nextruder"),
+  "nozzle_material": string (stock nozzle material like "Brass", "Hardened Steel", "Stainless Steel", "Copper Alloy")
 }
 
 Return ONLY the JSON object, no explanation or markdown.`;
@@ -244,11 +250,12 @@ serve(async (req) => {
     if (printerIds && printerIds.length > 0) {
       query = query.in('id', printerIds);
     } else if (!forceUpdate) {
-      // Find printers with missing critical data
+      // Find printers with missing critical data including hardware specs
       query = query.or(
         'build_volume_x_mm.is.null,build_volume_y_mm.is.null,build_volume_z_mm.is.null,' +
         'max_nozzle_temp_c.is.null,bed_max_temp_c.is.null,max_print_speed_mms.is.null,' +
-        'printer_technology.is.null,filament_diameter_mm.is.null'
+        'printer_technology.is.null,filament_diameter_mm.is.null,' +
+        'bed_type.is.null,hotend_type.is.null,nozzle_material.is.null'
       );
     }
 
