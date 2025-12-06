@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "@/components/LikeButton";
@@ -685,17 +686,25 @@ const FilamentDetail = () => {
                 };
 
                 return (
-                  <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Settings className="w-5 h-5 text-primary" />
-                          Compatible Hotends
-                        </div>
-                        <span className="text-xs font-normal text-muted-foreground">🟢 Best • 🟠 Caution • 🔴 Not Recommended</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
+                  <Collapsible defaultOpen={false}>
+                    <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
+                      <CollapsibleTrigger asChild>
+                        <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                          <CardTitle className="text-base flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Settings className="w-5 h-5 text-primary" />
+                              Compatible Hotends
+                              <Badge variant="secondary" className="text-xs">{compatibleHotends.length}</Badge>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-normal text-muted-foreground hidden sm:inline">🟢 Best • 🟠 Caution • 🔴 Not Recommended</span>
+                              <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                            </div>
+                          </CardTitle>
+                        </CardHeader>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <CardContent className="space-y-6 pt-0">
                       <TooltipProvider delayDuration={200}>
                         {diameterOrder.map((diameter) => {
                           const hotends = grouped[diameter];
@@ -842,24 +851,34 @@ const FilamentDetail = () => {
                           );
                         })}
                       </TooltipProvider>
-                    </CardContent>
-                  </Card>
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
                 );
               })()}
 
               {/* Compatible Build Plates - Full Width */}
               {compatibleBuildPlates.length > 0 && (
-                <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Package className="w-5 h-5 text-primary" />
-                        Compatible Build Plates
-                      </div>
-                      <span className="text-xs font-normal text-muted-foreground">🟢 Best • 🟠 Check • 🔴 Not Ideal</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <Collapsible defaultOpen={false}>
+                  <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                        <CardTitle className="text-base flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Package className="w-5 h-5 text-primary" />
+                            Compatible Build Plates
+                            <Badge variant="secondary" className="text-xs">{compatibleBuildPlates.length}</Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-normal text-muted-foreground hidden sm:inline">🟢 Best • 🟠 Check • 🔴 Not Ideal</span>
+                            <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                          </div>
+                        </CardTitle>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="pt-0">
                     <TooltipProvider delayDuration={200}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                         {compatibleBuildPlates.map((plate) => {
@@ -988,23 +1007,33 @@ const FilamentDetail = () => {
                         })}
                       </div>
                     </TooltipProvider>
-                  </CardContent>
-                </Card>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
               )}
 
               {/* Compatible AMS/MMU Systems - Full Width */}
               {compatibleAms.length > 0 && (
-                <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Package className="w-5 h-5 text-primary" />
-                        Compatible AMS/MMU Systems
-                      </div>
-                      <span className="text-xs font-normal text-muted-foreground">🟢 Ideal • 🟠 Considerations • 🔴 Challenges</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <Collapsible defaultOpen={false}>
+                  <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                        <CardTitle className="text-base flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Package className="w-5 h-5 text-primary" />
+                            Compatible AMS/MMU Systems
+                            <Badge variant="secondary" className="text-xs">{compatibleAms.length}</Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-normal text-muted-foreground hidden sm:inline">🟢 Ideal • 🟠 Considerations • 🔴 Challenges</span>
+                            <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                          </div>
+                        </CardTitle>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="pt-0">
                     <TooltipProvider delayDuration={200}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                         {compatibleAms.map((ams) => {
@@ -1133,8 +1162,10 @@ const FilamentDetail = () => {
                         })}
                       </div>
                     </TooltipProvider>
-                  </CardContent>
-                </Card>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
               )}
 
               {/* Limitations & Warnings */}
