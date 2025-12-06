@@ -687,7 +687,10 @@ export type Database = {
           abrasive_filament_support: boolean | null
           abrasive_materials_supported: boolean | null
           ai_spaghetti_detection: boolean | null
+          amazon_url_au: string | null
           amazon_url_ca: string | null
+          amazon_url_de: string | null
+          amazon_url_jp: string | null
           amazon_url_uk: string | null
           amazon_url_us: string | null
           area_leveling_supported: boolean | null
@@ -715,6 +718,16 @@ export type Database = {
           compatible_plate_types: string | null
           control_knob: boolean | null
           created_at: string | null
+          current_price_aud_amazon: number | null
+          current_price_aud_store: number | null
+          current_price_cad_amazon: number | null
+          current_price_cad_store: number | null
+          current_price_eur_amazon: number | null
+          current_price_eur_store: number | null
+          current_price_gbp_amazon: number | null
+          current_price_gbp_store: number | null
+          current_price_jpy_amazon: number | null
+          current_price_jpy_store: number | null
           current_price_usd_amazon: number | null
           current_price_usd_store: number | null
           data_quality_notes: string | null
@@ -791,6 +804,11 @@ export type Database = {
           object_skip_supported: boolean | null
           official_product_url: string | null
           official_store_url: string | null
+          official_store_url_au: string | null
+          official_store_url_ca: string | null
+          official_store_url_eu: string | null
+          official_store_url_jp: string | null
+          official_store_url_uk: string | null
           official_supported_materials: string | null
           onboard_storage_gb: number | null
           other_retailer_urls: string | null
@@ -803,6 +821,7 @@ export type Database = {
           power_supply_type: string | null
           pressure_advance_supported: boolean | null
           price_tier: string | null
+          prices_last_updated_at: string | null
           printer_id: string
           printer_profile_slug_in_slicers: string | null
           printer_technology: string | null
@@ -853,7 +872,10 @@ export type Database = {
           abrasive_filament_support?: boolean | null
           abrasive_materials_supported?: boolean | null
           ai_spaghetti_detection?: boolean | null
+          amazon_url_au?: string | null
           amazon_url_ca?: string | null
+          amazon_url_de?: string | null
+          amazon_url_jp?: string | null
           amazon_url_uk?: string | null
           amazon_url_us?: string | null
           area_leveling_supported?: boolean | null
@@ -881,6 +903,16 @@ export type Database = {
           compatible_plate_types?: string | null
           control_knob?: boolean | null
           created_at?: string | null
+          current_price_aud_amazon?: number | null
+          current_price_aud_store?: number | null
+          current_price_cad_amazon?: number | null
+          current_price_cad_store?: number | null
+          current_price_eur_amazon?: number | null
+          current_price_eur_store?: number | null
+          current_price_gbp_amazon?: number | null
+          current_price_gbp_store?: number | null
+          current_price_jpy_amazon?: number | null
+          current_price_jpy_store?: number | null
           current_price_usd_amazon?: number | null
           current_price_usd_store?: number | null
           data_quality_notes?: string | null
@@ -957,6 +989,11 @@ export type Database = {
           object_skip_supported?: boolean | null
           official_product_url?: string | null
           official_store_url?: string | null
+          official_store_url_au?: string | null
+          official_store_url_ca?: string | null
+          official_store_url_eu?: string | null
+          official_store_url_jp?: string | null
+          official_store_url_uk?: string | null
           official_supported_materials?: string | null
           onboard_storage_gb?: number | null
           other_retailer_urls?: string | null
@@ -969,6 +1006,7 @@ export type Database = {
           power_supply_type?: string | null
           pressure_advance_supported?: boolean | null
           price_tier?: string | null
+          prices_last_updated_at?: string | null
           printer_id: string
           printer_profile_slug_in_slicers?: string | null
           printer_technology?: string | null
@@ -1019,7 +1057,10 @@ export type Database = {
           abrasive_filament_support?: boolean | null
           abrasive_materials_supported?: boolean | null
           ai_spaghetti_detection?: boolean | null
+          amazon_url_au?: string | null
           amazon_url_ca?: string | null
+          amazon_url_de?: string | null
+          amazon_url_jp?: string | null
           amazon_url_uk?: string | null
           amazon_url_us?: string | null
           area_leveling_supported?: boolean | null
@@ -1047,6 +1088,16 @@ export type Database = {
           compatible_plate_types?: string | null
           control_knob?: boolean | null
           created_at?: string | null
+          current_price_aud_amazon?: number | null
+          current_price_aud_store?: number | null
+          current_price_cad_amazon?: number | null
+          current_price_cad_store?: number | null
+          current_price_eur_amazon?: number | null
+          current_price_eur_store?: number | null
+          current_price_gbp_amazon?: number | null
+          current_price_gbp_store?: number | null
+          current_price_jpy_amazon?: number | null
+          current_price_jpy_store?: number | null
           current_price_usd_amazon?: number | null
           current_price_usd_store?: number | null
           data_quality_notes?: string | null
@@ -1123,6 +1174,11 @@ export type Database = {
           object_skip_supported?: boolean | null
           official_product_url?: string | null
           official_store_url?: string | null
+          official_store_url_au?: string | null
+          official_store_url_ca?: string | null
+          official_store_url_eu?: string | null
+          official_store_url_jp?: string | null
+          official_store_url_uk?: string | null
           official_supported_materials?: string | null
           onboard_storage_gb?: number | null
           other_retailer_urls?: string | null
@@ -1135,6 +1191,7 @@ export type Database = {
           power_supply_type?: string | null
           pressure_advance_supported?: boolean | null
           price_tier?: string | null
+          prices_last_updated_at?: string | null
           printer_id?: string
           printer_profile_slug_in_slicers?: string | null
           printer_technology?: string | null

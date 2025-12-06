@@ -47,3 +47,6 @@ verify_jwt = true
 
 [functions.enrich-printer-data]
 verify_jwt = true
+
+[functions.update-global-prices]
+verify_jwt = true
