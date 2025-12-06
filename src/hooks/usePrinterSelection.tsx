@@ -107,18 +107,44 @@ export function usePrinterSelection() {
         const modelLower = modelStr.toLowerCase().trim();
         const printerModelLower = printerModel.toLowerCase();
         
-        // Check for exact or partial match
-        return printerModelLower.includes(modelLower) || 
-               modelLower.includes(printerModelLower) ||
-               // Check for series matches like "X1" matching "X1 Carbon"
-               printerModelLower.split(/[\s-]+/).some(part => 
-                 part.length >= 2 && modelLower.includes(part)
-               );
+        // Exact match
+        if (modelLower === printerModelLower) return true;
+        
+        // Check if model is contained in printer name or vice versa
+        if (printerModelLower.includes(modelLower) && modelLower.length >= 2) return true;
+        if (modelLower.includes(printerModelLower)) return true;
+        
+        return false;
+      };
+
+      // Helper to extract series info from hotend name like "(X1/P1)" or "(A1)" or "(H2/P2S)"
+      const extractSeriesFromName = (name: string): string[] => {
+        const match = name.match(/\(([^)]+)\)\s*$/);
+        if (!match) return [];
+        // Split by "/" and clean up
+        return match[1].split('/').map(s => s.trim().toLowerCase());
+      };
+
+      // Helper to check if printer model matches any series in the list
+      const matchesSeries = (seriesList: string[], printerModelLower: string): boolean => {
+        return seriesList.some(series => {
+          // Direct match: "p2s" matches "p2s"
+          if (printerModelLower.includes(series) || series.includes(printerModelLower)) {
+            return true;
+          }
+          // Series family match: "x1" matches "x1 carbon", "p1" matches "p1s", "p1p"
+          if (printerModelLower.startsWith(series) || 
+              printerModelLower.replace(/\s+/g, '').startsWith(series)) {
+            return true;
+          }
+          return false;
+        });
       };
 
       // Filter hotends based on model-level compatibility
       const filtered = (data || []).filter((hotend) => {
         const specs = hotend.specs as Record<string, unknown> | null;
+        const printerModelLower = printerModel.toLowerCase();
         
         // Priority 1: Check specs.compatible_models (array or comma-separated string)
         if (specs?.compatible_models) {
@@ -129,6 +155,8 @@ export function usePrinterSelection() {
             const modelList = models.split(',').map(m => m.trim());
             if (modelList.some(m => modelMatches(m))) return true;
           }
+          // If compatible_models is defined but doesn't match, don't include
+          return false;
         }
 
         // Priority 2: Check specs.compatible_printers (string with model names)
@@ -136,16 +164,19 @@ export function usePrinterSelection() {
           const printers = String(specs.compatible_printers);
           const printerList = printers.split(',').map(p => p.trim());
           if (printerList.some(p => modelMatches(p))) return true;
+          // If compatible_printers is defined but doesn't match, don't include
+          return false;
         }
 
-        // Priority 3: Check if hotend brand matches printer brand AND no specific model restrictions
-        if (hotend.brand === printerBrand) {
-          // Only include if there are no model restrictions, or we matched above
-          const hasModelRestrictions = specs?.compatible_models || specs?.compatible_printers;
-          if (!hasModelRestrictions) {
-            // Generic brand-level compatibility (no specific models defined)
-            return true;
+        // Priority 3: For brand-matching hotends, check series info in the name
+        if (hotend.brand === printerBrand || hotend.compatible_printer_brands?.includes(printerBrand)) {
+          const seriesFromName = extractSeriesFromName(hotend.name);
+          if (seriesFromName.length > 0) {
+            // Has series info in name - must match
+            return matchesSeries(seriesFromName, printerModelLower);
           }
+          // No series info in name - this is a generic hotend for the brand, include it
+          return true;
         }
 
         // Priority 4: Check compatible_printer_brands with "Universal" support
