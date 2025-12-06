@@ -580,22 +580,26 @@ const Finder = () => {
     };
 
     switch (sortBy) {
-      case "price-asc":
-        return getPricePerKg(a) - getPricePerKg(b);
-      case "price-desc":
-        return getPricePerKg(b) - getPricePerKg(a);
+      case "print-desc":
+        return (b.printability_index || 0) - (a.printability_index || 0);
+      case "print-asc":
+        return (a.printability_index || 0) - (b.printability_index || 0);
+      case "strength-desc":
+        return (b.strength_index || 0) - (a.strength_index || 0);
+      case "strength-asc":
+        return (a.strength_index || 0) - (b.strength_index || 0);
+      case "heat-desc":
+        return (b.tg_c || b.nozzle_temp_max_c || 0) - (a.tg_c || a.nozzle_temp_max_c || 0);
+      case "heat-asc":
+        return (a.tg_c || a.nozzle_temp_max_c || 0) - (b.tg_c || b.nozzle_temp_max_c || 0);
       case "score-desc":
         return (b.value_score || 0) - (a.value_score || 0);
       case "score-asc":
         return (a.value_score || 0) - (b.value_score || 0);
-      case "name-asc":
-        return (a.product_title || "").localeCompare(b.product_title || "");
-      case "name-desc":
-        return (b.product_title || "").localeCompare(a.product_title || "");
-      case "brand-asc":
-        return (a.vendor || "").localeCompare(b.vendor || "");
-      case "brand-desc":
-        return (b.vendor || "").localeCompare(a.vendor || "");
+      case "price-asc":
+        return getPricePerKg(a) - getPricePerKg(b);
+      case "price-desc":
+        return getPricePerKg(b) - getPricePerKg(a);
       default:
         return 0;
     }
@@ -806,14 +810,16 @@ const Finder = () => {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent className="bg-popover border-border z-50">
+              <SelectItem value="print-desc">Print: High to Low</SelectItem>
+              <SelectItem value="print-asc">Print: Low to High</SelectItem>
+              <SelectItem value="strength-desc">Strength: High to Low</SelectItem>
+              <SelectItem value="strength-asc">Strength: Low to High</SelectItem>
+              <SelectItem value="heat-desc">Heat: High to Low</SelectItem>
+              <SelectItem value="heat-asc">Heat: Low to High</SelectItem>
               <SelectItem value="score-desc">Score: High to Low</SelectItem>
               <SelectItem value="score-asc">Score: Low to High</SelectItem>
               <SelectItem value="price-asc">Price: Low to High</SelectItem>
               <SelectItem value="price-desc">Price: High to Low</SelectItem>
-              <SelectItem value="name-asc">Name: A to Z</SelectItem>
-              <SelectItem value="name-desc">Name: Z to A</SelectItem>
-              <SelectItem value="brand-asc">Brand: A to Z</SelectItem>
-              <SelectItem value="brand-desc">Brand: Z to A</SelectItem>
             </SelectContent>
           </Select>
         </div>
