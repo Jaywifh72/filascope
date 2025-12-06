@@ -424,10 +424,9 @@ const Finder = () => {
         }
       }
       
-      // Apply price filter
-      if (maxPrice && f.variant_price && f.net_weight_g) {
-        const pricePerKg = (f.variant_price / f.net_weight_g) * 1000;
-        if (pricePerKg > parseFloat(maxPrice)) return false;
+      // Apply price filter - variant_price is already per-kg
+      if (maxPrice && f.variant_price) {
+        if (f.variant_price > parseFloat(maxPrice)) return false;
       }
       
       return true;
@@ -563,21 +562,17 @@ const Finder = () => {
   };
 
   const filteredAndSortedFilaments = filaments?.filter(f => {
-    // Apply price filter
-    if (maxPrice && f.variant_price && f.net_weight_g) {
-      const pricePerKg = (f.variant_price / f.net_weight_g) * 1000;
-      if (pricePerKg > parseFloat(maxPrice)) return false;
+    // Apply price filter - variant_price is already per-kg
+    if (maxPrice && f.variant_price) {
+      if (f.variant_price > parseFloat(maxPrice)) return false;
     }
     // Apply AMS filter client-side (since it's calculated dynamically)
     if (amsOnly && !isAMSCompatible(f)) return false;
     return true;
   }).sort((a, b) => {
-    // Helper to calculate price per kg
+    // variant_price is already the per-kg price
     const getPricePerKg = (filament: typeof a) => {
-      if (!filament.variant_price || !filament.net_weight_g || filament.net_weight_g === 0) {
-        return filament.variant_price || 999999;
-      }
-      return (filament.variant_price / filament.net_weight_g) * 1000;
+      return filament.variant_price || 999999;
     };
 
     switch (sortBy) {
@@ -1054,16 +1049,9 @@ const Finder = () => {
               // Valid filament prices are typically $10-$200 per kg or $10-$100 per spool
               const isValidPrice = filament.variant_price && filament.variant_price > 5 && filament.variant_price < 500;
               
-              // Calculate price per kg if both price and weight are available
-              const pricePerKg = isValidPrice && filament.net_weight_g && filament.net_weight_g > 0
-                ? ((filament.variant_price / filament.net_weight_g) * 1000).toFixed(2)
-                : null;
-              
-              // Use raw price if per-kg calculation isn't possible
-              const displayPrice = isValidPrice 
-                ? (pricePerKg || filament.variant_price.toFixed(2))
-                : null;
-              const priceLabel = pricePerKg ? '/kg' : (isValidPrice ? 'ea' : null);
+              // variant_price is already the per-kg price
+              const displayPrice = isValidPrice ? filament.variant_price.toFixed(2) : null;
+              const priceLabel = isValidPrice ? '/kg' : null;
               
               const overallScore = filament.value_score || 7.0;
 
