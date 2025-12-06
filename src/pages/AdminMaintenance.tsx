@@ -112,6 +112,14 @@ const AdminMaintenance = () => {
     skipped: number;
     details: Array<{ title: string; status: string; url?: string; image?: string }>;
   } | null>(null);
+  const [isScrapingMatterHackers, setIsScrapingMatterHackers] = useState(false);
+  const [matterHackersResult, setMatterHackersResult] = useState<{
+    total: number;
+    success: number;
+    failed: number;
+    skipped: number;
+    results: Array<{ id: string; title: string; status: string; image?: string }>;
+  } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -484,6 +492,50 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsScrapingColorFabb(false);
+    }
+  };
+
+  const runMatterHackersImageScraper = async () => {
+    setIsScrapingMatterHackers(true);
+    setMatterHackersResult(null);
+
+    toast({
+      title: "MatterHackers Scraping Started",
+      description: "Scraping product images from MatterHackers product pages...",
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-matterhackers-images', {
+        method: 'POST',
+        body: {}
+      });
+
+      if (error) {
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('FunctionsFetchError')) {
+          toast({
+            title: "Running in Background",
+            description: "The scraper is still running. Refresh in 1-2 minutes to see updated images.",
+          });
+          return;
+        }
+        throw error;
+      }
+
+      setMatterHackersResult(data);
+      queryClient.invalidateQueries({ queryKey: ['filaments'] });
+      toast({
+        title: "MatterHackers Image Scraping Complete",
+        description: `Success: ${data.success}, Failed: ${data.failed}, Skipped: ${data.skipped}`,
+      });
+    } catch (error) {
+      console.error('MatterHackers scraping error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to run MatterHackers image scraper",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScrapingMatterHackers(false);
     }
   };
 
@@ -1015,6 +1067,106 @@ const AdminMaintenance = () => {
                               </div>
                             )}
                           </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* MatterHackers Image Scraper Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Package className="w-5 h-5 text-orange-500" />
+            <CardTitle>MatterHackers Image Scraper</CardTitle>
+          </div>
+          <CardDescription>
+            Scrapes product images from MatterHackers product pages using Firecrawl
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button 
+            onClick={runMatterHackersImageScraper} 
+            disabled={isScrapingMatterHackers}
+            className="w-full sm:w-auto"
+          >
+            {isScrapingMatterHackers ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Scraping MatterHackers Images...
+              </>
+            ) : (
+              <>
+                <Image className="w-4 h-4 mr-2" />
+                Scrape MatterHackers Images
+              </>
+            )}
+          </Button>
+
+          {matterHackersResult && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{matterHackersResult.total}</div>
+                  <div className="text-sm text-muted-foreground">Total Processed</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{matterHackersResult.success}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Updated</div>
+                </div>
+                <div className="bg-orange-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-orange-500" />
+                    <div className="text-2xl font-bold">{matterHackersResult.skipped}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Skipped</div>
+                </div>
+                <div className="bg-red-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <div className="text-2xl font-bold">{matterHackersResult.failed}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Failed</div>
+                </div>
+              </div>
+
+              {matterHackersResult.results?.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Results:</h3>
+                  <div className="max-h-96 overflow-y-auto space-y-2">
+                    {matterHackersResult.results.map((record, idx) => (
+                      <div key={idx} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-1">
+                            <div className="font-medium">{record.title}</div>
+                            <Badge 
+                              variant={record.status === 'success' ? 'default' : 'secondary'} 
+                              className="text-xs"
+                            >
+                              {record.status === 'success' && <CheckCircle className="w-3 h-3 mr-1" />}
+                              {record.status}
+                            </Badge>
+                            {record.image && (
+                              <div className="text-xs text-muted-foreground font-mono truncate max-w-md">
+                                Image: {record.image}
+                              </div>
+                            )}
+                          </div>
+                          {record.image && (
+                            <img 
+                              src={record.image} 
+                              alt={record.title}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          )}
                         </div>
                       </div>
                     ))}
