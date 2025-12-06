@@ -71,11 +71,16 @@ function extractPrice(html: string, url: string): number | null {
   ];
   
   // Shopify/brand store patterns - includes markdown format
+  // IMPORTANT: Sale price patterns must come FIRST to capture discounted prices
   const brandPatterns = [
-    // Shopify markdown format: "Regular price$22.99 USD" or "price$19.99"
-    /(?:Regular\s+)?price\$([0-9,.]+)\s*(?:USD|CAD|EUR|GBP)?/i,
-    // Sale price format: "Sale price$18.99"
-    /Sale\s+price\$([0-9,.]+)/i,
+    // Sale price format: "Sale price$18.99" - MUST be first to capture current sale price
+    /Sale\s*price\s*\$([0-9,.]+)/i,
+    // Sunlu format: "~~$24.99 USD~~Sale price$22.99 USD" - extract sale price after strikethrough
+    /~~\$[0-9,.]+\s*(?:USD|CAD|EUR|GBP)?~~\s*Sale\s*price\s*\$([0-9,.]+)/i,
+    // Regular price (only if no sale price found)
+    /Regular\s+price\s*\$([0-9,.]+)\s*(?:USD|CAD|EUR|GBP)?/i,
+    // Simple "price$XX.XX" format
+    /\bprice\s*\$([0-9,.]+)\s*(?:USD|CAD|EUR|GBP)?/i,
     // JSON price formats
     /"price":\s*"?([0-9,.]+)"?/,
     /"amount":\s*"?([0-9,.]+)"?/,
