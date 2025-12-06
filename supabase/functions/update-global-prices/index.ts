@@ -6,34 +6,187 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Brand regional availability for stores and Amazon
+interface RegionalAvailability {
+  store: boolean;
+  amazon: boolean;
+}
+
+interface BrandRegions {
+  US: RegionalAvailability;
+  CA: RegionalAvailability;
+  UK: RegionalAvailability;
+  EU: RegionalAvailability;
+  AU: RegionalAvailability;
+  JP: RegionalAvailability;
+}
+
+const BRAND_REGIONAL_AVAILABILITY: Record<string, BrandRegions> = {
+  'Creality': {
+    US: { store: true, amazon: true },
+    CA: { store: true, amazon: true },
+    UK: { store: true, amazon: true },
+    EU: { store: true, amazon: true },
+    AU: { store: true, amazon: true },
+    JP: { store: false, amazon: true },
+  },
+  'Anycubic': {
+    US: { store: true, amazon: true },
+    CA: { store: true, amazon: true },
+    UK: { store: true, amazon: true },
+    EU: { store: true, amazon: true },
+    AU: { store: true, amazon: true },
+    JP: { store: false, amazon: true },
+  },
+  'Bambu Lab': {
+    US: { store: true, amazon: true },
+    CA: { store: true, amazon: true },
+    UK: { store: true, amazon: true },
+    EU: { store: true, amazon: true },
+    AU: { store: true, amazon: true },
+    JP: { store: true, amazon: true },
+  },
+  'UltiMaker': {
+    US: { store: true, amazon: true },
+    CA: { store: true, amazon: false },
+    UK: { store: true, amazon: true },
+    EU: { store: true, amazon: true },
+    AU: { store: false, amazon: false },
+    JP: { store: false, amazon: false },
+  },
+  'FLSUN': {
+    US: { store: true, amazon: true },
+    CA: { store: false, amazon: true },
+    UK: { store: false, amazon: true },
+    EU: { store: true, amazon: true },
+    AU: { store: false, amazon: true },
+    JP: { store: false, amazon: false },
+  },
+  'Sovol': {
+    US: { store: true, amazon: true },
+    CA: { store: false, amazon: true },
+    UK: { store: false, amazon: true },
+    EU: { store: true, amazon: true },
+    AU: { store: false, amazon: true },
+    JP: { store: false, amazon: false },
+  },
+  'Prusa Research': {
+    US: { store: true, amazon: false },
+    CA: { store: true, amazon: false },
+    UK: { store: true, amazon: false },
+    EU: { store: true, amazon: false },
+    AU: { store: true, amazon: false },
+    JP: { store: true, amazon: false },
+  },
+  'Elegoo': {
+    US: { store: true, amazon: true },
+    CA: { store: true, amazon: true },
+    UK: { store: true, amazon: true },
+    EU: { store: true, amazon: true },
+    AU: { store: true, amazon: true },
+    JP: { store: false, amazon: true },
+  },
+  'QIDI Tech': {
+    US: { store: true, amazon: true },
+    CA: { store: true, amazon: true },
+    UK: { store: true, amazon: true },
+    EU: { store: true, amazon: true },
+    AU: { store: true, amazon: true },
+    JP: { store: false, amazon: false },
+  },
+  'Snapmaker': {
+    US: { store: true, amazon: true },
+    CA: { store: true, amazon: true },
+    UK: { store: true, amazon: true },
+    EU: { store: true, amazon: true },
+    AU: { store: true, amazon: false },
+    JP: { store: true, amazon: false },
+  },
+  'FlashForge': {
+    US: { store: true, amazon: true },
+    CA: { store: false, amazon: true },
+    UK: { store: false, amazon: true },
+    EU: { store: true, amazon: true },
+    AU: { store: false, amazon: true },
+    JP: { store: false, amazon: false },
+  },
+  'Raise3D': {
+    US: { store: true, amazon: false },
+    CA: { store: true, amazon: false },
+    UK: { store: true, amazon: false },
+    EU: { store: true, amazon: false },
+    AU: { store: true, amazon: false },
+    JP: { store: true, amazon: false },
+  },
+  'Voron Design': {
+    US: { store: false, amazon: false },
+    CA: { store: false, amazon: false },
+    UK: { store: false, amazon: false },
+    EU: { store: false, amazon: false },
+    AU: { store: false, amazon: false },
+    JP: { store: false, amazon: false },
+  },
+  'AnkerMake': {
+    US: { store: true, amazon: true },
+    CA: { store: true, amazon: true },
+    UK: { store: true, amazon: true },
+    EU: { store: true, amazon: true },
+    AU: { store: true, amazon: true },
+    JP: { store: true, amazon: true },
+  },
+  'Markforged': {
+    US: { store: true, amazon: false },
+    CA: { store: true, amazon: false },
+    UK: { store: true, amazon: false },
+    EU: { store: true, amazon: false },
+    AU: { store: false, amazon: false },
+    JP: { store: false, amazon: false },
+  },
+  'LDO Motors': {
+    US: { store: false, amazon: false },
+    CA: { store: false, amazon: false },
+    UK: { store: false, amazon: false },
+    EU: { store: false, amazon: false },
+    AU: { store: false, amazon: false },
+    JP: { store: false, amazon: false },
+  },
+};
+
+type RegionCode = 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP';
+
+function getBrandAvailability(brand: string, region: RegionCode): RegionalAvailability | null {
+  const brandData = BRAND_REGIONAL_AVAILABILITY[brand];
+  if (!brandData) return null;
+  return brandData[region] || null;
+}
+
 interface RegionalStore {
-  region: string;
+  region: RegionCode;
   currency: string;
-  urlField: string;
-  priceField: string;
+  storeUrlField: string;
   amazonUrlField: string;
+  storePriceField: string;
   amazonPriceField: string;
   firecrawlCountry: string;
 }
 
 const REGIONAL_CONFIG: RegionalStore[] = [
-  { region: 'US', currency: 'USD', urlField: 'official_store_url', priceField: 'current_price_usd_store', amazonUrlField: 'amazon_url_us', amazonPriceField: 'current_price_usd_amazon', firecrawlCountry: 'US' },
-  { region: 'CA', currency: 'CAD', urlField: 'official_store_url_ca', priceField: 'current_price_cad_store', amazonUrlField: 'amazon_url_ca', amazonPriceField: 'current_price_cad_amazon', firecrawlCountry: 'CA' },
-  { region: 'UK', currency: 'GBP', urlField: 'official_store_url_uk', priceField: 'current_price_gbp_store', amazonUrlField: 'amazon_url_uk', amazonPriceField: 'current_price_gbp_amazon', firecrawlCountry: 'GB' },
-  { region: 'EU', currency: 'EUR', urlField: 'official_store_url_eu', priceField: 'current_price_eur_store', amazonUrlField: 'amazon_url_de', amazonPriceField: 'current_price_eur_amazon', firecrawlCountry: 'DE' },
-  { region: 'AU', currency: 'AUD', urlField: 'official_store_url_au', priceField: 'current_price_aud_store', amazonUrlField: 'amazon_url_au', amazonPriceField: 'current_price_aud_amazon', firecrawlCountry: 'AU' },
-  { region: 'JP', currency: 'JPY', urlField: 'official_store_url_jp', priceField: 'current_price_jpy_store', amazonUrlField: 'amazon_url_jp', amazonPriceField: 'current_price_jpy_amazon', firecrawlCountry: 'JP' },
+  { region: 'US', currency: 'USD', storeUrlField: 'official_store_url', amazonUrlField: 'amazon_url_us', storePriceField: 'current_price_usd_store', amazonPriceField: 'current_price_usd_amazon', firecrawlCountry: 'us' },
+  { region: 'CA', currency: 'CAD', storeUrlField: 'official_store_url_ca', amazonUrlField: 'amazon_url_ca', storePriceField: 'current_price_cad_store', amazonPriceField: 'current_price_cad_amazon', firecrawlCountry: 'ca' },
+  { region: 'UK', currency: 'GBP', storeUrlField: 'official_store_url_uk', amazonUrlField: 'amazon_url_uk', storePriceField: 'current_price_gbp_store', amazonPriceField: 'current_price_gbp_amazon', firecrawlCountry: 'gb' },
+  { region: 'EU', currency: 'EUR', storeUrlField: 'official_store_url_eu', amazonUrlField: 'amazon_url_de', storePriceField: 'current_price_eur_store', amazonPriceField: 'current_price_eur_amazon', firecrawlCountry: 'de' },
+  { region: 'AU', currency: 'AUD', storeUrlField: 'official_store_url_au', amazonUrlField: 'amazon_url_au', storePriceField: 'current_price_aud_store', amazonPriceField: 'current_price_aud_amazon', firecrawlCountry: 'au' },
+  { region: 'JP', currency: 'JPY', storeUrlField: 'official_store_url_jp', amazonUrlField: 'amazon_url_jp', storePriceField: 'current_price_jpy_store', amazonPriceField: 'current_price_jpy_amazon', firecrawlCountry: 'jp' },
 ];
 
 function isValidPrinterPrice(price: number | null | undefined): boolean {
   if (price === null || price === undefined || isNaN(price)) return false;
-  if (price < 50) return false; // Most printers cost more than $50
-  if (price > 100000) return false; // Sanity check for very high prices
+  if (price < 50) return false;
+  if (price > 100000) return false;
   return true;
 }
 
 function extractPriceFromMarkdown(markdown: string, currency: string): number | null {
-  // Currency-specific patterns
   const currencySymbols: Record<string, string> = {
     'USD': '\\$',
     'CAD': '(?:C\\$|CAD\\s*\\$?|\\$)',
@@ -45,7 +198,6 @@ function extractPriceFromMarkdown(markdown: string, currency: string): number | 
 
   const symbol = currencySymbols[currency] || '\\$';
   
-  // Try to find prices with the currency symbol
   const pricePatterns = [
     new RegExp(`${symbol}\\s*([\\d,]+(?:\\.\\d{2})?)`, 'gi'),
     new RegExp(`([\\d,]+(?:\\.\\d{2})?)\\s*${symbol}`, 'gi'),
@@ -67,22 +219,20 @@ function extractPriceFromMarkdown(markdown: string, currency: string): number | 
 
   if (prices.length === 0) return null;
 
-  // For JPY, prices are typically higher (no decimal places)
   if (currency === 'JPY') {
     const jpy = prices.find(p => p > 10000);
     return jpy || prices[0];
   }
 
-  // Return the most common reasonable price (likely the main product price)
   prices.sort((a, b) => a - b);
-  return prices[0]; // Return the lowest valid price (likely current/sale price)
+  return prices[0];
 }
 
 async function scrapePrice(url: string, region: RegionalStore, firecrawlApiKey: string): Promise<number | null> {
   if (!url || !url.startsWith('http')) return null;
 
   try {
-    console.log(`  Scraping ${region.region} store: ${url}`);
+    console.log(`  [${region.region}] Scraping: ${url}`);
     
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
@@ -100,25 +250,25 @@ async function scrapePrice(url: string, region: RegionalStore, firecrawlApiKey: 
     });
 
     if (!response.ok) {
-      console.warn(`  Firecrawl error for ${url}: ${response.status}`);
+      console.warn(`  [${region.region}] Firecrawl error: ${response.status}`);
       return null;
     }
 
     const data = await response.json();
     if (!data.success || !data.data?.markdown) {
-      console.warn(`  No markdown content from ${url}`);
+      console.warn(`  [${region.region}] No markdown content`);
       return null;
     }
 
     const price = extractPriceFromMarkdown(data.data.markdown, region.currency);
     if (price) {
-      console.log(`  ✓ Found ${region.currency} ${price} at ${url}`);
+      console.log(`  [${region.region}] ✓ Found ${region.currency} ${price}`);
     } else {
-      console.log(`  ✗ No valid price found at ${url}`);
+      console.log(`  [${region.region}] ✗ No valid price found`);
     }
     return price;
   } catch (error) {
-    console.error(`  Error scraping ${url}:`, error);
+    console.error(`  [${region.region}] Error:`, error);
     return null;
   }
 }
@@ -135,8 +285,16 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { brand, regions, limit = 5 } = await req.json();
+    const { brand, regions, limit = 5, getBrandAvailabilityOnly = false } = await req.json();
     
+    // If just requesting brand availability data
+    if (getBrandAvailabilityOnly) {
+      return new Response(JSON.stringify({
+        success: true,
+        brand_availability: BRAND_REGIONAL_AVAILABILITY,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const selectedRegions = regions && regions.length > 0 
       ? REGIONAL_CONFIG.filter(r => regions.includes(r.region))
       : REGIONAL_CONFIG;
@@ -164,15 +322,19 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: true,
         message: 'No printers to update',
+        updated: 0,
+        failed: 0,
+        skipped: 0,
         results: [],
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     console.log(`Processing ${printers.length} printers...`);
 
-    const results = [];
+    const results: any[] = [];
     let totalUpdated = 0;
     let totalFailed = 0;
+    let totalSkipped = 0;
 
     for (const printer of printers) {
       const brandName = (printer.printer_brands as any)?.brand || 'Unknown';
@@ -183,39 +345,58 @@ serve(async (req) => {
         model_name: printer.model_name,
         brand: brandName,
         prices: {},
+        skipped_regions: [],
+        success: false,
       };
 
-      const updateData: any = {
+      const updateData: Record<string, any> = {
         prices_last_updated_at: new Date().toISOString(),
       };
 
       let pricesFound = 0;
 
       for (const region of selectedRegions) {
-        // Get URLs for this region
-        const storeUrl = (printer as any)[region.urlField] || (region.region === 'US' ? printer.official_store_url : null);
-        const amazonUrl = (printer as any)[region.amazonUrlField];
-
-        // Scrape store price
-        if (storeUrl) {
-          const storePrice = await scrapePrice(storeUrl, region, firecrawlApiKey);
-          if (storePrice) {
-            updateData[region.priceField] = storePrice;
-            printerResult.prices[`${region.region}_store`] = { price: storePrice, currency: region.currency };
-            pricesFound++;
-          }
-          await new Promise(resolve => setTimeout(resolve, 500)); // Rate limiting
+        // Check brand availability for this region
+        const availability = getBrandAvailability(brandName, region.region);
+        
+        if (!availability) {
+          console.log(`  [${region.region}] Unknown brand "${brandName}" - skipping`);
+          printerResult.skipped_regions.push({ region: region.region, reason: 'unknown_brand' });
+          continue;
         }
 
-        // Scrape Amazon price
-        if (amazonUrl) {
-          const amazonPrice = await scrapePrice(amazonUrl, region, firecrawlApiKey);
-          if (amazonPrice) {
-            updateData[region.amazonPriceField] = amazonPrice;
-            printerResult.prices[`${region.region}_amazon`] = { price: amazonPrice, currency: region.currency };
-            pricesFound++;
+        // Scrape store price if brand has store in this region
+        if (availability.store) {
+          const storeUrl = (printer as any)[region.storeUrlField] || (region.region === 'US' ? printer.official_store_url : null);
+          if (storeUrl && storeUrl.startsWith('http')) {
+            const storePrice = await scrapePrice(storeUrl, region, firecrawlApiKey);
+            if (storePrice) {
+              updateData[region.storePriceField] = storePrice;
+              printerResult.prices[`${region.region}_store`] = { price: storePrice, currency: region.currency };
+              pricesFound++;
+            }
+            await new Promise(resolve => setTimeout(resolve, 500));
           }
-          await new Promise(resolve => setTimeout(resolve, 500)); // Rate limiting
+        } else {
+          console.log(`  [${region.region}] No store for ${brandName} - skipping store`);
+          printerResult.skipped_regions.push({ region: region.region, source: 'store', reason: 'not_available' });
+        }
+
+        // Scrape Amazon price if brand sells on Amazon in this region
+        if (availability.amazon) {
+          const amazonUrl = (printer as any)[region.amazonUrlField];
+          if (amazonUrl && amazonUrl.startsWith('http')) {
+            const amazonPrice = await scrapePrice(amazonUrl, region, firecrawlApiKey);
+            if (amazonPrice) {
+              updateData[region.amazonPriceField] = amazonPrice;
+              printerResult.prices[`${region.region}_amazon`] = { price: amazonPrice, currency: region.currency };
+              pricesFound++;
+            }
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        } else {
+          console.log(`  [${region.region}] No Amazon for ${brandName} - skipping amazon`);
+          printerResult.skipped_regions.push({ region: region.region, source: 'amazon', reason: 'not_available' });
         }
       }
 
@@ -239,8 +420,8 @@ serve(async (req) => {
         }
       } else {
         printerResult.success = false;
-        printerResult.error = 'No prices found';
-        totalFailed++;
+        printerResult.error = 'No prices found (regions not available or no URLs)';
+        totalSkipped++;
       }
 
       results.push(printerResult);
@@ -250,13 +431,16 @@ serve(async (req) => {
     console.log(`Total processed: ${printers.length}`);
     console.log(`Successfully updated: ${totalUpdated}`);
     console.log(`Failed: ${totalFailed}`);
+    console.log(`Skipped: ${totalSkipped}`);
 
     return new Response(JSON.stringify({
       success: true,
       total_processed: printers.length,
       updated: totalUpdated,
       failed: totalFailed,
+      skipped: totalSkipped,
       results,
+      brand_availability: BRAND_REGIONAL_AVAILABILITY,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
@@ -264,6 +448,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
+      updated: 0,
+      failed: 0,
+      skipped: 0,
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
