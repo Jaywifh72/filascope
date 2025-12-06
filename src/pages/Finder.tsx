@@ -607,10 +607,18 @@ const Finder = () => {
   });
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left Sidebar */}
-      <aside className="w-72 border-r border-border bg-card/50 backdrop-blur-sm p-6 space-y-6 sticky top-0 h-screen overflow-y-auto shrink-0">
-        <div>
+    <div className="min-h-screen">
+      {/* Full-width Printer Selector at Top */}
+      <div className="p-4 lg:p-6 border-b border-border bg-card/30">
+        <div className="max-w-[1800px] mx-auto">
+          <PrinterSelector />
+        </div>
+      </div>
+
+      <div className="flex">
+        {/* Left Sidebar */}
+        <aside className="w-72 border-r border-border bg-card/50 backdrop-blur-sm p-6 space-y-6 sticky top-0 h-screen overflow-y-auto shrink-0">
+          <div>
           <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
             <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-semibold text-foreground hover:text-primary transition-colors mb-4">
               <span>Filters</span>
@@ -793,11 +801,6 @@ const Finder = () => {
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">🇺🇸 United States</span>
           </div>
-        </div>
-
-        {/* Your Printer Selector */}
-        <div className="mb-6">
-          <PrinterSelector />
         </div>
 
         {/* Search Bar and Sort */}
@@ -1245,6 +1248,7 @@ const Finder = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
