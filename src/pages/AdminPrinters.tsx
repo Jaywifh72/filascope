@@ -58,6 +58,7 @@ export default function AdminPrinters() {
     ai_response?: string;
   }>>([]);
   const [priceFetchBrand, setPriceFetchBrand] = useState<string>("all");
+  const [aiSearchBrand, setAiSearchBrand] = useState<string>("all");
 
   // Query ALL printers and count pricing status in memory for accuracy
   const { data: allPrinters, refetch: refetchAllPrinters } = useQuery({
@@ -650,7 +651,7 @@ export default function AdminPrinters() {
 
       // Call the ai-search-msrp edge function
       const { data, error } = await supabase.functions.invoke('ai-search-msrp', {
-        body: {},
+        body: { brand: aiSearchBrand === "all" ? undefined : aiSearchBrand },
       });
 
       if (error) throw error;
@@ -1215,6 +1216,23 @@ export default function AdminPrinters() {
                   </Card>
                 )}
 
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">AI Search - Filter by Brand</label>
+                  <Select value={aiSearchBrand} onValueChange={setAiSearchBrand}>
+                    <SelectTrigger className="w-full md:w-[280px]">
+                      <SelectValue placeholder="All Brands" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Brands</SelectItem>
+                      {brands?.map((b) => (
+                        <SelectItem key={b.brand} value={b.brand}>
+                          {b.brand}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <Button
                   onClick={handleAiSearchMsrp}
                   disabled={aiSearching || fetchingPrices}
@@ -1230,7 +1248,7 @@ export default function AdminPrinters() {
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4" />
-                      AI Search MSRP
+                      AI Search MSRP {aiSearchBrand !== "all" && `(${aiSearchBrand})`}
                     </>
                   )}
                 </Button>

@@ -126,9 +126,9 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { printerIds } = await req.json();
+    const { printerIds, brand } = await req.json();
     
-    console.log(`Starting AI price search with priority: store → amazon (no prices) → amazon (missing)`);
+    console.log(`Starting AI price search with priority: store → amazon (no prices) → amazon (missing)${brand ? ` for brand: ${brand}` : ''}`);
 
     const results = [];
     let successful = 0;
@@ -137,7 +137,7 @@ serve(async (req) => {
     // PRIORITY 1 & 2: Printers with NO prices at all - try store first, then Amazon
     let noPriceQuery = supabase
       .from('printers')
-      .select('id, printer_id, brand_id, model_name, official_product_url, official_store_url, current_price_usd_store, current_price_usd_amazon, msrp_usd, printer_brands(brand)')
+      .select('id, printer_id, brand_id, model_name, official_product_url, official_store_url, current_price_usd_store, current_price_usd_amazon, msrp_usd, printer_brands!inner(brand)')
       .is('current_price_usd_store', null)
       .is('current_price_usd_amazon', null)
       .is('msrp_usd', null)
@@ -145,6 +145,10 @@ serve(async (req) => {
 
     if (printerIds && printerIds.length > 0) {
       noPriceQuery = noPriceQuery.in('id', printerIds);
+    }
+    
+    if (brand) {
+      noPriceQuery = noPriceQuery.eq('printer_brands.brand', brand);
     }
 
     const { data: noPricePrinters, error: noPriceError } = await noPriceQuery;
@@ -233,12 +237,16 @@ serve(async (req) => {
     // PRIORITY 3: Printers missing Amazon price (but may have other prices)
     let noAmazonQuery = supabase
       .from('printers')
-      .select('id, printer_id, brand_id, model_name, official_product_url, official_store_url, current_price_usd_amazon, printer_brands(brand)')
+      .select('id, printer_id, brand_id, model_name, official_product_url, official_store_url, current_price_usd_amazon, printer_brands!inner(brand)')
       .is('current_price_usd_amazon', null)
       .limit(3); // Process 3 more for priority 3
 
     if (printerIds && printerIds.length > 0) {
       noAmazonQuery = noAmazonQuery.in('id', printerIds);
+    }
+    
+    if (brand) {
+      noAmazonQuery = noAmazonQuery.eq('printer_brands.brand', brand);
     }
 
     const { data: noAmazonPrinters, error: noAmazonError } = await noAmazonQuery;
