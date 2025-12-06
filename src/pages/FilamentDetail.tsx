@@ -462,7 +462,7 @@ const FilamentDetail = () => {
                     {filament.is_nozzle_abrasive && (
                       <Badge variant="destructive" className="text-sm px-3 py-1.5 animate-pulse">⚠️ Abrasive</Badge>
                     )}
-                    {filament.net_weight_g && (
+                    {filament.net_weight_g && filament.net_weight_g > 0 && (
                       <Badge variant="outline" className="text-sm px-3 py-1.5">
                         <Package className="w-3 h-3 mr-1" />
                         {filament.net_weight_g}g
