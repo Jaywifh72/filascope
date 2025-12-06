@@ -101,27 +101,55 @@ export function usePrinterSelection() {
 
       if (error) throw error;
 
-      // Filter hotends based on compatibility
-      const filtered = (data || []).filter((hotend) => {
-        // Check compatible_printer_brands array
-        if (hotend.compatible_printer_brands?.includes(printerBrand)) {
-          return true;
-        }
+      // Helper function to check if a model string matches the printer
+      const modelMatches = (modelStr: string): boolean => {
+        if (!modelStr) return false;
+        const modelLower = modelStr.toLowerCase().trim();
+        const printerModelLower = printerModel.toLowerCase();
+        
+        // Check for exact or partial match
+        return printerModelLower.includes(modelLower) || 
+               modelLower.includes(printerModelLower) ||
+               // Check for series matches like "X1" matching "X1 Carbon"
+               printerModelLower.split(/[\s-]+/).some(part => 
+                 part.length >= 2 && modelLower.includes(part)
+               );
+      };
 
-        // Check specs.compatible_models if available
+      // Filter hotends based on model-level compatibility
+      const filtered = (data || []).filter((hotend) => {
         const specs = hotend.specs as Record<string, unknown> | null;
+        
+        // Priority 1: Check specs.compatible_models (array or comma-separated string)
         if (specs?.compatible_models) {
-          const compatibleModels = specs.compatible_models as string[];
-          if (Array.isArray(compatibleModels)) {
-            return compatibleModels.some((model) =>
-              printerModel.toLowerCase().includes(model.toLowerCase()) ||
-              model.toLowerCase().includes(printerModel.toLowerCase())
-            );
+          const models = specs.compatible_models;
+          if (Array.isArray(models)) {
+            if (models.some(m => modelMatches(String(m)))) return true;
+          } else if (typeof models === 'string') {
+            const modelList = models.split(',').map(m => m.trim());
+            if (modelList.some(m => modelMatches(m))) return true;
           }
         }
 
-        // Check if brand matches the hotend brand
+        // Priority 2: Check specs.compatible_printers (string with model names)
+        if (specs?.compatible_printers) {
+          const printers = String(specs.compatible_printers);
+          const printerList = printers.split(',').map(p => p.trim());
+          if (printerList.some(p => modelMatches(p))) return true;
+        }
+
+        // Priority 3: Check if hotend brand matches printer brand AND no specific model restrictions
         if (hotend.brand === printerBrand) {
+          // Only include if there are no model restrictions, or we matched above
+          const hasModelRestrictions = specs?.compatible_models || specs?.compatible_printers;
+          if (!hasModelRestrictions) {
+            // Generic brand-level compatibility (no specific models defined)
+            return true;
+          }
+        }
+
+        // Priority 4: Check compatible_printer_brands with "Universal" support
+        if (hotend.compatible_printer_brands?.includes("Universal")) {
           return true;
         }
 
