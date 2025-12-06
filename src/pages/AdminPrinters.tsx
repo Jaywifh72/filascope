@@ -57,6 +57,7 @@ export default function AdminPrinters() {
     error?: string;
     ai_response?: string;
   }>>([]);
+  const [priceFetchBrand, setPriceFetchBrand] = useState<string>("all");
 
   // Query ALL printers and count pricing status in memory for accuracy
   const { data: allPrinters, refetch: refetchAllPrinters } = useQuery({
@@ -594,7 +595,7 @@ export default function AdminPrinters() {
 
       // Call the fetch-printer-prices edge function
       const { data, error } = await supabase.functions.invoke('fetch-printer-prices', {
-        body: {},
+        body: { brand: priceFetchBrand === "all" ? undefined : priceFetchBrand },
       });
 
       if (error) throw error;
@@ -1051,13 +1052,30 @@ export default function AdminPrinters() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Automatically scrape current prices from official product pages for printers without price data. This will update MSRP and store prices where available.
                   </p>
                   <p className="text-xs text-muted-foreground italic">
                     <strong>AI Search Priority:</strong> 1) Store price for printers with no prices → 2) Amazon price if store fails → 3) Amazon price for printers missing Amazon data.
                   </p>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Filter by Brand</label>
+                    <Select value={priceFetchBrand} onValueChange={setPriceFetchBrand}>
+                      <SelectTrigger className="w-full md:w-[280px]">
+                        <SelectValue placeholder="All Brands" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Brands</SelectItem>
+                        {brands?.map((b) => (
+                          <SelectItem key={b.brand} value={b.brand}>
+                            {b.brand}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {priceProgressData && priceProgressData.total > 0 && (
