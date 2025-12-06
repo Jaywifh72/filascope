@@ -98,37 +98,30 @@ Deno.serve(async (req) => {
         const html = scrapeResult.html || '';
         
         // Extract product image from MatterHackers page
-        // Look for the main product image in various patterns
+        // MatterHackers uses Google CDN (lh3.googleusercontent.com) for product images
         let imageUrl: string | null = null;
 
-        // Pattern 1: og:image meta tag (usually highest quality)
-        const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
-        if (ogImageMatch) {
-          imageUrl = ogImageMatch[1];
+        // Pattern 1: Google CDN images (lh3.googleusercontent.com) - main product images
+        const googleCdnMatch = html.match(/["'](https:\/\/lh3\.googleusercontent\.com\/[^"'\s]+)["']/i);
+        if (googleCdnMatch) {
+          imageUrl = googleCdnMatch[1];
+          // Clean up any HTML entities
+          imageUrl = imageUrl.replace(/&amp;/g, '&');
         }
 
-        // Pattern 2: Main product image in the product gallery
+        // Pattern 2: og:image meta tag as fallback
         if (!imageUrl) {
-          const mainImageMatch = html.match(/class=["'][^"']*product-image[^"']*["'][^>]*src=["']([^"']+)["']/i);
-          if (mainImageMatch) {
-            imageUrl = mainImageMatch[1];
+          const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+          if (ogImageMatch) {
+            imageUrl = ogImageMatch[1];
           }
         }
 
-        // Pattern 3: data-zoom-image or data-large
+        // Pattern 3: data-src with Google CDN
         if (!imageUrl) {
-          const zoomImageMatch = html.match(/data-zoom-image=["']([^"']+)["']/i) || 
-                                  html.match(/data-large=["']([^"']+)["']/i);
-          if (zoomImageMatch) {
-            imageUrl = zoomImageMatch[1];
-          }
-        }
-
-        // Pattern 4: Any large product image
-        if (!imageUrl) {
-          const imgMatch = html.match(/<img[^>]*src=["'](https:\/\/[^"']*matterhackers[^"']*(?:product|filament)[^"']*\.(?:jpg|jpeg|png|webp))["']/i);
-          if (imgMatch) {
-            imageUrl = imgMatch[1];
+          const dataSrcMatch = html.match(/data-src=["'](https:\/\/lh3\.googleusercontent\.com\/[^"'\s]+)["']/i);
+          if (dataSrcMatch) {
+            imageUrl = dataSrcMatch[1].replace(/&amp;/g, '&');
           }
         }
 
