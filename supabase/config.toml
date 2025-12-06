@@ -56,3 +56,6 @@ verify_jwt = true
 
 [functions.scrape-colorfabb-images]
 verify_jwt = true
+
+[functions.scrape-matterhackers-images]
+verify_jwt = true
