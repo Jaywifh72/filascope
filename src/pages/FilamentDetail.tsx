@@ -301,10 +301,24 @@ const FilamentDetail = () => {
   };
 
   const handleRescrapeImage = async () => {
-    if (!id) return;
+    if (!id || !filament) return;
+    
+    if (!filament.product_url) {
+      toast({
+        title: "No product URL",
+        description: "This filament has no product URL to scrape from.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setRescrapingImage(true);
     try {
+      toast({
+        title: "Scraping image...",
+        description: `Fetching image from: ${filament.product_url}`,
+      });
+
       const { data, error } = await supabase.functions.invoke('scrape-images', {
         body: { 
           filamentIds: [id],
@@ -316,7 +330,7 @@ const FilamentDetail = () => {
 
       toast({
         title: "Image rescrape completed",
-        description: data.message || "Image rescraped successfully. Check edge function logs for details.",
+        description: data.message || "Image rescraped from product URL successfully.",
         duration: 5000,
       });
 
@@ -325,7 +339,7 @@ const FilamentDetail = () => {
     } catch (error: any) {
       toast({
         title: "Rescrape failed",
-        description: error.message || "Failed to rescrape image. Check edge function logs for details.",
+        description: error.message || "Failed to rescrape image from product URL.",
         variant: "destructive",
         duration: 5000,
       });
@@ -388,14 +402,14 @@ const FilamentDetail = () => {
                     <Package className="w-16 h-16 text-muted-foreground/30" />
                   )}
                 </div>
-                {isAdmin && (
+                {isAdmin && filament.product_url && (
                   <Button
                     size="sm"
                     variant="secondary"
                     onClick={handleRescrapeImage}
                     disabled={rescrapingImage}
                     className="absolute bottom-2 right-2 gap-2"
-                    title="Rescrape product image with detailed logging"
+                    title={`Rescrape image from: ${filament.product_url}`}
                   >
                     <RefreshCw className={`w-4 h-4 ${rescrapingImage ? 'animate-spin' : ''}`} />
                     {rescrapingImage ? 'Scraping...' : 'Rescrape Image'}
