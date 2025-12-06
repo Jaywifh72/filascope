@@ -19,6 +19,7 @@ import {
   checkBuildPlatePrinterCompatibility, 
   checkAmsPrinterCompatibility 
 } from "@/lib/accessoryCompatibility";
+import { AccessoryCompatibilityBadge } from "@/components/AccessoryCompatibilityBadge";
 import {
   ArrowLeft,
   Box,
@@ -914,8 +915,9 @@ const PrinterDetail = () => {
                             .filter(a => a.accessory_type === 'nozzle')
                             .map((acc) => {
                               const specs = acc.specs as any;
+                              const compatibility = checkHotendPrinterCompatibility(acc, printer);
                               return (
-                              <Card key={acc.id} className="hover:shadow-lg transition-shadow overflow-hidden flex flex-col h-[340px]">
+                              <Card key={acc.id} className="hover:shadow-lg transition-shadow overflow-hidden flex flex-col h-[360px]">
                                 <CardContent className="p-0 flex flex-col h-full">
                                   {/* Header with brand badge */}
                                   <div className="relative h-28 flex-shrink-0">
@@ -945,7 +947,10 @@ const PrinterDetail = () => {
                                   
                                   {/* Content */}
                                   <div className="p-3 flex flex-col flex-1">
-                                    <h5 className="font-semibold text-sm line-clamp-2 mb-2">{acc.name}</h5>
+                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                      <h5 className="font-semibold text-sm line-clamp-2">{acc.name}</h5>
+                                      <AccessoryCompatibilityBadge compatibility={compatibility} compact />
+                                    </div>
                                     <div className="space-y-1 text-xs flex-1">
                                       {specs?.diameter_mm && (
                                         <div className="flex justify-between">
@@ -1002,10 +1007,14 @@ const PrinterDetail = () => {
                             .filter(a => a.accessory_type === 'build_plate')
                             .map((acc) => {
                               const specs = acc.specs as any;
+                              const compatibility = checkBuildPlatePrinterCompatibility(acc, printer);
                               return (
                               <Card key={acc.id} className="hover:shadow-lg transition-shadow">
                                 <CardContent className="p-4 space-y-2">
-                                  <h5 className="font-semibold text-sm capitalize">{acc.name}</h5>
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h5 className="font-semibold text-sm capitalize">{acc.name}</h5>
+                                    <AccessoryCompatibilityBadge compatibility={compatibility} compact />
+                                  </div>
                                   <div className="space-y-1 text-xs">
                                     {specs?.surface && (
                                       <div className="flex justify-between">
@@ -1075,10 +1084,14 @@ const PrinterDetail = () => {
                             .filter(a => a.accessory_type === 'ams_mmu')
                             .map((acc) => {
                               const specs = (acc.specs || {}) as any;
+                              const compatibility = checkAmsPrinterCompatibility(acc, printer);
                               return (
                               <Card key={acc.id} className="hover:shadow-lg transition-shadow">
                                 <CardContent className="p-4 space-y-3">
-                                  <h5 className="font-semibold capitalize">{acc.name || 'Unknown'}</h5>
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h5 className="font-semibold capitalize">{acc.name || 'Unknown'}</h5>
+                                    <AccessoryCompatibilityBadge compatibility={compatibility} compact />
+                                  </div>
                                   <div className="space-y-2 text-sm">
                                     {specs.spool_capacity != null && (
                                       <div className="flex justify-between">
