@@ -266,12 +266,12 @@ Deno.serve(async (req) => {
     if (filament_ids && filament_ids.length > 0) {
       query = query.in('id', filament_ids);
     } else {
-      // Fetch filaments in smaller batches to avoid timeout
-      // Process 20 at a time, prioritizing those missing weight data
+      // Fetch filaments in batches to avoid timeout
+      // Process 50 at a time, prioritizing those missing weight data
       query = query
         .or('net_weight_g.is.null,net_weight_g.eq.0')
         .not('product_url', 'is', null)
-        .limit(20);
+        .limit(50);
     }
 
     const { data: filaments, error: fetchError } = await query;
