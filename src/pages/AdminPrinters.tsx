@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles, Cpu } from "lucide-react";
+import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles, Cpu, Globe } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -59,6 +59,13 @@ export default function AdminPrinters() {
   }>>([]);
   const [priceFetchBrand, setPriceFetchBrand] = useState<string>("all");
   const [aiSearchBrand, setAiSearchBrand] = useState<string>("all");
+  
+  // Global price update state
+  const [globalPriceUpdating, setGlobalPriceUpdating] = useState(false);
+  const [globalPriceBrand, setGlobalPriceBrand] = useState<string>("all");
+  const [globalPriceRegions, setGlobalPriceRegions] = useState<string[]>(["US"]);
+  const [globalPriceLimit, setGlobalPriceLimit] = useState<number>(5);
+  const [globalPriceResults, setGlobalPriceResults] = useState<any>(null);
 
   // Query ALL printers and count pricing status in memory for accuracy
   const { data: allPrinters, refetch: refetchAllPrinters } = useQuery({
@@ -697,6 +704,54 @@ export default function AdminPrinters() {
     }
   };
 
+  const handleGlobalPriceUpdate = async () => {
+    try {
+      setGlobalPriceUpdating(true);
+      setGlobalPriceResults(null);
+
+      toast({
+        title: "Updating global prices",
+        description: `Scraping prices for ${globalPriceBrand === "all" ? "all brands" : globalPriceBrand} in regions: ${globalPriceRegions.join(", ")}`,
+      });
+
+      const { data, error } = await supabase.functions.invoke('update-global-prices', {
+        body: {
+          brand: globalPriceBrand === "all" ? undefined : globalPriceBrand,
+          regions: globalPriceRegions,
+          limit: globalPriceLimit,
+        },
+      });
+
+      if (error) throw error;
+
+      setGlobalPriceResults(data);
+
+      if (data.updated > 0) {
+        toast({
+          title: "Global prices updated",
+          description: `Updated ${data.updated} printers with regional prices. ${data.failed} failed.`,
+        });
+        await queryClient.invalidateQueries({ queryKey: ["all-printers-for-count"] });
+        await refetchAllPrinters();
+      } else {
+        toast({
+          title: "No prices found",
+          description: "Could not find any prices from the specified regions.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Global price update error:", error);
+      toast({
+        title: "Price update failed",
+        description: error.message || "An error occurred during price update",
+        variant: "destructive",
+      });
+    } finally {
+      setGlobalPriceUpdating(false);
+    }
+  };
+
   const handleMassRescrape = async () => {
     try {
       setMassRescraping(true);
@@ -1269,6 +1324,149 @@ export default function AdminPrinters() {
                     <>
                       <DollarSign className="h-4 w-4" />
                       Scrape Prices from Product Pages
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Separator />
+
+            {/* Global Price Update Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Global Price Update
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Scrape current prices from brand stores and Amazon across multiple regions. Prices are stored per region and displayed dynamically based on user location.
+                  </p>
+                  <p className="text-xs text-muted-foreground italic">
+                    Supported regions: US, Canada, UK, EU (Germany), Australia, Japan
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Filter by Brand</label>
+                    <Select value={globalPriceBrand} onValueChange={setGlobalPriceBrand}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Brands" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Brands</SelectItem>
+                        {brands?.map((b) => (
+                          <SelectItem key={b.brand} value={b.brand}>
+                            {b.brand}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Printers per batch</label>
+                    <Select value={String(globalPriceLimit)} onValueChange={(v) => setGlobalPriceLimit(Number(v))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">3 printers</SelectItem>
+                        <SelectItem value="5">5 printers</SelectItem>
+                        <SelectItem value="10">10 printers</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Regions to scrape</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { id: "US", label: "🇺🇸 US (USD)" },
+                      { id: "CA", label: "🇨🇦 Canada (CAD)" },
+                      { id: "UK", label: "🇬🇧 UK (GBP)" },
+                      { id: "EU", label: "🇪🇺 EU (EUR)" },
+                      { id: "AU", label: "🇦🇺 Australia (AUD)" },
+                      { id: "JP", label: "🇯🇵 Japan (JPY)" },
+                    ].map((region) => (
+                      <Button
+                        key={region.id}
+                        variant={globalPriceRegions.includes(region.id) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          if (globalPriceRegions.includes(region.id)) {
+                            setGlobalPriceRegions(globalPriceRegions.filter(r => r !== region.id));
+                          } else {
+                            setGlobalPriceRegions([...globalPriceRegions, region.id]);
+                          }
+                        }}
+                      >
+                        {region.label}
+                      </Button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Select which regions to scrape prices from. Each region adds ~2s per printer.
+                  </p>
+                </div>
+
+                {globalPriceResults && (
+                  <Alert>
+                    <AlertDescription>
+                      <div className="space-y-2">
+                        <div className="font-semibold">Global Price Update Results:</div>
+                        <div className="text-sm">
+                          <span className="text-green-600">✓ {globalPriceResults.updated} updated</span>
+                          {globalPriceResults.failed > 0 && (
+                            <span className="text-destructive ml-3">✗ {globalPriceResults.failed} failed</span>
+                          )}
+                        </div>
+                        {globalPriceResults.results?.length > 0 && (
+                          <div className="mt-2 max-h-40 overflow-y-auto space-y-1">
+                            {globalPriceResults.results.map((r: any, i: number) => (
+                              <div key={i} className="text-xs flex items-center gap-2 p-1 rounded bg-muted/50">
+                                {r.success ? (
+                                  <CheckCircle className="h-3 w-3 text-green-600" />
+                                ) : (
+                                  <XCircle className="h-3 w-3 text-destructive" />
+                                )}
+                                <span className="font-medium">{r.brand} {r.model_name}</span>
+                                {r.prices && Object.entries(r.prices).length > 0 && (
+                                  <span className="text-muted-foreground">
+                                    {Object.entries(r.prices).map(([key, val]: [string, any]) => 
+                                      `${key}: ${val.currency} ${val.price}`
+                                    ).join(", ")}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <Button
+                  onClick={handleGlobalPriceUpdate}
+                  disabled={globalPriceUpdating || globalPriceRegions.length === 0}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  {globalPriceUpdating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Updating Global Prices...
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="h-4 w-4" />
+                      Update Global Prices {globalPriceBrand !== "all" && `(${globalPriceBrand})`}
                     </>
                   )}
                 </Button>
