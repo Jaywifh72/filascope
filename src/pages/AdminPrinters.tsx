@@ -734,8 +734,9 @@ export default function AdminPrinters() {
       setGlobalPriceResults(null);
 
       toast({
-        title: "Updating global prices",
-        description: `Scraping prices for ${globalPriceBrand === "all" ? "all brands" : globalPriceBrand} in regions: ${globalPriceRegions.join(", ")}`,
+        title: "Price update started",
+        description: `Scraping prices for ${globalPriceBrand === "all" ? "all brands" : globalPriceBrand}. This runs in the background and may take 2-3 minutes. Refresh the page to see results.`,
+        duration: 10000,
       });
 
       const { data, error } = await supabase.functions.invoke('update-global-prices', {
@@ -746,7 +747,18 @@ export default function AdminPrinters() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a timeout error (function still running in background)
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('timeout')) {
+          toast({
+            title: "Update running in background",
+            description: "The price update is still running. Refresh the page in 2-3 minutes to see updated prices.",
+            duration: 15000,
+          });
+          return;
+        }
+        throw error;
+      }
 
       setGlobalPriceResults(data);
 
@@ -766,11 +778,20 @@ export default function AdminPrinters() {
       }
     } catch (error: any) {
       console.error("Global price update error:", error);
-      toast({
-        title: "Price update failed",
-        description: error.message || "An error occurred during price update",
-        variant: "destructive",
-      });
+      // Handle timeout errors gracefully
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('timeout') || error.name === 'FunctionsFetchError') {
+        toast({
+          title: "Update running in background",
+          description: "The price update is still running. Refresh the page in 2-3 minutes to see updated prices.",
+          duration: 15000,
+        });
+      } else {
+        toast({
+          title: "Price update failed",
+          description: error.message || "An error occurred during price update",
+          variant: "destructive",
+        });
+      }
     } finally {
       setGlobalPriceUpdating(false);
     }
