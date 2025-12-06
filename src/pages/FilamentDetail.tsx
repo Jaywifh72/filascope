@@ -1498,7 +1498,7 @@ const FilamentDetail = () => {
                   )}
                   {filament.recommended_nozzle_type && (
                     <PropertyRow
-                      label="🎯 Recommended Nozzle"
+                      label="🎯 Recommended Nozzle / Hotend"
                       value={filament.recommended_nozzle_type}
                       highlight
                     />
@@ -1744,7 +1744,7 @@ const FilamentDetail = () => {
                     <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg">
                       <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
                         <Settings className="w-4 h-4 text-primary" />
-                        Recommended Nozzle
+                        Recommended Nozzle / Hotend
                       </h4>
                       <p className="text-foreground font-medium">{filament.recommended_nozzle_type}</p>
                     </div>
