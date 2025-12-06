@@ -8,10 +8,8 @@ export interface UrlValidationResult {
 
 // Brand-specific URL patterns that need region prefixes
 const BRAND_URL_FIXES: Record<string, { pattern: RegExp; fix: (url: string) => string }> = {
-  'Creality': {
-    pattern: /^https?:\/\/store\.creality\.com\/products\//,
-    fix: (url: string) => url.replace('store.creality.com/products/', 'store.creality.com/us/products/')
-  },
+  // Creality URLs work without region prefix - removing the old fix that added /us/
+  // The global store URL (store.creality.com/products/...) works correctly
   'Bambu Lab': {
     pattern: /^https?:\/\/store\.bambulab\.com\/products\//,
     fix: (url: string) => url.replace('store.bambulab.com/products/', 'us.store.bambulab.com/products/')
@@ -21,7 +19,6 @@ const BRAND_URL_FIXES: Record<string, { pattern: RegExp; fix: (url: string) => s
 // Known broken URL patterns
 const KNOWN_ISSUES: Array<{ pattern: RegExp; issue: string }> = [
   { pattern: /^https?:\/\/[^\/]+\/?$/, issue: 'URL points to homepage, not a product page' },
-  { pattern: /^https?:\/\/store\.creality\.com\/products\//, issue: 'Missing region prefix (e.g., /us/)' },
   { pattern: /404|not-found/i, issue: 'URL contains 404 or not-found' },
 ];
 
