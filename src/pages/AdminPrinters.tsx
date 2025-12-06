@@ -15,6 +15,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
+import { BRAND_REGIONAL_AVAILABILITY } from "@/lib/brandRegionalAvailability";
+
+function BrandAvailabilityDisplay({ brand }: { brand: string }) {
+  const availability = BRAND_REGIONAL_AVAILABILITY[brand];
+  if (!availability) return <div className="text-xs text-muted-foreground p-2 bg-muted rounded">No regional data for {brand}</div>;
+  const regions = [{ id: 'US', flag: '🇺🇸' }, { id: 'CA', flag: '🇨🇦' }, { id: 'UK', flag: '🇬🇧' }, { id: 'EU', flag: '🇪🇺' }, { id: 'AU', flag: '🇦🇺' }, { id: 'JP', flag: '🇯🇵' }] as const;
+  return (
+    <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+      <div className="text-xs font-medium">{brand} Regional Availability</div>
+      <div className="grid grid-cols-6 gap-2 text-xs">
+        {regions.map(r => {
+          const avail = availability[r.id];
+          return (
+            <div key={r.id} className="text-center space-y-1">
+              <div className="font-medium">{r.flag}</div>
+              <div className={avail.store ? "text-green-600" : "text-muted-foreground"}>{avail.store ? "✓" : "✗"} Store</div>
+              <div className={avail.amazon ? "text-green-600" : "text-muted-foreground"}>{avail.amazon ? "✓" : "✗"} Amazon</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 /**
  * Admin page for importing printer data from CSV
@@ -1343,10 +1367,7 @@ export default function AdminPrinters() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    Scrape current prices from brand stores and Amazon across multiple regions. Prices are stored per region and displayed dynamically based on user location.
-                  </p>
-                  <p className="text-xs text-muted-foreground italic">
-                    Supported regions: US, Canada, UK, EU (Germany), Australia, Japan
+                    Scrape current prices from brand stores and Amazon across multiple regions. Regions are automatically skipped when the brand doesn't operate there.
                   </p>
                 </div>
 
@@ -1411,19 +1432,27 @@ export default function AdminPrinters() {
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Select which regions to scrape prices from. Each region adds ~2s per printer.
+                    Unavailable regions for the selected brand will be automatically skipped.
                   </p>
                 </div>
+
+                {/* Brand Availability Table */}
+                {globalPriceBrand !== "all" && (
+                  <BrandAvailabilityDisplay brand={globalPriceBrand} />
+                )}
 
                 {globalPriceResults && (
                   <Alert>
                     <AlertDescription>
                       <div className="space-y-2">
                         <div className="font-semibold">Global Price Update Results:</div>
-                        <div className="text-sm">
+                        <div className="text-sm flex gap-4">
                           <span className="text-green-600">✓ {globalPriceResults.updated} updated</span>
                           {globalPriceResults.failed > 0 && (
-                            <span className="text-destructive ml-3">✗ {globalPriceResults.failed} failed</span>
+                            <span className="text-destructive">✗ {globalPriceResults.failed} failed</span>
+                          )}
+                          {globalPriceResults.skipped > 0 && (
+                            <span className="text-muted-foreground">⊘ {globalPriceResults.skipped} skipped</span>
                           )}
                         </div>
                         {globalPriceResults.results?.length > 0 && (
@@ -1431,9 +1460,9 @@ export default function AdminPrinters() {
                             {globalPriceResults.results.map((r: any, i: number) => (
                               <div key={i} className="text-xs flex items-center gap-2 p-1 rounded bg-muted/50">
                                 {r.success ? (
-                                  <CheckCircle className="h-3 w-3 text-green-600" />
+                                  <CheckCircle className="h-3 w-3 text-green-600 shrink-0" />
                                 ) : (
-                                  <XCircle className="h-3 w-3 text-destructive" />
+                                  <XCircle className="h-3 w-3 text-destructive shrink-0" />
                                 )}
                                 <span className="font-medium">{r.brand} {r.model_name}</span>
                                 {r.prices && Object.entries(r.prices).length > 0 && (
@@ -1441,6 +1470,11 @@ export default function AdminPrinters() {
                                     {Object.entries(r.prices).map(([key, val]: [string, any]) => 
                                       `${key}: ${val.currency} ${val.price}`
                                     ).join(", ")}
+                                  </span>
+                                )}
+                                {r.skipped_regions && r.skipped_regions.length > 0 && (
+                                  <span className="text-muted-foreground text-xs">
+                                    (skipped: {r.skipped_regions.map((s: any) => s.region).join(", ")})
                                   </span>
                                 )}
                               </div>
