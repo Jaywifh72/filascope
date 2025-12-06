@@ -34,9 +34,10 @@ const BrandDetail = () => {
     enabled: !!decodedBrand,
   });
 
-  const getPricePerKg = (price: number | null, weight: number | null) => {
-    if (!price || !weight) return null;
-    return ((price / weight) * 1000).toFixed(2);
+  // variant_price is already the per-kg price
+  const getPricePerKg = (price: number | null) => {
+    if (!price) return null;
+    return price.toFixed(2);
   };
 
   const getCompanyTypeLabel = (type: string | undefined) => {
@@ -277,9 +278,9 @@ const BrandDetail = () => {
                           <Badge variant="outline">{filament.color_family}</Badge>
                         )}
                       </div>
-                      {filament.variant_price && filament.net_weight_g && (
+                      {filament.variant_price && (
                         <div className="text-xl font-bold text-primary">
-                          ${getPricePerKg(filament.variant_price, filament.net_weight_g)}/kg
+                          ${getPricePerKg(filament.variant_price)}/kg
                         </div>
                       )}
                       {filament.net_weight_g && (
