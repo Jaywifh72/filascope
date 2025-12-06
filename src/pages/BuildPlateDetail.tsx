@@ -259,6 +259,7 @@ export default function BuildPlateDetail() {
                 href={getAffiliateUrl(buildPlate.product_url, buildPlate.brand) || buildPlate.product_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
+                className="block mt-4"
               >
                 <Button className="w-full gap-2">
                   <ExternalLink className="h-4 w-4" />
