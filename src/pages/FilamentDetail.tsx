@@ -15,6 +15,7 @@ import { LikeButton } from "@/components/LikeButton";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
+import { checkHotendFilamentCompatibility } from "@/lib/accessoryCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
@@ -26,65 +27,10 @@ interface HotendWithRating extends Accessory {
   ratingReason: string;
 }
 
-// Rate hotend compatibility with filament - based on material and specs
-// Green = Best choice, Orange = Acceptable, Red = Not recommended
+// Use unified accessory compatibility service
 const rateHotend = (hotend: Accessory, filament: Filament): { rating: "green" | "orange" | "red"; reason: string } => {
-  const specs = hotend.specs as Record<string, any> | null;
-  const maxTemp = specs?.max_temp_c || 0;
-  const material = (specs?.material || "").toLowerCase();
-  const diameter = specs?.diameter_mm || 0;
-  
-  // Use standardized abrasion_resistant flag from database
-  const isHardened = specs?.abrasion_resistant === true;
-  const isStainless = material.includes("stainless");
-  const isBrass = material.includes("brass") || material.includes("standard");
-  
-  // If no material indicators found, check if it's likely a standard hotend
-  const hasKnownMaterial = isHardened || isStainless || isBrass || material.length > 0;
-  
-  const requiredTemp = filament.nozzle_temp_sweetspot_c || filament.nozzle_temp_max_c || 0;
-  const isAbrasive = filament.is_nozzle_abrasive || false;
-  
-  // Temperature check - if can't handle temp, it's not recommended
-  if (maxTemp > 0 && requiredTemp > maxTemp) {
-    return { rating: "red", reason: `Max temp ${maxTemp}°C below required ${requiredTemp}°C` };
-  }
-
-  // Build reason with diameter info if available
-  const diameterInfo = diameter > 0 ? ` (${diameter}mm)` : "";
-
-  // For ABRASIVE filaments (CF, GF, etc.)
-  if (isAbrasive) {
-    if (isHardened) {
-      // Larger diameters are better for abrasive filaments
-      if (diameter >= 0.6) {
-        return { rating: "green", reason: `Hardened + larger nozzle${diameterInfo} - ideal for abrasive filament` };
-      }
-      return { rating: "green", reason: `Hardened material${diameterInfo} - best for abrasive filament` };
-    }
-    if (isStainless) {
-      return { rating: "orange", reason: `Stainless steel${diameterInfo} - acceptable, will wear over time` };
-    }
-    if (isBrass) {
-      return { rating: "red", reason: `Brass nozzle${diameterInfo} - will wear rapidly with abrasive filament` };
-    }
-    // Unknown material - assume not ideal for abrasives
-    if (!hasKnownMaterial) {
-      return { rating: "orange", reason: `Material unknown${diameterInfo} - verify hardened for abrasive use` };
-    }
-    return { rating: "orange", reason: `Check material specs${diameterInfo} - ensure suitable for abrasives` };
-  }
-
-  // For NON-ABRASIVE filaments - most hotends work well
-  if (isBrass) {
-    return { rating: "green", reason: `Brass${diameterInfo} - excellent thermal conductivity` };
-  }
-  if (isStainless || isHardened) {
-    return { rating: "green", reason: `Compatible${diameterInfo} - works great with this material` };
-  }
-  
-  // Default - temp is ok, material unknown but should work for non-abrasive
-  return { rating: "green", reason: `Compatible${diameterInfo}` };
+  const result = checkHotendFilamentCompatibility(hotend, filament);
+  return { rating: result.rating, reason: result.reason };
 };
 
 const FilamentDetail = () => {
