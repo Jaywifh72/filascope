@@ -116,7 +116,7 @@ export default function Printers() {
         return false;
       }
 
-      // Size filter based on build volume
+      // Size filter based on build volume (in liters)
       if (selectedSize !== "all") {
         const volume = (printer.build_volume_x_mm || 0) * 
                       (printer.build_volume_y_mm || 0) * 
@@ -124,16 +124,16 @@ export default function Printers() {
         
         switch (selectedSize) {
           case "small":
-            if (volume >= 10) return false; // Less than 10L
+            if (volume >= 0.02) return false; // Less than 20L (mini printers)
             break;
           case "medium":
-            if (volume < 10 || volume >= 30) return false; // 10-30L
+            if (volume < 0.02 || volume >= 0.04) return false; // 20-40L
             break;
           case "large":
-            if (volume < 30 || volume >= 60) return false; // 30-60L
+            if (volume < 0.04 || volume >= 0.07) return false; // 40-70L
             break;
           case "xlarge":
-            if (volume < 60) return false; // 60L+
+            if (volume < 0.07) return false; // 70L+
             break;
         }
       }
@@ -299,15 +299,15 @@ export default function Printers() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Size:</span>
                 <Select value={selectedSize} onValueChange={setSelectedSize}>
-                  <SelectTrigger className="w-[130px] h-8">
+                  <SelectTrigger className="w-[140px] h-8">
                     <SelectValue placeholder="All Sizes" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sizes</SelectItem>
-                    <SelectItem value="small">Small (&lt;10L)</SelectItem>
-                    <SelectItem value="medium">Medium (10-30L)</SelectItem>
-                    <SelectItem value="large">Large (30-60L)</SelectItem>
-                    <SelectItem value="xlarge">Extra Large (60L+)</SelectItem>
+                    <SelectItem value="small">Small (&lt;20L)</SelectItem>
+                    <SelectItem value="medium">Medium (20-40L)</SelectItem>
+                    <SelectItem value="large">Large (40-70L)</SelectItem>
+                    <SelectItem value="xlarge">Extra Large (70L+)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
