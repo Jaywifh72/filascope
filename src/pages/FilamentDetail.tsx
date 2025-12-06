@@ -15,23 +15,17 @@ import { LikeButton } from "@/components/LikeButton";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
-import { checkHotendFilamentCompatibility } from "@/lib/accessoryCompatibility";
+import { checkHotendFilamentCompatibility, type AccessoryCompatibilityResult } from "@/lib/accessoryCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
+import { AccessoryCompatibilityBadge } from "@/components/AccessoryCompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
 
 interface HotendWithRating extends Accessory {
-  rating: "green" | "orange" | "red";
-  ratingReason: string;
+  compatibility: AccessoryCompatibilityResult;
 }
-
-// Use unified accessory compatibility service
-const rateHotend = (hotend: Accessory, filament: Filament): { rating: "green" | "orange" | "red"; reason: string } => {
-  const result = checkHotendFilamentCompatibility(hotend, filament);
-  return { rating: result.rating, reason: result.reason };
-};
 
 const FilamentDetail = () => {
   const { id } = useParams();
@@ -168,16 +162,16 @@ const FilamentDetail = () => {
         // Filter to those compatible with this printer
         const compatible = (hotends || []).filter(isCompatibleWithPrinter);
 
-        // Rate each hotend for this filament
+        // Rate each hotend for this filament using unified service
         const rated: HotendWithRating[] = compatible.map(hotend => {
-          const { rating, reason } = rateHotend(hotend, filament);
-          return { ...hotend, rating, ratingReason: reason };
+          const compatibility = checkHotendFilamentCompatibility(hotend, filament);
+          return { ...hotend, compatibility };
         });
 
         // Sort: green first, then orange, then red
         rated.sort((a, b) => {
           const order = { green: 0, orange: 1, red: 2 };
-          return order[a.rating] - order[b.rating];
+          return order[a.compatibility.rating] - order[b.compatibility.rating];
         });
 
         setCompatibleHotends(rated);
@@ -638,17 +632,17 @@ const FilamentDetail = () => {
                                       <TooltipTrigger asChild>
                                         <div 
                                           className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${
-                                            hotend.rating === 'green' ? 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10' :
-                                            hotend.rating === 'orange' ? 'bg-orange-500/5 border-orange-500/20 hover:bg-orange-500/10' :
+                                            hotend.compatibility.rating === 'green' ? 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10' :
+                                            hotend.compatibility.rating === 'orange' ? 'bg-orange-500/5 border-orange-500/20 hover:bg-orange-500/10' :
                                             'bg-red-500/5 border-red-500/20 hover:bg-red-500/10'
                                           } transition-colors`}
                                         >
-                                          {/* Rating indicator */}
-                                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                                            hotend.rating === 'green' ? 'bg-green-500' :
-                                            hotend.rating === 'orange' ? 'bg-orange-500' :
-                                            'bg-red-500'
-                                          }`} />
+                                          {/* Rating badge */}
+                                          <AccessoryCompatibilityBadge 
+                                            compatibility={hotend.compatibility} 
+                                            compact 
+                                            showIcon={true}
+                                          />
                                           
                                           {/* Hotend image */}
                                           <div className="w-12 h-12 flex-shrink-0 rounded bg-muted/50 overflow-hidden">
@@ -672,7 +666,7 @@ const FilamentDetail = () => {
                                               {hotend.brand}
                                             </div>
                                             <div className="text-xs text-muted-foreground/80 truncate">
-                                              {hotend.ratingReason}
+                                              {hotend.compatibility.reason}
                                             </div>
                                           </div>
 
@@ -703,15 +697,22 @@ const FilamentDetail = () => {
                                         <div className="space-y-2">
                                           <div className="font-semibold text-sm">{hotend.name}</div>
                                           <div className={`text-xs font-medium ${
-                                            hotend.rating === 'green' ? 'text-green-500' :
-                                            hotend.rating === 'orange' ? 'text-orange-500' :
+                                            hotend.compatibility.rating === 'green' ? 'text-green-500' :
+                                            hotend.compatibility.rating === 'orange' ? 'text-orange-500' :
                                             'text-red-500'
                                           }`}>
-                                            {hotend.rating === 'green' ? '✓ Recommended' : 
-                                             hotend.rating === 'orange' ? '⚠ Use with caution' : 
+                                            {hotend.compatibility.rating === 'green' ? '✓ Recommended' : 
+                                             hotend.compatibility.rating === 'orange' ? '⚠ Use with caution' : 
                                              '✗ Not recommended'}
                                           </div>
-                                          <p className="text-xs text-muted-foreground">{hotend.ratingReason}</p>
+                                          <p className="text-xs text-muted-foreground">{hotend.compatibility.reason}</p>
+                                          {hotend.compatibility.details && hotend.compatibility.details.length > 0 && (
+                                            <ul className="text-xs text-muted-foreground list-disc list-inside">
+                                              {hotend.compatibility.details.map((detail, i) => (
+                                                <li key={i}>{detail}</li>
+                                              ))}
+                                            </ul>
+                                          )}
                                           {specs && (
                                             <div className="pt-2 border-t border-border space-y-1">
                                               <div className="text-[10px] text-muted-foreground font-medium uppercase">Specifications</div>
