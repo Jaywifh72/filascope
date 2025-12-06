@@ -62,34 +62,40 @@ function extractWeight(html: string, url: string): number | null {
 function extractPrice(html: string, url: string): number | null {
   console.log(`Extracting price from ${url}`);
   
-  // Check if this is a Sunlu URL - they show per-kg pricing which should be prioritized
+  // Check if this is a Sunlu URL
   const isSunlu = url.toLowerCase().includes('sunlu.com');
   
   if (isSunlu) {
-    console.log('Sunlu URL detected - looking for per-kg unit price first');
+    console.log('Sunlu URL detected - looking for sale price');
     
-    // Sunlu-specific patterns - prioritize per-kg/per-unit price over total
-    const sunluPatterns = [
-      // Format: "$15.99/kg" or "$15.99 /kg"
-      /\$([0-9,.]+)\s*\/\s*kg/i,
-      // Format: "$15.99 per kg"
-      /\$([0-9,.]+)\s*per\s*kg/i,
-      // Format with unit price label
-      /unit\s*price[:\s]*\$([0-9,.]+)/i,
-      // Format: "price per kg: $15.99"
-      /price\s*per\s*kg[:\s]*\$([0-9,.]+)/i,
-      // Markdown format with /kg
-      /\$([0-9,.]+)\s*(?:USD)?\s*\/\s*kg/i,
-    ];
+    // Sunlu-specific patterns - extract sale price from their format
+    // Format: "~~$18.99 USD~~Sale price$12.49 USD"
+    const sunluSalePriceMatch = html.match(/~~\$[0-9,.]+\s*(?:USD)?~~\s*Sale\s*price\s*\$([0-9,.]+)/i);
+    if (sunluSalePriceMatch) {
+      const price = parseFloat(sunluSalePriceMatch[1].replace(/,/g, ''));
+      if (!isNaN(price) && price >= 5 && price <= 100) {
+        console.log(`Found Sunlu sale price: $${price}`);
+        return price;
+      }
+    }
     
-    for (const pattern of sunluPatterns) {
-      const match = html.match(pattern);
-      if (match) {
-        const price = parseFloat(match[1].replace(/,/g, ''));
-        if (!isNaN(price) && price >= 5 && price <= 100) {
-          console.log(`Found Sunlu per-kg price: $${price}`);
-          return price;
-        }
+    // Fallback: Look for "Sale price$XX.XX"
+    const saleMatch = html.match(/Sale\s*price\s*\$([0-9,.]+)/i);
+    if (saleMatch) {
+      const price = parseFloat(saleMatch[1].replace(/,/g, ''));
+      if (!isNaN(price) && price >= 5 && price <= 100) {
+        console.log(`Found Sunlu sale price (fallback): $${price}`);
+        return price;
+      }
+    }
+    
+    // Last fallback: Regular price
+    const regularMatch = html.match(/Regular\s*price\s*\$([0-9,.]+)/i);
+    if (regularMatch) {
+      const price = parseFloat(regularMatch[1].replace(/,/g, ''));
+      if (!isNaN(price) && price >= 5 && price <= 100) {
+        console.log(`Found Sunlu regular price: $${price}`);
+        return price;
       }
     }
   }
