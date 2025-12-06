@@ -1,7 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import FirecrawlApp from "https://esm.sh/@mendable/firecrawl-js@4.8.1?bundle-deps&no-dts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,7 +24,6 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
 
     const authClient = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace("Bearer ", "");
@@ -46,13 +44,6 @@ serve(async (req) => {
       });
     }
 
-    if (!firecrawlApiKey) {
-      return new Response(JSON.stringify({ error: "FIRECRAWL_API_KEY not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Fetch all Overture filaments
@@ -68,7 +59,6 @@ serve(async (req) => {
 
     console.log(`Found ${filaments?.length || 0} Overture filaments to process`);
 
-    const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey });
     const results: Array<{ id: string; title: string; status: string; image?: string }> = [];
 
     for (const filament of filaments || []) {
@@ -78,71 +68,49 @@ serve(async (req) => {
           continue;
         }
 
-        console.log(`Scraping: ${filament.product_url}`);
+        // Extract product handle from URL
+        const urlMatch = filament.product_url.match(/\/products\/([^/?#]+)/);
+        if (!urlMatch) {
+          results.push({ id: filament.id, title: filament.product_title, status: "invalid URL format" });
+          continue;
+        }
 
-        // Scrape the product page
-        const scrapeResult = await firecrawl.scrape(filament.product_url, {
-          formats: ["html"],
-          waitFor: 2000,
+        const productHandle = urlMatch[1];
+        const jsonUrl = `https://overture3d.com/products/${productHandle}.json`;
+        
+        console.log(`Fetching: ${jsonUrl}`);
+
+        // Use Shopify JSON API - much faster and reliable
+        const response = await fetch(jsonUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+            "Accept": "application/json",
+          },
         });
 
-        if (!scrapeResult.success || !scrapeResult.html) {
-          results.push({ id: filament.id, title: filament.product_title, status: "scrape failed" });
+        if (!response.ok) {
+          results.push({ id: filament.id, title: filament.product_title, status: `HTTP ${response.status}` });
           continue;
         }
 
-        // Extract the first product image from Shopify CDN
-        const html = scrapeResult.html;
+        const productData = await response.json();
         
-        // Look for Shopify product images - typically in og:image or product gallery
-        const patterns = [
-          // Open Graph image (usually the main product image)
-          /property="og:image"\s+content="([^"]+)"/i,
-          /content="([^"]+)"\s+property="og:image"/i,
-          // Shopify product image patterns
-          /data-zoom="([^"]+overture3d\.com\/cdn\/shop\/[^"]+)"/i,
-          /src="(https:\/\/overture3d\.com\/cdn\/shop\/(?:files|products)\/[^"?\s]+\.(jpg|png|webp)[^"]*)"[^>]*class="[^"]*product/i,
-          /srcset="([^"\s]+overture3d\.com\/cdn\/shop\/[^"\s]+)"/i,
-          /<img[^>]+src="(https:\/\/overture3d\.com\/cdn\/shop\/(?:files|products)\/[^"]+)"/gi,
-        ];
-
-        let imageUrl: string | null = null;
-
-        for (const pattern of patterns) {
-          const match = html.match(pattern);
-          if (match && match[1]) {
-            let url = match[1];
-            // Clean up Shopify CDN URL - remove width parameters to get full size
-            url = url.split("?")[0];
-            if (url.includes("overture3d.com/cdn/shop")) {
-              imageUrl = url;
-              break;
-            }
-          }
-        }
-
-        // Fallback: find any Shopify CDN image
-        if (!imageUrl) {
-          const allImagesMatch = html.match(/https:\/\/overture3d\.com\/cdn\/shop\/(?:files|products)\/[^"'\s]+\.(jpg|png|webp)/gi);
-          if (allImagesMatch && allImagesMatch.length > 0) {
-            // Filter out small thumbnails and icons
-            const validImages = allImagesMatch.filter((url: string) => 
-              !url.includes("icon") && 
-              !url.includes("logo") && 
-              !url.includes("32x32") &&
-              !url.includes("_small") &&
-              !url.includes("_thumb")
-            );
-            if (validImages.length > 0) {
-              imageUrl = validImages[0].split("?")[0];
-            }
-          }
-        }
-
-        if (!imageUrl) {
-          results.push({ id: filament.id, title: filament.product_title, status: "no image found" });
+        // Get the first image from the product
+        const images = productData?.product?.images || [];
+        if (images.length === 0) {
+          results.push({ id: filament.id, title: filament.product_title, status: "no images in product data" });
           continue;
         }
+
+        // Get the src of the first image, removing size parameters
+        let imageUrl = images[0]?.src;
+        if (!imageUrl) {
+          results.push({ id: filament.id, title: filament.product_title, status: "no src in first image" });
+          continue;
+        }
+
+        // Clean up the URL - remove width parameter to get full size
+        imageUrl = imageUrl.split("?")[0];
 
         // Update the filament with the new image
         const { error: updateError } = await supabase
@@ -157,8 +125,8 @@ serve(async (req) => {
           console.log(`Updated ${filament.product_title} with image: ${imageUrl}`);
         }
 
-        // Small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Small delay between requests to be polite
+        await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error: unknown) {
         console.error(`Error processing ${filament.product_title}:`, error);
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -168,6 +136,8 @@ serve(async (req) => {
 
     const updated = results.filter(r => r.status === "updated").length;
     const failed = results.filter(r => r.status !== "updated" && r.status !== "skipped - no URL").length;
+
+    console.log(`Completed: ${updated} updated, ${failed} failed`);
 
     return new Response(
       JSON.stringify({
