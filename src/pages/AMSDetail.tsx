@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,10 +9,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ExternalLink, Layers, Check, X, ImageIcon } from "lucide-react";
+import { ArrowLeft, ExternalLink, Layers, Check, X, ImageIcon, AlertTriangle, Link2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { validateProductUrl } from "@/lib/urlValidation";
 
 interface AMSSpecs {
   max_spools?: number;
@@ -128,6 +129,36 @@ export default function AMSDetail() {
   const handleUpdateImage = () => {
     if (newImageUrl.trim()) {
       updateImageMutation.mutate(newImageUrl.trim());
+    }
+  };
+
+  // URL validation
+  const urlValidation = useMemo(() => {
+    if (!ams?.product_url) return null;
+    return validateProductUrl(ams.product_url, ams.brand);
+  }, [ams?.product_url, ams?.brand]);
+
+  // Mutation for fixing URL
+  const fixUrlMutation = useMutation({
+    mutationFn: async (newUrl: string) => {
+      const { error } = await supabase
+        .from("printer_accessories")
+        .update({ product_url: newUrl })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ams-detail", id] });
+      toast.success("URL fixed successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to fix URL: " + error.message);
+    },
+  });
+
+  const handleFixUrl = () => {
+    if (urlValidation?.suggestedUrl) {
+      fixUrlMutation.mutate(urlValidation.suggestedUrl);
     }
   };
 
@@ -325,16 +356,37 @@ export default function AMSDetail() {
 
             {/* Store Link */}
             {ams.product_url && (
-              <a
-                href={getAffiliateUrl(ams.product_url, ams.brand) || ams.product_url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button className="w-full gap-2">
-                  <ExternalLink className="h-4 w-4" />
-                  View on Store
-                </Button>
-              </a>
+              <div className="space-y-2">
+                {/* URL validation warning for admins */}
+                {isAdmin && urlValidation && !urlValidation.isValid && (
+                  <div className="flex items-center gap-2 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm">
+                    <AlertTriangle className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                    <span className="text-yellow-600 dark:text-yellow-400 flex-1">{urlValidation.issue}</span>
+                    {urlValidation.suggestedUrl && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1 text-xs"
+                        onClick={handleFixUrl}
+                        disabled={fixUrlMutation.isPending}
+                      >
+                        <Link2 className="h-3 w-3" />
+                        {fixUrlMutation.isPending ? "Fixing..." : "Fix URL"}
+                      </Button>
+                    )}
+                  </div>
+                )}
+                <a
+                  href={getAffiliateUrl(ams.product_url, ams.brand) || ams.product_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button className="w-full gap-2">
+                    <ExternalLink className="h-4 w-4" />
+                    View on Store
+                  </Button>
+                </a>
+              </div>
             )}
           </div>
         </div>
