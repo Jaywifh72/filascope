@@ -392,11 +392,16 @@ serve(async (req) => {
 
     console.log(`Starting global price update for ${brand || 'all brands'}, regions: ${selectedRegions.map(r => r.region).join(', ')}`);
 
-    // Fetch printers to update
+    // Calculate 24 hours ago for skipping recently updated printers
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    // Fetch printers to update (skip those updated in last 24 hours)
     let query = supabase
       .from('printers')
-      .select('id, printer_id, model_name, brand_id, official_store_url, official_store_url_ca, official_store_url_uk, official_store_url_eu, official_store_url_au, official_store_url_jp, amazon_url_us, amazon_url_ca, amazon_url_uk, amazon_url_de, amazon_url_au, amazon_url_jp, printer_brands!inner(brand)')
+      .select('id, printer_id, model_name, brand_id, official_store_url, official_store_url_ca, official_store_url_uk, official_store_url_eu, official_store_url_au, official_store_url_jp, amazon_url_us, amazon_url_ca, amazon_url_uk, amazon_url_de, amazon_url_au, amazon_url_jp, prices_last_updated_at, printer_brands!inner(brand)')
       .eq('status', 'active')
+      .or(`prices_last_updated_at.is.null,prices_last_updated_at.lt.${twentyFourHoursAgo}`)
+      .order('prices_last_updated_at', { ascending: true, nullsFirst: true })
       .limit(limit);
 
     if (brand) {
