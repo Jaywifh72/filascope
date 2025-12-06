@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ExternalLink, ChevronDown, GitCompare, X } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -1092,19 +1093,40 @@ const Finder = () => {
                     {/* Scores */}
                     <div className="space-y-1.5 w-full lg:w-40">
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-muted-foreground w-12 flex-shrink-0">Print</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-muted-foreground w-12 flex-shrink-0 cursor-help border-b border-dotted border-muted-foreground/50">Print</span>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-[200px]">
+                            <p className="text-xs">Ease of printing - higher means easier to print with less tuning required</p>
+                          </TooltipContent>
+                        </Tooltip>
                         <div className="score-bar flex-1">
                           <div className="score-fill print" style={{ width: `${(filament.ease_of_printing_score || 7) * 10}%` }} />
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-muted-foreground w-12 flex-shrink-0">Strength</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-muted-foreground w-12 flex-shrink-0 cursor-help border-b border-dotted border-muted-foreground/50">Strength</span>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-[200px]">
+                            <p className="text-xs">Mechanical strength - tensile and impact resistance of printed parts</p>
+                          </TooltipContent>
+                        </Tooltip>
                         <div className="score-bar flex-1">
                           <div className="score-fill strength" style={{ width: `${(filament.strength_index || 7) * 10}%` }} />
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-muted-foreground w-12 flex-shrink-0">Heat</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-muted-foreground w-12 flex-shrink-0 cursor-help border-b border-dotted border-muted-foreground/50">Heat</span>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-[200px]">
+                            <p className="text-xs">Heat resistance - temperature at which the material begins to deform (Tg)</p>
+                          </TooltipContent>
+                        </Tooltip>
                         <div className="score-bar flex-1">
                           <div className="score-fill heat" style={{ width: `${Math.min((filament.tg_c || 70) / 2, 100)}%` }} />
                         </div>
@@ -1113,7 +1135,14 @@ const Finder = () => {
 
                     {/* Overall Score */}
                     <div className="flex items-center gap-4 lg:flex-col lg:gap-0">
-                      <span className="text-xs text-muted-foreground lg:mb-1">Score</span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-xs text-muted-foreground lg:mb-1 cursor-help border-b border-dotted border-muted-foreground/50">Score</span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-[200px]">
+                          <p className="text-xs">Overall value score - combines print quality, strength, and price-to-performance ratio</p>
+                        </TooltipContent>
+                      </Tooltip>
                       <span className={`text-3xl font-bold ${getScoreColor(overallScore)}`}>
                         {overallScore.toFixed(1)}
                       </span>
