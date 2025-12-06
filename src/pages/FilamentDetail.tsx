@@ -686,7 +686,7 @@ const FilamentDetail = () => {
                 };
 
                 return (
-                  <Collapsible defaultOpen={false}>
+                  <Collapsible defaultOpen={false} className="group">
                     <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
                       <CollapsibleTrigger asChild>
                         <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
@@ -698,12 +698,12 @@ const FilamentDetail = () => {
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-normal text-muted-foreground hidden sm:inline">🟢 Best • 🟠 Caution • 🔴 Not Recommended</span>
-                              <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                              <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-300 ease-out group-data-[state=open]:rotate-180" />
                             </div>
                           </CardTitle>
                         </CardHeader>
                       </CollapsibleTrigger>
-                      <CollapsibleContent>
+                      <CollapsibleContent className="data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">
                         <CardContent className="space-y-6 pt-0">
                       <TooltipProvider delayDuration={200}>
                         {diameterOrder.map((diameter) => {
@@ -860,7 +860,7 @@ const FilamentDetail = () => {
 
               {/* Compatible Build Plates - Full Width */}
               {compatibleBuildPlates.length > 0 && (
-                <Collapsible defaultOpen={false}>
+                <Collapsible defaultOpen={false} className="group">
                   <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
                     <CollapsibleTrigger asChild>
                       <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
@@ -872,12 +872,12 @@ const FilamentDetail = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-normal text-muted-foreground hidden sm:inline">🟢 Best • 🟠 Check • 🔴 Not Ideal</span>
-                            <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                            <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-300 ease-out group-data-[state=open]:rotate-180" />
                           </div>
                         </CardTitle>
                       </CardHeader>
                     </CollapsibleTrigger>
-                    <CollapsibleContent>
+                    <CollapsibleContent className="data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">
                       <CardContent className="pt-0">
                     <TooltipProvider delayDuration={200}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -1015,7 +1015,7 @@ const FilamentDetail = () => {
 
               {/* Compatible AMS/MMU Systems - Full Width */}
               {compatibleAms.length > 0 && (
-                <Collapsible defaultOpen={false}>
+                <Collapsible defaultOpen={false} className="group">
                   <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
                     <CollapsibleTrigger asChild>
                       <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
@@ -1027,12 +1027,12 @@ const FilamentDetail = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-normal text-muted-foreground hidden sm:inline">🟢 Ideal • 🟠 Considerations • 🔴 Challenges</span>
-                            <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                            <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-300 ease-out group-data-[state=open]:rotate-180" />
                           </div>
                         </CardTitle>
                       </CardHeader>
                     </CollapsibleTrigger>
-                    <CollapsibleContent>
+                    <CollapsibleContent className="data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">
                       <CardContent className="pt-0">
                     <TooltipProvider delayDuration={200}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
