@@ -269,7 +269,9 @@ Deno.serve(async (req) => {
 
     console.log(`Admin ${userId} authorized, proceeding with price fetch`);
 
-    const { filament_ids } = await req.json();
+    const body = await req.json();
+    // Accept both camelCase and snake_case parameter names
+    const filament_ids = body.filament_ids || body.filamentIds;
     
     console.log(`Fetching prices for ${filament_ids?.length || 'batch'} filaments`);
 
