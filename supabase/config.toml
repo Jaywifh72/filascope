@@ -50,3 +50,6 @@ verify_jwt = true
 
 [functions.update-global-prices]
 verify_jwt = true
+
+[functions.scrape-overture-images]
+verify_jwt = true

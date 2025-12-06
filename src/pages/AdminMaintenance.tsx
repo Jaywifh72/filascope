@@ -97,6 +97,13 @@ const AdminMaintenance = () => {
       error?: string;
     }>;
   } | null>(null);
+  const [isScrapingOverture, setIsScrapingOverture] = useState(false);
+  const [overtureResult, setOvertureResult] = useState<{
+    total: number;
+    updated: number;
+    failed: number;
+    results: Array<{ id: string; title: string; status: string; image?: string }>;
+  } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -382,6 +389,35 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsEnrichingPrinters(false);
+    }
+  };
+
+  const runOvertureImageScraper = async () => {
+    setIsScrapingOverture(true);
+    setOvertureResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-overture-images', {
+        method: 'POST',
+        body: {}
+      });
+
+      if (error) throw error;
+
+      setOvertureResult(data);
+      toast({
+        title: "Overture Image Scraping Complete",
+        description: `Updated: ${data.updated}, Failed: ${data.failed}`,
+      });
+    } catch (error) {
+      console.error('Overture scraping error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to run Overture image scraper",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScrapingOverture(false);
     }
   };
 
@@ -726,6 +762,92 @@ const AdminMaintenance = () => {
                             {record.image_url && (
                               <div className="text-xs text-muted-foreground font-mono truncate max-w-md">
                                 {record.image_url}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Overture Image Scraper Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Package className="w-5 h-5 text-orange-500" />
+            <CardTitle>Overture 3D Image Scraper</CardTitle>
+          </div>
+          <CardDescription>
+            Scrape product images directly from Overture 3D product pages for all Overture filaments
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button 
+            onClick={runOvertureImageScraper} 
+            disabled={isScrapingOverture}
+            className="w-full sm:w-auto"
+          >
+            {isScrapingOverture ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Scraping Overture Images...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                Scrape Overture Product Images
+              </>
+            )}
+          </Button>
+
+          {overtureResult && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{overtureResult.total}</div>
+                  <div className="text-sm text-muted-foreground">Total Processed</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{overtureResult.updated}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Updated</div>
+                </div>
+                <div className="bg-red-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <div className="text-2xl font-bold">{overtureResult.failed}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Failed</div>
+                </div>
+              </div>
+
+              {overtureResult.results.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Results:</h3>
+                  <div className="max-h-96 overflow-y-auto space-y-2">
+                    {overtureResult.results.map((record) => (
+                      <div key={record.id} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-1">
+                            <div className="font-medium">{record.title}</div>
+                            <Badge 
+                              variant={record.status === 'updated' ? 'default' : 'secondary'} 
+                              className="text-xs"
+                            >
+                              {record.status === 'updated' && <CheckCircle className="w-3 h-3 mr-1" />}
+                              {record.status}
+                            </Badge>
+                            {record.image && (
+                              <div className="text-xs text-muted-foreground font-mono truncate max-w-md">
+                                {record.image}
                               </div>
                             )}
                           </div>
