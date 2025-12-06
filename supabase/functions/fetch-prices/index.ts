@@ -62,6 +62,38 @@ function extractWeight(html: string, url: string): number | null {
 function extractPrice(html: string, url: string): number | null {
   console.log(`Extracting price from ${url}`);
   
+  // Check if this is a Sunlu URL - they show per-kg pricing which should be prioritized
+  const isSunlu = url.toLowerCase().includes('sunlu.com');
+  
+  if (isSunlu) {
+    console.log('Sunlu URL detected - looking for per-kg unit price first');
+    
+    // Sunlu-specific patterns - prioritize per-kg/per-unit price over total
+    const sunluPatterns = [
+      // Format: "$15.99/kg" or "$15.99 /kg"
+      /\$([0-9,.]+)\s*\/\s*kg/i,
+      // Format: "$15.99 per kg"
+      /\$([0-9,.]+)\s*per\s*kg/i,
+      // Format with unit price label
+      /unit\s*price[:\s]*\$([0-9,.]+)/i,
+      // Format: "price per kg: $15.99"
+      /price\s*per\s*kg[:\s]*\$([0-9,.]+)/i,
+      // Markdown format with /kg
+      /\$([0-9,.]+)\s*(?:USD)?\s*\/\s*kg/i,
+    ];
+    
+    for (const pattern of sunluPatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        const price = parseFloat(match[1].replace(/,/g, ''));
+        if (!isNaN(price) && price >= 5 && price <= 100) {
+          console.log(`Found Sunlu per-kg price: $${price}`);
+          return price;
+        }
+      }
+    }
+  }
+  
   // Amazon price patterns
   const amazonPatterns = [
     /<span class="a-price-whole">([0-9,]+)<\/span>/,
