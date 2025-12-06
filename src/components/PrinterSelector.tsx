@@ -20,26 +20,28 @@ export function PrinterSelector() {
   } = usePrinterSelection();
 
   return (
-    <div className="space-y-4 p-4 bg-card rounded-lg border">
-      <div className="flex items-center gap-2">
+    <div className="p-4 bg-card rounded-lg border">
+      <div className="flex items-center gap-2 mb-4">
         <Printer className="h-5 w-5 text-primary" />
         <h3 className="font-semibold">Your Printer</h3>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
         {/* Brand Selection */}
-        <div className="space-y-2">
-          <Label htmlFor="printer-brand">Brand</Label>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="printer-brand" className="text-sm font-medium">
+            Brand
+          </Label>
           {brandsLoading ? (
-            <div className="flex items-center justify-center h-10 border rounded-md">
-              <Loader2 className="h-4 w-4 animate-spin" />
+            <div className="flex items-center justify-center h-9 border rounded-md bg-muted/50">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           ) : (
             <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-              <SelectTrigger id="printer-brand">
-                <SelectValue placeholder="Select printer brand" />
+              <SelectTrigger id="printer-brand" className="h-9">
+                <SelectValue placeholder="Select brand" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover">
                 {brands?.map((brand) => (
                   <SelectItem key={brand.id} value={brand.brand}>
                     {brand.brand}
@@ -51,11 +53,13 @@ export function PrinterSelector() {
         </div>
 
         {/* Model Selection */}
-        <div className="space-y-2">
-          <Label htmlFor="printer-model">Model</Label>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="printer-model" className="text-sm font-medium">
+            Model
+          </Label>
           {modelsLoading ? (
-            <div className="flex items-center justify-center h-10 border rounded-md">
-              <Loader2 className="h-4 w-4 animate-spin" />
+            <div className="flex items-center justify-center h-9 border rounded-md bg-muted/50">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           ) : (
             <Select
@@ -63,14 +67,13 @@ export function PrinterSelector() {
               onValueChange={setSelectedPrinterId}
               disabled={!selectedBrand || !models || models.length === 0}
             >
-              <SelectTrigger id="printer-model">
-                <SelectValue placeholder="Select printer model" />
+              <SelectTrigger id="printer-model" className="h-9">
+                <SelectValue placeholder="Select model" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover">
                 {models?.map((model) => (
                   <SelectItem key={model.id} value={model.printer_id}>
                     {model.model_name}
-                    {model.series?.series_name && ` (${model.series.series_name})`}
                     {model.variant_or_bundle_name && ` - ${model.variant_or_bundle_name}`}
                   </SelectItem>
                 ))}
@@ -80,14 +83,19 @@ export function PrinterSelector() {
         </div>
 
         {/* Hotend Selection */}
-        <div className="space-y-2">
-          <Label htmlFor="printer-hotend" className="flex items-center gap-1.5">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="printer-hotend" className="text-sm font-medium flex items-center gap-1.5">
             <Flame className="h-3.5 w-3.5 text-orange-500" />
             Hotend
+            {compatibleHotends && compatibleHotends.length > 0 && (
+              <span className="text-xs text-muted-foreground font-normal">
+                ({compatibleHotends.length})
+              </span>
+            )}
           </Label>
           {hotendsLoading ? (
-            <div className="flex items-center justify-center h-10 border rounded-md">
-              <Loader2 className="h-4 w-4 animate-spin" />
+            <div className="flex items-center justify-center h-9 border rounded-md bg-muted/50">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           ) : (
             <Select
@@ -95,25 +103,23 @@ export function PrinterSelector() {
               onValueChange={setSelectedHotendId}
               disabled={!selectedPrinterId || !compatibleHotends || compatibleHotends.length === 0}
             >
-              <SelectTrigger id="printer-hotend">
+              <SelectTrigger id="printer-hotend" className="h-9">
                 <SelectValue placeholder={
                   !selectedPrinterId 
                     ? "Select printer first" 
                     : compatibleHotends?.length === 0 
                       ? "No compatible hotends" 
-                      : "Select hotend (optional)"
+                      : "Optional"
                 } />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover max-h-60">
                 {compatibleHotends?.map((hotend) => {
                   const specs = hotend.specs as Record<string, unknown> | null;
                   const diameter = specs?.diameter_mm || specs?.diameter;
-                  const material = specs?.material || specs?.nozzle_material;
                   return (
                     <SelectItem key={hotend.id} value={hotend.id}>
                       {hotend.name}
                       {diameter && ` (${diameter}mm)`}
-                      {material && ` - ${material}`}
                     </SelectItem>
                   );
                 })}
@@ -124,7 +130,7 @@ export function PrinterSelector() {
       </div>
 
       {!selectedBrand && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground mt-3">
           Select your printer to see compatibility information and recommendations
         </p>
       )}
