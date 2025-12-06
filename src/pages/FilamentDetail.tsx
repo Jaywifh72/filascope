@@ -26,36 +26,28 @@ interface HotendWithRating extends Accessory {
   ratingReason: string;
 }
 
-// Extract material from hotend specs - checks multiple field names for flexibility
-const getHotendMaterial = (hotend: Accessory): string => {
-  const specs = hotend.specs as Record<string, any> | null;
-  // Check various field names where material might be stored
-  const material = specs?.material || specs?.nozzle_material || specs?.tip_material || "";
-  return String(material).toLowerCase();
-};
-
 // Rate hotend compatibility with filament - based on material and specs
 // Green = Best choice, Orange = Acceptable, Red = Not recommended
 const rateHotend = (hotend: Accessory, filament: Filament): { rating: "green" | "orange" | "red"; reason: string } => {
   const specs = hotend.specs as Record<string, any> | null;
-  const maxTemp = specs?.max_temp_c || specs?.max_temp || 0;
-  const nozzleMaterial = getHotendMaterial(hotend);
+  const maxTemp = specs?.max_temp_c || 0;
+  const material = (specs?.material || "").toLowerCase();
   const nameAndDesc = (hotend.name + " " + (hotend.description || "")).toLowerCase();
   const isAbrasionResistant = specs?.abrasion_resistant === true || specs?.hardened === true;
-  const diameter = specs?.diameter_mm || specs?.diameter || 0;
+  const diameter = specs?.diameter_mm || 0;
   
-  // Detect material type from specs and name - check both specs.material and name
+  // Detect material type from specs and name
   const isHardened = isAbrasionResistant ||
-                     nozzleMaterial.includes("hardened") ||
-                     nozzleMaterial.includes("obxidian") || // E3D's hardened material
-                     nozzleMaterial.includes("hta") || // High Temp Alloy
-                     nozzleMaterial.includes("diamondback") ||
-                     nozzleMaterial.includes("tungsten") ||
-                     nozzleMaterial.includes("ruby") ||
-                     nozzleMaterial.includes("sapphire") ||
-                     nozzleMaterial.includes("diamond") ||
-                     nozzleMaterial.includes("pcd") ||
-                     nozzleMaterial.includes("carbide") ||
+                     material.includes("hardened") ||
+                     material.includes("obxidian") || // E3D's hardened material
+                     material.includes("hta") || // High Temp Alloy
+                     material.includes("diamondback") ||
+                     material.includes("tungsten") ||
+                     material.includes("ruby") ||
+                     material.includes("sapphire") ||
+                     material.includes("diamond") ||
+                     material.includes("pcd") ||
+                     material.includes("carbide") ||
                      nameAndDesc.includes("hardened") ||
                      nameAndDesc.includes("obxidian") ||
                      nameAndDesc.includes("diamondback") ||
@@ -66,14 +58,14 @@ const rateHotend = (hotend: Accessory, filament: Filament): { rating: "green" | 
                      nameAndDesc.includes("carbide") ||
                      nameAndDesc.includes("hta ");
   
-  const isStainless = nozzleMaterial.includes("stainless") ||
+  const isStainless = material.includes("stainless") ||
                       nameAndDesc.includes("stainless");
   
-  const isBrass = nozzleMaterial.includes("brass") ||
+  const isBrass = material.includes("brass") ||
                   nameAndDesc.includes("brass");
   
   // If no material indicators found, check if it's likely a standard hotend
-  const hasKnownMaterial = isHardened || isStainless || isBrass || nozzleMaterial.length > 0;
+  const hasKnownMaterial = isHardened || isStainless || isBrass || material.length > 0;
   
   const requiredTemp = filament.nozzle_temp_sweetspot_c || filament.nozzle_temp_max_c || 0;
   const isAbrasive = filament.is_nozzle_abrasive || false;
