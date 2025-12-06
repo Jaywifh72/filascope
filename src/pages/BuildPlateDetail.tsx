@@ -205,7 +205,7 @@ export default function BuildPlateDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
         {/* Back button */}
         <Button 
           variant="ghost" 
@@ -216,120 +216,123 @@ export default function BuildPlateDetail() {
           Back to Build Plates
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Image */}
-          <Card className="p-6 relative">
-            <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-              {buildPlate.image_url ? (
-                <img
-                  src={buildPlate.image_url}
-                  alt={buildPlate.name}
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    target.style.display = 'none';
-                    const fallback = target.parentElement?.querySelector('.image-fallback');
-                    if (fallback) fallback.classList.remove('hidden');
-                  }}
-                />
-              ) : null}
-              <div className={`image-fallback flex flex-col items-center justify-center text-muted-foreground ${buildPlate.image_url ? 'hidden' : ''}`}>
-                <Square className="h-24 w-24 mb-4 opacity-30" />
-                <span className="text-lg">No image available</span>
+        {/* Header with image and main info */}
+        <Card className="p-6">
+          <div className="flex gap-6">
+            {/* Small image in corner */}
+            <div className="relative flex-shrink-0">
+              <div className="w-32 h-32 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+                {buildPlate.image_url ? (
+                  <img
+                    src={buildPlate.image_url}
+                    alt={buildPlate.name}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.style.display = 'none';
+                      const fallback = target.parentElement?.querySelector('.image-fallback');
+                      if (fallback) fallback.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`image-fallback flex flex-col items-center justify-center text-muted-foreground ${buildPlate.image_url ? 'hidden' : ''}`}>
+                  <Square className="h-10 w-10 opacity-30" />
+                </div>
               </div>
-            </div>
-            {isAdmin && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="absolute top-8 right-8 gap-1.5"
-                onClick={openImageDialog}
-              >
-                <ImageIcon className="h-4 w-4" />
-                Edit Image
-              </Button>
-            )}
-          </Card>
-
-          {/* Details */}
-          <div className="space-y-6">
-            {/* Brand & Name */}
-            <div>
-              {brandLogo && (
-                <img
-                  src={brandLogo}
-                  alt={buildPlate.brand || "Brand"}
-                  className="h-8 w-auto object-contain mb-3"
-                />
-              )}
-              <h1 className="text-3xl font-bold">{buildPlate.name}</h1>
-              {buildPlate.brand && (
-                <p className="text-muted-foreground mt-1">{buildPlate.brand}</p>
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute -top-2 -right-2 h-7 w-7"
+                  onClick={openImageDialog}
+                >
+                  <ImageIcon className="h-3.5 w-3.5" />
+                </Button>
               )}
             </div>
 
-            {/* Price */}
-            {buildPlate.price && (
-              <p className="text-3xl font-bold text-primary">
-                ${buildPlate.price.toFixed(2)}
-                <span className="text-sm font-normal text-muted-foreground ml-2">
-                  {buildPlate.currency || "USD"}
-                </span>
-              </p>
-            )}
-
-            {/* Quick specs badges */}
-            <div className="flex flex-wrap gap-2">
-              {surface && <Badge>{surface}</Badge>}
-              {isMagnetic && <Badge variant="secondary">Magnetic</Badge>}
-              {coating && <Badge variant="outline">{coating}</Badge>}
-            </div>
-
-            {/* Buy button */}
-            {buildPlate.product_url && (
-              <div className="mt-4 space-y-2">
-                {/* URL validation warning for admins */}
-                {isAdmin && urlValidation && !urlValidation.isValid && (
-                  <div className="flex items-center gap-2 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm">
-                    <AlertTriangle className="h-4 w-4 text-yellow-500 flex-shrink-0" />
-                    <span className="text-yellow-600 dark:text-yellow-400 flex-1">{urlValidation.issue}</span>
-                    {urlValidation.suggestedUrl && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1 text-xs"
-                        onClick={handleFixUrl}
-                        disabled={fixUrlMutation.isPending}
-                      >
-                        <Link2 className="h-3 w-3" />
-                        {fixUrlMutation.isPending ? "Fixing..." : "Fix URL"}
-                      </Button>
-                    )}
+            {/* Main info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  {brandLogo && (
+                    <img
+                      src={brandLogo}
+                      alt={buildPlate.brand || "Brand"}
+                      className="h-6 w-auto object-contain mb-2"
+                    />
+                  )}
+                  <h1 className="text-2xl font-bold leading-tight">{buildPlate.name}</h1>
+                  {buildPlate.brand && !brandLogo && (
+                    <p className="text-muted-foreground text-sm mt-0.5">{buildPlate.brand}</p>
+                  )}
+                </div>
+                
+                {/* Price */}
+                {buildPlate.price && (
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-2xl font-bold text-primary">
+                      ${buildPlate.price.toFixed(2)}
+                    </p>
+                    <span className="text-xs text-muted-foreground">
+                      {buildPlate.currency || "USD"}
+                    </span>
                   </div>
                 )}
-                <a 
-                  href={getAffiliateUrl(buildPlate.product_url, buildPlate.brand) || buildPlate.product_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block"
-                >
-                  <Button className="w-full gap-2">
-                    <ExternalLink className="h-4 w-4" />
-                    View on Store
-                  </Button>
-                </a>
               </div>
-            )}
 
-            {/* Description */}
-            {buildPlate.description && (
-              <Card className="p-4">
-                <h3 className="font-semibold mb-2">Description</h3>
-                <p className="text-muted-foreground">{buildPlate.description}</p>
-              </Card>
-            )}
+              {/* Quick specs badges */}
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {surface && <Badge variant="secondary" className="text-xs">{surface}</Badge>}
+                {isMagnetic && <Badge variant="outline" className="text-xs">Magnetic</Badge>}
+                {coating && <Badge variant="outline" className="text-xs">{coating}</Badge>}
+                {(sizeX && sizeY) && <Badge variant="outline" className="text-xs">{sizeX}×{sizeY}mm</Badge>}
+              </div>
+
+              {/* Buy button */}
+              {buildPlate.product_url && (
+                <div className="mt-4 space-y-2">
+                  {/* URL validation warning for admins */}
+                  {isAdmin && urlValidation && !urlValidation.isValid && (
+                    <div className="flex items-center gap-2 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-xs">
+                      <AlertTriangle className="h-3.5 w-3.5 text-yellow-500 flex-shrink-0" />
+                      <span className="text-yellow-600 dark:text-yellow-400 flex-1">{urlValidation.issue}</span>
+                      {urlValidation.suggestedUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1 text-xs h-7"
+                          onClick={handleFixUrl}
+                          disabled={fixUrlMutation.isPending}
+                        >
+                          <Link2 className="h-3 w-3" />
+                          {fixUrlMutation.isPending ? "Fixing..." : "Fix URL"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  <a 
+                    href={getAffiliateUrl(buildPlate.product_url, buildPlate.brand) || buildPlate.product_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    <Button size="sm" className="gap-2">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      View on Store
+                    </Button>
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+
+          {/* Description */}
+          {buildPlate.description && (
+            <div className="mt-4 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">{buildPlate.description}</p>
+            </div>
+          )}
+        </Card>
 
         {/* Specifications */}
         <Card className="p-6">
