@@ -15,7 +15,7 @@ import { LikeButton } from "@/components/LikeButton";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
-import { checkHotendFilamentCompatibility, type AccessoryCompatibilityResult } from "@/lib/accessoryCompatibility";
+import { checkHotendFilamentCompatibility, checkBuildPlateFilamentCompatibility, type AccessoryCompatibilityResult } from "@/lib/accessoryCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { AccessoryCompatibilityBadge } from "@/components/AccessoryCompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
@@ -23,7 +23,7 @@ import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
 
-interface HotendWithRating extends Accessory {
+interface AccessoryWithCompatibility extends Accessory {
   compatibility: AccessoryCompatibilityResult;
 }
 
@@ -36,7 +36,8 @@ const FilamentDetail = () => {
   const [filament, setFilament] = useState<Filament | null>(null);
   const [loading, setLoading] = useState(true);
   const [rescrapingImage, setRescrapingImage] = useState(false);
-  const [compatibleHotends, setCompatibleHotends] = useState<HotendWithRating[]>([]);
+  const [compatibleHotends, setCompatibleHotends] = useState<AccessoryWithCompatibility[]>([]);
+  const [compatibleBuildPlates, setCompatibleBuildPlates] = useState<AccessoryWithCompatibility[]>([]);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
 
   const compatibility = selectedPrinter && filament 
@@ -163,7 +164,7 @@ const FilamentDetail = () => {
         const compatible = (hotends || []).filter(isCompatibleWithPrinter);
 
         // Rate each hotend for this filament using unified service
-        const rated: HotendWithRating[] = compatible.map(hotend => {
+        const rated: AccessoryWithCompatibility[] = compatible.map(hotend => {
           const compatibility = checkHotendFilamentCompatibility(hotend, filament);
           return { ...hotend, compatibility };
         });
@@ -183,6 +184,46 @@ const FilamentDetail = () => {
 
     fetchCompatibleHotends();
   }, [selectedPrinter, filament]);
+
+  // Fetch compatible build plates for this filament
+  useEffect(() => {
+    const fetchCompatibleBuildPlates = async () => {
+      if (!filament) {
+        setCompatibleBuildPlates([]);
+        return;
+      }
+
+      try {
+        // Fetch all build plates
+        const { data: buildPlates, error } = await supabase
+          .from("printer_accessories")
+          .select("*")
+          .eq("accessory_type", "build_plate")
+          .limit(100);
+
+        if (error) throw error;
+
+        // Rate each build plate for this filament using unified service
+        const rated: AccessoryWithCompatibility[] = (buildPlates || []).map(plate => {
+          const compatibility = checkBuildPlateFilamentCompatibility(plate, filament);
+          return { ...plate, compatibility };
+        });
+
+        // Sort: green first, then orange, then red
+        rated.sort((a, b) => {
+          const order = { green: 0, orange: 1, red: 2 };
+          return order[a.compatibility.rating] - order[b.compatibility.rating];
+        });
+
+        setCompatibleBuildPlates(rated);
+        console.log(`Found ${rated.length} build plates rated for ${filament.material}:`, rated.map(p => `${p.name}: ${p.compatibility.rating}`));
+      } catch (error) {
+        console.error("Error fetching build plates:", error);
+      }
+    };
+
+    fetchCompatibleBuildPlates();
+  }, [filament]);
 
   const fetchFilament = async () => {
     try {
@@ -764,6 +805,151 @@ const FilamentDetail = () => {
                   </Card>
                 );
               })()}
+
+              {/* Compatible Build Plates - Full Width */}
+              {compatibleBuildPlates.length > 0 && (
+                <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Package className="w-5 h-5 text-primary" />
+                        Compatible Build Plates
+                      </div>
+                      <span className="text-xs font-normal text-muted-foreground">🟢 Best • 🟠 Check • 🔴 Not Ideal</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TooltipProvider delayDuration={200}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {compatibleBuildPlates.map((plate) => {
+                          const specs = plate.specs as Record<string, any> | null;
+                          return (
+                            <Tooltip key={plate.id}>
+                              <TooltipTrigger asChild>
+                                <div 
+                                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${
+                                    plate.compatibility.rating === 'green' ? 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10' :
+                                    plate.compatibility.rating === 'orange' ? 'bg-orange-500/5 border-orange-500/20 hover:bg-orange-500/10' :
+                                    'bg-red-500/5 border-red-500/20 hover:bg-red-500/10'
+                                  } transition-colors`}
+                                >
+                                  {/* Rating badge */}
+                                  <AccessoryCompatibilityBadge 
+                                    compatibility={plate.compatibility} 
+                                    compact 
+                                    showIcon={true}
+                                  />
+                                  
+                                  {/* Plate image */}
+                                  <div className="w-12 h-12 flex-shrink-0 rounded bg-muted/50 overflow-hidden">
+                                    {plate.image_url ? (
+                                      <img 
+                                        src={plate.image_url} 
+                                        alt={plate.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center">
+                                        <Package className="w-5 h-5 text-muted-foreground/50" />
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Plate info */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-medium truncate">{plate.name}</div>
+                                    <div className="text-xs text-muted-foreground truncate">
+                                      {plate.brand}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground/80 truncate">
+                                      {plate.compatibility.reason}
+                                    </div>
+                                  </div>
+
+                                  {/* Action links */}
+                                  <div className="flex flex-col gap-1 flex-shrink-0">
+                                    <Link 
+                                      to={`/build-plates/${plate.id}`}
+                                      className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                    </Link>
+                                    {plate.product_url && (
+                                      <a 
+                                        href={getAffiliateUrl(plate.product_url, plate.brand) || plate.product_url}
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <Store className="w-4 h-4" />
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs p-3">
+                                <div className="space-y-2">
+                                  <div className="font-semibold text-sm">{plate.name}</div>
+                                  <div className={`text-xs font-medium ${
+                                    plate.compatibility.rating === 'green' ? 'text-green-500' :
+                                    plate.compatibility.rating === 'orange' ? 'text-orange-500' :
+                                    'text-red-500'
+                                  }`}>
+                                    {plate.compatibility.rating === 'green' ? '✓ Recommended' : 
+                                     plate.compatibility.rating === 'orange' ? '⚠ Use with caution' : 
+                                     '✗ Not recommended'}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">{plate.compatibility.reason}</p>
+                                  {plate.compatibility.details && plate.compatibility.details.length > 0 && (
+                                    <ul className="text-xs text-muted-foreground list-disc list-inside">
+                                      {plate.compatibility.details.map((detail, i) => (
+                                        <li key={i}>{detail}</li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                  {specs && (
+                                    <div className="pt-2 border-t border-border space-y-1">
+                                      <div className="text-[10px] text-muted-foreground font-medium uppercase">Specifications</div>
+                                      {specs.surface_type && (
+                                        <div className="text-xs flex justify-between">
+                                          <span className="text-muted-foreground">Surface:</span>
+                                          <span>{specs.surface_type}</span>
+                                        </div>
+                                      )}
+                                      {specs.max_temp_c && (
+                                        <div className="text-xs flex justify-between">
+                                          <span className="text-muted-foreground">Max Temp:</span>
+                                          <span>{specs.max_temp_c}°C</span>
+                                        </div>
+                                      )}
+                                      {(specs.size_x_mm && specs.size_y_mm) && (
+                                        <div className="text-xs flex justify-between">
+                                          <span className="text-muted-foreground">Size:</span>
+                                          <span>{specs.size_x_mm}×{specs.size_y_mm}mm</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  {plate.price && (
+                                    <div className="pt-2 border-t border-border">
+                                      <div className="text-xs flex justify-between">
+                                        <span className="text-muted-foreground">Price:</span>
+                                        <span className="font-medium">${plate.price}</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })}
+                      </div>
+                    </TooltipProvider>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Limitations & Warnings */}
               {(compatibility.limitations.length > 0 || compatibility.recommendations.warnings.length > 0) && (
