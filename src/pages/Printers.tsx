@@ -315,17 +315,16 @@ export default function Printers() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Speed:</span>
                 <Select value={selectedSpeed} onValueChange={setSelectedSpeed}>
-                  <SelectTrigger className="w-[110px] h-8">
+                  <SelectTrigger className="w-[120px] h-8">
                     <SelectValue placeholder="Any Speed" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Any Speed</SelectItem>
-                    <SelectItem value="100">100+ mm/s</SelectItem>
                     <SelectItem value="200">200+ mm/s</SelectItem>
                     <SelectItem value="300">300+ mm/s</SelectItem>
-                    <SelectItem value="400">400+ mm/s</SelectItem>
                     <SelectItem value="500">500+ mm/s</SelectItem>
-                    <SelectItem value="600">600+ mm/s</SelectItem>
+                    <SelectItem value="700">700+ mm/s</SelectItem>
+                    <SelectItem value="1000">1000+ mm/s</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
