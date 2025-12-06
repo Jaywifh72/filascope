@@ -58,7 +58,7 @@ function extractWeight(html: string, url: string): number | null {
   return null;
 }
 
-// Extract price from HTML content
+// Extract price from HTML/markdown content
 function extractPrice(html: string, url: string): number | null {
   console.log(`Extracting price from ${url}`);
   
@@ -70,14 +70,23 @@ function extractPrice(html: string, url: string): number | null {
     /"price":\s*"([0-9,.]+)"/,
   ];
   
-  // Shopify/brand store patterns
+  // Shopify/brand store patterns - includes markdown format
   const brandPatterns = [
+    // Shopify markdown format: "Regular price$22.99 USD" or "price$19.99"
+    /(?:Regular\s+)?price\$([0-9,.]+)\s*(?:USD|CAD|EUR|GBP)?/i,
+    // Sale price format: "Sale price$18.99"
+    /Sale\s+price\$([0-9,.]+)/i,
+    // JSON price formats
+    /"price":\s*"?([0-9,.]+)"?/,
+    /"amount":\s*"?([0-9,.]+)"?/,
+    // HTML span/class patterns
     /<span class="money">.*?\$([0-9,.]+)<\/span>/,
     /class="price"[^>]*>.*?\$([0-9,.]+)/s,
-    /"price":\s*"([0-9,.]+)"/,
     /data-product-price="([0-9,.]+)"/,
     /<meta property="product:price:amount" content="([0-9,.]+)"/,
     /class="product-price"[^>]*>.*?([0-9,.]+)/s,
+    // Generic dollar amount pattern (fallback)
+    /\$([0-9]+\.[0-9]{2})\s*(?:USD)?/,
   ];
   
   // Try Amazon patterns first if it's an Amazon URL
@@ -99,7 +108,8 @@ function extractPrice(html: string, url: string): number | null {
     const match = html.match(pattern);
     if (match) {
       const price = parseFloat(match[1].replace(/,/g, ''));
-      if (!isNaN(price) && price > 0 && price < 10000) {
+      // Filament prices are typically $5-$200
+      if (!isNaN(price) && price >= 5 && price <= 500) {
         console.log(`Found brand store price: ${price}`);
         return price;
       }
