@@ -254,7 +254,7 @@ export default function NozzleDetail() {
           <Button 
             variant="ghost" 
             className="gap-2"
-            onClick={() => navigate({ pathname: "/accessories", search: "?tab=hotends" })}
+            onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Hotends
@@ -274,7 +274,7 @@ export default function NozzleDetail() {
         <Button 
           variant="ghost" 
           className="gap-2"
-          onClick={() => navigate({ pathname: "/accessories", search: "?tab=hotends" })}
+          onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Hotends
