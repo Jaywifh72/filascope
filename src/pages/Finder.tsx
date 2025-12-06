@@ -864,21 +864,42 @@ const Finder = () => {
 
           {/* Compatibility */}
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-sm cursor-pointer group">
-              <Checkbox checked={brassOnly} onCheckedChange={(checked) => setBrassOnly(checked as boolean)} />
-              <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">Brass safe</span>
-              <span className="text-xs text-muted-foreground">({filterCounts['brass_safe'] || 0})</span>
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer group">
-              <Checkbox checked={foodContact} onCheckedChange={(checked) => setFoodContact(checked as boolean)} />
-              <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">Food safe</span>
-              <span className="text-xs text-muted-foreground">({filterCounts['food_contact'] || 0})</span>
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer group">
-              <Checkbox checked={amsOnly} onCheckedChange={(checked) => setAmsOnly(checked as boolean)} />
-              <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">AMS/MMU</span>
-              <span className="text-xs text-muted-foreground">({filterCounts['ams_fit'] || 0})</span>
-            </label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <label className="flex items-center gap-2 text-sm cursor-pointer group">
+                  <Checkbox checked={brassOnly} onCheckedChange={(checked) => setBrassOnly(checked as boolean)} />
+                  <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">Brass safe</span>
+                  <span className="text-xs text-muted-foreground">({filterCounts['brass_safe'] || 0})</span>
+                </label>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Non-abrasive filaments safe for brass nozzles</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <label className="flex items-center gap-2 text-sm cursor-pointer group">
+                  <Checkbox checked={foodContact} onCheckedChange={(checked) => setFoodContact(checked as boolean)} />
+                  <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">Food safe</span>
+                  <span className="text-xs text-muted-foreground">({filterCounts['food_contact'] || 0})</span>
+                </label>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Filaments rated for food contact applications</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <label className="flex items-center gap-2 text-sm cursor-pointer group">
+                  <Checkbox checked={amsOnly} onCheckedChange={(checked) => setAmsOnly(checked as boolean)} />
+                  <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">AMS/MMU</span>
+                  <span className="text-xs text-muted-foreground">({filterCounts['ams_fit'] || 0})</span>
+                </label>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Compatible with automatic material systems (multi-color/multi-material)</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
