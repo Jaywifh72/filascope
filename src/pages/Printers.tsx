@@ -52,6 +52,8 @@ export default function Printers() {
   
   const [hasEnclosure, setHasEnclosure] = useState(false);
   const [multiMaterial, setMultiMaterial] = useState(false);
+  const [selectedSize, setSelectedSize] = useState("all");
+  const [selectedSpeed, setSelectedSpeed] = useState("all");
   
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   
@@ -105,7 +107,7 @@ export default function Printers() {
   });
 
 
-  // Filter by brand, material, and build volume on client side
+  // Filter by brand and other criteria on client side
   const filteredPrinters = useMemo(() => {
     if (!printers) return [];
 
@@ -114,11 +116,38 @@ export default function Printers() {
         return false;
       }
 
+      // Size filter based on build volume
+      if (selectedSize !== "all") {
+        const volume = (printer.build_volume_x_mm || 0) * 
+                      (printer.build_volume_y_mm || 0) * 
+                      (printer.build_volume_z_mm || 0) / 1000000000; // Convert to liters
+        
+        switch (selectedSize) {
+          case "small":
+            if (volume >= 10) return false; // Less than 10L
+            break;
+          case "medium":
+            if (volume < 10 || volume >= 30) return false; // 10-30L
+            break;
+          case "large":
+            if (volume < 30 || volume >= 60) return false; // 30-60L
+            break;
+          case "xlarge":
+            if (volume < 60) return false; // 60L+
+            break;
+        }
+      }
 
+      // Speed filter based on max print speed
+      if (selectedSpeed !== "all") {
+        const minSpeed = parseInt(selectedSpeed);
+        const printerSpeed = printer.max_print_speed_mms || 0;
+        if (printerSpeed < minSpeed) return false;
+      }
 
       return true;
     });
-  }, [printers, selectedBrand]);
+  }, [printers, selectedBrand, selectedSize, selectedSpeed]);
 
   const toggleCompareSelection = (printerId: string) => {
     setSelectedForCompare(prev => 
@@ -266,6 +295,40 @@ export default function Printers() {
                 />
                 <span className="text-sm">Multi-Material Support</span>
               </label>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Size:</span>
+                <Select value={selectedSize} onValueChange={setSelectedSize}>
+                  <SelectTrigger className="w-[130px] h-8">
+                    <SelectValue placeholder="All Sizes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sizes</SelectItem>
+                    <SelectItem value="small">Small (&lt;10L)</SelectItem>
+                    <SelectItem value="medium">Medium (10-30L)</SelectItem>
+                    <SelectItem value="large">Large (30-60L)</SelectItem>
+                    <SelectItem value="xlarge">Extra Large (60L+)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Speed:</span>
+                <Select value={selectedSpeed} onValueChange={setSelectedSpeed}>
+                  <SelectTrigger className="w-[110px] h-8">
+                    <SelectValue placeholder="Any Speed" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Any Speed</SelectItem>
+                    <SelectItem value="100">100+ mm/s</SelectItem>
+                    <SelectItem value="200">200+ mm/s</SelectItem>
+                    <SelectItem value="300">300+ mm/s</SelectItem>
+                    <SelectItem value="400">400+ mm/s</SelectItem>
+                    <SelectItem value="500">500+ mm/s</SelectItem>
+                    <SelectItem value="600">600+ mm/s</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Results Count */}
