@@ -15,7 +15,7 @@ import { LikeButton } from "@/components/LikeButton";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
-import { checkHotendFilamentCompatibility, checkBuildPlateFilamentCompatibility, type AccessoryCompatibilityResult } from "@/lib/accessoryCompatibility";
+import { checkHotendFilamentCompatibility, checkBuildPlateFilamentCompatibility, checkAmsFilamentCompatibility, type AccessoryCompatibilityResult } from "@/lib/accessoryCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { AccessoryCompatibilityBadge } from "@/components/AccessoryCompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
@@ -38,6 +38,7 @@ const FilamentDetail = () => {
   const [rescrapingImage, setRescrapingImage] = useState(false);
   const [compatibleHotends, setCompatibleHotends] = useState<AccessoryWithCompatibility[]>([]);
   const [compatibleBuildPlates, setCompatibleBuildPlates] = useState<AccessoryWithCompatibility[]>([]);
+  const [compatibleAms, setCompatibleAms] = useState<AccessoryWithCompatibility[]>([]);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
 
   const compatibility = selectedPrinter && filament 
@@ -223,6 +224,46 @@ const FilamentDetail = () => {
     };
 
     fetchCompatibleBuildPlates();
+  }, [filament]);
+
+  // Fetch compatible AMS/MMU systems for this filament
+  useEffect(() => {
+    const fetchCompatibleAms = async () => {
+      if (!filament) {
+        setCompatibleAms([]);
+        return;
+      }
+
+      try {
+        // Fetch all AMS/MMU systems
+        const { data: amsSystems, error } = await supabase
+          .from("printer_accessories")
+          .select("*")
+          .eq("accessory_type", "ams_mmu")
+          .limit(100);
+
+        if (error) throw error;
+
+        // Rate each AMS/MMU for this filament using unified service
+        const rated: AccessoryWithCompatibility[] = (amsSystems || []).map(ams => {
+          const compatibility = checkAmsFilamentCompatibility(ams, filament);
+          return { ...ams, compatibility };
+        });
+
+        // Sort: green first, then orange, then red
+        rated.sort((a, b) => {
+          const order = { green: 0, orange: 1, red: 2 };
+          return order[a.compatibility.rating] - order[b.compatibility.rating];
+        });
+
+        setCompatibleAms(rated);
+        console.log(`Found ${rated.length} AMS/MMU systems rated for ${filament.material}:`, rated.map(a => `${a.name}: ${a.compatibility.rating}`));
+      } catch (error) {
+        console.error("Error fetching AMS/MMU systems:", error);
+      }
+    };
+
+    fetchCompatibleAms();
   }, [filament]);
 
   const fetchFilament = async () => {
@@ -937,6 +978,151 @@ const FilamentDetail = () => {
                                       <div className="text-xs flex justify-between">
                                         <span className="text-muted-foreground">Price:</span>
                                         <span className="font-medium">${plate.price}</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })}
+                      </div>
+                    </TooltipProvider>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Compatible AMS/MMU Systems - Full Width */}
+              {compatibleAms.length > 0 && (
+                <Card className="bg-gradient-to-br from-background to-background/50 border-border shadow-md">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Package className="w-5 h-5 text-primary" />
+                        Compatible AMS/MMU Systems
+                      </div>
+                      <span className="text-xs font-normal text-muted-foreground">🟢 Ideal • 🟠 Considerations • 🔴 Challenges</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TooltipProvider delayDuration={200}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {compatibleAms.map((ams) => {
+                          const specs = ams.specs as Record<string, any> | null;
+                          return (
+                            <Tooltip key={ams.id}>
+                              <TooltipTrigger asChild>
+                                <div 
+                                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${
+                                    ams.compatibility.rating === 'green' ? 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10' :
+                                    ams.compatibility.rating === 'orange' ? 'bg-orange-500/5 border-orange-500/20 hover:bg-orange-500/10' :
+                                    'bg-red-500/5 border-red-500/20 hover:bg-red-500/10'
+                                  } transition-colors`}
+                                >
+                                  {/* Rating badge */}
+                                  <AccessoryCompatibilityBadge 
+                                    compatibility={ams.compatibility} 
+                                    compact 
+                                    showIcon={true}
+                                  />
+                                  
+                                  {/* AMS image */}
+                                  <div className="w-12 h-12 flex-shrink-0 rounded bg-muted/50 overflow-hidden">
+                                    {ams.image_url ? (
+                                      <img 
+                                        src={ams.image_url} 
+                                        alt={ams.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center">
+                                        <Package className="w-5 h-5 text-muted-foreground/50" />
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* AMS info */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-medium truncate">{ams.name}</div>
+                                    <div className="text-xs text-muted-foreground truncate">
+                                      {ams.brand}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground/80 truncate">
+                                      {ams.compatibility.reason}
+                                    </div>
+                                  </div>
+
+                                  {/* Action links */}
+                                  <div className="flex flex-col gap-1 flex-shrink-0">
+                                    <Link 
+                                      to={`/ams/${ams.id}`}
+                                      className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                    </Link>
+                                    {ams.product_url && (
+                                      <a 
+                                        href={getAffiliateUrl(ams.product_url, ams.brand) || ams.product_url}
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <Store className="w-4 h-4" />
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs p-3">
+                                <div className="space-y-2">
+                                  <div className="font-semibold text-sm">{ams.name}</div>
+                                  <div className={`text-xs font-medium ${
+                                    ams.compatibility.rating === 'green' ? 'text-green-500' :
+                                    ams.compatibility.rating === 'orange' ? 'text-orange-500' :
+                                    'text-red-500'
+                                  }`}>
+                                    {ams.compatibility.rating === 'green' ? '✓ Recommended' : 
+                                     ams.compatibility.rating === 'orange' ? '⚠ Considerations' : 
+                                     '✗ Not ideal'}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">{ams.compatibility.reason}</p>
+                                  {ams.compatibility.details && ams.compatibility.details.length > 0 && (
+                                    <ul className="text-xs text-muted-foreground list-disc list-inside">
+                                      {ams.compatibility.details.map((detail, i) => (
+                                        <li key={i}>{detail}</li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                  {specs && (
+                                    <div className="pt-2 border-t border-border space-y-1">
+                                      <div className="text-[10px] text-muted-foreground font-medium uppercase">Features</div>
+                                      {specs.spool_capacity && (
+                                        <div className="text-xs flex justify-between">
+                                          <span className="text-muted-foreground">Capacity:</span>
+                                          <span>{specs.spool_capacity} spools</span>
+                                        </div>
+                                      )}
+                                      {specs.drying_capability !== undefined && (
+                                        <div className="text-xs flex justify-between">
+                                          <span className="text-muted-foreground">Drying:</span>
+                                          <span>{specs.drying_capability ? '✓ Yes' : '✗ No'}</span>
+                                        </div>
+                                      )}
+                                      {specs.max_spool_weight_g && (
+                                        <div className="text-xs flex justify-between">
+                                          <span className="text-muted-foreground">Max Spool:</span>
+                                          <span>{specs.max_spool_weight_g}g</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  {ams.price && (
+                                    <div className="pt-2 border-t border-border">
+                                      <div className="text-xs flex justify-between">
+                                        <span className="text-muted-foreground">Price:</span>
+                                        <span className="font-medium">${ams.price}</span>
                                       </div>
                                     </div>
                                   )}
