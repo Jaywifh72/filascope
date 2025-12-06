@@ -52,7 +52,7 @@ export default function Printers() {
   
   const [hasEnclosure, setHasEnclosure] = useState(false);
   const [multiMaterial, setMultiMaterial] = useState(false);
-  const [minBuildVolume, setMinBuildVolume] = useState("");
+  
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   
   // Image edit dialog state
@@ -115,18 +115,10 @@ export default function Printers() {
       }
 
 
-      if (minBuildVolume) {
-        const volume = (printer.build_volume_x_mm || 0) * 
-                      (printer.build_volume_y_mm || 0) * 
-                      (printer.build_volume_z_mm || 0);
-        if (volume < parseFloat(minBuildVolume) * 1000000) {
-          return false;
-        }
-      }
 
       return true;
     });
-  }, [printers, selectedBrand, minBuildVolume]);
+  }, [printers, selectedBrand]);
 
   const toggleCompareSelection = (printerId: string) => {
     setSelectedForCompare(prev => 
@@ -255,12 +247,6 @@ export default function Printers() {
               </Select>
 
 
-              <Input
-                type="number"
-                placeholder="Min volume (liters)"
-                value={minBuildVolume}
-                onChange={(e) => setMinBuildVolume(e.target.value)}
-              />
             </div>
 
             {/* Feature Filters */}
