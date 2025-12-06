@@ -179,10 +179,39 @@ const REGIONAL_CONFIG: RegionalStore[] = [
   { region: 'JP', currency: 'JPY', storeUrlField: 'official_store_url_jp', amazonUrlField: 'amazon_url_jp', storePriceField: 'current_price_jpy_store', amazonPriceField: 'current_price_jpy_amazon', firecrawlCountry: 'jp' },
 ];
 
-function isValidPrinterPrice(price: number | null | undefined): boolean {
+function isValidPrinterPrice(price: number | null | undefined, currency: string = 'USD'): boolean {
   if (price === null || price === undefined || isNaN(price)) return false;
-  if (price < 50) return false;
-  if (price > 100000) return false;
+  
+  // Currency-specific minimum thresholds (most printers cost at least this much)
+  const minPrices: Record<string, number> = {
+    'USD': 150,
+    'CAD': 180,
+    'GBP': 120,
+    'EUR': 140,
+    'AUD': 200,
+    'JPY': 15000,
+  };
+  
+  const minPrice = minPrices[currency] || 150;
+  if (price < minPrice) return false;
+  
+  // Maximum reasonable printer prices
+  const maxPrices: Record<string, number> = {
+    'USD': 50000,
+    'CAD': 60000,
+    'GBP': 40000,
+    'EUR': 45000,
+    'AUD': 70000,
+    'JPY': 5000000,
+  };
+  
+  const maxPrice = maxPrices[currency] || 50000;
+  if (price > maxPrice) return false;
+  
+  // Reject common discount/accessory price patterns
+  const suspiciousPatterns = [49.99, 59.99, 69.99, 79.99, 84.99, 89.99, 99.99, 29.99, 39.99];
+  if (suspiciousPatterns.some(p => Math.abs(price - p) < 1)) return false;
+  
   return true;
 }
 
@@ -198,33 +227,95 @@ function extractPriceFromMarkdown(markdown: string, currency: string): number | 
 
   const symbol = currencySymbols[currency] || '\\$';
   
-  const pricePatterns = [
+  // Priority 1: Look for explicit product price patterns (most reliable)
+  const productPricePatterns = [
+    new RegExp(`(?:regular\\s*price|price|total)[:\\s]*${symbol}\\s*([\\d,]+(?:\\.\\d{2})?)`, 'gi'),
+    new RegExp(`${symbol}\\s*([\\d,]+(?:\\.\\d{2})?)\\s*(?:USD|CAD|GBP|EUR|AUD)?(?:\\s|$|<)`, 'gi'),
+  ];
+  
+  // Priority 2: General price patterns
+  const generalPatterns = [
     new RegExp(`${symbol}\\s*([\\d,]+(?:\\.\\d{2})?)`, 'gi'),
     new RegExp(`([\\d,]+(?:\\.\\d{2})?)\\s*${symbol}`, 'gi'),
-    new RegExp(`(?:price|cost|buy|now|sale)[:\\s]*${symbol}?\\s*([\\d,]+(?:\\.\\d{2})?)`, 'gi'),
   ];
 
-  const prices: number[] = [];
-
-  for (const pattern of pricePatterns) {
-    let match;
-    while ((match = pattern.exec(markdown)) !== null) {
-      const priceStr = match[1].replace(/,/g, '');
-      const price = parseFloat(priceStr);
-      if (isValidPrinterPrice(price)) {
-        prices.push(price);
+  const extractPrices = (patterns: RegExp[]): number[] => {
+    const prices: number[] = [];
+    for (const pattern of patterns) {
+      let match;
+      pattern.lastIndex = 0; // Reset regex state
+      while ((match = pattern.exec(markdown)) !== null) {
+        const priceStr = match[1].replace(/,/g, '');
+        const price = parseFloat(priceStr);
+        if (isValidPrinterPrice(price, currency)) {
+          prices.push(price);
+        }
       }
     }
+    return prices;
+  };
+
+  // Try product-specific patterns first
+  let prices = extractPrices(productPricePatterns);
+  
+  // Fall back to general patterns if needed
+  if (prices.length === 0) {
+    prices = extractPrices(generalPatterns);
   }
 
   if (prices.length === 0) return null;
 
+  // For JPY, find prices in the expected range (typically 50k-500k for printers)
   if (currency === 'JPY') {
-    const jpy = prices.find(p => p > 10000);
-    return jpy || prices[0];
+    const jpy = prices.find(p => p >= 50000 && p <= 500000);
+    return jpy || prices.find(p => p > 15000) || null;
   }
 
-  prices.sort((a, b) => a - b);
+  // Use statistical approach: find the most common price range
+  // Printers typically have a prominent main price that appears multiple times
+  const priceOccurrences = new Map<number, number>();
+  for (const price of prices) {
+    // Round to nearest $10 to group similar prices
+    const rounded = Math.round(price / 10) * 10;
+    priceOccurrences.set(rounded, (priceOccurrences.get(rounded) || 0) + 1);
+  }
+  
+  // Find the most frequently occurring price range
+  let mostCommonPrice = prices[0];
+  let maxOccurrences = 0;
+  for (const [rounded, count] of priceOccurrences.entries()) {
+    if (count > maxOccurrences) {
+      maxOccurrences = count;
+      mostCommonPrice = prices.find(p => Math.abs(Math.round(p / 10) * 10 - rounded) < 1) || rounded;
+    }
+  }
+  
+  // If we found a clear winner, use it
+  if (maxOccurrences >= 2) {
+    console.log(`  Found frequently occurring price: ${currency} ${mostCommonPrice} (${maxOccurrences}x)`);
+    return mostCommonPrice;
+  }
+  
+  // Otherwise, prefer prices in typical printer range (not the cheapest - those are usually accessories)
+  const typicalRange = prices.filter(p => {
+    if (currency === 'USD' || currency === 'CAD') return p >= 200 && p <= 15000;
+    if (currency === 'GBP') return p >= 150 && p <= 12000;
+    if (currency === 'EUR') return p >= 180 && p <= 14000;
+    if (currency === 'AUD') return p >= 250 && p <= 20000;
+    return true;
+  });
+  
+  if (typicalRange.length > 0) {
+    // Sort and take median-ish price (avoid extremes)
+    typicalRange.sort((a, b) => a - b);
+    const idx = Math.floor(typicalRange.length / 2);
+    console.log(`  Using median from typical range: ${currency} ${typicalRange[idx]}`);
+    return typicalRange[idx];
+  }
+  
+  // Last resort: take the highest valid price (main product usually costs more than accessories)
+  prices.sort((a, b) => b - a);
+  console.log(`  Using highest valid price: ${currency} ${prices[0]}`);
   return prices[0];
 }
 
