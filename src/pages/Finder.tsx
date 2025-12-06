@@ -794,14 +794,6 @@ const Finder = () => {
 
       {/* Main Content */}
       <main className="flex-1 p-4 lg:p-8 max-w-[1600px] mx-auto w-full">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <h1 className="text-3xl font-bold text-foreground">
-            {filteredAndSortedFilaments?.length || 0} <span className="text-muted-foreground font-normal">filaments</span>
-          </h1>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">🇺🇸 United States</span>
-          </div>
-        </div>
 
         {/* Search Bar and Sort */}
         <div className="mb-4 flex flex-col sm:flex-row gap-4">
@@ -1022,6 +1014,14 @@ const Finder = () => {
             </Button>
           </div>
         )}
+
+        {/* Results count */}
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm text-muted-foreground">
+            {filteredAndSortedFilaments?.length || 0} filaments
+          </p>
+          <span className="text-xs text-muted-foreground">🇺🇸 United States</span>
+        </div>
 
         {/* Filaments List */}
         <div className="space-y-3">
