@@ -376,7 +376,7 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { brand, regions, limit = 5, getBrandAvailabilityOnly = false } = await req.json();
+    const { brand, regions, limit = 3, getBrandAvailabilityOnly = false } = await req.json();
     
     // If just requesting brand availability data
     if (getBrandAvailabilityOnly) {
