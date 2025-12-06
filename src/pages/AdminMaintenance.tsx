@@ -396,13 +396,28 @@ const AdminMaintenance = () => {
     setIsScrapingOverture(true);
     setOvertureResult(null);
 
+    toast({
+      title: "Overture Scraping Started",
+      description: "This processes 47 filaments and takes 2-3 minutes. It runs in the background - refresh the page in a few minutes to see results.",
+    });
+
     try {
       const { data, error } = await supabase.functions.invoke('scrape-overture-images', {
         method: 'POST',
         body: {}
       });
 
-      if (error) throw error;
+      if (error) {
+        // Browser timeout is expected for long-running functions
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('FunctionsFetchError')) {
+          toast({
+            title: "Running in Background",
+            description: "The scraper is still running. Refresh in 2-3 minutes to see updated images.",
+          });
+          return;
+        }
+        throw error;
+      }
 
       setOvertureResult(data);
       toast({
