@@ -128,7 +128,24 @@ export function usePrinterSelection() {
         return false;
       });
 
-      return filtered as PrinterAccessory[];
+      // Sort by brand: printer brand first, then alphabetically by brand, then by name
+      const sorted = filtered.sort((a, b) => {
+        const aIsPrinterBrand = a.brand === printerBrand;
+        const bIsPrinterBrand = b.brand === printerBrand;
+
+        // Printer brand hotends come first
+        if (aIsPrinterBrand && !bIsPrinterBrand) return -1;
+        if (!aIsPrinterBrand && bIsPrinterBrand) return 1;
+
+        // Then sort by brand name alphabetically
+        const brandCompare = (a.brand || "").localeCompare(b.brand || "");
+        if (brandCompare !== 0) return brandCompare;
+
+        // Finally sort by hotend name
+        return (a.name || "").localeCompare(b.name || "");
+      });
+
+      return sorted as PrinterAccessory[];
     },
   });
 
