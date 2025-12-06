@@ -180,7 +180,7 @@ export default function BuildPlateDetail() {
           <h1 className="text-2xl font-bold mb-4">Build Plate Not Found</h1>
           <Button 
             variant="outline"
-            onClick={() => navigate({ pathname: "/accessories", search: "?tab=build-plates" })}
+            onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Build Plates
@@ -210,7 +210,7 @@ export default function BuildPlateDetail() {
         <Button 
           variant="ghost" 
           className="gap-2"
-          onClick={() => navigate({ pathname: "/accessories", search: "?tab=build-plates" })}
+          onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Build Plates

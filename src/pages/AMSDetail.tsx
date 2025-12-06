@@ -188,7 +188,7 @@ export default function AMSDetail() {
           <h1 className="text-2xl font-bold">AMS/MMU Not Found</h1>
           <Button 
             variant="outline"
-            onClick={() => navigate({ pathname: "/accessories", search: "?tab=ams" })}
+            onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to AMS/MMU List
@@ -216,7 +216,7 @@ export default function AMSDetail() {
         <Button 
           variant="ghost" 
           size="sm"
-          onClick={() => navigate({ pathname: "/accessories", search: "?tab=ams" })}
+          onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to AMS/MMU Systems

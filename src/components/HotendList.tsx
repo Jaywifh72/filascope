@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,8 +58,34 @@ interface GroupedHotend {
 export default function HotendList() {
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Get filter values from URL params
+  const searchTerm = searchParams.get("search") || "";
+  const selectedBrand = searchParams.get("brand") || "all";
+  
+  // Update URL params when filters change
+  const setSearchTerm = (value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value) {
+      newParams.set("search", value);
+    } else {
+      newParams.delete("search");
+    }
+    newParams.set("tab", "hotends");
+    setSearchParams(newParams, { replace: true });
+  };
+  
+  const setSelectedBrand = (value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value && value !== "all") {
+      newParams.set("brand", value);
+    } else {
+      newParams.delete("brand");
+    }
+    newParams.set("tab", "hotends");
+    setSearchParams(newParams, { replace: true });
+  };
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingHotend, setEditingHotend] = useState<Accessory | null>(null);
   const [newImageUrl, setNewImageUrl] = useState("");
