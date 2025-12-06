@@ -5,42 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Mapping of ColorFabb product titles to their official URLs
-const COLORFABB_PRODUCT_URLS: Record<string, string> = {
-  "allPHA 100% Biodegradable": "https://colorfabb.com/allpha-white",
-  "ASA UV Resistant": "https://colorfabb.com/asa-naturel",
-  "bronzeFill Metal Composite PLA": "https://colorfabb.com/bronzefill",
-  "copperFill Metal Composite PLA": "https://colorfabb.com/copperfill",
-  "corkFill Cork Composite PLA": "https://colorfabb.com/corkfill",
-  "glowFill Glow in the Dark PLA": "https://colorfabb.com/glowfill",
-  "HT High Temperature Co-Polyester (1.75mm)": "https://colorfabb.com/ht-white",
-  "HT High Temperature Co-Polyester (2.85mm)": "https://colorfabb.com/ht-white",
-  "LW-ASA Lightweight UV Resistant": "https://colorfabb.com/lw-asa-naturel",
-  "LW-PLA Lightweight Foaming PLA": "https://colorfabb.com/lw-pla-black",
-  "LW-PLA-HT High Temperature Lightweight": "https://colorfabb.com/lw-pla-ht-black",
-  "nGen Co-Polyester (1.75mm)": "https://colorfabb.com/ngen-clear",
-  "nGen Co-Polyester (2.85mm)": "https://colorfabb.com/ngen-clear",
-  "nGen FLEX Semi-Flexible Co-Polyester": "https://colorfabb.com/ngen-flex-clear",
-  "nGen-CF10 Carbon Fiber Co-Polyester": "https://colorfabb.com/ngen-cf10",
-  "PA Nylon": "https://colorfabb.com/pa-neat",
-  "PA-CF Low Warp Carbon Fiber Nylon": "https://colorfabb.com/pa-cf-low-warp",
-  "PETG Economy": "https://colorfabb.com/petg-economy-black",
-  "PLA Economy": "https://colorfabb.com/pla-economy-white",
-  "PLA High Speed Pro": "https://colorfabb.com/pla-high-speed-pro-natural",
-  "PLA Semi Matte": "https://colorfabb.com/filaments/materials/pla-filaments/pla-semi-matte",
-  "PLA/PHA (1.75mm)": "https://colorfabb.com/natural",
-  "PLA/PHA (2.85mm)": "https://colorfabb.com/natural",
-  "steelFill Metal Composite PLA": "https://colorfabb.com/steelfill",
-  "stoneFill Stone Composite PLA": "https://colorfabb.com/stonefill-light-gray",
-  "TPU 85A Flexible": "https://colorfabb.com/tpu-85a-black",
-  "TPU 95A Flexible": "https://colorfabb.com/tpu-95a-black",
-  "Varioshore TPU Variable Hardness Flexible": "https://colorfabb.com/varioshore-tpu-black",
-  "woodFill Wood Composite PLA": "https://colorfabb.com/woodfill",
-  "XT Co-Polyester Engineering (1.75mm)": "https://colorfabb.com/xt-clear",
-  "XT Co-Polyester Engineering (2.85mm)": "https://colorfabb.com/xt-clear",
-  "XT-CF20 Carbon Fiber Co-Polyester": "https://colorfabb.com/xt-cf20",
-};
-
 async function scrapeImageFromUrl(url: string): Promise<string | null> {
   const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
   if (!FIRECRAWL_API_KEY) {
@@ -175,11 +139,12 @@ Deno.serve(async (req) => {
     // Use service role for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch all ColorFabb filaments
+    // Fetch all ColorFabb filaments that have a product_url set
     const { data: filaments, error: fetchError } = await supabase
       .from('filaments')
       .select('id, product_title, product_url, featured_image')
-      .ilike('vendor', '%colorfabb%');
+      .ilike('vendor', '%colorfabb%')
+      .not('product_url', 'is', null);
 
     if (fetchError) {
       console.error('Error fetching filaments:', fetchError);
@@ -189,7 +154,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`Found ${filaments?.length || 0} ColorFabb filaments`);
+    console.log(`Found ${filaments?.length || 0} ColorFabb filaments with product URLs`);
 
     const results = {
       total: filaments?.length || 0,
@@ -200,14 +165,15 @@ Deno.serve(async (req) => {
     };
 
     for (const filament of filaments || []) {
-      const productUrl = COLORFABB_PRODUCT_URLS[filament.product_title];
+      // Use the product_url already stored in the database
+      const productUrl = filament.product_url;
       
-      if (!productUrl) {
-        console.log(`No URL mapping for: ${filament.product_title}`);
+      if (!productUrl || !productUrl.startsWith('http')) {
+        console.log(`Invalid or missing product_url for: ${filament.product_title}`);
         results.skipped++;
         results.details.push({
           title: filament.product_title,
-          status: 'skipped - no URL mapping',
+          status: 'skipped - no valid product_url',
         });
         continue;
       }
@@ -216,35 +182,37 @@ Deno.serve(async (req) => {
         // Scrape the image from the product page
         const imageUrl = await scrapeImageFromUrl(productUrl);
 
-        const updateData: Record<string, string> = {
-          product_url: productUrl,
-        };
-
         if (imageUrl) {
-          updateData.featured_image = imageUrl;
-        }
+          const { error: updateError } = await supabase
+            .from('filaments')
+            .update({ featured_image: imageUrl })
+            .eq('id', filament.id);
 
-        const { error: updateError } = await supabase
-          .from('filaments')
-          .update(updateData)
-          .eq('id', filament.id);
-
-        if (updateError) {
-          console.error(`Failed to update ${filament.product_title}:`, updateError);
-          results.failed++;
-          results.details.push({
-            title: filament.product_title,
-            status: 'failed - database error',
-            url: productUrl,
-          });
+          if (updateError) {
+            console.error(`Failed to update ${filament.product_title}:`, updateError);
+            results.failed++;
+            results.details.push({
+              title: filament.product_title,
+              status: 'failed - database error',
+              url: productUrl,
+            });
+          } else {
+            console.log(`Updated ${filament.product_title} with image`);
+            results.updated++;
+            results.details.push({
+              title: filament.product_title,
+              status: 'updated',
+              url: productUrl,
+              image: imageUrl,
+            });
+          }
         } else {
-          console.log(`Updated ${filament.product_title} with URL and image`);
-          results.updated++;
+          console.log(`No image found for ${filament.product_title}`);
+          results.skipped++;
           results.details.push({
             title: filament.product_title,
-            status: 'updated',
+            status: 'skipped - no image found',
             url: productUrl,
-            image: imageUrl || 'no image found',
           });
         }
 
