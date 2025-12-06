@@ -37,6 +37,7 @@ const FilamentDetail = () => {
   const [filament, setFilament] = useState<Filament | null>(null);
   const [loading, setLoading] = useState(true);
   const [rescrapingImage, setRescrapingImage] = useState(false);
+  const [scrapingData, setScrapingData] = useState(false);
   const [compatibleHotends, setCompatibleHotends] = useState<AccessoryWithCompatibility[]>([]);
   const [compatibleBuildPlates, setCompatibleBuildPlates] = useState<AccessoryWithCompatibility[]>([]);
   const [compatibleAms, setCompatibleAms] = useState<AccessoryWithCompatibility[]>([]);
@@ -348,6 +349,54 @@ const FilamentDetail = () => {
     }
   };
 
+  const handleScrapeData = async () => {
+    if (!id || !filament) return;
+    
+    if (!filament.product_url) {
+      toast({
+        title: "No product URL",
+        description: "This filament has no product URL to scrape from.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setScrapingData(true);
+    try {
+      toast({
+        title: "Scraping product data...",
+        description: `Fetching all data from: ${filament.product_url}`,
+      });
+
+      const { data, error } = await supabase.functions.invoke('fetch-prices', {
+        body: { 
+          filamentIds: [id],
+          forceRescrape: true
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Data scrape completed",
+        description: data.message || "Product data scraped successfully from product URL.",
+        duration: 5000,
+      });
+
+      // Refresh filament data
+      await fetchFilament();
+    } catch (error: any) {
+      toast({
+        title: "Scrape failed",
+        description: error.message || "Failed to scrape data from product URL.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setScrapingData(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -422,9 +471,24 @@ const FilamentDetail = () => {
                 <div>
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex-1">
-                      <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-3 leading-tight">
-                        {filament.product_title}
-                      </h1>
+                      <div className="flex items-center gap-3 mb-3">
+                        <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight">
+                          {filament.product_title}
+                        </h1>
+                        {isAdmin && filament.product_url && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleScrapeData}
+                            disabled={scrapingData}
+                            className="gap-2 shrink-0"
+                            title={`Scrape all data from: ${filament.product_url}`}
+                          >
+                            <RefreshCw className={`w-4 h-4 ${scrapingData ? 'animate-spin' : ''}`} />
+                            {scrapingData ? 'Scraping...' : 'Scrape Data'}
+                          </Button>
+                        )}
+                      </div>
                       <Link 
                         to={`/brands/${encodeURIComponent(filament.vendor || '')}`}
                         className="text-xl text-primary hover:underline inline-flex items-center gap-2 group"
