@@ -407,8 +407,10 @@ const FilamentDetail = () => {
 
   if (!filament) return null;
 
-  const pricePerKg = filament.variant_price && filament.net_weight_g
-    ? ((filament.variant_price / filament.net_weight_g) * 1000).toFixed(2)
+  // variant_price is the per-kg price, calculate total from weight
+  const pricePerKg = filament.variant_price ? filament.variant_price.toFixed(2) : null;
+  const totalPrice = filament.variant_price && filament.net_weight_g
+    ? (filament.variant_price * (filament.net_weight_g / 1000)).toFixed(2)
     : null;
 
   return (
@@ -503,9 +505,9 @@ const FilamentDetail = () => {
                           ${pricePerKg}
                         </div>
                         <div className="text-sm text-muted-foreground">per kg</div>
-                        {filament.variant_price && (
+                        {totalPrice && (
                           <div className="text-xs text-muted-foreground mt-1">
-                            ${filament.variant_price} total
+                            ${totalPrice} total
                           </div>
                         )}
                       </div>
