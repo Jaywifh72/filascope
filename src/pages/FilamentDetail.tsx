@@ -32,37 +32,12 @@ const rateHotend = (hotend: Accessory, filament: Filament): { rating: "green" | 
   const specs = hotend.specs as Record<string, any> | null;
   const maxTemp = specs?.max_temp_c || 0;
   const material = (specs?.material || "").toLowerCase();
-  const nameAndDesc = (hotend.name + " " + (hotend.description || "")).toLowerCase();
-  const isAbrasionResistant = specs?.abrasion_resistant === true || specs?.hardened === true;
   const diameter = specs?.diameter_mm || 0;
   
-  // Detect material type from specs and name
-  const isHardened = isAbrasionResistant ||
-                     material.includes("hardened") ||
-                     material.includes("obxidian") || // E3D's hardened material
-                     material.includes("hta") || // High Temp Alloy
-                     material.includes("diamondback") ||
-                     material.includes("tungsten") ||
-                     material.includes("ruby") ||
-                     material.includes("sapphire") ||
-                     material.includes("diamond") ||
-                     material.includes("pcd") ||
-                     material.includes("carbide") ||
-                     nameAndDesc.includes("hardened") ||
-                     nameAndDesc.includes("obxidian") ||
-                     nameAndDesc.includes("diamondback") ||
-                     nameAndDesc.includes("tungsten") ||
-                     nameAndDesc.includes("ruby") ||
-                     nameAndDesc.includes("diamond") ||
-                     nameAndDesc.includes("pcd") ||
-                     nameAndDesc.includes("carbide") ||
-                     nameAndDesc.includes("hta ");
-  
-  const isStainless = material.includes("stainless") ||
-                      nameAndDesc.includes("stainless");
-  
-  const isBrass = material.includes("brass") ||
-                  nameAndDesc.includes("brass");
+  // Use standardized abrasion_resistant flag from database
+  const isHardened = specs?.abrasion_resistant === true;
+  const isStainless = material.includes("stainless");
+  const isBrass = material.includes("brass") || material.includes("standard");
   
   // If no material indicators found, check if it's likely a standard hotend
   const hasKnownMaterial = isHardened || isStainless || isBrass || material.length > 0;
