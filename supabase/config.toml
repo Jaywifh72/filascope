@@ -74,3 +74,6 @@ verify_jwt = true
 
 [functions.scrape-fillamentum-images]
 verify_jwt = true
+
+[functions.scrape-fillamentum-prices]
+verify_jwt = true
