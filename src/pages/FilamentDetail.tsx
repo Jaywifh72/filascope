@@ -278,31 +278,62 @@ const FilamentDetail = () => {
     fetchCompatibleAms();
   }, [filament]);
 
-  // Fetch color variants - other filaments of the same base material from the same vendor
+  // Extract base product name by removing color suffix (e.g., "Fillamentum ABS Extrafill - Cobalt Blue" -> "Fillamentum ABS Extrafill")
+  const getBaseProductName = (title: string): string => {
+    // Pattern: "Brand Material - Color" 
+    const dashMatch = title.match(/^(.+?)\s+-\s+.+$/);
+    if (dashMatch) {
+      return dashMatch[1].trim();
+    }
+    return title;
+  };
+
+  // Extract color from product title
+  const getColorFromTitle = (title: string, baseName: string): string | null => {
+    if (title === baseName) return null;
+    const dashMatch = title.match(/^.+?\s+-\s+(.+)$/);
+    if (dashMatch) {
+      return dashMatch[1].trim();
+    }
+    return null;
+  };
+
+  // Fetch color variants - other filaments of the same base product from the same vendor
   useEffect(() => {
     const fetchColorVariants = async () => {
-      if (!filament || !filament.vendor || !filament.material) {
+      if (!filament || !filament.vendor) {
         setColorVariants([]);
         return;
       }
 
       try {
-        // Extract base material (e.g., "PLA" from "PLA Blend", "PETG" from "PETG CF")
-        const baseMaterial = filament.material.split(' ')[0];
+        const baseName = getBaseProductName(filament.product_title);
         
-        // Fetch all filaments from the same vendor with similar material
-        const { data, error } = await supabase
-          .from("filaments")
-          .select("*")
-          .eq("vendor", filament.vendor)
-          .ilike("material", `${baseMaterial}%`)
-          .neq("id", filament.id)
-          .order("product_title")
-          .limit(50);
+        // If the title has no color suffix (single product), try matching by material
+        const hasColorSuffix = baseName !== filament.product_title;
+        
+        if (hasColorSuffix) {
+          // Fetch all filaments from the same vendor and filter by base name
+          const { data, error } = await supabase
+            .from("filaments")
+            .select("*")
+            .eq("vendor", filament.vendor)
+            .neq("id", filament.id)
+            .order("product_title");
 
-        if (error) throw error;
+          if (error) throw error;
 
-        setColorVariants(data || []);
+          // Filter to those with the same base product name
+          const variants = (data || []).filter(f => {
+            const fBaseName = getBaseProductName(f.product_title);
+            return fBaseName === baseName;
+          });
+
+          setColorVariants(variants);
+        } else {
+          // No color suffix, no variants
+          setColorVariants([]);
+        }
       } catch (error) {
         console.error("Error fetching color variants:", error);
         setColorVariants([]);
@@ -687,51 +718,30 @@ const FilamentDetail = () => {
                     <h3 className="text-sm font-medium text-muted-foreground">Available Colors</h3>
                     <div className="flex flex-wrap gap-2">
                       {/* Current color - highlighted */}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="relative">
-                              <div 
-                                className="w-8 h-8 rounded-full border-2 border-primary shadow-md ring-2 ring-primary ring-offset-2 ring-offset-background cursor-default"
-                                style={{ 
-                                  backgroundColor: filament.color_hex || '#808080',
-                                }}
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="font-medium">{filament.color_family || 'Current'}</p>
-                            <p className="text-xs text-muted-foreground">Currently viewing</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      {(() => {
+                        const baseName = getBaseProductName(filament.product_title);
+                        const currentColor = getColorFromTitle(filament.product_title, baseName) || filament.color_family || 'Current';
+                        return (
+                          <div className="px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground">
+                            {currentColor}
+                          </div>
+                        );
+                      })()}
                       
                       {/* Other color variants as links */}
-                      {colorVariants.map((variant) => (
-                        <TooltipProvider key={variant.id}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Link 
-                                to={`/filament/${variant.id}`}
-                                className="group"
-                              >
-                                <div 
-                                  className="w-8 h-8 rounded-full border border-border shadow-sm hover:scale-110 hover:shadow-md transition-all cursor-pointer group-hover:border-primary"
-                                  style={{ 
-                                    backgroundColor: variant.color_hex || '#808080',
-                                  }}
-                                />
-                              </Link>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="font-medium">{variant.color_family || variant.product_title}</p>
-                              {variant.variant_price && (
-                                <p className="text-xs text-muted-foreground">${variant.variant_price.toFixed(2)}/kg</p>
-                              )}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ))}
+                      {colorVariants.map((variant) => {
+                        const baseName = getBaseProductName(filament.product_title);
+                        const variantColor = getColorFromTitle(variant.product_title, baseName) || variant.color_family || 'View';
+                        return (
+                          <Link 
+                            key={variant.id}
+                            to={`/filament/${variant.id}`}
+                            className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-primary/20 hover:text-primary transition-colors"
+                          >
+                            {variantColor}
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
