@@ -294,7 +294,8 @@ const BrandDetail = () => {
             {groupedProducts.map((product) => (
               <Card
                 key={product.baseName}
-                className="bg-card border-border hover:border-primary/50 transition-all"
+                className="bg-card border-border hover:border-primary/50 transition-all cursor-pointer group"
+                onClick={() => navigate(`/filament/${product.variants[0].id}`)}
               >
                 <CardContent className="p-6">
                   <div className="space-y-4">
@@ -357,7 +358,10 @@ const BrandDetail = () => {
                               return (
                                 <button
                                   key={variant.id}
-                                  onClick={() => navigate(`/filament/${variant.id}`)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/filament/${variant.id}`);
+                                  }}
                                   className="px-2 py-1 text-xs rounded-md bg-muted hover:bg-primary/20 hover:text-primary transition-colors"
                                   title={color || variant.product_title}
                                 >
@@ -374,7 +378,10 @@ const BrandDetail = () => {
                         <Button 
                           variant="outline" 
                           className="w-full mt-2"
-                          onClick={() => navigate(`/filament/${product.variants[0].id}`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/filament/${product.variants[0].id}`);
+                          }}
                         >
                           View Details
                         </Button>
