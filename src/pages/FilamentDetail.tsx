@@ -9,7 +9,10 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "@/components/LikeButton";
@@ -41,6 +44,9 @@ const FilamentDetail = () => {
   const [compatibleHotends, setCompatibleHotends] = useState<AccessoryWithCompatibility[]>([]);
   const [compatibleBuildPlates, setCompatibleBuildPlates] = useState<AccessoryWithCompatibility[]>([]);
   const [compatibleAms, setCompatibleAms] = useState<AccessoryWithCompatibility[]>([]);
+  const [editImageOpen, setEditImageOpen] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [savingImage, setSavingImage] = useState(false);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
 
   const compatibility = selectedPrinter && filament 
@@ -397,6 +403,36 @@ const FilamentDetail = () => {
     }
   };
 
+  const handleSaveImage = async () => {
+    if (!id || !newImageUrl.trim()) return;
+    
+    setSavingImage(true);
+    try {
+      const { error } = await supabase
+        .from("filaments")
+        .update({ featured_image: newImageUrl.trim() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Image updated",
+        description: "Product image has been updated successfully.",
+      });
+
+      setEditImageOpen(false);
+      await fetchFilament();
+    } catch (error: any) {
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update product image.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingImage(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -453,18 +489,31 @@ const FilamentDetail = () => {
                     <Package className="w-16 h-16 text-muted-foreground/30" />
                   )}
                 </div>
-                {isAdmin && filament.product_url && (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={handleRescrapeImage}
-                    disabled={rescrapingImage}
-                    className="absolute bottom-2 right-2 gap-2"
-                    title={`Rescrape image from: ${filament.product_url}`}
-                  >
-                    <RefreshCw className={`w-4 h-4 ${rescrapingImage ? 'animate-spin' : ''}`} />
-                    {rescrapingImage ? 'Scraping...' : 'Rescrape Image'}
-                  </Button>
+                {isAdmin && (
+                  <div className="absolute bottom-2 right-2 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setNewImageUrl(filament.featured_image || "");
+                        setEditImageOpen(true);
+                      }}
+                      title="Edit product image URL"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                    </Button>
+                    {filament.product_url && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={handleRescrapeImage}
+                        disabled={rescrapingImage}
+                        title={`Rescrape image from: ${filament.product_url}`}
+                      >
+                        <RefreshCw className={`w-4 h-4 ${rescrapingImage ? 'animate-spin' : ''}`} />
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -1868,6 +1917,49 @@ const FilamentDetail = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Admin Edit Image Dialog */}
+      <Dialog open={editImageOpen} onOpenChange={setEditImageOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Product Image</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="imageUrl">Image URL</Label>
+              <Input
+                id="imageUrl"
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+            {newImageUrl && (
+              <div className="space-y-2">
+                <Label>Preview</Label>
+                <div className="border rounded-lg p-4 bg-muted/50">
+                  <img
+                    src={newImageUrl}
+                    alt="Preview"
+                    className="max-h-48 mx-auto object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditImageOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveImage} disabled={savingImage || !newImageUrl.trim()}>
+              {savingImage ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
