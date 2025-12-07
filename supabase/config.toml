@@ -62,3 +62,6 @@ verify_jwt = true
 
 [functions.scrape-siraya-images]
 verify_jwt = true
+
+[functions.scrape-ninjatek-images]
+verify_jwt = true
