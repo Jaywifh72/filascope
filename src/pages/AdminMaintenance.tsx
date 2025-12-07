@@ -128,6 +128,12 @@ const AdminMaintenance = () => {
     skipped: number;
     details: Array<{ title: string; status: string; url?: string; image?: string }>;
   } | null>(null);
+  const [isScrapingTaulman, setIsScrapingTaulman] = useState(false);
+  const [taulmanResult, setTaulmanResult] = useState<{
+    total: number;
+    updated: number;
+    results: Array<{ id: string; title: string; status: string; image?: string }>;
+  } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -588,6 +594,49 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsScrapingPrusament(false);
+    }
+  };
+
+  const runTaulmanImageScraper = async () => {
+    setIsScrapingTaulman(true);
+    setTaulmanResult(null);
+
+    toast({
+      title: "Taulman3D Scraping Started",
+      description: "Scraping product images from 3dmakerworld product pages...",
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-taulman-images', {
+        method: 'POST'
+      });
+
+      if (error) {
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('FunctionsFetchError')) {
+          toast({
+            title: "Running in Background",
+            description: "The scraper is still running. Refresh in 2-3 minutes to see updated images.",
+          });
+          return;
+        }
+        throw error;
+      }
+
+      setTaulmanResult(data);
+      queryClient.invalidateQueries({ queryKey: ['filaments'] });
+      toast({
+        title: "Taulman3D Image Scraping Complete",
+        description: `Updated: ${data.updated}/${data.total} images`,
+      });
+    } catch (error) {
+      console.error('Taulman3D scraping error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to run Taulman3D image scraper",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScrapingTaulman(false);
     }
   };
 
@@ -1311,6 +1360,87 @@ const AdminMaintenance = () => {
                                 Image: {record.image}
                               </div>
                             )}
+                          </div>
+                          {record.image && (
+                            <img 
+                              src={record.image} 
+                              alt={record.title}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Taulman3D Image Scraper Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Package className="w-5 h-5 text-blue-600" />
+            <CardTitle>Taulman3D Image Scraper</CardTitle>
+          </div>
+          <CardDescription>
+            Scrapes product images from 3dmakerworld product pages using Firecrawl
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button 
+            onClick={runTaulmanImageScraper} 
+            disabled={isScrapingTaulman}
+            className="w-full sm:w-auto"
+          >
+            {isScrapingTaulman ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Scraping Taulman3D Images...
+              </>
+            ) : (
+              <>
+                <Image className="w-4 h-4 mr-2" />
+                Scrape Taulman3D Images
+              </>
+            )}
+          </Button>
+
+          {taulmanResult && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{taulmanResult.total}</div>
+                  <div className="text-sm text-muted-foreground">Total Processed</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{taulmanResult.updated}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Updated</div>
+                </div>
+              </div>
+
+              {taulmanResult.results?.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Results:</h3>
+                  <div className="max-h-96 overflow-y-auto space-y-2">
+                    {taulmanResult.results.map((record, idx) => (
+                      <div key={idx} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-1">
+                            <div className="font-medium">{record.title}</div>
+                            <Badge 
+                              variant={record.status === 'success' ? 'default' : 'secondary'} 
+                              className="text-xs"
+                            >
+                              {record.status === 'success' && <CheckCircle className="w-3 h-3 mr-1" />}
+                              {record.status}
+                            </Badge>
                           </div>
                           {record.image && (
                             <img 
