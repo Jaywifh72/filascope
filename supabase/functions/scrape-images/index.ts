@@ -657,22 +657,126 @@ Deno.serve(async (req) => {
           console.log(`HTML length: ${html.length} characters`)
         }
 
-        // Strategy 1: Look for product gallery or main product image in HTML structure
-        const galleryPatterns = [
-          /<div[^>]*class=["'][^"']*product[^"']*gallery[^"']*["'][^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["']/i,
-          /<div[^>]*class=["'][^"']*product[^"']*image[^"']*["'][^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["']/i,
-          /<img[^>]*class=["'][^"']*product[^"']*featured[^"']*["'][^>]*src=["']([^"']+)["']/i,
-          /<img[^>]*class=["'][^"']*main[^"']*product[^"']*["'][^>]*src=["']([^"']+)["']/i
-        ]
+        // Strategy 0: Fillamentum/Shopify CDN specific extraction
+        // For Fillamentum products, extract images directly from srcset with color name matching
+        const vendorLower = (filament.vendor || '').toLowerCase()
+        const isFillamentum = vendorLower.includes('fillamentum')
+        const isShopifySite = html.includes('cdn.shopify.com') || html.includes('cdn/shop/')
         
-        for (const pattern of galleryPatterns) {
-          const match = html.match(pattern)
-          if (match && match[1] && isProductImage(match[1])) {
-            imageUrl = match[1]
-            if (singleFilamentMode) {
-              console.log(`✓ Strategy 1 (Gallery): Found image in product gallery`)
+        if (isFillamentum || isShopifySite) {
+          if (singleFilamentMode) {
+            console.log(`  Trying Strategy 0: Fillamentum/Shopify CDN extraction...`)
+          }
+          
+          // Extract color from product title (e.g., "Fillamentum ABS Extrafill - Luminous Orange" -> "luminous_orange")
+          const titleParts = filament.product_title.split(' - ')
+          const colorPart = titleParts.length > 1 ? titleParts[titleParts.length - 1] : ''
+          const colorSlug = colorPart.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+          
+          if (singleFilamentMode) {
+            console.log(`  Product title: ${filament.product_title}`)
+            console.log(`  Looking for color slug: "${colorSlug}"`)
+          }
+          
+          // Look for srcset with matching color in the image filename
+          const srcsetMatches = html.matchAll(/(?:srcset|data-srcset)=["']([^"']+)["']/gi)
+          for (const srcsetMatch of srcsetMatches) {
+            const srcset = srcsetMatch[1]
+            // Split srcset into individual URLs
+            const urls = srcset.split(',').map(s => s.trim().split(/\s+/)[0])
+            
+            for (const url of urls) {
+              const urlLower = url.toLowerCase()
+              // Check if URL contains the color name and is a high-res version
+              if (colorSlug && urlLower.includes(colorSlug.replace(/_/g, '_'))) {
+                // Prefer larger sizes
+                if (urlLower.includes('540x') || urlLower.includes('720x') || urlLower.includes('900x') || urlLower.includes('1080x')) {
+                  let cleanUrl = url.replace(/^\/\//, 'https://')
+                  if (singleFilamentMode) {
+                    console.log(`  ✓ Found matching color image in srcset: ${cleanUrl}`)
+                  }
+                  imageUrl = cleanUrl
+                  break
+                }
+              }
             }
-            break
+            if (imageUrl) break
+          }
+          
+          // Also try direct img src matching
+          if (!imageUrl) {
+            const imgSrcMatches = html.matchAll(/<img[^>]*src=["']([^"']+)["'][^>]*/gi)
+            for (const imgMatch of imgSrcMatches) {
+              const src = imgMatch[1]
+              const srcLower = src.toLowerCase()
+              if (colorSlug && srcLower.includes(colorSlug.replace(/_/g, '_'))) {
+                let cleanUrl = src.replace(/^\/\//, 'https://')
+                if (singleFilamentMode) {
+                  console.log(`  ✓ Found matching color image in img src: ${cleanUrl}`)
+                }
+                imageUrl = cleanUrl
+                break
+              }
+            }
+          }
+          
+          // Fallback: Look for any product image with the product name pattern
+          if (!imageUrl && isFillamentum) {
+            // Extract base product name (e.g., "ABS_Extrafill" from title)
+            const baseName = filament.product_title
+              .replace(/^Fillamentum\s+/i, '')
+              .split(' - ')[0]
+              .replace(/\s+/g, '_')
+              .replace(/[^a-zA-Z0-9_]/g, '')
+            
+            if (singleFilamentMode) {
+              console.log(`  Looking for base product pattern: "${baseName}"`)
+            }
+            
+            const allImageUrls = html.matchAll(/(?:src|srcset|data-srcset)=["']([^"']+(?:cdn\.shop|cdn\.shopify)[^"']+)["']/gi)
+            for (const match of allImageUrls) {
+              const urlPart = match[1]
+              const urls = urlPart.split(',').map(s => s.trim().split(/\s+/)[0])
+              
+              for (const url of urls) {
+                const urlLower = url.toLowerCase()
+                const baseNameLower = baseName.toLowerCase()
+                
+                // Match product images with the base name and color
+                if (urlLower.includes(baseNameLower) && colorSlug && urlLower.includes(colorSlug.replace(/_/g, '_'))) {
+                  if (urlLower.includes('540x') || urlLower.includes('720x') || !urlLower.includes('_150x')) {
+                    let cleanUrl = url.replace(/^\/\//, 'https://')
+                    if (singleFilamentMode) {
+                      console.log(`  ✓ Found Fillamentum product image: ${cleanUrl}`)
+                    }
+                    imageUrl = cleanUrl
+                    break
+                  }
+                }
+              }
+              if (imageUrl) break
+            }
+          }
+        }
+
+        // Strategy 1: Look for product gallery or main product image in HTML structure
+        if (!imageUrl) {
+          const galleryPatterns = [
+            /<div[^>]*class=["'][^"']*product[^"']*gallery[^"']*["'][^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["']/i,
+            /<div[^>]*class=["'][^"']*product[^"']*image[^"']*["'][^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["']/i,
+            /<img[^>]*class=["'][^"']*product[^"']*featured[^"']*["'][^>]*src=["']([^"']+)["']/i,
+            /<img[^>]*class=["'][^"']*main[^"']*product[^"']*["'][^>]*src=["']([^"']+)["']/i
+          ]
+          
+          for (const pattern of galleryPatterns) {
+            const match = html.match(pattern)
+            if (match && match[1] && isProductImage(match[1])) {
+              imageUrl = match[1]
+              if (singleFilamentMode) {
+                console.log(`✓ Strategy 1 (Gallery): Found image in product gallery`)
+              }
+              break
+            }
           }
         }
 
