@@ -134,6 +134,13 @@ const AdminMaintenance = () => {
     updated: number;
     results: Array<{ id: string; title: string; status: string; image?: string }>;
   } | null>(null);
+  const [isScrapingFillamentum, setIsScrapingFillamentum] = useState(false);
+  const [fillamentumResult, setFillamentumResult] = useState<{
+    processed: number;
+    updated: number;
+    errors: number;
+    results: Array<{ id: string; title: string; status: string; image?: string }>;
+  } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -637,6 +644,55 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsScrapingTaulman(false);
+    }
+  };
+
+  const runFillamentumImageScraper = async () => {
+    setIsScrapingFillamentum(true);
+    setFillamentumResult(null);
+
+    toast({
+      title: "Fillamentum Scraping Started",
+      description: "Scraping product images from Fillamentum collection pages...",
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-fillamentum-images', {
+        method: 'POST',
+        body: { limit: 200, force: false }
+      });
+
+      if (error) {
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('FunctionsFetchError')) {
+          toast({
+            title: "Running in Background",
+            description: "The scraper is still running. Refresh in 2-3 minutes to see updated images.",
+          });
+          return;
+        }
+        throw error;
+      }
+
+      setFillamentumResult({
+        processed: data.stats?.processed || 0,
+        updated: data.stats?.updated || 0,
+        errors: data.stats?.errors || 0,
+        results: data.results || []
+      });
+      queryClient.invalidateQueries({ queryKey: ['filaments'] });
+      toast({
+        title: "Fillamentum Image Scraping Complete",
+        description: `Updated: ${data.stats?.updated || 0}/${data.stats?.processed || 0} images`,
+      });
+    } catch (error) {
+      console.error('Fillamentum scraping error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to run Fillamentum image scraper",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScrapingFillamentum(false);
     }
   };
 
@@ -1452,6 +1508,99 @@ const AdminMaintenance = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Fillamentum Image Scraper Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Package className="w-5 h-5 text-purple-600" />
+            <CardTitle>Fillamentum Image Scraper</CardTitle>
+          </div>
+          <CardDescription>
+            Scrapes product images from Fillamentum shop collection pages using Firecrawl
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button 
+            onClick={runFillamentumImageScraper} 
+            disabled={isScrapingFillamentum}
+            className="w-full sm:w-auto"
+          >
+            {isScrapingFillamentum ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Scraping Fillamentum Images...
+              </>
+            ) : (
+              <>
+                <Image className="w-4 h-4 mr-2" />
+                Scrape Fillamentum Images
+              </>
+            )}
+          </Button>
+
+          {fillamentumResult && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{fillamentumResult.processed}</div>
+                  <div className="text-sm text-muted-foreground">Processed</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{fillamentumResult.updated}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Updated</div>
+                </div>
+                <div className="bg-red-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <div className="text-2xl font-bold">{fillamentumResult.errors}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Errors</div>
+                </div>
+              </div>
+
+              {fillamentumResult.results?.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Results:</h3>
+                  <div className="max-h-96 overflow-y-auto space-y-2">
+                    {fillamentumResult.results.slice(0, 20).map((record, idx) => (
+                      <div key={idx} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-1">
+                            <div className="font-medium">{record.title}</div>
+                            <Badge 
+                              variant={record.status === 'updated' ? 'default' : 'secondary'} 
+                              className="text-xs"
+                            >
+                              {record.status === 'updated' && <CheckCircle className="w-3 h-3 mr-1" />}
+                              {record.status}
+                            </Badge>
+                          </div>
+                          {record.image && (
+                            <img 
+                              src={record.image} 
+                              alt={record.title}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {fillamentumResult.results.length > 20 && (
+                      <div className="text-sm text-muted-foreground text-center py-2">
+                        +{fillamentumResult.results.length - 20} more results
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
