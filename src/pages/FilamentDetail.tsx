@@ -44,6 +44,7 @@ const FilamentDetail = () => {
   const [compatibleHotends, setCompatibleHotends] = useState<AccessoryWithCompatibility[]>([]);
   const [compatibleBuildPlates, setCompatibleBuildPlates] = useState<AccessoryWithCompatibility[]>([]);
   const [compatibleAms, setCompatibleAms] = useState<AccessoryWithCompatibility[]>([]);
+  const [colorVariants, setColorVariants] = useState<Filament[]>([]);
   const [editImageOpen, setEditImageOpen] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [savingImage, setSavingImage] = useState(false);
@@ -275,6 +276,40 @@ const FilamentDetail = () => {
     };
 
     fetchCompatibleAms();
+  }, [filament]);
+
+  // Fetch color variants - other filaments of the same base material from the same vendor
+  useEffect(() => {
+    const fetchColorVariants = async () => {
+      if (!filament || !filament.vendor || !filament.material) {
+        setColorVariants([]);
+        return;
+      }
+
+      try {
+        // Extract base material (e.g., "PLA" from "PLA Blend", "PETG" from "PETG CF")
+        const baseMaterial = filament.material.split(' ')[0];
+        
+        // Fetch all filaments from the same vendor with similar material
+        const { data, error } = await supabase
+          .from("filaments")
+          .select("*")
+          .eq("vendor", filament.vendor)
+          .ilike("material", `${baseMaterial}%`)
+          .neq("id", filament.id)
+          .order("product_title")
+          .limit(50);
+
+        if (error) throw error;
+
+        setColorVariants(data || []);
+      } catch (error) {
+        console.error("Error fetching color variants:", error);
+        setColorVariants([]);
+      }
+    };
+
+    fetchColorVariants();
   }, [filament]);
 
   const fetchFilament = async () => {
@@ -646,7 +681,60 @@ const FilamentDetail = () => {
                   </div>
                 </div>
 
-                {/* Performance Scores */}
+                {/* Color Variants Section */}
+                {colorVariants.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-muted-foreground">Available Colors</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {/* Current color - highlighted */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="relative">
+                              <div 
+                                className="w-8 h-8 rounded-full border-2 border-primary shadow-md ring-2 ring-primary ring-offset-2 ring-offset-background cursor-default"
+                                style={{ 
+                                  backgroundColor: filament.color_hex || '#808080',
+                                }}
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="font-medium">{filament.color_family || 'Current'}</p>
+                            <p className="text-xs text-muted-foreground">Currently viewing</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      {/* Other color variants as links */}
+                      {colorVariants.map((variant) => (
+                        <TooltipProvider key={variant.id}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Link 
+                                to={`/filament/${variant.id}`}
+                                className="group"
+                              >
+                                <div 
+                                  className="w-8 h-8 rounded-full border border-border shadow-sm hover:scale-110 hover:shadow-md transition-all cursor-pointer group-hover:border-primary"
+                                  style={{ 
+                                    backgroundColor: variant.color_hex || '#808080',
+                                  }}
+                                />
+                              </Link>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="font-medium">{variant.color_family || variant.product_title}</p>
+                              {variant.variant_price && (
+                                <p className="text-xs text-muted-foreground">${variant.variant_price.toFixed(2)}/kg</p>
+                              )}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {(filament.ease_of_printing_score || filament.strength_index || filament.value_score) && (
                   <div className="grid grid-cols-3 gap-4">
                     {filament.ease_of_printing_score && (
