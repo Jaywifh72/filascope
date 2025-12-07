@@ -68,3 +68,6 @@ verify_jwt = true
 
 [functions.scrape-prusament-images]
 verify_jwt = true
+
+[functions.scrape-taulman-images]
+verify_jwt = true
