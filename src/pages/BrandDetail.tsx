@@ -8,8 +8,43 @@ import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, Users, Globe, Tre
 import { getBrandLogo } from "@/lib/brandLogos";
 import { getBrandInfo } from "@/lib/brandInfo";
 import type { Tables } from "@/integrations/supabase/types";
+import { useMemo } from "react";
 
 type Filament = Tables<"filaments">;
+
+interface GroupedProduct {
+  baseName: string;
+  material: string | null;
+  variants: Filament[];
+  representativeImage: string | null;
+  priceRange: { min: number | null; max: number | null };
+  productUrl: string | null;
+}
+
+// Extract base product name by removing color suffix
+const getBaseProductName = (title: string): string => {
+  // Pattern: "Brand Material - Color" or "Brand Material Color"
+  // Try to match " - " separator first
+  const dashMatch = title.match(/^(.+?)\s+-\s+.+$/);
+  if (dashMatch) {
+    return dashMatch[1].trim();
+  }
+  
+  // For products without separator, return as-is (single products like NonOilen)
+  return title;
+};
+
+// Extract color from product title
+const getColorFromTitle = (title: string, baseName: string): string | null => {
+  if (title === baseName) return null;
+  
+  const dashMatch = title.match(/^.+?\s+-\s+(.+)$/);
+  if (dashMatch) {
+    return dashMatch[1].trim();
+  }
+  
+  return null;
+};
 
 const BrandDetail = () => {
   const { brand } = useParams<{ brand: string }>();
@@ -34,7 +69,48 @@ const BrandDetail = () => {
     enabled: !!decodedBrand,
   });
 
-  // variant_price is already the per-kg price
+  // Group filaments by base product name
+  const groupedProducts = useMemo(() => {
+    if (!filaments) return [];
+
+    const groups = new Map<string, GroupedProduct>();
+
+    filaments.forEach((filament) => {
+      const baseName = getBaseProductName(filament.product_title);
+      
+      if (!groups.has(baseName)) {
+        groups.set(baseName, {
+          baseName,
+          material: filament.material,
+          variants: [],
+          representativeImage: null,
+          priceRange: { min: null, max: null },
+          productUrl: filament.product_url,
+        });
+      }
+
+      const group = groups.get(baseName)!;
+      group.variants.push(filament);
+
+      // Use first available image as representative
+      if (!group.representativeImage && filament.featured_image?.startsWith('http')) {
+        group.representativeImage = filament.featured_image;
+      }
+
+      // Track price range
+      if (filament.variant_price) {
+        if (group.priceRange.min === null || filament.variant_price < group.priceRange.min) {
+          group.priceRange.min = filament.variant_price;
+        }
+        if (group.priceRange.max === null || filament.variant_price > group.priceRange.max) {
+          group.priceRange.max = filament.variant_price;
+        }
+      }
+    });
+
+    return Array.from(groups.values()).sort((a, b) => a.baseName.localeCompare(b.baseName));
+  }, [filaments]);
+
   const getPricePerKg = (price: number | null) => {
     if (!price) return null;
     return price.toFixed(2);
@@ -59,6 +135,8 @@ const BrandDetail = () => {
       default: return 'secondary';
     }
   };
+
+  const totalVariants = filaments?.length || 0;
 
   return (
     <div className="min-h-screen p-8">
@@ -203,7 +281,7 @@ const BrandDetail = () => {
         {/* Filaments Section */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-4">
-            {decodedBrand} Filaments {filaments && `(${filaments.length})`}
+            {decodedBrand} Products ({groupedProducts.length} products, {totalVariants} variants)
           </h2>
         </div>
 
@@ -211,42 +289,23 @@ const BrandDetail = () => {
           <div className="text-center py-12 text-muted-foreground">
             Loading filaments...
           </div>
-        ) : filaments && filaments.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filaments.map((filament) => (
+        ) : groupedProducts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {groupedProducts.map((product) => (
               <Card
-                key={filament.id}
-                className="bg-card border-border hover:border-primary/50 transition-all cursor-pointer group"
-                onClick={() => navigate(`/filament/${filament.id}`)}
+                key={product.baseName}
+                className="bg-card border-border hover:border-primary/50 transition-all"
               >
                 <CardContent className="p-6">
                   <div className="space-y-4">
+                    {/* Product Image */}
                     <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center relative">
-                      {filament.featured_image && filament.featured_image.startsWith('http') ? (
+                      {product.representativeImage ? (
                         <img
-                          src={filament.featured_image}
-                          alt={filament.product_title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          src={product.representativeImage}
+                          alt={product.baseName}
+                          className="w-full h-full object-cover"
                           loading="lazy"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            const parent = target.parentElement;
-                            if (parent) {
-                              target.remove();
-                              const fallbackDiv = document.createElement('div');
-                              fallbackDiv.className = 'w-full h-full flex items-center justify-center relative';
-                              fallbackDiv.innerHTML = `
-                                ${brandLogo ? `<img src="${brandLogo}" alt="${decodedBrand}" class="max-w-[60%] max-h-[60%] object-contain opacity-20 absolute" />` : ''}
-                                <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                                  <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                                    <span class="text-2xl font-bold text-primary">${filament.material?.charAt(0) || '📦'}</span>
-                                  </div>
-                                  <div class="text-xs text-muted-foreground font-medium">${filament.material || 'Filament'}</div>
-                                </div>
-                              `;
-                              parent.appendChild(fallbackDiv);
-                            }
-                          }}
                         />
                       ) : (
                         <>
@@ -259,34 +318,66 @@ const BrandDetail = () => {
                           )}
                           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                              <span className="text-2xl font-bold text-primary">{filament.material?.charAt(0) || '📦'}</span>
+                              <span className="text-2xl font-bold text-primary">{product.material?.charAt(0) || '📦'}</span>
                             </div>
-                            <div className="text-xs text-muted-foreground font-medium">{filament.material || 'Filament'}</div>
+                            <div className="text-xs text-muted-foreground font-medium">{product.material || 'Filament'}</div>
                           </div>
                         </>
                       )}
                     </div>
-                    <div className="space-y-2">
-                      <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
-                        {filament.product_title}
-                      </h3>
+
+                    {/* Product Info */}
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-lg">{product.baseName}</h3>
+                      
                       <div className="flex flex-wrap gap-2">
-                        {filament.material && (
-                          <Badge variant="secondary">{filament.material}</Badge>
+                        {product.material && (
+                          <Badge variant="secondary">{product.material}</Badge>
                         )}
-                        {filament.color_family && (
-                          <Badge variant="outline">{filament.color_family}</Badge>
-                        )}
+                        <Badge variant="outline">{product.variants.length} color{product.variants.length !== 1 ? 's' : ''}</Badge>
                       </div>
-                      {filament.variant_price && (
-                        <div className="text-xl font-bold text-primary">
-                          ${getPricePerKg(filament.variant_price)}/kg
+
+                      {/* Price Range */}
+                      {product.priceRange.min && (
+                        <div className="text-lg font-bold text-primary">
+                          {product.priceRange.min === product.priceRange.max 
+                            ? `$${getPricePerKg(product.priceRange.min)}/kg`
+                            : `$${getPricePerKg(product.priceRange.min)} - $${getPricePerKg(product.priceRange.max)}/kg`
+                          }
                         </div>
                       )}
-                      {filament.net_weight_g && (
-                        <p className="text-sm text-muted-foreground">
-                          {filament.net_weight_g}g spool
-                        </p>
+
+                      {/* Color Variants */}
+                      {product.variants.length > 1 && (
+                        <div className="pt-2 border-t">
+                          <div className="text-xs text-muted-foreground mb-2">Available Colors:</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {product.variants.map((variant) => {
+                              const color = getColorFromTitle(variant.product_title, product.baseName) || variant.color_family;
+                              return (
+                                <button
+                                  key={variant.id}
+                                  onClick={() => navigate(`/filament/${variant.id}`)}
+                                  className="px-2 py-1 text-xs rounded-md bg-muted hover:bg-primary/20 hover:text-primary transition-colors"
+                                  title={color || variant.product_title}
+                                >
+                                  {color || 'View'}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Single product - direct link */}
+                      {product.variants.length === 1 && (
+                        <Button 
+                          variant="outline" 
+                          className="w-full mt-2"
+                          onClick={() => navigate(`/filament/${product.variants[0].id}`)}
+                        >
+                          View Details
+                        </Button>
                       )}
                     </div>
                   </div>
