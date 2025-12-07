@@ -65,3 +65,6 @@ verify_jwt = true
 
 [functions.scrape-ninjatek-images]
 verify_jwt = true
+
+[functions.scrape-prusament-images]
+verify_jwt = true
