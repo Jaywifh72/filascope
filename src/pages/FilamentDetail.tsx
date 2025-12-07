@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +47,9 @@ const FilamentDetail = () => {
   const [editImageOpen, setEditImageOpen] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [savingImage, setSavingImage] = useState(false);
+  const [editUrlOpen, setEditUrlOpen] = useState(false);
+  const [newProductUrl, setNewProductUrl] = useState("");
+  const [savingUrl, setSavingUrl] = useState(false);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
 
   const compatibility = selectedPrinter && filament 
@@ -433,6 +436,36 @@ const FilamentDetail = () => {
     }
   };
 
+  const handleSaveProductUrl = async () => {
+    if (!id) return;
+    
+    setSavingUrl(true);
+    try {
+      const { error } = await supabase
+        .from("filaments")
+        .update({ product_url: newProductUrl.trim() || null })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Product URL updated",
+        description: "Product URL has been updated successfully.",
+      });
+
+      setEditUrlOpen(false);
+      await fetchFilament();
+    } catch (error: any) {
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update product URL.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingUrl(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -526,18 +559,33 @@ const FilamentDetail = () => {
                         <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight">
                           {filament.product_title}
                         </h1>
-                        {isAdmin && filament.product_url && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleScrapeData}
-                            disabled={scrapingData}
-                            className="gap-2 shrink-0"
-                            title={`Scrape all data from: ${filament.product_url}`}
-                          >
-                            <RefreshCw className={`w-4 h-4 ${scrapingData ? 'animate-spin' : ''}`} />
-                            {scrapingData ? 'Scraping...' : 'Scrape Data'}
-                          </Button>
+                        {isAdmin && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setNewProductUrl(filament.product_url || "");
+                                setEditUrlOpen(true);
+                              }}
+                              title="Edit product URL"
+                            >
+                              <Link2 className="w-4 h-4" />
+                            </Button>
+                            {filament.product_url && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleScrapeData}
+                                disabled={scrapingData}
+                                className="gap-2 shrink-0"
+                                title={`Scrape all data from: ${filament.product_url}`}
+                              >
+                                <RefreshCw className={`w-4 h-4 ${scrapingData ? 'animate-spin' : ''}`} />
+                                {scrapingData ? 'Scraping...' : 'Scrape Data'}
+                              </Button>
+                            )}
+                          </>
                         )}
                       </div>
                       <Link 
@@ -1956,6 +2004,47 @@ const FilamentDetail = () => {
             </Button>
             <Button onClick={handleSaveImage} disabled={savingImage || !newImageUrl.trim()}>
               {savingImage ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Admin Edit Product URL Dialog */}
+      <Dialog open={editUrlOpen} onOpenChange={setEditUrlOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Product URL</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="productUrl">Product URL</Label>
+              <Input
+                id="productUrl"
+                value={newProductUrl}
+                onChange={(e) => setNewProductUrl(e.target.value)}
+                placeholder="https://store.example.com/product/filament"
+              />
+            </div>
+            {newProductUrl && (
+              <div className="text-sm text-muted-foreground">
+                <a 
+                  href={newProductUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline flex items-center gap-1"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Test link
+                </a>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditUrlOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProductUrl} disabled={savingUrl}>
+              {savingUrl ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
