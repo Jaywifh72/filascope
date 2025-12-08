@@ -1,8 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, BadgeCheck, Zap, Radio } from "lucide-react";
+import { Package, BadgeCheck, Zap, Radio, Info } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Custom Plastic Spool Icon
 const PlasticSpoolIcon = ({ className }: { className?: string }) => (
@@ -132,7 +137,70 @@ const Brands = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Filament Brands</h1>
-          <p className="text-muted-foreground">Browse filaments by manufacturer</p>
+          <p className="text-muted-foreground mb-4">Browse filaments by manufacturer</p>
+          
+          {/* Legend */}
+          <div className="flex flex-wrap items-center gap-4 p-3 bg-[#1A1A1A] border border-[#333] rounded-lg">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Info className="w-3.5 h-3.5" />
+              <span className="font-mono">LEGEND:</span>
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-blue-500/20 text-blue-400 border border-blue-500/30 cursor-help">
+                  <PlasticSpoolIcon className="w-3.5 h-3.5" />
+                  Plastic
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <p className="font-mono text-xs">Standard plastic spools. Durable and reusable, but not eco-friendly.</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-help">
+                  <CardboardSpoolIcon className="w-3.5 h-3.5" />
+                  Cardboard
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <p className="font-mono text-xs">Eco-friendly cardboard spools. Recyclable but may absorb moisture - store in dry conditions.</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-primary/20 text-primary border border-primary/30 cursor-help">
+                  <Zap className="w-3.5 h-3.5" />
+                  High Speed
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <p className="font-mono text-xs">Optimized for high-speed printing (300+ mm/s). Enhanced flow and cooling properties.</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-purple-500/20 text-purple-400 border border-purple-500/30 cursor-help">
+                  <Radio className="w-3.5 h-3.5" />
+                  RFID/NFC
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <p className="font-mono text-xs">Spools with RFID/NFC chips for automatic material detection. Distance shows read range in meters.</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-green-500/20 text-green-400 border border-green-500/30 cursor-help">
+                  <BadgeCheck className="w-3.5 h-3.5" />
+                  Verified
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <p className="font-mono text-xs">Lab-tested brand with verified specifications and quality control.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
 
         {isLoading ? (
