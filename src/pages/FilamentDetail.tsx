@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -532,6 +532,44 @@ const FilamentDetail = () => {
     }
   };
 
+  const handleCopyProfile = async () => {
+    if (!filament) return;
+    
+    const profile = {
+      Brand: filament.vendor || "Unknown",
+      Material: filament.material || "Unknown",
+      Nozzle_Temp: filament.nozzle_temp_sweetspot_c 
+        ? `${filament.nozzle_temp_sweetspot_c}°C`
+        : filament.nozzle_temp_min_c && filament.nozzle_temp_max_c
+          ? `${filament.nozzle_temp_min_c}-${filament.nozzle_temp_max_c}°C`
+          : "Not specified",
+      Bed_Temp: filament.bed_temp_min_c && filament.bed_temp_max_c
+        ? `${filament.bed_temp_min_c}-${filament.bed_temp_max_c}°C`
+        : "Not specified",
+      Max_Volumetric_Speed: filament.print_speed_max_mms
+        ? `${filament.print_speed_max_mms} mm/s`
+        : "Not specified",
+      Retraction: filament.material?.includes("TPU") || filament.material?.includes("TPE")
+        ? "0.5-1.0mm (Flexible)"
+        : "1.0-2.0mm (Standard)"
+    };
+    
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(profile, null, 2));
+      toast({
+        title: "✓ Profile copied to clipboard",
+        description: "Print settings JSON copied successfully.",
+        duration: 3000,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy profile to clipboard.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -812,6 +850,15 @@ const FilamentDetail = () => {
                       </a>
                     </Button>
                   )}
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    onClick={handleCopyProfile}
+                    className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] transition-all duration-300"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy Profile
+                  </Button>
                 </div>
               </div>
             </div>
