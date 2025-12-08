@@ -439,7 +439,7 @@ const BrandDetail = () => {
                           <div className="flex flex-wrap gap-1.5">
                             {product.variants.map((variant) => {
                               const colorName = getColorFromTitle(variant.product_title, product.baseName) || variant.color_family;
-                              const hasColorHex = variant.color_hex && variant.color_hex !== '#000000';
+                              const hasColorHex = !!variant.color_hex;
                               
                               return (
                                 <button
@@ -454,10 +454,16 @@ const BrandDetail = () => {
                                   {hasColorHex ? (
                                     <div 
                                       className="w-7 h-7 rounded-full border-2 border-border hover:border-primary hover:scale-110 transition-all shadow-sm"
-                                      style={{ backgroundColor: variant.color_hex || '#888' }}
+                                      style={{ 
+                                        backgroundColor: variant.color_hex || '#888',
+                                        boxShadow: variant.color_hex === '#FFFFFF' || variant.color_hex === '#ffffff' 
+                                          ? 'inset 0 0 0 1px rgba(0,0,0,0.1)' 
+                                          : undefined
+                                      }}
                                     />
                                   ) : (
-                                    <div className="px-2 py-1 text-xs rounded-md bg-muted hover:bg-primary/20 hover:text-primary transition-colors">
+                                    <div className="px-2 py-1 text-xs rounded-md bg-muted hover:bg-primary/20 hover:text-primary transition-colors flex items-center gap-1">
+                                      <span className="w-3 h-3 rounded-full bg-gradient-to-br from-muted-foreground/30 to-muted-foreground/10 border border-border" />
                                       {colorName || 'View'}
                                     </div>
                                   )}
