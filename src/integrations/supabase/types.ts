@@ -286,6 +286,7 @@ export type Database = {
           finish_type: string | null
           flexural_strength_mpa: number | null
           food_contact_rating: string | null
+          high_speed_capable: boolean | null
           id: string
           industry_tags: string[] | null
           is_nozzle_abrasive: boolean | null
@@ -308,6 +309,7 @@ export type Database = {
           recommended_nozzle_type: string | null
           shore_hardness_d: number | null
           spool_ams_fit: boolean | null
+          spool_material: string | null
           spool_outer_d_mm: number | null
           spool_width_mm: number | null
           strength_index: number | null
@@ -315,6 +317,7 @@ export type Database = {
           tensile_modulus_xy_mpa: number | null
           tensile_strength_xy_mpa: number | null
           tg_c: number | null
+          transmission_distance: number | null
           updated_at: string | null
           use_case_tags: string[] | null
           value_score: number | null
@@ -345,6 +348,7 @@ export type Database = {
           finish_type?: string | null
           flexural_strength_mpa?: number | null
           food_contact_rating?: string | null
+          high_speed_capable?: boolean | null
           id?: string
           industry_tags?: string[] | null
           is_nozzle_abrasive?: boolean | null
@@ -367,6 +371,7 @@ export type Database = {
           recommended_nozzle_type?: string | null
           shore_hardness_d?: number | null
           spool_ams_fit?: boolean | null
+          spool_material?: string | null
           spool_outer_d_mm?: number | null
           spool_width_mm?: number | null
           strength_index?: number | null
@@ -374,6 +379,7 @@ export type Database = {
           tensile_modulus_xy_mpa?: number | null
           tensile_strength_xy_mpa?: number | null
           tg_c?: number | null
+          transmission_distance?: number | null
           updated_at?: string | null
           use_case_tags?: string[] | null
           value_score?: number | null
@@ -404,6 +410,7 @@ export type Database = {
           finish_type?: string | null
           flexural_strength_mpa?: number | null
           food_contact_rating?: string | null
+          high_speed_capable?: boolean | null
           id?: string
           industry_tags?: string[] | null
           is_nozzle_abrasive?: boolean | null
@@ -426,6 +433,7 @@ export type Database = {
           recommended_nozzle_type?: string | null
           shore_hardness_d?: number | null
           spool_ams_fit?: boolean | null
+          spool_material?: string | null
           spool_outer_d_mm?: number | null
           spool_width_mm?: number | null
           strength_index?: number | null
@@ -433,6 +441,7 @@ export type Database = {
           tensile_modulus_xy_mpa?: number | null
           tensile_strength_xy_mpa?: number | null
           tg_c?: number | null
+          transmission_distance?: number | null
           updated_at?: string | null
           use_case_tags?: string[] | null
           value_score?: number | null

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, BadgeCheck } from "lucide-react";
+import { Package, BadgeCheck, AlertTriangle, Zap, Radio } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 
 // Brands that have been lab-tested/verified
@@ -17,6 +17,14 @@ const VERIFIED_BRANDS = [
   "MatterHackers",
 ];
 
+interface BrandStats {
+  name: string;
+  count: number;
+  hasCardboardSpool: boolean;
+  hasHighSpeed: boolean;
+  avgTransmissionDistance: number | null;
+}
+
 const Brands = () => {
   const navigate = useNavigate();
   const { data: brands, isLoading } = useQuery({
@@ -24,18 +32,43 @@ const Brands = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("filaments")
-        .select("vendor")
+        .select("vendor, spool_material, transmission_distance, high_speed_capable")
         .not("vendor", "is", null);
       
       if (error) throw error;
       
-      const brandCounts = data.reduce((acc, f) => {
-        acc[f.vendor] = (acc[f.vendor] || 0) + 1;
+      const brandStats = data.reduce((acc, f) => {
+        if (!acc[f.vendor]) {
+          acc[f.vendor] = {
+            count: 0,
+            hasCardboardSpool: false,
+            hasHighSpeed: false,
+            transmissionDistances: [] as number[],
+          };
+        }
+        acc[f.vendor].count += 1;
+        if (f.spool_material === "Cardboard") {
+          acc[f.vendor].hasCardboardSpool = true;
+        }
+        if (f.high_speed_capable) {
+          acc[f.vendor].hasHighSpeed = true;
+        }
+        if (f.transmission_distance != null) {
+          acc[f.vendor].transmissionDistances.push(f.transmission_distance);
+        }
         return acc;
-      }, {} as Record<string, number>);
+      }, {} as Record<string, { count: number; hasCardboardSpool: boolean; hasHighSpeed: boolean; transmissionDistances: number[] }>);
       
-      return Object.entries(brandCounts)
-        .map(([name, count]) => ({ name, count }))
+      return Object.entries(brandStats)
+        .map(([name, stats]): BrandStats => ({
+          name,
+          count: stats.count,
+          hasCardboardSpool: stats.hasCardboardSpool,
+          hasHighSpeed: stats.hasHighSpeed,
+          avgTransmissionDistance: stats.transmissionDistances.length > 0
+            ? Math.round(stats.transmissionDistances.reduce((a, b) => a + b, 0) / stats.transmissionDistances.length)
+            : null,
+        }))
         .sort((a, b) => b.count - a.count);
     },
   });
@@ -76,7 +109,7 @@ const Brands = () => {
                           </div>
                         )}
                       </div>
-                      <div className="text-center space-y-1">
+                      <div className="text-center space-y-2">
                         <div className="flex items-center justify-center gap-2">
                           <h3 className="font-inter font-bold text-lg text-white group-hover:text-primary transition-colors">
                             {brand.name}
@@ -86,6 +119,28 @@ const Brands = () => {
                           )}
                         </div>
                         <p className="font-mono text-sm text-muted-foreground">{brand.count} filaments</p>
+                        
+                        {/* Feature Tags */}
+                        <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2">
+                          {brand.hasCardboardSpool && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                              <AlertTriangle className="w-3 h-3" />
+                              Cardboard
+                            </span>
+                          )}
+                          {brand.hasHighSpeed && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono bg-primary/20 text-primary border border-primary/30">
+                              <Zap className="w-3 h-3" />
+                              High Speed
+                            </span>
+                          )}
+                          {brand.avgTransmissionDistance != null && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                              <Radio className="w-3 h-3" />
+                              {brand.avgTransmissionDistance}m
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
