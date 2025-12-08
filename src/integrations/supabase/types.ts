@@ -318,6 +318,7 @@ export type Database = {
           tensile_strength_xy_mpa: number | null
           tg_c: number | null
           transmission_distance: number | null
+          upc: string | null
           updated_at: string | null
           use_case_tags: string[] | null
           value_score: number | null
@@ -380,6 +381,7 @@ export type Database = {
           tensile_strength_xy_mpa?: number | null
           tg_c?: number | null
           transmission_distance?: number | null
+          upc?: string | null
           updated_at?: string | null
           use_case_tags?: string[] | null
           value_score?: number | null
@@ -442,6 +444,7 @@ export type Database = {
           tensile_strength_xy_mpa?: number | null
           tg_c?: number | null
           transmission_distance?: number | null
+          upc?: string | null
           updated_at?: string | null
           use_case_tags?: string[] | null
           value_score?: number | null

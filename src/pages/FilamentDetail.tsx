@@ -1912,6 +1912,9 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   {filament.variant_sku && (
                     <PropertyRow label="SKU" value={filament.variant_sku} />
                   )}
+                  {(filament as any).upc && (
+                    <PropertyRow label="UPC" value={(filament as any).upc} />
+                  )}
                   {filament.variant_available !== null && (
                     <PropertyRow 
                       label="Stock Status" 
