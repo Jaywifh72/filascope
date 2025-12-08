@@ -23,11 +23,15 @@ interface GroupedProduct {
 
 // Common color names to detect at the end of product titles
 const COLOR_WORDS = [
+  // Basic colors
   'Beige', 'Black', 'Blue', 'Brown', 'Burgundy', 'Charcoal', 'Copper', 'Cream', 'Cyan',
   'Gold', 'Gray', 'Grey', 'Green', 'Ivory', 'Lavender', 'Magenta', 'Maroon', 'Navy',
   'Olive', 'Orange', 'Peach', 'Pink', 'Purple', 'Red', 'Rose', 'Salmon', 'Silver',
-  'Tan', 'Teal', 'Turquoise', 'Violet', 'White', 'Yellow',
-  // Multi-word colors
+  'Tan', 'Teal', 'Turquoise', 'Violet', 'White', 'Yellow', 'Kraft', 'Lemonade', 'Terracotta',
+  // Multi-word colors (Hatchbox style)
+  'Ash Gray', 'Stone Gray', 'Baby Pink', 'Blush Pink', 'Soft Purple', 'Light Lavender',
+  'Cherry Red', 'Lemon Yellow', 'Seafoam Blue', 'Seafoam Green',
+  // General multi-word colors
   'Light Blue', 'Dark Blue', 'Sky Blue', 'Royal Blue', 'Light Green', 'Dark Green',
   'Light Gray', 'Dark Gray', 'Light Grey', 'Dark Grey', 'Lime Green', 'Forest Green',
   'Hot Pink', 'Light Pink', 'Neon Green', 'Neon Orange', 'Neon Pink', 'Neon Yellow',
