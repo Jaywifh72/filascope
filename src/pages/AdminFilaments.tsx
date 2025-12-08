@@ -7,6 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -53,6 +60,7 @@ const AdminFilaments = () => {
   const [upcDialogOpen, setUpcDialogOpen] = useState(false);
   const [selectedBrandsForUpc, setSelectedBrandsForUpc] = useState<Set<string>>(new Set());
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
+  const [vendorFilter, setVendorFilter] = useState<string>("all");
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -190,8 +198,9 @@ const AdminFilaments = () => {
       f.material?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesUpcFilter = showMissingUpcOnly ? !f.upc : true;
+    const matchesVendor = vendorFilter === "all" || f.vendor === vendorFilter;
     
-    return matchesSearch && matchesUpcFilter;
+    return matchesSearch && matchesUpcFilter && matchesVendor;
   });
 
   // Stats
@@ -312,6 +321,19 @@ const AdminFilaments = () => {
               className="pl-10"
             />
           </div>
+          <Select value={vendorFilter} onValueChange={setVendorFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Vendors" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border z-50">
+              <SelectItem value="all">All Vendors</SelectItem>
+              {uniqueVendorsList.map((vendor) => (
+                <SelectItem key={vendor} value={vendor}>
+                  {vendor}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <div className="flex items-center gap-2">
             <Checkbox
               id="missing-upc"
