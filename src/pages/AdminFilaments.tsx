@@ -404,6 +404,7 @@ const AdminFilaments = () => {
                   <TableHead>Product</TableHead>
                   <TableHead>Vendor</TableHead>
                   <TableHead>Material</TableHead>
+                  <TableHead>UPC</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Weight</TableHead>
                   <TableHead className="w-24">Actions</TableHead>
@@ -455,6 +456,11 @@ const AdminFilaments = () => {
                       {filament.material && (
                         <Badge variant="secondary">{filament.material}</Badge>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {filament.upc || "-"}
+                      </span>
                     </TableCell>
                     <TableCell>
                       {filament.variant_price
