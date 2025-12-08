@@ -465,15 +465,15 @@ async function processFilament(
     }
     
     // Check if we have anything to update
-    const hasUpc = !!cleanUpc;
-    const hasSku = sku && sku !== filament.variant_sku;
+    const hasNewUpc = cleanUpc && cleanUpc !== filament.upc;
+    const hasNewSku = sku && sku !== filament.variant_sku;
     
-    if (hasUpc || hasSku) {
+    if (hasNewUpc || hasNewSku) {
       const updateData: Record<string, string> = {};
-      if (hasUpc) updateData.upc = cleanUpc!;
-      if (hasSku) updateData.variant_sku = sku!;
+      if (hasNewUpc) updateData.upc = cleanUpc!;
+      if (hasNewSku) updateData.variant_sku = sku!;
       
-      console.log(`  Found via ${method}: ${hasUpc ? `UPC=${cleanUpc}` : ''} ${hasSku ? `SKU=${sku}` : ''}`);
+      console.log(`  Found via ${method}: ${hasNewUpc ? `UPC=${cleanUpc}` : ''} ${hasNewSku ? `SKU=${sku}` : ''}`);
       
       const { error: updateError } = await supabase
         .from('filaments')
@@ -583,7 +583,7 @@ serve(async (req) => {
       
       let query = supabase
         .from('filaments')
-        .select('id, product_title, product_url, product_handle, vendor')
+        .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku')
         .in('id', filamentIds)
         .not('product_url', 'is', null);
 
@@ -665,7 +665,7 @@ serve(async (req) => {
 
       let query = supabase
         .from('filaments')
-        .select('id, product_title, product_url, product_handle, vendor')
+        .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku')
         .eq('vendor', brand)
         .not('product_url', 'is', null);
 
