@@ -141,6 +141,14 @@ const AdminMaintenance = () => {
     errors: number;
     results: Array<{ id: string; title: string; status: string; image?: string }>;
   } | null>(null);
+  const [isScrapingNewBrands, setIsScrapingNewBrands] = useState(false);
+  const [newBrandLimit, setNewBrandLimit] = useState("50");
+  const [newBrandResult, setNewBrandResult] = useState<{
+    total: number;
+    success: number;
+    failed: number;
+    results: Array<{ id: string; title: string; status: string; image?: string }>;
+  } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -693,6 +701,53 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsScrapingFillamentum(false);
+    }
+  };
+
+  const runNewBrandImageScraper = async () => {
+    setIsScrapingNewBrands(true);
+    setNewBrandResult(null);
+
+    toast({
+      title: "New Brand Image Scraping Started",
+      description: "Scraping product images for VoxelPLA, 3DFuel, Eryone, Inland, Fiberlogy, Ziro, and Paramount 3D...",
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-new-brand-images', {
+        method: 'POST',
+        body: { 
+          limit: parseInt(newBrandLimit),
+          brands: ["VoxelPLA", "3DFuel", "Eryone", "Inland", "Fiberlogy", "Ziro", "Paramount 3D"]
+        }
+      });
+
+      if (error) {
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('FunctionsFetchError')) {
+          toast({
+            title: "Running in Background",
+            description: "The scraper is still running. Refresh in 2-3 minutes to see updated images.",
+          });
+          return;
+        }
+        throw error;
+      }
+
+      setNewBrandResult(data);
+      queryClient.invalidateQueries({ queryKey: ['filaments'] });
+      toast({
+        title: "New Brand Image Scraping Complete",
+        description: `Success: ${data.success}, Failed: ${data.failed}`,
+      });
+    } catch (error) {
+      console.error('New brand scraping error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to run new brand image scraper",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScrapingNewBrands(false);
     }
   };
 
@@ -2154,6 +2209,107 @@ const AdminMaintenance = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* New Brand Image Scraper Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            <CardTitle>New Brand Image Scraper</CardTitle>
+          </div>
+          <CardDescription>
+            Scrape product images for newly added filament brands: VoxelPLA, 3DFuel, Eryone, Inland, Fiberlogy, Ziro, and Paramount 3D
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="new-brand-limit">Number of filaments to process</Label>
+            <Input
+              id="new-brand-limit"
+              type="number"
+              value={newBrandLimit}
+              onChange={(e) => setNewBrandLimit(e.target.value)}
+              min="1"
+              max="100"
+              className="w-32"
+            />
+            <p className="text-xs text-muted-foreground">
+              Processes filaments from VoxelPLA, 3DFuel, Eryone, Inland, Fiberlogy, Ziro, and Paramount 3D that are missing images
+            </p>
+          </div>
+
+          <Button 
+            onClick={runNewBrandImageScraper} 
+            disabled={isScrapingNewBrands}
+            className="w-full sm:w-auto"
+          >
+            {isScrapingNewBrands ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Scraping New Brand Images...
+              </>
+            ) : (
+              <>
+                <Package className="w-4 h-4 mr-2" />
+                Scrape New Brand Images
+              </>
+            )}
+          </Button>
+
+          {newBrandResult && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{newBrandResult.total}</div>
+                  <div className="text-sm text-muted-foreground">Total Processed</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{newBrandResult.success}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Success</div>
+                </div>
+                <div className="bg-red-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <div className="text-2xl font-bold">{newBrandResult.failed}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Failed</div>
+                </div>
+              </div>
+
+              {newBrandResult.results && newBrandResult.results.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Processing Details:</h3>
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {newBrandResult.results.map((result, idx) => (
+                      <div key={idx} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="font-medium">{result.title}</div>
+                            {result.image && result.status === "success" && (
+                              <div className="text-xs text-muted-foreground font-mono truncate max-w-md">
+                                {result.image}
+                              </div>
+                            )}
+                          </div>
+                          <Badge variant={
+                            result.status === "success" ? "default" :
+                            result.status === "no_url" || result.status === "no_image_found" ? "secondary" : "destructive"
+                          }>
+                            {result.status.replace(/_/g, ' ')}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
