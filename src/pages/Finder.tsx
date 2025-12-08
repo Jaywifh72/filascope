@@ -18,6 +18,7 @@ import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { isAMSCompatible } from "@/lib/amsCompatibility";
+import BentoGrid from "@/components/BentoGrid";
 
 const Finder = () => {
   const navigate = useNavigate();
@@ -616,6 +617,9 @@ const Finder = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Bento Grid Hero Section */}
+      <BentoGrid />
+      
       {/* Full-width Printer Selector at Top */}
       <div className="p-4 lg:p-6 border-b border-border bg-card/30">
         <div className="max-w-[1800px] mx-auto">
