@@ -61,6 +61,7 @@ const AdminFilaments = () => {
   const [selectedBrandsForUpc, setSelectedBrandsForUpc] = useState<Set<string>>(new Set());
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
+  const [forceUpdateScrape, setForceUpdateScrape] = useState(false);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
 
   useEffect(() => {
@@ -175,7 +176,7 @@ const AdminFilaments = () => {
         body: { 
           brands: Array.from(selectedBrandsForUpc),
           limit: 200, 
-          forceUpdate: false 
+          forceUpdate: forceUpdateScrape 
         }
       });
 
@@ -210,7 +211,7 @@ const AdminFilaments = () => {
       const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
         body: { 
           filamentIds: idsToScrape,
-          forceUpdate: false 
+          forceUpdate: forceUpdateScrape 
         }
       });
 
@@ -431,6 +432,16 @@ const AdminFilaments = () => {
                   ))}
                 </div>
               </ScrollArea>
+              <div className="flex items-center gap-2 pt-2 border-t">
+                <Checkbox
+                  id="force-update"
+                  checked={forceUpdateScrape}
+                  onCheckedChange={(checked) => setForceUpdateScrape(checked === true)}
+                />
+                <label htmlFor="force-update" className="text-sm cursor-pointer">
+                  Force update (re-scrape even if UPC exists, useful for fetching missing SKUs)
+                </label>
+              </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setUpcDialogOpen(false)}>
                   Cancel
