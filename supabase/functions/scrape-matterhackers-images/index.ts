@@ -50,11 +50,12 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get MatterHackers filaments
+    // Get MatterHackers filaments missing images
     const { data: filaments, error: fetchError } = await supabase
       .from('filaments')
       .select('id, product_title, product_url, featured_image')
       .eq('vendor', 'MatterHackers')
+      .is('featured_image', null)
       .not('product_url', 'is', null);
 
     if (fetchError) {
