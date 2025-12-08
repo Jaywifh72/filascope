@@ -28,7 +28,10 @@ const COLOR_WORDS = [
   'Gold', 'Gray', 'Grey', 'Green', 'Ivory', 'Lavender', 'Magenta', 'Maroon', 'Navy',
   'Olive', 'Orange', 'Peach', 'Pink', 'Purple', 'Red', 'Rose', 'Salmon', 'Silver',
   'Tan', 'Teal', 'Turquoise', 'Violet', 'White', 'Yellow', 'Kraft', 'Lemonade', 'Terracotta',
-  // Multi-word colors (Hatchbox style)
+  // Stylized color names (Hatchbox PETG style)
+  'Midnight', 'Peacock', 'Lake', 'Baby', 'Electric Lime', 'Dusk', 'Dawn', 'Sunset', 'Ocean',
+  'Sky', 'Coral', 'Mint', 'Sage', 'Moss', 'Sand', 'Clay', 'Slate', 'Storm', 'Fog', 'Mist',
+  // Multi-word colors (Hatchbox Matte PLA style)
   'Ash Gray', 'Stone Gray', 'Baby Pink', 'Blush Pink', 'Soft Purple', 'Light Lavender',
   'Cherry Red', 'Lemon Yellow', 'Seafoam Blue', 'Seafoam Green',
   // General multi-word colors
