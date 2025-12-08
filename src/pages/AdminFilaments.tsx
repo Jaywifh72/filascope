@@ -546,9 +546,10 @@ const AdminFilaments = () => {
                   <TableHead>Vendor</TableHead>
                   <TableHead>Material</TableHead>
                   <TableHead>UPC</TableHead>
+                  <TableHead>EAN</TableHead>
+                  <TableHead>GTIN</TableHead>
                   <TableHead>SKU</TableHead>
                   <TableHead>Price</TableHead>
-                  <TableHead>Weight</TableHead>
                   <TableHead className="w-24">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -606,6 +607,16 @@ const AdminFilaments = () => {
                     </TableCell>
                     <TableCell>
                       <span className="font-mono text-xs text-muted-foreground">
+                        {(filament as any).ean || "-"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {(filament as any).gtin || "-"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-xs text-muted-foreground">
                         {filament.variant_sku || "-"}
                       </span>
                     </TableCell>
@@ -613,9 +624,6 @@ const AdminFilaments = () => {
                       {filament.variant_price
                         ? `$${filament.variant_price.toFixed(2)}`
                         : "-"}
-                    </TableCell>
-                    <TableCell>
-                      {filament.net_weight_g ? `${filament.net_weight_g}g` : "-"}
                     </TableCell>
                     <TableCell>
                       <AlertDialog>
