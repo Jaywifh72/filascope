@@ -31,6 +31,7 @@ const COLOR_WORDS = [
   // Stylized color names (Hatchbox PETG style)
   'Midnight', 'Peacock', 'Lake', 'Baby', 'Electric Lime', 'Dusk', 'Dawn', 'Sunset', 'Ocean',
   'Sky', 'Coral', 'Mint', 'Sage', 'Moss', 'Sand', 'Clay', 'Slate', 'Storm', 'Fog', 'Mist',
+  'Eggplant', 'Caribbean', 'Pastel', 'Apple Sauce',
   // Multi-word colors (Hatchbox Matte PLA style)
   'Ash Gray', 'Stone Gray', 'Baby Pink', 'Blush Pink', 'Soft Purple', 'Light Lavender',
   'Cherry Red', 'Lemon Yellow', 'Seafoam Blue', 'Seafoam Green',
