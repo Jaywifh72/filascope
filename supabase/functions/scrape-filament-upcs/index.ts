@@ -29,6 +29,77 @@ const BRAND_SHOPIFY_URLS: Record<string, string> = {
   'FormFutura': 'https://formfutura.com',
 };
 
+// Helper function to process a single filament
+async function processFilament(
+  filament: any, 
+  productMap: Map<string, any>, 
+  shopifyUrl: string | undefined,
+  supabase: any
+): Promise<{ id: string; title: string; status: 'updated' | 'no_upc_found' | 'error'; upc?: string; error?: string }> {
+  try {
+    let upc: string | null = null;
+    let productHandle = filament.product_handle;
+
+    if (!productHandle && filament.product_url) {
+      const urlMatch = filament.product_url.match(/\/products\/([^?/]+)/);
+      if (urlMatch) productHandle = urlMatch[1];
+    }
+
+    console.log(`Processing: ${filament.product_title} (handle: ${productHandle})`);
+
+    if (productHandle) {
+      const cachedProduct = productMap.get(productHandle.toLowerCase());
+      if (cachedProduct) {
+        for (const variant of cachedProduct.variants || []) {
+          if (variant.barcode) {
+            upc = variant.barcode;
+            console.log(`Found UPC from cache: ${upc}`);
+            break;
+          }
+        }
+      }
+    }
+
+    if (!upc && productHandle && shopifyUrl) {
+      const productJsonUrl = `${shopifyUrl}/products/${productHandle}.json`;
+      try {
+        const response = await fetch(productJsonUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+          const productData = await response.json();
+          for (const variant of productData.product?.variants || []) {
+            if (variant.barcode) {
+              upc = variant.barcode;
+              console.log(`Found UPC from individual JSON: ${upc}`);
+              break;
+            }
+          }
+        }
+      } catch (e) {
+        console.log(`Error fetching individual product JSON: ${e}`);
+      }
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    if (upc) {
+      const { error: updateError } = await supabase
+        .from('filaments')
+        .update({ upc })
+        .eq('id', filament.id);
+
+      if (updateError) {
+        return { id: filament.id, title: filament.product_title, status: 'error', error: updateError.message };
+      }
+      return { id: filament.id, title: filament.product_title, status: 'updated', upc };
+    }
+    
+    return { id: filament.id, title: filament.product_title, status: 'no_upc_found' };
+  } catch (e) {
+    return { id: filament.id, title: filament.product_title, status: 'error', error: e instanceof Error ? e.message : 'Unknown error' };
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -74,12 +145,13 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { brands = [], limit = 100, forceUpdate = false } = await req.json().catch(() => ({}));
+    const { brands = [], filamentIds = [], limit = 100, forceUpdate = false } = await req.json().catch(() => ({}));
 
-    console.log(`Starting UPC scrape for brands: ${brands.join(', ')} with limit=${limit}, forceUpdate=${forceUpdate}`);
+    console.log(`Starting UPC scrape - brands: ${brands.join(', ')}, filamentIds: ${filamentIds.length}, limit=${limit}, forceUpdate=${forceUpdate}`);
 
-    if (!brands || brands.length === 0) {
-      return new Response(JSON.stringify({ error: 'No brands specified' }), {
+    // Must have either brands or filamentIds
+    if ((!brands || brands.length === 0) && (!filamentIds || filamentIds.length === 0)) {
+      return new Response(JSON.stringify({ error: 'No brands or filament IDs specified' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -94,6 +166,76 @@ serve(async (req) => {
       details: [] as any[]
     };
 
+    // If filamentIds provided, process those directly
+    if (filamentIds && filamentIds.length > 0) {
+      console.log(`\n=== Processing ${filamentIds.length} specific filaments ===`);
+      
+      let query = supabase
+        .from('filaments')
+        .select('id, product_title, product_url, product_handle, vendor')
+        .in('id', filamentIds)
+        .not('product_url', 'is', null);
+
+      if (!forceUpdate) {
+        query = query.is('upc', null);
+      }
+
+      const { data: filaments, error: fetchError } = await query;
+
+      if (fetchError) {
+        console.error('Error fetching filaments by ID:', fetchError);
+        return new Response(JSON.stringify({ error: fetchError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      console.log(`Found ${filaments?.length || 0} filaments to process`);
+      results.total = filaments?.length || 0;
+
+      // Group by vendor for efficient Shopify API calls
+      const byVendor = new Map<string, any[]>();
+      for (const f of filaments || []) {
+        const vendor = f.vendor || 'Unknown';
+        if (!byVendor.has(vendor)) byVendor.set(vendor, []);
+        byVendor.get(vendor)!.push(f);
+      }
+
+      for (const [vendor, vendorFilaments] of byVendor) {
+        results.brandResults[vendor] = { updated: 0, skipped: 0, failed: 0 };
+        const shopifyUrl = BRAND_SHOPIFY_URLS[vendor];
+        const productMap = new Map<string, any>();
+
+        if (shopifyUrl) {
+          try {
+            const resp = await fetch(`${shopifyUrl}/products.json?limit=250`, {
+              headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' }
+            });
+            if (resp.ok) {
+              const data = await resp.json();
+              for (const p of data.products || []) {
+                if (p.handle) productMap.set(p.handle.toLowerCase(), p);
+              }
+            }
+          } catch (e) {
+            console.error(`Error fetching products.json for ${vendor}:`, e);
+          }
+        }
+
+        for (const filament of vendorFilaments) {
+          const result = await processFilament(filament, productMap, shopifyUrl, supabase);
+          results[result.status === 'updated' ? 'updated' : result.status === 'error' ? 'failed' : 'skipped']++;
+          results.brandResults[vendor][result.status === 'updated' ? 'updated' : result.status === 'error' ? 'failed' : 'skipped']++;
+          results.details.push({ ...result, brand: vendor });
+        }
+      }
+
+      return new Response(JSON.stringify(results), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Otherwise process by brands
     for (const brand of brands) {
       console.log(`\n=== Processing brand: ${brand} ===`);
       
@@ -101,7 +243,7 @@ serve(async (req) => {
 
       let query = supabase
         .from('filaments')
-        .select('id, product_title, product_url, product_handle')
+        .select('id, product_title, product_url, product_handle, vendor')
         .eq('vendor', brand)
         .not('product_url', 'is', null);
 

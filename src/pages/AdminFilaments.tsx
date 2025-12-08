@@ -191,6 +191,40 @@ const AdminFilaments = () => {
     }
   };
 
+  const handleScrapeSelectedUpcs = async () => {
+    // Use selected filaments if any are selected, otherwise use filtered filaments missing UPC
+    const idsToScrape = selectedFilaments.size > 0 
+      ? Array.from(selectedFilaments)
+      : filteredFilaments.filter(f => !f.upc).map(f => f.id);
+
+    if (idsToScrape.length === 0) {
+      toast.error("No filaments to scrape");
+      return;
+    }
+
+    setScrapingUpcs(true);
+    
+    try {
+      toast.info(`Scraping UPC codes for ${idsToScrape.length} filament(s)...`);
+      const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
+        body: { 
+          filamentIds: idsToScrape,
+          forceUpdate: false 
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Scraped UPCs: ${data.updated} updated, ${data.skipped} skipped, ${data.failed} failed`);
+      fetchFilaments();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to scrape UPC codes");
+      console.error(error);
+    } finally {
+      setScrapingUpcs(false);
+    }
+  };
+
   const filteredFilaments = filaments.filter((f) => {
     const matchesSearch =
       f.product_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -397,6 +431,20 @@ const AdminFilaments = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          {(selectedFilaments.size > 0 || filteredFilaments.length > 0) && (
+            <Button
+              variant="secondary"
+              onClick={handleScrapeSelectedUpcs}
+              disabled={scrapingUpcs}
+            >
+              {scrapingUpcs ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Barcode className="w-4 h-4 mr-2" />
+              )}
+              Scrape UPCs ({selectedFilaments.size > 0 ? selectedFilaments.size : filteredFilaments.filter(f => !f.upc).length})
+            </Button>
+          )}
           {selectedFilaments.size > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
