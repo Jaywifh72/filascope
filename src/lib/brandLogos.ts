@@ -43,6 +43,8 @@ export const brandLogos: Record<string, string> = {
   "Ziro": "/images/brands/ziro.webp",
   "ZIRO": "/images/brands/ziro.webp",
   "Paramount 3D": "/images/brands/paramount-3d.webp",
+  "Proto-Pasta": "/images/brands/proto-pasta.webp",
+  "proto-pasta": "/images/brands/proto-pasta.webp",
   
   // Printer brands
   "AnkerMake": "/images/brands/ankermake.png",
