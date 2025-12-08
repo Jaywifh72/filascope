@@ -129,7 +129,7 @@ const FilterContent = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header with Reset */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Filters</h3>
@@ -138,7 +138,7 @@ const FilterContent = ({
             variant="ghost"
             size="sm"
             onClick={onReset}
-            className="h-7 text-xs text-muted-foreground hover:text-foreground"
+            className="h-6 text-xs text-muted-foreground hover:text-foreground px-2"
           >
             <X className="w-3 h-3 mr-1" />
             Reset ({activeFilterCount})
@@ -147,27 +147,24 @@ const FilterContent = ({
       </div>
 
       {/* Filter Presets */}
-      <div className="space-y-3">
-        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5" />
+      <div className="space-y-2">
+        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3" />
           Quick Presets
         </h4>
-        <div className="space-y-2">
+        <div className="space-y-1">
           {FILTER_PRESETS.map((preset) => (
             <button
               key={preset.id}
               onClick={() => handlePresetClick(preset)}
-              className="w-full flex items-center gap-3 p-3 rounded-lg bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/30 transition-all cursor-pointer group text-left"
+              className="w-full flex items-center gap-2 p-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/30 transition-all cursor-pointer group text-left"
             >
-              <div className="shrink-0 w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
+              <div className="shrink-0 w-6 h-6 rounded bg-muted/50 flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
                 {preset.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <span className="block text-sm font-medium text-foreground group-hover:text-cyan-400 transition-colors">
+                <span className="block text-xs font-medium text-foreground group-hover:text-cyan-400 transition-colors">
                   {preset.name}
-                </span>
-                <span className="block text-xs text-muted-foreground truncate">
-                  {preset.description}
                 </span>
               </div>
             </button>
@@ -178,27 +175,27 @@ const FilterContent = ({
       <Separator className="bg-border/50" />
 
       {/* Material Type */}
-      <div className="space-y-3">
-        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <Atom className="w-3.5 h-3.5" />
+      <div className="space-y-2">
+        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+          <Atom className="w-3 h-3" />
           Material
         </h4>
-        <div className="space-y-2">
+        <div className="space-y-0.5">
           {CORE_MATERIALS.map((material) => (
             <label
               key={material}
-              className="flex items-center gap-3 p-2 rounded-lg bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group"
+              className="flex items-center gap-2 py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group"
             >
               <Checkbox
                 checked={selectedMaterials.includes(material)}
                 onCheckedChange={(checked) => onMaterialChange(material, checked as boolean)}
-                className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
+                className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500 h-3.5 w-3.5"
               />
-              <span className="flex-1 text-sm text-foreground group-hover:text-cyan-400 transition-colors">
+              <span className="flex-1 text-xs text-foreground group-hover:text-cyan-400 transition-colors">
                 {material}
               </span>
               {filterCounts && (
-                <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5 bg-muted/50">
+                <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-muted/50">
                   {filterCounts[`material_${material}`] || 0}
                 </Badge>
               )}
@@ -210,57 +207,57 @@ const FilterContent = ({
       <Separator className="bg-border/50" />
 
       {/* Special Properties */}
-      <div className="space-y-3">
-        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5" />
+      <div className="space-y-2">
+        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3" />
           Special Properties
         </h4>
-        <div className="space-y-3">
-          <label className="flex items-center justify-between p-2 rounded-lg bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-400" />
-              <span className="text-sm text-foreground group-hover:text-cyan-400 transition-colors">High Speed</span>
+        <div className="space-y-0.5">
+          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">High Speed</span>
             </div>
             <Switch
               checked={highSpeed}
               onCheckedChange={onHighSpeedChange}
-              className="data-[state=checked]:bg-cyan-500"
+              className="data-[state=checked]:bg-cyan-500 scale-75"
             />
           </label>
           
-          <label className="flex items-center justify-between p-2 rounded-lg bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-muted to-muted-foreground/50" />
-              <span className="text-sm text-foreground group-hover:text-cyan-400 transition-colors">Matte Finish</span>
+          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-muted to-muted-foreground/50" />
+              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Matte Finish</span>
             </div>
             <Switch
               checked={matte}
               onCheckedChange={onMatteChange}
-              className="data-[state=checked]:bg-cyan-500"
+              className="data-[state=checked]:bg-cyan-500 scale-75"
             />
           </label>
           
-          <label className="flex items-center justify-between p-2 rounded-lg bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
-            <div className="flex items-center gap-2">
-              <Atom className="w-4 h-4 text-slate-400" />
-              <span className="text-sm text-foreground group-hover:text-cyan-400 transition-colors">Carbon Fiber</span>
+          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
+            <div className="flex items-center gap-1.5">
+              <Atom className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Carbon Fiber</span>
             </div>
             <Switch
               checked={carbonFiber}
               onCheckedChange={onCarbonFiberChange}
-              className="data-[state=checked]:bg-cyan-500"
+              className="data-[state=checked]:bg-cyan-500 scale-75"
             />
           </label>
           
-          <label className="flex items-center justify-between p-2 rounded-lg bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
-            <div className="flex items-center gap-2">
-              <Sun className="w-4 h-4 text-green-400" />
-              <span className="text-sm text-foreground group-hover:text-cyan-400 transition-colors">Glow in Dark</span>
+          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
+            <div className="flex items-center gap-1.5">
+              <Sun className="w-3.5 h-3.5 text-green-400" />
+              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Glow in Dark</span>
             </div>
             <Switch
               checked={glow}
               onCheckedChange={onGlowChange}
-              className="data-[state=checked]:bg-cyan-500"
+              className="data-[state=checked]:bg-cyan-500 scale-75"
             />
           </label>
         </div>
@@ -269,30 +266,30 @@ const FilterContent = ({
       <Separator className="bg-border/50" />
 
       {/* Spool Type */}
-      <div className="space-y-3">
-        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <Package className="w-3.5 h-3.5" />
+      <div className="space-y-2">
+        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+          <Package className="w-3 h-3" />
           Spool Type
         </h4>
-        <div className="space-y-2">
-          <label className="flex items-center gap-3 p-2 rounded-lg bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
+        <div className="space-y-0.5">
+          <label className="flex items-center gap-2 py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
             <Checkbox
               checked={plasticSpool}
               onCheckedChange={(checked) => onPlasticSpoolChange(checked as boolean)}
-              className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
+              className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500 h-3.5 w-3.5"
             />
-            <Package className="w-4 h-4 text-blue-400" />
-            <span className="text-sm text-foreground group-hover:text-cyan-400 transition-colors">Plastic Spool</span>
+            <Package className="w-3.5 h-3.5 text-blue-400" />
+            <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Plastic Spool</span>
           </label>
           
-          <label className="flex items-center gap-3 p-2 rounded-lg bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
+          <label className="flex items-center gap-2 py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
             <Checkbox
               checked={cardboardSpool}
               onCheckedChange={(checked) => onCardboardSpoolChange(checked as boolean)}
-              className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
+              className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500 h-3.5 w-3.5"
             />
-            <Recycle className="w-4 h-4 text-green-400" />
-            <span className="text-sm text-foreground group-hover:text-cyan-400 transition-colors">Cardboard Spool</span>
+            <Recycle className="w-3.5 h-3.5 text-green-400" />
+            <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Cardboard Spool</span>
           </label>
         </div>
       </div>
@@ -300,12 +297,12 @@ const FilterContent = ({
       <Separator className="bg-border/50" />
 
       {/* Price Range */}
-      <div className="space-y-4">
-        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+      <div className="space-y-2">
+        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
           <span className="font-mono text-[#ff6b00]">$</span>
           Price Range ($/kg)
         </h4>
-        <div className="px-2">
+        <div className="px-1">
           <Slider
             value={priceRange}
             onValueChange={(value) => onPriceRangeChange(value as [number, number])}
@@ -314,12 +311,12 @@ const FilterContent = ({
             step={1}
             className="w-full"
           />
-          <div className="flex items-center justify-between mt-3">
-            <div className="px-3 py-1.5 rounded-md bg-background border border-border text-sm font-mono text-[#ff6b00]">
+          <div className="flex items-center justify-between mt-2">
+            <div className="px-2 py-1 rounded bg-background border border-border text-xs font-mono text-[#ff6b00]">
               ${priceRange[0]}
             </div>
-            <span className="text-xs text-muted-foreground">to</span>
-            <div className="px-3 py-1.5 rounded-md bg-background border border-border text-sm font-mono text-[#ff6b00]">
+            <span className="text-[10px] text-muted-foreground">to</span>
+            <div className="px-2 py-1 rounded bg-background border border-border text-xs font-mono text-[#ff6b00]">
               ${priceRange[1]}
             </div>
           </div>
