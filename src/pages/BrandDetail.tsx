@@ -92,8 +92,8 @@ const BrandDetail = () => {
       const group = groups.get(baseName)!;
       group.variants.push(filament);
 
-      // Use first available image as representative
-      if (!group.representativeImage && filament.featured_image?.startsWith('http')) {
+      // Use first available image as representative (supports both http URLs and local paths)
+      if (!group.representativeImage && filament.featured_image) {
         group.representativeImage = filament.featured_image;
       }
 
