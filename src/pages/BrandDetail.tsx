@@ -49,8 +49,13 @@ const COLOR_WORDS = [
 
 // Extract base product name by removing color suffix
 const getBaseProductName = (title: string): string => {
+  // Normalize the title first - merge variant names into base product
+  let normalizedTitle = title
+    .replace(/\bPLA\s+PRO\+/gi, 'PLA+')  // "PLA PRO+" -> "PLA+"
+    .replace(/\bPLA\s+PRO\b/gi, 'PLA+'); // "PLA PRO" -> "PLA+"
+  
   // Pattern 1: "Brand Material - Color" (dash separator)
-  const dashMatch = title.match(/^(.+?)\s+-\s+.+$/);
+  const dashMatch = normalizedTitle.match(/^(.+?)\s+-\s+.+$/);
   if (dashMatch) {
     return dashMatch[1].trim();
   }
@@ -61,14 +66,14 @@ const getBaseProductName = (title: string): string => {
   
   for (const color of sortedColors) {
     const regex = new RegExp(`^(.+?)\\s+${color}$`, 'i');
-    const match = title.match(regex);
+    const match = normalizedTitle.match(regex);
     if (match) {
       return match[1].trim();
     }
   }
   
-  // No color found - return as-is
-  return title;
+  // No color found - return normalized title
+  return normalizedTitle;
 };
 
 // Extract color from product title
