@@ -28,6 +28,7 @@ const COLOR_WORDS = [
   'Gold', 'Gray', 'Grey', 'Green', 'Ivory', 'Lavender', 'Magenta', 'Maroon', 'Navy',
   'Olive', 'Orange', 'Peach', 'Pink', 'Purple', 'Red', 'Rose', 'Salmon', 'Silver',
   'Tan', 'Teal', 'Turquoise', 'Violet', 'White', 'Yellow', 'Kraft', 'Lemonade', 'Terracotta',
+  'Bronze', 'Rust',
   // Stylized color names (Hatchbox PETG style)
   'Midnight', 'Peacock', 'Lake', 'Baby', 'Electric Lime', 'Dusk', 'Dawn', 'Sunset', 'Ocean',
   'Sky', 'Coral', 'Mint', 'Sage', 'Moss', 'Sand', 'Clay', 'Slate', 'Storm', 'Fog', 'Mist',
@@ -38,12 +39,19 @@ const COLOR_WORDS = [
   'Jet', 'Raven', 'Shadow', 'Graphite', 'Gunmetal', 'Titanium', 'Chrome', 'Platinum',
   // Standalone modifier colors (Hatchbox style)
   'Light', 'Dark', 'Bright', 'Deep', 'Pale', 'Vivid',
-  // Multi-word colors (Hatchbox Matte PLA style)
+  // Multi-word Hatchbox colors
   'Ash Gray', 'Stone Gray', 'Baby Pink', 'Blush Pink', 'Soft Purple', 'Light Lavender',
   'Cherry Red', 'Lemon Yellow', 'Seafoam Blue', 'Seafoam Green',
+  'Baby Blue', 'Gray Blue', 'Lake Blue', 'Peacock Blue', 'Midnight Purple', 'Eggplant Purple',
+  'Caribbean Green', 'Mint Green', 'Pastel Green', 'Forest Green',
+  'Light Brown', 'Light Orange', 'Light Purple', 'Dark Yellow', 'Dark Green',
+  'Transparent Black', 'Transparent Blue', 'Transparent Green', 'Transparent White',
+  'Paint Free Brown',
+  // Glow variants
+  'Glow in the Dark', 'Glow in the Dark Blue', 'Glow in the Dark Green',
   // General multi-word colors
-  'Light Blue', 'Dark Blue', 'Sky Blue', 'Royal Blue', 'Light Green', 'Dark Green',
-  'Light Gray', 'Dark Gray', 'Light Grey', 'Dark Grey', 'Lime Green', 'Forest Green',
+  'Light Blue', 'Dark Blue', 'Sky Blue', 'Royal Blue', 'Light Green',
+  'Light Gray', 'Dark Gray', 'Light Grey', 'Dark Grey', 'Lime Green',
   'Hot Pink', 'Light Pink', 'Neon Green', 'Neon Orange', 'Neon Pink', 'Neon Yellow',
   'Glow Green', 'Glow Blue', 'True Black', 'True White', 'Jet Black', 'Snow White',
   'Natural', 'Clear', 'Transparent', 'Translucent',
@@ -62,11 +70,23 @@ const getBaseProductName = (title: string): string => {
     return dashMatch[1].trim();
   }
   
-  // Pattern 1.5: Handle compound material names like "Metallic PLA", "Silk PLA", "Matte PLA"
+  // Pattern 1.5: Handle compound material names like "Metallic PLA", "Silk PLA", "Matte PLA", "PETG Rapid"
   // Match: "Brand CompoundMaterial Color" -> "Brand CompoundMaterial"
-  const compoundMaterialMatch = normalizedTitle.match(/^(.+?\s+(?:Metallic|Silk|Matte|Marble|Galaxy|Sparkle|Glitter|Glow|Wood|Carbon|Glass)\s+(?:PLA|PETG|ABS|TPU|ASA))\s+.+$/i);
+  const compoundMaterialMatch = normalizedTitle.match(/^(.+?\s+(?:Metallic|Silk|Matte|Marble|Galaxy|Sparkle|Glitter|Glow|Wood|Carbon|Glass|Rapid)\s+(?:PLA|PETG|ABS|TPU|ASA))\s+.+$/i);
   if (compoundMaterialMatch) {
     return compoundMaterialMatch[1].trim();
+  }
+  
+  // Pattern 1.6: Handle "Material Rapid" pattern (e.g., "Hatchbox PETG Rapid Black" -> "Hatchbox PETG Rapid")
+  const materialRapidMatch = normalizedTitle.match(/^(.+?\s+(?:PLA|PETG|ABS|TPU|ASA)\s+Rapid)\s+.+$/i);
+  if (materialRapidMatch) {
+    return materialRapidMatch[1].trim();
+  }
+  
+  // Pattern 1.7: Handle "Carbon Fiber Material" pattern (e.g., "Hatchbox Carbon Fiber PLA" as standalone product)
+  const carbonFiberMatch = normalizedTitle.match(/^(.+?\s+Carbon\s+Fiber\s+(?:PLA|PETG|ABS|TPU|ASA))$/i);
+  if (carbonFiberMatch) {
+    return carbonFiberMatch[1].trim();
   }
   
   // Pattern 2: Check for color word at the end (case-insensitive)
