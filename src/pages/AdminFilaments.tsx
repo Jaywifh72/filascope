@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2 } from "lucide-react";
+import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -63,6 +63,7 @@ const AdminFilaments = () => {
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
   const [forceUpdateScrape, setForceUpdateScrape] = useState(false);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
+  const [syncing3DXTech, setSyncing3DXTech] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -224,6 +225,24 @@ const AdminFilaments = () => {
       console.error(error);
     } finally {
       setScrapingUpcs(false);
+    }
+  };
+
+  const handleSync3DXTech = async () => {
+    setSyncing3DXTech(true);
+    try {
+      toast.info("Syncing 3DXTech products... This may take a few minutes.");
+      const { data, error } = await supabase.functions.invoke('sync-3dxtech-products');
+
+      if (error) throw error;
+
+      toast.success(`3DXTech sync complete: ${data.results?.created || 0} created, ${data.results?.updated || 0} updated`);
+      fetchFilaments();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sync 3DXTech products");
+      console.error(error);
+    } finally {
+      setSyncing3DXTech(false);
     }
   };
 
@@ -491,6 +510,18 @@ const AdminFilaments = () => {
               </AlertDialogContent>
             </AlertDialog>
           )}
+          <Button
+            variant="outline"
+            onClick={handleSync3DXTech}
+            disabled={syncing3DXTech}
+          >
+            {syncing3DXTech ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2" />
+            )}
+            Sync 3DXTech
+          </Button>
         </div>
 
         {/* Filaments Table */}
