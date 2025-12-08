@@ -1,8 +1,48 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, BadgeCheck, AlertTriangle, Zap, Radio } from "lucide-react";
+import { Package, BadgeCheck, Zap, Radio } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
+
+// Custom Plastic Spool Icon
+const PlasticSpoolIcon = ({ className }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className={className}
+  >
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 3v6" />
+    <path d="M12 15v6" />
+    <path d="M3 12h6" />
+    <path d="M15 12h6" />
+  </svg>
+);
+
+// Custom Cardboard Spool Icon (with recycling indicator)
+const CardboardSpoolIcon = ({ className }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className={className}
+  >
+    <circle cx="12" cy="12" r="9" strokeDasharray="4 2" />
+    <circle cx="12" cy="12" r="3" />
+    <path d="M9 9l-2-2" />
+    <path d="M15 9l2-2" />
+    <path d="M9 15l-2 2" />
+    <path d="M15 15l2 2" />
+  </svg>
+);
 
 // Brands that have been lab-tested/verified
 const VERIFIED_BRANDS = [
@@ -20,7 +60,7 @@ const VERIFIED_BRANDS = [
 interface BrandStats {
   name: string;
   count: number;
-  hasCardboardSpool: boolean;
+  spoolMaterial: "Cardboard" | "Plastic" | "Mixed" | null;
   hasHighSpeed: boolean;
   avgTransmissionDistance: number | null;
 }
@@ -41,14 +81,18 @@ const Brands = () => {
         if (!acc[f.vendor]) {
           acc[f.vendor] = {
             count: 0,
-            hasCardboardSpool: false,
+            hasCardboard: false,
+            hasPlastic: false,
             hasHighSpeed: false,
             transmissionDistances: [] as number[],
           };
         }
         acc[f.vendor].count += 1;
         if (f.spool_material === "Cardboard") {
-          acc[f.vendor].hasCardboardSpool = true;
+          acc[f.vendor].hasCardboard = true;
+        }
+        if (f.spool_material === "Plastic") {
+          acc[f.vendor].hasPlastic = true;
         }
         if (f.high_speed_capable) {
           acc[f.vendor].hasHighSpeed = true;
@@ -57,18 +101,28 @@ const Brands = () => {
           acc[f.vendor].transmissionDistances.push(f.transmission_distance);
         }
         return acc;
-      }, {} as Record<string, { count: number; hasCardboardSpool: boolean; hasHighSpeed: boolean; transmissionDistances: number[] }>);
+      }, {} as Record<string, { count: number; hasCardboard: boolean; hasPlastic: boolean; hasHighSpeed: boolean; transmissionDistances: number[] }>);
       
       return Object.entries(brandStats)
-        .map(([name, stats]): BrandStats => ({
-          name,
-          count: stats.count,
-          hasCardboardSpool: stats.hasCardboardSpool,
-          hasHighSpeed: stats.hasHighSpeed,
-          avgTransmissionDistance: stats.transmissionDistances.length > 0
-            ? Math.round(stats.transmissionDistances.reduce((a, b) => a + b, 0) / stats.transmissionDistances.length)
-            : null,
-        }))
+        .map(([name, stats]): BrandStats => {
+          let spoolMaterial: BrandStats["spoolMaterial"] = null;
+          if (stats.hasCardboard && stats.hasPlastic) {
+            spoolMaterial = "Mixed";
+          } else if (stats.hasCardboard) {
+            spoolMaterial = "Cardboard";
+          } else if (stats.hasPlastic) {
+            spoolMaterial = "Plastic";
+          }
+          return {
+            name,
+            count: stats.count,
+            spoolMaterial,
+            hasHighSpeed: stats.hasHighSpeed,
+            avgTransmissionDistance: stats.transmissionDistances.length > 0
+              ? Math.round(stats.transmissionDistances.reduce((a, b) => a + b, 0) / stats.transmissionDistances.length)
+              : null,
+          };
+        })
         .sort((a, b) => b.count - a.count);
     },
   });
@@ -122,10 +176,22 @@ const Brands = () => {
                         
                         {/* Feature Tags */}
                         <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2">
-                          {brand.hasCardboardSpool && (
+                          {brand.spoolMaterial === "Cardboard" && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                              <AlertTriangle className="w-3 h-3" />
+                              <CardboardSpoolIcon className="w-3 h-3" />
                               Cardboard
+                            </span>
+                          )}
+                          {brand.spoolMaterial === "Plastic" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                              <PlasticSpoolIcon className="w-3 h-3" />
+                              Plastic
+                            </span>
+                          )}
+                          {brand.spoolMaterial === "Mixed" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono bg-gray-500/20 text-gray-400 border border-gray-500/30">
+                              <PlasticSpoolIcon className="w-3 h-3" />
+                              Mixed
                             </span>
                           )}
                           {brand.hasHighSpeed && (
