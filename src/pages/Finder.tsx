@@ -31,7 +31,7 @@ const Finder = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<string>("score-desc");
+  const [sortBy, setSortBy] = useState<string>("truecost-asc");
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
     const saved = localStorage.getItem("finderViewMode");
     return saved === "list" ? "list" : "grid";
@@ -585,6 +585,10 @@ const Finder = () => {
     };
 
     switch (sortBy) {
+      case "truecost-asc":
+        return getPricePerKg(a) - getPricePerKg(b);
+      case "truecost-desc":
+        return getPricePerKg(b) - getPricePerKg(a);
       case "print-desc":
         return (b.printability_index || 0) - (a.printability_index || 0);
       case "print-asc":
@@ -606,7 +610,7 @@ const Finder = () => {
       case "price-desc":
         return getPricePerKg(b) - getPricePerKg(a);
       default:
-        return 0;
+        return getPricePerKg(a) - getPricePerKg(b);
     }
   });
 
@@ -813,6 +817,8 @@ const Finder = () => {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent className="bg-popover border-border z-50">
+              <SelectItem value="truecost-asc">True Cost: Low to High</SelectItem>
+              <SelectItem value="truecost-desc">True Cost: High to Low</SelectItem>
               <SelectItem value="print-desc">Print: High to Low</SelectItem>
               <SelectItem value="print-asc">Print: Low to High</SelectItem>
               <SelectItem value="strength-desc">Strength: High to Low</SelectItem>
@@ -821,8 +827,6 @@ const Finder = () => {
               <SelectItem value="heat-asc">Heat: Low to High</SelectItem>
               <SelectItem value="score-desc">Score: High to Low</SelectItem>
               <SelectItem value="score-asc">Score: Low to High</SelectItem>
-              <SelectItem value="price-asc">Price: Low to High</SelectItem>
-              <SelectItem value="price-desc">Price: High to Low</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1086,8 +1090,8 @@ const Finder = () => {
                     <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Brand</th>
                     <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Product</th>
                     <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Material</th>
-                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Price</th>
-                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Price/kg</th>
+                    <th className="py-3 px-3 text-xs font-semibold text-orange-400 uppercase tracking-wide text-right">True Cost</th>
+                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">List Price</th>
                     <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Stock</th>
                     <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Score</th>
                     <th className="py-3 px-3"></th>
@@ -1126,13 +1130,13 @@ const Finder = () => {
                           </Badge>
                         </td>
                         <td className="py-3 px-3 text-right">
-                          <span className="font-mono text-sm text-muted-foreground">
-                            {totalPrice ? `$${totalPrice}` : "—"}
+                          <span className="font-mono text-sm font-bold text-orange-400">
+                            {pricePerKg ? `$${pricePerKg.toFixed(2)}/kg` : "—"}
                           </span>
                         </td>
                         <td className="py-3 px-3 text-right">
-                          <span className="font-mono text-sm text-foreground font-semibold">
-                            {pricePerKg ? `$${pricePerKg.toFixed(2)}` : "—"}
+                          <span className="font-mono text-sm text-muted-foreground">
+                            {totalPrice ? `$${totalPrice}` : "—"}
                           </span>
                         </td>
                         <td className="py-3 px-3 text-center">
@@ -1295,13 +1299,17 @@ const Finder = () => {
                       </span>
                     </div>
 
-                    {/* Price */}
-                    <div className="flex items-center gap-4 lg:flex-col lg:gap-0 lg:text-center">
-                      <span className="text-xs text-muted-foreground lg:mb-1">Price</span>
+                    {/* True Cost */}
+                    <div className="flex items-center gap-4 lg:flex-col lg:gap-1 lg:text-center">
+                      <span className="text-xs text-orange-400 lg:mb-0 font-medium">True Cost</span>
                       {displayPrice ? (
                         <div>
-                          <p className="font-semibold text-foreground">${displayPrice}</p>
-                          <p className="text-xs text-muted-foreground">{priceLabel}</p>
+                          <p className="font-mono font-bold text-orange-400 text-lg">${displayPrice}/kg</p>
+                          {filament.net_weight_g && (
+                            <p className="text-xs text-muted-foreground">
+                              ${(parseFloat(displayPrice) * (filament.net_weight_g / 1000)).toFixed(2)} list
+                            </p>
+                          )}
                         </div>
                       ) : (
                         <p className="text-sm text-muted-foreground">—</p>
