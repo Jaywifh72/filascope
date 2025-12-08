@@ -77,3 +77,9 @@ verify_jwt = true
 
 [functions.scrape-fillamentum-prices]
 verify_jwt = true
+
+[functions.scrape-paramount-prices]
+verify_jwt = true
+
+[functions.scrape-new-brand-images]
+verify_jwt = true

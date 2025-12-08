@@ -151,6 +151,15 @@ const AdminMaintenance = () => {
     failed: number;
     results: Array<{ id: string; title: string; status: string; image?: string }>;
   } | null>(null);
+  const [isScrapingParamount, setIsScrapingParamount] = useState(false);
+  const [paramountLimit, setParamountLimit] = useState("50");
+  const [paramountForce, setParamountForce] = useState(false);
+  const [paramountResult, setParamountResult] = useState<{
+    total: number;
+    updated: number;
+    failed: number;
+    results: Array<{ id: string; title: string; price: number | null; temps: boolean; error?: string }>;
+  } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -751,6 +760,53 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsScrapingNewBrands(false);
+    }
+  };
+
+  const runParamountPriceScraper = async () => {
+    setIsScrapingParamount(true);
+    setParamountResult(null);
+
+    toast({
+      title: "Paramount 3D Price Scraping Started",
+      description: "Scraping prices and temperature specs from product pages...",
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-paramount-prices', {
+        method: 'POST',
+        body: { 
+          limit: parseInt(paramountLimit),
+          force: paramountForce,
+        }
+      });
+
+      if (error) {
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('FunctionsFetchError')) {
+          toast({
+            title: "Running in Background",
+            description: "The scraper is still running. Refresh in 2-3 minutes to see updated prices.",
+          });
+          return;
+        }
+        throw error;
+      }
+
+      setParamountResult(data);
+      queryClient.invalidateQueries({ queryKey: ['filaments'] });
+      toast({
+        title: "Paramount 3D Price Scraping Complete",
+        description: `Updated: ${data.updated}, Failed: ${data.failed}`,
+      });
+    } catch (error) {
+      console.error('Paramount scraping error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to run Paramount 3D price scraper",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScrapingParamount(false);
     }
   };
 
@@ -2312,6 +2368,117 @@ const AdminMaintenance = () => {
                             result.status === "no_url" || result.status === "no_image_found" ? "secondary" : "destructive"
                           }>
                             {result.status.replace(/_/g, ' ')}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Paramount 3D Price Scraper Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            <CardTitle>Paramount 3D Price Scraper</CardTitle>
+          </div>
+          <CardDescription>
+            Scrape prices and temperature specifications from Paramount 3D product pages
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="paramount-limit">Number of filaments to process</Label>
+            <Input
+              id="paramount-limit"
+              type="number"
+              value={paramountLimit}
+              onChange={(e) => setParamountLimit(e.target.value)}
+              min="1"
+              max="150"
+              className="w-32"
+            />
+            <p className="text-xs text-muted-foreground">
+              Scrapes price, nozzle temp, and bed temp from product pages
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="paramount-force"
+              checked={paramountForce}
+              onCheckedChange={(checked) => setParamountForce(checked === true)}
+            />
+            <Label htmlFor="paramount-force" className="text-sm font-normal">
+              Force rescrape (overwrite existing prices)
+            </Label>
+          </div>
+          <Button 
+            onClick={runParamountPriceScraper} 
+            disabled={isScrapingParamount}
+            className="w-full sm:w-auto"
+          >
+            {isScrapingParamount ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Scraping Paramount 3D Prices...
+              </>
+            ) : (
+              <>
+                <Package className="w-4 h-4 mr-2" />
+                Scrape Paramount 3D Prices
+              </>
+            )}
+          </Button>
+
+          {paramountResult && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{paramountResult.total}</div>
+                  <div className="text-sm text-muted-foreground">Total Processed</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{paramountResult.updated}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Updated</div>
+                </div>
+                <div className="bg-red-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <div className="text-2xl font-bold">{paramountResult.failed}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Failed</div>
+                </div>
+              </div>
+
+              {paramountResult.results && paramountResult.results.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Processing Details:</h3>
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {paramountResult.results.map((result, idx) => (
+                      <div key={idx} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="font-medium">{result.title}</div>
+                            {result.price && (
+                              <div className="text-xs text-muted-foreground">
+                                Price: ${result.price.toFixed(2)} {result.temps && "| Temps: ✓"}
+                              </div>
+                            )}
+                            {result.error && (
+                              <div className="text-xs text-destructive">{result.error}</div>
+                            )}
+                          </div>
+                          <Badge variant={result.price ? "default" : "destructive"}>
+                            {result.price ? "success" : "failed"}
                           </Badge>
                         </div>
                       </div>
