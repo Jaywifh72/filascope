@@ -261,20 +261,28 @@ async function extractUpcFromShopify(
   shopifyUrl: string,
   productHandle: string,
   productMap: Map<string, any>
-): Promise<string | null> {
+): Promise<{ upc: string | null; note?: string }> {
   // Try cache first
   const cachedProduct = productMap.get(productHandle.toLowerCase());
   if (cachedProduct) {
+    const variantsChecked = cachedProduct.variants?.length || 0;
     for (const variant of cachedProduct.variants || []) {
       if (variant.barcode && variant.barcode.length >= 8) {
-        return variant.barcode;
+        console.log(`  Found UPC in cache: ${variant.barcode}`);
+        return { upc: variant.barcode };
       }
+    }
+    // Product found in cache but no barcode
+    if (variantsChecked > 0) {
+      console.log(`  Product found in cache (${variantsChecked} variants) but no barcode field populated`);
+      return { upc: null, note: `Product has ${variantsChecked} variants but none have barcode data` };
     }
   }
   
-  // Try individual product JSON
+  // Try individual product JSON (some Shopify stores don't include barcode in products.json but do in individual product.json)
   try {
     const productJsonUrl = `${shopifyUrl}/products/${productHandle}.json`;
+    console.log(`  Trying individual product JSON: ${productJsonUrl}`);
     const response = await fetch(productJsonUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -284,17 +292,25 @@ async function extractUpcFromShopify(
     
     if (response.ok) {
       const data = await response.json();
-      for (const variant of data.product?.variants || []) {
+      const variants = data.product?.variants || [];
+      for (const variant of variants) {
         if (variant.barcode && variant.barcode.length >= 8) {
-          return variant.barcode;
+          console.log(`  Found UPC in product JSON: ${variant.barcode}`);
+          return { upc: variant.barcode };
         }
       }
+      if (variants.length > 0) {
+        console.log(`  Individual product JSON has ${variants.length} variants but no barcode data`);
+        return { upc: null, note: `Vendor does not populate barcode/UPC in Shopify` };
+      }
+    } else {
+      console.log(`  Individual product JSON returned ${response.status}`);
     }
   } catch (e) {
-    console.log(`Error fetching Shopify product JSON: ${e}`);
+    console.log(`  Error fetching Shopify product JSON: ${e}`);
   }
   
-  return null;
+  return { upc: null, note: 'Product not found in Shopify API' };
 }
 
 // Fetch all products from Shopify store
@@ -383,10 +399,13 @@ async function processFilament(
     
     let upc: string | null = null;
     let method = '';
+    let extractionNote = '';
     
     // Shopify extraction
     if (brandConfig.upcExtractionMethod === 'shopify' && brandConfig.shopifyUrl && productHandle) {
-      upc = await extractUpcFromShopify(brandConfig.shopifyUrl, productHandle, productMap);
+      const result = await extractUpcFromShopify(brandConfig.shopifyUrl, productHandle, productMap);
+      upc = result.upc;
+      if (result.note) extractionNote = result.note;
       if (upc) method = 'shopify';
     }
     
@@ -422,7 +441,12 @@ async function processFilament(
       }
     }
     
-    return { id: filament.id, title: filament.product_title, status: 'no_upc_found' };
+    return { 
+      id: filament.id, 
+      title: filament.product_title, 
+      status: 'no_upc_found',
+      error: extractionNote || 'No UPC/barcode data found'
+    };
   } catch (e) {
     console.error(`Error processing filament: ${e}`);
     return { id: filament.id, title: filament.product_title, status: 'error', error: e instanceof Error ? e.message : 'Unknown error' };
