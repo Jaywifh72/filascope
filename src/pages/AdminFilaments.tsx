@@ -52,6 +52,7 @@ const AdminFilaments = () => {
   const [scrapingUpcs, setScrapingUpcs] = useState(false);
   const [upcDialogOpen, setUpcDialogOpen] = useState(false);
   const [selectedBrandsForUpc, setSelectedBrandsForUpc] = useState<Set<string>>(new Set());
+  const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -182,18 +183,23 @@ const AdminFilaments = () => {
     }
   };
 
-  const filteredFilaments = filaments.filter(
-    (f) =>
+  const filteredFilaments = filaments.filter((f) => {
+    const matchesSearch =
       f.product_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       f.vendor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.material?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      f.material?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesUpcFilter = showMissingUpcOnly ? !f.upc : true;
+    
+    return matchesSearch && matchesUpcFilter;
+  });
 
   // Stats
   const totalFilaments = filaments.length;
   const filamentsWithImages = filaments.filter((f) => f.featured_image).length;
   const filamentsWithPrices = filaments.filter((f) => f.variant_price).length;
   const filamentsWithTDS = filaments.filter((f) => f.tds_url).length;
+  const filamentsWithUpc = filaments.filter((f) => f.upc).length;
   const uniqueVendors = new Set(filaments.map((f) => f.vendor).filter(Boolean)).size;
 
   if (authLoading || loading) {
@@ -305,6 +311,16 @@ const AdminFilaments = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="missing-upc"
+              checked={showMissingUpcOnly}
+              onCheckedChange={(checked) => setShowMissingUpcOnly(checked === true)}
+            />
+            <label htmlFor="missing-upc" className="text-sm cursor-pointer whitespace-nowrap">
+              Missing UPC ({totalFilaments - filamentsWithUpc})
+            </label>
           </div>
           <Dialog open={upcDialogOpen} onOpenChange={setUpcDialogOpen}>
             <DialogTrigger asChild>
