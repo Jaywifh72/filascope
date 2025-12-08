@@ -708,6 +708,17 @@ const Finder = () => {
             (cardboardSpool ? 1 : 0) +
             (priceRange[0] > 0 || priceRange[1] < MAX_PRICE_LIMIT ? 1 : 0)
           }
+          onApplyPreset={(preset) => {
+            // Reset all filters first
+            setSelectedMaterials(preset.filters.materials || ["All"]);
+            setHighSpeed(preset.filters.highSpeed ?? false);
+            setMatte(preset.filters.matte ?? false);
+            setCarbonFiber(preset.filters.carbonFiber ?? false);
+            setGlow(preset.filters.glow ?? false);
+            setPlasticSpool(preset.filters.plasticSpool ?? false);
+            setCardboardSpool(preset.filters.cardboardSpool ?? false);
+            setPriceRange(preset.filters.priceRange ?? [0, MAX_PRICE_LIMIT]);
+          }}
         />
 
       {/* Main Content */}
