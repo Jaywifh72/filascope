@@ -367,6 +367,31 @@ export const brandInfo: Record<string, BrandInfoData> = {
     parentCompany: "Anker Innovations (SZSE: 300866)",
     headquarters: "Shenzhen, Guangdong Province, China",
     website: "https://www.ankermake.com"
+  },
+  "Proto-Pasta": {
+    summary: "Proto-Pasta is a premium American specialty filament manufacturer based in Vancouver, Washington, founded by Alex Horne in 2013. The company emerged from the early RepRap community with a mission to create unique, high-quality materials that push the boundaries of desktop 3D printing. Proto-Pasta quickly established itself as a leader in composite and specialty filaments, pioneering materials that combine functional properties with stunning aesthetics.\n\nTheir flagship products include groundbreaking metal-composite filaments like Stainless Steel, Copper, Bronze, and Iron PLA that produce prints with authentic metallic weight and appearance that can be polished to a shine. The company's Carbon Fiber PLA revolutionized functional printing with its exceptional stiffness-to-weight ratio. Proto-Pasta's Conductive PLA opened new possibilities for makers creating electronic projects, while their HTPLA line offers heat-treatable polymers that achieve remarkable temperature resistance.\n\nProto-Pasta maintains a strong connection to the maker community, frequently collaborating with artists and engineers to develop new formulations. Their commitment to American manufacturing ensures rigorous quality control, with every batch tested for consistency. The company provides extensive technical documentation and printing guides, reflecting their deep expertise in materials science. Proto-Pasta continues to innovate with unique colors and special edition releases that delight the creative 3D printing community.",
+    location: "Vancouver, Washington, USA",
+    founded: "2013",
+    companyType: "private",
+    founder: "Alex Horne",
+    headquarters: "Vancouver, Washington, USA",
+    website: "https://www.proto-pasta.com"
+  },
+  "MH Build Series": {
+    summary: "MH Build Series is the in-house economy filament line developed by MatterHackers, the leading American 3D printing retailer and manufacturer based in Lake Forest, California. Launched to provide reliable, budget-friendly materials without sacrificing quality, MH Build Series has become a favorite among hobbyists, educators, and prototypers who need consistent performance at accessible prices.\n\nThe MH Build Series encompasses essential materials including PLA, PETG, ABS, TPU, ASA, Nylon, and PVA support material, covering virtually every common 3D printing application. Each material is formulated in-house by MatterHackers' engineering team, drawing on years of experience testing and selling filaments from manufacturers worldwide. The result is a carefully tuned product line that prints reliably across popular printer platforms including Prusa, Creality, Bambu Lab, and more.\n\nMatterHackers backs the MH Build Series with the same exceptional customer service and technical support that has made them a trusted name in the industry. Detailed printing guidelines and material specifications help users achieve optimal results. The MH Build Series represents MatterHackers' commitment to making quality 3D printing accessible to everyone, from first-time makers to experienced professionals working on tight budgets.",
+    location: "Lake Forest, California, USA",
+    companyType: "subsidiary",
+    parentCompany: "MatterHackers",
+    headquarters: "21040 Bake Parkway, Lake Forest, CA 92630, USA",
+    website: "https://www.matterhackers.com/store/c/mh-build-series"
+  },
+  "Fillamentum": {
+    summary: "Fillamentum Manufacturing Czech s.r.o. is a prestigious European filament manufacturer based in Hulín, Czech Republic, renowned for their exceptional quality, vibrant color offerings, and commitment to European craftsmanship. Founded in 2013, the company has established itself as a leader in the premium filament market, beloved by artists, designers, and engineers who demand the finest materials for their work.\n\nTheir flagship Extrafill line showcases an extraordinary palette of precisely formulated colors, with shades ranging from subtle earth tones to brilliant metallics that are unmatched in the industry. Fillamentum's Crystal Clear PETG and PLA have become benchmarks for transparency, while their CPE (Copolyester) materials offer exceptional chemical resistance and toughness. The company's Flexfill TPE and TPU lines deliver reliable flexible printing with consistent shore hardness ratings.\n\nFillamentum's manufacturing facility combines traditional European quality standards with modern production technology. Every spool undergoes rigorous quality control, and the company maintains tight diameter tolerances of ±0.02mm. Their commitment to sustainability is evident in their eco-friendly packaging and recyclable cardboard spools. Fillamentum has earned numerous awards for innovation and quality, establishing their reputation as the premier choice for makers who refuse to compromise on color accuracy, surface finish, and material performance.",
+    location: "Hulín, Czech Republic",
+    founded: "2013",
+    companyType: "private",
+    headquarters: "Záhumenní 1454, 768 24 Hulín, Czech Republic",
+    website: "https://fillamentum.com"
   }
 };
 
