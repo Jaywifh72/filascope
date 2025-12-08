@@ -392,7 +392,9 @@ const BrandDetail = () => {
                           <div className="text-xs text-muted-foreground mb-2">Available Colors:</div>
                           <div className="flex flex-wrap gap-1.5">
                             {product.variants.map((variant) => {
-                              const color = getColorFromTitle(variant.product_title, product.baseName) || variant.color_family;
+                              const colorName = getColorFromTitle(variant.product_title, product.baseName) || variant.color_family;
+                              const hasColorHex = variant.color_hex && variant.color_hex !== '#000000';
+                              
                               return (
                                 <button
                                   key={variant.id}
@@ -400,10 +402,23 @@ const BrandDetail = () => {
                                     e.stopPropagation();
                                     navigate(`/filament/${variant.id}`);
                                   }}
-                                  className="px-2 py-1 text-xs rounded-md bg-muted hover:bg-primary/20 hover:text-primary transition-colors"
-                                  title={color || variant.product_title}
+                                  className="group/swatch relative"
+                                  title={colorName || variant.product_title}
                                 >
-                                  {color || 'View'}
+                                  {hasColorHex ? (
+                                    <div 
+                                      className="w-7 h-7 rounded-full border-2 border-border hover:border-primary hover:scale-110 transition-all shadow-sm"
+                                      style={{ backgroundColor: variant.color_hex || '#888' }}
+                                    />
+                                  ) : (
+                                    <div className="px-2 py-1 text-xs rounded-md bg-muted hover:bg-primary/20 hover:text-primary transition-colors">
+                                      {colorName || 'View'}
+                                    </div>
+                                  )}
+                                  {/* Tooltip on hover */}
+                                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg opacity-0 group-hover/swatch:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-border">
+                                    {colorName || variant.product_title}
+                                  </div>
                                 </button>
                               );
                             })}
