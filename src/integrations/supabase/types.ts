@@ -278,6 +278,7 @@ export type Database = {
           dimensional_accuracy_score: number | null
           drying_temp_c: number | null
           drying_time_hours: number | null
+          ean: string | null
           ease_of_printing_score: number | null
           elongation_break_xy_percent: number | null
           fan_max_percent: number | null
@@ -286,6 +287,7 @@ export type Database = {
           finish_type: string | null
           flexural_strength_mpa: number | null
           food_contact_rating: string | null
+          gtin: string | null
           high_speed_capable: boolean | null
           id: string
           industry_tags: string[] | null
@@ -341,6 +343,7 @@ export type Database = {
           dimensional_accuracy_score?: number | null
           drying_temp_c?: number | null
           drying_time_hours?: number | null
+          ean?: string | null
           ease_of_printing_score?: number | null
           elongation_break_xy_percent?: number | null
           fan_max_percent?: number | null
@@ -349,6 +352,7 @@ export type Database = {
           finish_type?: string | null
           flexural_strength_mpa?: number | null
           food_contact_rating?: string | null
+          gtin?: string | null
           high_speed_capable?: boolean | null
           id?: string
           industry_tags?: string[] | null
@@ -404,6 +408,7 @@ export type Database = {
           dimensional_accuracy_score?: number | null
           drying_temp_c?: number | null
           drying_time_hours?: number | null
+          ean?: string | null
           ease_of_printing_score?: number | null
           elongation_break_xy_percent?: number | null
           fan_max_percent?: number | null
@@ -412,6 +417,7 @@ export type Database = {
           finish_type?: string | null
           flexural_strength_mpa?: number | null
           food_contact_rating?: string | null
+          gtin?: string | null
           high_speed_capable?: boolean | null
           id?: string
           industry_tags?: string[] | null

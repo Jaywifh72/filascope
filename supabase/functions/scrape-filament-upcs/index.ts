@@ -256,10 +256,12 @@ function extractProductHandle(productUrl: string): string | null {
   return null;
 }
 
-// Shopify UPC extraction
+// Shopify product identifier extraction
 interface ShopifyExtractionResult {
   upc: string | null;
   sku: string | null;
+  gtin: string | null;
+  ean: string | null;
   note?: string;
 }
 
@@ -308,24 +310,61 @@ async function extractFromShopify(
 ): Promise<ShopifyExtractionResult> {
   let upc: string | null = null;
   let sku: string | null = null;
+  let gtin: string | null = null;
+  let ean: string | null = null;
+  
+  // Helper to classify barcode type based on length
+  const classifyBarcode = (barcode: string): { upc: string | null; gtin: string | null; ean: string | null } => {
+    const cleanBarcode = barcode.replace(/\D/g, '');
+    const length = cleanBarcode.length;
+    
+    // UPC-A: 12 digits, UPC-E: 8 digits
+    if (length === 12 || length === 8) {
+      return { upc: cleanBarcode, gtin: null, ean: null };
+    }
+    // EAN-13: 13 digits, EAN-8: 8 digits (same as UPC-E, context dependent)
+    if (length === 13) {
+      return { upc: null, gtin: null, ean: cleanBarcode };
+    }
+    // GTIN-14: 14 digits
+    if (length === 14) {
+      return { upc: null, gtin: cleanBarcode, ean: null };
+    }
+    // Default: treat as UPC if 10-12 digits, otherwise GTIN
+    if (length >= 10 && length <= 12) {
+      return { upc: cleanBarcode, gtin: null, ean: null };
+    }
+    return { upc: null, gtin: cleanBarcode, ean: null };
+  };
   
   // Helper to extract data from variants
   const extractFromVariants = (variants: any[], source: string): boolean => {
     for (const variant of variants || []) {
-      // Extract UPC from barcode
-      if (!upc && variant.barcode && variant.barcode.length >= 8) {
-        console.log(`  Found UPC in ${source}: ${variant.barcode}`);
-        upc = variant.barcode;
+      // Extract barcode and classify it
+      if (variant.barcode && variant.barcode.length >= 8) {
+        const classified = classifyBarcode(variant.barcode);
+        if (!upc && classified.upc) {
+          console.log(`  Found UPC in ${source}: ${classified.upc}`);
+          upc = classified.upc;
+        }
+        if (!ean && classified.ean) {
+          console.log(`  Found EAN in ${source}: ${classified.ean}`);
+          ean = classified.ean;
+        }
+        if (!gtin && classified.gtin) {
+          console.log(`  Found GTIN in ${source}: ${classified.gtin}`);
+          gtin = classified.gtin;
+        }
       }
       // Extract SKU
       if (!sku && variant.sku && variant.sku.trim()) {
         console.log(`  Found SKU in ${source}: ${variant.sku}`);
         sku = variant.sku.trim();
       }
-      // If we have both, we're done
-      if (upc && sku) return true;
+      // If we have all, we're done
+      if ((upc || ean || gtin) && sku) return true;
     }
-    return upc !== null || sku !== null;
+    return upc !== null || sku !== null || gtin !== null || ean !== null;
   };
   
   // Try cache first by exact handle match
@@ -335,12 +374,12 @@ async function extractFromShopify(
     const found = extractFromVariants(cachedProduct.variants, 'cache (exact handle)');
     
     if (found) {
-      return { upc, sku };
+      return { upc, sku, gtin, ean };
     }
     
     if (variantsChecked > 0) {
       console.log(`  Product found in cache (${variantsChecked} variants) but no barcode/sku populated`);
-      return { upc: null, sku: null, note: `Product has ${variantsChecked} variants but none have barcode/sku data` };
+      return { upc: null, sku: null, gtin: null, ean: null, note: `Product has ${variantsChecked} variants but none have barcode/sku data` };
     }
   }
   
@@ -361,12 +400,12 @@ async function extractFromShopify(
       const found = extractFromVariants(variants, 'product JSON');
       
       if (found) {
-        return { upc, sku };
+        return { upc, sku, gtin, ean };
       }
       
       if (variants.length > 0) {
         console.log(`  Individual product JSON has ${variants.length} variants but no barcode/sku data`);
-        return { upc: null, sku: null, note: `Vendor does not populate barcode/SKU in Shopify` };
+        return { upc: null, sku: null, gtin: null, ean: null, note: `Vendor does not populate barcode/SKU in Shopify` };
       }
     } else {
       console.log(`  Individual product JSON returned ${response.status}`);
@@ -383,18 +422,18 @@ async function extractFromShopify(
       console.log(`  Found fuzzy match: "${matchedProduct.title}" (handle: ${matchedProduct.handle})`);
       const found = extractFromVariants(matchedProduct.variants, 'cache (fuzzy title match)');
       if (found) {
-        return { upc, sku };
+        return { upc, sku, gtin, ean };
       }
       if (matchedProduct.variants?.length > 0) {
         console.log(`  Fuzzy matched product has ${matchedProduct.variants.length} variants but no barcode/sku data`);
-        return { upc: null, sku: null, note: `Product matched by title but vendor does not populate barcode/SKU in Shopify` };
+        return { upc: null, sku: null, gtin: null, ean: null, note: `Product matched by title but vendor does not populate barcode/SKU in Shopify` };
       }
     } else {
       console.log(`  No fuzzy title match found in ${productMap.size} cached products`);
     }
   }
   
-  return { upc: null, sku: null, note: 'Product not found in Shopify API' };
+  return { upc: null, sku: null, gtin: null, ean: null, note: 'Product not found in Shopify API' };
 }
 
 // Fetch all products from Shopify store
@@ -455,7 +494,7 @@ async function processFilament(
   brandConfig: BrandConfig | null,
   productMap: Map<string, any>,
   supabase: any
-): Promise<{ id: string; title: string; status: 'updated' | 'no_data_found' | 'error' | 'unsupported'; upc?: string; sku?: string; error?: string; method?: string }> {
+): Promise<{ id: string; title: string; status: 'updated' | 'no_data_found' | 'error' | 'unsupported'; upc?: string; sku?: string; gtin?: string; ean?: string; error?: string; method?: string }> {
   try {
     const productHandle = filament.product_handle || extractProductHandle(filament.product_url || '');
     
@@ -483,16 +522,20 @@ async function processFilament(
     
     let upc: string | null = null;
     let sku: string | null = null;
+    let gtin: string | null = null;
+    let ean: string | null = null;
     let method = '';
     let extractionNote = '';
     
-    // Shopify extraction (gets both UPC and SKU)
+    // Shopify extraction (gets UPC, SKU, GTIN, EAN)
     if (brandConfig.upcExtractionMethod === 'shopify' && brandConfig.shopifyUrl) {
       const result = await extractFromShopify(brandConfig.shopifyUrl, productHandle || '', productMap, filament.product_title);
       upc = result.upc;
       sku = result.sku;
+      gtin = result.gtin;
+      ean = result.ean;
       if (result.note) extractionNote = result.note;
-      if (upc || sku) method = 'shopify';
+      if (upc || sku || gtin || ean) method = 'shopify';
     }
     
     // WooCommerce extraction (placeholder - would need HTML scraping)
@@ -519,13 +562,17 @@ async function processFilament(
     // Check if we have anything to update
     const hasNewUpc = cleanUpc && cleanUpc !== filament.upc;
     const hasNewSku = sku && sku !== filament.variant_sku;
+    const hasNewGtin = gtin && gtin !== filament.gtin;
+    const hasNewEan = ean && ean !== filament.ean;
     
-    if (hasNewUpc || hasNewSku) {
+    if (hasNewUpc || hasNewSku || hasNewGtin || hasNewEan) {
       const updateData: Record<string, string> = {};
       if (hasNewUpc) updateData.upc = cleanUpc!;
       if (hasNewSku) updateData.variant_sku = sku!;
+      if (hasNewGtin) updateData.gtin = gtin!;
+      if (hasNewEan) updateData.ean = ean!;
       
-      console.log(`  Found via ${method}: ${hasNewUpc ? `UPC=${cleanUpc}` : ''} ${hasNewSku ? `SKU=${sku}` : ''}`);
+      console.log(`  Found via ${method}: ${hasNewUpc ? `UPC=${cleanUpc}` : ''} ${hasNewSku ? `SKU=${sku}` : ''} ${hasNewGtin ? `GTIN=${gtin}` : ''} ${hasNewEan ? `EAN=${ean}` : ''}`);
       
       const { error: updateError } = await supabase
         .from('filaments')
@@ -543,6 +590,8 @@ async function processFilament(
         status: 'updated', 
         upc: cleanUpc || undefined,
         sku: sku || undefined,
+        gtin: gtin || undefined,
+        ean: ean || undefined,
         method 
       };
     }
@@ -551,7 +600,7 @@ async function processFilament(
       id: filament.id, 
       title: filament.product_title, 
       status: 'no_data_found',
-      error: extractionNote || 'No UPC or SKU data found'
+      error: extractionNote || 'No UPC, SKU, GTIN or EAN data found'
     };
   } catch (e) {
     console.error(`Error processing filament: ${e}`);
@@ -635,8 +684,8 @@ serve(async (req) => {
       
       let query = supabase
         .from('filaments')
-        .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku')
-        .in('id', filamentIds)
+      .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku, gtin, ean')
+      .in('id', filamentIds)
         .not('product_url', 'is', null);
 
       if (!forceUpdate) {
@@ -717,8 +766,8 @@ serve(async (req) => {
 
       let query = supabase
         .from('filaments')
-        .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku')
-        .eq('vendor', brand)
+      .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku, gtin, ean')
+      .eq('vendor', brand)
         .not('product_url', 'is', null);
 
       if (!forceUpdate) {
