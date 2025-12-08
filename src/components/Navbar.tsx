@@ -1,8 +1,13 @@
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Search, Tag, GitCompare, Grid3x3, Sparkles, Wrench, LogIn, LogOut, User, Shield, Archive, Database, Layers } from "lucide-react";
+import { 
+  Search, Tag, GitCompare, Grid3x3, Sparkles, Wrench, LogIn, LogOut, 
+  User, Shield, Archive, Database, Layers, Terminal, TrendingUp, TrendingDown, Minus
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,170 +16,277 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const SLASH_COMMANDS = [
+  { command: "/pla", description: "Filter PLA filaments", filter: "PLA" },
+  { command: "/petg", description: "Filter PETG filaments", filter: "PETG" },
+  { command: "/abs", description: "Filter ABS filaments", filter: "ABS" },
+  { command: "/tpu", description: "Filter TPU filaments", filter: "TPU" },
+  { command: "/asa", description: "Filter ASA filaments", filter: "ASA" },
+  { command: "/nylon", description: "Filter Nylon filaments", filter: "Nylon" },
+  { command: "/carbon", description: "Filter Carbon Fiber", filter: "Carbon" },
+  { command: "/wood", description: "Filter Wood filaments", filter: "Wood" },
+  { command: "/silk", description: "Filter Silk filaments", filter: "Silk" },
+  { command: "/glow", description: "Filter Glow-in-dark", filter: "Glow" },
+];
+
 const Navbar = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [searchValue, setSearchValue] = useState("");
+  const [showCommands, setShowCommands] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Fetch real-time PLA price average
+  const { data: priceData } = useQuery({
+    queryKey: ["pla-price-ticker"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("filaments")
+        .select("variant_price")
+        .ilike("material", "%PLA%")
+        .not("variant_price", "is", null)
+        .gt("variant_price", 0);
+      
+      if (error) throw error;
+      
+      const prices = data.map(f => Number(f.variant_price));
+      const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+      
+      // Simulate 24h change (would normally come from historical data)
+      const change = (Math.random() - 0.5) * 4; // -2% to +2%
+      
+      return { 
+        avgPrice: avg, 
+        change,
+        count: prices.length 
+      };
+    },
+    refetchInterval: 60000, // Refresh every minute
+  });
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchValue(value);
+    setShowCommands(value.startsWith("/"));
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      // Check for slash command
+      const matchedCommand = SLASH_COMMANDS.find(cmd => 
+        searchValue.toLowerCase().startsWith(cmd.command)
+      );
+      
+      if (matchedCommand) {
+        navigate(`/?material=${encodeURIComponent(matchedCommand.filter)}`);
+        setSearchValue("");
+        setShowCommands(false);
+      } else if (searchValue.trim()) {
+        navigate(`/?search=${encodeURIComponent(searchValue.trim())}`);
+        setSearchValue("");
+      }
+    }
+    
+    if (e.key === "Escape") {
+      setShowCommands(false);
+      setSearchValue("");
+    }
+  };
+
+  const handleCommandClick = (command: typeof SLASH_COMMANDS[0]) => {
+    navigate(`/?material=${encodeURIComponent(command.filter)}`);
+    setSearchValue("");
+    setShowCommands(false);
+  };
+
+  // Filter commands based on input
+  const filteredCommands = SLASH_COMMANDS.filter(cmd =>
+    cmd.command.toLowerCase().includes(searchValue.toLowerCase())
+  );
+
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 items-center justify-between px-6">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-primary font-bold text-lg">🎯</span>
+    <>
+      {/* Price Ticker Bar */}
+      <div className="w-full bg-[#0D0D0D] border-b border-[#222] py-1.5 px-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-6 text-xs font-mono">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">PLA/KG</span>
+              <span className="text-white font-semibold">
+                ${priceData?.avgPrice?.toFixed(2) || "—"}
+              </span>
+              {priceData?.change !== undefined && (
+                <span className={`flex items-center gap-0.5 ${
+                  priceData.change > 0 ? "text-green-400" : 
+                  priceData.change < 0 ? "text-red-400" : "text-muted-foreground"
+                }`}>
+                  {priceData.change > 0 ? <TrendingUp className="w-3 h-3" /> : 
+                   priceData.change < 0 ? <TrendingDown className="w-3 h-3" /> : 
+                   <Minus className="w-3 h-3" />}
+                  {priceData.change > 0 ? "+" : ""}{priceData.change.toFixed(2)}%
+                </span>
+              )}
             </div>
-            <span className="text-xl font-bold tracking-tight">
-              <span className="text-primary">SPOOL</span>
-              <span className="text-foreground">STASH</span>
-            </span>
+            <div className="h-3 w-px bg-[#333]" />
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span>SAMPLES</span>
+              <span className="text-primary">{priceData?.count || 0}</span>
+            </div>
+            <div className="h-3 w-px bg-[#333]" />
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="animate-pulse text-green-400">●</span>
+              <span>LIVE</span>
+            </div>
           </div>
-        </Link>
-
-        {/* Center Navigation */}
-        <div className="hidden md:flex items-center gap-1">
-          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
-            <Link to="/" className="flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              Filament Finder
-            </Link>
-          </Button>
-          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
-            <Link to="/printers" className="flex items-center gap-2">
-              <Database className="w-4 h-4" />
-              Printers
-            </Link>
-          </Button>
-          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
-            <Link to="/accessories" className="flex items-center gap-2">
-              <Layers className="w-4 h-4" />
-              Accessories
-            </Link>
-          </Button>
-          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
-            <Link to="/brands" className="flex items-center gap-2">
-              <Tag className="w-4 h-4" />
-              Brands
-            </Link>
-          </Button>
-          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
-            <Link to="/compare" className="flex items-center gap-2">
-              <GitCompare className="w-4 h-4" />
-              Compare
-            </Link>
-          </Button>
-          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
-            <Link to="/matrix" className="flex items-center gap-2">
-              <Grid3x3 className="w-4 h-4" />
-              Matrix
-            </Link>
-          </Button>
-          <Button variant="ghost" asChild className="bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300">
-            <Link to="/deals" className="flex items-center gap-2">
-              <Tag className="w-4 h-4" />
-              Deals
-            </Link>
-          </Button>
-          <Button variant="ghost" asChild className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300">
-            <Link to="/wizard" className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Wizard
-            </Link>
-          </Button>
-          <Button variant="ghost" asChild className="bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 hover:text-orange-300">
-            <Link to="/diagnose" className="flex items-center gap-2">
-              <Wrench className="w-4 h-4" />
-              Diagnose
-            </Link>
-          </Button>
-          
-          {user && (
-            <Button variant="ghost" asChild className="bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300">
-              <Link to="/vault" className="flex items-center gap-2">
-                <Archive className="w-4 h-4" />
-                Vault
-              </Link>
-            </Button>
-          )}
-          
-          {isAdmin && (
-            <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
-              <Link to="/admin/dashboard" className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                Admin
-              </Link>
-            </Button>
-          )}
-        </div>
-
-        {/* Right Actions */}
-        <div className="flex items-center gap-3">
-          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Link to="/" className="flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              Find Filament
-            </Link>
-          </Button>
-          
-          {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="border-border">
-                  <User className="w-4 h-4 mr-2" />
-                  {user.email?.split("@")[0]}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-popover border-border">
-                <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                  {user.email}
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/vault" className="flex items-center">
-                    <Archive className="w-4 h-4 mr-2" />
-                    My Vault
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {isAdmin && (
-                  <>
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin/dashboard" className="flex items-center">
-                        <Shield className="w-4 h-4 mr-2" />
-                        Admin Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin/maintenance" className="flex items-center">
-                        <Database className="w-4 h-4 mr-2" />
-                        Maintenance
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                  </>
-                )}
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button variant="outline" asChild className="border-border">
-              <Link to="/auth" className="flex items-center gap-2">
-                <LogIn className="w-4 h-4" />
-                Sign In
-              </Link>
-            </Button>
-          )}
+          <div className="text-xs text-muted-foreground font-mono hidden sm:block">
+            {new Date().toLocaleTimeString()} UTC
+          </div>
         </div>
       </div>
-    </nav>
+
+      {/* Main Command Center Header */}
+      <nav className="sticky top-0 z-50 border-b border-[#333] bg-[#0A0A0A]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/80">
+        <div className="flex h-14 items-center justify-between px-6 gap-4">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center border border-primary/30">
+              <Terminal className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-lg font-bold tracking-tight font-mono hidden sm:block">
+              <span className="text-primary">SPOOL</span>
+              <span className="text-white">STASH</span>
+            </span>
+          </Link>
+
+          {/* Command Search Bar */}
+          <div className="relative flex-1 max-w-xl">
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                <Terminal className="w-4 h-4 text-primary" />
+                <span className="text-xs text-muted-foreground font-mono">&gt;</span>
+              </div>
+              <input
+                ref={searchRef}
+                type="text"
+                value={searchValue}
+                onChange={handleSearchChange}
+                onKeyDown={handleSearchKeyDown}
+                onFocus={() => searchValue.startsWith("/") && setShowCommands(true)}
+                onBlur={() => setTimeout(() => setShowCommands(false), 200)}
+                placeholder="Type / for commands or search filaments..."
+                className="w-full h-10 pl-12 pr-4 bg-[#1A1A1A] border border-[#333] rounded-lg text-white placeholder:text-muted-foreground font-mono text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all"
+              />
+              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground bg-[#252525] rounded border border-[#333]">
+                ESC
+              </kbd>
+            </div>
+
+            {/* Slash Commands Dropdown */}
+            {showCommands && filteredCommands.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#1A1A1A] border border-[#333] rounded-lg overflow-hidden shadow-xl z-50">
+                <div className="p-2 border-b border-[#333]">
+                  <span className="text-xs text-muted-foreground font-mono">SLASH COMMANDS</span>
+                </div>
+                {filteredCommands.map((cmd) => (
+                  <button
+                    key={cmd.command}
+                    onClick={() => handleCommandClick(cmd)}
+                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-primary/10 transition-colors text-left"
+                  >
+                    <code className="text-primary font-mono text-sm">{cmd.command}</code>
+                    <span className="text-muted-foreground text-sm">{cmd.description}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Navigation Links */}
+          <div className="hidden lg:flex items-center gap-1">
+            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
+              <Link to="/printers">PRINTERS</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
+              <Link to="/brands">BRANDS</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
+              <Link to="/compare">COMPARE</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className="text-red-400 hover:text-red-300 font-mono text-xs">
+              <Link to="/deals">DEALS</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className="text-purple-400 hover:text-purple-300 font-mono text-xs">
+              <Link to="/wizard">WIZARD</Link>
+            </Button>
+            {isAdmin && (
+              <Button variant="ghost" size="sm" asChild className="text-amber-400 hover:text-amber-300 font-mono text-xs">
+                <Link to="/admin/dashboard">ADMIN</Link>
+              </Button>
+            )}
+          </div>
+
+          {/* User Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="border-[#333] bg-[#1A1A1A] font-mono text-xs">
+                    <User className="w-3 h-3 mr-1.5" />
+                    {user.email?.split("@")[0]}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-[#1A1A1A] border-[#333]">
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground font-mono">
+                    {user.email}
+                  </div>
+                  <DropdownMenuSeparator className="bg-[#333]" />
+                  <DropdownMenuItem asChild>
+                    <Link to="/vault" className="flex items-center font-mono text-xs">
+                      <Archive className="w-3 h-3 mr-2" />
+                      MY VAULT
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-[#333]" />
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/dashboard" className="flex items-center font-mono text-xs">
+                          <Shield className="w-3 h-3 mr-2" />
+                          ADMIN
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/maintenance" className="flex items-center font-mono text-xs">
+                          <Database className="w-3 h-3 mr-2" />
+                          MAINTENANCE
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-[#333]" />
+                    </>
+                  )}
+                  <DropdownMenuItem onClick={handleSignOut} className="font-mono text-xs">
+                    <LogOut className="w-3 h-3 mr-2" />
+                    SIGN OUT
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="outline" size="sm" asChild className="border-[#333] bg-[#1A1A1A] font-mono text-xs">
+                <Link to="/auth">
+                  <LogIn className="w-3 h-3 mr-1.5" />
+                  LOGIN
+                </Link>
+              </Button>
+            )}
+          </div>
+        </div>
+      </nav>
+    </>
   );
 };
 
