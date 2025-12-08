@@ -17,16 +17,32 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const SLASH_COMMANDS = [
+  // Common materials
   { command: "/pla", description: "Filter PLA filaments", filter: "PLA" },
   { command: "/petg", description: "Filter PETG filaments", filter: "PETG" },
   { command: "/abs", description: "Filter ABS filaments", filter: "ABS" },
-  { command: "/tpu", description: "Filter TPU filaments", filter: "TPU" },
+  { command: "/tpu", description: "Filter TPU/Flexible", filter: "TPU" },
   { command: "/asa", description: "Filter ASA filaments", filter: "ASA" },
-  { command: "/nylon", description: "Filter Nylon filaments", filter: "Nylon" },
+  { command: "/nylon", description: "Filter Nylon/PA", filter: "Nylon" },
+  // Engineering materials
+  { command: "/pc", description: "Filter Polycarbonate", filter: "PC" },
+  { command: "/peek", description: "Filter PEEK high-temp", filter: "PEEK" },
+  { command: "/pei", description: "Filter PEI/ULTEM", filter: "PEI" },
+  { command: "/pom", description: "Filter POM/Acetal", filter: "POM" },
+  { command: "/pp", description: "Filter Polypropylene", filter: "PP" },
+  { command: "/hips", description: "Filter HIPS support", filter: "HIPS" },
+  { command: "/pva", description: "Filter PVA soluble", filter: "PVA" },
+  // Composite materials
   { command: "/carbon", description: "Filter Carbon Fiber", filter: "Carbon" },
+  { command: "/glass", description: "Filter Glass Fiber", filter: "Glass" },
+  { command: "/metal", description: "Filter Metal-filled", filter: "Metal" },
   { command: "/wood", description: "Filter Wood filaments", filter: "Wood" },
-  { command: "/silk", description: "Filter Silk filaments", filter: "Silk" },
+  // Specialty materials
+  { command: "/silk", description: "Filter Silk finish", filter: "Silk" },
   { command: "/glow", description: "Filter Glow-in-dark", filter: "Glow" },
+  { command: "/marble", description: "Filter Marble effect", filter: "Marble" },
+  { command: "/matte", description: "Filter Matte finish", filter: "Matte" },
+  { command: "/flex", description: "Filter Flexible/TPE", filter: "Flex" },
 ];
 
 const Navbar = () => {
