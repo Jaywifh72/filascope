@@ -392,6 +392,54 @@ export const brandInfo: Record<string, BrandInfoData> = {
     companyType: "private",
     headquarters: "Záhumenní 1454, 768 24 Hulín, Czech Republic",
     website: "https://fillamentum.com"
+  },
+  "VoxelPLA": {
+    summary: "VoxelPLA is a budget-friendly 3D printing filament brand that has gained popularity among hobbyists and educators for delivering reliable quality at accessible price points. The company focuses on producing consistent PLA and PLA+ filaments that perform well on a wide range of consumer 3D printers, from entry-level machines to enthusiast favorites.\n\nVoxelPLA's product line emphasizes dimensional accuracy and smooth feeding characteristics, making their filaments ideal for users who want dependable prints without the premium price tag. Their PLA Plus formulation offers enhanced toughness and impact resistance compared to standard PLA, bridging the gap between budget materials and engineering-grade filaments.\n\nThe brand has built a following through positive reviews highlighting their excellent price-to-performance ratio. VoxelPLA filaments come vacuum-sealed with desiccant to ensure freshness and consistent moisture levels. Available primarily through Amazon, the brand offers an expanding color selection to meet diverse project needs. VoxelPLA represents the new generation of value-focused filament brands proving that quality printing doesn't require premium pricing.",
+    companyType: "private",
+    website: "https://www.amazon.com/stores/VOXELPLA"
+  },
+  "3DFuel": {
+    summary: "3D-Fuel is an American filament manufacturer based in Fargo, North Dakota, distinguished by their commitment to producing innovative, high-quality materials with a focus on sustainability and American manufacturing. Founded by a team passionate about advancing desktop 3D printing, 3D-Fuel has carved out a unique niche by developing specialty filaments that combine exceptional performance with environmental responsibility.\n\n3D-Fuel's flagship products include their Pro PLA and Tough PLA lines, engineered for professional-grade printing with enhanced mechanical properties. The company gained significant attention with their bio-based materials, including filaments made from renewable resources like agricultural waste. Their Buzzed filament, made with beer brewing byproducts, exemplifies their creative approach to sustainable material development.\n\nThe company maintains rigorous quality standards at their North Dakota manufacturing facility, ensuring consistent diameter tolerances and material properties. 3D-Fuel provides comprehensive technical support and detailed material data sheets to help users achieve optimal results. Their commitment to innovation extends to developing advanced engineering materials like PCTG and high-performance specialty compounds. 3D-Fuel continues to push boundaries in sustainable 3D printing while delivering materials trusted by professionals and makers alike.",
+    location: "Fargo, North Dakota, USA",
+    founded: "2013",
+    companyType: "private",
+    headquarters: "Fargo, North Dakota, USA",
+    website: "https://www.3dfuel.com"
+  },
+  "Eryone": {
+    summary: "Shenzhen Eryone Technology Co., Ltd. is a Chinese 3D printing company that has rapidly grown to become a significant player in both the printer and filament markets. The company offers a comprehensive ecosystem including FDM and resin 3D printers alongside an extensive range of filament materials, positioning themselves as a one-stop solution for desktop fabrication needs.\n\nEryone's filament line spans standard materials like PLA, PETG, and ABS to specialty offerings including silk, matte, and high-speed formulations. Their filaments have earned praise for consistent quality and vibrant colors at competitive prices. The company's vertically integrated approach—manufacturing both printers and materials—allows them to optimize compatibility and provide tailored recommendations for their ecosystem.\n\nEryone operates globally through their direct-to-consumer platform and major e-commerce channels, providing responsive customer service and technical support. Their B2B division serves educational institutions, businesses, and resellers with volume pricing and OEM/ODM services. The company maintains ISO-certified manufacturing facilities with stringent quality control processes. Eryone continues to expand their product range with innovative materials including high-speed and specialty filaments that address evolving market demands.",
+    location: "Shenzhen, China",
+    companyType: "private",
+    headquarters: "Shenzhen, Guangdong Province, China",
+    website: "https://www.eryone.com"
+  },
+  "Inland": {
+    summary: "Inland is the house brand of Micro Center, America's iconic computer and electronics retailer with stores across 25 states. As Micro Center's private label for 3D printing filaments, Inland has become one of the most popular budget filament brands in the United States, beloved by makers for its consistent quality, extensive color selection, and exceptional value.\n\nInland's filament range covers essential materials including PLA, PLA+, PETG, ABS, and TPU, with each product benefiting from Micro Center's demanding quality standards and purchasing power. The brand has earned a devoted following among hobbyists who appreciate being able to purchase filament in-store, avoid shipping costs, and leverage Micro Center's hassle-free return policy. Their PLA+ line, in particular, has become legendary in maker communities for punching well above its price point.\n\nAvailable exclusively at Micro Center locations and through their online store, Inland filaments are manufactured to tight tolerances and vacuum-sealed for freshness. The brand offers one of the most extensive color palettes in the budget segment, enabling creative freedom without breaking the bank. Inland represents Micro Center's commitment to supporting the maker community with affordable, reliable supplies backed by in-person customer service.",
+    location: "Hilliard, Ohio, USA",
+    companyType: "subsidiary",
+    parentCompany: "Micro Center",
+    headquarters: "4119 Leap Road, Hilliard, OH 43026, USA",
+    website: "https://www.microcenter.com"
+  },
+  "Fiberlogy": {
+    summary: "Fiberlogy is a Polish filament manufacturer that has established itself as one of Europe's premier producers of high-quality 3D printing materials. Operating from modern production facilities in Poland, the company combines decades of experience in plastics processing with cutting-edge extrusion technology to create filaments with exceptional consistency and performance.\n\nFiberlogy's product portfolio spans from user-friendly materials like Easy PLA and Easy PETG to advanced engineering filaments including Nylon PA12, PEEK, and their innovative Fiberthane flexible materials. The company's flagship Easy line has earned widespread acclaim for its forgiving print characteristics and excellent results across diverse printer platforms. Their ABS and ASA formulations are particularly noted for reduced warping and improved layer adhesion.\n\nThe company invests heavily in research and development, continuously introducing new materials that address emerging market needs. Fiberlogy provides comprehensive technical documentation, including detailed TDS and printing guidelines, reflecting their engineering-focused approach. Their quality management system ensures every spool meets stringent European standards. Fiberlogy has built strong distribution partnerships across Europe and beyond, making their premium materials accessible to makers and professionals worldwide who demand reliable, consistent performance.",
+    location: "Poland",
+    companyType: "private",
+    headquarters: "Poland",
+    website: "https://fiberlogy.com"
+  },
+  "Ziro": {
+    summary: "Shenzhen Ziro 3D Print Technology Co., Ltd. is a Chinese filament manufacturer that has built a strong reputation for producing quality materials at competitive prices. Operating from Shenzhen, the heart of China's manufacturing hub, Ziro leverages advanced production capabilities to deliver consistent filaments across an impressive range of materials and colors.\n\nZiro's product catalog spans over 20 material types and 200+ color options, making them one of the most comprehensive filament suppliers in the budget segment. Their core offerings include PLA, PETG, ABS, TPU, and specialty materials like wood-fill and marble composites. Each filament is manufactured from 100% virgin raw materials, ensuring predictable printing behavior and reliable mechanical properties.\n\nThe company operates with flexible manufacturing capabilities that accommodate both small orders with low minimums and large-scale industrial volumes. Ziro maintains substantial inventory levels enabling fast fulfillment for distributors and retailers worldwide. Their quality control processes ensure consistent diameter tolerances and material purity across production batches. Ziro also offers OEM and customization services, allowing brands and businesses to develop tailored filament solutions for specific applications.",
+    location: "Shenzhen, China",
+    companyType: "private",
+    headquarters: "Shenzhen, Guangdong Province, China",
+    website: "https://ziro3dprint.en.alibaba.com"
+  },
+  "Paramount 3D": {
+    summary: "Paramount 3D is an American filament brand focused on delivering quality materials with an emphasis on creative collections and themed color palettes. The company has distinguished itself in the crowded filament market through unique color naming conventions and curated collections that inspire creativity, from their Military Collection featuring tactical tones to their vibrant primary colors.\n\nParamount 3D manufactures their filaments from 100% virgin materials, ensuring consistent performance and predictable printing behavior. Their product line includes PLA, ABS, PETG, and specialty materials, all vacuum-sealed with desiccant to maintain optimal moisture levels during shipping and storage. The company provides detailed specifications for each material, including recommended print settings and spool dimensions.\n\nBased in the United States, Paramount 3D serves makers through their direct website and major e-commerce platforms. Their themed collections have resonated with hobbyists and professionals who appreciate thoughtful color curation that simplifies material selection for specific projects. The company also offers PCB prototyping boards, reflecting their roots in the broader maker movement. Paramount 3D continues to expand their offerings while maintaining their commitment to quality and creative inspiration.",
+    location: "United States",
+    companyType: "private",
+    website: "https://www.paramount-3d.com"
   }
 };
 
