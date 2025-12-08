@@ -28,7 +28,26 @@ const COLOR_WORDS = [
   'Gold', 'Gray', 'Grey', 'Green', 'Ivory', 'Lavender', 'Magenta', 'Maroon', 'Navy',
   'Olive', 'Orange', 'Peach', 'Pink', 'Purple', 'Red', 'Rose', 'Salmon', 'Silver',
   'Tan', 'Teal', 'Turquoise', 'Violet', 'White', 'Yellow', 'Kraft', 'Lemonade', 'Terracotta',
-  'Bronze', 'Rust',
+  'Bronze', 'Rust', 'Khaki', 'Mustard', 'Amber', 'Aqua', 'Azure', 'Bone', 'Champagne',
+  // Fillamentum style colors
+  'Cobalt Blue', 'Concrete Grey', 'Luminous Orange', 'Metallic Grey', 'Signal Brown',
+  'Sky Blue', 'Traffic Black', 'Traffic Red', 'Traffic White', 'Traffic Yellow',
+  'Turquoise Green', 'Anthracite Grey', 'Dijon Mustard', 'Green Grass', 'Grey Blue',
+  'Snow White', 'Vertigo Grey', 'Vivid Pink', 'White Aluminium', 'Army Green',
+  'Black Soul', 'Caramel Brown Metallic', 'Deep Sea Transparent', 'Flash Yellow Metallic',
+  'Flirty Plum', 'Ghost White', 'Grey Mouse Transparent', 'Iced Green Transparent',
+  'Jungle Green Metallic', 'Lagoon Transparent', 'Lemonade Translucent', 'Mistake Blue Metallic',
+  'Morning Mist', 'Noble Green', 'Passion Fruit Metallic', 'Perl Ruby', 'Portofino Blue',
+  'Pure Clear', 'Rapunzel Silver', 'Traffic Blue', 'Urban Grey', 'Wizard Voodoo',
+  'Crystal Clear', 'Crystal Clear Blue', 'Crystal Clear Green', 'Crystal Clear Purple',
+  // Polymaker style colors  
+  'Teal Green', 'Army Dark Green', 'Fossil Grey', 'Luminous White', 'Luminous Green',
+  'Luminous Blue', 'Luminous Red', 'Galaxy Dark Blue', 'Galaxy Purple', 'Galaxy Rose',
+  // Prusament style colors
+  'Galaxy Black', 'Galaxy Silver', 'Jet Black', 'Signal White', 'Opal Green',
+  'Prusa Orange', 'Mystic Green', 'Mystic Brown', 'Lipstick Red', 'Azure Blue',
+  // Sunlu style colors
+  'Army Beige', 'Coffee Brown', 'Grass Green', 'Light Pink', 'Skin', 'Wood',
   // Stylized color names (Hatchbox PETG style)
   'Midnight', 'Peacock', 'Lake', 'Baby', 'Electric Lime', 'Dusk', 'Dawn', 'Sunset', 'Ocean',
   'Sky', 'Coral', 'Mint', 'Sage', 'Moss', 'Sand', 'Clay', 'Slate', 'Storm', 'Fog', 'Mist',
@@ -38,7 +57,7 @@ const COLOR_WORDS = [
   'Cream', 'Ivory', 'Pearl', 'Snow', 'Ice', 'Frost', 'Steel', 'Smoke', 'Charcoal', 'Onyx',
   'Jet', 'Raven', 'Shadow', 'Graphite', 'Gunmetal', 'Titanium', 'Chrome', 'Platinum',
   // Standalone modifier colors (Hatchbox style)
-  'Light', 'Dark', 'Bright', 'Deep', 'Pale', 'Vivid',
+  'Light', 'Dark', 'Bright', 'Deep', 'Pale', 'Vivid', 'Pure', 'Signal', 'Traffic',
   // Multi-word Hatchbox colors
   'Ash Gray', 'Stone Gray', 'Baby Pink', 'Blush Pink', 'Soft Purple', 'Light Lavender',
   'Cherry Red', 'Lemon Yellow', 'Seafoam Blue', 'Seafoam Green',
@@ -50,8 +69,8 @@ const COLOR_WORDS = [
   // Glow variants
   'Glow in the Dark', 'Glow in the Dark Blue', 'Glow in the Dark Green',
   // General multi-word colors
-  'Light Blue', 'Dark Blue', 'Sky Blue', 'Royal Blue', 'Light Green',
-  'Light Gray', 'Dark Gray', 'Light Grey', 'Dark Grey', 'Lime Green',
+  'Light Blue', 'Dark Blue', 'Sky Blue', 'Royal Blue', 'Light Green', 'Ocean Blue',
+  'Light Gray', 'Dark Gray', 'Light Grey', 'Dark Grey', 'Lime Green', 'Neon Blue',
   'Hot Pink', 'Light Pink', 'Neon Green', 'Neon Orange', 'Neon Pink', 'Neon Yellow',
   'Glow Green', 'Glow Blue', 'True Black', 'True White', 'Jet Black', 'Snow White',
   'Natural', 'Clear', 'Transparent', 'Translucent',
@@ -64,27 +83,35 @@ const getBaseProductName = (title: string): string => {
     .replace(/\bPLA\s+PRO\+/gi, 'PLA+')  // "PLA PRO+" -> "PLA+"
     .replace(/\bPLA\s+PRO\b/gi, 'PLA+'); // "PLA PRO" -> "PLA+"
   
-  // Pattern 1: "Brand Material - Color" (dash separator)
+  // Pattern 1: "Brand Material - Color" (dash separator) - Fillamentum, ColorFabb style
   const dashMatch = normalizedTitle.match(/^(.+?)\s+-\s+.+$/);
   if (dashMatch) {
     return dashMatch[1].trim();
   }
   
-  // Pattern 1.5: Handle compound material names like "Metallic PLA", "Silk PLA", "Matte PLA", "PETG Rapid"
+  // Pattern 1.5: Handle compound material names like "Metallic PLA", "Silk PLA", "Matte PLA"
   // Match: "Brand CompoundMaterial Color" -> "Brand CompoundMaterial"
-  const compoundMaterialMatch = normalizedTitle.match(/^(.+?\s+(?:Metallic|Silk|Matte|Marble|Galaxy|Sparkle|Glitter|Glow|Wood|Carbon|Glass|Rapid)\s+(?:PLA|PETG|ABS|TPU|ASA))\s+.+$/i);
+  const compoundMaterialMatch = normalizedTitle.match(/^(.+?\s+(?:Metallic|Silk|Matte|Marble|Galaxy|Sparkle|Glitter|Glow|Wood|Carbon|Glass|Rapid|Tough|Flex|Pro|Premium|Basic|Economy|Ultra)\s+(?:PLA|PETG|ABS|TPU|TPE|ASA|PA|PC|HIPS|PVA|Nylon))\s+.+$/i);
   if (compoundMaterialMatch) {
     return compoundMaterialMatch[1].trim();
   }
   
-  // Pattern 1.6: Handle "Material Rapid" pattern (e.g., "Hatchbox PETG Rapid Black" -> "Hatchbox PETG Rapid")
-  const materialRapidMatch = normalizedTitle.match(/^(.+?\s+(?:PLA|PETG|ABS|TPU|ASA)\s+Rapid)\s+.+$/i);
-  if (materialRapidMatch) {
-    return materialRapidMatch[1].trim();
+  // Pattern 1.6: Handle "Material Rapid/Pro/etc" pattern (e.g., "Hatchbox PETG Rapid Black")
+  const materialVariantMatch = normalizedTitle.match(/^(.+?\s+(?:PLA|PETG|ABS|TPU|TPE|ASA|PA|PC)\s+(?:Rapid|Pro|Plus|Max|Lite|Basic|Premium|HS|HT|CF|GF))\s+.+$/i);
+  if (materialVariantMatch) {
+    return materialVariantMatch[1].trim();
   }
   
-  // Pattern 1.7: Handle "Carbon Fiber Material" pattern (e.g., "Hatchbox Carbon Fiber PLA" as standalone product)
-  const carbonFiberMatch = normalizedTitle.match(/^(.+?\s+Carbon\s+Fiber\s+(?:PLA|PETG|ABS|TPU|ASA))$/i);
+  // Pattern 1.7: Handle "Brand Extrafill/PolyLite/etc Material" patterns (Fillamentum, Polymaker style)
+  // e.g., "Fillamentum PLA Extrafill - Color" already handled by dash pattern
+  // e.g., "Polymaker PolyLite PLA Color" -> "Polymaker PolyLite PLA"
+  const brandLineMatch = normalizedTitle.match(/^(.+?\s+(?:PolyLite|PolyMax|PolyMide|PolyFlex|PolyWood|PolyDissolve|Extrafill|Flexfill|Timberfill|CPE HG100|ASA Extrafill|ABS Extrafill|PLA Extrafill))\s+.+$/i);
+  if (brandLineMatch) {
+    return brandLineMatch[1].trim();
+  }
+  
+  // Pattern 1.8: Handle "Carbon Fiber Material" pattern (standalone product)
+  const carbonFiberMatch = normalizedTitle.match(/^(.+?\s+Carbon\s+Fiber\s+(?:PLA|PETG|ABS|TPU|ASA|PA|Nylon))$/i);
   if (carbonFiberMatch) {
     return carbonFiberMatch[1].trim();
   }
