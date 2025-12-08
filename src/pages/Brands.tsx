@@ -68,7 +68,38 @@ interface BrandStats {
   spoolMaterial: "Cardboard" | "Plastic" | "Mixed" | null;
   hasHighSpeed: boolean;
   avgTransmissionDistance: number | null;
+  colors: string[];
 }
+
+// ColorStack component for displaying brand's color range
+const ColorStack = ({ colors }: { colors: string[] }) => {
+  const displayColors = colors.slice(0, 6);
+  const remainingCount = colors.length - 6;
+  
+  if (displayColors.length === 0) return null;
+  
+  return (
+    <div className="flex items-center justify-center mt-3 pt-3 border-t border-[#333]">
+      <div className="flex items-center">
+        {displayColors.map((color, index) => (
+          <div
+            key={index}
+            className="w-3 h-3 rounded-full border border-[#333] -ml-1 first:ml-0"
+            style={{ 
+              backgroundColor: color,
+              zIndex: displayColors.length - index 
+            }}
+          />
+        ))}
+        {remainingCount > 0 && (
+          <span className="ml-1.5 text-xs font-mono text-muted-foreground">
+            +{remainingCount}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const Brands = () => {
   const navigate = useNavigate();
@@ -77,7 +108,7 @@ const Brands = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("filaments")
-        .select("vendor, spool_material, transmission_distance, high_speed_capable")
+        .select("vendor, spool_material, transmission_distance, high_speed_capable, color_hex")
         .not("vendor", "is", null);
       
       if (error) throw error;
@@ -90,6 +121,7 @@ const Brands = () => {
             hasPlastic: false,
             hasHighSpeed: false,
             transmissionDistances: [] as number[],
+            colorSet: new Set<string>(),
           };
         }
         acc[f.vendor].count += 1;
@@ -105,8 +137,11 @@ const Brands = () => {
         if (f.transmission_distance != null) {
           acc[f.vendor].transmissionDistances.push(f.transmission_distance);
         }
+        if (f.color_hex && /^#[0-9A-Fa-f]{6}$/.test(f.color_hex)) {
+          acc[f.vendor].colorSet.add(f.color_hex);
+        }
         return acc;
-      }, {} as Record<string, { count: number; hasCardboard: boolean; hasPlastic: boolean; hasHighSpeed: boolean; transmissionDistances: number[] }>);
+      }, {} as Record<string, { count: number; hasCardboard: boolean; hasPlastic: boolean; hasHighSpeed: boolean; transmissionDistances: number[]; colorSet: Set<string> }>);
       
       return Object.entries(brandStats)
         .map(([name, stats]): BrandStats => {
@@ -126,6 +161,7 @@ const Brands = () => {
             avgTransmissionDistance: stats.transmissionDistances.length > 0
               ? Math.round(stats.transmissionDistances.reduce((a, b) => a + b, 0) / stats.transmissionDistances.length)
               : null,
+            colors: Array.from(stats.colorSet),
           };
         })
         .sort((a, b) => b.count - a.count);
@@ -275,6 +311,9 @@ const Brands = () => {
                             </span>
                           )}
                         </div>
+                        
+                        {/* Color Stack */}
+                        <ColorStack colors={brand.colors} />
                       </div>
                     </div>
                   </div>
