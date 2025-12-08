@@ -257,51 +257,83 @@ function extractProductHandle(productUrl: string): string | null {
 }
 
 // Shopify UPC extraction
-async function extractUpcFromShopify(
+interface ShopifyExtractionResult {
+  upc: string | null;
+  sku: string | null;
+  note?: string;
+}
+
+async function extractFromShopify(
   shopifyUrl: string,
   productHandle: string,
   productMap: Map<string, any>
-): Promise<{ upc: string | null; note?: string }> {
+): Promise<ShopifyExtractionResult> {
+  let upc: string | null = null;
+  let sku: string | null = null;
+  
   // Try cache first
   const cachedProduct = productMap.get(productHandle.toLowerCase());
   if (cachedProduct) {
     const variantsChecked = cachedProduct.variants?.length || 0;
     for (const variant of cachedProduct.variants || []) {
-      if (variant.barcode && variant.barcode.length >= 8) {
+      // Extract UPC from barcode
+      if (!upc && variant.barcode && variant.barcode.length >= 8) {
         console.log(`  Found UPC in cache: ${variant.barcode}`);
-        return { upc: variant.barcode };
+        upc = variant.barcode;
       }
+      // Extract SKU
+      if (!sku && variant.sku && variant.sku.trim()) {
+        console.log(`  Found SKU in cache: ${variant.sku}`);
+        sku = variant.sku.trim();
+      }
+      // If we have both, we're done
+      if (upc && sku) break;
     }
-    // Product found in cache but no barcode
+    
+    if (upc || sku) {
+      return { upc, sku };
+    }
+    
+    // Product found in cache but no data
     if (variantsChecked > 0) {
-      console.log(`  Product found in cache (${variantsChecked} variants) but no barcode field populated`);
-      return { upc: null, note: `Product has ${variantsChecked} variants but none have barcode data` };
+      console.log(`  Product found in cache (${variantsChecked} variants) but no barcode/sku populated`);
+      return { upc: null, sku: null, note: `Product has ${variantsChecked} variants but none have barcode/sku data` };
     }
   }
   
-  // Try individual product JSON (some Shopify stores don't include barcode in products.json but do in individual product.json)
+  // Try individual product JSON
   try {
     const productJsonUrl = `${shopifyUrl}/products/${productHandle}.json`;
     console.log(`  Trying individual product JSON: ${productJsonUrl}`);
     const response = await fetch(productJsonUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'application/json'
-      }
+        'Accept': 'application/json',
+      },
     });
     
     if (response.ok) {
       const data = await response.json();
       const variants = data.product?.variants || [];
       for (const variant of variants) {
-        if (variant.barcode && variant.barcode.length >= 8) {
+        if (!upc && variant.barcode && variant.barcode.length >= 8) {
           console.log(`  Found UPC in product JSON: ${variant.barcode}`);
-          return { upc: variant.barcode };
+          upc = variant.barcode;
         }
+        if (!sku && variant.sku && variant.sku.trim()) {
+          console.log(`  Found SKU in product JSON: ${variant.sku}`);
+          sku = variant.sku.trim();
+        }
+        if (upc && sku) break;
       }
+      
+      if (upc || sku) {
+        return { upc, sku };
+      }
+      
       if (variants.length > 0) {
-        console.log(`  Individual product JSON has ${variants.length} variants but no barcode data`);
-        return { upc: null, note: `Vendor does not populate barcode/UPC in Shopify` };
+        console.log(`  Individual product JSON has ${variants.length} variants but no barcode/sku data`);
+        return { upc: null, sku: null, note: `Vendor does not populate barcode/SKU in Shopify` };
       }
     } else {
       console.log(`  Individual product JSON returned ${response.status}`);
@@ -310,7 +342,7 @@ async function extractUpcFromShopify(
     console.log(`  Error fetching Shopify product JSON: ${e}`);
   }
   
-  return { upc: null, note: 'Product not found in Shopify API' };
+  return { upc: null, sku: null, note: 'Product not found in Shopify API' };
 }
 
 // Fetch all products from Shopify store
@@ -371,7 +403,7 @@ async function processFilament(
   brandConfig: BrandConfig | null,
   productMap: Map<string, any>,
   supabase: any
-): Promise<{ id: string; title: string; status: 'updated' | 'no_upc_found' | 'error' | 'unsupported'; upc?: string; error?: string; method?: string }> {
+): Promise<{ id: string; title: string; status: 'updated' | 'no_data_found' | 'error' | 'unsupported'; upc?: string; sku?: string; error?: string; method?: string }> {
   try {
     const productHandle = filament.product_handle || extractProductHandle(filament.product_url || '');
     
@@ -398,54 +430,76 @@ async function processFilament(
     }
     
     let upc: string | null = null;
+    let sku: string | null = null;
     let method = '';
     let extractionNote = '';
     
-    // Shopify extraction
+    // Shopify extraction (gets both UPC and SKU)
     if (brandConfig.upcExtractionMethod === 'shopify' && brandConfig.shopifyUrl && productHandle) {
-      const result = await extractUpcFromShopify(brandConfig.shopifyUrl, productHandle, productMap);
+      const result = await extractFromShopify(brandConfig.shopifyUrl, productHandle, productMap);
       upc = result.upc;
+      sku = result.sku;
       if (result.note) extractionNote = result.note;
-      if (upc) method = 'shopify';
+      if (upc || sku) method = 'shopify';
     }
     
     // WooCommerce extraction (placeholder - would need HTML scraping)
     if (!upc && brandConfig.upcExtractionMethod === 'woocommerce') {
       console.log(`WooCommerce extraction not yet implemented for ${filament.vendor}`);
-      // Future: implement HTML scraping for WooCommerce meta tags
     }
     
-    // Custom extraction (placeholder)
+    // Custom extraction (for brands with special logic)
     if (!upc && brandConfig.upcExtractionMethod === 'custom' && brandConfig.customExtractor) {
       upc = await brandConfig.customExtractor(filament.product_url, filament.product_title);
       if (upc) method = 'custom';
     }
     
+    // Validate and clean UPC format (8-14 digits)
+    let cleanUpc: string | null = null;
     if (upc) {
-      // Validate UPC format (should be 8-14 digits)
-      const cleanUpc = upc.replace(/\D/g, '');
-      if (cleanUpc.length >= 8 && cleanUpc.length <= 14) {
-        const { error: updateError } = await supabase
-          .from('filaments')
-          .update({ upc: cleanUpc })
-          .eq('id', filament.id);
-
-        if (updateError) {
-          return { id: filament.id, title: filament.product_title, status: 'error', error: updateError.message };
-        }
-        
-        console.log(`Updated ${filament.product_title} with UPC: ${cleanUpc} (via ${method})`);
-        return { id: filament.id, title: filament.product_title, status: 'updated', upc: cleanUpc, method };
-      } else {
-        console.log(`Invalid UPC format: ${upc}`);
+      cleanUpc = upc.replace(/\D/g, '');
+      if (cleanUpc.length < 8 || cleanUpc.length > 14) {
+        console.log(`  Invalid UPC format: ${upc}`);
+        cleanUpc = null;
       }
+    }
+    
+    // Check if we have anything to update
+    const hasUpc = !!cleanUpc;
+    const hasSku = sku && sku !== filament.variant_sku;
+    
+    if (hasUpc || hasSku) {
+      const updateData: Record<string, string> = {};
+      if (hasUpc) updateData.upc = cleanUpc!;
+      if (hasSku) updateData.variant_sku = sku!;
+      
+      console.log(`  Found via ${method}: ${hasUpc ? `UPC=${cleanUpc}` : ''} ${hasSku ? `SKU=${sku}` : ''}`);
+      
+      const { error: updateError } = await supabase
+        .from('filaments')
+        .update(updateData)
+        .eq('id', filament.id);
+      
+      if (updateError) {
+        return { id: filament.id, title: filament.product_title, status: 'error', error: updateError.message };
+      }
+      
+      console.log(`Updated ${filament.product_title}`);
+      return { 
+        id: filament.id, 
+        title: filament.product_title, 
+        status: 'updated', 
+        upc: cleanUpc || undefined,
+        sku: sku || undefined,
+        method 
+      };
     }
     
     return { 
       id: filament.id, 
       title: filament.product_title, 
-      status: 'no_upc_found',
-      error: extractionNote || 'No UPC/barcode data found'
+      status: 'no_data_found',
+      error: extractionNote || 'No UPC or SKU data found'
     };
   } catch (e) {
     console.error(`Error processing filament: ${e}`);
