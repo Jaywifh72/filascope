@@ -6,7 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { SlidersHorizontal, X, Zap, Sparkles, Atom, Sun, Package, Recycle } from "lucide-react";
+import { SlidersHorizontal, X, Zap, Sparkles, Atom, Sun, Package, Recycle, Wallet, Rocket, Leaf } from "lucide-react";
+
+interface FilterPreset {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  description: string;
+  filters: {
+    materials?: string[];
+    highSpeed?: boolean;
+    matte?: boolean;
+    carbonFiber?: boolean;
+    glow?: boolean;
+    plasticSpool?: boolean;
+    cardboardSpool?: boolean;
+    priceRange?: [number, number];
+  };
+}
 
 interface FilamentFiltersProps {
   // Material filters
@@ -40,9 +57,47 @@ interface FilamentFiltersProps {
   // Reset
   onReset: () => void;
   activeFilterCount: number;
+  
+  // Preset application
+  onApplyPreset?: (preset: FilterPreset) => void;
 }
 
 const CORE_MATERIALS = ["PLA", "PETG", "ABS", "ASA", "TPU"];
+
+const FILTER_PRESETS: FilterPreset[] = [
+  {
+    id: "budget",
+    name: "Budget Friendly",
+    icon: <Wallet className="w-4 h-4 text-emerald-400" />,
+    description: "Affordable PLA & PETG under $25/kg",
+    filters: {
+      materials: ["PLA", "PETG"],
+      priceRange: [0, 25],
+    },
+  },
+  {
+    id: "performance",
+    name: "High Performance",
+    icon: <Rocket className="w-4 h-4 text-orange-400" />,
+    description: "High-speed, engineering-grade filaments",
+    filters: {
+      materials: ["ABS", "ASA", "PETG"],
+      highSpeed: true,
+      carbonFiber: true,
+    },
+  },
+  {
+    id: "eco",
+    name: "Eco-Friendly",
+    icon: <Leaf className="w-4 h-4 text-green-400" />,
+    description: "Sustainable materials with cardboard spools",
+    filters: {
+      materials: ["PLA"],
+      cardboardSpool: true,
+      plasticSpool: false,
+    },
+  },
+];
 
 const FilterContent = ({
   selectedMaterials,
@@ -65,7 +120,14 @@ const FilterContent = ({
   filterCounts,
   onReset,
   activeFilterCount,
+  onApplyPreset,
 }: FilamentFiltersProps) => {
+  const handlePresetClick = (preset: FilterPreset) => {
+    if (onApplyPreset) {
+      onApplyPreset(preset);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with Reset */}
@@ -83,6 +145,37 @@ const FilterContent = ({
           </Button>
         )}
       </div>
+
+      {/* Filter Presets */}
+      <div className="space-y-3">
+        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+          <Sparkles className="w-3.5 h-3.5" />
+          Quick Presets
+        </h4>
+        <div className="space-y-2">
+          {FILTER_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              onClick={() => handlePresetClick(preset)}
+              className="w-full flex items-center gap-3 p-3 rounded-lg bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/30 transition-all cursor-pointer group text-left"
+            >
+              <div className="shrink-0 w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
+                {preset.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="block text-sm font-medium text-foreground group-hover:text-cyan-400 transition-colors">
+                  {preset.name}
+                </span>
+                <span className="block text-xs text-muted-foreground truncate">
+                  {preset.description}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Separator className="bg-border/50" />
 
       {/* Material Type */}
       <div className="space-y-3">
