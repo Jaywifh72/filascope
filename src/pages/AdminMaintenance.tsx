@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe, Upload, Link as LinkIcon, Sparkles, Package, Printer } from "lucide-react";
@@ -143,6 +144,7 @@ const AdminMaintenance = () => {
   } | null>(null);
   const [isScrapingNewBrands, setIsScrapingNewBrands] = useState(false);
   const [newBrandLimit, setNewBrandLimit] = useState("50");
+  const [newBrandForce, setNewBrandForce] = useState(false);
   const [newBrandResult, setNewBrandResult] = useState<{
     total: number;
     success: number;
@@ -718,6 +720,7 @@ const AdminMaintenance = () => {
         method: 'POST',
         body: { 
           limit: parseInt(newBrandLimit),
+          force: newBrandForce,
           brands: ["VoxelPLA", "3DFuel", "Eryone", "Inland", "Fiberlogy", "Ziro", "Paramount 3D"]
         }
       });
@@ -2234,10 +2237,20 @@ const AdminMaintenance = () => {
               className="w-32"
             />
             <p className="text-xs text-muted-foreground">
-              Processes filaments from VoxelPLA, 3DFuel, Eryone, Inland, Fiberlogy, Ziro, and Paramount 3D that are missing images
+              Processes filaments from VoxelPLA, 3DFuel, Eryone, Inland, Fiberlogy, Ziro, and Paramount 3D
             </p>
           </div>
 
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="new-brand-force"
+              checked={newBrandForce}
+              onCheckedChange={(checked) => setNewBrandForce(checked === true)}
+            />
+            <Label htmlFor="new-brand-force" className="text-sm font-normal">
+              Force rescrape (overwrite existing images)
+            </Label>
+          </div>
           <Button 
             onClick={runNewBrandImageScraper} 
             disabled={isScrapingNewBrands}
