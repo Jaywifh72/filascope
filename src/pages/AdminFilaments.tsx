@@ -60,6 +60,7 @@ const AdminFilaments = () => {
   const [upcDialogOpen, setUpcDialogOpen] = useState(false);
   const [selectedBrandsForUpc, setSelectedBrandsForUpc] = useState<Set<string>>(new Set());
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
+  const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
 
   useEffect(() => {
@@ -232,9 +233,10 @@ const AdminFilaments = () => {
       f.material?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesUpcFilter = showMissingUpcOnly ? !f.upc : true;
+    const matchesSkuFilter = showMissingSkuOnly ? !f.variant_sku : true;
     const matchesVendor = vendorFilter === "all" || f.vendor === vendorFilter;
     
-    return matchesSearch && matchesUpcFilter && matchesVendor;
+    return matchesSearch && matchesUpcFilter && matchesSkuFilter && matchesVendor;
   });
 
   // Stats
@@ -377,6 +379,16 @@ const AdminFilaments = () => {
             />
             <label htmlFor="missing-upc" className="text-sm cursor-pointer whitespace-nowrap">
               Missing UPC ({totalFilaments - filamentsWithUpc})
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="missing-sku"
+              checked={showMissingSkuOnly}
+              onCheckedChange={(checked) => setShowMissingSkuOnly(checked === true)}
+            />
+            <label htmlFor="missing-sku" className="text-sm cursor-pointer whitespace-nowrap">
+              Missing SKU ({totalFilaments - filamentsWithSku})
             </label>
           </div>
           <Dialog open={upcDialogOpen} onOpenChange={setUpcDialogOpen}>
