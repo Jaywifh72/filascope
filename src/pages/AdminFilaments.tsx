@@ -243,6 +243,7 @@ const AdminFilaments = () => {
   const filamentsWithPrices = filaments.filter((f) => f.variant_price).length;
   const filamentsWithTDS = filaments.filter((f) => f.tds_url).length;
   const filamentsWithUpc = filaments.filter((f) => f.upc).length;
+  const filamentsWithSku = filaments.filter((f) => f.variant_sku).length;
   const uniqueVendors = new Set(filaments.map((f) => f.vendor).filter(Boolean)).size;
 
   if (authLoading || loading) {
@@ -491,6 +492,7 @@ const AdminFilaments = () => {
                   <TableHead>Vendor</TableHead>
                   <TableHead>Material</TableHead>
                   <TableHead>UPC</TableHead>
+                  <TableHead>SKU</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Weight</TableHead>
                   <TableHead className="w-24">Actions</TableHead>
@@ -546,6 +548,11 @@ const AdminFilaments = () => {
                     <TableCell>
                       <span className="font-mono text-xs text-muted-foreground">
                         {filament.upc || "-"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {filament.variant_sku || "-"}
                       </span>
                     </TableCell>
                     <TableCell>
