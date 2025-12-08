@@ -60,6 +60,13 @@ const getBaseProductName = (title: string): string => {
     return dashMatch[1].trim();
   }
   
+  // Pattern 1.5: Handle compound material names like "Metallic PLA", "Silk PLA", "Matte PLA"
+  // Match: "Brand CompoundMaterial Color" -> "Brand CompoundMaterial"
+  const compoundMaterialMatch = normalizedTitle.match(/^(.+?\s+(?:Metallic|Silk|Matte|Marble|Galaxy|Sparkle|Glitter|Glow|Wood|Carbon|Glass)\s+(?:PLA|PETG|ABS|TPU|ASA))\s+.+$/i);
+  if (compoundMaterialMatch) {
+    return compoundMaterialMatch[1].trim();
+  }
+  
   // Pattern 2: Check for color word at the end (case-insensitive)
   // Sort by length descending to match longer colors first ("Light Blue" before "Blue")
   const sortedColors = [...COLOR_WORDS].sort((a, b) => b.length - a.length);
