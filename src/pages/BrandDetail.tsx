@@ -4,11 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, Users, Globe, TrendingUp } from "lucide-react";
+import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, Users, Globe, TrendingUp, Filter } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { getBrandInfo } from "@/lib/brandInfo";
 import type { Tables } from "@/integrations/supabase/types";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 type Filament = Tables<"filaments">;
 
@@ -161,6 +161,7 @@ const BrandDetail = () => {
   const { brand } = useParams<{ brand: string }>();
   const navigate = useNavigate();
   const decodedBrand = brand ? decodeURIComponent(brand) : "";
+  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
 
   const brandInfo = getBrandInfo(decodedBrand);
   const brandLogo = getBrandLogo(decodedBrand);
@@ -180,13 +181,28 @@ const BrandDetail = () => {
     enabled: !!decodedBrand,
   });
 
+  // Extract unique materials for filter
+  const availableMaterials = useMemo(() => {
+    if (!filaments) return [];
+    const materials = new Set<string>();
+    filaments.forEach((f) => {
+      if (f.material) materials.add(f.material);
+    });
+    return Array.from(materials).sort();
+  }, [filaments]);
+
   // Group filaments by base product name
   const groupedProducts = useMemo(() => {
     if (!filaments) return [];
 
+    // Filter by material if selected
+    const filteredFilaments = selectedMaterial
+      ? filaments.filter((f) => f.material === selectedMaterial)
+      : filaments;
+
     const groups = new Map<string, GroupedProduct>();
 
-    filaments.forEach((filament) => {
+    filteredFilaments.forEach((filament) => {
       const baseName = getBaseProductName(filament.product_title);
       
       if (!groups.has(baseName)) {
@@ -220,7 +236,7 @@ const BrandDetail = () => {
     });
 
     return Array.from(groups.values()).sort((a, b) => a.baseName.localeCompare(b.baseName));
-  }, [filaments]);
+  }, [filaments, selectedMaterial]);
 
   const getPricePerKg = (price: number | null) => {
     if (!price) return null;
@@ -390,10 +406,54 @@ const BrandDetail = () => {
         </Card>
 
         {/* Filaments Section */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-4">
-            {decodedBrand} Products ({groupedProducts.length} products, {totalVariants} variants)
-          </h2>
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h2 className="text-2xl font-bold">
+              {decodedBrand} Products ({groupedProducts.length} products, {totalVariants} variants)
+            </h2>
+            
+            {/* Material Filter */}
+            {availableMaterials.length > 1 && (
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <div className="flex flex-wrap gap-1.5">
+                  <Button
+                    variant={selectedMaterial === null ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedMaterial(null)}
+                    className="h-7 text-xs"
+                  >
+                    All
+                  </Button>
+                  {availableMaterials.map((material) => (
+                    <Button
+                      key={material}
+                      variant={selectedMaterial === material ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedMaterial(material)}
+                      className="h-7 text-xs"
+                    >
+                      {material}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {selectedMaterial && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Showing {selectedMaterial} products</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedMaterial(null)}
+                className="h-6 px-2 text-xs"
+              >
+                Clear filter
+              </Button>
+            </div>
+          )}
         </div>
 
         {isLoading ? (
