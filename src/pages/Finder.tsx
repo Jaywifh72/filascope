@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ExternalLink, ChevronDown, GitCompare, X } from "lucide-react";
+import { ExternalLink, ChevronDown, GitCompare, X, LayoutGrid, List, CheckCircle, XCircle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "@/components/LikeButton";
@@ -32,6 +32,7 @@ const Finder = () => {
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("score-desc");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
   // Printer selection hook
   const { selectedPrinter } = usePrinterSelection();
@@ -1031,20 +1032,143 @@ const Finder = () => {
           </div>
         )}
 
-        {/* Results count */}
+        {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm text-muted-foreground">
             {filteredAndSortedFilaments?.length || 0} filaments
           </p>
-          <span className="text-xs text-muted-foreground">🇺🇸 United States</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">🇺🇸 United States</span>
+            <div className="flex items-center border border-[#333] rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 transition-colors ${
+                  viewMode === "grid" 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-[#1A1A1A] text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 transition-colors ${
+                  viewMode === "list" 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-[#1A1A1A] text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Filaments List */}
-        <div className="space-y-3">
-          {isLoading ? (
-            <div className="text-center py-16 text-muted-foreground">Loading filaments...</div>
-          ) : filteredAndSortedFilaments && filteredAndSortedFilaments.length > 0 ? (
-            filteredAndSortedFilaments.map((filament) => {
+        {/* Filaments Display */}
+        {isLoading ? (
+          <div className="text-center py-16 text-muted-foreground">Loading filaments...</div>
+        ) : filteredAndSortedFilaments && filteredAndSortedFilaments.length > 0 ? (
+          viewMode === "list" ? (
+            /* List View - Compact Table */
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-800 text-left">
+                    <th className="py-3 px-2 w-8"></th>
+                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Brand</th>
+                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Product</th>
+                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Material</th>
+                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Price</th>
+                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Price/kg</th>
+                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Stock</th>
+                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Score</th>
+                    <th className="py-3 px-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAndSortedFilaments.map((filament) => {
+                    const isValidPrice = filament.variant_price && filament.variant_price > 5 && filament.variant_price < 500;
+                    const pricePerKg = isValidPrice ? filament.variant_price : null;
+                    const totalPrice = pricePerKg && filament.net_weight_g 
+                      ? (pricePerKg * (filament.net_weight_g / 1000)).toFixed(2) 
+                      : null;
+                    const overallScore = filament.value_score || 7.0;
+                    
+                    return (
+                      <tr 
+                        key={filament.id} 
+                        className="border-b border-gray-800 hover:bg-[#1A1A1A] transition-colors cursor-pointer"
+                        onClick={() => navigate(`/filaments/${filament.id}`)}
+                      >
+                        <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox 
+                            checked={selectedForCompare.includes(filament.id)}
+                            onCheckedChange={() => toggleCompareSelection(filament.id)}
+                          />
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="text-sm font-medium text-foreground">{filament.vendor}</span>
+                        </td>
+                        <td className="py-3 px-3 max-w-[300px]">
+                          <span className="text-sm text-muted-foreground truncate block">{filament.product_title}</span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <Badge variant="outline" className="text-xs border-primary/30 text-primary">
+                            {filament.material || "—"}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <span className="font-mono text-sm text-muted-foreground">
+                            {totalPrice ? `$${totalPrice}` : "—"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <span className="font-mono text-sm text-foreground font-semibold">
+                            {pricePerKg ? `$${pricePerKg.toFixed(2)}` : "—"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-center">
+                          {filament.variant_available !== false ? (
+                            <CheckCircle className="w-4 h-4 text-green-400 mx-auto" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-red-400 mx-auto" />
+                          )}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <span className={`font-mono text-sm font-semibold ${
+                            overallScore >= 8 ? "text-green-400" : 
+                            overallScore >= 6 ? "text-cyan-400" : "text-orange-400"
+                          }`}>
+                            {overallScore.toFixed(1)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1">
+                            <LikeButton filamentId={filament.id} size="sm" />
+                            {filament.product_url && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0"
+                                asChild
+                              >
+                                <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            /* Grid View - Original Cards */
+            <div className="space-y-3">
+            {filteredAndSortedFilaments.map((filament) => {
               // Filter out corrupted prices (likely data import errors)
               // Valid filament prices are typically $10-$200 per kg or $10-$100 per spool
               const isValidPrice = filament.variant_price && filament.variant_price > 5 && filament.variant_price < 500;
@@ -1216,13 +1340,14 @@ const Finder = () => {
                   </div>
                 </div>
               );
-            })
-          ) : (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground text-lg">No filaments found</p>
+            })}
             </div>
-          )}
-        </div>
+          )
+        ) : (
+          <div className="text-center py-16">
+            <p className="text-muted-foreground text-lg">No filaments found</p>
+          </div>
+        )}
       </main>
 
       {/* Floating Compare Bar */}
