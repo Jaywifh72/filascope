@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -28,6 +29,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Filament = Tables<"filaments">;
 
@@ -39,6 +50,8 @@ const AdminFilaments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilaments, setSelectedFilaments] = useState<Set<string>>(new Set());
   const [scrapingUpcs, setScrapingUpcs] = useState(false);
+  const [upcDialogOpen, setUpcDialogOpen] = useState(false);
+  const [selectedBrandsForUpc, setSelectedBrandsForUpc] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -120,17 +133,46 @@ const AdminFilaments = () => {
     }
   };
 
-  const handleScrape3DFuelUpcs = async () => {
+  // Get unique vendors for UPC dialog
+  const uniqueVendorsList = useMemo(() => {
+    return Array.from(new Set(filaments.map((f) => f.vendor).filter(Boolean))).sort() as string[];
+  }, [filaments]);
+
+  const toggleBrandForUpc = (brand: string) => {
+    setSelectedBrandsForUpc((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(brand)) {
+        newSet.delete(brand);
+      } else {
+        newSet.add(brand);
+      }
+      return newSet;
+    });
+  };
+
+  const handleScrapeUpcs = async () => {
+    if (selectedBrandsForUpc.size === 0) {
+      toast.error("Please select at least one brand");
+      return;
+    }
+
     setScrapingUpcs(true);
+    setUpcDialogOpen(false);
+    
     try {
-      toast.info("Scraping 3D-Fuel UPC codes from Shopify...");
-      const { data, error } = await supabase.functions.invoke('scrape-3dfuel-upcs', {
-        body: { limit: 200, forceUpdate: false }
+      toast.info(`Scraping UPC codes for ${selectedBrandsForUpc.size} brand(s)...`);
+      const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
+        body: { 
+          brands: Array.from(selectedBrandsForUpc),
+          limit: 200, 
+          forceUpdate: false 
+        }
       });
 
       if (error) throw error;
 
       toast.success(`Scraped UPCs: ${data.updated} updated, ${data.skipped} skipped, ${data.failed} failed`);
+      setSelectedBrandsForUpc(new Set());
       fetchFilaments();
     } catch (error: any) {
       toast.error(error.message || "Failed to scrape UPC codes");
@@ -264,18 +306,59 @@ const AdminFilaments = () => {
               className="pl-10"
             />
           </div>
-          <Button
-            variant="outline"
-            onClick={handleScrape3DFuelUpcs}
-            disabled={scrapingUpcs}
-          >
-            {scrapingUpcs ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Barcode className="w-4 h-4 mr-2" />
-            )}
-            Scrape 3D-Fuel UPCs
-          </Button>
+          <Dialog open={upcDialogOpen} onOpenChange={setUpcDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                disabled={scrapingUpcs}
+              >
+                {scrapingUpcs ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Barcode className="w-4 h-4 mr-2" />
+                )}
+                Scrape UPCs
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Scrape UPC Codes</DialogTitle>
+                <DialogDescription>
+                  Select brands to scrape UPC codes from their Shopify stores.
+                </DialogDescription>
+              </DialogHeader>
+              <ScrollArea className="max-h-[300px] pr-4">
+                <div className="space-y-2">
+                  {uniqueVendorsList.map((brand) => (
+                    <div key={brand} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`brand-${brand}`}
+                        checked={selectedBrandsForUpc.has(brand)}
+                        onCheckedChange={() => toggleBrandForUpc(brand)}
+                      />
+                      <label
+                        htmlFor={`brand-${brand}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {brand}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setUpcDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleScrapeUpcs}
+                  disabled={selectedBrandsForUpc.size === 0}
+                >
+                  Scrape {selectedBrandsForUpc.size} Brand(s)
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
