@@ -676,9 +676,9 @@ const AdminMaintenance = () => {
     });
 
     try {
-      const { data, error } = await supabase.functions.invoke('scrape-fillamentum-images', {
+      const { data, error } = await supabase.functions.invoke('fix-fillamentum-images', {
         method: 'POST',
-        body: { limit: 200, force: false }
+        body: {}
       });
 
       if (error) {
