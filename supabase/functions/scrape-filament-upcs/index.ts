@@ -263,45 +263,88 @@ interface ShopifyExtractionResult {
   note?: string;
 }
 
+// Normalize title for matching
+function normalizeForMatching(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/[™®©]/g, '')
+    .replace(/[^a-z0-9]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Find product in cache by fuzzy title matching
+function findProductByTitle(productTitle: string, productMap: Map<string, any>): any | null {
+  const normalizedTitle = normalizeForMatching(productTitle);
+  const titleWords = normalizedTitle.split(' ').filter(w => w.length > 2);
+  
+  let bestMatch: any = null;
+  let bestScore = 0;
+  
+  for (const [handle, product] of productMap) {
+    const shopifyTitle = normalizeForMatching(product.title || '');
+    
+    // Check if titles are similar enough
+    let matchingWords = 0;
+    for (const word of titleWords) {
+      if (shopifyTitle.includes(word)) matchingWords++;
+    }
+    
+    const score = matchingWords / titleWords.length;
+    if (score > bestScore && score >= 0.5) { // At least 50% of words match
+      bestScore = score;
+      bestMatch = product;
+    }
+  }
+  
+  return bestMatch;
+}
+
 async function extractFromShopify(
   shopifyUrl: string,
   productHandle: string,
-  productMap: Map<string, any>
+  productMap: Map<string, any>,
+  productTitle?: string
 ): Promise<ShopifyExtractionResult> {
   let upc: string | null = null;
   let sku: string | null = null;
   
-  // Try cache first
-  const cachedProduct = productMap.get(productHandle.toLowerCase());
-  if (cachedProduct) {
-    const variantsChecked = cachedProduct.variants?.length || 0;
-    for (const variant of cachedProduct.variants || []) {
+  // Helper to extract data from variants
+  const extractFromVariants = (variants: any[], source: string): boolean => {
+    for (const variant of variants || []) {
       // Extract UPC from barcode
       if (!upc && variant.barcode && variant.barcode.length >= 8) {
-        console.log(`  Found UPC in cache: ${variant.barcode}`);
+        console.log(`  Found UPC in ${source}: ${variant.barcode}`);
         upc = variant.barcode;
       }
       // Extract SKU
       if (!sku && variant.sku && variant.sku.trim()) {
-        console.log(`  Found SKU in cache: ${variant.sku}`);
+        console.log(`  Found SKU in ${source}: ${variant.sku}`);
         sku = variant.sku.trim();
       }
       // If we have both, we're done
-      if (upc && sku) break;
+      if (upc && sku) return true;
     }
+    return upc !== null || sku !== null;
+  };
+  
+  // Try cache first by exact handle match
+  const cachedProduct = productMap.get(productHandle.toLowerCase());
+  if (cachedProduct) {
+    const variantsChecked = cachedProduct.variants?.length || 0;
+    const found = extractFromVariants(cachedProduct.variants, 'cache (exact handle)');
     
-    if (upc || sku) {
+    if (found) {
       return { upc, sku };
     }
     
-    // Product found in cache but no data
     if (variantsChecked > 0) {
       console.log(`  Product found in cache (${variantsChecked} variants) but no barcode/sku populated`);
       return { upc: null, sku: null, note: `Product has ${variantsChecked} variants but none have barcode/sku data` };
     }
   }
   
-  // Try individual product JSON
+  // Try individual product JSON first
   try {
     const productJsonUrl = `${shopifyUrl}/products/${productHandle}.json`;
     console.log(`  Trying individual product JSON: ${productJsonUrl}`);
@@ -315,19 +358,9 @@ async function extractFromShopify(
     if (response.ok) {
       const data = await response.json();
       const variants = data.product?.variants || [];
-      for (const variant of variants) {
-        if (!upc && variant.barcode && variant.barcode.length >= 8) {
-          console.log(`  Found UPC in product JSON: ${variant.barcode}`);
-          upc = variant.barcode;
-        }
-        if (!sku && variant.sku && variant.sku.trim()) {
-          console.log(`  Found SKU in product JSON: ${variant.sku}`);
-          sku = variant.sku.trim();
-        }
-        if (upc && sku) break;
-      }
+      const found = extractFromVariants(variants, 'product JSON');
       
-      if (upc || sku) {
+      if (found) {
         return { upc, sku };
       }
       
@@ -340,6 +373,25 @@ async function extractFromShopify(
     }
   } catch (e) {
     console.log(`  Error fetching Shopify product JSON: ${e}`);
+  }
+  
+  // Try fuzzy title matching as fallback (for stores like 3DXTech with mismatched handles)
+  if (productTitle && productMap.size > 0) {
+    console.log(`  Trying fuzzy title match for: ${productTitle}`);
+    const matchedProduct = findProductByTitle(productTitle, productMap);
+    if (matchedProduct) {
+      console.log(`  Found fuzzy match: "${matchedProduct.title}" (handle: ${matchedProduct.handle})`);
+      const found = extractFromVariants(matchedProduct.variants, 'cache (fuzzy title match)');
+      if (found) {
+        return { upc, sku };
+      }
+      if (matchedProduct.variants?.length > 0) {
+        console.log(`  Fuzzy matched product has ${matchedProduct.variants.length} variants but no barcode/sku data`);
+        return { upc: null, sku: null, note: `Product matched by title but vendor does not populate barcode/SKU in Shopify` };
+      }
+    } else {
+      console.log(`  No fuzzy title match found in ${productMap.size} cached products`);
+    }
   }
   
   return { upc: null, sku: null, note: 'Product not found in Shopify API' };
@@ -435,8 +487,8 @@ async function processFilament(
     let extractionNote = '';
     
     // Shopify extraction (gets both UPC and SKU)
-    if (brandConfig.upcExtractionMethod === 'shopify' && brandConfig.shopifyUrl && productHandle) {
-      const result = await extractFromShopify(brandConfig.shopifyUrl, productHandle, productMap);
+    if (brandConfig.upcExtractionMethod === 'shopify' && brandConfig.shopifyUrl) {
+      const result = await extractFromShopify(brandConfig.shopifyUrl, productHandle || '', productMap, filament.product_title);
       upc = result.upc;
       sku = result.sku;
       if (result.note) extractionNote = result.note;
