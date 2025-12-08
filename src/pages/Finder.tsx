@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +32,15 @@ const Finder = () => {
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("score-desc");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    const saved = localStorage.getItem("finderViewMode");
+    return saved === "list" ? "list" : "grid";
+  });
+  
+  // Persist viewMode to localStorage
+  useEffect(() => {
+    localStorage.setItem("finderViewMode", viewMode);
+  }, [viewMode]);
   
   // Printer selection hook
   const { selectedPrinter } = usePrinterSelection();
