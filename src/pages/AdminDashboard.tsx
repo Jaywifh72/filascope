@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Database, Users, Package, Upload, TrendingUp, Shield, ExternalLink, BarChart3 } from "lucide-react";
+import { Database, Users, Package, Upload, TrendingUp, Shield, ExternalLink, BarChart3, ShoppingCart } from "lucide-react";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -213,6 +213,18 @@ const AdminDashboard = () => {
               </div>
               <p className="text-sm text-muted-foreground">
                 View printer data completeness metrics and fix issues
+              </p>
+            </Link>
+          </Card>
+
+          <Card className="p-6 bg-card border-border hover:border-primary transition-colors">
+            <Link to="/admin/amazon-links" className="block">
+              <div className="flex items-center gap-3 mb-3">
+                <ShoppingCart className="w-6 h-6 text-orange-500" />
+                <h3 className="text-lg font-semibold text-foreground">Amazon Link Finder</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Find and add Amazon links for filaments across regions
               </p>
             </Link>
           </Card>
