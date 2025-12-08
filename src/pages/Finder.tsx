@@ -19,6 +19,7 @@ import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { isAMSCompatible } from "@/lib/amsCompatibility";
 import BentoGrid from "@/components/BentoGrid";
+import { FilamentFilters } from "@/components/FilamentFilters";
 
 const Finder = () => {
   const navigate = useNavigate();
@@ -37,6 +38,16 @@ const Finder = () => {
     const saved = localStorage.getItem("finderViewMode");
     return saved === "list" ? "list" : "grid";
   });
+  
+  // New filter states
+  const [highSpeed, setHighSpeed] = useState(false);
+  const [matte, setMatte] = useState(false);
+  const [carbonFiber, setCarbonFiber] = useState(false);
+  const [glow, setGlow] = useState(false);
+  const [plasticSpool, setPlasticSpool] = useState(false);
+  const [cardboardSpool, setCardboardSpool] = useState(false);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
+  const MAX_PRICE_LIMIT = 100;
   
   // Persist viewMode to localStorage
   useEffect(() => {
@@ -572,12 +583,30 @@ const Finder = () => {
   };
 
   const filteredAndSortedFilaments = filaments?.filter(f => {
-    // Apply price filter - variant_price is already per-kg
-    if (maxPrice && f.variant_price) {
-      if (f.variant_price > parseFloat(maxPrice)) return false;
+    // Apply price range filter
+    if (f.variant_price) {
+      if (f.variant_price < priceRange[0] || f.variant_price > priceRange[1]) return false;
     }
+    
     // Apply AMS filter client-side (since it's calculated dynamically)
     if (amsOnly && !isAMSCompatible(f)) return false;
+    
+    // Apply high speed filter
+    if (highSpeed && !f.high_speed_capable) return false;
+    
+    // Apply matte filter
+    if (matte && f.finish_type?.toLowerCase() !== 'matte') return false;
+    
+    // Apply carbon fiber filter
+    if (carbonFiber && !f.material?.toLowerCase().includes('cf') && !f.material?.toLowerCase().includes('carbon')) return false;
+    
+    // Apply glow filter
+    if (glow && !f.material?.toLowerCase().includes('glow') && !f.product_title?.toLowerCase().includes('glow')) return false;
+    
+    // Apply spool type filters
+    if (plasticSpool && !cardboardSpool && f.spool_material?.toLowerCase() !== 'plastic') return false;
+    if (cardboardSpool && !plasticSpool && f.spool_material?.toLowerCase() !== 'cardboard') return false;
+    
     return true;
   }).sort((a, b) => {
     // variant_price is already the per-kg price
@@ -628,181 +657,58 @@ const Finder = () => {
       </div>
 
       <div className="flex">
-        {/* Left Sidebar */}
-        <aside className="w-72 border-r border-border bg-card/50 backdrop-blur-sm p-6 space-y-6 sticky top-0 h-screen overflow-y-auto shrink-0">
-          <div>
-          <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-semibold text-foreground hover:text-primary transition-colors mb-4">
-              <span>Filters</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-6">
-              <div className="space-y-4">
-                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Material Type</h4>
-                
-                {/* All Materials Option */}
-                <div className="pb-2 border-b border-border">
-                  <Badge
-                    variant={selectedMaterials.includes("All") ? "default" : "outline"}
-                    className={`cursor-pointer text-xs transition-all ${
-                      selectedMaterials.includes("All")
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-                    }`}
-                    onClick={() => toggleMaterial("All")}
-                  >
-                    All Materials
-                  </Badge>
-                </div>
-
-                {/* Base Standard Materials with Variants */}
-                {materials?.baseStandards && materials.baseStandards.length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">Standard</span>
-                      <div className="h-px flex-1 bg-border"></div>
-                    </div>
-                    <div className="space-y-2">
-                      {materials.baseStandards.map((baseMaterial) => {
-                        const variants = materials.variantsByBase?.[baseMaterial] || [];
-                        const isSelected = selectedMaterials.includes(baseMaterial);
-                        const selectedVariantsList = selectedVariants[baseMaterial] || [];
-                        
-                        return (
-                          <div key={baseMaterial} className="space-y-1">
-                            <Badge
-                              variant={isSelected ? "default" : "outline"}
-                              className={`cursor-pointer text-xs transition-all ${
-                                isSelected
-                                  ? "bg-primary text-primary-foreground shadow-sm"
-                                  : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-                              }`}
-                              onClick={() => toggleMaterial(baseMaterial)}
-                            >
-                              {baseMaterial}
-                              <span className="ml-1 opacity-60">({getMaterialCount(baseMaterial)})</span>
-                            </Badge>
-                            
-                            {/* Variants Dropdown */}
-                            {isSelected && variants.length > 0 && (
-                              <Collapsible>
-                                <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pl-4">
-                                  <ChevronDown className="w-3 h-3" />
-                                  <span>Show variants</span>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent className="pl-4 pt-2 space-y-1">
-                                  <div className="flex flex-wrap gap-1.5">
-                                     {variants.map((variant) => (
-                                      <Badge
-                                        key={variant}
-                                        variant={selectedVariantsList.includes(variant) ? "default" : "outline"}
-                                        className={`cursor-pointer text-xs transition-all ${
-                                          selectedVariantsList.includes(variant)
-                                            ? "bg-secondary text-secondary-foreground shadow-sm"
-                                            : "border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30"
-                                        }`}
-                                        onClick={() => toggleVariant(baseMaterial, variant)}
-                                      >
-                                        {variant}
-                                        <span className="ml-1 opacity-60">({getVariantCount(baseMaterial, variant)})</span>
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </CollapsibleContent>
-                              </Collapsible>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Other Standard Materials (no variants) */}
-                {materials?.otherStandards && materials.otherStandards.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">Other Materials</span>
-                      <div className="h-px flex-1 bg-border"></div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {materials.otherStandards.map((material) => (
-                        <Badge
-                          key={material}
-                          variant={selectedMaterials.includes(material) ? "default" : "outline"}
-                          className={`cursor-pointer text-xs transition-all ${
-                            selectedMaterials.includes(material)
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-                          }`}
-                          onClick={() => toggleMaterial(material)}
-                        >
-                          {material}
-                          <span className="ml-1 opacity-60">({getMaterialCount(material)})</span>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Composites (not variants) */}
-                {materials?.composites && materials.composites.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">Composites</span>
-                      <div className="h-px flex-1 bg-border"></div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {materials.composites.map((material) => (
-                        <Badge
-                          key={material}
-                          variant={selectedMaterials.includes(material) ? "default" : "outline"}
-                          className={`cursor-pointer text-xs transition-all ${
-                            selectedMaterials.includes(material)
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-                          }`}
-                          onClick={() => toggleMaterial(material)}
-                        >
-                          {material}
-                          <span className="ml-1 opacity-60">({getMaterialCount(material)})</span>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Specialty Materials (not variants) */}
-                {materials?.specialty && materials.specialty.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">Specialty</span>
-                      <div className="h-px flex-1 bg-border"></div>
-                    </div>
-                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-                      {materials.specialty.map((material) => (
-                        <Badge
-                          key={material}
-                          variant={selectedMaterials.includes(material) ? "default" : "outline"}
-                          className={`cursor-pointer text-xs transition-all ${
-                            selectedMaterials.includes(material)
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-                          }`}
-                          onClick={() => toggleMaterial(material)}
-                        >
-                          {material}
-                          <span className="ml-1 opacity-60">({getMaterialCount(material)})</span>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
-      </aside>
+        {/* Sidebar Filters */}
+        <FilamentFilters
+          selectedMaterials={selectedMaterials.includes("All") ? [] : selectedMaterials}
+          onMaterialChange={(material, checked) => {
+            if (checked) {
+              setSelectedMaterials(prev => 
+                prev.includes("All") ? [material] : [...prev, material]
+              );
+            } else {
+              setSelectedMaterials(prev => {
+                const newMaterials = prev.filter(m => m !== material);
+                return newMaterials.length === 0 ? ["All"] : newMaterials;
+              });
+            }
+          }}
+          highSpeed={highSpeed}
+          onHighSpeedChange={setHighSpeed}
+          matte={matte}
+          onMatteChange={setMatte}
+          carbonFiber={carbonFiber}
+          onCarbonFiberChange={setCarbonFiber}
+          glow={glow}
+          onGlowChange={setGlow}
+          plasticSpool={plasticSpool}
+          onPlasticSpoolChange={setPlasticSpool}
+          cardboardSpool={cardboardSpool}
+          onCardboardSpoolChange={setCardboardSpool}
+          priceRange={priceRange}
+          onPriceRangeChange={setPriceRange}
+          maxPriceLimit={MAX_PRICE_LIMIT}
+          filterCounts={filterCounts}
+          onReset={() => {
+            setSelectedMaterials(["All"]);
+            setHighSpeed(false);
+            setMatte(false);
+            setCarbonFiber(false);
+            setGlow(false);
+            setPlasticSpool(false);
+            setCardboardSpool(false);
+            setPriceRange([0, MAX_PRICE_LIMIT]);
+          }}
+          activeFilterCount={
+            (selectedMaterials.includes("All") ? 0 : selectedMaterials.length) +
+            (highSpeed ? 1 : 0) +
+            (matte ? 1 : 0) +
+            (carbonFiber ? 1 : 0) +
+            (glow ? 1 : 0) +
+            (plasticSpool ? 1 : 0) +
+            (cardboardSpool ? 1 : 0) +
+            (priceRange[0] > 0 || priceRange[1] < MAX_PRICE_LIMIT ? 1 : 0)
+          }
+        />
 
       {/* Main Content */}
       <main className="flex-1 p-4 lg:p-8 max-w-[1600px] mx-auto w-full">
