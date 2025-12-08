@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, Search, ExternalLink, Check, X, Loader2, Link2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -36,6 +37,7 @@ export default function AdminAmazonLinks() {
   const [filaments, setFilaments] = useState<Filament[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [selectedRegions, setSelectedRegions] = useState<Region[]>(['us', 'uk', 'de']);
   const [showMissingOnly, setShowMissingOnly] = useState(true);
   const [editingLinks, setEditingLinks] = useState<Record<string, Record<Region, string>>>({});
@@ -77,6 +79,11 @@ export default function AdminAmazonLinks() {
         : [...prev, region]
     );
   };
+
+  const brands = useMemo(() => {
+    const uniqueBrands = [...new Set(filaments.map(f => f.vendor).filter(Boolean))] as string[];
+    return uniqueBrands.sort((a, b) => a.localeCompare(b));
+  }, [filaments]);
 
   const generateSearchUrl = (filament: Filament, region: Region) => {
     const searchQuery = encodeURIComponent(`${filament.vendor || ''} ${filament.product_title} ${filament.material || ''} filament`.trim());
@@ -156,6 +163,9 @@ export default function AdminAmazonLinks() {
       f.material?.toLowerCase().includes(searchTerm.toLowerCase());
 
     if (!matchesSearch) return false;
+
+    const matchesBrand = selectedBrand === "all" || f.vendor === selectedBrand;
+    if (!matchesBrand) return false;
 
     if (showMissingOnly) {
       const hasMissingLink = selectedRegions.some(region => {
@@ -240,7 +250,7 @@ export default function AdminAmazonLinks() {
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
+              <div className="flex-1 flex gap-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -250,6 +260,17 @@ export default function AdminAmazonLinks() {
                     className="pl-10"
                   />
                 </div>
+                <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="All Brands" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Brands</SelectItem>
+                    {brands.map(brand => (
+                      <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="flex items-center gap-4">
