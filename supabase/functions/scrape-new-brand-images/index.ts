@@ -48,17 +48,21 @@ serve(async (req) => {
       });
     }
 
-    const { brands, limit = 50 } = await req.json();
+    const { brands, limit = 50, force = false } = await req.json();
 
     const targetBrands = brands || ["VoxelPLA", "3DFuel", "Eryone", "Inland", "Fiberlogy", "Ziro", "Paramount 3D"];
 
-    // Fetch filaments missing images for these brands
-    const { data: filaments, error: fetchError } = await authClient
+    // Fetch filaments - either all or only those missing images
+    let query = authClient
       .from("filaments")
       .select("id, product_title, vendor, product_url, featured_image")
-      .in("vendor", targetBrands)
-      .or("featured_image.is.null,featured_image.not.ilike.https://%")
-      .limit(limit);
+      .in("vendor", targetBrands);
+    
+    if (!force) {
+      query = query.or("featured_image.is.null,featured_image.not.ilike.https://%");
+    }
+    
+    const { data: filaments, error: fetchError } = await query.limit(limit);
 
     if (fetchError) {
       throw new Error(`Failed to fetch filaments: ${fetchError.message}`);
