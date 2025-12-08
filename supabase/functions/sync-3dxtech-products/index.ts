@@ -15,7 +15,7 @@ interface ShopifyProduct {
   body_html: string;
   vendor: string;
   product_type: string;
-  tags: string;
+  tags: string[] | string;
   variants: ShopifyVariant[];
   images: ShopifyImage[];
 }
@@ -58,9 +58,9 @@ function extractTdsUrl(bodyHtml: string): string | null {
 }
 
 // Extract material type from product title and tags
-function extractMaterial(title: string, tags: string): string {
+function extractMaterial(title: string, tags: string[] | string): string {
   const titleLower = title.toLowerCase();
-  const tagsLower = tags.toLowerCase();
+  const tagsLower = Array.isArray(tags) ? tags.join(' ').toLowerCase() : (tags || '').toLowerCase();
   
   // Check for specific materials in order of specificity
   const materialPatterns: [RegExp, string][] = [
@@ -289,7 +289,8 @@ serve(async (req) => {
     const filamentProducts = allProducts.filter(p => {
       const typeMatch = p.product_type?.toLowerCase().includes('reel') || 
                         p.product_type?.toLowerCase().includes('filament');
-      const tagMatch = p.tags?.toLowerCase().includes('filament');
+      const tagsStr = Array.isArray(p.tags) ? p.tags.join(' ').toLowerCase() : (p.tags || '').toLowerCase();
+      const tagMatch = tagsStr.includes('filament');
       const titleExclude = p.title?.toLowerCase().includes('nozzle') ||
                           p.title?.toLowerCase().includes('adhesive') ||
                           p.title?.toLowerCase().includes('build sheet');
