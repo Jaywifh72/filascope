@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2 } from "lucide-react";
+import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -38,6 +38,7 @@ const AdminFilaments = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilaments, setSelectedFilaments] = useState<Set<string>>(new Set());
+  const [scrapingUpcs, setScrapingUpcs] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -116,6 +117,26 @@ const AdminFilaments = () => {
       setSelectedFilaments(new Set());
     } else {
       setSelectedFilaments(new Set(filteredFilaments.map((f) => f.id)));
+    }
+  };
+
+  const handleScrape3DFuelUpcs = async () => {
+    setScrapingUpcs(true);
+    try {
+      toast.info("Scraping 3D-Fuel UPC codes from Shopify...");
+      const { data, error } = await supabase.functions.invoke('scrape-3dfuel-upcs', {
+        body: { limit: 200, forceUpdate: false }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Scraped UPCs: ${data.updated} updated, ${data.skipped} skipped, ${data.failed} failed`);
+      fetchFilaments();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to scrape UPC codes");
+      console.error(error);
+    } finally {
+      setScrapingUpcs(false);
     }
   };
 
@@ -243,6 +264,18 @@ const AdminFilaments = () => {
               className="pl-10"
             />
           </div>
+          <Button
+            variant="outline"
+            onClick={handleScrape3DFuelUpcs}
+            disabled={scrapingUpcs}
+          >
+            {scrapingUpcs ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Barcode className="w-4 h-4 mr-2" />
+            )}
+            Scrape 3D-Fuel UPCs
+          </Button>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
