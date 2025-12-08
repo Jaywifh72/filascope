@@ -21,16 +21,41 @@ interface GroupedProduct {
   productUrl: string | null;
 }
 
+// Common color names to detect at the end of product titles
+const COLOR_WORDS = [
+  'Beige', 'Black', 'Blue', 'Brown', 'Burgundy', 'Charcoal', 'Copper', 'Cream', 'Cyan',
+  'Gold', 'Gray', 'Grey', 'Green', 'Ivory', 'Lavender', 'Magenta', 'Maroon', 'Navy',
+  'Olive', 'Orange', 'Peach', 'Pink', 'Purple', 'Red', 'Rose', 'Salmon', 'Silver',
+  'Tan', 'Teal', 'Turquoise', 'Violet', 'White', 'Yellow',
+  // Multi-word colors
+  'Light Blue', 'Dark Blue', 'Sky Blue', 'Royal Blue', 'Light Green', 'Dark Green',
+  'Light Gray', 'Dark Gray', 'Light Grey', 'Dark Grey', 'Lime Green', 'Forest Green',
+  'Hot Pink', 'Light Pink', 'Neon Green', 'Neon Orange', 'Neon Pink', 'Neon Yellow',
+  'Glow Green', 'Glow Blue', 'True Black', 'True White', 'Jet Black', 'Snow White',
+  'Natural', 'Clear', 'Transparent', 'Translucent',
+];
+
 // Extract base product name by removing color suffix
 const getBaseProductName = (title: string): string => {
-  // Pattern: "Brand Material - Color" or "Brand Material Color"
-  // Try to match " - " separator first
+  // Pattern 1: "Brand Material - Color" (dash separator)
   const dashMatch = title.match(/^(.+?)\s+-\s+.+$/);
   if (dashMatch) {
     return dashMatch[1].trim();
   }
   
-  // For products without separator, return as-is (single products like NonOilen)
+  // Pattern 2: Check for color word at the end (case-insensitive)
+  // Sort by length descending to match longer colors first ("Light Blue" before "Blue")
+  const sortedColors = [...COLOR_WORDS].sort((a, b) => b.length - a.length);
+  
+  for (const color of sortedColors) {
+    const regex = new RegExp(`^(.+?)\\s+${color}$`, 'i');
+    const match = title.match(regex);
+    if (match) {
+      return match[1].trim();
+    }
+  }
+  
+  // No color found - return as-is
   return title;
 };
 
@@ -38,9 +63,22 @@ const getBaseProductName = (title: string): string => {
 const getColorFromTitle = (title: string, baseName: string): string | null => {
   if (title === baseName) return null;
   
+  // Pattern 1: Dash separator
   const dashMatch = title.match(/^.+?\s+-\s+(.+)$/);
   if (dashMatch) {
     return dashMatch[1].trim();
+  }
+  
+  // Pattern 2: Color at the end
+  const sortedColors = [...COLOR_WORDS].sort((a, b) => b.length - a.length);
+  
+  for (const color of sortedColors) {
+    const regex = new RegExp(`\\s+${color}$`, 'i');
+    if (title.match(regex)) {
+      // Return the actual color from the title (preserving case)
+      const extractedColor = title.slice(baseName.length).trim();
+      return extractedColor || color;
+    }
   }
   
   return null;
