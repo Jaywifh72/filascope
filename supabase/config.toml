@@ -1,7 +1,7 @@
 project_id = "cfqfavmhdbyjzejipiwa"
 
 [functions.scrape-filament-upcs]
-verify_jwt = true
+verify_jwt = false
 
 [functions.fetch-prices]
 verify_jwt = true
