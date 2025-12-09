@@ -470,9 +470,38 @@ const BrandDetail = () => {
               >
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    {/* Product Image */}
+                    {/* Product Image or Color Bubbles for Fillamentum */}
                     <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center relative">
-                      {product.representativeImage ? (
+                      {decodedBrand === "Fillamentum" && product.variants.some(v => v.color_hex) ? (
+                        <div className="w-full h-full p-4 flex flex-wrap content-center justify-center gap-2">
+                          {product.variants.slice(0, 16).map((variant) => (
+                            <button
+                              key={variant.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/filament/${variant.id}`);
+                              }}
+                              className="group/bubble relative"
+                              title={getColorFromTitle(variant.product_title, product.baseName) || variant.color_family || variant.product_title}
+                            >
+                              <div 
+                                className="w-10 h-10 rounded-full border-2 border-border hover:border-primary hover:scale-110 transition-all shadow-md"
+                                style={{ 
+                                  backgroundColor: variant.color_hex || '#888',
+                                  boxShadow: variant.color_hex === '#FFFFFF' || variant.color_hex === '#ffffff' 
+                                    ? 'inset 0 0 0 1px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1)' 
+                                    : '0 2px 4px rgba(0,0,0,0.15)'
+                                }}
+                              />
+                            </button>
+                          ))}
+                          {product.variants.length > 16 && (
+                            <div className="w-10 h-10 rounded-full bg-muted-foreground/20 flex items-center justify-center text-xs font-medium">
+                              +{product.variants.length - 16}
+                            </div>
+                          )}
+                        </div>
+                      ) : product.representativeImage ? (
                         <img
                           src={product.representativeImage}
                           alt={product.baseName}
