@@ -85,6 +85,15 @@ const getBaseProductName = (title: string): string => {
     .replace(/\bPLA\s+PRO\+/gi, 'PLA+')  // "PLA PRO+" -> "PLA+"
     .replace(/\bPLA\s+PRO\b/gi, 'PLA+'); // "PLA PRO" -> "PLA+"
   
+  // Pre-process: Remove product variant suffixes like "(with Spool)", "Refill", etc.
+  // These indicate the same product in different packaging, not different products
+  normalizedTitle = normalizedTitle
+    .replace(/\s*\(with\s+Spool\)\s*/gi, ' ')  // "(with Spool)"
+    .replace(/\s+Refill\s*$/gi, '')            // "Refill" at end
+    .replace(/\s+w\/\s*Spool\s*/gi, ' ')       // "w/ Spool"
+    .replace(/\s+with\s+Spool\s*/gi, ' ')      // "with Spool"
+    .trim();
+  
   // Pattern 1: "Brand Material - Color" (dash separator) - Fillamentum, ColorFabb style
   const dashMatch = normalizedTitle.match(/^(.+?)\s+-\s+.+$/);
   if (dashMatch) {
@@ -98,8 +107,8 @@ const getBaseProductName = (title: string): string => {
     return compoundMaterialMatch[1].trim();
   }
   
-  // Pattern 1.6: Handle "Material Rapid/Pro/etc" pattern (e.g., "Hatchbox PETG Rapid Black")
-  const materialVariantMatch = normalizedTitle.match(/^(.+?\s+(?:PLA|PETG|ABS|TPU|TPE|ASA|PA|PC)\s+(?:Rapid|Pro|Plus|Max|Lite|Basic|Premium|HS|HT|CF|GF))\s+.+$/i);
+  // Pattern 1.6: Handle "Material Rapid/Pro/Reload/etc" pattern (e.g., "Hatchbox PETG Rapid Black", "Hatchbox PLA Reload Blue")
+  const materialVariantMatch = normalizedTitle.match(/^(.+?\s+(?:PLA|PETG|ABS|TPU|TPE|ASA|PA|PC)\s+(?:Rapid|Pro|Plus|Max|Lite|Basic|Premium|HS|HT|CF|GF|Reload))\s+.+$/i);
   if (materialVariantMatch) {
     return materialVariantMatch[1].trim();
   }
