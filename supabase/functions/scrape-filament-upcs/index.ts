@@ -68,7 +68,7 @@ const VENDOR_ALIASES: Record<string, string> = {
   'polymaker': 'Polymaker',
   '3dxtech': '3DXTech', '3DXTECH': '3DXTech',
   'hatchbox': 'Hatchbox', 'HATCHBOX': 'Hatchbox',
-  'overture': 'Overture', 'OVERTURE': 'Overture',
+  'overture': 'Overture', 'OVERTURE': 'Overture', 'Overture 3D': 'Overture', 'overture 3d': 'Overture',
   'inland': 'Inland', 'INLAND': 'Inland',
   'ziro': 'ZIRO', 'Ziro': 'ZIRO',
   'colorfabb': 'ColorFabb', 'Colorfabb': 'ColorFabb',
