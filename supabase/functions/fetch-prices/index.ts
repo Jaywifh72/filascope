@@ -16,6 +16,98 @@ interface WeightData {
   source: string;
 }
 
+interface PackInfo {
+  quantity: number;
+  totalPrice: number;
+  pricePerSpool: number;
+  pricePerKg: number | null;
+  weightPerSpool: number | null;
+}
+
+// Detect pack quantity from product title or HTML content
+function detectPackQuantity(title: string, html: string): number {
+  const titleLower = title.toLowerCase();
+  const htmlLower = html.toLowerCase();
+  
+  // Common pack patterns in titles
+  const packPatterns = [
+    // "2-Pack", "3-Pack", "4-Pack", etc.
+    /(\d+)\s*[-–]?\s*pack/i,
+    // "Pack of 2", "Pack of 3", etc.
+    /pack\s+of\s+(\d+)/i,
+    // "2 Pack", "3 Pack" (space separated)
+    /\b(\d+)\s+pack\b/i,
+    // "2x 1kg", "3x 1kg" - quantity multiplier
+    /\b(\d+)\s*x\s*\d+(?:\.\d+)?\s*(?:kg|g)\b/i,
+    // "2 Spools", "3 Spools"
+    /\b(\d+)\s+spools?\b/i,
+    // "2 Rolls", "3 Rolls"
+    /\b(\d+)\s+rolls?\b/i,
+    // "Bundle of 2", "Bundle of 3"
+    /bundle\s+of\s+(\d+)/i,
+    // "2-Count", "3-Count"
+    /(\d+)\s*[-–]?\s*count/i,
+    // "Multipack 2", "Multi-pack 3"
+    /multi[-\s]?pack\s*(\d+)?/i,
+    // Quantity in parentheses: "(2)", "(3)"
+    /\((\d+)\s*(?:pack|spools?|rolls?|pcs?)?\s*\)/i,
+  ];
+  
+  // Check title first (most reliable)
+  for (const pattern of packPatterns) {
+    const match = titleLower.match(pattern);
+    if (match && match[1]) {
+      const qty = parseInt(match[1], 10);
+      if (qty >= 2 && qty <= 20) {
+        console.log(`  📦 Pack detected from title: ${qty}x`);
+        return qty;
+      }
+    }
+  }
+  
+  // Check HTML content for additional patterns
+  const htmlPatterns = [
+    // JSON data: "quantity": 2, "pack_size": 3
+    /"(?:quantity|pack_?size|pack_?qty|num_?spools?)":\s*(\d+)/i,
+    // Visible text patterns
+    /contains?\s+(\d+)\s+(?:spools?|rolls?)/i,
+    /includes?\s+(\d+)\s+(?:spools?|rolls?)/i,
+  ];
+  
+  for (const pattern of htmlPatterns) {
+    const match = htmlLower.match(pattern);
+    if (match && match[1]) {
+      const qty = parseInt(match[1], 10);
+      if (qty >= 2 && qty <= 20) {
+        console.log(`  📦 Pack detected from HTML: ${qty}x`);
+        return qty;
+      }
+    }
+  }
+  
+  return 1; // Default to single spool
+}
+
+// Calculate pack pricing info
+function calculatePackPricing(
+  totalPrice: number, 
+  packQuantity: number, 
+  weightPerSpoolG: number | null
+): PackInfo {
+  const pricePerSpool = totalPrice / packQuantity;
+  const pricePerKg = weightPerSpoolG && weightPerSpoolG > 0 
+    ? (pricePerSpool / weightPerSpoolG) * 1000 
+    : null;
+  
+  return {
+    quantity: packQuantity,
+    totalPrice,
+    pricePerSpool,
+    pricePerKg,
+    weightPerSpool: weightPerSpoolG,
+  };
+}
+
 // Extract weight from HTML content (returns grams)
 function extractWeight(html: string, url: string): number | null {
   console.log(`Extracting weight from ${url}`);
@@ -182,17 +274,17 @@ function isValidUrl(urlString: string | null): boolean {
   }
 }
 
-// Fetch price and weight from a URL with retry logic
+// Fetch price, weight, and HTML from a URL with retry logic
 async function fetchDataFromUrl(
   url: string | null, 
   region: string, 
   maxRetries: number = 3
-): Promise<{ price: number | null; weight: number | null }> {
+): Promise<{ price: number | null; weight: number | null; html: string }> {
   if (!isValidUrl(url)) {
     if (url && url !== 'null') {
       console.log(`Skipping invalid URL for ${region}: ${url}`);
     }
-    return { price: null, weight: null };
+    return { price: null, weight: null, html: '' };
   }
   
   let lastError: Error | null = null;
@@ -223,7 +315,7 @@ async function fetchDataFromUrl(
         }
         
         console.log(`✗ Failed to fetch ${url}: ${response.status}`);
-        return { price: null, weight: null };
+        return { price: null, weight: null, html: '' };
       }
       
       const html = await response.text();
@@ -232,7 +324,7 @@ async function fetchDataFromUrl(
       
       console.log(`✓ Scraped ${region}: price=${price ? '$' + price : 'none'}, weight=${weight ? weight + 'g' : 'none'}`);
       
-      return { price, weight };
+      return { price, weight, html };
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('Unknown error');
       
@@ -245,7 +337,7 @@ async function fetchDataFromUrl(
   }
   
   console.log(`✗ All ${maxRetries} attempts failed for ${url}: ${lastError?.message || 'Unknown error'}`);
-  return { price: null, weight: null };
+  return { price: null, weight: null, html: '' };
 }
 
 Deno.serve(async (req) => {
@@ -316,7 +408,7 @@ Deno.serve(async (req) => {
     // Fetch filaments that need price updates
     let query = supabaseService
       .from('filaments')
-      .select('id, product_url, amazon_link_us, amazon_link_uk, amazon_link_de, variant_price, product_title');
+      .select('id, product_url, amazon_link_us, amazon_link_uk, amazon_link_de, variant_price, product_title, net_weight_g, pack_quantity');
     
     if (filament_ids && filament_ids.length > 0) {
       query = query.in('id', filament_ids);
@@ -343,6 +435,7 @@ Deno.serve(async (req) => {
       failed: 0,
       prices: [] as PriceData[],
       weights_updated: 0,
+      packs_detected: 0,
       timeout_reached: false,
       details: [] as Array<{
         filament_id: string;
@@ -351,6 +444,8 @@ Deno.serve(async (req) => {
         prices_found: number;
         weight_found: boolean;
         sources_checked: number;
+        pack_quantity?: number;
+        price_per_kg?: number;
       }>,
     };
 
@@ -372,20 +467,27 @@ Deno.serve(async (req) => {
       const prices: PriceData[] = [];
       let extractedWeight: number | null = null;
       let sourcesChecked = 0;
+      let scrapedHtml = '';
+      let detectedPackQuantity = filament.pack_quantity || 1;
       
       // Fetch from all available sources
       const sources = [
-        { url: filament.product_url, region: 'US', label: 'Brand Store' },
-        { url: filament.amazon_link_us, region: 'US', label: 'Amazon US' },
-        { url: filament.amazon_link_uk, region: 'UK', label: 'Amazon UK' },
-        { url: filament.amazon_link_de, region: 'DE', label: 'Amazon DE' },
+        { url: filament.product_url, region: 'US', label: 'Brand Store', isPrimary: true },
+        { url: filament.amazon_link_us, region: 'US', label: 'Amazon US', isPrimary: false },
+        { url: filament.amazon_link_uk, region: 'UK', label: 'Amazon UK', isPrimary: false },
+        { url: filament.amazon_link_de, region: 'DE', label: 'Amazon DE', isPrimary: false },
       ];
 
-      for (const { url, region, label } of sources) {
+      for (const { url, region, label, isPrimary } of sources) {
         if (isValidUrl(url)) {
           sourcesChecked++;
           console.log(`  → Checking ${label}...`);
-          const { price, weight } = await fetchDataFromUrl(url, region);
+          const { price, weight, html } = await fetchDataFromUrl(url, region);
+          
+          // Use primary source (brand store) HTML for pack detection
+          if (isPrimary && html) {
+            scrapedHtml = html;
+          }
           
           if (price !== null) {
             prices.push({
@@ -405,6 +507,14 @@ Deno.serve(async (req) => {
           // Add delay to avoid rate limiting
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
+      }
+      
+      // Detect pack quantity from title and HTML content
+      const packQty = detectPackQuantity(filament.product_title, scrapedHtml);
+      if (packQty > 1) {
+        detectedPackQuantity = packQty;
+        results.packs_detected++;
+        console.log(`  📦 Multi-pack detected: ${packQty}x spools`);
       }
 
       // Determine status
@@ -433,19 +543,50 @@ Deno.serve(async (req) => {
           }
         }
         
-        // Update filament with price and/or weight
-        const updates: { variant_price?: number; net_weight_g?: number } = {};
+        // Update filament with price, weight, and pack quantity
+        // For packs: variant_price should be the PER-KG price (not total price)
+        const updates: { variant_price?: number; net_weight_g?: number; pack_quantity?: number } = {};
+        
+        // Get weight per spool (use extracted weight or existing weight)
+        const weightPerSpool = extractedWeight || filament.net_weight_g;
         
         if (prices.length > 0) {
-          // Update variant_price with US price (prefer first US price found)
-          const usPrice = prices.find(p => p.region === 'US')?.price || prices[0]?.price;
-          if (usPrice) {
-            updates.variant_price = usPrice;
+          // Get US price (prefer first US price found)
+          const totalPrice = prices.find(p => p.region === 'US')?.price || prices[0]?.price;
+          
+          if (totalPrice && detectedPackQuantity > 0) {
+            // Calculate per-spool price
+            const pricePerSpool = totalPrice / detectedPackQuantity;
+            
+            // Calculate per-kg price if we have weight
+            if (weightPerSpool && weightPerSpool > 0) {
+              // variant_price is per-kg price
+              const pricePerKg = (pricePerSpool / weightPerSpool) * 1000;
+              updates.variant_price = Math.round(pricePerKg * 100) / 100; // Round to 2 decimals
+              console.log(`  💰 Pricing: Total $${totalPrice} / ${detectedPackQuantity} spools = $${pricePerSpool.toFixed(2)}/spool`);
+              console.log(`  💰 Per kg: $${pricePerSpool.toFixed(2)} / ${weightPerSpool}g * 1000 = $${updates.variant_price}/kg`);
+            } else {
+              // No weight available, store price per spool as variant_price
+              updates.variant_price = Math.round(pricePerSpool * 100) / 100;
+              console.log(`  💰 Pricing (no weight): Total $${totalPrice} / ${detectedPackQuantity} spools = $${updates.variant_price}/spool`);
+            }
           }
         }
         
         if (extractedWeight !== null) {
           updates.net_weight_g = extractedWeight;
+        }
+        
+        // Update pack_quantity if it's a multi-pack
+        if (detectedPackQuantity > 1) {
+          updates.pack_quantity = detectedPackQuantity;
+        }
+        
+        // Calculate the final price per kg for details
+        let calculatedPricePerKg: number | undefined = undefined;
+        if (updates.variant_price && weightPerSpool) {
+          // If variant_price is already per-kg, use it directly
+          calculatedPricePerKg = updates.variant_price;
         }
         
         if (Object.keys(updates).length > 0) {
@@ -458,7 +599,7 @@ Deno.serve(async (req) => {
             console.log(`  ✗ DB Error updating filament: ${updateError.message}`);
             hasError = true;
           } else {
-            console.log(`  ✓ DB: Updated filament (price=${updates.variant_price ? '$' + updates.variant_price : 'no'}, weight=${updates.net_weight_g ? updates.net_weight_g + 'g' : 'no'})`);
+            console.log(`  ✓ DB: Updated filament (price=${updates.variant_price ? '$' + updates.variant_price + '/kg' : 'no'}, weight=${updates.net_weight_g ? updates.net_weight_g + 'g' : 'no'}, pack=${updates.pack_quantity || 1}x)`);
             if (extractedWeight !== null) {
               results.weights_updated++;
             }
@@ -476,7 +617,17 @@ Deno.serve(async (req) => {
         console.log(`  ✗ No data extracted from any source`);
       }
       
-      // Add to details
+      // Add to details with pack info
+      const weightPerSpool = extractedWeight || filament.net_weight_g;
+      let pricePerKgForDetail: number | undefined = undefined;
+      if (prices.length > 0 && weightPerSpool) {
+        const totalPrice = prices.find(p => p.region === 'US')?.price || prices[0]?.price;
+        if (totalPrice) {
+          const pricePerSpool = totalPrice / detectedPackQuantity;
+          pricePerKgForDetail = Math.round((pricePerSpool / weightPerSpool) * 1000 * 100) / 100;
+        }
+      }
+      
       results.details.push({
         filament_id: filament.id,
         product_title: filament.product_title,
@@ -484,6 +635,8 @@ Deno.serve(async (req) => {
         prices_found: prices.length,
         weight_found: extractedWeight !== null,
         sources_checked: sourcesChecked,
+        pack_quantity: detectedPackQuantity > 1 ? detectedPackQuantity : undefined,
+        price_per_kg: pricePerKgForDetail,
       });
     }
 
@@ -492,6 +645,7 @@ Deno.serve(async (req) => {
     console.log(`✗ Failed: ${results.failed}`);
     console.log(`📊 Total prices found: ${results.prices.length}`);
     console.log(`⚖️  Weights updated: ${results.weights_updated}`);
+    console.log(`📦 Packs detected: ${results.packs_detected}`);
     if (results.timeout_reached) {
       console.log(`⏱️  Note: Batch limit reached, more filaments may need processing`);
     }

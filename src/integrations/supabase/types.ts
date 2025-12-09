@@ -302,6 +302,7 @@ export type Database = {
           nozzle_temp_max_c: number | null
           nozzle_temp_min_c: number | null
           nozzle_temp_sweetspot_c: number | null
+          pack_quantity: number | null
           print_speed_max_mms: number | null
           printability_index: number | null
           product_handle: string | null
@@ -368,6 +369,7 @@ export type Database = {
           nozzle_temp_max_c?: number | null
           nozzle_temp_min_c?: number | null
           nozzle_temp_sweetspot_c?: number | null
+          pack_quantity?: number | null
           print_speed_max_mms?: number | null
           printability_index?: number | null
           product_handle?: string | null
@@ -434,6 +436,7 @@ export type Database = {
           nozzle_temp_max_c?: number | null
           nozzle_temp_min_c?: number | null
           nozzle_temp_sweetspot_c?: number | null
+          pack_quantity?: number | null
           print_speed_max_mms?: number | null
           printability_index?: number | null
           product_handle?: string | null
