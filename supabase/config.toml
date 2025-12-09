@@ -94,4 +94,4 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.scrape-filament-colors]
-verify_jwt = true
+verify_jwt = false
