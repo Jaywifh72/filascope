@@ -878,6 +878,7 @@ const AdminFilaments = () => {
                   <TableHead>GTIN</TableHead>
                   <TableHead>MPN</TableHead>
                   <TableHead>SKU</TableHead>
+                  <TableHead>TDS</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead className="w-24">Actions</TableHead>
                 </TableRow>
@@ -953,6 +954,21 @@ const AdminFilaments = () => {
                       <span className="font-mono text-xs text-muted-foreground">
                         {filament.variant_sku || "-"}
                       </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {filament.tds_url ? (
+                        <a
+                          href={filament.tds_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-500 hover:text-green-400"
+                          title={filament.tds_url}
+                        >
+                          ✓
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {filament.variant_price
