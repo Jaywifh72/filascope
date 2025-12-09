@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag, Copy, GitBranch } from "lucide-react";
+import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag, Copy, GitBranch, Database } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -51,6 +51,7 @@ const AdminFilaments = () => {
   const [scrapingMpns, setScrapingMpns] = useState(false);
   const [copyingSkuToMpn, setCopyingSkuToMpn] = useState(false);
   const [derivingIdentifiers, setDerivingIdentifiers] = useState(false);
+  const [lookingUpBarcodes, setLookingUpBarcodes] = useState(false);
   const [scrapeProgress, setScrapeProgress] = useState({ current: 0, total: 0 });
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
@@ -350,6 +351,73 @@ const AdminFilaments = () => {
     }
   };
 
+  // Lookup barcodes using external database
+  const handleLookupBarcodes = async () => {
+    setLookingUpBarcodes(true);
+    
+    try {
+      // Get filaments with SKU but missing barcodes for the selected vendor
+      const targetFilaments = filteredFilaments.filter(f => 
+        f.variant_sku && (!f.upc || !(f as any).ean || !(f as any).gtin)
+      );
+      
+      if (targetFilaments.length === 0) {
+        toast.info("No filaments with SKU missing barcodes in current filter");
+        setLookingUpBarcodes(false);
+        return;
+      }
+      
+      const batchSize = 10;
+      const batches = [];
+      for (let i = 0; i < targetFilaments.length; i += batchSize) {
+        batches.push(targetFilaments.slice(i, i + batchSize));
+      }
+      
+      let totalFound = 0;
+      let totalUpdated = 0;
+      let totalProcessed = 0;
+      
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        setScrapeProgress({ current: totalProcessed, total: targetFilaments.length });
+        
+        const { data, error } = await supabase.functions.invoke('lookup-barcodes', {
+          body: {
+            filamentIds: batch.map(f => f.id),
+            limit: batchSize,
+          }
+        });
+        
+        if (error) {
+          console.error('Batch error:', error);
+          toast.error(`Batch ${i + 1} failed: ${error.message}`);
+          continue;
+        }
+        
+        if (data?.stats) {
+          totalFound += data.stats.found || 0;
+          totalUpdated += data.stats.updated || 0;
+          totalProcessed += data.stats.processed || 0;
+        }
+        
+        // Rate limit between batches
+        if (i < batches.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      setScrapeProgress({ current: 0, total: 0 });
+      toast.success(`Looked up ${totalProcessed} filaments: found ${totalFound} barcodes, updated ${totalUpdated}`);
+      fetchFilaments();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to lookup barcodes");
+      console.error(error);
+    } finally {
+      setLookingUpBarcodes(false);
+      setScrapeProgress({ current: 0, total: 0 });
+    }
+  };
+
   const filteredFilaments = filaments.filter((f) => {
     const matchesSearch =
       f.product_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -608,6 +676,19 @@ const AdminFilaments = () => {
               <GitBranch className="w-4 h-4 mr-2" />
             )}
             {derivingIdentifiers ? "Deriving..." : "UPC → EAN/GTIN"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleLookupBarcodes}
+            disabled={lookingUpBarcodes || derivingIdentifiers || copyingSkuToMpn || scrapingMpns || scrapingUpcs}
+            title="Search external barcode databases using SKU/MPN to find UPC/EAN/GTIN"
+          >
+            {lookingUpBarcodes ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Database className="w-4 h-4 mr-2" />
+            )}
+            {lookingUpBarcodes ? "Looking up..." : "Lookup Barcodes"}
           </Button>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
