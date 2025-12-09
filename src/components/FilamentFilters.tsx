@@ -46,6 +46,12 @@ interface FilamentFiltersProps {
   cardboardSpool: boolean;
   onCardboardSpoolChange: (checked: boolean) => void;
   
+  // Pack quantity
+  singleSpool: boolean;
+  onSingleSpoolChange: (checked: boolean) => void;
+  multiPack: boolean;
+  onMultiPackChange: (checked: boolean) => void;
+  
   // Price range
   priceRange: [number, number];
   onPriceRangeChange: (range: [number, number]) => void;
@@ -114,6 +120,10 @@ const FilterContent = ({
   onPlasticSpoolChange,
   cardboardSpool,
   onCardboardSpoolChange,
+  singleSpool,
+  onSingleSpoolChange,
+  multiPack,
+  onMultiPackChange,
   priceRange,
   onPriceRangeChange,
   maxPriceLimit,
@@ -290,6 +300,44 @@ const FilterContent = ({
             />
             <Recycle className="w-3.5 h-3.5 text-green-400" />
             <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Cardboard Spool</span>
+          </label>
+        </div>
+      </div>
+
+      <Separator className="bg-border/50" />
+
+      {/* Pack Quantity */}
+      <div className="space-y-2">
+        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+          📦 Pack Size
+        </h4>
+        <div className="space-y-0.5">
+          <label className="flex items-center gap-2 py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
+            <Checkbox
+              checked={singleSpool}
+              onCheckedChange={(checked) => onSingleSpoolChange(checked as boolean)}
+              className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500 h-3.5 w-3.5"
+            />
+            <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Single Spool</span>
+            {filterCounts && (
+              <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-muted/50 ml-auto">
+                {filterCounts['pack_single'] || 0}
+              </Badge>
+            )}
+          </label>
+          
+          <label className="flex items-center gap-2 py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
+            <Checkbox
+              checked={multiPack}
+              onCheckedChange={(checked) => onMultiPackChange(checked as boolean)}
+              className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500 h-3.5 w-3.5"
+            />
+            <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Multi-Pack (2+)</span>
+            {filterCounts && (
+              <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-muted/50 ml-auto">
+                {filterCounts['pack_multi'] || 0}
+              </Badge>
+            )}
           </label>
         </div>
       </div>

@@ -46,6 +46,8 @@ const Finder = () => {
   const [glow, setGlow] = useState(false);
   const [plasticSpool, setPlasticSpool] = useState(false);
   const [cardboardSpool, setCardboardSpool] = useState(false);
+  const [singleSpool, setSingleSpool] = useState(false);
+  const [multiPack, setMultiPack] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const MAX_PRICE_LIMIT = 100;
   
@@ -464,6 +466,14 @@ const Finder = () => {
         // Count by full material name (for variants)
         counts[`material_${material}`] = (counts[`material_${material}`] || 0) + 1;
       }
+      
+      // Count by pack quantity
+      const packQty = f.pack_quantity || 1;
+      if (packQty === 1) {
+        counts['pack_single'] = (counts['pack_single'] || 0) + 1;
+      } else {
+        counts['pack_multi'] = (counts['pack_multi'] || 0) + 1;
+      }
     });
 
     // Count by brand (apply all filters except brand)
@@ -607,6 +617,11 @@ const Finder = () => {
     if (plasticSpool && !cardboardSpool && f.spool_material?.toLowerCase() !== 'plastic') return false;
     if (cardboardSpool && !plasticSpool && f.spool_material?.toLowerCase() !== 'cardboard') return false;
     
+    // Apply pack quantity filters
+    const packQty = f.pack_quantity || 1;
+    if (singleSpool && !multiPack && packQty !== 1) return false;
+    if (multiPack && !singleSpool && packQty <= 1) return false;
+    
     return true;
   }).sort((a, b) => {
     // variant_price is already the per-kg price
@@ -684,6 +699,10 @@ const Finder = () => {
           onPlasticSpoolChange={setPlasticSpool}
           cardboardSpool={cardboardSpool}
           onCardboardSpoolChange={setCardboardSpool}
+          singleSpool={singleSpool}
+          onSingleSpoolChange={setSingleSpool}
+          multiPack={multiPack}
+          onMultiPackChange={setMultiPack}
           priceRange={priceRange}
           onPriceRangeChange={setPriceRange}
           maxPriceLimit={MAX_PRICE_LIMIT}
@@ -696,6 +715,8 @@ const Finder = () => {
             setGlow(false);
             setPlasticSpool(false);
             setCardboardSpool(false);
+            setSingleSpool(false);
+            setMultiPack(false);
             setPriceRange([0, MAX_PRICE_LIMIT]);
           }}
           activeFilterCount={
@@ -706,6 +727,8 @@ const Finder = () => {
             (glow ? 1 : 0) +
             (plasticSpool ? 1 : 0) +
             (cardboardSpool ? 1 : 0) +
+            (singleSpool ? 1 : 0) +
+            (multiPack ? 1 : 0) +
             (priceRange[0] > 0 || priceRange[1] < MAX_PRICE_LIMIT ? 1 : 0)
           }
           onApplyPreset={(preset) => {
@@ -717,6 +740,8 @@ const Finder = () => {
             setGlow(preset.filters.glow ?? false);
             setPlasticSpool(preset.filters.plasticSpool ?? false);
             setCardboardSpool(preset.filters.cardboardSpool ?? false);
+            setSingleSpool(false);
+            setMultiPack(false);
             setPriceRange(preset.filters.priceRange ?? [0, MAX_PRICE_LIMIT]);
           }}
         />
