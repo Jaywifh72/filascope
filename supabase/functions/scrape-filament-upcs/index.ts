@@ -12,7 +12,7 @@ const MAX_BATCH_SIZE = 25;
 // Brand configuration for UPC scraping
 interface BrandConfig {
   shopifyUrl?: string;
-  upcExtractionMethod: 'shopify' | 'woocommerce' | 'html' | 'none' | 'wix' | 'fiberlogy' | 'ninjatek' | 'matterhackers' | 'microcenter';
+  upcExtractionMethod: 'shopify' | 'woocommerce' | 'html' | 'none' | 'wix' | 'fiberlogy' | 'ninjatek' | 'matterhackers' | 'microcenter' | 'prusament';
   notes?: string;
 }
 
@@ -46,8 +46,8 @@ const BRAND_CONFIGS: Record<string, BrandConfig> = {
   // === WOOCOMMERCE STORES ===
   'eSUN': { shopifyUrl: 'https://www.esun3d.com', upcExtractionMethod: 'woocommerce' },
   
-  // === HTML SCRAPING (Custom stores) ===
-  'Prusament': { upcExtractionMethod: 'html', notes: 'Prusa custom store' },
+  // === CUSTOM STORES ===
+  'Prusament': { upcExtractionMethod: 'prusament', notes: 'Prusa Research custom store - extract IDF/IDS from page, SKU from URL' },
   'MatterHackers': { upcExtractionMethod: 'matterhackers', notes: 'Custom store with SKU in URL path /sk/XXXXX' },
   'Bambu Lab': { upcExtractionMethod: 'html', notes: 'Bambu Lab store' },
   'Creality': { upcExtractionMethod: 'html', notes: 'Creality store' },
@@ -1034,7 +1034,144 @@ async function tryMicroCenterExtraction(filament: any): Promise<ExtractionResult
   }
 }
 
-// Strategy 4: WooCommerce HTML scraping
+// Strategy 10: Prusament extraction - Prusa Research custom store
+// Extracts IDF (product ID) and IDS (variant ID) from page, generates SKU from URL slug
+async function tryPrusamentExtraction(filament: any): Promise<ExtractionResult | null> {
+  try {
+    console.log(`  [Strategy 10] Prusament extraction for: ${filament.product_title}`);
+    
+    let sku: string | null = null;
+    let mpn: string | null = null;
+    let upc: string | null = null;
+    let gtin: string | null = null;
+    let ean: string | null = null;
+    
+    // Extract SKU/MPN from URL slug
+    // URL pattern: /product/prusament-petg-jet-black-1kg/
+    if (filament.product_url) {
+      const slugMatch = filament.product_url.match(/\/product\/([a-z0-9\-]+)\/?$/i);
+      if (slugMatch) {
+        const slug = slugMatch[1];
+        // Generate MPN from slug - convert to uppercase, keep hyphens
+        // prusament-petg-jet-black-1kg -> PRUSAMENT-PETG-JET-BLACK-1KG
+        mpn = slug.toUpperCase();
+        sku = slug.toUpperCase();
+        console.log(`    -> Generated SKU/MPN from URL slug: ${mpn}`);
+      }
+    }
+    
+    // Try to fetch the page for additional data (IDF, IDS, any barcodes)
+    if (filament.product_url && filament.product_url.startsWith('http')) {
+      try {
+        const response = await fetch(filament.product_url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html',
+          },
+        });
+        
+        if (response.ok) {
+          const html = await response.text();
+          
+          // Look for IDF (product ID) and IDS (variant ID) pattern
+          // Pattern: IDF: 2747|IDS: 580
+          const idfIdsMatch = html.match(/IDF:\s*(\d+)\s*\|\s*IDS:\s*(\d+)/i);
+          if (idfIdsMatch) {
+            const idf = idfIdsMatch[1];
+            const ids = idfIdsMatch[2];
+            console.log(`    -> Found Prusa IDs: IDF=${idf}, IDS=${ids}`);
+            
+            // Use IDF-IDS as a more unique SKU if we only had a slug-based one
+            if (!sku || sku.startsWith('PRUSAMENT-')) {
+              sku = `PRUSA-${idf}-${ids}`;
+              console.log(`    -> Generated SKU from IDF/IDS: ${sku}`);
+            }
+          }
+          
+          // Look for JSON-LD Product data
+          const jsonLdMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+          if (jsonLdMatches) {
+            for (const match of jsonLdMatches) {
+              try {
+                const jsonContent = match.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
+                const data = JSON.parse(jsonContent);
+                const items = Array.isArray(data) ? data : [data];
+                for (const item of items) {
+                  if (item['@type'] === 'Product') {
+                    if (item.gtin12 || item.gtin13 || item.gtin14 || item.gtin) {
+                      const gtinValue = item.gtin12 || item.gtin13 || item.gtin14 || item.gtin;
+                      const classified = classifyBarcode(gtinValue);
+                      gtin = classified.gtin;
+                      ean = classified.ean;
+                      upc = classified.upc;
+                      console.log(`    -> Found GTIN in JSON-LD: ${gtinValue}`);
+                    }
+                    if (item.sku && (!sku || sku.startsWith('PRUSA-'))) {
+                      sku = item.sku;
+                      console.log(`    -> Found SKU in JSON-LD: ${sku}`);
+                    }
+                    if (item.mpn && !mpn) {
+                      mpn = item.mpn;
+                      console.log(`    -> Found MPN in JSON-LD: ${mpn}`);
+                    }
+                  }
+                }
+              } catch (e) {}
+            }
+          }
+          
+          // Look for EAN patterns in HTML
+          const eanPatterns = [
+            /EAN[:\s]*([0-9]{13})/i,
+            /data-ean=["']([0-9]{13})["']/i,
+            /"ean"\s*:\s*"?([0-9]{13})"?/i,
+            /\b(859[0-9]{10})\b/,  // Czech EAN prefix (Prusa is Czech)
+          ];
+          for (const pattern of eanPatterns) {
+            const match = html.match(pattern);
+            if (match && !ean) {
+              ean = match[1];
+              console.log(`    -> Found EAN in HTML: ${ean}`);
+              break;
+            }
+          }
+          
+          // Look for SKU/product code patterns
+          const skuPatterns = [
+            /data-sku=["']([A-Z0-9\-]+)["']/i,
+            /"sku"\s*:\s*"([A-Z0-9\-]+)"/i,
+            /product[_-]?id[:\s]*["']?([A-Z0-9\-]+)["']?/i,
+          ];
+          for (const pattern of skuPatterns) {
+            const match = html.match(pattern);
+            if (match && (!sku || sku.startsWith('PRUSA-') || sku.startsWith('PRUSAMENT-'))) {
+              sku = match[1];
+              console.log(`    -> Found SKU pattern in HTML: ${sku}`);
+              break;
+            }
+          }
+        } else {
+          console.log(`    -> HTTP ${response.status}`);
+        }
+      } catch (e) {
+        console.log(`    -> Error fetching page: ${e}`);
+      }
+    }
+    
+    if (sku || mpn || upc || gtin || ean) {
+      console.log(`    -> Found: SKU=${sku}, MPN=${mpn}, UPC=${upc}, GTIN=${gtin}, EAN=${ean}`);
+      return { sku, upc, gtin, ean, mpn, method: 'prusament_extraction' };
+    }
+    
+    console.log(`    -> No data found`);
+    return null;
+  } catch (e) {
+    console.log(`    -> Error: ${e}`);
+    return null;
+  }
+}
+
+
 async function tryWooCommerce(productUrl: string): Promise<ExtractionResult | null> {
   if (!productUrl || !productUrl.startsWith('http')) return null;
   
@@ -1242,6 +1379,14 @@ async function processFilament(
     } else if (brandConfig.upcExtractionMethod === 'microcenter') {
       // Micro Center (Inland) - product ID in URL
       result = await tryMicroCenterExtraction(filament);
+      
+      // Fallback to generic HTML
+      if (!result && filament.product_url) {
+        result = await tryHtmlJsonLd(filament.product_url);
+      }
+    } else if (brandConfig.upcExtractionMethod === 'prusament') {
+      // Prusament (Prusa Research) - IDF/IDS IDs, URL slug as SKU
+      result = await tryPrusamentExtraction(filament);
       
       // Fallback to generic HTML
       if (!result && filament.product_url) {
