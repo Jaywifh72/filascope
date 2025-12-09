@@ -1268,9 +1268,26 @@ async function processFilament(
       }
     }
     
-    // Fallback: Use SKU as MPN if MPN is missing (common pattern for many brands)
+    // Paramount 3D specific: 12-digit numeric SKUs are valid UPCs
+    // Skip known placeholder SKU that appears across multiple products
+    const PARAMOUNT_PLACEHOLDER_SKUS = ['852297007909'];
     const effectiveSku = result.sku || filament.variant_sku;
-    if (!result.mpn && effectiveSku) {
+    
+    if (!cleanUpc && effectiveSku && /^\d{12}$/.test(effectiveSku)) {
+      // Check if it's not a known placeholder
+      if (!PARAMOUNT_PLACEHOLDER_SKUS.includes(effectiveSku)) {
+        cleanUpc = effectiveSku;
+        result.upc = effectiveSku;
+        console.log(`  -> Detected 12-digit SKU as UPC: ${effectiveSku}`);
+      } else {
+        console.log(`  -> Skipping placeholder SKU: ${effectiveSku}`);
+        // Clear the placeholder SKU so it doesn't get saved
+        if (result.sku === effectiveSku) result.sku = null;
+      }
+    }
+    
+    // Fallback: Use SKU as MPN if MPN is missing (common pattern for many brands)
+    if (!result.mpn && effectiveSku && !PARAMOUNT_PLACEHOLDER_SKUS.includes(effectiveSku)) {
       result.mpn = effectiveSku;
       console.log(`  -> Using SKU as MPN fallback: ${effectiveSku}`);
     }
