@@ -296,6 +296,7 @@ export type Database = {
           melt_temp_c: number | null
           moisture_care: string | null
           moisture_sensitivity_level: string | null
+          mpn: string | null
           net_weight_g: number | null
           nozzle_care: string | null
           nozzle_temp_max_c: number | null
@@ -361,6 +362,7 @@ export type Database = {
           melt_temp_c?: number | null
           moisture_care?: string | null
           moisture_sensitivity_level?: string | null
+          mpn?: string | null
           net_weight_g?: number | null
           nozzle_care?: string | null
           nozzle_temp_max_c?: number | null
@@ -426,6 +428,7 @@ export type Database = {
           melt_temp_c?: number | null
           moisture_care?: string | null
           moisture_sensitivity_level?: string | null
+          mpn?: string | null
           net_weight_g?: number | null
           nozzle_care?: string | null
           nozzle_temp_max_c?: number | null

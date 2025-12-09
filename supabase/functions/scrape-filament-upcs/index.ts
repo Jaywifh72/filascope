@@ -127,6 +127,7 @@ interface ExtractionResult {
   sku: string | null;
   gtin: string | null;
   ean: string | null;
+  mpn: string | null;
   method: string;
   note?: string;
 }
@@ -181,11 +182,12 @@ function findProductByTitle(productTitle: string, products: any[]): any | null {
 }
 
 // Extract data from Shopify variant
-function extractFromVariants(variants: any[]): ExtractionResult {
+function extractFromVariants(variants: any[], productData?: any): ExtractionResult {
   let upc: string | null = null;
   let sku: string | null = null;
   let gtin: string | null = null;
   let ean: string | null = null;
+  let mpn: string | null = null;
   
   for (const variant of variants || []) {
     if (variant.barcode && variant.barcode.length >= 8) {
@@ -200,7 +202,13 @@ function extractFromVariants(variants: any[]): ExtractionResult {
     if ((upc || ean || gtin) && sku) break;
   }
   
-  return { upc, sku, gtin, ean, method: 'shopify_variants' };
+  // Try to extract MPN from product metafields or vendor data
+  if (productData?.vendor && sku) {
+    // Some stores use vendor + SKU as MPN
+    mpn = sku;
+  }
+  
+  return { upc, sku, gtin, ean, mpn, method: 'shopify_variants' };
 }
 
 // Strategy 1: Shopify Individual Product JSON
@@ -222,13 +230,14 @@ async function tryShopifyProductJson(shopifyUrl: string, productHandle: string):
     }
     
     const data = await response.json();
-    const variants = data.product?.variants || [];
+    const product = data.product;
+    const variants = product?.variants || [];
     if (variants.length === 0) return null;
     
-    const result = extractFromVariants(variants);
-    if (result.upc || result.sku || result.gtin || result.ean) {
+    const result = extractFromVariants(variants, product);
+    if (result.upc || result.sku || result.gtin || result.ean || result.mpn) {
       result.method = 'shopify_product_json';
-      console.log(`    -> Found: UPC=${result.upc}, SKU=${result.sku}, GTIN=${result.gtin}, EAN=${result.ean}`);
+      console.log(`    -> Found: UPC=${result.upc}, SKU=${result.sku}, GTIN=${result.gtin}, EAN=${result.ean}, MPN=${result.mpn}`);
       return result;
     }
     
@@ -286,8 +295,8 @@ function findProductInCollection(products: any[], productHandle: string, product
   // Try exact handle match first
   const exactMatch = products.find(p => p.handle?.toLowerCase() === productHandle.toLowerCase());
   if (exactMatch) {
-    const result = extractFromVariants(exactMatch.variants);
-    if (result.upc || result.sku || result.gtin || result.ean) {
+    const result = extractFromVariants(exactMatch.variants, exactMatch);
+    if (result.upc || result.sku || result.gtin || result.ean || result.mpn) {
       result.method = 'shopify_collection_exact';
       return result;
     }
@@ -296,8 +305,8 @@ function findProductInCollection(products: any[], productHandle: string, product
   // Try fuzzy title match
   const fuzzyMatch = findProductByTitle(productTitle, products);
   if (fuzzyMatch) {
-    const result = extractFromVariants(fuzzyMatch.variants);
-    if (result.upc || result.sku || result.gtin || result.ean) {
+    const result = extractFromVariants(fuzzyMatch.variants, fuzzyMatch);
+    if (result.upc || result.sku || result.gtin || result.ean || result.mpn) {
       result.method = 'shopify_collection_fuzzy';
       return result;
     }
@@ -331,6 +340,7 @@ async function tryHtmlJsonLd(productUrl: string): Promise<ExtractionResult | nul
     let sku: string | null = null;
     let gtin: string | null = null;
     let ean: string | null = null;
+    let mpn: string | null = null;
     
     // Extract JSON-LD structured data
     const jsonLdMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
@@ -355,12 +365,13 @@ async function tryHtmlJsonLd(productUrl: string): Promise<ExtractionResult | nul
               if (item.gtin14 && !gtin) gtin = item.gtin14;
               if (item.sku && !sku) sku = item.sku;
               if (item.productID && !sku) sku = item.productID;
-              if (item.mpn && !sku) sku = item.mpn;
+              if (item.mpn && !mpn) mpn = item.mpn;
               
               // Check offers
               const offers = Array.isArray(item.offers) ? item.offers : [item.offers].filter(Boolean);
               for (const offer of offers) {
                 if (offer?.sku && !sku) sku = offer.sku;
+                if (offer?.mpn && !mpn) mpn = offer.mpn;
               }
             }
           }
@@ -376,6 +387,12 @@ async function tryHtmlJsonLd(productUrl: string): Promise<ExtractionResult | nul
       if (skuMeta) sku = skuMeta[1];
     }
     
+    // Look for MPN in meta tags
+    if (!mpn) {
+      const mpnMeta = html.match(/<meta[^>]*(?:property|name)=["'](?:product:mpn|og:mpn|mpn)["'][^>]*content=["']([^"']+)["']/i);
+      if (mpnMeta) mpn = mpnMeta[1];
+    }
+    
     if (!gtin && !upc && !ean) {
       const gtinMeta = html.match(/<meta[^>]*property=["']product:gtin["'][^>]*content=["']([^"']+)["']/i);
       if (gtinMeta) {
@@ -386,7 +403,7 @@ async function tryHtmlJsonLd(productUrl: string): Promise<ExtractionResult | nul
       }
     }
     
-    // Look for barcode in visible text (tables, specs)
+    // Look for barcode and MPN in visible text (tables, specs)
     if (!upc && !gtin && !ean) {
       const barcodePatterns = [
         /UPC[:\s]*([0-9]{8,14})/i,
@@ -406,9 +423,25 @@ async function tryHtmlJsonLd(productUrl: string): Promise<ExtractionResult | nul
       }
     }
     
-    if (upc || sku || gtin || ean) {
-      console.log(`    -> Found: UPC=${upc}, SKU=${sku}, GTIN=${gtin}, EAN=${ean}`);
-      return { upc, sku, gtin, ean, method: 'html_jsonld' };
+    // Look for MPN in visible text
+    if (!mpn) {
+      const mpnPatterns = [
+        /MPN[:\s]*([A-Za-z0-9\-_]+)/i,
+        /Manufacturer Part Number[:\s]*([A-Za-z0-9\-_]+)/i,
+        /Part Number[:\s]*([A-Za-z0-9\-_]+)/i,
+      ];
+      for (const pattern of mpnPatterns) {
+        const match = html.match(pattern);
+        if (match && match[1].length >= 3 && match[1].length <= 50) {
+          mpn = match[1].trim();
+          break;
+        }
+      }
+    }
+    
+    if (upc || sku || gtin || ean || mpn) {
+      console.log(`    -> Found: UPC=${upc}, SKU=${sku}, GTIN=${gtin}, EAN=${ean}, MPN=${mpn}`);
+      return { upc, sku, gtin, ean, mpn, method: 'html_jsonld' };
     }
     
     console.log(`    -> No data found in HTML`);
@@ -444,6 +477,7 @@ async function tryWooCommerce(productUrl: string): Promise<ExtractionResult | nu
     let sku: string | null = null;
     let gtin: string | null = null;
     let ean: string | null = null;
+    let mpn: string | null = null;
     
     // WooCommerce SKU
     const skuMatch = html.match(/class=["']sku["'][^>]*>([^<]+)</i);
@@ -466,6 +500,7 @@ async function tryWooCommerce(productUrl: string): Promise<ExtractionResult | nu
                 upc = classified.upc;
               }
               if (item.sku && !sku) sku = item.sku;
+              if (item.mpn && !mpn) mpn = item.mpn;
             }
           }
         } catch (e) {}
@@ -481,9 +516,29 @@ async function tryWooCommerce(productUrl: string): Promise<ExtractionResult | nu
       upc = classified.upc;
     }
     
-    if (upc || sku || gtin || ean) {
-      console.log(`    -> Found: UPC=${upc}, SKU=${sku}, GTIN=${gtin}, EAN=${ean}`);
-      return { upc, sku, gtin, ean, method: 'woocommerce' };
+    // Look for MPN in WooCommerce product details
+    if (!mpn) {
+      const mpnMatch = html.match(/itemprop=["']mpn["'][^>]*content=["']([^"']+)["']/i);
+      if (mpnMatch) mpn = mpnMatch[1];
+    }
+    
+    if (!mpn) {
+      const mpnPatterns = [
+        /MPN[:\s]*([A-Za-z0-9\-_]+)/i,
+        /Manufacturer Part Number[:\s]*([A-Za-z0-9\-_]+)/i,
+      ];
+      for (const pattern of mpnPatterns) {
+        const match = html.match(pattern);
+        if (match && match[1].length >= 3 && match[1].length <= 50) {
+          mpn = match[1].trim();
+          break;
+        }
+      }
+    }
+    
+    if (upc || sku || gtin || ean || mpn) {
+      console.log(`    -> Found: UPC=${upc}, SKU=${sku}, GTIN=${gtin}, EAN=${ean}, MPN=${mpn}`);
+      return { upc, sku, gtin, ean, mpn, method: 'woocommerce' };
     }
     
     console.log(`    -> No data found`);
@@ -508,6 +563,7 @@ async function processFilament(
   sku?: string; 
   gtin?: string; 
   ean?: string; 
+  mpn?: string;
   error?: string; 
   method?: string 
 }> {
@@ -590,6 +646,7 @@ async function processFilament(
     const hasNewSku = result.sku && result.sku !== filament.variant_sku;
     const hasNewGtin = result.gtin && result.gtin !== filament.gtin;
     const hasNewEan = result.ean && result.ean !== filament.ean;
+    const hasNewMpn = result.mpn && result.mpn !== filament.mpn;
     
     // Log what was found vs what already exists
     console.log(`  Extraction result via ${result.method}:`);
@@ -597,13 +654,15 @@ async function processFilament(
     console.log(`    SKU: ${result.sku || 'none'} (existing: ${filament.variant_sku || 'none'}) ${hasNewSku ? '[NEW]' : ''}`);
     console.log(`    GTIN: ${result.gtin || 'none'} (existing: ${filament.gtin || 'none'}) ${hasNewGtin ? '[NEW]' : ''}`);
     console.log(`    EAN: ${result.ean || 'none'} (existing: ${filament.ean || 'none'}) ${hasNewEan ? '[NEW]' : ''}`);
+    console.log(`    MPN: ${result.mpn || 'none'} (existing: ${filament.mpn || 'none'}) ${hasNewMpn ? '[NEW]' : ''}`);
     
-    if (hasNewUpc || hasNewSku || hasNewGtin || hasNewEan) {
+    if (hasNewUpc || hasNewSku || hasNewGtin || hasNewEan || hasNewMpn) {
       const updateData: Record<string, string> = {};
       if (hasNewUpc) updateData.upc = cleanUpc!;
       if (hasNewSku) updateData.variant_sku = result.sku!;
       if (hasNewGtin) updateData.gtin = result.gtin!;
       if (hasNewEan) updateData.ean = result.ean!;
+      if (hasNewMpn) updateData.mpn = result.mpn!;
       
       console.log(`  Updating: ${JSON.stringify(updateData)}`);
       
@@ -624,17 +683,18 @@ async function processFilament(
         sku: result.sku || undefined,
         gtin: result.gtin || undefined,
         ean: result.ean || undefined,
+        mpn: result.mpn || undefined,
         method: result.method 
       };
     }
     
     // Data exists but no new values to update
-    const hasAnyData = result.upc || result.sku || result.gtin || result.ean;
+    const hasAnyData = result.upc || result.sku || result.gtin || result.ean || result.mpn;
     return { 
       id: filament.id, 
       title: filament.product_title, 
       status: 'no_data_found',
-      error: hasAnyData ? 'Data already exists (no updates needed)' : 'No UPC/GTIN/EAN data available from store'
+      error: hasAnyData ? 'Data already exists (no updates needed)' : 'No UPC/GTIN/EAN/MPN data available from store'
     };
   } catch (e) {
     console.error(`Error processing filament: ${e}`);
@@ -709,7 +769,7 @@ serve(async (req) => {
       
       let query = supabase
         .from('filaments')
-        .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku, gtin, ean')
+        .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku, gtin, ean, mpn')
         .in('id', batchIds)
         .not('product_url', 'is', null);
 
@@ -791,7 +851,7 @@ serve(async (req) => {
 
       let query = supabase
         .from('filaments')
-        .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku, gtin, ean')
+        .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku, gtin, ean, mpn')
         .eq('vendor', brand)
         .not('product_url', 'is', null);
 
