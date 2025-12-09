@@ -712,6 +712,13 @@ async function processFilament(
       }
     }
     
+    // Fallback: Use SKU as MPN if MPN is missing (common pattern for many brands)
+    const effectiveSku = result.sku || filament.variant_sku;
+    if (!result.mpn && effectiveSku) {
+      result.mpn = effectiveSku;
+      console.log(`  -> Using SKU as MPN fallback: ${effectiveSku}`);
+    }
+    
     // Check if we have new data to update
     const hasNewUpc = cleanUpc && cleanUpc !== filament.upc;
     const hasNewSku = result.sku && result.sku !== filament.variant_sku;
