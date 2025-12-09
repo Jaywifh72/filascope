@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag, Copy, GitBranch, Database } from "lucide-react";
+import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag, Copy, GitBranch, Database, Palette } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -79,12 +79,14 @@ const AdminFilaments = () => {
   const [copyingSkuToMpn, setCopyingSkuToMpn] = useState(false);
   const [derivingIdentifiers, setDerivingIdentifiers] = useState(false);
   const [lookingUpBarcodes, setLookingUpBarcodes] = useState(false);
+  const [populatingHexColors, setPopulatingHexColors] = useState(false);
   const [scrapeProgress, setScrapeProgress] = useState({ current: 0, total: 0 });
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
   const [showMissingEanOnly, setShowMissingEanOnly] = useState(false);
   const [showMissingGtinOnly, setShowMissingGtinOnly] = useState(false);
   const [showMissingMpnOnly, setShowMissingMpnOnly] = useState(false);
+  const [showMissingHexOnly, setShowMissingHexOnly] = useState(false);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
 
   useEffect(() => {
@@ -443,6 +445,31 @@ const AdminFilaments = () => {
     }
   };
 
+  const handlePopulateHexColors = async () => {
+    setPopulatingHexColors(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('populate-hex-colors', {
+        body: { limit: 100, vendor: vendorFilter !== 'all' ? vendorFilter : null, useAI: true }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast.success(`Updated ${data.updated} filaments with hex colors`, {
+          description: `Dictionary: ${data.by_method?.dictionary || 0}, Pattern: ${data.by_method?.pattern || 0}, AI: ${data.by_method?.ai || 0}`
+        });
+        fetchFilaments();
+      } else {
+        throw new Error(data?.error || 'Failed to populate hex colors');
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to populate hex colors");
+      console.error(error);
+    } finally {
+      setPopulatingHexColors(false);
+    }
+  };
+
   const filteredFilaments = filaments.filter((f) => {
     const matchesSearch =
       f.product_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -454,9 +481,10 @@ const AdminFilaments = () => {
     const matchesEanFilter = showMissingEanOnly ? !(f as any).ean : true;
     const matchesGtinFilter = showMissingGtinOnly ? !(f as any).gtin : true;
     const matchesMpnFilter = showMissingMpnOnly ? !(f as any).mpn : true;
+    const matchesHexFilter = showMissingHexOnly ? !f.color_hex : true;
     const matchesVendor = vendorFilter === "all" || f.vendor === vendorFilter;
     
-    return matchesSearch && matchesUpcFilter && matchesSkuFilter && matchesEanFilter && matchesGtinFilter && matchesMpnFilter && matchesVendor;
+    return matchesSearch && matchesUpcFilter && matchesSkuFilter && matchesEanFilter && matchesGtinFilter && matchesMpnFilter && matchesHexFilter && matchesVendor;
   });
 
   // Count for lookup barcodes button
@@ -479,6 +507,7 @@ const AdminFilaments = () => {
   const filamentsWithEan = filaments.filter((f) => (f as any).ean).length;
   const filamentsWithGtin = filaments.filter((f) => (f as any).gtin).length;
   const filamentsWithMpn = filaments.filter((f) => (f as any).mpn).length;
+  const filamentsWithHex = filaments.filter((f) => f.color_hex).length;
   const uniqueVendors = new Set(filaments.map((f) => f.vendor).filter(Boolean)).size;
 
   if (authLoading || loading) {
@@ -515,8 +544,8 @@ const AdminFilaments = () => {
           <StatCard label="Prices" value={filamentsWithPrices} total={totalFilaments} />
           <StatCard label="SKUs" value={filamentsWithSku} total={totalFilaments} />
           <StatCard label="UPCs" value={filamentsWithUpc} total={totalFilaments} />
+          <StatCard label="Hex" value={filamentsWithHex} total={totalFilaments} />
           <StatCard label="TDS" value={filamentsWithTDS} total={totalFilaments} />
-          <StatCard label="Vendors" value={uniqueVendors} />
         </div>
 
         {/* Search and Filters */}
@@ -675,6 +704,19 @@ const AdminFilaments = () => {
               <Progress value={(scrapeProgress.current / scrapeProgress.total) * 100} className="h-1 w-full" />
             )}
           </div>
+          <Button
+            variant="outline"
+            onClick={handlePopulateHexColors}
+            disabled={populatingHexColors || (totalFilaments - filamentsWithHex) === 0}
+            title="Populate missing hex color codes using AI"
+          >
+            {populatingHexColors ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Palette className="w-4 h-4 mr-2" />
+            )}
+            {populatingHexColors ? "Populating..." : `Hex Colors (${totalFilaments - filamentsWithHex})`}
+          </Button>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
