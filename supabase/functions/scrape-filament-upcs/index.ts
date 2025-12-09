@@ -12,7 +12,7 @@ const MAX_BATCH_SIZE = 25;
 // Brand configuration for UPC scraping
 interface BrandConfig {
   shopifyUrl?: string;
-  upcExtractionMethod: 'shopify' | 'woocommerce' | 'html' | 'none';
+  upcExtractionMethod: 'shopify' | 'woocommerce' | 'html' | 'none' | 'wix';
   notes?: string;
 }
 
@@ -37,7 +37,7 @@ const BRAND_CONFIGS: Record<string, BrandConfig> = {
   'ZIRO': { shopifyUrl: 'https://ziro3d.com', upcExtractionMethod: 'shopify' },
   'VoxelPLA': { shopifyUrl: 'https://voxelpla.com', upcExtractionMethod: 'shopify' },
   'GreenGate3D': { shopifyUrl: 'https://greengate3d.com', upcExtractionMethod: 'shopify' },
-  'Paramount 3D': { shopifyUrl: 'https://paramount-3d.com', upcExtractionMethod: 'shopify' },
+  'Paramount 3D': { upcExtractionMethod: 'wix', notes: 'Wix store - extract SKU from product title brackets' },
   'Gizmo Dorks': { shopifyUrl: 'https://gizmodorks.com', upcExtractionMethod: 'shopify' },
   'Printed Solid': { shopifyUrl: 'https://printedsolid.com', upcExtractionMethod: 'shopify' },
   'Matter3D': { shopifyUrl: 'https://matter3d.com', upcExtractionMethod: 'shopify' },
@@ -513,6 +513,116 @@ async function tryHtmlJsonLd(productUrl: string): Promise<ExtractionResult | nul
   }
 }
 
+// Strategy 5: Wix extraction - Paramount 3D style
+// SKU is embedded in product title as [CODE] and sometimes in URL
+async function tryWixExtraction(filament: any): Promise<ExtractionResult | null> {
+  try {
+    console.log(`  [Strategy 5] Wix extraction for: ${filament.product_title}`);
+    
+    let sku: string | null = null;
+    let mpn: string | null = null;
+    
+    // Extract SKU from product title - pattern: [SKUCODE] or (SKUCODE)
+    // Example: "ASA (Military Green) 1.75mm 1kg Filament [OGRL60037764SA] ASA"
+    const titleSkuMatch = filament.product_title?.match(/\[([A-Z0-9\-]+)\]/i);
+    if (titleSkuMatch) {
+      sku = titleSkuMatch[1].trim();
+      console.log(`    -> Found SKU in title brackets: ${sku}`);
+    }
+    
+    // Also try extracting from product URL
+    // Pattern: paramount-3d.com/product-page/pla-military-green-1-75mm-1kg-filament-ogrl60037764c
+    // The last segment after last hyphen before any trailing suffix might be SKU
+    if (!sku && filament.product_url) {
+      // Try to extract code from URL - look for pattern like -XXXXX at end or -XXXXX-yyy
+      const urlMatch = filament.product_url.match(/filament-([a-z0-9]+)(?:-[a-z]+)?$/i);
+      if (urlMatch && urlMatch[1].length >= 6) {
+        sku = urlMatch[1].toUpperCase();
+        console.log(`    -> Found SKU in URL: ${sku}`);
+      }
+    }
+    
+    // If we found a SKU, also use it as MPN (common for Paramount 3D)
+    if (sku) {
+      mpn = sku;
+    }
+    
+    // Try to fetch the page to look for additional data (UPC, GTIN, etc.)
+    if (filament.product_url && filament.product_url.startsWith('http')) {
+      try {
+        console.log(`    -> Fetching page: ${filament.product_url}`);
+        const response = await fetch(filament.product_url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html',
+          },
+        });
+        
+        if (response.ok) {
+          const html = await response.text();
+          
+          // Look for SKU in Wix product title on page
+          // Pattern: <h1 data-hook="product-title" class="...">Title [SKUCODE] Material</h1>
+          const pageTitleMatch = html.match(/data-hook=["']product-title["'][^>]*>([^<]+)</i);
+          if (pageTitleMatch) {
+            const pageTitle = pageTitleMatch[1];
+            const pageSkuMatch = pageTitle.match(/\[([A-Z0-9\-]+)\]/i);
+            if (pageSkuMatch && !sku) {
+              sku = pageSkuMatch[1].trim();
+              mpn = sku;
+              console.log(`    -> Found SKU in page title: ${sku}`);
+            }
+          }
+          
+          // Look for barcode patterns in the HTML
+          let upc: string | null = null;
+          let gtin: string | null = null;
+          let ean: string | null = null;
+          
+          const barcodePatterns = [
+            /UPC[:\s]*([0-9]{8,14})/i,
+            /GTIN[:\s]*([0-9]{8,14})/i,
+            /EAN[:\s]*([0-9]{8,14})/i,
+            /Barcode[:\s]*([0-9]{8,14})/i,
+          ];
+          
+          for (const pattern of barcodePatterns) {
+            const match = html.match(pattern);
+            if (match) {
+              const classified = classifyBarcode(match[1]);
+              if (!upc && classified.upc) upc = classified.upc;
+              if (!ean && classified.ean) ean = classified.ean;
+              if (!gtin && classified.gtin) gtin = classified.gtin;
+              break;
+            }
+          }
+          
+          if (sku || upc || gtin || ean || mpn) {
+            console.log(`    -> Found: SKU=${sku}, UPC=${upc}, GTIN=${gtin}, EAN=${ean}, MPN=${mpn}`);
+            return { sku, upc, gtin, ean, mpn, method: 'wix_extraction' };
+          }
+        } else {
+          console.log(`    -> HTTP ${response.status}`);
+        }
+      } catch (e) {
+        console.log(`    -> Error fetching page: ${e}`);
+      }
+    }
+    
+    // Return what we found from title/URL even if page fetch failed
+    if (sku) {
+      console.log(`    -> Found from title/URL: SKU=${sku}, MPN=${mpn}`);
+      return { sku, upc: null, gtin: null, ean: null, mpn, method: 'wix_title_extraction' };
+    }
+    
+    console.log(`    -> No data found`);
+    return null;
+  } catch (e) {
+    console.log(`    -> Error: ${e}`);
+    return null;
+  }
+}
+
 // Strategy 4: WooCommerce HTML scraping
 async function tryWooCommerce(productUrl: string): Promise<ExtractionResult | null> {
   if (!productUrl || !productUrl.startsWith('http')) return null;
@@ -691,6 +801,14 @@ async function processFilament(
     } else if (brandConfig.upcExtractionMethod === 'html') {
       // HTML-only brands
       result = await tryHtmlJsonLd(filament.product_url);
+    } else if (brandConfig.upcExtractionMethod === 'wix') {
+      // Wix stores (like Paramount 3D) - extract SKU from title/URL
+      result = await tryWixExtraction(filament);
+      
+      // Fallback to HTML scraping
+      if (!result && filament.product_url) {
+        result = await tryHtmlJsonLd(filament.product_url);
+      }
     }
     
     if (!result) {
