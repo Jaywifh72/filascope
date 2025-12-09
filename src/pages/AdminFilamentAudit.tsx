@@ -13,7 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { 
   ArrowLeft, CheckCircle, AlertCircle, XCircle, RefreshCw, 
   ChevronDown, ChevronRight, ExternalLink, Image, DollarSign, 
-  Palette, FileText, Link2, Search, TestTube, Loader2, Globe
+  Palette, FileText, Link2, Search, TestTube, Loader2, Globe, Wrench
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -69,9 +69,11 @@ interface UrlTestResult {
   url: string;
   filamentId: string;
   filamentTitle: string;
-  status: "pending" | "success" | "error" | "redirect";
+  vendor: string;
+  status: "pending" | "success" | "error" | "redirect" | "fixing" | "fixed" | "fix-failed";
   statusCode?: number;
   error?: string;
+  newUrl?: string;
 }
 
 const AdminFilamentAudit = () => {
@@ -85,8 +87,10 @@ const AdminFilamentAudit = () => {
   
   // URL Testing state
   const [isTesting, setIsTesting] = useState(false);
+  const [isFixing, setIsFixing] = useState(false);
   const [urlTestResults, setUrlTestResults] = useState<UrlTestResult[]>([]);
   const [testProgress, setTestProgress] = useState(0);
+  const [fixProgress, setFixProgress] = useState(0);
   const [selectedBrandForTest, setSelectedBrandForTest] = useState<string | null>(null);
 
   useEffect(() => {
@@ -184,11 +188,11 @@ const AdminFilamentAudit = () => {
     setUrlTestResults([]);
     setTestProgress(0);
 
-    const urlsToTest: { url: string; filamentId: string; filamentTitle: string }[] = [];
+    const urlsToTest: { url: string; filamentId: string; filamentTitle: string; vendor: string }[] = [];
 
     brand.filaments.forEach((f) => {
       if (f.product_url && f.product_url.startsWith("http")) {
-        urlsToTest.push({ url: f.product_url, filamentId: f.id, filamentTitle: f.product_title });
+        urlsToTest.push({ url: f.product_url, filamentId: f.id, filamentTitle: f.product_title, vendor: f.vendor || brand.name });
       }
     });
 
@@ -205,7 +209,7 @@ const AdminFilamentAudit = () => {
       const batch = urlsToTest.slice(i, i + batchSize);
       
       const batchResults = await Promise.all(
-        batch.map(async ({ url, filamentId, filamentTitle }) => {
+        batch.map(async ({ url, filamentId, filamentTitle, vendor }) => {
           try {
             const { data, error } = await supabase.functions.invoke("test-url", {
               body: { url },
@@ -216,6 +220,7 @@ const AdminFilamentAudit = () => {
                 url,
                 filamentId,
                 filamentTitle,
+                vendor,
                 status: "error" as const,
                 error: error.message,
               };
@@ -225,6 +230,7 @@ const AdminFilamentAudit = () => {
               url,
               filamentId,
               filamentTitle,
+              vendor,
               status: data.ok ? "success" as const : (data.statusCode >= 300 && data.statusCode < 400 ? "redirect" as const : "error" as const),
               statusCode: data.statusCode,
               error: data.error,
@@ -234,6 +240,7 @@ const AdminFilamentAudit = () => {
               url,
               filamentId,
               filamentTitle,
+              vendor,
               status: "error" as const,
               error: err.message,
             };
@@ -248,6 +255,93 @@ const AdminFilamentAudit = () => {
 
     setIsTesting(false);
     toast.success(`URL test complete: ${results.filter((r) => r.status === "success").length}/${results.length} OK`);
+  };
+
+  const fixBrokenUrl = async (result: UrlTestResult) => {
+    // Update the result to show fixing status
+    setUrlTestResults((prev) =>
+      prev.map((r) =>
+        r.filamentId === result.filamentId ? { ...r, status: "fixing" as const } : r
+      )
+    );
+
+    try {
+      const { data, error } = await supabase.functions.invoke("fix-filament-url", {
+        body: {
+          filamentId: result.filamentId,
+          productTitle: result.filamentTitle,
+          vendor: result.vendor,
+          currentUrl: result.url,
+        },
+      });
+
+      if (error || !data?.success) {
+        setUrlTestResults((prev) =>
+          prev.map((r) =>
+            r.filamentId === result.filamentId
+              ? { ...r, status: "fix-failed" as const, error: data?.error || error?.message || "Failed to fix" }
+              : r
+          )
+        );
+        toast.error(`Failed to fix URL: ${data?.error || error?.message}`);
+        return;
+      }
+
+      setUrlTestResults((prev) =>
+        prev.map((r) =>
+          r.filamentId === result.filamentId
+            ? { ...r, status: "fixed" as const, newUrl: data.newUrl, url: data.newUrl }
+            : r
+        )
+      );
+      toast.success(`Fixed URL for ${result.filamentTitle}`);
+    } catch (err: any) {
+      setUrlTestResults((prev) =>
+        prev.map((r) =>
+          r.filamentId === result.filamentId
+            ? { ...r, status: "fix-failed" as const, error: err.message }
+            : r
+        )
+      );
+      toast.error(`Error fixing URL: ${err.message}`);
+    }
+  };
+
+  const fixAllBrokenUrls = async () => {
+    const brokenResults = urlTestResults.filter(
+      (r) => r.status === "error" || r.status === "fix-failed"
+    );
+
+    if (brokenResults.length === 0) {
+      toast.info("No broken URLs to fix");
+      return;
+    }
+
+    setIsFixing(true);
+    setFixProgress(0);
+
+    let fixed = 0;
+    let failed = 0;
+
+    for (let i = 0; i < brokenResults.length; i++) {
+      await fixBrokenUrl(brokenResults[i]);
+      
+      // Check the updated status
+      const updatedResult = urlTestResults.find((r) => r.filamentId === brokenResults[i].filamentId);
+      if (updatedResult?.status === "fixed") {
+        fixed++;
+      } else {
+        failed++;
+      }
+
+      setFixProgress(Math.round(((i + 1) / brokenResults.length) * 100));
+      
+      // Small delay to avoid overwhelming the API
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    setIsFixing(false);
+    toast.success(`URL fix complete: ${fixed} fixed, ${failed} failed`);
   };
 
   const getScoreColor = (score: number) => {
@@ -671,18 +765,45 @@ const AdminFilamentAudit = () => {
                     </div>
                   )}
 
+                  {isFixing && (
+                    <div className="mb-6">
+                      <div className="flex items-center gap-4 mb-2">
+                        <Wrench className="w-5 h-5 animate-pulse text-primary" />
+                        <span className="text-foreground">
+                          Fixing broken URLs...
+                        </span>
+                      </div>
+                      <Progress value={fixProgress} className="h-2" />
+                    </div>
+                  )}
+
                   {urlTestResults.length > 0 && (
                     <div>
-                      <div className="flex gap-4 mb-4">
-                        <Badge className="bg-green-500">
-                          {urlTestResults.filter((r) => r.status === "success").length} OK
-                        </Badge>
-                        <Badge variant="destructive">
-                          {urlTestResults.filter((r) => r.status === "error").length} Failed
-                        </Badge>
-                        <Badge className="bg-yellow-500">
-                          {urlTestResults.filter((r) => r.status === "redirect").length} Redirects
-                        </Badge>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex gap-4">
+                          <Badge className="bg-green-500">
+                            {urlTestResults.filter((r) => r.status === "success" || r.status === "fixed").length} OK
+                          </Badge>
+                          <Badge variant="destructive">
+                            {urlTestResults.filter((r) => r.status === "error" || r.status === "fix-failed").length} Failed
+                          </Badge>
+                          <Badge className="bg-yellow-500">
+                            {urlTestResults.filter((r) => r.status === "redirect").length} Redirects
+                          </Badge>
+                          {urlTestResults.filter((r) => r.status === "fixed").length > 0 && (
+                            <Badge className="bg-cyan-500">
+                              {urlTestResults.filter((r) => r.status === "fixed").length} Fixed
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        {/* Fix All Button */}
+                        {urlTestResults.filter((r) => r.status === "error" || r.status === "fix-failed").length > 0 && !isTesting && !isFixing && (
+                          <Button onClick={fixAllBrokenUrls} variant="default" size="sm">
+                            <Wrench className="w-4 h-4 mr-2" />
+                            Fix All Broken URLs ({urlTestResults.filter((r) => r.status === "error" || r.status === "fix-failed").length})
+                          </Button>
+                        )}
                       </div>
 
                       <Table>
@@ -692,6 +813,7 @@ const AdminFilamentAudit = () => {
                             <TableHead>Filament</TableHead>
                             <TableHead>URL</TableHead>
                             <TableHead>Details</TableHead>
+                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -710,6 +832,15 @@ const AdminFilamentAudit = () => {
                                   {result.status === "redirect" && (
                                     <AlertCircle className="w-5 h-5 text-yellow-500" />
                                   )}
+                                  {result.status === "fixing" && (
+                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                  )}
+                                  {result.status === "fixed" && (
+                                    <CheckCircle className="w-5 h-5 text-cyan-500" />
+                                  )}
+                                  {result.status === "fix-failed" && (
+                                    <XCircle className="w-5 h-5 text-orange-500" />
+                                  )}
                                 </TableCell>
                                 <TableCell>
                                   <Link
@@ -719,26 +850,75 @@ const AdminFilamentAudit = () => {
                                     {result.filamentTitle}
                                   </Link>
                                 </TableCell>
-                                <TableCell className="max-w-xs truncate">
-                                  <a
-                                    href={result.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-muted-foreground hover:text-foreground text-sm"
-                                  >
-                                    {result.url}
-                                  </a>
+                                <TableCell className="max-w-xs">
+                                  {result.status === "fixed" && result.newUrl ? (
+                                    <div className="space-y-1">
+                                      <div className="text-xs text-muted-foreground line-through truncate">
+                                        {result.url !== result.newUrl ? result.url : null}
+                                      </div>
+                                      <a
+                                        href={result.newUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-cyan-500 hover:text-cyan-400 text-sm truncate block"
+                                      >
+                                        {result.newUrl}
+                                      </a>
+                                    </div>
+                                  ) : (
+                                    <a
+                                      href={result.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-muted-foreground hover:text-foreground text-sm truncate block"
+                                    >
+                                      {result.url}
+                                    </a>
+                                  )}
                                 </TableCell>
                                 <TableCell>
                                   <span className="text-sm text-muted-foreground">
-                                    {result.statusCode && `HTTP ${result.statusCode}`}
-                                    {result.error && ` - ${result.error}`}
+                                    {result.status === "fixed" && "URL fixed!"}
+                                    {result.status === "fixing" && "Finding correct URL..."}
+                                    {result.status === "fix-failed" && `Fix failed: ${result.error}`}
+                                    {(result.status === "error" || result.status === "redirect") && (
+                                      <>
+                                        {result.statusCode && `HTTP ${result.statusCode}`}
+                                        {result.error && ` - ${result.error}`}
+                                      </>
+                                    )}
                                   </span>
+                                </TableCell>
+                                <TableCell>
+                                  {(result.status === "error" || result.status === "fix-failed") && !isFixing && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => fixBrokenUrl(result)}
+                                    >
+                                      <Wrench className="w-3 h-3 mr-1" />
+                                      Fix
+                                    </Button>
+                                  )}
+                                  {result.status === "fixing" && (
+                                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                                  )}
+                                  {result.status === "fixed" && (
+                                    <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                                      Fixed
+                                    </Badge>
+                                  )}
                                 </TableCell>
                               </TableRow>
                             ))}
                         </TableBody>
                       </Table>
+                      
+                      {urlTestResults.filter((r) => r.status !== "success").length > 50 && (
+                        <p className="text-xs text-muted-foreground text-center mt-4">
+                          Showing 50 of {urlTestResults.filter((r) => r.status !== "success").length} results with issues
+                        </p>
+                      )}
                     </div>
                   )}
 
