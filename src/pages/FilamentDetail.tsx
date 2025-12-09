@@ -923,6 +923,12 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                         {filament.color_family}
                       </Badge>
                     )}
+                    {filament.color_hex && (
+                      <Badge variant="outline" className="text-sm px-3 py-1.5 flex items-center gap-2 font-mono">
+                        <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: filament.color_hex }} />
+                        {filament.color_hex.toUpperCase()}
+                      </Badge>
+                    )}
                     {filament.finish_type && (
                       <Badge variant="secondary" className="text-sm px-3 py-1.5">{filament.finish_type}</Badge>
                     )}
