@@ -230,14 +230,14 @@ const AdminFilaments = () => {
     
     try {
       const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
-        body: { vendor: vendorFilter }
+        body: { brands: [vendorFilter], scrapeMpnOnly: true }
       });
 
       if (error) {
         throw error;
       }
 
-      toast.success(`MPN scrape complete: ${data.updated || 0} updated, ${data.noData || 0} no data`);
+      toast.success(`MPN scrape complete: ${data.updated || 0} updated, ${data.skipped || 0} skipped`);
       fetchFilaments();
     } catch (error: any) {
       toast.error(error.message || "Failed to scrape MPNs");
