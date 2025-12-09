@@ -96,3 +96,5 @@ verify_jwt = true
 [functions.lookup-barcodes]
 verify_jwt = false
 
+[functions.scrape-overture-colors]
+verify_jwt = true
