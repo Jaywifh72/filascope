@@ -654,9 +654,9 @@ const BrandDetail = () => {
                       )}
                     </div>
 
-                    {/* Product Info */}
-                    <div className="space-y-3">
-                      <h3 className="font-semibold text-lg">{product.baseName}</h3>
+                      {/* Product Info */}
+                      <div className="space-y-3">
+                        <h3 className="font-semibold text-lg">{product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, '')}</h3>
                       
                       <div className="flex flex-wrap gap-2">
                         {product.material && (
