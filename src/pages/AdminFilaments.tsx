@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -47,6 +48,7 @@ const AdminFilaments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilaments, setSelectedFilaments] = useState<Set<string>>(new Set());
   const [scrapingUpcs, setScrapingUpcs] = useState(false);
+  const [scrapeProgress, setScrapeProgress] = useState({ current: 0, total: 0 });
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
   const [showMissingEanOnly, setShowMissingEanOnly] = useState(false);
@@ -171,18 +173,15 @@ const AdminFilaments = () => {
     }
 
     setScrapingUpcs(true);
+    setScrapeProgress({ current: 0, total: idsToScrape.length });
     
     try {
       let totalUpdated = 0;
       let totalSkipped = 0;
       let totalFailed = 0;
-      const totalBatches = Math.ceil(idsToScrape.length / BATCH_SIZE);
 
       for (let i = 0; i < idsToScrape.length; i += BATCH_SIZE) {
         const batch = idsToScrape.slice(i, i + BATCH_SIZE);
-        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
-        
-        toast.info(`Scraping batch ${batchNum}/${totalBatches} (${batch.length} filaments)...`);
         
         const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
           body: { 
@@ -192,14 +191,15 @@ const AdminFilaments = () => {
         });
 
         if (error) {
-          console.error(`Error in batch ${batchNum}:`, error);
+          console.error(`Error in batch:`, error);
           totalFailed += batch.length;
-          continue;
+        } else {
+          totalUpdated += data.updated || 0;
+          totalSkipped += data.skipped || 0;
+          totalFailed += data.failed || 0;
         }
 
-        totalUpdated += data.updated || 0;
-        totalSkipped += data.skipped || 0;
-        totalFailed += data.failed || 0;
+        setScrapeProgress({ current: Math.min(i + BATCH_SIZE, idsToScrape.length), total: idsToScrape.length });
         
         // Small delay between batches
         if (i + BATCH_SIZE < idsToScrape.length) {
@@ -214,6 +214,7 @@ const AdminFilaments = () => {
       console.error(error);
     } finally {
       setScrapingUpcs(false);
+      setScrapeProgress({ current: 0, total: 0 });
     }
   };
 
@@ -407,18 +408,25 @@ const AdminFilaments = () => {
               Missing GTIN ({totalFilaments - filamentsWithGtin})
             </label>
           </div>
-          <Button
-            variant="secondary"
-            onClick={handleScrapeSelectedUpcs}
-            disabled={scrapingUpcs || filteredFilaments.length === 0}
-          >
-            {scrapingUpcs ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Barcode className="w-4 h-4 mr-2" />
+          <div className="flex flex-col gap-1">
+            <Button
+              variant="secondary"
+              onClick={handleScrapeSelectedUpcs}
+              disabled={scrapingUpcs || filteredFilaments.length === 0}
+            >
+              {scrapingUpcs ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Barcode className="w-4 h-4 mr-2" />
+              )}
+              {scrapingUpcs 
+                ? `Scraping ${scrapeProgress.current}/${scrapeProgress.total}` 
+                : `Scrape UPCs (${selectedFilaments.size > 0 ? selectedFilaments.size : filteredFilaments.length})`}
+            </Button>
+            {scrapingUpcs && scrapeProgress.total > 0 && (
+              <Progress value={(scrapeProgress.current / scrapeProgress.total) * 100} className="h-1 w-full" />
             )}
-            Scrape UPCs ({selectedFilaments.size > 0 ? selectedFilaments.size : filteredFilaments.length})
-          </Button>
+          </div>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
