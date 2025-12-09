@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -42,6 +42,7 @@ const FilamentDetail = () => {
   const [loading, setLoading] = useState(true);
   const [rescrapingImage, setRescrapingImage] = useState(false);
   const [scrapingData, setScrapingData] = useState(false);
+  const [scrapingColors, setScrapingColors] = useState(false);
   const [compatibleHotends, setCompatibleHotends] = useState<AccessoryWithCompatibility[]>([]);
   const [compatibleBuildPlates, setCompatibleBuildPlates] = useState<AccessoryWithCompatibility[]>([]);
   const [compatibleAms, setCompatibleAms] = useState<AccessoryWithCompatibility[]>([]);
@@ -473,6 +474,51 @@ const FilamentDetail = () => {
     }
   };
 
+  const handleScrapeColors = async () => {
+    if (!id || !filament) return;
+    
+    if (!filament.product_url) {
+      toast({
+        title: "No product URL",
+        description: "This filament has no product URL to scrape colors from.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setScrapingColors(true);
+    try {
+      toast({
+        title: "Scraping colors...",
+        description: `Fetching color variants from: ${filament.product_url}`,
+      });
+
+      const { data, error } = await supabase.functions.invoke('scrape-filament-colors', {
+        body: { filamentId: id }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: data.success ? "Colors scraped" : "No colors found",
+        description: data.message || "Color scraping completed.",
+        duration: 5000,
+      });
+
+      // Refresh filament data
+      await fetchFilament();
+    } catch (error: any) {
+      toast({
+        title: "Scrape failed",
+        description: error.message || "Failed to scrape colors from product URL.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setScrapingColors(false);
+    }
+  };
+
   const handleSaveImage = async () => {
     if (!id || !newImageUrl.trim()) return;
     
@@ -865,17 +911,30 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                               <Link2 className="w-4 h-4" />
                             </Button>
                             {filament.product_url && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={handleScrapeData}
-                                disabled={scrapingData}
-                                className="gap-2 shrink-0"
-                                title={`Scrape all data from: ${filament.product_url}`}
-                              >
-                                <RefreshCw className={`w-4 h-4 ${scrapingData ? 'animate-spin' : ''}`} />
-                                {scrapingData ? 'Scraping...' : 'Scrape Data'}
-                              </Button>
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={handleScrapeData}
+                                  disabled={scrapingData}
+                                  className="gap-2 shrink-0"
+                                  title={`Scrape all data from: ${filament.product_url}`}
+                                >
+                                  <RefreshCw className={`w-4 h-4 ${scrapingData ? 'animate-spin' : ''}`} />
+                                  {scrapingData ? 'Scraping...' : 'Scrape Data'}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={handleScrapeColors}
+                                  disabled={scrapingColors}
+                                  className="gap-2 shrink-0"
+                                  title={`Scrape color variants from: ${filament.product_url}`}
+                                >
+                                  <Palette className={`w-4 h-4 ${scrapingColors ? 'animate-pulse' : ''}`} />
+                                  {scrapingColors ? 'Scraping...' : 'Scrape Colors'}
+                                </Button>
+                              </>
                             )}
                           </>
                         )}
