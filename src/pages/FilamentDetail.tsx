@@ -311,31 +311,27 @@ const FilamentDetail = () => {
       try {
         const baseName = getBaseProductName(filament.product_title);
         
-        // If the title has no color suffix (single product), try matching by material
-        const hasColorSuffix = baseName !== filament.product_title;
-        
-        if (hasColorSuffix) {
-          // Fetch all filaments from the same vendor and filter by base name
-          const { data, error } = await supabase
-            .from("filaments")
-            .select("*")
-            .eq("vendor", filament.vendor)
-            .neq("id", filament.id)
-            .order("product_title");
+        // Fetch all filaments from the same vendor
+        const { data, error } = await supabase
+          .from("filaments")
+          .select("*")
+          .eq("vendor", filament.vendor)
+          .neq("id", filament.id)
+          .order("product_title");
 
-          if (error) throw error;
+        if (error) throw error;
 
-          // Filter to those with the same base product name
-          const variants = (data || []).filter(f => {
-            const fBaseName = getBaseProductName(f.product_title);
-            return fBaseName === baseName;
-          });
+        // Filter to those with the same base product name OR where the base name matches the current title
+        // This handles both cases:
+        // 1. Current filament has color suffix: "Overture ABS - Black" -> base "Overture ABS"
+        // 2. Current filament has NO color suffix: "Overture ABS" -> find variants like "Overture ABS - Black"
+        const variants = (data || []).filter(f => {
+          const fBaseName = getBaseProductName(f.product_title);
+          // Match if base names are the same, OR if variant's base name equals current full title
+          return fBaseName === baseName || fBaseName === filament.product_title;
+        });
 
-          setColorVariants(variants);
-        } else {
-          // No color suffix, no variants
-          setColorVariants([]);
-        }
+        setColorVariants(variants);
       } catch (error) {
         console.error("Error fetching color variants:", error);
         setColorVariants([]);
