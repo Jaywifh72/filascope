@@ -17,10 +17,13 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    if (!loading && !isAdmin) {
+    // Only redirect after loading is complete AND user is confirmed not admin
+    if (!loading && user && !isAdmin) {
       navigate("/");
+    } else if (!loading && !user) {
+      navigate("/auth");
     }
-  }, [isAdmin, loading, navigate]);
+  }, [isAdmin, loading, user, navigate]);
 
   useEffect(() => {
     if (isAdmin) {
