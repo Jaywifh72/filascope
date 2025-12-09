@@ -54,8 +54,10 @@ const BRAND_CONFIGS: Record<string, BrandConfig> = {
   'Anycubic': { upcExtractionMethod: 'html', notes: 'Anycubic store' },
   'QIDI': { upcExtractionMethod: 'html', notes: 'QIDI store' },
   
+  // === SHOPIFY STORES (continued) ===
+  'Hatchbox': { shopifyUrl: 'https://www.hatchbox3d.com', upcExtractionMethod: 'shopify', notes: 'Official store at hatchbox3d.com' },
+  
   // === NO UPC SUPPORT ===
-  'Hatchbox': { upcExtractionMethod: 'none', notes: 'Amazon-only, no direct store' },
   'ELEGOO': { upcExtractionMethod: 'none', notes: 'Amazon-only' },
 };
 
