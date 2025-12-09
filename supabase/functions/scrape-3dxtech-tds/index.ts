@@ -41,16 +41,20 @@ function extractProductLine(name: string): string | null {
     '3dxstat', 'carbonx', 'fibrex', 'thermax', 'triton', 'amidex', 
     'ecomax', 'hyperlite', 'obsidian', 'fluorx', 'wearx', 'ceramix',
     '3dxmax', '3dxflex', 'aquatek', 'simubone', 'firewire', 'ezpc', 
-    'max-g', 'maxg', 'ion', '3dxtech'
+    'max-g', 'maxg', 'ion', '3dxtech', '3dxpro'
   ];
   
   for (const line of productLines) {
     if (normalized.includes(line)) {
-      return line.replace('-', '');
+      // Normalize equivalent product lines
+      const normalizedLine = line.replace('-', '');
+      // 3DXMAX and 3DXTECH are equivalent product lines
+      if (normalizedLine === '3dxtech') return '3dxmax';
+      return normalizedLine;
     }
   }
   
-  // Check for standalone "MAX" that isn't "MAX-G"
+  // Check for standalone "MAX" that isn't "MAX-G" - this is MAX PLA
   if (/\bmax\b/i.test(normalized) && !normalized.includes('max-g') && !normalized.includes('maxg') && !normalized.includes('ecomax') && !normalized.includes('3dxmax') && !normalized.includes('thermax')) {
     return 'max';
   }
