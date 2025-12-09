@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -36,16 +36,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Filament = Tables<"filaments">;
 
@@ -57,13 +47,11 @@ const AdminFilaments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilaments, setSelectedFilaments] = useState<Set<string>>(new Set());
   const [scrapingUpcs, setScrapingUpcs] = useState(false);
-  const [upcDialogOpen, setUpcDialogOpen] = useState(false);
-  const [selectedBrandsForUpc, setSelectedBrandsForUpc] = useState<Set<string>>(new Set());
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
-  const [forceUpdateScrape, setForceUpdateScrape] = useState(false);
+  const [showMissingEanOnly, setShowMissingEanOnly] = useState(false);
+  const [showMissingGtinOnly, setShowMissingGtinOnly] = useState(false);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
-  const [syncing3DXTech, setSyncing3DXTech] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -164,73 +152,13 @@ const AdminFilaments = () => {
     }
   };
 
-  // Get unique vendors for UPC dialog
+  // Get unique vendors for dropdown
   const uniqueVendorsList = useMemo(() => {
     return Array.from(new Set(filaments.map((f) => f.vendor).filter(Boolean))).sort() as string[];
   }, [filaments]);
 
-  const toggleBrandForUpc = (brand: string) => {
-    setSelectedBrandsForUpc((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(brand)) {
-        newSet.delete(brand);
-      } else {
-        newSet.add(brand);
-      }
-      return newSet;
-    });
-  };
-
   // Batch size for UPC scraping (edge function max is 25)
   const BATCH_SIZE = 25;
-
-  const handleScrapeUpcs = async () => {
-    if (selectedBrandsForUpc.size === 0) {
-      toast.error("Please select at least one brand");
-      return;
-    }
-
-    setScrapingUpcs(true);
-    setUpcDialogOpen(false);
-    
-    try {
-      const brands = Array.from(selectedBrandsForUpc);
-      let totalUpdated = 0;
-      let totalSkipped = 0;
-      let totalFailed = 0;
-
-      for (const brand of brands) {
-        toast.info(`Scraping UPCs for ${brand}...`);
-        
-        const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
-          body: { 
-            brands: [brand],
-            limit: BATCH_SIZE, 
-            forceUpdate: forceUpdateScrape 
-          }
-        });
-
-        if (error) {
-          console.error(`Error scraping ${brand}:`, error);
-          toast.error(`Failed to scrape ${brand}: ${error.message}`);
-          continue;
-        }
-
-        totalUpdated += data.updated || 0;
-        totalSkipped += data.skipped || 0;
-        totalFailed += data.failed || 0;
-      }
-
-      toast.success(`Scrape complete: ${totalUpdated} updated, ${totalSkipped} skipped, ${totalFailed} failed`);
-      setSelectedBrandsForUpc(new Set());
-      fetchFilaments();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to scrape UPC codes");
-      console.error(error);
-    } finally {
-      setScrapingUpcs(false);
-    }
-  };
 
   const handleScrapeSelectedUpcs = async () => {
     const idsToScrape = selectedFilaments.size > 0 
@@ -259,7 +187,7 @@ const AdminFilaments = () => {
         const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
           body: { 
             filamentIds: batch,
-            forceUpdate: forceUpdateScrape 
+            forceUpdate: false 
           }
         });
 
@@ -289,23 +217,6 @@ const AdminFilaments = () => {
     }
   };
 
-  const handleSync3DXTech = async () => {
-    setSyncing3DXTech(true);
-    try {
-      toast.info("Syncing 3DXTech products... This may take a few minutes.");
-      const { data, error } = await supabase.functions.invoke('sync-3dxtech-products');
-
-      if (error) throw error;
-
-      toast.success(`3DXTech sync complete: ${data.results?.created || 0} created, ${data.results?.updated || 0} updated`);
-      fetchFilaments();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to sync 3DXTech products");
-      console.error(error);
-    } finally {
-      setSyncing3DXTech(false);
-    }
-  };
 
   const filteredFilaments = filaments.filter((f) => {
     const matchesSearch =
@@ -315,9 +226,11 @@ const AdminFilaments = () => {
     
     const matchesUpcFilter = showMissingUpcOnly ? !f.upc : true;
     const matchesSkuFilter = showMissingSkuOnly ? !f.variant_sku : true;
+    const matchesEanFilter = showMissingEanOnly ? !f.ean : true;
+    const matchesGtinFilter = showMissingGtinOnly ? !f.gtin : true;
     const matchesVendor = vendorFilter === "all" || f.vendor === vendorFilter;
     
-    return matchesSearch && matchesUpcFilter && matchesSkuFilter && matchesVendor;
+    return matchesSearch && matchesUpcFilter && matchesSkuFilter && matchesEanFilter && matchesGtinFilter && matchesVendor;
   });
 
   // Stats
@@ -327,6 +240,8 @@ const AdminFilaments = () => {
   const filamentsWithTDS = filaments.filter((f) => f.tds_url).length;
   const filamentsWithUpc = filaments.filter((f) => f.upc).length;
   const filamentsWithSku = filaments.filter((f) => f.variant_sku).length;
+  const filamentsWithEan = filaments.filter((f) => f.ean).length;
+  const filamentsWithGtin = filaments.filter((f) => f.gtin).length;
   const uniqueVendors = new Set(filaments.map((f) => f.vendor).filter(Boolean)).size;
 
   if (authLoading || loading) {
@@ -472,83 +387,38 @@ const AdminFilaments = () => {
               Missing SKU ({totalFilaments - filamentsWithSku})
             </label>
           </div>
-          <Dialog open={upcDialogOpen} onOpenChange={setUpcDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                disabled={scrapingUpcs}
-              >
-                {scrapingUpcs ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Barcode className="w-4 h-4 mr-2" />
-                )}
-                Scrape UPCs
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Scrape UPC Codes</DialogTitle>
-                <DialogDescription>
-                  Select brands to scrape UPC codes from their Shopify stores.
-                </DialogDescription>
-              </DialogHeader>
-              <ScrollArea className="max-h-[300px] pr-4">
-                <div className="space-y-2">
-                  {uniqueVendorsList.map((brand) => (
-                    <div key={brand} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`brand-${brand}`}
-                        checked={selectedBrandsForUpc.has(brand)}
-                        onCheckedChange={() => toggleBrandForUpc(brand)}
-                      />
-                      <label
-                        htmlFor={`brand-${brand}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                      >
-                        {brand}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-              <div className="flex items-center gap-2 pt-2 border-t">
-                <Checkbox
-                  id="force-update"
-                  checked={forceUpdateScrape}
-                  onCheckedChange={(checked) => setForceUpdateScrape(checked === true)}
-                />
-                <label htmlFor="force-update" className="text-sm cursor-pointer">
-                  Force update (re-scrape even if UPC exists, useful for fetching missing SKUs)
-                </label>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setUpcDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleScrapeUpcs}
-                  disabled={selectedBrandsForUpc.size === 0}
-                >
-                  Scrape {selectedBrandsForUpc.size} Brand(s)
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          {(selectedFilaments.size > 0 || filteredFilaments.length > 0) && (
-            <Button
-              variant="secondary"
-              onClick={handleScrapeSelectedUpcs}
-              disabled={scrapingUpcs}
-            >
-              {scrapingUpcs ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Barcode className="w-4 h-4 mr-2" />
-              )}
-              Scrape UPCs ({selectedFilaments.size > 0 ? selectedFilaments.size : filteredFilaments.filter(f => !f.upc).length})
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="missing-ean"
+              checked={showMissingEanOnly}
+              onCheckedChange={(checked) => setShowMissingEanOnly(checked === true)}
+            />
+            <label htmlFor="missing-ean" className="text-sm cursor-pointer whitespace-nowrap">
+              Missing EAN ({totalFilaments - filamentsWithEan})
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="missing-gtin"
+              checked={showMissingGtinOnly}
+              onCheckedChange={(checked) => setShowMissingGtinOnly(checked === true)}
+            />
+            <label htmlFor="missing-gtin" className="text-sm cursor-pointer whitespace-nowrap">
+              Missing GTIN ({totalFilaments - filamentsWithGtin})
+            </label>
+          </div>
+          <Button
+            variant="secondary"
+            onClick={handleScrapeSelectedUpcs}
+            disabled={scrapingUpcs || filteredFilaments.length === 0}
+          >
+            {scrapingUpcs ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Barcode className="w-4 h-4 mr-2" />
+            )}
+            Scrape UPCs ({selectedFilaments.size > 0 ? selectedFilaments.size : filteredFilaments.length})
+          </Button>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -571,18 +441,6 @@ const AdminFilaments = () => {
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Button
-            variant="outline"
-            onClick={handleSync3DXTech}
-            disabled={syncing3DXTech}
-          >
-            {syncing3DXTech ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <RefreshCw className="w-4 h-4 mr-2" />
-            )}
-            Sync 3DXTech
-          </Button>
         </div>
 
         {/* Filaments Table */}
