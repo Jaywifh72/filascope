@@ -29,28 +29,35 @@ function detectPackQuantity(title: string, html: string): number {
   const titleLower = title.toLowerCase();
   const htmlLower = html.toLowerCase();
   
-  // Common pack patterns in titles
+  // Common pack patterns in titles - order matters, most specific first
   const packPatterns = [
+    // "6 Spools", "6 Rolls" - MUST be before other patterns
+    /\b(\d+)\s+spools?\b/i,
+    /\b(\d+)\s+rolls?\b/i,
     // "2-Pack", "3-Pack", "4-Pack", etc.
     /(\d+)\s*[-–]?\s*pack/i,
     // "Pack of 2", "Pack of 3", etc.
     /pack\s+of\s+(\d+)/i,
     // "2 Pack", "3 Pack" (space separated)
     /\b(\d+)\s+pack\b/i,
-    // "2x 1kg", "3x 1kg" - quantity multiplier
+    // "2x 1kg", "3x 1kg", "6x1kg" - quantity multiplier
     /\b(\d+)\s*x\s*\d+(?:\.\d+)?\s*(?:kg|g)\b/i,
-    // "2 Spools", "3 Spools"
-    /\b(\d+)\s+spools?\b/i,
-    // "2 Rolls", "3 Rolls"
-    /\b(\d+)\s+rolls?\b/i,
-    // "Bundle of 2", "Bundle of 3"
+    // "2x", "3x", "6x" at word boundary (e.g., "6x PLA")
+    /\b(\d+)x\b/i,
+    // Bundle patterns
     /bundle\s+of\s+(\d+)/i,
     // "2-Count", "3-Count"
     /(\d+)\s*[-–]?\s*count/i,
     // "Multipack 2", "Multi-pack 3"
     /multi[-\s]?pack\s*(\d+)?/i,
-    // Quantity in parentheses: "(2)", "(3)"
+    // Quantity in parentheses: "(2)", "(6 spools)"
     /\((\d+)\s*(?:pack|spools?|rolls?|pcs?)?\s*\)/i,
+    // "Set of 6", "Box of 4"
+    /(?:set|box)\s+of\s+(\d+)/i,
+    // "6-color", "8-color" often indicates pack quantity
+    /(\d+)\s*[-–]?\s*colou?rs?\b/i,
+    // Quantity before weight: "6 x 1kg", "4 x 250g"
+    /\b(\d+)\s*[xX×]\s*\d+/,
   ];
   
   // Check title first (most reliable)
@@ -59,8 +66,27 @@ function detectPackQuantity(title: string, html: string): number {
     if (match && match[1]) {
       const qty = parseInt(match[1], 10);
       if (qty >= 2 && qty <= 20) {
-        console.log(`  📦 Pack detected from title: ${qty}x`);
+        console.log(`  📦 Pack detected from title pattern "${pattern}": ${qty}x`);
         return qty;
+      }
+    }
+  }
+  
+  // Check for price-per-unit indicators that suggest multi-pack
+  // e.g., "$12.49/spool" when total is $74.99 suggests 6-pack
+  const pricePerUnitMatch = titleLower.match(/\$([0-9.]+)\s*\/\s*(?:spool|roll|kg)/i);
+  if (pricePerUnitMatch) {
+    const pricePerUnit = parseFloat(pricePerUnitMatch[1]);
+    // Look for total price in HTML
+    const totalPriceMatch = htmlLower.match(/\$([0-9.]+)\s*(?:usd)?/i);
+    if (totalPriceMatch) {
+      const totalPrice = parseFloat(totalPriceMatch[1]);
+      if (totalPrice > pricePerUnit * 1.5) {
+        const estimatedQty = Math.round(totalPrice / pricePerUnit);
+        if (estimatedQty >= 2 && estimatedQty <= 20) {
+          console.log(`  📦 Pack detected from price ratio ($${totalPrice}/$${pricePerUnit}): ${estimatedQty}x`);
+          return estimatedQty;
+        }
       }
     }
   }
@@ -72,6 +98,10 @@ function detectPackQuantity(title: string, html: string): number {
     // Visible text patterns
     /contains?\s+(\d+)\s+(?:spools?|rolls?)/i,
     /includes?\s+(\d+)\s+(?:spools?|rolls?)/i,
+    // Product description patterns
+    /(\d+)\s+(?:individual\s+)?(?:spools?|rolls?)\s+(?:of|per|in)/i,
+    // Variant/option patterns in Shopify
+    /"option1":\s*"(\d+)\s*(?:pack|spools?|rolls?)"/i,
   ];
   
   for (const pattern of htmlPatterns) {
@@ -79,7 +109,7 @@ function detectPackQuantity(title: string, html: string): number {
     if (match && match[1]) {
       const qty = parseInt(match[1], 10);
       if (qty >= 2 && qty <= 20) {
-        console.log(`  📦 Pack detected from HTML: ${qty}x`);
+        console.log(`  📦 Pack detected from HTML pattern "${pattern}": ${qty}x`);
         return qty;
       }
     }
