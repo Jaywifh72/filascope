@@ -12,7 +12,7 @@ const MAX_BATCH_SIZE = 25;
 // Brand configuration for UPC scraping
 interface BrandConfig {
   shopifyUrl?: string;
-  upcExtractionMethod: 'shopify' | 'woocommerce' | 'html' | 'none' | 'wix';
+  upcExtractionMethod: 'shopify' | 'woocommerce' | 'html' | 'none' | 'wix' | 'fiberlogy';
   notes?: string;
 }
 
@@ -31,7 +31,7 @@ const BRAND_CONFIGS: Record<string, BrandConfig> = {
   'Fillamentum': { shopifyUrl: 'https://shop.fillamentum.com', upcExtractionMethod: 'shopify' },
   'NinjaTek': { shopifyUrl: 'https://ninjatek.com', upcExtractionMethod: 'shopify' },
   'Taulman3D': { shopifyUrl: 'https://taulman3d.com', upcExtractionMethod: 'shopify' },
-  'Fiberlogy': { shopifyUrl: 'https://fiberlogy.com', upcExtractionMethod: 'shopify' },
+  'Fiberlogy': { upcExtractionMethod: 'fiberlogy', notes: 'ShopArena platform - extract slug from URL as MPN' },
   'FormFutura': { shopifyUrl: 'https://formfutura.com', upcExtractionMethod: 'shopify' },
   'Inland': { shopifyUrl: 'https://inlandfilament.com', upcExtractionMethod: 'shopify' },
   'ZIRO': { shopifyUrl: 'https://ziro3d.com', upcExtractionMethod: 'shopify' },
@@ -623,6 +623,56 @@ async function tryWixExtraction(filament: any): Promise<ExtractionResult | null>
   }
 }
 
+// Strategy 6: Fiberlogy extraction - ShopArena platform
+// Fiberlogy doesn't expose SKU/EAN on their website, but we can derive MPN from URL slug
+async function tryFiberlogyExtraction(filament: any): Promise<ExtractionResult | null> {
+  try {
+    console.log(`  [Strategy 6] Fiberlogy extraction for: ${filament.product_title}`);
+    
+    let mpn: string | null = null;
+    let sku: string | null = null;
+    
+    // Extract product slug from URL
+    // Pattern: https://fiberlogy.com/en/products/easy-petg-black
+    // We'll use the slug "easy-petg-black" as MPN, formatted as "EASY-PETG-BLACK"
+    if (filament.product_url) {
+      const urlMatch = filament.product_url.match(/\/products\/([a-z0-9\-]+)$/i);
+      if (urlMatch) {
+        const slug = urlMatch[1];
+        // Convert slug to uppercase MPN style: "easy-petg-black" -> "EASY-PETG-BLACK"
+        mpn = slug.toUpperCase();
+        sku = mpn;
+        console.log(`    -> Extracted slug from URL: ${slug}`);
+        console.log(`    -> Generated MPN/SKU: ${mpn}`);
+      }
+    }
+    
+    // Also try store URL pattern: https://fiberlogy.com/en/Easy-PETG-Filament-1_75mm-0_85kg
+    if (!mpn && filament.product_url) {
+      const storeUrlMatch = filament.product_url.match(/fiberlogy\.com\/en\/([A-Za-z0-9\-_]+)$/i);
+      if (storeUrlMatch) {
+        const slug = storeUrlMatch[1];
+        // Convert to standardized format
+        mpn = slug.replace(/_/g, '-').toUpperCase();
+        sku = mpn;
+        console.log(`    -> Extracted store slug from URL: ${slug}`);
+        console.log(`    -> Generated MPN/SKU: ${mpn}`);
+      }
+    }
+    
+    if (mpn) {
+      console.log(`    -> Found: SKU=${sku}, MPN=${mpn}`);
+      return { sku, upc: null, gtin: null, ean: null, mpn, method: 'fiberlogy_slug' };
+    }
+    
+    console.log(`    -> No data found`);
+    return null;
+  } catch (e) {
+    console.log(`    -> Error: ${e}`);
+    return null;
+  }
+}
+
 // Strategy 4: WooCommerce HTML scraping
 async function tryWooCommerce(productUrl: string): Promise<ExtractionResult | null> {
   if (!productUrl || !productUrl.startsWith('http')) return null;
@@ -809,6 +859,9 @@ async function processFilament(
       if (!result && filament.product_url) {
         result = await tryHtmlJsonLd(filament.product_url);
       }
+    } else if (brandConfig.upcExtractionMethod === 'fiberlogy') {
+      // Fiberlogy (ShopArena platform) - extract slug from URL as MPN
+      result = await tryFiberlogyExtraction(filament);
     }
     
     if (!result) {
