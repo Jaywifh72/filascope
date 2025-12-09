@@ -6,176 +6,196 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Color name to hex mapping
+// Comprehensive color name to hex mapping
 const COLOR_HEX_MAP: Record<string, string> = {
   // Basic colors
-  "black": "#000000",
+  "black": "#1A1A1A",
   "white": "#FFFFFF",
-  "red": "#FF0000",
-  "blue": "#0000FF",
-  "green": "#00FF00",
-  "yellow": "#FFFF00",
-  "orange": "#FFA500",
-  "purple": "#800080",
-  "pink": "#FFC0CB",
-  "brown": "#8B4513",
-  "gray": "#808080",
-  "grey": "#808080",
-  
-  // Extended colors
+  "cold white": "#F0F8FF",
+  "red": "#E53935",
+  "fresh red": "#FF4444",
+  "blue": "#2196F3",
   "light blue": "#87CEEB",
-  "sky blue": "#87CEEB",
-  "navy": "#000080",
-  "navy blue": "#000080",
-  "dark blue": "#00008B",
-  "royal blue": "#4169E1",
-  "cyan": "#00FFFF",
-  "teal": "#008080",
-  "turquoise": "#40E0D0",
-  
-  "dark green": "#006400",
-  "forest green": "#228B22",
-  "lime": "#00FF00",
-  "lime green": "#32CD32",
-  "olive": "#808000",
-  "mint": "#98FF98",
-  "mint green": "#98FF98",
-  "grass green": "#7CFC00",
-  
+  "gray blue": "#6E7B8B",
+  "green": "#4CAF50",
+  "olive green": "#6B8E23",
+  "yellow": "#FFEB3B",
+  "highlight yellow": "#FFFF00",
+  "lemon yellow": "#FFF44F",
+  "orange": "#FF9800",
+  "purple": "#9C27B0",
+  "pink": "#E91E63",
+  "bright pink": "#FF69B4",
+  "pastel red": "#FFB6B6",
+  "brick red": "#CB4154",
   "dark red": "#8B0000",
-  "maroon": "#800000",
-  "crimson": "#DC143C",
-  "wine": "#722F37",
-  "burgundy": "#800020",
+  "brown": "#795548",
+  "chocolate": "#7B3F00",
+  "light brown": "#C4A484",
   
-  "light pink": "#FFB6C1",
-  "hot pink": "#FF69B4",
-  "magenta": "#FF00FF",
-  "fuchsia": "#FF00FF",
-  "rose": "#FF007F",
-  "coral": "#FF7F50",
-  "salmon": "#FA8072",
-  "peach": "#FFCBA4",
-  
-  "violet": "#EE82EE",
-  "lavender": "#E6E6FA",
-  "plum": "#DDA0DD",
-  "indigo": "#4B0082",
-  "lilac": "#C8A2C8",
-  
-  "gold": "#FFD700",
-  "golden": "#FFD700",
-  "silver": "#C0C0C0",
-  "bronze": "#CD7F32",
-  "copper": "#B87333",
-  "champagne": "#F7E7CE",
-  
-  "beige": "#F5F5DC",
-  "tan": "#D2B48C",
-  "cream": "#FFFDD0",
-  "ivory": "#FFFFF0",
-  "khaki": "#F0E68C",
-  "sand": "#C2B280",
-  
-  "charcoal": "#36454F",
-  "dark gray": "#A9A9A9",
-  "dark grey": "#A9A9A9",
+  // Grays
+  "gray": "#9E9E9E",
+  "grey": "#9E9E9E",
+  "space gray": "#4A4A4A",
   "light gray": "#D3D3D3",
   "light grey": "#D3D3D3",
-  "slate": "#708090",
+  "cement gray": "#8D8D8D",
+  "slate gray": "#708090",
+  "metallic gray": "#8E8E8E",
+  "carbon fiber black": "#2B2B2B",
   
-  // Transparent/special
+  // Special colors
+  "gold": "#FFD700",
+  "royal gold": "#DAA520",
+  "silver": "#C0C0C0",
+  "copper": "#B87333",
+  "bronze": "#CD7F32",
+  "natural": "#F5DEB3",
   "transparent": "#FFFFFF",
   "clear": "#FFFFFF",
-  "natural": "#F5DEB3",
+  "skin": "#FFCBA4",
+  "wood": "#DEB887",
+  "beige": "#F5F5DC",
+  
+  // Glow colors
+  "glow in dark": "#90EE90",
+  "glow in the dark": "#90EE90",
+  "glow green": "#39FF14",
+  "neon green": "#39FF14",
+  "neon red": "#FF073A",
+  "neon orange": "#FF6600",
+  
+  // Blues
+  "navy blue": "#000080",
+  "digital blue": "#0066CC",
+  "starry blue": "#1E3A5F",
+  "sparkle blue": "#4169E1",
+  "transparent blue": "#ADD8E6",
+  
+  // Greens
+  "grass green": "#7CFC00",
+  "army green": "#4B5320",
+  "light green": "#90EE90",
+  "transparent green": "#98FB98",
+  "bamboo green": "#7BA05B",
+  "turquoise": "#40E0D0",
+  
+  // Other special
+  "magenta": "#FF00FF",
+  "transparent red": "#FF6B6B",
+  "rock white": "#F8F8FF",
+  "avocado": "#568203",
+  "lilac": "#C8A2C8",
+  "butter yellow": "#FFFACD",
+  "baby pink": "#F4C2C2",
+  "champagne": "#F7E7CE",
+  "champagne frost": "#E8DCC4",
+  
+  // Silk colors
+  "silk gold": "#FFD700",
+  "silk copper": "#B87333",
+  "silk gray": "#A8A8A8",
+  "silk silver": "#C0C0C0",
+  "silk white": "#FFFAFA",
+  "silk red": "#DC143C",
+  "silk fresh red": "#FF4500",
+  "silk green": "#228B22",
+  "silk neon green": "#39FF14",
+  "silk purple": "#9370DB",
+  "silk blue": "#4682B4",
+  "silk caramel": "#FFD59A",
+  
+  // Diamond colors
+  "diamond purple": "#B19CD9",
+  "diamond gray": "#A0A0A0",
+  "diamond orange": "#FF7F50",
+  "diamond blue": "#89CFF0",
+  "diamond red": "#FF6961",
+  "diamond green": "#90EE90",
+  
+  // Shimmer colors
+  "shimmer dark green": "#013220",
+  "shimmer purple": "#8B008B",
+  "shimmer silver green": "#8FBC8F",
+  "shimmer bronze": "#CD7F32",
+  
+  // Sparkle colors
+  "sparkle black": "#1C1C1C",
+  "sparkle purple": "#9932CC",
 };
 
 // Color family mapping
 const COLOR_FAMILY_MAP: Record<string, string> = {
-  "black": "Black",
-  "white": "White",
-  "red": "Red",
-  "dark red": "Red",
-  "maroon": "Red",
-  "crimson": "Red",
-  "wine": "Red",
-  "burgundy": "Red",
-  "blue": "Blue",
-  "light blue": "Blue",
-  "sky blue": "Blue",
-  "navy": "Blue",
-  "navy blue": "Blue",
-  "dark blue": "Blue",
-  "royal blue": "Blue",
-  "cyan": "Blue",
-  "teal": "Blue",
-  "turquoise": "Blue",
-  "green": "Green",
-  "dark green": "Green",
-  "forest green": "Green",
-  "lime": "Green",
-  "lime green": "Green",
-  "olive": "Green",
-  "mint": "Green",
-  "mint green": "Green",
-  "grass green": "Green",
-  "yellow": "Yellow",
-  "gold": "Yellow",
-  "golden": "Yellow",
-  "orange": "Orange",
-  "coral": "Orange",
-  "peach": "Orange",
-  "purple": "Purple",
-  "violet": "Purple",
-  "lavender": "Purple",
-  "plum": "Purple",
-  "indigo": "Purple",
-  "lilac": "Purple",
-  "pink": "Pink",
-  "light pink": "Pink",
-  "hot pink": "Pink",
-  "magenta": "Pink",
-  "fuchsia": "Pink",
-  "rose": "Pink",
-  "salmon": "Pink",
-  "brown": "Brown",
-  "tan": "Brown",
-  "bronze": "Brown",
-  "copper": "Brown",
-  "gray": "Gray",
-  "grey": "Gray",
-  "charcoal": "Gray",
-  "dark gray": "Gray",
-  "dark grey": "Gray",
-  "light gray": "Gray",
-  "light grey": "Gray",
-  "slate": "Gray",
-  "silver": "Gray",
-  "beige": "Beige",
-  "cream": "Beige",
-  "ivory": "Beige",
-  "khaki": "Beige",
-  "sand": "Beige",
-  "champagne": "Beige",
-  "natural": "Beige",
-  "transparent": "Clear",
-  "clear": "Clear",
+  "black": "Black", "carbon fiber black": "Black", "sparkle black": "Black",
+  "white": "White", "cold white": "White", "rock white": "White", "silk white": "White",
+  "red": "Red", "fresh red": "Red", "pastel red": "Red", "brick red": "Red", "dark red": "Red", 
+  "silk red": "Red", "silk fresh red": "Red", "diamond red": "Red", "neon red": "Red", "transparent red": "Red",
+  "blue": "Blue", "light blue": "Blue", "gray blue": "Blue", "navy blue": "Blue", "digital blue": "Blue",
+  "starry blue": "Blue", "sparkle blue": "Blue", "transparent blue": "Blue", "silk blue": "Blue", "diamond blue": "Blue",
+  "green": "Green", "olive green": "Green", "grass green": "Green", "army green": "Green", "light green": "Green",
+  "transparent green": "Green", "bamboo green": "Green", "silk green": "Green", "silk neon green": "Green",
+  "diamond green": "Green", "glow green": "Green", "neon green": "Green", "shimmer dark green": "Green", "shimmer silver green": "Green",
+  "yellow": "Yellow", "highlight yellow": "Yellow", "lemon yellow": "Yellow", "butter yellow": "Yellow",
+  "orange": "Orange", "diamond orange": "Orange", "neon orange": "Orange",
+  "purple": "Purple", "silk purple": "Purple", "diamond purple": "Purple", "shimmer purple": "Purple", "sparkle purple": "Purple", "lilac": "Purple",
+  "pink": "Pink", "bright pink": "Pink", "baby pink": "Pink", "magenta": "Pink",
+  "brown": "Brown", "chocolate": "Brown", "light brown": "Brown", "wood": "Brown",
+  "gray": "Gray", "grey": "Gray", "space gray": "Gray", "light gray": "Gray", "light grey": "Gray",
+  "cement gray": "Gray", "slate gray": "Gray", "metallic gray": "Gray", "silk gray": "Gray", "diamond gray": "Gray",
+  "gold": "Gold", "royal gold": "Gold", "silk gold": "Gold",
+  "silver": "Silver", "silk silver": "Silver",
+  "copper": "Copper", "silk copper": "Copper",
+  "bronze": "Bronze", "shimmer bronze": "Bronze",
+  "beige": "Beige", "champagne": "Beige", "champagne frost": "Beige", "natural": "Beige", "skin": "Beige",
+  "turquoise": "Turquoise",
+  "transparent": "Clear", "clear": "Clear",
+  "glow in dark": "Glow", "glow in the dark": "Glow",
 };
 
-function extractColorFromVariant(variantTitle: string): { hex: string | null; family: string | null } {
-  const title = variantTitle.toLowerCase().trim();
+function extractColorInfo(colorName: string): { hex: string | null; family: string | null } {
+  const normalized = colorName.toLowerCase().trim();
   
-  // Check for exact matches first
-  for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
-    if (title === colorName || title.includes(colorName)) {
+  // Direct match
+  if (COLOR_HEX_MAP[normalized]) {
+    return {
+      hex: COLOR_HEX_MAP[normalized],
+      family: COLOR_FAMILY_MAP[normalized] || null,
+    };
+  }
+  
+  // Partial matching - check if color name contains known colors
+  for (const [key, hex] of Object.entries(COLOR_HEX_MAP)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
       return {
         hex,
-        family: COLOR_FAMILY_MAP[colorName] || null,
+        family: COLOR_FAMILY_MAP[key] || null,
       };
     }
   }
   
+  // Fallback: try to detect color family from name
+  const familyKeywords: Record<string, string> = {
+    "black": "Black", "white": "White", "red": "Red", "blue": "Blue",
+    "green": "Green", "yellow": "Yellow", "orange": "Orange", "purple": "Purple",
+    "pink": "Pink", "brown": "Brown", "gray": "Gray", "grey": "Gray",
+    "gold": "Gold", "silver": "Silver", "copper": "Copper", "bronze": "Bronze",
+  };
+  
+  for (const [keyword, family] of Object.entries(familyKeywords)) {
+    if (normalized.includes(keyword)) {
+      return { hex: null, family };
+    }
+  }
+  
   return { hex: null, family: null };
+}
+
+interface ColorVariant {
+  name: string;
+  hex: string | null;
+  family: string | null;
+  imageUrl: string | null;
+  variantId: number | null;
 }
 
 serve(async (req) => {
@@ -220,7 +240,7 @@ serve(async (req) => {
     // Fetch all Overture filaments
     const { data: filaments, error: fetchError } = await supabase
       .from("filaments")
-      .select("id, product_title, product_url, color_hex, color_family")
+      .select("*")
       .ilike("vendor", "%overture%")
       .not("product_url", "is", null);
 
@@ -234,20 +254,26 @@ serve(async (req) => {
       id: string; 
       title: string; 
       status: string; 
-      colors?: Array<{ name: string; hex: string | null; family: string | null }>;
+      colorsFound: number;
+      colorsCreated: number;
+      colors?: ColorVariant[];
     }> = [];
+
+    let totalColorsFound = 0;
+    let totalEntriesCreated = 0;
+    let totalEntriesUpdated = 0;
 
     for (const filament of filaments || []) {
       try {
         if (!filament.product_url) {
-          results.push({ id: filament.id, title: filament.product_title, status: "skipped - no URL" });
+          results.push({ id: filament.id, title: filament.product_title, status: "skipped - no URL", colorsFound: 0, colorsCreated: 0 });
           continue;
         }
 
         // Extract product handle from URL
         const urlMatch = filament.product_url.match(/\/products\/([^/?#]+)/);
         if (!urlMatch) {
-          results.push({ id: filament.id, title: filament.product_title, status: "invalid URL format" });
+          results.push({ id: filament.id, title: filament.product_title, status: "invalid URL format", colorsFound: 0, colorsCreated: 0 });
           continue;
         }
 
@@ -264,7 +290,7 @@ serve(async (req) => {
         });
 
         if (!response.ok) {
-          results.push({ id: filament.id, title: filament.product_title, status: `HTTP ${response.status}` });
+          results.push({ id: filament.id, title: filament.product_title, status: `HTTP ${response.status}`, colorsFound: 0, colorsCreated: 0 });
           continue;
         }
 
@@ -272,124 +298,206 @@ serve(async (req) => {
         const product = productData?.product;
         
         if (!product) {
-          results.push({ id: filament.id, title: filament.product_title, status: "no product data" });
+          results.push({ id: filament.id, title: filament.product_title, status: "no product data", colorsFound: 0, colorsCreated: 0 });
           continue;
         }
 
-        // Extract color options from variants
+        // Extract color variants
         const variants = product.variants || [];
+        const images = product.images || [];
         const options = product.options || [];
         
         // Find color option
-        const colorOption = options.find((opt: { name: string }) => 
+        const colorOptionIndex = options.findIndex((opt: { name: string }) => 
           opt.name.toLowerCase().includes("color") || opt.name.toLowerCase().includes("colour")
         );
 
-        const colorVariants: Array<{ name: string; hex: string | null; family: string | null }> = [];
+        const colorVariants: ColorVariant[] = [];
         
-        if (colorOption) {
-          // Use options values directly
-          for (const colorName of colorOption.values || []) {
-            const { hex, family } = extractColorFromVariant(colorName);
-            colorVariants.push({ name: colorName, hex, family });
+        if (colorOptionIndex !== -1) {
+          const colorOptionKey = `option${colorOptionIndex + 1}`;
+          const seenColors = new Set<string>();
+          
+          for (const variant of variants) {
+            const colorName = variant[colorOptionKey];
+            if (!colorName || seenColors.has(colorName.toLowerCase())) continue;
+            seenColors.add(colorName.toLowerCase());
+            
+            // Find image for this variant
+            let imageUrl: string | null = null;
+            if (variant.featured_image?.src) {
+              imageUrl = variant.featured_image.src.split("?")[0];
+            } else if (variant.image_id && images.length > 0) {
+              const img = images.find((i: { id: number }) => i.id === variant.image_id);
+              if (img?.src) {
+                imageUrl = img.src.split("?")[0];
+              }
+            }
+            
+            // Fall back to first image if no variant-specific image
+            if (!imageUrl && images.length > 0) {
+              imageUrl = images[0].src?.split("?")[0] || null;
+            }
+            
+            const { hex, family } = extractColorInfo(colorName);
+            colorVariants.push({
+              name: colorName,
+              hex,
+              family,
+              imageUrl,
+              variantId: variant.id,
+            });
           }
         } else {
-          // Extract from variant titles
-          const uniqueColors = new Set<string>();
+          // No color option - extract from variant titles
+          const seenColors = new Set<string>();
           for (const variant of variants) {
-            const title = variant.title || variant.option1 || "";
-            if (title && !uniqueColors.has(title)) {
-              uniqueColors.add(title);
-              const { hex, family } = extractColorFromVariant(title);
-              colorVariants.push({ name: title, hex, family });
+            const title = variant.title || variant.option1 || "Default";
+            if (seenColors.has(title.toLowerCase())) continue;
+            seenColors.add(title.toLowerCase());
+            
+            let imageUrl: string | null = null;
+            if (variant.featured_image?.src) {
+              imageUrl = variant.featured_image.src.split("?")[0];
+            } else if (images.length > 0) {
+              imageUrl = images[0].src?.split("?")[0] || null;
             }
+            
+            const { hex, family } = extractColorInfo(title);
+            colorVariants.push({
+              name: title,
+              hex,
+              family,
+              imageUrl,
+              variantId: variant.id,
+            });
           }
         }
 
+        totalColorsFound += colorVariants.length;
+
         if (colorVariants.length === 0) {
-          results.push({ id: filament.id, title: filament.product_title, status: "no colors found" });
+          results.push({ id: filament.id, title: filament.product_title, status: "no colors found", colorsFound: 0, colorsCreated: 0 });
           continue;
         }
 
-        // Determine if it's a single color or multicolor product
+        // Get base product info from original filament
+        const baseProductName = filament.product_title.replace(/ - .+$/, "").trim();
+        let colorsCreated = 0;
+
         if (colorVariants.length === 1) {
-          // Single color - update directly
+          // Single color product - update existing entry
           const color = colorVariants[0];
           const { error: updateError } = await supabase
             .from("filaments")
             .update({ 
               color_hex: color.hex,
               color_family: color.family,
+              featured_image: color.imageUrl || filament.featured_image,
             })
             .eq("id", filament.id);
 
-          if (updateError) {
-            results.push({ id: filament.id, title: filament.product_title, status: `update failed: ${updateError.message}` });
-          } else {
-            results.push({ 
-              id: filament.id, 
-              title: filament.product_title, 
-              status: "updated single color", 
-              colors: colorVariants 
-            });
+          if (!updateError) {
+            totalEntriesUpdated++;
             console.log(`Updated ${filament.product_title} with color: ${color.name} (${color.hex})`);
           }
         } else {
-          // Multiple colors - set to multicolor family
-          const { error: updateError } = await supabase
-            .from("filaments")
-            .update({ 
-              color_family: "Multicolor",
-            })
-            .eq("id", filament.id);
-
-          if (updateError) {
-            results.push({ id: filament.id, title: filament.product_title, status: `update failed: ${updateError.message}` });
-          } else {
-            results.push({ 
-              id: filament.id, 
-              title: filament.product_title, 
-              status: `found ${colorVariants.length} colors`, 
-              colors: colorVariants 
-            });
-            console.log(`Found ${colorVariants.length} colors for ${filament.product_title}:`, colorVariants.map(c => c.name).join(", "));
+          // Multiple colors - check if color-specific entries exist, create if not
+          for (const color of colorVariants) {
+            const colorProductTitle = `${baseProductName} - ${color.name}`;
+            
+            // Check if this color variant already exists
+            const { data: existing } = await supabase
+              .from("filaments")
+              .select("id")
+              .eq("vendor", filament.vendor)
+              .eq("product_title", colorProductTitle)
+              .maybeSingle();
+            
+            if (existing) {
+              // Update existing color variant
+              const { error: updateError } = await supabase
+                .from("filaments")
+                .update({ 
+                  color_hex: color.hex,
+                  color_family: color.family,
+                  featured_image: color.imageUrl || undefined,
+                })
+                .eq("id", existing.id);
+              
+              if (!updateError) {
+                totalEntriesUpdated++;
+              }
+            } else {
+              // Create new color variant entry
+              const newEntry = {
+                ...filament,
+                id: undefined, // Let DB generate new ID
+                product_title: colorProductTitle,
+                color_hex: color.hex,
+                color_family: color.family,
+                featured_image: color.imageUrl || filament.featured_image,
+                product_url: filament.product_url, // Keep same product URL
+                created_at: undefined,
+                updated_at: undefined,
+              };
+              
+              delete newEntry.id;
+              delete newEntry.created_at;
+              delete newEntry.updated_at;
+              
+              const { error: insertError } = await supabase
+                .from("filaments")
+                .insert(newEntry);
+              
+              if (!insertError) {
+                colorsCreated++;
+                totalEntriesCreated++;
+                console.log(`Created new entry: ${colorProductTitle} (${color.hex})`);
+              } else {
+                console.error(`Failed to create ${colorProductTitle}:`, insertError.message);
+              }
+            }
+          }
+          
+          // Update original entry to be "Multicolor" if it doesn't have a color suffix
+          if (!filament.product_title.includes(" - ")) {
+            await supabase
+              .from("filaments")
+              .update({ color_family: "Multicolor" })
+              .eq("id", filament.id);
           }
         }
 
+        results.push({ 
+          id: filament.id, 
+          title: filament.product_title, 
+          status: `processed ${colorVariants.length} colors`, 
+          colorsFound: colorVariants.length,
+          colorsCreated,
+          colors: colorVariants,
+        });
+
+        console.log(`Processed ${filament.product_title}: ${colorVariants.length} colors found, ${colorsCreated} created`);
+
         // Small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 150));
       } catch (error: unknown) {
         console.error(`Error processing ${filament.product_title}:`, error);
         const errorMessage = error instanceof Error ? error.message : String(error);
-        results.push({ id: filament.id, title: filament.product_title, status: `error: ${errorMessage}` });
+        results.push({ id: filament.id, title: filament.product_title, status: `error: ${errorMessage}`, colorsFound: 0, colorsCreated: 0 });
       }
     }
 
-    const updated = results.filter(r => r.status.includes("updated") || r.status.includes("colors")).length;
-    const failed = results.filter(r => r.status.includes("error") || r.status.includes("failed")).length;
-
-    // Collect all unique colors found
-    const allColors: Array<{ name: string; hex: string | null; family: string | null }> = [];
-    for (const result of results) {
-      if (result.colors) {
-        for (const color of result.colors) {
-          if (!allColors.some(c => c.name === color.name)) {
-            allColors.push(color);
-          }
-        }
-      }
-    }
-
-    console.log(`Completed: ${updated} processed, ${failed} failed`);
-    console.log(`Unique colors found:`, allColors.length);
+    console.log(`Completed: ${totalColorsFound} colors found, ${totalEntriesCreated} created, ${totalEntriesUpdated} updated`);
 
     return new Response(
       JSON.stringify({
         success: true,
         total: filaments?.length || 0,
-        updated,
-        failed,
-        uniqueColors: allColors,
+        totalColorsFound,
+        totalEntriesCreated,
+        totalEntriesUpdated,
         results,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
