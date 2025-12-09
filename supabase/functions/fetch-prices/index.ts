@@ -645,20 +645,24 @@ Deno.serve(async (req) => {
             const pricePerSpool = totalPrice / detectedPackQuantity;
             
             // Use detected spool weight (in kg) or existing weight from DB/scrape
-            // Priority: detected from title/URL > extracted from HTML > existing DB value
+            // Priority: detected from title/URL (most reliable) > extracted from HTML > existing DB value
             let spoolWeightKg = detectedSpoolWeightKg; // Default from title/URL detection
             
-            // If we have extracted weight in grams, convert to kg and use if it makes sense
-            if (extractedWeight && extractedWeight > 0) {
-              const extractedKg = extractedWeight / 1000;
-              // Only use extracted weight if it's reasonable (0.25-5kg)
-              if (extractedKg >= 0.25 && extractedKg <= 5) {
-                spoolWeightKg = extractedKg;
+            // Only use extracted/DB weight if we didn't explicitly detect weight from title/URL
+            if (detectedSpoolWeightKg === 1) {
+              // No explicit weight in title/URL, check other sources
+              if (extractedWeight && extractedWeight > 0) {
+                const extractedKg = extractedWeight / 1000;
+                // Only use extracted weight if it's reasonable (0.25-5kg)
+                if (extractedKg >= 0.25 && extractedKg <= 5) {
+                  spoolWeightKg = extractedKg;
+                }
+              } else if (filament.net_weight_g && filament.net_weight_g > 0) {
+                // Use existing DB weight as fallback
+                spoolWeightKg = filament.net_weight_g / 1000;
               }
-            } else if (filament.net_weight_g && filament.net_weight_g > 0 && detectedSpoolWeightKg === 1) {
-              // Use existing DB weight only if we didn't detect a different weight from title
-              spoolWeightKg = filament.net_weight_g / 1000;
             }
+            // If title/URL explicitly says 2kg, trust that over HTML scraping
             
             // Calculate per-kg price
             const pricePerKg = pricePerSpool / spoolWeightKg;
