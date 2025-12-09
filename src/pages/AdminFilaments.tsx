@@ -79,18 +79,37 @@ const AdminFilaments = () => {
 
   const fetchFilaments = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("filaments")
-      .select("*")
-      .order("vendor", { ascending: true })
-      .order("product_title", { ascending: true });
+    
+    // Fetch all filaments (bypassing default 1000 row limit)
+    let allFilaments: Filament[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from("filaments")
+        .select("*")
+        .order("vendor", { ascending: true })
+        .order("product_title", { ascending: true })
+        .range(from, from + batchSize - 1);
 
-    if (error) {
-      toast.error("Failed to fetch filaments");
-      console.error(error);
-    } else {
-      setFilaments(data || []);
+      if (error) {
+        toast.error("Failed to fetch filaments");
+        console.error(error);
+        break;
+      }
+      
+      if (data && data.length > 0) {
+        allFilaments = [...allFilaments, ...data];
+        from += batchSize;
+        hasMore = data.length === batchSize;
+      } else {
+        hasMore = false;
+      }
     }
+    
+    setFilaments(allFilaments);
     setLoading(false);
   };
 
