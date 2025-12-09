@@ -53,6 +53,7 @@ const AdminFilaments = () => {
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
   const [showMissingEanOnly, setShowMissingEanOnly] = useState(false);
   const [showMissingGtinOnly, setShowMissingGtinOnly] = useState(false);
+  const [showMissingMpnOnly, setShowMissingMpnOnly] = useState(false);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
 
   useEffect(() => {
@@ -227,11 +228,12 @@ const AdminFilaments = () => {
     
     const matchesUpcFilter = showMissingUpcOnly ? !f.upc : true;
     const matchesSkuFilter = showMissingSkuOnly ? !f.variant_sku : true;
-    const matchesEanFilter = showMissingEanOnly ? !f.ean : true;
-    const matchesGtinFilter = showMissingGtinOnly ? !f.gtin : true;
+    const matchesEanFilter = showMissingEanOnly ? !(f as any).ean : true;
+    const matchesGtinFilter = showMissingGtinOnly ? !(f as any).gtin : true;
+    const matchesMpnFilter = showMissingMpnOnly ? !(f as any).mpn : true;
     const matchesVendor = vendorFilter === "all" || f.vendor === vendorFilter;
     
-    return matchesSearch && matchesUpcFilter && matchesSkuFilter && matchesEanFilter && matchesGtinFilter && matchesVendor;
+    return matchesSearch && matchesUpcFilter && matchesSkuFilter && matchesEanFilter && matchesGtinFilter && matchesMpnFilter && matchesVendor;
   });
 
   // Stats
@@ -241,8 +243,9 @@ const AdminFilaments = () => {
   const filamentsWithTDS = filaments.filter((f) => f.tds_url).length;
   const filamentsWithUpc = filaments.filter((f) => f.upc).length;
   const filamentsWithSku = filaments.filter((f) => f.variant_sku).length;
-  const filamentsWithEan = filaments.filter((f) => f.ean).length;
-  const filamentsWithGtin = filaments.filter((f) => f.gtin).length;
+  const filamentsWithEan = filaments.filter((f) => (f as any).ean).length;
+  const filamentsWithGtin = filaments.filter((f) => (f as any).gtin).length;
+  const filamentsWithMpn = filaments.filter((f) => (f as any).mpn).length;
   const uniqueVendors = new Set(filaments.map((f) => f.vendor).filter(Boolean)).size;
 
   if (authLoading || loading) {
@@ -408,6 +411,16 @@ const AdminFilaments = () => {
               Missing GTIN ({totalFilaments - filamentsWithGtin})
             </label>
           </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="missing-mpn"
+              checked={showMissingMpnOnly}
+              onCheckedChange={(checked) => setShowMissingMpnOnly(checked === true)}
+            />
+            <label htmlFor="missing-mpn" className="text-sm cursor-pointer whitespace-nowrap">
+              Missing MPN ({totalFilaments - filamentsWithMpn})
+            </label>
+          </div>
           <div className="flex flex-col gap-1">
             <Button
               variant="secondary"
@@ -475,6 +488,7 @@ const AdminFilaments = () => {
                   <TableHead>UPC</TableHead>
                   <TableHead>EAN</TableHead>
                   <TableHead>GTIN</TableHead>
+                  <TableHead>MPN</TableHead>
                   <TableHead>SKU</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead className="w-24">Actions</TableHead>
@@ -540,6 +554,11 @@ const AdminFilaments = () => {
                     <TableCell>
                       <span className="font-mono text-xs text-muted-foreground">
                         {(filament as any).gtin || "-"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {(filament as any).mpn || "-"}
                       </span>
                     </TableCell>
                     <TableCell>
