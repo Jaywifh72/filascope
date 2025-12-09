@@ -7,7 +7,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.scrape-filament-upcs]
-verify_jwt = false
+verify_jwt = true
 
 [functions.fetch-prices]
 verify_jwt = true
