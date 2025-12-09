@@ -82,6 +82,7 @@ const AdminFilaments = () => {
   const [populatingHexColors, setPopulatingHexColors] = useState(false);
   const [scrapingFillamentumImages, setScrapingFillamentumImages] = useState(false);
   const [scraping3dxtechTds, setScraping3dxtechTds] = useState(false);
+  const [scraping3dfuelTds, setScraping3dfuelTds] = useState(false);
   const [scrapeProgress, setScrapeProgress] = useState({ current: 0, total: 0 });
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
@@ -518,6 +519,29 @@ const AdminFilaments = () => {
     }
   };
 
+  const handleScrape3dfuelTds = async () => {
+    setScraping3dfuelTds(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-3dfuel-tds', {});
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast.success(`3D-Fuel TDS: ${data.updated} updated, ${data.skipped} skipped`, {
+          description: data.message
+        });
+        fetchFilaments();
+      } else {
+        throw new Error(data?.error || 'Failed to scrape 3D-Fuel TDS URLs');
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to scrape 3D-Fuel TDS URLs");
+      console.error(error);
+    } finally {
+      setScraping3dfuelTds(false);
+    }
+  };
+
   const filteredFilaments = filaments.filter((f) => {
     const matchesSearch =
       f.product_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -790,6 +814,19 @@ const AdminFilaments = () => {
               <FileText className="w-4 h-4 mr-2" />
             )}
             {scraping3dxtechTds ? "Scraping..." : "3DXTech TDS"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleScrape3dfuelTds}
+            disabled={scraping3dfuelTds}
+            title="Scrape TDS URLs for 3D-Fuel filaments using known URL patterns"
+          >
+            {scraping3dfuelTds ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4 mr-2" />
+            )}
+            {scraping3dfuelTds ? "Scraping..." : "3D-Fuel TDS"}
           </Button>
           {selectedFilaments.size > 0 && (
             <AlertDialog>

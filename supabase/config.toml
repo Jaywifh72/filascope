@@ -110,3 +110,6 @@ verify_jwt = true
 
 [functions.scrape-3dxtech-tds]
 verify_jwt = true
+
+[functions.scrape-3dfuel-tds]
+verify_jwt = true
