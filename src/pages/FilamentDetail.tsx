@@ -947,31 +947,80 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                 {/* Color Variants Section */}
                 {colorVariants.length > 0 && (
                   <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-muted-foreground">Available Colors</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground">Available Colors ({colorVariants.length + 1})</h3>
                     <div className="flex flex-wrap gap-2">
-                      {/* Current color - highlighted */}
+                      {/* Current color - highlighted with swatch */}
                       {(() => {
                         const baseName = getBaseProductName(filament.product_title);
                         const currentColor = getColorFromTitle(filament.product_title, baseName) || filament.color_family || 'Current';
                         return (
-                          <div className="px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground">
-                            {currentColor}
-                          </div>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background">
+                                  {filament.color_hex && (
+                                    <div 
+                                      className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 shadow-inner"
+                                      style={{ 
+                                        backgroundColor: filament.color_hex,
+                                        boxShadow: filament.color_hex?.toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
+                                      }}
+                                    />
+                                  )}
+                                  {currentColor}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="text-center">
+                                  <div className="font-medium">{currentColor}</div>
+                                  {filament.color_hex && (
+                                    <div className="text-xs font-mono text-muted-foreground">{filament.color_hex.toUpperCase()}</div>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         );
                       })()}
                       
-                      {/* Other color variants as links */}
+                      {/* Other color variants as links with swatches */}
                       {colorVariants.map((variant) => {
                         const baseName = getBaseProductName(filament.product_title);
                         const variantColor = getColorFromTitle(variant.product_title, baseName) || variant.color_family || 'View';
                         return (
-                          <Link 
-                            key={variant.id}
-                            to={`/filament/${variant.id}`}
-                            className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-primary/20 hover:text-primary transition-colors"
-                          >
-                            {variantColor}
-                          </Link>
+                          <TooltipProvider key={variant.id}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Link 
+                                  to={`/filament/${variant.id}`}
+                                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-primary/20 hover:text-primary transition-colors"
+                                >
+                                  {variant.color_hex ? (
+                                    <div 
+                                      className="w-4 h-4 rounded-full border border-border shadow-sm"
+                                      style={{ 
+                                        backgroundColor: variant.color_hex,
+                                        boxShadow: variant.color_hex?.toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-muted-foreground/30 to-muted-foreground/10 border border-border" />
+                                  )}
+                                  {variantColor}
+                                </Link>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="text-center">
+                                  <div className="font-medium">{variantColor}</div>
+                                  {variant.color_hex ? (
+                                    <div className="text-xs font-mono text-muted-foreground">{variant.color_hex.toUpperCase()}</div>
+                                  ) : (
+                                    <div className="text-xs text-muted-foreground">No hex code</div>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         );
                       })}
                     </div>
