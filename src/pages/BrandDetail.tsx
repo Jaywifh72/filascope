@@ -118,7 +118,7 @@ const COLOR_WORDS = [
 ];
 
 // Extract base product name by removing color suffix
-const getBaseProductName = (title: string): string => {
+const getBaseProductName = (title: string, material?: string | null): string => {
   // Normalize the title first - merge variant names into base product
   let normalizedTitle = title
     .replace(/\bPLA\s+PRO\+/gi, 'PLA+')  // "PLA PRO+" -> "PLA+"
@@ -134,7 +134,20 @@ const getBaseProductName = (title: string): string => {
     .replace(/\s+with\s+Spool\s*/gi, ' ')      // "with Spool"
     .trim();
   
-  // Pattern 0: Handle "Brand Material Color Weight" pattern (Prusament style)
+  // Pattern 0: Paramount 3D style - "Material (Color) Diameter Weight Filament"
+  // e.g., "ABS (Autobot Blue) 1.75mm 1kg Filament" -> "ABS"
+  // e.g., "PLA (Black) 1.75mm 1kg Filament" -> "PLA"
+  const paramountMatch = normalizedTitle.match(/^((?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC|HIPS|PVA|Nylon|Carbon\s+Fiber\s+\w+))\s*\(.+\)\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i);
+  if (paramountMatch) {
+    return paramountMatch[1].trim();
+  }
+  
+  // Pattern 0.5: If we have a material field, use it for grouping when title follows "Material (Color) ..." pattern
+  if (material && normalizedTitle.match(/^\w+\s*\(.+\)/)) {
+    return material;
+  }
+  
+  // Pattern 1: Handle "Brand Material Color Weight" pattern (Prusament style)
   // e.g., "Prusament ASA Jet Black 800g" -> "Prusament ASA 800g"
   // e.g., "Prusament PETG Prusa Orange 1kg" -> "Prusament PETG 1kg"
   const weightMatch = normalizedTitle.match(/^(.+?\s+(?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC(?:\s+Blend)?|HIPS|PVA|Nylon|PA11\s+Carbon\s+Fiber))\s+.+?\s+(\d+(?:\.\d+)?(?:kg|g))\s*$/i);
@@ -142,26 +155,26 @@ const getBaseProductName = (title: string): string => {
     return `${weightMatch[1].trim()} ${weightMatch[2]}`;
   }
   
-  // Pattern 1: "Brand Material - Color" (dash separator) - Fillamentum, ColorFabb style
+  // Pattern 2: "Brand Material - Color" (dash separator) - Fillamentum, ColorFabb style
   const dashMatch = normalizedTitle.match(/^(.+?)\s+-\s+.+$/);
   if (dashMatch) {
     return dashMatch[1].trim();
   }
   
-  // Pattern 1.5: Handle compound material names like "Metallic PLA", "Silk PLA", "Matte PLA"
+  // Pattern 2.5: Handle compound material names like "Metallic PLA", "Silk PLA", "Matte PLA"
   // Match: "Brand CompoundMaterial Color" -> "Brand CompoundMaterial"
   const compoundMaterialMatch = normalizedTitle.match(/^(.+?\s+(?:Metallic|Silk|Matte|Marble|Galaxy|Sparkle|Glitter|Glow|Wood|Carbon|Glass|Rapid|Tough|Flex|Pro|Premium|Basic|Economy|Ultra)\s+(?:PLA|PETG|ABS|TPU|TPE|ASA|PA|PC|HIPS|PVA|Nylon))\s+.+$/i);
   if (compoundMaterialMatch) {
     return compoundMaterialMatch[1].trim();
   }
   
-  // Pattern 1.6: Handle "Material Rapid/Pro/Reload/etc" pattern (e.g., "Hatchbox PETG Rapid Black", "Hatchbox PLA Reload Blue")
+  // Pattern 2.6: Handle "Material Rapid/Pro/Reload/etc" pattern (e.g., "Hatchbox PETG Rapid Black", "Hatchbox PLA Reload Blue")
   const materialVariantMatch = normalizedTitle.match(/^(.+?\s+(?:PLA|PETG|ABS|TPU|TPE|ASA|PA|PC)\s+(?:Rapid|Pro|Plus|Max|Lite|Basic|Premium|HS|HT|CF|GF|Reload))\s+.+$/i);
   if (materialVariantMatch) {
     return materialVariantMatch[1].trim();
   }
   
-  // Pattern 1.7: Handle "Brand Extrafill/PolyLite/etc Material" patterns (Fillamentum, Polymaker style)
+  // Pattern 2.7: Handle "Brand Extrafill/PolyLite/etc Material" patterns (Fillamentum, Polymaker style)
   // e.g., "Fillamentum PLA Extrafill - Color" already handled by dash pattern
   // e.g., "Polymaker PolyLite PLA Color" -> "Polymaker PolyLite PLA"
   const brandLineMatch = normalizedTitle.match(/^(.+?\s+(?:PolyLite|PolyMax|PolyMide|PolyFlex|PolyWood|PolyDissolve|Extrafill|Flexfill|Timberfill|CPE HG100|ASA Extrafill|ABS Extrafill|PLA Extrafill))\s+.+$/i);
@@ -169,13 +182,13 @@ const getBaseProductName = (title: string): string => {
     return brandLineMatch[1].trim();
   }
   
-  // Pattern 1.8: Handle "Carbon Fiber Material" pattern (standalone product)
+  // Pattern 2.8: Handle "Carbon Fiber Material" pattern (standalone product)
   const carbonFiberMatch = normalizedTitle.match(/^(.+?\s+Carbon\s+Fiber\s+(?:PLA|PETG|ABS|TPU|ASA|PA|Nylon))$/i);
   if (carbonFiberMatch) {
     return carbonFiberMatch[1].trim();
   }
   
-  // Pattern 2: Check for color word at the end (case-insensitive)
+  // Pattern 3: Check for color word at the end (case-insensitive)
   // Sort by length descending to match longer colors first ("Light Blue" before "Blue")
   const sortedColors = [...COLOR_WORDS].sort((a, b) => b.length - a.length);
   
@@ -194,6 +207,13 @@ const getBaseProductName = (title: string): string => {
 // Extract color from product title
 const getColorFromTitle = (title: string, baseName: string): string | null => {
   if (title === baseName) return null;
+  
+  // Pattern 0: Paramount 3D style - extract color from parentheses
+  // e.g., "ABS (Autobot Blue) 1.75mm 1kg Filament" -> "Autobot Blue"
+  const parenMatch = title.match(/\(([^)]+)\)/);
+  if (parenMatch) {
+    return parenMatch[1].trim();
+  }
   
   // Pattern 1: Dash separator
   const dashMatch = title.match(/^.+?\s+-\s+(.+)$/);
@@ -318,7 +338,7 @@ const BrandDetail = () => {
     const groups = new Map<string, GroupedProduct>();
 
     filteredFilaments.forEach((filament) => {
-      const baseName = getBaseProductName(filament.product_title);
+      const baseName = getBaseProductName(filament.product_title, filament.material);
       
       if (!groups.has(baseName)) {
         groups.set(baseName, {
