@@ -591,6 +591,13 @@ async function processFilament(
     const hasNewGtin = result.gtin && result.gtin !== filament.gtin;
     const hasNewEan = result.ean && result.ean !== filament.ean;
     
+    // Log what was found vs what already exists
+    console.log(`  Extraction result via ${result.method}:`);
+    console.log(`    UPC: ${result.upc || 'none'} (existing: ${filament.upc || 'none'}) ${hasNewUpc ? '[NEW]' : ''}`);
+    console.log(`    SKU: ${result.sku || 'none'} (existing: ${filament.variant_sku || 'none'}) ${hasNewSku ? '[NEW]' : ''}`);
+    console.log(`    GTIN: ${result.gtin || 'none'} (existing: ${filament.gtin || 'none'}) ${hasNewGtin ? '[NEW]' : ''}`);
+    console.log(`    EAN: ${result.ean || 'none'} (existing: ${filament.ean || 'none'}) ${hasNewEan ? '[NEW]' : ''}`);
+    
     if (hasNewUpc || hasNewSku || hasNewGtin || hasNewEan) {
       const updateData: Record<string, string> = {};
       if (hasNewUpc) updateData.upc = cleanUpc!;
@@ -598,7 +605,7 @@ async function processFilament(
       if (hasNewGtin) updateData.gtin = result.gtin!;
       if (hasNewEan) updateData.ean = result.ean!;
       
-      console.log(`  Updating via ${result.method}: ${JSON.stringify(updateData)}`);
+      console.log(`  Updating: ${JSON.stringify(updateData)}`);
       
       const { error: updateError } = await supabase
         .from('filaments')
@@ -621,11 +628,13 @@ async function processFilament(
       };
     }
     
+    // Data exists but no new values to update
+    const hasAnyData = result.upc || result.sku || result.gtin || result.ean;
     return { 
       id: filament.id, 
       title: filament.product_title, 
       status: 'no_data_found',
-      error: 'Data already exists or no new data found'
+      error: hasAnyData ? 'Data already exists (no updates needed)' : 'No UPC/GTIN/EAN data available from store'
     };
   } catch (e) {
     console.error(`Error processing filament: ${e}`);
