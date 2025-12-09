@@ -545,8 +545,8 @@ const AdminFilaments = () => {
           </Card>
         </div>
 
-        {/* Search and Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
@@ -619,6 +619,10 @@ const AdminFilaments = () => {
               Missing MPN ({totalFilaments - filamentsWithMpn})
             </label>
           </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2 mb-6">
           <div className="flex flex-col gap-1">
             <Button
               variant="secondary"
