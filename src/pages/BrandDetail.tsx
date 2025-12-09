@@ -1,14 +1,16 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, Users, Globe, TrendingUp, Filter } from "lucide-react";
+import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, Users, Globe, TrendingUp, Filter, Palette, Loader2 } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { getBrandInfo } from "@/lib/brandInfo";
 import type { Tables } from "@/integrations/supabase/types";
 import { useMemo, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 type Filament = Tables<"filaments">;
 
@@ -160,11 +162,61 @@ const getColorFromTitle = (title: string, baseName: string): string | null => {
 const BrandDetail = () => {
   const { brand } = useParams<{ brand: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const decodedBrand = brand ? decodeURIComponent(brand) : "";
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
+  const [isScrapingColors, setIsScrapingColors] = useState(false);
+  const { isAdmin } = useAuth();
+  const { toast } = useToast();
 
   const brandInfo = getBrandInfo(decodedBrand);
   const brandLogo = getBrandLogo(decodedBrand);
+
+  // Check if this is a brand with color scraping support
+  const hasColorScraper = decodedBrand.toLowerCase().includes("overture");
+
+  const handleScrapeColors = async () => {
+    setIsScrapingColors(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to perform this action",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await supabase.functions.invoke("scrape-overture-colors", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const result = response.data;
+      toast({
+        title: "Colors Scraped",
+        description: `Processed ${result.total} filaments. Found ${result.uniqueColors?.length || 0} unique colors.`,
+      });
+
+      // Refresh filaments data
+      queryClient.invalidateQueries({ queryKey: ["brand-filaments", decodedBrand] });
+    } catch (error) {
+      console.error("Error scraping colors:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to scrape colors",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScrapingColors(false);
+    }
+  };
 
   const { data: filaments, isLoading } = useQuery({
     queryKey: ["brand-filaments", decodedBrand],
@@ -412,33 +464,53 @@ const BrandDetail = () => {
               {decodedBrand} Products ({groupedProducts.length} products, {totalVariants} variants)
             </h2>
             
-            {/* Material Filter */}
-            {availableMaterials.length > 1 && (
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-muted-foreground" />
-                <div className="flex flex-wrap gap-1.5">
-                  <Button
-                    variant={selectedMaterial === null ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedMaterial(null)}
-                    className="h-7 text-xs"
-                  >
-                    All
-                  </Button>
-                  {availableMaterials.map((material) => (
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Admin: Scrape Colors Button */}
+              {isAdmin && hasColorScraper && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleScrapeColors}
+                  disabled={isScrapingColors}
+                  className="h-7 text-xs"
+                >
+                  {isScrapingColors ? (
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                  ) : (
+                    <Palette className="w-3 h-3 mr-1" />
+                  )}
+                  Scrape Colors
+                </Button>
+              )}
+
+              {/* Material Filter */}
+              {availableMaterials.length > 1 && (
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-muted-foreground" />
+                  <div className="flex flex-wrap gap-1.5">
                     <Button
-                      key={material}
-                      variant={selectedMaterial === material ? "default" : "outline"}
+                      variant={selectedMaterial === null ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setSelectedMaterial(material)}
+                      onClick={() => setSelectedMaterial(null)}
                       className="h-7 text-xs"
                     >
-                      {material}
+                      All
                     </Button>
-                  ))}
+                    {availableMaterials.map((material) => (
+                      <Button
+                        key={material}
+                        variant={selectedMaterial === material ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedMaterial(material)}
+                        className="h-7 text-xs"
+                      >
+                        {material}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
           
           {selectedMaterial && (
