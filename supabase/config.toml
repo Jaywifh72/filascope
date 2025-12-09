@@ -1,5 +1,8 @@
 project_id = "cfqfavmhdbyjzejipiwa"
 
+[functions.fix-filament-url]
+verify_jwt = true
+
 [functions.scrape-filament-colors]
 verify_jwt = true
 
