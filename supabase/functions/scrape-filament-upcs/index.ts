@@ -12,7 +12,7 @@ const MAX_BATCH_SIZE = 25;
 // Brand configuration for UPC scraping
 interface BrandConfig {
   shopifyUrl?: string;
-  upcExtractionMethod: 'shopify' | 'woocommerce' | 'html' | 'none' | 'wix' | 'fiberlogy';
+  upcExtractionMethod: 'shopify' | 'woocommerce' | 'html' | 'none' | 'wix' | 'fiberlogy' | 'ninjatek' | 'matterhackers' | 'microcenter';
   notes?: string;
 }
 
@@ -29,11 +29,11 @@ const BRAND_CONFIGS: Record<string, BrandConfig> = {
   'Proto-pasta': { shopifyUrl: 'https://www.proto-pasta.com', upcExtractionMethod: 'shopify' },
   'ColorFabb': { shopifyUrl: 'https://colorfabb.com', upcExtractionMethod: 'shopify' },
   'Fillamentum': { shopifyUrl: 'https://shop.fillamentum.com', upcExtractionMethod: 'shopify' },
-  'NinjaTek': { shopifyUrl: 'https://ninjatek.com', upcExtractionMethod: 'shopify' },
+  'NinjaTek': { upcExtractionMethod: 'ninjatek', notes: 'WooCommerce with data-sku in option elements' },
   'Taulman3D': { shopifyUrl: 'https://taulman3d.com', upcExtractionMethod: 'shopify' },
   'Fiberlogy': { upcExtractionMethod: 'fiberlogy', notes: 'ShopArena platform - extract slug from URL as MPN' },
   'FormFutura': { shopifyUrl: 'https://formfutura.com', upcExtractionMethod: 'shopify' },
-  'Inland': { shopifyUrl: 'https://inlandfilament.com', upcExtractionMethod: 'shopify' },
+  'Inland': { upcExtractionMethod: 'microcenter', notes: 'Sold via Micro Center - extract SKU from product ID' },
   'ZIRO': { shopifyUrl: 'https://ziro3d.com', upcExtractionMethod: 'shopify' },
   'VoxelPLA': { shopifyUrl: 'https://voxelpla.com', upcExtractionMethod: 'shopify' },
   'GreenGate3D': { shopifyUrl: 'https://greengate3d.com', upcExtractionMethod: 'shopify' },
@@ -48,7 +48,7 @@ const BRAND_CONFIGS: Record<string, BrandConfig> = {
   
   // === HTML SCRAPING (Custom stores) ===
   'Prusament': { upcExtractionMethod: 'html', notes: 'Prusa custom store' },
-  'MatterHackers': { shopifyUrl: 'https://www.matterhackers.com', upcExtractionMethod: 'html' },
+  'MatterHackers': { upcExtractionMethod: 'matterhackers', notes: 'Custom store with SKU in URL path /sk/XXXXX' },
   'Bambu Lab': { upcExtractionMethod: 'html', notes: 'Bambu Lab store' },
   'Creality': { upcExtractionMethod: 'html', notes: 'Creality store' },
   'Anycubic': { upcExtractionMethod: 'html', notes: 'Anycubic store' },
@@ -675,6 +675,289 @@ async function tryFiberlogyExtraction(filament: any): Promise<ExtractionResult |
   }
 }
 
+// Strategy 7: NinjaTek extraction - WooCommerce with data-sku in option elements
+async function tryNinjaTekExtraction(filament: any): Promise<ExtractionResult | null> {
+  try {
+    console.log(`  [Strategy 7] NinjaTek extraction for: ${filament.product_title}`);
+    
+    if (!filament.product_url || !filament.product_url.startsWith('http')) {
+      console.log(`    -> No valid product URL`);
+      return null;
+    }
+    
+    const response = await fetch(filament.product_url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html',
+      },
+    });
+    
+    if (!response.ok) {
+      console.log(`    -> HTTP ${response.status}`);
+      return null;
+    }
+    
+    const html = await response.text();
+    let sku: string | null = null;
+    let mpn: string | null = null;
+    
+    // NinjaTek uses WooCommerce with SKUs in option data-sku attributes
+    // Pattern: <option value="440" data-sku="3DNF0317505" ...>
+    // Try to match by product title or find first matching SKU
+    const productTitle = filament.product_title?.toLowerCase() || '';
+    
+    // Extract all data-sku values from options
+    const optionMatches = html.matchAll(/data-sku=["']([A-Z0-9]+)["'][^>]*data-name=["']([^"']+)["']/gi);
+    for (const match of optionMatches) {
+      const optionSku = match[1];
+      const optionName = match[2].toLowerCase();
+      
+      // Check if this option matches our product title
+      // NinjaTek product naming: "NinjaFlex TPU - Black 1.75mm 1kg"
+      // Option naming: "3D Printing Filament TPU NinjaTek NinjaFlex - Midnight Black - 1.75mm - 1kg"
+      if (productTitle && optionName) {
+        // Extract color and diameter from both
+        const colorMatch = productTitle.match(/(?:midnight\s*)?(\w+)\s*(?:1\.75|3)mm/i);
+        const optionColorMatch = optionName.match(/(?:midnight\s*)?(\w+)\s*-\s*(?:1\.75|3)mm/i);
+        
+        if (colorMatch && optionColorMatch && 
+            colorMatch[1].toLowerCase() === optionColorMatch[1].toLowerCase()) {
+          sku = optionSku;
+          mpn = optionSku;
+          console.log(`    -> Matched option by color: ${sku}`);
+          break;
+        }
+      }
+    }
+    
+    // If no match, try to find SKU from JSON-LD or simpler pattern
+    if (!sku) {
+      // Try first data-sku found
+      const simpleSkuMatch = html.match(/data-sku=["']([A-Z0-9]+)["']/i);
+      if (simpleSkuMatch) {
+        sku = simpleSkuMatch[1];
+        mpn = sku;
+        console.log(`    -> Using first data-sku found: ${sku}`);
+      }
+    }
+    
+    // Also check JSON-LD for additional data
+    let upc: string | null = null;
+    let gtin: string | null = null;
+    let ean: string | null = null;
+    
+    const jsonLdMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+    if (jsonLdMatches) {
+      for (const match of jsonLdMatches) {
+        try {
+          const jsonContent = match.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
+          const data = JSON.parse(jsonContent);
+          const items = Array.isArray(data) ? data : [data];
+          for (const item of items) {
+            if (item['@type'] === 'Product') {
+              if (item.gtin) {
+                const classified = classifyBarcode(item.gtin);
+                gtin = classified.gtin;
+                ean = classified.ean;
+                upc = classified.upc;
+              }
+              if (item.sku && !sku) sku = item.sku;
+              if (item.mpn && !mpn) mpn = item.mpn;
+            }
+          }
+        } catch (e) {}
+      }
+    }
+    
+    if (sku || mpn || upc || gtin || ean) {
+      console.log(`    -> Found: SKU=${sku}, MPN=${mpn}, UPC=${upc}, GTIN=${gtin}, EAN=${ean}`);
+      return { sku, upc, gtin, ean, mpn, method: 'ninjatek_woocommerce' };
+    }
+    
+    console.log(`    -> No data found`);
+    return null;
+  } catch (e) {
+    console.log(`    -> Error: ${e}`);
+    return null;
+  }
+}
+
+// Strategy 8: MatterHackers extraction - SKU in URL path
+async function tryMatterHackersExtraction(filament: any): Promise<ExtractionResult | null> {
+  try {
+    console.log(`  [Strategy 8] MatterHackers extraction for: ${filament.product_title}`);
+    
+    let sku: string | null = null;
+    let mpn: string | null = null;
+    
+    // MatterHackers URLs contain SKU in /sk/XXXXX format
+    // Example: https://www.matterhackers.com/store/l/pla-filament-black-175mm/sk/MEEDKTKU
+    if (filament.product_url) {
+      const skuMatch = filament.product_url.match(/\/sk\/([A-Z0-9\-]+)/i);
+      if (skuMatch) {
+        sku = skuMatch[1].toUpperCase();
+        mpn = sku;
+        console.log(`    -> Found SKU in URL: ${sku}`);
+      }
+    }
+    
+    // If we have a URL, also try to fetch the page for additional data
+    let upc: string | null = null;
+    let gtin: string | null = null;
+    let ean: string | null = null;
+    
+    if (filament.product_url && filament.product_url.startsWith('http')) {
+      try {
+        const response = await fetch(filament.product_url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html',
+          },
+        });
+        
+        if (response.ok) {
+          const html = await response.text();
+          
+          // Look for JSON-LD or barcode patterns
+          const jsonLdMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+          if (jsonLdMatches) {
+            for (const match of jsonLdMatches) {
+              try {
+                const jsonContent = match.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
+                const data = JSON.parse(jsonContent);
+                const items = Array.isArray(data) ? data : [data];
+                for (const item of items) {
+                  if (item['@type'] === 'Product') {
+                    if (item.gtin) {
+                      const classified = classifyBarcode(item.gtin);
+                      gtin = classified.gtin;
+                      ean = classified.ean;
+                      upc = classified.upc;
+                    }
+                    if (item.sku && !sku) sku = item.sku;
+                    if (item.mpn && !mpn) mpn = item.mpn;
+                  }
+                }
+              } catch (e) {}
+            }
+          }
+          
+          // Look for barcode patterns in page
+          const barcodePatterns = [
+            /UPC[:\s]*([0-9]{8,14})/i,
+            /GTIN[:\s]*([0-9]{8,14})/i,
+            /EAN[:\s]*([0-9]{8,14})/i,
+          ];
+          for (const pattern of barcodePatterns) {
+            const match = html.match(pattern);
+            if (match) {
+              const classified = classifyBarcode(match[1]);
+              if (!upc && classified.upc) upc = classified.upc;
+              if (!ean && classified.ean) ean = classified.ean;
+              if (!gtin && classified.gtin) gtin = classified.gtin;
+              break;
+            }
+          }
+        }
+      } catch (e) {
+        console.log(`    -> Error fetching page: ${e}`);
+      }
+    }
+    
+    if (sku || mpn || upc || gtin || ean) {
+      console.log(`    -> Found: SKU=${sku}, MPN=${mpn}, UPC=${upc}, GTIN=${gtin}, EAN=${ean}`);
+      return { sku, upc, gtin, ean, mpn, method: 'matterhackers_url' };
+    }
+    
+    console.log(`    -> No data found`);
+    return null;
+  } catch (e) {
+    console.log(`    -> Error: ${e}`);
+    return null;
+  }
+}
+
+// Strategy 9: Micro Center extraction - Inland filaments
+async function tryMicroCenterExtraction(filament: any): Promise<ExtractionResult | null> {
+  try {
+    console.log(`  [Strategy 9] Micro Center extraction for: ${filament.product_title}`);
+    
+    let sku: string | null = null;
+    let mpn: string | null = null;
+    
+    // Micro Center URLs contain product ID in /product/XXXXX/ format
+    // Example: https://www.microcenter.com/product/485644/inland-175mm-black-pla-3d-printer-filament-1kg-spool-(22-lbs)
+    if (filament.product_url) {
+      const productIdMatch = filament.product_url.match(/\/product\/(\d+)\//i);
+      if (productIdMatch) {
+        // The product ID is the Micro Center SKU
+        sku = productIdMatch[1];
+        mpn = sku;
+        console.log(`    -> Found product ID in URL: ${sku}`);
+      }
+    }
+    
+    // If we have a URL, try to fetch for additional data
+    let upc: string | null = null;
+    let gtin: string | null = null;
+    let ean: string | null = null;
+    
+    if (filament.product_url && filament.product_url.startsWith('http')) {
+      try {
+        const response = await fetch(filament.product_url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html',
+          },
+        });
+        
+        if (response.ok) {
+          const html = await response.text();
+          
+          // Look for actual SKU in data attributes
+          // Pattern: data-id="485644"
+          const dataIdMatch = html.match(/data-id=["'](\d+)["']/);
+          if (dataIdMatch && !sku) {
+            sku = dataIdMatch[1];
+            mpn = sku;
+            console.log(`    -> Found data-id: ${sku}`);
+          }
+          
+          // Look for UPC/barcode in page
+          const barcodePatterns = [
+            /UPC[:\s]*([0-9]{8,14})/i,
+            /GTIN[:\s]*([0-9]{8,14})/i,
+            /EAN[:\s]*([0-9]{8,14})/i,
+          ];
+          for (const pattern of barcodePatterns) {
+            const match = html.match(pattern);
+            if (match) {
+              const classified = classifyBarcode(match[1]);
+              if (!upc && classified.upc) upc = classified.upc;
+              if (!ean && classified.ean) ean = classified.ean;
+              if (!gtin && classified.gtin) gtin = classified.gtin;
+              break;
+            }
+          }
+        }
+      } catch (e) {
+        console.log(`    -> Error fetching page: ${e}`);
+      }
+    }
+    
+    if (sku || mpn || upc || gtin || ean) {
+      console.log(`    -> Found: SKU=${sku}, MPN=${mpn}, UPC=${upc}, GTIN=${gtin}, EAN=${ean}`);
+      return { sku, upc, gtin, ean, mpn, method: 'microcenter_url' };
+    }
+    
+    console.log(`    -> No data found`);
+    return null;
+  } catch (e) {
+    console.log(`    -> Error: ${e}`);
+    return null;
+  }
+}
+
 // Strategy 4: WooCommerce HTML scraping
 async function tryWooCommerce(productUrl: string): Promise<ExtractionResult | null> {
   if (!productUrl || !productUrl.startsWith('http')) return null;
@@ -864,6 +1147,30 @@ async function processFilament(
     } else if (brandConfig.upcExtractionMethod === 'fiberlogy') {
       // Fiberlogy (ShopArena platform) - extract slug from URL as MPN
       result = await tryFiberlogyExtraction(filament);
+    } else if (brandConfig.upcExtractionMethod === 'ninjatek') {
+      // NinjaTek (WooCommerce with data-sku in option elements)
+      result = await tryNinjaTekExtraction(filament);
+      
+      // Fallback to generic HTML
+      if (!result && filament.product_url) {
+        result = await tryHtmlJsonLd(filament.product_url);
+      }
+    } else if (brandConfig.upcExtractionMethod === 'matterhackers') {
+      // MatterHackers - SKU in URL path /sk/XXXXX
+      result = await tryMatterHackersExtraction(filament);
+      
+      // Fallback to generic HTML
+      if (!result && filament.product_url) {
+        result = await tryHtmlJsonLd(filament.product_url);
+      }
+    } else if (brandConfig.upcExtractionMethod === 'microcenter') {
+      // Micro Center (Inland) - product ID in URL
+      result = await tryMicroCenterExtraction(filament);
+      
+      // Fallback to generic HTML
+      if (!result && filament.product_url) {
+        result = await tryHtmlJsonLd(filament.product_url);
+      }
     }
     
     if (!result) {
