@@ -5,64 +5,142 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Normalize material names for matching
+// Normalize material names for matching - strip colors, sizes, special chars
 function normalizeMaterialName(name: string): string {
   return name
     .toLowerCase()
+    // Remove brand prefix
+    .replace(/^3dxtech\s*/i, '')
+    // Remove trademark symbols
     .replace(/[™®©]/g, '')
-    .replace(/\s+/g, ' ')
+    // Remove HTML entities
+    .replace(/&nbsp;/g, ' ')
+    // Remove color suffixes (e.g., "- Black", "- Red", "- Nylon Black")
+    .replace(/\s*-\s*(?:black|white|red|blue|grey|gray|green|orange|yellow|tan|natural|dark\s*grey|mid\s*blue|reflex\s*blue|blue\s*frost|glacier\s*grey|nylon\s*black|antique\s*white|tactical\s*tan).*$/i, '')
+    // Remove size/variant info
+    .replace(/\s*,?\s*\d+\.?\d*mm.*$/i, '')
+    .replace(/\s*-\s*default\s*title.*$/i, '')
+    // Normalize material names
     .replace(/carbon\s*fiber/gi, 'cf')
     .replace(/glass\s*fiber/gi, 'gf')
-    .replace(/nylon/gi, 'pa')
     .replace(/polycarbonate/gi, 'pc')
-    .replace(/\+/g, ' ')
-    .replace(/-/g, ' ')
+    .replace(/nylon\s*12/gi, 'pa12')
+    .replace(/nylon\s*6/gi, 'pa6')
+    .replace(/nylon/gi, 'pa')
+    // Remove dashes, plus signs, extra spaces
+    .replace(/[\+\-]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-// Check if two material names are a potential match
+// Extract the base product line (e.g., "3DXSTAT", "CarbonX", "FibreX")
+function extractProductLine(name: string): string | null {
+  const normalized = name.toLowerCase().replace(/[™®©]/g, '');
+  
+  const productLines = [
+    '3dxstat', 'carbonx', 'fibrex', 'thermax', 'triton', 'amidex', 
+    'ecomax', 'hyperlite', 'obsidian', 'fluorx', 'wearx', 'ceramix',
+    '3dxmax', '3dxflex', 'aquatek', 'simubone', 'firewire', 'ezpc', 'max-g', 'maxg', 'ion'
+  ];
+  
+  for (const line of productLines) {
+    if (normalized.includes(line)) {
+      return line.replace('-', '');
+    }
+  }
+  return null;
+}
+
+// Extract material type (e.g., "PETG", "ABS", "PC", "PA6")
+function extractMaterialType(name: string): string | null {
+  const normalized = name.toLowerCase();
+  
+  const materials = [
+    'pekk', 'peek', 'pei', 'ultem', 'pps', 'pvdf', 'ppsu', 'pes', 'ppa',
+    'pc', 'petg', 'pctg', 'abs', 'pla', 'asa', 'tpu', 'pva', 'pp',
+    'pa12', 'pa6', 'htn', 'lts2', 'bas', '9085', '1010'
+  ];
+  
+  for (const mat of materials) {
+    if (normalized.includes(mat)) {
+      return mat;
+    }
+  }
+  return null;
+}
+
+// Check if product has fiber reinforcement
+function hasFiberReinforcement(name: string): { cf: boolean; gf: boolean } {
+  const normalized = name.toLowerCase();
+  return {
+    cf: normalized.includes('cf') || normalized.includes('carbon'),
+    gf: normalized.includes('gf') || normalized.includes('glass')
+  };
+}
+
+// Check if two material names match
 function isMaterialMatch(tdsName: string, productTitle: string): boolean {
   const normalizedTds = normalizeMaterialName(tdsName);
   const normalizedProduct = normalizeMaterialName(productTitle);
   
-  // Extract key material identifiers
-  const tdsWords = normalizedTds.split(' ').filter(w => w.length > 1);
-  const productWords = normalizedProduct.split(' ').filter(w => w.length > 1);
-  
-  // Check for key material matches
-  const materialPatterns = [
-    'esd', 'carbonx', 'fibrex', 'thermax', 'triton', 'amidex', 'ecomax', 'hyperlite', 'obsidian',
-    'pekk', 'peek', 'pei', 'ultem', 'pps', 'pvdf', 'pc', 'petg', 'abs', 'pla', 'pa6', 'pa12', 
-    'nylon', 'asa', 'tpu', 'cf', 'gf', 'htn', 'ppa', 'pp', 'pctg', 'ppsu', 'pes'
-  ];
-  
-  // Find matching material patterns in both strings
-  const tdsPatterns = materialPatterns.filter(p => normalizedTds.includes(p));
-  const productPatterns = materialPatterns.filter(p => normalizedProduct.includes(p));
-  
-  // If they share at least 2 material patterns, consider it a match
-  const sharedPatterns = tdsPatterns.filter(p => productPatterns.includes(p));
-  
-  if (sharedPatterns.length >= 2) {
+  // Direct match after normalization
+  if (normalizedTds === normalizedProduct) {
     return true;
   }
   
-  // Also check for brand line matches (e.g., "3DXSTAT ESD PETG" should match "3DXTech 3DXSTAT ESD-PETG")
-  if (normalizedTds.includes('3dxstat') && normalizedProduct.includes('3dxstat')) {
-    return sharedPatterns.length >= 1;
+  // Extract product lines
+  const tdsLine = extractProductLine(tdsName);
+  const productLine = extractProductLine(productTitle);
+  
+  // Extract material types
+  const tdsMaterial = extractMaterialType(tdsName);
+  const productMaterial = extractMaterialType(productTitle);
+  
+  // Extract fiber reinforcement
+  const tdsFiber = hasFiberReinforcement(tdsName);
+  const productFiber = hasFiberReinforcement(productTitle);
+  
+  // Match by product line + material + fiber type
+  if (tdsLine && productLine && tdsLine === productLine) {
+    // Same product line
+    if (tdsMaterial && productMaterial) {
+      // Both have material types - they should match
+      if (tdsMaterial === productMaterial) {
+        // Check fiber reinforcement matches
+        if (tdsFiber.cf === productFiber.cf && tdsFiber.gf === productFiber.gf) {
+          return true;
+        }
+      }
+    } else {
+      // One doesn't have explicit material - match if fibers match
+      if (tdsFiber.cf === productFiber.cf && tdsFiber.gf === productFiber.gf) {
+        return true;
+      }
+    }
   }
-  if (normalizedTds.includes('carbonx') && normalizedProduct.includes('carbonx')) {
-    return sharedPatterns.length >= 1;
+  
+  // Special case: "MAX-G PETG" should match "MAX-G™ PETG"
+  if (normalizedTds.includes('max g') && normalizedProduct.includes('max g')) {
+    return true;
   }
-  if (normalizedTds.includes('fibrex') && normalizedProduct.includes('fibrex')) {
-    return sharedPatterns.length >= 1;
+  
+  // Special case: "ezPC" products
+  if (normalizedTds.includes('ezpc') && normalizedProduct.includes('ezpc')) {
+    return true;
   }
-  if (normalizedTds.includes('thermax') && normalizedProduct.includes('thermax')) {
-    return sharedPatterns.length >= 1;
+  
+  // Special case: Triton products with specific material
+  if (tdsLine === 'triton' && productLine === 'triton') {
+    if (tdsMaterial && productMaterial && tdsMaterial === productMaterial) {
+      return true;
+    }
   }
-  if (normalizedTds.includes('triton') && normalizedProduct.includes('triton')) {
-    return sharedPatterns.length >= 1;
+  
+  // Fallback: check if normalized names contain each other
+  if (normalizedTds.length > 5 && normalizedProduct.length > 5) {
+    if (normalizedProduct.includes(normalizedTds) || normalizedTds.includes(normalizedProduct)) {
+      return true;
+    }
   }
   
   return false;
@@ -150,15 +228,23 @@ Deno.serve(async (req) => {
     console.log(`Got HTML with length: ${html.length}`);
 
     // Step 2: Extract all TDS entries from the table
-    // Pattern: <td>MATERIAL_NAME</td><td><a href="TDS_URL">
     const tdsEntries: { materialName: string; tdsUrl: string }[] = [];
     
-    // Find all rows with TDS links
-    const rowPattern = /<tr[^>]*>[\s\S]*?<td[^>]*>(?:<[^>]*>)*\s*([^<]+(?:™|®)?[^<]*)\s*(?:<\/[^>]*>)*<\/td>\s*<td[^>]*>(?:<[^>]*>)*\s*<a[^>]*href=["']([^"']*_TDS[^"']*\.pdf[^"']*)["']/gi;
+    // Find all TDS PDF links with their associated material names
+    // Pattern: look for table rows with material name in first cell and TDS link in second
+    const rowPattern = /<tr[^>]*>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>\s*<td[^>]*>[\s\S]*?<a[^>]*href=["']([^"']*_TDS[^"']*\.pdf[^"']*)["']/gi;
     
     let match;
+    const foundUrls = new Set<string>();
+    
     while ((match = rowPattern.exec(html)) !== null) {
-      const materialName = match[1].replace(/<[^>]*>/g, '').trim();
+      // Clean the material name - remove HTML tags
+      const materialName = match[1]
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
       let tdsUrl = match[2];
       
       // Ensure URL is absolute
@@ -166,15 +252,17 @@ Deno.serve(async (req) => {
         tdsUrl = tdsUrl.startsWith('//') ? `https:${tdsUrl}` : `https://cdn.shopify.com${tdsUrl}`;
       }
       
-      if (materialName && tdsUrl && tdsUrl.includes('_TDS') && !tdsUrl.toLowerCase().includes('sds')) {
+      // Skip SDS links and duplicates
+      if (materialName && tdsUrl && tdsUrl.includes('_TDS') && 
+          !tdsUrl.toLowerCase().includes('sds') && !foundUrls.has(tdsUrl)) {
         tdsEntries.push({ materialName, tdsUrl });
+        foundUrls.add(tdsUrl);
         console.log(`Found TDS: "${materialName}" -> ${tdsUrl}`);
       }
     }
 
-    // Also try a more general pattern for PDF links with TDS in filename
-    const pdfPattern = /href=["']([^"']*(?:cdn\.shopify\.com|3dxtech)[^"']*_TDS[^"']*\.pdf)["']/gi;
-    const foundUrls = new Set(tdsEntries.map(e => e.tdsUrl));
+    // Also extract TDS URLs from standalone links and infer material name from filename
+    const pdfPattern = /href=["']([^"']*(?:cdn\.shopify\.com|3dxtech)[^"']*_TDS[^"']*\.pdf[^"']*)["']/gi;
     
     while ((match = pdfPattern.exec(html)) !== null) {
       let tdsUrl = match[1];
@@ -182,11 +270,15 @@ Deno.serve(async (req) => {
         tdsUrl = tdsUrl.startsWith('//') ? `https:${tdsUrl}` : `https://cdn.shopify.com${tdsUrl}`;
       }
       
-      if (!foundUrls.has(tdsUrl)) {
-        // Extract material name from URL
+      if (!foundUrls.has(tdsUrl) && !tdsUrl.toLowerCase().includes('sds')) {
+        // Extract material name from URL filename
         const urlMatch = tdsUrl.match(/\/([^/]+)_TDS[^.]*\.pdf/i);
         if (urlMatch) {
-          const materialName = urlMatch[1].replace(/_/g, ' ').replace(/v\d+(\.\d+)?$/i, '').trim();
+          const materialName = urlMatch[1]
+            .replace(/_/g, ' ')
+            .replace(/v\d+(\.\d+)?$/i, '')
+            .replace(/\s+/g, ' ')
+            .trim();
           tdsEntries.push({ materialName, tdsUrl });
           foundUrls.add(tdsUrl);
           console.log(`Found TDS from URL: "${materialName}" -> ${tdsUrl}`);
@@ -235,6 +327,7 @@ Deno.serve(async (req) => {
     let updated = 0;
     let notMatched = 0;
     const results: { id: string; title: string; tds_url?: string; matched_to?: string; error?: string }[] = [];
+    const unmatchedProducts: string[] = [];
 
     for (const filament of filaments) {
       let bestMatch: { materialName: string; tdsUrl: string } | null = null;
@@ -243,6 +336,7 @@ Deno.serve(async (req) => {
       for (const tds of tdsEntries) {
         if (isMaterialMatch(tds.materialName, filament.product_title)) {
           bestMatch = tds;
+          console.log(`MATCH: "${filament.product_title}" -> "${tds.materialName}"`);
           break;
         }
       }
@@ -261,7 +355,6 @@ Deno.serve(async (req) => {
             error: updateError.message 
           });
         } else {
-          console.log(`Updated: ${filament.product_title} -> ${bestMatch.materialName}`);
           results.push({ 
             id: filament.id, 
             title: filament.product_title, 
@@ -272,11 +365,7 @@ Deno.serve(async (req) => {
         }
       } else {
         console.log(`No TDS match for: ${filament.product_title}`);
-        results.push({ 
-          id: filament.id, 
-          title: filament.product_title, 
-          error: "No TDS match found" 
-        });
+        unmatchedProducts.push(filament.product_title);
         notMatched++;
       }
     }
@@ -287,8 +376,9 @@ Deno.serve(async (req) => {
       filamentsProcessed: filaments.length,
       updated,
       notMatched,
-      results: results.slice(0, 50), // Limit results to avoid huge response
-      tdsEntries: tdsEntries.slice(0, 20), // Show some found TDS entries for debugging
+      results: results.slice(0, 50),
+      unmatchedProducts: unmatchedProducts.slice(0, 30),
+      tdsEntries: tdsEntries.map(t => t.materialName),
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
