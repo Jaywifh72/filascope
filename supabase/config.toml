@@ -93,5 +93,3 @@ verify_jwt = true
 [functions.sync-3dxtech-products]
 verify_jwt = true
 
-[functions.scrape-filament-colors]
-verify_jwt = false
