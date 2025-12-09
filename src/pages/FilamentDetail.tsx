@@ -1921,6 +1921,15 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   {(filament as any).upc && (
                     <PropertyRow label="UPC" value={(filament as any).upc} />
                   )}
+                  {(filament as any).ean && (
+                    <PropertyRow label="EAN" value={(filament as any).ean} />
+                  )}
+                  {(filament as any).gtin && (
+                    <PropertyRow label="GTIN" value={(filament as any).gtin} />
+                  )}
+                  {(filament as any).mpn && (
+                    <PropertyRow label="MPN" value={(filament as any).mpn} />
+                  )}
                   {filament.variant_available !== null && (
                     <PropertyRow 
                       label="Stock Status" 
