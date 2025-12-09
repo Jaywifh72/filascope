@@ -303,20 +303,27 @@ const FilamentDetail = () => {
       .replace(/\s+Refill\s*$/gi, '')            // "Refill" at end
       .trim();
     
-    // Pattern 0: Handle "Brand Material Color Weight" pattern (Prusament style)
+    // Pattern 0: Paramount 3D style - "Material (Color) Diameter Weight Filament"
+    // e.g., "ABS (Autobot Blue) 1.75mm 1kg Filament" -> "ABS"
+    const paramountMatch = normalizedTitle.match(/^((?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC|HIPS|PVA|Nylon|Carbon\s+Fiber\s+\w+))\s*\(.+\)\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i);
+    if (paramountMatch) {
+      return paramountMatch[1].trim();
+    }
+    
+    // Pattern 1: Handle "Brand Material Color Weight" pattern (Prusament style)
     // e.g., "Prusament ASA Jet Black 800g" -> "Prusament ASA"
     const weightMatch = normalizedTitle.match(/^(.+?\s+(?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC(?:\s+Blend)?|HIPS|PVA|Nylon|PA11\s+Carbon\s+Fiber))\s+.+?\s+\d+(?:\.\d+)?(?:kg|g)\s*$/i);
     if (weightMatch) {
       return weightMatch[1].trim();
     }
     
-    // Pattern 1: "Brand Material - Color" (dash separator)
+    // Pattern 2: "Brand Material - Color" (dash separator)
     const dashMatch = normalizedTitle.match(/^(.+?)\s+-\s+.+$/);
     if (dashMatch) {
       return dashMatch[1].trim();
     }
     
-    // Pattern 2: Check for color word at the end
+    // Pattern 3: Check for color word at the end
     const sortedColors = [...COLOR_WORDS].sort((a, b) => b.length - a.length);
     for (const color of sortedColors) {
       const regex = new RegExp(`^(.+?)\\s+${color}$`, 'i');
@@ -339,6 +346,13 @@ const FilamentDetail = () => {
       .trim();
     
     if (cleanTitle === baseName) return null;
+    
+    // Pattern 0: Paramount 3D style - extract color from parentheses
+    // e.g., "ABS (Autobot Blue) 1.75mm 1kg Filament" -> "Autobot Blue"
+    const parenMatch = title.match(/\(([^)]+)\)/);
+    if (parenMatch) {
+      return parenMatch[1].trim();
+    }
     
     // Pattern 1: Dash separator
     const dashMatch = title.match(/^.+?\s+-\s+(.+?)(?:\s+\d+(?:\.\d+)?(?:kg|g))?(?:\s*\(NFC\))?(?:\s+Refill)?$/i);
