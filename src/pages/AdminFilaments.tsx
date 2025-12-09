@@ -424,7 +424,7 @@ const AdminFilaments = () => {
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="All Vendors" />
             </SelectTrigger>
-            <SelectContent className="bg-background border z-50">
+            <SelectContent className="bg-background border z-50 max-h-[300px] overflow-y-auto">
               <SelectItem value="all">All Vendors</SelectItem>
               {uniqueVendorsList.map((vendor) => (
                 <SelectItem key={vendor} value={vendor}>
