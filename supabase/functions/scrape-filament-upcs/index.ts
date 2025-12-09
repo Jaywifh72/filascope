@@ -732,12 +732,12 @@ serve(async (req) => {
       });
     }
 
-    const { brands = [], filamentIds = [], limit = MAX_BATCH_SIZE, forceUpdate = false } = requestBody;
+    const { brands = [], filamentIds = [], limit = MAX_BATCH_SIZE, forceUpdate = false, scrapeMpnOnly = false } = requestBody;
     
     // Enforce batch size limit
     const effectiveLimit = Math.min(limit, MAX_BATCH_SIZE);
     
-    console.log(`Starting UPC scrape - brands: ${brands.length}, filamentIds: ${filamentIds.length}, limit=${effectiveLimit}, forceUpdate=${forceUpdate}`);
+    console.log(`Starting UPC scrape - brands: ${brands.length}, filamentIds: ${filamentIds.length}, limit=${effectiveLimit}, forceUpdate=${forceUpdate}, scrapeMpnOnly=${scrapeMpnOnly}`);
 
     if ((!brands || brands.length === 0) && (!filamentIds || filamentIds.length === 0)) {
       return new Response(JSON.stringify({ error: 'No brands or filament IDs specified' }), {
@@ -856,7 +856,12 @@ serve(async (req) => {
         .not('product_url', 'is', null);
 
       if (!forceUpdate) {
-        query = query.is('upc', null);
+        if (scrapeMpnOnly) {
+          // For MPN-only scraping, filter for filaments missing MPN
+          query = query.is('mpn', null);
+        } else {
+          query = query.is('upc', null);
+        }
       }
 
       const { data: filaments, error: fetchError } = await query.limit(effectiveLimit);
