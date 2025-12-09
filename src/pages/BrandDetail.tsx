@@ -188,6 +188,11 @@ const BrandDetail = () => {
         return;
       }
 
+      toast({
+        title: "Scraping colors...",
+        description: "Fetching color data from product pages. This may take a moment.",
+      });
+
       const response = await supabase.functions.invoke("scrape-overture-colors", {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -200,8 +205,9 @@ const BrandDetail = () => {
 
       const result = response.data;
       toast({
-        title: "Colors Scraped",
-        description: `Processed ${result.total} filaments. Found ${result.uniqueColors?.length || 0} unique colors.`,
+        title: "Colors Scraped Successfully",
+        description: `Found ${result.totalColorsFound} colors. Created ${result.totalEntriesCreated} new entries, updated ${result.totalEntriesUpdated} existing.`,
+        duration: 8000,
       });
 
       // Refresh filaments data
