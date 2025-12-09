@@ -137,7 +137,8 @@ const getBaseProductName = (title: string, material?: string | null): string => 
   // Pattern 0: Paramount 3D style - "Material (Color) Diameter Weight Filament"
   // e.g., "ABS (Autobot Blue) 1.75mm 1kg Filament" -> "ABS"
   // e.g., "PLA (Black) 1.75mm 1kg Filament" -> "PLA"
-  const paramountMatch = normalizedTitle.match(/^((?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC|HIPS|PVA|Nylon|Carbon\s+Fiber\s+\w+))\s*\(.+\)\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i);
+  // e.g., "PETG Carbon Fiber (Black) 1.75mm 1kg Filament" -> "PETG Carbon Fiber"
+  const paramountMatch = normalizedTitle.match(/^((?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC|HIPS|PVA|Nylon)(?:\s+Carbon\s+Fiber)?)\s*\(.+\)\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i);
   if (paramountMatch) {
     return paramountMatch[1].trim();
   }
