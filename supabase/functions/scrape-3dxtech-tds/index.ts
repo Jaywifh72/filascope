@@ -40,7 +40,8 @@ function extractProductLine(name: string): string | null {
   const productLines = [
     '3dxstat', 'carbonx', 'fibrex', 'thermax', 'triton', 'amidex', 
     'ecomax', 'hyperlite', 'obsidian', 'fluorx', 'wearx', 'ceramix',
-    '3dxmax', '3dxflex', 'aquatek', 'simubone', 'firewire', 'ezpc', 'max-g', 'maxg', 'ion'
+    '3dxmax', '3dxflex', 'aquatek', 'simubone', 'firewire', 'ezpc', 
+    'max-g', 'maxg', 'ion', '3dxtech'
   ];
   
   for (const line of productLines) {
@@ -48,6 +49,12 @@ function extractProductLine(name: string): string | null {
       return line.replace('-', '');
     }
   }
+  
+  // Check for standalone "MAX" that isn't "MAX-G"
+  if (/\bmax\b/i.test(normalized) && !normalized.includes('max-g') && !normalized.includes('maxg') && !normalized.includes('ecomax') && !normalized.includes('3dxmax') && !normalized.includes('thermax')) {
+    return 'max';
+  }
+  
   return null;
 }
 
@@ -55,26 +62,39 @@ function extractProductLine(name: string): string | null {
 function extractMaterialType(name: string): string | null {
   const normalized = name.toLowerCase();
   
+  // Order matters - check longer/specific patterns first
   const materials = [
     'pekk', 'peek', 'pei', 'ultem', 'pps', 'pvdf', 'ppsu', 'pes', 'ppa',
-    'pc', 'petg', 'pctg', 'abs', 'pla', 'asa', 'tpu', 'pva', 'pp',
-    'pa12', 'pa6', 'htn', 'lts2', 'bas', '9085', '1010'
+    'petg', 'pctg', 'r-petg', 'rpetg',
+    'pa12', 'pa6-66', 'pa6', 'pa',
+    'pc', 'abs', 'pla', 'asa', 'tpu', 'pva', 'pp',
+    'htn', 'lts2', 'bas', '9085', '1010'
   ];
   
   for (const mat of materials) {
-    if (normalized.includes(mat)) {
+    // Use word boundary check for short material names
+    const pattern = mat.length <= 3 ? new RegExp(`\\b${mat}\\b`, 'i') : new RegExp(mat, 'i');
+    if (pattern.test(normalized)) {
+      // Normalize r-petg/rpetg to petg
+      if (mat === 'r-petg' || mat === 'rpetg') return 'petg';
       return mat;
     }
   }
   return null;
 }
 
+// Extract TPU hardness (e.g., "85A", "95A")
+function extractTpuHardness(name: string): string | null {
+  const match = name.match(/\b(\d{2}A)\b/i);
+  return match ? match[1].toUpperCase() : null;
+}
+
 // Check if product has fiber reinforcement
 function hasFiberReinforcement(name: string): { cf: boolean; gf: boolean } {
   const normalized = name.toLowerCase();
   return {
-    cf: normalized.includes('cf') || normalized.includes('carbon'),
-    gf: normalized.includes('gf') || normalized.includes('glass')
+    cf: /\bcf\b/.test(normalized) || normalized.includes('carbon'),
+    gf: /\bgf\b/.test(normalized) || normalized.includes('glass')
   };
 }
 
@@ -82,6 +102,8 @@ function hasFiberReinforcement(name: string): { cf: boolean; gf: boolean } {
 function isMaterialMatch(tdsName: string, productTitle: string): boolean {
   const normalizedTds = normalizeMaterialName(tdsName);
   const normalizedProduct = normalizeMaterialName(productTitle);
+  
+  console.log(`  Comparing TDS:"${normalizedTds}" vs Product:"${normalizedProduct}"`);
   
   // Direct match after normalization
   if (normalizedTds === normalizedProduct) {
@@ -99,6 +121,69 @@ function isMaterialMatch(tdsName: string, productTitle: string): boolean {
   // Extract fiber reinforcement
   const tdsFiber = hasFiberReinforcement(tdsName);
   const productFiber = hasFiberReinforcement(productTitle);
+  
+  console.log(`    TDS line:${tdsLine} mat:${tdsMaterial} cf:${tdsFiber.cf} | Product line:${productLine} mat:${productMaterial} cf:${productFiber.cf}`);
+  
+  // Special case: TPU with hardness rating
+  const tdsHardness = extractTpuHardness(tdsName);
+  const productHardness = extractTpuHardness(productTitle);
+  if (tdsMaterial === 'tpu' && productMaterial === 'tpu') {
+    // If both have hardness, they must match
+    if (tdsHardness && productHardness) {
+      return tdsHardness === productHardness;
+    }
+    // If TDS has no hardness but product does, still match (generic TDS)
+    if (!tdsHardness && productHardness) {
+      return true;
+    }
+  }
+  
+  // Special case: "3DXTECH ABS" products - match line + material
+  if (productLine === '3dxtech' && tdsLine === '3dxtech') {
+    if (tdsMaterial && productMaterial && tdsMaterial === productMaterial) {
+      if (tdsFiber.cf === productFiber.cf && tdsFiber.gf === productFiber.gf) {
+        return true;
+      }
+    }
+  }
+  
+  // Special case: Standalone "MAX PLA" products (not MAX-G)
+  if (productLine === 'max' && tdsLine === 'max') {
+    return true;
+  }
+  
+  // Special case: "AquaTek PVA"
+  if ((tdsLine === 'aquatek' || normalizedTds.includes('aquatek')) && 
+      (productLine === 'aquatek' || normalizedProduct.includes('aquatek'))) {
+    return true;
+  }
+  
+  // Special case: "CeramiX" products
+  if ((tdsLine === 'ceramix' || normalizedTds.includes('ceramix')) && 
+      (productLine === 'ceramix' || normalizedProduct.includes('ceramix'))) {
+    return true;
+  }
+  
+  // Special case: "ECOMAX R-PETG" products
+  if ((tdsLine === 'ecomax' || normalizedTds.includes('ecomax')) && 
+      (productLine === 'ecomax' || normalizedProduct.includes('ecomax'))) {
+    return true;
+  }
+  
+  // Special case: AmideX products
+  if ((tdsLine === 'amidex' || normalizedTds.includes('amidex')) && 
+      (productLine === 'amidex' || normalizedProduct.includes('amidex'))) {
+    // Check material type matches if both have it
+    if (tdsMaterial && productMaterial) {
+      // Handle "Nylon 6-66" vs "pa6" vs "pa12"
+      const tdsNylon = tdsName.toLowerCase();
+      const prodNylon = productTitle.toLowerCase();
+      if (tdsNylon.includes('6-66') && prodNylon.includes('6-66')) return true;
+      if (tdsNylon.includes('nylon 12') && prodNylon.includes('nylon 12')) return true;
+      if (tdsMaterial === productMaterial) return true;
+    }
+    return true;
+  }
   
   // Match by product line + material + fiber type
   if (tdsLine && productLine && tdsLine === productLine) {
@@ -129,15 +214,22 @@ function isMaterialMatch(tdsName: string, productTitle: string): boolean {
     return true;
   }
   
-  // Special case: Triton products with specific material
+  // Special case: Triton products - match by material type
   if (tdsLine === 'triton' && productLine === 'triton') {
     if (tdsMaterial && productMaterial && tdsMaterial === productMaterial) {
-      return true;
+      // Check fiber matches too for Triton CF products
+      if (tdsFiber.cf === productFiber.cf && tdsFiber.gf === productFiber.gf) {
+        return true;
+      }
     }
+    // Handle special Triton cases like "9085 BAS", "Ultem 1010 BAS"
+    if (normalizedTds.includes('9085') && normalizedProduct.includes('9085')) return true;
+    if (normalizedTds.includes('1010') && normalizedProduct.includes('1010')) return true;
+    if (normalizedTds.includes('ultem') && normalizedProduct.includes('ultem')) return true;
   }
   
-  // Fallback: check if normalized names contain each other
-  if (normalizedTds.length > 5 && normalizedProduct.length > 5) {
+  // Fallback: check if normalized names contain each other (only for longer names)
+  if (normalizedTds.length > 8 && normalizedProduct.length > 8) {
     if (normalizedProduct.includes(normalizedTds) || normalizedTds.includes(normalizedProduct)) {
       return true;
     }
