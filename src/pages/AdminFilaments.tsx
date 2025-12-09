@@ -162,6 +162,9 @@ const AdminFilaments = () => {
     });
   };
 
+  // Batch size for UPC scraping (edge function max is 25)
+  const BATCH_SIZE = 25;
+
   const handleScrapeUpcs = async () => {
     if (selectedBrandsForUpc.size === 0) {
       toast.error("Please select at least one brand");
@@ -172,18 +175,34 @@ const AdminFilaments = () => {
     setUpcDialogOpen(false);
     
     try {
-      toast.info(`Scraping UPC codes for ${selectedBrandsForUpc.size} brand(s)...`);
-      const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
-        body: { 
-          brands: Array.from(selectedBrandsForUpc),
-          limit: 200, 
-          forceUpdate: forceUpdateScrape 
+      const brands = Array.from(selectedBrandsForUpc);
+      let totalUpdated = 0;
+      let totalSkipped = 0;
+      let totalFailed = 0;
+
+      for (const brand of brands) {
+        toast.info(`Scraping UPCs for ${brand}...`);
+        
+        const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
+          body: { 
+            brands: [brand],
+            limit: BATCH_SIZE, 
+            forceUpdate: forceUpdateScrape 
+          }
+        });
+
+        if (error) {
+          console.error(`Error scraping ${brand}:`, error);
+          toast.error(`Failed to scrape ${brand}: ${error.message}`);
+          continue;
         }
-      });
 
-      if (error) throw error;
+        totalUpdated += data.updated || 0;
+        totalSkipped += data.skipped || 0;
+        totalFailed += data.failed || 0;
+      }
 
-      toast.success(`Scraped UPCs: ${data.updated} updated, ${data.skipped} skipped, ${data.failed} failed`);
+      toast.success(`Scrape complete: ${totalUpdated} updated, ${totalSkipped} skipped, ${totalFailed} failed`);
       setSelectedBrandsForUpc(new Set());
       fetchFilaments();
     } catch (error: any) {
@@ -195,7 +214,6 @@ const AdminFilaments = () => {
   };
 
   const handleScrapeSelectedUpcs = async () => {
-    // Use selected filaments if any are selected, otherwise use filtered filaments missing UPC
     const idsToScrape = selectedFilaments.size > 0 
       ? Array.from(selectedFilaments)
       : filteredFilaments.filter(f => !f.upc).map(f => f.id);
@@ -208,17 +226,41 @@ const AdminFilaments = () => {
     setScrapingUpcs(true);
     
     try {
-      toast.info(`Scraping UPC codes for ${idsToScrape.length} filament(s)...`);
-      const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
-        body: { 
-          filamentIds: idsToScrape,
-          forceUpdate: forceUpdateScrape 
+      let totalUpdated = 0;
+      let totalSkipped = 0;
+      let totalFailed = 0;
+      const totalBatches = Math.ceil(idsToScrape.length / BATCH_SIZE);
+
+      for (let i = 0; i < idsToScrape.length; i += BATCH_SIZE) {
+        const batch = idsToScrape.slice(i, i + BATCH_SIZE);
+        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+        
+        toast.info(`Scraping batch ${batchNum}/${totalBatches} (${batch.length} filaments)...`);
+        
+        const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
+          body: { 
+            filamentIds: batch,
+            forceUpdate: forceUpdateScrape 
+          }
+        });
+
+        if (error) {
+          console.error(`Error in batch ${batchNum}:`, error);
+          totalFailed += batch.length;
+          continue;
         }
-      });
 
-      if (error) throw error;
+        totalUpdated += data.updated || 0;
+        totalSkipped += data.skipped || 0;
+        totalFailed += data.failed || 0;
+        
+        // Small delay between batches
+        if (i + BATCH_SIZE < idsToScrape.length) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
 
-      toast.success(`Scraped UPCs: ${data.updated} updated, ${data.skipped} skipped, ${data.failed} failed`);
+      toast.success(`Scrape complete: ${totalUpdated} updated, ${totalSkipped} skipped, ${totalFailed} failed`);
       fetchFilaments();
     } catch (error: any) {
       toast.error(error.message || "Failed to scrape UPC codes");

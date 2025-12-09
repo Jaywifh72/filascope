@@ -6,226 +6,94 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Comprehensive brand configuration for UPC scraping
+// Maximum batch size to prevent timeouts
+const MAX_BATCH_SIZE = 25;
+
+// Brand configuration for UPC scraping
 interface BrandConfig {
-  shopifyUrl?: string;           // Shopify store URL (for JSON API)
-  productsJsonPath?: string;     // Custom products.json path
-  upcExtractionMethod: 'shopify' | 'woocommerce' | 'magento' | 'custom' | 'none';
-  customExtractor?: (productUrl: string, productTitle: string) => Promise<string | null>;
+  shopifyUrl?: string;
+  upcExtractionMethod: 'shopify' | 'woocommerce' | 'html' | 'none';
   notes?: string;
 }
 
 const BRAND_CONFIGS: Record<string, BrandConfig> = {
-  // === SHOPIFY STORES (most common - use products.json API) ===
-  '3D-Fuel': {
-    shopifyUrl: 'https://www.3dfuel.com',
-    upcExtractionMethod: 'shopify',
-  },
-  '3DXTech': {
-    shopifyUrl: 'https://www.3dxtech.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Polymaker': {
-    shopifyUrl: 'https://us.polymaker.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Overture': {
-    shopifyUrl: 'https://overture3d.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'SUNLU': {
-    shopifyUrl: 'https://www.sunlu.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Amolen': {
-    shopifyUrl: 'https://amolen.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Eryone': {
-    shopifyUrl: 'https://eryone3d.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Atomic Filament': {
-    shopifyUrl: 'https://atomicfilament.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Proto-pasta': {
-    shopifyUrl: 'https://www.proto-pasta.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'ColorFabb': {
-    shopifyUrl: 'https://colorfabb.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Fillamentum': {
-    shopifyUrl: 'https://shop.fillamentum.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'NinjaTek': {
-    shopifyUrl: 'https://ninjatek.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Taulman3D': {
-    shopifyUrl: 'https://taulman3d.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Fiberlogy': {
-    shopifyUrl: 'https://fiberlogy.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'FormFutura': {
-    shopifyUrl: 'https://formfutura.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Inland': {
-    shopifyUrl: 'https://inlandfilament.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'ZIRO': {
-    shopifyUrl: 'https://ziro3d.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'VoxelPLA': {
-    shopifyUrl: 'https://voxelpla.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'GreenGate3D': {
-    shopifyUrl: 'https://greengate3d.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Paramount 3D': {
-    shopifyUrl: 'https://paramount-3d.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Gizmo Dorks': {
-    shopifyUrl: 'https://gizmodorks.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Printed Solid': {
-    shopifyUrl: 'https://printedsolid.com',
-    upcExtractionMethod: 'shopify',
-  },
-  'Matter3D': {
-    shopifyUrl: 'https://matter3d.com',
-    upcExtractionMethod: 'shopify',
-  },
+  // === SHOPIFY STORES ===
+  '3D-Fuel': { shopifyUrl: 'https://www.3dfuel.com', upcExtractionMethod: 'shopify' },
+  '3DXTech': { shopifyUrl: 'https://www.3dxtech.com', upcExtractionMethod: 'shopify' },
+  'Polymaker': { shopifyUrl: 'https://us.polymaker.com', upcExtractionMethod: 'shopify' },
+  'Overture': { shopifyUrl: 'https://overture3d.com', upcExtractionMethod: 'shopify' },
+  'SUNLU': { shopifyUrl: 'https://www.sunlu.com', upcExtractionMethod: 'shopify' },
+  'Amolen': { shopifyUrl: 'https://amolen.com', upcExtractionMethod: 'shopify' },
+  'Eryone': { shopifyUrl: 'https://eryone3d.com', upcExtractionMethod: 'shopify' },
+  'Atomic Filament': { shopifyUrl: 'https://atomicfilament.com', upcExtractionMethod: 'shopify' },
+  'Proto-pasta': { shopifyUrl: 'https://www.proto-pasta.com', upcExtractionMethod: 'shopify' },
+  'ColorFabb': { shopifyUrl: 'https://colorfabb.com', upcExtractionMethod: 'shopify' },
+  'Fillamentum': { shopifyUrl: 'https://shop.fillamentum.com', upcExtractionMethod: 'shopify' },
+  'NinjaTek': { shopifyUrl: 'https://ninjatek.com', upcExtractionMethod: 'shopify' },
+  'Taulman3D': { shopifyUrl: 'https://taulman3d.com', upcExtractionMethod: 'shopify' },
+  'Fiberlogy': { shopifyUrl: 'https://fiberlogy.com', upcExtractionMethod: 'shopify' },
+  'FormFutura': { shopifyUrl: 'https://formfutura.com', upcExtractionMethod: 'shopify' },
+  'Inland': { shopifyUrl: 'https://inlandfilament.com', upcExtractionMethod: 'shopify' },
+  'ZIRO': { shopifyUrl: 'https://ziro3d.com', upcExtractionMethod: 'shopify' },
+  'VoxelPLA': { shopifyUrl: 'https://voxelpla.com', upcExtractionMethod: 'shopify' },
+  'GreenGate3D': { shopifyUrl: 'https://greengate3d.com', upcExtractionMethod: 'shopify' },
+  'Paramount 3D': { shopifyUrl: 'https://paramount-3d.com', upcExtractionMethod: 'shopify' },
+  'Gizmo Dorks': { shopifyUrl: 'https://gizmodorks.com', upcExtractionMethod: 'shopify' },
+  'Printed Solid': { shopifyUrl: 'https://printedsolid.com', upcExtractionMethod: 'shopify' },
+  'Matter3D': { shopifyUrl: 'https://matter3d.com', upcExtractionMethod: 'shopify' },
+  'Siraya Tech': { shopifyUrl: 'https://siraya.tech', upcExtractionMethod: 'shopify' },
   
   // === WOOCOMMERCE STORES ===
-  'eSUN': {
-    shopifyUrl: 'https://www.esun3d.com',
-    upcExtractionMethod: 'woocommerce',
-    notes: 'eSUN uses WooCommerce - UPCs in product meta or SKU field',
-  },
+  'eSUN': { shopifyUrl: 'https://www.esun3d.com', upcExtractionMethod: 'woocommerce' },
   
-  // === BRANDS WITH CUSTOM STORES ===
-  'Prusament': {
-    upcExtractionMethod: 'custom',
-    notes: 'Prusa uses custom e-commerce - check product page meta tags',
-  },
-  'MatterHackers': {
-    shopifyUrl: 'https://www.matterhackers.com',
-    upcExtractionMethod: 'custom',
-    notes: 'MatterHackers has custom store - may need HTML scraping',
-  },
-  'Hatchbox': {
-    upcExtractionMethod: 'none',
-    notes: 'Hatchbox primarily sold through Amazon - UPCs on Amazon listings',
-  },
-  'Bambu Lab': {
-    upcExtractionMethod: 'custom',
-    notes: 'Bambu Lab store - check product page for barcode data',
-  },
-  'Creality': {
-    upcExtractionMethod: 'custom',
-    notes: 'Creality store - may have UPCs in product data',
-  },
-  'Anycubic': {
-    upcExtractionMethod: 'custom',
-    notes: 'Anycubic store',
-  },
-  'ELEGOO': {
-    upcExtractionMethod: 'none',
-    notes: 'ELEGOO primarily sells through Amazon',
-  },
-  'QIDI': {
-    upcExtractionMethod: 'custom',
-    notes: 'QIDI store',
-  },
-  'Siraya Tech': {
-    shopifyUrl: 'https://siraya.tech',
-    upcExtractionMethod: 'shopify',
-  },
+  // === HTML SCRAPING (Custom stores) ===
+  'Prusament': { upcExtractionMethod: 'html', notes: 'Prusa custom store' },
+  'MatterHackers': { shopifyUrl: 'https://www.matterhackers.com', upcExtractionMethod: 'html' },
+  'Bambu Lab': { upcExtractionMethod: 'html', notes: 'Bambu Lab store' },
+  'Creality': { upcExtractionMethod: 'html', notes: 'Creality store' },
+  'Anycubic': { upcExtractionMethod: 'html', notes: 'Anycubic store' },
+  'QIDI': { upcExtractionMethod: 'html', notes: 'QIDI store' },
+  
+  // === NO UPC SUPPORT ===
+  'Hatchbox': { upcExtractionMethod: 'none', notes: 'Amazon-only, no direct store' },
+  'ELEGOO': { upcExtractionMethod: 'none', notes: 'Amazon-only' },
 };
 
-// Alias mapping for vendor name variations
+// Vendor alias mapping
 const VENDOR_ALIASES: Record<string, string> = {
-  'esun': 'eSUN',
-  'ESUN': 'eSUN',
-  'sunlu': 'SUNLU',
-  'Sunlu': 'SUNLU',
+  'esun': 'eSUN', 'ESUN': 'eSUN',
+  'sunlu': 'SUNLU', 'Sunlu': 'SUNLU',
   'polymaker': 'Polymaker',
-  '3dxtech': '3DXTech',
-  '3DXTECH': '3DXTech',
-  'hatchbox': 'Hatchbox',
-  'HATCHBOX': 'Hatchbox',
-  'overture': 'Overture',
-  'OVERTURE': 'Overture',
-  'inland': 'Inland',
-  'INLAND': 'Inland',
-  'ziro': 'ZIRO',
-  'Ziro': 'ZIRO',
-  'colorfabb': 'ColorFabb',
-  'Colorfabb': 'ColorFabb',
+  '3dxtech': '3DXTech', '3DXTECH': '3DXTech',
+  'hatchbox': 'Hatchbox', 'HATCHBOX': 'Hatchbox',
+  'overture': 'Overture', 'OVERTURE': 'Overture',
+  'inland': 'Inland', 'INLAND': 'Inland',
+  'ziro': 'ZIRO', 'Ziro': 'ZIRO',
+  'colorfabb': 'ColorFabb', 'Colorfabb': 'ColorFabb',
   'fillamentum': 'Fillamentum',
   'fiberlogy': 'Fiberlogy',
-  'formfutura': 'FormFutura',
-  'Formfutura': 'FormFutura',
-  'proto-pasta': 'Proto-pasta',
-  'Proto-Pasta': 'Proto-pasta',
-  'protopasta': 'Proto-pasta',
-  'ninjatek': 'NinjaTek',
-  'Ninjatek': 'NinjaTek',
-  'taulman3d': 'Taulman3D',
-  'Taulman3d': 'Taulman3D',
-  'TAULMAN3D': 'Taulman3D',
-  'taulman 3d': 'Taulman3D',
-  '3d-fuel': '3D-Fuel',
-  '3D Fuel': '3D-Fuel',
-  '3dfuel': '3D-Fuel',
-  'atomic': 'Atomic Filament',
-  'Atomic': 'Atomic Filament',
-  'atomicfilament': 'Atomic Filament',
-  'gizmo dorks': 'Gizmo Dorks',
-  'GizmoDorks': 'Gizmo Dorks',
-  'matter3d': 'Matter3D',
-  'Matter 3D': 'Matter3D',
-  'printed solid': 'Printed Solid',
-  'printedsolid': 'Printed Solid',
-  'paramount': 'Paramount 3D',
-  'paramount3d': 'Paramount 3D',
-  'siraya': 'Siraya Tech',
-  'sirayatech': 'Siraya Tech',
-  'greengate': 'GreenGate3D',
-  'greengate 3d': 'GreenGate3D',
-  'voxel': 'VoxelPLA',
-  'voxelpla': 'VoxelPLA',
-  'matterhackers': 'MatterHackers',
-  'matter hackers': 'MatterHackers',
-  'prusament': 'Prusament',
-  'prusa': 'Prusament',
-  'bambulab': 'Bambu Lab',
-  'bambu': 'Bambu Lab',
+  'formfutura': 'FormFutura', 'Formfutura': 'FormFutura',
+  'proto-pasta': 'Proto-pasta', 'Proto-Pasta': 'Proto-pasta', 'protopasta': 'Proto-pasta',
+  'ninjatek': 'NinjaTek', 'Ninjatek': 'NinjaTek',
+  'taulman3d': 'Taulman3D', 'Taulman3d': 'Taulman3D', 'TAULMAN3D': 'Taulman3D',
+  '3d-fuel': '3D-Fuel', '3D Fuel': '3D-Fuel', '3dfuel': '3D-Fuel',
+  'atomic': 'Atomic Filament', 'Atomic': 'Atomic Filament', 'atomicfilament': 'Atomic Filament',
+  'gizmo dorks': 'Gizmo Dorks', 'GizmoDorks': 'Gizmo Dorks',
+  'matter3d': 'Matter3D', 'Matter 3D': 'Matter3D',
+  'printed solid': 'Printed Solid', 'printedsolid': 'Printed Solid',
+  'paramount': 'Paramount 3D', 'paramount3d': 'Paramount 3D',
+  'siraya': 'Siraya Tech', 'sirayatech': 'Siraya Tech',
+  'greengate': 'GreenGate3D', 'greengate 3d': 'GreenGate3D',
+  'voxel': 'VoxelPLA', 'voxelpla': 'VoxelPLA',
+  'matterhackers': 'MatterHackers', 'matter hackers': 'MatterHackers',
+  'prusament': 'Prusament', 'prusa': 'Prusament',
+  'bambulab': 'Bambu Lab', 'bambu': 'Bambu Lab',
   'creality': 'Creality',
   'anycubic': 'Anycubic',
-  'elegoo': 'ELEGOO',
-  'Elegoo': 'ELEGOO',
-  'qidi': 'QIDI',
-  'Qidi': 'QIDI',
-  'qidi tech': 'QIDI',
-  'amolen': 'Amolen',
-  'AMOLEN': 'Amolen',
-  'eryone': 'Eryone',
-  'ERYONE': 'Eryone',
+  'elegoo': 'ELEGOO', 'Elegoo': 'ELEGOO',
+  'qidi': 'QIDI', 'Qidi': 'QIDI', 'qidi tech': 'QIDI',
+  'amolen': 'Amolen', 'AMOLEN': 'Amolen',
+  'eryone': 'Eryone', 'ERYONE': 'Eryone',
 };
 
 function normalizeVendorName(vendor: string): string {
@@ -239,15 +107,12 @@ function getBrandConfig(vendor: string): BrandConfig | null {
 
 // Extract product handle from URL
 function extractProductHandle(productUrl: string): string | null {
-  // Shopify format: /products/product-handle
   const shopifyMatch = productUrl.match(/\/products\/([^?/]+)/);
   if (shopifyMatch) return shopifyMatch[1];
   
-  // WooCommerce format: /product/product-slug/
   const wooMatch = productUrl.match(/\/product\/([^?/]+)/);
   if (wooMatch) return wooMatch[1];
   
-  // Generic slug at end of URL
   const genericMatch = productUrl.match(/\/([^/?]+)(?:\?|$)/);
   if (genericMatch && genericMatch[1] !== 'products' && genericMatch[1] !== 'product') {
     return genericMatch[1];
@@ -256,44 +121,57 @@ function extractProductHandle(productUrl: string): string | null {
   return null;
 }
 
-// Shopify product identifier extraction
-interface ShopifyExtractionResult {
+// Extraction result interface
+interface ExtractionResult {
   upc: string | null;
   sku: string | null;
   gtin: string | null;
   ean: string | null;
+  method: string;
   note?: string;
 }
 
-// Normalize title for matching
-function normalizeForMatching(str: string): string {
-  return str
-    .toLowerCase()
-    .replace(/[™®©]/g, '')
-    .replace(/[^a-z0-9]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+// Classify barcode by length
+function classifyBarcode(barcode: string): { upc: string | null; gtin: string | null; ean: string | null } {
+  const cleanBarcode = barcode.replace(/\D/g, '');
+  const length = cleanBarcode.length;
+  
+  if (length === 12 || length === 8) {
+    return { upc: cleanBarcode, gtin: null, ean: null };
+  }
+  if (length === 13) {
+    return { upc: null, gtin: null, ean: cleanBarcode };
+  }
+  if (length === 14) {
+    return { upc: null, gtin: cleanBarcode, ean: null };
+  }
+  if (length >= 10 && length <= 12) {
+    return { upc: cleanBarcode, gtin: null, ean: null };
+  }
+  return { upc: null, gtin: cleanBarcode, ean: null };
 }
 
-// Find product in cache by fuzzy title matching
-function findProductByTitle(productTitle: string, productMap: Map<string, any>): any | null {
+// Normalize title for fuzzy matching
+function normalizeForMatching(str: string): string {
+  return str.toLowerCase().replace(/[™®©]/g, '').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Fuzzy match product by title
+function findProductByTitle(productTitle: string, products: any[]): any | null {
   const normalizedTitle = normalizeForMatching(productTitle);
   const titleWords = normalizedTitle.split(' ').filter(w => w.length > 2);
   
   let bestMatch: any = null;
   let bestScore = 0;
   
-  for (const [handle, product] of productMap) {
+  for (const product of products) {
     const shopifyTitle = normalizeForMatching(product.title || '');
-    
-    // Check if titles are similar enough
     let matchingWords = 0;
     for (const word of titleWords) {
       if (shopifyTitle.includes(word)) matchingWords++;
     }
-    
-    const score = matchingWords / titleWords.length;
-    if (score > bestScore && score >= 0.5) { // At least 50% of words match
+    const score = titleWords.length > 0 ? matchingWords / titleWords.length : 0;
+    if (score > bestScore && score >= 0.5) {
       bestScore = score;
       bestMatch = product;
     }
@@ -302,164 +180,86 @@ function findProductByTitle(productTitle: string, productMap: Map<string, any>):
   return bestMatch;
 }
 
-async function extractFromShopify(
-  shopifyUrl: string,
-  productHandle: string,
-  productMap: Map<string, any>,
-  productTitle?: string
-): Promise<ShopifyExtractionResult> {
+// Extract data from Shopify variant
+function extractFromVariants(variants: any[]): ExtractionResult {
   let upc: string | null = null;
   let sku: string | null = null;
   let gtin: string | null = null;
   let ean: string | null = null;
   
-  // Helper to classify barcode type based on length
-  const classifyBarcode = (barcode: string): { upc: string | null; gtin: string | null; ean: string | null } => {
-    const cleanBarcode = barcode.replace(/\D/g, '');
-    const length = cleanBarcode.length;
-    
-    // UPC-A: 12 digits, UPC-E: 8 digits
-    if (length === 12 || length === 8) {
-      return { upc: cleanBarcode, gtin: null, ean: null };
+  for (const variant of variants || []) {
+    if (variant.barcode && variant.barcode.length >= 8) {
+      const classified = classifyBarcode(variant.barcode);
+      if (!upc && classified.upc) upc = classified.upc;
+      if (!ean && classified.ean) ean = classified.ean;
+      if (!gtin && classified.gtin) gtin = classified.gtin;
     }
-    // EAN-13: 13 digits, EAN-8: 8 digits (same as UPC-E, context dependent)
-    if (length === 13) {
-      return { upc: null, gtin: null, ean: cleanBarcode };
+    if (!sku && variant.sku && variant.sku.trim()) {
+      sku = variant.sku.trim();
     }
-    // GTIN-14: 14 digits
-    if (length === 14) {
-      return { upc: null, gtin: cleanBarcode, ean: null };
-    }
-    // Default: treat as UPC if 10-12 digits, otherwise GTIN
-    if (length >= 10 && length <= 12) {
-      return { upc: cleanBarcode, gtin: null, ean: null };
-    }
-    return { upc: null, gtin: cleanBarcode, ean: null };
-  };
-  
-  // Helper to extract data from variants
-  const extractFromVariants = (variants: any[], source: string): boolean => {
-    for (const variant of variants || []) {
-      // Extract barcode and classify it
-      if (variant.barcode && variant.barcode.length >= 8) {
-        const classified = classifyBarcode(variant.barcode);
-        if (!upc && classified.upc) {
-          console.log(`  Found UPC in ${source}: ${classified.upc}`);
-          upc = classified.upc;
-        }
-        if (!ean && classified.ean) {
-          console.log(`  Found EAN in ${source}: ${classified.ean}`);
-          ean = classified.ean;
-        }
-        if (!gtin && classified.gtin) {
-          console.log(`  Found GTIN in ${source}: ${classified.gtin}`);
-          gtin = classified.gtin;
-        }
-      }
-      // Extract SKU
-      if (!sku && variant.sku && variant.sku.trim()) {
-        console.log(`  Found SKU in ${source}: ${variant.sku}`);
-        sku = variant.sku.trim();
-      }
-      // If we have all, we're done
-      if ((upc || ean || gtin) && sku) return true;
-    }
-    return upc !== null || sku !== null || gtin !== null || ean !== null;
-  };
-  
-  // Try cache first by exact handle match
-  const cachedProduct = productMap.get(productHandle.toLowerCase());
-  if (cachedProduct) {
-    const variantsChecked = cachedProduct.variants?.length || 0;
-    const found = extractFromVariants(cachedProduct.variants, 'cache (exact handle)');
-    
-    if (found) {
-      return { upc, sku, gtin, ean };
-    }
-    
-    if (variantsChecked > 0) {
-      console.log(`  Product found in cache (${variantsChecked} variants) but no barcode/sku populated`);
-      return { upc: null, sku: null, gtin: null, ean: null, note: `Product has ${variantsChecked} variants but none have barcode/sku data` };
-    }
+    if ((upc || ean || gtin) && sku) break;
   }
   
-  // Try individual product JSON first
+  return { upc, sku, gtin, ean, method: 'shopify_variants' };
+}
+
+// Strategy 1: Shopify Individual Product JSON
+async function tryShopifyProductJson(shopifyUrl: string, productHandle: string): Promise<ExtractionResult | null> {
   try {
-    const productJsonUrl = `${shopifyUrl}/products/${productHandle}.json`;
-    console.log(`  Trying individual product JSON: ${productJsonUrl}`);
-    const response = await fetch(productJsonUrl, {
+    const url = `${shopifyUrl}/products/${productHandle}.json`;
+    console.log(`  [Strategy 1] Individual product JSON: ${url}`);
+    
+    const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'application/json',
       },
     });
     
-    if (response.ok) {
-      const data = await response.json();
-      const variants = data.product?.variants || [];
-      const found = extractFromVariants(variants, 'product JSON');
-      
-      if (found) {
-        return { upc, sku, gtin, ean };
-      }
-      
-      if (variants.length > 0) {
-        console.log(`  Individual product JSON has ${variants.length} variants but no barcode/sku data`);
-        return { upc: null, sku: null, gtin: null, ean: null, note: `Vendor does not populate barcode/SKU in Shopify` };
-      }
-    } else {
-      console.log(`  Individual product JSON returned ${response.status}`);
+    if (!response.ok) {
+      console.log(`    -> HTTP ${response.status}`);
+      return null;
     }
+    
+    const data = await response.json();
+    const variants = data.product?.variants || [];
+    if (variants.length === 0) return null;
+    
+    const result = extractFromVariants(variants);
+    if (result.upc || result.sku || result.gtin || result.ean) {
+      result.method = 'shopify_product_json';
+      console.log(`    -> Found: UPC=${result.upc}, SKU=${result.sku}, GTIN=${result.gtin}, EAN=${result.ean}`);
+      return result;
+    }
+    
+    console.log(`    -> ${variants.length} variants but no barcode/SKU data`);
+    return null;
   } catch (e) {
-    console.log(`  Error fetching Shopify product JSON: ${e}`);
+    console.log(`    -> Error: ${e}`);
+    return null;
   }
-  
-  // Try fuzzy title matching as fallback (for stores like 3DXTech with mismatched handles)
-  if (productTitle && productMap.size > 0) {
-    console.log(`  Trying fuzzy title match for: ${productTitle}`);
-    const matchedProduct = findProductByTitle(productTitle, productMap);
-    if (matchedProduct) {
-      console.log(`  Found fuzzy match: "${matchedProduct.title}" (handle: ${matchedProduct.handle})`);
-      const found = extractFromVariants(matchedProduct.variants, 'cache (fuzzy title match)');
-      if (found) {
-        return { upc, sku, gtin, ean };
-      }
-      if (matchedProduct.variants?.length > 0) {
-        console.log(`  Fuzzy matched product has ${matchedProduct.variants.length} variants but no barcode/sku data`);
-        return { upc: null, sku: null, gtin: null, ean: null, note: `Product matched by title but vendor does not populate barcode/SKU in Shopify` };
-      }
-    } else {
-      console.log(`  No fuzzy title match found in ${productMap.size} cached products`);
-    }
-  }
-  
-  return { upc: null, sku: null, gtin: null, ean: null, note: 'Product not found in Shopify API' };
 }
 
-// Fetch all products from Shopify store
-async function fetchShopifyProducts(shopifyUrl: string): Promise<Map<string, any>> {
-  const productMap = new Map<string, any>();
+// Strategy 2: Shopify Collection JSON (batch all products)
+async function fetchShopifyProductsJson(shopifyUrl: string): Promise<any[]> {
+  const allProducts: any[] = [];
   
   try {
-    console.log(`Fetching products from ${shopifyUrl}/products.json...`);
-    
-    // Shopify paginates at 250 products, may need multiple pages
     let page = 1;
     let hasMore = true;
     
-    while (hasMore && page <= 10) { // Max 2500 products
+    while (hasMore && page <= 5) {
       const url = `${shopifyUrl}/products.json?limit=250&page=${page}`;
+      console.log(`  Fetching ${url}`);
+      
       const response = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json'
-        }
+          'Accept': 'application/json',
+        },
       });
       
-      if (!response.ok) {
-        console.log(`Failed to fetch page ${page}: ${response.status}`);
-        break;
-      }
+      if (!response.ok) break;
       
       const data = await response.json();
       const products = data.products || [];
@@ -467,41 +267,257 @@ async function fetchShopifyProducts(shopifyUrl: string): Promise<Map<string, any
       if (products.length === 0) {
         hasMore = false;
       } else {
-        for (const product of products) {
-          if (product.handle) {
-            productMap.set(product.handle.toLowerCase(), product);
-          }
-        }
-        console.log(`Fetched ${products.length} products from page ${page}`);
+        allProducts.push(...products);
         page++;
-        
-        // Small delay between pages
+        if (products.length < 250) hasMore = false;
         if (hasMore) await new Promise(r => setTimeout(r, 200));
       }
     }
     
-    console.log(`Total products cached: ${productMap.size}`);
+    console.log(`  Total products fetched: ${allProducts.length}`);
   } catch (e) {
-    console.error(`Error fetching Shopify products: ${e}`);
+    console.log(`  Error fetching products.json: ${e}`);
   }
   
-  return productMap;
+  return allProducts;
 }
 
-// Process a single filament
+function findProductInCollection(products: any[], productHandle: string, productTitle: string): ExtractionResult | null {
+  // Try exact handle match first
+  const exactMatch = products.find(p => p.handle?.toLowerCase() === productHandle.toLowerCase());
+  if (exactMatch) {
+    const result = extractFromVariants(exactMatch.variants);
+    if (result.upc || result.sku || result.gtin || result.ean) {
+      result.method = 'shopify_collection_exact';
+      return result;
+    }
+  }
+  
+  // Try fuzzy title match
+  const fuzzyMatch = findProductByTitle(productTitle, products);
+  if (fuzzyMatch) {
+    const result = extractFromVariants(fuzzyMatch.variants);
+    if (result.upc || result.sku || result.gtin || result.ean) {
+      result.method = 'shopify_collection_fuzzy';
+      return result;
+    }
+  }
+  
+  return null;
+}
+
+// Strategy 3: HTML Scraping for JSON-LD structured data
+async function tryHtmlJsonLd(productUrl: string): Promise<ExtractionResult | null> {
+  if (!productUrl || !productUrl.startsWith('http')) return null;
+  
+  try {
+    console.log(`  [Strategy 3] HTML JSON-LD: ${productUrl}`);
+    
+    const response = await fetch(productUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html',
+      },
+    });
+    
+    if (!response.ok) {
+      console.log(`    -> HTTP ${response.status}`);
+      return null;
+    }
+    
+    const html = await response.text();
+    
+    let upc: string | null = null;
+    let sku: string | null = null;
+    let gtin: string | null = null;
+    let ean: string | null = null;
+    
+    // Extract JSON-LD structured data
+    const jsonLdMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+    if (jsonLdMatches) {
+      for (const match of jsonLdMatches) {
+        try {
+          const jsonContent = match.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
+          const data = JSON.parse(jsonContent);
+          
+          // Handle array or single object
+          const items = Array.isArray(data) ? data : [data];
+          for (const item of items) {
+            if (item['@type'] === 'Product' || item['@type']?.includes('Product')) {
+              if (item.gtin && !gtin) {
+                const classified = classifyBarcode(item.gtin);
+                gtin = classified.gtin;
+                ean = classified.ean;
+                upc = classified.upc;
+              }
+              if (item.gtin12 && !upc) upc = item.gtin12;
+              if (item.gtin13 && !ean) ean = item.gtin13;
+              if (item.gtin14 && !gtin) gtin = item.gtin14;
+              if (item.sku && !sku) sku = item.sku;
+              if (item.productID && !sku) sku = item.productID;
+              if (item.mpn && !sku) sku = item.mpn;
+              
+              // Check offers
+              const offers = Array.isArray(item.offers) ? item.offers : [item.offers].filter(Boolean);
+              for (const offer of offers) {
+                if (offer?.sku && !sku) sku = offer.sku;
+              }
+            }
+          }
+        } catch (e) {
+          // Skip invalid JSON
+        }
+      }
+    }
+    
+    // Fallback: Look for meta tags
+    if (!sku) {
+      const skuMeta = html.match(/<meta[^>]*property=["']product:retailer_item_id["'][^>]*content=["']([^"']+)["']/i);
+      if (skuMeta) sku = skuMeta[1];
+    }
+    
+    if (!gtin && !upc && !ean) {
+      const gtinMeta = html.match(/<meta[^>]*property=["']product:gtin["'][^>]*content=["']([^"']+)["']/i);
+      if (gtinMeta) {
+        const classified = classifyBarcode(gtinMeta[1]);
+        gtin = classified.gtin;
+        ean = classified.ean;
+        upc = classified.upc;
+      }
+    }
+    
+    // Look for barcode in visible text (tables, specs)
+    if (!upc && !gtin && !ean) {
+      const barcodePatterns = [
+        /UPC[:\s]*([0-9]{8,14})/i,
+        /GTIN[:\s]*([0-9]{8,14})/i,
+        /EAN[:\s]*([0-9]{8,14})/i,
+        /Barcode[:\s]*([0-9]{8,14})/i,
+      ];
+      for (const pattern of barcodePatterns) {
+        const match = html.match(pattern);
+        if (match) {
+          const classified = classifyBarcode(match[1]);
+          if (!upc && classified.upc) upc = classified.upc;
+          if (!ean && classified.ean) ean = classified.ean;
+          if (!gtin && classified.gtin) gtin = classified.gtin;
+          break;
+        }
+      }
+    }
+    
+    if (upc || sku || gtin || ean) {
+      console.log(`    -> Found: UPC=${upc}, SKU=${sku}, GTIN=${gtin}, EAN=${ean}`);
+      return { upc, sku, gtin, ean, method: 'html_jsonld' };
+    }
+    
+    console.log(`    -> No data found in HTML`);
+    return null;
+  } catch (e) {
+    console.log(`    -> Error: ${e}`);
+    return null;
+  }
+}
+
+// Strategy 4: WooCommerce HTML scraping
+async function tryWooCommerce(productUrl: string): Promise<ExtractionResult | null> {
+  if (!productUrl || !productUrl.startsWith('http')) return null;
+  
+  try {
+    console.log(`  [Strategy 4] WooCommerce HTML: ${productUrl}`);
+    
+    const response = await fetch(productUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html',
+      },
+    });
+    
+    if (!response.ok) {
+      console.log(`    -> HTTP ${response.status}`);
+      return null;
+    }
+    
+    const html = await response.text();
+    
+    let upc: string | null = null;
+    let sku: string | null = null;
+    let gtin: string | null = null;
+    let ean: string | null = null;
+    
+    // WooCommerce SKU
+    const skuMatch = html.match(/class=["']sku["'][^>]*>([^<]+)</i);
+    if (skuMatch) sku = skuMatch[1].trim();
+    
+    // JSON-LD (same as HTML strategy)
+    const jsonLdMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+    if (jsonLdMatches) {
+      for (const match of jsonLdMatches) {
+        try {
+          const jsonContent = match.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
+          const data = JSON.parse(jsonContent);
+          const items = Array.isArray(data) ? data : [data];
+          for (const item of items) {
+            if (item['@type'] === 'Product') {
+              if (item.gtin) {
+                const classified = classifyBarcode(item.gtin);
+                gtin = classified.gtin;
+                ean = classified.ean;
+                upc = classified.upc;
+              }
+              if (item.sku && !sku) sku = item.sku;
+            }
+          }
+        } catch (e) {}
+      }
+    }
+    
+    // Additional WooCommerce-specific patterns
+    const additionalInfoMatch = html.match(/itemprop=["']gtin[0-9]*["'][^>]*content=["']([^"']+)["']/i);
+    if (additionalInfoMatch && !gtin && !upc && !ean) {
+      const classified = classifyBarcode(additionalInfoMatch[1]);
+      gtin = classified.gtin;
+      ean = classified.ean;
+      upc = classified.upc;
+    }
+    
+    if (upc || sku || gtin || ean) {
+      console.log(`    -> Found: UPC=${upc}, SKU=${sku}, GTIN=${gtin}, EAN=${ean}`);
+      return { upc, sku, gtin, ean, method: 'woocommerce' };
+    }
+    
+    console.log(`    -> No data found`);
+    return null;
+  } catch (e) {
+    console.log(`    -> Error: ${e}`);
+    return null;
+  }
+}
+
+// Process a single filament with multi-strategy fallback
 async function processFilament(
-  filament: any, 
+  filament: any,
   brandConfig: BrandConfig | null,
-  productMap: Map<string, any>,
+  shopifyProducts: any[],
   supabase: any
-): Promise<{ id: string; title: string; status: 'updated' | 'no_data_found' | 'error' | 'unsupported'; upc?: string; sku?: string; gtin?: string; ean?: string; error?: string; method?: string }> {
+): Promise<{ 
+  id: string; 
+  title: string; 
+  status: 'updated' | 'no_data_found' | 'error' | 'unsupported'; 
+  upc?: string; 
+  sku?: string; 
+  gtin?: string; 
+  ean?: string; 
+  error?: string; 
+  method?: string 
+}> {
   try {
     const productHandle = filament.product_handle || extractProductHandle(filament.product_url || '');
     
     console.log(`Processing: ${filament.product_title} (vendor: ${filament.vendor}, handle: ${productHandle})`);
     
     if (!brandConfig) {
-      console.log(`No config for vendor: ${filament.vendor}`);
+      console.log(`  No config for vendor: ${filament.vendor}`);
       return { 
         id: filament.id, 
         title: filament.product_title, 
@@ -511,68 +527,78 @@ async function processFilament(
     }
     
     if (brandConfig.upcExtractionMethod === 'none') {
-      console.log(`UPC extraction not supported for ${filament.vendor}`);
+      console.log(`  UPC extraction not supported for ${filament.vendor}`);
       return { 
         id: filament.id, 
         title: filament.product_title, 
         status: 'unsupported',
-        error: brandConfig.notes || 'UPC extraction not supported for this vendor'
+        error: brandConfig.notes || 'UPC extraction not supported'
       };
     }
     
-    let upc: string | null = null;
-    let sku: string | null = null;
-    let gtin: string | null = null;
-    let ean: string | null = null;
-    let method = '';
-    let extractionNote = '';
+    let result: ExtractionResult | null = null;
     
-    // Shopify extraction (gets UPC, SKU, GTIN, EAN)
-    if (brandConfig.upcExtractionMethod === 'shopify' && brandConfig.shopifyUrl) {
-      const result = await extractFromShopify(brandConfig.shopifyUrl, productHandle || '', productMap, filament.product_title);
-      upc = result.upc;
-      sku = result.sku;
-      gtin = result.gtin;
-      ean = result.ean;
-      if (result.note) extractionNote = result.note;
-      if (upc || sku || gtin || ean) method = 'shopify';
+    // Strategy chain based on brand config
+    if (brandConfig.upcExtractionMethod === 'shopify' && brandConfig.shopifyUrl && productHandle) {
+      // Try individual product JSON first (faster)
+      result = await tryShopifyProductJson(brandConfig.shopifyUrl, productHandle);
+      
+      // Fallback to collection search
+      if (!result && shopifyProducts.length > 0) {
+        console.log(`  [Strategy 2] Searching collection (${shopifyProducts.length} products)`);
+        result = findProductInCollection(shopifyProducts, productHandle, filament.product_title);
+      }
+      
+      // Fallback to HTML scraping
+      if (!result && filament.product_url) {
+        result = await tryHtmlJsonLd(filament.product_url);
+      }
+    } else if (brandConfig.upcExtractionMethod === 'woocommerce') {
+      // Try WooCommerce extraction
+      result = await tryWooCommerce(filament.product_url);
+      
+      // Fallback to generic HTML
+      if (!result && filament.product_url) {
+        result = await tryHtmlJsonLd(filament.product_url);
+      }
+    } else if (brandConfig.upcExtractionMethod === 'html') {
+      // HTML-only brands
+      result = await tryHtmlJsonLd(filament.product_url);
     }
     
-    // WooCommerce extraction (placeholder - would need HTML scraping)
-    if (!upc && brandConfig.upcExtractionMethod === 'woocommerce') {
-      console.log(`WooCommerce extraction not yet implemented for ${filament.vendor}`);
+    if (!result) {
+      return { 
+        id: filament.id, 
+        title: filament.product_title, 
+        status: 'no_data_found',
+        error: 'No UPC/SKU/GTIN/EAN found with any extraction method'
+      };
     }
     
-    // Custom extraction (for brands with special logic)
-    if (!upc && brandConfig.upcExtractionMethod === 'custom' && brandConfig.customExtractor) {
-      upc = await brandConfig.customExtractor(filament.product_url, filament.product_title);
-      if (upc) method = 'custom';
-    }
-    
-    // Validate and clean UPC format (8-14 digits)
+    // Validate and clean UPC
     let cleanUpc: string | null = null;
-    if (upc) {
-      cleanUpc = upc.replace(/\D/g, '');
+    if (result.upc) {
+      cleanUpc = result.upc.replace(/\D/g, '');
       if (cleanUpc.length < 8 || cleanUpc.length > 14) {
-        console.log(`  Invalid UPC format: ${upc}`);
+        console.log(`  Invalid UPC format: ${result.upc}`);
         cleanUpc = null;
       }
     }
     
-    // Check if we have anything to update
+    // Check if we have new data to update
     const hasNewUpc = cleanUpc && cleanUpc !== filament.upc;
-    const hasNewSku = sku && sku !== filament.variant_sku;
-    const hasNewGtin = gtin && gtin !== filament.gtin;
-    const hasNewEan = ean && ean !== filament.ean;
+    const hasNewSku = result.sku && result.sku !== filament.variant_sku;
+    const hasNewGtin = result.gtin && result.gtin !== filament.gtin;
+    const hasNewEan = result.ean && result.ean !== filament.ean;
     
     if (hasNewUpc || hasNewSku || hasNewGtin || hasNewEan) {
       const updateData: Record<string, string> = {};
       if (hasNewUpc) updateData.upc = cleanUpc!;
-      if (hasNewSku) updateData.variant_sku = sku!;
-      if (hasNewGtin) updateData.gtin = gtin!;
-      if (hasNewEan) updateData.ean = ean!;
+      if (hasNewSku) updateData.variant_sku = result.sku!;
+      if (hasNewGtin) updateData.gtin = result.gtin!;
+      if (hasNewEan) updateData.ean = result.ean!;
       
-      console.log(`  Found via ${method}: ${hasNewUpc ? `UPC=${cleanUpc}` : ''} ${hasNewSku ? `SKU=${sku}` : ''} ${hasNewGtin ? `GTIN=${gtin}` : ''} ${hasNewEan ? `EAN=${ean}` : ''}`);
+      console.log(`  Updating via ${result.method}: ${JSON.stringify(updateData)}`);
       
       const { error: updateError } = await supabase
         .from('filaments')
@@ -583,16 +609,15 @@ async function processFilament(
         return { id: filament.id, title: filament.product_title, status: 'error', error: updateError.message };
       }
       
-      console.log(`Updated ${filament.product_title}`);
       return { 
         id: filament.id, 
         title: filament.product_title, 
         status: 'updated', 
         upc: cleanUpc || undefined,
-        sku: sku || undefined,
-        gtin: gtin || undefined,
-        ean: ean || undefined,
-        method 
+        sku: result.sku || undefined,
+        gtin: result.gtin || undefined,
+        ean: result.ean || undefined,
+        method: result.method 
       };
     }
     
@@ -600,11 +625,16 @@ async function processFilament(
       id: filament.id, 
       title: filament.product_title, 
       status: 'no_data_found',
-      error: extractionNote || 'No UPC, SKU, GTIN or EAN data found'
+      error: 'Data already exists or no new data found'
     };
   } catch (e) {
     console.error(`Error processing filament: ${e}`);
-    return { id: filament.id, title: filament.product_title, status: 'error', error: e instanceof Error ? e.message : 'Unknown error' };
+    return { 
+      id: filament.id, 
+      title: filament.product_title, 
+      status: 'error', 
+      error: e instanceof Error ? e.message : 'Unknown error' 
+    };
   }
 }
 
@@ -616,13 +646,29 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    // Use service role key directly since JWT verification is disabled in config
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { brands = [], filamentIds = [], limit = 100, forceUpdate = false } = await req.json().catch(() => ({}));
+    // Parse request body with better error handling
+    let requestBody: any = {};
+    try {
+      const bodyText = await req.text();
+      if (bodyText) {
+        requestBody = JSON.parse(bodyText);
+      }
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-    console.log(`Starting UPC scrape - brands: ${brands.join(', ')}, filamentIds: ${filamentIds.length}, limit=${limit}, forceUpdate=${forceUpdate}`);
+    const { brands = [], filamentIds = [], limit = MAX_BATCH_SIZE, forceUpdate = false } = requestBody;
+    
+    // Enforce batch size limit
+    const effectiveLimit = Math.min(limit, MAX_BATCH_SIZE);
+    
+    console.log(`Starting UPC scrape - brands: ${brands.length}, filamentIds: ${filamentIds.length}, limit=${effectiveLimit}, forceUpdate=${forceUpdate}`);
 
     if ((!brands || brands.length === 0) && (!filamentIds || filamentIds.length === 0)) {
       return new Response(JSON.stringify({ error: 'No brands or filament IDs specified' }), {
@@ -637,22 +683,25 @@ serve(async (req) => {
       failed: 0,
       skipped: 0,
       unsupported: 0,
+      batchSize: effectiveLimit,
       brandResults: {} as Record<string, { updated: number; skipped: number; failed: number; unsupported: number }>,
       details: [] as any[],
       supportedBrands: Object.keys(BRAND_CONFIGS).filter(b => BRAND_CONFIGS[b].upcExtractionMethod !== 'none'),
     };
 
-    // Cache for Shopify product maps by brand
-    const shopifyProductCaches = new Map<string, Map<string, any>>();
+    // Cache for Shopify products by vendor
+    const shopifyProductCaches = new Map<string, any[]>();
 
     // Process by filament IDs
     if (filamentIds && filamentIds.length > 0) {
-      console.log(`\n=== Processing ${filamentIds.length} specific filaments ===`);
+      // Limit the batch
+      const batchIds = filamentIds.slice(0, effectiveLimit);
+      console.log(`\n=== Processing ${batchIds.length} filaments (limited from ${filamentIds.length}) ===`);
       
       let query = supabase
         .from('filaments')
-      .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku, gtin, ean')
-      .in('id', filamentIds)
+        .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku, gtin, ean')
+        .in('id', batchIds)
         .not('product_url', 'is', null);
 
       if (!forceUpdate) {
@@ -671,7 +720,7 @@ serve(async (req) => {
       console.log(`Found ${filaments?.length || 0} filaments to process`);
       results.total = filaments?.length || 0;
 
-      // Group by vendor for efficient processing
+      // Group by vendor
       const byVendor = new Map<string, any[]>();
       for (const f of filaments || []) {
         const vendor = normalizeVendorName(f.vendor || 'Unknown');
@@ -684,18 +733,18 @@ serve(async (req) => {
         const brandConfig = getBrandConfig(vendor);
         
         // Pre-fetch Shopify products if needed
-        let productMap = new Map<string, any>();
+        let shopifyProducts: any[] = [];
         if (brandConfig?.upcExtractionMethod === 'shopify' && brandConfig.shopifyUrl) {
           if (!shopifyProductCaches.has(vendor)) {
-            productMap = await fetchShopifyProducts(brandConfig.shopifyUrl);
-            shopifyProductCaches.set(vendor, productMap);
+            shopifyProducts = await fetchShopifyProductsJson(brandConfig.shopifyUrl);
+            shopifyProductCaches.set(vendor, shopifyProducts);
           } else {
-            productMap = shopifyProductCaches.get(vendor)!;
+            shopifyProducts = shopifyProductCaches.get(vendor)!;
           }
         }
 
         for (const filament of vendorFilaments) {
-          const result = await processFilament(filament, brandConfig, productMap, supabase);
+          const result = await processFilament(filament, brandConfig, shopifyProducts, supabase);
           
           if (result.status === 'updated') {
             results.updated++;
@@ -714,7 +763,7 @@ serve(async (req) => {
           results.details.push({ ...result, brand: vendor });
           
           // Small delay between requests
-          await new Promise(r => setTimeout(r, 100));
+          await new Promise(r => setTimeout(r, 50));
         }
       }
 
@@ -733,15 +782,15 @@ serve(async (req) => {
 
       let query = supabase
         .from('filaments')
-      .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku, gtin, ean')
-      .eq('vendor', brand)
+        .select('id, product_title, product_url, product_handle, vendor, upc, variant_sku, gtin, ean')
+        .eq('vendor', brand)
         .not('product_url', 'is', null);
 
       if (!forceUpdate) {
         query = query.is('upc', null);
       }
 
-      const { data: filaments, error: fetchError } = await query.limit(limit);
+      const { data: filaments, error: fetchError } = await query.limit(effectiveLimit);
 
       if (fetchError) {
         console.error(`Error fetching ${brand} filaments:`, fetchError);
@@ -752,13 +801,13 @@ serve(async (req) => {
       results.total += filaments?.length || 0;
 
       // Pre-fetch Shopify products if needed
-      let productMap = new Map<string, any>();
+      let shopifyProducts: any[] = [];
       if (brandConfig?.upcExtractionMethod === 'shopify' && brandConfig.shopifyUrl) {
-        productMap = await fetchShopifyProducts(brandConfig.shopifyUrl);
+        shopifyProducts = await fetchShopifyProductsJson(brandConfig.shopifyUrl);
       }
 
       for (const filament of filaments || []) {
-        const result = await processFilament(filament, brandConfig, productMap, supabase);
+        const result = await processFilament(filament, brandConfig, shopifyProducts, supabase);
         
         if (result.status === 'updated') {
           results.updated++;
@@ -776,14 +825,14 @@ serve(async (req) => {
         
         results.details.push({ ...result, brand: normalizedBrand });
         
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 50));
       }
 
       // Delay between brands
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 300));
     }
 
-    console.log(`\nScrape complete: ${results.updated} updated, ${results.skipped} no UPC found, ${results.unsupported} unsupported, ${results.failed} failed`);
+    console.log(`\nScrape complete: ${results.updated} updated, ${results.skipped} no data, ${results.unsupported} unsupported, ${results.failed} failed`);
 
     return new Response(JSON.stringify(results), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
