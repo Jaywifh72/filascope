@@ -24,10 +24,14 @@ interface PackInfo {
   weightPerSpool: number | null;
 }
 
-// Detect pack quantity from product title or HTML content
-function detectPackQuantity(title: string, html: string): number {
+// Detect pack quantity from product title, URL, or HTML content
+function detectPackQuantity(title: string, html: string, url: string = ''): number {
   const titleLower = title.toLowerCase();
   const htmlLower = html.toLowerCase();
+  const urlLower = url.toLowerCase();
+  
+  // Combine title and URL for pattern matching (URL often has "6-pack" etc.)
+  const combinedText = `${titleLower} ${urlLower}`;
   
   // Common pack patterns in titles - order matters, most specific first
   const packPatterns = [
@@ -60,13 +64,13 @@ function detectPackQuantity(title: string, html: string): number {
     /\b(\d+)\s*[xX×]\s*\d+/,
   ];
   
-  // Check title first (most reliable)
+  // Check title and URL combined (URL often has "6-pack" in slug)
   for (const pattern of packPatterns) {
-    const match = titleLower.match(pattern);
+    const match = combinedText.match(pattern);
     if (match && match[1]) {
       const qty = parseInt(match[1], 10);
       if (qty >= 2 && qty <= 20) {
-        console.log(`  📦 Pack detected from title pattern "${pattern}": ${qty}x`);
+        console.log(`  📦 Pack detected from title/URL pattern "${pattern}": ${qty}x`);
         return qty;
       }
     }
@@ -539,8 +543,8 @@ Deno.serve(async (req) => {
         }
       }
       
-      // Detect pack quantity from title and HTML content
-      const packQty = detectPackQuantity(filament.product_title, scrapedHtml);
+      // Detect pack quantity from title, URL, and HTML content
+      const packQty = detectPackQuantity(filament.product_title, scrapedHtml, filament.product_url || '');
       if (packQty > 1) {
         detectedPackQuantity = packQty;
         results.packs_detected++;
