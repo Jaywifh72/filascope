@@ -24,6 +24,52 @@ interface PackInfo {
   weightPerSpool: number | null;
 }
 
+// Detect spool weight in kg from product title, URL, or HTML content
+function detectSpoolWeightKg(title: string, html: string, url: string = ''): number {
+  const combinedText = `${title.toLowerCase()} ${url.toLowerCase()}`;
+  
+  // Common weight patterns - check for 2kg, 3kg, etc.
+  const weightPatterns = [
+    /\b(\d+(?:\.\d+)?)\s*kg\b/i,           // "2kg", "2.2kg"
+    /\b(\d+(?:\.\d+)?)\s*kilogram/i,       // "2 kilogram"
+    /\b(\d+(?:\.\d+)?)-?kg\b/i,            // "2-kg"
+    /\b(\d+)\s*(?:kilo|kilos)\b/i,         // "2 kilo", "2 kilos"
+  ];
+  
+  for (const pattern of weightPatterns) {
+    const match = combinedText.match(pattern);
+    if (match && match[1]) {
+      const weight = parseFloat(match[1]);
+      // Valid spool weights: 0.25kg to 5kg
+      if (weight >= 0.25 && weight <= 5) {
+        console.log(`  ⚖️ Spool weight detected: ${weight}kg from pattern "${pattern}"`);
+        return weight;
+      }
+    }
+  }
+  
+  // Check HTML for weight info (often in product specs)
+  const htmlWeightPatterns = [
+    /net\s*weight[:\s]*(\d+(?:\.\d+)?)\s*kg/i,
+    /spool\s*weight[:\s]*(\d+(?:\.\d+)?)\s*kg/i,
+    /(\d+(?:\.\d+)?)\s*kg\s*(?:spool|roll|filament)/i,
+  ];
+  
+  for (const pattern of htmlWeightPatterns) {
+    const match = html.toLowerCase().match(pattern);
+    if (match && match[1]) {
+      const weight = parseFloat(match[1]);
+      if (weight >= 0.25 && weight <= 5) {
+        console.log(`  ⚖️ Spool weight detected from HTML: ${weight}kg`);
+        return weight;
+      }
+    }
+  }
+  
+  // Default to 1kg
+  return 1;
+}
+
 // Detect pack quantity from product title, URL, or HTML content
 function detectPackQuantity(title: string, html: string, url: string = ''): number {
   const titleLower = title.toLowerCase();
@@ -550,6 +596,12 @@ Deno.serve(async (req) => {
         results.packs_detected++;
         console.log(`  📦 Multi-pack detected: ${packQty}x spools`);
       }
+      
+      // Detect spool weight from title, URL, and HTML content
+      const detectedSpoolWeightKg = detectSpoolWeightKg(filament.product_title, scrapedHtml, filament.product_url || '');
+      if (detectedSpoolWeightKg !== 1) {
+        console.log(`  ⚖️ Non-standard spool weight: ${detectedSpoolWeightKg}kg`);
+      }
 
       // Determine status
       let status: 'success' | 'partial' | 'failed' = 'failed';
@@ -592,17 +644,32 @@ Deno.serve(async (req) => {
             // Calculate per-spool price
             const pricePerSpool = totalPrice / detectedPackQuantity;
             
-            // Calculate per-kg price if we have weight
-            if (weightPerSpool && weightPerSpool > 0) {
-              // variant_price is per-kg price
-              const pricePerKg = (pricePerSpool / weightPerSpool) * 1000;
-              updates.variant_price = Math.round(pricePerKg * 100) / 100; // Round to 2 decimals
-              console.log(`  💰 Pricing: Total $${totalPrice} / ${detectedPackQuantity} spools = $${pricePerSpool.toFixed(2)}/spool`);
-              console.log(`  💰 Per kg: $${pricePerSpool.toFixed(2)} / ${weightPerSpool}g * 1000 = $${updates.variant_price}/kg`);
-            } else {
-              // No weight available, store price per spool as variant_price
-              updates.variant_price = Math.round(pricePerSpool * 100) / 100;
-              console.log(`  💰 Pricing (no weight): Total $${totalPrice} / ${detectedPackQuantity} spools = $${updates.variant_price}/spool`);
+            // Use detected spool weight (in kg) or existing weight from DB/scrape
+            // Priority: detected from title/URL > extracted from HTML > existing DB value
+            let spoolWeightKg = detectedSpoolWeightKg; // Default from title/URL detection
+            
+            // If we have extracted weight in grams, convert to kg and use if it makes sense
+            if (extractedWeight && extractedWeight > 0) {
+              const extractedKg = extractedWeight / 1000;
+              // Only use extracted weight if it's reasonable (0.25-5kg)
+              if (extractedKg >= 0.25 && extractedKg <= 5) {
+                spoolWeightKg = extractedKg;
+              }
+            } else if (filament.net_weight_g && filament.net_weight_g > 0 && detectedSpoolWeightKg === 1) {
+              // Use existing DB weight only if we didn't detect a different weight from title
+              spoolWeightKg = filament.net_weight_g / 1000;
+            }
+            
+            // Calculate per-kg price
+            const pricePerKg = pricePerSpool / spoolWeightKg;
+            updates.variant_price = Math.round(pricePerKg * 100) / 100; // Round to 2 decimals
+            
+            console.log(`  💰 Pricing: Total $${totalPrice} / ${detectedPackQuantity} spools = $${pricePerSpool.toFixed(2)}/spool`);
+            console.log(`  💰 Per kg: $${pricePerSpool.toFixed(2)} / ${spoolWeightKg}kg = $${updates.variant_price}/kg`);
+            
+            // Update net_weight_g based on detected spool weight if not already set
+            if (!extractedWeight && detectedSpoolWeightKg !== 1) {
+              updates.net_weight_g = detectedSpoolWeightKg * 1000;
             }
           }
         }
