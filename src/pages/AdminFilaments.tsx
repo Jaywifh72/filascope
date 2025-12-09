@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag, Copy } from "lucide-react";
+import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag, Copy, GitBranch } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -50,6 +50,7 @@ const AdminFilaments = () => {
   const [scrapingUpcs, setScrapingUpcs] = useState(false);
   const [scrapingMpns, setScrapingMpns] = useState(false);
   const [copyingSkuToMpn, setCopyingSkuToMpn] = useState(false);
+  const [derivingIdentifiers, setDerivingIdentifiers] = useState(false);
   const [scrapeProgress, setScrapeProgress] = useState({ current: 0, total: 0 });
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
@@ -293,6 +294,59 @@ const AdminFilaments = () => {
       console.error(error);
     } finally {
       setCopyingSkuToMpn(false);
+    }
+  };
+
+  // Derive EAN from 13-digit UPC and GTIN from 14-digit UPC
+  const handleDeriveIdentifiers = async () => {
+    setDerivingIdentifiers(true);
+    
+    try {
+      // Fetch filaments with UPC but missing EAN or GTIN
+      const { data: filamentsWithUpc, error: fetchError } = await supabase
+        .from('filaments')
+        .select('id, upc, ean, gtin')
+        .not('upc', 'is', null);
+      
+      if (fetchError) throw fetchError;
+      
+      let eanUpdated = 0;
+      let gtinUpdated = 0;
+      
+      for (const f of filamentsWithUpc || []) {
+        const cleanUpc = f.upc?.replace(/[^0-9]/g, '') || '';
+        const updates: { ean?: string; gtin?: string } = {};
+        
+        // 13-digit UPC → EAN (if EAN is missing)
+        if (cleanUpc.length === 13 && !f.ean) {
+          updates.ean = f.upc;
+        }
+        
+        // 14-digit UPC → GTIN (if GTIN is missing)
+        if (cleanUpc.length === 14 && !f.gtin) {
+          updates.gtin = f.upc;
+        }
+        
+        if (Object.keys(updates).length > 0) {
+          const { error: updateError } = await supabase
+            .from('filaments')
+            .update(updates)
+            .eq('id', f.id);
+          
+          if (!updateError) {
+            if (updates.ean) eanUpdated++;
+            if (updates.gtin) gtinUpdated++;
+          }
+        }
+      }
+      
+      toast.success(`Derived ${eanUpdated} EAN values and ${gtinUpdated} GTIN values from UPC`);
+      fetchFilaments();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to derive identifiers");
+      console.error(error);
+    } finally {
+      setDerivingIdentifiers(false);
     }
   };
 
@@ -541,6 +595,19 @@ const AdminFilaments = () => {
               <Copy className="w-4 h-4 mr-2" />
             )}
             {copyingSkuToMpn ? "Copying..." : "SKU → MPN"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleDeriveIdentifiers}
+            disabled={derivingIdentifiers || copyingSkuToMpn || scrapingMpns || scrapingUpcs}
+            title="Derive EAN from 13-digit UPC and GTIN from 14-digit UPC values"
+          >
+            {derivingIdentifiers ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <GitBranch className="w-4 h-4 mr-2" />
+            )}
+            {derivingIdentifiers ? "Deriving..." : "UPC → EAN/GTIN"}
           </Button>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
