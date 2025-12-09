@@ -291,8 +291,69 @@ async function fetchShopifyProductsJson(shopifyUrl: string): Promise<any[]> {
   return allProducts;
 }
 
-function findProductInCollection(products: any[], productHandle: string, productTitle: string): ExtractionResult | null {
-  // Try exact handle match first
+// Enhanced matching using existing identifiers
+function findProductBySku(products: any[], existingSku: string): any | null {
+  if (!existingSku) return null;
+  const normalizedSku = existingSku.toLowerCase().trim();
+  
+  for (const product of products) {
+    for (const variant of product.variants || []) {
+      if (variant.sku?.toLowerCase().trim() === normalizedSku) {
+        console.log(`    -> SKU match found: ${variant.sku}`);
+        return product;
+      }
+    }
+  }
+  return null;
+}
+
+function findProductByBarcode(products: any[], existingUpc: string | null, existingEan: string | null, existingGtin: string | null): any | null {
+  const barcodes = [existingUpc, existingEan, existingGtin].filter(Boolean).map(b => b!.replace(/\D/g, ''));
+  if (barcodes.length === 0) return null;
+  
+  for (const product of products) {
+    for (const variant of product.variants || []) {
+      const variantBarcode = variant.barcode?.replace(/\D/g, '');
+      if (variantBarcode && barcodes.includes(variantBarcode)) {
+        console.log(`    -> Barcode match found: ${variantBarcode}`);
+        return product;
+      }
+    }
+  }
+  return null;
+}
+
+function findProductInCollection(
+  products: any[], 
+  productHandle: string, 
+  productTitle: string,
+  existingData?: { sku?: string; upc?: string; ean?: string; gtin?: string }
+): ExtractionResult | null {
+  // Priority 1: Try SKU match (most reliable)
+  if (existingData?.sku) {
+    const skuMatch = findProductBySku(products, existingData.sku);
+    if (skuMatch) {
+      const result = extractFromVariants(skuMatch.variants, skuMatch);
+      if (result.upc || result.sku || result.gtin || result.ean || result.mpn) {
+        result.method = 'shopify_collection_sku_match';
+        return result;
+      }
+    }
+  }
+  
+  // Priority 2: Try barcode match
+  if (existingData?.upc || existingData?.ean || existingData?.gtin) {
+    const barcodeMatch = findProductByBarcode(products, existingData.upc || null, existingData.ean || null, existingData.gtin || null);
+    if (barcodeMatch) {
+      const result = extractFromVariants(barcodeMatch.variants, barcodeMatch);
+      if (result.upc || result.sku || result.gtin || result.ean || result.mpn) {
+        result.method = 'shopify_collection_barcode_match';
+        return result;
+      }
+    }
+  }
+  
+  // Priority 3: Try exact handle match
   const exactMatch = products.find(p => p.handle?.toLowerCase() === productHandle.toLowerCase());
   if (exactMatch) {
     const result = extractFromVariants(exactMatch.variants, exactMatch);
@@ -302,7 +363,7 @@ function findProductInCollection(products: any[], productHandle: string, product
     }
   }
   
-  // Try fuzzy title match
+  // Priority 4: Try fuzzy title match
   const fuzzyMatch = findProductByTitle(productTitle, products);
   if (fuzzyMatch) {
     const result = extractFromVariants(fuzzyMatch.variants, fuzzyMatch);
@@ -594,15 +655,25 @@ async function processFilament(
     
     let result: ExtractionResult | null = null;
     
+    // Prepare existing data for enhanced matching
+    const existingData = {
+      sku: filament.variant_sku || undefined,
+      upc: filament.upc || undefined,
+      ean: filament.ean || undefined,
+      gtin: filament.gtin || undefined,
+    };
+    
+    console.log(`  Existing identifiers: SKU=${existingData.sku || 'none'}, UPC=${existingData.upc || 'none'}, EAN=${existingData.ean || 'none'}, GTIN=${existingData.gtin || 'none'}`);
+    
     // Strategy chain based on brand config
     if (brandConfig.upcExtractionMethod === 'shopify' && brandConfig.shopifyUrl && productHandle) {
       // Try individual product JSON first (faster)
       result = await tryShopifyProductJson(brandConfig.shopifyUrl, productHandle);
       
-      // Fallback to collection search
+      // Fallback to collection search with enhanced matching using existing identifiers
       if (!result && shopifyProducts.length > 0) {
-        console.log(`  [Strategy 2] Searching collection (${shopifyProducts.length} products)`);
-        result = findProductInCollection(shopifyProducts, productHandle, filament.product_title);
+        console.log(`  [Strategy 2] Searching collection (${shopifyProducts.length} products) with existing identifiers`);
+        result = findProductInCollection(shopifyProducts, productHandle, filament.product_title, existingData);
       }
       
       // Fallback to HTML scraping
