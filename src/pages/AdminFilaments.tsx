@@ -353,33 +353,33 @@ const AdminFilaments = () => {
 
   // Lookup barcodes using external database
   const handleLookupBarcodes = async () => {
+    // Use selected filaments if any, otherwise use filtered filaments
+    const baseFilaments = selectedFilaments.size > 0 
+      ? filteredFilaments.filter(f => selectedFilaments.has(f.id))
+      : filteredFilaments;
+    
+    // Filter to filaments that could benefit from barcode lookup
+    const targetFilaments = baseFilaments.filter(f => 
+      (f.variant_sku || (f as any).mpn) && (!f.upc || !(f as any).ean || !(f as any).gtin)
+    );
+    
+    if (targetFilaments.length === 0) {
+      toast.info("No filaments with SKU/MPN missing barcodes in selection");
+      return;
+    }
+
     setLookingUpBarcodes(true);
+    setScrapeProgress({ current: 0, total: targetFilaments.length });
     
     try {
-      // Get filaments with SKU but missing barcodes for the selected vendor
-      const targetFilaments = filteredFilaments.filter(f => 
-        f.variant_sku && (!f.upc || !(f as any).ean || !(f as any).gtin)
-      );
-      
-      if (targetFilaments.length === 0) {
-        toast.info("No filaments with SKU missing barcodes in current filter");
-        setLookingUpBarcodes(false);
-        return;
-      }
-      
       const batchSize = 10;
-      const batches = [];
-      for (let i = 0; i < targetFilaments.length; i += batchSize) {
-        batches.push(targetFilaments.slice(i, i + batchSize));
-      }
-      
       let totalFound = 0;
       let totalUpdated = 0;
       let totalProcessed = 0;
       
-      for (let i = 0; i < batches.length; i++) {
-        const batch = batches[i];
-        setScrapeProgress({ current: totalProcessed, total: targetFilaments.length });
+      for (let i = 0; i < targetFilaments.length; i += batchSize) {
+        const batch = targetFilaments.slice(i, i + batchSize);
+        setScrapeProgress({ current: i, total: targetFilaments.length });
         
         const { data, error } = await supabase.functions.invoke('lookup-barcodes', {
           body: {
@@ -390,7 +390,6 @@ const AdminFilaments = () => {
         
         if (error) {
           console.error('Batch error:', error);
-          toast.error(`Batch ${i + 1} failed: ${error.message}`);
           continue;
         }
         
@@ -401,12 +400,11 @@ const AdminFilaments = () => {
         }
         
         // Rate limit between batches
-        if (i < batches.length - 1) {
+        if (i + batchSize < targetFilaments.length) {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
       
-      setScrapeProgress({ current: 0, total: 0 });
       toast.success(`Looked up ${totalProcessed} filaments: found ${totalFound} barcodes, updated ${totalUpdated}`);
       fetchFilaments();
     } catch (error: any) {
@@ -433,6 +431,16 @@ const AdminFilaments = () => {
     
     return matchesSearch && matchesUpcFilter && matchesSkuFilter && matchesEanFilter && matchesGtinFilter && matchesMpnFilter && matchesVendor;
   });
+
+  // Count for lookup barcodes button
+  const lookupBarcodesCount = useMemo(() => {
+    const baseFilaments = selectedFilaments.size > 0 
+      ? filteredFilaments.filter(f => selectedFilaments.has(f.id))
+      : filteredFilaments;
+    return baseFilaments.filter(f => 
+      (f.variant_sku || (f as any).mpn) && (!f.upc || !(f as any).ean || !(f as any).gtin)
+    ).length;
+  }, [filteredFilaments, selectedFilaments]);
 
   // Stats
   const totalFilaments = filaments.length;
@@ -681,19 +689,26 @@ const AdminFilaments = () => {
             )}
             {derivingIdentifiers ? "Deriving..." : "UPC → EAN/GTIN"}
           </Button>
-          <Button
-            variant="outline"
-            onClick={handleLookupBarcodes}
-            disabled={lookingUpBarcodes || derivingIdentifiers || copyingSkuToMpn || scrapingMpns || scrapingUpcs}
-            title="Search external barcode databases using SKU/MPN to find UPC/EAN/GTIN"
-          >
-            {lookingUpBarcodes ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Database className="w-4 h-4 mr-2" />
+          <div className="flex flex-col gap-1">
+            <Button
+              variant="outline"
+              onClick={handleLookupBarcodes}
+              disabled={lookingUpBarcodes || derivingIdentifiers || copyingSkuToMpn || scrapingMpns || scrapingUpcs || lookupBarcodesCount === 0}
+              title="Search external barcode databases using SKU/MPN to find UPC/EAN/GTIN"
+            >
+              {lookingUpBarcodes ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Database className="w-4 h-4 mr-2" />
+              )}
+              {lookingUpBarcodes 
+                ? `Looking up ${scrapeProgress.current}/${scrapeProgress.total}` 
+                : `Lookup Barcodes (${lookupBarcodesCount})`}
+            </Button>
+            {lookingUpBarcodes && scrapeProgress.total > 0 && (
+              <Progress value={(scrapeProgress.current / scrapeProgress.total) * 100} className="h-1 w-full" />
             )}
-            {lookingUpBarcodes ? "Looking up..." : "Lookup Barcodes"}
-          </Button>
+          </div>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
