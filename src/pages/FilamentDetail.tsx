@@ -906,32 +906,28 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                             >
                               <Link2 className="w-4 h-4" />
                             </Button>
-                            {filament.product_url && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={handleScrapeData}
-                                  disabled={scrapingData}
-                                  className="gap-2 shrink-0"
-                                  title={`Scrape all data from: ${filament.product_url}`}
-                                >
-                                  <RefreshCw className={`w-4 h-4 ${scrapingData ? 'animate-spin' : ''}`} />
-                                  {scrapingData ? 'Scraping...' : 'Scrape Data'}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={handleScrapeColors}
-                                  disabled={scrapingColors}
-                                  className="gap-2 shrink-0"
-                                  title={`Scrape color variants from: ${filament.product_url}`}
-                                >
-                                  <Palette className={`w-4 h-4 ${scrapingColors ? 'animate-pulse' : ''}`} />
-                                  {scrapingColors ? 'Scraping...' : 'Scrape Colors'}
-                                </Button>
-                              </>
-                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleScrapeData}
+                              disabled={scrapingData || !filament.product_url}
+                              className="gap-2 shrink-0"
+                              title={filament.product_url ? `Scrape all data from: ${filament.product_url}` : "No product URL"}
+                            >
+                              <RefreshCw className={`w-4 h-4 ${scrapingData ? 'animate-spin' : ''}`} />
+                              {scrapingData ? 'Scraping...' : 'Scrape Data'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleScrapeColors}
+                              disabled={scrapingColors || !filament.product_url}
+                              className="gap-2 shrink-0"
+                              title={filament.product_url ? `Scrape color variants from: ${filament.product_url}` : "No product URL"}
+                            >
+                              <Palette className={`w-4 h-4 ${scrapingColors ? 'animate-pulse' : ''}`} />
+                              {scrapingColors ? 'Scraping...' : 'Scrape Colors'}
+                            </Button>
                           </>
                         )}
                       </div>
