@@ -12,7 +12,7 @@ const MAX_BATCH_SIZE = 25;
 // Brand configuration for UPC scraping
 interface BrandConfig {
   shopifyUrl?: string;
-  upcExtractionMethod: 'shopify' | 'woocommerce' | 'html' | 'none' | 'wix' | 'fiberlogy' | 'ninjatek' | 'matterhackers' | 'microcenter' | 'prusament';
+  upcExtractionMethod: 'shopify' | 'woocommerce' | 'html' | 'none' | 'wix' | 'fiberlogy' | 'ninjatek' | 'matterhackers' | 'microcenter' | 'prusament' | 'voxelpla' | 'ziro';
   notes?: string;
 }
 
@@ -34,8 +34,8 @@ const BRAND_CONFIGS: Record<string, BrandConfig> = {
   'Fiberlogy': { upcExtractionMethod: 'fiberlogy', notes: 'ShopArena platform - extract slug from URL as MPN' },
   'FormFutura': { shopifyUrl: 'https://formfutura.com', upcExtractionMethod: 'shopify' },
   'Inland': { upcExtractionMethod: 'microcenter', notes: 'Sold via Micro Center - extract SKU from product ID' },
-  'ZIRO': { shopifyUrl: 'https://ziro3d.com', upcExtractionMethod: 'shopify' },
-  'VoxelPLA': { shopifyUrl: 'https://voxelpla.com', upcExtractionMethod: 'shopify' },
+  'ZIRO': { upcExtractionMethod: 'ziro', notes: 'Amazon-only with MPNs like Z00003D-XXX format' },
+  'VoxelPLA': { upcExtractionMethod: 'voxelpla', notes: 'Shopify store - SKU from API, MPN from URL slug' },
   'GreenGate3D': { shopifyUrl: 'https://greengate3d.com', upcExtractionMethod: 'shopify' },
   'Paramount 3D': { upcExtractionMethod: 'wix', notes: 'Wix store - extract SKU from product title brackets' },
   'Gizmo Dorks': { shopifyUrl: 'https://gizmodorks.com', upcExtractionMethod: 'shopify' },
@@ -1171,6 +1171,179 @@ async function tryPrusamentExtraction(filament: any): Promise<ExtractionResult |
   }
 }
 
+// Strategy 11: VoxelPLA extraction - Shopify store with SKU and MPN from URL slug
+async function tryVoxelPlaExtraction(filament: any): Promise<ExtractionResult | null> {
+  try {
+    console.log(`  [Strategy 11] VoxelPLA extraction for: ${filament.product_title}`);
+    
+    let sku: string | null = null;
+    let mpn: string | null = null;
+    let upc: string | null = null;
+    let gtin: string | null = null;
+    let ean: string | null = null;
+    
+    // First, try Shopify JSON API for SKU
+    if (filament.product_url && filament.product_url.includes('voxelpla.com')) {
+      const handleMatch = filament.product_url.match(/\/products\/([^?/]+)/);
+      if (handleMatch) {
+        const handle = handleMatch[1];
+        
+        try {
+          const jsonUrl = `https://voxelpla.com/products/${handle}.json`;
+          console.log(`    -> Fetching Shopify JSON: ${jsonUrl}`);
+          
+          const response = await fetch(jsonUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Accept': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const product = data.product;
+            const variants = product?.variants || [];
+            
+            for (const variant of variants) {
+              if (!sku && variant.sku && variant.sku.trim()) {
+                sku = variant.sku.trim();
+                console.log(`    -> Found SKU from Shopify JSON: ${sku}`);
+              }
+              if (variant.barcode && variant.barcode.length >= 8) {
+                const classified = classifyBarcode(variant.barcode);
+                if (!upc && classified.upc) upc = classified.upc;
+                if (!ean && classified.ean) ean = classified.ean;
+                if (!gtin && classified.gtin) gtin = classified.gtin;
+              }
+            }
+          }
+        } catch (e) {
+          console.log(`    -> Error fetching Shopify JSON: ${e}`);
+        }
+        
+        // Generate MPN from URL slug
+        // URL: /products/voxel-pla-pro-1-75mm-black-filament
+        // Generate: VOXELPLA-PLA-PRO-BLACK or similar
+        const slug = handle;
+        // Clean up the slug - remove common suffixes
+        let cleanSlug = slug
+          .replace(/-?1-75mm/gi, '')
+          .replace(/-?3-00mm/gi, '')
+          .replace(/-?1kg/gi, '')
+          .replace(/-?filament$/gi, '')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        
+        if (cleanSlug.length >= 3) {
+          mpn = `VOXEL-${cleanSlug.toUpperCase()}`;
+          console.log(`    -> Generated MPN from URL slug: ${mpn}`);
+        }
+      }
+    }
+    
+    // Use SKU as MPN fallback if no MPN generated
+    if (!mpn && sku) {
+      mpn = `VOXEL-${sku.toUpperCase().replace(/\s+/g, '-')}`;
+      console.log(`    -> Generated MPN from SKU: ${mpn}`);
+    }
+    
+    if (sku || mpn || upc || gtin || ean) {
+      console.log(`    -> Found: SKU=${sku}, MPN=${mpn}, UPC=${upc}, GTIN=${gtin}, EAN=${ean}`);
+      return { sku, upc, gtin, ean, mpn, method: 'voxelpla_extraction' };
+    }
+    
+    console.log(`    -> No data found`);
+    return null;
+  } catch (e) {
+    console.log(`    -> Error: ${e}`);
+    return null;
+  }
+}
+
+// Strategy 12: Ziro extraction - Amazon-only products with Z00003D-XXX MPN format
+async function tryZiroExtraction(filament: any): Promise<ExtractionResult | null> {
+  try {
+    console.log(`  [Strategy 12] Ziro extraction for: ${filament.product_title}`);
+    
+    let sku: string | null = null;
+    let mpn: string | null = null;
+    let upc: string | null = null;
+    let gtin: string | null = null;
+    let ean: string | null = null;
+    
+    // Ziro products have Amazon URLs - can't scrape those easily
+    // But Ziro already has MPNs in Z00003D-XXX format in the database
+    // If existing MPN is valid Ziro format, keep it
+    if (filament.mpn && filament.mpn.startsWith('Z00003D-')) {
+      mpn = filament.mpn;
+      console.log(`    -> Using existing valid Ziro MPN: ${mpn}`);
+    }
+    
+    // Also use existing SKU if it matches Ziro pattern
+    if (filament.variant_sku && filament.variant_sku.startsWith('Z00003D-')) {
+      sku = filament.variant_sku;
+      console.log(`    -> Using existing valid Ziro SKU: ${sku}`);
+    }
+    
+    // If no valid MPN, try to generate from product title
+    // Title patterns: "PLA - Black", "Marble PLA - White", "Wood PLA - Bamboo"
+    if (!mpn && filament.product_title) {
+      const title = filament.product_title;
+      
+      // Extract material type and color
+      // Pattern 1: "Material Type - Color" (e.g., "PLA - Black", "Marble PLA - Coffee")
+      const materialColorMatch = title.match(/^(?:([A-Za-z]+)\s+)?([A-Z]+)\s*[-–]\s*(.+?)$/i);
+      if (materialColorMatch) {
+        const modifier = materialColorMatch[1]?.toUpperCase() || '';
+        const material = materialColorMatch[2].toUpperCase();
+        const color = materialColorMatch[3].toUpperCase().replace(/\s+/g, '-').replace(/[^A-Z0-9\-]/g, '');
+        
+        if (modifier) {
+          mpn = `ZIRO-${modifier}-${material}-${color}`;
+        } else {
+          mpn = `ZIRO-${material}-${color}`;
+        }
+        console.log(`    -> Generated MPN from title: ${mpn}`);
+      }
+      
+      // Fallback: clean entire title
+      if (!mpn) {
+        const cleanTitle = title
+          .toUpperCase()
+          .replace(/[^A-Z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+          .substring(0, 30);
+        if (cleanTitle.length >= 3) {
+          mpn = `ZIRO-${cleanTitle}`;
+          console.log(`    -> Generated MPN from cleaned title: ${mpn}`);
+        }
+      }
+    }
+    
+    // Try to extract ASIN from Amazon URL (useful for cross-reference)
+    if (filament.product_url && filament.product_url.includes('amazon.com')) {
+      const asinMatch = filament.product_url.match(/\/dp\/([A-Z0-9]+)/i);
+      if (asinMatch) {
+        // Store ASIN as SKU if no SKU exists
+        if (!sku) {
+          sku = `ASIN-${asinMatch[1].toUpperCase()}`;
+          console.log(`    -> Extracted ASIN as SKU: ${sku}`);
+        }
+      }
+    }
+    
+    if (sku || mpn || upc || gtin || ean) {
+      console.log(`    -> Found: SKU=${sku}, MPN=${mpn}, UPC=${upc}, GTIN=${gtin}, EAN=${ean}`);
+      return { sku, upc, gtin, ean, mpn, method: 'ziro_extraction' };
+    }
+    
+    console.log(`    -> No data found`);
+    return null;
+  } catch (e) {
+    console.log(`    -> Error: ${e}`);
+    return null;
+  }
+}
 
 async function tryWooCommerce(productUrl: string): Promise<ExtractionResult | null> {
   if (!productUrl || !productUrl.startsWith('http')) return null;
@@ -1392,6 +1565,17 @@ async function processFilament(
       if (!result && filament.product_url) {
         result = await tryHtmlJsonLd(filament.product_url);
       }
+    } else if (brandConfig.upcExtractionMethod === 'voxelpla') {
+      // VoxelPLA - Shopify store with SKU and MPN from URL slug
+      result = await tryVoxelPlaExtraction(filament);
+      
+      // Fallback to generic HTML
+      if (!result && filament.product_url) {
+        result = await tryHtmlJsonLd(filament.product_url);
+      }
+    } else if (brandConfig.upcExtractionMethod === 'ziro') {
+      // Ziro - Amazon-only with Z00003D-XXX MPN format
+      result = await tryZiroExtraction(filament);
     }
     
     if (!result) {
