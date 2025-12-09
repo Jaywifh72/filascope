@@ -85,14 +85,23 @@ const getBaseProductName = (title: string): string => {
     .replace(/\bPLA\s+PRO\+/gi, 'PLA+')  // "PLA PRO+" -> "PLA+"
     .replace(/\bPLA\s+PRO\b/gi, 'PLA+'); // "PLA PRO" -> "PLA+"
   
-  // Pre-process: Remove product variant suffixes like "(with Spool)", "Refill", etc.
+  // Pre-process: Remove product variant suffixes like "(with Spool)", "Refill", "(NFC)", etc.
   // These indicate the same product in different packaging, not different products
   normalizedTitle = normalizedTitle
     .replace(/\s*\(with\s+Spool\)\s*/gi, ' ')  // "(with Spool)"
+    .replace(/\s*\(NFC\)\s*/gi, '')            // "(NFC)"
     .replace(/\s+Refill\s*$/gi, '')            // "Refill" at end
     .replace(/\s+w\/\s*Spool\s*/gi, ' ')       // "w/ Spool"
     .replace(/\s+with\s+Spool\s*/gi, ' ')      // "with Spool"
     .trim();
+  
+  // Pattern 0: Handle "Brand Material Color Weight" pattern (Prusament style)
+  // e.g., "Prusament ASA Jet Black 800g" -> "Prusament ASA 800g"
+  // e.g., "Prusament PETG Prusa Orange 1kg" -> "Prusament PETG 1kg"
+  const weightMatch = normalizedTitle.match(/^(.+?\s+(?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC(?:\s+Blend)?|HIPS|PVA|Nylon|PA11\s+Carbon\s+Fiber))\s+.+?\s+(\d+(?:\.\d+)?(?:kg|g))\s*$/i);
+  if (weightMatch) {
+    return `${weightMatch[1].trim()} ${weightMatch[2]}`;
+  }
   
   // Pattern 1: "Brand Material - Color" (dash separator) - Fillamentum, ColorFabb style
   const dashMatch = normalizedTitle.match(/^(.+?)\s+-\s+.+$/);
