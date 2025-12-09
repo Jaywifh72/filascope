@@ -80,56 +80,99 @@ Deno.serve(async (req) => {
 
     const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey });
     
-    // Scrape the collection page
-    const collectionUrl = "https://fillamentumusa.com/collections/pla-extrafill-filament";
-    console.log(`Scraping collection: ${collectionUrl}`);
-
-    const scrapeResult = await firecrawl.scrapeUrl(collectionUrl, {
-      formats: ["html"],
-      waitFor: 5000,
-    });
-
-    if (!scrapeResult.success || !scrapeResult.html) {
-      throw new Error("Failed to scrape collection page");
-    }
-
-    const html = scrapeResult.html;
-    console.log(`HTML length: ${html.length}`);
-
-    // Extract all products from the collection page
-    // Pattern: href="...products/pla-extrafill-COLOR..."
+    // Try multiple collection URLs for different material types
+    const collectionUrls = [
+      "https://shop.fillamentum.com/en-us/collections/pla-extrafill-filament",
+      "https://shop.fillamentum.com/en-us/collections/asa-extrafill",
+      "https://shop.fillamentum.com/en-us/collections/petg",
+      "https://shop.fillamentum.com/en-us/collections/cpe-hg100",
+      "https://shop.fillamentum.com/en-us/collections/flexfill",
+      "https://shop.fillamentum.com/en-us/collections/nylon-cf15-carbon",
+    ];
+    
     const productBlocks: ProductData[] = [];
     
-    // Match product blocks with their images
-    const blockRegex = /<div class="product-block[^"]*"[^>]*>[\s\S]*?<a[^>]*href="([^"]*products\/pla-extrafill[^"]*)"[^>]*>[\s\S]*?data-srcset="([^"]+)"[\s\S]*?<a[^>]*class="product-block__title-link"[^>]*>([^<]+)<\/a>/gi;
-    
-    let match;
-    while ((match = blockRegex.exec(html)) !== null) {
-      const productUrl = match[1];
-      const srcset = match[2];
-      const title = match[3].trim();
-      
-      // Extract color from URL slug (e.g., pla-extrafill-traffic-white -> traffic white)
-      const slugMatch = productUrl.match(/pla-extrafill-([^-?/]+(?:-[^-?/]+)*?)(?:-us)?(?:\?|$|\/)/i);
-      const colorKey = slugMatch ? slugMatch[1].replace(/-/g, " ").toLowerCase() : "";
-      
-      // Get highest resolution image from srcset
-      const imageUrls = srcset.split(",").map(s => s.trim().split(" ")[0]);
-      const bestImage = imageUrls.find(url => url.includes("1080x") || url.includes("900x") || url.includes("720x")) || imageUrls[0];
-      let imageUrl = bestImage?.startsWith("//") ? "https:" + bestImage : bestImage;
-      
-      // Remove size constraints to get full resolution
-      if (imageUrl) {
-        imageUrl = imageUrl.replace(/_\d+x\.jpg/, ".jpg");
-      }
-      
-      if (colorKey && imageUrl) {
-        productBlocks.push({ title, colorKey, productUrl, imageUrl });
-        console.log(`Found product: "${title}" -> color key: "${colorKey}"`);
+    for (const collectionUrl of collectionUrls) {
+      console.log(`Scraping collection: ${collectionUrl}`);
+
+      try {
+        const scrapeResult = await firecrawl.scrapeUrl(collectionUrl, {
+          formats: ["html"],
+          waitFor: 3000,
+        });
+
+        if (!scrapeResult.success || !scrapeResult.html) {
+          console.log(`Failed to scrape ${collectionUrl}`);
+          continue;
+        }
+
+        const html = scrapeResult.html;
+        console.log(`HTML length: ${html.length}`);
+
+        // Extract product cards - look for product images and links
+        // Pattern 1: Shopify product grid with srcset images
+        const imgRegex = /<a[^>]*href="([^"]*\/products\/[^"]+)"[^>]*>[\s\S]*?<img[^>]*(?:src|data-src)="([^"]+)"[^>]*>/gi;
+        
+        let match;
+        while ((match = imgRegex.exec(html)) !== null) {
+          const productUrl = match[1];
+          let imageUrl = match[2];
+          
+          // Clean up image URL
+          if (imageUrl.startsWith("//")) {
+            imageUrl = "https:" + imageUrl;
+          }
+          
+          // Extract color from URL slug
+          const slugMatch = productUrl.match(/\/products\/([^?/]+)/i);
+          const slug = slugMatch ? slugMatch[1] : "";
+          const colorKey = slug.replace(/-filament.*$/i, "").replace(/-/g, " ").toLowerCase();
+          
+          if (colorKey && imageUrl && !productBlocks.some(p => p.colorKey === colorKey)) {
+            productBlocks.push({ 
+              title: colorKey, 
+              colorKey, 
+              productUrl: productUrl.startsWith("http") ? productUrl : "https://shop.fillamentum.com" + productUrl, 
+              imageUrl 
+            });
+            console.log(`Found product: "${colorKey}"`);
+          }
+        }
+
+        // Pattern 2: Look for srcset patterns
+        const srcsetRegex = /<a[^>]*href="([^"]*\/products\/[^"]+)"[^>]*>[\s\S]*?data-srcset="([^"]+)"/gi;
+        while ((match = srcsetRegex.exec(html)) !== null) {
+          const productUrl = match[1];
+          const srcset = match[2];
+          
+          // Get best image from srcset
+          const images = srcset.split(",").map(s => s.trim().split(" ")[0]);
+          let imageUrl = images.find(u => u.includes("800x") || u.includes("600x") || u.includes("400x")) || images[0];
+          
+          if (imageUrl?.startsWith("//")) {
+            imageUrl = "https:" + imageUrl;
+          }
+          
+          const slugMatch = productUrl.match(/\/products\/([^?/]+)/i);
+          const slug = slugMatch ? slugMatch[1] : "";
+          const colorKey = slug.replace(/-filament.*$/i, "").replace(/-/g, " ").toLowerCase();
+          
+          if (colorKey && imageUrl && !productBlocks.some(p => p.colorKey === colorKey)) {
+            productBlocks.push({ 
+              title: colorKey, 
+              colorKey, 
+              productUrl: productUrl.startsWith("http") ? productUrl : "https://shop.fillamentum.com" + productUrl, 
+              imageUrl 
+            });
+            console.log(`Found product (srcset): "${colorKey}"`);
+          }
+        }
+      } catch (e) {
+        console.error(`Error scraping ${collectionUrl}:`, e);
       }
     }
 
-    console.log(`Extracted ${productBlocks.length} products from collection`);
+    console.log(`Extracted ${productBlocks.length} total products from collections`);
 
     // Match filaments to products
     let updated = 0;
