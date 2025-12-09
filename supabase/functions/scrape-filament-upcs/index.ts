@@ -524,14 +524,37 @@ async function tryWixExtraction(filament: any): Promise<ExtractionResult | null>
     let sku: string | null = null;
     let mpn: string | null = null;
     
-    // Skip Amazon URLs - these can't be scraped for Paramount SKU codes
+    // For Amazon URLs, generate MPN from product title since we can't scrape Paramount SKU codes
     if (filament.product_url && filament.product_url.includes('amazon.com')) {
-      console.log(`    -> Amazon URL detected, cannot extract Paramount SKU from Amazon`);
-      // For Amazon, we can note the ASIN but can't get the Paramount product code
-      const asinMatch = filament.product_url.match(/\/dp\/([A-Z0-9]{10})/);
-      if (asinMatch) {
-        console.log(`    -> Found Amazon ASIN: ${asinMatch[1]} (not usable as Paramount SKU)`);
+      console.log(`    -> Amazon URL detected, generating MPN from product title`);
+      
+      // Generate MPN from product title: "PLA - Black" -> "P3D-PLA-BLACK"
+      // or "PETG - Red" -> "P3D-PETG-RED"
+      if (filament.product_title) {
+        // Extract material and color from title patterns like "PLA - Black" or "PETG - White"
+        const titleMatch = filament.product_title.match(/^([A-Z]+)\s*[-–]\s*(.+?)(?:\s+\d|$)/i);
+        if (titleMatch) {
+          const material = titleMatch[1].toUpperCase().trim();
+          const color = titleMatch[2].toUpperCase().trim().replace(/\s+/g, '-');
+          mpn = `P3D-${material}-${color}`;
+          console.log(`    -> Generated MPN from title: ${mpn}`);
+          return { sku: null, upc: null, gtin: null, ean: null, mpn, method: 'wix_amazon_title' };
+        }
+        
+        // Fallback: use entire title, cleaned
+        const cleanTitle = filament.product_title
+          .toUpperCase()
+          .replace(/[^A-Z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+          .substring(0, 40);
+        if (cleanTitle.length >= 3) {
+          mpn = `P3D-${cleanTitle}`;
+          console.log(`    -> Generated MPN from cleaned title: ${mpn}`);
+          return { sku: null, upc: null, gtin: null, ean: null, mpn, method: 'wix_amazon_title' };
+        }
       }
+      
+      console.log(`    -> Could not generate MPN from title`);
       return null;
     }
     
