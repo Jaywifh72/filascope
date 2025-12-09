@@ -101,3 +101,6 @@ verify_jwt = false
 
 [functions.scrape-overture-colors]
 verify_jwt = true
+
+[functions.populate-hex-colors]
+verify_jwt = true
