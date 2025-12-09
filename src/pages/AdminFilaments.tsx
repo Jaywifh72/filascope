@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag, Copy, GitBranch, Database, Palette } from "lucide-react";
+import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag, Copy, GitBranch, Database, Palette, Download } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -80,6 +80,7 @@ const AdminFilaments = () => {
   const [derivingIdentifiers, setDerivingIdentifiers] = useState(false);
   const [lookingUpBarcodes, setLookingUpBarcodes] = useState(false);
   const [populatingHexColors, setPopulatingHexColors] = useState(false);
+  const [scrapingFillamentumImages, setScrapingFillamentumImages] = useState(false);
   const [scrapeProgress, setScrapeProgress] = useState({ current: 0, total: 0 });
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
@@ -470,6 +471,29 @@ const AdminFilaments = () => {
     }
   };
 
+  const handleScrapeFillamentumImages = async () => {
+    setScrapingFillamentumImages(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fix-fillamentum-images', {});
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast.success(`Fillamentum images: ${data.stats.updated} updated, ${data.stats.errors} errors`, {
+          description: `Found ${data.stats.products_found} products in store`
+        });
+        fetchFilaments();
+      } else {
+        throw new Error(data?.error || 'Failed to scrape Fillamentum images');
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to scrape Fillamentum images");
+      console.error(error);
+    } finally {
+      setScrapingFillamentumImages(false);
+    }
+  };
+
   const filteredFilaments = filaments.filter((f) => {
     const matchesSearch =
       f.product_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -716,6 +740,19 @@ const AdminFilaments = () => {
               <Palette className="w-4 h-4 mr-2" />
             )}
             {populatingHexColors ? "Populating..." : `Hex Colors (${totalFilaments - filamentsWithHex})`}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleScrapeFillamentumImages}
+            disabled={scrapingFillamentumImages}
+            title="Scrape product images for Fillamentum filaments from official store"
+          >
+            {scrapingFillamentumImages ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            {scrapingFillamentumImages ? "Scraping..." : "Fillamentum Images"}
           </Button>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
