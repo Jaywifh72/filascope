@@ -93,3 +93,6 @@ verify_jwt = true
 [functions.sync-3dxtech-products]
 verify_jwt = true
 
+[functions.lookup-barcodes]
+verify_jwt = false
+
