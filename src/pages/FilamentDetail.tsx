@@ -280,23 +280,83 @@ const FilamentDetail = () => {
     fetchCompatibleAms();
   }, [filament]);
 
-  // Extract base product name by removing color suffix (e.g., "Fillamentum ABS Extrafill - Cobalt Blue" -> "Fillamentum ABS Extrafill")
+  // Common color names to detect at the end of product titles
+  const COLOR_WORDS = [
+    'Beige', 'Black', 'Blue', 'Brown', 'Burgundy', 'Charcoal', 'Copper', 'Cream', 'Cyan',
+    'Gold', 'Gray', 'Grey', 'Green', 'Ivory', 'Lavender', 'Magenta', 'Maroon', 'Navy',
+    'Olive', 'Orange', 'Peach', 'Pink', 'Purple', 'Red', 'Rose', 'Salmon', 'Silver',
+    'Tan', 'Teal', 'Turquoise', 'Violet', 'White', 'Yellow', 'Natural', 'Clear', 'Transparent',
+    // Prusament style colors
+    'Jet Black', 'Lipstick Red', 'Prusa Pro Green', 'Prusa Galaxy Black', 'Prusa Orange',
+    'Signal White', 'Olive Green', 'Sapphire Blue', 'Azure Blue', 'Opal Green', 'Mystic Green',
+    'Mystic Brown', 'Galaxy Black', 'Galaxy Silver',
+    // Other brand colors
+    'Anthracite Grey', 'Carmine Red', 'Chalky Blue', 'Jungle Green', 'Mango Yellow',
+    'Neon Green', 'Shimmering Violet', 'Ultramarine Blue', 'Carbon Fiber Black',
+  ];
+
+  // Extract base product name by removing color suffix
   const getBaseProductName = (title: string): string => {
-    // Pattern: "Brand Material - Color" 
-    const dashMatch = title.match(/^(.+?)\s+-\s+.+$/);
+    // Normalize the title first
+    let normalizedTitle = title
+      .replace(/\s*\(NFC\)\s*/gi, '')            // "(NFC)"
+      .replace(/\s+Refill\s*$/gi, '')            // "Refill" at end
+      .trim();
+    
+    // Pattern 0: Handle "Brand Material Color Weight" pattern (Prusament style)
+    // e.g., "Prusament ASA Jet Black 800g" -> "Prusament ASA"
+    const weightMatch = normalizedTitle.match(/^(.+?\s+(?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC(?:\s+Blend)?|HIPS|PVA|Nylon|PA11\s+Carbon\s+Fiber))\s+.+?\s+\d+(?:\.\d+)?(?:kg|g)\s*$/i);
+    if (weightMatch) {
+      return weightMatch[1].trim();
+    }
+    
+    // Pattern 1: "Brand Material - Color" (dash separator)
+    const dashMatch = normalizedTitle.match(/^(.+?)\s+-\s+.+$/);
     if (dashMatch) {
       return dashMatch[1].trim();
     }
-    return title;
+    
+    // Pattern 2: Check for color word at the end
+    const sortedColors = [...COLOR_WORDS].sort((a, b) => b.length - a.length);
+    for (const color of sortedColors) {
+      const regex = new RegExp(`^(.+?)\\s+${color}$`, 'i');
+      const match = normalizedTitle.match(regex);
+      if (match) {
+        return match[1].trim();
+      }
+    }
+    
+    return normalizedTitle;
   };
 
-  // Extract color from product title
+  // Extract color from product title  
   const getColorFromTitle = (title: string, baseName: string): string | null => {
-    if (title === baseName) return null;
-    const dashMatch = title.match(/^.+?\s+-\s+(.+)$/);
+    // Remove packaging suffixes for comparison
+    const cleanTitle = title
+      .replace(/\s*\(NFC\)\s*/gi, '')
+      .replace(/\s+Refill\s*$/gi, '')
+      .replace(/\s+\d+(?:\.\d+)?(?:kg|g)\s*$/gi, '')
+      .trim();
+    
+    if (cleanTitle === baseName) return null;
+    
+    // Pattern 1: Dash separator
+    const dashMatch = title.match(/^.+?\s+-\s+(.+?)(?:\s+\d+(?:\.\d+)?(?:kg|g))?(?:\s*\(NFC\))?(?:\s+Refill)?$/i);
     if (dashMatch) {
       return dashMatch[1].trim();
     }
+    
+    // Pattern 2: Extract color between base name and weight
+    const weightColorMatch = title.match(new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+(.+?)\\s+\\d+(?:\\.\\d+)?(?:kg|g)`, 'i'));
+    if (weightColorMatch) {
+      return weightColorMatch[1].trim();
+    }
+    
+    // Fallback: everything after base name
+    if (cleanTitle.startsWith(baseName)) {
+      return cleanTitle.slice(baseName.length).trim() || null;
+    }
+    
     return null;
   };
 
@@ -316,19 +376,23 @@ const FilamentDetail = () => {
           .from("filaments")
           .select("*")
           .eq("vendor", filament.vendor)
-          .neq("id", filament.id)
           .order("product_title");
 
         if (error) throw error;
 
-        // Filter to those with the same base product name OR where the base name matches the current title
-        // This handles both cases:
-        // 1. Current filament has color suffix: "Overture ABS - Black" -> base "Overture ABS"
-        // 2. Current filament has NO color suffix: "Overture ABS" -> find variants like "Overture ABS - Black"
+        // Filter to those with the same base product name (including current filament for display)
         const variants = (data || []).filter(f => {
           const fBaseName = getBaseProductName(f.product_title);
-          // Match if base names are the same, OR if variant's base name equals current full title
-          return fBaseName === baseName || fBaseName === filament.product_title;
+          return fBaseName === baseName;
+        });
+
+        // Sort: current filament first, then alphabetically by color
+        variants.sort((a, b) => {
+          if (a.id === filament.id) return -1;
+          if (b.id === filament.id) return 1;
+          const colorA = getColorFromTitle(a.product_title, baseName) || '';
+          const colorB = getColorFromTitle(b.product_title, baseName) || '';
+          return colorA.localeCompare(colorB);
         });
 
         setColorVariants(variants);
@@ -902,7 +966,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
                         <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight">
-                          {filament.product_title}
+                          {getBaseProductName(filament.product_title)}
                         </h1>
                         {isAdmin && (
                           <>
@@ -1017,69 +1081,53 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                 </div>
 
                 {/* Color Variants Section */}
-                {colorVariants.length > 0 && (
+                {colorVariants.length > 1 && (
                   <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-muted-foreground">Available Colors ({colorVariants.length + 1})</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground">Available Colors ({colorVariants.length})</h3>
                     <div className="flex flex-wrap gap-2">
-                      {/* Current color - highlighted with swatch */}
-                      {(() => {
-                        const baseName = getBaseProductName(filament.product_title);
-                        const currentColor = getColorFromTitle(filament.product_title, baseName) || filament.color_family || 'Current';
-                        return (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background">
-                                  {filament.color_hex && (
-                                    <div 
-                                      className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 shadow-inner"
-                                      style={{ 
-                                        backgroundColor: filament.color_hex,
-                                        boxShadow: filament.color_hex?.toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
-                                      }}
-                                    />
-                                  )}
-                                  {currentColor}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <div className="text-center">
-                                  <div className="font-medium">{currentColor}</div>
-                                  {filament.color_hex && (
-                                    <div className="text-xs font-mono text-muted-foreground">{filament.color_hex.toUpperCase()}</div>
-                                  )}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      })()}
-                      
-                      {/* Other color variants as links with swatches */}
                       {colorVariants.map((variant) => {
                         const baseName = getBaseProductName(filament.product_title);
                         const variantColor = getColorFromTitle(variant.product_title, baseName) || variant.color_family || 'View';
+                        const isCurrentVariant = variant.id === filament.id;
+                        
                         return (
                           <TooltipProvider key={variant.id}>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Link 
-                                  to={`/filament/${variant.id}`}
-                                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-primary/20 hover:text-primary transition-colors"
-                                >
-                                  {variant.color_hex ? (
-                                    <div 
-                                      className="w-4 h-4 rounded-full border border-border shadow-sm"
-                                      style={{ 
-                                        backgroundColor: variant.color_hex,
-                                        boxShadow: variant.color_hex?.toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
-                                      }}
-                                    />
-                                  ) : (
-                                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-muted-foreground/30 to-muted-foreground/10 border border-border" />
-                                  )}
-                                  {variantColor}
-                                </Link>
+                                {isCurrentVariant ? (
+                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background cursor-default">
+                                    {variant.color_hex ? (
+                                      <div 
+                                        className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 shadow-inner"
+                                        style={{ 
+                                          backgroundColor: variant.color_hex,
+                                          boxShadow: variant.color_hex?.toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className="w-4 h-4 rounded-full bg-primary-foreground/30 border-2 border-primary-foreground/30" />
+                                    )}
+                                    {variantColor}
+                                  </div>
+                                ) : (
+                                  <Link 
+                                    to={`/filament/${variant.id}`}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-primary/20 hover:text-primary transition-colors"
+                                  >
+                                    {variant.color_hex ? (
+                                      <div 
+                                        className="w-4 h-4 rounded-full border border-border shadow-sm"
+                                        style={{ 
+                                          backgroundColor: variant.color_hex,
+                                          boxShadow: variant.color_hex?.toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className="w-4 h-4 rounded-full bg-gradient-to-br from-muted-foreground/30 to-muted-foreground/10 border border-border" />
+                                    )}
+                                    {variantColor}
+                                  </Link>
+                                )}
                               </TooltipTrigger>
                               <TooltipContent>
                                 <div className="text-center">
@@ -1088,6 +1136,9 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                                     <div className="text-xs font-mono text-muted-foreground">{variant.color_hex.toUpperCase()}</div>
                                   ) : (
                                     <div className="text-xs text-muted-foreground">No hex code</div>
+                                  )}
+                                  {variant.product_url && (
+                                    <div className="text-xs text-primary mt-1">Click to view</div>
                                   )}
                                 </div>
                               </TooltipContent>
