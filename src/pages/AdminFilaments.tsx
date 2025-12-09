@@ -40,6 +40,33 @@ import {
 
 type Filament = Tables<"filaments">;
 
+// Helper to get percentage color class
+const getPercentageColor = (percent: number): string => {
+  if (percent >= 95) return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+  if (percent >= 50) return "bg-orange-500/20 text-orange-400 border-orange-500/30";
+  if (percent >= 35) return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+  return "bg-red-500/20 text-red-400 border-red-500/30";
+};
+
+// Sleek stat card component
+const StatCard = ({ label, value, total }: { label: string; value: number; total?: number }) => {
+  const percent = total ? Math.round((value / total) * 100) : null;
+  
+  return (
+    <div className="bg-card border rounded-lg p-3 flex flex-col">
+      <span className="text-xs text-muted-foreground uppercase tracking-wider">{label}</span>
+      <div className="flex items-end justify-between mt-1">
+        <span className="text-xl font-bold tabular-nums">{value.toLocaleString()}</span>
+        {percent !== null && (
+          <span className={`text-xs font-medium px-1.5 py-0.5 rounded border ${getPercentageColor(percent)}`}>
+            {percent}%
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const AdminFilaments = () => {
   const { isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -481,76 +508,15 @@ const AdminFilaments = () => {
           <h1 className="text-3xl font-bold">Manage Filaments</h1>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Filaments
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{totalFilaments}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                With Images
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{filamentsWithImages}</p>
-              <p className="text-xs text-muted-foreground">
-                {totalFilaments > 0
-                  ? Math.round((filamentsWithImages / totalFilaments) * 100)
-                  : 0}
-                %
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                With Prices
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{filamentsWithPrices}</p>
-              <p className="text-xs text-muted-foreground">
-                {totalFilaments > 0
-                  ? Math.round((filamentsWithPrices / totalFilaments) * 100)
-                  : 0}
-                %
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                With TDS
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{filamentsWithTDS}</p>
-              <p className="text-xs text-muted-foreground">
-                {totalFilaments > 0
-                  ? Math.round((filamentsWithTDS / totalFilaments) * 100)
-                  : 0}
-                %
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Vendors
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{uniqueVendors}</p>
-            </CardContent>
-          </Card>
+        {/* Stats Dashboard */}
+        <div className="grid grid-cols-3 md:grid-cols-7 gap-3 mb-6">
+          <StatCard label="Total" value={totalFilaments} />
+          <StatCard label="Images" value={filamentsWithImages} total={totalFilaments} />
+          <StatCard label="Prices" value={filamentsWithPrices} total={totalFilaments} />
+          <StatCard label="SKUs" value={filamentsWithSku} total={totalFilaments} />
+          <StatCard label="UPCs" value={filamentsWithUpc} total={totalFilaments} />
+          <StatCard label="TDS" value={filamentsWithTDS} total={totalFilaments} />
+          <StatCard label="Vendors" value={uniqueVendors} />
         </div>
 
         {/* Search and Filters */}
