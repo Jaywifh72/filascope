@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag } from "lucide-react";
+import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag, Copy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -49,6 +49,7 @@ const AdminFilaments = () => {
   const [selectedFilaments, setSelectedFilaments] = useState<Set<string>>(new Set());
   const [scrapingUpcs, setScrapingUpcs] = useState(false);
   const [scrapingMpns, setScrapingMpns] = useState(false);
+  const [copyingSkuToMpn, setCopyingSkuToMpn] = useState(false);
   const [scrapeProgress, setScrapeProgress] = useState({ current: 0, total: 0 });
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
@@ -247,6 +248,53 @@ const AdminFilaments = () => {
     }
   };
 
+  // Bulk copy SKU to MPN for filaments missing MPN
+  const handleCopySkuToMpn = async () => {
+    setCopyingSkuToMpn(true);
+    
+    try {
+      // Count how many will be affected
+      const { count, error: countError } = await supabase
+        .from('filaments')
+        .select('*', { count: 'exact', head: true })
+        .is('mpn', null)
+        .not('variant_sku', 'is', null);
+      
+      if (countError) throw countError;
+      
+      if (!count || count === 0) {
+        toast.info("No filaments found with SKU but missing MPN");
+        return;
+      }
+      
+      // Perform the update - fetch IDs first, then update in batches
+      const { data: filamentsToCopy, error: fetchError } = await supabase
+        .from('filaments')
+        .select('id, variant_sku')
+        .is('mpn', null)
+        .not('variant_sku', 'is', null);
+      
+      if (fetchError) throw fetchError;
+      
+      let updated = 0;
+      for (const f of filamentsToCopy || []) {
+        const { error: updateError } = await supabase
+          .from('filaments')
+          .update({ mpn: f.variant_sku })
+          .eq('id', f.id);
+        
+        if (!updateError) updated++;
+      }
+      
+      toast.success(`Copied SKU to MPN for ${updated} filaments`);
+      fetchFilaments();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to copy SKU to MPN");
+      console.error(error);
+    } finally {
+      setCopyingSkuToMpn(false);
+    }
+  };
 
   const filteredFilaments = filaments.filter((f) => {
     const matchesSearch =
@@ -480,6 +528,19 @@ const AdminFilaments = () => {
               <Tag className="w-4 h-4 mr-2" />
             )}
             {scrapingMpns ? "Scraping MPNs..." : "Scrape MPNs"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleCopySkuToMpn}
+            disabled={copyingSkuToMpn || scrapingMpns || scrapingUpcs}
+            title="Copy existing SKU values to MPN for all filaments missing MPN"
+          >
+            {copyingSkuToMpn ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Copy className="w-4 h-4 mr-2" />
+            )}
+            {copyingSkuToMpn ? "Copying..." : "SKU → MPN"}
           </Button>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
