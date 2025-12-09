@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2 } from "lucide-react";
+import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -48,6 +48,7 @@ const AdminFilaments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilaments, setSelectedFilaments] = useState<Set<string>>(new Set());
   const [scrapingUpcs, setScrapingUpcs] = useState(false);
+  const [scrapingMpns, setScrapingMpns] = useState(false);
   const [scrapeProgress, setScrapeProgress] = useState({ current: 0, total: 0 });
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
@@ -216,6 +217,33 @@ const AdminFilaments = () => {
     } finally {
       setScrapingUpcs(false);
       setScrapeProgress({ current: 0, total: 0 });
+    }
+  };
+
+  const handleScrapeMpns = async () => {
+    if (vendorFilter === "all") {
+      toast.error("Please select a specific vendor to scrape MPNs");
+      return;
+    }
+
+    setScrapingMpns(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-filament-upcs', {
+        body: { vendor: vendorFilter }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success(`MPN scrape complete: ${data.updated || 0} updated, ${data.noData || 0} no data`);
+      fetchFilaments();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to scrape MPNs");
+      console.error(error);
+    } finally {
+      setScrapingMpns(false);
     }
   };
 
@@ -425,7 +453,7 @@ const AdminFilaments = () => {
             <Button
               variant="secondary"
               onClick={handleScrapeSelectedUpcs}
-              disabled={scrapingUpcs || filteredFilaments.length === 0}
+              disabled={scrapingUpcs || scrapingMpns || filteredFilaments.length === 0}
             >
               {scrapingUpcs ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -440,6 +468,19 @@ const AdminFilaments = () => {
               <Progress value={(scrapeProgress.current / scrapeProgress.total) * 100} className="h-1 w-full" />
             )}
           </div>
+          <Button
+            variant="secondary"
+            onClick={handleScrapeMpns}
+            disabled={scrapingMpns || scrapingUpcs || vendorFilter === "all"}
+            title={vendorFilter === "all" ? "Select a vendor first" : `Scrape MPNs for ${vendorFilter}`}
+          >
+            {scrapingMpns ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Tag className="w-4 h-4 mr-2" />
+            )}
+            {scrapingMpns ? "Scraping MPNs..." : "Scrape MPNs"}
+          </Button>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
