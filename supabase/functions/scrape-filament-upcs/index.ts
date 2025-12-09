@@ -524,6 +524,17 @@ async function tryWixExtraction(filament: any): Promise<ExtractionResult | null>
     let sku: string | null = null;
     let mpn: string | null = null;
     
+    // Skip Amazon URLs - these can't be scraped for Paramount SKU codes
+    if (filament.product_url && filament.product_url.includes('amazon.com')) {
+      console.log(`    -> Amazon URL detected, cannot extract Paramount SKU from Amazon`);
+      // For Amazon, we can note the ASIN but can't get the Paramount product code
+      const asinMatch = filament.product_url.match(/\/dp\/([A-Z0-9]{10})/);
+      if (asinMatch) {
+        console.log(`    -> Found Amazon ASIN: ${asinMatch[1]} (not usable as Paramount SKU)`);
+      }
+      return null;
+    }
+    
     // Extract SKU from product title - pattern: [SKUCODE] or (SKUCODE)
     // Example: "ASA (Military Green) 1.75mm 1kg Filament [OGRL60037764SA] ASA"
     const titleSkuMatch = filament.product_title?.match(/\[([A-Z0-9\-]+)\]/i);
@@ -532,25 +543,58 @@ async function tryWixExtraction(filament: any): Promise<ExtractionResult | null>
       console.log(`    -> Found SKU in title brackets: ${sku}`);
     }
     
-    // Also try extracting from product URL
-    // Pattern: paramount-3d.com/product-page/pla-military-green-1-75mm-1kg-filament-ogrl60037764c
-    // The last segment after last hyphen before any trailing suffix might be SKU
+    // Try to extract SKU code from URL patterns
     if (!sku && filament.product_url) {
-      // Try to extract code from URL - look for pattern like -XXXXX at end or -XXXXX-yyy
-      const urlMatch = filament.product_url.match(/filament-([a-z0-9]+)(?:-[a-z]+)?$/i);
-      if (urlMatch && urlMatch[1].length >= 6) {
-        sku = urlMatch[1].toUpperCase();
-        console.log(`    -> Found SKU in URL: ${sku}`);
+      // Pattern 1: URL ends with SKU code after "filament-"
+      // Example: /pla-military-green-1-75mm-1kg-filament-ogrl60037764c
+      const filamentCodeMatch = filament.product_url.match(/filament-([a-z0-9]+)$/i);
+      if (filamentCodeMatch && filamentCodeMatch[1].length >= 6) {
+        sku = filamentCodeMatch[1].toUpperCase();
+        console.log(`    -> Found SKU code in URL (after filament-): ${sku}`);
+      }
+      
+      // Pattern 2: URL ends with alphanumeric code that looks like a SKU
+      // Example: /tpu-military-green-1-75mm-1kg-filament-ogrl6003-7764u
+      if (!sku) {
+        const codeEndMatch = filament.product_url.match(/-([a-z]{2,4}[lr][0-9]+[a-z0-9]*)$/i);
+        if (codeEndMatch && codeEndMatch[1].length >= 6) {
+          sku = codeEndMatch[1].toUpperCase().replace(/-/g, '');
+          console.log(`    -> Found SKU code in URL (code pattern): ${sku}`);
+        }
+      }
+      
+      // Pattern 3: For simple product slugs without codes, generate an MPN from the slug
+      // Examples: /absblack, /flexpla, /petg-white, /pla-silver-dollar-1-75mm-1kg-filament
+      if (!sku) {
+        const slugMatch = filament.product_url.match(/\/product-page\/([a-z0-9\-]+)$/i);
+        if (slugMatch) {
+          const slug = slugMatch[1];
+          // Generate MPN from slug: prefix with P3D- and clean up
+          // Remove common suffixes like -1-75mm, -1kg, -filament
+          let cleanSlug = slug
+            .replace(/-?1-75mm/gi, '')
+            .replace(/-?3-00mm/gi, '')
+            .replace(/-?1kg/gi, '')
+            .replace(/-?0-5kg/gi, '')
+            .replace(/-?filament$/gi, '')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+          
+          if (cleanSlug.length >= 3) {
+            mpn = `P3D-${cleanSlug.toUpperCase()}`;
+            console.log(`    -> Generated MPN from slug: ${mpn}`);
+          }
+        }
       }
     }
     
-    // If we found a SKU, also use it as MPN (common for Paramount 3D)
+    // If we found a SKU, also use it as MPN
     if (sku) {
       mpn = sku;
     }
     
     // Try to fetch the page to look for additional data (UPC, GTIN, etc.)
-    if (filament.product_url && filament.product_url.startsWith('http')) {
+    if (filament.product_url && filament.product_url.startsWith('http') && !filament.product_url.includes('amazon.com')) {
       try {
         console.log(`    -> Fetching page: ${filament.product_url}`);
         const response = await fetch(filament.product_url, {
@@ -564,7 +608,6 @@ async function tryWixExtraction(filament: any): Promise<ExtractionResult | null>
           const html = await response.text();
           
           // Look for SKU in Wix product title on page
-          // Pattern: <h1 data-hook="product-title" class="...">Title [SKUCODE] Material</h1>
           const pageTitleMatch = html.match(/data-hook=["']product-title["'][^>]*>([^<]+)</i);
           if (pageTitleMatch) {
             const pageTitle = pageTitleMatch[1];
@@ -574,6 +617,14 @@ async function tryWixExtraction(filament: any): Promise<ExtractionResult | null>
               mpn = sku;
               console.log(`    -> Found SKU in page title: ${sku}`);
             }
+          }
+          
+          // Look for SKU in product info/JSON data
+          const productInfoMatch = html.match(/"sku"\s*:\s*"([A-Z0-9\-]+)"/i);
+          if (productInfoMatch && !sku) {
+            sku = productInfoMatch[1].trim();
+            mpn = sku;
+            console.log(`    -> Found SKU in JSON data: ${sku}`);
           }
           
           // Look for barcode patterns in the HTML
@@ -586,6 +637,8 @@ async function tryWixExtraction(filament: any): Promise<ExtractionResult | null>
             /GTIN[:\s]*([0-9]{8,14})/i,
             /EAN[:\s]*([0-9]{8,14})/i,
             /Barcode[:\s]*([0-9]{8,14})/i,
+            /"barcode"\s*:\s*"([0-9]{8,14})"/i,
+            /"gtin"\s*:\s*"([0-9]{8,14})"/i,
           ];
           
           for (const pattern of barcodePatterns) {
@@ -612,7 +665,7 @@ async function tryWixExtraction(filament: any): Promise<ExtractionResult | null>
     }
     
     // Return what we found from title/URL even if page fetch failed
-    if (sku) {
+    if (sku || mpn) {
       console.log(`    -> Found from title/URL: SKU=${sku}, MPN=${mpn}`);
       return { sku, upc: null, gtin: null, ean: null, mpn, method: 'wix_title_extraction' };
     }
