@@ -810,10 +810,21 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
 
   if (!filament) return null;
 
-  // variant_price is the per-kg price, calculate total from weight
+  // Get pack quantity (default to 1 for single spools)
+  const packQuantity = (filament as any).pack_quantity || 1;
+  const isMultiPack = packQuantity > 1;
+  
+  // variant_price is the per-kg price
   const pricePerKg = filament.variant_price ? filament.variant_price.toFixed(2) : null;
-  const totalPrice = filament.variant_price && filament.net_weight_g
-    ? (filament.variant_price * (filament.net_weight_g / 1000)).toFixed(2)
+  
+  // Calculate per-spool price from per-kg price and weight
+  const pricePerSpool = filament.variant_price && filament.net_weight_g
+    ? (filament.variant_price * (filament.net_weight_g / 1000))
+    : null;
+  
+  // Calculate total pack price (for multi-packs)
+  const totalPackPrice = pricePerSpool && packQuantity
+    ? (pricePerSpool * packQuantity).toFixed(2)
     : null;
 
   return (
@@ -945,9 +956,14 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                           ${pricePerKg}
                         </div>
                         <div className="text-sm text-muted-foreground">per kg</div>
-                        {totalPrice && (
+                        {pricePerSpool && (
                           <div className="text-xs text-muted-foreground mt-1">
-                            ${totalPrice} total
+                            ${pricePerSpool.toFixed(2)} per spool
+                          </div>
+                        )}
+                        {isMultiPack && totalPackPrice && (
+                          <div className="text-xs text-primary/80 mt-1 font-medium">
+                            📦 {packQuantity}-pack: ${totalPackPrice}
                           </div>
                         )}
                       </div>
@@ -990,6 +1006,11 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                       <Badge variant="outline" className="text-sm px-3 py-1.5">
                         <Package className="w-3 h-3 mr-1" />
                         {filament.net_weight_g}g
+                      </Badge>
+                    )}
+                    {isMultiPack && (
+                      <Badge variant="secondary" className="text-sm px-3 py-1.5 bg-primary/20 text-primary border-primary/30">
+                        📦 {packQuantity}-Pack
                       </Badge>
                     )}
                   </div>
