@@ -21,7 +21,46 @@ interface GroupedProduct {
   representativeImage: string | null;
   priceRange: { min: number | null; max: number | null };
   productUrl: string | null;
+  categoryUrl: string | null;
 }
+
+// Brand-specific category URL patterns for grouped products
+const getCategoryUrl = (brand: string, material: string | null, baseName: string): string | null => {
+  if (!material) return null;
+  
+  const materialLower = material.toLowerCase();
+  const brandLower = brand.toLowerCase();
+  
+  // Prusament category URLs
+  if (brandLower === 'prusament') {
+    // Map materials to Prusa category slugs
+    const prusaCategoryMap: Record<string, string> = {
+      'asa': 'prusament-asa',
+      'petg': 'prusament-petg',
+      'pla': 'prusament-pla',
+      'pc blend': 'prusament-pc-blend',
+      'pvb': 'prusament-pvb',
+      'pa11 carbon fiber': 'prusament-pa11-cf',
+    };
+    
+    const categorySlug = prusaCategoryMap[materialLower];
+    if (categorySlug) {
+      return `https://www.prusa3d.com/category/${categorySlug}/`;
+    }
+  }
+  
+  // Polymaker category URLs
+  if (brandLower === 'polymaker') {
+    return `https://us.polymaker.com/collections/${materialLower}`;
+  }
+  
+  // Bambu Lab category URLs
+  if (brandLower === 'bambu lab') {
+    return `https://us.store.bambulab.com/collections/filament`;
+  }
+  
+  return null;
+};
 
 // Common color names to detect at the end of product titles
 const COLOR_WORDS = [
@@ -289,6 +328,7 @@ const BrandDetail = () => {
           representativeImage: null,
           priceRange: { min: null, max: null },
           productUrl: filament.product_url,
+          categoryUrl: getCategoryUrl(decodedBrand, filament.material, baseName),
         });
       }
 
@@ -658,6 +698,21 @@ const BrandDetail = () => {
                               );
                             })}
                           </div>
+                          {/* View Collection button for grouped products with category URL */}
+                          {product.categoryUrl && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full mt-2 text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(product.categoryUrl!, '_blank');
+                              }}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              View Collection
+                            </Button>
+                          )}
                         </div>
                       )}
 
