@@ -470,9 +470,9 @@ const BrandDetail = () => {
               >
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    {/* Product Image or Color Bubbles for Fillamentum */}
+                    {/* Product Image or Color Bubbles */}
                     <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center relative">
-                      {decodedBrand === "Fillamentum" && product.variants.some(v => v.color_hex) ? (
+                      {product.variants.some(v => v.color_hex) ? (
                         <div className="w-full h-full p-4 flex flex-wrap content-center justify-center gap-2">
                           {product.variants.slice(0, 16).map((variant) => (
                             <button
