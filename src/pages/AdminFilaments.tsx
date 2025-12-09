@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag, Copy, GitBranch, Database, Palette, Download } from "lucide-react";
+import { ArrowLeft, Search, Package, ExternalLink, Image as ImageIcon, Trash2, Barcode, Loader2, Tag, Copy, GitBranch, Database, Palette, Download, FileText } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -81,6 +81,7 @@ const AdminFilaments = () => {
   const [lookingUpBarcodes, setLookingUpBarcodes] = useState(false);
   const [populatingHexColors, setPopulatingHexColors] = useState(false);
   const [scrapingFillamentumImages, setScrapingFillamentumImages] = useState(false);
+  const [scraping3dxtechTds, setScraping3dxtechTds] = useState(false);
   const [scrapeProgress, setScrapeProgress] = useState({ current: 0, total: 0 });
   const [showMissingUpcOnly, setShowMissingUpcOnly] = useState(false);
   const [showMissingSkuOnly, setShowMissingSkuOnly] = useState(false);
@@ -494,6 +495,29 @@ const AdminFilaments = () => {
     }
   };
 
+  const handleScrape3dxtechTds = async () => {
+    setScraping3dxtechTds(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-3dxtech-tds', {});
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast.success(`3DXTech TDS: ${data.updated} updated, ${data.failed} failed`, {
+          description: `Processed ${data.total} filaments`
+        });
+        fetchFilaments();
+      } else {
+        throw new Error(data?.error || 'Failed to scrape 3DXTech TDS URLs');
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to scrape 3DXTech TDS URLs");
+      console.error(error);
+    } finally {
+      setScraping3dxtechTds(false);
+    }
+  };
+
   const filteredFilaments = filaments.filter((f) => {
     const matchesSearch =
       f.product_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -753,6 +777,19 @@ const AdminFilaments = () => {
               <Download className="w-4 h-4 mr-2" />
             )}
             {scrapingFillamentumImages ? "Scraping..." : "Fillamentum Images"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleScrape3dxtechTds}
+            disabled={scraping3dxtechTds}
+            title="Scrape TDS URLs for 3DXTech filaments from official product pages"
+          >
+            {scraping3dxtechTds ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4 mr-2" />
+            )}
+            {scraping3dxtechTds ? "Scraping..." : "3DXTech TDS"}
           </Button>
           {selectedFilaments.size > 0 && (
             <AlertDialog>
