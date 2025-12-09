@@ -90,6 +90,7 @@ const AdminFilaments = () => {
   const [showMissingGtinOnly, setShowMissingGtinOnly] = useState(false);
   const [showMissingMpnOnly, setShowMissingMpnOnly] = useState(false);
   const [showMissingHexOnly, setShowMissingHexOnly] = useState(false);
+  const [showMissingTdsOnly, setShowMissingTdsOnly] = useState(false);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
 
   useEffect(() => {
@@ -554,9 +555,10 @@ const AdminFilaments = () => {
     const matchesGtinFilter = showMissingGtinOnly ? !(f as any).gtin : true;
     const matchesMpnFilter = showMissingMpnOnly ? !(f as any).mpn : true;
     const matchesHexFilter = showMissingHexOnly ? !f.color_hex : true;
+    const matchesTdsFilter = showMissingTdsOnly ? !f.tds_url : true;
     const matchesVendor = vendorFilter === "all" || f.vendor === vendorFilter;
     
-    return matchesSearch && matchesUpcFilter && matchesSkuFilter && matchesEanFilter && matchesGtinFilter && matchesMpnFilter && matchesHexFilter && matchesVendor;
+    return matchesSearch && matchesUpcFilter && matchesSkuFilter && matchesEanFilter && matchesGtinFilter && matchesMpnFilter && matchesHexFilter && matchesTdsFilter && matchesVendor;
   });
 
   // Count for lookup barcodes button
@@ -692,6 +694,16 @@ const AdminFilaments = () => {
             />
             <label htmlFor="missing-mpn" className="text-sm cursor-pointer whitespace-nowrap">
               Missing MPN ({totalFilaments - filamentsWithMpn})
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="missing-tds"
+              checked={showMissingTdsOnly}
+              onCheckedChange={(checked) => setShowMissingTdsOnly(checked === true)}
+            />
+            <label htmlFor="missing-tds" className="text-sm cursor-pointer whitespace-nowrap">
+              Missing TDS ({totalFilaments - filamentsWithTDS})
             </label>
           </div>
         </div>
