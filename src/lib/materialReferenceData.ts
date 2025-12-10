@@ -3383,6 +3383,477 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'PLA-CF': {
+    name: 'PLA-CF',
+    fullName: 'Carbon Fiber Reinforced Polylactic Acid',
+    origin: {
+      yearInvented: '2015+ (3D printing formulation)',
+      originalCompany: 'Multiple manufacturers developed carbon fiber PLA',
+      keyMilestones: [
+        '2007-2010: PLA becomes dominant FDM material',
+        '2015-2016: Carbon fiber PLA filaments emerge',
+        '2018+: Becomes popular entry-level CF composite',
+        '2020+: Widely available from most filament brands',
+      ],
+      majorManufacturers: ['Polymaker', 'Priline', 'Overture', '3DXTech', 'eSUN', 'Hatchbox', 'Protopasta'],
+    },
+    composition: {
+      basePolymer: 'PLA (Polylactic Acid)',
+      chemicalFamily: 'Aliphatic Polyester Composite',
+      keyAdditives: ['Chopped carbon fiber (10-20%)', 'Coupling agents'],
+      coloringAgents: 'Typically black only due to carbon fiber',
+      specialFillers: ['Chopped carbon fiber strands (100-200μm length)'],
+    },
+    familyContext: {
+      parentPolymer: 'Standard PLA reinforced with carbon fiber',
+      variants: ['PLA-CF 10%', 'PLA-CF 15%', 'PLA-CF 20%'],
+      chemicalComparison: 'Significantly stiffer than PLA with improved dimensional stability, but still has PLA heat limitations.',
+      evolution: 'Created as an accessible entry point to carbon fiber composites for hobbyists.',
+    },
+    strengths: {
+      uniqueProperties: ['High stiffness for PLA', 'Excellent dimensional stability', 'Professional matte finish', 'Reduced stringing'],
+      bestUseScenarios: ['Stiff prototypes', 'Lightweight structural models', 'Precision parts', 'Camera mounts', 'Quadcopter frames (indoor)'],
+      advantagesOverCompetitors: ['Easiest CF composite to print', 'No enclosure needed', 'Much stiffer than plain PLA', 'Low warping'],
+      whyChooseThis: 'When you need carbon fiber stiffness but want the easy printability of PLA.',
+    },
+    weaknesses: {
+      limitations: ['Requires hardened nozzle', 'Low heat resistance (still PLA)', 'Brittle - low impact resistance', 'Not for outdoor use'],
+      commonProblems: ['Rapid brass nozzle wear', 'Layer adhesion weaker than solid PLA', 'Parts still soften at 50-60°C'],
+      environmentalConcerns: ['Carbon fiber not biodegradable', 'PLA matrix may still compost industrially', 'CF dust hazard'],
+      whenNotToUse: ['Heat-exposed applications', 'Impact-critical parts', 'Outdoor use', 'Without hardened nozzle'],
+    },
+    practicalContext: {
+      industryAdoption: ['Hobbyist prototyping', 'Educational settings', 'RC/drone indoor frames', 'Precision tooling'],
+      commonApplications: ['Camera gimbals', 'Laptop stands', 'Precision brackets', 'Stiff enclosures', 'RC plane components'],
+      safetyStandards: ['Generally not certified for critical applications'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'PLA-CF is often called "beginner carbon fiber" - easiest CF to print',
+        'The matte black finish comes from fiber ends at the surface',
+        'Parts are 30-40% stiffer than standard PLA',
+        'A brass nozzle will be destroyed in under 500g of PLA-CF',
+      ],
+      whyInvented: 'Created to bring carbon fiber benefits to hobbyists without requiring enclosed printers.',
+      controversies: [
+        'Some brands use minimal CF content (5%) but market as "carbon fiber"',
+        'Heat resistance is often overstated - it is still PLA underneath',
+        'Quality varies dramatically between brands',
+      ],
+      marketAdoption: 'Very popular as an introduction to carbon fiber composites.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-65', unit: 'MPa', implications: 'Similar to plain PLA but with better stiffness.' },
+        { name: 'Tensile Modulus', value: '4000-6000', unit: 'MPa', implications: 'High. 1.5-2x stiffer than standard PLA.' },
+        { name: 'Elongation at Break', value: '2-4', unit: '%', implications: 'Very Low. Brittle like standard PLA but more so.' },
+        { name: 'Impact Strength', value: '15-25', unit: 'kJ/m²', implications: 'Low. Reduced from plain PLA due to fiber stress points.' },
+        { name: 'Glass Transition (Tg)', value: '55-60', unit: '°C', implications: 'STILL LOW - this is still PLA. Parts soften in heat.' },
+        { name: 'Heat Deflection (HDT)', value: '~55-60', unit: '°C (0.45 MPa)', implications: 'Minimal improvement. CF does not fix PLA heat weakness.' },
+      ],
+      notes: 'Carbon fiber improves stiffness but NOT heat resistance. Still has PLA thermal limitations.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 200, max: 230, optimal: 215 },
+      bedTemp: { min: 40, max: 60, optimal: 50 },
+      coolingFan: { min: 50, max: 100, notes: 'Good cooling like standard PLA. Helps with detail.' },
+      enclosure: { required: false, notes: 'Not required - prints like PLA in open air.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Less critical than engineering CF materials but still helps.' },
+      printSpeed: { recommended: '40-80 mm/s', notes: 'Similar to PLA. Can print reasonably fast.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED (steel or better)',
+        'Larger nozzle (0.5mm+) recommended to prevent clogging',
+        'Print slightly hotter than plain PLA for better fiber wetting',
+        'Layer adhesion may be weaker - consider thicker layers',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'PEI (Smooth)', 'Glass with glue'],
+        good: ['Blue tape', 'BuildTak'],
+        poor: ['Bare aluminum'],
+      },
+      releaseAgents: 'Same as PLA - usually not needed on textured PEI.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer base - excellent compatibility.' },
+        { material: 'TPU', bondQuality: 'Strong Chemical Bond', notes: 'Good for stiff parts with flexible sections.' },
+        { material: 'PVA', bondQuality: 'Strong Chemical Bond', notes: 'PVA works as soluble support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'THF/Ethyl Acetate', effectiveness: 'Difficult', notes: 'PLA smoothing chemicals work but fibers protrude.' },
+      ],
+      mechanical: ['Sanding requires dust mask - CF dust hazardous', 'Can be drilled and tapped', 'Machining possible with care'],
+      glues: ['Cyanoacrylate works well', 'Epoxy for structural joints', 'Hot air welding possible'],
+      painting: 'Matte surface accepts paint well. Prime for best results.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'PLA base emits minimal fumes. Carbon fiber dust is the main concern when post-processing.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Carbon fiber shedding makes food contact inadvisable.' },
+      biodegradability: { rating: 'Partial', notes: 'PLA matrix may biodegrade industrially; carbon fiber will not.' },
+      additionalNotes: [
+        'Wear mask when sanding - CF dust is a respiratory irritant',
+        'Much safer to print than ABS-CF or ASA-CF',
+        'Good ventilation still recommended',
+      ],
+    },
+  },
+
+  'HTPLA': {
+    name: 'HTPLA',
+    fullName: 'High Temperature Polylactic Acid',
+    origin: {
+      yearInvented: '2015+ (3D printing formulation)',
+      originalCompany: 'Protopasta (one of the first), then multiple manufacturers',
+      keyMilestones: [
+        '2007-2010: PLA becomes dominant but heat weakness is apparent',
+        '2015: HTPLA formulations emerge to address heat resistance',
+        '2017+: Annealing techniques become well-documented',
+        '2020+: Multiple brands offer heat-treatable PLA',
+      ],
+      majorManufacturers: ['Protopasta', 'Polymaker (PolyMax)', '3D-Fuel', 'Fillamentum', 'ColorFabb (HT)'],
+    },
+    composition: {
+      basePolymer: 'Modified PLA with crystallization enhancers',
+      chemicalFamily: 'Aliphatic Polyester (Modified)',
+      keyAdditives: ['Nucleating agents for crystallization', 'Impact modifiers', 'Heat stabilizers'],
+      coloringAgents: 'Various colors available, though annealing may shift color slightly',
+      specialFillers: ['Some formulas include mineral fillers for stability'],
+    },
+    familyContext: {
+      parentPolymer: 'PLA modified to enable post-print heat treatment (annealing)',
+      variants: ['HTPLA', 'PLA-HT', 'PolyMax PLA', 'Tough PLA HT'],
+      chemicalComparison: 'Same base chemistry as PLA but formulated to crystallize during annealing, dramatically improving heat resistance.',
+      evolution: 'Created to solve PLA\'s biggest weakness - low heat deflection temperature.',
+    },
+    strengths: {
+      uniqueProperties: ['Heat resistance up to 120°C after annealing', 'Easy to print (like PLA)', 'Post-process to unlock heat resistance', 'Low warping during print'],
+      bestUseScenarios: ['Heat-exposed parts', 'Automotive interior', 'Coffee cup holders', 'Electronics enclosures', 'Dishwasher-safe items'],
+      advantagesOverCompetitors: ['Prints as easily as PLA', 'No enclosure needed', 'Heat resistance rivals ABS after treatment', 'Biodegradable base'],
+      whyChooseThis: 'When you need heat resistance but want the easy printability of PLA and no enclosure.',
+    },
+    weaknesses: {
+      limitations: ['Requires post-print annealing', 'Parts shrink during annealing (5-10%)', 'Annealing can cause warping', 'More expensive than standard PLA'],
+      commonProblems: ['Dimensional changes during annealing', 'Uneven crystallization', 'Color shift with heat treatment', 'Requires oven or heat gun'],
+      environmentalConcerns: ['Same as standard PLA - industrial composting only'],
+      whenNotToUse: ['When precise dimensions required (shrinkage)', 'Without access to annealing equipment', 'Quick prototypes not needing heat resistance'],
+    },
+    practicalContext: {
+      industryAdoption: ['Consumer products', 'Automotive accessories', 'Kitchen items', 'Electronics'],
+      commonApplications: ['Cup holders', 'Phone mounts in cars', 'Kitchen utensil handles', 'Enclosures near heat sources', 'Sunlit window items'],
+      safetyStandards: ['Some grades are food-safe certified after proper annealing'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'Annealing causes PLA to crystallize from amorphous to semi-crystalline structure',
+        'The white/opaque color shift during annealing is the crystallization happening',
+        'Properly annealed HTPLA can survive boiling water (100°C)',
+        'The shrinkage during annealing can be compensated by scaling prints 105-110%',
+      ],
+      whyInvented: 'Created because users loved PLA ease of printing but were frustrated by parts deforming in hot cars.',
+      controversies: [
+        'Annealing instructions vary between brands - inconsistent results',
+        'Some "HTPLA" brands show minimal improvement even after treatment',
+        'Shrinkage compensation is trial-and-error for complex geometries',
+      ],
+      marketAdoption: 'Growing steadily as users discover the annealing process.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength (As Printed)', value: '50-60', unit: 'MPa', implications: 'Similar to standard PLA before annealing.' },
+        { name: 'Tensile Strength (Annealed)', value: '55-70', unit: 'MPa', implications: 'Slight improvement after crystallization.' },
+        { name: 'Elongation at Break', value: '4-8', unit: '%', implications: 'Low. Similar brittleness to standard PLA.' },
+        { name: 'Glass Transition (Tg) - As Printed', value: '55-60', unit: '°C', implications: 'Same as standard PLA initially.' },
+        { name: 'Heat Deflection (Annealed)', value: '100-120', unit: '°C', implications: 'DRAMATICALLY IMPROVED - the whole point of HTPLA.' },
+        { name: 'Shrinkage During Annealing', value: '5-10', unit: '%', implications: 'Significant. Design parts 5-10% larger to compensate.' },
+      ],
+      notes: 'Properties before and after annealing differ significantly. Heat resistance is only achieved after proper heat treatment.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 195, max: 225, optimal: 210 },
+      bedTemp: { min: 45, max: 65, optimal: 55 },
+      coolingFan: { min: 50, max: 100, notes: 'Good cooling like standard PLA.' },
+      enclosure: { required: false, notes: 'Not required for printing. Oven needed for annealing.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Same moisture sensitivity as standard PLA.' },
+      printSpeed: { recommended: '40-80 mm/s', notes: 'Same as standard PLA.' },
+      additionalNotes: [
+        'Print like normal PLA - no special settings needed',
+        'ANNEALING REQUIRED for heat resistance: 70-110°C for 30-60 minutes',
+        'Support parts during annealing to prevent warping',
+        'Scale parts 105-110% to compensate for shrinkage',
+        'Use sand or salt as support medium in oven',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'PEI (Smooth)', 'Glass'],
+        good: ['Blue tape', 'BuildTak'],
+        poor: ['Bare aluminum'],
+      },
+      releaseAgents: 'Same as standard PLA.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Compatible but non-HTPLA sections will soften during annealing.' },
+        { material: 'PVA', bondQuality: 'Strong Chemical Bond', notes: 'PVA works for supports but dissolve BEFORE annealing.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'THF/Ethyl Acetate', effectiveness: 'Good', notes: 'Same as PLA before annealing. After annealing, crystalline structure resists chemicals.' },
+      ],
+      mechanical: ['Sands easily', 'Machine before annealing for precise dimensions', 'Can be drilled and tapped'],
+      glues: ['Cyanoacrylate works', 'Epoxy for heat-resistant joints', 'Acetone does NOT work'],
+      painting: 'Paint after annealing - surface becomes slightly matte. Prime for best adhesion.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Same low emissions as standard PLA during printing.' },
+      foodSafety: { rating: 'Some Grades Certified', notes: 'Check brand certifications. Must be properly annealed for heat applications.' },
+      biodegradability: { rating: 'Industrial Only', notes: 'Same as standard PLA - requires industrial composting.' },
+      additionalNotes: [
+        'Annealing should be done in well-ventilated area',
+        'Use dedicated oven or toaster oven - not food preparation oven',
+        'Monitor temperature carefully during annealing',
+      ],
+    },
+  },
+
+  'LW-PLA': {
+    name: 'LW-PLA',
+    fullName: 'Lightweight Foaming Polylactic Acid',
+    origin: {
+      yearInvented: '2019 (3D printing formulation)',
+      originalCompany: 'ColorFabb (developed LW-PLA)',
+      keyMilestones: [
+        '2019: ColorFabb introduces LW-PLA',
+        '2020: RC plane community adopts rapidly',
+        '2021+: Other manufacturers release competing foaming PLAs',
+      ],
+      majorManufacturers: ['ColorFabb (original)', 'Polymaker (PolyLite LW)', '3D-Fuel', 'eSUN (ePLA-LW)'],
+    },
+    composition: {
+      basePolymer: 'PLA with foaming/blowing agents',
+      chemicalFamily: 'Aliphatic Polyester with Gas-Generating Additives',
+      keyAdditives: ['Chemical foaming agents (activated by heat)', 'Nucleating agents', 'Cell stabilizers'],
+      coloringAgents: 'Limited colors - typically white, gray, black',
+      specialFillers: ['Foaming agents that release gas when heated'],
+    },
+    familyContext: {
+      parentPolymer: 'PLA modified with foaming agents that activate at high temperatures',
+      variants: ['LW-PLA', 'ePLA-LW', 'PolyLite LW-PLA'],
+      chemicalComparison: 'Expands up to 3x volume when printed hot, creating lightweight cellular structure.',
+      evolution: 'Developed specifically for RC aircraft builders who needed light, printable foam alternatives.',
+    },
+    strengths: {
+      uniqueProperties: ['Up to 65% weight reduction', 'Closed-cell foam structure', 'Excellent for large parts', 'Dramatically faster printing (more volume per gram)'],
+      bestUseScenarios: ['RC aircraft', 'Large display models', 'Cosplay props', 'Floating objects', 'Sound absorption'],
+      advantagesOverCompetitors: ['Lightest 3D printable material', 'Reduces material cost per volume', 'Faster large prints', 'Can be sanded smooth'],
+      whyChooseThis: 'When weight is the primary concern - nothing else comes close for lightweight printing.',
+    },
+    weaknesses: {
+      limitations: ['Lower strength than solid PLA', 'Requires careful temperature tuning', 'Surface finish is rough/matte', 'Limited color options'],
+      commonProblems: ['Finding optimal expansion temperature', 'Inconsistent expansion', 'Clogging if temperature drops', 'Stringing'],
+      environmentalConcerns: ['Same as PLA - industrial composting', 'Foaming agents may affect biodegradability'],
+      whenNotToUse: ['Structural/load-bearing parts', 'When smooth surface needed', 'Small detailed parts', 'Mechanical components'],
+    },
+    practicalContext: {
+      industryAdoption: ['RC/hobby aircraft', 'Display models', 'Props and cosplay', 'Prototyping large objects'],
+      commonApplications: ['RC plane fuselages and wings', 'Drone frames', 'Display busts', 'Theatrical props', 'Architectural models'],
+      safetyStandards: ['Not typically certified - hobbyist material'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'A meter-wingspan RC plane fuselage can weigh under 100 grams with LW-PLA',
+        'The foaming agent creates millions of tiny bubbles inside the plastic',
+        'LW-PLA uses LESS filament by weight to fill the same volume',
+        'Some users report up to 3x the print volume from the same spool weight',
+      ],
+      whyInvented: 'Created for RC aircraft builders who wanted printable alternatives to foam board construction.',
+      controversies: [
+        'Optimal settings vary significantly between printers and even spools',
+        'Claims of "3x expansion" are marketing - 1.5-2x is more realistic in practice',
+        'Some competing brands offer minimal foaming compared to ColorFabb original',
+      ],
+      marketAdoption: 'Rapidly adopted by RC community; niche but enthusiastic user base.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Density (Foamed)', value: '0.4-0.6', unit: 'g/cm³', implications: 'VERY LOW. Standard PLA is 1.24 g/cm³. Up to 65% weight reduction.' },
+        { name: 'Tensile Strength', value: '20-35', unit: 'MPa', implications: 'Reduced. Cellular structure decreases strength significantly.' },
+        { name: 'Elongation at Break', value: '3-5', unit: '%', implications: 'Brittle like PLA. Foam structure can make it more prone to crushing.' },
+        { name: 'Expansion Ratio', value: '1.5-2.5x', unit: 'volume', implications: 'Prints larger than input material. Temperature controls expansion.' },
+        { name: 'Glass Transition (Tg)', value: '55-60', unit: '°C', implications: 'Same as PLA. Heat weakness remains.' },
+        { name: 'Cell Size', value: '50-200', unit: 'μm', implications: 'Closed-cell structure provides buoyancy and insulation.' },
+      ],
+      notes: 'Properties vary dramatically based on printing temperature. Higher temp = more expansion = lighter but weaker.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 230, max: 265, optimal: 250 },
+      bedTemp: { min: 45, max: 60, optimal: 50 },
+      coolingFan: { min: 0, max: 50, notes: 'Less cooling than normal PLA. Too much cooling stops foaming.' },
+      enclosure: { required: false, notes: 'Not required but helps maintain consistent foaming.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Moisture affects foaming consistency. Dry thoroughly.' },
+      printSpeed: { recommended: '20-40 mm/s', notes: 'Slower speeds allow proper foaming. Fast printing underfoams.' },
+      additionalNotes: [
+        'Temperature controls expansion: 230°C = minimal foam, 250°C+ = maximum foam',
+        'Use 0.6mm+ nozzle for best results',
+        'Set flow rate to 50-65% to compensate for expansion',
+        'Disable retraction or minimize to prevent clogging',
+        'First layer at normal PLA temps (200-210°C) for adhesion',
+        'Increase temp for foaming on subsequent layers',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Glass with glue'],
+        good: ['PEI (Smooth)', 'Blue tape'],
+        poor: ['Bare surfaces'],
+      },
+      releaseAgents: 'Glue stick helps since first layer is printed hot.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Use solid PLA for structural sections, LW-PLA for bulk.' },
+        { material: 'PVA', bondQuality: 'Weak Bond', notes: 'Supports may not work well - design for supportless printing.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not Recommended', effectiveness: 'Difficult', notes: 'Foam structure makes chemical smoothing impractical.' },
+      ],
+      mechanical: ['Sands very easily - foam structure is soft', 'Can fill with lightweight filler', 'Accepts CA glue well for reinforcement'],
+      glues: ['Cyanoacrylate penetrates foam for strong bonds', 'Epoxy works but adds weight', 'Hot glue effective'],
+      painting: 'Porous surface absorbs paint. Use filler primer for smooth finish.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Higher printing temps but still PLA-based. Better ventilation recommended at 250°C+.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Porous foam structure traps bacteria. Not suitable for food contact.' },
+      biodegradability: { rating: 'Unknown', notes: 'PLA base may biodegrade industrially; foaming agents effect unknown.' },
+      additionalNotes: [
+        'Higher printing temps require better ventilation',
+        'Foam dust when sanding - use mask',
+        'Material is generally safe to handle',
+      ],
+    },
+  },
+
+  'PLA-Matte': {
+    name: 'PLA-Matte',
+    fullName: 'Matte Finish Polylactic Acid',
+    origin: {
+      yearInvented: '2018+ (3D printing formulation)',
+      originalCompany: 'Multiple manufacturers developed matte PLA formulations',
+      keyMilestones: [
+        '2007-2010: Standard PLA dominates with glossy finish',
+        '2018-2019: Matte PLA variants emerge for aesthetic applications',
+        '2020+: Becomes popular for display models and props',
+      ],
+      majorManufacturers: ['Polymaker (PolyTerra)', 'Bambu Lab', 'Elegoo', 'Eryone', 'Overture', 'eSUN'],
+    },
+    composition: {
+      basePolymer: 'PLA with surface-modifying additives',
+      chemicalFamily: 'Aliphatic Polyester (Modified)',
+      keyAdditives: ['Matte agents (mineral fillers)', 'Surface texture modifiers', 'Light-diffusing particles'],
+      coloringAgents: 'Wide color range - matte finish enhances earth tones especially',
+      specialFillers: ['Micro-minerals for light diffusion', 'Sometimes recycled PLA content'],
+    },
+    familyContext: {
+      parentPolymer: 'PLA modified with additives that create light-diffusing matte surface',
+      variants: ['PLA-Matte', 'PolyTerra PLA', 'Matte Silk PLA', 'Eco PLA Matte'],
+      chemicalComparison: 'Same base chemistry as PLA but with surface-modifying particles that eliminate glossy shine.',
+      evolution: 'Developed for users who wanted professional-looking prints without post-processing.',
+    },
+    strengths: {
+      uniqueProperties: ['No visible layer lines', 'Professional matte finish', 'Hides print imperfections', 'Earth tone colors look natural'],
+      bestUseScenarios: ['Display models', 'Props and cosplay', 'Product prototypes', 'Figurines', 'Architectural models'],
+      advantagesOverCompetitors: ['Eliminates sanding for appearance', 'Ready for photography', 'Consistent appearance', 'Easy to print'],
+      whyChooseThis: 'When appearance matters and you want print-ready results without post-processing.',
+    },
+    weaknesses: {
+      limitations: ['Slightly weaker than standard PLA', 'Shows fingerprints/oils easily', 'Limited to matte aesthetic', 'Can be slightly more brittle'],
+      commonProblems: ['Dust and fingerprints visible on dark colors', 'Some brands string more', 'Moisture sensitivity'],
+      environmentalConcerns: ['Some formulas use recycled content (positive)', 'Industrial composting only'],
+      whenNotToUse: ['When glossy finish desired', 'Mechanical parts (use standard PLA)', 'When handling frequently'],
+    },
+    practicalContext: {
+      industryAdoption: ['Product design', 'Architecture', 'Entertainment/props', 'Art and sculpture'],
+      commonApplications: ['Display figurines', 'Architectural models', 'Film props', 'Product mockups', 'Art sculptures'],
+      safetyStandards: ['Some brands are food-safe certified (PolyTerra)'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'Matte PLA became famous for making layer lines nearly invisible',
+        'PolyTerra PLA includes recycled cardboard spool and recycled PLA content',
+        'The matte effect comes from micro-particles that scatter light',
+        'Dark matte colors show dust and fingerprints more than light colors',
+      ],
+      whyInvented: 'Created for users who wanted professional-looking prints without sanding and painting.',
+      controversies: [
+        'Some "matte" PLAs are barely different from standard',
+        'Matte finish can be achieved with spray finishes on regular PLA',
+        'Quality and matteness vary significantly between brands',
+      ],
+      marketAdoption: 'Rapidly growing - becoming preferred choice for display and aesthetic prints.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '45-55', unit: 'MPa', implications: 'Slightly lower than standard PLA due to additives.' },
+        { name: 'Elongation at Break', value: '3-5', unit: '%', implications: 'Similar brittleness to standard PLA.' },
+        { name: "Young's Modulus", value: '2200-3000', unit: 'MPa', implications: 'Similar stiffness to standard PLA.' },
+        { name: 'Impact Strength', value: '20-25', unit: 'kJ/m²', implications: 'Similar to standard PLA.' },
+        { name: 'Glass Transition (Tg)', value: '55-60', unit: '°C', implications: 'Same heat limitations as standard PLA.' },
+        { name: 'Surface Finish', value: 'Matte', unit: '', implications: 'Light-diffusing surface hides layer lines.' },
+      ],
+      notes: 'Mechanical properties similar to standard PLA. The difference is aesthetic, not structural.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 190, max: 220, optimal: 205 },
+      bedTemp: { min: 40, max: 60, optimal: 50 },
+      coolingFan: { min: 80, max: 100, notes: 'Good cooling like standard PLA for best matte finish.' },
+      enclosure: { required: false, notes: 'Not required - prints like standard PLA.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Same moisture sensitivity as standard PLA.' },
+      printSpeed: { recommended: '40-80 mm/s', notes: 'Same speeds as standard PLA.' },
+      additionalNotes: [
+        'Print like standard PLA - no special settings needed',
+        'Slightly lower temps may enhance matte effect',
+        'Good cooling helps maintain matte finish',
+        'Handle with gloves to avoid fingerprints on final parts',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'PEI (Smooth)', 'Glass'],
+        good: ['Blue tape', 'BuildTak'],
+        poor: ['Bare aluminum'],
+      },
+      releaseAgents: 'Same as standard PLA - usually not needed.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Fully compatible with standard PLA.' },
+        { material: 'TPU', bondQuality: 'Strong Chemical Bond', notes: 'Good for soft-touch matte parts.' },
+        { material: 'PVA', bondQuality: 'Strong Chemical Bond', notes: 'PVA works as soluble support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not Recommended', effectiveness: 'Good', notes: 'Smoothing would remove the matte effect - defeats the purpose.' },
+      ],
+      mechanical: ['Light sanding maintains matte look', 'Can be primed and painted', 'Clear matte coat can protect finish'],
+      glues: ['Cyanoacrylate works well', 'Epoxy for structural bonds', 'Hot glue effective'],
+      painting: 'Already has ideal matte surface for paint adhesion. No primer needed for matte paints.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Same low emissions as standard PLA.' },
+      foodSafety: { rating: 'Some Grades Certified', notes: 'PolyTerra and some others are food-safe. Check brand certifications.' },
+      biodegradability: { rating: 'Industrial Only', notes: 'Same as standard PLA. Some brands include recycled content.' },
+      additionalNotes: [
+        'Generally very safe material',
+        'Some brands (PolyTerra) emphasize eco-friendly production',
+        'Same safety profile as standard PLA',
+      ],
+    },
+  },
+
   'PVC': {
     name: 'PVC',
     fullName: 'Polyvinyl Chloride',
