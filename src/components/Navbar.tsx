@@ -1,10 +1,8 @@
-import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { 
-  Search, Tag, GitCompare, Grid3x3, Sparkles, Wrench, LogIn, LogOut, 
-  User, Shield, Archive, Database, Layers, Terminal, TrendingUp, TrendingDown, Minus
+  LogIn, LogOut, User, Shield, Archive, Database, TrendingUp, TrendingDown, Minus
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -17,41 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const SLASH_COMMANDS = [
-  // Common materials
-  { command: "/pla", description: "Filter PLA filaments", filter: "PLA" },
-  { command: "/petg", description: "Filter PETG filaments", filter: "PETG" },
-  { command: "/abs", description: "Filter ABS filaments", filter: "ABS" },
-  { command: "/tpu", description: "Filter TPU/Flexible", filter: "TPU" },
-  { command: "/asa", description: "Filter ASA filaments", filter: "ASA" },
-  { command: "/nylon", description: "Filter Nylon/PA", filter: "Nylon" },
-  // Engineering materials
-  { command: "/pc", description: "Filter Polycarbonate", filter: "PC" },
-  { command: "/peek", description: "Filter PEEK high-temp", filter: "PEEK" },
-  { command: "/pei", description: "Filter PEI/ULTEM", filter: "PEI" },
-  { command: "/pom", description: "Filter POM/Acetal", filter: "POM" },
-  { command: "/pp", description: "Filter Polypropylene", filter: "PP" },
-  { command: "/hips", description: "Filter HIPS support", filter: "HIPS" },
-  { command: "/pva", description: "Filter PVA soluble", filter: "PVA" },
-  // Composite materials
-  { command: "/carbon", description: "Filter Carbon Fiber", filter: "Carbon" },
-  { command: "/glass", description: "Filter Glass Fiber", filter: "Glass" },
-  { command: "/metal", description: "Filter Metal-filled", filter: "Metal" },
-  { command: "/wood", description: "Filter Wood filaments", filter: "Wood" },
-  // Specialty materials
-  { command: "/silk", description: "Filter Silk finish", filter: "Silk" },
-  { command: "/glow", description: "Filter Glow-in-dark", filter: "Glow" },
-  { command: "/marble", description: "Filter Marble effect", filter: "Marble" },
-  { command: "/matte", description: "Filter Matte finish", filter: "Matte" },
-  { command: "/flex", description: "Filter Flexible/TPE", filter: "Flex" },
-];
-
 const Navbar = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [searchValue, setSearchValue] = useState("");
-  const [showCommands, setShowCommands] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   // Fetch real-time PLA price average
   const { data: priceData } = useQuery({
@@ -85,46 +51,6 @@ const Navbar = () => {
     await supabase.auth.signOut();
     navigate("/");
   };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchValue(value);
-    setShowCommands(value.startsWith("/"));
-  };
-
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      // Check for slash command
-      const matchedCommand = SLASH_COMMANDS.find(cmd => 
-        searchValue.toLowerCase().startsWith(cmd.command)
-      );
-      
-      if (matchedCommand) {
-        navigate(`/?material=${encodeURIComponent(matchedCommand.filter)}`);
-        setSearchValue("");
-        setShowCommands(false);
-      } else if (searchValue.trim()) {
-        navigate(`/?search=${encodeURIComponent(searchValue.trim())}`);
-        setSearchValue("");
-      }
-    }
-    
-    if (e.key === "Escape") {
-      setShowCommands(false);
-      setSearchValue("");
-    }
-  };
-
-  const handleCommandClick = (command: typeof SLASH_COMMANDS[0]) => {
-    navigate(`/?material=${encodeURIComponent(command.filter)}`);
-    setSearchValue("");
-    setShowCommands(false);
-  };
-
-  // Filter commands based on input
-  const filteredCommands = SLASH_COMMANDS.filter(cmd =>
-    cmd.command.toLowerCase().includes(searchValue.toLowerCase())
-  );
 
   return (
     <>
