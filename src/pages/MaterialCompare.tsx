@@ -8,23 +8,79 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Search, X, Thermometer, Shield, Zap, Layers, AlertTriangle, CheckCircle, Info, GitCompare, BookOpen } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { 
+  ArrowLeft, Search, X, Thermometer, Shield, Zap, Layers, AlertTriangle, 
+  CheckCircle, Info, GitCompare, BookOpen, ChevronDown, Trophy, Droplets,
+  Wind, Flame, Gauge, Factory, Paintbrush, Leaf, Settings2, Crown
+} from "lucide-react";
 import { 
   MATERIAL_CATEGORIES, 
-  MATERIAL_INFO, 
   getMaterialInfo, 
   getMaterialCategory,
   type MaterialInfo 
 } from "@/lib/materialHierarchy";
+import { MATERIAL_REFERENCE_DATA, type MaterialReferenceInfo } from "@/lib/materialReferenceData";
 import { cn } from "@/lib/utils";
 import MaterialReference from "@/components/MaterialReference";
 
+// Helper to get numeric value from property level for comparison
+const getPropertyValue = (level: string): number => {
+  const levelMap: Record<string, number> = {
+    'Very Low': 1, 'Low': 2, 'Medium': 3, 'High': 4, 'Very High': 5,
+    'Easy': 4, 'Hard': 2, 'Expert': 1,
+    'Rigid': 1, 'Semi-Flexible': 2, 'Flexible': 3, 'Very Flexible': 4,
+    'Excellent': 4, 'Good': 3, 'Difficult': 2, 'Not Possible': 1,
+    'Strong Chemical Bond': 4, 'Mechanical Bond': 3, 'Weak Bond': 2, 'No Bond': 1,
+  };
+  return levelMap[level] || 0;
+};
+
+// Determine winner for a criteria (higher is better by default, can be inverted)
+const getWinners = (
+  materials: { name: string; value: number | string | null }[],
+  higherIsBetter: boolean = true
+): string[] => {
+  const validMaterials = materials.filter(m => m.value !== null && m.value !== undefined && m.value !== '');
+  if (validMaterials.length === 0) return [];
+  
+  const numericMaterials = validMaterials.map(m => ({
+    name: m.name,
+    value: typeof m.value === 'number' ? m.value : getPropertyValue(String(m.value))
+  }));
+  
+  const bestValue = higherIsBetter 
+    ? Math.max(...numericMaterials.map(m => m.value))
+    : Math.min(...numericMaterials.map(m => m.value));
+  
+  return numericMaterials.filter(m => m.value === bestValue).map(m => m.name);
+};
+
+// Extract numeric value from TDS property
+const extractNumericValue = (value: string): number | null => {
+  const match = value.match(/[\d.]+/);
+  return match ? parseFloat(match[0]) : null;
+};
+
+const WinnerBadge = ({ isWinner }: { isWinner: boolean }) => {
+  if (!isWinner) return null;
+  return (
+    <div className="absolute -top-1 -right-1 z-10">
+      <div className="bg-amber-500 text-amber-950 rounded-full p-1 shadow-lg">
+        <Crown className="w-3 h-3" />
+      </div>
+    </div>
+  );
+};
+
 const PropertyBar = ({ 
   level, 
-  color 
+  color,
+  isWinner = false,
 }: { 
   level: 'Low' | 'Medium' | 'High' | 'Very High' | 'Easy' | 'Hard' | 'Expert' | 'Rigid' | 'Semi-Flexible' | 'Flexible' | 'Very Flexible';
   color: string;
+  isWinner?: boolean;
 }) => {
   const getWidth = () => {
     switch (level) {
@@ -49,14 +105,98 @@ const PropertyBar = ({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={cn(
+      "flex items-center gap-2 relative p-2 rounded-md transition-all",
+      isWinner && "bg-amber-500/10 ring-1 ring-amber-500/30"
+    )}>
+      {isWinner && (
+        <Trophy className="w-3.5 h-3.5 text-amber-500 absolute -top-1 -right-1" />
+      )}
       <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
         <div 
           className={cn("h-full rounded-full transition-all", color)}
           style={{ width: `${getWidth()}%` }}
         />
       </div>
-      <span className="text-xs text-muted-foreground w-20">{level}</span>
+      <span className={cn(
+        "text-xs w-20",
+        isWinner ? "text-amber-600 font-semibold" : "text-muted-foreground"
+      )}>{level}</span>
+    </div>
+  );
+};
+
+const ComparisonCell = ({ 
+  value, 
+  isWinner = false,
+  unit = '',
+  className = ''
+}: { 
+  value: string | number | null | undefined;
+  isWinner?: boolean;
+  unit?: string;
+  className?: string;
+}) => {
+  if (value === null || value === undefined || value === '') {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+  
+  return (
+    <div className={cn(
+      "text-sm p-2 rounded-md transition-all text-center",
+      isWinner && "bg-amber-500/10 ring-1 ring-amber-500/30 font-semibold text-amber-600",
+      !isWinner && "text-foreground",
+      className
+    )}>
+      {isWinner && <Trophy className="w-3 h-3 text-amber-500 inline mr-1" />}
+      {value}{unit}
+    </div>
+  );
+};
+
+const ComparisonRow = ({
+  label,
+  icon: Icon,
+  materials,
+  getValue,
+  higherIsBetter = true,
+  unit = '',
+  formatValue,
+}: {
+  label: string;
+  icon?: React.ElementType;
+  materials: { name: string; refData?: MaterialReferenceInfo }[];
+  getValue: (refData?: MaterialReferenceInfo) => string | number | null | undefined;
+  higherIsBetter?: boolean;
+  unit?: string;
+  formatValue?: (value: any) => string;
+}) => {
+  const values = materials.map(m => ({
+    name: m.name,
+    value: getValue(m.refData)
+  }));
+  
+  const winners = getWinners(
+    values.map(v => ({ name: v.name, value: v.value as string | number | null })),
+    higherIsBetter
+  );
+
+  return (
+    <div className="py-3">
+      <div className="flex items-center gap-2 mb-2">
+        {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+        <span className="text-sm font-medium text-foreground">{label}</span>
+      </div>
+      <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${materials.length}, minmax(0, 1fr))` }}>
+        {values.map(({ name, value }) => (
+          <ComparisonCell
+            key={name}
+            value={formatValue ? formatValue(value) : value}
+            isWinner={winners.includes(name)}
+            unit={unit}
+          />
+        ))}
+      </div>
     </div>
   );
 };
@@ -64,6 +204,7 @@ const PropertyBar = ({
 const ComparisonContent = () => {
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   // Get all available materials with info
   const allMaterials = useMemo(() => {
@@ -125,7 +266,26 @@ const ComparisonContent = () => {
     name,
     info: getMaterialInfo(name),
     category: getMaterialCategory(name),
+    refData: MATERIAL_REFERENCE_DATA[name],
   })).filter(m => m.info);
+
+  // Calculate winners for basic properties
+  const printabilityWinners = getWinners(
+    selectedMaterialInfos.map(m => ({ name: m.name, value: m.info?.properties.printability || null })),
+    true // Easy is best (highest value)
+  );
+  const strengthWinners = getWinners(
+    selectedMaterialInfos.map(m => ({ name: m.name, value: m.info?.properties.strength || null })),
+    true
+  );
+  const flexibilityWinners = getWinners(
+    selectedMaterialInfos.map(m => ({ name: m.name, value: m.info?.properties.flexibility || null })),
+    true
+  );
+  const heatResistanceWinners = getWinners(
+    selectedMaterialInfos.map(m => ({ name: m.name, value: m.info?.properties.heatResistance || null })),
+    true
+  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8">
@@ -221,6 +381,18 @@ const ComparisonContent = () => {
           </Card>
         ) : (
           <>
+            {/* Legend */}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg">
+              <div className="flex items-center gap-1.5">
+                <Trophy className="w-4 h-4 text-amber-500" />
+                <span>Best in category</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded bg-amber-500/20 ring-1 ring-amber-500/30" />
+                <span>Winner highlight</span>
+              </div>
+            </div>
+
             {/* Material Headers */}
             <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${selectedMaterialInfos.length}, minmax(0, 1fr))` }}>
               {selectedMaterialInfos.map(({ name, info, category }) => (
@@ -262,11 +434,18 @@ const ComparisonContent = () => {
                   <div className="flex items-center gap-2 mb-3">
                     <Zap className="w-4 h-4 text-amber-400" />
                     <span className="text-sm font-medium text-foreground">Printability</span>
+                    <span className="text-xs text-muted-foreground">(Easy = Best)</span>
                   </div>
                   <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${selectedMaterialInfos.length}, minmax(0, 1fr))` }}>
                     {selectedMaterialInfos.map(({ name, info }) => (
                       <div key={name} className="text-center">
-                        {info && <PropertyBar level={info.properties.printability} color="bg-amber-500" />}
+                        {info && (
+                          <PropertyBar 
+                            level={info.properties.printability} 
+                            color="bg-amber-500" 
+                            isWinner={printabilityWinners.includes(name)}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -279,11 +458,18 @@ const ComparisonContent = () => {
                   <div className="flex items-center gap-2 mb-3">
                     <Shield className="w-4 h-4 text-blue-400" />
                     <span className="text-sm font-medium text-foreground">Strength</span>
+                    <span className="text-xs text-muted-foreground">(Higher = Better)</span>
                   </div>
                   <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${selectedMaterialInfos.length}, minmax(0, 1fr))` }}>
                     {selectedMaterialInfos.map(({ name, info }) => (
                       <div key={name} className="text-center">
-                        {info && <PropertyBar level={info.properties.strength} color="bg-blue-500" />}
+                        {info && (
+                          <PropertyBar 
+                            level={info.properties.strength} 
+                            color="bg-blue-500" 
+                            isWinner={strengthWinners.includes(name)}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -296,11 +482,18 @@ const ComparisonContent = () => {
                   <div className="flex items-center gap-2 mb-3">
                     <Layers className="w-4 h-4 text-purple-400" />
                     <span className="text-sm font-medium text-foreground">Flexibility</span>
+                    <span className="text-xs text-muted-foreground">(More Flexible = Higher)</span>
                   </div>
                   <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${selectedMaterialInfos.length}, minmax(0, 1fr))` }}>
                     {selectedMaterialInfos.map(({ name, info }) => (
                       <div key={name} className="text-center">
-                        {info && <PropertyBar level={info.properties.flexibility} color="bg-purple-500" />}
+                        {info && (
+                          <PropertyBar 
+                            level={info.properties.flexibility} 
+                            color="bg-purple-500" 
+                            isWinner={flexibilityWinners.includes(name)}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -313,17 +506,312 @@ const ComparisonContent = () => {
                   <div className="flex items-center gap-2 mb-3">
                     <Thermometer className="w-4 h-4 text-red-400" />
                     <span className="text-sm font-medium text-foreground">Heat Resistance</span>
+                    <span className="text-xs text-muted-foreground">(Higher = Better)</span>
                   </div>
                   <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${selectedMaterialInfos.length}, minmax(0, 1fr))` }}>
                     {selectedMaterialInfos.map(({ name, info }) => (
                       <div key={name} className="text-center">
-                        {info && <PropertyBar level={info.properties.heatResistance} color="bg-red-500" />}
+                        {info && (
+                          <PropertyBar 
+                            level={info.properties.heatResistance} 
+                            color="bg-red-500" 
+                            isWinner={heatResistanceWinners.includes(name)}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               </CardContent>
             </Card>
+
+            {/* Advanced Technical Comparison */}
+            <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Settings2 className="w-5 h-5 text-primary" />
+                        Advanced Technical Comparison
+                      </div>
+                      <ChevronDown className={cn(
+                        "w-5 h-5 text-muted-foreground transition-transform",
+                        advancedOpen && "rotate-180"
+                      )} />
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-6 pt-0">
+                    {/* Mechanical Properties */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+                        <Gauge className="w-4 h-4 text-blue-500" />
+                        Mechanical Properties
+                      </h4>
+                      <div className="space-y-1 divide-y divide-border/50">
+                        <ComparisonRow
+                          label="Tensile Strength"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => {
+                            const prop = ref?.tdsProfile?.properties.find(p => p.name.toLowerCase().includes('tensile strength'));
+                            return prop?.value || null;
+                          }}
+                          unit=" MPa"
+                          higherIsBetter={true}
+                        />
+                        <ComparisonRow
+                          label="Elongation at Break"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => {
+                            const prop = ref?.tdsProfile?.properties.find(p => p.name.toLowerCase().includes('elongation'));
+                            return prop?.value || null;
+                          }}
+                          unit="%"
+                          higherIsBetter={true}
+                        />
+                        <ComparisonRow
+                          label="Young's Modulus"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => {
+                            const prop = ref?.tdsProfile?.properties.find(p => p.name.toLowerCase().includes('modulus'));
+                            return prop?.value || null;
+                          }}
+                          unit=" MPa"
+                          higherIsBetter={true}
+                        />
+                        <ComparisonRow
+                          label="Impact Strength"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => {
+                            const prop = ref?.tdsProfile?.properties.find(p => p.name.toLowerCase().includes('impact'));
+                            return prop?.value || null;
+                          }}
+                          higherIsBetter={true}
+                        />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Thermal Properties */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+                        <Flame className="w-4 h-4 text-orange-500" />
+                        Thermal Properties
+                      </h4>
+                      <div className="space-y-1 divide-y divide-border/50">
+                        <ComparisonRow
+                          label="Glass Transition (Tg)"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => {
+                            const prop = ref?.tdsProfile?.properties.find(p => 
+                              p.name.toLowerCase().includes('glass transition') || p.name.toLowerCase().includes('tg')
+                            );
+                            return prop?.value || null;
+                          }}
+                          unit="°C"
+                          higherIsBetter={true}
+                        />
+                        <ComparisonRow
+                          label="Heat Deflection (HDT)"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => {
+                            const prop = ref?.tdsProfile?.properties.find(p => 
+                              p.name.toLowerCase().includes('heat deflection') || p.name.toLowerCase().includes('hdt')
+                            );
+                            return prop?.value || null;
+                          }}
+                          unit="°C"
+                          higherIsBetter={true}
+                        />
+                        <ComparisonRow
+                          label="Density"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => {
+                            const prop = ref?.tdsProfile?.properties.find(p => p.name.toLowerCase().includes('density'));
+                            return prop?.value || null;
+                          }}
+                          unit=" g/cm³"
+                          higherIsBetter={false}
+                        />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Print Settings */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+                        <Factory className="w-4 h-4 text-green-500" />
+                        Print Settings
+                      </h4>
+                      <div className="space-y-1 divide-y divide-border/50">
+                        <ComparisonRow
+                          label="Nozzle Temperature"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => {
+                            const settings = ref?.printSettings?.nozzleTemp;
+                            return settings ? `${settings.min}-${settings.max}` : null;
+                          }}
+                          unit="°C"
+                          higherIsBetter={false}
+                        />
+                        <ComparisonRow
+                          label="Bed Temperature"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => {
+                            const settings = ref?.printSettings?.bedTemp;
+                            return settings ? `${settings.min}-${settings.max}` : null;
+                          }}
+                          unit="°C"
+                          higherIsBetter={false}
+                        />
+                        <ComparisonRow
+                          label="Enclosure Required"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => ref?.printSettings?.enclosure?.required ? 'Yes' : 'No'}
+                          formatValue={(v) => v}
+                          higherIsBetter={false}
+                        />
+                        <ComparisonRow
+                          label="Drying Temperature"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => ref?.printSettings?.drying?.temp || null}
+                          unit="°C"
+                          higherIsBetter={false}
+                        />
+                        <ComparisonRow
+                          label="Drying Duration"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => ref?.printSettings?.drying?.duration || null}
+                          higherIsBetter={false}
+                        />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Post-Processing */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+                        <Paintbrush className="w-4 h-4 text-purple-500" />
+                        Post-Processing
+                      </h4>
+                      <div className="space-y-1 divide-y divide-border/50">
+                        <ComparisonRow
+                          label="Chemical Smoothing"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => {
+                            const best = ref?.postProcessing?.chemicalSmoothing?.[0];
+                            return best?.effectiveness || null;
+                          }}
+                          higherIsBetter={true}
+                        />
+                        <ComparisonRow
+                          label="Paintability"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => {
+                            const painting = ref?.postProcessing?.painting;
+                            if (!painting) return null;
+                            if (painting.toLowerCase().includes('excellent') || painting.toLowerCase().includes('easy')) return 'Easy';
+                            if (painting.toLowerCase().includes('difficult') || painting.toLowerCase().includes('requires')) return 'Difficult';
+                            return 'Good';
+                          }}
+                          higherIsBetter={true}
+                        />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Safety */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+                        <Leaf className="w-4 h-4 text-emerald-500" />
+                        Safety & Environment
+                      </h4>
+                      <div className="space-y-1 divide-y divide-border/50">
+                        <ComparisonRow
+                          label="Fume Level"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => ref?.safety?.fumes?.level || null}
+                          higherIsBetter={false}
+                        />
+                        <ComparisonRow
+                          label="Food Safety"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => ref?.safety?.foodSafety?.rating || null}
+                          formatValue={(v) => {
+                            if (!v) return null;
+                            if (v.toLowerCase().includes('fda') || v.toLowerCase().includes('approved')) return 'FDA Approved';
+                            if (v.toLowerCase().includes('not') || v.toLowerCase().includes('unsafe')) return 'Not Safe';
+                            return v;
+                          }}
+                          higherIsBetter={true}
+                        />
+                        <ComparisonRow
+                          label="Biodegradability"
+                          materials={selectedMaterialInfos}
+                          getValue={(ref) => ref?.safety?.biodegradability?.rating || null}
+                          formatValue={(v) => {
+                            if (!v) return null;
+                            if (v.toLowerCase().includes('biodegradable') && !v.toLowerCase().includes('not')) return 'Biodegradable';
+                            if (v.toLowerCase().includes('compostable')) return 'Compostable';
+                            return 'Not Biodegradable';
+                          }}
+                          higherIsBetter={true}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Bed Adhesion */}
+                    <Separator />
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+                        <Droplets className="w-4 h-4 text-cyan-500" />
+                        Bed Adhesion Surfaces
+                      </h4>
+                      <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${selectedMaterialInfos.length}, minmax(0, 1fr))` }}>
+                        {selectedMaterialInfos.map(({ name, refData }) => (
+                          <div key={name} className="space-y-2">
+                            <h5 className="text-xs font-medium text-center text-foreground">{name}</h5>
+                            {refData?.adhesion?.bedSurfaces?.excellent && (
+                              <div>
+                                <span className="text-xs text-emerald-600 font-medium">Excellent:</span>
+                                <p className="text-xs text-muted-foreground">
+                                  {refData.adhesion.bedSurfaces.excellent.slice(0, 3).join(', ')}
+                                </p>
+                              </div>
+                            )}
+                            {refData?.adhesion?.bedSurfaces?.good && (
+                              <div>
+                                <span className="text-xs text-amber-600 font-medium">Good:</span>
+                                <p className="text-xs text-muted-foreground">
+                                  {refData.adhesion.bedSurfaces.good.slice(0, 3).join(', ')}
+                                </p>
+                              </div>
+                            )}
+                            {refData?.adhesion?.bedSurfaces?.poor && (
+                              <div>
+                                <span className="text-xs text-red-500 font-medium">Poor:</span>
+                                <p className="text-xs text-muted-foreground">
+                                  {refData.adhesion.bedSurfaces.poor.slice(0, 2).join(', ')}
+                                </p>
+                              </div>
+                            )}
+                            {!refData?.adhesion?.bedSurfaces && (
+                              <p className="text-xs text-muted-foreground text-center">No data</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
 
             {/* Use Cases */}
             <Card>
