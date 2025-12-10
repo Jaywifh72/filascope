@@ -14,6 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "@/components/LikeButton";
 import { PrinterSelector } from "@/components/PrinterSelector";
+import { MaterialRecommendations } from "@/components/MaterialRecommendations";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
@@ -671,8 +672,9 @@ const Finder = () => {
       
       {/* Full-width Printer Selector at Top */}
       <div className="p-4 lg:p-6 border-b border-border bg-card/30">
-        <div className="max-w-[1800px] mx-auto">
+        <div className="max-w-[1800px] mx-auto space-y-4">
           <PrinterSelector />
+          <MaterialRecommendations />
         </div>
       </div>
 
