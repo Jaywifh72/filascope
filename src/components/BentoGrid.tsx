@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Star, TrendingDown, Sparkles, AlertTriangle } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { normalizeColorHex } from "@/lib/utils";
 
 interface Filament {
   id: string;
@@ -171,7 +172,7 @@ const BentoGrid = () => {
             >
               <div 
                 className="w-8 h-8 rounded-full border border-border/50 shrink-0"
-                style={{ backgroundColor: filament.color_hex ? (filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`) : '#888' }}
+                style={{ backgroundColor: normalizeColorHex(filament.color_hex) }}
               />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-foreground truncate group-hover:text-green-400 transition-colors">
@@ -225,7 +226,7 @@ const BentoGrid = () => {
                 ) : (
                   <div 
                     className="w-12 h-12 rounded-lg border border-border/50"
-                    style={{ backgroundColor: newArrival.color_hex ? `#${newArrival.color_hex}` : '#888' }}
+                    style={{ backgroundColor: normalizeColorHex(newArrival.color_hex) }}
                   />
                 )}
                 <div className="flex-1 min-w-0">

@@ -11,6 +11,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { normalizeColorHex } from "@/lib/utils";
 
 type Filament = Tables<"filaments">;
 
@@ -704,8 +705,8 @@ const BrandDetail = () => {
                                     <div 
                                       className="w-7 h-7 rounded-full border-2 border-border hover:border-primary hover:scale-110 transition-all shadow-sm"
                                       style={{ 
-                                        backgroundColor: variant.color_hex || '#888',
-                                        boxShadow: variant.color_hex === '#FFFFFF' || variant.color_hex === '#ffffff' 
+                                        backgroundColor: normalizeColorHex(variant.color_hex),
+                                        boxShadow: normalizeColorHex(variant.color_hex).toUpperCase() === '#FFFFFF' 
                                           ? 'inset 0 0 0 1px rgba(0,0,0,0.1)' 
                                           : undefined
                                       }}

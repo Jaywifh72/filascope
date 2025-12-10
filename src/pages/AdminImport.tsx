@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { normalizeColorHex } from "@/lib/utils";
 
 interface DiscoveredProduct {
   product_id: string;
@@ -840,10 +841,10 @@ const AdminImport = () => {
                           )}
                           {product.color_name && (
                             <div className="flex items-center gap-1">
-                              {product.color_hex && (
+                                {product.color_hex && (
                                 <div 
                                   className="w-3 h-3 rounded-full border"
-                                  style={{ backgroundColor: product.color_hex }}
+                                  style={{ backgroundColor: normalizeColorHex(product.color_hex) }}
                                 />
                               )}
                               <span className="text-xs text-muted-foreground">{product.color_name}</span>
@@ -941,7 +942,7 @@ const AdminImport = () => {
                                   {product.color_hex && (
                                     <div 
                                       className="w-4 h-4 rounded-full border"
-                                      style={{ backgroundColor: product.color_hex }}
+                                      style={{ backgroundColor: normalizeColorHex(product.color_hex) }}
                                     />
                                   )}
                                   <span>{product.color_name}</span>
