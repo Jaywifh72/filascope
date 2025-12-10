@@ -1,9 +1,10 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { MATERIAL_INFO, MATERIAL_CATEGORIES, MaterialInfo } from "@/lib/materialHierarchy";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { CheckCircle, AlertTriangle, XCircle, Flame, Thermometer, Box, Zap, Info } from "lucide-react";
+import { CheckCircle, AlertTriangle, XCircle, Flame, Thermometer, Box, Zap, Info, Wrench } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
@@ -114,7 +115,7 @@ const isHardenedNozzle = (hotendSpecs: Record<string, unknown> | null, hotendNam
 };
 
 export function MaterialRecommendations() {
-  const { selectedPrinter, selectedHotend } = usePrinterSelection();
+  const { selectedPrinter, selectedHotend, compatibleHotends } = usePrinterSelection();
   const [isExpanded, setIsExpanded] = useState(true);
 
   const recommendations = useMemo(() => {
@@ -220,6 +221,20 @@ export function MaterialRecommendations() {
   const recommended = recommendations?.filter(r => r.status === 'recommended') || [];
   const possible = recommendations?.filter(r => r.status === 'possible') || [];
   const notRecommended = recommendations?.filter(r => r.status === 'not-recommended') || [];
+
+  // Check if there are abrasive materials in "possible" due to missing hardened nozzle
+  const abrasiveMaterialsNeedingNozzle = possible.filter(item => {
+    const specs = MATERIAL_SPECS[item.material];
+    return specs?.isAbrasive && item.reasons.some(r => r.toLowerCase().includes('hardened nozzle'));
+  });
+
+  // Find hardened hotends from compatible hotends
+  const hardenedHotends = useMemo(() => {
+    if (!compatibleHotends || abrasiveMaterialsNeedingNozzle.length === 0) return [];
+    return compatibleHotends.filter(hotend => 
+      isHardenedNozzle(hotend.specs as Record<string, unknown> | null, hotend.name || '')
+    ).slice(0, 3); // Limit to 3 suggestions
+  }, [compatibleHotends, abrasiveMaterialsNeedingNozzle.length]);
 
   const StatusIcon = ({ status }: { status: string }) => {
     switch (status) {
@@ -366,6 +381,38 @@ export function MaterialRecommendations() {
                   <MaterialBadgeWithTooltip key={item.material} item={item} />
                 ))}
               </div>
+
+              {/* Hotend suggestions for abrasive materials */}
+              {hardenedHotends.length > 0 && abrasiveMaterialsNeedingNozzle.length > 0 && (
+                <div className="mt-3 p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Wrench className="h-4 w-4 text-purple-400" />
+                    <span className="text-sm font-medium text-purple-300">
+                      Upgrade to print {abrasiveMaterialsNeedingNozzle.map(m => m.material).join(', ')}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    These compatible hardened hotends support abrasive filaments:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {hardenedHotends.map(hotend => (
+                      <Link
+                        key={hotend.id}
+                        to={`/hotends/${hotend.id}`}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded bg-purple-500/20 hover:bg-purple-500/30 transition-colors text-xs"
+                      >
+                        <Zap className="h-3 w-3 text-purple-400" />
+                        <span className="text-purple-200">{hotend.name}</span>
+                        {hotend.price && (
+                          <span className="text-purple-400/70">
+                            ${hotend.price.toFixed(0)}
+                          </span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
