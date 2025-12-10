@@ -30,6 +30,49 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 
 const STORAGE_KEY = 'filascope-currency';
 
+// Map browser locales to currency codes
+const LOCALE_CURRENCY_MAP: Record<string, CurrencyCode> = {
+  'en-US': 'USD',
+  'en-CA': 'CAD',
+  'en-GB': 'GBP',
+  'en-AU': 'AUD',
+  'de': 'EUR',
+  'de-DE': 'EUR',
+  'de-AT': 'EUR',
+  'fr': 'EUR',
+  'fr-FR': 'EUR',
+  'es': 'EUR',
+  'es-ES': 'EUR',
+  'it': 'EUR',
+  'it-IT': 'EUR',
+  'nl': 'EUR',
+  'nl-NL': 'EUR',
+  'pt': 'EUR',
+  'pt-PT': 'EUR',
+  'ja': 'JPY',
+  'ja-JP': 'JPY',
+};
+
+function detectCurrencyFromLocale(): CurrencyCode {
+  if (typeof window === 'undefined') return 'USD';
+  
+  const languages = navigator.languages || [navigator.language];
+  
+  for (const lang of languages) {
+    // Try exact match first
+    if (lang in LOCALE_CURRENCY_MAP) {
+      return LOCALE_CURRENCY_MAP[lang];
+    }
+    // Try language prefix (e.g., 'de' from 'de-CH')
+    const prefix = lang.split('-')[0];
+    if (prefix in LOCALE_CURRENCY_MAP) {
+      return LOCALE_CURRENCY_MAP[prefix];
+    }
+  }
+  
+  return 'USD';
+}
+
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
     if (typeof window !== 'undefined') {
@@ -37,6 +80,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       if (stored && stored in CURRENCIES) {
         return stored as CurrencyCode;
       }
+      // No stored preference, detect from browser locale
+      return detectCurrencyFromLocale();
     }
     return 'USD';
   });
