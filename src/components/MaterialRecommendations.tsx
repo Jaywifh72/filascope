@@ -80,19 +80,59 @@ const MATERIAL_SPECS: Record<string, {
   'HIPS': { minNozzle: 230, minBed: 100, needsEnclosure: true, isAbrasive: false, needsDirectDrive: false },
 };
 
+// List of hardened nozzle materials that support abrasive filaments
+const HARDENED_NOZZLE_MATERIALS = [
+  'hardened steel', 'hardened', 'hta', 'obxidian', 'diamondback', 
+  'ruby', 'sapphire', 'tungsten', 'pcd', 'polycrystalline diamond',
+  'tool steel', 'a2 steel', 'd2 steel'
+];
+
+const isHardenedNozzle = (hotendSpecs: Record<string, unknown> | null, hotendName: string): boolean => {
+  if (!hotendSpecs && !hotendName) return false;
+  
+  // Check specs.material field
+  const material = hotendSpecs?.material as string | undefined;
+  if (material) {
+    const materialLower = material.toLowerCase();
+    if (HARDENED_NOZZLE_MATERIALS.some(m => materialLower.includes(m))) {
+      return true;
+    }
+  }
+  
+  // Check hotend name for hardened material keywords
+  const nameLower = hotendName.toLowerCase();
+  if (HARDENED_NOZZLE_MATERIALS.some(m => nameLower.includes(m))) {
+    return true;
+  }
+  
+  // Check specs.abrasion_resistant flag
+  if (hotendSpecs?.abrasion_resistant === true) {
+    return true;
+  }
+  
+  return false;
+};
+
 export function MaterialRecommendations() {
-  const { selectedPrinter } = usePrinterSelection();
+  const { selectedPrinter, selectedHotend } = usePrinterSelection();
   const [isExpanded, setIsExpanded] = useState(true);
 
   const recommendations = useMemo(() => {
     if (!selectedPrinter) return null;
 
+    // Check if selected hotend is hardened/abrasion resistant
+    const hotendSpecs = selectedHotend?.specs as Record<string, unknown> | null;
+    const hotendSupportsAbrasive = selectedHotend 
+      ? isHardenedNozzle(hotendSpecs, selectedHotend.name || '')
+      : false;
+
     const printerCapabilities = {
       maxNozzleTemp: selectedPrinter.max_nozzle_temp_c || 260,
       maxBedTemp: selectedPrinter.bed_max_temp_c || 100,
       hasEnclosure: selectedPrinter.has_enclosure || false,
-      supportsAbrasive: selectedPrinter.abrasive_filament_support || false,
+      supportsAbrasive: selectedPrinter.abrasive_filament_support || hotendSupportsAbrasive,
       hasDirectDrive: selectedPrinter.extruder_type?.toLowerCase().includes('direct') || false,
+      hotendName: selectedHotend?.name || null,
     };
 
     const results: MaterialCompatibility[] = [];
@@ -150,7 +190,11 @@ export function MaterialRecommendations() {
           reasons.push('Enclosure available');
         }
         if (specs.isAbrasive && printerCapabilities.supportsAbrasive) {
-          reasons.push('Hardened nozzle supported');
+          if (printerCapabilities.hotendName) {
+            reasons.push(`Hardened nozzle: ${printerCapabilities.hotendName}`);
+          } else {
+            reasons.push('Hardened nozzle supported');
+          }
         }
       }
 
@@ -167,7 +211,7 @@ export function MaterialRecommendations() {
       const order = { 'recommended': 0, 'possible': 1, 'not-recommended': 2 };
       return order[a.status] - order[b.status];
     });
-  }, [selectedPrinter]);
+  }, [selectedPrinter, selectedHotend]);
 
   if (!selectedPrinter) {
     return null;
@@ -244,6 +288,7 @@ export function MaterialRecommendations() {
                   {selectedPrinter.max_nozzle_temp_c && ` ${selectedPrinter.max_nozzle_temp_c}°C nozzle,`}
                   {selectedPrinter.bed_max_temp_c && ` ${selectedPrinter.bed_max_temp_c}°C bed,`}
                   {selectedPrinter.has_enclosure ? ' enclosed' : ' open frame'}
+                  {selectedHotend && ` with ${selectedHotend.name}`}
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -284,10 +329,12 @@ export function MaterialRecommendations() {
                 <span>Enclosed</span>
               </div>
             )}
-            {selectedPrinter.abrasive_filament_support && (
+            {(selectedPrinter.abrasive_filament_support || (selectedHotend && isHardenedNozzle(selectedHotend.specs as Record<string, unknown> | null, selectedHotend.name || ''))) && (
               <div className="flex items-center gap-1 px-2 py-1 rounded bg-muted/50">
                 <Zap className="h-3 w-3 text-purple-400" />
-                <span>Hardened Nozzle</span>
+                <span>
+                  {selectedHotend ? selectedHotend.name : 'Hardened Nozzle'}
+                </span>
               </div>
             )}
           </div>
