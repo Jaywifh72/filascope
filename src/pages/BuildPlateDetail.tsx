@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { ArrowLeft, ExternalLink, Square, Check, X, ImageIcon, AlertTriangle, Link2 } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { validateProductUrl, fixProductUrl } from "@/lib/urlValidation";
@@ -20,6 +21,7 @@ export default function BuildPlateDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getAffiliateUrl } = useAffiliateLinks();
+  const { formatPrice } = useCurrency();
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   

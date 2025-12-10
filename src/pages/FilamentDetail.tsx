@@ -25,6 +25,7 @@ import { checkHotendFilamentCompatibility, checkBuildPlateFilamentCompatibility,
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { AccessoryCompatibilityBadge } from "@/components/AccessoryCompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useCurrency } from "@/hooks/useCurrency";
 import { normalizeColorHex } from "@/lib/utils";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -56,6 +57,7 @@ const FilamentDetail = () => {
   const [newProductUrl, setNewProductUrl] = useState("");
   const [savingUrl, setSavingUrl] = useState(false);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
+  const { formatPrice, currencyInfo } = useCurrency();
 
   const compatibility = selectedPrinter && filament 
     ? checkPrinterFilamentCompatibility(selectedPrinter, filament)
@@ -975,18 +977,28 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
     ? (filament.net_weight_g / 1000) * packQuantity 
     : packQuantity; // Assume 1kg per spool if weight unknown
   
-  const pricePerKg = filament.variant_price 
-    ? (filament.variant_price / totalWeightKg).toFixed(2) 
+  // Calculate raw USD values first, then format with currency conversion
+  const rawPricePerKg = filament.variant_price 
+    ? (filament.variant_price / totalWeightKg) 
     : null;
   
   // Per-spool price = total price / pack quantity
-  const pricePerSpool = filament.variant_price 
+  const rawPricePerSpool = filament.variant_price 
     ? (filament.variant_price / packQuantity)
+    : null;
+  
+  // Format prices with selected currency
+  const pricePerKg = rawPricePerKg 
+    ? formatPrice(rawPricePerKg, false)
+    : null;
+  
+  const pricePerSpool = rawPricePerSpool 
+    ? formatPrice(rawPricePerSpool)
     : null;
   
   // Total pack price is just the variant_price for multi-packs
   const totalPackPrice = isMultiPack && filament.variant_price 
-    ? filament.variant_price.toFixed(2) 
+    ? formatPrice(filament.variant_price) 
     : null;
 
   return (
@@ -1115,18 +1127,17 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                     {pricePerKg && (
                       <div className="text-right bg-primary/10 px-6 py-5 rounded-2xl border border-primary/20 shadow-sm">
                         <div className="text-3xl lg:text-4xl font-bold text-primary tracking-tight font-mono">
-                          ${pricePerKg}
-                          <span className="text-sm font-semibold text-primary/70 ml-1">USD</span>
+                          {pricePerKg}
                         </div>
                         <div className="text-sm text-muted-foreground font-medium mt-1">per kg</div>
                         {pricePerSpool && (
                           <div className="text-sm text-muted-foreground mt-2">
-                            ${pricePerSpool.toFixed(2)} USD per spool
+                            {pricePerSpool} per spool
                           </div>
                         )}
                         {isMultiPack && totalPackPrice && (
                           <div className="text-sm text-primary/80 mt-2 font-semibold">
-                            📦 {packQuantity}-pack: ${totalPackPrice} USD
+                            📦 {packQuantity}-pack: {totalPackPrice}
                           </div>
                         )}
                       </div>

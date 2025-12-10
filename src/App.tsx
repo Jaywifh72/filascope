@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import Navbar from "./components/Navbar";
+import { CurrencyProvider } from "./hooks/useCurrency";
 
 // Lazy load route components for better performance
 const Finder = lazy(() => import("./pages/Finder"));
@@ -43,49 +44,51 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Navbar />
-        <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-muted-foreground">Loading...</div></div>}>
-          <Routes>
-            <Route path="/" element={<Finder />} />
-            <Route path="/brands" element={<Brands />} />
-            <Route path="/brands/:brand" element={<BrandDetail />} />
-            <Route path="/compare" element={<Compare />} />
-            <Route path="/materials/compare" element={<MaterialCompare />} />
-          <Route path="/printers" element={<Printers />} />
-          <Route path="/printers/:id" element={<PrinterDetail />} />
-          <Route path="/printers/compare" element={<PrinterCompare />} />
-          <Route path="/accessories" element={<Accessories />} />
-          <Route path="/hotends/:id" element={<HotendDetail />} />
-          <Route path="/build-plates/:id" element={<BuildPlateDetail />} />
-          <Route path="/ams/:id" element={<AMSDetail />} />
-            <Route path="/matrix" element={<Matrix />} />
-            <Route path="/deals" element={<Deals />} />
-            <Route path="/wizard" element={<Wizard />} />
-            <Route path="/diagnose" element={<Diagnose />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/vault" element={<Vault />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/import" element={<AdminImport />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
-            <Route path="/admin/enrichment" element={<AdminEnrichment />} />
-            <Route path="/admin/affiliates" element={<AdminAffiliates />} />
-            <Route path="/admin/maintenance" element={<AdminMaintenance />} />
-            <Route path="/admin/printers" element={<AdminPrinters />} />
-            <Route path="/admin/data-quality" element={<AdminDataQuality />} />
-            <Route path="/admin/filaments" element={<AdminFilaments />} />
-            <Route path="/admin/amazon-links" element={<AdminAmazonLinks />} />
-            <Route path="/admin/filament-audit" element={<AdminFilamentAudit />} />
-            <Route path="/filament/:id" element={<FilamentDetail />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </TooltipProvider>
+    <CurrencyProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Navbar />
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-muted-foreground">Loading...</div></div>}>
+            <Routes>
+              <Route path="/" element={<Finder />} />
+              <Route path="/brands" element={<Brands />} />
+              <Route path="/brands/:brand" element={<BrandDetail />} />
+              <Route path="/compare" element={<Compare />} />
+              <Route path="/materials/compare" element={<MaterialCompare />} />
+              <Route path="/printers" element={<Printers />} />
+              <Route path="/printers/:id" element={<PrinterDetail />} />
+              <Route path="/printers/compare" element={<PrinterCompare />} />
+              <Route path="/accessories" element={<Accessories />} />
+              <Route path="/hotends/:id" element={<HotendDetail />} />
+              <Route path="/build-plates/:id" element={<BuildPlateDetail />} />
+              <Route path="/ams/:id" element={<AMSDetail />} />
+              <Route path="/matrix" element={<Matrix />} />
+              <Route path="/deals" element={<Deals />} />
+              <Route path="/wizard" element={<Wizard />} />
+              <Route path="/diagnose" element={<Diagnose />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/vault" element={<Vault />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/import" element={<AdminImport />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/enrichment" element={<AdminEnrichment />} />
+              <Route path="/admin/affiliates" element={<AdminAffiliates />} />
+              <Route path="/admin/maintenance" element={<AdminMaintenance />} />
+              <Route path="/admin/printers" element={<AdminPrinters />} />
+              <Route path="/admin/data-quality" element={<AdminDataQuality />} />
+              <Route path="/admin/filaments" element={<AdminFilaments />} />
+              <Route path="/admin/amazon-links" element={<AdminAmazonLinks />} />
+              <Route path="/admin/filament-audit" element={<AdminFilamentAudit />} />
+              <Route path="/filament/:id" element={<FilamentDetail />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </CurrencyProvider>
   </QueryClientProvider>
 );
 

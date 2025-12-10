@@ -19,6 +19,7 @@ import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useCurrency } from "@/hooks/useCurrency";
 import { isAMSCompatible } from "@/lib/amsCompatibility";
 import BentoGrid from "@/components/BentoGrid";
 import { FilamentFilters } from "@/components/FilamentFilters";
@@ -63,6 +64,9 @@ const Finder = () => {
   
   // Affiliate links hook
   const { getAffiliateUrl } = useAffiliateLinks();
+  
+  // Currency hook
+  const { formatPrice, currencyInfo, convertPrice } = useCurrency();
 
   // Normalize variant names to group similar variants
   const normalizeVariantName = (material: string, base: string): string => {
@@ -1143,11 +1147,14 @@ const Finder = () => {
               // Calculate true per-kg price accounting for pack quantity
               const packQty = (filament as any).pack_quantity || 1;
               const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
-              const pricePerKg = (filament.variant_price && weightKg) 
+              const rawPricePerKg = (filament.variant_price && weightKg) 
                 ? filament.variant_price / (weightKg * packQty) 
                 : null;
-              const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
-              const displayPrice = isValidPrice ? pricePerKg.toFixed(2) : null;
+              const isValidPrice = rawPricePerKg && rawPricePerKg > 0 && rawPricePerKg < 500;
+              const displayPrice = isValidPrice ? formatPrice(rawPricePerKg, false) : null;
+              const listPrice = isValidPrice && filament.net_weight_g 
+                ? formatPrice(rawPricePerKg * (filament.net_weight_g / 1000)) 
+                : null;
               
               const overallScore = filament.value_score || 7.0;
 
@@ -1266,10 +1273,10 @@ const Finder = () => {
                       <span className="text-xs text-orange-400 lg:mb-0 font-medium">True Cost</span>
                       {displayPrice ? (
                         <div>
-                          <p className="font-mono font-bold text-orange-400 text-lg">${displayPrice} <span className="text-xs font-medium">USD/kg</span></p>
-                          {filament.net_weight_g && (
+                          <p className="font-mono font-bold text-orange-400 text-lg">{displayPrice} <span className="text-xs font-medium">{currencyInfo.code}/kg</span></p>
+                          {listPrice && (
                             <p className="text-xs text-muted-foreground">
-                              ${(parseFloat(displayPrice) * (filament.net_weight_g / 1000)).toFixed(2)} USD list
+                              {listPrice} list
                             </p>
                           )}
                         </div>

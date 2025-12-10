@@ -15,6 +15,7 @@ import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, ImageIcon, 
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { useCurrency } from "@/hooks/useCurrency";
 
 // Brand wiki/documentation URLs
 const BRAND_WIKI_URLS: Record<string, string> = {
@@ -47,6 +48,7 @@ export default function Printers() {
   const navigate = useNavigate(); 
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
+  const { formatPrice } = useCurrency();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
   
@@ -428,19 +430,19 @@ export default function Printers() {
                         {printer.current_price_usd_store && (
                           <div className="text-xl font-bold text-primary flex items-center gap-1.5">
                             <Store className="h-4 w-4 shrink-0" />
-                            <span>${printer.current_price_usd_store} <span className="text-xs font-medium">USD</span></span>
+                            <span>{formatPrice(printer.current_price_usd_store)}</span>
                           </div>
                         )}
                         {printer.current_price_usd_amazon && (
                           <div className={`flex items-center gap-1.5 ${printer.current_price_usd_store ? 'text-sm text-muted-foreground' : 'text-xl font-bold text-primary'}`}>
                             <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
-                            <span>${printer.current_price_usd_amazon} <span className="text-xs font-medium">USD</span></span>
+                            <span>{formatPrice(printer.current_price_usd_amazon)}</span>
                           </div>
                         )}
                         {printer.msrp_usd && !printer.current_price_usd_store && !printer.current_price_usd_amazon && (
                           <div className="text-xl font-bold text-primary flex items-center gap-1.5">
                             <Tag className="h-4 w-4 shrink-0" />
-                            <span>${printer.msrp_usd} <span className="text-xs font-medium">USD</span></span>
+                            <span>{formatPrice(printer.msrp_usd)}</span>
                           </div>
                         )}
                       </div>
