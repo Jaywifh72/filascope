@@ -365,45 +365,7 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
           </AccordionContent>
         </AccordionItem>
 
-        {/* Trivia */}
-        <AccordionItem value="trivia" className="border rounded-lg px-4">
-          <AccordionTrigger className="hover:no-underline">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-yellow-500" />
-              <span className="font-semibold">Trivia & Background</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pt-4 space-y-4">
-            {reference.trivia.whyInvented && (
-              <div>
-                <h5 className="text-sm font-medium mb-1">Why It Was Invented</h5>
-                <p className="text-sm text-muted-foreground">{reference.trivia.whyInvented}</p>
-              </div>
-            )}
-
-            {reference.trivia.funFacts && (
-              <div>
-                <h5 className="text-sm font-medium mb-2">Fun Facts</h5>
-                <InfoList items={reference.trivia.funFacts} />
-              </div>
-            )}
-
-            {reference.trivia.controversies && (
-              <div>
-                <h5 className="text-sm font-medium mb-2">Controversies & Criticisms</h5>
-                <InfoList items={reference.trivia.controversies} />
-              </div>
-            )}
-
-            {reference.trivia.marketAdoption && (
-              <div>
-                <h5 className="text-sm font-medium mb-1">Market Adoption</h5>
-                <p className="text-sm text-muted-foreground">{reference.trivia.marketAdoption}</p>
-              </div>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-
+        {/* Technical Data Sheet Profile */}
         {/* Technical Data Sheet Profile */}
         {reference.tdsProfile && (
           <AccordionItem value="tds" className="border rounded-lg px-4">
@@ -759,6 +721,45 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
             </AccordionContent>
           </AccordionItem>
         )}
+
+        {/* Trivia & Background - Always Last */}
+        <AccordionItem value="trivia" className="border rounded-lg px-4">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-yellow-500" />
+              <span className="font-semibold">Trivia & Background</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pt-4 space-y-4">
+            {reference.trivia.whyInvented && (
+              <div>
+                <h5 className="text-sm font-medium mb-1">Why It Was Invented</h5>
+                <p className="text-sm text-muted-foreground">{reference.trivia.whyInvented}</p>
+              </div>
+            )}
+
+            {reference.trivia.funFacts && (
+              <div>
+                <h5 className="text-sm font-medium mb-2">Fun Facts</h5>
+                <InfoList items={reference.trivia.funFacts} />
+              </div>
+            )}
+
+            {reference.trivia.controversies && (
+              <div>
+                <h5 className="text-sm font-medium mb-2">Controversies & Criticisms</h5>
+                <InfoList items={reference.trivia.controversies} />
+              </div>
+            )}
+
+            {reference.trivia.marketAdoption && (
+              <div>
+                <h5 className="text-sm font-medium mb-1">Market Adoption</h5>
+                <p className="text-sm text-muted-foreground">{reference.trivia.marketAdoption}</p>
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
       </Accordion>
     </div>
   );
