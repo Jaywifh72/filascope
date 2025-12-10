@@ -4329,6 +4329,700 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'PC-FR': {
+    name: 'PC-FR',
+    fullName: 'Flame Retardant Polycarbonate',
+    origin: {
+      yearInvented: '1970s',
+      originalCompany: 'GE Plastics (now SABIC) and Bayer',
+      keyMilestones: [
+        '1970s: Flame retardant PC formulations developed for electronics',
+        '1990s: Halogen-free FR formulations developed',
+        '2000s: Stricter fire safety regulations drive adoption',
+        '2018+: FR-PC becomes available for 3D printing',
+      ],
+      majorManufacturers: ['SABIC', 'Covestro', 'Polymaker', '3DXTech', 'Stratasys'],
+    },
+    composition: {
+      basePolymer: 'Polycarbonate with flame retardant additives',
+      chemicalFamily: 'Polycarbonate (modified)',
+      keyAdditives: ['Phosphorus-based flame retardants', 'Halogenated compounds (older)', 'Synergists'],
+      coloringAgents: 'Limited colors - typically black, white, natural',
+      specialFillers: ['Flame retardant compounds', 'Char-forming additives'],
+    },
+    familyContext: {
+      parentPolymer: 'Polycarbonate base with FR additives',
+      variants: ['PC-FR V0', 'PC-FR V2', 'Halogen-free PC-FR'],
+      chemicalComparison: 'Standard PC with additives that inhibit combustion. Slightly reduced mechanical properties.',
+      evolution: 'Developed to meet fire safety codes in electronics and transportation.',
+    },
+    strengths: {
+      uniqueProperties: ['Self-extinguishing', 'UL94 V0 rating achievable', 'Maintains PC toughness', 'High heat resistance'],
+      bestUseScenarios: ['Electrical enclosures', 'Transportation interiors', 'Appliance housings', 'Safety-critical parts'],
+      advantagesOverCompetitors: ['Passes strict fire codes', 'Better impact than FR-ABS', 'Maintains optical clarity options'],
+      whyChooseThis: 'When fire safety certification is required and standard PC cannot pass flammability tests.',
+    },
+    weaknesses: {
+      limitations: ['Reduced impact vs standard PC', 'Higher cost', 'Limited colors', 'Some FR additives controversial'],
+      commonProblems: ['FR additives can affect layer adhesion', 'May require higher temps', 'Slight brittleness increase'],
+      environmentalConcerns: ['Some FR compounds are environmental concerns', 'Halogenated versions being phased out'],
+      whenNotToUse: ['When fire rating not required', 'Maximum impact resistance needed', 'Outdoor UV exposure'],
+    },
+    practicalContext: {
+      industryAdoption: ['Electronics', 'Automotive', 'Aerospace', 'Appliances', 'Rail transport'],
+      commonApplications: ['Server housings', 'Electrical junction boxes', 'Aircraft interior parts', 'Train components'],
+      safetyStandards: ['UL94 V0/V1/V2', 'FAR 25.853', 'EN 45545', 'FMVSS 302'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'UL94 V0 means a flame self-extinguishes within 10 seconds',
+        'Modern halogen-free FR-PC uses phosphorus chemistry instead of bromine',
+        'Every commercial aircraft uses flame-retardant plastics in the cabin',
+        'Some FR-PC can achieve V0 at just 0.8mm thickness',
+      ],
+      whyInvented: 'Fire safety regulations in electronics and transportation required plastics that would not sustain combustion.',
+      controversies: [
+        'Brominated flame retardants linked to health and environmental concerns',
+        'Transition to halogen-free has been slow in some industries',
+        'FR additives can outgas at high temperatures',
+      ],
+      marketAdoption: 'Essential material for certified applications, growing in 3D printing for functional prototypes.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-65', unit: 'MPa', implications: 'Slightly reduced from standard PC.' },
+        { name: 'Elongation at Break', value: '80-120', unit: '%', implications: 'Good ductility maintained.' },
+        { name: "Young's Modulus", value: '2200-2400', unit: 'MPa', implications: 'Similar stiffness to standard PC.' },
+        { name: 'Impact Strength (Notched)', value: '400-600', unit: 'J/m', implications: 'Good impact, slightly less than pure PC.' },
+        { name: 'UL94 Rating', value: 'V0-V2', unit: '', implications: 'Self-extinguishing. V0 is most stringent.' },
+        { name: 'Heat Deflection (HDT)', value: '125-135', unit: '°C (0.45 MPa)', implications: 'Excellent heat resistance maintained.' },
+      ],
+      notes: 'FR rating depends on wall thickness - thicker walls achieve better ratings.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 280, max: 310, optimal: 295 },
+      bedTemp: { min: 100, max: 130, optimal: 115 },
+      coolingFan: { min: 0, max: 20, notes: 'Minimal cooling like standard PC.' },
+      enclosure: { required: true, notes: 'Required. Same chamber requirements as standard PC.' },
+      drying: { temp: 80, duration: '6-10 hours', notes: 'Hygroscopic. FR additives may increase sensitivity.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Similar to standard PC.' },
+      additionalNotes: [
+        'All-metal hotend required',
+        'FR additives may cause slight odor',
+        'Ensure good ventilation',
+        'Test fire rating on printed parts - layer lines affect performance',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Garolite (G10)', 'PC sheet'],
+        good: ['PEI with PC adhesive', 'Glass with specialized adhesive'],
+        poor: ['Bare PEI', 'Blue tape'],
+      },
+      releaseAgents: 'Same as standard PC - specialized PC adhesives work best.',
+      multiMaterial: [
+        { material: 'PC', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility.' },
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Good bonding.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Dichloromethane', effectiveness: 'Good', notes: 'Works but toxic. FR additives may affect results.' },
+      ],
+      mechanical: ['Sands well', 'Machines cleanly', 'Polishable'],
+      glues: ['Epoxy', 'Cyanoacrylate', 'Solvent welding with caution'],
+      painting: 'Accepts paints after light sanding.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Standard PC fumes plus FR additive compounds. Good ventilation essential.' },
+      foodSafety: { rating: 'Not Safe', notes: 'FR additives are not food safe. Never use for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based with synthetic additives.' },
+      additionalNotes: [
+        'FR additives may produce additional fumes',
+        'HEPA + carbon filtration recommended',
+        'Some FR compounds are regulated substances',
+      ],
+    },
+  },
+
+  'PC-PBT': {
+    name: 'PC-PBT',
+    fullName: 'Polycarbonate-Polybutylene Terephthalate Blend',
+    origin: {
+      yearInvented: '1980s',
+      originalCompany: 'GE Plastics (Xenoy brand)',
+      keyMilestones: [
+        '1980s: PC-PBT blends commercialized for automotive',
+        '1990s: Becomes standard for automotive bumpers and body panels',
+        '2000s: Expanded to industrial applications',
+        '2020+: Emerging in 3D printing market',
+      ],
+      majorManufacturers: ['SABIC (Xenoy)', 'Covestro', 'DSM', 'BASF'],
+    },
+    composition: {
+      basePolymer: 'Polycarbonate (40-60%) + PBT (40-60%) blend',
+      chemicalFamily: 'Polymer blend (Polycarbonate + Polyester)',
+      keyAdditives: ['Impact modifiers', 'Compatibilizers', 'UV stabilizers'],
+      coloringAgents: 'Wide color range available, good pigment acceptance',
+      specialFillers: ['Glass fiber versions available', 'Mineral fillers'],
+    },
+    familyContext: {
+      parentPolymer: 'Polycarbonate and Polybutylene Terephthalate combined',
+      variants: ['PC-PBT', 'PC-PBT GF (glass filled)', 'PC-PBT UV stabilized'],
+      chemicalComparison: 'Combines PC impact resistance with PBT chemical resistance and processability.',
+      evolution: 'Created for automotive exterior applications requiring both toughness and chemical resistance.',
+    },
+    strengths: {
+      uniqueProperties: ['Excellent chemical resistance', 'Outstanding low-temp impact', 'UV resistant', 'Paintable'],
+      bestUseScenarios: ['Automotive exterior parts', 'Chemical-exposed enclosures', 'Outdoor applications', 'Painted parts'],
+      advantagesOverCompetitors: ['Better chemical resistance than PC-ABS', 'Superior low-temp toughness', 'Excellent paintability'],
+      whyChooseThis: 'When parts need both impact resistance AND chemical/fuel resistance that PC-ABS cannot provide.',
+    },
+    weaknesses: {
+      limitations: ['Less common in 3D printing', 'Requires drying', 'Higher processing temps than PBT alone'],
+      commonProblems: ['Moisture sensitivity', 'Can be stringy', 'Requires proper temp balance'],
+      environmentalConcerns: ['Petroleum-based blend', 'Mixed polymer recycling challenges'],
+      whenNotToUse: ['Optical clarity needed', 'Maximum heat resistance (use pure PC)', 'Budget applications'],
+    },
+    practicalContext: {
+      industryAdoption: ['Automotive', 'Industrial equipment', 'Outdoor electronics', 'Sporting goods'],
+      commonApplications: ['Bumper fascias', 'Fuel filler doors', 'Snowmobile hoods', 'Power tool housings', 'Outdoor enclosures'],
+      safetyStandards: ['Automotive OEM specifications', 'Various chemical resistance standards'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'Xenoy PC-PBT has been used on car bumpers since the 1980s',
+        'PC-PBT can withstand gasoline, oil, and brake fluid exposure',
+        'The blend maintains impact strength down to -40°C',
+        'Many car mirror housings are made from PC-PBT',
+      ],
+      whyInvented: 'Automotive industry needed a material tough enough for bumpers that could also resist fuel and chemicals.',
+      controversies: [
+        'Less well-known in 3D printing despite excellent properties',
+        'Can be confused with PC-ABS which has different chemical resistance',
+      ],
+      marketAdoption: 'Dominant in automotive injection molding, emerging in industrial 3D printing.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '45-55', unit: 'MPa', implications: 'Good strength, similar to PC-ABS.' },
+        { name: 'Elongation at Break', value: '100-150', unit: '%', implications: 'Excellent ductility.' },
+        { name: "Young's Modulus", value: '2000-2300', unit: 'MPa', implications: 'Good stiffness.' },
+        { name: 'Impact Strength (Notched, -30°C)', value: '400-600', unit: 'J/m', implications: 'Outstanding cold-temperature toughness.' },
+        { name: 'Chemical Resistance', value: 'Excellent', unit: '', implications: 'Resists fuels, oils, many solvents.' },
+        { name: 'Heat Deflection (HDT)', value: '100-115', unit: '°C (0.45 MPa)', implications: 'Good heat resistance.' },
+      ],
+      notes: 'Exceptional combination of toughness, chemical resistance, and processability.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 250, max: 280, optimal: 265 },
+      bedTemp: { min: 80, max: 110, optimal: 95 },
+      coolingFan: { min: 10, max: 40, notes: 'Moderate cooling acceptable.' },
+      enclosure: { required: true, notes: 'Recommended for consistent results and reduced warping.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'PBT component is moisture sensitive.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Similar to PC-ABS.' },
+      additionalNotes: [
+        'All-metal hotend recommended at higher temps',
+        'Dry thoroughly - PBT is very moisture sensitive',
+        'Slower first layer for adhesion',
+        'Can be painted directly without primer in many cases',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite'],
+        good: ['Glass with glue stick', 'BuildTak'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'Glue stick works well. Not as aggressive as pure PC.',
+      multiMaterial: [
+        { material: 'PC', bondQuality: 'Strong Chemical Bond', notes: 'Good compatibility due to PC content.' },
+        { material: 'PBT', bondQuality: 'Strong Chemical Bond', notes: 'Excellent bonding.' },
+        { material: 'PETG', bondQuality: 'Mechanical Bond', notes: 'Reasonable adhesion, both polyesters.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Limited options', effectiveness: 'Difficult', notes: 'Chemical resistance makes smoothing challenging.' },
+      ],
+      mechanical: ['Sands well', 'Excellent machinability', 'Polishes to good finish'],
+      glues: ['Epoxy (best)', 'Cyanoacrylate', 'Structural adhesives'],
+      painting: 'Excellent paintability - a key feature of PC-PBT. Often painted in automotive applications.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Similar to PC-ABS. Good ventilation recommended.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Not typically certified for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polymer blend.' },
+      additionalNotes: [
+        'BPA present from PC component',
+        'Standard ventilation precautions',
+      ],
+    },
+  },
+
+  'ESD-PC': {
+    name: 'ESD-PC',
+    fullName: 'Electrostatic Dissipative Polycarbonate',
+    origin: {
+      yearInvented: '1990s',
+      originalCompany: 'Multiple manufacturers for electronics industry',
+      keyMilestones: [
+        '1990s: ESD plastics developed for electronics manufacturing',
+        '2000s: Miniaturization drives demand for ESD-safe materials',
+        '2015+: ESD filaments become available for 3D printing',
+        '2020+: Growing adoption for electronics prototyping',
+      ],
+      majorManufacturers: ['3DXTech', 'Polymaker', 'Stratasys', 'SABIC', 'Covestro'],
+    },
+    composition: {
+      basePolymer: 'Polycarbonate with conductive additives',
+      chemicalFamily: 'Polycarbonate (electrically modified)',
+      keyAdditives: ['Carbon nanotubes', 'Carbon black', 'Conductive fibers', 'Inherently dissipative polymers'],
+      coloringAgents: 'Typically black due to carbon additives',
+      specialFillers: ['Carbon-based conductive fillers'],
+    },
+    familyContext: {
+      parentPolymer: 'Polycarbonate base with ESD additives',
+      variants: ['ESD-PC (surface resistive)', 'ESD-PC (volume conductive)'],
+      chemicalComparison: 'Standard PC with additives that allow controlled static dissipation without sparking.',
+      evolution: 'Developed to protect sensitive electronics from electrostatic discharge damage.',
+    },
+    strengths: {
+      uniqueProperties: ['Static dissipative (10^6-10^9 ohms)', 'Maintains PC toughness', 'Consistent ESD properties', 'High heat resistance'],
+      bestUseScenarios: ['Electronics manufacturing fixtures', 'ESD-safe enclosures', 'Semiconductor handling', 'Cleanroom tools'],
+      advantagesOverCompetitors: ['Better impact than ESD-ABS', 'Higher heat resistance', 'More consistent ESD properties'],
+      whyChooseThis: 'When static-sensitive electronics require handling fixtures with PC-level toughness and heat resistance.',
+    },
+    weaknesses: {
+      limitations: ['Black color only', 'Higher cost', 'Slightly reduced mechanical properties', 'Requires proper grounding'],
+      commonProblems: ['ESD properties can vary with humidity', 'Surface contamination affects performance', 'Requires verification testing'],
+      environmentalConcerns: ['Carbon additives not recyclable', 'Specialized disposal may be required'],
+      whenNotToUse: ['Color required', 'Maximum mechanical properties needed', 'ESD protection not necessary'],
+    },
+    practicalContext: {
+      industryAdoption: ['Semiconductor', 'Electronics manufacturing', 'Aerospace', 'Medical devices', 'Automotive electronics'],
+      commonApplications: ['Chip trays', 'PCB handling fixtures', 'Test equipment housings', 'Cleanroom tools', 'Electronics enclosures'],
+      safetyStandards: ['ANSI/ESD S20.20', 'IEC 61340', 'MIL-STD-1686'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'A single static discharge can destroy a microchip worth thousands of dollars',
+        'ESD damage causes billions in losses to the electronics industry annually',
+        'The human body can generate 25,000 volts of static electricity',
+        'ESD-PC dissipates charge slowly enough to prevent damaging sparks',
+      ],
+      whyInvented: 'Electronics miniaturization made components increasingly vulnerable to static damage, requiring protective handling materials.',
+      controversies: [
+        'ESD properties must be verified - printing can affect conductivity',
+        'Humidity significantly affects surface resistivity',
+        'Some "ESD" filaments do not meet industry standards',
+      ],
+      marketAdoption: 'Essential in electronics manufacturing, growing in 3D printing for functional prototypes and fixtures.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Surface Resistivity', value: '10^6 - 10^9', unit: 'ohms/sq', implications: 'Static dissipative range. Safe for electronics handling.' },
+        { name: 'Tensile Strength', value: '50-60', unit: 'MPa', implications: 'Slightly reduced from standard PC.' },
+        { name: 'Elongation at Break', value: '80-120', unit: '%', implications: 'Good ductility maintained.' },
+        { name: 'Impact Strength (Notched)', value: '400-550', unit: 'J/m', implications: 'Good impact resistance.' },
+        { name: 'Heat Deflection (HDT)', value: '130-140', unit: '°C (0.45 MPa)', implications: 'Excellent heat resistance maintained.' },
+      ],
+      notes: 'ESD properties should be verified after printing. Layer orientation can affect conductivity.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 280, max: 310, optimal: 295 },
+      bedTemp: { min: 100, max: 130, optimal: 115 },
+      coolingFan: { min: 0, max: 20, notes: 'Minimal cooling like standard PC.' },
+      enclosure: { required: true, notes: 'Required. Same as standard PC.' },
+      drying: { temp: 80, duration: '6-10 hours', notes: 'Very important - moisture affects both printing and ESD properties.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Similar to standard PC.' },
+      additionalNotes: [
+        'All-metal hotend required',
+        'Carbon additives may be slightly abrasive',
+        'Verify ESD properties after printing',
+        'Ground parts properly in use',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Garolite (G10)', 'PC sheet'],
+        good: ['PEI with adhesive'],
+        poor: ['Bare PEI', 'Glass'],
+      },
+      releaseAgents: 'Standard PC adhesives work.',
+      multiMaterial: [
+        { material: 'PC', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer.' },
+        { material: 'ESD-ABS', bondQuality: 'Mechanical Bond', notes: 'Possible for graded ESD assemblies.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not recommended', effectiveness: 'Difficult', notes: 'May affect ESD properties.' },
+      ],
+      mechanical: ['Sanding possible but may affect surface resistivity', 'Test ESD after any post-processing'],
+      glues: ['Conductive epoxy for ESD continuity', 'Standard epoxy where grounding not needed'],
+      painting: 'Not recommended - paint insulates and defeats ESD purpose.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Similar to standard PC. Carbon additives are relatively inert.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Not intended for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based with carbon additives.' },
+      additionalNotes: [
+        'Carbon nanotubes in some formulations have safety considerations',
+        'Standard ventilation for PC printing',
+      ],
+    },
+  },
+
+  'PC Pro': {
+    name: 'PC Pro',
+    fullName: 'Professional Grade Polycarbonate',
+    origin: {
+      yearInvented: '2018-2020',
+      originalCompany: 'Multiple 3D printing filament manufacturers',
+      keyMilestones: [
+        '2015: PC filaments become available for desktop printers',
+        '2018: Enhanced "Pro" formulations developed',
+        '2020+: Improved formulations reduce printing difficulty',
+      ],
+      majorManufacturers: ['Polymaker', 'eSUN', 'Prusament', '3DXTech', 'Fiberlogy'],
+    },
+    composition: {
+      basePolymer: 'Modified Polycarbonate',
+      chemicalFamily: 'Polycarbonate (enhanced formulation)',
+      keyAdditives: ['Flow enhancers', 'Warp reduction agents', 'Impact modifiers'],
+      coloringAgents: 'Various colors available including transparent',
+      specialFillers: ['Processing aids for easier printing'],
+    },
+    familyContext: {
+      parentPolymer: 'Polycarbonate with enhanced printability',
+      variants: ['PC Pro', 'PC Max', 'Easy PC', 'PC Plus'],
+      chemicalComparison: 'Standard PC chemistry with additives to improve flow and reduce warping.',
+      evolution: 'Developed to make PC accessible to desktop 3D printer users.',
+    },
+    strengths: {
+      uniqueProperties: ['Easier to print than standard PC', 'Reduced warping', 'Maintains good impact resistance', 'Lower chamber temp requirements'],
+      bestUseScenarios: ['Functional prototypes', 'Impact-resistant parts', 'Heat-resistant components', 'Engineering applications'],
+      advantagesOverCompetitors: ['Easier than pure PC', 'Better properties than PC-ABS', 'Accessible to more printers'],
+      whyChooseThis: 'When you want PC properties but your printer or experience level cannot handle pure PC.',
+    },
+    weaknesses: {
+      limitations: ['Slightly reduced properties vs pure PC', 'Still requires enclosure', 'More expensive than standard filaments', 'Properties vary by brand'],
+      commonProblems: ['Still can warp without proper setup', 'Moisture sensitive', 'Layer adhesion still challenging'],
+      environmentalConcerns: ['Same as standard PC - BPA concerns, not biodegradable'],
+      whenNotToUse: ['Maximum PC properties required', 'No enclosure available', 'Strict material certification needed'],
+    },
+    practicalContext: {
+      industryAdoption: ['Prototyping', 'Small-batch production', 'Maker community', 'Engineering education'],
+      commonApplications: ['Functional prototypes', 'Tool housings', 'Brackets and mounts', 'Enclosures', 'Drone components'],
+      safetyStandards: ['Varies by manufacturer - check specific product certifications'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'PC Pro formulations often include trade-secret additives for easier printing',
+        'Some PC Pro filaments can print with chamber temps as low as 40°C',
+        'The "Pro" designation has no industry standard definition',
+        'Quality varies significantly between manufacturers',
+      ],
+      whyInvented: 'Pure PC was too difficult for most desktop printers, creating demand for easier formulations.',
+      controversies: [
+        '"Pro" and similar designations are marketing terms without standards',
+        'Some PC Pro is barely different from standard PC',
+        'Trade-offs between printability and properties not always disclosed',
+      ],
+      marketAdoption: 'Popular among users wanting PC properties without industrial equipment.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '55-65', unit: 'MPa', implications: 'Good strength, slightly less than pure PC.' },
+        { name: 'Elongation at Break', value: '80-120', unit: '%', implications: 'Good ductility.' },
+        { name: "Young's Modulus", value: '2100-2300', unit: 'MPa', implications: 'Good stiffness.' },
+        { name: 'Impact Strength (Notched)', value: '500-700', unit: 'J/m', implications: 'Excellent impact resistance.' },
+        { name: 'Heat Deflection (HDT)', value: '120-135', unit: '°C (0.45 MPa)', implications: 'Good heat resistance.' },
+      ],
+      notes: 'Properties vary by manufacturer. Check specific product datasheets.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 260, max: 290, optimal: 275 },
+      bedTemp: { min: 90, max: 115, optimal: 105 },
+      coolingFan: { min: 0, max: 30, notes: 'Minimal cooling. Some Pro formulations tolerate more fan than pure PC.' },
+      enclosure: { required: true, notes: 'Still recommended, though requirements less strict than pure PC. 40-60°C chamber often sufficient.' },
+      drying: { temp: 80, duration: '4-8 hours', notes: 'Hygroscopic like all PC. Dry before printing.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Faster than pure PC possible with good formulations.' },
+      additionalNotes: [
+        'All-metal hotend required',
+        'Lower temps than pure PC often work',
+        'Brim recommended',
+        'Cool slowly in enclosure',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite', 'PC sheet'],
+        good: ['Glass with glue stick', 'BuildTak'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'Glue stick often sufficient. Less aggressive than pure PC.',
+      multiMaterial: [
+        { material: 'PC', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility.' },
+        { material: 'PC-ABS', bondQuality: 'Strong Chemical Bond', notes: 'Good bonding.' },
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Compatible.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Dichloromethane', effectiveness: 'Good', notes: 'Works on PC base. Toxic - professional use.' },
+      ],
+      mechanical: ['Sands well', 'Polishes to clarity if transparent', 'Machines nicely'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'Solvent welding'],
+      painting: 'Accepts paints well after light sanding.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Similar to standard PC. Good ventilation required.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'BPA concerns apply. Not food safe.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polycarbonate.' },
+      additionalNotes: [
+        'BPA is present',
+        'HEPA + carbon filtration recommended',
+        'Print in ventilated space',
+      ],
+    },
+  },
+
+  'ezPC': {
+    name: 'ezPC',
+    fullName: 'Easy-Print Polycarbonate',
+    origin: {
+      yearInvented: '2019-2020',
+      originalCompany: 'Multiple filament manufacturers',
+      keyMilestones: [
+        '2019: First "easy PC" formulations appear',
+        '2020: Growing demand for accessible PC alternatives',
+        '2021+: Refined formulations further reduce difficulty',
+      ],
+      majorManufacturers: ['Polymaker (PolyLite PC)', 'eSUN', 'Overture', 'Sunlu'],
+    },
+    composition: {
+      basePolymer: 'Modified Polycarbonate blend',
+      chemicalFamily: 'Polycarbonate copolymer or blend',
+      keyAdditives: ['Significant flow modifiers', 'Warp reduction compounds', 'Processing aids'],
+      coloringAgents: 'Limited colors - typically natural, black, white',
+      specialFillers: ['Proprietary additives for printability'],
+    },
+    familyContext: {
+      parentPolymer: 'Heavily modified PC for maximum printability',
+      variants: ['ezPC', 'PolyLite PC', 'Easy PC', 'PC Lite'],
+      chemicalComparison: 'PC-based but with significant modifications prioritizing printability over pure properties.',
+      evolution: 'Created to bring PC to printers without enclosures or high-temp capability.',
+    },
+    strengths: {
+      uniqueProperties: ['Prints without enclosure', 'Minimal warping', 'Lower temperature requirements', 'Beginner accessible'],
+      bestUseScenarios: ['PC introduction for beginners', 'Printers without enclosures', 'Quick prototypes needing some PC properties'],
+      advantagesOverCompetitors: ['Can print on basic printers', 'No enclosure required', 'Significantly reduced warping'],
+      whyChooseThis: 'When your printer cannot handle any other PC variant and you need some PC-like toughness.',
+    },
+    weaknesses: {
+      limitations: ['Noticeably reduced properties vs true PC', 'Heat resistance compromised', 'Impact lower than pure PC', 'May not meet PC specifications'],
+      commonProblems: ['Properties far from true PC', 'Heat deflection much lower', 'May not satisfy engineering requirements'],
+      environmentalConcerns: ['Same as standard PC'],
+      whenNotToUse: ['True PC properties required', 'High-temp applications', 'Impact-critical parts', 'Certification requirements'],
+    },
+    practicalContext: {
+      industryAdoption: ['Hobbyist printing', 'Education', 'Basic prototyping'],
+      commonApplications: ['Learning PC printing', 'Non-critical tough parts', 'Aesthetic prototypes', 'Hobby projects'],
+      safetyStandards: ['Generally not certified to PC standards'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'ezPC can often print at PETG-like temperatures',
+        'Some ezPC formulations work completely open-air',
+        'The trade-off is significant - heat resistance may be half of pure PC',
+        'Popular as a "gateway" to PC printing',
+      ],
+      whyInvented: 'To allow users with basic printers to experience some PC benefits without expensive equipment upgrades.',
+      controversies: [
+        'Whether ezPC should be called "PC" at all given reduced properties',
+        'Marketing can overstate similarity to true PC',
+        'Heat deflection often closer to PETG than PC',
+      ],
+      marketAdoption: 'Popular among hobbyists, but serious users move to true PC formulations.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '45-55', unit: 'MPa', implications: 'Reduced from true PC. Similar to PETG.' },
+        { name: 'Elongation at Break', value: '60-100', unit: '%', implications: 'Good ductility but less than pure PC.' },
+        { name: "Young's Modulus", value: '1800-2100', unit: 'MPa', implications: 'Moderate stiffness.' },
+        { name: 'Impact Strength (Notched)', value: '200-400', unit: 'J/m', implications: 'Reduced but still good. Between PETG and PC.' },
+        { name: 'Heat Deflection (HDT)', value: '85-110', unit: '°C (0.45 MPa)', implications: 'Significantly reduced. This is the main compromise.' },
+      ],
+      notes: 'Properties between PETG and true PC. Suitable when full PC specs not required.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 240, max: 270, optimal: 255 },
+      bedTemp: { min: 80, max: 100, optimal: 90 },
+      coolingFan: { min: 20, max: 50, notes: 'More cooling possible than true PC.' },
+      enclosure: { required: false, notes: 'Not required! This is the main benefit. Enclosure still helps with large parts.' },
+      drying: { temp: 70, duration: '4-6 hours', notes: 'Still hygroscopic. Drying recommended.' },
+      printSpeed: { recommended: '40-70 mm/s', notes: 'Faster than true PC. Similar to PETG.' },
+      additionalNotes: [
+        'All-metal hotend still recommended',
+        'Can work with PTFE-lined at lower temps',
+        'Prints much like enhanced PETG',
+        'Brim helps but less critical than pure PC',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'BuildTak'],
+        good: ['Glass with glue stick', 'PEI (Smooth)'],
+        poor: ['Blue tape'],
+      },
+      releaseAgents: 'Standard glue stick works. Much less aggressive than pure PC.',
+      multiMaterial: [
+        { material: 'PETG', bondQuality: 'Mechanical Bond', notes: 'Reasonable compatibility given similar print profiles.' },
+        { material: 'PC Pro', bondQuality: 'Strong Chemical Bond', notes: 'Good bonding with other PC variants.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Limited effectiveness', effectiveness: 'Difficult', notes: 'Modified chemistry may not respond like pure PC.' },
+      ],
+      mechanical: ['Sands well', 'Standard finishing techniques'],
+      glues: ['Cyanoacrylate', 'Epoxy'],
+      painting: 'Accepts paint after light sanding.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Lower temps mean less fumes than true PC. Still ventilate.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'BPA concerns still apply.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based material.' },
+      additionalNotes: [
+        'Lower temp printing reduces fume concerns',
+        'Still contains BPA',
+        'Basic ventilation usually sufficient',
+      ],
+    },
+  },
+
+  'PC Blend': {
+    name: 'PC Blend',
+    fullName: 'Polycarbonate Blend',
+    origin: {
+      yearInvented: '2015-2018',
+      originalCompany: 'Various filament manufacturers',
+      keyMilestones: [
+        '2015: PC enters desktop 3D printing',
+        '2017: Various PC blend formulations appear',
+        '2018+: Blends become popular alternative to pure PC',
+      ],
+      majorManufacturers: ['Various manufacturers', 'Polymaker', 'eSUN', 'Overture'],
+    },
+    composition: {
+      basePolymer: 'Polycarbonate blended with other polymers',
+      chemicalFamily: 'Polycarbonate alloy/blend',
+      keyAdditives: ['Secondary polymers (varies)', 'Compatibilizers', 'Flow modifiers'],
+      coloringAgents: 'Varies by blend composition',
+      specialFillers: ['Depends on blend partner'],
+    },
+    familyContext: {
+      parentPolymer: 'Polycarbonate combined with other engineering polymers',
+      variants: ['PC-ABS', 'PC-PBT', 'PC-ASA', 'PC-PETG', 'Various proprietary blends'],
+      chemicalComparison: 'Generic term for PC mixed with other polymers to modify properties or printability.',
+      evolution: 'Umbrella term covering various PC alloys designed for different applications.',
+    },
+    strengths: {
+      uniqueProperties: ['Balanced properties', 'Often easier than pure PC', 'Tailored performance', 'Various options available'],
+      bestUseScenarios: ['When pure PC is overkill', 'Specific property requirements', 'Easier printing needs', 'Cost-sensitive applications'],
+      advantagesOverCompetitors: ['Can be optimized for specific needs', 'Often easier to print', 'Lower cost than pure PC'],
+      whyChooseThis: 'When you need some PC properties but want specific benefits from the blend partner.',
+    },
+    weaknesses: {
+      limitations: ['Properties vary widely', 'May not match pure PC', 'Blend composition often proprietary', 'Harder to predict performance'],
+      commonProblems: ['Inconsistent between manufacturers', 'Hard to know exact composition', 'May not meet PC specifications'],
+      environmentalConcerns: ['Mixed polymers harder to recycle', 'Same concerns as component materials'],
+      whenNotToUse: ['Specific PC certifications required', 'Predictable properties essential', 'Maximum PC performance needed'],
+    },
+    practicalContext: {
+      industryAdoption: ['Prototyping', 'Consumer products', 'General engineering'],
+      commonApplications: ['Functional parts', 'Enclosures', 'Housings', 'Structural components'],
+      safetyStandards: ['Varies by specific blend - check manufacturer specifications'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'PC Blend is a catch-all term for many different formulations',
+        'The most common PC blend is PC-ABS, used in billions of products',
+        'Blend ratio significantly affects final properties',
+        'Some "PC Blend" products are mostly the other polymer with minor PC content',
+      ],
+      whyInvented: 'To combine PC strengths with other polymers for optimized, application-specific materials.',
+      controversies: [
+        'Vague labeling - "PC Blend" tells you little about actual properties',
+        'PC content can range from 20% to 80%',
+        'Marketing may emphasize PC while properties are dominated by blend partner',
+      ],
+      marketAdoption: 'Very common in injection molding, increasingly available in 3D printing filaments.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '40-60', unit: 'MPa', implications: 'Varies widely based on blend composition.' },
+        { name: 'Elongation at Break', value: '50-150', unit: '%', implications: 'Depends on blend partner flexibility.' },
+        { name: "Young's Modulus", value: '1800-2400', unit: 'MPa', implications: 'Range depends on blend.' },
+        { name: 'Impact Strength', value: '200-600', unit: 'J/m', implications: 'Can vary significantly.' },
+        { name: 'Heat Deflection', value: '90-130', unit: '°C', implications: 'Usually between component materials.' },
+      ],
+      notes: 'Properties highly dependent on specific blend. Always check manufacturer datasheet.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 250, max: 290, optimal: 270 },
+      bedTemp: { min: 80, max: 115, optimal: 100 },
+      coolingFan: { min: 0, max: 40, notes: 'Varies by blend. Check manufacturer recommendations.' },
+      enclosure: { required: false, notes: 'Often recommended but not always required. Depends on blend.' },
+      drying: { temp: 75, duration: '4-8 hours', notes: 'Most PC blends are hygroscopic.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Generally easier than pure PC.' },
+      additionalNotes: [
+        'Settings vary significantly by blend',
+        'Follow manufacturer recommendations',
+        'All-metal hotend often recommended',
+        'Drying usually important',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite'],
+        good: ['Glass with glue', 'BuildTak'],
+        poor: ['Blue tape'],
+      },
+      releaseAgents: 'Glue stick usually works. Specific needs depend on blend.',
+      multiMaterial: [
+        { material: 'PC', bondQuality: 'Strong Chemical Bond', notes: 'PC content enables bonding.' },
+        { material: 'Blend partner', bondQuality: 'Strong Chemical Bond', notes: 'Usually bonds well with its component materials.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Varies', effectiveness: 'Difficult', notes: 'Depends on blend composition.' },
+      ],
+      mechanical: ['Generally sands well', 'Finishing similar to pure PC'],
+      glues: ['Epoxy typically works', 'Cyanoacrylate', 'Solvent welding if blend partner allows'],
+      painting: 'Usually accepts paint after preparation.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Fume profile depends on blend components. Ventilate.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'PC component means BPA concerns apply.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polymers.' },
+      additionalNotes: [
+        'BPA present from PC component',
+        'Other concerns depend on blend partner',
+        'Ventilation recommended',
+      ],
+    },
+  },
+
   'PEEK': {
     name: 'PEEK',
     fullName: 'Polyether Ether Ketone',
