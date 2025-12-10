@@ -100,7 +100,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.lookup-barcodes]
-verify_jwt = false
+verify_jwt = true
 
 [functions.scrape-overture-colors]
 verify_jwt = true
