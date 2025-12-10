@@ -4554,6 +4554,244 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'TPC': {
+    name: 'TPC',
+    fullName: 'Thermoplastic Copolyester Elastomer',
+    origin: {
+      yearInvented: '1970s',
+      originalCompany: 'DuPont (Hytrel brand)',
+      keyMilestones: [
+        '1972: DuPont commercializes Hytrel TPC',
+        '1980s: Automotive and industrial adoption grows',
+        '2000s: Other manufacturers develop TPC variants',
+        '2018+: TPC filaments emerge for 3D printing',
+      ],
+      majorManufacturers: ['DuPont (Hytrel)', 'DSM (Arnitel)', 'BASF (Elastollan TPC)', 'colorFabb', 'FormFutura'],
+    },
+    composition: {
+      basePolymer: 'Copolyester block copolymer (polyester hard segments + polyether soft segments)',
+      chemicalFamily: 'Thermoplastic Copolyester (TPC-ET)',
+      keyAdditives: ['UV stabilizers', 'Heat stabilizers', 'Processing aids'],
+      coloringAgents: 'Available in various colors, often natural/translucent',
+      specialFillers: ['Generally unfilled', 'Some carbon fiber variants exist'],
+    },
+    familyContext: {
+      parentPolymer: 'Copolyester elastomer family',
+      variants: ['TPC-ET (ether soft segment)', 'TPC-ES (ester soft segment)', 'TPC-EE (ether-ester)'],
+      chemicalComparison: 'Better chemical and heat resistance than TPU, comparable to softer polyesters.',
+      evolution: 'From automotive bellows and hoses to 3D printing flexible engineering material.',
+    },
+    strengths: {
+      uniqueProperties: ['Excellent heat resistance', 'Superior chemical resistance', 'Good fatigue resistance', 'Wide service temperature range', 'Hydrolysis resistant'],
+      bestUseScenarios: ['Automotive under-hood parts', 'Chemical contact applications', 'High-temperature flexible parts', 'Outdoor/UV exposure'],
+      advantagesOverCompetitors: ['Better heat resistance than TPU', 'Better chemical resistance', 'Excellent long-term flex fatigue'],
+      whyChooseThis: 'When you need flexibility combined with heat resistance or chemical exposure that TPU cannot handle.',
+    },
+    weaknesses: {
+      limitations: ['More expensive than TPU', 'Limited filament availability', 'Requires higher print temps', 'Less commonly stocked'],
+      commonProblems: ['Temperature sensitivity during printing', 'Stringing at higher temps', 'Moisture absorption'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable', 'Complex polymer difficult to recycle'],
+      whenNotToUse: ['Budget-sensitive projects', 'When TPU suffices', 'Ultra-soft applications'],
+    },
+    practicalContext: {
+      industryAdoption: ['Automotive', 'Industrial', 'Sports equipment', 'Medical devices'],
+      commonApplications: ['Bellows', 'Seals', 'Flexible couplings', 'Wire/cable jackets', 'Ski boot components'],
+      safetyStandards: ['FDA food contact grades available', 'Various automotive certifications'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'DuPont\'s Hytrel is used in automotive CVJ boots - the accordion-like covers on drive shafts',
+        'TPC was chosen for ski boot components due to its flexibility even in cold temperatures',
+        'The material can flex millions of times without fatigue failure',
+      ],
+      whyInvented: 'Developed to replace rubber in applications requiring flexibility with heat and chemical resistance.',
+      controversies: [
+        'Often confused with generic TPE despite distinct chemistry',
+        'Higher cost limits adoption despite technical advantages',
+      ],
+      marketAdoption: 'Growing slowly in 3D printing as high-performance flexible material alternative to TPU.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Shore Hardness', value: '35D-72D', unit: '', implications: 'Generally firmer than TPU. D-scale indicates medium flexibility.' },
+        { name: 'Tensile Strength', value: '25-50', unit: 'MPa', implications: 'Good strength retention at elevated temperatures.' },
+        { name: 'Elongation at Break', value: '300-600', unit: '%', implications: 'Excellent elasticity with good recovery.' },
+        { name: 'Flexural Modulus', value: '50-600', unit: 'MPa', implications: 'Wide range depending on grade. Stiffer than soft TPU.' },
+        { name: 'Heat Resistance', value: '100-150', unit: '°C (continuous)', implications: 'Significantly better than TPU. Excellent for under-hood automotive.' },
+        { name: 'Chemical Resistance', value: 'Excellent', unit: '', implications: 'Resists oils, greases, fuels, and many solvents better than TPU.' },
+      ],
+      notes: 'Properties superior to TPU in heat and chemical resistance. Trade-off is generally firmer feel and higher cost.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 220, max: 260, optimal: 240 },
+      bedTemp: { min: 60, max: 90, optimal: 75 },
+      coolingFan: { min: 30, max: 70, notes: 'Moderate cooling. Too much causes poor layer adhesion, too little causes stringing.' },
+      enclosure: { required: false, notes: 'Helpful for temperature stability and reducing warping on larger parts.' },
+      drying: { temp: 60, duration: '4-6 hours', notes: 'TPC absorbs moisture. Dry before printing for best results.' },
+      printSpeed: { recommended: '20-40 mm/s', notes: 'Slower than rigid materials. Direct drive extruder recommended.' },
+      additionalNotes: [
+        'Direct drive extruder strongly recommended',
+        'Higher temps than TPU - watch for stringing',
+        'Use retraction carefully - test settings on small parts first',
+        'Good flow calibration important for consistent results',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Glass with glue stick', 'PEI (textured)'],
+        good: ['Blue tape', 'BuildTak'],
+        poor: ['Smooth PEI (may stick too well)'],
+      },
+      releaseAgents: 'Glue stick helps with both adhesion and release.',
+      multiMaterial: [
+        { material: 'PETG', bondQuality: 'Mechanical Bond', notes: 'Polyester family compatibility provides some adhesion.' },
+        { material: 'PLA', bondQuality: 'Weak Bond', notes: 'Limited adhesion between these materials.' },
+        { material: 'Nylon', bondQuality: 'Mechanical Bond', notes: 'Can be used in combination for flexible/rigid parts.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Chemical', effectiveness: 'Difficult', notes: 'Resistant to most solvents. Not practical for smoothing.' },
+      ],
+      mechanical: ['Difficult to sand (elastic)', 'Can trim with sharp blade', 'Heat welding possible'],
+      glues: ['Cyanoacrylate with activator', 'Contact cement', 'Specialty flexible adhesives'],
+      painting: 'Difficult due to flexibility. Use flexible paints or dyes designed for elastomers.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Generally low emissions. Good ventilation recommended at higher temps.' },
+      foodSafety: { rating: 'Some Grades', notes: 'FDA compliant grades available. Verify specific formulation.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polymer. Not biodegradable.' },
+      additionalNotes: [
+        'Generally considered safe with good ventilation',
+        'Less odor than many flexible materials',
+        'Skin-safe for most formulations',
+      ],
+    },
+  },
+
+  'PEBA': {
+    name: 'PEBA',
+    fullName: 'Polyether Block Amide',
+    origin: {
+      yearInvented: '1981',
+      originalCompany: 'Arkema (originally Elf Atochem)',
+      keyMilestones: [
+        '1981: Arkema commercializes Pebax brand PEBA',
+        '1990s: Sports and medical industry adoption',
+        '2000s: High-performance footwear applications',
+        '2019: Nike Vaporfly controversy brings PEBA to public attention',
+        '2020+: PEBA filaments available for 3D printing',
+      ],
+      majorManufacturers: ['Arkema (Pebax)', 'Evonik (Vestamid E)', 'BASF', 'Lubrizol'],
+    },
+    composition: {
+      basePolymer: 'Polyamide-polyether block copolymer',
+      chemicalFamily: 'Polyether Block Amide Elastomer',
+      keyAdditives: ['Antioxidants', 'UV stabilizers', 'Processing aids'],
+      coloringAgents: 'Available in natural (translucent) and various colors',
+      specialFillers: ['Generally unfilled for maximum energy return'],
+    },
+    familyContext: {
+      parentPolymer: 'Nylon (polyamide) backbone with polyether soft segments',
+      variants: ['Pebax (Arkema brand)', 'Vestamid E (Evonik)', 'Different hardness grades'],
+      chemicalComparison: 'Combines nylon toughness with elastomer flexibility. Superior energy return compared to TPU.',
+      evolution: 'From specialty industrial applications to revolutionary athletic footwear component.',
+    },
+    strengths: {
+      uniqueProperties: ['Exceptional energy return (>90%)', 'Very low density (lightest engineering elastomer)', 'Excellent low-temperature flexibility', 'Fatigue resistant', 'Good chemical resistance'],
+      bestUseScenarios: ['Athletic footwear midsoles', 'Sports equipment', 'Energy-absorbing applications', 'Low-temperature flexible parts'],
+      advantagesOverCompetitors: ['Best energy return of any TPE', 'Lightest flexible engineering polymer', 'Maintains properties at -40°C', 'Superior resilience'],
+      whyChooseThis: 'When you need maximum energy return, lightweight flexibility, or low-temperature performance that no other material matches.',
+    },
+    weaknesses: {
+      limitations: ['Very expensive', 'Limited filament availability', 'Requires dry storage', 'Difficult to print'],
+      commonProblems: ['Moisture absorption affects print quality', 'Stringing common', 'Limited supplier options', 'High cost per kg'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable', 'Complex polymer challenging to recycle'],
+      whenNotToUse: ['Budget-constrained projects', 'Applications where TPU suffices', 'Printers without direct drive'],
+    },
+    practicalContext: {
+      industryAdoption: ['Athletic footwear', 'Sports equipment', 'Medical devices', 'Aerospace', 'Automotive'],
+      commonApplications: ['Running shoe midsoles', 'Ski boots', 'Prosthetics', 'Protective gear', 'Shock absorbers'],
+      safetyStandards: ['Medical grades available', 'Skin contact certified grades'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'Nike Vaporfly and Alphafly shoes use Pebax foam (ZoomX) - sparked controversy about unfair advantage',
+        'PEBA returns over 90% of energy while TPU typically returns 60-70%',
+        'It\'s called a "super foam" in athletic footwear and can shave minutes off marathon times',
+        'PEBA is also used in hockey puck-resistant glass panel gaskets due to low-temp flexibility',
+        'Arkema\'s Pebax is the dominant brand, almost synonymous with the polymer itself',
+      ],
+      whyInvented: 'Created to combine nylon\'s strength with rubber\'s flexibility for demanding industrial and medical applications.',
+      controversies: [
+        'Nike Vaporfly shoes sparked debate about whether PEBA provides unfair racing advantage',
+        'World Athletics considered banning certain stack heights and foam combinations',
+        'Called "technological doping" by some running purists',
+      ],
+      marketAdoption: 'Extremely limited in 3D printing due to cost and difficulty. Dominated by athletic footwear industry.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Shore Hardness', value: '25D-72D', unit: '', implications: 'Wide range available. Footwear typically uses softer grades (25-40D).' },
+        { name: 'Density', value: '1.00-1.02', unit: 'g/cm³', implications: 'Lightest engineering elastomer. Even lighter than water.' },
+        { name: 'Tensile Strength', value: '30-60', unit: 'MPa', implications: 'Excellent strength for an elastomer.' },
+        { name: 'Elongation at Break', value: '400-600', unit: '%', implications: 'High elasticity with excellent recovery.' },
+        { name: 'Energy Return', value: '>90', unit: '%', implications: 'Exceptional - returns stored energy extremely efficiently. Key differentiator.' },
+        { name: 'Low-Temp Flexibility', value: '-40', unit: '°C', implications: 'Remains flexible at extremely low temperatures. Better than TPU.' },
+        { name: 'Compression Set', value: '<15', unit: '%', implications: 'Excellent - maintains shape after repeated compression.' },
+      ],
+      notes: 'Outstanding energy return and low density are the defining characteristics. Significantly outperforms TPU in these metrics.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 220, max: 260, optimal: 240 },
+      bedTemp: { min: 60, max: 90, optimal: 75 },
+      coolingFan: { min: 20, max: 60, notes: 'Moderate cooling. Balance between stringing control and layer adhesion.' },
+      enclosure: { required: false, notes: 'Not required but helpful for temperature stability and reducing moisture pickup during long prints.' },
+      drying: { temp: 70, duration: '6-8 hours', notes: 'PEBA absorbs moisture like nylon. Dry thoroughly and consider printing from a dry box.' },
+      printSpeed: { recommended: '15-30 mm/s', notes: 'Slow printing required. Direct drive extruder essential.' },
+      additionalNotes: [
+        'DIRECT DRIVE EXTRUDER ESSENTIAL - cannot print with Bowden',
+        'Constrained filament path critical to prevent buckling',
+        'Minimal retraction (0.5-2mm) with slower retraction speed',
+        'Print from dry box if possible - very moisture sensitive',
+        'Expect extensive tuning required for good results',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Glass with glue stick', 'PEI (textured) with light glue'],
+        good: ['Blue tape', 'BuildTak'],
+        poor: ['Smooth PEI (may adhere too strongly)'],
+      },
+      releaseAgents: 'Glue stick serves as both adhesion promoter and release aid.',
+      multiMaterial: [
+        { material: 'Nylon', bondQuality: 'Strong Chemical Bond', notes: 'Polyamide backbone provides excellent adhesion to nylon materials.' },
+        { material: 'TPU', bondQuality: 'Mechanical Bond', notes: 'Some adhesion possible for flexible combinations.' },
+        { material: 'PLA', bondQuality: 'Weak Bond', notes: 'Limited compatibility between these materials.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Chemical', effectiveness: 'Difficult', notes: 'Resistant to common solvents. Chemical smoothing not practical.' },
+      ],
+      mechanical: ['Difficult to sand (elastic recovery)', 'Can trim with sharp tools', 'Heat welding possible'],
+      glues: ['Cyanoacrylate with activator', 'Contact adhesive', 'Two-part epoxy for structural bonds'],
+      painting: 'Challenging due to flexibility. Flexible paints or specialty elastomer coatings required.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Similar to nylon. Good ventilation recommended.' },
+      foodSafety: { rating: 'Some Grades', notes: 'Medical-grade PEBA available. Specific certification required.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based engineering polymer. Not biodegradable.' },
+      additionalNotes: [
+        'Generally safe with good ventilation',
+        'Medical grades are biocompatible and used in implantable devices',
+        'Skin-safe for most applications',
+      ],
+    },
+  },
+
   'Breakaway': {
     name: 'Breakaway',
     fullName: 'Breakaway Support Material',
