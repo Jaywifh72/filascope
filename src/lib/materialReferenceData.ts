@@ -5893,6 +5893,121 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'Silk PLA+': {
+    name: 'Silk PLA+',
+    fullName: 'Silk Finish Enhanced Polylactic Acid',
+    origin: {
+      yearInvented: '2019-2020',
+      originalCompany: 'Multiple manufacturers (TTYT3D, Eryone, Sunlu)',
+      keyMilestones: [
+        '2017-2018: Original Silk PLA introduced',
+        '2019: Manufacturers combine silk finish with PLA+ toughening',
+        '2020: Silk PLA+ becomes distinct product category',
+        '2022+: Wide color ranges and dual-color silk variants',
+      ],
+      majorManufacturers: ['TTYT3D', 'Eryone', 'Sunlu', 'Overture', 'eSUN', 'Geeetech', 'MIKA3D'],
+    },
+    composition: {
+      basePolymer: 'Modified Polylactic Acid',
+      chemicalFamily: 'Aliphatic Polyester (Enhanced with Silk Additives)',
+      keyAdditives: ['Silk-effect pearlescent pigments', 'Impact modifiers', 'Flow enhancers', 'Plasticizers'],
+      coloringAgents: 'Pearlescent and interference pigments for silk sheen effect',
+      specialFillers: ['Mica particles', 'Pearl effect compounds', 'Toughening agents'],
+    },
+    familyContext: {
+      parentPolymer: 'PLA+ base with silk finish additives',
+      variants: ['Silk PLA+', 'Silk PLA Pro', 'Dual-Color Silk', 'Rainbow Silk PLA+'],
+      chemicalComparison: 'Combines PLA+ toughening technology with silk-finish pearlescent additives for both improved properties and aesthetics.',
+      evolution: 'Natural combination of two popular PLA modifications - silk finish for looks and plus formulation for durability.',
+    },
+    strengths: {
+      uniqueProperties: ['Beautiful silk/satin finish', 'Improved toughness over standard Silk PLA', 'Hides layer lines effectively', 'Vibrant, eye-catching colors'],
+      bestUseScenarios: ['Decorative prints', 'Vases and containers', 'Display models', 'Gifts', 'Art pieces', 'Parts that need both looks and durability'],
+      advantagesOverCompetitors: ['Better toughness than regular Silk PLA', 'More attractive than standard PLA+', 'Excellent layer line hiding', 'Premium appearance'],
+      whyChooseThis: 'When you want the beautiful silk finish AND improved toughness - best of both worlds for decorative functional parts.',
+    },
+    weaknesses: {
+      limitations: ['Same heat resistance as standard PLA', 'Silk effect can show scratches', 'Higher cost than plain PLA+', 'Surface finish affected by print settings'],
+      commonProblems: ['Stringing more common than standard PLA', 'Optimal settings needed for best silk effect', 'Flow rate sensitive'],
+      environmentalConcerns: ['Pearlescent additives may affect compostability', 'Same disposal considerations as PLA+'],
+      whenNotToUse: ['High-temperature applications', 'Parts requiring painting', 'When matte finish needed', 'Maximum strength requirements'],
+    },
+    practicalContext: {
+      industryAdoption: ['Hobbyist printing', 'Gift making', 'Art and design', 'Home decor'],
+      commonApplications: ['Vases', 'Decorative items', 'Jewelry', 'Display models', 'Planters', 'Gift items', 'Art sculptures'],
+      safetyStandards: ['Generally same as PLA', 'Not food safe due to additives'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'The silk effect comes from flat particles that align during extrusion, reflecting light uniformly',
+        'Silk PLA+ is one of the best materials for hiding layer lines',
+        'The sheen is most visible on curved surfaces and gradual angles',
+        'Dual-color silk variants create color-shifting effects as the print rotates',
+      ],
+      whyInvented: 'To combine the aesthetic appeal of silk PLA with the improved durability of PLA+ formulations.',
+      controversies: [
+        'Some "Silk PLA+" products are just regular Silk PLA with marketing',
+        'Toughness improvements vary significantly between brands',
+        'Debate over whether the "+" adds meaningful strength',
+      ],
+      marketAdoption: 'Very popular for decorative printing where both appearance and durability matter.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '48-58', unit: 'MPa', implications: 'Slightly below plain PLA+ due to silk additives.' },
+        { name: 'Impact Strength', value: '4-8', unit: 'kJ/m²', implications: 'Better than standard Silk PLA, slightly less than plain PLA+.' },
+        { name: 'Elongation at Break', value: '6-12', unit: '%', implications: 'Improved flexibility over standard PLA.' },
+        { name: 'Glass Transition', value: '55-60', unit: '°C', implications: 'Same heat limitations as standard PLA.' },
+        { name: 'Surface Gloss', value: 'High Satin', unit: '', implications: 'Characteristic silk sheen appearance.' },
+      ],
+      notes: 'Properties combine PLA+ toughness with silk aesthetics. Actual values depend on brand.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 205, max: 235, optimal: 220 },
+      bedTemp: { min: 50, max: 70, optimal: 60 },
+      coolingFan: { min: 30, max: 80, notes: 'Moderate cooling. Too much cooling can dull the silk effect.' },
+      enclosure: { required: false, notes: 'Not required.' },
+      drying: { temp: 50, duration: '4 hours', notes: 'Dry if stringing occurs.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Moderate speeds for best silk finish. Slower = better sheen.' },
+      additionalNotes: [
+        'Slightly higher temps than standard PLA for best flow and silk effect',
+        'Reduce retraction to minimize stringing',
+        'Slower outer walls improve silk appearance',
+        'Vase mode produces stunning results',
+        'Layer height 0.2mm or less for best finish',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI', 'Glass with adhesive', 'BuildTak'],
+        good: ['Blue tape', 'Textured PEI'],
+        poor: ['Bare glass', 'Polypropylene'],
+      },
+      releaseAgents: 'Standard PLA methods. Glue stick if needed.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Good compatibility.' },
+        { material: 'PLA+', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility.' },
+        { material: 'PVA', bondQuality: 'Mechanical Bond', notes: 'Works for supports.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [{ method: 'Not recommended', effectiveness: 'Not Possible', notes: 'Would damage silk finish.' }],
+      mechanical: ['Very light sanding only', 'Polishing can enhance shine', 'Avoid heavy abrasion'],
+      painting: 'Generally not painted - defeats purpose. Clear coat can protect and enhance.',
+      glues: ['CA glue', 'Epoxy', 'Hot glue'],
+    },
+    safety: {
+      fumes: { level: 'Very Low', notes: 'Same as standard PLA.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Silk additives not food safe.' },
+      biodegradability: { rating: 'Partially Compostable', notes: 'PLA base compostable, additives may affect this.' },
+      additionalNotes: [
+        'Safe for normal printing and handling',
+        'Not for food contact applications',
+      ],
+    },
+  },
+
   'PVC': {
     name: 'PVC',
     fullName: 'Polyvinyl Chloride',
