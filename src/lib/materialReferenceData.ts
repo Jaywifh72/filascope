@@ -1,5 +1,12 @@
 // Comprehensive material reference data for the encyclopedia
 
+export interface TDSProperty {
+  name: string;
+  value: string;
+  unit?: string;
+  implications?: string;
+}
+
 export interface MaterialReferenceInfo {
   name: string;
   fullName: string;
@@ -59,6 +66,58 @@ export interface MaterialReferenceInfo {
     whyInvented?: string;
     controversies?: string[];
     marketAdoption?: string;
+  };
+  
+  // Technical Data Sheet Profile
+  tdsProfile?: {
+    properties: TDSProperty[];
+    notes?: string;
+  };
+  
+  // Operational Rheology (Print Settings)
+  printSettings?: {
+    nozzleTemp?: { min: number; max: number; optimal?: number };
+    bedTemp?: { min: number; max: number; optimal?: number };
+    coolingFan?: { min: number; max: number; notes?: string };
+    enclosure?: { required: boolean; notes?: string };
+    drying?: { temp?: number; duration?: string; notes?: string };
+    printSpeed?: { recommended?: string; notes?: string };
+    additionalNotes?: string[];
+  };
+  
+  // Adhesion & Multi-Material Compatibility
+  adhesion?: {
+    bedSurfaces?: {
+      excellent?: string[];
+      good?: string[];
+      poor?: string[];
+    };
+    releaseAgents?: string;
+    multiMaterial?: {
+      material: string;
+      bondQuality: 'Strong Chemical Bond' | 'Mechanical Bond' | 'Weak Bond' | 'No Bond';
+      notes?: string;
+    }[];
+  };
+  
+  // Post-Processing
+  postProcessing?: {
+    chemicalSmoothing?: {
+      method: string;
+      effectiveness: 'Excellent' | 'Good' | 'Difficult' | 'Not Possible';
+      notes?: string;
+    }[];
+    mechanical?: string[];
+    glues?: string[];
+    painting?: string;
+  };
+  
+  // Safety & Sustainability
+  safety?: {
+    fumes?: { level: 'Very Low' | 'Low' | 'Moderate' | 'High'; notes?: string };
+    foodSafety?: { rating: string; notes?: string };
+    biodegradability?: { rating: string; notes?: string };
+    additionalNotes?: string[];
   };
 }
 
@@ -123,6 +182,64 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
       ],
       marketAdoption: 'Instant success in 3D printing - became dominant within 2 years of widespread FDM printer availability.',
     },
+    // Technical Data Sheet Profile
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-65', unit: 'MPa', implications: 'High. Stronger than ABS in pure tension, but fails catastrophically (snaps) rather than stretching.' },
+        { name: 'Elongation at Break', value: '4-6', unit: '%', implications: 'Very Low. Extremely brittle. Not suitable for snap-fits or parts undergoing repetitive bending.' },
+        { name: "Young's Modulus", value: '2300-3500', unit: 'MPa', implications: 'High Stiffness. Very rigid; resists bending well until the breaking point.' },
+        { name: 'Impact Strength (Notched)', value: '~26', unit: 'kJ/m²', implications: 'Low. Drops easily shatter it. "Tough PLA" or "PLA+" significantly improves this.' },
+        { name: 'Glass Transition (Tg)', value: '55-60', unit: '°C', implications: 'Critical Weakness. Parts will soften and deform in a hot car or dishwasher.' },
+        { name: 'Heat Deflection (HDT)', value: '~55', unit: '°C (0.45 MPa)', implications: 'Service temperature limit. Annealing can raise this to ~80°C but causes shrinkage.' },
+      ],
+      notes: 'Typical values for standard PLA printed flat (XY orientation).',
+    },
+    // Print Settings
+    printSettings: {
+      nozzleTemp: { min: 190, max: 220 },
+      bedTemp: { min: 35, max: 60, optimal: 50 },
+      coolingFan: { min: 100, max: 100, notes: 'PLA remains viscous for a long time; rapid cooling is required to lock in fine details and bridges.' },
+      enclosure: { required: false, notes: 'Open Air. An enclosure is detrimental; trapped heat causes the filament to soften in the "cold end" of the extruder, leading to jams (Heat Creep).' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Hygroscopic. If stringing occurs, dry at 40°C – 50°C for 4–6 hours.' },
+      printSpeed: { recommended: '40-100 mm/s', notes: 'Can print on a cold bed with proper adhesion aids (glue/tape).' },
+    },
+    // Adhesion & Multi-Material
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'PEI (Textured)', 'Glass', 'Blue Tape'],
+        good: ['BuildTak', 'Garolite'],
+        poor: ['Bare Aluminum'],
+      },
+      releaseAgents: 'Generally not needed for Textured PEI. Glue stick recommended for Smooth PEI or Glass to aid release.',
+      multiMaterial: [
+        { material: 'TPU', bondQuality: 'Strong Chemical Bond', notes: 'Ideal for rigid parts with soft-touch grips or tires.' },
+        { material: 'PETG', bondQuality: 'No Bond', notes: 'They repel each other. Use PLA as a "0-distance" interface support for PETG prints to achieve perfect overhangs (and vice-versa).' },
+        { material: 'PVA', bondQuality: 'Strong Chemical Bond', notes: 'PVA is the standard water-soluble support material for PLA.' },
+        { material: 'HIPS', bondQuality: 'No Bond', notes: 'No adhesion between these materials.' },
+      ],
+    },
+    // Post-Processing
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on PLA.' },
+        { method: 'THF (Tetrahydrofuran)', effectiveness: 'Good', notes: 'Effective but highly toxic and difficult to handle. Not recommended for home users.' },
+        { method: 'Ethyl Acetate', effectiveness: 'Good', notes: 'Works but requires careful handling and ventilation.' },
+      ],
+      mechanical: ['Sands easily with 200-400 grit', 'Can be primed and painted with acrylics', 'Heat gun can smooth surfaces (carefully)'],
+      glues: ['Cyanoacrylate (Super Glue) works instantly', 'Epoxy is excellent for structural bonding', 'PLA-specific welding with friction or hot air'],
+      painting: 'Accepts acrylic and enamel paints well. Priming recommended for best adhesion.',
+    },
+    // Safety & Sustainability
+    safety: {
+      fumes: { level: 'Low', notes: 'Emits lactides (sweet smell). Considered safe for home/classroom use, though good ventilation is always recommended to remove Ultrafine Particles (UFPs).' },
+      foodSafety: { rating: 'Technical, but not Practical', notes: 'Pure PLA is FDA GRAS (Generally Recognized As Safe). However, FDM printed parts have layer lines that trap bacteria (Salmonella/E. coli) which cannot be cleaned. Brass nozzles also leach lead. Verdict: Use only for single-use items or seal with food-grade epoxy.' },
+      biodegradability: { rating: 'Industrial Only', notes: 'PLA does not decompose in nature or home compost bins. It requires an industrial facility with sustained temperatures >60°C and specific microbial activity to break down. In a landfill, it persists for decades like regular plastic.' },
+      additionalNotes: [
+        'Considered one of the safest materials to print',
+        'No styrene emissions (unlike ABS)',
+        'Low ultrafine particle emission compared to ABS',
+      ],
+    },
   },
 
   'PETG': {
@@ -182,6 +299,52 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
         'Often sticks to PEI beds so well it damages the surface',
       ],
       marketAdoption: 'Gradual adoption from 2015, became mainstream by 2018 as the "step up from PLA" material.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '45-55', unit: 'MPa', implications: 'Moderate. Good balance of strength and flexibility.' },
+        { name: 'Elongation at Break', value: '100-200', unit: '%', implications: 'High. Much more ductile than PLA, will stretch before breaking.' },
+        { name: "Young's Modulus", value: '1800-2100', unit: 'MPa', implications: 'Moderate stiffness. More flexible than PLA but still reasonably rigid.' },
+        { name: 'Impact Strength (Notched)', value: '70-80', unit: 'kJ/m²', implications: 'High. Significantly better impact resistance than PLA.' },
+        { name: 'Glass Transition (Tg)', value: '75-80', unit: '°C', implications: 'Better than PLA. Survives warmer environments but not extreme heat.' },
+        { name: 'Heat Deflection (HDT)', value: '~70', unit: '°C (0.45 MPa)', implications: 'Moderate heat resistance. Safe for most indoor applications.' },
+      ],
+      notes: 'Typical values for standard PETG printed flat (XY orientation).',
+    },
+    printSettings: {
+      nozzleTemp: { min: 220, max: 250, optimal: 235 },
+      bedTemp: { min: 70, max: 85, optimal: 80 },
+      coolingFan: { min: 30, max: 70, notes: 'Some cooling needed but less than PLA. Too much causes layer adhesion issues.' },
+      enclosure: { required: false, notes: 'Not required but can help with large parts to reduce warping.' },
+      drying: { temp: 65, duration: '4-6 hours', notes: 'More hygroscopic than PLA. Dry if stringing or bubbling occurs.' },
+      printSpeed: { recommended: '40-80 mm/s', notes: 'Slower than PLA for best results. Prone to stringing at high speeds.' },
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Glass with glue', 'BuildTak'],
+        good: ['Blue Tape', 'PEI (Smooth) with release agent'],
+        poor: ['Bare PEI (sticks TOO well, can damage surface)'],
+      },
+      releaseAgents: 'CRITICAL for smooth PEI. Use glue stick or Windex as release agent to prevent bed damage.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'No Bond', notes: 'They repel each other. Use as interface support material.' },
+        { material: 'TPU', bondQuality: 'Weak Bond', notes: 'Possible but not recommended for structural use.' },
+        { material: 'PVA', bondQuality: 'Weak Bond', notes: 'Better compatibility than with PLA but still not ideal.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on PETG.' },
+        { method: 'Dichloromethane', effectiveness: 'Good', notes: 'Works but extremely toxic. Professional use only.' },
+      ],
+      mechanical: ['Sands well but softens with friction heat', 'Scratches easily - handle with care', 'Can be polished with fine grits'],
+      glues: ['Cyanoacrylate (Super Glue) works well', 'Epoxy excellent for structural bonds', 'Solvent welding possible with MEK'],
+      painting: 'Accepts paints well after light sanding. Primer recommended for best adhesion.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Lower emissions than ABS. Generally safe with basic ventilation.' },
+      foodSafety: { rating: 'Possible with Certification', notes: 'FDA approved grades exist. Same bacteria concerns as PLA apply. Use food-safe grades and new stainless steel nozzles.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based plastic. Should be recycled through proper channels if available.' },
     },
   },
 
@@ -246,6 +409,59 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
       ],
       marketAdoption: 'Was THE 3D printing material in the early days (2009-2015), now declining in favor of easier alternatives.',
     },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '40-50', unit: 'MPa', implications: 'Good. Slightly lower than PLA but much more impact resistant.' },
+        { name: 'Elongation at Break', value: '10-25', unit: '%', implications: 'Moderate. Will deform before breaking, unlike brittle PLA.' },
+        { name: "Young's Modulus", value: '2000-2600', unit: 'MPa', implications: 'Good stiffness. Similar to PLA but with better toughness.' },
+        { name: 'Impact Strength (Notched)', value: '200-300', unit: 'J/m', implications: 'Excellent. This is ABS\'s main advantage - very tough material.' },
+        { name: 'Glass Transition (Tg)', value: '100-105', unit: '°C', implications: 'High. Can survive hot environments like car interiors.' },
+        { name: 'Heat Deflection (HDT)', value: '~95', unit: '°C (0.45 MPa)', implications: 'Good heat resistance. Suitable for functional parts near heat sources.' },
+      ],
+      notes: 'Typical values for standard ABS printed in enclosed chamber.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 230, max: 260, optimal: 245 },
+      bedTemp: { min: 90, max: 110, optimal: 100 },
+      coolingFan: { min: 0, max: 30, notes: 'Minimal cooling. Too much fan causes warping and layer splitting.' },
+      enclosure: { required: true, notes: 'REQUIRED. Without enclosure, warping and layer splitting are almost guaranteed. Chamber temp 45-60°C ideal.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'Hygroscopic. Moisture causes bubbling, poor surface finish, and weak layer adhesion.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Moderate speeds. First layer should be very slow (20 mm/s).' },
+      additionalNotes: ['Use brim for bed adhesion', 'Avoid drafts - even small air currents cause warping', 'Let parts cool slowly in enclosure'],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['ABS Slurry (ABS dissolved in acetone)', 'Garolite (G10/FR4)', 'PEI (Textured)'],
+        good: ['Kapton Tape with glue', 'Glass with ABS juice'],
+        poor: ['Bare glass', 'Blue tape (at high temps)'],
+      },
+      releaseAgents: 'ABS slurry or glue stick recommended. Parts may stick too well - let bed cool completely before removal.',
+      multiMaterial: [
+        { material: 'ASA', bondQuality: 'Strong Chemical Bond', notes: 'Similar chemistry, excellent adhesion between materials.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'HIPS is the standard dissolvable support for ABS (limonene soluble).' },
+        { material: 'TPU', bondQuality: 'Mechanical Bond', notes: 'Reasonable adhesion for functional parts.' },
+        { material: 'PLA', bondQuality: 'No Bond', notes: 'No adhesion between these materials.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Excellent', notes: 'The signature ABS post-processing method. Creates glass-like finish.' },
+        { method: 'Acetone Brush/Dip', effectiveness: 'Good', notes: 'Faster than vapor but less uniform. Good for quick smoothing.' },
+      ],
+      mechanical: ['Sands easily', 'Can be machined (drilling, tapping)', 'Excellent for gap filling with ABS slurry'],
+      glues: ['Acetone chemically welds ABS to itself', 'Cyanoacrylate works well', 'ABS cement (acetone + dissolved ABS) creates invisible joints'],
+      painting: 'Excellent paint adhesion. The acetone smoothing process creates ideal surface for painting.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Emits styrene and other VOCs. REQUIRES good ventilation or enclosure with filtration. Not recommended for classrooms or bedrooms.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Styrene is a concern. While FDA grades exist, not recommended for food contact in printed form.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based. Theoretically recyclable but infrastructure is limited.' },
+      additionalNotes: [
+        'Styrene is classified as "possibly carcinogenic" by IARC',
+        'Use activated carbon filtration if printing in enclosed spaces',
+        'Consider ASA as safer alternative with similar properties',
+      ],
+    },
   },
 
   'ASA': {
@@ -304,6 +520,51 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
         'Premium pricing sometimes isn\'t justified for indoor applications',
       ],
       marketAdoption: 'Slow adoption initially due to price, but now considered essential for any outdoor application.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '42-50', unit: 'MPa', implications: 'Similar to ABS. Good all-around strength.' },
+        { name: 'Elongation at Break', value: '15-35', unit: '%', implications: 'Good ductility. Will deform before catastrophic failure.' },
+        { name: "Young's Modulus", value: '2000-2400', unit: 'MPa', implications: 'Similar stiffness to ABS. Rigid but not brittle.' },
+        { name: 'Impact Strength (Notched)', value: '150-250', unit: 'J/m', implications: 'Excellent impact resistance, comparable to ABS.' },
+        { name: 'Glass Transition (Tg)', value: '95-105', unit: '°C', implications: 'High heat resistance. Similar to ABS.' },
+        { name: 'UV Resistance', value: 'Excellent', unit: '', implications: 'The main advantage over ABS. 10x better UV stability.' },
+      ],
+      notes: 'Typical values for standard ASA. UV resistance is the key differentiator from ABS.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 235, max: 260, optimal: 250 },
+      bedTemp: { min: 90, max: 110, optimal: 100 },
+      coolingFan: { min: 0, max: 30, notes: 'Similar to ABS. Minimal cooling to prevent warping.' },
+      enclosure: { required: true, notes: 'Required like ABS. Chamber temp 45-55°C recommended.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'Hygroscopic. Dry before printing for best results.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Similar to ABS. Use slow first layer.' },
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite (G10)', 'Glass with ASA slurry'],
+        good: ['Kapton with glue', 'PEI (Smooth)'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'Glue stick or ASA slurry recommended for consistent adhesion.',
+      multiMaterial: [
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Similar chemistry, bonds well.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'Can use HIPS as dissolvable support.' },
+        { material: 'TPU', bondQuality: 'Mechanical Bond', notes: 'Reasonable adhesion for grips.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Excellent', notes: 'Works just like ABS. Creates smooth, UV-resistant finish.' },
+      ],
+      mechanical: ['Sands easily', 'Can be machined', 'Excellent for gap filling'],
+      glues: ['Acetone welding works', 'Cyanoacrylate effective', 'Epoxy for structural joints'],
+      painting: 'Excellent paint adhesion. UV-stable paints recommended for outdoor use.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Similar to ABS. Produces styrene fumes. Good ventilation or filtration required.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Not suitable for food contact applications.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polymer.' },
     },
   },
 

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
   Search, 
   Beaker, 
@@ -21,7 +22,16 @@ import {
   Calendar,
   Users,
   Atom,
-  Layers
+  Layers,
+  FileSpreadsheet,
+  Settings2,
+  Link2,
+  Paintbrush,
+  Shield,
+  Thermometer,
+  Wind,
+  Droplets,
+  Leaf
 } from "lucide-react";
 import { MATERIAL_CATEGORIES, MATERIAL_INFO, getMaterialInfo } from "@/lib/materialHierarchy";
 import { getMaterialReference, MATERIAL_REFERENCE_DATA, type MaterialReferenceInfo } from "@/lib/materialReferenceData";
@@ -393,6 +403,362 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
             )}
           </AccordionContent>
         </AccordionItem>
+
+        {/* Technical Data Sheet Profile */}
+        {reference.tdsProfile && (
+          <AccordionItem value="tds" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5 text-cyan-500" />
+                <span className="font-semibold">Technical Data Sheet Profile</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 space-y-4">
+              {reference.tdsProfile.notes && (
+                <p className="text-xs text-muted-foreground italic">{reference.tdsProfile.notes}</p>
+              )}
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[180px]">Property</TableHead>
+                      <TableHead className="w-[120px]">Value</TableHead>
+                      <TableHead>Implications</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reference.tdsProfile.properties.map((prop, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium">{prop.name}</TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {prop.value} {prop.unit && <span className="text-muted-foreground">{prop.unit}</span>}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{prop.implications}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* Print Settings */}
+        {reference.printSettings && (
+          <AccordionItem value="printSettings" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <Settings2 className="w-5 h-5 text-indigo-500" />
+                <span className="font-semibold">Operational Rheology (Print Settings)</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {reference.printSettings.nozzleTemp && (
+                  <div className="flex items-start gap-2 bg-muted/30 rounded-lg p-3">
+                    <Thermometer className="w-4 h-4 text-red-500 mt-0.5" />
+                    <div>
+                      <span className="text-xs text-muted-foreground">Nozzle Temperature</span>
+                      <p className="text-sm font-mono font-medium">
+                        {reference.printSettings.nozzleTemp.min}°C – {reference.printSettings.nozzleTemp.max}°C
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {reference.printSettings.bedTemp && (
+                  <div className="flex items-start gap-2 bg-muted/30 rounded-lg p-3">
+                    <Thermometer className="w-4 h-4 text-orange-500 mt-0.5" />
+                    <div>
+                      <span className="text-xs text-muted-foreground">Bed Temperature</span>
+                      <p className="text-sm font-mono font-medium">
+                        {reference.printSettings.bedTemp.min}°C – {reference.printSettings.bedTemp.max}°C
+                        {reference.printSettings.bedTemp.optimal && <span className="text-muted-foreground ml-1">(optimal: {reference.printSettings.bedTemp.optimal}°C)</span>}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {reference.printSettings.coolingFan && (
+                <div className="flex items-start gap-2">
+                  <Wind className="w-4 h-4 text-blue-400 mt-0.5" />
+                  <div>
+                    <span className="text-sm font-medium">Cooling Fan: {reference.printSettings.coolingFan.min}-{reference.printSettings.coolingFan.max}%</span>
+                    {reference.printSettings.coolingFan.notes && (
+                      <p className="text-sm text-muted-foreground">{reference.printSettings.coolingFan.notes}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {reference.printSettings.enclosure && (
+                <div className="flex items-start gap-2">
+                  <div className={cn(
+                    "w-4 h-4 rounded-full mt-0.5 flex items-center justify-center text-[10px] font-bold",
+                    reference.printSettings.enclosure.required ? "bg-amber-500 text-amber-950" : "bg-green-500 text-green-950"
+                  )}>
+                    {reference.printSettings.enclosure.required ? '!' : '✓'}
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">Enclosure: {reference.printSettings.enclosure.required ? 'Required' : 'Not Required'}</span>
+                    {reference.printSettings.enclosure.notes && (
+                      <p className="text-sm text-muted-foreground">{reference.printSettings.enclosure.notes}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {reference.printSettings.drying && (
+                <div className="flex items-start gap-2">
+                  <Droplets className="w-4 h-4 text-sky-400 mt-0.5" />
+                  <div>
+                    <span className="text-sm font-medium">
+                      Drying: {reference.printSettings.drying.temp}°C for {reference.printSettings.drying.duration}
+                    </span>
+                    {reference.printSettings.drying.notes && (
+                      <p className="text-sm text-muted-foreground">{reference.printSettings.drying.notes}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {reference.printSettings.additionalNotes && reference.printSettings.additionalNotes.length > 0 && (
+                <div className="mt-2">
+                  <InfoList items={reference.printSettings.additionalNotes} />
+                </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* Adhesion & Multi-Material Compatibility */}
+        {reference.adhesion && (
+          <AccordionItem value="adhesion" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <Link2 className="w-5 h-5 text-teal-500" />
+                <span className="font-semibold">Adhesion & Multi-Material Compatibility</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 space-y-4">
+              {reference.adhesion.bedSurfaces && (
+                <div>
+                  <h5 className="text-sm font-medium mb-3">Bed Surface Compatibility</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {reference.adhesion.bedSurfaces.excellent && reference.adhesion.bedSurfaces.excellent.length > 0 && (
+                      <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                        <span className="text-xs font-semibold text-green-600 uppercase">Excellent</span>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {reference.adhesion.bedSurfaces.excellent.map((s, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {reference.adhesion.bedSurfaces.good && reference.adhesion.bedSurfaces.good.length > 0 && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                        <span className="text-xs font-semibold text-amber-600 uppercase">Good</span>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {reference.adhesion.bedSurfaces.good.map((s, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {reference.adhesion.bedSurfaces.poor && reference.adhesion.bedSurfaces.poor.length > 0 && (
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                        <span className="text-xs font-semibold text-red-600 uppercase">Poor</span>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {reference.adhesion.bedSurfaces.poor.map((s, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {reference.adhesion.releaseAgents && (
+                <div>
+                  <h5 className="text-sm font-medium mb-1">Release Agents</h5>
+                  <p className="text-sm text-muted-foreground">{reference.adhesion.releaseAgents}</p>
+                </div>
+              )}
+
+              {reference.adhesion.multiMaterial && reference.adhesion.multiMaterial.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium mb-3">Multi-Material Bonding</h5>
+                  <div className="space-y-2">
+                    {reference.adhesion.multiMaterial.map((mm, i) => (
+                      <div key={i} className="flex items-start gap-3 bg-muted/30 rounded-lg p-3">
+                        <Badge 
+                          variant={
+                            mm.bondQuality === 'Strong Chemical Bond' ? 'default' :
+                            mm.bondQuality === 'Mechanical Bond' ? 'secondary' :
+                            mm.bondQuality === 'Weak Bond' ? 'outline' :
+                            'destructive'
+                          }
+                          className="text-xs shrink-0"
+                        >
+                          {mm.material}
+                        </Badge>
+                        <div>
+                          <span className={cn(
+                            "text-sm font-medium",
+                            mm.bondQuality === 'Strong Chemical Bond' && "text-green-600",
+                            mm.bondQuality === 'No Bond' && "text-red-500"
+                          )}>
+                            {mm.bondQuality}
+                          </span>
+                          {mm.notes && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{mm.notes}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* Post-Processing */}
+        {reference.postProcessing && (
+          <AccordionItem value="postProcessing" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <Paintbrush className="w-5 h-5 text-pink-500" />
+                <span className="font-semibold">Post-Processing</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 space-y-4">
+              {reference.postProcessing.chemicalSmoothing && reference.postProcessing.chemicalSmoothing.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium mb-2">Chemical Smoothing</h5>
+                  <div className="space-y-2">
+                    {reference.postProcessing.chemicalSmoothing.map((cs, i) => (
+                      <div key={i} className="flex items-start gap-3 text-sm">
+                        <Badge 
+                          variant={
+                            cs.effectiveness === 'Excellent' ? 'default' :
+                            cs.effectiveness === 'Good' ? 'secondary' :
+                            cs.effectiveness === 'Difficult' ? 'outline' :
+                            'destructive'
+                          }
+                          className="text-xs shrink-0 min-w-[70px] justify-center"
+                        >
+                          {cs.effectiveness}
+                        </Badge>
+                        <div>
+                          <span className="font-medium">{cs.method}</span>
+                          {cs.notes && <span className="text-muted-foreground ml-1">- {cs.notes}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {reference.postProcessing.mechanical && reference.postProcessing.mechanical.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium mb-2">Mechanical Processing</h5>
+                  <InfoList items={reference.postProcessing.mechanical} />
+                </div>
+              )}
+
+              {reference.postProcessing.glues && reference.postProcessing.glues.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium mb-2">Glues & Bonding</h5>
+                  <InfoList items={reference.postProcessing.glues} />
+                </div>
+              )}
+
+              {reference.postProcessing.painting && (
+                <div>
+                  <h5 className="text-sm font-medium mb-1">Painting</h5>
+                  <p className="text-sm text-muted-foreground">{reference.postProcessing.painting}</p>
+                </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* Safety & Sustainability */}
+        {reference.safety && (
+          <AccordionItem value="safety" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-emerald-500" />
+                <span className="font-semibold">Safety & Sustainability</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 space-y-4">
+              {reference.safety.fumes && (
+                <div className="flex items-start gap-3 bg-muted/30 rounded-lg p-3">
+                  <Wind className="w-5 h-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Fumes (VOCs):</span>
+                      <Badge variant={
+                        reference.safety.fumes.level === 'Very Low' || reference.safety.fumes.level === 'Low' ? 'default' :
+                        reference.safety.fumes.level === 'Moderate' ? 'secondary' :
+                        'destructive'
+                      } className="text-xs">
+                        {reference.safety.fumes.level}
+                      </Badge>
+                    </div>
+                    {reference.safety.fumes.notes && (
+                      <p className="text-sm text-muted-foreground mt-1">{reference.safety.fumes.notes}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {reference.safety.foodSafety && (
+                <div className="flex items-start gap-3 bg-muted/30 rounded-lg p-3">
+                  <Info className="w-5 h-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Food Safety:</span>
+                      <Badge variant="outline" className="text-xs">
+                        {reference.safety.foodSafety.rating}
+                      </Badge>
+                    </div>
+                    {reference.safety.foodSafety.notes && (
+                      <p className="text-sm text-muted-foreground mt-1">{reference.safety.foodSafety.notes}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {reference.safety.biodegradability && (
+                <div className="flex items-start gap-3 bg-muted/30 rounded-lg p-3">
+                  <Leaf className="w-5 h-5 text-green-500 mt-0.5" />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Biodegradability:</span>
+                      <Badge variant="outline" className="text-xs">
+                        {reference.safety.biodegradability.rating}
+                      </Badge>
+                    </div>
+                    {reference.safety.biodegradability.notes && (
+                      <p className="text-sm text-muted-foreground mt-1">{reference.safety.biodegradability.notes}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {reference.safety.additionalNotes && reference.safety.additionalNotes.length > 0 && (
+                <div className="mt-2">
+                  <h5 className="text-sm font-medium mb-2">Additional Notes</h5>
+                  <InfoList items={reference.safety.additionalNotes} />
+                </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        )}
       </Accordion>
     </div>
   );
