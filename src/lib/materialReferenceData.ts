@@ -4859,6 +4859,118 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'PLA-Temp': {
+    name: 'PLA-Temp',
+    fullName: 'Temperature-Sensitive / Thermochromic Polylactic Acid',
+    origin: {
+      yearInvented: '2015-2016',
+      originalCompany: 'Multiple manufacturers (Amolen, SUNLU, Eryone)',
+      keyMilestones: [
+        '2015: First thermochromic PLA filaments appear',
+        '2016: Color-change temperature ranges expand',
+        '2018: Multiple temperature thresholds available',
+        '2020+: Improved color vibrancy and transition sharpness',
+      ],
+      majorManufacturers: ['Amolen', 'SUNLU', 'Eryone', 'TTYT3D', 'Gizmo Dorks', 'MIKA3D'],
+    },
+    composition: {
+      basePolymer: 'Polylactic Acid',
+      chemicalFamily: 'Polyester (Bio-based) with thermochromic additives',
+      keyAdditives: ['Thermochromic pigments', 'Leuco dyes', 'Temperature-sensitive microcapsules'],
+      coloringAgents: 'Leuco dye systems that change color with temperature',
+      specialFillers: ['Microencapsulated thermochromic compounds'],
+    },
+    familyContext: {
+      parentPolymer: 'PLA with temperature-responsive color-change additives',
+      variants: ['Cold-activated', 'Warm-activated', 'Body-heat responsive', 'Multi-stage color change'],
+      chemicalComparison: 'Standard PLA with leuco dye microcapsules that switch between colored and colorless states.',
+      evolution: 'From novelty to practical applications in temperature indication.',
+    },
+    strengths: {
+      uniqueProperties: ['Changes color with temperature', 'Reversible and repeatable', 'Touch-responsive', 'Temperature indicator', 'Interactive prints'],
+      bestUseScenarios: ['Temperature indicators', 'Interactive toys', 'Hot/cold drink indicators', 'Mood rings/jewelry', 'Educational demonstrations'],
+      advantagesOverCompetitors: ['No electronics needed', 'Instant visual feedback', 'Works indefinitely', 'Fun and functional'],
+      whyChooseThis: 'When you want prints that visually respond to temperature changes.',
+    },
+    weaknesses: {
+      limitations: ['Color options limited', 'Effect can fade over time', 'Not for high-temp applications', 'More expensive', 'Temperature range is fixed per filament'],
+      commonProblems: ['Effect weakens with heavy use', 'Transition temperature varies by batch', 'Some colors less vibrant'],
+      environmentalConcerns: ['Thermochromic additives not biodegradable', 'Difficult to recycle'],
+      whenNotToUse: ['Permanent color needed', 'Temperatures above 60°C', 'Professional/precise applications'],
+    },
+    practicalContext: {
+      industryAdoption: ['Novelty products', 'Educational tools', 'Consumer goods prototypes'],
+      commonApplications: ['Baby bottle temperature indicators', 'Coffee cup sleeves', 'Interactive toys', 'Thermometer housings', 'Mood jewelry'],
+      safetyStandards: ['Generally safe', 'Not food safe due to additives'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'The same technology is used in mood rings since the 1970s',
+        'Leuco dyes work by molecular structure changes at specific temperatures',
+        'You can get filaments that change at body temperature (31°C) for touch effects',
+        'Cold drinks make the color appear, warm drinks make it disappear (or vice versa)',
+        'Some filaments have multiple color stages at different temperatures',
+      ],
+      whyInvented: 'Create interactive, temperature-responsive objects for novelty and functional indication.',
+      controversies: ['Longevity claims vary widely', 'Some brands fade quickly'],
+      marketAdoption: 'Popular niche for novelty and educational applications.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '38-48', unit: 'MPa', implications: 'Slightly lower than pure PLA.' },
+        { name: 'Elongation at Break', value: '3-6', unit: '%', implications: 'Standard PLA brittleness.' },
+        { name: 'Activation Temperature', value: '25-45', unit: '°C', implications: 'Varies by product - check specifications.' },
+        { name: 'Color Transition Range', value: '3-8', unit: '°C', implications: 'Temperature span over which color changes.' },
+        { name: 'Heat Deflection', value: '50-55', unit: '°C', implications: 'Standard PLA - avoid exceeding this.' },
+      ],
+      notes: 'Activation temperature varies by product. Common ranges: 22°C, 31°C (body temp), 33°C, 45°C.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 185, max: 215, optimal: 200 },
+      bedTemp: { min: 45, max: 60, optimal: 50 },
+      coolingFan: { min: 80, max: 100, notes: 'Good cooling helps preserve thermochromic properties.' },
+      enclosure: { required: false, notes: 'Not needed - avoid excess heat.' },
+      drying: { temp: 40, duration: '4-6 hours', notes: 'Lower temp to protect thermochromic compounds.' },
+      printSpeed: { recommended: '40-55 mm/s', notes: 'Moderate speeds work well.' },
+      additionalNotes: [
+        'Print at LOWER temperatures than standard PLA to preserve effect',
+        'Excessive heat during printing can damage thermochromic compounds',
+        'Test color change immediately after printing',
+        'Store away from heat sources',
+        'Avoid post-processing with heat (heat guns, annealing)',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (lower temp)', 'Glass with glue stick'],
+        good: ['Blue painters tape', 'BuildTak'],
+        poor: ['Overheated beds'],
+      },
+      releaseAgents: 'Standard PLA release methods at lower temps.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Good compatibility.' },
+        { material: 'PLA+', bondQuality: 'Strong Chemical Bond', notes: 'Works well together.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [{ method: 'Not recommended', effectiveness: 'Not Possible', notes: 'Chemicals may damage thermochromic compounds.' }],
+      mechanical: ['Light sanding only', 'No heat treatment'],
+      painting: 'Clear coat only - paint blocks temperature sensing.',
+      glues: ['CA glue', 'Epoxy (room temp cure)', 'Avoid hot glue'],
+    },
+    safety: {
+      fumes: { level: 'Very Low', notes: 'Standard PLA emissions.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Thermochromic additives not food safe.' },
+      biodegradability: { rating: 'Partially Compostable', notes: 'PLA base compostable, additives may not be.' },
+      additionalNotes: [
+        'Safe for normal handling',
+        'Not for food contact applications',
+        'Keep away from sustained heat',
+      ],
+    },
+  },
+
   'PVC': {
     name: 'PVC',
     fullName: 'Polyvinyl Chloride',
