@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import filascopeLogo from "@/assets/filascope-logo.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -170,13 +171,11 @@ const Navbar = () => {
         <div className="flex h-14 items-center justify-between px-6 gap-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center border border-primary/30">
-              <Terminal className="w-4 h-4 text-primary" />
-            </div>
-            <span className="text-lg font-bold tracking-tight font-mono hidden sm:block">
-              <span className="text-primary">SPOOL</span>
-              <span className="text-white">STASH</span>
-            </span>
+            <img 
+              src={filascopeLogo} 
+              alt="FilaScope" 
+              className="h-12 w-auto object-contain"
+            />
           </Link>
 
           {/* Command Search Bar */}
