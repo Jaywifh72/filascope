@@ -119,3 +119,6 @@ verify_jwt = true
 
 [functions.test-url]
 verify_jwt = true
+
+[functions.discover-filament-brand]
+verify_jwt = true

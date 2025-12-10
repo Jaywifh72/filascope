@@ -1,48 +1,86 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, ArrowLeft, Shield, AlertCircle, Download } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Search, 
+  Globe, 
+  Package, 
+  CheckCircle2, 
+  XCircle, 
+  Loader2, 
+  Download,
+  Upload,
+  AlertTriangle,
+  Image as ImageIcon,
+  DollarSign,
+  Ruler,
+  FileText,
+  Tag,
+  Palette
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
-import { z } from "zod";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { retryWithBackoff } from "@/lib/retryWithBackoff";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Validation schema for filament data
-const isURL = (value: string | null): boolean => {
-  if (!value) return false;
-  return value.startsWith('http://') || value.startsWith('https://') || value.startsWith('www.');
-};
+interface DiscoveredProduct {
+  product_id: string;
+  product_title: string;
+  product_handle: string;
+  product_url: string;
+  vendor: string;
+  material: string | null;
+  color_name: string | null;
+  color_hex: string | null;
+  color_family: string | null;
+  featured_image: string | null;
+  variant_sku: string | null;
+  variant_price: number | null;
+  net_weight_g: number | null;
+  diameter_nominal_mm: number | null;
+  tds_url: string | null;
+  upc: string | null;
+  ean: string | null;
+  gtin: string | null;
+  mpn: string | null;
+  nozzle_temp_min_c: number | null;
+  nozzle_temp_max_c: number | null;
+  bed_temp_min_c: number | null;
+  bed_temp_max_c: number | null;
+  is_nozzle_abrasive: boolean | null;
+  data_completeness: number;
+  existing_id: string | null;
+  raw_data: any;
+  selected?: boolean;
+}
 
-const filamentRowSchema = z.object({
-  product_title: z.string().min(1, { message: "Product title is required" }).max(500, { message: "Product title must be less than 500 characters" }),
-}).passthrough();
+interface DiscoveryResult {
+  platform: 'shopify' | 'woocommerce' | 'custom' | 'unknown';
+  brand_name: string;
+  website_url: string;
+  products: DiscoveredProduct[];
+  total_found: number;
+  errors: string[];
+}
 
 const AdminImport = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [deleteNonCsv, setDeleteNonCsv] = useState(true);
-  const [progress, setProgress] = useState({ current: 0, total: 0, errors: 0, warnings: 0 });
-  const [importResults, setImportResults] = useState<{ success: number; errors: string[]; warnings: string[] } | null>(null);
-  const [logs, setLogs] = useState<Array<{ type: 'info' | 'success' | 'error' | 'warning'; message: string }>>([]);
-  const [weightStats, setWeightStats] = useState<{ total: number; kg: number; g: number; unchanged: number } | null>(null);
-  const [summaryReport, setSummaryReport] = useState<{
-    totalRows: number;
-    missingRequired: number;
-    invalidWeights: number;
-    outOfRangeNumeric: number;
-    invalidUrls: number;
-    missingPrices: number;
-    toDeleteCount?: number;
-    toDeleteExamples?: string[];
-    issues: Array<{ type: string; count: number; examples: string[] }>;
-  } | null>(null);
-  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
-  const [processedRows, setProcessedRows] = useState<any[]>([]);
+  const [brandName, setBrandName] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [discoveryResult, setDiscoveryResult] = useState<DiscoveryResult | null>(null);
+  const [products, setProducts] = useState<DiscoveredProduct[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
+  const [importResults, setImportResults] = useState<{ success: number; updated: number; errors: string[] } | null>(null);
+  
   const { isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -58,1296 +96,570 @@ const AdminImport = () => {
     }
   }, [isAdmin, loading, navigate, toast]);
 
-  const addLog = (type: 'info' | 'success' | 'error' | 'warning', message: string) => {
-    setLogs(prev => [...prev, { type, message }]);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile && selectedFile.type === "text/csv") {
-      setFile(selectedFile);
-      // Reset previous results
-      setImportResults(null);
-      setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
-      setLogs([]);
-      setWeightStats(null);
-      setSummaryReport(null);
-      setAwaitingConfirmation(false);
-      setProcessedRows([]);
-    } else {
+  const handleDiscover = async () => {
+    if (!brandName.trim() || !websiteUrl.trim()) {
       toast({
-        title: "Invalid file",
-        description: "Please select a CSV file",
+        title: "Missing Information",
+        description: "Please provide both brand name and website URL",
         variant: "destructive",
       });
+      return;
     }
-  };
 
-  const downloadTemplate = () => {
-    const headers = [
-      'Product ID', 'Product Title', 'Vendor', 'Material', 'Featured Image', 
-      'Variant SKU', 'Variant Price', 'Product URL', 'Amazon Link US', 
-      'TDS URL', 'net_weight_g', 'diameter_nominal_mm'
-    ];
-    
-    const exampleRow = [
-      '20000001',
-      'Example PLA Filament Black 1.75mm',
-      'Example Brand',
-      'PLA',
-      'https://example.com/image.jpg',
-      'SKU-001',
-      '19.99',
-      'https://example.com/product',
-      'https://amazon.com/dp/EXAMPLE',
-      'https://example.com/tds.pdf',
-      '1000',
-      '1.75'
-    ];
-
-    const csvContent = headers.join(',') + '\n' + exampleRow.join(',');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'filament_import_template.csv');
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast({
-      title: "Template downloaded",
-      description: "CSV template downloaded successfully.",
-    });
-  };
-
-  const parseCSV = (text: string) => {
-    const lines: string[] = [];
-    let currentLine = '';
-    let insideQuotes = false;
-    
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      const nextChar = text[i + 1];
-      
-      if (char === '"') {
-        if (insideQuotes && nextChar === '"') {
-          currentLine += '"';
-          i++;
-        } else {
-          insideQuotes = !insideQuotes;
-        }
-      } else if (char === '\n' && !insideQuotes) {
-        if (currentLine.trim()) {
-          lines.push(currentLine);
-        }
-        currentLine = '';
-      } else if (char === '\r' && nextChar === '\n' && !insideQuotes) {
-        if (currentLine.trim()) {
-          lines.push(currentLine);
-        }
-        currentLine = '';
-        i++;
-      } else {
-        currentLine += char;
-      }
+    // Normalize URL
+    let normalizedUrl = websiteUrl.trim();
+    if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+      normalizedUrl = `https://${normalizedUrl}`;
     }
-    
-    if (currentLine.trim()) {
-      lines.push(currentLine);
-    }
-    
-    if (lines.length === 0) return [];
-    
-    const headers = parseCSVLine(lines[0]);
-    const data = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-      const values = parseCSVLine(lines[i]);
-      const row: any = {};
-      
-      headers.forEach((header, index) => {
-        const value = values[index]?.trim();
-        row[header.trim()] = value === "" || value === undefined ? null : value;
-      });
-      
-      data.push(row);
-    }
-    
-    return data;
-  };
-  
-  const parseCSVLine = (line: string): string[] => {
-    const result: string[] = [];
-    let current = '';
-    let insideQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      const nextChar = line[i + 1];
-      
-      if (char === '"') {
-        if (insideQuotes && nextChar === '"') {
-          current += '"';
-          i++;
-        } else {
-          insideQuotes = !insideQuotes;
-        }
-      } else if (char === ',' && !insideQuotes) {
-        result.push(current);
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    
-    result.push(current);
-    return result;
-  };
 
-  const downloadAndUploadImage = async (imageUrl: string, productId: string): Promise<string | null> => {
-    try {
-      const response = await fetch(imageUrl);
-      if (!response.ok) return null;
-      
-      const blob = await response.blob();
-      const urlParts = imageUrl.split('/');
-      const originalFilename = urlParts[urlParts.length - 1].split('?')[0];
-      const extension = originalFilename.split('.').pop() || 'jpg';
-      const filename = `${productId}-${Date.now()}.${extension}`;
-      
-      const { data, error } = await supabase.storage
-        .from('filament-images')
-        .upload(filename, blob, {
-          contentType: blob.type,
-          upsert: true
-        });
-      
-      if (error) {
-        console.error('Storage upload error:', error);
-        return null;
-      }
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('filament-images')
-        .getPublicUrl(data.path);
-      
-      return publicUrl;
-    } catch (error) {
-      console.error('Image download error:', error);
-      return null;
-    }
-  };
-
-  // Validate numeric values against PostgreSQL column limits
-  const validateNumeric = (value: number, precision: number, scale: number, fieldName?: string): number | null => {
-    if (!isFinite(value)) return null;
-    // Calculate max value for numeric(precision, scale)
-    // For numeric(10, 2): max is 99999999.99
-    // For numeric(10, 3): max is 9999999.999
-    const maxValue = Math.pow(10, precision - scale) - Math.pow(10, -scale);
-    const minValue = -maxValue;
-    
-    if (value > maxValue || value < minValue) {
-      if (fieldName) {
-        console.warn(`⚠️ ${fieldName}: Value ${value} exceeds numeric(${precision},${scale}) limit [${minValue} to ${maxValue}] - setting to NULL`);
-      }
-      return null;
-    }
-    return value;
-  };
-
-  const parseNumber = (value: any, precision: number = 10, scale: number = 2, fieldName?: string): number | null => {
-    if (value === null || value === undefined || value === '') return null;
-    const parsed = parseFloat(value);
-    if (isNaN(parsed)) return null;
-    return validateNumeric(parsed, precision, scale, fieldName);
-  };
-
-  const parseIntSafe = (value: any): number | null => {
-    if (value === null || value === undefined || value === '') return null;
-    const parsed = parseInt(value);
-    if (isNaN(parsed)) return null;
-    // PostgreSQL integer range: -2147483648 to 2147483647
-    if (parsed < -2147483648 || parsed > 2147483647) {
-      console.warn(`Integer overflow for value: ${value} (parsed as ${parsed})`);
-      return null;
-    }
-    return parsed;
-  };
-
-  const parseBool = (value: any): boolean | null => {
-    if (value === null || value === undefined || value === '') return null;
-    const str = String(value).toLowerCase();
-    return str === 'true' || str === '1' || str === 'yes';
-  };
-
-  // Normalize weight values: convert kg/g to numeric grams
-  const normalizeWeight = (value: any): string => {
-    if (value === null || value === undefined || value === '') return '';
-    const str = String(value).trim().toLowerCase();
-    
-    // Handle kg values (multiply by 1000)
-    if (str.endsWith('kg')) {
-      const num = parseFloat(str.slice(0, -2));
-      if (isNaN(num)) return '';
-      return String(Math.round(num * 1000));
-    }
-    
-    // Handle g values (strip the 'g')
-    if (str.endsWith('g')) {
-      const num = parseFloat(str.slice(0, -1));
-      if (isNaN(num)) return '';
-      return String(Math.round(num));
-    }
-    
-    // Return as-is if no unit
-    return str;
-  };
-
-  const parseWeight = (value: any, rowNum?: number): number | null => {
-    // Silently return null for empty values (this is normal - not all products have weights)
-    if (value === null || value === undefined || value === '') {
-      return null;
-    }
-    
-    // Handle booleans (shouldn't happen after preprocessing, but just in case)
-    if (typeof value === 'boolean') {
-      return null;
-    }
-    
-    const str = String(value).trim();
-    const parsed = parseIntSafe(str);
-    
-    // Don't log errors here - validation step already caught issues
-    return parsed;
-  };
-
-  const handleUpload = async () => {
-    if (!file) return;
-
-    setIsUploading(true);
-    setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
+    setIsDiscovering(true);
+    setDiscoveryResult(null);
+    setProducts([]);
     setImportResults(null);
-    setLogs([]);
-    setWeightStats(null);
-    setSummaryReport(null);
-    setAwaitingConfirmation(false);
-    setProcessedRows([]);
 
     try {
-      const text = await file.text();
-      const rows = parseCSV(text);
-      
-      if (rows.length === 0) {
-        toast({
-          title: "Empty file",
-          description: "The CSV file contains no data rows.",
-          variant: "destructive",
-        });
-        setIsUploading(false);
-        return;
-      }
-
-      console.log(`🚀 Starting NEW import of ${rows.length} rows...`);
-      addLog('info', `🚀 Starting import of ${rows.length} rows`);
-      console.log("📋 CSV Headers:", Object.keys(rows[0]));
-      addLog('info', `📋 CSV Headers: ${Object.keys(rows[0]).join(', ')}`);
-      
-      // Step 1: Normalize weight values across all rows
-      console.log("\n" + "=".repeat(80));
-      console.log("🔄 STEP 1: WEIGHT NORMALIZATION (kg/g → numeric grams)");
-      console.log("=".repeat(80));
-      addLog('info', '🔄 Step 1: Analyzing and normalizing weight values...');
-      
-      let kgCount = 0;
-      let gCount = 0;
-      let unchangedCount = 0;
-      let booleanCount = 0;
-      let totalWeights = 0;
-      
-      rows.forEach((row, idx) => {
-        const originalWeight = row['Variant Weight Unit'];
-        
-        // Handle boolean values (data quality issue)
-        if (typeof originalWeight === 'boolean') {
-          booleanCount++;
-          if (booleanCount <= 10) {
-            console.log(`  → Row ${idx + 2}: Boolean value "${originalWeight}" → null`);
-            addLog('warning', `⚠️ Row ${idx + 2}: Weight is boolean "${originalWeight}" - setting to null`);
-          }
-          row['Variant Weight Unit'] = null;
-        } else if (originalWeight) {
-          totalWeights++;
-          const str = String(originalWeight).trim().toLowerCase();
-          const normalizedWeight = normalizeWeight(originalWeight);
-          
-          if (str.endsWith('kg')) {
-            kgCount++;
-            if (idx < 10) {
-              console.log(`  ✓ Row ${idx + 2}: "${originalWeight}" → "${normalizedWeight}" (kg conversion)`);
-            }
-          } else if (str.endsWith('g')) {
-            gCount++;
-            if (idx < 10) {
-              console.log(`  ✓ Row ${idx + 2}: "${originalWeight}" → "${normalizedWeight}" (stripped 'g')`);
-            }
-          } else {
-            unchangedCount++;
-            if (idx < 10) {
-              console.log(`  → Row ${idx + 2}: "${originalWeight}" (no change needed)`);
-            }
-          }
-          
-          row['Variant Weight Unit'] = normalizedWeight;
-        } else {
-          // Set empty/null weights to null explicitly so parseWeight handles them gracefully
-          row['Variant Weight Unit'] = null;
-        }
-      });
-      
-      const weightStatsData = { total: totalWeights, kg: kgCount, g: gCount, unchanged: unchangedCount };
-      setWeightStats(weightStatsData);
-      
-      console.log("\n📊 WEIGHT CONVERSION STATISTICS:");
-      console.log(`   Total weight cells processed: ${totalWeights}`);
-      console.log(`   ✓ Converted from kg: ${kgCount} cells`);
-      console.log(`   ✓ Stripped 'g' suffix: ${gCount} cells`);
-      console.log(`   → Unchanged (no unit): ${unchangedCount} cells`);
-      if (booleanCount > 0) {
-        console.log(`   ⚠️ Boolean values converted to null: ${booleanCount} cells`);
-      }
-      console.log("=".repeat(80) + "\n");
-      
-      addLog('success', `✓ Weight normalization complete: ${totalWeights} cells processed`);
-      addLog('info', `  • ${kgCount} converted from kg to grams`);
-      addLog('info', `  • ${gCount} stripped 'g' suffix`);
-      addLog('info', `  • ${unchangedCount} unchanged (numeric only)`);
-      if (booleanCount > 0) {
-        addLog('warning', `  • ${booleanCount} boolean values set to null`);
-      }
-      
-      console.log("📝 Sample row after normalization:", {
-        'Product Title': rows[0]['Product Title'],
-        'Vendor': rows[0]['Vendor'],
-        'Material': rows[0]['Material'],
-        'Variant Weight Unit': rows[0]['Variant Weight Unit'],
-        'Variant Price': rows[0]['Variant Price']
+      const { data, error } = await supabase.functions.invoke('discover-filament-brand', {
+        body: { brand_name: brandName.trim(), website_url: normalizedUrl }
       });
 
-      // Step 2: Validate weight values after preprocessing
-      console.log("\n" + "=".repeat(80));
-      console.log("🔍 STEP 2: VALIDATING WEIGHT VALUES");
-      console.log("=".repeat(80));
-      addLog('info', '🔍 Step 2: Validating preprocessed weight values...');
-      
-      let validWeights = 0;
-      let nullWeights = 0;
-      let invalidWeights = 0;
-      const invalidWeightRows: Array<{ row: number; value: any; type: string }> = [];
-      
-      rows.forEach((row, idx) => {
-        const weightValue = row['Variant Weight Unit'];
-        const rowNum = idx + 2;
-        
-        if (weightValue === null || weightValue === undefined || weightValue === '') {
-          nullWeights++;
-        } else if (typeof weightValue === 'boolean') {
-          // Should have been caught in preprocessing, but double-check
-          invalidWeights++;
-          invalidWeightRows.push({ row: rowNum, value: weightValue, type: 'boolean' });
-          console.error(`⚠️ Row ${rowNum}: Weight is boolean: ${weightValue}`);
-          if (invalidWeights <= 5) {
-            addLog('error', `⚠️ Row ${rowNum}: Weight is boolean: ${weightValue}`);
-          }
-        } else {
-          const str = String(weightValue).trim().toLowerCase();
-          
-          // Check if value still contains units (should have been removed)
-          if (str.endsWith('kg') || str.endsWith('g')) {
-            invalidWeights++;
-            invalidWeightRows.push({ row: rowNum, value: weightValue, type: 'has-unit' });
-            console.error(`⚠️ Row ${rowNum}: Weight still contains units: "${weightValue}"`);
-            if (invalidWeights <= 5) {
-              addLog('error', `⚠️ Row ${rowNum}: Weight not preprocessed: "${weightValue}"`);
-            }
-          } else if (isNaN(parseFloat(str))) {
-            invalidWeights++;
-            invalidWeightRows.push({ row: rowNum, value: weightValue, type: 'non-numeric' });
-            console.error(`⚠️ Row ${rowNum}: Weight is not numeric: "${weightValue}" (type: ${typeof weightValue})`);
-            if (invalidWeights <= 5) {
-              addLog('error', `⚠️ Row ${rowNum}: Weight not numeric: "${weightValue}"`);
-            }
-          } else {
-            validWeights++;
-          }
-        }
-      });
-      
-      console.log("\n📊 WEIGHT VALIDATION RESULTS:");
-      console.log(`   ✓ Valid numeric weights: ${validWeights}`);
-      console.log(`   ○ Null/empty weights (acceptable): ${nullWeights}`);
-      console.log(`   ✗ Invalid weights: ${invalidWeights}`);
-      
-      if (invalidWeights > 0) {
-        console.log(`\n⚠️ FIRST 10 INVALID WEIGHTS WITH DETAILS:`);
-        invalidWeightRows.slice(0, 10).forEach(({ row, value, type }) => {
-          const rowData = rows[row - 2]; // row is 1-indexed with header
-          console.log(`   Row ${row} [${type}]:`);
-          console.log(`     Weight value: "${value}" (type: ${typeof value})`);
-          console.log(`     Product: ${rowData['Product Title']}`);
-          console.log(`     Vendor: ${rowData['Vendor']}`);
-        });
-        if (invalidWeightRows.length > 10) {
-          console.log(`   ... and ${invalidWeightRows.length - 10} more`);
-        }
-      }
-      console.log("=".repeat(80) + "\n");
-      
-      addLog(invalidWeights > 0 ? 'warning' : 'success', 
-        `✓ Validation complete: ${validWeights} valid, ${nullWeights} empty, ${invalidWeights} invalid`);
-      
-      if (invalidWeights > 0) {
-        addLog('warning', `⚠️ ${invalidWeights} rows have invalid weight values - these will be imported as NULL`);
-      }
+      if (error) throw error;
 
-      // Step 3: Generate comprehensive pre-import summary report
-      console.log("\n" + "=".repeat(80));
-      console.log("📊 STEP 3: PRE-IMPORT ANALYSIS & VALIDATION");
-      console.log("=".repeat(80));
-      addLog('info', '📊 Step 3: Analyzing all data for potential issues...');
-      
-      let missingRequiredCount = 0;
-      let invalidWeightsCount = 0;
-      let outOfRangeCount = 0;
-      let invalidUrlsCount = 0;
-      let missingPricesCount = 0;
-      const issues: Array<{ type: string; count: number; examples: string[] }> = [];
-      
-      const missingRequiredExamples: string[] = [];
-      const outOfRangeExamples: string[] = [];
-      const invalidUrlExamples: string[] = [];
-      const missingPriceExamples: string[] = [];
-      
-      rows.forEach((row, idx) => {
-        const rowNum = idx + 2;
-        
-        // Check missing required fields
-        if (!row['Product Title'] || row['Product Title'].trim() === '') {
-          missingRequiredCount++;
-          if (missingRequiredExamples.length < 5) {
-            missingRequiredExamples.push(`Row ${rowNum}: Missing Product Title`);
-          }
-        }
-        
-        // Check invalid weights (already validated but count them)
-        const weightValue = row['Variant Weight Unit'];
-        if (weightValue && typeof weightValue !== 'boolean') {
-          const str = String(weightValue).trim();
-          if (str.endsWith('kg') || str.endsWith('g') || isNaN(parseFloat(str))) {
-            invalidWeightsCount++;
-          }
-        }
-        
-        // Check out-of-range numeric values
-        const numericFields = [
-          { field: 'Variant Price', max: 99999999.99, precision: 2 },
-          { field: 'density_g_cm3', max: 9999999.999, precision: 3 },
-          { field: 'diameter_nominal_mm', max: 9999999.999, precision: 3 },
-          { field: 'spool_outer_d_mm', max: 99999999.99, precision: 2 },
-          { field: 'spool_width_mm', max: 99999999.99, precision: 2 },
-          { field: 'tensile_strength_xy_mpa', max: 99999999.99, precision: 2 },
-          { field: 'tensile_modulus_xy_mpa', max: 99999999.99, precision: 2 },
-          { field: 'elongation_break_xy_percent', max: 99999999.99, precision: 2 },
-          { field: 'flexural_strength_mpa', max: 99999999.99, precision: 2 },
-          { field: 'shore_hardness_d', max: 99999999.99, precision: 2 },
-          { field: 'tg_c', max: 99999999.99, precision: 2 },
-          { field: 'melt_temp_c', max: 99999999.99, precision: 2 },
-          { field: 'strength_index', max: 99999999.99, precision: 2 },
-          { field: 'printability_index', max: 99999999.99, precision: 2 },
-          { field: 'value_score', max: 99999999.99, precision: 2 },
-        ];
-        
-        numericFields.forEach(({ field, max }) => {
-          const value = row[field];
-          if (value !== null && value !== undefined && value !== '') {
-            const num = parseFloat(value);
-            if (!isNaN(num) && (num > max || num < -max)) {
-              outOfRangeCount++;
-              if (outOfRangeExamples.length < 5) {
-                outOfRangeExamples.push(`Row ${rowNum}: ${field} = ${value} (max: ${max})`);
-              }
-            }
-          }
-        });
-        
-        // Check invalid URLs
-        const urlFields = ['Product URL', 'Amazon Link US', 'Amazon Link UK', 'Amazon Link DE', 'TDS URL', 'Featured Image'];
-        urlFields.forEach(field => {
-          const url = row[field];
-          if (url && !isURL(url)) {
-            invalidUrlsCount++;
-            if (invalidUrlExamples.length < 5) {
-              invalidUrlExamples.push(`Row ${rowNum}: Invalid ${field} - "${url}"`);
-            }
-          }
-        });
-        
-        // Check missing prices
-        if (!row['Variant Price'] || row['Variant Price'] === '' || row['Variant Price'] === '0') {
-          missingPricesCount++;
-          if (missingPriceExamples.length < 3) {
-            missingPriceExamples.push(`Row ${rowNum}: ${row['Product Title']}`);
-          }
-        }
+      setDiscoveryResult(data);
+      setProducts(data.products.map((p: DiscoveredProduct) => ({ ...p, selected: true })));
+
+      toast({
+        title: "Discovery Complete",
+        description: `Found ${data.total_found} filament products on ${data.platform} platform`,
       });
-      
-      // Build issues array
-      if (missingRequiredCount > 0) {
-        issues.push({ type: 'Missing Required Fields', count: missingRequiredCount, examples: missingRequiredExamples });
-      }
-      if (invalidWeightsCount > 0) {
-        issues.push({ type: 'Invalid Weights', count: invalidWeightsCount, examples: invalidWeightRows.slice(0, 5).map(({ row, value }) => `Row ${row}: "${value}"`) });
-      }
-      if (outOfRangeCount > 0) {
-        issues.push({ type: 'Out-of-Range Numeric Values', count: outOfRangeCount, examples: outOfRangeExamples });
-      }
-      if (invalidUrlsCount > 0) {
-        issues.push({ type: 'Invalid URLs', count: invalidUrlsCount, examples: invalidUrlExamples });
-      }
-      if (missingPricesCount > 0) {
-        issues.push({ type: 'Missing/Zero Prices', count: missingPricesCount, examples: missingPriceExamples });
-      }
-      
-      // Calculate filaments to delete if deleteNonCsv is enabled
-      let toDeleteCount = 0;
-      const toDeleteExamples: string[] = [];
-      
-      if (deleteNonCsv) {
-        addLog('info', '🔍 Checking for filaments to delete...');
-        const csvProductIds = rows
-          .map(row => row['Product ID'])
-          .filter(id => id && id.trim() !== '');
-        
-        const { data: existingFilaments } = await supabase
-          .from('filaments')
-          .select('id, product_title, product_id')
-          .not('product_id', 'in', `(${csvProductIds.map(id => `"${id}"`).join(',')})`);
-        
-        toDeleteCount = existingFilaments?.length || 0;
-        if (existingFilaments && existingFilaments.length > 0) {
-          existingFilaments.slice(0, 5).forEach(f => {
-            toDeleteExamples.push(`${f.product_title} (ID: ${f.product_id})`);
-          });
-        }
-      }
-      
-      const summary = {
-        totalRows: rows.length,
-        missingRequired: missingRequiredCount,
-        invalidWeights: invalidWeightsCount,
-        outOfRangeNumeric: outOfRangeCount,
-        invalidUrls: invalidUrlsCount,
-        missingPrices: missingPricesCount,
-        toDeleteCount,
-        toDeleteExamples,
-        issues
-      };
-      
-      setSummaryReport(summary);
-      setProcessedRows(rows);
-      setAwaitingConfirmation(true);
-      
-      console.log("\n📊 PRE-IMPORT SUMMARY REPORT:");
-      console.log(`   Total rows to import: ${rows.length}`);
-      console.log(`   ✗ Missing required fields: ${missingRequiredCount}`);
-      console.log(`   ✗ Invalid weight values: ${invalidWeightsCount}`);
-      console.log(`   ✗ Out-of-range numeric values: ${outOfRangeCount}`);
-      console.log(`   ✗ Invalid URLs: ${invalidUrlsCount}`);
-      console.log(`   ⚠️ Missing/zero prices: ${missingPricesCount}`);
-      if (deleteNonCsv && toDeleteCount > 0) {
-        console.log(`   🗑️ Filaments to delete: ${toDeleteCount}`);
-      }
-      console.log("=".repeat(80) + "\n");
-      
-      addLog('success', `✓ Pre-import analysis complete`);
-      addLog('info', `📊 Found ${issues.length} types of issues across ${rows.length} rows`);
-      addLog('warning', '⏸️ Import paused - Please review the summary report and confirm to proceed');
-      
-      setIsUploading(false);
+
     } catch (error) {
-      console.error("Import error:", error);
-      addLog('error', `❌ Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Discovery error:', error);
       toast({
-        title: "Import failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
-      setIsUploading(false);
-    }
-  };
-
-  const confirmAndProceedImport = async () => {
-    if (!processedRows || processedRows.length === 0) return;
-    
-    setAwaitingConfirmation(false);
-    setIsUploading(true);
-    
-    try {
-      const rows = processedRows;
-      
-      // Step 3.5: Delete filaments not in CSV (if enabled)
-      if (deleteNonCsv) {
-        console.log("\n" + "=".repeat(80));
-        console.log("🗑️ STEP 3.5: CLEANING UP NON-CSV FILAMENTS");
-        console.log("=".repeat(80));
-        addLog('info', '🗑️ Step 3.5: Deleting filaments not in CSV...');
-        
-        try {
-          const csvProductIds = rows
-            .map(row => row['Product ID'])
-            .filter(id => id && id.trim() !== '');
-          
-          console.log(`Found ${csvProductIds.length} product IDs in CSV`);
-          addLog('info', `Found ${csvProductIds.length} product IDs in CSV`);
-          
-          // Delete filaments whose product_id is not in the CSV with retry mechanism
-          const deleteResult = await retryWithBackoff(
-            async () => {
-              // First, fetch all existing filaments to determine which ones to delete
-              const { data: allFilaments, error: fetchError } = await supabase
-                .from('filaments')
-                .select('id, product_id');
-              
-              if (fetchError) {
-                console.error('Fetch error:', fetchError);
-                throw fetchError;
-              }
-              
-              if (!allFilaments || allFilaments.length === 0) {
-                console.log('No existing filaments to check');
-                return 0;
-              }
-              
-              // Find IDs of filaments NOT in the CSV
-              const csvProductIdSet = new Set(csvProductIds);
-              const idsToDelete = allFilaments
-                .filter(filament => !csvProductIdSet.has(filament.product_id))
-                .map(filament => filament.id);
-              
-              console.log(`Found ${idsToDelete.length} filaments to delete (not in CSV)`);
-              
-              if (idsToDelete.length === 0) {
-                return 0;
-              }
-              
-              // Delete by ID using proper Supabase syntax
-              const { error: deleteError, count } = await supabase
-                .from('filaments')
-                .delete({ count: 'exact' })
-                .in('id', idsToDelete);
-              
-              if (deleteError) {
-                console.error('Delete error:', deleteError);
-                throw deleteError;
-              }
-              
-              return count || 0;
-            },
-            3, // Max 3 retries
-            1000, // Start with 1 second delay
-            (attempt, error) => {
-              // Log retry attempts
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              console.log(`Retry attempt ${attempt}/3 for deletion. Error: ${errorMsg}`);
-              addLog('warning', `⚠️ Deletion failed (${errorMsg}), retrying (attempt ${attempt}/3)...`);
-            }
-          );
-          
-          console.log(`✓ Deleted ${deleteResult} filaments not in CSV`);
-          addLog('success', `✓ Deleted ${deleteResult || 0} filaments not in CSV`);
-          toast({
-            title: "Cleanup Complete",
-            description: `Removed ${deleteResult || 0} filaments not in CSV`,
-          });
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          const errorStack = error instanceof Error ? error.stack : 'No stack trace';
-          const errorDetails = error && typeof error === 'object' ? {
-            message: (error as any).message,
-            code: (error as any).code,
-            details: (error as any).details,
-            hint: (error as any).hint,
-          } : null;
-          
-          console.error('Error during cleanup after all retries:', error);
-          console.error('Stack trace:', errorStack);
-          if (errorDetails) {
-            console.error('Error details:', errorDetails);
-          }
-          
-          addLog('error', `❌ Cleanup failed after all retry attempts: ${errorMessage}`);
-          if (errorDetails) {
-            addLog('error', `Error code: ${errorDetails.code || 'N/A'}, Details: ${JSON.stringify(errorDetails)}`);
-          }
-          addLog('error', `Stack trace: ${errorStack}`);
-          
-          toast({
-            title: "Cleanup Failed",
-            description: `Failed to delete old filaments after retries: ${errorMessage}. Import will continue.`,
-            variant: "destructive",
-          });
-        }
-      }
-      
-      // Step 4: Import to database
-      console.log("\n" + "=".repeat(80));
-      console.log("🔄 STEP 4: IMPORTING FILAMENT DATA");
-      console.log("=".repeat(80));
-      addLog('info', '🔄 Step 4: Starting database import...');
-
-      setProgress({ current: 0, total: rows.length, errors: 0, warnings: 0 });
-
-      let successCount = 0;
-      const errors: string[] = [];
-      const warnings: string[] = [];
-
-      // Process rows in batches
-      const BATCH_SIZE = 50;
-      for (let batchStart = 0; batchStart < rows.length; batchStart += BATCH_SIZE) {
-        const batchEnd = Math.min(batchStart + BATCH_SIZE, rows.length);
-        const batch = rows.slice(batchStart, batchEnd);
-        
-        console.log(`\n📦 Processing batch ${Math.floor(batchStart / BATCH_SIZE) + 1} (rows ${batchStart + 2}-${batchEnd + 1})`);
-        addLog('info', `📦 Batch ${Math.floor(batchStart / BATCH_SIZE) + 1}: Rows ${batchStart + 2}-${batchEnd + 1}`);
-
-        for (let i = 0; i < batch.length; i++) {
-          const rowIndex = batchStart + i;
-          const row = batch[i];
-          const rowNum = rowIndex + 2; // +2 for header and 1-indexed
-          
-          // Get product title - this is required
-          let productTitle = row['Product Title'];
-          if (!productTitle || productTitle.trim() === "") {
-            const errorMsg = `Row ${rowNum}: Missing Product Title`;
-            errors.push(errorMsg);
-            addLog('error', `❌ ${errorMsg}`);
-            setProgress(prev => ({ ...prev, current: rowIndex + 1, errors: prev.errors + 1 }));
-            continue;
-          }
-
-          // Clean up product title by removing redundant phrases
-          productTitle = productTitle
-            .replace(/3D Printer Filament 1\.75mm/gi, '')
-            .replace(/Filament 1\.75mm/gi, '')
-            .trim();
-
-          try {
-            // Map CSV columns to database fields with detailed logging
-            const filamentData: any = {
-              product_id: row['Product ID'] || null,
-              product_title: productTitle.trim(),
-              product_handle: row['Product Handle'] || null,
-              vendor: row['Vendor'] || null,
-              material: row['Material'] || null,
-              featured_image: row['Featured Image'] || null,
-              variant_sku: row['Variant SKU'] || null,
-              product_url: row['Product URL'] || null,
-              amazon_link_us: row['Amazon Link US'] || null,
-              amazon_link_uk: row['Amazon Link UK'] || null,
-              amazon_link_de: row['Amazon Link DE'] || null,
-              tds_url: row['TDS URL'] || null,
-              
-              // Physical properties (with precision/scale validation)
-              density_g_cm3: parseNumber(row['density_g_cm3'], 10, 3),
-              diameter_nominal_mm: parseNumber(row['diameter_nominal_mm'], 10, 3),
-              net_weight_g: parseWeight(row['Variant Weight Unit'], rowNum),
-              spool_outer_d_mm: parseNumber(row['spool_outer_d_mm'], 10, 2),
-              spool_width_mm: parseNumber(row['spool_width_mm'], 10, 2),
-              variant_price: parseNumber(row['Variant Price'], 10, 2),
-              
-              // Thermal properties (numeric(10,2))
-              tg_c: parseNumber(row['tg_c'], 10, 2),
-              melt_temp_c: parseNumber(row['melt_temp_c'], 10, 2),
-              nozzle_temp_min_c: parseIntSafe(row['nozzle_temp_min_c']),
-              nozzle_temp_max_c: parseIntSafe(row['nozzle_temp_max_c']),
-              nozzle_temp_sweetspot_c: parseIntSafe(row['nozzle_temp_sweetspot_c']),
-              bed_temp_min_c: parseIntSafe(row['bed_temp_min_c']),
-              bed_temp_max_c: parseIntSafe(row['bed_temp_max_c']),
-              
-              // Mechanical properties (numeric(10,2))
-              tensile_strength_xy_mpa: parseNumber(row['tensile_strength_xy_mpa'], 10, 2),
-              tensile_modulus_xy_mpa: parseNumber(row['tensile_modulus_xy_mpa'], 10, 2),
-              elongation_break_xy_percent: parseNumber(row['elongation_break_xy_percent'], 10, 2),
-              flexural_strength_mpa: parseNumber(row['flexural_strength_mpa'], 10, 2),
-              shore_hardness_d: parseNumber(row['shore_hardness_d'], 10, 2),
-              
-              // Print settings
-              print_speed_max_mms: parseIntSafe(row['print_speed_max_mms']),
-              fan_min_percent: parseIntSafe(row['fan_min_percent']),
-              fan_max_percent: parseIntSafe(row['fan_max_percent']),
-              
-              // Color and appearance
-              color_hex: row['color_hex'] || null,
-              color_family: row['color_family'] || null,
-              finish_type: row['finish_type'] || null,
-              
-              // Care and handling
-              moisture_sensitivity_level: row['moisture_sensitivity_level'] || null,
-              moisture_care: row['moisture_care'] || null,
-              nozzle_care: row['nozzle_care'] || null,
-              drying_temp_c: parseIntSafe(row['drying_temp_c']),
-              drying_time_hours: parseIntSafe(row['drying_time_hours']),
-              recommended_nozzle_type: row['recommended_nozzle_type'] || null,
-              
-              // Flags
-              is_nozzle_abrasive: parseBool(row['is_nozzle_abrasive']),
-              spool_ams_fit: parseBool(row['spool_ams_fit']),
-              variant_available: parseBool(row['Variant Available']) !== false,
-              
-              // Scores (numeric(10,2))
-              ease_of_printing_score: parseIntSafe(row['ease_of_printing_score']),
-              dimensional_accuracy_score: parseIntSafe(row['dimensional_accuracy_score']),
-              strength_index: parseNumber(row['strength_index'], 10, 2),
-              printability_index: parseNumber(row['printability_index'], 10, 2),
-              value_score: parseNumber(row['value_score'], 10, 2),
-              
-              // Tags
-              use_case_tags: row['use_case_tags'] ? row['use_case_tags'].split(',').map((t: string) => t.trim()).filter((t: string) => t) : null,
-              industry_tags: row['industry_tags'] ? row['industry_tags'].split(',').map((t: string) => t.trim()).filter((t: string) => t) : null,
-              
-              // Other
-              food_contact_rating: row['food_contact_rating'] || null,
-            };
-
-            // Log sample field values for debugging overflow issues
-            if (rowNum <= 5 || rowNum % 500 === 0) {
-              const debugFields = ['net_weight_g', 'variant_price', 'tensile_modulus_xy_mpa'];
-              const debugInfo: any = {};
-              debugFields.forEach(field => {
-                const csvKey = field === 'variant_price' ? 'Variant Price' : field;
-                debugInfo[field] = {
-                  raw: row[csvKey],
-                  parsed: filamentData[field]
-                };
-              });
-              console.log(`Row ${rowNum} sample values:`, debugInfo);
-            }
-
-            // Remove null/undefined/empty values
-            Object.keys(filamentData).forEach(key => {
-              if (filamentData[key] === null || filamentData[key] === undefined || filamentData[key] === '') {
-                delete filamentData[key];
-              }
-            });
-
-            // Generate product_id if missing
-            if (!filamentData.product_id) {
-              const vendor = filamentData.vendor || 'unknown';
-              const title = productTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50);
-              filamentData.product_id = `${vendor.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${title}-${Date.now()}-${rowIndex}`;
-              console.log(`🔑 Generated product_id: ${filamentData.product_id}`);
-            }
-
-            // Download and upload image if it's an external URL
-            if (filamentData.featured_image && filamentData.featured_image.startsWith('http')) {
-              const uploadedUrl = await downloadAndUploadImage(filamentData.featured_image, filamentData.product_id);
-              if (uploadedUrl) {
-                filamentData.featured_image = uploadedUrl;
-              }
-            }
-
-            // Insert/update in database
-            const { error } = await supabase
-              .from("filaments")
-              .upsert(filamentData, { onConflict: "product_id" });
-
-            if (error) {
-              console.error(`❌ Row ${rowNum} (${productTitle}):`, {
-                message: error.message,
-                details: error.details,
-                hint: error.hint,
-                code: error.code
-              });
-              
-              // Enhanced error message with field information
-              let errorMsg = `Row ${rowNum} (${productTitle}): ${error.message}`;
-              if (error.details) errorMsg += ` | Details: ${error.details}`;
-              if (error.hint) errorMsg += ` | Hint: ${error.hint}`;
-              
-              errors.push(errorMsg);
-              addLog('error', `❌ Row ${rowNum}: ${productTitle} - ${error.message}`);
-              setProgress(prev => ({ ...prev, current: rowIndex + 1, errors: prev.errors + 1 }));
-            } else {
-              console.log(`✅ Row ${rowNum} (${productTitle}) imported successfully`);
-              addLog('success', `✅ Row ${rowNum}: ${productTitle}`);
-              successCount++;
-              setProgress(prev => ({ ...prev, current: rowIndex + 1 }));
-            }
-          } catch (rowError: any) {
-            console.error(`❌ Exception at row ${rowNum}:`, rowError);
-            const errorMsg = `Row ${rowNum}: ${rowError.message}`;
-            errors.push(errorMsg);
-            addLog('error', `❌ ${errorMsg}`);
-            setProgress(prev => ({ ...prev, current: rowIndex + 1, errors: prev.errors + 1 }));
-          }
-        }
-      }
-
-      console.log("\n" + "=".repeat(80));
-      console.log(`✅ IMPORT COMPLETE`);
-      console.log(`   Successful: ${successCount}`);
-      console.log(`   Errors: ${errors.length}`);
-      console.log(`   Warnings: ${warnings.length}`);
-      console.log("=".repeat(80) + "\n");
-      
-      addLog('info', '');
-      addLog('success', `✅ Import complete: ${successCount} successful, ${errors.length} errors, ${warnings.length} warnings`);
-
-      setImportResults({ success: successCount, errors, warnings });
-
-      if (successCount > 0) {
-        toast({
-          title: "Import completed",
-          description: `Successfully imported ${successCount} filament(s). ${errors.length} error(s).`,
-        });
-      } else {
-        toast({
-          title: "Import failed",
-          description: `No filaments were imported. Check error details below.`,
-          variant: "destructive",
-        });
-      }
-
-      setFile(null);
-    } catch (error: any) {
-      console.error("Import error:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to import CSV",
+        title: "Discovery Failed",
+        description: error instanceof Error ? error.message : "Failed to discover products",
         variant: "destructive",
       });
     } finally {
-      setIsUploading(false);
+      setIsDiscovering(false);
     }
   };
 
-  if (loading || !isAdmin) {
-    return null;
+  const toggleProduct = (productId: string) => {
+    setProducts(prev => prev.map(p => 
+      p.product_id === productId ? { ...p, selected: !p.selected } : p
+    ));
+  };
+
+  const toggleAll = (selected: boolean) => {
+    setProducts(prev => prev.map(p => ({ ...p, selected })));
+  };
+
+  const handleImport = async () => {
+    const selectedProducts = products.filter(p => p.selected);
+    if (selectedProducts.length === 0) {
+      toast({
+        title: "No Products Selected",
+        description: "Please select at least one product to import",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+    setImportProgress({ current: 0, total: selectedProducts.length });
+    
+    const results = { success: 0, updated: 0, errors: [] as string[] };
+
+    for (let i = 0; i < selectedProducts.length; i++) {
+      const product = selectedProducts[i];
+      setImportProgress({ current: i + 1, total: selectedProducts.length });
+
+      try {
+        const filamentData = {
+          product_id: product.product_id,
+          product_title: product.product_title,
+          product_handle: product.product_handle,
+          product_url: product.product_url,
+          vendor: product.vendor,
+          material: product.material,
+          color_hex: product.color_hex,
+          color_family: product.color_family,
+          featured_image: product.featured_image,
+          variant_sku: product.variant_sku,
+          variant_price: product.variant_price,
+          net_weight_g: product.net_weight_g,
+          diameter_nominal_mm: product.diameter_nominal_mm,
+          tds_url: product.tds_url,
+          upc: product.upc,
+          ean: product.ean,
+          gtin: product.gtin,
+          mpn: product.mpn,
+          nozzle_temp_min_c: product.nozzle_temp_min_c,
+          nozzle_temp_max_c: product.nozzle_temp_max_c,
+          bed_temp_min_c: product.bed_temp_min_c,
+          bed_temp_max_c: product.bed_temp_max_c,
+          is_nozzle_abrasive: product.is_nozzle_abrasive,
+        };
+
+        if (product.existing_id) {
+          // Update existing
+          const { error } = await supabase
+            .from('filaments')
+            .update(filamentData)
+            .eq('id', product.existing_id);
+          
+          if (error) throw error;
+          results.updated++;
+        } else {
+          // Insert new
+          const { error } = await supabase
+            .from('filaments')
+            .insert(filamentData);
+          
+          if (error) throw error;
+          results.success++;
+        }
+      } catch (error) {
+        results.errors.push(`${product.product_title}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    setImportResults(results);
+    setIsImporting(false);
+
+    toast({
+      title: "Import Complete",
+      description: `Created ${results.success}, Updated ${results.updated}, Errors: ${results.errors.length}`,
+    });
+  };
+
+  const getCompletenessColor = (percentage: number) => {
+    if (percentage >= 80) return 'text-green-500';
+    if (percentage >= 50) return 'text-yellow-500';
+    return 'text-red-500';
+  };
+
+  const selectedCount = products.filter(p => p.selected).length;
+  const newCount = products.filter(p => p.selected && !p.existing_id).length;
+  const updateCount = products.filter(p => p.selected && p.existing_id).length;
+  const avgCompleteness = products.length > 0 
+    ? Math.round(products.reduce((sum, p) => sum + p.data_completeness, 0) / products.length)
+    : 0;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" asChild>
-                <Link to="/admin/dashboard">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Link>
-              </Button>
-              <Shield className="w-8 h-8 text-primary" />
-              <h1 className="text-3xl font-bold text-foreground">CSV Import</h1>
-            </div>
-            <Button onClick={downloadTemplate} variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Download Template
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <Link to="/admin">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
             </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Brand Discovery & Import</h1>
+            <p className="text-muted-foreground">
+              Automatically discover and import filament products from any brand website
+            </p>
           </div>
-          <p className="text-muted-foreground">
-            Upload filament data via CSV - new standardized format
-          </p>
         </div>
 
-        <Card className="p-8 bg-card border-border">
-          <div className="space-y-6">
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-              {file ? (
-                <div className="space-y-4">
-                  <FileText className="h-12 w-12 text-primary mx-auto" />
-                  <p className="font-medium text-foreground">{file.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {(file.size / 1024).toFixed(2)} KB
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <Upload className="h-12 w-12 text-muted-foreground mx-auto" />
-                  <div>
-                    <label htmlFor="csv-upload" className="cursor-pointer">
-                      <span className="text-primary hover:underline">Choose a CSV file</span>
-                      <Input
-                        id="csv-upload"
-                        type="file"
-                        accept=".csv"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </label>
+        {/* Discovery Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Discover Brand Products
+            </CardTitle>
+            <CardDescription>
+              Enter the brand name and their website URL. The system will automatically detect the platform and scrape all filament products.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="brand-name">Brand Name</Label>
+                <Input
+                  id="brand-name"
+                  placeholder="e.g., Polymaker, eSUN, Eryone"
+                  value={brandName}
+                  onChange={(e) => setBrandName(e.target.value)}
+                  disabled={isDiscovering}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="website-url">Website URL</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="website-url"
+                      placeholder="e.g., polymaker.com or https://www.esun3d.com"
+                      value={websiteUrl}
+                      onChange={(e) => setWebsiteUrl(e.target.value)}
+                      disabled={isDiscovering}
+                      className="pl-10"
+                    />
                   </div>
+                  <Button 
+                    onClick={handleDiscover} 
+                    disabled={isDiscovering || !brandName || !websiteUrl}
+                  >
+                    {isDiscovering ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Discovering...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="mr-2 h-4 w-4" />
+                        Discover
+                      </>
+                    )}
+                  </Button>
                 </div>
-              )}
+              </div>
             </div>
 
-            {file && (
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2 p-3 rounded-lg border bg-muted/30">
-                  <input
-                    type="checkbox"
-                    id="delete-non-csv"
-                    checked={deleteNonCsv}
-                    onChange={(e) => setDeleteNonCsv(e.target.checked)}
-                    disabled={isUploading}
-                    className="h-4 w-4 rounded border-border cursor-pointer"
-                  />
-                  <label htmlFor="delete-non-csv" className="text-sm cursor-pointer select-none">
-                    Delete filaments not in CSV before import
-                  </label>
-                </div>
-                
-                <div className="flex gap-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setFile(null);
-                      setImportResults(null);
-                      setProgress({ current: 0, total: 0, errors: 0, warnings: 0 });
-                      setLogs([]);
-                      setWeightStats(null);
-                      setSummaryReport(null);
-                      setAwaitingConfirmation(false);
-                      setProcessedRows([]);
-                    }}
-                    className="flex-1"
-                    disabled={isUploading}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleUpload}
-                    disabled={isUploading}
-                    className="flex-1"
-                  >
-                    {isUploading ? "Importing..." : "Import Data"}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {isUploading && progress.total > 0 && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Processing: {progress.current} / {progress.total}</span>
-                  <span className="text-destructive">{progress.errors} errors</span>
-                </div>
-                <Progress value={(progress.current / progress.total) * 100} />
-              </div>
-            )}
-
-            {weightStats && (
-              <div className="rounded-lg border bg-blue-500/10 border-blue-500/20 p-4">
-                <h3 className="font-semibold mb-2 text-blue-600 dark:text-blue-400">Weight Conversion Statistics</h3>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Total weight cells processed:</span>
-                    <span className="font-medium">{weightStats.total}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Converted from kg (× 1000):</span>
-                    <span className="font-medium text-green-600 dark:text-green-400">{weightStats.kg} cells</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Stripped 'g' suffix:</span>
-                    <span className="font-medium text-blue-600 dark:text-blue-400">{weightStats.g} cells</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Unchanged (numeric only):</span>
-                    <span className="font-medium text-muted-foreground">{weightStats.unchanged} cells</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {summaryReport && (
-              <div className="space-y-4">
-                <Alert className="border-blue-500/50 bg-blue-500/10">
-                  <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <AlertTitle className="text-blue-600 dark:text-blue-400">Pre-Import Summary Report</AlertTitle>
-                  <AlertDescription className="text-foreground/80 mt-2 space-y-2">
-                    <p className="font-semibold">Ready to import {summaryReport.totalRows} rows</p>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="flex justify-between p-2 rounded bg-background/50">
-                        <span>Missing Required:</span>
-                        <span className={`font-medium ${summaryReport.missingRequired > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                          {summaryReport.missingRequired}
-                        </span>
-                      </div>
-                      <div className="flex justify-between p-2 rounded bg-background/50">
-                        <span>Invalid Weights:</span>
-                        <span className={`font-medium ${summaryReport.invalidWeights > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
-                          {summaryReport.invalidWeights}
-                        </span>
-                      </div>
-                      <div className="flex justify-between p-2 rounded bg-background/50">
-                        <span>Out-of-Range:</span>
-                        <span className={`font-medium ${summaryReport.outOfRangeNumeric > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
-                          {summaryReport.outOfRangeNumeric}
-                        </span>
-                      </div>
-                      <div className="flex justify-between p-2 rounded bg-background/50">
-                        <span>Invalid URLs:</span>
-                        <span className={`font-medium ${summaryReport.invalidUrls > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
-                          {summaryReport.invalidUrls}
-                        </span>
-                      </div>
-                      <div className="flex justify-between p-2 rounded bg-background/50 col-span-2">
-                        <span>Missing/Zero Prices:</span>
-                        <span className={`font-medium ${summaryReport.missingPrices > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}`}>
-                          {summaryReport.missingPrices}
-                        </span>
-                      </div>
-                      {summaryReport.toDeleteCount !== undefined && summaryReport.toDeleteCount > 0 && (
-                        <div className="flex justify-between p-2 rounded bg-background/50 col-span-2">
-                          <span>Filaments to Delete:</span>
-                          <span className="font-medium text-red-600 dark:text-red-400">
-                            {summaryReport.toDeleteCount}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </AlertDescription>
-                </Alert>
-
-                {(summaryReport.issues.length > 0 || (summaryReport.toDeleteCount && summaryReport.toDeleteCount > 0)) && (
-                  <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4">
-                    <h3 className="font-semibold mb-3 text-yellow-600 dark:text-yellow-400">Details</h3>
-                    <div className="space-y-3">
-                      {summaryReport.toDeleteCount !== undefined && summaryReport.toDeleteCount > 0 && (
-                        <div className="text-sm">
-                          <p className="font-medium text-red-600 dark:text-red-400 mb-1">
-                            🗑️ Filaments to Delete: {summaryReport.toDeleteCount}
-                          </p>
-                          {summaryReport.toDeleteExamples && summaryReport.toDeleteExamples.length > 0 && (
-                            <div className="ml-4 space-y-0.5 text-xs text-muted-foreground font-mono">
-                              {summaryReport.toDeleteExamples.map((example, exIdx) => (
-                                <div key={exIdx}>• {example}</div>
-                              ))}
-                              {summaryReport.toDeleteCount > summaryReport.toDeleteExamples.length && (
-                                <div className="text-red-600/70 dark:text-red-400/70">
-                                  ... and {summaryReport.toDeleteCount - summaryReport.toDeleteExamples.length} more
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {summaryReport.issues.map((issue, idx) => (
-                        <div key={idx} className="text-sm">
-                          <p className="font-medium text-foreground mb-1">
-                            {issue.type}: {issue.count} row{issue.count !== 1 ? 's' : ''}
-                          </p>
-                          {issue.examples.length > 0 && (
-                            <div className="ml-4 space-y-0.5 text-xs text-muted-foreground font-mono">
-                              {issue.examples.map((example, exIdx) => (
-                                <div key={exIdx}>• {example}</div>
-                              ))}
-                              {issue.count > issue.examples.length && (
-                                <div className="text-yellow-600/70 dark:text-yellow-400/70">
-                                  ... and {issue.count - issue.examples.length} more
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {awaitingConfirmation && (
-                  <div className="flex gap-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setAwaitingConfirmation(false);
-                        setSummaryReport(null);
-                        setProcessedRows([]);
-                        setIsUploading(false);
-                      }}
-                      className="flex-1"
-                    >
-                      Cancel Import
-                    </Button>
-                    <Button
-                      onClick={confirmAndProceedImport}
-                      className="flex-1 bg-primary"
-                    >
-                      Confirm & Import
-                    </Button>
-                  </div>
+            {/* Platform Detection Result */}
+            {discoveryResult && (
+              <div className="flex items-center gap-4 p-3 bg-muted rounded-lg">
+                <Badge variant="secondary" className="font-mono">
+                  {discoveryResult.platform.toUpperCase()}
+                </Badge>
+                <span className="text-sm text-muted-foreground">
+                  Platform detected • {discoveryResult.total_found} products found
+                </span>
+                {discoveryResult.errors.length > 0 && (
+                  <Badge variant="destructive">
+                    {discoveryResult.errors.length} errors
+                  </Badge>
                 )}
               </div>
             )}
+          </CardContent>
+        </Card>
 
-            {logs.length > 0 && (
-              <div className="rounded-lg border bg-muted/30 p-4">
-                <h3 className="font-semibold mb-2">Import Log</h3>
-                <div className="max-h-96 overflow-y-auto space-y-0.5 text-xs font-mono">
-                  {logs.map((log, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`
-                        ${log.type === 'success' ? 'text-green-600 dark:text-green-400' : ''}
-                        ${log.type === 'error' ? 'text-red-600 dark:text-red-400' : ''}
-                        ${log.type === 'warning' ? 'text-yellow-600 dark:text-yellow-400' : ''}
-                        ${log.type === 'info' ? 'text-foreground/70' : ''}
-                      `}
-                    >
-                      {log.message}
+        {/* Results */}
+        {products.length > 0 && (
+          <>
+            {/* Summary Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-2xl font-bold">{products.length}</div>
+                  <p className="text-sm text-muted-foreground">Total Found</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-2xl font-bold text-green-500">{selectedCount}</div>
+                  <p className="text-sm text-muted-foreground">Selected</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-2xl font-bold text-blue-500">{newCount}</div>
+                  <p className="text-sm text-muted-foreground">New Products</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-2xl font-bold text-yellow-500">{updateCount}</div>
+                  <p className="text-sm text-muted-foreground">Updates</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className={`text-2xl font-bold ${getCompletenessColor(avgCompleteness)}`}>
+                    {avgCompleteness}%
+                  </div>
+                  <p className="text-sm text-muted-foreground">Avg Completeness</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => toggleAll(true)}>
+                  Select All
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => toggleAll(false)}>
+                  Deselect All
+                </Button>
+              </div>
+              <Button 
+                onClick={handleImport} 
+                disabled={isImporting || selectedCount === 0}
+                size="lg"
+              >
+                {isImporting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Importing {importProgress.current}/{importProgress.total}...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import {selectedCount} Products
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Import Progress */}
+            {isImporting && (
+              <Progress value={(importProgress.current / importProgress.total) * 100} />
+            )}
+
+            {/* Import Results */}
+            {importResults && (
+              <Card className={importResults.errors.length > 0 ? 'border-yellow-500' : 'border-green-500'}>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-4">
+                    {importResults.errors.length === 0 ? (
+                      <CheckCircle2 className="h-8 w-8 text-green-500" />
+                    ) : (
+                      <AlertTriangle className="h-8 w-8 text-yellow-500" />
+                    )}
+                    <div>
+                      <p className="font-semibold">Import Complete</p>
+                      <p className="text-sm text-muted-foreground">
+                        Created: {importResults.success} • Updated: {importResults.updated} • Errors: {importResults.errors.length}
+                      </p>
                     </div>
+                  </div>
+                  {importResults.errors.length > 0 && (
+                    <ScrollArea className="h-32 mt-4">
+                      <div className="space-y-1">
+                        {importResults.errors.map((err, i) => (
+                          <p key={i} className="text-sm text-destructive">{err}</p>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Product Grid */}
+            <Tabs defaultValue="grid" className="w-full">
+              <TabsList>
+                <TabsTrigger value="grid">Grid View</TabsTrigger>
+                <TabsTrigger value="table">Table View</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="grid">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {products.map((product) => (
+                    <Card 
+                      key={product.product_id} 
+                      className={`cursor-pointer transition-all ${
+                        product.selected ? 'ring-2 ring-primary' : 'opacity-60'
+                      }`}
+                      onClick={() => toggleProduct(product.product_id)}
+                    >
+                      <CardContent className="p-4 space-y-3">
+                        {/* Image */}
+                        <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+                          {product.featured_image ? (
+                            <img 
+                              src={product.featured_image} 
+                              alt={product.product_title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon className="h-12 w-12 text-muted-foreground/30" />
+                            </div>
+                          )}
+                          
+                          {/* Selection indicator */}
+                          <div className="absolute top-2 left-2">
+                            <Checkbox checked={product.selected} />
+                          </div>
+                          
+                          {/* Status badge */}
+                          <div className="absolute top-2 right-2">
+                            {product.existing_id ? (
+                              <Badge variant="secondary" className="text-xs">Update</Badge>
+                            ) : (
+                              <Badge className="text-xs bg-green-500">New</Badge>
+                            )}
+                          </div>
+                          
+                          {/* Completeness */}
+                          <div className="absolute bottom-2 right-2">
+                            <Badge 
+                              variant="outline" 
+                              className={`text-xs ${getCompletenessColor(product.data_completeness)}`}
+                            >
+                              {product.data_completeness}%
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="font-medium text-sm line-clamp-2" title={product.product_title}>
+                          {product.product_title}
+                        </h3>
+
+                        {/* Material & Color */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {product.material && (
+                            <Badge variant="secondary" className="text-xs">{product.material}</Badge>
+                          )}
+                          {product.color_name && (
+                            <div className="flex items-center gap-1">
+                              {product.color_hex && (
+                                <div 
+                                  className="w-3 h-3 rounded-full border"
+                                  style={{ backgroundColor: product.color_hex }}
+                                />
+                              )}
+                              <span className="text-xs text-muted-foreground">{product.color_name}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Data indicators */}
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <DollarSign className={`h-4 w-4 ${product.variant_price ? 'text-green-500' : ''}`} />
+                          <Ruler className={`h-4 w-4 ${product.net_weight_g ? 'text-green-500' : ''}`} />
+                          <Tag className={`h-4 w-4 ${product.variant_sku ? 'text-green-500' : ''}`} />
+                          <FileText className={`h-4 w-4 ${product.tds_url ? 'text-green-500' : ''}`} />
+                        </div>
+
+                        {/* Price */}
+                        {product.variant_price && (
+                          <p className="text-lg font-bold font-mono">
+                            ${product.variant_price.toFixed(2)}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
-              </div>
-            )}
+              </TabsContent>
+              
+              <TabsContent value="table">
+                <Card>
+                  <ScrollArea className="h-[600px]">
+                    <table className="w-full">
+                      <thead className="sticky top-0 bg-background border-b">
+                        <tr>
+                          <th className="p-3 text-left">Select</th>
+                          <th className="p-3 text-left">Product</th>
+                          <th className="p-3 text-left">Material</th>
+                          <th className="p-3 text-left">Color</th>
+                          <th className="p-3 text-left">Price</th>
+                          <th className="p-3 text-left">Weight</th>
+                          <th className="p-3 text-left">SKU</th>
+                          <th className="p-3 text-left">Completeness</th>
+                          <th className="p-3 text-left">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {products.map((product) => (
+                          <tr 
+                            key={product.product_id} 
+                            className={`border-b cursor-pointer hover:bg-muted/50 ${
+                              product.selected ? '' : 'opacity-50'
+                            }`}
+                            onClick={() => toggleProduct(product.product_id)}
+                          >
+                            <td className="p-3">
+                              <Checkbox checked={product.selected} />
+                            </td>
+                            <td className="p-3">
+                              <div className="flex items-center gap-2">
+                                {product.featured_image && (
+                                  <img 
+                                    src={product.featured_image} 
+                                    alt=""
+                                    className="w-10 h-10 object-cover rounded"
+                                  />
+                                )}
+                                <span className="max-w-[200px] truncate" title={product.product_title}>
+                                  {product.product_title}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              {product.material && (
+                                <Badge variant="secondary">{product.material}</Badge>
+                              )}
+                            </td>
+                            <td className="p-3">
+                              {product.color_name && (
+                                <div className="flex items-center gap-1">
+                                  {product.color_hex && (
+                                    <div 
+                                      className="w-4 h-4 rounded-full border"
+                                      style={{ backgroundColor: product.color_hex }}
+                                    />
+                                  )}
+                                  <span>{product.color_name}</span>
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-3 font-mono">
+                              {product.variant_price ? `$${product.variant_price.toFixed(2)}` : '-'}
+                            </td>
+                            <td className="p-3">
+                              {product.net_weight_g ? `${product.net_weight_g}g` : '-'}
+                            </td>
+                            <td className="p-3 font-mono text-sm">
+                              {product.variant_sku || '-'}
+                            </td>
+                            <td className="p-3">
+                              <Badge 
+                                variant="outline" 
+                                className={getCompletenessColor(product.data_completeness)}
+                              >
+                                {product.data_completeness}%
+                              </Badge>
+                            </td>
+                            <td className="p-3">
+                              {product.existing_id ? (
+                                <Badge variant="secondary">Update</Badge>
+                              ) : (
+                                <Badge className="bg-green-500">New</Badge>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </ScrollArea>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
 
-            {importResults && (
-              <div className="space-y-3">
-                <div className="rounded-lg border bg-muted/50 p-4">
-                  <h3 className="font-semibold mb-2">Import Summary</h3>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span>Successfully imported:</span>
-                      <span className="font-medium text-primary">{importResults.success}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Errors:</span>
-                      <span className="font-medium text-destructive">{importResults.errors.length}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {importResults.errors.length > 0 && (
-                  <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
-                    <h3 className="font-semibold mb-2 text-destructive">Error Details (first 50)</h3>
-                    <div className="max-h-64 overflow-y-auto space-y-1 text-sm">
-                      {importResults.errors.slice(0, 50).map((error, idx) => (
-                        <div key={idx} className="text-destructive/90">{error}</div>
-                      ))}
-                      {importResults.errors.length > 50 && (
-                        <div className="text-destructive/70 italic">... and {importResults.errors.length - 50} more errors</div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </Card>
+        {/* Empty State */}
+        {!isDiscovering && products.length === 0 && !discoveryResult && (
+          <Card className="border-dashed">
+            <CardContent className="py-12 text-center">
+              <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-semibold mb-2">No Products Discovered Yet</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Enter a brand name and website URL above, then click "Discover" to automatically 
+                find and extract all filament products from their store.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
