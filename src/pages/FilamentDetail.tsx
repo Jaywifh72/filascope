@@ -295,6 +295,14 @@ const FilamentDetail = () => {
     'Neon Green', 'Shimmering Violet', 'Ultramarine Blue', 'Carbon Fiber Black',
   ];
 
+  // Terms that are PRODUCT VARIANTS (not colors) - should be kept in base name
+  const PRODUCT_VARIANT_TERMS = [
+    'Matte', 'Matt', 'Silk', 'Glitter', 'Silk Glitter', 'Carbon Fiber', 'CF',
+    'Recycled', 'CMYK Bundle', 'Bulk Buy', 'Wood Fill', 'Wood', 'HF', 'High Flow',
+    '10 rolls', '10 packs', 'Bundle', 'Pack', 'Pellets', 'Large-Format',
+    'Conductive', 'ESD', 'Performance', 'Essentials', 'Basics',
+  ];
+
   // Extract base product name by removing color suffix
   const getBaseProductName = (title: string): string => {
     // Normalize the title first
@@ -317,10 +325,30 @@ const FilamentDetail = () => {
       return weightMatch[1].trim();
     }
     
-    // Pattern 2: "Brand Material - Color" (dash separator)
-    const dashMatch = normalizedTitle.match(/^(.+?)\s+-\s+.+$/);
+    // Pattern 2: "Brand Material - Variant" (dash separator)
+    // For Matter3D style: "Basics Series PLA - Matte Bambu AMS Compatible"
+    // Check if the part after dash contains a product variant term - if so, keep it in base name
+    const dashMatch = normalizedTitle.match(/^(.+?)\s+-\s+(.+)$/);
     if (dashMatch) {
-      return dashMatch[1].trim();
+      const beforeDash = dashMatch[1].trim();
+      const afterDash = dashMatch[2].trim();
+      
+      // Check if afterDash starts with a product variant term
+      const startsWithVariant = PRODUCT_VARIANT_TERMS.some(term => 
+        afterDash.toLowerCase().startsWith(term.toLowerCase())
+      );
+      
+      // If it's a product variant, the whole title is the base name (minus generic suffixes)
+      if (startsWithVariant) {
+        // Remove generic suffixes like "Bambu AMS Compatible", "AMS Compatible"
+        return normalizedTitle
+          .replace(/\s+Bambu\s+AMS\s+Compatible\s*$/i, '')
+          .replace(/\s+AMS\s+Compatible\s*$/i, '')
+          .trim();
+      }
+      
+      // Otherwise, it's likely a color after the dash
+      return beforeDash;
     }
     
     // Pattern 3: Check for color word at the end
