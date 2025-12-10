@@ -14,7 +14,7 @@ import {
   ArrowLeft, Search, X, Thermometer, Shield, Zap, Layers, AlertTriangle, 
   CheckCircle, Info, GitCompare, BookOpen, ChevronDown, Trophy, Droplets,
   Wind, Flame, Gauge, Factory, Paintbrush, Leaf, Settings2, Crown, SlidersHorizontal,
-  Medal, Award
+  Medal, Award, Beaker, Sun, DollarSign
 } from "lucide-react";
 import { 
   MATERIAL_CATEGORIES, 
@@ -36,6 +36,79 @@ const getPropertyValue = (level: string): number => {
     'Strong Chemical Bond': 4, 'Mechanical Bond': 3, 'Weak Bond': 2, 'No Bond': 1,
   };
   return levelMap[level] || 0;
+};
+
+// Derive chemical resistance score from material data (1-5 scale)
+const getChemicalResistanceScore = (refData?: MaterialReferenceInfo): number => {
+  if (!refData) return 2; // Default medium-low
+
+  // Check for chemical resistance keywords in properties
+  const materialName = refData.name.toUpperCase();
+  
+  // Known chemically resistant materials
+  if (['PETG', 'PP', 'HDPE', 'PEEK', 'PEI', 'PEKK', 'PA-CF', 'PA-GF', 'PPA', 'CPE'].some(m => materialName.includes(m))) {
+    return 5;
+  }
+  if (['ABS', 'ASA', 'NYLON', 'PA6', 'PA12', 'PC'].some(m => materialName.includes(m))) {
+    return 4;
+  }
+  if (['PETG', 'PET'].some(m => materialName.includes(m))) {
+    return 4;
+  }
+  if (['TPU', 'TPE', 'FLEX'].some(m => materialName.includes(m))) {
+    return 3;
+  }
+  if (['PLA', 'PVA', 'HIPS', 'WOOD'].some(m => materialName.includes(m))) {
+    return 2;
+  }
+  
+  return 2; // Default
+};
+
+// Derive UV stability score from material data (1-5 scale)
+const getUVStabilityScore = (refData?: MaterialReferenceInfo): number => {
+  if (!refData) return 2;
+
+  const materialName = refData.name.toUpperCase();
+  
+  // Check weaknesses for UV degradation mentions
+  const weaknesses = refData.weaknesses?.limitations?.join(' ').toLowerCase() || '';
+  if (weaknesses.includes('uv') && weaknesses.includes('degrad')) {
+    return 1;
+  }
+  
+  // Known UV-stable materials
+  if (['ASA', 'PMMA', 'PC-ASA'].some(m => materialName.includes(m))) {
+    return 5;
+  }
+  if (['PETG', 'PC', 'PEEK', 'PEI', 'PP'].some(m => materialName.includes(m))) {
+    return 4;
+  }
+  if (['ABS', 'NYLON', 'PA'].some(m => materialName.includes(m))) {
+    return 3;
+  }
+  if (['PLA', 'TPU'].some(m => materialName.includes(m))) {
+    return 2;
+  }
+  if (['PVA', 'HIPS'].some(m => materialName.includes(m))) {
+    return 1;
+  }
+  
+  return 2;
+};
+
+// Derive cost efficiency score from material data (1-5 scale, higher = more affordable)
+const getCostEfficiencyScore = (refData?: MaterialReferenceInfo): number => {
+  if (!refData) return 3;
+
+  const costPosition = refData.practicalContext?.costPosition;
+  switch (costPosition) {
+    case 'Budget': return 5;
+    case 'Standard': return 4;
+    case 'Premium': return 2;
+    case 'Industrial': return 1;
+    default: return 3;
+  }
 };
 
 // Extract numeric value from string, handling ranges like "50-65" by taking the midpoint
@@ -245,10 +318,13 @@ const ComparisonContent = () => {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [weightsOpen, setWeightsOpen] = useState(false);
   const [weights, setWeights] = useState({
-    printability: 25,
-    strength: 25,
-    flexibility: 25,
-    heatResistance: 25,
+    printability: 15,
+    strength: 15,
+    flexibility: 15,
+    heatResistance: 15,
+    chemicalResistance: 15,
+    uvStability: 15,
+    costEfficiency: 10,
   });
 
   // Get all available materials with info
@@ -334,7 +410,8 @@ const ComparisonContent = () => {
 
   // Calculate weighted scores
   const weightedScores = useMemo(() => {
-    const totalWeight = weights.printability + weights.strength + weights.flexibility + weights.heatResistance;
+    const totalWeight = weights.printability + weights.strength + weights.flexibility + 
+      weights.heatResistance + weights.chemicalResistance + weights.uvStability + weights.costEfficiency;
     if (totalWeight === 0) return [];
 
     return selectedMaterialInfos.map(m => {
@@ -342,12 +419,18 @@ const ComparisonContent = () => {
       const strengthValue = getPropertyValue(m.info?.properties.strength || '');
       const flexValue = getPropertyValue(m.info?.properties.flexibility || '');
       const heatValue = getPropertyValue(m.info?.properties.heatResistance || '');
+      const chemicalValue = getChemicalResistanceScore(m.refData);
+      const uvValue = getUVStabilityScore(m.refData);
+      const costValue = getCostEfficiencyScore(m.refData);
 
       const weightedScore = (
         (printValue * weights.printability) +
         (strengthValue * weights.strength) +
         (flexValue * weights.flexibility) +
-        (heatValue * weights.heatResistance)
+        (heatValue * weights.heatResistance) +
+        (chemicalValue * weights.chemicalResistance) +
+        (uvValue * weights.uvStability) +
+        (costValue * weights.costEfficiency)
       ) / totalWeight;
 
       // Convert to 0-100 scale (max possible is 5)
@@ -361,6 +444,9 @@ const ComparisonContent = () => {
           strength: strengthValue,
           flexibility: flexValue,
           heatResistance: heatValue,
+          chemicalResistance: chemicalValue,
+          uvStability: uvValue,
+          costEfficiency: costValue,
         }
       };
     }).sort((a, b) => b.score - a.score);
@@ -372,7 +458,15 @@ const ComparisonContent = () => {
   };
 
   const resetWeights = () => {
-    setWeights({ printability: 25, strength: 25, flexibility: 25, heatResistance: 25 });
+    setWeights({ 
+      printability: 15, 
+      strength: 15, 
+      flexibility: 15, 
+      heatResistance: 15,
+      chemicalResistance: 15,
+      uvStability: 15,
+      costEfficiency: 10,
+    });
   };
 
   return (
@@ -581,6 +675,57 @@ const ComparisonContent = () => {
                             className="[&_[role=slider]]:bg-red-500"
                           />
                         </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                              <Beaker className="w-3.5 h-3.5 text-cyan-400" />
+                              Chemical Resistance
+                            </label>
+                            <span className="text-sm font-medium text-foreground w-8 text-right">{weights.chemicalResistance}%</span>
+                          </div>
+                          <Slider
+                            value={[weights.chemicalResistance]}
+                            onValueChange={([v]) => updateWeight('chemicalResistance', v)}
+                            max={100}
+                            step={5}
+                            className="[&_[role=slider]]:bg-cyan-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                              <Sun className="w-3.5 h-3.5 text-yellow-400" />
+                              UV Stability
+                            </label>
+                            <span className="text-sm font-medium text-foreground w-8 text-right">{weights.uvStability}%</span>
+                          </div>
+                          <Slider
+                            value={[weights.uvStability]}
+                            onValueChange={([v]) => updateWeight('uvStability', v)}
+                            max={100}
+                            step={5}
+                            className="[&_[role=slider]]:bg-yellow-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                              <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                              Cost Efficiency
+                            </label>
+                            <span className="text-sm font-medium text-foreground w-8 text-right">{weights.costEfficiency}%</span>
+                          </div>
+                          <Slider
+                            value={[weights.costEfficiency]}
+                            onValueChange={([v]) => updateWeight('costEfficiency', v)}
+                            max={100}
+                            step={5}
+                            className="[&_[role=slider]]:bg-emerald-500"
+                          />
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -625,7 +770,7 @@ const ComparisonContent = () => {
                         )}>
                           {material.name}
                         </div>
-                        <div className="text-xs text-muted-foreground space-y-0.5">
+                        <div className="text-xs text-muted-foreground grid grid-cols-2 gap-x-2 gap-y-0.5">
                           <div className="flex justify-between">
                             <span>Print:</span>
                             <span className={weights.printability > 0 ? "text-foreground" : "text-muted-foreground/50"}>
@@ -648,6 +793,24 @@ const ComparisonContent = () => {
                             <span>Heat:</span>
                             <span className={weights.heatResistance > 0 ? "text-foreground" : "text-muted-foreground/50"}>
                               {material.breakdown.heatResistance}/5
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Chem:</span>
+                            <span className={weights.chemicalResistance > 0 ? "text-foreground" : "text-muted-foreground/50"}>
+                              {material.breakdown.chemicalResistance}/5
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>UV:</span>
+                            <span className={weights.uvStability > 0 ? "text-foreground" : "text-muted-foreground/50"}>
+                              {material.breakdown.uvStability}/5
+                            </span>
+                          </div>
+                          <div className="flex justify-between col-span-2">
+                            <span>Cost:</span>
+                            <span className={weights.costEfficiency > 0 ? "text-foreground" : "text-muted-foreground/50"}>
+                              {material.breakdown.costEfficiency}/5
                             </span>
                           </div>
                         </div>
