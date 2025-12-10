@@ -298,15 +298,36 @@ const FilamentDetail = () => {
   // Terms that are PRODUCT VARIANTS (not colors) - should be kept in base name
   const PRODUCT_VARIANT_TERMS = [
     'Matte', 'Matt', 'Silk', 'Glitter', 'Silk Glitter', 'Carbon Fiber', 'CF',
-    'Recycled', 'CMYK Bundle', 'Bulk Buy', 'Wood Fill', 'Wood', 'HF', 'High Flow',
-    '10 rolls', '10 packs', 'Bundle', 'Pack', 'Pellets', 'Large-Format',
+    'Recycled', 'CMYK Bundle', 'CMYK', 'Bundle', 'Bulk Buy', 'Wood Fill', 'Wood', 'HF', 'High Flow',
+    '10 rolls', '10 packs', 'Pack', 'Pellets', 'Large-Format',
     'Conductive', 'ESD', 'Performance', 'Essentials', 'Basics',
   ];
 
+  // Marketing/compatibility suffixes to strip from titles (NOT colors or variants)
+  const TITLE_CLEANUP_PATTERNS = [
+    /\s*-?\s*Bambu\s+AMS\s+Compatible\s*$/i,
+    /\s*-?\s*AMS\s+Compatible\s*$/i,
+    /\s*-?\s*Bambu\s+Compatible\s*$/i,
+    /\s*\|\s*Matter3D\s*$/i,
+    /\s*\|\s*[\w\s]+$/i,  // " | BrandName" suffixes
+  ];
+
+  // Clean title by removing marketing/compatibility suffixes
+  const cleanProductTitle = (title: string): string => {
+    let cleaned = title.trim();
+    for (const pattern of TITLE_CLEANUP_PATTERNS) {
+      cleaned = cleaned.replace(pattern, '').trim();
+    }
+    return cleaned.replace(/\s+/g, ' ').trim();
+  };
+
   // Extract base product name by removing color suffix
   const getBaseProductName = (title: string): string => {
-    // Normalize the title first
-    let normalizedTitle = title
+    // First, clean the title of marketing suffixes
+    const cleanedTitle = cleanProductTitle(title);
+    
+    // Normalize the title
+    let normalizedTitle = cleanedTitle
       .replace(/\s*\(NFC\)\s*/gi, '')            // "(NFC)"
       .replace(/\s+Refill\s*$/gi, '')            // "Refill" at end
       .trim();
