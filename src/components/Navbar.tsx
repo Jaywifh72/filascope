@@ -174,7 +174,7 @@ const Navbar = () => {
             <img 
               src={filascopeLogo} 
               alt="FilaScope" 
-              className="h-20 w-auto object-contain"
+              className="h-40 w-auto object-contain"
             />
           </Link>
 
