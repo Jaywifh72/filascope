@@ -168,7 +168,7 @@ const Navbar = () => {
 
       {/* Main Command Center Header */}
       <nav className="sticky top-0 z-50 border-b border-[#333] bg-[#0A0A0A]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/80">
-        <div className="flex h-14 items-center justify-between px-6 gap-4">
+        <div className="flex h-44 items-center justify-between px-6 gap-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <img 
