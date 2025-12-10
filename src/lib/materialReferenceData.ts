@@ -2092,6 +2092,244 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'ASA-GF': {
+    name: 'ASA-GF',
+    fullName: 'Glass Fiber Reinforced Acrylonitrile Styrene Acrylate',
+    origin: {
+      yearInvented: '2018+ (3D printing formulation)',
+      originalCompany: 'Multiple manufacturers developed for industrial outdoor applications',
+      keyMilestones: [
+        '1970s: ASA polymer developed for UV resistance',
+        '1980s: Glass fiber reinforced plastics widespread in injection molding',
+        '2018-2020: ASA-GF filaments become commercially available',
+        '2021+: Adopted for cost-effective outdoor structural applications',
+      ],
+      majorManufacturers: ['3DXTech', 'Polymaker', 'Fiberlogy', 'FormFutura', 'BASF'],
+    },
+    composition: {
+      basePolymer: 'ASA (Acrylonitrile Styrene Acrylate)',
+      chemicalFamily: 'Styrenic Polymer Composite',
+      keyAdditives: ['Chopped glass fiber (15-30%)', 'UV stabilizers (inherent in ASA)', 'Coupling agents'],
+      coloringAgents: 'Limited colors - typically natural/beige, gray, white, or black',
+      specialFillers: ['E-glass or S-glass fiber (typically 15-30% by weight)'],
+    },
+    familyContext: {
+      parentPolymer: 'ASA reinforced with glass fiber for increased stiffness at lower cost than carbon fiber',
+      variants: ['ASA-GF15 (15% glass)', 'ASA-GF20 (20% glass)', 'ASA-GF30 (30% glass)'],
+      chemicalComparison: 'Same UV resistance as ASA with significant stiffness improvement. Heavier but cheaper than ASA-CF.',
+      evolution: 'Created as cost-effective alternative to ASA-CF for outdoor structural applications.',
+    },
+    strengths: {
+      uniqueProperties: ['UV resistant AND stiff', 'Lower cost than carbon fiber', 'Good dimensional stability', 'Excellent creep resistance'],
+      bestUseScenarios: ['Outdoor structural housings', 'Agricultural equipment', 'Solar panel brackets', 'Marine fixtures', 'Automotive exterior parts'],
+      advantagesOverCompetitors: ['Cheaper than ASA-CF', 'UV stable unlike ABS-GF', 'Stiff and weather-resistant', 'Good balance of properties'],
+      whyChooseThis: 'When you need UV-resistant structural parts but carbon fiber cost is prohibitive.',
+    },
+    weaknesses: {
+      limitations: ['Abrasive - requires hardened nozzle', 'Heavier than ASA-CF', 'Reduced impact resistance', 'Limited color options'],
+      commonProblems: ['Nozzle wear', 'Rough surface finish', 'Glass fiber skin irritation', 'Brittle compared to unreinforced ASA'],
+      environmentalConcerns: ['Not recyclable', 'Glass fiber dust hazard', 'Petroleum-based'],
+      whenNotToUse: ['Weight-critical applications (use ASA-CF)', 'Impact-critical parts', 'Aesthetic applications', 'Without hardened nozzle'],
+    },
+    practicalContext: {
+      industryAdoption: ['Agricultural equipment', 'Marine', 'Automotive exterior', 'Industrial outdoor', 'Solar industry'],
+      commonApplications: ['Outdoor enclosures', 'Agricultural machinery parts', 'Marina fixtures', 'Solar mounting brackets', 'Weatherproof housings'],
+      safetyStandards: ['Various automotive weathering standards', 'UV aging certifications'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'Glass fiber reinforcement adds about 10x less cost than carbon fiber for similar stiffness gains',
+        'The natural tan/beige color comes from the glass fiber itself',
+        'ASA-GF can withstand decades of outdoor exposure without significant degradation',
+        'Often used where parts must survive both UV exposure and mechanical loading',
+      ],
+      whyInvented: 'Created to provide cost-effective reinforced outdoor materials without carbon fiber pricing.',
+      controversies: [
+        'Some consider glass fiber "inferior" to carbon, but cost-benefit is often favorable',
+        'Glass dust is irritating to skin - handle with care',
+        'Properties heavily dependent on fiber quality and content percentage',
+      ],
+      marketAdoption: 'Growing in outdoor industrial and agricultural applications where cost matters.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-70', unit: 'MPa', implications: 'High. Significant improvement over unreinforced ASA.' },
+        { name: 'Tensile Modulus', value: '4000-6000', unit: 'MPa', implications: 'High stiffness. Similar to ASA-CF but heavier.' },
+        { name: 'Elongation at Break', value: '2-4', unit: '%', implications: 'Very Low. Brittle - glass fibers reduce ductility.' },
+        { name: 'Impact Strength (Notched)', value: '50-90', unit: 'J/m', implications: 'Reduced from base ASA due to fiber stress concentrators.' },
+        { name: 'UV Resistance', value: 'Excellent', unit: '', implications: 'Retains ASA\'s outstanding UV stability.' },
+        { name: 'Density', value: '1.25-1.35', unit: 'g/cm³', implications: 'Higher than ASA-CF. Glass is heavier than carbon.' },
+      ],
+      notes: 'Properties depend on glass fiber content. Higher % = stiffer but more brittle.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 250, max: 280, optimal: 265 },
+      bedTemp: { min: 95, max: 110, optimal: 105 },
+      coolingFan: { min: 0, max: 30, notes: 'Minimal cooling. Similar to standard ASA.' },
+      enclosure: { required: true, notes: 'Required - warping concerns similar to ASA.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'Hygroscopic - moisture causes weak layers.' },
+      printSpeed: { recommended: '35-55 mm/s', notes: 'Slightly slower than unreinforced ASA for better layer adhesion.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED (steel, ruby, or tungsten carbide)',
+        'Larger nozzle diameter (0.5-0.8mm) recommended',
+        'Print hotter than plain ASA for fiber wetting',
+        'Use generous brim for bed adhesion',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite (G10)', 'ASA slurry'],
+        good: ['Glass with glue stick', 'Kapton tape'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'ASA slurry or heavy glue stick application. Let cool completely before removal.',
+      multiMaterial: [
+        { material: 'ASA', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer base - excellent compatibility.' },
+        { material: 'ASA-CF', bondQuality: 'Strong Chemical Bond', notes: 'Both ASA-based composites.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'Can use HIPS as dissolvable support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Good', notes: 'ASA matrix dissolves but glass fibers remain - textured finish.' },
+      ],
+      mechanical: ['Sanding produces glass dust - wear mask and eye protection', 'Can be machined with carbide tools', 'Drilling works well'],
+      glues: ['Acetone welding on ASA matrix', 'Epoxy for structural joints', 'Cyanoacrylate effective'],
+      painting: 'Rough surface requires filler primer for smooth finish. Use UV-stable paints for outdoor.',
+    },
+    safety: {
+      fumes: { level: 'High', notes: 'ASA styrene fumes plus glass fiber particulates. Enclosure with filtration required.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Not suitable for food contact - fiber shedding and styrene.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum and silica-based - does not degrade.' },
+      additionalNotes: [
+        'Glass fiber dust irritates skin, eyes, and respiratory system',
+        'Wear gloves when handling parts',
+        'Use proper dust extraction when machining',
+        'HEPA+activated carbon filtration recommended',
+      ],
+    },
+  },
+
+  'LW-ASA': {
+    name: 'LW-ASA',
+    fullName: 'Lightweight Acrylonitrile Styrene Acrylate',
+    origin: {
+      yearInvented: '2022+ (3D printing formulation)',
+      originalCompany: 'ColorFabb pioneered LW-PLA; LW-ASA followed for outdoor applications',
+      keyMilestones: [
+        '1970s: ASA polymer developed',
+        '2019: ColorFabb introduces LW-PLA concept',
+        '2022+: LW-ASA developed for UV-resistant lightweight parts',
+        '2023+: Growing adoption for outdoor RC and drone applications',
+      ],
+      majorManufacturers: ['ColorFabb', 'FormFutura', 'Polymaker', 'eSUN'],
+    },
+    composition: {
+      basePolymer: 'ASA (Acrylonitrile Styrene Acrylate)',
+      chemicalFamily: 'Foamed Styrenic Polymer',
+      keyAdditives: ['Blowing/foaming agents', 'Cell nucleating agents', 'UV stabilizers (inherent in ASA)'],
+      coloringAgents: 'Limited colors - foaming affects appearance',
+      specialFillers: ['Microsphere or chemical blowing agents that activate at higher temperatures'],
+    },
+    familyContext: {
+      parentPolymer: 'ASA with foaming agents that activate at elevated temperatures',
+      variants: ['LW-ASA (standard)', 'Active foaming versions'],
+      chemicalComparison: 'Same UV resistance as ASA but with 50-65% density reduction when foamed.',
+      evolution: 'Developed to bring LW-PLA benefits to outdoor applications requiring UV resistance.',
+    },
+    strengths: {
+      uniqueProperties: ['Up to 50-65% weight reduction', 'UV resistant (unlike LW-PLA)', 'Expanded foam texture', 'No layer lines when foamed'],
+      bestUseScenarios: ['Outdoor RC aircraft', 'Drone bodies', 'Lightweight outdoor enclosures', 'Float components', 'Prop replicas for outdoor display'],
+      advantagesOverCompetitors: ['Only lightweight AND UV-stable option', 'Massive weight savings', 'Unique matte foam finish', 'Weather-resistant'],
+      whyChooseThis: 'When you need ultralight parts for outdoor use - the ONLY UV-stable lightweight foaming filament.',
+    },
+    weaknesses: {
+      limitations: ['Requires precise temperature control for foaming', 'Reduced strength vs solid ASA', 'Limited color options', 'More expensive'],
+      commonProblems: ['Inconsistent foaming if temps vary', 'Learning curve for optimal settings', 'Not suitable for structural loads', 'Over-expansion possible'],
+      environmentalConcerns: ['Petroleum-based', 'Not recyclable (foamed structure)', 'Blowing agent considerations'],
+      whenNotToUse: ['Structural/load-bearing parts', 'When consistent density needed', 'Precise dimensional tolerance required', 'Water submersion (absorbs through cells)'],
+    },
+    practicalContext: {
+      industryAdoption: ['RC aircraft hobby', 'Drone racing', 'Props and cosplay', 'Lightweight prototyping', 'Marine floats'],
+      commonApplications: ['RC airplane fuselages', 'Drone bodies', 'Outdoor display props', 'Float accessories', 'Lightweight covers'],
+      safetyStandards: ['Not typically certified - hobby/prototyping use'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'Weight reduction of 50-65% means parts feel like styrofoam but much stronger',
+        'The foaming process eliminates visible layer lines - smooth matte finish',
+        'You can control foam density by adjusting hotend temperature',
+        'LW-ASA is the answer to "LW-PLA melts in my car" complaints',
+      ],
+      whyInvented: 'Created because LW-PLA parts would deform in sunlight and hot cars - LW-ASA survives.',
+      controversies: [
+        'Significantly more expensive per gram than standard ASA',
+        'Foaming adds print complexity - not for beginners',
+        'Strength trade-off may not be acceptable for all applications',
+      ],
+      marketAdoption: 'Niche but growing rapidly in outdoor RC and drone communities.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Density (Foamed)', value: '0.4-0.6', unit: 'g/cm³', implications: 'Massive weight reduction. Standard ASA is ~1.07 g/cm³.' },
+        { name: 'Density Reduction', value: '45-65', unit: '%', implications: 'Primary benefit - ultralight parts.' },
+        { name: 'Tensile Strength (Foamed)', value: '15-30', unit: 'MPa', implications: 'Reduced from solid ASA due to foam structure.' },
+        { name: 'UV Resistance', value: 'Excellent', unit: '', implications: 'Retains ASA UV stability even when foamed.' },
+        { name: 'Glass Transition (Tg)', value: '95-105', unit: '°C', implications: 'Same heat resistance as standard ASA.' },
+        { name: 'Foam Cell Size', value: 'Varies', unit: '', implications: 'Smaller = denser/stronger. Larger = lighter/weaker.' },
+      ],
+      notes: 'Properties highly dependent on foaming level. Test settings for your specific application.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 230, max: 270, optimal: 250 },
+      bedTemp: { min: 90, max: 105, optimal: 95 },
+      coolingFan: { min: 0, max: 40, notes: 'More cooling than standard ASA to set foam quickly.' },
+      enclosure: { required: false, notes: 'Foamed parts warp less. Enclosure optional but helps consistency.' },
+      drying: { temp: 70, duration: '4-6 hours', notes: 'Critical - moisture affects foaming behavior.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Slower speeds for better foam control.' },
+      additionalNotes: [
+        'Temperature controls foam level: lower = less foam/denser, higher = more foam/lighter',
+        'Active foaming starts around 230°C, maximum foam around 260°C',
+        'Use low flow rate (65-75%) to compensate for expansion',
+        'Larger nozzle (0.6-0.8mm) works better for consistent foam',
+        'Test print temperature towers to find ideal foam level for your needs',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Glass with glue stick'],
+        good: ['PEI (Smooth)', 'Kapton tape'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'Glue stick recommended. Foamed parts release easier than solid ASA.',
+      multiMaterial: [
+        { material: 'ASA', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer base - excellent for reinforced sections.' },
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Compatible styrenic polymers.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'Can use for dissolvable support in solid sections.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Difficult', notes: 'Foam cells may collapse. Test on scrap first.' },
+      ],
+      mechanical: ['Sanding not recommended - damages foam structure', 'Cut with sharp blades', 'Can be carved/shaped like foam'],
+      glues: ['CA glue penetrates foam well', 'Acetone welding on solid sections', 'Foam-safe epoxies work'],
+      painting: 'Foam texture accepts paint well. Primer helps. Use UV-stable paints for outdoor.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'ASA styrene fumes plus minor blowing agent off-gassing. Good ventilation required.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Not suitable for food contact - foam structure and styrene.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polymer.' },
+      additionalNotes: [
+        'Same safety precautions as standard ASA',
+        'Blowing agents are generally safe when activated in printer',
+        'Well-ventilated printing area recommended',
+      ],
+    },
+  },
+
   'TPU': {
     name: 'TPU',
     fullName: 'Thermoplastic Polyurethane',
