@@ -177,7 +177,14 @@ const BentoGrid = () => {
                 <p className="text-xs font-medium text-foreground truncate group-hover:text-green-400 transition-colors">
                   {filament.product_title}
                 </p>
-                <p className="text-xs text-muted-foreground">{filament.vendor}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground">{filament.vendor}</p>
+                  {filament.color_hex && (
+                    <span className="font-mono text-[10px] text-muted-foreground/70">
+                      #{filament.color_hex.toUpperCase()}
+                    </span>
+                  )}
+                </div>
               </div>
               {getTrueCost(filament) && (
                 <span className="font-mono text-xs font-bold text-[#ff6b00] shrink-0">
