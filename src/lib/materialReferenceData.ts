@@ -464,6 +464,361 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'ABS-CF': {
+    name: 'ABS-CF',
+    fullName: 'Carbon Fiber Reinforced Acrylonitrile Butadiene Styrene',
+    origin: {
+      yearInvented: '2010s (3D printing formulation)',
+      originalCompany: 'Multiple manufacturers developed carbon fiber composites',
+      keyMilestones: [
+        '1948: ABS polymer first developed',
+        '2010s: Carbon fiber reinforced variants emerge for industrial 3D printing',
+        '2016+: Desktop 3D printing CF-ABS becomes available',
+        '2020+: Widely adopted for high-strength functional parts',
+      ],
+      majorManufacturers: ['3DXTech', 'Polymaker', 'MatterHackers', 'Priline', 'eSUN', 'ColorFabb'],
+    },
+    composition: {
+      basePolymer: 'ABS (Acrylonitrile Butadiene Styrene)',
+      chemicalFamily: 'Styrenic Polymer Composite',
+      keyAdditives: ['Chopped carbon fiber (10-20%)', 'Coupling agents', 'Impact modifiers'],
+      coloringAgents: 'Typically black only due to carbon fiber content',
+      specialFillers: ['Chopped carbon fiber strands (typically 100-200μm length)'],
+    },
+    familyContext: {
+      parentPolymer: 'Standard ABS reinforced with carbon fiber',
+      variants: ['ABS-CF 10%', 'ABS-CF 15%', 'ABS-CF 20%'],
+      chemicalComparison: '40-60% stiffer than standard ABS with significantly improved dimensional stability.',
+      evolution: 'Developed to bring aerospace-grade performance to desktop 3D printing.',
+    },
+    strengths: {
+      uniqueProperties: ['Exceptional stiffness', 'Low warping compared to standard ABS', 'Excellent dimensional stability', 'Professional matte finish'],
+      bestUseScenarios: ['Structural components', 'Jigs and fixtures', 'End-use parts', 'Drone frames', 'RC vehicle chassis'],
+      advantagesOverCompetitors: ['Stiffer than any other ABS variant', 'Less warping than plain ABS', 'Acetone smoothable like ABS', 'High strength-to-weight ratio'],
+      whyChooseThis: 'When you need maximum stiffness and dimensional accuracy for functional parts that ABS alone cannot provide.',
+    },
+    weaknesses: {
+      limitations: ['Highly abrasive - requires hardened nozzle', 'Brittle in impact (fiber pullout)', 'Anisotropic strength', 'Expensive'],
+      commonProblems: ['Rapid brass nozzle wear', 'Layer adhesion weaker than solid ABS', 'Stringing with protruding fibers', 'Clogging with worn nozzles'],
+      environmentalConcerns: ['Carbon fiber dust is a respiratory hazard', 'Not recyclable', 'More energy-intensive production'],
+      whenNotToUse: ['Impact-critical parts', 'When you lack a hardened nozzle', 'Parts requiring isotropic strength', 'Aesthetic parts (matte black only)'],
+    },
+    practicalContext: {
+      industryAdoption: ['Aerospace prototyping', 'Automotive tooling', 'Industrial fixtures', 'Robotics', 'UAV/Drone industry'],
+      commonApplications: ['Drone frames', 'Camera gimbals', 'Robotic end effectors', 'Manufacturing jigs', 'Precision brackets'],
+      safetyStandards: ['Industrial certification varies', 'UL94 ratings available on some grades'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'Carbon fiber in ABS-CF increases stiffness by 40-60% over plain ABS',
+        'A hardened steel nozzle can last 50+ kg of CF filament; brass fails in under 500g',
+        'The matte surface finish is actually fiber ends breaking through the surface',
+        'CF-reinforced parts can replace aluminum in some applications',
+      ],
+      whyInvented: 'Created to provide stiffness approaching metals while maintaining easy processability of ABS.',
+      controversies: [
+        'Some manufacturers cut costs with low-quality short fibers that provide minimal benefit',
+        '"Carbon fiber" marketing sometimes refers to minimal CF content (5% or less)',
+        'Fiber length and quality vary dramatically between brands',
+      ],
+      marketAdoption: 'Growing rapidly as hardened nozzles become standard equipment on mid-range printers.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '55-75', unit: 'MPa', implications: 'High. Significantly stronger than base ABS in tension.' },
+        { name: 'Tensile Modulus', value: '4000-7000', unit: 'MPa', implications: 'Very High. 2-3x stiffer than standard ABS - the main benefit.' },
+        { name: 'Elongation at Break', value: '2-5', unit: '%', implications: 'Very Low. Brittle - snaps rather than bends.' },
+        { name: 'Impact Strength (Notched)', value: '40-80', unit: 'J/m', implications: 'Reduced. Lower impact than plain ABS due to fiber stress concentrators.' },
+        { name: 'Glass Transition (Tg)', value: '100-105', unit: '°C', implications: 'Same as ABS. Heat resistance unchanged.' },
+        { name: 'Heat Deflection (HDT)', value: '~100', unit: '°C (0.45 MPa)', implications: 'Slightly improved due to fiber reinforcement.' },
+      ],
+      notes: 'Fiber orientation during printing affects properties - parts are strongest along print lines.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 240, max: 270, optimal: 255 },
+      bedTemp: { min: 90, max: 110, optimal: 100 },
+      coolingFan: { min: 0, max: 30, notes: 'Minimal cooling like ABS. Some cooling can improve bridges.' },
+      enclosure: { required: true, notes: 'Required - same warping concerns as ABS, though reduced.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'Hygroscopic. Moisture causes bubbling and weak layers.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Moderate speeds. Slower for fine details.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED (steel, ruby, or tungsten carbide)',
+        'Larger nozzle diameter (0.5-0.8mm) reduces clogging',
+        'Print hotter than plain ABS for better layer adhesion',
+        'Z-offset may need adjustment due to fiber content',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite (G10)', 'ABS slurry'],
+        good: ['Glass with glue stick', 'Kapton tape'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'Same as ABS. Glue stick or ABS slurry recommended.',
+      multiMaterial: [
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility - same polymer base.' },
+        { material: 'ASA', bondQuality: 'Strong Chemical Bond', notes: 'Compatible styrenic polymers.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'Can use HIPS as dissolvable support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Good', notes: 'Works but fibers may protrude through smoothed surface.' },
+        { method: 'Acetone Brush', effectiveness: 'Good', notes: 'Local smoothing possible but uneven due to fibers.' },
+      ],
+      mechanical: ['Sanding requires dust mask - CF dust is hazardous', 'Can be machined with carbide tools', 'Drilling and tapping work well'],
+      glues: ['Acetone welding effective', 'Cyanoacrylate works well', 'Epoxy for structural joints'],
+      painting: 'Matte finish accepts paint well. Prime first for best results.',
+    },
+    safety: {
+      fumes: { level: 'High', notes: 'ABS styrene fumes PLUS carbon fiber particulates. Good ventilation AND filtration required.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Not suitable for food contact - fiber shedding and styrene concerns.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based with non-degradable carbon fiber.' },
+      additionalNotes: [
+        'Carbon fiber dust is a respiratory irritant - use mask when sanding',
+        'Enclosure with HEPA+activated carbon filtration strongly recommended',
+        'Dispose of sanding dust and failed prints properly',
+      ],
+    },
+  },
+
+  'ABS+': {
+    name: 'ABS+',
+    fullName: 'Enhanced Acrylonitrile Butadiene Styrene',
+    origin: {
+      yearInvented: '2015+ (3D printing formulation)',
+      originalCompany: 'Multiple filament manufacturers - not a standardized formula',
+      keyMilestones: [
+        '1948: ABS polymer invented',
+        '2015-2017: ABS+ variants emerge from various manufacturers',
+        '2018+: Becomes popular "easy-print ABS" option',
+      ],
+      majorManufacturers: ['eSUN', 'Hatchbox', 'Inland', 'Overture', 'SUNLU', 'Polymaker'],
+    },
+    composition: {
+      basePolymer: 'ABS with proprietary additives',
+      chemicalFamily: 'Modified Styrenic Polymer',
+      keyAdditives: ['Impact modifiers', 'Anti-warping agents', 'Flow enhancers', 'Possibly styrene-acrylonitrile modifiers'],
+      coloringAgents: 'Full color range available, similar to standard ABS',
+      specialFillers: ['Varies by manufacturer - some add rubber modifiers'],
+    },
+    familyContext: {
+      parentPolymer: 'Enhanced version of standard ABS',
+      variants: ['ABS+ (generic)', 'ABS Pro', 'ABS Premium', 'Easy ABS'],
+      chemicalComparison: 'Similar to ABS but with reduced warping tendency and improved layer adhesion.',
+      evolution: 'Created to address the printability challenges of standard ABS for hobbyists.',
+    },
+    strengths: {
+      uniqueProperties: ['Reduced warping vs standard ABS', 'Better layer adhesion', 'Easier to print', 'Maintains ABS heat resistance'],
+      bestUseScenarios: ['Functional prototypes', 'Heat-resistant parts', 'Mechanical components', 'Automotive interior parts'],
+      advantagesOverCompetitors: ['Easier than standard ABS', 'Better than PETG for heat resistance', 'Still acetone smoothable'],
+      whyChooseThis: 'When you want ABS properties but find regular ABS too difficult to print reliably.',
+    },
+    weaknesses: {
+      limitations: ['Still requires enclosure (usually)', 'Still emits styrene fumes', '"+" formulation not standardized', 'Properties vary by brand'],
+      commonProblems: ['Still can warp (just less)', 'Inconsistent quality between manufacturers', 'Some ABS+ is barely different from ABS'],
+      environmentalConcerns: ['Same environmental concerns as ABS', 'Petroleum-based', 'Fumes contain VOCs'],
+      whenNotToUse: ['When ventilation is unavailable', 'If pure ABS certification is required', 'UV-exposed applications'],
+    },
+    practicalContext: {
+      industryAdoption: ['Consumer products', 'Prototyping', 'DIY/Maker community', 'Small-batch manufacturing'],
+      commonApplications: ['Enclosures', 'Brackets', 'Functional prototypes', 'Heat-resistant housings', 'Automotive parts'],
+      safetyStandards: ['Generally not certified - formulation varies', 'Some manufacturers provide testing data'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'There is no industry standard for "ABS+" - each manufacturer has their own formula',
+        'Some ABS+ is just well-made ABS with better quality control',
+        'The "+" usually refers to reduced warping, not mechanical improvement',
+        'Printing tests show 30-50% less warping compared to budget ABS brands',
+      ],
+      whyInvented: 'Created to make ABS accessible to hobbyists without industrial enclosures.',
+      controversies: [
+        '"ABS+" naming is marketing - no standard definition exists',
+        'Quality varies dramatically between manufacturers',
+        'Some manufacturers charge premium prices for minimal improvements',
+      ],
+      marketAdoption: 'Popular with hobbyists who want ABS properties without the difficulty.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '38-48', unit: 'MPa', implications: 'Similar to ABS. Good general-purpose strength.' },
+        { name: 'Elongation at Break', value: '15-30', unit: '%', implications: 'Moderate to good ductility before failure.' },
+        { name: "Young's Modulus", value: '1800-2400', unit: 'MPa', implications: 'Similar stiffness to ABS.' },
+        { name: 'Impact Strength (Notched)', value: '180-280', unit: 'J/m', implications: 'Good impact resistance - some formulas improve this.' },
+        { name: 'Glass Transition (Tg)', value: '100-105', unit: '°C', implications: 'Same heat resistance as standard ABS.' },
+        { name: 'Heat Deflection (HDT)', value: '~90-95', unit: '°C (0.45 MPa)', implications: 'Good heat resistance for functional parts.' },
+      ],
+      notes: 'Properties vary by manufacturer. "+" typically refers to printability, not mechanical improvement.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 230, max: 260, optimal: 245 },
+      bedTemp: { min: 80, max: 100, optimal: 90 },
+      coolingFan: { min: 0, max: 40, notes: 'Slightly more cooling tolerance than standard ABS.' },
+      enclosure: { required: false, notes: 'Recommended but some brands work without. Large parts still need enclosure.' },
+      drying: { temp: 75, duration: '4-6 hours', notes: 'Hygroscopic. Dry if stringing or bubbling occurs.' },
+      printSpeed: { recommended: '40-70 mm/s', notes: 'Can print slightly faster than standard ABS.' },
+      additionalNotes: [
+        'Try without enclosure first - many ABS+ formulas work open-air for small parts',
+        'Use brim for bed adhesion on larger parts',
+        'First layer slow (20 mm/s) for best adhesion',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite (G10)', 'ABS slurry'],
+        good: ['Glass with glue stick', 'PEI (Smooth)'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'Glue stick recommended. Less aggressive adhesion than some standard ABS.',
+      multiMaterial: [
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer family - excellent compatibility.' },
+        { material: 'ASA', bondQuality: 'Strong Chemical Bond', notes: 'Compatible styrenic polymers.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'HIPS works as dissolvable support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Excellent', notes: 'Works identically to standard ABS.' },
+        { method: 'Acetone Brush', effectiveness: 'Good', notes: 'Same smoothing characteristics as ABS.' },
+      ],
+      mechanical: ['Sands easily', 'Can be machined', 'Gap filling with ABS slurry works'],
+      glues: ['Acetone welding works', 'Cyanoacrylate effective', 'ABS cement creates strong joints'],
+      painting: 'Excellent paint adhesion. Same finishing as standard ABS.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Same styrene emissions as ABS. Ventilation required.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Same concerns as ABS - styrene and layer lines.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based like standard ABS.' },
+      additionalNotes: [
+        'Same safety precautions as standard ABS',
+        'Ventilation or filtration recommended',
+        'Styrene classified as "possibly carcinogenic"',
+      ],
+    },
+  },
+
+  'ABS-GF': {
+    name: 'ABS-GF',
+    fullName: 'Glass Fiber Reinforced Acrylonitrile Butadiene Styrene',
+    origin: {
+      yearInvented: '1960s (injection molding), 2015+ (3D printing)',
+      originalCompany: 'Various industrial plastics manufacturers',
+      keyMilestones: [
+        '1948: ABS polymer developed',
+        '1960s: Glass fiber reinforced ABS for injection molding',
+        '2015-2018: GF-reinforced filaments become available',
+        '2020+: Growing adoption for industrial 3D printing',
+      ],
+      majorManufacturers: ['3DXTech', 'Polymaker', 'Fiberlogy', 'ColorFabb', 'BASF'],
+    },
+    composition: {
+      basePolymer: 'ABS (Acrylonitrile Butadiene Styrene)',
+      chemicalFamily: 'Styrenic Polymer Composite',
+      keyAdditives: ['Chopped glass fiber (15-30%)', 'Coupling agents', 'Impact modifiers'],
+      coloringAgents: 'Limited colors - typically natural/beige, gray, or black',
+      specialFillers: ['E-glass or S-glass fiber (typically 10-30% by weight)'],
+    },
+    familyContext: {
+      parentPolymer: 'Standard ABS reinforced with glass fiber',
+      variants: ['ABS-GF15 (15% glass)', 'ABS-GF20 (20% glass)', 'ABS-GF30 (30% glass)'],
+      chemicalComparison: 'Lower cost than CF reinforcement with similar stiffness improvements. Heavier than CF variants.',
+      evolution: 'Industrial injection molding material adapted for 3D printing applications.',
+    },
+    strengths: {
+      uniqueProperties: ['High stiffness', 'Excellent dimensional stability', 'Lower cost than carbon fiber', 'Good creep resistance'],
+      bestUseScenarios: ['Structural housings', 'Industrial tooling', 'Jigs and fixtures', 'Automotive under-hood parts'],
+      advantagesOverCompetitors: ['Cheaper than ABS-CF', 'Higher stiffness than plain ABS', 'Better heat resistance under load'],
+      whyChooseThis: 'When you need reinforced ABS stiffness at lower cost than carbon fiber options.',
+    },
+    weaknesses: {
+      limitations: ['Abrasive - requires hardened nozzle', 'Heavy (higher density than CF)', 'Reduced impact resistance', 'Limited color options'],
+      commonProblems: ['Nozzle wear', 'Rough surface finish', 'Brittle compared to unreinforced ABS', 'Glass fibers can irritate skin'],
+      environmentalConcerns: ['Not recyclable', 'Glass fiber dust hazard', 'Petroleum-based'],
+      whenNotToUse: ['Weight-critical applications (use CF instead)', 'Aesthetic parts', 'Impact-critical components'],
+    },
+    practicalContext: {
+      industryAdoption: ['Automotive', 'Industrial equipment', 'Appliances', 'Electronics enclosures'],
+      commonApplications: ['Under-hood automotive parts', 'Industrial housings', 'Power tool components', 'Structural brackets'],
+      safetyStandards: ['UL94 rated versions available', 'Various automotive standards'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'Glass fiber is about 10x cheaper than carbon fiber as a reinforcement',
+        'GF-ABS was used in injection molding for decades before 3D printing',
+        'The beige/tan color of natural GF-ABS comes from the glass fiber itself',
+        'Glass fiber is silica-based - same material as window glass',
+      ],
+      whyInvented: 'Created to provide cost-effective reinforcement for industrial plastic parts.',
+      controversies: [
+        'Sometimes marketed as "as good as carbon fiber" despite different properties',
+        'Glass fiber dust more irritating to skin than carbon fiber',
+        'Some cheap brands use low-quality short fibers with minimal benefit',
+      ],
+      marketAdoption: 'Popular in industrial settings where cost matters more than weight.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-70', unit: 'MPa', implications: 'High. Comparable to ABS-CF.' },
+        { name: 'Tensile Modulus', value: '4000-6000', unit: 'MPa', implications: 'High. Significant stiffness improvement over base ABS.' },
+        { name: 'Elongation at Break', value: '2-4', unit: '%', implications: 'Very Low. Brittle - fibers create stress concentrators.' },
+        { name: 'Impact Strength (Notched)', value: '50-100', unit: 'J/m', implications: 'Reduced. Lower than plain ABS due to fiber addition.' },
+        { name: 'Glass Transition (Tg)', value: '100-105', unit: '°C', implications: 'Same as ABS. Heat resistance unchanged.' },
+        { name: 'Density', value: '1.25-1.35', unit: 'g/cm³', implications: 'Higher than ABS-CF. Glass is heavier than carbon.' },
+      ],
+      notes: 'Properties depend on glass fiber content. Higher % = stiffer but more brittle.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 245, max: 275, optimal: 260 },
+      bedTemp: { min: 95, max: 110, optimal: 105 },
+      coolingFan: { min: 0, max: 30, notes: 'Minimal cooling. Similar to standard ABS.' },
+      enclosure: { required: true, notes: 'Required - same warping concerns as ABS.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'Hygroscopic. Moisture causes weak layers and bubbling.' },
+      printSpeed: { recommended: '35-55 mm/s', notes: 'Slightly slower than ABS-CF for better layer adhesion.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED (steel, ruby, or tungsten carbide)',
+        'Larger nozzle diameter (0.5-0.8mm) recommended',
+        'Print hotter than plain ABS for fiber wetting',
+        'Use brim - warping still occurs',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite (G10)', 'ABS slurry'],
+        good: ['Glass with glue stick', 'Kapton tape'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'ABS slurry or heavy glue stick application recommended.',
+      multiMaterial: [
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer base - good compatibility.' },
+        { material: 'ABS-CF', bondQuality: 'Strong Chemical Bond', notes: 'Both ABS-based composites bond well.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'Can use HIPS as dissolvable support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Good', notes: 'ABS matrix dissolves but glass fibers remain - textured finish.' },
+      ],
+      mechanical: ['Sanding produces glass dust - wear mask and eye protection', 'Can be machined with carbide tools', 'Drilling works well'],
+      glues: ['Acetone welding works on ABS matrix', 'Epoxy for structural joints', 'Cyanoacrylate effective'],
+      painting: 'Surface is rough - requires filler primer for smooth finish.',
+    },
+    safety: {
+      fumes: { level: 'High', notes: 'ABS styrene fumes plus glass fiber particulates. Enclosure with filtration required.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Not suitable for food contact - fiber shedding and styrene.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum and silica-based - does not degrade.' },
+      additionalNotes: [
+        'Glass fiber dust irritates skin, eyes, and respiratory system',
+        'Wear gloves when handling parts',
+        'Use proper dust extraction when machining',
+        'HEPA+activated carbon filtration recommended',
+      ],
+    },
+  },
+
   'ASA': {
     name: 'ASA',
     fullName: 'Acrylonitrile Styrene Acrylate',
