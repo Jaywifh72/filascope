@@ -1,11 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { 
-  LogIn, LogOut, User, Shield, Archive, Database, TrendingUp, TrendingDown, Minus
-} from "lucide-react";
+import { LogIn, LogOut, User, Shield, Archive, Database } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
 import filascopeLogo from "@/assets/filascope-logo.png";
 import {
   DropdownMenu,
@@ -19,34 +16,6 @@ const Navbar = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch real-time PLA price average
-  const { data: priceData } = useQuery({
-    queryKey: ["pla-price-ticker"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("filaments")
-        .select("variant_price")
-        .ilike("material", "%PLA%")
-        .not("variant_price", "is", null)
-        .gt("variant_price", 0);
-      
-      if (error) throw error;
-      
-      const prices = data.map(f => Number(f.variant_price));
-      const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
-      
-      // Simulate 24h change (would normally come from historical data)
-      const change = (Math.random() - 0.5) * 4; // -2% to +2%
-      
-      return { 
-        avgPrice: avg, 
-        change,
-        count: prices.length 
-      };
-    },
-    refetchInterval: 60000, // Refresh every minute
-  });
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
@@ -54,45 +23,6 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Price Ticker Bar */}
-      <div className="w-full bg-[#0D0D0D] border-b border-[#222] py-1.5 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-6 text-xs font-mono">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">PLA/KG</span>
-              <span className="text-white font-semibold">
-                ${priceData?.avgPrice?.toFixed(2) || "—"}
-              </span>
-              {priceData?.change !== undefined && (
-                <span className={`flex items-center gap-0.5 ${
-                  priceData.change > 0 ? "text-green-400" : 
-                  priceData.change < 0 ? "text-red-400" : "text-muted-foreground"
-                }`}>
-                  {priceData.change > 0 ? <TrendingUp className="w-3 h-3" /> : 
-                   priceData.change < 0 ? <TrendingDown className="w-3 h-3" /> : 
-                   <Minus className="w-3 h-3" />}
-                  {priceData.change > 0 ? "+" : ""}{priceData.change.toFixed(2)}%
-                </span>
-              )}
-            </div>
-            <div className="h-3 w-px bg-[#333]" />
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <span>SAMPLES</span>
-              <span className="text-primary">{priceData?.count || 0}</span>
-            </div>
-            <div className="h-3 w-px bg-[#333]" />
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="animate-pulse text-green-400">●</span>
-              <span>LIVE</span>
-            </div>
-          </div>
-          <div className="text-xs text-muted-foreground font-mono hidden sm:block">
-            {new Date().toLocaleTimeString()} UTC
-          </div>
-        </div>
-      </div>
-
-      {/* Main Command Center Header */}
       <nav className="sticky top-0 z-50 border-b border-[#333] bg-[#0A0A0A]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/80">
         <div className="flex h-24 md:h-44 items-center justify-between px-6 gap-4">
           {/* Logo */}
