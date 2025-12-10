@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -31,10 +32,12 @@ import {
   Thermometer,
   Wind,
   Droplets,
-  Leaf
+  Leaf,
+  Printer
 } from "lucide-react";
 import { MATERIAL_CATEGORIES, MATERIAL_INFO, getMaterialInfo } from "@/lib/materialHierarchy";
 import { getMaterialReference, MATERIAL_REFERENCE_DATA, type MaterialReferenceInfo } from "@/lib/materialReferenceData";
+import { printMaterialReference } from "@/components/MaterialReferencePrintable";
 import { cn } from "@/lib/utils";
 
 const SectionCard = ({ 
@@ -74,13 +77,28 @@ const InfoList = ({ items, icon: Icon }: { items?: string[]; icon?: React.Elemen
 };
 
 const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialReferenceInfo; basicInfo: any }) => {
+  const handlePrint = () => {
+    printMaterialReference(reference);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-foreground">{reference.fullName}</h2>
-          <Badge variant="outline">{reference.name}</Badge>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-foreground">{reference.fullName}</h2>
+            <Badge variant="outline">{reference.name}</Badge>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handlePrint}
+            className="gap-2"
+          >
+            <Printer className="w-4 h-4" />
+            Print Reference Sheet
+          </Button>
         </div>
         {basicInfo?.description && (
           <p className="text-muted-foreground">{basicInfo.description}</p>
