@@ -4792,6 +4792,358 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'PEBA 85A': {
+    name: 'PEBA 85A',
+    fullName: 'Polyether Block Amide - Shore 85A',
+    origin: {
+      yearInvented: '1981 (PEBA), 2020s (3D printing grades)',
+      originalCompany: 'Arkema (Pebax brand)',
+      keyMilestones: [
+        '1981: Arkema commercializes Pebax brand PEBA',
+        '2019: Nike Vaporfly brings PEBA to mainstream awareness',
+        '2021+: Softer PEBA grades become available for 3D printing',
+      ],
+      majorManufacturers: ['Arkema (Pebax)', 'Evonik', 'Lubrizol', 'Recreus'],
+    },
+    composition: {
+      basePolymer: 'Polyamide-polyether block copolymer',
+      chemicalFamily: 'Polyether Block Amide Elastomer',
+      keyAdditives: ['Antioxidants', 'UV stabilizers', 'Softening modifiers'],
+      coloringAgents: 'Available in natural (translucent) and various colors',
+      specialFillers: ['Generally unfilled for maximum flexibility and energy return'],
+    },
+    familyContext: {
+      parentPolymer: 'PEBA (Polyether Block Amide)',
+      variants: ['PEBA 85A (soft)', 'PEBA 95A (medium)', 'PEBA Air (ultra-light foamed)'],
+      chemicalComparison: 'Softer than standard PEBA grades (typically 25D-72D). 85A comparable to medium-soft TPU.',
+      evolution: 'Developed for applications requiring softer feel while retaining PEBA energy return properties.',
+    },
+    strengths: {
+      uniqueProperties: ['Exceptional energy return (>87%)', 'Soft rubber-like feel', 'Ultra-lightweight', 'Excellent low-temp flexibility', 'Superior fatigue resistance'],
+      bestUseScenarios: ['Cushioning applications', 'Soft-touch grips', 'Athletic footwear components', 'Prosthetic liners'],
+      advantagesOverCompetitors: ['Better energy return than TPU 85A', 'Lighter weight', 'Superior resilience', 'Better cold-weather performance'],
+      whyChooseThis: 'When you need soft flexibility with maximum energy return and lightweight properties.',
+    },
+    weaknesses: {
+      limitations: ['Extremely expensive', 'Very limited availability', 'Challenging to print', 'Requires dry storage'],
+      commonProblems: ['Moisture sensitivity', 'Stringing issues', 'Limited supplier options', 'Direct drive required'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable', 'Difficult to recycle'],
+      whenNotToUse: ['Budget projects', 'When TPU 85A suffices', 'Bowden extruder printers'],
+    },
+    practicalContext: {
+      industryAdoption: ['Athletic footwear', 'Medical devices', 'Sports equipment', 'Prosthetics'],
+      commonApplications: ['Running shoe midsoles', 'Protective padding', 'Soft grips', 'Energy-absorbing insoles'],
+      safetyStandards: ['Medical grades available', 'Skin-contact certified'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'PEBA 85A offers TPU-like softness with PEBA energy return - best of both worlds',
+        'Used in premium running shoe midsoles where cushioning meets responsiveness',
+        'Some prosthetic socket liners use soft PEBA grades for comfort',
+      ],
+      whyInvented: 'Created to extend PEBA benefits to applications requiring softer, more cushioning properties.',
+      controversies: [
+        'Premium pricing limits adoption despite excellent properties',
+        'Often compared unfavorably to TPU on cost basis alone',
+      ],
+      marketAdoption: 'Extremely limited in 3D printing. Primarily used in injection-molded athletic products.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Shore Hardness', value: '85A', unit: '', implications: 'Soft flexible material. Similar feel to TPU 85A but with superior energy return.' },
+        { name: 'Density', value: '1.00-1.02', unit: 'g/cm³', implications: 'Ultra-lightweight - among the lightest elastomers available.' },
+        { name: 'Tensile Strength', value: '25-35', unit: 'MPa', implications: 'Good strength for soft elastomer.' },
+        { name: 'Elongation at Break', value: '500-700', unit: '%', implications: 'Excellent elasticity with outstanding recovery.' },
+        { name: 'Energy Return', value: '>87', unit: '%', implications: 'Exceptional - significantly better than TPU at same hardness.' },
+        { name: 'Compression Set', value: '<20', unit: '%', implications: 'Excellent shape retention after compression.' },
+      ],
+      notes: 'Combines soft flexibility of 85A hardness with PEBA energy return advantages. Premium performance in lightweight package.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 215, max: 250, optimal: 235 },
+      bedTemp: { min: 50, max: 80, optimal: 65 },
+      coolingFan: { min: 20, max: 50, notes: 'Moderate cooling. Balance stringing control with layer adhesion.' },
+      enclosure: { required: false, notes: 'Helpful for temperature stability.' },
+      drying: { temp: 65, duration: '6-8 hours', notes: 'Very moisture sensitive. Dry thoroughly before printing.' },
+      printSpeed: { recommended: '15-25 mm/s', notes: 'Very slow speeds required. Direct drive essential.' },
+      additionalNotes: [
+        'DIRECT DRIVE EXTRUDER ESSENTIAL',
+        'Constrained filament path critical - soft material buckles easily',
+        'Minimal retraction (0.5-1.5mm) with slow retraction speed',
+        'Print from dry box recommended',
+        'Expect extensive tuning for optimal results',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Glass with glue stick', 'Blue tape'],
+        good: ['PEI (textured) with glue', 'BuildTak'],
+        poor: ['Smooth PEI (sticks too much)'],
+      },
+      releaseAgents: 'Glue stick essential for both adhesion and release.',
+      multiMaterial: [
+        { material: 'Nylon', bondQuality: 'Strong Chemical Bond', notes: 'Polyamide compatibility provides excellent adhesion.' },
+        { material: 'TPU', bondQuality: 'Mechanical Bond', notes: 'Reasonable adhesion for flexible combinations.' },
+        { material: 'PLA', bondQuality: 'Weak Bond', notes: 'Limited compatibility.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Chemical', effectiveness: 'Difficult', notes: 'Solvent resistant. Not practical for smoothing.' },
+      ],
+      mechanical: ['Difficult to sand (elastic)', 'Trim with sharp blade', 'Heat welding possible'],
+      glues: ['Cyanoacrylate with activator', 'Contact adhesive', 'Flexible adhesives'],
+      painting: 'Challenging - use flexible paints designed for elastomers.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Generally low emissions with good ventilation.' },
+      foodSafety: { rating: 'Some Grades', notes: 'Medical-grade options available. Verify certification.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polymer.' },
+      additionalNotes: [
+        'Generally safe with ventilation',
+        'Skin-safe for most formulations',
+        'Medical grades available for biocompatible applications',
+      ],
+    },
+  },
+
+  'PEBA 95A': {
+    name: 'PEBA 95A',
+    fullName: 'Polyether Block Amide - Shore 95A',
+    origin: {
+      yearInvented: '1981 (PEBA), 2020s (3D printing grades)',
+      originalCompany: 'Arkema (Pebax brand)',
+      keyMilestones: [
+        '1981: Arkema commercializes Pebax brand PEBA',
+        '2019: Nike Vaporfly controversy highlights PEBA technology',
+        '2020+: PEBA 95A filaments emerge for 3D printing',
+      ],
+      majorManufacturers: ['Arkema (Pebax)', 'Evonik (Vestamid E)', 'Lubrizol', 'Recreus'],
+    },
+    composition: {
+      basePolymer: 'Polyamide-polyether block copolymer',
+      chemicalFamily: 'Polyether Block Amide Elastomer',
+      keyAdditives: ['Antioxidants', 'UV stabilizers', 'Processing aids'],
+      coloringAgents: 'Available in natural (translucent) and various colors',
+      specialFillers: ['Generally unfilled for maximum energy return'],
+    },
+    familyContext: {
+      parentPolymer: 'PEBA (Polyether Block Amide)',
+      variants: ['PEBA 85A (soft)', 'PEBA 95A (medium)', 'PEBA Air (ultra-light foamed)'],
+      chemicalComparison: 'Medium firmness PEBA. Comparable to standard TPU but with superior energy return.',
+      evolution: 'Standard hardness grade bridging soft and firm PEBA offerings.',
+    },
+    strengths: {
+      uniqueProperties: ['Exceptional energy return (>90%)', 'Balanced flexibility and support', 'Ultra-lightweight', 'Excellent durability', 'Wide temperature range'],
+      bestUseScenarios: ['Athletic footwear', 'Mechanical springs', 'Energy-return applications', 'Responsive padding'],
+      advantagesOverCompetitors: ['Superior energy return vs TPU 95A', 'Lighter weight', 'Better fatigue resistance', 'Maintains properties in cold'],
+      whyChooseThis: 'When you need responsive, springy behavior with moderate firmness and maximum energy return.',
+    },
+    weaknesses: {
+      limitations: ['Very expensive', 'Limited filament suppliers', 'Moisture sensitive', 'Difficult to print well'],
+      commonProblems: ['Requires thorough drying', 'Stringing common', 'Direct drive required', 'High cost per kg'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable', 'Complex recycling'],
+      whenNotToUse: ['Budget-constrained projects', 'When standard TPU works', 'Bowden extruder setups'],
+    },
+    practicalContext: {
+      industryAdoption: ['Athletic footwear', 'Sports equipment', 'Prosthetics', 'Automotive'],
+      commonApplications: ['Running shoe plates/midsoles', 'Ski boot components', 'Shock absorbers', 'Responsive grips'],
+      safetyStandards: ['Medical grades available', 'Skin-contact certified'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'PEBA 95A is the workhorse grade - firm enough for structure, soft enough for comfort',
+        'Many marathon world records have been set on PEBA 95A-based shoe technology',
+        'The "springy" feel of modern running shoes often comes from PEBA at this hardness',
+      ],
+      whyInvented: 'Created as optimal balance point between cushioning comfort and responsive energy return.',
+      controversies: [
+        'Performance advantage over traditional foams sparked athletic regulation debates',
+        'High cost creates accessibility concerns in competitive sports',
+      ],
+      marketAdoption: 'Growing adoption in athletic footwear. Very limited in 3D printing due to cost and difficulty.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Shore Hardness', value: '95A', unit: '', implications: 'Medium firmness. More supportive than 85A while retaining good flexibility.' },
+        { name: 'Density', value: '1.00-1.02', unit: 'g/cm³', implications: 'Ultra-lightweight engineering elastomer.' },
+        { name: 'Tensile Strength', value: '35-50', unit: 'MPa', implications: 'Excellent strength for an elastomer.' },
+        { name: 'Elongation at Break', value: '400-550', unit: '%', implications: 'High elasticity with excellent recovery.' },
+        { name: 'Energy Return', value: '>90', unit: '%', implications: 'Exceptional - the defining characteristic of PEBA.' },
+        { name: 'Compression Set', value: '<15', unit: '%', implications: 'Outstanding shape retention after repeated compression.' },
+      ],
+      notes: 'Optimal balance of firmness and energy return. Superior to TPU 95A in performance metrics.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 220, max: 255, optimal: 240 },
+      bedTemp: { min: 55, max: 85, optimal: 70 },
+      coolingFan: { min: 20, max: 50, notes: 'Moderate cooling for stringing control.' },
+      enclosure: { required: false, notes: 'Helpful but not essential.' },
+      drying: { temp: 70, duration: '6-8 hours', notes: 'Moisture sensitive - thorough drying required.' },
+      printSpeed: { recommended: '15-30 mm/s', notes: 'Slow speeds. Direct drive extruder required.' },
+      additionalNotes: [
+        'DIRECT DRIVE EXTRUDER REQUIRED',
+        'Minimal retraction (0.5-2mm)',
+        'Constrained filament path essential',
+        'Print from dry box for best results',
+        'Expect tuning required - material behaves differently than TPU',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Glass with glue stick', 'PEI (textured) with glue'],
+        good: ['Blue tape', 'BuildTak'],
+        poor: ['Smooth PEI (adhesion issues)'],
+      },
+      releaseAgents: 'Glue stick recommended for consistent adhesion and release.',
+      multiMaterial: [
+        { material: 'Nylon', bondQuality: 'Strong Chemical Bond', notes: 'Excellent adhesion due to polyamide backbone.' },
+        { material: 'TPU', bondQuality: 'Mechanical Bond', notes: 'Good for flexible-flexible combinations.' },
+        { material: 'PLA', bondQuality: 'Weak Bond', notes: 'Minimal adhesion.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Chemical', effectiveness: 'Difficult', notes: 'Solvent resistant - not practical.' },
+      ],
+      mechanical: ['Difficult to sand', 'Trim with sharp tools', 'Heat welding possible'],
+      glues: ['Cyanoacrylate with activator', 'Contact adhesive', 'Epoxy'],
+      painting: 'Use flexible paints or elastomer-specific coatings.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Low emissions with adequate ventilation.' },
+      foodSafety: { rating: 'Some Grades', notes: 'Medical-grade options available.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based.' },
+      additionalNotes: [
+        'Safe with normal ventilation',
+        'Skin-safe formulations available',
+        'Medical grades for biocompatible applications',
+      ],
+    },
+  },
+
+  'PEBA Air': {
+    name: 'PEBA Air',
+    fullName: 'Foamed Polyether Block Amide',
+    origin: {
+      yearInvented: '2010s (foamed PEBA technology)',
+      originalCompany: 'Arkema (Pebax Powered) and athletic footwear companies',
+      keyMilestones: [
+        '2017: Nike introduces ZoomX (foamed Pebax) in Vaporfly',
+        '2019: Kipchoge breaks 2-hour marathon barrier in Pebax-based shoes',
+        '2021+: Foamed PEBA concept extends to 3D printing experimentation',
+      ],
+      majorManufacturers: ['Arkema (Pebax Powered)', 'Athletic brand proprietary variants'],
+    },
+    composition: {
+      basePolymer: 'Polyamide-polyether block copolymer (foamed)',
+      chemicalFamily: 'Foamed Polyether Block Amide Elastomer',
+      keyAdditives: ['Foaming agents', 'Cell structure stabilizers', 'UV stabilizers'],
+      coloringAgents: 'Typically white or light colors (foam structure limits pigmentation)',
+      specialFillers: ['None - foam structure provides properties'],
+    },
+    familyContext: {
+      parentPolymer: 'PEBA (Polyether Block Amide)',
+      variants: ['ZoomX (Nike)', 'Pebax Powered (Arkema)', 'Various brand-specific formulations'],
+      chemicalComparison: 'Same chemistry as solid PEBA but foamed for extreme lightweight. Trades some durability for weight savings.',
+      evolution: 'Revolutionary application of PEBA in supercritical foam form for maximum energy return at minimum weight.',
+    },
+    strengths: {
+      uniqueProperties: ['Ultra-lightweight (30-50% lighter than solid)', 'Exceptional energy return', 'Superior cushioning', 'Responsive springy feel', 'Wide temp range'],
+      bestUseScenarios: ['Ultra-lightweight cushioning', 'Racing footwear concepts', 'Weight-critical flexible parts', 'Energy-absorbing applications'],
+      advantagesOverCompetitors: ['Lightest high-performance elastomer available', 'Best energy-to-weight ratio', 'Unmatched cushioning efficiency'],
+      whyChooseThis: 'When absolute minimum weight with maximum energy return is critical and cost is secondary.',
+    },
+    weaknesses: {
+      limitations: ['Extremely expensive', 'Very limited/experimental availability', 'Lower durability than solid PEBA', 'Complex to produce', 'Experimental in 3D printing'],
+      commonProblems: ['Foam structure challenging to replicate in FDM', 'Wear faster than solid', 'Limited suppliers', 'Premium pricing'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable', 'Complex manufacturing process'],
+      whenNotToUse: ['Durability-critical applications', 'Abrasive wear conditions', 'Budget projects', 'Standard printing (requires specialized equipment)'],
+    },
+    practicalContext: {
+      industryAdoption: ['Elite athletic footwear', 'Racing equipment', 'Experimental/R&D'],
+      commonApplications: ['Marathon racing shoe midsoles', 'Elite athletic footwear', 'Ultra-light padding'],
+      safetyStandards: ['Skin-contact safe', 'Athletic certification standards'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'Nike ZoomX (foamed Pebax) helped Kipchoge break the 2-hour marathon barrier',
+        'Foamed PEBA can be up to 50% lighter than solid while maintaining energy return',
+        'The material is called "super foam" and has revolutionized competitive running',
+        'Creating consistent foam structure is extremely difficult - injection molded, not easily 3D printed',
+        'World Athletics had to create new regulations specifically because of PEBA foam technology',
+      ],
+      whyInvented: 'Developed to push the boundaries of lightweight energy return for competitive athletics.',
+      controversies: [
+        'Accused of being "technological doping" in competitive running',
+        'Sparked major debate about equipment vs athlete performance',
+        'World Athletics imposed stack height limits partly due to PEBA foam advantages',
+        'Accessibility concerns - elite shoes with PEBA foam cost $250+ per pair',
+      ],
+      marketAdoption: 'Dominant in elite running footwear. Essentially non-existent in 3D printing - foam structure requires specialized manufacturing.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Density', value: '0.15-0.25', unit: 'g/cm³', implications: 'Extremely lightweight - foam structure dramatically reduces density.' },
+        { name: 'Energy Return', value: '>85', unit: '%', implications: 'Exceptional despite foam structure. Slightly lower than solid PEBA but at fraction of weight.' },
+        { name: 'Compression Set', value: '<25', unit: '%', implications: 'Good shape retention but foam degrades faster than solid.' },
+        { name: 'Cell Structure', value: 'Closed-cell', unit: '', implications: 'Consistent energy return, moisture resistant.' },
+        { name: 'Temperature Range', value: '-30 to +50', unit: '°C', implications: 'Maintains properties across wide temp range.' },
+        { name: 'Durability', value: '300-500', unit: 'km (running)', implications: 'Lower than solid PEBA. Racing shoes typically 300-500km lifespan.' },
+      ],
+      notes: 'Foam structure trades some durability for extreme weight reduction. Not truly available as 3D printing filament - included for reference.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 220, max: 250, optimal: 235 },
+      bedTemp: { min: 50, max: 75, optimal: 60 },
+      coolingFan: { min: 30, max: 60, notes: 'Moderate cooling if solid PEBA printed to simulate foam.' },
+      enclosure: { required: false, notes: 'N/A for true foamed PEBA - requires specialized manufacturing.' },
+      drying: { temp: 65, duration: '6 hours', notes: 'If printing solid PEBA with foam-inspired design.' },
+      printSpeed: { recommended: '15-25 mm/s', notes: 'For solid PEBA. True foam not FDM printable.' },
+      additionalNotes: [
+        'TRUE FOAMED PEBA CANNOT BE 3D PRINTED via FDM',
+        'Requires supercritical foam injection molding process',
+        'Lattice structures in solid PEBA can approximate some foam benefits',
+        'Included for reference - represents theoretical ideal for lightweight flex',
+        'Research ongoing into direct foam 3D printing methods',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['N/A - specialized manufacturing'],
+        good: ['See solid PEBA for reference'],
+        poor: ['N/A'],
+      },
+      releaseAgents: 'N/A for foam production. See solid PEBA grades for printable alternatives.',
+      multiMaterial: [
+        { material: 'Solid PEBA', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer family.' },
+        { material: 'Nylon', bondQuality: 'Strong Chemical Bond', notes: 'Polyamide compatibility.' },
+        { material: 'TPU', bondQuality: 'Mechanical Bond', notes: 'Can be used in combination.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'N/A', effectiveness: 'Not Possible', notes: 'Foam structure - not applicable.' },
+      ],
+      mechanical: ['Foam does not sand well', 'Can be trimmed', 'Limited post-processing options'],
+      glues: ['Contact adhesive', 'Cyanoacrylate can damage foam structure'],
+      painting: 'Not typically painted - foam structure and function are primary.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Standard PEBA emissions - foam production in industrial settings.' },
+      foodSafety: { rating: 'Not Applicable', notes: 'Not used in food contact applications.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polymer foam.' },
+      additionalNotes: [
+        'Foam production requires industrial equipment',
+        'Safe for skin contact in finished products',
+        'Athletic footwear applications extensively tested',
+      ],
+    },
+  },
+
   'Breakaway': {
     name: 'Breakaway',
     fullName: 'Breakaway Support Material',
