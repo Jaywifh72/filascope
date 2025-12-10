@@ -2565,6 +2565,462 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'TPU 95A': {
+    name: 'TPU 95A',
+    fullName: 'Thermoplastic Polyurethane 95A Shore Hardness',
+    origin: {
+      yearInvented: '1950s (TPU), 2014+ (3D printing filament)',
+      originalCompany: 'Various manufacturers standardized on Shore hardness ratings',
+      keyMilestones: [
+        '1950s: TPU chemistry developed',
+        '2014-2016: TPU filaments emerge for 3D printing',
+        '2017+: Shore hardness ratings become standard classification',
+        '2019+: 95A becomes the most common "standard" TPU',
+      ],
+      majorManufacturers: ['NinjaTek (Cheetah)', 'Polymaker (PolyFlex)', 'SainSmart', 'eSUN', 'Overture'],
+    },
+    composition: {
+      basePolymer: 'TPU (Thermoplastic Polyurethane)',
+      chemicalFamily: 'Polyurethane Elastomer',
+      keyAdditives: ['Shore hardness modifiers', 'Processing aids', 'UV stabilizers'],
+      coloringAgents: 'Wide color range available, some translucency possible',
+      specialFillers: ['None typically - pure elastomer'],
+    },
+    familyContext: {
+      parentPolymer: 'Standard TPU formulated to 95A Shore hardness',
+      variants: ['TPU 95A standard', 'High-speed TPU 95A', 'TPU 95A Matte'],
+      chemicalComparison: 'Hardest common TPU - feels like a car tire or shoe sole. Semi-flexible rather than soft.',
+      evolution: 'The "default" TPU hardness that balances printability with flexibility.',
+    },
+    strengths: {
+      uniqueProperties: ['Easiest TPU to print', 'Good abrasion resistance', 'Semi-flexible', 'Oil and chemical resistant'],
+      bestUseScenarios: ['Phone cases', 'Protective bumpers', 'Tool grips', 'Vibration dampeners', 'Watch bands'],
+      advantagesOverCompetitors: ['Most printable of all TPUs', 'Works with some Bowden setups', 'Best layer adhesion of TPUs'],
+      whyChooseThis: 'The starting point for TPU printing - easiest to print while still being flexible.',
+    },
+    weaknesses: {
+      limitations: ['Not as soft as 85A/75A', 'Still slower than rigid materials', 'Some stringing'],
+      commonProblems: ['Stringing between parts', 'Requires slow retraction', 'Can buckle in long Bowden tubes'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable', 'Difficult to recycle'],
+      whenNotToUse: ['When very soft/rubber-like feel needed', 'High-speed printing', 'Thin walls requiring flexibility'],
+    },
+    practicalContext: {
+      industryAdoption: ['Consumer electronics', 'Footwear prototyping', 'Automotive', 'Medical devices'],
+      commonApplications: ['Phone cases', 'Bumpers', 'Seals', 'Grips', 'Gaskets', 'Cable management'],
+      safetyStandards: ['FDA grades available', 'Skin-safe grades for wearables'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        '95A is about as hard as a car tire tread or rollerblade wheel',
+        'The "A" in 95A refers to the Shore A durometer scale',
+        'NinjaTek Cheetah 95A was one of the first "printable" TPUs',
+        'Most beginners should start with 95A before trying softer variants',
+      ],
+      whyInvented: 'Created as the optimal balance between printability and flexibility for desktop 3D printers.',
+      controversies: [
+        'Some budget 95A TPUs are actually harder or softer than advertised',
+        'Shore hardness can vary slightly between colors from same brand',
+      ],
+      marketAdoption: 'The most popular TPU variant - considered "standard" flexible filament.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Shore Hardness', value: '95', unit: 'A', implications: 'Semi-flexible. Feels like a car tire - bends but returns to shape.' },
+        { name: 'Tensile Strength', value: '35-50', unit: 'MPa', implications: 'Strong. Similar to rigid materials but with flexibility.' },
+        { name: 'Elongation at Break', value: '400-600', unit: '%', implications: 'Very High. Stretches significantly before breaking.' },
+        { name: 'Tear Resistance', value: '80-120', unit: 'kN/m', implications: 'Good tear resistance for flexible applications.' },
+        { name: 'Abrasion Resistance', value: 'Excellent', unit: '', implications: 'Outstanding wear resistance - key TPU advantage.' },
+        { name: 'Density', value: '1.20-1.25', unit: 'g/cm³', implications: 'Slightly heavier than PLA.' },
+      ],
+      notes: '95A is the most printable TPU. Start here before trying softer grades.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 220, max: 250, optimal: 235 },
+      bedTemp: { min: 40, max: 70, optimal: 50 },
+      coolingFan: { min: 50, max: 100, notes: 'Moderate to high cooling helps solidify quickly.' },
+      enclosure: { required: false, notes: 'Not required. TPU does not warp.' },
+      drying: { temp: 50, duration: '4-8 hours', notes: 'Mildly hygroscopic. Dry if stringing increases.' },
+      printSpeed: { recommended: '20-40 mm/s', notes: 'Slower than rigid materials. 95A can handle faster speeds than softer TPUs.' },
+      additionalNotes: [
+        'Direct drive strongly recommended (some Bowden possible with short tubes)',
+        'Disable or minimize retraction (1-2mm max)',
+        'Slow down travel moves to reduce stringing',
+        'Z-hop can help with stringing',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'Glass with glue stick', 'Blue tape'],
+        good: ['PEI (Textured)', 'BuildTak'],
+        poor: ['Bare glass without adhesive'],
+      },
+      releaseAgents: 'Glue stick helps with release. TPU can stick too well to PEI.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Mechanical Bond', notes: 'Reasonable adhesion for soft-touch grips on rigid parts.' },
+        { material: 'PETG', bondQuality: 'Mechanical Bond', notes: 'Decent adhesion for protective bumpers.' },
+        { material: 'ABS', bondQuality: 'Mechanical Bond', notes: 'Can create flexible hinges on rigid parts.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'TPU is chemically resistant to acetone.' },
+      ],
+      mechanical: ['Trimming with sharp blade', 'Heat gun for minor smoothing', 'Sanding difficult due to flexibility'],
+      glues: ['Flexible CA glue', 'Polyurethane adhesive', 'Contact cement'],
+      painting: 'Difficult - use flexible paints or dyes. Regular paint will crack.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Generally safe with basic ventilation.' },
+      foodSafety: { rating: 'Possible (Specific Grades)', notes: 'FDA grades exist. Layer lines concern for bacteria.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polyurethane.' },
+    },
+  },
+
+  'TPU 85A': {
+    name: 'TPU 85A',
+    fullName: 'Thermoplastic Polyurethane 85A Shore Hardness',
+    origin: {
+      yearInvented: '1950s (TPU), 2016+ (3D printing filament)',
+      originalCompany: 'NinjaTek (NinjaFlex) popularized soft TPU for 3D printing',
+      keyMilestones: [
+        '1950s: TPU chemistry developed',
+        '2014: NinjaTek introduces NinjaFlex (softer TPU)',
+        '2017+: 85A becomes standard "soft" TPU option',
+        '2020+: More manufacturers offer 85A grades',
+      ],
+      majorManufacturers: ['NinjaTek (NinjaFlex)', 'Polymaker', 'SainSmart', 'Recreus (FilaFlex)', 'eSUN'],
+    },
+    composition: {
+      basePolymer: 'TPU (Thermoplastic Polyurethane)',
+      chemicalFamily: 'Polyurethane Elastomer',
+      keyAdditives: ['Softening agents', 'Processing aids', 'Flexibility enhancers'],
+      coloringAgents: 'Wide color range, often more translucent than 95A',
+      specialFillers: ['None - pure soft elastomer'],
+    },
+    familyContext: {
+      parentPolymer: 'Softer TPU formulated to 85A Shore hardness',
+      variants: ['TPU 85A standard', 'NinjaFlex', 'FilaFlex 82A'],
+      chemicalComparison: 'Noticeably softer than 95A - feels like rubber bands or soft erasers.',
+      evolution: 'Developed for applications requiring more flexibility than 95A can provide.',
+    },
+    strengths: {
+      uniqueProperties: ['Very flexible', 'Excellent grip surface', 'High energy absorption', 'Soft touch feel'],
+      bestUseScenarios: ['Soft grips', 'Wearables', 'Shoe insoles', 'Soft seals', 'Prosthetic interfaces'],
+      advantagesOverCompetitors: ['Softer feel than 95A', 'Better energy absorption', 'More rubber-like behavior'],
+      whyChooseThis: 'When 95A is too stiff and you need true rubber-like flexibility.',
+    },
+    weaknesses: {
+      limitations: ['Harder to print than 95A', 'Requires direct drive', 'Significant stringing', 'Slower speeds required'],
+      commonProblems: ['Buckling in extruder', 'Heavy stringing', 'Poor bridging', 'Slow print times'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable'],
+      whenNotToUse: ['Bowden extruders', 'High-speed printing needs', 'Structural applications', 'Beginners'],
+    },
+    practicalContext: {
+      industryAdoption: ['Footwear', 'Medical prosthetics', 'Wearables', 'Sporting goods'],
+      commonApplications: ['Shoe insoles', 'Wearable bands', 'Soft seals', 'Grip covers', 'Protective padding'],
+      safetyStandards: ['Skin-safe grades available', 'FDA grades for medical use'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        '85A feels like a rubber band or soft eraser',
+        'NinjaFlex was one of the first soft TPUs that was actually printable',
+        'The softness comes from longer soft segment chains in the polymer',
+        '85A requires about 50% slower print speeds than 95A',
+      ],
+      whyInvented: 'Created for wearables and applications where 95A was too rigid.',
+      controversies: [
+        'Significantly harder to print - many beginners give up',
+        'Direct drive is essentially mandatory',
+        'Print quality very dependent on specific printer setup',
+      ],
+      marketAdoption: 'Popular in wearables and footwear prototyping.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Shore Hardness', value: '85', unit: 'A', implications: 'Soft and flexible. Feels like a rubber band.' },
+        { name: 'Tensile Strength', value: '25-40', unit: 'MPa', implications: 'Lower than 95A due to increased softness.' },
+        { name: 'Elongation at Break', value: '500-700', unit: '%', implications: 'Very High. Extremely stretchy.' },
+        { name: 'Tear Resistance', value: '50-80', unit: 'kN/m', implications: 'Good but lower than harder TPUs.' },
+        { name: 'Rebound Resilience', value: 'High', unit: '', implications: 'Springs back quickly from compression.' },
+        { name: 'Density', value: '1.15-1.20', unit: 'g/cm³', implications: 'Slightly lighter than 95A.' },
+      ],
+      notes: 'Softer than 95A but more challenging to print. Direct drive required.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 225, max: 250, optimal: 240 },
+      bedTemp: { min: 40, max: 60, optimal: 50 },
+      coolingFan: { min: 30, max: 80, notes: 'Moderate cooling. Too much can cause layer adhesion issues.' },
+      enclosure: { required: false, notes: 'Not needed. TPU does not warp.' },
+      drying: { temp: 50, duration: '4-8 hours', notes: 'Dry before printing for best results.' },
+      printSpeed: { recommended: '15-30 mm/s', notes: 'Slower than 95A. Patience required.' },
+      additionalNotes: [
+        'DIRECT DRIVE REQUIRED - Bowden will not work',
+        'Disable retraction completely or use 0.5-1mm max',
+        'Use constrained filament path to prevent buckling',
+        'Very slow travel speeds reduce stringing',
+        'Consider using wipe/coast settings',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'Glass with glue stick', 'Blue tape'],
+        good: ['BuildTak', 'Textured PEI (may stick too well)'],
+        poor: ['Bare glass'],
+      },
+      releaseAgents: 'Glue stick for easier release. Can bond too well to PEI.',
+      multiMaterial: [
+        { material: 'TPU 95A', bondQuality: 'Strong Chemical Bond', notes: 'Different hardnesses bond well together.' },
+        { material: 'PLA', bondQuality: 'Mechanical Bond', notes: 'For soft grip sections on rigid parts.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'TPU is chemically resistant.' },
+      ],
+      mechanical: ['Sharp blade trimming', 'Scissors work well', 'Heat gun for minor welding'],
+      glues: ['Flexible CA glue', 'Polyurethane adhesive', 'Contact cement'],
+      painting: 'Use flexible dyes or paints only. Regular paint cracks.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Safe with basic ventilation.' },
+      foodSafety: { rating: 'Possible (Specific Grades)', notes: 'FDA grades exist for medical/food use.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based.' },
+    },
+  },
+
+  'TPU 75A': {
+    name: 'TPU 75A',
+    fullName: 'Thermoplastic Polyurethane 75A Shore Hardness',
+    origin: {
+      yearInvented: '1950s (TPU), 2018+ (3D printing filament)',
+      originalCompany: 'Specialty manufacturers developed ultra-soft TPUs',
+      keyMilestones: [
+        '1950s: TPU chemistry developed',
+        '2018+: Ultra-soft 75A TPUs become available',
+        '2020+: Growing niche for very soft applications',
+      ],
+      majorManufacturers: ['Recreus (FilaFlex)', 'NinjaTek', 'Polymaker', 'FormFutura'],
+    },
+    composition: {
+      basePolymer: 'TPU (Thermoplastic Polyurethane)',
+      chemicalFamily: 'Polyurethane Elastomer',
+      keyAdditives: ['High concentration of softening agents', 'Flow modifiers', 'Stability enhancers'],
+      coloringAgents: 'Limited colors - very soft TPU harder to pigment consistently',
+      specialFillers: ['None - maximum softness requires pure elastomer'],
+    },
+    familyContext: {
+      parentPolymer: 'Ultra-soft TPU formulated to 75A Shore hardness',
+      variants: ['TPU 75A', 'FilaFlex 70A', 'Ultra-soft TPE'],
+      chemicalComparison: 'Very soft - feels like soft silicone or gummy candy. Maximum flexibility.',
+      evolution: 'Created for applications requiring the softest possible printed elastomer.',
+    },
+    strengths: {
+      uniqueProperties: ['Extremely soft and flexible', 'Maximum energy absorption', 'Silicone-like feel', 'Excellent sealing'],
+      bestUseScenarios: ['Soft seals and gaskets', 'Medical cushioning', 'Ultra-soft grips', 'Vibration isolation', 'Prosthetic liners'],
+      advantagesOverCompetitors: ['Softest printable TPU', 'Best for skin contact applications', 'Maximum shock absorption'],
+      whyChooseThis: 'When you need the absolute softest printed material possible - approaching silicone softness.',
+    },
+    weaknesses: {
+      limitations: ['Very difficult to print', 'Expert-level material', 'Extremely slow', 'Limited structural integrity'],
+      commonProblems: ['Constant buckling in extruder', 'Massive stringing', 'Poor dimensional accuracy', 'Requires perfectly tuned printer'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable', 'Specialized disposal'],
+      whenNotToUse: ['Any structural application', 'Beginners', 'Standard printers without modifications', 'When 85A softness is adequate'],
+    },
+    practicalContext: {
+      industryAdoption: ['Medical devices', 'Prosthetics', 'Specialized sealing', 'Comfort applications'],
+      commonApplications: ['Prosthetic liners', 'Medical cushions', 'Ultra-soft seals', 'Comfort pads', 'Wearable interfaces'],
+      safetyStandards: ['Medical-grade versions available', 'Biocompatibility certifications exist'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        '75A feels like soft gummy candy or medical-grade silicone',
+        'Can be compressed flat and springs back completely',
+        'Print speeds often under 15mm/s for success',
+        'Some users modify extruders specifically for ultra-soft TPU',
+      ],
+      whyInvented: 'Created for medical and prosthetic applications requiring maximum softness.',
+      controversies: [
+        'Many users consider 75A "unprintable" without significant printer mods',
+        'Quality varies dramatically between manufacturers',
+        'Often recommended to skip 75A and use 85A unless absolutely necessary',
+      ],
+      marketAdoption: 'Niche market - medical and specialized applications only.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Shore Hardness', value: '75', unit: 'A', implications: 'Very Soft. Feels like soft silicone or gummy candy.' },
+        { name: 'Tensile Strength', value: '15-25', unit: 'MPa', implications: 'Lower strength due to extreme softness.' },
+        { name: 'Elongation at Break', value: '600-800', unit: '%', implications: 'Extremely High. Stretches to 6-8x original length.' },
+        { name: 'Tear Resistance', value: '30-50', unit: 'kN/m', implications: 'Lower than harder TPUs - handle with care.' },
+        { name: 'Compression Set', value: 'Low', unit: '', implications: 'Excellent recovery from compression.' },
+        { name: 'Density', value: '1.10-1.15', unit: 'g/cm³', implications: 'Lightest of common TPUs.' },
+      ],
+      notes: 'Expert-level material. Only attempt after mastering 95A and 85A.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 230, max: 255, optimal: 245 },
+      bedTemp: { min: 40, max: 60, optimal: 50 },
+      coolingFan: { min: 20, max: 60, notes: 'Moderate cooling - too much causes adhesion issues.' },
+      enclosure: { required: false, notes: 'Not needed for warping, but stable temps help consistency.' },
+      drying: { temp: 50, duration: '6-12 hours', notes: 'Absolutely critical. Any moisture destroys printability.' },
+      printSpeed: { recommended: '10-20 mm/s', notes: 'Extremely slow. Patience is essential.' },
+      additionalNotes: [
+        'DIRECT DRIVE MANDATORY with constrained filament path',
+        'ZERO retraction recommended - use wiping/coasting instead',
+        'Consider all-metal extruder with dual drive gears',
+        'Print one object at a time to minimize travel',
+        'Z-hop can reduce stringing but adds print time',
+        'May require extruder modifications for reliable feeding',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth) with glue stick', 'Glass with heavy glue'],
+        good: ['Blue tape', 'BuildTak'],
+        poor: ['Any surface without adhesive'],
+      },
+      releaseAgents: 'Glue stick essential. Ultra-soft TPU can bond permanently to PEI.',
+      multiMaterial: [
+        { material: 'TPU 95A', bondQuality: 'Strong Chemical Bond', notes: 'Gradient hardness possible.' },
+        { material: 'TPU 85A', bondQuality: 'Strong Chemical Bond', notes: 'Can create soft-to-softer transitions.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'None', effectiveness: 'Not Possible', notes: 'No chemical smoothing available for TPU.' },
+      ],
+      mechanical: ['Careful scissor trimming', 'Avoid sanding - tears easily', 'Heat gun for minor repairs'],
+      glues: ['Flexible CA glue', 'Polyurethane adhesive - test first'],
+      painting: 'Not recommended. Dyes only.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Safe with ventilation.' },
+      foodSafety: { rating: 'Possible (Specific Grades)', notes: 'Medical grades exist for skin contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polyurethane.' },
+    },
+  },
+
+  'TPU-CF': {
+    name: 'TPU-CF',
+    fullName: 'Carbon Fiber Reinforced Thermoplastic Polyurethane',
+    origin: {
+      yearInvented: '2019+ (3D printing formulation)',
+      originalCompany: 'Multiple manufacturers developed simultaneously',
+      keyMilestones: [
+        '1950s: TPU chemistry developed',
+        '2014+: TPU filaments become mainstream',
+        '2019+: Carbon fiber reinforced TPU emerges',
+        '2021+: Growing adoption for industrial flexible parts',
+      ],
+      majorManufacturers: ['3DXTech', 'Polymaker', 'Fiberlogy', 'ColorFabb'],
+    },
+    composition: {
+      basePolymer: 'TPU (Thermoplastic Polyurethane) - typically 95A base',
+      chemicalFamily: 'Reinforced Polyurethane Elastomer',
+      keyAdditives: ['Chopped carbon fiber (10-15%)', 'Coupling agents', 'Flow modifiers'],
+      coloringAgents: 'Black only due to carbon fiber content',
+      specialFillers: ['Short chopped carbon fiber strands'],
+    },
+    familyContext: {
+      parentPolymer: 'TPU 95A reinforced with carbon fiber for increased stiffness',
+      variants: ['TPU-CF 10%', 'TPU-CF 15%'],
+      chemicalComparison: 'Stiffer than plain TPU but retains some flexibility. Unique semi-flexible composite.',
+      evolution: 'Created to bridge the gap between flexible TPU and rigid carbon fiber composites.',
+    },
+    strengths: {
+      uniqueProperties: ['Unique stiff-but-flexible behavior', 'Excellent abrasion resistance', 'Fatigue resistant', 'Professional appearance'],
+      bestUseScenarios: ['Industrial gaskets', 'Vibration-dampening mounts', 'Wear surfaces', 'Flexible hinges', 'Semi-rigid covers'],
+      advantagesOverCompetitors: ['Only stiff flexible material', 'Better abrasion than any other material', 'Fatigue resistance of TPU with added stiffness'],
+      whyChooseThis: 'When you need something that bends but also holds its shape - the middle ground between flexible and rigid.',
+    },
+    weaknesses: {
+      limitations: ['Abrasive - requires hardened nozzle', 'Black color only', 'Expensive', 'Less flexible than unreinforced TPU'],
+      commonProblems: ['Nozzle wear', 'Requires direct drive', 'Stringing still occurs', 'Print settings balance tricky'],
+      environmentalConcerns: ['Carbon fiber dust hazard when machining', 'Not recyclable', 'Petroleum-based'],
+      whenNotToUse: ['When maximum flexibility needed', 'Aesthetic parts requiring color', 'Without hardened nozzle', 'Budget projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Industrial machinery', 'Automotive', 'Aerospace', 'Robotics'],
+      commonApplications: ['Industrial seals', 'Vibration mounts', 'Wear pads', 'Conveyor parts', 'Semi-flexible brackets'],
+      safetyStandards: ['Industrial use primarily - specific certifications vary'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'TPU-CF is one of the only materials that is both flexible AND abrasion resistant',
+        'Used in industrial applications where parts must flex AND resist wear',
+        'The carbon fiber significantly reduces stretchiness compared to plain TPU',
+        'Creates a unique "semi-flexible" category that didn\'t exist before',
+      ],
+      whyInvented: 'Created for industrial applications requiring flexibility, stiffness, AND abrasion resistance.',
+      controversies: [
+        'Some argue it defeats the purpose of TPU by making it stiffer',
+        'Requires hardened nozzle which many TPU users don\'t have',
+        'Finding optimal settings is challenging - behaves unlike any other material',
+      ],
+      marketAdoption: 'Niche industrial material with growing applications in robotics and automation.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Shore Hardness', value: '95-98', unit: 'A', implications: 'Stiffer than plain 95A TPU due to fiber reinforcement.' },
+        { name: 'Tensile Strength', value: '40-55', unit: 'MPa', implications: 'Higher than plain TPU due to fiber reinforcement.' },
+        { name: 'Tensile Modulus', value: '800-1500', unit: 'MPa', implications: 'Significantly stiffer than unreinforced TPU.' },
+        { name: 'Elongation at Break', value: '200-350', unit: '%', implications: 'Lower than plain TPU - fibers limit stretch.' },
+        { name: 'Abrasion Resistance', value: 'Excellent+', unit: '', implications: 'Best-in-class. Carbon fiber enhances already-excellent TPU wear resistance.' },
+        { name: 'Density', value: '1.25-1.30', unit: 'g/cm³', implications: 'Slightly heavier than plain TPU.' },
+      ],
+      notes: 'Unique semi-flexible composite. Behaves unlike any other material.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 230, max: 255, optimal: 245 },
+      bedTemp: { min: 50, max: 70, optimal: 60 },
+      coolingFan: { min: 30, max: 70, notes: 'Moderate cooling for good layer adhesion.' },
+      enclosure: { required: false, notes: 'Not required but helps with consistency.' },
+      drying: { temp: 55, duration: '4-8 hours', notes: 'Hygroscopic. Dry before printing.' },
+      printSpeed: { recommended: '20-35 mm/s', notes: 'Similar to standard TPU but may tolerate slightly faster.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED - carbon fiber is abrasive',
+        'Direct drive strongly recommended',
+        'Minimize retraction (1-2mm max)',
+        'Larger nozzle (0.5mm+) reduces clogging risk',
+        'Print settings are between TPU and rigid CF composites',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'Glass with glue stick'],
+        good: ['PEI (Textured)', 'BuildTak'],
+        poor: ['Bare glass'],
+      },
+      releaseAgents: 'Glue stick helps with release. Can stick firmly to PEI.',
+      multiMaterial: [
+        { material: 'TPU', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer family - excellent compatibility.' },
+        { material: 'ABS-CF', bondQuality: 'Mechanical Bond', notes: 'For flexible sections on rigid carbon fiber parts.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'None', effectiveness: 'Not Possible', notes: 'TPU is chemically resistant. Fibers would remain anyway.' },
+      ],
+      mechanical: ['Sanding with mask - carbon dust hazard', 'Trimming with sharp blade', 'Can be machined carefully'],
+      glues: ['Flexible CA glue', 'Polyurethane adhesive', 'Epoxy for structural needs'],
+      painting: 'Difficult. Matte black finish is usually acceptable as-is.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'TPU fumes plus carbon particulates. Good ventilation recommended.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Carbon fiber shedding concern. Not for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based with carbon fiber.' },
+      additionalNotes: [
+        'Wear mask when sanding - carbon fiber dust is respiratory hazard',
+        'Wash hands after handling sanded parts',
+        'Dispose of waste properly',
+      ],
+    },
+  },
+
   'Nylon': {
     name: 'Nylon',
     fullName: 'Polyamide (PA)',
