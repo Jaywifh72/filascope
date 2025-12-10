@@ -306,12 +306,7 @@ export default function AMSDetail() {
             {/* Price */}
             {ams.price && (
               <div className="text-3xl font-bold text-primary">
-                ${ams.price}
-                {ams.currency && ams.currency !== "USD" && (
-                  <span className="text-sm font-normal text-muted-foreground ml-2">
-                    ({ams.currency})
-                  </span>
-                )}
+                ${ams.price} <span className="text-lg font-medium">{ams.currency || "USD"}</span>
               </div>
             )}
 

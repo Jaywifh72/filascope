@@ -106,10 +106,10 @@ export const AccessoryPriceChart = ({ accessoryId, currentPrice, currency = "USD
         {chartData.length > 1 && (
           <div className="mt-3 flex justify-between text-xs text-muted-foreground">
             <div>
-              <span className="font-medium">Lowest:</span> ${Math.min(...chartData.map(d => d.price)).toFixed(2)}
+              <span className="font-medium">Lowest:</span> ${Math.min(...chartData.map(d => d.price)).toFixed(2)} USD
             </div>
             <div>
-              <span className="font-medium">Highest:</span> ${Math.max(...chartData.map(d => d.price)).toFixed(2)}
+              <span className="font-medium">Highest:</span> ${Math.max(...chartData.map(d => d.price)).toFixed(2)} USD
             </div>
           </div>
         )}

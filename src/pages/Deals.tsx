@@ -53,10 +53,10 @@ const Deals = () => {
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-red-400">${deal.deal_price}</span>
+                        <span className="text-2xl font-bold text-red-400">${deal.deal_price} <span className="text-sm font-medium">USD</span></span>
                         {deal.original_price && (
                           <span className="text-sm text-muted-foreground line-through">
-                            ${deal.original_price}
+                            ${deal.original_price} USD
                           </span>
                         )}
                       </div>

@@ -428,19 +428,19 @@ export default function Printers() {
                         {printer.current_price_usd_store && (
                           <div className="text-xl font-bold text-primary flex items-center gap-1.5">
                             <Store className="h-4 w-4 shrink-0" />
-                            <span>${printer.current_price_usd_store}</span>
+                            <span>${printer.current_price_usd_store} <span className="text-xs font-medium">USD</span></span>
                           </div>
                         )}
                         {printer.current_price_usd_amazon && (
                           <div className={`flex items-center gap-1.5 ${printer.current_price_usd_store ? 'text-sm text-muted-foreground' : 'text-xl font-bold text-primary'}`}>
                             <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
-                            <span>${printer.current_price_usd_amazon}</span>
+                            <span>${printer.current_price_usd_amazon} <span className="text-xs font-medium">USD</span></span>
                           </div>
                         )}
                         {printer.msrp_usd && !printer.current_price_usd_store && !printer.current_price_usd_amazon && (
                           <div className="text-xl font-bold text-primary flex items-center gap-1.5">
                             <Tag className="h-4 w-4 shrink-0" />
-                            <span>${printer.msrp_usd}</span>
+                            <span>${printer.msrp_usd} <span className="text-xs font-medium">USD</span></span>
                           </div>
                         )}
                       </div>

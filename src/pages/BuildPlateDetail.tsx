@@ -272,11 +272,8 @@ export default function BuildPlateDetail() {
                 {buildPlate.price && (
                   <div className="text-right flex-shrink-0">
                     <p className="text-2xl font-bold text-primary">
-                      ${buildPlate.price.toFixed(2)}
+                      ${buildPlate.price.toFixed(2)} <span className="text-sm font-medium">{buildPlate.currency || "USD"}</span>
                     </p>
-                    <span className="text-xs text-muted-foreground">
-                      {buildPlate.currency || "USD"}
-                    </span>
                   </div>
                 )}
               </div>

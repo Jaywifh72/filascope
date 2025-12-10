@@ -196,7 +196,7 @@ const Vault = () => {
                 {filament.material && <Badge variant="secondary">{filament.material}</Badge>}
                 {filament.variant_price && filament.net_weight_g && (
                   <Badge variant="outline">
-                    ${((filament.variant_price / filament.net_weight_g) * 1000).toFixed(2)}/kg
+                    ${((filament.variant_price / filament.net_weight_g) * 1000).toFixed(2)} USD/kg
                   </Badge>
                 )}
               </div>

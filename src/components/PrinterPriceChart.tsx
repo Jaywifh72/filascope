@@ -81,19 +81,19 @@ export const PrinterPriceChart = ({
           {currentStorePrice && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Store Price</span>
-              <span className="font-bold text-primary">${currentStorePrice.toLocaleString()}</span>
+              <span className="font-bold text-primary">${currentStorePrice.toLocaleString()} USD</span>
             </div>
           )}
           {currentAmazonPrice && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Amazon</span>
-              <span className="font-semibold">${currentAmazonPrice.toLocaleString()}</span>
+              <span className="font-semibold">${currentAmazonPrice.toLocaleString()} USD</span>
             </div>
           )}
           {msrp && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">MSRP</span>
-              <span className="text-muted-foreground">${msrp.toLocaleString()}</span>
+              <span className="text-muted-foreground">${msrp.toLocaleString()} USD</span>
             </div>
           )}
           {!displayPrice && (
@@ -153,10 +153,10 @@ export const PrinterPriceChart = ({
             
             <div className="flex justify-between text-xs text-muted-foreground">
               <div>
-                <span className="font-medium">Low:</span> ${Math.min(...chartData.map(d => d.price)).toLocaleString()}
+                <span className="font-medium">Low:</span> ${Math.min(...chartData.map(d => d.price)).toLocaleString()} USD
               </div>
               <div>
-                <span className="font-medium">High:</span> ${Math.max(...chartData.map(d => d.price)).toLocaleString()}
+                <span className="font-medium">High:</span> ${Math.max(...chartData.map(d => d.price)).toLocaleString()} USD
               </div>
             </div>
           </>
