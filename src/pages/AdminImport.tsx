@@ -79,6 +79,23 @@ interface TDSParseResult {
   error?: string;
 }
 
+interface DatabaseFilament {
+  id: string;
+  product_title: string;
+  vendor: string | null;
+  product_url: string | null;
+  tds_url: string | null;
+  nozzle_temp_min_c: number | null;
+  nozzle_temp_max_c: number | null;
+  bed_temp_min_c: number | null;
+  bed_temp_max_c: number | null;
+  featured_image: string | null;
+  material: string | null;
+  selected?: boolean;
+  parsing?: boolean;
+  parsed?: boolean;
+}
+
 const AdminImport = () => {
   const [brandName, setBrandName] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -92,9 +109,34 @@ const AdminImport = () => {
   const [tdsProgress, setTdsProgress] = useState({ current: 0, total: 0 });
   const [tdsResults, setTdsResults] = useState<TDSParseResult[]>([]);
   
+  // Batch TDS parsing state for existing filaments
+  const [batchBrandFilter, setBatchBrandFilter] = useState("");
+  const [batchVendors, setBatchVendors] = useState<string[]>([]);
+  const [batchFilaments, setBatchFilaments] = useState<DatabaseFilament[]>([]);
+  const [isFetchingBatch, setIsFetchingBatch] = useState(false);
+  const [isBatchParsing, setIsBatchParsing] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
+  const [batchResults, setBatchResults] = useState<TDSParseResult[]>([]);
+  
   const { isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Fetch vendors for dropdown
+  useEffect(() => {
+    const fetchVendors = async () => {
+      const { data } = await supabase
+        .from('filaments')
+        .select('vendor')
+        .not('vendor', 'is', null);
+      
+      if (data) {
+        const uniqueVendors = [...new Set(data.map(f => f.vendor).filter(Boolean))] as string[];
+        setBatchVendors(uniqueVendors.sort());
+      }
+    };
+    fetchVendors();
+  }, []);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -347,6 +389,112 @@ const AdminImport = () => {
     if (percentage >= 80) return 'text-green-500';
     if (percentage >= 50) return 'text-yellow-500';
     return 'text-red-500';
+  };
+
+  // Fetch filaments missing print settings
+  const handleFetchBatchFilaments = async () => {
+    setIsFetchingBatch(true);
+    setBatchFilaments([]);
+    setBatchResults([]);
+
+    try {
+      let query = supabase
+        .from('filaments')
+        .select('id, product_title, vendor, product_url, tds_url, nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, bed_temp_max_c, featured_image, material')
+        .is('nozzle_temp_max_c', null);
+
+      if (batchBrandFilter) {
+        query = query.eq('vendor', batchBrandFilter);
+      }
+
+      const { data, error } = await query.order('vendor').limit(200);
+
+      if (error) throw error;
+
+      setBatchFilaments((data || []).map(f => ({ ...f, selected: true })));
+      
+      toast({
+        title: "Filaments Loaded",
+        description: `Found ${data?.length || 0} filaments missing print settings`,
+      });
+    } catch (error) {
+      console.error('Error fetching filaments:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch filaments",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingBatch(false);
+    }
+  };
+
+  // Batch parse TDS for existing filaments
+  const handleBatchParseTDS = async () => {
+    const selectedFilaments = batchFilaments.filter(f => f.selected);
+    if (selectedFilaments.length === 0) return;
+
+    setIsBatchParsing(true);
+    setBatchProgress({ current: 0, total: selectedFilaments.length });
+    setBatchResults([]);
+
+    const results: TDSParseResult[] = [];
+
+    for (let i = 0; i < selectedFilaments.length; i++) {
+      const filament = selectedFilaments[i];
+      setBatchProgress({ current: i + 1, total: selectedFilaments.length });
+
+      // Mark as parsing
+      setBatchFilaments(prev => prev.map(f => 
+        f.id === filament.id ? { ...f, parsing: true } : f
+      ));
+
+      try {
+        const { data, error } = await supabase.functions.invoke('parse-filament-tds', {
+          body: { 
+            tds_url: filament.tds_url,
+            product_url: filament.product_url,
+            filament_id: filament.id
+          }
+        });
+
+        if (error) throw error;
+
+        setBatchFilaments(prev => prev.map(f => 
+          f.id === filament.id ? { ...f, parsing: false, parsed: data.success } : f
+        ));
+
+        results.push({
+          product_id: filament.id,
+          success: data.success,
+          fields_extracted: data.fields_extracted,
+          error: data.error,
+        });
+      } catch (error) {
+        setBatchFilaments(prev => prev.map(f => 
+          f.id === filament.id ? { ...f, parsing: false } : f
+        ));
+        results.push({
+          product_id: filament.id,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+
+      // Rate limiting delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    setBatchResults(results);
+    setIsBatchParsing(false);
+
+    const successCount = results.filter(r => r.success).length;
+    const totalFields = results.reduce((sum, r) => sum + (r.fields_extracted || 0), 0);
+
+    toast({
+      title: "Batch Parsing Complete",
+      description: `Parsed ${successCount}/${results.length} filaments, extracted ${totalFields} fields`,
+    });
   };
 
   const selectedCount = products.filter(p => p.selected).length;
@@ -848,6 +996,193 @@ const AdminImport = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Batch TDS Parsing Section */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Thermometer className="h-5 w-5" />
+              Batch TDS Parsing for Existing Filaments
+            </CardTitle>
+            <CardDescription>
+              Parse TDS documents for existing filaments in the database that are missing print settings (nozzle temp, bed temp, etc.)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-4 items-end">
+              <div className="space-y-2 flex-1 min-w-[200px]">
+                <Label htmlFor="batch-brand">Filter by Brand</Label>
+                <select
+                  id="batch-brand"
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                  value={batchBrandFilter}
+                  onChange={(e) => setBatchBrandFilter(e.target.value)}
+                  disabled={isFetchingBatch || isBatchParsing}
+                >
+                  <option value="">All Brands</option>
+                  {batchVendors.map(vendor => (
+                    <option key={vendor} value={vendor}>{vendor}</option>
+                  ))}
+                </select>
+              </div>
+              <Button 
+                onClick={handleFetchBatchFilaments} 
+                disabled={isFetchingBatch || isBatchParsing}
+                variant="secondary"
+              >
+                {isFetchingBatch ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <Search className="mr-2 h-4 w-4" />
+                    Find Filaments Missing Settings
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Batch Filaments Results */}
+            {batchFilaments.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-4">
+                    <Badge variant="outline" className="text-lg px-3 py-1">
+                      {batchFilaments.length} filaments missing print settings
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      Selected: {batchFilaments.filter(f => f.selected).length}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setBatchFilaments(prev => prev.map(f => ({ ...f, selected: true })))}
+                    >
+                      Select All
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setBatchFilaments(prev => prev.map(f => ({ ...f, selected: false })))}
+                    >
+                      Deselect All
+                    </Button>
+                    <Button 
+                      onClick={handleBatchParseTDS} 
+                      disabled={isBatchParsing || batchFilaments.filter(f => f.selected).length === 0}
+                    >
+                      {isBatchParsing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Parsing {batchProgress.current}/{batchProgress.total}...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Parse TDS ({batchFilaments.filter(f => f.selected).length})
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Batch Progress */}
+                {isBatchParsing && (
+                  <div className="space-y-2">
+                    <Progress value={(batchProgress.current / batchProgress.total) * 100} />
+                    <p className="text-sm text-muted-foreground text-center">
+                      AI is extracting print settings from TDS documents...
+                    </p>
+                  </div>
+                )}
+
+                {/* Batch Results Summary */}
+                {batchResults.length > 0 && !isBatchParsing && (
+                  <Card className="border-purple-500">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center gap-4">
+                        <Sparkles className="h-6 w-6 text-purple-500" />
+                        <div>
+                          <p className="font-semibold">Batch Parsing Complete</p>
+                          <p className="text-sm text-muted-foreground">
+                            Success: {batchResults.filter(r => r.success).length} • 
+                            Failed: {batchResults.filter(r => !r.success).length} • 
+                            Fields Extracted: {batchResults.reduce((sum, r) => sum + (r.fields_extracted || 0), 0)}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Batch Filaments List */}
+                <ScrollArea className="h-[400px] border rounded-lg">
+                  <div className="p-4 space-y-2">
+                    {batchFilaments.map((filament) => (
+                      <div 
+                        key={filament.id}
+                        className={`flex items-center gap-4 p-3 rounded-lg border cursor-pointer transition-all ${
+                          filament.selected ? 'bg-primary/5 border-primary' : 'hover:bg-muted/50'
+                        } ${filament.parsing ? 'opacity-50' : ''}`}
+                        onClick={() => setBatchFilaments(prev => prev.map(f => 
+                          f.id === filament.id ? { ...f, selected: !f.selected } : f
+                        ))}
+                      >
+                        <Checkbox checked={filament.selected} disabled={filament.parsing} />
+                        
+                        {filament.featured_image ? (
+                          <img 
+                            src={filament.featured_image} 
+                            alt="" 
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                            <ImageIcon className="h-6 w-6 text-muted-foreground/30" />
+                          </div>
+                        )}
+                        
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{filament.product_title}</p>
+                          <p className="text-sm text-muted-foreground">{filament.vendor}</p>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          {filament.material && (
+                            <Badge variant="secondary">{filament.material}</Badge>
+                          )}
+                          {filament.tds_url ? (
+                            <Badge variant="outline" className="text-green-500">Has TDS</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-yellow-500">No TDS URL</Badge>
+                          )}
+                          {filament.parsing && (
+                            <Loader2 className="h-4 w-4 animate-spin text-purple-500" />
+                          )}
+                          {filament.parsed && (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+
+            {/* Empty state for batch */}
+            {batchFilaments.length === 0 && !isFetchingBatch && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Thermometer className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>Click "Find Filaments Missing Settings" to load filaments that need TDS parsing</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
