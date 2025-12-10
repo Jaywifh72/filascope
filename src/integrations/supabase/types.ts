@@ -518,6 +518,7 @@ export type Database = {
           printer_id: string | null
           product_url: string | null
           specs: Json | null
+          tds_url: string | null
           updated_at: string | null
         }
         Insert: {
@@ -538,6 +539,7 @@ export type Database = {
           printer_id?: string | null
           product_url?: string | null
           specs?: Json | null
+          tds_url?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -558,6 +560,7 @@ export type Database = {
           printer_id?: string | null
           product_url?: string | null
           specs?: Json | null
+          tds_url?: string | null
           updated_at?: string | null
         }
         Relationships: [

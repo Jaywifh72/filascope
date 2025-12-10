@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, ExternalLink, Square, Check, X, ImageIcon, AlertTriangle, Link2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Square, Check, X, ImageIcon, AlertTriangle, Link2, FileText } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -321,6 +321,20 @@ export default function BuildPlateDetail() {
                     </Button>
                   </a>
                 </div>
+              )}
+              {/* TDS Link */}
+              {(specs?.tds_url || (buildPlate as any).tds_url) && (
+                <a
+                  href={String(specs?.tds_url || (buildPlate as any).tds_url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-block"
+                >
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <FileText className="h-3.5 w-3.5" />
+                    Technical Data Sheet
+                  </Button>
+                </a>
               )}
             </div>
           </div>
