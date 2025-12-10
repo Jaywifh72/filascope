@@ -5550,6 +5550,121 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'rPLA': {
+    name: 'rPLA',
+    fullName: 'Recycled Polylactic Acid',
+    origin: {
+      yearInvented: '2018-2019',
+      originalCompany: 'Multiple manufacturers (Closed Loop Plastics, Prusament, re-PET)',
+      keyMilestones: [
+        '2018: First commercial recycled PLA filaments appear',
+        '2019: Major brands launch recycled filament lines',
+        '2020: Prusament introduces Recycled PLA from production waste',
+        '2022+: Improved recycling processes yield better quality rPLA',
+      ],
+      majorManufacturers: ['Prusament', 'Closed Loop Plastics', 're-PET', 'Fillamentum', 'ColorFabb', 'Polymaker'],
+    },
+    composition: {
+      basePolymer: 'Recycled Polylactic Acid (from post-industrial or post-consumer sources)',
+      chemicalFamily: 'Aliphatic Polyester (Recycled)',
+      keyAdditives: ['Chain extenders (restore molecular weight)', 'Stabilizers', 'Compatibilizers for mixed sources'],
+      coloringAgents: 'Often limited or natural color due to mixed feedstock',
+      specialFillers: ['Sometimes mixed with virgin PLA for consistency'],
+    },
+    familyContext: {
+      parentPolymer: 'Recycled from virgin PLA waste streams',
+      variants: ['Post-Industrial rPLA', 'Post-Consumer rPLA', 'Hybrid rPLA (recycled + virgin blend)'],
+      chemicalComparison: 'Chemically identical to virgin PLA but may have shorter polymer chains from recycling process.',
+      evolution: 'Emerged from sustainability initiatives in the 3D printing community.',
+    },
+    strengths: {
+      uniqueProperties: ['Reduced environmental footprint', 'Diverts plastic from waste', 'Similar properties to virgin PLA', 'Supports circular economy'],
+      bestUseScenarios: ['Prototyping', 'Non-critical parts', 'Educational printing', 'Sustainability-focused projects', 'General purpose printing'],
+      advantagesOverCompetitors: ['Lower carbon footprint than virgin PLA', 'Often lower cost', 'Supports recycling infrastructure', 'Feel-good factor'],
+      whyChooseThis: 'For environmentally conscious printing where virgin material properties aren\'t critical.',
+    },
+    weaknesses: {
+      limitations: ['Slightly reduced mechanical properties', 'Color options limited', 'Batch-to-batch variation possible', 'May contain minor impurities'],
+      commonProblems: ['Occasional print quality variations', 'Slight brittleness compared to virgin', 'Color inconsistency between batches'],
+      environmentalConcerns: ['Energy use in recycling process', 'Not infinitely recyclable (degrades each cycle)', 'Quality depends on source material purity'],
+      whenNotToUse: ['Critical structural parts', 'Consistent color requirements', 'Maximum strength applications', 'Food contact (unless certified)'],
+    },
+    practicalContext: {
+      industryAdoption: ['Educational institutions', 'Sustainability-focused makerspaces', 'Eco-conscious hobbyists', 'Prototyping shops'],
+      commonApplications: ['Prototypes', 'Educational models', 'Non-critical parts', 'Decorative items', 'Concept models'],
+      safetyStandards: ['Same as virgin PLA', 'Check certifications for specific applications'],
+      costPosition: 'Budget',
+    },
+    trivia: {
+      funFacts: [
+        'Some rPLA comes from 3D printing production waste (failed prints, purge material)',
+        'Prusament recycles their own production waste into rPLA filament',
+        'PLA can typically be recycled 3-5 times before significant degradation',
+        'The energy to recycle PLA is about 70% less than producing virgin PLA',
+      ],
+      whyInvented: 'To address environmental concerns about single-use plastics in 3D printing.',
+      controversies: [
+        'Debate over true environmental benefit vs. marketing',
+        'Quality consistency concerns',
+        'Greenwashing accusations for some products',
+        'Questions about actual recycled content percentages',
+      ],
+      marketAdoption: 'Growing adoption driven by environmental awareness and cost savings.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '45-55', unit: 'MPa', implications: 'Slightly below virgin PLA (50-60 MPa).' },
+        { name: 'Elongation at Break', value: '4-8', unit: '%', implications: 'Similar to virgin PLA, may be slightly more brittle.' },
+        { name: 'Glass Transition', value: '55-60', unit: '°C', implications: 'Same heat limitations as virgin PLA.' },
+        { name: 'Recycled Content', value: '80-100', unit: '%', implications: 'Varies by manufacturer and product.' },
+        { name: 'Density', value: '1.24', unit: 'g/cm³', implications: 'Same as virgin PLA.' },
+      ],
+      notes: 'Properties vary based on recycling source and process quality.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 195, max: 220, optimal: 210 },
+      bedTemp: { min: 50, max: 70, optimal: 60 },
+      coolingFan: { min: 50, max: 100, notes: 'Standard PLA cooling works well.' },
+      enclosure: { required: false, notes: 'Not required.' },
+      drying: { temp: 50, duration: '4 hours', notes: 'Standard PLA drying if needed.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Same as virgin PLA.' },
+      additionalNotes: [
+        'Print settings very similar to virgin PLA',
+        'May need slight temperature adjustments per batch',
+        'Start with standard PLA settings and adjust as needed',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI', 'Glass with adhesive', 'BuildTak'],
+        good: ['Blue tape', 'Textured PEI'],
+        poor: ['Bare glass', 'Polypropylene'],
+      },
+      releaseAgents: 'Same as virgin PLA - glue stick or hairspray if needed.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility with virgin PLA.' },
+        { material: 'PLA+', bondQuality: 'Strong Chemical Bond', notes: 'Good bonding.' },
+        { material: 'PVA', bondQuality: 'Mechanical Bond', notes: 'Works for supports.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [{ method: 'Ethyl Acetate vapor', effectiveness: 'Difficult', notes: 'Same as virgin PLA - limited effectiveness.' }],
+      mechanical: ['Sanding', 'Filing', 'Cutting'],
+      painting: 'Same as virgin PLA - primes and paints well.',
+      glues: ['CA glue', 'Epoxy', 'Hot glue'],
+    },
+    safety: {
+      fumes: { level: 'Very Low', notes: 'Same emissions profile as virgin PLA.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Recycling process and potential contaminants make food contact inadvisable unless specifically certified.' },
+      biodegradability: { rating: 'Industrial Compostable', notes: 'Same as virgin PLA - requires industrial composting conditions.' },
+      additionalNotes: [
+        'Safe for normal printing and handling',
+        'Check specific product certifications',
+        'Environmental benefit comes from reduced virgin material use',
+      ],
+    },
+  },
+
   'PVC': {
     name: 'PVC',
     fullName: 'Polyvinyl Chloride',
