@@ -20,6 +20,7 @@ interface DiscoveredProduct {
   variant_price: number | null;
   net_weight_g: number | null;
   diameter_nominal_mm: number | null;
+  pack_quantity: number;
   tds_url: string | null;
   upc: string | null;
   ean: string | null;
@@ -176,6 +177,53 @@ function extractDiameter(title: string): number | null {
     }
   }
   return null;
+}
+
+// Extract pack quantity from product title (e.g., "10 packs", "5-pack", "3x", "bundle of 4")
+function extractPackQuantity(title: string): number {
+  const lowerTitle = title.toLowerCase();
+  
+  // Pattern: "X packs" or "X-pack" or "X pack"
+  const packMatch = lowerTitle.match(/(\d+)\s*[-]?\s*packs?/i);
+  if (packMatch) {
+    const qty = parseInt(packMatch[1], 10);
+    if (qty >= 2 && qty <= 100) return qty;
+  }
+  
+  // Pattern: "Xx" or "X x" (e.g., "10x", "5 x")
+  const xMatch = lowerTitle.match(/(\d+)\s*x\b/i);
+  if (xMatch) {
+    const qty = parseInt(xMatch[1], 10);
+    if (qty >= 2 && qty <= 100) return qty;
+  }
+  
+  // Pattern: "bundle of X" or "set of X"
+  const bundleMatch = lowerTitle.match(/(?:bundle|set|box)\s+of\s+(\d+)/i);
+  if (bundleMatch) {
+    const qty = parseInt(bundleMatch[1], 10);
+    if (qty >= 2 && qty <= 100) return qty;
+  }
+  
+  // Pattern: "X rolls" or "X spools"
+  const rollsMatch = lowerTitle.match(/(\d+)\s*(?:rolls?|spools?)/i);
+  if (rollsMatch) {
+    const qty = parseInt(rollsMatch[1], 10);
+    if (qty >= 2 && qty <= 100) return qty;
+  }
+  
+  // Pattern: "multipack" or "multi-pack" with quantity
+  const multiMatch = lowerTitle.match(/multi[-]?pack\s*(?:of\s*)?(\d+)?/i);
+  if (multiMatch) {
+    if (multiMatch[1]) {
+      const qty = parseInt(multiMatch[1], 10);
+      if (qty >= 2 && qty <= 100) return qty;
+    }
+    // Generic multipack without number, assume 2
+    return 2;
+  }
+  
+  // Default: single spool
+  return 1;
 }
 
 function calculateDataCompleteness(product: DiscoveredProduct): number {
@@ -346,6 +394,7 @@ async function fetchShopifyProducts(websiteUrl: string, brandName: string): Prom
         variant_price: variant.price ? parseFloat(variant.price) : null,
         net_weight_g: extractWeight(product.title, product.variants),
         diameter_nominal_mm: extractDiameter(product.title) || 1.75,
+        pack_quantity: extractPackQuantity(product.title),
         tds_url: null,
         upc: variant.barcode || null,
         ean: null,
@@ -453,6 +502,7 @@ async function fetchCustomProducts(websiteUrl: string, brandName: string, firecr
           variant_price: price,
           net_weight_g: extractWeight(title + ' ' + markdown),
           diameter_nominal_mm: extractDiameter(title + ' ' + markdown) || 1.75,
+          pack_quantity: extractPackQuantity(title),
           tds_url: null,
           upc: null,
           ean: null,
