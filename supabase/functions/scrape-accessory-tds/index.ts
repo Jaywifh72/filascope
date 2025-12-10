@@ -79,6 +79,9 @@ async function findTdsUrl(productUrl: string, firecrawlApiKey: string): Promise<
   try {
     console.log(`Scraping product page for TDS: ${productUrl}`);
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    
     const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: {
@@ -87,11 +90,14 @@ async function findTdsUrl(productUrl: string, firecrawlApiKey: string): Promise<
       },
       body: JSON.stringify({
         url: productUrl,
-        formats: ["html", "links", "markdown"],
+        formats: ["links"],
         onlyMainContent: false,
-        waitFor: 2000,
+        timeout: 10000,
       }),
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -102,6 +108,7 @@ async function findTdsUrl(productUrl: string, firecrawlApiKey: string): Promise<
     const data = await response.json();
     const html = data.data?.html || "";
     const markdown = data.data?.markdown || "";
+    console.log(`Firecrawl returned data for ${productUrl}`);
     const links = data.data?.links || [];
     
     console.log(`Found ${links.length} links on page`);
@@ -314,7 +321,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { accessoryType, forceRescrape, limit = 10 } = await req.json();
+    const { accessoryType, forceRescrape, limit = 5 } = await req.json();
 
     // Build query for accessories
     let query = supabase
@@ -432,7 +439,7 @@ Deno.serve(async (req) => {
       }
 
       // Small delay between requests
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     return new Response(
