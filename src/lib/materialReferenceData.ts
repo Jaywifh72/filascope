@@ -5665,6 +5665,234 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'Standard PLA+': {
+    name: 'Standard PLA+',
+    fullName: 'Enhanced Polylactic Acid Plus',
+    origin: {
+      yearInvented: '2015-2016',
+      originalCompany: 'Multiple manufacturers (eSUN, Overture, Sunlu)',
+      keyMilestones: [
+        '2015: First "PLA+" formulations marketed as improved PLA',
+        '2016-2017: Major filament brands launch PLA+ product lines',
+        '2018: PLA+ becomes standard offering from most manufacturers',
+        '2020+: Formulations refined with better impact resistance and layer adhesion',
+      ],
+      majorManufacturers: ['eSUN', 'Overture', 'Sunlu', 'Hatchbox', 'Polymaker', 'Inland', 'Amazon Basics'],
+    },
+    composition: {
+      basePolymer: 'Modified Polylactic Acid',
+      chemicalFamily: 'Aliphatic Polyester (Enhanced)',
+      keyAdditives: ['Impact modifiers', 'Plasticizers for flexibility', 'Nucleating agents', 'Chain extenders'],
+      coloringAgents: 'Full range of pigments and masterbatch colorants',
+      specialFillers: ['Toughening agents', 'Flow enhancers'],
+    },
+    familyContext: {
+      parentPolymer: 'Standard PLA with toughening additives',
+      variants: ['PLA+', 'PLA Pro', 'PLA Premium', 'Tough PLA', 'PLA Enhanced'],
+      chemicalComparison: 'PLA base polymer modified with impact modifiers and plasticizers to reduce brittleness while maintaining easy printability.',
+      evolution: 'Developed to address standard PLA\'s brittleness while keeping its easy printing characteristics.',
+    },
+    strengths: {
+      uniqueProperties: ['Improved impact resistance over standard PLA', 'Better layer adhesion', 'Reduced brittleness', 'Maintains easy printability'],
+      bestUseScenarios: ['Functional prototypes', 'Parts requiring some flexibility', 'General purpose printing', 'Parts that may experience drops or impacts'],
+      advantagesOverCompetitors: ['Easier than PETG with better toughness than PLA', 'Wide color selection', 'Low cost improvement over PLA', 'No special equipment needed'],
+      whyChooseThis: 'When you need better toughness than standard PLA but don\'t want the complexity of PETG or ABS.',
+    },
+    weaknesses: {
+      limitations: ['Still not as strong as PETG or ABS', 'Same heat resistance as standard PLA', 'Formulations vary significantly between brands', 'Marketing term - no standard specification'],
+      commonProblems: ['Quality varies by manufacturer', 'Some "PLA+" is barely different from PLA', 'Slightly higher stringing than PLA'],
+      environmentalConcerns: ['Additives may affect compostability', 'Same disposal challenges as PLA'],
+      whenNotToUse: ['High-temperature applications', 'Maximum strength requirements', 'When consistent specifications needed across brands'],
+    },
+    practicalContext: {
+      industryAdoption: ['Hobbyist printing', 'Prototyping', 'Educational', 'Consumer products'],
+      commonApplications: ['Functional prototypes', 'Phone cases', 'Tool handles', 'Enclosures', 'General purpose parts'],
+      safetyStandards: ['Generally same as PLA', 'Check specific brand certifications'],
+      costPosition: 'Budget',
+    },
+    trivia: {
+      funFacts: [
+        'There\'s no industry standard for what makes PLA "plus" - each brand has their own formula',
+        'Some PLA+ is just standard PLA with better QC and marketing',
+        'The best PLA+ brands can approach PETG toughness while printing like PLA',
+        'Price difference between PLA and PLA+ is often minimal',
+      ],
+      whyInvented: 'To create an easy-to-print material that addresses standard PLA\'s brittleness complaints.',
+      controversies: [
+        '"PLA+" is a marketing term with no standardized meaning',
+        'Quality and properties vary wildly between brands',
+        'Some users report no difference from standard PLA',
+        'Debate over whether it\'s worth the price premium',
+      ],
+      marketAdoption: 'Extremely popular as a "better PLA" option for beginners and general use.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-65', unit: 'MPa', implications: 'Similar or slightly better than standard PLA.' },
+        { name: 'Impact Strength', value: '5-10', unit: 'kJ/m²', implications: 'Improved over standard PLA (2-4 kJ/m²).' },
+        { name: 'Elongation at Break', value: '8-15', unit: '%', implications: 'Better than PLA (3-6%), less brittle.' },
+        { name: 'Glass Transition', value: '55-60', unit: '°C', implications: 'Same heat limitations as standard PLA.' },
+        { name: 'Density', value: '1.24', unit: 'g/cm³', implications: 'Same as standard PLA.' },
+      ],
+      notes: 'Properties vary significantly between manufacturers. Test your specific brand.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 200, max: 230, optimal: 215 },
+      bedTemp: { min: 50, max: 70, optimal: 60 },
+      coolingFan: { min: 50, max: 100, notes: 'Standard PLA cooling. Some brands print better with slightly less cooling.' },
+      enclosure: { required: false, notes: 'Not required.' },
+      drying: { temp: 50, duration: '4 hours', notes: 'Standard PLA drying if needed.' },
+      printSpeed: { recommended: '40-70 mm/s', notes: 'Similar to standard PLA, some brands handle faster speeds.' },
+      additionalNotes: [
+        'Settings very similar to standard PLA',
+        'May need 5-10°C higher nozzle temp than standard PLA',
+        'Test with your specific brand',
+        'Slightly slower retraction may help with stringing',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI', 'Glass with adhesive', 'BuildTak'],
+        good: ['Blue tape', 'Textured PEI'],
+        poor: ['Bare glass', 'Polypropylene'],
+      },
+      releaseAgents: 'Same as standard PLA.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility.' },
+        { material: 'PVA', bondQuality: 'Mechanical Bond', notes: 'Good for supports.' },
+        { material: 'PETG', bondQuality: 'Weak Bond', notes: 'Poor adhesion.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [{ method: 'Ethyl Acetate vapor', effectiveness: 'Difficult', notes: 'Same limited effectiveness as standard PLA.' }],
+      mechanical: ['Sanding', 'Filing', 'Cutting', 'Drilling'],
+      painting: 'Same as PLA - accepts primers and paints well.',
+      glues: ['CA glue', 'Epoxy', 'Hot glue', 'PLA-specific adhesives'],
+    },
+    safety: {
+      fumes: { level: 'Very Low', notes: 'Same as standard PLA.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Additives typically not food safe. Check specific certifications.' },
+      biodegradability: { rating: 'Partially Compostable', notes: 'PLA base compostable, additives may affect this.' },
+      additionalNotes: [
+        'Safe for normal printing and handling',
+        'Same safety profile as standard PLA',
+      ],
+    },
+  },
+
+  'EasyPrint PLA': {
+    name: 'EasyPrint PLA',
+    fullName: 'Easy Print Polylactic Acid',
+    origin: {
+      yearInvented: '2018-2019',
+      originalCompany: 'Multiple manufacturers (3D-Fuel, Polymaker, FormFutura)',
+      keyMilestones: [
+        '2018: "Easy" or "beginner-friendly" PLA formulations emerge',
+        '2019: Major brands market specifically to new users',
+        '2020: Becomes popular entry-level filament category',
+        '2022+: Refined for maximum forgiving print characteristics',
+      ],
+      majorManufacturers: ['3D-Fuel', 'Polymaker', 'FormFutura', 'MatterHackers', 'Prusa'],
+    },
+    composition: {
+      basePolymer: 'Polylactic Acid (optimized formulation)',
+      chemicalFamily: 'Aliphatic Polyester',
+      keyAdditives: ['Flow enhancers', 'Adhesion promoters', 'Anti-stringing agents', 'Stabilizers for consistent extrusion'],
+      coloringAgents: 'Standard pigments optimized for color consistency',
+      specialFillers: ['None typically - focus on pure printability'],
+    },
+    familyContext: {
+      parentPolymer: 'Standard PLA optimized for consistent, trouble-free printing',
+      variants: ['EasyPrint PLA', 'Easy PLA', 'Beginner PLA', 'Standard PLA (high-QC)'],
+      chemicalComparison: 'Same base chemistry as standard PLA but with tighter tolerances, better drying, and optimized additives for reliable extrusion.',
+      evolution: 'Developed as entry-level products for new 3D printer users who need guaranteed success.',
+    },
+    strengths: {
+      uniqueProperties: ['Maximum printability', 'Very forgiving temperature range', 'Minimal stringing', 'Consistent diameter tolerance'],
+      bestUseScenarios: ['New printer users', 'Printer calibration', 'Educational settings', 'When reliability matters most', 'General purpose printing'],
+      advantagesOverCompetitors: ['Prints successfully on first try', 'Wide temperature window', 'Excellent bed adhesion', 'Minimal troubleshooting needed'],
+      whyChooseThis: 'When you want guaranteed successful prints without fussing with settings - perfect for beginners.',
+    },
+    weaknesses: {
+      limitations: ['Same mechanical properties as standard PLA', 'Same heat limitations', 'Often limited color selection', 'Sometimes premium priced for "easy" label'],
+      commonProblems: ['May be overpriced for what it is', '"Easy" is sometimes just marketing', 'Not better than good standard PLA'],
+      environmentalConcerns: ['Same as standard PLA'],
+      whenNotToUse: ['When you need enhanced properties', 'Cost-sensitive projects', 'When experienced with printing'],
+    },
+    practicalContext: {
+      industryAdoption: ['Educational institutions', 'Makerspaces', 'Home hobbyists', 'Schools'],
+      commonApplications: ['Learning to print', 'Test prints', 'Calibration', 'General decorative items', 'Classroom projects'],
+      safetyStandards: ['Same as standard PLA'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'Many "EasyPrint" PLAs are just well-made standard PLA with tighter QC',
+        'The wide temperature tolerance comes from careful additive balancing',
+        'Some brands\' standard PLA is already "easy" enough - the label is marketing',
+        'Prusa\'s standard Prusament is often considered "easy" quality without the label',
+      ],
+      whyInvented: 'To reduce frustration for new 3D printer users and guarantee successful first prints.',
+      controversies: [
+        'Debate over whether it\'s meaningfully different from good standard PLA',
+        'Price premium may not be justified',
+        'Some view it as marketing to beginners',
+      ],
+      marketAdoption: 'Popular in educational and beginner markets; experienced users often stick with standard PLA.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-60', unit: 'MPa', implications: 'Same as standard PLA.' },
+        { name: 'Elongation at Break', value: '4-6', unit: '%', implications: 'Standard PLA brittleness.' },
+        { name: 'Glass Transition', value: '55-60', unit: '°C', implications: 'Same heat limitations.' },
+        { name: 'Diameter Tolerance', value: '±0.02', unit: 'mm', implications: 'Tighter than budget PLA for consistent extrusion.' },
+        { name: 'Density', value: '1.24', unit: 'g/cm³', implications: 'Standard PLA density.' },
+      ],
+      notes: 'Mechanical properties identical to standard PLA - the "easy" is in the printing, not the finished part.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 190, max: 230, optimal: 210 },
+      bedTemp: { min: 45, max: 70, optimal: 60 },
+      coolingFan: { min: 50, max: 100, notes: 'Standard cooling works well across wide range.' },
+      enclosure: { required: false, notes: 'Not required.' },
+      drying: { temp: 50, duration: '4 hours', notes: 'Usually ships well-dried. Dry if stored long.' },
+      printSpeed: { recommended: '40-80 mm/s', notes: 'Forgiving across wide speed range.' },
+      additionalNotes: [
+        'Wide temperature window - hard to get wrong',
+        'Start with manufacturer recommended settings',
+        'Very forgiving of slight miscalibration',
+        'Great for learning your printer',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI', 'Glass with adhesive', 'BuildTak', 'Blue tape'],
+        good: ['Textured PEI', 'Glass with hairspray'],
+        poor: ['Bare untreated glass'],
+      },
+      releaseAgents: 'Usually not needed - good adhesion and release by design.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility with all PLA variants.' },
+        { material: 'PVA', bondQuality: 'Mechanical Bond', notes: 'Good for supports.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [{ method: 'Ethyl Acetate vapor', effectiveness: 'Difficult', notes: 'Same as standard PLA.' }],
+      mechanical: ['Sanding', 'Filing', 'Cutting'],
+      painting: 'Same as standard PLA - accepts paints well.',
+      glues: ['CA glue', 'Epoxy', 'Hot glue'],
+    },
+    safety: {
+      fumes: { level: 'Very Low', notes: 'Same as standard PLA.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Same considerations as standard PLA.' },
+      biodegradability: { rating: 'Industrial Compostable', notes: 'Same as standard PLA.' },
+      additionalNotes: [
+        'Safe for normal printing and handling',
+        'Good for educational environments',
+      ],
+    },
+  },
+
   'PVC': {
     name: 'PVC',
     fullName: 'Polyvinyl Chloride',
