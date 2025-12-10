@@ -385,10 +385,19 @@ const FilamentDetail = () => {
     return normalizedTitle;
   };
 
+  // Check if a term is a product variant (not a color)
+  const isProductVariant = (term: string): boolean => {
+    const termLower = term.toLowerCase();
+    return PRODUCT_VARIANT_TERMS.some(v => termLower.includes(v.toLowerCase()));
+  };
+
   // Extract color from product title  
   const getColorFromTitle = (title: string, baseName: string): string | null => {
+    // First clean the title of marketing suffixes
+    const cleanedTitle = cleanProductTitle(title);
+    
     // Remove packaging suffixes for comparison
-    const cleanTitle = title
+    const cleanTitle = cleanedTitle
       .replace(/\s*\(NFC\)\s*/gi, '')
       .replace(/\s+Refill\s*$/gi, '')
       .replace(/\s+\d+(?:\.\d+)?(?:kg|g)\s*$/gi, '')
@@ -398,26 +407,36 @@ const FilamentDetail = () => {
     
     // Pattern 0: Paramount 3D style - extract color from parentheses
     // e.g., "ABS (Autobot Blue) 1.75mm 1kg Filament" -> "Autobot Blue"
-    const parenMatch = title.match(/\(([^)]+)\)/);
+    const parenMatch = cleanedTitle.match(/\(([^)]+)\)/);
     if (parenMatch) {
-      return parenMatch[1].trim();
+      const extracted = parenMatch[1].trim();
+      // Don't return if it's a product variant
+      if (isProductVariant(extracted)) return null;
+      return extracted;
     }
     
     // Pattern 1: Dash separator
-    const dashMatch = title.match(/^.+?\s+-\s+(.+?)(?:\s+\d+(?:\.\d+)?(?:kg|g))?(?:\s*\(NFC\))?(?:\s+Refill)?$/i);
+    const dashMatch = cleanedTitle.match(/^.+?\s+-\s+(.+?)(?:\s+\d+(?:\.\d+)?(?:kg|g))?(?:\s*\(NFC\))?(?:\s+Refill)?$/i);
     if (dashMatch) {
-      return dashMatch[1].trim();
+      const extracted = dashMatch[1].trim();
+      // Don't return if it's a product variant
+      if (isProductVariant(extracted)) return null;
+      return extracted;
     }
     
     // Pattern 2: Extract color between base name and weight
-    const weightColorMatch = title.match(new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+(.+?)\\s+\\d+(?:\\.\\d+)?(?:kg|g)`, 'i'));
+    const weightColorMatch = cleanedTitle.match(new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+(.+?)\\s+\\d+(?:\\.\\d+)?(?:kg|g)`, 'i'));
     if (weightColorMatch) {
-      return weightColorMatch[1].trim();
+      const extracted = weightColorMatch[1].trim();
+      if (isProductVariant(extracted)) return null;
+      return extracted;
     }
     
     // Fallback: everything after base name
     if (cleanTitle.startsWith(baseName)) {
-      return cleanTitle.slice(baseName.length).trim() || null;
+      const extracted = cleanTitle.slice(baseName.length).replace(/^[\s-]+/, '').trim();
+      if (!extracted || isProductVariant(extracted)) return null;
+      return extracted;
     }
     
     return null;
@@ -443,10 +462,17 @@ const FilamentDetail = () => {
 
         if (error) throw error;
 
-        // Filter to those with the same base product name (including current filament for display)
+        // Filter to those with the same base product name AND that have actual colors (not product variants)
         const variants = (data || []).filter(f => {
           const fBaseName = getBaseProductName(f.product_title);
-          return fBaseName === baseName;
+          if (fBaseName !== baseName) return false;
+          
+          // Include current filament
+          if (f.id === filament.id) return true;
+          
+          // Only include if it has an actual color (not a product variant)
+          const color = getColorFromTitle(f.product_title, baseName);
+          return color !== null;
         });
 
         // Sort: current filament first, then alphabetically by color
