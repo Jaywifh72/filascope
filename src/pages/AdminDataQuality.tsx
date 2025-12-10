@@ -8,7 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, CheckCircle, AlertCircle, XCircle, RefreshCw, Database, Printer, TestTube, Wrench } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, XCircle, RefreshCw, Database, Printer, TestTube, Wrench, DollarSign, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface DataQualityMetrics {
   total: number;
@@ -40,6 +41,30 @@ interface AccessoryMetrics {
   amsMmu: DataQualityMetrics | null;
 }
 
+interface PricingAuditResult {
+  success: boolean;
+  total_filaments: number;
+  issues_found: number;
+  issues_by_severity: { error: number; warning: number; info: number };
+  issues_by_type: Record<string, number>;
+  issues: Array<{
+    id: string;
+    product_title: string;
+    vendor: string;
+    issue_type: string;
+    severity: 'error' | 'warning' | 'info';
+    details: string;
+    current_values: {
+      variant_price?: number | null;
+      net_weight_g?: number | null;
+      pack_quantity?: number | null;
+      calculated_price_per_kg?: number | null;
+    };
+    suggested_fix?: string;
+  }>;
+  auto_fixes_applied?: number;
+}
+
 const AdminDataQuality = () => {
   const navigate = useNavigate();
   const { isAdmin, loading } = useAuth();
@@ -51,6 +76,8 @@ const AdminDataQuality = () => {
   const [filamentsWithIssues, setFilamentsWithIssues] = useState<ItemWithIssues[]>([]);
   const [accessoriesWithIssues, setAccessoriesWithIssues] = useState<ItemWithIssues[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pricingAuditResult, setPricingAuditResult] = useState<PricingAuditResult | null>(null);
+  const [isRunningPricingAudit, setIsRunningPricingAudit] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -68,6 +95,61 @@ const AdminDataQuality = () => {
     setIsLoading(true);
     await Promise.all([fetchPrinterData(), fetchFilamentData(), fetchAccessoryData()]);
     setIsLoading(false);
+  };
+
+  const runPricingAudit = async (autoFix: boolean = false) => {
+    setIsRunningPricingAudit(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('audit-filament-data', {
+        body: {},
+      });
+
+      if (error) throw error;
+
+      setPricingAuditResult(data);
+      
+      if (data.issues_found === 0) {
+        toast.success('No pricing issues found!');
+      } else {
+        toast.info(`Found ${data.issues_found} pricing issues (${data.issues_by_severity.error} errors, ${data.issues_by_severity.warning} warnings)`);
+      }
+
+      if (autoFix && data.auto_fixes_applied > 0) {
+        toast.success(`Auto-fixed ${data.auto_fixes_applied} issues`);
+        // Refresh filament data after auto-fix
+        await fetchFilamentData();
+      }
+    } catch (error) {
+      console.error('Pricing audit error:', error);
+      toast.error('Failed to run pricing audit');
+    } finally {
+      setIsRunningPricingAudit(false);
+    }
+  };
+
+  const runPricingAuditWithAutoFix = async () => {
+    setIsRunningPricingAudit(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('audit-filament-data', {
+        body: { autoFix: true },
+      });
+
+      if (error) throw error;
+
+      setPricingAuditResult(data);
+      
+      if (data.auto_fixes_applied > 0) {
+        toast.success(`Auto-fixed ${data.auto_fixes_applied} issues`);
+        await fetchFilamentData();
+      } else {
+        toast.info('No issues could be auto-fixed');
+      }
+    } catch (error) {
+      console.error('Pricing audit error:', error);
+      toast.error('Failed to run pricing audit with auto-fix');
+    } finally {
+      setIsRunningPricingAudit(false);
+    }
   };
 
   const fetchPrinterData = async () => {
@@ -759,7 +841,7 @@ const AdminDataQuality = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="printers" className="flex items-center gap-2">
               <Printer className="w-4 h-4" />
               Printers
@@ -767,6 +849,10 @@ const AdminDataQuality = () => {
             <TabsTrigger value="filaments" className="flex items-center gap-2">
               <TestTube className="w-4 h-4" />
               Filaments
+            </TabsTrigger>
+            <TabsTrigger value="pricing" className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4" />
+              Pricing Audit
             </TabsTrigger>
             <TabsTrigger value="accessories" className="flex items-center gap-2">
               <Wrench className="w-4 h-4" />
@@ -780,6 +866,175 @@ const AdminDataQuality = () => {
 
           <TabsContent value="filaments">
             {renderMetricsContent(filamentMetrics, filamentsWithIssues, "filament")}
+          </TabsContent>
+
+          <TabsContent value="pricing">
+            <div className="space-y-6">
+              {/* Pricing Audit Controls */}
+              <Card className="p-6 bg-card border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-foreground">Filament Pricing Audit</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Detect suspicious pricing data: wrong weights, pack quantities, and price calculations
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => runPricingAudit(false)}
+                      disabled={isRunningPricingAudit}
+                      variant="outline"
+                    >
+                      {isRunningPricingAudit ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Running...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Run Audit
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={runPricingAuditWithAutoFix}
+                      disabled={isRunningPricingAudit}
+                      variant="default"
+                    >
+                      {isRunningPricingAudit ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Fixing...
+                        </>
+                      ) : (
+                        <>
+                          <Wrench className="w-4 h-4 mr-2" />
+                          Run & Auto-Fix
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Audit Results */}
+              {pricingAuditResult && (
+                <>
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card className="p-4 bg-card border-border">
+                      <div className="text-sm text-muted-foreground mb-1">Total Scanned</div>
+                      <div className="text-3xl font-bold text-foreground">{pricingAuditResult.total_filaments}</div>
+                    </Card>
+                    <Card className="p-4 bg-card border-border border-red-500/30">
+                      <div className="text-sm text-muted-foreground mb-1">Errors</div>
+                      <div className="text-3xl font-bold text-red-500">{pricingAuditResult.issues_by_severity.error}</div>
+                    </Card>
+                    <Card className="p-4 bg-card border-border border-yellow-500/30">
+                      <div className="text-sm text-muted-foreground mb-1">Warnings</div>
+                      <div className="text-3xl font-bold text-yellow-500">{pricingAuditResult.issues_by_severity.warning}</div>
+                    </Card>
+                    <Card className="p-4 bg-card border-border border-blue-500/30">
+                      <div className="text-sm text-muted-foreground mb-1">Info</div>
+                      <div className="text-3xl font-bold text-blue-500">{pricingAuditResult.issues_by_severity.info}</div>
+                    </Card>
+                  </div>
+
+                  {/* Issues by Type */}
+                  {Object.keys(pricingAuditResult.issues_by_type).length > 0 && (
+                    <Card className="p-6 bg-card border-border">
+                      <h3 className="text-lg font-semibold text-foreground mb-4">Issues by Type</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(pricingAuditResult.issues_by_type).map(([type, count]) => (
+                          <Badge key={type} variant="secondary" className="text-sm">
+                            {type.replace(/_/g, ' ')}: {count}
+                          </Badge>
+                        ))}
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Issues Table */}
+                  {pricingAuditResult.issues.length > 0 && (
+                    <Card className="p-6 bg-card border-border">
+                      <h3 className="text-lg font-semibold text-foreground mb-4">
+                        Issues Found ({pricingAuditResult.issues_found})
+                      </h3>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Severity</TableHead>
+                              <TableHead>Filament</TableHead>
+                              <TableHead>Vendor</TableHead>
+                              <TableHead>Issue</TableHead>
+                              <TableHead>Current Values</TableHead>
+                              <TableHead>Suggested Fix</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {pricingAuditResult.issues.slice(0, 50).map((issue, idx) => (
+                              <TableRow key={`${issue.id}-${idx}`}>
+                                <TableCell>
+                                  <Badge 
+                                    variant={issue.severity === 'error' ? 'destructive' : issue.severity === 'warning' ? 'secondary' : 'outline'}
+                                  >
+                                    {issue.severity}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Link 
+                                    to={`/filament/${issue.id}`}
+                                    className="text-primary hover:underline font-medium text-sm"
+                                  >
+                                    {issue.product_title.slice(0, 40)}...
+                                  </Link>
+                                </TableCell>
+                                <TableCell className="text-sm">{issue.vendor}</TableCell>
+                                <TableCell className="text-sm max-w-xs">{issue.details}</TableCell>
+                                <TableCell className="text-xs font-mono">
+                                  <div>Price: ${issue.current_values.variant_price || 'N/A'}</div>
+                                  <div>Weight: {issue.current_values.net_weight_g || 'N/A'}g</div>
+                                  <div>Pack: {issue.current_values.pack_quantity || 1}</div>
+                                  <div>$/kg: ${issue.current_values.calculated_price_per_kg || 'N/A'}</div>
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground max-w-xs">
+                                  {issue.suggested_fix || '-'}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        {pricingAuditResult.issues.length > 50 && (
+                          <p className="text-sm text-muted-foreground mt-4 text-center">
+                            Showing 50 of {pricingAuditResult.issues_found} issues
+                          </p>
+                        )}
+                      </div>
+                    </Card>
+                  )}
+
+                  {pricingAuditResult.issues_found === 0 && (
+                    <Card className="p-8 bg-card border-border text-center">
+                      <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-foreground mb-2">All Clear!</h3>
+                      <p className="text-muted-foreground">No pricing issues found in the filament database.</p>
+                    </Card>
+                  )}
+                </>
+              )}
+
+              {!pricingAuditResult && !isRunningPricingAudit && (
+                <Card className="p-8 bg-card border-border text-center">
+                  <DollarSign className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Run a Pricing Audit</h3>
+                  <p className="text-muted-foreground">
+                    Click "Run Audit" to scan for pricing data issues like incorrect weights, pack quantities, and suspicious price-per-kg values.
+                  </p>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="accessories">
