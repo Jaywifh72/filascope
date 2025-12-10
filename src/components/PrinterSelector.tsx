@@ -27,7 +27,7 @@ export function PrinterSelector() {
           <h3 className="font-semibold whitespace-nowrap">Your Printer</h3>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end flex-1 max-w-4xl sm:ml-4">
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end flex-1 max-w-4xl sm:ml-8">
         {/* Brand Selection */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="printer-brand" className="text-sm font-medium">
