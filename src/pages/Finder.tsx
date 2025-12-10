@@ -1057,7 +1057,7 @@ const Finder = () => {
                     const pricePerKg = (filament.variant_price && weightKg) 
                       ? filament.variant_price / (weightKg * packQty) 
                       : null;
-                    const isValidPrice = pricePerKg && pricePerKg > 5 && pricePerKg < 500;
+                    const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
                     const displayPricePerKg = isValidPrice ? pricePerKg : null;
                     // Per-spool price = total price / pack quantity
                     const pricePerSpool = filament.variant_price ? filament.variant_price / packQty : null;
@@ -1146,13 +1146,8 @@ const Finder = () => {
               const pricePerKg = (filament.variant_price && weightKg) 
                 ? filament.variant_price / (weightKg * packQty) 
                 : null;
-              const isValidPrice = pricePerKg && pricePerKg > 5 && pricePerKg < 500;
+              const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
               const displayPrice = isValidPrice ? pricePerKg.toFixed(2) : null;
-              
-              // Debug logging
-              if (!displayPrice && filament.variant_price) {
-                console.log('True Cost null for:', filament.product_title, { variant_price: filament.variant_price, net_weight_g: filament.net_weight_g, pack_quantity: (filament as any).pack_quantity, pricePerKg, isValidPrice });
-              }
               
               const overallScore = filament.value_score || 7.0;
 
