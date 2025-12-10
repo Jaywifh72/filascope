@@ -967,17 +967,24 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
   const packQuantity = (filament as any).pack_quantity || 1;
   const isMultiPack = packQuantity > 1;
   
-  // variant_price is the per-kg price
-  const pricePerKg = filament.variant_price ? filament.variant_price.toFixed(2) : null;
+  // variant_price is the TOTAL price for the listing (may be multi-pack)
+  // Calculate true per-kg price: total_price / (pack_quantity * weight_per_spool_kg)
+  const totalWeightKg = filament.net_weight_g 
+    ? (filament.net_weight_g / 1000) * packQuantity 
+    : packQuantity; // Assume 1kg per spool if weight unknown
   
-  // Calculate per-spool price from per-kg price and weight
-  const pricePerSpool = filament.variant_price && filament.net_weight_g
-    ? (filament.variant_price * (filament.net_weight_g / 1000))
+  const pricePerKg = filament.variant_price 
+    ? (filament.variant_price / totalWeightKg).toFixed(2) 
     : null;
   
-  // Calculate total pack price (for multi-packs)
-  const totalPackPrice = pricePerSpool && packQuantity
-    ? (pricePerSpool * packQuantity).toFixed(2)
+  // Per-spool price = total price / pack quantity
+  const pricePerSpool = filament.variant_price 
+    ? (filament.variant_price / packQuantity)
+    : null;
+  
+  // Total pack price is just the variant_price for multi-packs
+  const totalPackPrice = isMultiPack && filament.variant_price 
+    ? filament.variant_price.toFixed(2) 
     : null;
 
   return (
