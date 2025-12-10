@@ -4089,6 +4089,246 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'PC-ABS': {
+    name: 'PC-ABS',
+    fullName: 'Polycarbonate-ABS Blend',
+    origin: {
+      yearInvented: '1980s',
+      originalCompany: 'General Electric (developed Cycoloy brand)',
+      keyMilestones: [
+        '1980s: PC-ABS blends commercialized for automotive',
+        '1990s: Becomes standard for automotive interiors',
+        '2000s: Stratasys adopts PC-ABS for FDM industrial printers',
+        '2015+: Desktop-accessible PC-ABS formulations emerge',
+      ],
+      majorManufacturers: ['Covestro', 'SABIC', 'Stratasys', 'Polymaker', 'eSUN', '3DXTech'],
+    },
+    composition: {
+      basePolymer: 'Polycarbonate (50-70%) + ABS (30-50%) blend',
+      chemicalFamily: 'Polymer blend (Polycarbonate + Acrylonitrile Butadiene Styrene)',
+      keyAdditives: ['Compatibilizers', 'Impact modifiers', 'UV stabilizers'],
+      coloringAgents: 'Naturally opaque, accepts various pigments, typically darker colors',
+      specialFillers: ['Some formulations include fire retardants'],
+    },
+    familyContext: {
+      parentPolymer: 'Polycarbonate and ABS combined',
+      variants: ['PC-ABS', 'PC-ABS FR (flame retardant)', 'PC-ABS HI (high impact)'],
+      chemicalComparison: 'Combines PC impact resistance with ABS ease of printing. Properties intermediate between parents.',
+      evolution: 'Created to make PC more processable while retaining most of its superior properties.',
+    },
+    strengths: {
+      uniqueProperties: ['Excellent impact resistance', 'Much easier to print than pure PC', 'Good heat resistance', 'Dimensional stability'],
+      bestUseScenarios: ['Automotive interior parts', 'Electronic enclosures', 'Structural prototypes', 'Functional parts requiring toughness'],
+      advantagesOverCompetitors: ['Easier than PC, tougher than ABS', 'Better dimensional stability than ABS', 'Lower warping than pure PC'],
+      whyChooseThis: 'When you need PC-like toughness but cannot achieve the extreme conditions pure PC requires.',
+    },
+    weaknesses: {
+      limitations: ['Still requires enclosure', 'Lower heat resistance than pure PC', 'Less impact resistant than pure PC', 'More expensive than ABS'],
+      commonProblems: ['Warping in unenclosed printers', 'Moisture absorption affects quality', 'Layer adhesion requires proper temps'],
+      environmentalConcerns: ['Contains BPA from PC component', 'Not biodegradable', 'Mixed polymer harder to recycle'],
+      whenNotToUse: ['Maximum impact resistance needed (use pure PC)', 'No enclosure available', 'Budget constraints (use ABS)'],
+    },
+    practicalContext: {
+      industryAdoption: ['Automotive', 'Consumer electronics', 'Appliances', 'Industrial prototyping'],
+      commonApplications: ['Dashboard components', 'Laptop housings', 'Power tool casings', 'Phone cases', 'Appliance covers'],
+      safetyStandards: ['UL94 ratings available', 'Automotive interior standards'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'PC-ABS is the standard material in Stratasys industrial FDM printers',
+        'Most automotive interior trim pieces are injection molded PC-ABS',
+        'The blend was specifically engineered to keep PC tough while making it processable',
+        'Cycoloy brand PC-ABS has been an automotive standard for decades',
+      ],
+      whyInvented: 'Pure PC was too difficult to process; ABS addition made it moldable and printable while keeping most benefits.',
+      controversies: [
+        'Some PC-ABS blends skimp on PC content for easier printing',
+        'Properties vary significantly between manufacturers',
+        'Marketing sometimes overstates heat resistance compared to pure PC',
+      ],
+      marketAdoption: 'Widely adopted in industrial 3D printing, growing in desktop market for users with enclosures.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '45-55', unit: 'MPa', implications: 'High. Between ABS and PC strength.' },
+        { name: 'Elongation at Break', value: '80-130', unit: '%', implications: 'Good ductility. Better than ABS.' },
+        { name: "Young's Modulus", value: '2000-2300', unit: 'MPa', implications: 'Good stiffness. Slightly less rigid than pure PC.' },
+        { name: 'Impact Strength (Notched)', value: '400-600', unit: 'J/m', implications: 'Excellent. Much better than ABS, slightly less than PC.' },
+        { name: 'Glass Transition (Tg)', value: '115-125', unit: '°C', implications: 'Good heat resistance. Better than ABS, less than PC.' },
+        { name: 'Heat Deflection (HDT)', value: '100-115', unit: '°C (0.45 MPa)', implications: 'Good heat deflection. Suitable for warm environments.' },
+      ],
+      notes: 'Properties depend heavily on PC:ABS ratio. Higher PC content = better properties but harder to print.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 250, max: 280, optimal: 265 },
+      bedTemp: { min: 90, max: 110, optimal: 100 },
+      coolingFan: { min: 0, max: 30, notes: 'Minimal cooling. Some fan acceptable, unlike pure PC.' },
+      enclosure: { required: true, notes: 'Strongly recommended. 50-60°C chamber temperature helps significantly.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'Hygroscopic. Moisture causes bubbling and poor layer adhesion.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Moderate speeds. Slower first layer improves adhesion.' },
+      additionalNotes: [
+        'All-metal hotend required at higher temps',
+        'Less demanding than pure PC but still needs proper setup',
+        'Brim recommended for adhesion',
+        'Cool slowly to prevent cracking',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite', 'ABS slurry on glass'],
+        good: ['Glass with glue stick', 'BuildTak'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'ABS slurry (ABS dissolved in acetone) works excellently. Standard glue stick acceptable.',
+      multiMaterial: [
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility due to ABS content.' },
+        { material: 'PC', bondQuality: 'Strong Chemical Bond', notes: 'Good bonding with pure PC.' },
+        { material: 'ASA', bondQuality: 'Strong Chemical Bond', notes: 'Similar chemistry enables good adhesion.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone vapor', effectiveness: 'Good', notes: 'ABS component allows acetone smoothing, though slower than pure ABS.' },
+        { method: 'Dichloromethane', effectiveness: 'Excellent', notes: 'Very effective but highly toxic. Professional use only.' },
+      ],
+      mechanical: ['Sands well', 'Drills and taps cleanly', 'CNC machinable'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'ABS slurry for solvent welding'],
+      painting: 'Accepts paints well. Light sanding improves adhesion.',
+    },
+    safety: {
+      fumes: { level: 'High', notes: 'Releases styrene and BPA. Good ventilation required. Filtration recommended.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'BPA from PC component makes it unsuitable for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based blend. Very stable in environment.' },
+      additionalNotes: [
+        'BPA is present from PC component',
+        'Styrene fumes from ABS component',
+        'HEPA + carbon filtration strongly recommended',
+        'Better to print in enclosed, ventilated space',
+      ],
+    },
+  },
+
+  'PC-CF': {
+    name: 'PC-CF',
+    fullName: 'Carbon Fiber Reinforced Polycarbonate',
+    origin: {
+      yearInvented: '2010s (for 3D printing)',
+      originalCompany: 'Multiple manufacturers developed similar products',
+      keyMilestones: [
+        '2010s: CF-reinforced filaments emerge for desktop printers',
+        '2015: 3DXTech and others commercialize PC-CF',
+        '2018+: High-flow nozzles make CF printing more accessible',
+        '2020+: Growing adoption for functional prototypes',
+      ],
+      majorManufacturers: ['3DXTech', 'Polymaker', 'eSUN', 'Priline', 'Matterhackers'],
+    },
+    composition: {
+      basePolymer: 'Polycarbonate (85-90%)',
+      chemicalFamily: 'Polycarbonate with carbon fiber reinforcement',
+      keyAdditives: ['Chopped carbon fiber (10-15%)', 'Coupling agents'],
+      coloringAgents: 'Black/grey appearance from carbon fiber. No other colors possible.',
+      specialFillers: ['Milled or chopped carbon fibers'],
+    },
+    familyContext: {
+      parentPolymer: 'Polycarbonate base',
+      variants: ['PC-CF', 'PC-CF15 (15% fiber)', 'PC-CF20 (20% fiber)'],
+      chemicalComparison: 'Stiffer and stronger than pure PC, but less impact resistant due to fiber brittleness.',
+      evolution: 'Carbon fiber addition maximizes stiffness while maintaining PC heat resistance.',
+    },
+    strengths: {
+      uniqueProperties: ['Exceptional stiffness', 'High heat resistance', 'Low warping', 'Excellent dimensional stability'],
+      bestUseScenarios: ['Structural jigs/fixtures', 'Aerospace prototypes', 'High-temp tooling', 'Stiffness-critical parts'],
+      advantagesOverCompetitors: ['Stiffer than any unreinforced plastic', 'Less warping than pure PC', 'Better dimensional accuracy'],
+      whyChooseThis: 'When maximum stiffness at high temperatures is required and impact resistance is secondary.',
+    },
+    weaknesses: {
+      limitations: ['Extremely abrasive - destroys brass nozzles', 'Reduced impact vs pure PC', 'Anisotropic properties', 'Expensive'],
+      commonProblems: ['Nozzle wear without hardened nozzle', 'Layer delamination under impact', 'Fiber orientation affects strength'],
+      environmentalConcerns: ['Carbon fiber not recyclable', 'Energy intensive production', 'Potential for fiber inhalation'],
+      whenNotToUse: ['Impact-critical parts (use pure PC)', 'Without hardened nozzle', 'Budget applications'],
+    },
+    practicalContext: {
+      industryAdoption: ['Aerospace', 'Automotive tooling', 'Robotics', 'Industrial equipment'],
+      commonApplications: ['UAV frames', 'End-of-arm tooling', 'CMM fixtures', 'High-temp brackets', 'Structural inserts'],
+      safetyStandards: ['Varies by manufacturer - some UL rated'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'PC-CF can be stiffer than aluminum at a fraction of the weight',
+        'A brass nozzle can wear out in hours printing CF materials',
+        'The fibers align with print direction, making parts stronger in that axis',
+        'Used in actual aerospace prototyping and low-volume production',
+      ],
+      whyInvented: 'To maximize PC stiffness for tooling and structural applications where rigidity matters most.',
+      controversies: [
+        'Many users destroy nozzles not knowing CF materials are abrasive',
+        'Claimed "carbon fiber" content varies widely between brands',
+        'Actual strength depends heavily on fiber length and distribution',
+      ],
+      marketAdoption: 'Growing industrial adoption. Desktop users with proper equipment increasingly using for functional parts.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '70-90', unit: 'MPa', implications: 'Very high. Fiber reinforcement adds significant strength.' },
+        { name: 'Elongation at Break', value: '3-6', unit: '%', implications: 'Low. Stiff but will snap rather than deform.' },
+        { name: "Young's Modulus", value: '6000-10000', unit: 'MPa', implications: 'Extremely high. One of the stiffest printable materials.' },
+        { name: 'Impact Strength (Notched)', value: '100-200', unit: 'J/m', implications: 'Reduced vs PC. Fiber makes it stiffer but more brittle.' },
+        { name: 'Glass Transition (Tg)', value: '145-150', unit: '°C', implications: 'Maintains PC heat resistance. Excellent high-temp capability.' },
+        { name: 'Heat Deflection (HDT)', value: '140-150', unit: '°C (0.45 MPa)', implications: 'Outstanding. Maintains shape under heat load.' },
+      ],
+      notes: 'Properties are highly anisotropic - much stronger in print direction. Design accordingly.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 280, max: 320, optimal: 300 },
+      bedTemp: { min: 100, max: 130, optimal: 115 },
+      coolingFan: { min: 0, max: 20, notes: 'Minimal cooling. PC base still sensitive to rapid cooling.' },
+      enclosure: { required: true, notes: 'REQUIRED. 60-80°C chamber temperature for reliable results.' },
+      drying: { temp: 80, duration: '6-10 hours', notes: 'Very hygroscopic. Print from dry box if possible.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Moderate speeds. Fiber can cause inconsistent flow at high speeds.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED - brass will wear in hours',
+        'All-metal hotend mandatory',
+        'Large nozzle (0.5mm+) recommended for fiber flow',
+        'Slow perimeters for surface quality',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Garolite (G10)', 'PC sheet', 'PEI with PC glue'],
+        good: ['Textured PEI with adhesive'],
+        poor: ['Smooth PEI', 'Glass', 'Most standard surfaces'],
+      },
+      releaseAgents: 'PC-specific adhesives like Vision Miner Nano Polymer. Standard glue often insufficient.',
+      multiMaterial: [
+        { material: 'PC', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer - excellent compatibility.' },
+        { material: 'PC-ABS', bondQuality: 'Strong Chemical Bond', notes: 'Good bonding due to PC content.' },
+        { material: 'ABS', bondQuality: 'Mechanical Bond', notes: 'Reasonable adhesion but different shrink rates.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Dichloromethane', effectiveness: 'Difficult', notes: 'Works on PC matrix but fibers remain visible. Smooths less than pure PC.' },
+      ],
+      mechanical: ['Sands with care (fiber dust)', 'Machines well with carbide tools', 'Taps cleanly'],
+      glues: ['Epoxy (best)', 'Cyanoacrylate', 'Methacrylate adhesives'],
+      painting: 'Accepts paint after sanding. Fibers may show through thin paint.',
+    },
+    safety: {
+      fumes: { level: 'High', notes: 'PC fumes plus carbon fiber particulates. Excellent ventilation and filtration mandatory.' },
+      foodSafety: { rating: 'Not Safe', notes: 'BPA from PC, fiber particle concerns. Never use for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Carbon fiber is essentially permanent. Cannot be recycled.' },
+      additionalNotes: [
+        'Carbon fiber dust is a respiratory hazard',
+        'HEPA filtration required when sanding',
+        'Wear N95 mask when post-processing',
+        'BPA concerns from PC base',
+        'Proper ventilation during printing is critical',
+      ],
+    },
+  },
+
   'PEEK': {
     name: 'PEEK',
     fullName: 'Polyether Ether Ketone',
