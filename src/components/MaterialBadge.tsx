@@ -66,9 +66,9 @@ export const MaterialBadge = ({
     <Badge 
       variant={variant} 
       className={cn(
-        "border-primary/30 text-primary cursor-default",
-        size === "sm" ? "text-xs" : "text-sm",
-        showTooltip && "cursor-help",
+        "bg-primary/15 border-primary/40 text-foreground font-semibold cursor-default",
+        size === "sm" ? "text-xs px-2.5 py-1" : "text-sm px-3 py-1.5",
+        showTooltip && "cursor-help hover:bg-primary/25 transition-colors",
         className
       )}
     >
