@@ -1628,6 +1628,243 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'ESD-ABS': {
+    name: 'ESD-ABS',
+    fullName: 'Electrostatic Dissipative Acrylonitrile Butadiene Styrene',
+    origin: {
+      yearInvented: '1980s (industrial), 2017+ (3D printing)',
+      originalCompany: 'Various industrial plastics manufacturers',
+      keyMilestones: [
+        '1948: ABS polymer developed',
+        '1980s: ESD grades developed for electronics manufacturing',
+        '2017-2019: ESD-ABS filaments become commercially available',
+        '2020+: Widely adopted for electronics handling and cleanroom applications',
+      ],
+      majorManufacturers: ['3DXTech', 'Polymaker', 'Stratasys', 'Ultimaker', 'Kimya', 'Filamentive'],
+    },
+    composition: {
+      basePolymer: 'ABS (Acrylonitrile Butadiene Styrene)',
+      chemicalFamily: 'Conductive Styrenic Polymer',
+      keyAdditives: ['Carbon black', 'Carbon nanotubes', 'Conductive fibers', 'Graphene (some formulations)'],
+      coloringAgents: 'Typically black only due to carbon additives',
+      specialFillers: ['Carbon-based conductive additives (5-15%)', 'Sometimes stainless steel fibers'],
+    },
+    familyContext: {
+      parentPolymer: 'Standard ABS with conductive additives',
+      variants: ['ESD-ABS (10^6-10^9 Ω)', 'Conductive ABS (10^2-10^4 Ω)', 'Static Dissipative ABS'],
+      chemicalComparison: 'Similar to ABS-CF but optimized for consistent electrical properties rather than mechanical reinforcement.',
+      evolution: 'Developed for electronics industry to prevent electrostatic discharge damage to sensitive components.',
+    },
+    strengths: {
+      uniqueProperties: ['Controlled surface resistivity (10^6-10^9 Ω)', 'Prevents ESD damage', 'Consistent conductivity', 'Cleanroom compatible'],
+      bestUseScenarios: ['Electronics handling trays', 'Component carriers', 'Test fixtures', 'Cleanroom equipment', 'Antistatic enclosures'],
+      advantagesOverCompetitors: ['Permanent ESD protection (not humidity dependent)', 'Consistent resistivity throughout part', 'Processable like standard ABS'],
+      whyChooseThis: 'When protecting sensitive electronics from static discharge is critical - semiconductors, PCB handling, or cleanroom applications.',
+    },
+    weaknesses: {
+      limitations: ['Black color only', 'Slightly reduced impact strength', 'More expensive than standard ABS', 'Requires hardened nozzle (some grades)'],
+      commonProblems: ['Surface resistivity can vary with layer orientation', 'Carbon can cause slight nozzle wear', 'Limited color options'],
+      environmentalConcerns: ['Not recyclable with standard ABS', 'Carbon additives complicate disposal', 'Petroleum-based'],
+      whenNotToUse: ['When ESD protection not required', 'Aesthetic applications requiring color', 'Food contact'],
+    },
+    practicalContext: {
+      industryAdoption: ['Semiconductor manufacturing', 'Electronics assembly', 'Aerospace', 'Medical device manufacturing', 'Automotive electronics'],
+      commonApplications: ['IC chip trays', 'PCB handling fixtures', 'Electronic component bins', 'Test equipment housings', 'Cleanroom tools'],
+      safetyStandards: ['ANSI/ESD S20.20', 'IEC 61340', 'MIL-PRF-81705 (military packaging)', 'JEDEC standards'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'ESD damage costs the electronics industry billions of dollars annually',
+        'Surface resistivity between 10^6 and 10^9 ohms is the "sweet spot" for ESD dissipation',
+        'Unlike antistatic sprays, ESD-ABS provides permanent protection',
+        'Some chips can be damaged by as little as 10 volts of static discharge',
+      ],
+      whyInvented: 'Created to prevent electrostatic discharge damage during electronics manufacturing and handling.',
+      controversies: [
+        'Some "ESD" filaments only provide surface treatment, not through-part conductivity',
+        'Resistivity can vary between manufacturers - always verify specifications',
+        'Carbon content affects both ESD properties and mechanical strength',
+      ],
+      marketAdoption: 'Essential in semiconductor and electronics manufacturing industries.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Surface Resistivity', value: '10^6 - 10^9', unit: 'Ω/sq', implications: 'Static dissipative range - safely drains static without sparking.' },
+        { name: 'Volume Resistivity', value: '10^5 - 10^8', unit: 'Ω·cm', implications: 'Conductivity through the entire part, not just surface.' },
+        { name: 'Tensile Strength', value: '35-45', unit: 'MPa', implications: 'Slightly reduced from standard ABS due to carbon loading.' },
+        { name: 'Elongation at Break', value: '5-15', unit: '%', implications: 'Reduced ductility compared to standard ABS.' },
+        { name: 'Impact Strength (Notched)', value: '100-180', unit: 'J/m', implications: 'Good but lower than standard ABS.' },
+        { name: 'Glass Transition (Tg)', value: '100-105', unit: '°C', implications: 'Same heat resistance as standard ABS.' },
+      ],
+      notes: 'Resistivity values critical for ESD applications. Always verify with manufacturer specifications.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 240, max: 265, optimal: 250 },
+      bedTemp: { min: 95, max: 110, optimal: 100 },
+      coolingFan: { min: 0, max: 30, notes: 'Minimal cooling like standard ABS.' },
+      enclosure: { required: true, notes: 'Required - same warping concerns as ABS.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'Critical - moisture affects both printability and electrical properties.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Similar to standard ABS.' },
+      additionalNotes: [
+        'Hardened nozzle recommended for high-carbon grades',
+        'Use brim for adhesion',
+        'Ground your printer frame when printing ESD parts',
+        'Test resistivity of printed parts before critical applications',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite (G10)', 'ABS slurry'],
+        good: ['Glass with glue stick', 'Kapton tape'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'ABS slurry or glue stick. Same adhesion as standard ABS.',
+      multiMaterial: [
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer base - good compatibility.' },
+        { material: 'ABS-CF', bondQuality: 'Strong Chemical Bond', notes: 'Both carbon-filled ABS variants.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'Can use HIPS as dissolvable support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Good', notes: 'Works but may affect surface conductivity slightly.' },
+      ],
+      mechanical: ['Sanding possible but may affect ESD properties', 'Machine with care - avoid contaminating conductive pathways'],
+      glues: ['Acetone welding works', 'Cyanoacrylate may affect local conductivity', 'Conductive epoxy for critical joints'],
+      painting: 'Not recommended - paint will insulate the surface and defeat ESD properties.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Standard ABS fumes plus carbon particulates. Good ventilation required.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Not suitable for food contact - carbon additives and styrene.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based with carbon additives.' },
+      additionalNotes: [
+        'Carbon black is generally considered safe but avoid inhaling dust',
+        'Same ventilation requirements as standard ABS',
+        'Dispose properly - do not mix with regular ABS recycling',
+      ],
+    },
+  },
+
+  'ABS HT': {
+    name: 'ABS HT',
+    fullName: 'High Temperature Acrylonitrile Butadiene Styrene',
+    origin: {
+      yearInvented: '2000s (industrial), 2018+ (3D printing)',
+      originalCompany: 'Various advanced plastics manufacturers',
+      keyMilestones: [
+        '1948: Standard ABS developed',
+        '2000s: High-heat ABS grades developed for automotive',
+        '2018-2020: ABS HT filaments become commercially available',
+        '2021+: Growing adoption for under-hood and industrial applications',
+      ],
+      majorManufacturers: ['Polymaker', '3DXTech', 'Ultimaker', 'BASF', 'FormFutura', 'Fillamentum'],
+    },
+    composition: {
+      basePolymer: 'Modified ABS or ABS/PC blend',
+      chemicalFamily: 'High-Performance Styrenic Polymer',
+      keyAdditives: ['Heat stabilizers', 'Alpha-methylstyrene copolymers', 'Sometimes polycarbonate blend'],
+      coloringAgents: 'Various colors available, though some may reduce heat performance',
+      specialFillers: ['Heat-resistant additives', 'Some grades include glass or mineral fillers'],
+    },
+    familyContext: {
+      parentPolymer: 'Enhanced ABS with improved thermal properties',
+      variants: ['ABS HT', 'ABS HT+', 'High-Heat ABS', 'ABS/PC Blend'],
+      chemicalComparison: 'Higher Tg than standard ABS (115-120°C vs 100-105°C), approaching polycarbonate territory.',
+      evolution: 'Developed to bridge the gap between standard ABS and engineering polymers like PC.',
+    },
+    strengths: {
+      uniqueProperties: ['Higher heat deflection temperature', 'Improved dimensional stability at temperature', 'Better creep resistance', 'Maintains ABS processability'],
+      bestUseScenarios: ['Under-hood automotive parts', 'Industrial equipment', 'Appliance components near heat sources', 'Electronics in warm environments'],
+      advantagesOverCompetitors: ['Higher heat resistance than standard ABS', 'Easier to print than PC', 'Acetone smoothable', 'Good balance of properties'],
+      whyChooseThis: 'When standard ABS heat resistance is insufficient but full polycarbonate is overkill or too difficult to print.',
+    },
+    weaknesses: {
+      limitations: ['More expensive than standard ABS', 'Still requires enclosure', 'Not as heat resistant as PC', 'Some grades have reduced impact'],
+      commonProblems: ['Warping (similar to ABS)', 'May require higher bed temps', 'Some formulations more brittle'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable', 'Styrene fumes during printing'],
+      whenNotToUse: ['When standard ABS heat resistance is adequate', 'Applications above 120°C (use PC instead)', 'Budget-constrained projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Automotive', 'Aerospace', 'Industrial equipment', 'Appliances', 'Electronics'],
+      commonApplications: ['Under-hood automotive parts', 'Heat-resistant enclosures', 'Industrial tooling', 'Appliance components', 'LED housings'],
+      safetyStandards: ['Various automotive heat aging standards', 'UL94 ratings available on some grades'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'ABS HT can survive temperatures that would deform standard ABS in under an hour',
+        'Many ABS HT grades are actually ABS/PC blends - combining best of both',
+        'The alpha-methylstyrene modification raises Tg without major processing changes',
+        'Used in automotive for parts that sit near the engine or in hot climates',
+      ],
+      whyInvented: 'Created to extend ABS into higher-temperature applications without moving to more difficult engineering polymers.',
+      controversies: [
+        'Definition of "HT" varies widely - always check actual HDT specifications',
+        'Some "ABS HT" is just standard ABS with marketing claims',
+        'ABS/PC blends may not acetone smooth as well as pure ABS',
+      ],
+      marketAdoption: 'Growing as automotive and industrial applications demand higher thermal performance.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Glass Transition (Tg)', value: '115-125', unit: '°C', implications: 'Significantly higher than standard ABS (100-105°C).' },
+        { name: 'Heat Deflection (HDT)', value: '105-115', unit: '°C (0.45 MPa)', implications: 'Major improvement over standard ABS (~95°C).' },
+        { name: 'Tensile Strength', value: '40-50', unit: 'MPa', implications: 'Similar to standard ABS.' },
+        { name: 'Elongation at Break', value: '10-20', unit: '%', implications: 'Similar ductility to standard ABS.' },
+        { name: 'Impact Strength (Notched)', value: '150-250', unit: 'J/m', implications: 'Good impact resistance, may be slightly reduced in some formulations.' },
+        { name: 'Vicat Softening', value: '110-120', unit: '°C', implications: 'Temperature at which material begins to soften under load.' },
+      ],
+      notes: 'Properties vary by formulation. ABS/PC blends may have different characteristics than modified ABS.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 245, max: 275, optimal: 260 },
+      bedTemp: { min: 100, max: 115, optimal: 110 },
+      coolingFan: { min: 0, max: 25, notes: 'Minimal cooling. Higher temps mean more warping sensitivity.' },
+      enclosure: { required: true, notes: 'Required. Higher bed temps and chamber temps (50-65°C) recommended.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'Hygroscopic - dry before printing.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Similar to standard ABS but first layer should be slow.' },
+      additionalNotes: [
+        'Higher chamber temperature recommended (50-65°C) vs standard ABS (45-55°C)',
+        'Use generous brim - warping more aggressive than standard ABS',
+        'Cool down slowly after print completion',
+        'Some ABS/PC blends may require even higher temps',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite (G10)', 'ABS slurry'],
+        good: ['Glass with glue stick (high temp)', 'Kapton tape'],
+        poor: ['Bare glass', 'Blue tape (melts at high bed temps)'],
+      },
+      releaseAgents: 'ABS slurry or heavy glue application. May stick very aggressively - let cool completely before removal.',
+      multiMaterial: [
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Compatible polymer family.' },
+        { material: 'PC', bondQuality: 'Strong Chemical Bond', notes: 'Especially for ABS/PC blend grades.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'Can use HIPS as dissolvable support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Good', notes: 'Works well for pure ABS HT. ABS/PC blends may be more resistant.' },
+        { method: 'Acetone Brush', effectiveness: 'Good', notes: 'Effective for local smoothing.' },
+      ],
+      mechanical: ['Sands well', 'Can be machined', 'Higher heat resistance means better stability during finishing'],
+      glues: ['Acetone welding for pure ABS grades', 'Cyanoacrylate works well', 'Epoxy for structural joints'],
+      painting: 'Good paint adhesion. Same finishing as standard ABS.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Similar to ABS. Higher print temps may increase emissions slightly. Ventilation required.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Same concerns as standard ABS.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polymer.' },
+      additionalNotes: [
+        'Same safety precautions as standard ABS',
+        'Higher print temperatures may increase VOC emissions',
+        'Use with enclosed printer and filtration',
+      ],
+    },
+  },
+
   'ASA': {
     name: 'ASA',
     fullName: 'Acrylonitrile Styrene Acrylate',
