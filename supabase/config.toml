@@ -125,3 +125,6 @@ verify_jwt = true
 
 [functions.parse-filament-tds]
 verify_jwt = true
+
+[functions.audit-filament-data]
+verify_jwt = true
