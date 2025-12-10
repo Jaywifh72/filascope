@@ -9,10 +9,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Slider } from "@/components/ui/slider";
 import { 
   ArrowLeft, Search, X, Thermometer, Shield, Zap, Layers, AlertTriangle, 
   CheckCircle, Info, GitCompare, BookOpen, ChevronDown, Trophy, Droplets,
-  Wind, Flame, Gauge, Factory, Paintbrush, Leaf, Settings2, Crown
+  Wind, Flame, Gauge, Factory, Paintbrush, Leaf, Settings2, Crown, SlidersHorizontal,
+  Medal, Award
 } from "lucide-react";
 import { 
   MATERIAL_CATEGORIES, 
@@ -205,6 +207,13 @@ const ComparisonContent = () => {
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [weightsOpen, setWeightsOpen] = useState(false);
+  const [weights, setWeights] = useState({
+    printability: 25,
+    strength: 25,
+    flexibility: 25,
+    heatResistance: 25,
+  });
 
   // Get all available materials with info
   const allMaterials = useMemo(() => {
@@ -286,6 +295,49 @@ const ComparisonContent = () => {
     selectedMaterialInfos.map(m => ({ name: m.name, value: m.info?.properties.heatResistance || null })),
     true
   );
+
+  // Calculate weighted scores
+  const weightedScores = useMemo(() => {
+    const totalWeight = weights.printability + weights.strength + weights.flexibility + weights.heatResistance;
+    if (totalWeight === 0) return [];
+
+    return selectedMaterialInfos.map(m => {
+      const printValue = getPropertyValue(m.info?.properties.printability || '');
+      const strengthValue = getPropertyValue(m.info?.properties.strength || '');
+      const flexValue = getPropertyValue(m.info?.properties.flexibility || '');
+      const heatValue = getPropertyValue(m.info?.properties.heatResistance || '');
+
+      const weightedScore = (
+        (printValue * weights.printability) +
+        (strengthValue * weights.strength) +
+        (flexValue * weights.flexibility) +
+        (heatValue * weights.heatResistance)
+      ) / totalWeight;
+
+      // Convert to 0-100 scale (max possible is 5)
+      const normalizedScore = Math.round((weightedScore / 5) * 100);
+
+      return {
+        name: m.name,
+        score: normalizedScore,
+        breakdown: {
+          printability: printValue,
+          strength: strengthValue,
+          flexibility: flexValue,
+          heatResistance: heatValue,
+        }
+      };
+    }).sort((a, b) => b.score - a.score);
+  }, [selectedMaterialInfos, weights]);
+
+  const overallWinner = weightedScores[0]?.name;
+  const updateWeight = (key: keyof typeof weights, value: number) => {
+    setWeights(prev => ({ ...prev, [key]: value }));
+  };
+
+  const resetWeights = () => {
+    setWeights({ printability: 25, strength: 25, flexibility: 25, heatResistance: 25 });
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8">
@@ -392,6 +444,183 @@ const ComparisonContent = () => {
                 <span>Winner highlight</span>
               </div>
             </div>
+
+            {/* Summary Score Card */}
+            <Card className="border-primary/20 bg-gradient-to-br from-background to-primary/5">
+              <Collapsible open={weightsOpen} onOpenChange={setWeightsOpen}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Medal className="w-5 h-5 text-primary" />
+                      Summary Score
+                    </CardTitle>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-1.5">
+                        <SlidersHorizontal className="w-4 h-4" />
+                        Customize Weights
+                        <ChevronDown className={cn(
+                          "w-4 h-4 transition-transform",
+                          weightsOpen && "rotate-180"
+                        )} />
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                </CardHeader>
+
+                <CollapsibleContent>
+                  <CardContent className="pt-0 pb-4">
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">Adjust criteria weights</span>
+                        <Button variant="ghost" size="sm" onClick={resetWeights} className="h-7 text-xs">
+                          Reset to Default
+                        </Button>
+                      </div>
+                      
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                              <Zap className="w-3.5 h-3.5 text-amber-400" />
+                              Printability
+                            </label>
+                            <span className="text-sm font-medium text-foreground w-8 text-right">{weights.printability}%</span>
+                          </div>
+                          <Slider
+                            value={[weights.printability]}
+                            onValueChange={([v]) => updateWeight('printability', v)}
+                            max={100}
+                            step={5}
+                            className="[&_[role=slider]]:bg-amber-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                              <Shield className="w-3.5 h-3.5 text-blue-400" />
+                              Strength
+                            </label>
+                            <span className="text-sm font-medium text-foreground w-8 text-right">{weights.strength}%</span>
+                          </div>
+                          <Slider
+                            value={[weights.strength]}
+                            onValueChange={([v]) => updateWeight('strength', v)}
+                            max={100}
+                            step={5}
+                            className="[&_[role=slider]]:bg-blue-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                              <Layers className="w-3.5 h-3.5 text-purple-400" />
+                              Flexibility
+                            </label>
+                            <span className="text-sm font-medium text-foreground w-8 text-right">{weights.flexibility}%</span>
+                          </div>
+                          <Slider
+                            value={[weights.flexibility]}
+                            onValueChange={([v]) => updateWeight('flexibility', v)}
+                            max={100}
+                            step={5}
+                            className="[&_[role=slider]]:bg-purple-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                              <Thermometer className="w-3.5 h-3.5 text-red-400" />
+                              Heat Resistance
+                            </label>
+                            <span className="text-sm font-medium text-foreground w-8 text-right">{weights.heatResistance}%</span>
+                          </div>
+                          <Slider
+                            value={[weights.heatResistance]}
+                            onValueChange={([v]) => updateWeight('heatResistance', v)}
+                            max={100}
+                            step={5}
+                            className="[&_[role=slider]]:bg-red-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+
+                <CardContent className={cn(weightsOpen ? "pt-0" : "pt-4")}>
+                  <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${weightedScores.length}, minmax(0, 1fr))` }}>
+                    {weightedScores.map((material, index) => (
+                      <div 
+                        key={material.name}
+                        className={cn(
+                          "relative rounded-lg p-4 text-center transition-all",
+                          index === 0 
+                            ? "bg-gradient-to-br from-amber-500/20 to-amber-600/10 ring-2 ring-amber-500/50" 
+                            : "bg-muted/50"
+                        )}
+                      >
+                        {index === 0 && (
+                          <div className="absolute -top-2 -right-2 bg-amber-500 text-amber-950 rounded-full p-1.5 shadow-lg">
+                            <Award className="w-4 h-4" />
+                          </div>
+                        )}
+                        {index === 1 && weightedScores.length > 2 && (
+                          <div className="absolute -top-1.5 -right-1.5 bg-slate-400 text-slate-900 rounded-full p-1 shadow">
+                            <Medal className="w-3 h-3" />
+                          </div>
+                        )}
+                        {index === 2 && weightedScores.length > 3 && (
+                          <div className="absolute -top-1.5 -right-1.5 bg-amber-700 text-amber-100 rounded-full p-1 shadow">
+                            <Medal className="w-3 h-3" />
+                          </div>
+                        )}
+                        <div className={cn(
+                          "text-3xl font-bold mb-1",
+                          index === 0 ? "text-amber-500" : "text-foreground"
+                        )}>
+                          {material.score}
+                        </div>
+                        <div className={cn(
+                          "text-sm font-medium mb-2",
+                          index === 0 ? "text-amber-600" : "text-muted-foreground"
+                        )}>
+                          {material.name}
+                        </div>
+                        <div className="text-xs text-muted-foreground space-y-0.5">
+                          <div className="flex justify-between">
+                            <span>Print:</span>
+                            <span className={weights.printability > 0 ? "text-foreground" : "text-muted-foreground/50"}>
+                              {material.breakdown.printability}/5
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Strength:</span>
+                            <span className={weights.strength > 0 ? "text-foreground" : "text-muted-foreground/50"}>
+                              {material.breakdown.strength}/5
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Flex:</span>
+                            <span className={weights.flexibility > 0 ? "text-foreground" : "text-muted-foreground/50"}>
+                              {material.breakdown.flexibility}/5
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Heat:</span>
+                            <span className={weights.heatResistance > 0 ? "text-foreground" : "text-muted-foreground/50"}>
+                              {material.breakdown.heatResistance}/5
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Collapsible>
+            </Card>
 
             {/* Material Headers */}
             <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${selectedMaterialInfos.length}, minmax(0, 1fr))` }}>
