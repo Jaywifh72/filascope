@@ -998,9 +998,9 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
         </Button>
 
         {/* Hero Section */}
-        <Card className="bg-gradient-to-br from-card via-card to-card/50 border-border shadow-lg mb-8 overflow-hidden animate-fade-in">
-          <CardContent className="p-8">
-            <div className="flex flex-col lg:flex-row gap-8">
+        <Card className="bg-gradient-to-br from-card via-card to-card/50 border-border shadow-xl mb-10 overflow-hidden animate-fade-in">
+          <CardContent className="p-6 lg:p-10">
+            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
               {/* Product Image */}
               <div className="w-full lg:w-72 h-72 flex-shrink-0 relative">
                 {filament.featured_image ? (
@@ -1058,12 +1058,12 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
               </div>
 
               {/* Product Info */}
-              <div className="flex-1 min-w-0 space-y-6">
+              <div className="flex-1 min-w-0 space-y-8">
                 <div>
-                  <div className="flex items-start justify-between gap-4 mb-3">
+                  <div className="flex items-start justify-between gap-6 mb-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight">
+                      <div className="flex items-center gap-4 mb-4">
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-[1.1] tracking-tight">
                           {getBaseProductName(filament.product_title)}
                         </h1>
                         {isAdmin && (
@@ -1106,25 +1106,25 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                       </div>
                       <Link 
                         to={`/brands/${encodeURIComponent(filament.vendor || '')}`}
-                        className="text-xl text-primary hover:underline inline-flex items-center gap-2 group"
+                        className="text-lg lg:text-xl text-primary hover:underline inline-flex items-center gap-2 group font-medium"
                       >
                         {filament.vendor}
                         <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </Link>
                     </div>
                     {pricePerKg && (
-                      <div className="text-right bg-primary/10 px-6 py-4 rounded-xl border border-primary/20">
-                        <div className="text-4xl font-bold text-primary">
+                      <div className="text-right bg-primary/10 px-6 py-5 rounded-2xl border border-primary/20 shadow-sm">
+                        <div className="text-3xl lg:text-4xl font-bold text-primary tracking-tight font-mono">
                           ${pricePerKg}
                         </div>
-                        <div className="text-sm text-muted-foreground">per kg</div>
+                        <div className="text-sm text-muted-foreground font-medium mt-1">per kg</div>
                         {pricePerSpool && (
-                          <div className="text-xs text-muted-foreground mt-1">
+                          <div className="text-sm text-muted-foreground mt-2">
                             ${pricePerSpool.toFixed(2)} per spool
                           </div>
                         )}
                         {isMultiPack && totalPackPrice && (
-                          <div className="text-xs text-primary/80 mt-1 font-medium">
+                          <div className="text-sm text-primary/80 mt-2 font-semibold">
                             📦 {packQuantity}-pack: ${totalPackPrice}
                           </div>
                         )}
@@ -1133,48 +1133,48 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   </div>
 
                   {/* Badges */}
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2.5 flex-wrap mt-5">
                     {filament.material && (
                       <MaterialBadge 
                         material={filament.material} 
                         variant="default" 
                         size="md"
-                        className="text-base px-4 py-1.5 font-semibold"
+                        className="text-sm px-4 py-2 font-semibold"
                       />
                     )}
                     {filament.diameter_nominal_mm && (
-                      <Badge variant="outline" className="text-sm px-3 py-1.5">
+                      <Badge variant="outline" className="text-sm px-3.5 py-2 font-medium">
                         {filament.diameter_nominal_mm}mm
                       </Badge>
                     )}
                     {filament.color_family && (
-                      <Badge variant="outline" className="text-sm px-3 py-1.5 flex items-center gap-2">
+                      <Badge variant="outline" className="text-sm px-3.5 py-2 flex items-center gap-2 font-medium">
                         {filament.color_hex && (
-                          <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: normalizeColorHex(filament.color_hex) }} />
+                          <div className="w-3.5 h-3.5 rounded-full border border-border shadow-sm" style={{ backgroundColor: normalizeColorHex(filament.color_hex) }} />
                         )}
                         {filament.color_family}
                       </Badge>
                     )}
                     {filament.color_hex && (
-                      <Badge variant="outline" className="text-sm px-3 py-1.5 flex items-center gap-2 font-mono">
-                        <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: normalizeColorHex(filament.color_hex) }} />
+                      <Badge variant="outline" className="text-sm px-3.5 py-2 flex items-center gap-2 font-mono font-medium">
+                        <div className="w-3.5 h-3.5 rounded-full border border-border shadow-sm" style={{ backgroundColor: normalizeColorHex(filament.color_hex) }} />
                         {normalizeColorHex(filament.color_hex).toUpperCase()}
                       </Badge>
                     )}
                     {filament.finish_type && (
-                      <Badge variant="secondary" className="text-sm px-3 py-1.5">{filament.finish_type}</Badge>
+                      <Badge variant="secondary" className="text-sm px-3.5 py-2 font-medium">{filament.finish_type}</Badge>
                     )}
                     {filament.is_nozzle_abrasive && (
-                      <Badge variant="destructive" className="text-sm px-3 py-1.5 animate-pulse">⚠️ Abrasive</Badge>
+                      <Badge variant="destructive" className="text-sm px-3.5 py-2 animate-pulse font-medium">⚠️ Abrasive</Badge>
                     )}
                     {filament.net_weight_g && filament.net_weight_g > 0 && (
-                      <Badge variant="outline" className="text-sm px-3 py-1.5">
-                        <Package className="w-3 h-3 mr-1" />
+                      <Badge variant="outline" className="text-sm px-3.5 py-2 font-medium">
+                        <Package className="w-3.5 h-3.5 mr-1.5" />
                         {filament.net_weight_g}g
                       </Badge>
                     )}
                     {isMultiPack && (
-                      <Badge variant="secondary" className="text-sm px-3 py-1.5 bg-primary/20 text-primary border-primary/30">
+                      <Badge variant="secondary" className="text-sm px-3.5 py-2 bg-primary/20 text-primary border-primary/30 font-semibold">
                         📦 {packQuantity}-Pack
                       </Badge>
                     )}
@@ -1183,9 +1183,9 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
 
                 {/* Color Variants Section */}
                 {colorVariants.length > 1 && (
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-muted-foreground">Available Colors ({colorVariants.length})</h3>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="space-y-4 pt-2">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Available Colors ({colorVariants.length})</h3>
+                    <div className="flex flex-wrap gap-2.5">
                       {colorVariants.map((variant) => {
                         const baseName = getBaseProductName(filament.product_title);
                         const variantColor = getColorFromTitle(variant.product_title, baseName) || variant.color_family || 'View';
@@ -1251,33 +1251,33 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   </div>
                 )}
                 {(filament.ease_of_printing_score || filament.strength_index || filament.value_score) && (
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 gap-4 lg:gap-6 pt-2">
                     {filament.ease_of_printing_score && (
-                      <div className="bg-accent/30 rounded-lg p-4 text-center">
-                        <Zap className="w-5 h-5 mx-auto mb-2 text-primary" />
-                        <div className="text-2xl font-bold text-foreground">{filament.ease_of_printing_score}/10</div>
-                        <div className="text-xs text-muted-foreground">Ease of Printing</div>
+                      <div className="bg-accent/40 rounded-xl p-5 text-center border border-accent/50">
+                        <Zap className="w-6 h-6 mx-auto mb-2 text-primary" />
+                        <div className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">{filament.ease_of_printing_score}/10</div>
+                        <div className="text-xs lg:text-sm text-muted-foreground font-medium mt-1">Ease of Printing</div>
                       </div>
                     )}
                     {filament.strength_index && (
-                      <div className="bg-accent/30 rounded-lg p-4 text-center">
-                        <Award className="w-5 h-5 mx-auto mb-2 text-primary" />
-                        <div className="text-2xl font-bold text-foreground">{filament.strength_index}/10</div>
-                        <div className="text-xs text-muted-foreground">Strength Index</div>
+                      <div className="bg-accent/40 rounded-xl p-5 text-center border border-accent/50">
+                        <Award className="w-6 h-6 mx-auto mb-2 text-primary" />
+                        <div className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">{filament.strength_index}/10</div>
+                        <div className="text-xs lg:text-sm text-muted-foreground font-medium mt-1">Strength Index</div>
                       </div>
                     )}
                     {filament.value_score && (
-                      <div className="bg-accent/30 rounded-lg p-4 text-center">
-                        <Gauge className="w-5 h-5 mx-auto mb-2 text-primary" />
-                        <div className="text-2xl font-bold text-foreground">{filament.value_score}/10</div>
-                        <div className="text-xs text-muted-foreground">Value Score</div>
+                      <div className="bg-accent/40 rounded-xl p-5 text-center border border-accent/50">
+                        <Gauge className="w-6 h-6 mx-auto mb-2 text-primary" />
+                        <div className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">{filament.value_score}/10</div>
+                        <div className="text-xs lg:text-sm text-muted-foreground font-medium mt-1">Value Score</div>
                       </div>
                     )}
                   </div>
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-3 pt-2">
                   <LikeButton filamentId={filament.id} size="lg" />
                   {filament.product_url && (
                     <Button asChild variant="default" size="lg" className="hover:scale-105 transition-transform">
@@ -2092,38 +2092,38 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
         )}
 
         {/* Tabs Section */}
-        <Tabs defaultValue="specs" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 h-auto">
-            <TabsTrigger value="specs" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+        <Tabs defaultValue="specs" className="space-y-8">
+          <TabsList className="bg-muted/50 p-1.5 h-auto flex-wrap gap-1">
+            <TabsTrigger value="specs" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2.5 text-sm font-medium">
               <Package className="w-4 h-4 mr-2" />
               Technical Specs
             </TabsTrigger>
-            <TabsTrigger value="printing" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="printing" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2.5 text-sm font-medium">
               <Printer className="w-4 h-4 mr-2" />
               Print Settings
             </TabsTrigger>
-            <TabsTrigger value="properties" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="properties" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2.5 text-sm font-medium">
               <Award className="w-4 h-4 mr-2" />
               Material Properties
             </TabsTrigger>
-            <TabsTrigger value="compatibility" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="compatibility" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2.5 text-sm font-medium">
               <Shield className="w-4 h-4 mr-2" />
               Compatibility
             </TabsTrigger>
           </TabsList>
 
           {/* Technical Specs Tab */}
-          <TabsContent value="specs" className="space-y-6 animate-fade-in">
+          <TabsContent value="specs" className="space-y-8 animate-fade-in">
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
               {/* Physical Properties */}
               <Card className="bg-card border-border hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2.5 text-lg font-semibold">
                     <Ruler className="w-5 h-5 text-primary" />
                     Physical Specifications
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-1">
                   {filament.diameter_nominal_mm && (
                     <PropertyRow label="Filament Diameter" value={`${filament.diameter_nominal_mm} mm`} icon={<Ruler className="w-4 h-4" />} />
                   )}
@@ -2141,13 +2141,13 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
 
               {/* Spool Dimensions */}
               <Card className="bg-card border-border hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2.5 text-lg font-semibold">
                     <Package className="w-5 h-5 text-primary" />
                     Spool Specifications
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-1">
                   {filament.spool_outer_d_mm && (
                     <PropertyRow label="Outer Diameter" value={`${filament.spool_outer_d_mm} mm`} />
                   )}
@@ -2178,13 +2178,13 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
 
               {/* Product Information */}
               <Card className="bg-card border-border hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2.5 text-lg font-semibold">
                     <Settings className="w-5 h-5 text-primary" />
                     Product Details
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-1">
                   {filament.product_id && (
                     <PropertyRow label="Product ID" value={filament.product_id} />
                   )}
@@ -2262,17 +2262,17 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
           </TabsContent>
 
           {/* Print Settings Tab */}
-          <TabsContent value="printing" className="space-y-6 animate-fade-in">
+          <TabsContent value="printing" className="space-y-8 animate-fade-in">
             <div className="grid md:grid-cols-2 gap-6">
               {/* Temperature Settings */}
               <Card className="bg-card border-border hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2.5 text-lg font-semibold">
                     <Flame className="w-5 h-5 text-primary" />
                     Temperature Settings
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-1">
                   {(filament.nozzle_temp_min_c || filament.nozzle_temp_max_c) && (
                     <PropertyRow
                       label="Nozzle Temperature Range"
@@ -2305,13 +2305,13 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
 
               {/* Print Parameters */}
               <Card className="bg-card border-border hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2.5 text-lg font-semibold">
                     <Zap className="w-5 h-5 text-primary" />
                     Print Parameters
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-1">
                   {filament.print_speed_max_mms && (
                     <PropertyRow
                       label="Maximum Print Speed"
@@ -2345,14 +2345,14 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
 
               {/* Moisture & Care */}
               <Card className="bg-card border-border md:col-span-2 hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2.5 text-lg font-semibold">
                     <Droplets className="w-5 h-5 text-primary" />
                     Moisture Management & Care
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="grid md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {filament.moisture_sensitivity_level && (
                       <PropertyRow
                         label="Moisture Sensitivity"
@@ -2403,17 +2403,17 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
           </TabsContent>
 
           {/* Material Properties Tab */}
-          <TabsContent value="properties" className="space-y-6 animate-fade-in">
+          <TabsContent value="properties" className="space-y-8 animate-fade-in">
             <div className="grid md:grid-cols-2 gap-6">
               {/* Mechanical Properties */}
               <Card className="bg-card border-border hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2.5 text-lg font-semibold">
                     <Award className="w-5 h-5 text-primary" />
                     Mechanical Properties
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-1">
                   {filament.tensile_strength_xy_mpa && (
                     <PropertyRow
                       label="Tensile Strength (XY)"
@@ -2450,13 +2450,13 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
 
               {/* Thermal Properties */}
               <Card className="bg-card border-border hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2.5 text-lg font-semibold">
                     <ThermometerSun className="w-5 h-5 text-primary" />
                     Thermal Properties
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-1">
                   {filament.tg_c && (
                     <PropertyRow
                       label="Glass Transition Temp"
@@ -2721,12 +2721,12 @@ const PropertyRow = ({
   highlight?: boolean;
   icon?: React.ReactNode;
 }) => (
-  <div className={`flex justify-between items-center py-2 ${highlight ? 'bg-primary/5 px-3 rounded-lg border border-primary/20' : ''}`}>
-    <span className="text-sm text-muted-foreground flex items-center gap-2">
-      {icon && <span className="text-muted-foreground">{icon}</span>}
+  <div className={`flex justify-between items-center py-3 ${highlight ? 'bg-primary/5 px-4 rounded-xl border border-primary/20 my-1' : 'border-b border-border/50 last:border-b-0'}`}>
+    <span className="text-sm text-muted-foreground flex items-center gap-2.5 font-medium">
+      {icon && <span className="text-muted-foreground/70">{icon}</span>}
       {label}
     </span>
-    <span className={`text-sm font-medium ${highlight ? 'text-primary font-semibold' : 'text-foreground'}`}>{value}</span>
+    <span className={`text-sm ${highlight ? 'text-primary font-bold' : 'text-foreground font-semibold'}`}>{value}</span>
   </div>
 );
 
@@ -2754,17 +2754,17 @@ const CompatibilityCard = ({
   };
 
   return (
-    <div className={`p-4 rounded-lg border ${getStatusColor()} transition-all hover:shadow-md`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+    <div className={`p-5 rounded-xl border-2 ${getStatusColor()} transition-all hover:shadow-md`}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-semibold text-foreground flex items-center gap-2.5">
           {icon && <span className="text-primary">{icon}</span>}
           {label}
         </span>
-        <span className="text-xl font-bold">
+        <span className="text-2xl font-bold">
           {getStatusIcon()}
         </span>
       </div>
-      <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
     </div>
   );
 };
