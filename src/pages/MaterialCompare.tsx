@@ -180,6 +180,40 @@ const extractNumericValue = (value: string): number | null => {
   return extractNumericFromString(value);
 };
 
+// Get TDS backing value for a property
+const getTDSValue = (refData: MaterialReferenceInfo | undefined, propertySearch: string): string | null => {
+  if (!refData?.tdsProfile?.properties) return null;
+  const prop = refData.tdsProfile.properties.find(p => 
+    p.name.toLowerCase().includes(propertySearch.toLowerCase())
+  );
+  if (!prop) return null;
+  return prop.value;
+};
+
+// Get tensile strength for "Strength" property
+const getTensileStrength = (refData?: MaterialReferenceInfo): string | null => {
+  return getTDSValue(refData, 'tensile strength');
+};
+
+// Get elongation for "Flexibility" property  
+const getElongation = (refData?: MaterialReferenceInfo): string | null => {
+  return getTDSValue(refData, 'elongation');
+};
+
+// Get glass transition for "Heat Resistance" property
+const getGlassTransition = (refData?: MaterialReferenceInfo): string | null => {
+  const tg = getTDSValue(refData, 'glass transition');
+  if (tg) return tg;
+  return getTDSValue(refData, 'tg');
+};
+
+// Get nozzle temp range for "Printability" (lower = easier)
+const getNozzleTempRange = (refData?: MaterialReferenceInfo): string | null => {
+  if (!refData?.printSettings?.nozzleTemp) return null;
+  const { min, max } = refData.printSettings.nozzleTemp;
+  return `${min}-${max}`;
+};
+
 const WinnerBadge = ({ isWinner }: { isWinner: boolean }) => {
   if (!isWinner) return null;
   return (
@@ -195,10 +229,14 @@ const PropertyBar = ({
   level, 
   color,
   isWinner = false,
+  numericValue,
+  numericUnit,
 }: { 
   level: 'Low' | 'Medium' | 'High' | 'Very High' | 'Easy' | 'Hard' | 'Expert' | 'Rigid' | 'Semi-Flexible' | 'Flexible' | 'Very Flexible';
   color: string;
   isWinner?: boolean;
+  numericValue?: string | null;
+  numericUnit?: string;
 }) => {
   const getWidth = () => {
     switch (level) {
@@ -224,22 +262,32 @@ const PropertyBar = ({
 
   return (
     <div className={cn(
-      "flex items-center gap-2 relative p-2 rounded-md transition-all",
+      "flex flex-col gap-1 relative p-2 rounded-md transition-all",
       isWinner && "bg-amber-500/10 ring-1 ring-amber-500/30"
     )}>
       {isWinner && (
         <Trophy className="w-3.5 h-3.5 text-amber-500 absolute -top-1 -right-1" />
       )}
-      <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-        <div 
-          className={cn("h-full rounded-full transition-all", color)}
-          style={{ width: `${getWidth()}%` }}
-        />
+      <div className="flex items-center gap-2">
+        <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+          <div 
+            className={cn("h-full rounded-full transition-all", color)}
+            style={{ width: `${getWidth()}%` }}
+          />
+        </div>
+        <span className={cn(
+          "text-xs w-20",
+          isWinner ? "text-amber-600 font-semibold" : "text-muted-foreground"
+        )}>{level}</span>
       </div>
-      <span className={cn(
-        "text-xs w-20",
-        isWinner ? "text-amber-600 font-semibold" : "text-muted-foreground"
-      )}>{level}</span>
+      {numericValue && (
+        <span className={cn(
+          "text-xs font-mono pl-0.5",
+          isWinner ? "text-amber-600" : "text-muted-foreground/70"
+        )}>
+          {numericValue}{numericUnit}
+        </span>
+      )}
     </div>
   );
 };
@@ -397,21 +445,39 @@ const ComparisonContent = () => {
     refData: MATERIAL_REFERENCE_DATA[name],
   })).filter(m => m.info);
 
-  // Calculate winners for basic properties
+  // Calculate winners for basic properties using TDS numeric values when available
   const printabilityWinners = getWinners(
-    selectedMaterialInfos.map(m => ({ name: m.name, value: m.info?.properties.printability || null })),
-    true // Easy is best (highest value)
+    selectedMaterialInfos.map(m => {
+      // For printability, lower nozzle temp = easier, so use inverted logic
+      const nozzleRange = getNozzleTempRange(m.refData);
+      const numericValue = nozzleRange ? extractNumericFromString(nozzleRange) : null;
+      // Fall back to qualitative if no numeric
+      return { name: m.name, value: numericValue || m.info?.properties.printability || null };
+    }),
+    false // Lower nozzle temp = easier to print
   );
   const strengthWinners = getWinners(
-    selectedMaterialInfos.map(m => ({ name: m.name, value: m.info?.properties.strength || null })),
+    selectedMaterialInfos.map(m => {
+      const tensile = getTensileStrength(m.refData);
+      const numericValue = tensile ? extractNumericFromString(tensile) : null;
+      return { name: m.name, value: numericValue || m.info?.properties.strength || null };
+    }),
     true
   );
   const flexibilityWinners = getWinners(
-    selectedMaterialInfos.map(m => ({ name: m.name, value: m.info?.properties.flexibility || null })),
+    selectedMaterialInfos.map(m => {
+      const elongation = getElongation(m.refData);
+      const numericValue = elongation ? extractNumericFromString(elongation) : null;
+      return { name: m.name, value: numericValue || m.info?.properties.flexibility || null };
+    }),
     true
   );
   const heatResistanceWinners = getWinners(
-    selectedMaterialInfos.map(m => ({ name: m.name, value: m.info?.properties.heatResistance || null })),
+    selectedMaterialInfos.map(m => {
+      const tg = getGlassTransition(m.refData);
+      const numericValue = tg ? extractNumericFromString(tg) : null;
+      return { name: m.name, value: numericValue || m.info?.properties.heatResistance || null };
+    }),
     true
   );
 
@@ -872,13 +938,15 @@ const ComparisonContent = () => {
                     <span className="text-xs text-muted-foreground">(Easy = Best)</span>
                   </div>
                   <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${selectedMaterialInfos.length}, minmax(0, 1fr))` }}>
-                    {selectedMaterialInfos.map(({ name, info }) => (
+                    {selectedMaterialInfos.map(({ name, info, refData }) => (
                       <div key={name} className="text-center">
                         {info && (
                           <PropertyBar 
                             level={info.properties.printability} 
                             color="bg-amber-500" 
                             isWinner={printabilityWinners.includes(name)}
+                            numericValue={getNozzleTempRange(refData)}
+                            numericUnit="°C nozzle"
                           />
                         )}
                       </div>
@@ -896,13 +964,15 @@ const ComparisonContent = () => {
                     <span className="text-xs text-muted-foreground">(Higher = Better)</span>
                   </div>
                   <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${selectedMaterialInfos.length}, minmax(0, 1fr))` }}>
-                    {selectedMaterialInfos.map(({ name, info }) => (
+                    {selectedMaterialInfos.map(({ name, info, refData }) => (
                       <div key={name} className="text-center">
                         {info && (
                           <PropertyBar 
                             level={info.properties.strength} 
                             color="bg-blue-500" 
                             isWinner={strengthWinners.includes(name)}
+                            numericValue={getTensileStrength(refData)}
+                            numericUnit=" MPa"
                           />
                         )}
                       </div>
@@ -920,13 +990,15 @@ const ComparisonContent = () => {
                     <span className="text-xs text-muted-foreground">(More Flexible = Higher)</span>
                   </div>
                   <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${selectedMaterialInfos.length}, minmax(0, 1fr))` }}>
-                    {selectedMaterialInfos.map(({ name, info }) => (
+                    {selectedMaterialInfos.map(({ name, info, refData }) => (
                       <div key={name} className="text-center">
                         {info && (
                           <PropertyBar 
                             level={info.properties.flexibility} 
                             color="bg-purple-500" 
                             isWinner={flexibilityWinners.includes(name)}
+                            numericValue={getElongation(refData)}
+                            numericUnit="% elong."
                           />
                         )}
                       </div>
@@ -944,13 +1016,15 @@ const ComparisonContent = () => {
                     <span className="text-xs text-muted-foreground">(Higher = Better)</span>
                   </div>
                   <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${selectedMaterialInfos.length}, minmax(0, 1fr))` }}>
-                    {selectedMaterialInfos.map(({ name, info }) => (
+                    {selectedMaterialInfos.map(({ name, info, refData }) => (
                       <div key={name} className="text-center">
                         {info && (
                           <PropertyBar 
                             level={info.properties.heatResistance} 
                             color="bg-red-500" 
                             isWinner={heatResistanceWinners.includes(name)}
+                            numericValue={getGlassTransition(refData)}
+                            numericUnit="°C Tg"
                           />
                         )}
                       </div>
