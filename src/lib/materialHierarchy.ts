@@ -134,6 +134,8 @@ export const MATERIAL_CATEGORIES: MaterialCategory[] = [
     description: 'Strong, wear-resistant engineering materials',
     materials: [
       'Nylon',
+      'PA6',
+      'PA12',
       'Nylon-CF',
       'Nylon-GF',
       'Nylon-AF',
