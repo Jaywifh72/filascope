@@ -171,7 +171,7 @@ const BentoGrid = () => {
             >
               <div 
                 className="w-8 h-8 rounded-full border border-border/50 shrink-0"
-                style={{ backgroundColor: filament.color_hex ? `#${filament.color_hex}` : '#888' }}
+                style={{ backgroundColor: filament.color_hex ? (filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`) : '#888' }}
               />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-foreground truncate group-hover:text-green-400 transition-colors">
