@@ -24,18 +24,15 @@ const Navbar = () => {
   return (
     <>
       <nav className="sticky top-0 z-50 border-b border-[#333] bg-[#0A0A0A]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/80">
-        <div className="flex h-24 md:h-44 items-center justify-between px-6 gap-4">
+        <div className="flex h-20 md:h-32 items-center px-6 gap-6">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0">
+          <Link to="/" className="flex items-center shrink-0">
             <img 
               src={filascopeLogo} 
               alt="FilaScope" 
-              className="h-20 md:h-40 w-auto object-contain"
+              className="h-16 md:h-28 w-auto object-contain"
             />
           </Link>
-
-          {/* Spacer for layout balance */}
-          <div className="flex-1" />
 
           {/* Navigation Links */}
           <div className="hidden lg:flex items-center gap-1">
@@ -60,6 +57,9 @@ const Navbar = () => {
               </Button>
             )}
           </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
 
           {/* User Actions */}
           <div className="flex items-center gap-2 shrink-0">
