@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogIn, LogOut, User, Shield, Archive, Database, Settings, ChevronDown, Flame, Square, Layers } from "lucide-react";
+import { LogIn, LogOut, User, Shield, Archive, Database, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/filascope-logo.png";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -84,34 +84,9 @@ const Navbar = () => {
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
               <Link to="/printers">PRINTERS</Link>
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary font-mono text-xs gap-1">
-                  ACCESSORIES
-                  <ChevronDown className="w-3 h-3" />
-                </Button>
-              </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="bg-[#1A1A1A] border-[#333]">
-                <DropdownMenuItem asChild>
-                  <Link to="/accessories?tab=hotends" className="flex items-center font-mono text-xs">
-                    <Flame className="w-3 h-3 mr-2" />
-                    HOTENDS
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/accessories?tab=build-plates" className="flex items-center font-mono text-xs">
-                    <Square className="w-3 h-3 mr-2" />
-                    BUILD PLATES
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/accessories?tab=ams" className="flex items-center font-mono text-xs">
-                    <Layers className="w-3 h-3 mr-2" />
-                    AMS/MMU
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
+              <Link to="/accessories">ACCESSORIES</Link>
+            </Button>
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
               <Link to="/brands">BRANDS</Link>
             </Button>
