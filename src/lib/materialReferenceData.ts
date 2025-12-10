@@ -923,6 +923,129 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'ASA-CF': {
+    name: 'ASA-CF',
+    fullName: 'Carbon Fiber Reinforced Acrylonitrile Styrene Acrylate',
+    origin: {
+      yearInvented: '2018+ (3D printing formulation)',
+      originalCompany: 'Multiple manufacturers developed simultaneously',
+      keyMilestones: [
+        '1970s: ASA polymer developed for UV resistance',
+        '2010s: Carbon fiber reinforced polymers become mainstream',
+        '2018+: ASA-CF filaments emerge for outdoor structural applications',
+        '2021+: Adopted for demanding outdoor and automotive applications',
+      ],
+      majorManufacturers: ['3DXTech', 'Polymaker', 'Fillamentum', 'Fiberlogy', 'ColorFabb'],
+    },
+    composition: {
+      basePolymer: 'ASA (Acrylonitrile Styrene Acrylate)',
+      chemicalFamily: 'Styrenic Polymer Composite',
+      keyAdditives: ['Chopped carbon fiber (10-20%)', 'UV stabilizers (inherent in ASA)', 'Coupling agents'],
+      coloringAgents: 'Typically black only due to carbon fiber content',
+      specialFillers: ['Chopped carbon fiber strands (typically 100-200μm length)'],
+    },
+    familyContext: {
+      parentPolymer: 'ASA reinforced with carbon fiber - combines UV stability with high stiffness',
+      variants: ['ASA-CF 10%', 'ASA-CF 15%', 'ASA-CF 20%'],
+      chemicalComparison: 'Combines the UV resistance of ASA with the stiffness of carbon fiber - the ultimate outdoor structural material.',
+      evolution: 'Created to provide both UV stability AND high stiffness for demanding outdoor applications.',
+    },
+    strengths: {
+      uniqueProperties: ['UV resistant AND stiff', 'Excellent dimensional stability', 'Weather-proof structural material', 'Professional matte finish'],
+      bestUseScenarios: ['Outdoor structural parts', 'Drone frames for outdoor use', 'Automotive exterior brackets', 'Solar panel mounts', 'Marine equipment'],
+      advantagesOverCompetitors: ['Only UV-stable carbon fiber composite', 'Stiffer than ASA alone', 'Better outdoor durability than ABS-CF', 'Low warping'],
+      whyChooseThis: 'The ONLY choice when you need both UV resistance AND maximum stiffness for outdoor structural applications.',
+    },
+    weaknesses: {
+      limitations: ['Highly abrasive - requires hardened nozzle', 'Expensive', 'Brittle (low impact)', 'Black color only'],
+      commonProblems: ['Rapid brass nozzle wear', 'Layer adhesion challenges', 'Anisotropic strength', 'Higher cost than alternatives'],
+      environmentalConcerns: ['Carbon fiber dust hazard', 'Not recyclable', 'Petroleum-based'],
+      whenNotToUse: ['Impact-critical outdoor parts', 'When UV resistance isn\'t needed (use ABS-CF)', 'Without hardened nozzle', 'Budget projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Automotive exterior', 'Aerospace', 'Marine', 'Solar industry', 'Professional UAV/Drone'],
+      commonApplications: ['Outdoor drone frames', 'Solar panel brackets', 'Automotive exterior clips', 'Marine fittings', 'Weather station housings'],
+      safetyStandards: ['Automotive weathering standards', 'UL ratings available on some grades'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'ASA-CF is the only carbon fiber composite that survives years of UV exposure without degradation',
+        'Parts printed in ASA-CF have been tested to 5+ years outdoor exposure with minimal property loss',
+        'The combination of UV + CF makes this the most "professional-grade" desktop material available',
+        'Popular in the FPV drone community for frames that fly outdoors',
+      ],
+      whyInvented: 'Created for applications that need both the mechanical performance of CF and the weatherability of ASA.',
+      controversies: [
+        'Premium pricing can be 3-4x standard ASA cost',
+        'Some argue PETG-CF with UV coating is "good enough" for outdoor use',
+        'Availability is more limited than ABS-CF due to niche market',
+      ],
+      marketAdoption: 'Niche but growing - essential material for professional outdoor 3D printing applications.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '55-70', unit: 'MPa', implications: 'High. Significantly stronger than base ASA.' },
+        { name: 'Tensile Modulus', value: '4500-7000', unit: 'MPa', implications: 'Very High. 2-3x stiffer than standard ASA.' },
+        { name: 'Elongation at Break', value: '2-4', unit: '%', implications: 'Very Low. Brittle - will snap rather than bend.' },
+        { name: 'Impact Strength (Notched)', value: '40-70', unit: 'J/m', implications: 'Reduced. Lower than plain ASA due to fiber stress concentrators.' },
+        { name: 'Glass Transition (Tg)', value: '95-105', unit: '°C', implications: 'Same as ASA. Good heat resistance maintained.' },
+        { name: 'UV Resistance', value: 'Excellent', unit: '', implications: 'Inherits ASA\'s exceptional UV stability - the key differentiator from ABS-CF.' },
+        { name: 'Heat Deflection (HDT)', value: '~105', unit: '°C (0.45 MPa)', implications: 'Improved due to fiber reinforcement.' },
+      ],
+      notes: 'Combines UV resistance of ASA with stiffness of carbon fiber. Fiber orientation affects properties.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 245, max: 275, optimal: 260 },
+      bedTemp: { min: 95, max: 110, optimal: 105 },
+      coolingFan: { min: 0, max: 30, notes: 'Minimal cooling like ASA. Some cooling helps with bridges.' },
+      enclosure: { required: true, notes: 'Required - same warping concerns as ASA, though CF reduces warping somewhat.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'Hygroscopic. Moisture causes bubbling and weak layer adhesion.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Moderate speeds. Slower for fine details and better layer adhesion.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED (steel, ruby, or tungsten carbide)',
+        'Larger nozzle diameter (0.5-0.8mm) reduces clogging',
+        'Print hotter than plain ASA for better fiber wetting',
+        'Chamber temperature 50-60°C optimal',
+        'Use brim for bed adhesion',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite (G10)', 'ASA/ABS slurry'],
+        good: ['Glass with glue stick', 'Kapton tape'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'Same as ASA - glue stick or ASA slurry recommended.',
+      multiMaterial: [
+        { material: 'ASA', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility - same polymer base.' },
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Compatible styrenic polymers.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'Can use HIPS as dissolvable support.' },
+        { material: 'ABS-CF', bondQuality: 'Strong Chemical Bond', notes: 'Both styrenic CF composites bond well.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Good', notes: 'Works but carbon fibers protrude through smoothed surface.' },
+        { method: 'Acetone Brush', effectiveness: 'Good', notes: 'Local smoothing possible. Uneven due to fibers.' },
+      ],
+      mechanical: ['Sanding requires dust mask - CF dust is hazardous', 'Can be machined with carbide tools', 'Drilling and tapping work well'],
+      glues: ['Acetone welding effective on ASA matrix', 'Cyanoacrylate works well', 'Epoxy for structural joints - best option'],
+      painting: 'Matte black finish. Can be painted with proper adhesion promoter. UV-stable paints recommended.',
+    },
+    safety: {
+      fumes: { level: 'High', notes: 'ASA styrene fumes PLUS carbon fiber particulates. Enclosure with HEPA+carbon filtration required.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Not suitable for food contact - fiber shedding and styrene concerns.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based with non-degradable carbon fiber.' },
+      additionalNotes: [
+        'Carbon fiber dust is a respiratory hazard - use mask when sanding/machining',
+        'Enclosure with HEPA and activated carbon filtration strongly recommended',
+        'Wear gloves when handling sanded parts',
+        'Dispose of CF dust and failed prints properly',
+      ],
+    },
+  },
+
   'TPU': {
     name: 'TPU',
     fullName: 'Thermoplastic Polyurethane',
