@@ -348,6 +348,236 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'PETG-CF': {
+    name: 'PETG-CF',
+    fullName: 'Carbon Fiber Reinforced PETG',
+    origin: {
+      yearInvented: '2017-2018',
+      originalCompany: 'Multiple manufacturers (3DXTech, Polymaker, Priline)',
+      keyMilestones: [
+        '2016: Carbon fiber filaments gain popularity',
+        '2017: First PETG-CF formulations appear',
+        '2018: Major brands launch PETG-CF product lines',
+        '2020+: Refined formulations with better fiber distribution',
+      ],
+      majorManufacturers: ['3DXTech', 'Polymaker', 'Priline', 'Overture', 'MatterHackers', 'Fiberlogy'],
+    },
+    composition: {
+      basePolymer: 'PETG (Polyethylene Terephthalate Glycol-modified)',
+      chemicalFamily: 'Glycol-Modified Polyester with Carbon Fiber',
+      keyAdditives: ['Chopped carbon fiber (10-20%)', 'Coupling agents', 'Flow modifiers'],
+      coloringAgents: 'Typically black/dark gray from carbon fiber',
+      specialFillers: ['Milled carbon fiber', 'Chopped carbon strands'],
+    },
+    familyContext: {
+      parentPolymer: 'PETG reinforced with carbon fiber',
+      variants: ['PETG-CF Standard', 'PETG-CF HT', 'PETG-CF Pro'],
+      chemicalComparison: 'Combines PETG\'s chemical resistance and ease of printing with carbon fiber\'s stiffness and dimensional stability.',
+      evolution: 'Natural extension of carbon fiber composites to the popular PETG base material.',
+    },
+    strengths: {
+      uniqueProperties: ['Significantly increased stiffness', 'Excellent dimensional stability', 'Professional matte finish', 'Reduced warping vs plain PETG'],
+      bestUseScenarios: ['Structural brackets', 'Drone frames', 'Jigs and fixtures', 'Stiff enclosures', 'Camera mounts'],
+      advantagesOverCompetitors: ['Easier to print than Nylon-CF or PC-CF', 'No enclosure required', 'Good chemical resistance', 'Less warping than ABS-CF'],
+      whyChooseThis: 'When you need increased stiffness and dimensional stability without the printing difficulty of Nylon-CF or PC-CF.',
+    },
+    weaknesses: {
+      limitations: ['Abrasive - requires hardened nozzle', 'Brittle compared to plain PETG', 'Lower impact resistance', 'Limited color options'],
+      commonProblems: ['Nozzle wear with brass nozzles', 'Layer adhesion slightly reduced', 'Fiber orientation affects strength', 'Stringing can be worse'],
+      environmentalConcerns: ['Carbon fiber not recyclable', 'Composite disposal challenges'],
+      whenNotToUse: ['Impact-critical parts', 'Parts requiring flexibility', 'Without hardened nozzle', 'When plain PETG stiffness is sufficient'],
+    },
+    practicalContext: {
+      industryAdoption: ['Drone manufacturing', 'Industrial tooling', 'Robotics', 'Automotive prototyping'],
+      commonApplications: ['Drone arms and frames', 'Camera gimbals', 'Tool holders', 'Structural brackets', 'End effectors'],
+      safetyStandards: ['Industrial prototyping use', 'No special certifications common'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'Carbon fiber increases tensile modulus by 2-3x while barely affecting print difficulty',
+        'The matte finish comes from fiber ends at the surface',
+        'PETG-CF is often the "gateway" carbon fiber material for new users',
+        'Parts are stiffer in the print direction due to fiber alignment',
+      ],
+      whyInvented: 'To bring carbon fiber reinforcement to the beginner-friendly PETG material.',
+      controversies: [
+        'Some cheap PETG-CF has minimal actual carbon content',
+        'Fiber length and quality varies significantly between brands',
+        'Debate over whether it\'s worth the nozzle wear for hobbyist use',
+      ],
+      marketAdoption: 'Popular entry point for carbon fiber printing due to easier handling than Nylon-CF.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '55-70', unit: 'MPa', implications: 'Improved over plain PETG (50 MPa).' },
+        { name: 'Tensile Modulus', value: '5000-7000', unit: 'MPa', implications: 'Significantly stiffer than plain PETG (2000 MPa).' },
+        { name: 'Elongation at Break', value: '2-5', unit: '%', implications: 'More brittle than plain PETG.' },
+        { name: 'Heat Deflection', value: '70-80', unit: '°C', implications: 'Similar to plain PETG.' },
+        { name: 'Carbon Fiber Content', value: '10-20', unit: '%', implications: 'Higher content = stiffer but more brittle.' },
+      ],
+      notes: 'Properties depend heavily on fiber content and print orientation.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 240, max: 270, optimal: 255 },
+      bedTemp: { min: 70, max: 90, optimal: 80 },
+      coolingFan: { min: 20, max: 60, notes: 'Less cooling than plain PETG for better layer adhesion.' },
+      enclosure: { required: false, notes: 'Not required but helps with large parts.' },
+      drying: { temp: 65, duration: '4-6 hours', notes: 'Important - PETG absorbs moisture which affects CF composite.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Slower than plain PETG for better fiber distribution.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED - brass will wear quickly',
+        'Use 0.5mm or larger nozzle for best flow',
+        'Slightly higher temps than plain PETG',
+        'Reduce retraction to prevent clogging',
+        'First layer slower for adhesion',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI', 'Glass with glue stick', 'Garolite'],
+        good: ['BuildTak', 'Textured PEI'],
+        poor: ['Blue tape', 'Bare glass'],
+      },
+      releaseAgents: 'Glue stick helps with both adhesion and release.',
+      multiMaterial: [
+        { material: 'PETG', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility.' },
+        { material: 'PVA', bondQuality: 'Weak Bond', notes: 'Not ideal - consider breakaway supports.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [{ method: 'Not effective', effectiveness: 'Not Possible', notes: 'Carbon fiber prevents effective smoothing.' }],
+      mechanical: ['Sanding possible but dusty', 'Filing works well', 'Wear mask - CF dust is harmful'],
+      painting: 'Accepts paint after light sanding. Matte finish provides good adhesion.',
+      glues: ['Epoxy (best)', 'CA glue', 'Structural adhesives'],
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Same as plain PETG.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Carbon fiber not food safe.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Neither PETG nor carbon fiber is biodegradable.' },
+      additionalNotes: [
+        'Wear mask when sanding - CF particles are harmful to lungs',
+        'Safe for normal printing with ventilation',
+        'Wash hands after handling sanded parts',
+      ],
+    },
+  },
+
+  'PETG+': {
+    name: 'PETG+',
+    fullName: 'Enhanced Polyethylene Terephthalate Glycol',
+    origin: {
+      yearInvented: '2018-2019',
+      originalCompany: 'Multiple manufacturers (eSUN, Overture, Sunlu)',
+      keyMilestones: [
+        '2016: PETG becomes popular 3D printing material',
+        '2018: First "PETG+" enhanced formulations appear',
+        '2019: Major brands launch PETG+ product lines',
+        '2021+: Formulations refined for better layer adhesion and clarity',
+      ],
+      majorManufacturers: ['eSUN', 'Overture', 'Sunlu', 'Polymaker', 'Inland', 'Hatchbox'],
+    },
+    composition: {
+      basePolymer: 'Modified PETG (Polyethylene Terephthalate Glycol)',
+      chemicalFamily: 'Glycol-Modified Polyester (Enhanced)',
+      keyAdditives: ['Impact modifiers', 'Flow enhancers', 'Clarity agents', 'Anti-stringing compounds'],
+      coloringAgents: 'Full range including translucent and transparent options',
+      specialFillers: ['Toughening agents', 'Nucleating agents'],
+    },
+    familyContext: {
+      parentPolymer: 'Standard PETG with enhanced additives',
+      variants: ['PETG+', 'PETG Pro', 'Premium PETG', 'PETG Enhanced'],
+      chemicalComparison: 'PETG base with additives to improve flow, reduce stringing, and enhance layer adhesion.',
+      evolution: 'Developed to address common PETG complaints while maintaining its excellent properties.',
+    },
+    strengths: {
+      uniqueProperties: ['Reduced stringing vs standard PETG', 'Better layer adhesion', 'Improved clarity in transparent colors', 'Easier printing'],
+      bestUseScenarios: ['Functional parts', 'Clear/translucent prints', 'Mechanical components', 'Water-resistant applications'],
+      advantagesOverCompetitors: ['Easier than standard PETG', 'Better than PLA for durability', 'Good chemical resistance', 'Wide temperature tolerance'],
+      whyChooseThis: 'When you want PETG properties with reduced hassle - less stringing and better layer bonding.',
+    },
+    weaknesses: {
+      limitations: ['Still scratches easily', 'Can be stringy (though less than standard)', 'Similar heat resistance to standard PETG', 'Formulations vary by brand'],
+      commonProblems: ['Quality inconsistent between manufacturers', 'Some "PETG+" is barely different', 'Still hygroscopic'],
+      environmentalConcerns: ['Same as standard PETG - petroleum based, recyclable'],
+      whenNotToUse: ['High-temperature applications', 'When maximum clarity needed (use specialty clear)', 'Cost-sensitive projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Prototyping', 'Consumer products', 'Hobbyist printing', 'Functional parts'],
+      commonApplications: ['Enclosures', 'Mechanical parts', 'Containers', 'Outdoor parts', 'Functional prototypes'],
+      safetyStandards: ['Generally same as PETG', 'Check specific brand certifications'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'Like PLA+, "PETG+" has no standardized definition',
+        'The best PETG+ brands genuinely reduce the infamous PETG stringing',
+        'Some PETG+ is just well-dried, high-quality standard PETG',
+        'Clear PETG+ can approach injection-molded clarity',
+      ],
+      whyInvented: 'To address PETG\'s stringing and layer adhesion complaints while keeping its strengths.',
+      controversies: [
+        '"Plus" is marketing - no industry standard',
+        'Some products show minimal improvement over standard PETG',
+        'Price premium may not be justified',
+      ],
+      marketAdoption: 'Growing popularity as users seek easier PETG printing experience.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-55', unit: 'MPa', implications: 'Same as standard PETG.' },
+        { name: 'Impact Strength', value: '7-10', unit: 'kJ/m²', implications: 'Similar or slightly better than standard PETG.' },
+        { name: 'Elongation at Break', value: '120-150', unit: '%', implications: 'Excellent flexibility - same as standard PETG.' },
+        { name: 'Heat Deflection', value: '70-80', unit: '°C', implications: 'Same heat resistance as standard PETG.' },
+        { name: 'Density', value: '1.27', unit: 'g/cm³', implications: 'Same as standard PETG.' },
+      ],
+      notes: 'Mechanical properties similar to standard PETG - improvements are in printability.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 230, max: 260, optimal: 245 },
+      bedTemp: { min: 70, max: 85, optimal: 80 },
+      coolingFan: { min: 30, max: 70, notes: 'Moderate cooling - less than PLA, more than ABS.' },
+      enclosure: { required: false, notes: 'Not required but helps with larger parts.' },
+      drying: { temp: 65, duration: '4-6 hours', notes: 'Important - PETG is hygroscopic.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Similar to standard PETG, some brands handle faster.' },
+      additionalNotes: [
+        'Settings similar to standard PETG',
+        'May allow faster retraction without stringing',
+        'Some brands print well at lower temps',
+        'Test your specific brand for optimal settings',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI', 'Glass with glue stick', 'BuildTak'],
+        good: ['Textured PEI', 'Glass with hairspray'],
+        poor: ['Blue tape', 'Bare glass'],
+      },
+      releaseAgents: 'Glue stick helps prevent PETG from bonding too strongly to PEI.',
+      multiMaterial: [
+        { material: 'PETG', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility.' },
+        { material: 'PETG-CF', bondQuality: 'Strong Chemical Bond', notes: 'Works well together.' },
+        { material: 'PVA', bondQuality: 'Weak Bond', notes: 'Not ideal for supports.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [{ method: 'MEK vapor', effectiveness: 'Difficult', notes: 'Possible but difficult and hazardous.' }],
+      mechanical: ['Sanding', 'Filing', 'Cutting', 'Polishing for clarity'],
+      painting: 'Accepts paint well after light sanding. Clear coat for gloss finish.',
+      glues: ['CA glue', 'Epoxy', 'Solvent welding with MEK'],
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Same as standard PETG.' },
+      foodSafety: { rating: 'Possible with Certification', notes: 'Same as standard PETG - check specific certifications.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based, recyclable.' },
+      additionalNotes: [
+        'Safe for normal printing',
+        'Basic ventilation sufficient',
+        'Check food safety certifications if needed',
+      ],
+    },
+  },
+
   'ABS': {
     name: 'ABS',
     fullName: 'Acrylonitrile Butadiene Styrene',

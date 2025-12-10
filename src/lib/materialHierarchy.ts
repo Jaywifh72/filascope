@@ -76,6 +76,7 @@ export const MATERIAL_CATEGORIES: MaterialCategory[] = [
     description: 'Durable, chemical-resistant, easy to print',
     materials: [
       'PETG',
+      'PETG+',
       'PETG-CF',
       'PETG Iridescent',
       'Pro PETG',
