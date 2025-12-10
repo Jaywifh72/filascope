@@ -1507,6 +1507,127 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'FR-ABS': {
+    name: 'FR-ABS',
+    fullName: 'Flame Retardant Acrylonitrile Butadiene Styrene',
+    origin: {
+      yearInvented: '1960s (industrial), 2018+ (3D printing)',
+      originalCompany: 'Various industrial plastics manufacturers',
+      keyMilestones: [
+        '1948: ABS polymer developed',
+        '1960s: Flame retardant grades developed for electronics and aviation',
+        '2018-2020: FR-ABS filaments become commercially available',
+        '2021+: Growing adoption for certified applications',
+      ],
+      majorManufacturers: ['SABIC', 'Covestro', '3DXTech', 'Polymaker', 'Ultimaker', 'Stratasys'],
+    },
+    composition: {
+      basePolymer: 'ABS (Acrylonitrile Butadiene Styrene)',
+      chemicalFamily: 'Flame Retardant Styrenic Polymer',
+      keyAdditives: ['Brominated flame retardants', 'Phosphorus-based FR additives', 'Antimony trioxide (synergist)', 'Char-forming agents'],
+      coloringAgents: 'Limited colors - typically white, black, or natural due to FR additive interference',
+      specialFillers: ['Halogenated compounds', 'Metal hydroxides', 'Intumescent additives'],
+    },
+    familyContext: {
+      parentPolymer: 'Standard ABS modified with flame retardant additives',
+      variants: ['FR-ABS V0', 'FR-ABS V2', 'FR-ABS HB', 'FR-ABS 5VA'],
+      chemicalComparison: 'Same mechanical properties as ABS but self-extinguishing when ignited.',
+      evolution: 'Developed for electrical and electronic enclosures requiring UL certification.',
+    },
+    strengths: {
+      uniqueProperties: ['Self-extinguishing (stops burning when flame removed)', 'UL94 certified grades', 'Meets regulatory requirements', 'Similar processing to ABS'],
+      bestUseScenarios: ['Electronics enclosures', 'Electrical junction boxes', 'Appliance housings', 'Transportation interiors', 'Aerospace components'],
+      advantagesOverCompetitors: ['Regulatory compliance for fire safety', 'Required for many commercial applications', 'Maintains ABS processing characteristics'],
+      whyChooseThis: 'When fire safety certification is mandatory - electronics, transportation, or commercial building applications.',
+    },
+    weaknesses: {
+      limitations: ['More expensive than standard ABS', 'Reduced impact strength', 'Limited color options', 'FR additives can affect layer adhesion'],
+      commonProblems: ['Slight reduction in mechanical properties', 'May require higher print temperatures', 'Some formulations more brittle', 'Older halogenated FRs are environmental concern'],
+      environmentalConcerns: ['Brominated FRs are persistent pollutants', 'Difficult to recycle', 'Halogen emissions if burned improperly', 'Newer phosphorus-based grades are greener'],
+      whenNotToUse: ['When fire rating not required (use standard ABS)', 'Food contact applications', 'When maximum impact strength needed'],
+    },
+    practicalContext: {
+      industryAdoption: ['Electronics', 'Aerospace', 'Automotive', 'Railway', 'Medical devices', 'Commercial appliances'],
+      commonApplications: ['TV housings', 'Computer enclosures', 'Electrical panels', 'Aircraft interior parts', 'Train components', 'Server racks'],
+      safetyStandards: ['UL94 V0/V1/V2/5VA ratings', 'FAR 25.853 (aviation)', 'EN 45545 (railway)', 'IEC 60695 (fire hazard testing)'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'UL94 V0 rating means the material self-extinguishes in under 10 seconds',
+        'The "5VA" rating is the most stringent - material cannot drip flaming particles',
+        'FR-ABS is mandatory in most commercial electronics sold in the US and EU',
+        'Modern phosphorus-based FR grades are replacing older brominated formulations',
+      ],
+      whyInvented: 'Created to meet fire safety regulations for consumer electronics and transportation.',
+      controversies: [
+        'Brominated flame retardants (BFRs) are being phased out due to environmental persistence',
+        'Some cheap "FR-ABS" products lack proper certification',
+        'Fire testing certification is expensive - not all claims are verified',
+        'Recycling FR-ABS separately from regular ABS is critical but rarely done',
+      ],
+      marketAdoption: 'Essential material for any application requiring fire safety certification.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '35-45', unit: 'MPa', implications: 'Slightly reduced from standard ABS due to FR additives.' },
+        { name: 'Elongation at Break', value: '8-20', unit: '%', implications: 'Reduced ductility compared to standard ABS.' },
+        { name: "Young's Modulus", value: '2000-2500', unit: 'MPa', implications: 'Similar stiffness to standard ABS.' },
+        { name: 'Impact Strength (Notched)', value: '100-180', unit: 'J/m', implications: 'Reduced from standard ABS - FR additives create stress concentrators.' },
+        { name: 'UL94 Rating', value: 'V0/V1/V2', unit: '', implications: 'Self-extinguishing within specified time (V0 = <10 sec).' },
+        { name: 'Glass Transition (Tg)', value: '100-105', unit: '°C', implications: 'Same heat resistance as standard ABS.' },
+      ],
+      notes: 'Properties vary based on FR additive type and loading. Always verify UL certification for actual applications.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 235, max: 265, optimal: 250 },
+      bedTemp: { min: 95, max: 110, optimal: 100 },
+      coolingFan: { min: 0, max: 25, notes: 'Minimal cooling like standard ABS. FR additives may affect layer adhesion.' },
+      enclosure: { required: true, notes: 'Required - same warping concerns as ABS. HEPA+carbon filtration strongly recommended.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'Critical - moisture affects both printability and final properties.' },
+      printSpeed: { recommended: '35-55 mm/s', notes: 'Slightly slower than standard ABS for better layer adhesion.' },
+      additionalNotes: [
+        'Print in well-ventilated area with filtration - FR additives may produce additional fumes',
+        'Use brim for adhesion - warping behavior similar to ABS',
+        'Let parts cool slowly to avoid stress cracking',
+        'Verify print parameters with specific manufacturer datasheet',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite (G10)', 'ABS slurry'],
+        good: ['Glass with glue stick', 'Kapton tape'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'ABS slurry or glue stick recommended. Same adhesion characteristics as standard ABS.',
+      multiMaterial: [
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer base - excellent compatibility.' },
+        { material: 'ABS-CF', bondQuality: 'Strong Chemical Bond', notes: 'Both ABS-based materials bond well.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'Can use HIPS as dissolvable support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Good', notes: 'Works like standard ABS but FR additives may affect surface finish.' },
+        { method: 'Acetone Brush', effectiveness: 'Good', notes: 'Effective for local smoothing.' },
+      ],
+      mechanical: ['Sands like standard ABS', 'Can be machined', 'Drilling and tapping work well'],
+      glues: ['Acetone welding effective', 'Cyanoacrylate works', 'ABS cement creates strong joints'],
+      painting: 'Good paint adhesion. Prime first for best results.',
+    },
+    safety: {
+      fumes: { level: 'High', notes: 'Standard ABS fumes PLUS potential FR additive emissions. HEPA+activated carbon filtration required.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Not suitable for food contact - FR additives and styrene concerns.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based with persistent FR additives. Specialized disposal required.' },
+      additionalNotes: [
+        'Print with proper ventilation and filtration - FR additives may emit additional compounds',
+        'Brominated FR grades should not be burned or incinerated without proper controls',
+        'Dispose of waste properly - do not mix with regular ABS recycling',
+        'Modern halogen-free grades (phosphorus-based) have better environmental profile',
+      ],
+    },
+  },
+
   'ASA': {
     name: 'ASA',
     fullName: 'Acrylonitrile Styrene Acrylate',
