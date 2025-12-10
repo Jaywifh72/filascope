@@ -214,6 +214,14 @@ export function MaterialRecommendations() {
     });
   }, [selectedPrinter, selectedHotend]);
 
+  // Find hardened hotends from compatible hotends - must be before early return!
+  const hardenedHotends = useMemo(() => {
+    if (!compatibleHotends) return [];
+    return compatibleHotends.filter(hotend => 
+      isHardenedNozzle(hotend.specs as Record<string, unknown> | null, hotend.name || '')
+    ).slice(0, 3); // Limit to 3 suggestions
+  }, [compatibleHotends]);
+
   if (!selectedPrinter) {
     return null;
   }
@@ -227,14 +235,6 @@ export function MaterialRecommendations() {
     const specs = MATERIAL_SPECS[item.material];
     return specs?.isAbrasive && item.reasons.some(r => r.toLowerCase().includes('hardened nozzle'));
   });
-
-  // Find hardened hotends from compatible hotends
-  const hardenedHotends = useMemo(() => {
-    if (!compatibleHotends || abrasiveMaterialsNeedingNozzle.length === 0) return [];
-    return compatibleHotends.filter(hotend => 
-      isHardenedNozzle(hotend.specs as Record<string, unknown> | null, hotend.name || '')
-    ).slice(0, 3); // Limit to 3 suggestions
-  }, [compatibleHotends, abrasiveMaterialsNeedingNozzle.length]);
 
   const StatusIcon = ({ status }: { status: string }) => {
     switch (status) {
