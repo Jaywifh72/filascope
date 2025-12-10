@@ -1969,6 +1969,125 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'ASA+': {
+    name: 'ASA+',
+    fullName: 'Enhanced Acrylonitrile Styrene Acrylate',
+    origin: {
+      yearInvented: '2018+ (3D printing formulation)',
+      originalCompany: 'Multiple filament manufacturers - not a standardized formula',
+      keyMilestones: [
+        '1970s: ASA polymer developed by BASF',
+        '2016-2018: ASA gains popularity in 3D printing',
+        '2019+: ASA+ variants emerge from various manufacturers',
+        '2021+: Becomes popular "easy-print ASA" option',
+      ],
+      majorManufacturers: ['Polymaker', 'eSUN', 'Fillamentum', 'FormFutura', 'Prusament'],
+    },
+    composition: {
+      basePolymer: 'ASA with proprietary additives',
+      chemicalFamily: 'Modified Styrenic Polymer',
+      keyAdditives: ['Anti-warping agents', 'Flow enhancers', 'Impact modifiers', 'Enhanced UV stabilizers'],
+      coloringAgents: 'Full color range available, weather-stable pigments',
+      specialFillers: ['Varies by manufacturer - some add rubber modifiers for impact'],
+    },
+    familyContext: {
+      parentPolymer: 'Enhanced version of standard ASA',
+      variants: ['ASA+ (generic)', 'ASA Pro', 'ASA Premium', 'Easy ASA'],
+      chemicalComparison: 'Similar to ASA but with reduced warping tendency and improved layer adhesion.',
+      evolution: 'Created to address the printability challenges of standard ASA for hobbyists.',
+    },
+    strengths: {
+      uniqueProperties: ['Reduced warping vs standard ASA', 'Better layer adhesion', 'Easier to print', 'Maintains UV resistance'],
+      bestUseScenarios: ['Outdoor functional parts', 'Automotive exterior', 'Garden fixtures', 'Weatherproof enclosures'],
+      advantagesOverCompetitors: ['Easier than standard ASA', 'Better than ABS+ for outdoor use', 'Still UV resistant', 'Lower printing difficulty'],
+      whyChooseThis: 'When you want ASA UV-resistance but find regular ASA too difficult to print reliably.',
+    },
+    weaknesses: {
+      limitations: ['Still requires enclosure (usually)', 'Still emits styrene fumes', '"+" formulation not standardized', 'Properties vary by brand'],
+      commonProblems: ['Still can warp (just less)', 'Inconsistent quality between manufacturers', 'Some ASA+ is barely different from ASA'],
+      environmentalConcerns: ['Same environmental concerns as ASA', 'Petroleum-based', 'Fumes contain VOCs'],
+      whenNotToUse: ['When ventilation unavailable', 'If pure ASA certification required', 'Indoor-only applications (use ABS+ instead)'],
+    },
+    practicalContext: {
+      industryAdoption: ['Consumer outdoor products', 'Prototyping', 'DIY/Maker community', 'Small-batch manufacturing'],
+      commonApplications: ['Outdoor enclosures', 'Garden tool parts', 'Automotive trim', 'Weatherproof housings', 'Solar accessories'],
+      safetyStandards: ['Generally not certified - formulation varies', 'Some manufacturers provide UV aging data'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'There is no industry standard for "ASA+" - each manufacturer has their own formula',
+        'Some ASA+ is just well-made ASA with better quality control',
+        'The "+" usually refers to reduced warping, not UV improvement (already excellent)',
+        'Printing tests show 30-50% less warping compared to budget ASA brands',
+      ],
+      whyInvented: 'Created to make ASA accessible to hobbyists without industrial enclosures.',
+      controversies: [
+        '"ASA+" naming is marketing - no standard definition exists',
+        'Quality varies dramatically between manufacturers',
+        'Some charge premium prices for minimal improvements over standard ASA',
+      ],
+      marketAdoption: 'Popular with makers who want outdoor-capable parts without the ASA learning curve.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '40-48', unit: 'MPa', implications: 'Similar to ASA. Good general-purpose strength.' },
+        { name: 'Elongation at Break', value: '20-40', unit: '%', implications: 'Good ductility before failure.' },
+        { name: "Young's Modulus", value: '1900-2300', unit: 'MPa', implications: 'Similar stiffness to ASA.' },
+        { name: 'Impact Strength (Notched)', value: '150-250', unit: 'J/m', implications: 'Good impact resistance - some formulas improve this.' },
+        { name: 'Glass Transition (Tg)', value: '95-105', unit: '°C', implications: 'Same heat resistance as standard ASA.' },
+        { name: 'UV Resistance', value: 'Excellent', unit: '', implications: 'Retains ASA UV stability.' },
+      ],
+      notes: 'Properties vary by manufacturer. "+" typically refers to printability, not mechanical improvement.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 235, max: 260, optimal: 250 },
+      bedTemp: { min: 85, max: 105, optimal: 95 },
+      coolingFan: { min: 0, max: 40, notes: 'Slightly more cooling tolerance than standard ASA.' },
+      enclosure: { required: false, notes: 'Recommended but some brands work without. Large parts still need enclosure.' },
+      drying: { temp: 75, duration: '4-6 hours', notes: 'Hygroscopic. Dry if stringing or bubbling occurs.' },
+      printSpeed: { recommended: '40-70 mm/s', notes: 'Can print slightly faster than standard ASA.' },
+      additionalNotes: [
+        'Try without enclosure first - many ASA+ formulas work open-air for small parts',
+        'Use brim for bed adhesion on larger parts',
+        'First layer slow (20 mm/s) for best adhesion',
+        'Still benefits from warm chamber for large prints',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Garolite (G10)', 'ASA slurry'],
+        good: ['Glass with glue stick', 'PEI (Smooth)'],
+        poor: ['Bare glass', 'Blue tape'],
+      },
+      releaseAgents: 'Glue stick recommended. Less aggressive adhesion than some standard ASA.',
+      multiMaterial: [
+        { material: 'ASA', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer family - excellent compatibility.' },
+        { material: 'ABS', bondQuality: 'Strong Chemical Bond', notes: 'Compatible styrenic polymers.' },
+        { material: 'HIPS', bondQuality: 'Strong Chemical Bond', notes: 'HIPS works as dissolvable support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone Vapor', effectiveness: 'Excellent', notes: 'Works identically to standard ASA.' },
+        { method: 'Acetone Brush', effectiveness: 'Good', notes: 'Same smoothing characteristics as ASA.' },
+      ],
+      mechanical: ['Sands easily', 'Can be machined', 'Gap filling with ASA slurry works'],
+      glues: ['Acetone welding works', 'Cyanoacrylate effective', 'ASA cement creates strong joints'],
+      painting: 'Excellent paint adhesion. Use UV-stable paints for outdoor use.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Same styrene emissions as ASA. Ventilation required.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Same concerns as ASA - styrene and layer lines.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based like standard ASA.' },
+      additionalNotes: [
+        'Same safety precautions as standard ASA',
+        'Ventilation or filtration recommended',
+        'Styrene classified as "possibly carcinogenic"',
+      ],
+    },
+  },
+
   'ASA-CF': {
     name: 'ASA-CF',
     fullName: 'Carbon Fiber Reinforced Acrylonitrile Styrene Acrylate',
