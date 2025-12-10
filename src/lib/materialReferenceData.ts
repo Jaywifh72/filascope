@@ -5431,6 +5431,125 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'LW-PLA-HT': {
+    name: 'LW-PLA-HT',
+    fullName: 'Lightweight High Temperature PLA',
+    origin: {
+      yearInvented: '2021-2022',
+      originalCompany: 'ColorFabb, Polymaker',
+      keyMilestones: [
+        '2019: Original LW-PLA (foaming PLA) introduced by ColorFabb',
+        '2021: Heat-treatable foaming PLA variants developed',
+        '2022: LW-PLA-HT combines lightweight foaming with heat treatment',
+        '2023+: Refined formulations with better annealing and foam stability',
+      ],
+      majorManufacturers: ['ColorFabb', 'Polymaker', 'Proto-pasta', 'Recreus'],
+    },
+    composition: {
+      basePolymer: 'Modified Polylactic Acid with foaming agents and crystallization enhancers',
+      chemicalFamily: 'Aliphatic Polyester (Foamable, Semi-crystalline after annealing)',
+      keyAdditives: ['Chemical foaming agents (azodicarbonamide or similar)', 'Nucleating agents for crystallization', 'Heat stabilizers', 'Cell structure promoters'],
+      coloringAgents: 'Limited color options due to foaming chemistry',
+      specialFillers: ['Micro-foam nucleators', 'Crystallization promoters'],
+    },
+    familyContext: {
+      parentPolymer: 'LW-PLA (Lightweight PLA) + HTPLA (Heat Treatable PLA)',
+      variants: ['LW-PLA-HT Standard', 'LW-PLA-HT Pro', 'Active Foaming HT'],
+      chemicalComparison: 'Combines two PLA enhancement technologies: foaming for weight reduction and heat treatment for increased temperature resistance.',
+      evolution: 'Represents the merger of lightweight printing technology with heat-treatable crystallization.',
+    },
+    strengths: {
+      uniqueProperties: ['Up to 65% weight reduction when foamed', 'Heat resistance up to 120°C+ after annealing', 'Excellent strength-to-weight ratio', 'Matte surface finish'],
+      bestUseScenarios: ['RC aircraft', 'Drone components', 'Cosplay armor', 'Large decorative prints', 'Lightweight structural parts', 'Heat-exposed lightweight components'],
+      advantagesOverCompetitors: ['Lighter than any other rigid filament', 'Better heat resistance than standard LW-PLA', 'Easier than separate foam + anneal workflow', 'Bio-based polymer'],
+      whyChooseThis: 'For applications requiring both extreme lightness AND heat resistance - the best of both worlds.',
+    },
+    weaknesses: {
+      limitations: ['Complex two-step process (foam + anneal)', 'Dimensional changes during both foaming and annealing', 'Limited color options', 'Higher cost', 'Requires careful temperature calibration'],
+      commonProblems: ['Inconsistent foam density', 'Over-foaming at high temps', 'Shrinkage during annealing', 'Surface finish varies with foam level', 'Difficult to achieve consistent results'],
+      environmentalConcerns: ['Foaming agents may have environmental impact', 'Energy use for annealing', 'Composite material disposal'],
+      whenNotToUse: ['Tight tolerance parts', 'Parts requiring precise dimensions', 'Without temperature calibration', 'Fine detail prints', 'Clear/translucent requirements'],
+    },
+    practicalContext: {
+      industryAdoption: ['RC/drone hobbyists', 'Cosplay community', 'Model aircraft builders', 'Lightweight prototyping'],
+      commonApplications: ['RC airplane fuselages and wings', 'Drone frames', 'Cosplay armor and props', 'Large display models', 'Buoyant parts', 'Heat-shielding lightweight components'],
+      safetyStandards: ['Standard PLA safety', 'Ensure good ventilation during foaming'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'The foaming creates millions of tiny air bubbles that reduce density by up to 65%',
+        'RC aircraft builders can print full-size planes that are light enough to fly',
+        'The annealing process transforms the foam structure while adding heat resistance',
+        'Developed specifically for the RC and drone communities who needed both light weight and heat tolerance',
+      ],
+      whyInvented: 'To address RC hobbyists\' need for lightweight parts that could also withstand heat from motors and sun exposure.',
+      controversies: [
+        'Debate over whether it truly matches dedicated engineering foams',
+        'Inconsistency between batches and manufacturers',
+        'Complex workflow deters many users',
+        'Questions about long-term foam cell stability',
+      ],
+      marketAdoption: 'Niche following in RC aircraft and drone communities who value the unique lightweight + heat-resistant combination.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Density (foamed)', value: '0.4-0.7', unit: 'g/cm³', implications: '40-65% lighter than solid PLA (1.24 g/cm³).' },
+        { name: 'Tensile Strength (annealed)', value: '35-50', unit: 'MPa', implications: 'Good strength considering foam structure.' },
+        { name: 'Heat Deflection (annealed)', value: '100-120', unit: '°C', implications: 'Excellent heat resistance after annealing.' },
+        { name: 'Foam Expansion', value: '2.5-3x', unit: 'volume', implications: 'Material expands during printing - adjust flow accordingly.' },
+        { name: 'Glass Transition (annealed)', value: '80-100', unit: '°C', implications: 'Significantly improved over standard LW-PLA.' },
+      ],
+      notes: 'Properties vary significantly based on foaming level and annealing protocol. Test with your specific workflow.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 230, max: 270, optimal: 250 },
+      bedTemp: { min: 50, max: 70, optimal: 60 },
+      coolingFan: { min: 0, max: 50, notes: 'Lower cooling helps foam expansion. Too much cooling collapses foam cells.' },
+      enclosure: { required: false, notes: 'Not required but helps consistency. Avoid drafts.' },
+      drying: { temp: 50, duration: '4-6 hours', notes: 'Critical - moisture affects foaming behavior significantly.' },
+      printSpeed: { recommended: '20-40 mm/s', notes: 'Slow speeds required for proper foam formation and flow compensation.' },
+      additionalNotes: [
+        'Use 0.6mm or larger nozzle for best foam flow',
+        'Reduce flow rate to 40-60% to compensate for foam expansion',
+        'Higher temps = more foaming, lower temps = less foaming',
+        'Layer height affects foam cell size',
+        'Annealing: 70-80°C for 30-60 minutes after printing',
+        'Expect 2-5% shrinkage during annealing - design oversized',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI', 'Glass with glue stick', 'BuildTak'],
+        good: ['Blue tape', 'Textured PEI'],
+        poor: ['Bare glass'],
+      },
+      releaseAgents: 'Glue stick recommended for easy release without damaging foam structure.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Good compatibility for solid/foam combinations.' },
+        { material: 'HTPLA', bondQuality: 'Strong Chemical Bond', notes: 'Excellent - same annealing process.' },
+        { material: 'PVA', bondQuality: 'Mechanical Bond', notes: 'Possible but foam surface may be rough.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [{ method: 'Not recommended', effectiveness: 'Not Possible', notes: 'Would destroy foam cell structure.' }],
+      mechanical: ['Very light sanding', 'Careful trimming', 'Avoid heavy pressure that compresses foam'],
+      painting: 'Use light coats - heavy paint adds weight. Primer may fill foam surface texture.',
+      glues: ['CA glue (penetrates foam - use sparingly)', 'Foam-safe epoxy', 'Hot glue (low temp)'],
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Foaming agents release gases during printing. Ensure good ventilation.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Foam structure harbors bacteria; additives not food safe.' },
+      biodegradability: { rating: 'Partially Compostable', notes: 'PLA base compostable, foaming additives unknown.' },
+      additionalNotes: [
+        'Print in well-ventilated area due to foaming agent off-gassing',
+        'Not suitable for food contact',
+        'Safe for normal handling after printing',
+        'Some users report mild odor during printing',
+      ],
+    },
+  },
+
   'PVC': {
     name: 'PVC',
     fullName: 'Polyvinyl Chloride',
