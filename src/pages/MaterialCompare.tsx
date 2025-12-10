@@ -38,6 +38,23 @@ const getPropertyValue = (level: string): number => {
   return levelMap[level] || 0;
 };
 
+// Extract numeric value from string, handling ranges like "50-65" by taking the midpoint
+const extractNumericFromString = (value: string): number | null => {
+  if (!value || typeof value !== 'string') return null;
+  
+  // Check for range pattern like "50-65" or "40 - 50"
+  const rangeMatch = value.match(/([\d.]+)\s*[-–]\s*([\d.]+)/);
+  if (rangeMatch) {
+    const low = parseFloat(rangeMatch[1]);
+    const high = parseFloat(rangeMatch[2]);
+    return (low + high) / 2; // Use midpoint for comparison
+  }
+  
+  // Single number
+  const singleMatch = value.match(/[\d.]+/);
+  return singleMatch ? parseFloat(singleMatch[0]) : null;
+};
+
 // Determine winner for a criteria (higher is better by default, can be inverted)
 const getWinners = (
   materials: { name: string; value: number | string | null }[],
@@ -46,22 +63,41 @@ const getWinners = (
   const validMaterials = materials.filter(m => m.value !== null && m.value !== undefined && m.value !== '');
   if (validMaterials.length === 0) return [];
   
-  const numericMaterials = validMaterials.map(m => ({
-    name: m.name,
-    value: typeof m.value === 'number' ? m.value : getPropertyValue(String(m.value))
-  }));
+  const numericMaterials = validMaterials.map(m => {
+    let numValue: number;
+    if (typeof m.value === 'number') {
+      numValue = m.value;
+    } else {
+      // Try to extract numeric value first (for values like "50-65 MPa")
+      const extracted = extractNumericFromString(String(m.value));
+      if (extracted !== null) {
+        numValue = extracted;
+      } else {
+        // Fall back to qualitative level mapping
+        numValue = getPropertyValue(String(m.value));
+      }
+    }
+    return { name: m.name, value: numValue };
+  });
+  
+  // Filter out materials with 0 value (couldn't be parsed)
+  const scoredMaterials = numericMaterials.filter(m => m.value !== 0);
+  if (scoredMaterials.length === 0) return [];
   
   const bestValue = higherIsBetter 
-    ? Math.max(...numericMaterials.map(m => m.value))
-    : Math.min(...numericMaterials.map(m => m.value));
+    ? Math.max(...scoredMaterials.map(m => m.value))
+    : Math.min(...scoredMaterials.map(m => m.value));
   
-  return numericMaterials.filter(m => m.value === bestValue).map(m => m.name);
+  // Only return winners if there's a meaningful difference (>5% difference from best)
+  const threshold = Math.abs(bestValue) * 0.05;
+  return scoredMaterials
+    .filter(m => Math.abs(m.value - bestValue) <= threshold)
+    .map(m => m.name);
 };
 
 // Extract numeric value from TDS property
 const extractNumericValue = (value: string): number | null => {
-  const match = value.match(/[\d.]+/);
-  return match ? parseFloat(match[0]) : null;
+  return extractNumericFromString(value);
 };
 
 const WinnerBadge = ({ isWinner }: { isWinner: boolean }) => {
