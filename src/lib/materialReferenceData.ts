@@ -6084,6 +6084,1290 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'PEEK-CF': {
+    name: 'PEEK-CF',
+    fullName: 'Carbon Fiber Reinforced Polyether Ether Ketone',
+    origin: {
+      yearInvented: '2010s (for 3D printing)',
+      originalCompany: 'Various manufacturers for industrial applications',
+      keyMilestones: [
+        '2010s: CF-reinforced PEEK developed for machining',
+        '2015+: PEEK-CF filaments emerge for high-temp printers',
+        '2020+: Growing availability from specialized manufacturers',
+      ],
+      majorManufacturers: ['Victrex', '3DXTech', 'Apium', 'Evonik', 'Stratasys'],
+    },
+    composition: {
+      basePolymer: 'PEEK (Polyether Ether Ketone)',
+      chemicalFamily: 'Polyaryletherketone (PAEK) with carbon fiber',
+      keyAdditives: ['Chopped carbon fiber (10-30%)', 'Coupling agents'],
+      coloringAgents: 'Black/dark grey from carbon fiber content',
+      specialFillers: ['Milled or chopped carbon fibers'],
+    },
+    familyContext: {
+      parentPolymer: 'PEEK reinforced with carbon fiber',
+      variants: ['PEEK-CF10', 'PEEK-CF20', 'PEEK-CF30'],
+      chemicalComparison: 'Dramatically increased stiffness and dimensional stability over pure PEEK, with reduced ductility.',
+      evolution: 'Carbon fiber addition maximizes stiffness for structural aerospace applications.',
+    },
+    strengths: {
+      uniqueProperties: ['Extreme stiffness', 'Outstanding heat resistance', 'Excellent dimensional stability', 'Metal replacement capability'],
+      bestUseScenarios: ['Aerospace structural parts', 'High-temp tooling', 'Metal replacement applications', 'Stiffness-critical components'],
+      advantagesOverCompetitors: ['Stiffest high-temp material available', 'Maintains PEEK thermal properties', 'Superior creep resistance'],
+      whyChooseThis: 'When maximum stiffness at extreme temperatures is required and nothing else will survive the environment.',
+    },
+    weaknesses: {
+      limitations: ['Extremely expensive ($800+/kg)', 'Requires specialized high-temp equipment', 'Highly abrasive', 'Reduced ductility'],
+      commonProblems: ['Rapid nozzle wear', 'Anisotropic properties', 'Difficult crystallization control', 'Very few printers capable'],
+      environmentalConcerns: ['Carbon fiber not recyclable', 'Extremely energy-intensive production'],
+      whenNotToUse: ['When pure PEEK properties suffice', 'Impact-critical applications', 'Without proper high-temp equipment'],
+    },
+    practicalContext: {
+      industryAdoption: ['Aerospace', 'Semiconductor', 'Oil & gas', 'Racing/motorsport'],
+      commonApplications: ['Aircraft brackets', 'Satellite components', 'Downhole tools', 'Wafer handling'],
+      safetyStandards: ['Various aerospace certifications', 'FST compliance available'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'PEEK-CF can have higher stiffness-to-weight ratio than aluminum',
+        'Used in actual spacecraft and satellite applications',
+        'Requires hardened steel or ruby-tipped nozzles',
+      ],
+      whyInvented: 'To maximize structural performance of PEEK for weight-critical aerospace applications.',
+      controversies: [
+        'Cost puts it out of reach for most applications',
+        'Fiber orientation dramatically affects properties',
+      ],
+      marketAdoption: 'Extremely specialized - only for applications where no other material works.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '120-170', unit: 'MPa', implications: 'Extremely high with fiber reinforcement.' },
+        { name: 'Tensile Modulus', value: '12000-20000', unit: 'MPa', implications: 'Exceptional stiffness. Approaches aluminum.' },
+        { name: 'Elongation at Break', value: '1-3', unit: '%', implications: 'Very low - stiff but brittle.' },
+        { name: 'Continuous Use Temp', value: '250', unit: '°C', implications: 'Outstanding high-temperature capability.' },
+        { name: 'Heat Deflection (HDT)', value: '260-300', unit: '°C', implications: 'Maintains shape at extreme temperatures.' },
+      ],
+      notes: 'Properties highly dependent on fiber content and orientation. Design for fiber alignment.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 380, max: 420, optimal: 400 },
+      bedTemp: { min: 140, max: 180, optimal: 160 },
+      coolingFan: { min: 0, max: 0, notes: 'NO cooling. Thermal management critical.' },
+      enclosure: { required: true, notes: 'MANDATORY. 120-160°C chamber required.' },
+      drying: { temp: 150, duration: '6-12 hours', notes: 'Must be bone dry. Consider printing from dry box.' },
+      printSpeed: { recommended: '10-25 mm/s', notes: 'Very slow. CF content requires careful flow control.' },
+      additionalNotes: [
+        'Hardened nozzle MANDATORY - brass will destroy in minutes',
+        '400°C+ capable hotend required',
+        'Specialized PEEK-capable printer essential',
+        'Consider 0.6mm+ nozzle for fiber flow',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEEK/PEI sheet', 'High-temp specialty surfaces'],
+        good: ['Garolite at extreme temps'],
+        poor: ['All standard surfaces'],
+      },
+      releaseAgents: 'Usually releases on cooling. High-temp bed surfaces only.',
+      multiMaterial: [
+        { material: 'PEEK', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer.' },
+        { material: 'PEKK', bondQuality: 'Strong Chemical Bond', notes: 'PAEK family compatibility.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not applicable', effectiveness: 'Not Possible', notes: 'Chemically inert. No solvents work.' },
+      ],
+      mechanical: ['Machines with carbide tools', 'CF dust hazard when machining'],
+      glues: ['Specialty high-temp adhesives', 'Mechanical fastening preferred'],
+      painting: 'Rarely needed. Surface prep challenging due to chemical resistance.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'PEEK fumes plus CF particulates. Excellent ventilation required.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Carbon fiber content precludes food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Extremely stable. Carbon fiber is permanent.' },
+      additionalNotes: [
+        'Carbon fiber dust is a respiratory hazard',
+        'HEPA filtration mandatory when machining',
+        'Wear appropriate PPE',
+      ],
+    },
+  },
+
+  'PEKK-CF': {
+    name: 'PEKK-CF',
+    fullName: 'Carbon Fiber Reinforced Polyetherketoneketone',
+    origin: {
+      yearInvented: '2016+',
+      originalCompany: 'Arkema and compounding partners',
+      keyMilestones: [
+        '2016: Arkema launches Kepstan for 3D printing',
+        '2018: PEKK-CF variants become available',
+        '2020+: Growing adoption in aerospace 3D printing',
+      ],
+      majorManufacturers: ['Arkema', '3DXTech', 'Stratasys', 'CRP Technology'],
+    },
+    composition: {
+      basePolymer: 'PEKK (Polyetherketoneketone)',
+      chemicalFamily: 'Polyaryletherketone (PAEK) with carbon fiber',
+      keyAdditives: ['Chopped carbon fiber (10-20%)', 'Coupling agents'],
+      coloringAgents: 'Black/dark grey from carbon fiber',
+      specialFillers: ['Carbon fiber reinforcement'],
+    },
+    familyContext: {
+      parentPolymer: 'PEKK reinforced with carbon fiber',
+      variants: ['PEKK-CF A (amorphous)', 'PEKK-CF C (crystalline)'],
+      chemicalComparison: 'Easier to print than PEEK-CF while offering similar performance for many applications.',
+      evolution: 'Combines PEKK processability with carbon fiber reinforcement.',
+    },
+    strengths: {
+      uniqueProperties: ['High stiffness', 'Easier processing than PEEK-CF', 'Excellent thermal properties', 'Good layer adhesion'],
+      bestUseScenarios: ['Aerospace prototypes', 'High-temp tooling', 'Structural components', 'Weight-critical parts'],
+      advantagesOverCompetitors: ['Lower processing temp than PEEK-CF', 'Better layer adhesion', 'More forgiving to print'],
+      whyChooseThis: 'When you need PEEK-CF-like performance but want easier processing and better print success rates.',
+    },
+    weaknesses: {
+      limitations: ['Very expensive', 'Still requires high-temp equipment', 'Abrasive', 'Limited availability'],
+      commonProblems: ['Crystallization management', 'Anisotropic strength', 'Nozzle wear'],
+      environmentalConcerns: ['Not recyclable', 'Energy-intensive production'],
+      whenNotToUse: ['When pure PEKK suffices', 'Budget applications', 'Without proper equipment'],
+    },
+    practicalContext: {
+      industryAdoption: ['Aerospace', 'Defense', 'High-performance motorsport'],
+      commonApplications: ['Aircraft interior brackets', 'UAV components', 'High-temp fixtures', 'Structural prototypes'],
+      safetyStandards: ['FST compliant grades available', 'Aerospace certifications'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'PEKK-CF offers ~90% of PEEK-CF performance with better printability',
+        'Stratasys Antero 840CF is a commercial PEKK-CF material',
+        'Used in production aerospace parts',
+      ],
+      whyInvented: 'To make carbon fiber reinforced PAEK more accessible for additive manufacturing.',
+      controversies: [
+        'Debate over PEKK-CF vs PEEK-CF for specific applications continues',
+      ],
+      marketAdoption: 'Growing in aerospace AM as processability advantage is recognized.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '110-140', unit: 'MPa', implications: 'Very high with fiber reinforcement.' },
+        { name: 'Tensile Modulus', value: '10000-15000', unit: 'MPa', implications: 'Excellent stiffness.' },
+        { name: 'Elongation at Break', value: '2-4', unit: '%', implications: 'Low ductility due to fiber.' },
+        { name: 'Glass Transition', value: '160', unit: '°C', implications: 'High Tg maintained.' },
+        { name: 'Continuous Use Temp', value: '250', unit: '°C', implications: 'Outstanding thermal capability.' },
+      ],
+      notes: 'PEKK-CF A is easier to print, PEKK-CF C offers higher crystallinity and performance.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 350, max: 390, optimal: 370 },
+      bedTemp: { min: 130, max: 160, optimal: 145 },
+      coolingFan: { min: 0, max: 0, notes: 'NO cooling. Controlled thermal environment required.' },
+      enclosure: { required: true, notes: 'MANDATORY. 90-120°C chamber needed.' },
+      drying: { temp: 120, duration: '6-10 hours', notes: 'Must be thoroughly dried.' },
+      printSpeed: { recommended: '15-30 mm/s', notes: 'Slow speeds for proper adhesion and fiber distribution.' },
+      additionalNotes: [
+        'Hardened nozzle REQUIRED',
+        'High-temp capable system essential',
+        'Easier than PEEK-CF but still challenging',
+        '0.5mm+ nozzle recommended',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI high-temp', 'PEKK/PEEK sheet'],
+        good: ['High-temp Garolite'],
+        poor: ['Standard surfaces'],
+      },
+      releaseAgents: 'Usually releases on cooling with proper surfaces.',
+      multiMaterial: [
+        { material: 'PEKK', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer.' },
+        { material: 'PEEK', bondQuality: 'Strong Chemical Bond', notes: 'PAEK family compatibility.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not applicable', effectiveness: 'Not Possible', notes: 'Chemically resistant.' },
+      ],
+      mechanical: ['Machines with carbide tools', 'CF dust precautions required'],
+      glues: ['High-temp epoxy', 'Mechanical fastening'],
+      painting: 'Surface prep required. Rarely needed.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'PEKK has low emissions. CF dust concern during machining.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Carbon fiber precludes food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Extremely stable materials.' },
+      additionalNotes: [
+        'CF dust hazard when post-processing',
+        'HEPA filtration for machining',
+      ],
+    },
+  },
+
+  'PEKK-A': {
+    name: 'PEKK-A',
+    fullName: 'Amorphous Polyetherketoneketone',
+    origin: {
+      yearInvented: '2016',
+      originalCompany: 'Arkema (Kepstan)',
+      keyMilestones: [
+        '2016: Arkema develops amorphous PEKK for 3D printing',
+        '2018: Gains traction as easier-to-print PAEK alternative',
+        '2020+: Widely adopted in industrial FFF',
+      ],
+      majorManufacturers: ['Arkema', '3DXTech', 'Polymaker', 'Stratasys'],
+    },
+    composition: {
+      basePolymer: 'PEKK in amorphous form',
+      chemicalFamily: 'Polyaryletherketone (PAEK)',
+      keyAdditives: ['Modified for amorphous structure', 'Processing aids'],
+      coloringAgents: 'Natural amber color, limited pigmentation',
+      specialFillers: ['None in base grade'],
+    },
+    familyContext: {
+      parentPolymer: 'PEKK formulated to remain amorphous',
+      variants: ['PEKK-A unfilled', 'PEKK-A CF'],
+      chemicalComparison: 'Lower crystallinity than PEKK-C gives better layer adhesion but lower mechanical properties.',
+      evolution: 'Specifically developed for FFF 3D printing with better interlayer bonding.',
+    },
+    strengths: {
+      uniqueProperties: ['Best layer adhesion of PAEK materials', 'No crystallization issues', 'Transparent/translucent possible', 'Forgiving to print'],
+      bestUseScenarios: ['High-temp prototypes', 'Parts requiring good Z-strength', 'Learning high-temp printing', 'Transparent high-temp parts'],
+      advantagesOverCompetitors: ['Easiest PAEK to print', 'Best interlayer strength', 'No warping from crystallization'],
+      whyChooseThis: 'When you need PAEK-class performance with the best possible print success and layer bonding.',
+    },
+    weaknesses: {
+      limitations: ['Lower mechanical properties than crystalline PEKK', 'Lower chemical resistance', 'Still expensive', 'Lower service temp than PEKK-C'],
+      commonProblems: ['Can soften at lower temps than crystalline version', 'May not meet all PAEK specs'],
+      environmentalConcerns: ['Same as other PAEK materials'],
+      whenNotToUse: ['Maximum mechanical properties required', 'Highest chemical resistance needed', 'When PEKK-C properties are specified'],
+    },
+    practicalContext: {
+      industryAdoption: ['R&D prototyping', 'Aerospace development', 'High-temp tooling'],
+      commonApplications: ['Prototypes before PEKK-C production', 'High-temp fixtures', 'Transparent high-temp parts'],
+      safetyStandards: ['Various certifications depending on grade'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'PEKK-A was specifically designed for FFF printing - not just adapted',
+        'Can be nearly transparent in thin sections',
+        'The amorphous structure eliminates crystallization warping',
+      ],
+      whyInvented: 'To solve the layer adhesion and warping problems that plagued early PAEK 3D printing.',
+      controversies: [
+        'Trade-off between printability and performance debated',
+        'Some consider it "PEKK-lite" unfairly',
+      ],
+      marketAdoption: 'Popular entry point into PAEK printing due to forgiving nature.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '85-100', unit: 'MPa', implications: 'High, slightly lower than crystalline PEKK.' },
+        { name: 'Tensile Modulus', value: '3200-3800', unit: 'MPa', implications: 'Good stiffness.' },
+        { name: 'Elongation at Break', value: '20-40', unit: '%', implications: 'Better ductility than crystalline.' },
+        { name: 'Glass Transition', value: '160', unit: '°C', implications: 'Service temp limited by Tg.' },
+        { name: 'Continuous Use Temp', value: '160', unit: '°C', implications: 'Lower than crystalline due to no crystallinity.' },
+      ],
+      notes: 'Trade lower ultimate properties for better printability and isotropy.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 340, max: 380, optimal: 360 },
+      bedTemp: { min: 120, max: 150, optimal: 135 },
+      coolingFan: { min: 0, max: 10, notes: 'Minimal or no cooling.' },
+      enclosure: { required: true, notes: 'Required but lower chamber temp acceptable - 70-100°C.' },
+      drying: { temp: 120, duration: '4-8 hours', notes: 'Thorough drying required.' },
+      printSpeed: { recommended: '20-40 mm/s', notes: 'Faster than crystalline PEKK possible.' },
+      additionalNotes: [
+        'Most forgiving of PAEK materials',
+        'Good for learning high-temp printing',
+        'No annealing required',
+        'All-metal hotend still required',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI high-temp', 'Garolite'],
+        good: ['Glass with high-temp adhesive'],
+        poor: ['Standard low-temp surfaces'],
+      },
+      releaseAgents: 'Usually releases on cooling.',
+      multiMaterial: [
+        { material: 'PEKK', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer family.' },
+        { material: 'PEI', bondQuality: 'Mechanical Bond', notes: 'Reasonable adhesion.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not effective', effectiveness: 'Difficult', notes: 'Chemically resistant like all PAEK.' },
+      ],
+      mechanical: ['Sands and machines well', 'Can be polished to clarity'],
+      glues: ['Epoxy', 'Cyanoacrylate', 'Specialty PAEK adhesives'],
+      painting: 'Surface prep required due to chemical resistance.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Low emissions. Good ventilation still recommended.' },
+      foodSafety: { rating: 'Grades Available', notes: 'FDA compliant grades may be available.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Stable polymer.' },
+    },
+  },
+
+  'PEI-CF': {
+    name: 'PEI-CF',
+    fullName: 'Carbon Fiber Reinforced Polyetherimide',
+    origin: {
+      yearInvented: '2015+',
+      originalCompany: 'Various manufacturers',
+      keyMilestones: [
+        '2015: PEI (Ultem) enters 3D printing',
+        '2017: CF-reinforced PEI variants emerge',
+        '2020+: Growing industrial adoption',
+      ],
+      majorManufacturers: ['3DXTech', 'Stratasys', 'Polymaker', 'Sabic'],
+    },
+    composition: {
+      basePolymer: 'PEI (Polyetherimide)',
+      chemicalFamily: 'Polyimide with carbon fiber',
+      keyAdditives: ['Chopped carbon fiber (10-20%)'],
+      coloringAgents: 'Black/dark from carbon fiber',
+      specialFillers: ['Carbon fiber reinforcement'],
+    },
+    familyContext: {
+      parentPolymer: 'PEI (Ultem) reinforced with carbon fiber',
+      variants: ['PEI-CF10', 'PEI-CF20'],
+      chemicalComparison: 'Increased stiffness and dimensional stability over pure PEI.',
+      evolution: 'Carbon fiber addition for structural applications.',
+    },
+    strengths: {
+      uniqueProperties: ['High stiffness', 'Excellent heat resistance', 'FST compliance', 'Dimensional stability'],
+      bestUseScenarios: ['Aircraft interior parts', 'High-temp tooling', 'ESD applications', 'Structural aerospace'],
+      advantagesOverCompetitors: ['FST compliant', 'Good high-temp performance', 'Better than PEI alone for stiffness'],
+      whyChooseThis: 'When aerospace FST compliance is needed with maximum stiffness.',
+    },
+    weaknesses: {
+      limitations: ['Expensive', 'Abrasive', 'Requires high-temp equipment', 'Reduced ductility'],
+      commonProblems: ['Nozzle wear', 'Layer adhesion challenges', 'Moisture sensitive'],
+      environmentalConcerns: ['CF not recyclable', 'Energy intensive'],
+      whenNotToUse: ['When pure PEI suffices', 'Impact-critical parts', 'Budget applications'],
+    },
+    practicalContext: {
+      industryAdoption: ['Aerospace', 'Defense', 'Industrial tooling'],
+      commonApplications: ['Aircraft ducting', 'Interior brackets', 'High-temp jigs'],
+      safetyStandards: ['FAR 25.853', 'FST compliance'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'PEI-CF meets stringent aircraft interior fire safety requirements',
+        'Often used alongside Ultem 9085 in aerospace',
+      ],
+      whyInvented: 'To maximize PEI stiffness for structural aerospace applications.',
+      controversies: [
+        'Cost vs benefit debate for non-certified applications',
+      ],
+      marketAdoption: 'Growing in aerospace additive manufacturing.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '100-130', unit: 'MPa', implications: 'High with CF reinforcement.' },
+        { name: 'Tensile Modulus', value: '8000-12000', unit: 'MPa', implications: 'Very stiff.' },
+        { name: 'Elongation at Break', value: '2-4', unit: '%', implications: 'Low - stiff but brittle.' },
+        { name: 'Heat Deflection', value: '200-210', unit: '°C', implications: 'Excellent heat resistance.' },
+        { name: 'Glass Transition', value: '215', unit: '°C', implications: 'High Tg maintained.' },
+      ],
+      notes: 'FST compliant for aerospace interiors.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 360, max: 400, optimal: 380 },
+      bedTemp: { min: 130, max: 160, optimal: 145 },
+      coolingFan: { min: 0, max: 10, notes: 'Minimal cooling.' },
+      enclosure: { required: true, notes: 'REQUIRED. 90-120°C chamber.' },
+      drying: { temp: 150, duration: '8-12 hours', notes: 'Critical - very hygroscopic.' },
+      printSpeed: { recommended: '20-35 mm/s', notes: 'Moderate speeds.' },
+      additionalNotes: [
+        'Hardened nozzle REQUIRED',
+        'All-metal high-temp hotend required',
+        '0.5mm+ nozzle recommended for CF',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI sheet', 'High-temp surfaces'],
+        good: ['Garolite'],
+        poor: ['Standard surfaces'],
+      },
+      releaseAgents: 'Usually releases on cooling.',
+      multiMaterial: [
+        { material: 'PEI', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not effective', effectiveness: 'Not Possible', notes: 'Chemically resistant.' },
+      ],
+      mechanical: ['Machines with carbide tools', 'CF dust precautions'],
+      glues: ['High-temp epoxy', 'Specialty adhesives'],
+      painting: 'Surface prep required.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Good ventilation required. CF dust when machining.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Carbon fiber precludes food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Stable materials.' },
+    },
+  },
+
+  'PEI 1010': {
+    name: 'PEI 1010',
+    fullName: 'Polyetherimide 1010 (Ultem 1010)',
+    origin: {
+      yearInvented: '1980s (material), 2010s (filament)',
+      originalCompany: 'SABIC (Ultem brand)',
+      keyMilestones: [
+        '1980s: Ultem 1010 developed by GE Plastics',
+        '2010s: Stratasys adopts for Fortus systems',
+        '2018+: Third-party filaments emerge',
+      ],
+      majorManufacturers: ['SABIC', 'Stratasys', '3DXTech'],
+    },
+    composition: {
+      basePolymer: 'PEI (Polyetherimide) - Ultem 1010 grade',
+      chemicalFamily: 'Polyimide',
+      keyAdditives: ['Minimal - pure grade'],
+      coloringAgents: 'Natural amber, limited colors',
+      specialFillers: ['None - unfilled grade'],
+    },
+    familyContext: {
+      parentPolymer: 'Ultem 1010 - the original unfilled PEI',
+      variants: ['Ultem 1010 standard'],
+      chemicalComparison: 'Higher heat resistance than 9085, better chemical resistance, but lower FST ratings.',
+      evolution: 'Original high-performance PEI grade adapted for 3D printing.',
+    },
+    strengths: {
+      uniqueProperties: ['Highest heat resistance of PEI grades', 'Excellent chemical resistance', 'Biocompatible', 'Autoclavable'],
+      bestUseScenarios: ['Medical devices', 'Food processing', 'Sterilizable parts', 'Chemical exposure applications'],
+      advantagesOverCompetitors: ['Biocompatible certified', 'Autoclave safe', 'FDA food contact grades'],
+      whyChooseThis: 'When biocompatibility, sterilizability, or food contact compliance is required.',
+    },
+    weaknesses: {
+      limitations: ['No FST certification (use 9085 for aerospace)', 'Very expensive', 'Difficult to print', 'Requires high-temp equipment'],
+      commonProblems: ['Warping', 'Layer adhesion', 'Moisture absorption'],
+      environmentalConcerns: ['Energy intensive production'],
+      whenNotToUse: ['Aerospace FST applications (use 9085)', 'Budget projects', 'Without proper equipment'],
+    },
+    practicalContext: {
+      industryAdoption: ['Medical devices', 'Food processing', 'Semiconductor'],
+      commonApplications: ['Surgical instruments', 'Sterilization trays', 'Food handling parts', 'Autoclave components'],
+      safetyStandards: ['FDA food contact', 'ISO 10993 biocompatibility', 'USP Class VI'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'Ultem 1010 can withstand steam autoclave sterilization',
+        'Used in reusable surgical instruments',
+        'Higher Tg than 9085 grade',
+      ],
+      whyInvented: 'For applications requiring both high heat and biocompatibility/chemical resistance.',
+      controversies: [
+        'Often confused with 9085 - they have different certifications',
+      ],
+      marketAdoption: 'Standard in medical device prototyping and production.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '81', unit: 'MPa', implications: 'High strength.' },
+        { name: 'Tensile Modulus', value: '2800', unit: 'MPa', implications: 'Good stiffness.' },
+        { name: 'Elongation at Break', value: '3-6', unit: '%', implications: 'Limited ductility.' },
+        { name: 'Heat Deflection', value: '213', unit: '°C', implications: 'Highest of PEI grades.' },
+        { name: 'Glass Transition', value: '217', unit: '°C', implications: 'Very high Tg.' },
+      ],
+      notes: 'The go-to grade for biocompatible and sterilizable applications.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 365, max: 400, optimal: 385 },
+      bedTemp: { min: 140, max: 175, optimal: 160 },
+      coolingFan: { min: 0, max: 0, notes: 'No cooling.' },
+      enclosure: { required: true, notes: 'REQUIRED. 100-130°C chamber.' },
+      drying: { temp: 150, duration: '8-12 hours', notes: 'CRITICAL - extremely hygroscopic.' },
+      printSpeed: { recommended: '20-35 mm/s', notes: 'Moderate speeds.' },
+      additionalNotes: [
+        'All-metal 400°C hotend required',
+        'More difficult than 9085 to print',
+        'Aggressive bed adhesion needed',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI sheet', 'High-temp specialty'],
+        good: ['Garolite'],
+        poor: ['Standard surfaces'],
+      },
+      releaseAgents: 'High-temp specialty adhesives may help.',
+      multiMaterial: [
+        { material: 'PEI', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not effective', effectiveness: 'Not Possible', notes: 'Chemically resistant.' },
+      ],
+      mechanical: ['Machines well', 'Can be polished'],
+      glues: ['Epoxy', 'Specialty adhesives'],
+      painting: 'Surface prep required.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Ventilation required at high printing temps.' },
+      foodSafety: { rating: 'FDA Compliant', notes: 'FDA food contact approved.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Stable polymer.' },
+      additionalNotes: [
+        'Biocompatible (ISO 10993)',
+        'Autoclave sterilizable',
+      ],
+    },
+  },
+
+  'PEI 9085': {
+    name: 'PEI 9085',
+    fullName: 'Polyetherimide 9085 (Ultem 9085)',
+    origin: {
+      yearInvented: '2000s',
+      originalCompany: 'SABIC/Stratasys',
+      keyMilestones: [
+        '2000s: Developed specifically for aerospace AM',
+        '2012: Certified for aircraft interior use',
+        '2015+: Becomes standard for aerospace 3D printing',
+      ],
+      majorManufacturers: ['SABIC', 'Stratasys', '3DXTech'],
+    },
+    composition: {
+      basePolymer: 'PEI (Polyetherimide) - 9085 FST grade',
+      chemicalFamily: 'Polyimide (FST formulated)',
+      keyAdditives: ['Flame retardants', 'Smoke suppressants'],
+      coloringAgents: 'Tan natural color, black available',
+      specialFillers: ['FST additives'],
+    },
+    familyContext: {
+      parentPolymer: 'PEI formulated for FST (Flame, Smoke, Toxicity) compliance',
+      variants: ['Ultem 9085 standard', 'Ultem 9085 CG (certified)'],
+      chemicalComparison: 'Lower heat resistance than 1010, but FST certified for aerospace.',
+      evolution: 'Developed specifically for aircraft interior compliance.',
+    },
+    strengths: {
+      uniqueProperties: ['FST certified', 'FAR 25.853 compliant', 'Good strength', 'Excellent layer adhesion'],
+      bestUseScenarios: ['Aircraft interiors', 'Rail transport', 'Certified aerospace parts', 'High-temp enclosures'],
+      advantagesOverCompetitors: ['The standard for aerospace AM', 'Certified supply chain', 'Proven track record'],
+      whyChooseThis: 'When FAR 25.853 FST certification is required for aircraft or rail interiors.',
+    },
+    weaknesses: {
+      limitations: ['Lower heat resistance than 1010', 'Expensive', 'Proprietary system advantage', 'Not biocompatible'],
+      commonProblems: ['Still requires high-temp equipment', 'Moisture sensitive', 'Warping possible'],
+      environmentalConcerns: ['FST additives', 'Energy intensive'],
+      whenNotToUse: ['Biocompatible needs (use 1010)', 'Maximum heat resistance', 'Non-certified applications'],
+    },
+    practicalContext: {
+      industryAdoption: ['Commercial aerospace', 'Defense', 'Rail transport'],
+      commonApplications: ['Aircraft ducting', 'Interior brackets', 'Cable management', 'Overhead bin components'],
+      safetyStandards: ['FAR 25.853', 'ABD0031', 'EN 45545'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'Ultem 9085 is on thousands of commercial aircraft',
+        'First thermoplastic certified for aircraft interior production',
+        'The "9085" refers to the FST formulation number',
+      ],
+      whyInvented: 'To enable additive manufacturing of certified aircraft interior parts.',
+      controversies: [
+        'High cost of certified material supply chains',
+        'Stratasys vs third-party certification debates',
+      ],
+      marketAdoption: 'The dominant material for aerospace FDM production.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '72', unit: 'MPa', implications: 'Good strength.' },
+        { name: 'Tensile Modulus', value: '2200', unit: 'MPa', implications: 'Moderate stiffness.' },
+        { name: 'Elongation at Break', value: '6', unit: '%', implications: 'Limited ductility.' },
+        { name: 'Heat Deflection', value: '153', unit: '°C', implications: 'Lower than 1010 due to FST additives.' },
+        { name: 'FST Rating', value: 'FAR 25.853', unit: '', implications: 'Certified for aircraft interiors.' },
+      ],
+      notes: 'The benchmark for FST-compliant 3D printed parts.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 355, max: 390, optimal: 370 },
+      bedTemp: { min: 130, max: 160, optimal: 145 },
+      coolingFan: { min: 0, max: 10, notes: 'Minimal cooling.' },
+      enclosure: { required: true, notes: 'REQUIRED. 90-110°C chamber.' },
+      drying: { temp: 150, duration: '8-12 hours', notes: 'Very hygroscopic - thorough drying critical.' },
+      printSpeed: { recommended: '25-40 mm/s', notes: 'Moderate speeds work well.' },
+      additionalNotes: [
+        'Easier than 1010 to print',
+        'All-metal hotend required',
+        'Good layer adhesion',
+        'Use certified material for production parts',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI sheet', 'Ultem sheet'],
+        good: ['Garolite'],
+        poor: ['Standard surfaces'],
+      },
+      releaseAgents: 'Usually releases on cooling.',
+      multiMaterial: [
+        { material: 'PEI 1010', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer family.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not effective', effectiveness: 'Not Possible', notes: 'Chemically resistant.' },
+      ],
+      mechanical: ['Sands and machines well', 'Can be polished'],
+      glues: ['Epoxy', 'Specialty PEI adhesives'],
+      painting: 'Surface prep needed. FST paints required for certified parts.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Good ventilation required.' },
+      foodSafety: { rating: 'Not Certified', notes: 'FST additives preclude food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Stable polymer.' },
+      additionalNotes: [
+        'FST compliant - low flame, smoke, toxicity',
+        'Safe for aircraft cabin use',
+      ],
+    },
+  },
+
+  'ESD-PEI': {
+    name: 'ESD-PEI',
+    fullName: 'Electrostatic Dissipative Polyetherimide',
+    origin: {
+      yearInvented: '2015+',
+      originalCompany: 'Various manufacturers',
+      keyMilestones: [
+        '2015+: ESD variants of high-performance materials emerge',
+        '2018: ESD-PEI filaments become available',
+      ],
+      majorManufacturers: ['3DXTech', 'Stratasys', 'Polymaker'],
+    },
+    composition: {
+      basePolymer: 'PEI (Polyetherimide)',
+      chemicalFamily: 'Polyimide with ESD additives',
+      keyAdditives: ['Carbon nanotubes or carbon black', 'ESD compounds'],
+      coloringAgents: 'Black only due to carbon content',
+      specialFillers: ['Conductive carbon additives'],
+    },
+    familyContext: {
+      parentPolymer: 'PEI with ESD properties',
+      variants: ['ESD-PEI standard'],
+      chemicalComparison: 'Standard PEI properties with static dissipation capability.',
+      evolution: 'Developed for semiconductor and electronics requiring both high-temp and ESD protection.',
+    },
+    strengths: {
+      uniqueProperties: ['ESD safe', 'High heat resistance', 'Good mechanical properties', 'Consistent conductivity'],
+      bestUseScenarios: ['Semiconductor tooling', 'Electronics manufacturing fixtures', 'High-temp ESD applications'],
+      advantagesOverCompetitors: ['Higher temp than ESD-PC', 'Better chemical resistance', 'Aerospace-compatible'],
+      whyChooseThis: 'When both high temperature capability and ESD protection are required.',
+    },
+    weaknesses: {
+      limitations: ['Black only', 'Expensive', 'Requires high-temp equipment', 'Slightly reduced mechanical properties'],
+      commonProblems: ['ESD properties must be verified after printing', 'Humidity affects conductivity'],
+      environmentalConcerns: ['Carbon additives not recyclable'],
+      whenNotToUse: ['When ESD not needed', 'Color required', 'Budget applications'],
+    },
+    practicalContext: {
+      industryAdoption: ['Semiconductor', 'Electronics manufacturing', 'Aerospace'],
+      commonApplications: ['Wafer handling', 'ESD-safe test fixtures', 'High-temp electronics jigs'],
+      safetyStandards: ['ANSI/ESD standards', 'Various semiconductor specs'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'ESD-PEI combines two specialized requirements in one material',
+        'Used in semiconductor fabs for wafer handling at elevated temps',
+      ],
+      whyInvented: 'Semiconductor industry needs both ESD protection and high-temp capability.',
+      controversies: [
+        'Printing process can affect ESD properties - must verify',
+      ],
+      marketAdoption: 'Specialized but essential in semiconductor manufacturing.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Surface Resistivity', value: '10^6-10^9', unit: 'ohms/sq', implications: 'ESD dissipative range.' },
+        { name: 'Tensile Strength', value: '70-80', unit: 'MPa', implications: 'Slightly reduced from pure PEI.' },
+        { name: 'Heat Deflection', value: '195-205', unit: '°C', implications: 'Excellent heat resistance.' },
+        { name: 'Glass Transition', value: '210-215', unit: '°C', implications: 'High Tg.' },
+      ],
+      notes: 'Verify ESD properties after printing. Layer orientation affects conductivity.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 360, max: 395, optimal: 375 },
+      bedTemp: { min: 130, max: 160, optimal: 145 },
+      coolingFan: { min: 0, max: 10, notes: 'Minimal cooling.' },
+      enclosure: { required: true, notes: 'REQUIRED. 90-110°C chamber.' },
+      drying: { temp: 150, duration: '8-12 hours', notes: 'Critical - very hygroscopic.' },
+      printSpeed: { recommended: '20-35 mm/s', notes: 'Moderate speeds.' },
+      additionalNotes: [
+        'All-metal high-temp hotend required',
+        'Verify ESD after printing',
+        'Ground parts properly in use',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI sheet', 'High-temp specialty'],
+        good: ['Garolite'],
+        poor: ['Standard surfaces'],
+      },
+      releaseAgents: 'Standard PEI techniques.',
+      multiMaterial: [
+        { material: 'PEI', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not recommended', effectiveness: 'Not Possible', notes: 'May affect ESD properties.' },
+      ],
+      mechanical: ['Minimal - may affect ESD', 'Test after any modification'],
+      glues: ['Conductive adhesives for ESD continuity'],
+      painting: 'Not recommended - defeats ESD purpose.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Good ventilation required.' },
+      foodSafety: { rating: 'Not Safe', notes: 'Not intended for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Stable polymer.' },
+    },
+  },
+
+  'ESD-PEKK': {
+    name: 'ESD-PEKK',
+    fullName: 'Electrostatic Dissipative Polyetherketoneketone',
+    origin: {
+      yearInvented: '2018+',
+      originalCompany: 'Various manufacturers',
+      keyMilestones: [
+        '2018+: ESD versions of PAEK materials developed',
+      ],
+      majorManufacturers: ['3DXTech', 'Arkema'],
+    },
+    composition: {
+      basePolymer: 'PEKK (Polyetherketoneketone)',
+      chemicalFamily: 'PAEK with ESD additives',
+      keyAdditives: ['Carbon-based conductive compounds'],
+      coloringAgents: 'Black only',
+      specialFillers: ['ESD carbon additives'],
+    },
+    familyContext: {
+      parentPolymer: 'PEKK with ESD properties',
+      variants: ['ESD-PEKK standard'],
+      chemicalComparison: 'PEKK properties with static dissipation added.',
+      evolution: 'Top-tier ESD material for extreme environments.',
+    },
+    strengths: {
+      uniqueProperties: ['ESD safe', 'Extreme heat resistance', 'Chemical resistance', 'PAEK-class performance'],
+      bestUseScenarios: ['Extreme environment ESD tooling', 'High-temp semiconductor', 'Aerospace ESD applications'],
+      advantagesOverCompetitors: ['Highest-temp ESD material', 'Chemical resistance', 'PAEK properties'],
+      whyChooseThis: 'When both PAEK-level performance and ESD protection are essential.',
+    },
+    weaknesses: {
+      limitations: ['Extremely expensive', 'Very limited availability', 'Requires specialized equipment'],
+      commonProblems: ['Same as PEKK plus ESD verification needs'],
+      environmentalConcerns: ['Not recyclable'],
+      whenNotToUse: ['When lower-temp ESD materials suffice', 'Budget projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Semiconductor', 'Aerospace'],
+      commonApplications: ['Extreme environment ESD fixtures', 'Space applications'],
+      safetyStandards: ['ESD standards', 'Various aerospace specs'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'One of the highest-performance ESD materials available',
+        'Combines PAEK thermal performance with ESD capability',
+      ],
+      whyInvented: 'For applications requiring both extreme temp and ESD protection.',
+      controversies: [
+        'Limited practical applications justify the extreme cost',
+      ],
+      marketAdoption: 'Very niche - only where no other material works.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Surface Resistivity', value: '10^6-10^9', unit: 'ohms/sq', implications: 'ESD dissipative.' },
+        { name: 'Tensile Strength', value: '85-95', unit: 'MPa', implications: 'Slightly reduced from pure PEKK.' },
+        { name: 'Continuous Use Temp', value: '250', unit: '°C', implications: 'Outstanding thermal capability.' },
+      ],
+      notes: 'Premium ESD material for extreme requirements.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 340, max: 380, optimal: 360 },
+      bedTemp: { min: 120, max: 155, optimal: 140 },
+      coolingFan: { min: 0, max: 0, notes: 'No cooling.' },
+      enclosure: { required: true, notes: 'MANDATORY. 90-120°C chamber.' },
+      drying: { temp: 120, duration: '6-10 hours', notes: 'Thorough drying required.' },
+      printSpeed: { recommended: '15-30 mm/s', notes: 'Slow speeds.' },
+      additionalNotes: [
+        'Same requirements as PEKK',
+        'Verify ESD after printing',
+        'All-metal high-temp system required',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEKK/PEI sheet', 'High-temp surfaces'],
+        good: ['Garolite'],
+        poor: ['Standard surfaces'],
+      },
+      releaseAgents: 'Standard PEKK techniques.',
+      multiMaterial: [
+        { material: 'PEKK', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not effective', effectiveness: 'Not Possible', notes: 'Chemically resistant.' },
+      ],
+      mechanical: ['Test ESD after modifications'],
+      glues: ['Conductive adhesives preferred'],
+      painting: 'Not recommended.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'PEKK has low emissions. Ventilation still required.' },
+      foodSafety: { rating: 'Not Safe', notes: 'ESD additives preclude food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Extremely stable.' },
+    },
+  },
+
+  'PPS': {
+    name: 'PPS',
+    fullName: 'Polyphenylene Sulfide',
+    origin: {
+      yearInvented: '1973',
+      originalCompany: 'Phillips Petroleum (now Chevron Phillips)',
+      keyMilestones: [
+        '1973: PPS commercialized by Phillips Petroleum',
+        '1980s: Widely adopted in automotive and electronics',
+        '2018+: PPS filaments emerge for 3D printing',
+      ],
+      majorManufacturers: ['Solvay (Ryton)', 'Toray', 'DIC', '3DXTech'],
+    },
+    composition: {
+      basePolymer: 'Polyphenylene Sulfide',
+      chemicalFamily: 'Aromatic sulfide polymer',
+      keyAdditives: ['Glass or carbon fiber common', 'Various fillers'],
+      coloringAgents: 'Natural dark brown, black with additives',
+      specialFillers: ['Often glass or carbon fiber reinforced'],
+    },
+    familyContext: {
+      parentPolymer: 'PPS (polyphenylene sulfide)',
+      variants: ['PPS unfilled', 'PPS-GF', 'PPS-CF'],
+      chemicalComparison: 'Exceptional chemical resistance, better than most engineering plastics. High temperature capability.',
+      evolution: 'Originally for injection molding, now adapted for 3D printing.',
+    },
+    strengths: {
+      uniqueProperties: ['Outstanding chemical resistance', 'Inherently flame retardant', 'Excellent dimensional stability', 'High-temp capable'],
+      bestUseScenarios: ['Chemical processing equipment', 'Automotive under-hood', 'Pump components', 'Aggressive chemical environments'],
+      advantagesOverCompetitors: ['Better chemical resistance than PEEK', 'Inherently FR without additives', 'Lower cost than PAEK'],
+      whyChooseThis: 'When chemical resistance is the primary requirement with good thermal properties.',
+    },
+    weaknesses: {
+      limitations: ['Brittle unfilled', 'Usually needs fiber reinforcement', 'Limited impact resistance', 'Requires high-temp equipment'],
+      commonProblems: ['Crystallization important', 'Annealing may be needed', 'Brittle failures possible'],
+      environmentalConcerns: ['Sulfur content', 'Energy intensive production'],
+      whenNotToUse: ['Impact-critical parts', 'Without reinforcement for structural use', 'Budget applications'],
+    },
+    practicalContext: {
+      industryAdoption: ['Chemical processing', 'Automotive', 'Electronics', 'Aerospace'],
+      commonApplications: ['Pump impellers', 'Valve seats', 'Chemical tanks', 'Fuel system components'],
+      safetyStandards: ['Inherently UL94 V0', 'Various chemical certifications'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'PPS is naturally flame retardant without any additives',
+        'Resists nearly all organic solvents at room temperature',
+        'Originally developed for oil field applications',
+        'Often called "the poor man\'s PEEK" for chemical resistance',
+      ],
+      whyInvented: 'For applications requiring extreme chemical resistance that even metals cannot provide.',
+      controversies: [
+        'Brittleness limits unfilled use',
+        'Often compared to PEEK but different property balance',
+      ],
+      marketAdoption: 'Growing in AM for chemical resistance applications.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '65-85', unit: 'MPa', implications: 'Good when reinforced.' },
+        { name: 'Tensile Modulus', value: '3500-4000', unit: 'MPa', implications: 'Stiff.' },
+        { name: 'Elongation at Break', value: '1-3', unit: '%', implications: 'Brittle - very low elongation.' },
+        { name: 'Heat Deflection', value: '135', unit: '°C (unfilled)', implications: 'Good heat resistance.' },
+        { name: 'Continuous Use Temp', value: '200-220', unit: '°C', implications: 'Excellent long-term thermal stability.' },
+        { name: 'Chemical Resistance', value: 'Outstanding', unit: '', implications: 'Resists nearly all chemicals.' },
+      ],
+      notes: 'Usually fiber-reinforced for practical applications. Inherently UL94 V0.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 300, max: 340, optimal: 320 },
+      bedTemp: { min: 120, max: 150, optimal: 135 },
+      coolingFan: { min: 0, max: 10, notes: 'Minimal cooling for crystallization control.' },
+      enclosure: { required: true, notes: 'REQUIRED. 80-100°C chamber.' },
+      drying: { temp: 150, duration: '4-8 hours', notes: 'Must be thoroughly dried.' },
+      printSpeed: { recommended: '20-40 mm/s', notes: 'Moderate speeds.' },
+      additionalNotes: [
+        'All-metal hotend required',
+        'Crystallization control important',
+        'Consider annealing for optimal properties',
+        'Often used with GF or CF reinforcement',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI', 'High-temp specialty surfaces'],
+        good: ['Garolite'],
+        poor: ['Standard surfaces'],
+      },
+      releaseAgents: 'Usually releases on cooling.',
+      multiMaterial: [
+        { material: 'PPS-GF', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Very limited', effectiveness: 'Not Possible', notes: 'Chemically inert - that\'s the point.' },
+      ],
+      mechanical: ['Machines well', 'Brittle - careful with sharp corners'],
+      glues: ['Specialty adhesives', 'Mechanical fastening often preferred'],
+      painting: 'Difficult due to chemical resistance. Surface activation required.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Sulfur compounds possible. Good ventilation required.' },
+      foodSafety: { rating: 'Grades Available', notes: 'Some FDA compliant grades exist.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Extremely stable.' },
+    },
+  },
+
+  'PPS-CF': {
+    name: 'PPS-CF',
+    fullName: 'Carbon Fiber Reinforced Polyphenylene Sulfide',
+    origin: {
+      yearInvented: '2018+',
+      originalCompany: 'Various manufacturers',
+      keyMilestones: [
+        '2018+: CF-reinforced PPS for 3D printing emerges',
+      ],
+      majorManufacturers: ['3DXTech', 'Solvay'],
+    },
+    composition: {
+      basePolymer: 'PPS (Polyphenylene Sulfide)',
+      chemicalFamily: 'Aromatic sulfide with carbon fiber',
+      keyAdditives: ['Carbon fiber (10-20%)'],
+      coloringAgents: 'Black from CF',
+      specialFillers: ['Carbon fiber reinforcement'],
+    },
+    familyContext: {
+      parentPolymer: 'PPS reinforced with carbon fiber',
+      variants: ['PPS-CF10', 'PPS-CF20'],
+      chemicalComparison: 'Dramatically improved stiffness while maintaining chemical resistance.',
+      evolution: 'CF addition for structural chemical-resistant parts.',
+    },
+    strengths: {
+      uniqueProperties: ['Outstanding chemical resistance', 'High stiffness', 'Flame retardant', 'Dimensional stability'],
+      bestUseScenarios: ['Structural chemical equipment', 'High-temp chemical jigs', 'Pump components'],
+      advantagesOverCompetitors: ['Chemical resistance + stiffness combination', 'Lower cost than PEEK-CF'],
+      whyChooseThis: 'When structural stiffness AND chemical resistance are both required.',
+    },
+    weaknesses: {
+      limitations: ['Abrasive', 'Brittle', 'Requires high-temp equipment', 'Limited impact resistance'],
+      commonProblems: ['Nozzle wear', 'Brittleness', 'Layer adhesion'],
+      environmentalConcerns: ['CF not recyclable', 'Sulfur content'],
+      whenNotToUse: ['Impact applications', 'Without hardened nozzle', 'Budget projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Chemical processing', 'Semiconductor', 'Oil & gas'],
+      commonApplications: ['Chemical fixtures', 'Pump components', 'Valve bodies'],
+      safetyStandards: ['Inherently UL94 V0'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'Combines PPS chemical inertness with CF stiffness',
+        'Often used where PEEK-CF chemical resistance is insufficient',
+      ],
+      whyInvented: 'For structural parts in aggressive chemical environments.',
+      controversies: [
+        'Brittleness limits applications despite excellent properties',
+      ],
+      marketAdoption: 'Specialized but valuable for chemical processing.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '100-130', unit: 'MPa', implications: 'High with CF.' },
+        { name: 'Tensile Modulus', value: '12000-16000', unit: 'MPa', implications: 'Very stiff.' },
+        { name: 'Elongation at Break', value: '1-2', unit: '%', implications: 'Very brittle.' },
+        { name: 'Chemical Resistance', value: 'Outstanding', unit: '', implications: 'Resists nearly all chemicals.' },
+        { name: 'Heat Deflection', value: '260+', unit: '°C', implications: 'Excellent with CF reinforcement.' },
+      ],
+      notes: 'Very stiff but brittle. Design accordingly.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 310, max: 350, optimal: 330 },
+      bedTemp: { min: 120, max: 150, optimal: 135 },
+      coolingFan: { min: 0, max: 10, notes: 'Minimal cooling.' },
+      enclosure: { required: true, notes: 'REQUIRED. 80-100°C chamber.' },
+      drying: { temp: 150, duration: '6-10 hours', notes: 'Thorough drying critical.' },
+      printSpeed: { recommended: '15-30 mm/s', notes: 'Slower for CF flow.' },
+      additionalNotes: [
+        'Hardened nozzle REQUIRED',
+        'All-metal hotend required',
+        '0.5mm+ nozzle recommended',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI', 'High-temp surfaces'],
+        good: ['Garolite'],
+        poor: ['Standard surfaces'],
+      },
+      releaseAgents: 'Usually releases on cooling.',
+      multiMaterial: [
+        { material: 'PPS', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Not effective', effectiveness: 'Not Possible', notes: 'Chemically inert.' },
+      ],
+      mechanical: ['Machines with carbide tools', 'CF dust precautions'],
+      glues: ['Specialty adhesives', 'Mechanical fastening'],
+      painting: 'Surface activation required.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'PPS fumes plus CF dust concerns.' },
+      foodSafety: { rating: 'Not Safe', notes: 'CF content.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Extremely stable.' },
+    },
+  },
+
+  'PPSU': {
+    name: 'PPSU',
+    fullName: 'Polyphenylsulfone',
+    origin: {
+      yearInvented: '1990s',
+      originalCompany: 'Solvay (Radel brand)',
+      keyMilestones: [
+        '1990s: PPSU developed by Amoco/Solvay',
+        '2000s: Medical device adoption grows',
+        '2018+: PPSU filaments emerge',
+      ],
+      majorManufacturers: ['Solvay (Radel)', '3DXTech', 'BASF'],
+    },
+    composition: {
+      basePolymer: 'Polyphenylsulfone',
+      chemicalFamily: 'Sulfone polymer',
+      keyAdditives: ['Minimal additives in pure grade'],
+      coloringAgents: 'Natural amber, transparent possible',
+      specialFillers: ['None in standard grade'],
+    },
+    familyContext: {
+      parentPolymer: 'PPSU - toughest sulfone polymer',
+      variants: ['PPSU standard', 'PPSU medical grade'],
+      chemicalComparison: 'Highest impact resistance of sulfone family. Better toughness than PSU or PEI.',
+      evolution: 'Developed for applications needing both chemical resistance and toughness.',
+    },
+    strengths: {
+      uniqueProperties: ['Outstanding toughness', 'Excellent chemical resistance', 'Autoclavable', 'Biocompatible grades'],
+      bestUseScenarios: ['Medical instruments', 'Reusable sterilizable parts', 'Impact-resistant chemical equipment'],
+      advantagesOverCompetitors: ['Tougher than PSU', 'Better impact than PEI', 'Excellent steam resistance'],
+      whyChooseThis: 'When both toughness AND chemical/steam resistance are required, especially for medical.',
+    },
+    weaknesses: {
+      limitations: ['Expensive', 'Requires high-temp equipment', 'UV sensitive', 'Notch sensitive'],
+      commonProblems: ['Moisture absorption', 'UV degradation outdoors', 'Printing difficulty'],
+      environmentalConcerns: ['Energy intensive production'],
+      whenNotToUse: ['Outdoor UV exposure', 'Budget applications', 'When PSU suffices'],
+    },
+    practicalContext: {
+      industryAdoption: ['Medical devices', 'Plumbing', 'Food service', 'Aerospace'],
+      commonApplications: ['Surgical instrument trays', 'Reusable medical devices', 'Hot water fittings'],
+      safetyStandards: ['FDA', 'ISO 10993', 'NSF/ANSI 61'],
+      costPosition: 'Industrial',
+    },
+    trivia: {
+      funFacts: [
+        'PPSU is the toughest member of the sulfone polymer family',
+        'Can withstand 1000+ autoclave cycles',
+        'Used for drinking water fittings worldwide',
+      ],
+      whyInvented: 'To provide sulfone chemical resistance with practical toughness.',
+      controversies: [
+        'High cost limits adoption despite excellent properties',
+      ],
+      marketAdoption: 'Standard for reusable medical devices.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '70-75', unit: 'MPa', implications: 'Good strength.' },
+        { name: 'Tensile Modulus', value: '2300-2500', unit: 'MPa', implications: 'Moderate stiffness.' },
+        { name: 'Impact Strength (Notched)', value: '690', unit: 'J/m', implications: 'Outstanding - toughest sulfone.' },
+        { name: 'Heat Deflection', value: '207', unit: '°C', implications: 'Excellent heat resistance.' },
+        { name: 'Steam Resistance', value: '1000+ cycles', unit: '', implications: 'Excellent autoclave durability.' },
+      ],
+      notes: 'The go-to material for reusable, sterilizable medical devices.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 360, max: 400, optimal: 380 },
+      bedTemp: { min: 140, max: 175, optimal: 160 },
+      coolingFan: { min: 0, max: 20, notes: 'Minimal cooling.' },
+      enclosure: { required: true, notes: 'REQUIRED. 90-120°C chamber recommended.' },
+      drying: { temp: 150, duration: '6-10 hours', notes: 'Hygroscopic - thorough drying critical.' },
+      printSpeed: { recommended: '25-40 mm/s', notes: 'Moderate speeds.' },
+      additionalNotes: [
+        'All-metal high-temp hotend required',
+        'Excellent layer adhesion when properly printed',
+        'Great for functional medical prototypes',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI', 'High-temp specialty'],
+        good: ['Garolite', 'Glass with adhesive'],
+        poor: ['Standard surfaces'],
+      },
+      releaseAgents: 'Usually releases on cooling.',
+      multiMaterial: [
+        { material: 'PSU', bondQuality: 'Strong Chemical Bond', notes: 'Same sulfone family.' },
+        { material: 'PEI', bondQuality: 'Mechanical Bond', notes: 'Reasonable compatibility.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Limited options', effectiveness: 'Difficult', notes: 'Chemically resistant.' },
+      ],
+      mechanical: ['Machines well', 'Good surface finish achievable'],
+      glues: ['Epoxy', 'Specialty adhesives', 'Solvent bonding with NMP'],
+      painting: 'Accepts paint after prep.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Good ventilation required.' },
+      foodSafety: { rating: 'FDA Compliant', notes: 'FDA and NSF certified grades available.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Stable polymer.' },
+      additionalNotes: [
+        'Biocompatible (ISO 10993)',
+        'Autoclave safe',
+      ],
+    },
+  },
+
+  'PSU': {
+    name: 'PSU',
+    fullName: 'Polysulfone',
+    origin: {
+      yearInvented: '1965',
+      originalCompany: 'Union Carbide (now Solvay - Udel brand)',
+      keyMilestones: [
+        '1965: PSU developed by Union Carbide',
+        '1970s: Medical and food industry adoption',
+        '2018+: PSU filaments for 3D printing',
+      ],
+      majorManufacturers: ['Solvay (Udel)', 'BASF', '3DXTech'],
+    },
+    composition: {
+      basePolymer: 'Polysulfone',
+      chemicalFamily: 'Sulfone polymer',
+      keyAdditives: ['Minimal in pure grade', 'GF versions available'],
+      coloringAgents: 'Transparent amber natural color',
+      specialFillers: ['Glass fiber in reinforced grades'],
+    },
+    familyContext: {
+      parentPolymer: 'PSU - the original sulfone polymer',
+      variants: ['PSU (Udel)', 'PSU-GF'],
+      chemicalComparison: 'Good balance of properties. Less tough than PPSU, lower temp than PEI.',
+      evolution: 'The first commercial sulfone polymer, still widely used.',
+    },
+    strengths: {
+      uniqueProperties: ['Transparent', 'Excellent hydrolysis resistance', 'Good chemical resistance', 'Autoclavable'],
+      bestUseScenarios: ['Medical equipment', 'Transparent high-temp parts', 'Water handling', 'Food processing'],
+      advantagesOverCompetitors: ['Transparent option', 'Lower cost than PPSU', 'Good steam resistance'],
+      whyChooseThis: 'When transparency, chemical resistance, and steam sterilization are needed.',
+    },
+    weaknesses: {
+      limitations: ['Less tough than PPSU', 'UV sensitive', 'Notch sensitive', 'Stress cracking in some solvents'],
+      commonProblems: ['UV degradation', 'Stress cracking with some chemicals', 'Moisture absorption'],
+      environmentalConcerns: ['Energy intensive production'],
+      whenNotToUse: ['Maximum toughness needed (use PPSU)', 'Outdoor UV exposure', 'Aromatic solvent exposure'],
+    },
+    practicalContext: {
+      industryAdoption: ['Medical', 'Food service', 'Water treatment', 'Electronics'],
+      commonApplications: ['Dialysis equipment', 'Food service items', 'Water filters', 'Electrical connectors'],
+      safetyStandards: ['FDA', 'NSF/ANSI 61', 'Various medical standards'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'PSU was the first commercial sulfone polymer',
+        'Can be naturally transparent at reasonable thicknesses',
+        'Widely used in hemodialysis equipment',
+      ],
+      whyInvented: 'To provide a transparent, steam-resistant engineering plastic.',
+      controversies: [
+        'Often compared unfavorably to PPSU despite different applications',
+      ],
+      marketAdoption: 'Established material in medical and food industries.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '70-75', unit: 'MPa', implications: 'Good strength.' },
+        { name: 'Tensile Modulus', value: '2500-2700', unit: 'MPa', implications: 'Good stiffness.' },
+        { name: 'Impact Strength (Notched)', value: '60-70', unit: 'J/m', implications: 'Moderate - less than PPSU.' },
+        { name: 'Heat Deflection', value: '174', unit: '°C', implications: 'Good heat resistance.' },
+        { name: 'Light Transmission', value: '80+', unit: '%', implications: 'Transparent (amber tinted).' },
+      ],
+      notes: 'Good balance of properties with transparency option.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 340, max: 380, optimal: 360 },
+      bedTemp: { min: 130, max: 160, optimal: 145 },
+      coolingFan: { min: 0, max: 20, notes: 'Minimal cooling.' },
+      enclosure: { required: true, notes: 'REQUIRED. 80-100°C chamber.' },
+      drying: { temp: 140, duration: '6-10 hours', notes: 'Very hygroscopic.' },
+      printSpeed: { recommended: '25-45 mm/s', notes: 'Moderate speeds.' },
+      additionalNotes: [
+        'All-metal hotend required',
+        'Can achieve transparency with proper settings',
+        'Avoid stress concentrators in design',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI', 'High-temp surfaces'],
+        good: ['Garolite', 'Glass with adhesive'],
+        poor: ['Standard surfaces'],
+      },
+      releaseAgents: 'Usually releases on cooling.',
+      multiMaterial: [
+        { material: 'PPSU', bondQuality: 'Strong Chemical Bond', notes: 'Same sulfone family.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Dichloromethane', effectiveness: 'Good', notes: 'Works but toxic. Can affect transparency.' },
+      ],
+      mechanical: ['Polishes well for clarity', 'Machines cleanly'],
+      glues: ['Epoxy', 'Solvent bonding possible', 'Cyanoacrylate'],
+      painting: 'Accepts paint, but often used for transparency.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Good ventilation required.' },
+      foodSafety: { rating: 'FDA Compliant', notes: 'FDA food contact approved.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Stable polymer.' },
+    },
+  },
+
   'PVB': {
     name: 'PVB',
     fullName: 'Polyvinyl Butyral',
