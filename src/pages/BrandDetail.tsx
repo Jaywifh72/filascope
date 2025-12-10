@@ -361,13 +361,18 @@ const BrandDetail = () => {
         group.representativeImage = filament.featured_image;
       }
 
-      // Track price range
+      // Track price range - calculate true per-kg price accounting for pack quantity
       if (filament.variant_price) {
-        if (group.priceRange.min === null || filament.variant_price < group.priceRange.min) {
-          group.priceRange.min = filament.variant_price;
+        const packQty = (filament as any).pack_quantity || 1;
+        const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : 1;
+        const totalWeightKg = weightKg * packQty;
+        const pricePerKg = filament.variant_price / totalWeightKg;
+        
+        if (group.priceRange.min === null || pricePerKg < group.priceRange.min) {
+          group.priceRange.min = pricePerKg;
         }
-        if (group.priceRange.max === null || filament.variant_price > group.priceRange.max) {
-          group.priceRange.max = filament.variant_price;
+        if (group.priceRange.max === null || pricePerKg > group.priceRange.max) {
+          group.priceRange.max = pricePerKg;
         }
       }
     });
