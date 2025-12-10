@@ -87,60 +87,94 @@ async function findTdsUrl(productUrl: string, firecrawlApiKey: string): Promise<
       },
       body: JSON.stringify({
         url: productUrl,
-        formats: ["html", "links"],
+        formats: ["html", "links", "markdown"],
         onlyMainContent: false,
+        waitFor: 2000,
       }),
     });
 
     if (!response.ok) {
-      console.error(`Firecrawl error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Firecrawl error: ${response.status} - ${errorText}`);
       return null;
     }
 
     const data = await response.json();
     const html = data.data?.html || "";
+    const markdown = data.data?.markdown || "";
     const links = data.data?.links || [];
+    
+    console.log(`Found ${links.length} links on page`);
 
-    // First check extracted links
+    // Keywords to look for TDS/datasheet links
+    const tdsKeywords = ["tds", "datasheet", "data-sheet", "technical-data", "spec-sheet", "specifications", "specs"];
+    const documentKeywords = ["download", "document", "pdf", "resources", "support"];
+
+    // First check extracted links for obvious TDS files
     for (const link of links) {
       const lowerLink = link.toLowerCase();
-      if (lowerLink.includes("tds") || lowerLink.includes("datasheet") || lowerLink.includes("technical-data")) {
-        if (lowerLink.endsWith(".pdf")) {
-          console.log(`Found TDS in links: ${link}`);
+      for (const keyword of tdsKeywords) {
+        if (lowerLink.includes(keyword)) {
+          console.log(`Found TDS link with keyword "${keyword}": ${link}`);
           return link;
         }
       }
     }
 
-    // Then search HTML with patterns
-    for (const pattern of TDS_PATTERNS) {
-      pattern.lastIndex = 0;
-      const matches = html.matchAll(pattern);
-      for (const match of matches) {
-        if (match[1]) {
-          let url = match[1];
-          // Make relative URLs absolute
-          if (url.startsWith("/")) {
-            const baseUrl = new URL(productUrl);
-            url = `${baseUrl.origin}${url}`;
+    // Check for PDF links that might be TDS
+    const pdfLinks = links.filter((link: string) => link.toLowerCase().endsWith(".pdf"));
+    console.log(`Found ${pdfLinks.length} PDF links`);
+    
+    if (pdfLinks.length > 0) {
+      // Prioritize PDFs with TDS-related names
+      for (const pdf of pdfLinks) {
+        const filename = pdf.split("/").pop()?.toLowerCase() || "";
+        for (const keyword of [...tdsKeywords, "spec", "data", "sheet", "info"]) {
+          if (filename.includes(keyword)) {
+            console.log(`Found TDS PDF by filename: ${pdf}`);
+            return pdf;
           }
-          console.log(`Found TDS via pattern: ${url}`);
-          return url;
+        }
+      }
+      // Return first PDF if no TDS-specific name found
+      console.log(`Using first PDF found: ${pdfLinks[0]}`);
+      return pdfLinks[0];
+    }
+
+    // Search HTML for embedded PDF links or download buttons
+    const htmlPdfMatches = html.match(/href=["']([^"']+\.pdf)["']/gi) || [];
+    console.log(`Found ${htmlPdfMatches.length} PDF links in HTML`);
+    
+    for (const match of htmlPdfMatches) {
+      const urlMatch = match.match(/href=["']([^"']+)["']/i);
+      if (urlMatch?.[1]) {
+        let url = urlMatch[1];
+        if (url.startsWith("/")) {
+          const baseUrl = new URL(productUrl);
+          url = `${baseUrl.origin}${url}`;
+        }
+        console.log(`Found PDF in HTML: ${url}`);
+        return url;
+      }
+    }
+
+    // Check markdown for any document/download links
+    const markdownLinks = markdown.match(/\[([^\]]+)\]\(([^)]+)\)/g) || [];
+    for (const mdLink of markdownLinks) {
+      const linkMatch = mdLink.match(/\[([^\]]+)\]\(([^)]+)\)/);
+      if (linkMatch) {
+        const text = linkMatch[1].toLowerCase();
+        const url = linkMatch[2];
+        if (text.includes("download") || text.includes("pdf") || text.includes("spec") || text.includes("data")) {
+          console.log(`Found document link in markdown: ${url}`);
+          if (url.endsWith(".pdf") || url.includes(".pdf")) {
+            return url;
+          }
         }
       }
     }
 
-    // Check for links containing PDF that might be TDS
-    for (const link of links) {
-      if (link.toLowerCase().endsWith(".pdf")) {
-        const linkName = link.split("/").pop()?.toLowerCase() || "";
-        if (linkName.includes("spec") || linkName.includes("data") || linkName.includes("sheet")) {
-          console.log(`Found potential TDS PDF: ${link}`);
-          return link;
-        }
-      }
-    }
-
+    console.log(`No TDS found for: ${productUrl}`);
     return null;
   } catch (error) {
     console.error(`Error finding TDS URL:`, error);
