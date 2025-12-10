@@ -1090,12 +1090,12 @@ const Finder = () => {
                         </td>
                         <td className="py-3 px-3 text-right">
                           <span className="font-mono text-sm font-bold text-orange-400">
-                            {displayPricePerKg ? `$${displayPricePerKg.toFixed(2)}/kg` : "—"}
+                            {displayPricePerKg ? `$${displayPricePerKg.toFixed(2)} USD/kg` : "—"}
                           </span>
                         </td>
                         <td className="py-3 px-3 text-right">
                           <span className="font-mono text-sm text-muted-foreground">
-                            {pricePerSpool ? `$${pricePerSpool.toFixed(2)}` : "—"}
+                            {pricePerSpool ? `$${pricePerSpool.toFixed(2)} USD` : "—"}
                           </span>
                         </td>
                         <td className="py-3 px-3 text-center">
@@ -1266,10 +1266,10 @@ const Finder = () => {
                       <span className="text-xs text-orange-400 lg:mb-0 font-medium">True Cost</span>
                       {displayPrice ? (
                         <div>
-                          <p className="font-mono font-bold text-orange-400 text-lg">${displayPrice}/kg</p>
+                          <p className="font-mono font-bold text-orange-400 text-lg">${displayPrice} <span className="text-xs font-medium">USD/kg</span></p>
                           {filament.net_weight_g && (
                             <p className="text-xs text-muted-foreground">
-                              ${(parseFloat(displayPrice) * (filament.net_weight_g / 1000)).toFixed(2)} list
+                              ${(parseFloat(displayPrice) * (filament.net_weight_g / 1000)).toFixed(2)} USD list
                             </p>
                           )}
                         </div>

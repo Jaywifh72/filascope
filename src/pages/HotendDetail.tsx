@@ -317,7 +317,7 @@ export default function NozzleDetail() {
               <CardContent className="p-4 space-y-4">
                 {nozzle.price && (
                   <div className="text-3xl font-bold text-primary">
-                    {nozzle.currency || "USD"} ${nozzle.price.toFixed(2)}
+                    ${nozzle.price.toFixed(2)} <span className="text-lg font-medium">{nozzle.currency || "USD"}</span>
                   </div>
                 )}
                 {nozzle.product_url && (
@@ -396,7 +396,7 @@ export default function NozzleDetail() {
                             {diameter ? `${diameter}mm` : "Unknown"}
                             {variant.price && (
                               <span className="ml-2 text-xs opacity-70">
-                                ${variant.price.toFixed(2)}
+                                ${variant.price.toFixed(2)} USD
                               </span>
                             )}
                           </Button>

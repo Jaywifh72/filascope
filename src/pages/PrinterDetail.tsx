@@ -435,7 +435,7 @@ const PrinterDetail = () => {
                 <div className="flex flex-wrap items-center gap-4 pt-4">
                   {printer.msrp_usd && (
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-primary">${printer.msrp_usd}</span>
+                      <span className="text-4xl font-bold text-primary">${printer.msrp_usd} <span className="text-lg font-medium">USD</span></span>
                       <span className="text-sm text-muted-foreground">MSRP</span>
                     </div>
                   )}
@@ -973,7 +973,7 @@ const PrinterDetail = () => {
                                       {acc.price && (
                                         <div className="flex justify-between pt-1 border-t mt-1">
                                           <span className="text-muted-foreground">Price:</span>
-                                          <span className="font-bold text-primary">${acc.price}</span>
+                                          <span className="font-bold text-primary">${acc.price} {acc.currency || "USD"}</span>
                                         </div>
                                       )}
                                     </div>
@@ -1031,7 +1031,7 @@ const PrinterDetail = () => {
                                     {acc.price && (
                                       <div className="flex justify-between pt-2 border-t">
                                         <span className="text-muted-foreground">Price:</span>
-                                        <span className="font-bold text-primary">${acc.price}</span>
+                                        <span className="font-bold text-primary">${acc.price} {acc.currency || "USD"}</span>
                                       </div>
                                     )}
                                     {acc.price_change_percent !== null && acc.price_change_percent !== undefined && (
@@ -1126,7 +1126,7 @@ const PrinterDetail = () => {
                                     {acc.price && (
                                       <div className="flex justify-between pt-2 border-t">
                                         <span className="text-muted-foreground">Price:</span>
-                                        <span className="font-bold text-primary">${acc.price}</span>
+                                        <span className="font-bold text-primary">${acc.price} {acc.currency || "USD"}</span>
                                       </div>
                                     )}
                                     {acc.price_change_percent !== null && acc.price_change_percent !== undefined && (

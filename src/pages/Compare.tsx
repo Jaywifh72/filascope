@@ -140,7 +140,7 @@ const Compare = () => {
                   </div>
                   {filament.variant_price && filament.net_weight_g && (
                     <div className="text-2xl font-bold text-primary">
-                      ${getPricePerKg(filament.variant_price, filament.net_weight_g)}/kg
+                      ${getPricePerKg(filament.variant_price, filament.net_weight_g)} <span className="text-sm font-medium">USD/kg</span>
                     </div>
                   )}
                   {filament.product_url && (

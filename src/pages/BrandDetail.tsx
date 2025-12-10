@@ -677,8 +677,8 @@ const BrandDetail = () => {
                       {product.priceRange.min && (
                         <div className="text-lg font-bold text-primary">
                           {product.priceRange.min === product.priceRange.max 
-                            ? `$${getPricePerKg(product.priceRange.min)}/kg`
-                            : `$${getPricePerKg(product.priceRange.min)} - $${getPricePerKg(product.priceRange.max)}/kg`
+                            ? `$${getPricePerKg(product.priceRange.min)} USD/kg`
+                            : `$${getPricePerKg(product.priceRange.min)} - $${getPricePerKg(product.priceRange.max)} USD/kg`
                           }
                         </div>
                       )}

@@ -614,8 +614,8 @@ export default function HotendList() {
                                 return (
                                   <span className="font-bold text-primary">
                                     {minPrice === maxPrice 
-                                      ? `$${minPrice.toFixed(2)}` 
-                                      : `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`}
+                                      ? `$${minPrice.toFixed(2)} USD` 
+                                      : `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)} USD`}
                                   </span>
                                 );
                               })()}

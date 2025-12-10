@@ -1116,16 +1116,17 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                       <div className="text-right bg-primary/10 px-6 py-5 rounded-2xl border border-primary/20 shadow-sm">
                         <div className="text-3xl lg:text-4xl font-bold text-primary tracking-tight font-mono">
                           ${pricePerKg}
+                          <span className="text-sm font-semibold text-primary/70 ml-1">USD</span>
                         </div>
                         <div className="text-sm text-muted-foreground font-medium mt-1">per kg</div>
                         {pricePerSpool && (
                           <div className="text-sm text-muted-foreground mt-2">
-                            ${pricePerSpool.toFixed(2)} per spool
+                            ${pricePerSpool.toFixed(2)} USD per spool
                           </div>
                         )}
                         {isMultiPack && totalPackPrice && (
                           <div className="text-sm text-primary/80 mt-2 font-semibold">
-                            📦 {packQuantity}-pack: ${totalPackPrice}
+                            📦 {packQuantity}-pack: ${totalPackPrice} USD
                           </div>
                         )}
                       </div>
@@ -1655,7 +1656,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                                             <div className="pt-2 border-t border-border">
                                               <div className="text-xs flex justify-between">
                                                 <span className="text-muted-foreground">Price:</span>
-                                                <span className="font-medium">${hotend.price}</span>
+                                                <span className="font-medium">${hotend.price} USD</span>
                                               </div>
                                             </div>
                                           )}
@@ -1814,7 +1815,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                                     <div className="pt-2 border-t border-border">
                                       <div className="text-xs flex justify-between">
                                         <span className="text-muted-foreground">Price:</span>
-                                        <span className="font-medium">${plate.price}</span>
+                                        <span className="font-medium">${plate.price} USD</span>
                                       </div>
                                     </div>
                                   )}
@@ -1969,7 +1970,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                                     <div className="pt-2 border-t border-border">
                                       <div className="text-xs flex justify-between">
                                         <span className="text-muted-foreground">Price:</span>
-                                        <span className="font-medium">${ams.price}</span>
+                                        <span className="font-medium">${ams.price} USD</span>
                                       </div>
                                     </div>
                                   )}

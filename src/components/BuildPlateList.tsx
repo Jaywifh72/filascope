@@ -214,7 +214,7 @@ export default function BuildPlateList() {
                         {/* Price */}
                         {plate.price && (
                           <p className="text-primary font-bold">
-                            ${plate.price.toFixed(2)}
+                            ${plate.price.toFixed(2)} <span className="text-sm font-medium">{plate.currency || "USD"}</span>
                           </p>
                         )}
                       </Card>

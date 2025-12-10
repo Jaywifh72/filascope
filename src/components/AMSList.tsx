@@ -213,7 +213,7 @@ export default function AMSList() {
 
                     {/* Price */}
                     {ams.price && (
-                      <p className="text-lg font-bold text-primary">${ams.price}</p>
+                      <p className="text-lg font-bold text-primary">${ams.price} <span className="text-sm font-medium">USD</span></p>
                     )}
                   </Card>
                 </Link>

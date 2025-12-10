@@ -123,7 +123,7 @@ const PrinterCompare = () => {
               )}
               {printer.current_price_usd_store && (
                 <p className="text-lg font-semibold text-primary">
-                  ${printer.current_price_usd_store}
+                  ${printer.current_price_usd_store} <span className="text-sm font-medium">USD</span>
                 </p>
               )}
               {printer.official_product_url && (
