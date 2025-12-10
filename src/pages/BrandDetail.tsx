@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MaterialBadge } from "@/components/MaterialBadge";
 import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, Users, Globe, TrendingUp, Filter, Palette, Loader2 } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { getBrandInfo } from "@/lib/brandInfo";
@@ -667,7 +668,7 @@ const BrandDetail = () => {
                       
                       <div className="flex flex-wrap gap-2">
                         {product.material && (
-                          <Badge variant="secondary">{product.material}</Badge>
+                          <MaterialBadge material={product.material} variant="secondary" />
                         )}
                         <Badge variant="outline">{product.variants.length} color{product.variants.length !== 1 ? 's' : ''}</Badge>
                       </div>

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MaterialBadge } from "@/components/MaterialBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -1134,9 +1135,12 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   {/* Badges */}
                   <div className="flex gap-2 flex-wrap">
                     {filament.material && (
-                      <Badge variant="default" className="text-base px-4 py-1.5 font-semibold">
-                        {filament.material}
-                      </Badge>
+                      <MaterialBadge 
+                        material={filament.material} 
+                        variant="default" 
+                        size="md"
+                        className="text-base px-4 py-1.5 font-semibold"
+                      />
                     )}
                     {filament.diameter_nominal_mm && (
                       <Badge variant="outline" className="text-sm px-3 py-1.5">
