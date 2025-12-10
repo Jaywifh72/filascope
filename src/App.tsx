@@ -10,6 +10,7 @@ import Navbar from "./components/Navbar";
 const Finder = lazy(() => import("./pages/Finder"));
 const Brands = lazy(() => import("./pages/Brands"));
 const Compare = lazy(() => import("./pages/Compare"));
+const MaterialCompare = lazy(() => import("./pages/MaterialCompare"));
 const Matrix = lazy(() => import("./pages/Matrix"));
 const Deals = lazy(() => import("./pages/Deals"));
 const Wizard = lazy(() => import("./pages/Wizard"));
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/brands" element={<Brands />} />
             <Route path="/brands/:brand" element={<BrandDetail />} />
             <Route path="/compare" element={<Compare />} />
+            <Route path="/materials/compare" element={<MaterialCompare />} />
           <Route path="/printers" element={<Printers />} />
           <Route path="/printers/:id" element={<PrinterDetail />} />
           <Route path="/printers/compare" element={<PrinterCompare />} />
