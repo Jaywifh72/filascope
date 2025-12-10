@@ -5608,6 +5608,819 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'CPE+': {
+    name: 'CPE+',
+    fullName: 'Copolyester Plus (High-Temperature Copolyester)',
+    origin: {
+      yearInvented: '2016',
+      originalCompany: 'Ultimaker (co-developed with Eastman)',
+      keyMilestones: [
+        '2008: Eastman develops Tritan copolyester platform',
+        '2016: Ultimaker launches CPE+ with higher heat resistance',
+        '2018: Other manufacturers adopt high-temp copolyester formulations',
+        '2020+: CPE+ becomes standard for demanding copolyester applications',
+      ],
+      majorManufacturers: ['Ultimaker', 'colorFabb', 'Fillamentum', '3DXTech'],
+    },
+    composition: {
+      basePolymer: 'High-temperature copolyester (modified Tritan)',
+      chemicalFamily: 'Copolyester / Modified Polyester',
+      keyAdditives: ['Heat stabilizers', 'Impact modifiers', 'Clarifying agents'],
+      coloringAgents: 'Excellent clarity maintained, can be transparent or colored',
+      specialFillers: ['Rarely filled to maintain transparency and impact properties'],
+    },
+    familyContext: {
+      parentPolymer: 'CPE base - upgraded with higher heat resistance formulation',
+      variants: ['CPE+ standard', 'CPE HG100 (even higher heat)', 'CPE+ colored grades'],
+      chemicalComparison: 'Bridge between CPE and polycarbonate - nearly PC heat resistance with CPE printability.',
+      evolution: 'Direct evolution of CPE for applications requiring higher service temperatures.',
+    },
+    strengths: {
+      uniqueProperties: ['100°C+ heat resistance', 'Maintains clarity at high temps', 'Excellent chemical resistance', 'High impact strength'],
+      bestUseScenarios: ['Automotive parts', 'High-temp containers', 'Dishwasher-safe items', 'Under-hood applications'],
+      advantagesOverCompetitors: ['Easier than PC at similar heat resistance', 'Clearer than standard CPE', 'BPA-free', 'Lower warping than ABS/PC'],
+      whyChooseThis: 'When you need higher heat resistance than PETG/CPE but want to avoid polycarbonate difficulty.',
+    },
+    weaknesses: {
+      limitations: ['Higher print temps than CPE', 'Premium pricing', 'Requires enclosed printer for best results', 'Limited availability'],
+      commonProblems: ['Stringing at high temps', 'Moisture absorption', 'Layer adhesion at lower temps'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable', 'Complex recycling'],
+      whenNotToUse: ['When standard CPE/PETG heat resistance is sufficient', 'Open-frame printers', 'Budget projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Automotive', 'Appliance manufacturing', 'Food service equipment', 'Industrial prototyping'],
+      commonApplications: ['Coffee machine parts', 'Automotive interior trim', 'Dishwasher-safe containers', 'High-temp housings'],
+      safetyStandards: ['FDA food contact grades available', 'BPA-free', 'Dishwasher safe certification'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'CPE+ was developed specifically for parts that need to survive dishwashers',
+        'The "+" designation indicates approximately 30°C higher Tg than standard CPE',
+        'Ultimaker tested CPE+ with actual automotive under-hood conditions',
+      ],
+      whyInvented: 'Created to fill the gap between easy-printing CPE and difficult-printing polycarbonate.',
+      controversies: [
+        'Premium pricing sometimes questioned vs blended materials',
+        'Brand-specific formulations vary significantly in actual heat resistance',
+      ],
+      marketAdoption: 'Growing adoption in automotive prototyping and consumer goods requiring dishwasher safety.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '55-65', unit: 'MPa', implications: 'Good. Slightly higher than standard CPE.' },
+        { name: 'Elongation at Break', value: '80-120', unit: '%', implications: 'Excellent ductility. Will stretch significantly before failure.' },
+        { name: "Young's Modulus", value: '2000-2400', unit: 'MPa', implications: 'Moderate stiffness. Stiffer than CPE.' },
+        { name: 'Impact Strength', value: '90-110', unit: 'kJ/m² (Notched)', implications: 'Excellent impact resistance. Near-polycarbonate performance.' },
+        { name: 'Glass Transition (Tg)', value: '100-115', unit: '°C', implications: 'Key advantage over CPE. Handles boiling water and dishwashers.' },
+        { name: 'Heat Deflection (HDT)', value: '95-110', unit: '°C (0.45 MPa)', implications: 'Good for high-temp applications. Automotive interior approved.' },
+      ],
+      notes: 'Properties vary by manufacturer. Ultimaker CPE+ has published Tg of 108°C.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 260, max: 290, optimal: 275 },
+      bedTemp: { min: 85, max: 110, optimal: 95 },
+      coolingFan: { min: 25, max: 75, notes: 'Moderate cooling. Balance clarity and layer adhesion.' },
+      enclosure: { required: false, notes: 'Recommended for best results. Reduces warping on larger parts.' },
+      drying: { temp: 80, duration: '4-6 hours', notes: 'Hygroscopic. Dry thoroughly before printing.' },
+      printSpeed: { recommended: '35-60 mm/s', notes: 'Slightly slower than CPE for high-temp grades.' },
+      additionalNotes: [
+        'Higher nozzle temps than standard CPE (260-290°C)',
+        'Use release agent on smooth PEI',
+        'Enclosure significantly improves large part success',
+        'Keep filament dry during printing for best clarity',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured) with release agent', 'Glass with adhesive'],
+        good: ['BuildTak', 'Garolite'],
+        poor: ['Bare smooth PEI (will damage surface)'],
+      },
+      releaseAgents: 'Essential on smooth PEI. Windex or glue stick required.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'No Bond', notes: 'Not compatible.' },
+        { material: 'TPU', bondQuality: 'Weak Bond', notes: 'Some mechanical adhesion possible.' },
+        { material: 'CPE', bondQuality: 'Strong Chemical Bond', notes: 'Bonds well to standard CPE.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on CPE+.' },
+        { method: 'Dichloromethane', effectiveness: 'Good', notes: 'Works but extremely hazardous.' },
+      ],
+      mechanical: ['Excellent sanding and polishing', 'Can achieve high clarity finish', 'Machines well'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'Copolyester-specific adhesives'],
+      painting: 'Accepts paint well with light sanding or adhesion promoter.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Low emissions similar to PETG. Standard ventilation sufficient.' },
+      foodSafety: { rating: 'FDA Approved (specific grades)', notes: 'Many CPE+ grades are FDA food contact approved. Verify specific product.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based copolyester.' },
+      additionalNotes: [
+        'BPA-free formulation',
+        'Dishwasher safe after printing',
+        'Low VOC emissions during printing',
+      ],
+    },
+  },
+
+  'CPE-CF': {
+    name: 'CPE-CF',
+    fullName: 'Carbon Fiber Reinforced Copolyester',
+    origin: {
+      yearInvented: '2018',
+      originalCompany: 'Various (3DXTech, Polymaker early adopters)',
+      keyMilestones: [
+        '2015: Carbon fiber PETG established as material class',
+        '2018: CPE-CF variants introduced for higher performance',
+        '2020+: Growing adoption for stiff, chemically resistant parts',
+      ],
+      majorManufacturers: ['3DXTech', 'Polymaker', 'colorFabb', 'Fillamentum'],
+    },
+    composition: {
+      basePolymer: 'Copolyester (CPE matrix)',
+      chemicalFamily: 'Carbon Fiber Reinforced Copolyester',
+      keyAdditives: ['Chopped carbon fiber (15-20%)', 'Coupling agents', 'Processing aids'],
+      coloringAgents: 'Black/dark grey from carbon fiber',
+      specialFillers: ['Carbon fiber (primary)', 'Occasionally glass fiber blends'],
+    },
+    familyContext: {
+      parentPolymer: 'CPE base with carbon fiber reinforcement',
+      variants: ['CPE-CF standard', 'CPE-CF high-flow', 'CPE-CF 20%'],
+      chemicalComparison: 'Combines CPE chemical resistance with carbon fiber stiffness. Better chemical resistance than PETG-CF.',
+      evolution: 'Developed as premium alternative to PETG-CF for demanding applications.',
+    },
+    strengths: {
+      uniqueProperties: ['High stiffness', 'Excellent chemical resistance', 'Low thermal expansion', 'Dimensional stability'],
+      bestUseScenarios: ['Chemical-resistant structural parts', 'Precision tooling', 'Jigs and fixtures', 'Scientific equipment'],
+      advantagesOverCompetitors: ['Better chemical resistance than PETG-CF', 'Higher heat resistance than PETG-CF', 'Premium surface finish'],
+      whyChooseThis: 'When you need carbon fiber stiffness with superior chemical resistance to PETG.',
+    },
+    weaknesses: {
+      limitations: ['Abrasive to nozzles', 'Premium pricing', 'Reduced impact vs unfilled CPE', 'Anisotropic strength'],
+      commonProblems: ['Nozzle wear requires hardened steel', 'Moisture sensitivity', 'Layer adhesion challenges'],
+      environmentalConcerns: ['Not recyclable', 'Carbon fiber disposal issues', 'Petroleum-based'],
+      whenNotToUse: ['When impact resistance is critical', 'Multi-direction loading', 'Budget projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Aerospace prototyping', 'Scientific equipment', 'Precision manufacturing', 'Chemical processing'],
+      commonApplications: ['Chemical-resistant enclosures', 'Lab equipment', 'Precision fixtures', 'Measurement tools'],
+      safetyStandards: ['Industrial use primarily', 'Chemical resistance certifications vary'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'CPE-CF can withstand many solvents that attack ABS-CF',
+        'The combination of stiffness and chemical resistance is rare in FDM materials',
+        'Often used in laboratory automation equipment',
+      ],
+      whyInvented: 'Created for applications requiring both mechanical stiffness and chemical resistance.',
+      controversies: [
+        'Price premium over PETG-CF not always justified for general applications',
+        'Carbon fiber content and type varies significantly between brands',
+      ],
+      marketAdoption: 'Specialized niche - adopted where chemical resistance is critical and PETG-CF is insufficient.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '70-85', unit: 'MPa', implications: 'High. Carbon fiber significantly increases strength.' },
+        { name: 'Elongation at Break', value: '3-6', unit: '%', implications: 'Low due to carbon fiber. Stiff but brittle.' },
+        { name: "Young's Modulus", value: '6000-8000', unit: 'MPa', implications: 'Very stiff. 3-4x higher than unfilled CPE.' },
+        { name: 'Impact Strength', value: '8-15', unit: 'kJ/m² (Notched)', implications: 'Reduced vs unfilled. Carbon fiber decreases toughness.' },
+        { name: 'Glass Transition (Tg)', value: '85-100', unit: '°C', implications: 'Good heat resistance from CPE matrix.' },
+        { name: 'Heat Deflection (HDT)', value: '90-105', unit: '°C (0.45 MPa)', implications: 'Improved with carbon fiber. Good structural stability at temp.' },
+      ],
+      notes: 'Properties highly dependent on carbon fiber content and print orientation.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 255, max: 280, optimal: 270 },
+      bedTemp: { min: 80, max: 100, optimal: 90 },
+      coolingFan: { min: 25, max: 75, notes: 'Moderate cooling for layer adhesion.' },
+      enclosure: { required: false, notes: 'Recommended for larger parts to reduce warping.' },
+      drying: { temp: 70, duration: '4-6 hours', notes: 'Hygroscopic. Dry thoroughly before printing.' },
+      printSpeed: { recommended: '35-60 mm/s', notes: 'Moderate speeds for good layer adhesion.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED - carbon fiber is abrasive',
+        'Minimum 0.4mm nozzle diameter recommended',
+        'Slower speeds improve surface finish',
+        'Keep filament dry throughout printing',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Textured PEI', 'Garolite (G10)'],
+        good: ['Glass with adhesive', 'BuildTak'],
+        poor: ['Bare smooth PEI without release agent'],
+      },
+      releaseAgents: 'Recommended on smooth PEI to prevent surface damage.',
+      multiMaterial: [
+        { material: 'CPE', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility with unfilled CPE.' },
+        { material: 'PETG', bondQuality: 'Weak Bond', notes: 'Some adhesion but not structural.' },
+        { material: 'PLA', bondQuality: 'No Bond', notes: 'Not compatible.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on CPE matrix.' },
+      ],
+      mechanical: ['Sands well but carbon fiber dust is hazardous', 'Wear respiratory protection', 'Can be polished'],
+      glues: ['Cyanoacrylate', 'Epoxy (best)', 'Structural adhesives'],
+      painting: 'Accepts paint well. Prime first for best results.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Carbon fiber particles can be released. Use ventilation.' },
+      foodSafety: { rating: 'Not Food Safe', notes: 'Carbon fiber makes this unsuitable for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Carbon fiber composite - not recyclable.' },
+      additionalNotes: [
+        'Wear respiratory protection when sanding',
+        'Carbon fiber particles are hazardous if inhaled',
+        'Use dust collection or wet sanding',
+      ],
+    },
+  },
+
+  'Pro PCTG': {
+    name: 'Pro PCTG',
+    fullName: 'Professional Grade Polycyclohexylenedimethylene Terephthalate Glycol',
+    origin: {
+      yearInvented: '2010s (filament formulation)',
+      originalCompany: 'Based on Eastman PCTG resins (Tritan family)',
+      keyMilestones: [
+        '2007: Eastman develops Tritan/PCTG platform',
+        '2015: PCTG filaments introduced',
+        '2018: "Pro" formulations with enhanced properties',
+        '2020+: Pro PCTG establishes premium copolyester segment',
+      ],
+      majorManufacturers: ['Polymaker', 'colorFabb', 'Prusament', 'Fillamentum'],
+    },
+    composition: {
+      basePolymer: 'PCTG (modified copolyester)',
+      chemicalFamily: 'Copolyester / Glycol-modified Polyester',
+      keyAdditives: ['Impact modifiers', 'Clarity enhancers', 'Stabilizers'],
+      coloringAgents: 'Excellent optical clarity, transparent to colored options',
+      specialFillers: ['Generally unfilled for clarity', 'Some grades with glass fiber'],
+    },
+    familyContext: {
+      parentPolymer: 'PCTG - cyclohexane-modified PET copolyester (Tritan family)',
+      variants: ['Pro PCTG Standard', 'Pro PCTG Clear', 'Pro PCTG High-Impact'],
+      chemicalComparison: 'Between PETG and CPE - better clarity than PETG, easier than CPE+.',
+      evolution: 'Refined formulation of PCTG for professional 3D printing applications.',
+    },
+    strengths: {
+      uniqueProperties: ['Outstanding optical clarity', 'Excellent impact resistance', 'Good chemical resistance', 'BPA-free'],
+      bestUseScenarios: ['Clear protective covers', 'Display cases', 'Medical models', 'Premium prototypes'],
+      advantagesOverCompetitors: ['Clearer than standard PETG', 'Tougher than PLA', 'Easier than PC', 'Dishwasher safe'],
+      whyChooseThis: 'When optical clarity and impact resistance matter more than maximum heat resistance.',
+    },
+    weaknesses: {
+      limitations: ['Lower heat resistance than CPE+', 'Premium pricing', 'Stringing prone', 'Moisture sensitive'],
+      commonProblems: ['Requires careful retraction tuning', 'Best results need dry filament', 'Can over-adhere to PEI'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable'],
+      whenNotToUse: ['High-temperature applications above 70°C', 'Budget projects', 'When PETG is sufficient'],
+    },
+    practicalContext: {
+      industryAdoption: ['Consumer products', 'Medical', 'Retail displays', 'Packaging prototypes'],
+      commonApplications: ['Clear enclosures', 'Light diffusers', 'Protective covers', 'Display stands'],
+      safetyStandards: ['FDA food contact (Tritan grades)', 'BPA-free certified', 'Medical grades available'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'PCTG can achieve near-acrylic clarity in thin sections',
+        'Tritan-based PCTG replaced polycarbonate in most reusable water bottles',
+        'Pro PCTG was formulated specifically for FDM printability',
+      ],
+      whyInvented: 'Created as a printable alternative to injection-molded Tritan for clear applications.',
+      controversies: [
+        'Marketing distinction between PETG and PCTG sometimes unclear',
+        'Pro designation varies between manufacturers',
+      ],
+      marketAdoption: 'Growing in consumer and medical prototyping where clarity and safety matter.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '48-55', unit: 'MPa', implications: 'Good. Similar to PETG.' },
+        { name: 'Elongation at Break', value: '150-200', unit: '%', implications: 'Excellent ductility. Very tough material.' },
+        { name: "Young's Modulus", value: '1600-2000', unit: 'MPa', implications: 'Moderate stiffness. Slightly flexible.' },
+        { name: 'Impact Strength', value: '100-130', unit: 'kJ/m² (Notched)', implications: 'Outstanding. One of the highest impact ratings in copolyesters.' },
+        { name: 'Glass Transition (Tg)', value: '78-85', unit: '°C', implications: 'Moderate. Lower than CPE+ but sufficient for most applications.' },
+        { name: 'Heat Deflection (HDT)', value: '70-78', unit: '°C (0.45 MPa)', implications: 'Lower than CPE+. Not for high-temp use.' },
+        { name: 'Light Transmission', value: '88-91', unit: '%', implications: 'Excellent. Near-acrylic clarity possible.' },
+      ],
+      notes: 'Optimized for clarity and impact rather than heat resistance.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 240, max: 265, optimal: 255 },
+      bedTemp: { min: 70, max: 85, optimal: 75 },
+      coolingFan: { min: 30, max: 80, notes: 'Moderate to high cooling for clarity.' },
+      enclosure: { required: false, notes: 'Not required. Open frame printers work well.' },
+      drying: { temp: 65, duration: '4-6 hours', notes: 'Hygroscopic. Dry before printing for best clarity.' },
+      printSpeed: { recommended: '40-70 mm/s', notes: 'Standard PETG-like speeds work well.' },
+      additionalNotes: [
+        'Similar print settings to quality PETG',
+        'Tune retraction carefully to minimize stringing',
+        'Use release agent on smooth PEI',
+        'Slower speeds improve optical clarity',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Textured PEI', 'Glass with adhesive'],
+        good: ['BuildTak', 'Blue tape'],
+        poor: ['Bare smooth PEI (sticks too well)'],
+      },
+      releaseAgents: 'Recommended on smooth PEI to prevent surface damage.',
+      multiMaterial: [
+        { material: 'PETG', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility with PETG family.' },
+        { material: 'TPU', bondQuality: 'Weak Bond', notes: 'Some mechanical adhesion.' },
+        { material: 'PLA', bondQuality: 'No Bond', notes: 'Not compatible.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on PCTG.' },
+        { method: 'Ethyl Acetate', effectiveness: 'Difficult', notes: 'Limited effect. Test carefully.' },
+      ],
+      mechanical: ['Sands and polishes to high clarity', 'Can achieve mirror finish', 'Wet sanding recommended'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'E6000'],
+      painting: 'Accepts paint with adhesion promoter or light sanding.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Low emissions. Standard ventilation sufficient.' },
+      foodSafety: { rating: 'FDA Approved (Tritan grades)', notes: 'Tritan-based PCTG is FDA approved for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based copolyester.' },
+      additionalNotes: [
+        'BPA-free - safe for food and beverage',
+        'Can be sterilized with alcohol',
+        'Dishwasher safe for most grades',
+      ],
+    },
+  },
+
+  'CoPoly-CF': {
+    name: 'CoPoly-CF',
+    fullName: 'Carbon Fiber Reinforced Copolyester (Generic)',
+    origin: {
+      yearInvented: '2017-2018',
+      originalCompany: 'Multiple manufacturers simultaneously',
+      keyMilestones: [
+        '2015: Carbon fiber PETG becomes available',
+        '2017: Premium copolyester carbon fiber variants introduced',
+        '2019: CoPoly-CF category established in market',
+      ],
+      majorManufacturers: ['colorFabb', 'Polymaker', '3DXTech', 'Fiberlogy'],
+    },
+    composition: {
+      basePolymer: 'Various copolyester blends',
+      chemicalFamily: 'Carbon Fiber Reinforced Copolyester',
+      keyAdditives: ['Chopped carbon fiber (10-20%)', 'Coupling agents', 'Processing aids'],
+      coloringAgents: 'Black/dark grey from carbon fiber',
+      specialFillers: ['Carbon fiber (primary)'],
+    },
+    familyContext: {
+      parentPolymer: 'Copolyester matrix - varies by manufacturer',
+      variants: ['CoPoly-CF 10%', 'CoPoly-CF 15%', 'CoPoly-CF 20%'],
+      chemicalComparison: 'Generic category covering various CF-reinforced copolyesters between PETG-CF and specialty grades.',
+      evolution: 'Generic classification for premium carbon fiber copolyester materials.',
+    },
+    strengths: {
+      uniqueProperties: ['High stiffness', 'Good chemical resistance', 'Low warping', 'Dimensional stability'],
+      bestUseScenarios: ['Structural parts', 'Fixtures and jigs', 'Enclosures', 'Tooling'],
+      advantagesOverCompetitors: ['Stiffer than unfilled copolyester', 'Better chemical resistance than ABS-CF', 'Lower warping than ABS'],
+      whyChooseThis: 'General-purpose carbon fiber copolyester when specific grade is not critical.',
+    },
+    weaknesses: {
+      limitations: ['Abrasive to nozzles', 'Reduced impact strength', 'Anisotropic properties', 'Variable specs by brand'],
+      commonProblems: ['Nozzle wear', 'Moisture absorption', 'Layer adhesion at low temps'],
+      environmentalConcerns: ['Not recyclable', 'Carbon fiber disposal', 'Petroleum-based'],
+      whenNotToUse: ['Impact-critical applications', 'When specific certification needed', 'Budget projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Prototyping', 'Manufacturing aids', 'Hobbyist structural parts', 'Educational'],
+      commonApplications: ['Camera mounts', 'Drone parts', 'Tool holders', 'Equipment housings'],
+      safetyStandards: ['Varies by manufacturer', 'Generally industrial use'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'CoPoly-CF is a catch-all term for various branded CF copolyester products',
+        'Carbon fiber content and type varies significantly between manufacturers',
+        'Often marketed under brand-specific names like HT-CF, XT-CF, etc.',
+      ],
+      whyInvented: 'Created as generic category for carbon fiber reinforced copolyesters beyond basic PETG-CF.',
+      controversies: [
+        'No standardization in composition or properties',
+        'Brand marketing can be confusing',
+      ],
+      marketAdoption: 'Growing segment as users seek stiffer alternatives to standard copolyesters.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '65-80', unit: 'MPa', implications: 'Good to high depending on formulation.' },
+        { name: 'Elongation at Break', value: '3-8', unit: '%', implications: 'Low due to carbon fiber. Brittle failure mode.' },
+        { name: "Young's Modulus", value: '5500-8000', unit: 'MPa', implications: 'High stiffness. 3-4x base copolyester.' },
+        { name: 'Impact Strength', value: '8-18', unit: 'kJ/m² (Notched)', implications: 'Reduced vs unfilled. Trade-off for stiffness.' },
+        { name: 'Glass Transition (Tg)', value: '80-100', unit: '°C', implications: 'Depends on copolyester matrix.' },
+        { name: 'Heat Deflection (HDT)', value: '85-100', unit: '°C (0.45 MPa)', implications: 'Good. Carbon fiber improves thermal stability.' },
+      ],
+      notes: 'Properties vary significantly between manufacturers. Check specific product datasheets.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 250, max: 280, optimal: 265 },
+      bedTemp: { min: 75, max: 95, optimal: 85 },
+      coolingFan: { min: 25, max: 75, notes: 'Moderate cooling for layer adhesion.' },
+      enclosure: { required: false, notes: 'Recommended for large parts.' },
+      drying: { temp: 70, duration: '4-6 hours', notes: 'Hygroscopic. Dry before printing.' },
+      printSpeed: { recommended: '35-60 mm/s', notes: 'Moderate speeds for quality.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED',
+        'Minimum 0.4mm nozzle diameter',
+        'Settings vary by specific product',
+        'Follow manufacturer recommendations',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Textured PEI', 'Garolite'],
+        good: ['Glass with adhesive', 'BuildTak'],
+        poor: ['Bare smooth PEI'],
+      },
+      releaseAgents: 'Recommended on smooth surfaces.',
+      multiMaterial: [
+        { material: 'Copolyester (unfilled)', bondQuality: 'Strong Chemical Bond', notes: 'Good compatibility.' },
+        { material: 'PETG', bondQuality: 'Mechanical Bond', notes: 'Some adhesion possible.' },
+        { material: 'PLA', bondQuality: 'No Bond', notes: 'Not compatible.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on copolyester.' },
+      ],
+      mechanical: ['Sands well with respiratory protection', 'Can be polished', 'Use wet sanding'],
+      glues: ['Epoxy (best)', 'Cyanoacrylate', 'Structural adhesives'],
+      painting: 'Accepts paint with primer.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Carbon fiber particles possible. Use ventilation.' },
+      foodSafety: { rating: 'Not Food Safe', notes: 'Carbon fiber makes this unsuitable for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Composite material - not recyclable.' },
+      additionalNotes: [
+        'Wear respiratory protection when sanding',
+        'Carbon fiber dust is hazardous',
+        'Use dust collection',
+      ],
+    },
+  },
+
+  'CoPoly-HT': {
+    name: 'CoPoly-HT',
+    fullName: 'High-Temperature Copolyester',
+    origin: {
+      yearInvented: '2016-2017',
+      originalCompany: 'colorFabb (nGen HT), Polymaker (PolyMax PC)',
+      keyMilestones: [
+        '2016: colorFabb launches nGen HT (115°C Tg)',
+        '2017: Other manufacturers release high-temp copolyester variants',
+        '2019: HT copolyester category matures',
+      ],
+      majorManufacturers: ['colorFabb (nGen HT)', 'Polymaker', 'Fiberlogy', 'Fillamentum'],
+    },
+    composition: {
+      basePolymer: 'High-temperature modified copolyester',
+      chemicalFamily: 'Copolyester / Modified Polyester',
+      keyAdditives: ['Heat stabilizers', 'Crystallization modifiers', 'Impact modifiers'],
+      coloringAgents: 'Good clarity available, colored options',
+      specialFillers: ['Generally unfilled', 'Some glass-filled variants'],
+    },
+    familyContext: {
+      parentPolymer: 'Copolyester base with heat-resistant modifications',
+      variants: ['CoPoly-HT Standard', 'CoPoly-HT Clear', 'CoPoly-HT Glass-filled'],
+      chemicalComparison: 'Bridges gap between CPE+ and polycarbonate in heat resistance.',
+      evolution: 'Developed to push copolyester heat resistance toward polycarbonate territory.',
+    },
+    strengths: {
+      uniqueProperties: ['115°C+ Tg possible', 'Good clarity', 'Low warping', 'Easier than PC'],
+      bestUseScenarios: ['Automotive under-hood', 'High-temp enclosures', 'Industrial prototypes', 'Dishwasher-safe parts'],
+      advantagesOverCompetitors: ['Higher heat than CPE+', 'Easier than polycarbonate', 'Low warping', 'Good surface finish'],
+      whyChooseThis: 'When you need maximum heat resistance from copolyester without switching to polycarbonate.',
+    },
+    weaknesses: {
+      limitations: ['Requires enclosure for best results', 'Higher print temps', 'Premium pricing', 'May require annealing'],
+      commonProblems: ['Warping without enclosure', 'Moisture sensitivity', 'Layer adhesion at low chamber temps'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable'],
+      whenNotToUse: ['Open-frame printers', 'When standard PETG heat is sufficient', 'Budget projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Automotive prototyping', 'Industrial equipment', 'Consumer appliances', 'Electrical housings'],
+      commonApplications: ['Under-hood components', 'Coffee machine parts', 'Heat shields', 'LED housings'],
+      safetyStandards: ['UL94 ratings available', 'Automotive interior grades', 'Some food-contact grades'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'colorFabb nGen HT was one of the first 115°C+ Tg copolyesters for FDM',
+        'Some HT copolyesters can be annealed to increase heat resistance further',
+        'HT copolyesters often used as polycarbonate substitute in prototyping',
+      ],
+      whyInvented: 'Created to provide polycarbonate-like heat resistance without PC\'s printing difficulties.',
+      controversies: [
+        'Heat resistance claims sometimes require post-print annealing',
+        'Performance gap between printed and injection molded parts',
+      ],
+      marketAdoption: 'Strong adoption in automotive and appliance prototyping sectors.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '55-65', unit: 'MPa', implications: 'Good. Similar to high-grade CPE.' },
+        { name: 'Elongation at Break', value: '30-80', unit: '%', implications: 'Moderate to good ductility.' },
+        { name: "Young's Modulus", value: '2100-2500', unit: 'MPa', implications: 'Good stiffness. Stiffer than standard copolyester.' },
+        { name: 'Impact Strength', value: '60-90', unit: 'kJ/m² (Notched)', implications: 'Good. Maintains toughness at high temps.' },
+        { name: 'Glass Transition (Tg)', value: '105-120', unit: '°C', implications: 'Excellent. Approaching polycarbonate territory.' },
+        { name: 'Heat Deflection (HDT)', value: '100-115', unit: '°C (0.45 MPa)', implications: 'Very good. Suitable for high-temp applications.' },
+      ],
+      notes: 'Some grades can achieve higher heat resistance with post-print annealing.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 265, max: 295, optimal: 280 },
+      bedTemp: { min: 90, max: 115, optimal: 100 },
+      coolingFan: { min: 20, max: 60, notes: 'Lower cooling for layer adhesion at high temps.' },
+      enclosure: { required: true, notes: 'Strongly recommended. Heated chamber improves results significantly.' },
+      drying: { temp: 80, duration: '4-8 hours', notes: 'Hygroscopic. Dry thoroughly before printing.' },
+      printSpeed: { recommended: '30-55 mm/s', notes: 'Slower speeds for best layer adhesion.' },
+      additionalNotes: [
+        'Higher temps than standard copolyester (265-295°C)',
+        'Enclosure critical for large parts',
+        'Consider annealing for maximum heat resistance',
+        'Use release agent on smooth PEI',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Textured PEI with release agent', 'Glass with strong adhesive'],
+        good: ['Garolite', 'BuildTak'],
+        poor: ['Bare smooth PEI'],
+      },
+      releaseAgents: 'Required on smooth PEI. Use Magigoo or similar.',
+      multiMaterial: [
+        { material: 'CPE/Copolyester', bondQuality: 'Strong Chemical Bond', notes: 'Good compatibility with copolyester family.' },
+        { material: 'PETG', bondQuality: 'Mechanical Bond', notes: 'Some adhesion possible.' },
+        { material: 'PLA', bondQuality: 'No Bond', notes: 'Not compatible.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect.' },
+      ],
+      mechanical: ['Sands well', 'Can be polished', 'Annealing improves heat resistance'],
+      glues: ['Epoxy', 'Cyanoacrylate', 'Copolyester adhesives'],
+      painting: 'Accepts paint well with light sanding.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Higher print temps increase emissions. Use ventilation.' },
+      foodSafety: { rating: 'Check Specific Grade', notes: 'Some grades FDA approved. Verify product specs.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based copolyester.' },
+      additionalNotes: [
+        'Higher temp printing may increase VOC emissions',
+        'Use enclosure with HEPA filtration ideally',
+        'Safe for most industrial applications',
+      ],
+    },
+  },
+
+  'CoPoly-nGen': {
+    name: 'CoPoly-nGen',
+    fullName: 'Eastman Amphora nGen Copolyester',
+    origin: {
+      yearInvented: '2015',
+      originalCompany: 'colorFabb (using Eastman Amphora AM3300)',
+      keyMilestones: [
+        '2014: Eastman develops Amphora AM3300 for 3D printing',
+        '2015: colorFabb launches nGen filament line',
+        '2016: nGen becomes premium copolyester standard',
+        '2018+: Multiple nGen variants (HT, Flex, Lux)',
+      ],
+      majorManufacturers: ['colorFabb (exclusive nGen brand)', 'Eastman (raw material)'],
+    },
+    composition: {
+      basePolymer: 'Eastman Amphora AM3300 copolyester',
+      chemicalFamily: 'Copolyester / Amphora family',
+      keyAdditives: ['Clarity enhancers', 'Processing aids', 'Impact modifiers'],
+      coloringAgents: 'Excellent clarity, vibrant color options',
+      specialFillers: ['Generally unfilled', 'Some specialty variants with additives'],
+    },
+    familyContext: {
+      parentPolymer: 'Eastman Amphora AM3300 - purpose-built for 3D printing',
+      variants: ['nGen Standard', 'nGen HT', 'nGen Flex', 'nGen Lux', 'nGen ColorMorph'],
+      chemicalComparison: 'Amphora was specifically formulated for FDM, unlike repurposed industrial copolyesters.',
+      evolution: 'First copolyester specifically engineered for consumer 3D printing.',
+    },
+    strengths: {
+      uniqueProperties: ['Designed for FDM printing', 'Excellent clarity', 'Low odor', 'Very low warping'],
+      bestUseScenarios: ['Display models', 'Functional prototypes', 'Consumer products', 'Educational'],
+      advantagesOverCompetitors: ['Easier than generic copolyester', 'Lower warping than PETG', 'Better clarity', 'Low odor'],
+      whyChooseThis: 'When you want the easiest-printing premium copolyester with excellent aesthetics.',
+    },
+    weaknesses: {
+      limitations: ['colorFabb exclusive', 'Premium pricing', 'Lower heat resistance than HT variants', 'Stringing prone'],
+      commonProblems: ['Stringing requires retraction tuning', 'Moisture sensitive', 'Can stick too well to PEI'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable'],
+      whenNotToUse: ['High-temperature applications', 'When generic PETG is sufficient', 'Extreme budget constraints'],
+    },
+    practicalContext: {
+      industryAdoption: ['Consumer products', 'Educational', 'Prototyping', 'Art and design'],
+      commonApplications: ['Display cases', 'Consumer housings', 'Light covers', 'Educational models'],
+      safetyStandards: ['Low emissions', 'Styrene-free certification', 'Classroom-safe'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'Amphora was the first copolyester specifically formulated for 3D printing',
+        'nGen is named for "next generation" copolyester',
+        'colorFabb worked directly with Eastman to develop the material',
+        'nGen Lux adds a metallic sheen effect',
+      ],
+      whyInvented: 'Eastman created Amphora to provide a copolyester optimized for FDM rather than adapted from injection molding.',
+      controversies: [
+        'Single-source material raises supply concerns',
+        'Premium pricing compared to generic PETG alternatives',
+      ],
+      marketAdoption: 'Popular in education and consumer products where low emissions and ease of printing matter.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '46-52', unit: 'MPa', implications: 'Good. Comparable to PETG.' },
+        { name: 'Elongation at Break', value: '180-220', unit: '%', implications: 'Excellent ductility. Very tough material.' },
+        { name: "Young's Modulus", value: '1700-1950', unit: 'MPa', implications: 'Moderate stiffness. Slightly flexible.' },
+        { name: 'Impact Strength', value: '95-120', unit: 'kJ/m² (Notched)', implications: 'Excellent. One of the toughest copolyesters.' },
+        { name: 'Glass Transition (Tg)', value: '78-85', unit: '°C', implications: 'Moderate. Standard copolyester range.' },
+        { name: 'Heat Deflection (HDT)', value: '72-80', unit: '°C (0.45 MPa)', implications: 'Standard. Use nGen HT for higher temps.' },
+      ],
+      notes: 'Optimized for printability and impact resistance rather than heat resistance.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 220, max: 250, optimal: 240 },
+      bedTemp: { min: 75, max: 85, optimal: 80 },
+      coolingFan: { min: 40, max: 100, notes: 'Higher cooling than typical copolyester for clarity.' },
+      enclosure: { required: false, notes: 'Not required. Open frame printers work well.' },
+      drying: { temp: 65, duration: '4-6 hours', notes: 'Hygroscopic. Dry for best results.' },
+      printSpeed: { recommended: '40-70 mm/s', notes: 'Prints faster than many copolyesters.' },
+      additionalNotes: [
+        'Lower print temps than typical copolyester (220-250°C)',
+        'Excellent first layer adhesion',
+        'Use release agent on smooth PEI',
+        'Higher fan speeds improve clarity',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Textured PEI', 'Glass with hairspray'],
+        good: ['BuildTak', 'Blue tape'],
+        poor: ['Bare smooth PEI (may damage surface)'],
+      },
+      releaseAgents: 'Recommended on smooth PEI. Hairspray or glue stick work well.',
+      multiMaterial: [
+        { material: 'PETG', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility.' },
+        { material: 'nGen variants', bondQuality: 'Strong Chemical Bond', notes: 'All nGen variants bond well together.' },
+        { material: 'PLA', bondQuality: 'No Bond', notes: 'Not compatible.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on Amphora.' },
+      ],
+      mechanical: ['Sands very well', 'Polishes to high clarity', 'Excellent surface finishing'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'E6000'],
+      painting: 'Accepts paint well with light sanding or adhesion promoter.',
+    },
+    safety: {
+      fumes: { level: 'Very Low', notes: 'Designed for low emissions. Styrene-free.' },
+      foodSafety: { rating: 'Check Specific Color', notes: 'Base material is food-safe. Colorants may vary.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based copolyester.' },
+      additionalNotes: [
+        'Styrene-free formulation',
+        'Designed to be classroom-safe',
+        'Lower emissions than many engineering plastics',
+        'Good choice for educational environments',
+      ],
+    },
+  },
+
+  'CoPoly-XT': {
+    name: 'CoPoly-XT',
+    fullName: 'Cross-linked/Extended Temperature Copolyester',
+    origin: {
+      yearInvented: '2016-2017',
+      originalCompany: 'colorFabb (XT series), others following',
+      keyMilestones: [
+        '2016: colorFabb XT series launched',
+        '2017: XT-CF carbon fiber variant introduced',
+        '2018: Other manufacturers adopt XT-style formulations',
+      ],
+      majorManufacturers: ['colorFabb (XT series)', 'Polymaker', 'Fiberlogy', 'add:north'],
+    },
+    composition: {
+      basePolymer: 'Eastman Amphora-based copolyester (XT formulation)',
+      chemicalFamily: 'Copolyester / Extended Performance',
+      keyAdditives: ['Heat stabilizers', 'Clarity enhancers', 'Impact modifiers'],
+      coloringAgents: 'Good clarity, color options available',
+      specialFillers: ['Carbon fiber (XT-CF)', 'Generally unfilled (XT standard)'],
+    },
+    familyContext: {
+      parentPolymer: 'Based on Eastman Amphora copolyester platform',
+      variants: ['XT Standard', 'XT-CF (carbon fiber)', 'XT Clear'],
+      chemicalComparison: 'Positioned between nGen and nGen HT - better heat resistance than nGen, easier than HT.',
+      evolution: 'Developed as middle-ground option in copolyester performance spectrum.',
+    },
+    strengths: {
+      uniqueProperties: ['Balanced properties', 'Good heat resistance', 'Excellent clarity', 'Low warping'],
+      bestUseScenarios: ['Functional prototypes', 'Consumer products', 'Light-duty engineering', 'Display parts'],
+      advantagesOverCompetitors: ['Easier than HT variants', 'Better heat than standard nGen', 'Good balance of properties'],
+      whyChooseThis: 'When you need better heat resistance than standard copolyester without HT-level complexity.',
+    },
+    weaknesses: {
+      limitations: ['Middle-ground positioning', 'Premium pricing', 'Limited brand availability', 'Stringing prone'],
+      commonProblems: ['Stringing requires tuning', 'Moisture sensitive', 'Can over-adhere to some surfaces'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable'],
+      whenNotToUse: ['When standard PETG is sufficient', 'Maximum heat resistance needed', 'Budget constraints'],
+    },
+    practicalContext: {
+      industryAdoption: ['Prototyping', 'Consumer products', 'Light engineering', 'Hobbyist'],
+      commonApplications: ['Functional prototypes', 'Housings', 'Display cases', 'Tool handles'],
+      safetyStandards: ['Low emissions', 'Generally industrial use'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'XT designation stands for "extended temperature" or "cross-temperature" capability',
+        'XT-CF was one of the first premium carbon fiber copolyester products',
+        'The XT line bridges the gap between hobbyist and professional materials',
+      ],
+      whyInvented: 'Created to offer a step-up from standard copolyester without requiring enclosed printers.',
+      controversies: [
+        'Naming convention can be confusing vs other manufacturer designations',
+        'Performance overlap with other copolyester grades',
+      ],
+      marketAdoption: 'Popular among users wanting better-than-PETG performance without professional equipment.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-58', unit: 'MPa', implications: 'Good. Between nGen and HT grades.' },
+        { name: 'Elongation at Break', value: '100-180', unit: '%', implications: 'Good ductility. Tough material.' },
+        { name: "Young's Modulus", value: '1900-2200', unit: 'MPa', implications: 'Moderate stiffness. Balanced rigidity.' },
+        { name: 'Impact Strength', value: '80-100', unit: 'kJ/m² (Notched)', implications: 'Good impact resistance.' },
+        { name: 'Glass Transition (Tg)', value: '88-98', unit: '°C', implications: 'Good. Better than standard nGen.' },
+        { name: 'Heat Deflection (HDT)', value: '82-95', unit: '°C (0.45 MPa)', implications: 'Good. Improved heat resistance.' },
+      ],
+      notes: 'Middle-ground properties between standard and HT copolyesters.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 240, max: 270, optimal: 255 },
+      bedTemp: { min: 75, max: 90, optimal: 85 },
+      coolingFan: { min: 30, max: 80, notes: 'Moderate to high cooling for clarity.' },
+      enclosure: { required: false, notes: 'Beneficial but not required for most parts.' },
+      drying: { temp: 70, duration: '4-6 hours', notes: 'Hygroscopic. Dry before printing.' },
+      printSpeed: { recommended: '40-65 mm/s', notes: 'Standard copolyester speeds work well.' },
+      additionalNotes: [
+        'Higher temps than nGen, lower than HT',
+        'Enclosure helps for larger parts',
+        'Use release agent on smooth PEI',
+        'Tune retraction to minimize stringing',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Textured PEI', 'Glass with adhesive'],
+        good: ['BuildTak', 'Blue tape'],
+        poor: ['Bare smooth PEI'],
+      },
+      releaseAgents: 'Recommended on smooth PEI.',
+      multiMaterial: [
+        { material: 'nGen/Copolyester', bondQuality: 'Strong Chemical Bond', notes: 'Excellent compatibility with copolyester family.' },
+        { material: 'PETG', bondQuality: 'Strong Chemical Bond', notes: 'Good adhesion to PETG.' },
+        { material: 'PLA', bondQuality: 'No Bond', notes: 'Not compatible.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on copolyester.' },
+      ],
+      mechanical: ['Sands well', 'Can be polished', 'Good surface finishing'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'E6000'],
+      painting: 'Accepts paint with light sanding or adhesion promoter.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Low emissions. Standard ventilation sufficient.' },
+      foodSafety: { rating: 'Check Specific Grade', notes: 'Base material may be food-safe. Verify specific product.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based copolyester.' },
+      additionalNotes: [
+        'Based on Amphora platform - low emissions',
+        'Safe for general use with normal ventilation',
+        'Good choice for classroom or office printing',
+      ],
+    },
+  },
+
   'PEI': {
     name: 'PEI',
     fullName: 'Polyetherimide (Ultem)',
