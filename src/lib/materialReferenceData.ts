@@ -1328,6 +1328,66 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
       ],
       marketAdoption: 'Very niche in 3D printing - only specialists who absolutely need PP properties use it.',
     },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '25-40', unit: 'MPa', implications: 'Moderate. Lower than PLA but with much better fatigue resistance.' },
+        { name: 'Elongation at Break', value: '100-600', unit: '%', implications: 'Very High. Excellent for living hinges and flexible applications.' },
+        { name: "Young's Modulus", value: '1100-1600', unit: 'MPa', implications: 'Low stiffness. Flexible and forgiving material.' },
+        { name: 'Impact Strength', value: 'No Break', unit: '(Notched Izod)', implications: 'Exceptional. PP often doesn\'t break in impact tests.' },
+        { name: 'Glass Transition (Tg)', value: '-10 to 0', unit: '°C', implications: 'Very Low Tg. Remains flexible at cold temperatures.' },
+        { name: 'Heat Deflection (HDT)', value: '100-110', unit: '°C (0.45 MPa)', implications: 'Good heat resistance. Better than PLA and PETG.' },
+        { name: 'Density', value: '0.90-0.91', unit: 'g/cm³', implications: 'Lowest density of commodity plastics - floats on water.' },
+      ],
+      notes: 'Properties vary between homopolymer and copolymer grades. Fatigue resistance is exceptional.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 220, max: 260, optimal: 240 },
+      bedTemp: { min: 80, max: 100, optimal: 90 },
+      coolingFan: { min: 0, max: 50, notes: 'Minimal cooling to prevent warping. Some cooling helps with bridges.' },
+      enclosure: { required: true, notes: 'Highly recommended to prevent warping. Keep ambient temperature stable.' },
+      drying: { temp: 60, duration: '4-6 hours', notes: 'Less hygroscopic than nylon but still benefits from drying.' },
+      printSpeed: { recommended: '20-50 mm/s', notes: 'Slow speeds help with bed adhesion and layer bonding.' },
+      additionalNotes: [
+        'PP-specific build surfaces are MANDATORY',
+        'Standard beds will not work - parts will detach mid-print',
+        'Print on PP tape, PP sheet, or packing tape',
+        'Raft strongly recommended for all prints',
+        'First layer adhesion is the #1 challenge',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PP sheet', 'PP tape', 'Packing tape (PP-based)'],
+        good: ['Specialized PP build plates'],
+        poor: ['PEI', 'Glass', 'Blue tape', 'BuildTak', 'Everything else'],
+      },
+      releaseAgents: 'Not applicable - the challenge is getting PP to STICK, not release.',
+      multiMaterial: [
+        { material: 'TPE/TPU', bondQuality: 'No Bond', notes: 'PP bonds to almost nothing. This is a feature and a bug.' },
+        { material: 'PE', bondQuality: 'Weak Bond', notes: 'Same polyolefin family, slight compatibility.' },
+        { material: 'EVOH', bondQuality: 'Mechanical Bond', notes: 'Used as tie layer in industrial applications.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Xylene', effectiveness: 'Good', notes: 'Works but xylene is highly toxic. Not recommended.' },
+        { method: 'Most Solvents', effectiveness: 'Not Possible', notes: 'PP is chemically resistant to most solvents.' },
+      ],
+      mechanical: ['Sands with difficulty', 'Can be machined', 'Welding/friction welding works well', 'Heat gun welding effective'],
+      glues: ['Hot glue', 'PP-specific adhesives', 'Friction welding', 'Heat staking'],
+      painting: 'Very difficult - requires PP primer or flame treatment. Paint doesn\'t adhere to untreated PP.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'PP has low emissions when printing. Generally considered safe with normal ventilation.' },
+      foodSafety: { rating: 'FDA Approved', notes: 'PP is widely used for food containers. One of the safest food-contact plastics. Microwave safe.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polyolefin. Does not biodegrade but is recyclable (Type 5).' },
+      additionalNotes: [
+        'One of the safest plastics for food contact',
+        'Microwave safe - won\'t leach chemicals when heated',
+        'Recycling code #5 - accepted in many programs',
+        'No BPA or phthalates',
+      ],
+    },
   },
 
   'CPE': {
@@ -1387,6 +1447,64 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
         'Premium pricing sometimes not justified vs standard PETG',
       ],
       marketAdoption: 'Niche premium market - users willing to pay extra for improved properties over PETG.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-60', unit: 'MPa', implications: 'Good. Similar to PETG but with better consistency.' },
+        { name: 'Elongation at Break', value: '100-150', unit: '%', implications: 'High ductility. Will stretch before breaking.' },
+        { name: "Young's Modulus", value: '1800-2200', unit: 'MPa', implications: 'Moderate stiffness. Slightly stiffer than PETG.' },
+        { name: 'Impact Strength', value: '80-100', unit: 'kJ/m² (Notched)', implications: 'Excellent impact resistance, similar to PC.' },
+        { name: 'Glass Transition (Tg)', value: '80-110', unit: '°C', implications: 'Better than PETG. Varies by grade - HG100 has higher Tg.' },
+        { name: 'Heat Deflection (HDT)', value: '75-105', unit: '°C (0.45 MPa)', implications: 'Good heat resistance. Higher-grade CPE exceeds standard PETG significantly.' },
+      ],
+      notes: 'Properties vary between CPE grades. CPE+ and HG100 have significantly higher heat resistance.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 250, max: 280, optimal: 265 },
+      bedTemp: { min: 75, max: 95, optimal: 85 },
+      coolingFan: { min: 25, max: 75, notes: 'Moderate cooling. Less than PETG to maintain clarity and layer adhesion.' },
+      enclosure: { required: false, notes: 'Not required but helps with larger parts and higher-temp grades.' },
+      drying: { temp: 70, duration: '4-6 hours', notes: 'Hygroscopic like PETG. Dry before printing for best results.' },
+      printSpeed: { recommended: '40-70 mm/s', notes: 'Slightly slower than PETG. Slower speeds improve clarity.' },
+      additionalNotes: [
+        'Higher temps than PETG - typically 250-280°C',
+        'CPE+ and HG100 require even higher temperatures',
+        'Use release agent on smooth PEI (Windex, glue stick)',
+        'Stringing similar to PETG - tune retraction carefully',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured) with release agent', 'Glass with adhesive'],
+        good: ['BuildTak', 'Blue tape'],
+        poor: ['Bare smooth PEI (will damage surface)'],
+      },
+      releaseAgents: 'Critical on smooth PEI. Use Windex or glue stick as release agent.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'No Bond', notes: 'Not compatible - similar to PETG behavior.' },
+        { material: 'TPU', bondQuality: 'Weak Bond', notes: 'Some adhesion possible but not structural.' },
+        { material: 'PVA', bondQuality: 'Weak Bond', notes: 'Limited compatibility for supports.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on CPE.' },
+        { method: 'Dichloromethane', effectiveness: 'Good', notes: 'Works but extremely toxic. Professional only.' },
+      ],
+      mechanical: ['Sands well', 'Polishes to high clarity', 'Can achieve near-glass finish', 'Machines cleanly'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'Some plastic cements'],
+      painting: 'Accepts paint after light sanding or primer. Good surface for finishing.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Low emissions similar to PETG. Normal ventilation sufficient.' },
+      foodSafety: { rating: 'FDA Approved (Tritan grades)', notes: 'Tritan-based CPE is FDA food contact approved and BPA-free. Widely used for water bottles.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based copolyester. Not biodegradable but recyclable with proper facilities.' },
+      additionalNotes: [
+        'BPA-free - major selling point over polycarbonate',
+        'Tritan grades specifically formulated for food safety',
+        'Safe for hot and cold food/beverage contact',
+        'Does not leach harmful chemicals',
+      ],
     },
   },
 
@@ -1450,6 +1568,65 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
       ],
       marketAdoption: 'Professional/industrial only - requires $10,000+ printers and aerospace certifications drive adoption.',
     },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '100-115', unit: 'MPa', implications: 'Very High. Stronger than most engineering plastics.' },
+        { name: 'Elongation at Break', value: '50-80', unit: '%', implications: 'Good ductility for a high-performance polymer.' },
+        { name: "Young's Modulus", value: '3000-3500', unit: 'MPa', implications: 'High stiffness. Rigid and dimensionally stable.' },
+        { name: 'Impact Strength', value: '50-65', unit: 'kJ/m² (Notched)', implications: 'Good. Not brittle despite high strength.' },
+        { name: 'Glass Transition (Tg)', value: '215-217', unit: '°C', implications: 'Excellent. One of the highest Tg values in printable plastics.' },
+        { name: 'Heat Deflection (HDT)', value: '200-210', unit: '°C (1.8 MPa)', implications: 'Outstanding heat resistance. Rated for continuous 170°C+ service.' },
+        { name: 'Flammability', value: 'V-0', unit: 'UL94', implications: 'Inherently flame retardant without additives.' },
+      ],
+      notes: 'Ultem 9085 is the aerospace grade with FST (flame, smoke, toxicity) certifications.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 350, max: 390, optimal: 370 },
+      bedTemp: { min: 120, max: 160, optimal: 140 },
+      coolingFan: { min: 0, max: 30, notes: 'Minimal or no cooling. Slow cooling improves layer adhesion.' },
+      enclosure: { required: true, notes: 'MANDATORY. Heated chamber 90-130°C required for proper printing.' },
+      drying: { temp: 150, duration: '4-8 hours', notes: 'Must be thoroughly dried. PEI is hygroscopic. Print from dry box.' },
+      printSpeed: { recommended: '20-40 mm/s', notes: 'Slow speeds for best layer adhesion and part quality.' },
+      additionalNotes: [
+        'All-metal hotend rated for 400°C+ required',
+        'Heated chamber is not optional - parts will warp without it',
+        'Print on PEI sheet or high-temp materials',
+        'Specialized printers (Stratasys Fortus, Intamsys) designed for this',
+        'Consumer printers generally cannot print PEI',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI sheet (high-temp grade)', 'Ultem sheet', 'Garolite at high temp'],
+        good: ['Glass with high-temp adhesive'],
+        poor: ['Standard surfaces - cannot withstand bed temps'],
+      },
+      releaseAgents: 'Usually not needed. Parts release when bed cools. High-temp Kapton tape can help.',
+      multiMaterial: [
+        { material: 'PEEK', bondQuality: 'Weak Bond', notes: 'Different polymer families, limited adhesion.' },
+        { material: 'PC', bondQuality: 'Mechanical Bond', notes: 'Some compatibility at interface.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Most Solvents', effectiveness: 'Not Possible', notes: 'PEI is chemically resistant. Dichloromethane has limited effect.' },
+        { method: 'NMP', effectiveness: 'Difficult', notes: 'N-Methyl-2-pyrrolidone can attack PEI but is very hazardous.' },
+      ],
+      mechanical: ['Machines exceptionally well', 'Can be polished', 'Taps and threads easily', 'Sands with care'],
+      glues: ['Epoxy with surface prep', 'Mechanical fasteners often preferred', 'Ultrasonic welding'],
+      painting: 'Primer required. Surface prep (sanding/plasma) improves adhesion.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Despite high temps, PEI has low emissions. Still requires ventilation for any high-temp printing.' },
+      foodSafety: { rating: 'FDA Approved (Ultem 1010)', notes: 'Ultem 1010 is FDA food contact approved. Can be repeatedly sterilized.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Extremely stable polymer. Does not degrade.' },
+      additionalNotes: [
+        'Biocompatible grades exist for medical implants',
+        'Can be autoclaved and gamma sterilized',
+        'Low smoke and toxicity when burned (FST certified)',
+        'Inherently flame retardant - no additives needed',
+      ],
+    },
   },
 
   'PA-CF': {
@@ -1512,6 +1689,65 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
       ],
       marketAdoption: 'Growing rapidly as hardened nozzles become standard and more printers support it.',
     },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '80-140', unit: 'MPa', implications: 'Very High. Approaches aluminum in specific strength.' },
+        { name: 'Elongation at Break', value: '2-5', unit: '%', implications: 'Low. Stiff and will snap rather than bend. Highly anisotropic.' },
+        { name: "Young's Modulus", value: '6000-12000', unit: 'MPa', implications: 'Very High. Much stiffer than unreinforced nylon. Direction-dependent.' },
+        { name: 'Flexural Strength', value: '130-200', unit: 'MPa', implications: 'Excellent. Resists bending loads very well along fiber direction.' },
+        { name: 'Heat Deflection (HDT)', value: '150-180', unit: '°C (0.45 MPa)', implications: 'Excellent heat resistance from the PA matrix plus carbon reinforcement.' },
+        { name: 'Density', value: '1.15-1.25', unit: 'g/cm³', implications: 'Lightweight. About 40% the density of aluminum.' },
+      ],
+      notes: 'Properties are highly anisotropic - XY direction much stronger than Z. Values shown are for XY orientation.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 260, max: 290, optimal: 275 },
+      bedTemp: { min: 80, max: 110, optimal: 95 },
+      coolingFan: { min: 0, max: 50, notes: 'Minimal cooling helps layer adhesion. Some cooling on overhangs.' },
+      enclosure: { required: true, notes: 'Required to prevent warping and moisture absorption during print.' },
+      drying: { temp: 80, duration: '8-12 hours', notes: 'CRITICAL. PA-CF is extremely hygroscopic. Must print from dry box. Re-dry if exposed for 30+ minutes.' },
+      printSpeed: { recommended: '30-60 mm/s', notes: 'Moderate speeds. Too fast causes poor layer adhesion.' },
+      additionalNotes: [
+        'HARDENED NOZZLE MANDATORY - steel, ruby, or hardened alloy',
+        'Brass nozzle will be destroyed in minutes',
+        'Print from active dry box - not optional',
+        'Enclosure helps maintain consistent conditions',
+        'Consider part orientation carefully due to anisotropy',
+        'Z-strength is a fraction of XY-strength',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Garolite (G10/FR4)', 'PEI (Textured) with adhesive'],
+        good: ['Glass with PA-specific glue', 'BuildTak'],
+        poor: ['Bare glass', 'Smooth PEI without adhesive'],
+      },
+      releaseAgents: 'Usually need adhesive rather than release. PA-specific glues or Magigoo PA work well.',
+      multiMaterial: [
+        { material: 'TPU', bondQuality: 'Mechanical Bond', notes: 'Can print TPU on PA-CF for soft-touch areas.' },
+        { material: 'PVA', bondQuality: 'No Bond', notes: 'PVA doesn\'t work well with high-temp PA-CF.' },
+        { material: 'Standard PA', bondQuality: 'Strong Chemical Bond', notes: 'Unreinforced nylon bonds well for support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Chemical', effectiveness: 'Not Possible', notes: 'Carbon fiber prevents effective chemical smoothing.' },
+      ],
+      mechanical: ['Sands with difficulty (fiber exposure)', 'Machines well with carbide tools', 'Can be drilled and tapped', 'Avoid excessive heat during machining'],
+      glues: ['Epoxy', 'Cyanoacrylate with primer', 'Mechanical fasteners', 'Thread inserts work well'],
+      painting: 'Sanding exposes fibers. Prime before painting. Epoxy coatings work well.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Nylon fumes plus potential carbon fiber particulates. Good ventilation and filtration recommended.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Carbon fibers could potentially shed. Not suitable for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Carbon fiber composite. Cannot be recycled in standard facilities.' },
+      additionalNotes: [
+        'Wear gloves when handling - fibers can cause skin irritation',
+        'Use filtration to capture carbon fiber particulates',
+        'Sanding creates hazardous dust - use respiratory protection',
+        'Dispose of as composite waste, not regular plastic recycling',
+      ],
+    },
   },
 
   'PLA+': {
@@ -1571,6 +1807,63 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
         'Claims often exaggerate improvements over standard PLA',
       ],
       marketAdoption: 'Extremely popular - has largely replaced standard PLA as the default beginner material.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-60', unit: 'MPa', implications: 'Similar to PLA. Main improvement is in toughness, not strength.' },
+        { name: 'Elongation at Break', value: '8-15', unit: '%', implications: 'Improved vs PLA (4-6%). Less brittle but still not flexible.' },
+        { name: "Young's Modulus", value: '2000-2800', unit: 'MPa', implications: 'Slightly lower stiffness than PLA for improved toughness.' },
+        { name: 'Impact Strength', value: '40-80', unit: 'kJ/m² (Notched)', implications: 'Improved. The main benefit - less likely to shatter on impact.' },
+        { name: 'Glass Transition (Tg)', value: '55-65', unit: '°C', implications: 'Similar to PLA. Some brands claim slight improvement.' },
+        { name: 'Heat Deflection (HDT)', value: '55-65', unit: '°C (0.45 MPa)', implications: 'Marginal improvement over standard PLA at best.' },
+      ],
+      notes: 'Properties vary significantly between brands. Test your specific brand for critical applications.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 200, max: 230, optimal: 215 },
+      bedTemp: { min: 45, max: 65, optimal: 55 },
+      coolingFan: { min: 80, max: 100, notes: 'Similar to PLA - high cooling for best detail and bridging.' },
+      enclosure: { required: false, notes: 'Not required. Open air is fine - same as PLA.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Hygroscopic like PLA. Dry if stringing occurs.' },
+      printSpeed: { recommended: '40-100 mm/s', notes: 'Prints as fast as regular PLA. Some high-speed variants available.' },
+      additionalNotes: [
+        'Print settings nearly identical to PLA',
+        'Slightly higher temps may improve layer adhesion',
+        'Same bed surfaces and techniques as PLA work fine',
+        'More forgiving than standard PLA in many cases',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'PEI (Textured)', 'Glass', 'Blue Tape'],
+        good: ['BuildTak', 'Garolite'],
+        poor: ['Bare aluminum'],
+      },
+      releaseAgents: 'Same as PLA - generally not needed on textured PEI. Glue stick on smooth surfaces.',
+      multiMaterial: [
+        { material: 'TPU', bondQuality: 'Strong Chemical Bond', notes: 'Same as PLA - good for soft-touch areas.' },
+        { material: 'PETG', bondQuality: 'No Bond', notes: 'Same incompatibility as standard PLA.' },
+        { material: 'PVA', bondQuality: 'Strong Chemical Bond', notes: 'Works as water-soluble support.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect, same as standard PLA.' },
+        { method: 'THF', effectiveness: 'Good', notes: 'Works but toxic. Same as PLA.' },
+      ],
+      mechanical: ['Sands easily', 'Paints well', 'Can be primed and finished', 'Similar to PLA'],
+      glues: ['Cyanoacrylate (Super Glue)', 'Epoxy', 'PLA welding'],
+      painting: 'Same as PLA - accepts acrylic and enamel paints well. Prime for best results.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Same as PLA - low emissions, generally safe for home use.' },
+      foodSafety: { rating: 'Varies by Brand', notes: 'Some maintain food safety certification, others don\'t disclose additives. Check with manufacturer.' },
+      biodegradability: { rating: 'Reduced vs PLA', notes: 'Additives may reduce biodegradability. Not guaranteed to meet PLA\'s industrial composting standards.' },
+      additionalNotes: [
+        'Generally as safe as standard PLA to print',
+        'Additive disclosure varies by brand',
+        'When in doubt, assume not food-safe',
+      ],
     },
   },
 
@@ -1632,6 +1925,63 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
       ],
       marketAdoption: 'Growing in aerospace as an easier-to-print PEEK alternative, still very specialized.',
     },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '95-115', unit: 'MPa', implications: 'Very High. Comparable to PEEK in many applications.' },
+        { name: 'Elongation at Break', value: '15-30', unit: '%', implications: 'Good ductility. Better than many high-performance polymers.' },
+        { name: "Young's Modulus", value: '3500-4200', unit: 'MPa', implications: 'High stiffness. Rigid and dimensionally stable.' },
+        { name: 'Impact Strength', value: '45-65', unit: 'kJ/m² (Notched)', implications: 'Good. Tough despite high stiffness.' },
+        { name: 'Glass Transition (Tg)', value: '160-165', unit: '°C', implications: 'High. Excellent for high-temperature applications.' },
+        { name: 'Continuous Use Temp', value: '260', unit: '°C', implications: 'Outstanding. Suitable for extreme environment applications.' },
+        { name: 'Melting Point', value: '305-360', unit: '°C', implications: '~30°C lower than PEEK, making it easier to process.' },
+      ],
+      notes: 'PEKK-A (amorphous) has lower strength but better printability. PEKK-C (crystalline) has higher performance but requires annealing.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 340, max: 380, optimal: 360 },
+      bedTemp: { min: 120, max: 160, optimal: 145 },
+      coolingFan: { min: 0, max: 0, notes: 'NO cooling. Controlled cooling is critical for crystallization.' },
+      enclosure: { required: true, notes: 'MANDATORY. Heated chamber 80-120°C required. Lower than PEEK.' },
+      drying: { temp: 120, duration: '4-8 hours', notes: 'Must be thoroughly dried before printing.' },
+      printSpeed: { recommended: '15-35 mm/s', notes: 'Slow speeds for proper layer adhesion and crystallization control.' },
+      additionalNotes: [
+        'All-metal hotend rated for 400°C required',
+        'Easier than PEEK - lower chamber temps needed',
+        'PEKK-A is easier to print, PEKK-C has better properties',
+        'Annealing may be required for crystalline grades',
+        'Still requires specialized high-temp printers',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (high-temp grade)', 'PEKK/PEEK sheet', 'Garolite at high temp'],
+        good: ['Glass with high-temp adhesive'],
+        poor: ['Standard surfaces - cannot withstand temps'],
+      },
+      releaseAgents: 'Usually not needed. Parts release on cooling. High-temp surfaces required.',
+      multiMaterial: [
+        { material: 'PEEK', bondQuality: 'Strong Chemical Bond', notes: 'Same PAEK family. Excellent compatibility.' },
+        { material: 'Carbon Fiber', bondQuality: 'Strong Chemical Bond', notes: 'PEKK-CF is common high-performance composite.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Chemical', effectiveness: 'Not Possible', notes: 'PEKK is chemically resistant like PEEK.' },
+      ],
+      mechanical: ['Machines well', 'Can be polished', 'CNC machining common', 'Accepts threads'],
+      glues: ['Specialty PAEK adhesives', 'Mechanical fastening preferred', 'Epoxy with surface prep'],
+      painting: 'Surface prep required due to chemical inertness. Primer needed.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Low emissions despite high temps. Ventilation still required for high-temp printing.' },
+      foodSafety: { rating: 'Grades Available', notes: 'FDA compliant grades exist. Check specific grade certifications.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Extremely stable polymer. Does not degrade.' },
+      additionalNotes: [
+        'Biocompatible grades available for medical use',
+        'Can be sterilized by multiple methods',
+        'Lower processing temps than PEEK improves safety margin',
+      ],
+    },
   },
 
   'PVB': {
@@ -1691,6 +2041,62 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
         'Smoothing results require practice and proper equipment',
       ],
       marketAdoption: 'Niche market - primarily for users specifically wanting smoothable prints.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '35-45', unit: 'MPa', implications: 'Moderate. Lower than PLA. Not for structural use.' },
+        { name: 'Elongation at Break', value: '20-50', unit: '%', implications: 'Moderate flexibility. More forgiving than PLA.' },
+        { name: "Young's Modulus", value: '1800-2200', unit: 'MPa', implications: 'Moderate stiffness. Slightly softer than PLA.' },
+        { name: 'Impact Strength', value: '40-60', unit: 'kJ/m²', implications: 'Decent. Better than PLA due to slight flexibility.' },
+        { name: 'Glass Transition (Tg)', value: '60-70', unit: '°C', implications: 'Similar to PLA. Not heat resistant.' },
+        { name: 'Optical Clarity', value: '>90', unit: '% transmission', implications: 'Excellent transparency. Main selling point.' },
+      ],
+      notes: 'Mechanical properties are secondary - PVB is chosen for its smoothing capability and optical clarity.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 190, max: 220, optimal: 205 },
+      bedTemp: { min: 45, max: 65, optimal: 55 },
+      coolingFan: { min: 50, max: 100, notes: 'Similar cooling to PLA. Moderate to high cooling.' },
+      enclosure: { required: false, notes: 'Not required. Open air printing works fine.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Hygroscopic. Dry if stringing or bubbles occur.' },
+      printSpeed: { recommended: '30-60 mm/s', notes: 'Slightly slower than PLA for best clarity.' },
+      additionalNotes: [
+        'Prints like PLA - very easy',
+        'Lower layer heights improve clarity',
+        'Post-print IPA smoothing is where the magic happens',
+        'Polysher or DIY vapor chamber for smoothing',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'PEI (Textured)', 'Glass with glue'],
+        good: ['Blue tape', 'BuildTak'],
+        poor: ['Bare glass without adhesive'],
+      },
+      releaseAgents: 'Similar to PLA - usually not needed. Glue stick if adhesion issues.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Weak Bond', notes: 'Some adhesion but not strong.' },
+        { material: 'PVA', bondQuality: 'Weak Bond', notes: 'Related chemistries but different properties.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Isopropyl Alcohol (IPA)', effectiveness: 'Excellent', notes: 'The primary feature! IPA vapor smooths PVB to glass-like finish.' },
+        { method: 'Ethanol', effectiveness: 'Good', notes: 'Also works for smoothing.' },
+      ],
+      mechanical: ['Sands easily', 'Polishes to high clarity', 'Can be buffed', 'Paints after smoothing'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'Plastic cement'],
+      painting: 'Smooth before painting for best results. IPA-smoothed surfaces accept paint well.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Low emissions during printing. IPA smoothing requires ventilation.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'While PVB in windshields is inert, 3D printing PVB may have additives. Not food safe.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based polymer. Does not biodegrade.' },
+      additionalNotes: [
+        'IPA is flammable - proper ventilation and no ignition sources during smoothing',
+        'Polysher device contains IPA mist - keep away from flames',
+        'Much safer than acetone smoothing for ABS',
+      ],
     },
   },
 
@@ -1752,6 +2158,63 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
       ],
       marketAdoption: 'Very limited in 3D printing - TPU dominates the flexible material space.',
     },
+    tdsProfile: {
+      properties: [
+        { name: 'Shore Hardness', value: '20A-90A', unit: '', implications: 'Wide range. Softest TPEs are like rubber bands; firmer ones like pencil erasers.' },
+        { name: 'Tensile Strength', value: '5-25', unit: 'MPa', implications: 'Low-Moderate. Varies greatly with hardness. Softer = weaker.' },
+        { name: 'Elongation at Break', value: '300-800', unit: '%', implications: 'Very High. Stretches significantly before breaking.' },
+        { name: 'Compression Set', value: '20-40', unit: '%', implications: 'Moderate. Returns to shape but some permanent deformation possible.' },
+        { name: 'Temperature Range', value: '-40 to +80', unit: '°C', implications: 'Remains flexible across wide temp range. Softer at high temps.' },
+        { name: 'Abrasion Resistance', value: 'Low-Moderate', unit: '', implications: 'Generally lower than TPU. Wears faster in friction applications.' },
+      ],
+      notes: 'Properties vary enormously between TPE types (SEBS, SBS, TPO, TPV). Always check specific grade.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 200, max: 240, optimal: 220 },
+      bedTemp: { min: 40, max: 70, optimal: 55 },
+      coolingFan: { min: 50, max: 100, notes: 'Moderate cooling helps with stringing. Too much can cause adhesion issues.' },
+      enclosure: { required: false, notes: 'Not required but can help with very soft grades.' },
+      drying: { temp: 50, duration: '4-6 hours', notes: 'Some TPEs are hygroscopic. Dry if issues occur.' },
+      printSpeed: { recommended: '10-25 mm/s', notes: 'VERY SLOW. Fastest way to fail is printing too fast. Direct drive strongly recommended.' },
+      additionalNotes: [
+        'DIRECT DRIVE EXTRUDER ESSENTIAL - Bowden tubes cannot handle soft TPE',
+        'Disable retraction or use minimal retraction (0.5-1mm)',
+        'Print even slower for very soft (<60A) grades',
+        'Constrained filament path crucial - no gaps for filament to escape',
+        'Test prints highly recommended before committing to projects',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Glass with glue stick', 'Blue tape'],
+        good: ['PEI (Textured)', 'BuildTak'],
+        poor: ['Smooth PEI (too much adhesion, damages bed)'],
+      },
+      releaseAgents: 'Glue stick acts as both adhesion promoter and release agent. Makes removal easier.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Mechanical Bond', notes: 'Can print TPE on PLA for soft-touch areas.' },
+        { material: 'PETG', bondQuality: 'Weak Bond', notes: 'Some adhesion possible.' },
+        { material: 'PP', bondQuality: 'No Bond', notes: 'Both are low-surface-energy materials.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Chemical', effectiveness: 'Difficult', notes: 'TPE is generally resistant to common solvents. Not recommended.' },
+      ],
+      mechanical: ['Very difficult to sand', 'Can be trimmed with scissors/knife', 'Heat welding possible', 'Talc powder reduces stickiness'],
+      glues: ['Contact adhesive', 'Specialty TPE adhesives', 'Some cyanoacrylate formulations', 'Hot glue'],
+      painting: 'Difficult - flexible surfaces crack rigid paints. Use flexible paints or dyes.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Most TPEs have low emissions. Always verify with specific grade MSDS.' },
+      foodSafety: { rating: 'Some Grades', notes: 'Medical and food-grade TPEs exist. Must verify specific formulation.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based elastomers. Do not biodegrade.' },
+      additionalNotes: [
+        'Generally skin-safe - used in baby products and medical devices (specific grades)',
+        'Latex-free alternative for sensitive users',
+        'Some people have sensitivities to certain TPE formulations',
+      ],
+    },
   },
 
   'Breakaway': {
@@ -1810,6 +2273,62 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
         'Premium pricing for what is essentially "designed to fail" plastic',
       ],
       marketAdoption: 'Common in professional/prosumer dual-extrusion setups.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '30-45', unit: 'MPa', implications: 'Moderate. Strong enough to support, weak enough to break away.' },
+        { name: 'Elongation at Break', value: '5-15', unit: '%', implications: 'Low-Moderate. Designed to snap rather than stretch.' },
+        { name: 'Interface Adhesion', value: 'Controlled', unit: '', implications: 'Engineered for 50-80% of normal layer adhesion to enable clean separation.' },
+        { name: 'Print Temp Compatibility', value: '190-250', unit: '°C', implications: 'Wide range to match common model materials.' },
+      ],
+      notes: 'Mechanical properties are intentionally engineered for removability, not strength. Specs vary by brand and target material.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 200, max: 250, optimal: 225 },
+      bedTemp: { min: 50, max: 85, optimal: 65 },
+      coolingFan: { min: 50, max: 100, notes: 'Moderate to high cooling. Similar to model material settings.' },
+      enclosure: { required: false, notes: 'Depends on model material requirements, not breakaway itself.' },
+      drying: { temp: 50, duration: '4 hours', notes: 'Moderate sensitivity. Dry if experiencing adhesion issues.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Match or slightly slower than model material.' },
+      additionalNotes: [
+        'Interface distance (Z gap) is CRITICAL - typically 0.1-0.2mm',
+        'Interface layer speed should be slower than infill',
+        'Temperature difference from model material affects breakaway ease',
+        'Test small parts first to calibrate interface settings',
+        'Purge tower required between material switches',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Same as model material'],
+        good: ['PEI', 'Glass', 'Blue tape'],
+        poor: ['N/A - breakaway rarely touches bed directly'],
+      },
+      releaseAgents: 'N/A - breakaway is the release mechanism itself.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Mechanical Bond', notes: 'Most common pairing. Weak controlled bond for easy removal.' },
+        { material: 'PETG', bondQuality: 'Mechanical Bond', notes: 'Works with PETG-compatible breakaway formulations.' },
+        { material: 'ABS', bondQuality: 'Mechanical Bond', notes: 'ABS-specific breakaway available (or use HIPS).' },
+        { material: 'Nylon', bondQuality: 'Mechanical Bond', notes: 'Specialty breakaway materials for high-temp materials.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'N/A', effectiveness: 'Not Possible', notes: 'Breakaway is removed, not smoothed. It\'s waste material.' },
+      ],
+      mechanical: ['Peel by hand', 'Needle-nose pliers for tight spots', 'X-acto knife for cleanup', 'Light sanding of interface marks'],
+      glues: ['Not applicable - material is meant to be discarded'],
+      painting: 'Not applicable.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Similar to model material. Low emissions with normal ventilation.' },
+      foodSafety: { rating: 'N/A', notes: 'Removed before use. Not present in final part.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Creates plastic waste. Not recyclable in standard facilities.' },
+      additionalNotes: [
+        'Safe to handle - no special precautions needed',
+        'Dispose of removed supports as plastic waste',
+        'Some brands exploring compostable breakaway options',
+      ],
     },
   },
 };
