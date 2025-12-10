@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'JPY';
+export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'JPY' | 'CHF' | 'SEK' | 'CNY' | 'KRW' | 'INR' | 'MXN' | 'BRL' | 'NZD';
 
 interface CurrencyInfo {
   code: CurrencyCode;
@@ -16,6 +16,14 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyInfo> = {
   CAD: { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar', rate: 1.36 },
   AUD: { code: 'AUD', symbol: 'A$', name: 'Australian Dollar', rate: 1.53 },
   JPY: { code: 'JPY', symbol: '¥', name: 'Japanese Yen', rate: 149.50 },
+  CHF: { code: 'CHF', symbol: 'Fr', name: 'Swiss Franc', rate: 0.88 },
+  SEK: { code: 'SEK', symbol: 'kr', name: 'Swedish Krona', rate: 10.45 },
+  CNY: { code: 'CNY', symbol: '¥', name: 'Chinese Yuan', rate: 7.24 },
+  KRW: { code: 'KRW', symbol: '₩', name: 'South Korean Won', rate: 1320 },
+  INR: { code: 'INR', symbol: '₹', name: 'Indian Rupee', rate: 83.50 },
+  MXN: { code: 'MXN', symbol: '$', name: 'Mexican Peso', rate: 17.15 },
+  BRL: { code: 'BRL', symbol: 'R$', name: 'Brazilian Real', rate: 4.97 },
+  NZD: { code: 'NZD', symbol: 'NZ$', name: 'New Zealand Dollar', rate: 1.62 },
 };
 
 interface CurrencyContextType {
@@ -36,21 +44,36 @@ const LOCALE_CURRENCY_MAP: Record<string, CurrencyCode> = {
   'en-CA': 'CAD',
   'en-GB': 'GBP',
   'en-AU': 'AUD',
+  'en-NZ': 'NZD',
   'de': 'EUR',
   'de-DE': 'EUR',
   'de-AT': 'EUR',
+  'de-CH': 'CHF',
   'fr': 'EUR',
   'fr-FR': 'EUR',
-  'es': 'EUR',
-  'es-ES': 'EUR',
+  'fr-CH': 'CHF',
   'it': 'EUR',
   'it-IT': 'EUR',
+  'it-CH': 'CHF',
+  'es': 'EUR',
+  'es-ES': 'EUR',
+  'es-MX': 'MXN',
   'nl': 'EUR',
   'nl-NL': 'EUR',
   'pt': 'EUR',
   'pt-PT': 'EUR',
+  'pt-BR': 'BRL',
   'ja': 'JPY',
   'ja-JP': 'JPY',
+  'zh': 'CNY',
+  'zh-CN': 'CNY',
+  'zh-TW': 'CNY',
+  'ko': 'KRW',
+  'ko-KR': 'KRW',
+  'hi': 'INR',
+  'hi-IN': 'INR',
+  'sv': 'SEK',
+  'sv-SE': 'SEK',
 };
 
 function detectCurrencyFromLocale(): CurrencyCode {
@@ -103,8 +126,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     
     const converted = priceInUSD * currencyInfo.rate;
     
-    // JPY doesn't use decimals
-    const decimals = currency === 'JPY' ? 0 : 2;
+    // Currencies that don't use decimals
+    const noDecimalCurrencies: CurrencyCode[] = ['JPY', 'KRW'];
+    const decimals = noDecimalCurrencies.includes(currency) ? 0 : 2;
     const formatted = converted.toFixed(decimals);
     
     if (showCurrency) {
