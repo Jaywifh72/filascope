@@ -91,21 +91,21 @@ const Navbar = () => {
                   <ChevronDown className="w-3 h-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="bg-[#1A1A1A] border-[#333]">
+                <DropdownMenuContent align="start" className="bg-[#1A1A1A] border-[#333]">
                 <DropdownMenuItem asChild>
-                  <Link to="/printers?tab=hotends" className="flex items-center font-mono text-xs">
+                  <Link to="/accessories?tab=hotends" className="flex items-center font-mono text-xs">
                     <Flame className="w-3 h-3 mr-2" />
                     HOTENDS
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/printers?tab=build-plates" className="flex items-center font-mono text-xs">
+                  <Link to="/accessories?tab=build-plates" className="flex items-center font-mono text-xs">
                     <Square className="w-3 h-3 mr-2" />
                     BUILD PLATES
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/printers?tab=ams-mmu" className="flex items-center font-mono text-xs">
+                  <Link to="/accessories?tab=ams" className="flex items-center font-mono text-xs">
                     <Layers className="w-3 h-3 mr-2" />
                     AMS/MMU
                   </Link>
