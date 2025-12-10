@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ArrowLeft, ExternalLink, Thermometer, CircleDot, Wrench, Package, Printer, ImageIcon, AlertTriangle, Link2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { validateProductUrl } from "@/lib/urlValidation";
@@ -39,6 +40,7 @@ export default function NozzleDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getAffiliateUrl } = useAffiliateLinks();
+  const { formatPrice } = useCurrency();
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   
@@ -317,7 +319,7 @@ export default function NozzleDetail() {
               <CardContent className="p-4 space-y-4">
                 {nozzle.price && (
                   <div className="text-3xl font-bold text-primary">
-                    ${nozzle.price.toFixed(2)} <span className="text-lg font-medium">{nozzle.currency || "USD"}</span>
+                    {formatPrice(nozzle.price)}
                   </div>
                 )}
                 {nozzle.product_url && (

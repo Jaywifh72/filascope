@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { LogIn, LogOut, User, Shield, Archive, Database } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/filascope-logo.png";
+import { CurrencySelector } from "@/components/CurrencySelector";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,7 +66,8 @@ const Navbar = () => {
           <div className="flex-1" />
 
           {/* User Actions */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
+            <CurrencySelector />
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useCurrency } from "@/hooks/useCurrency";
 import { 
   checkHotendPrinterCompatibility, 
   checkBuildPlatePrinterCompatibility, 
@@ -57,6 +58,7 @@ const PrinterDetail = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
+  const { formatPrice } = useCurrency();
   
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -435,7 +437,7 @@ const PrinterDetail = () => {
                 <div className="flex flex-wrap items-center gap-4 pt-4">
                   {printer.msrp_usd && (
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-primary">${printer.msrp_usd} <span className="text-lg font-medium">USD</span></span>
+                      <span className="text-4xl font-bold text-primary">{formatPrice(printer.msrp_usd)}</span>
                       <span className="text-sm text-muted-foreground">MSRP</span>
                     </div>
                   )}

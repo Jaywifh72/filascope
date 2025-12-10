@@ -13,6 +13,7 @@ import { ArrowLeft, ExternalLink, Layers, Check, X, ImageIcon, AlertTriangle, Li
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useCurrency } from "@/hooks/useCurrency";
 import { validateProductUrl } from "@/lib/urlValidation";
 
 interface AMSSpecs {
@@ -44,6 +45,7 @@ export default function AMSDetail() {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
   const { getAffiliateUrl } = useAffiliateLinks();
+  const { formatPrice } = useCurrency();
 
   const { data: ams, isLoading } = useQuery({
     queryKey: ["ams-detail", id],

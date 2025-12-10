@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, TrendingDown, Sparkles, AlertTriangle } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { normalizeColorHex } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface Filament {
   id: string;
@@ -22,6 +23,8 @@ interface Filament {
 }
 
 const BentoGrid = () => {
+  const { formatPrice, currencyInfo } = useCurrency();
+  
   // Fetch featured filament (highest rated by value_score)
   const { data: featuredFilament } = useQuery({
     queryKey: ["featured-filament"],
@@ -139,7 +142,7 @@ const BentoGrid = () => {
                   )}
                   {getTrueCost(featuredFilament) && (
                     <span className="font-mono text-lg font-bold text-[#ff6b00]">
-                      ${getTrueCost(featuredFilament)?.toFixed(2)}/kg
+                      {formatPrice(getTrueCost(featuredFilament), false)}/{currencyInfo.code === 'JPY' ? '' : 'kg'}
                     </span>
                   )}
                   {featuredFilament.value_score && (
@@ -196,7 +199,7 @@ const BentoGrid = () => {
               </div>
               {getTrueCost(filament) && (
                 <span className="font-mono text-xs font-bold text-[#ff6b00] shrink-0">
-                  ${getTrueCost(filament)?.toFixed(2)}
+                  {formatPrice(getTrueCost(filament), false)}
                 </span>
               )}
             </Link>
@@ -252,7 +255,7 @@ const BentoGrid = () => {
                 )}
                 {getTrueCost(newArrival) && (
                   <span className="font-mono text-sm font-bold text-[#ff6b00]">
-                    ${getTrueCost(newArrival)?.toFixed(2)}/kg
+                    {formatPrice(getTrueCost(newArrival), false)}/kg
                   </span>
                 )}
               </div>
