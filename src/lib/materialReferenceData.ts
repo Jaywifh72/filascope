@@ -2331,6 +2331,1272 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
       ],
     },
   },
+
+  // ========== SPECIALTY MATERIALS ==========
+
+  'Wood PLA': {
+    name: 'Wood PLA',
+    fullName: 'Wood Fiber Filled Polylactic Acid',
+    origin: {
+      yearInvented: '2012-2013 (3D printing)',
+      originalCompany: 'Multiple early pioneers including colorFabb and LAYWOO-D3',
+      keyMilestones: [
+        '2012: LAYWOO-D3 introduces first wood filament',
+        '2013: colorFabb WoodFill launches',
+        '2015+: Wood PLA becomes mainstream specialty material',
+        '2020+: Multiple wood species variants available',
+      ],
+      majorManufacturers: ['colorFabb', 'Hatchbox', 'Polymaker', 'eSUN', '3D-Fuel', 'FormFutura'],
+    },
+    composition: {
+      basePolymer: 'PLA (Polylactic Acid)',
+      chemicalFamily: 'Filled Thermoplastic Composite',
+      keyAdditives: ['Wood fibers/particles (typically 20-40%)', 'Binding agents', 'Colorants for wood species simulation'],
+      coloringAgents: 'Natural wood tones, some brands use wood flour from specific species',
+      specialFillers: ['Pine', 'Bamboo', 'Cork', 'Cherry', 'Olive', 'Coconut', 'Walnut'],
+    },
+    familyContext: {
+      parentPolymer: 'PLA base with wood fiber reinforcement',
+      variants: ['Pine', 'Bamboo', 'Cork-fill', 'Cherry', 'Olive Wood', 'Coconut', 'Walnut', 'Cedar', 'Ebony'],
+      chemicalComparison: 'Weaker than pure PLA due to fiber discontinuity, but provides unique aesthetic and texture.',
+      evolution: 'From novelty material to established artistic/decorative filament category.',
+    },
+    strengths: {
+      uniqueProperties: ['Natural wood appearance', 'Wood-like smell when printing', 'Can be stained/sanded like real wood', 'Temperature-variable color'],
+      bestUseScenarios: ['Decorative items', 'Artistic projects', 'Furniture accents', 'Wood-look prototypes', 'Film props'],
+      advantagesOverCompetitors: ['Most realistic wood simulation', 'Smells pleasant when printing', 'Easy post-processing', 'Lower environmental impact perception'],
+      whyChooseThis: 'When you want the appearance and feel of wood without actual woodworking, or for unique artistic pieces.',
+    },
+    weaknesses: {
+      limitations: ['Weaker than pure PLA', 'Not for structural parts', 'Prone to clogging', 'Abrasive to nozzles'],
+      commonProblems: ['Nozzle clogging from wood fibers', 'Inconsistent extrusion', 'Stringing', 'Moisture absorption'],
+      environmentalConcerns: ['Wood sourcing varies by brand', 'PLA base still requires industrial composting'],
+      whenNotToUse: ['Structural applications', 'High-stress parts', 'Fine detail prints', 'Outdoor use (degradation)'],
+    },
+    practicalContext: {
+      industryAdoption: ['Art and design', 'Architecture models', 'Film/theater props', 'Custom furniture accents'],
+      commonApplications: ['Decorative bowls', 'Figurines', 'Wall art', 'Furniture prototypes', 'Gift items'],
+      safetyStandards: ['Generally safe but wood dust when sanding requires precaution'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'You can change the color by varying print temperature - higher temps = darker brown',
+        'Some brands use recycled sawmill waste, making it somewhat eco-friendly',
+        'The wood smell comes from volatile compounds in the wood fibers',
+        'Parts can be finished with wood stain, varnish, or oil just like real wood',
+      ],
+      whyInvented: 'Created to bring the aesthetic and tactile qualities of wood to 3D printed objects.',
+      controversies: [
+        'Some "wood" filaments use very little actual wood content',
+        'Nozzle wear claims vary - some say minimal, others report significant wear',
+        'Food safety is questionable due to porous structure and unknown additives',
+      ],
+      marketAdoption: 'Established specialty niche - consistently popular for decorative applications.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '25-40', unit: 'MPa', implications: 'Lower than pure PLA. Wood fibers create weak points.' },
+        { name: 'Elongation at Break', value: '2-5', unit: '%', implications: 'Very brittle. Handle with care.' },
+        { name: 'Wood Content', value: '20-40', unit: '%', implications: 'Higher content = more realistic but harder to print.' },
+        { name: 'Density', value: '1.15-1.25', unit: 'g/cm³', implications: 'Slightly lighter than pure PLA due to wood fibers.' },
+        { name: 'Glass Transition (Tg)', value: '50-55', unit: '°C', implications: 'Lower than pure PLA. Less heat resistant.' },
+      ],
+      notes: 'Properties vary significantly based on wood content and fiber size. Use larger nozzles (0.5mm+) for reliability.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 175, max: 220, optimal: 195 },
+      bedTemp: { min: 45, max: 65, optimal: 55 },
+      coolingFan: { min: 50, max: 100, notes: 'Moderate to high cooling. Similar to PLA.' },
+      enclosure: { required: false, notes: 'Not required. Open air printing works fine.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'More hygroscopic than pure PLA due to wood content.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Slower than pure PLA to prevent clogging and ensure consistent extrusion.' },
+      additionalNotes: [
+        'Use 0.5mm+ nozzle to prevent clogging - wood fibers block smaller nozzles',
+        'Retraction settings may need tuning to prevent clogs',
+        'Temperature affects color - experiment for desired shade',
+        'Clean nozzle regularly during long prints',
+        'Consider hardened nozzle for extended use',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'Glass with glue', 'Blue tape'],
+        good: ['PEI (Textured)', 'BuildTak'],
+        poor: ['Bare glass', 'Bare aluminum'],
+      },
+      releaseAgents: 'Glue stick recommended on smooth surfaces.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer. Good adhesion.' },
+        { material: 'PETG', bondQuality: 'Weak Bond', notes: 'Some adhesion but not structural.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on PLA base.' },
+        { method: 'Wood Stain', effectiveness: 'Excellent', notes: 'Absorbs stain like real wood. Amazing results.' },
+      ],
+      mechanical: ['Sands beautifully like real wood', 'Can be carved or whittled', 'Accepts wood finishes', 'Can be burned/woodgrained'],
+      glues: ['Wood glue works!', 'Cyanoacrylate', 'Epoxy', 'PLA welding'],
+      painting: 'Can be stained, varnished, oiled, or painted. Staining gives most natural results.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Pleasant wood smell. Standard ventilation recommended.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Porous structure harbors bacteria. Unknown additives. Not food safe.' },
+      biodegradability: { rating: 'Partially Enhanced', notes: 'Wood content may improve degradation, but PLA base still requires industrial composting.' },
+      additionalNotes: [
+        'Wear mask when sanding - wood dust is irritating',
+        'Pleasant smell during printing',
+        'Natural material feel makes it popular for gifts',
+      ],
+    },
+  },
+
+  'PLA-Silk': {
+    name: 'PLA-Silk',
+    fullName: 'Silk-Finish Polylactic Acid',
+    origin: {
+      yearInvented: '2017-2018 (3D printing)',
+      originalCompany: 'Multiple - TTYT3D, CC3D, and Chinese manufacturers pioneered the finish',
+      keyMilestones: [
+        '2017: First silk PLA variants appear',
+        '2018: Silk PLA goes viral in 3D printing community',
+        '2019+: Every major brand offers silk variants',
+        '2020+: Dual-color and rainbow silk variants emerge',
+      ],
+      majorManufacturers: ['Eryone', 'TTYT3D', 'Polymaker', 'eSUN', 'Hatchbox', 'Overture', 'Sunlu'],
+    },
+    composition: {
+      basePolymer: 'PLA (Polylactic Acid)',
+      chemicalFamily: 'Modified Thermoplastic with Metallic/Pearlescent Additives',
+      keyAdditives: ['Metallic pigments', 'Pearlescent powders', 'Specialized colorants', 'Optical brighteners'],
+      coloringAgents: 'Metallic flakes and pearlescent particles that create depth and shimmer',
+      specialFillers: ['Generally unfilled - additives are for appearance only'],
+    },
+    familyContext: {
+      parentPolymer: 'PLA base with cosmetic additives',
+      variants: ['Single-color Silk', 'Dual-color Silk', 'Rainbow Silk', 'Silk Metallic', 'Silk Shiny', 'Magic Silk'],
+      chemicalComparison: 'Slightly different properties than pure PLA due to additives, but prints similarly.',
+      evolution: 'From novelty to one of the most popular specialty PLA variants for decorative printing.',
+    },
+    strengths: {
+      uniqueProperties: ['Stunning metallic/shiny finish', 'No post-processing needed', 'Deep color depth', 'Eye-catching appearance'],
+      bestUseScenarios: ['Display pieces', 'Vases', 'Decorative items', 'Gifts', 'Cosplay accessories', 'Art projects'],
+      advantagesOverCompetitors: ['Instant beauty - no finishing needed', 'Wide color range', 'Easy to print', 'Affordable'],
+      whyChooseThis: 'When you want the most visually impressive prints possible with zero post-processing.',
+    },
+    weaknesses: {
+      limitations: ['Slightly weaker than standard PLA', 'Shiny finish shows layer lines', 'Limited to decorative use'],
+      commonProblems: ['Can be stringy', 'Slightly higher temps needed', 'Detail can be lost in shimmer'],
+      environmentalConcerns: ['Metallic additives may affect biodegradability', 'Not truly compostable'],
+      whenNotToUse: ['Structural parts', 'Precise mechanical fits', 'When matte finish is desired'],
+    },
+    practicalContext: {
+      industryAdoption: ['Consumer products', 'Art', 'Gifts', 'Decorative items'],
+      commonApplications: ['Vases', 'Figurines', 'Jewelry', 'Display models', 'Home decor', 'Gift items'],
+      safetyStandards: ['Generally safe to print'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'The "silk" effect comes from metallic flakes aligning during extrusion',
+        'Printing temperature affects the shininess - higher can mean shinier',
+        'Silk PLA went viral on social media, driving massive demand',
+        'Some brands achieve the effect with different additive formulations',
+      ],
+      whyInvented: 'Created to provide stunning visual results without any post-processing requirements.',
+      controversies: [
+        'Quality varies enormously between brands',
+        'Some "silk" PLAs are just slightly shiny, not truly metallic',
+        'Mechanical properties sometimes compromised for appearance',
+      ],
+      marketAdoption: 'Explosive growth - now one of the most popular specialty PLA types.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '40-55', unit: 'MPa', implications: 'Slightly lower than pure PLA due to additives.' },
+        { name: 'Elongation at Break', value: '3-6', unit: '%', implications: 'Brittle like standard PLA.' },
+        { name: 'Surface Finish', value: 'High Gloss', unit: '', implications: 'The defining characteristic. Metallic sheen built-in.' },
+        { name: 'Glass Transition (Tg)', value: '55-60', unit: '°C', implications: 'Same as standard PLA.' },
+      ],
+      notes: 'Silk PLA is chosen for aesthetics, not mechanical properties. Properties secondary to appearance.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 200, max: 230, optimal: 215 },
+      bedTemp: { min: 50, max: 65, optimal: 55 },
+      coolingFan: { min: 80, max: 100, notes: 'High cooling maintains the silk finish quality.' },
+      enclosure: { required: false, notes: 'Not required. Standard PLA printing.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Similar to standard PLA.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Moderate speeds for best finish. Slower on details.' },
+      additionalNotes: [
+        'Slightly higher temps than regular PLA improve flow and shine',
+        'Print walls slightly slower for best surface finish',
+        'Layer height affects shimmer appearance',
+        'Ironing can enhance the silk effect on top surfaces',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'PEI (Textured)', 'Glass', 'Blue Tape'],
+        good: ['BuildTak'],
+        poor: ['Bare aluminum'],
+      },
+      releaseAgents: 'Same as standard PLA.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer.' },
+        { material: 'Matte PLA', bondQuality: 'Strong Chemical Bond', notes: 'Great for contrast effects.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on PLA base.' },
+      ],
+      mechanical: ['Light sanding removes silk effect', 'Can be clear coated', 'Polishing enhances shine'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'PLA welding'],
+      painting: 'Painting defeats the purpose - the silk finish IS the feature. Clear coat to protect if needed.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Same as standard PLA.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Metallic additives not food-safe certified.' },
+      biodegradability: { rating: 'Reduced', notes: 'Metallic additives may interfere with composting.' },
+    },
+  },
+
+  'PLA-Glow': {
+    name: 'PLA-Glow',
+    fullName: 'Glow-in-the-Dark Polylactic Acid',
+    origin: {
+      yearInvented: '2013-2014 (3D printing)',
+      originalCompany: 'Multiple manufacturers - phosphorescent pigments added to PLA',
+      keyMilestones: [
+        '2013: First glow PLA filaments appear',
+        '2015+: Improved formulations with brighter, longer glow',
+        '2018+: Multiple glow colors available (green, blue, purple)',
+      ],
+      majorManufacturers: ['Gizmo Dorks', 'CC3D', 'eSUN', 'Hatchbox', 'Polymaker', 'Amolen'],
+    },
+    composition: {
+      basePolymer: 'PLA (Polylactic Acid)',
+      chemicalFamily: 'Phosphorescent-Filled Thermoplastic',
+      keyAdditives: ['Strontium aluminate phosphors (modern)', 'Zinc sulfide (older/cheaper)', 'Europium or dysprosium dopants'],
+      coloringAgents: 'Phosphorescent pigments - yellow-green most common and brightest',
+      specialFillers: ['Phosphorescent particles - typically 10-30% by weight'],
+    },
+    familyContext: {
+      parentPolymer: 'PLA base with phosphorescent particles',
+      variants: ['Green Glow', 'Blue Glow', 'Purple Glow', 'Aqua Glow', 'White/Green Glow'],
+      chemicalComparison: 'Similar to other filled PLAs. Phosphor particles are abrasive like glass or carbon fiber.',
+      evolution: 'From novelty to practical safety and decorative applications.',
+    },
+    strengths: {
+      uniqueProperties: ['Glows in the dark', 'Charges in any light', 'Long afterglow (hours)', 'Attention-grabbing'],
+      bestUseScenarios: ['Night visibility items', 'Toys', 'Safety markers', 'Halloween decorations', 'Astronomy accessories'],
+      advantagesOverCompetitors: ['Fun and functional', 'No batteries needed', 'Rechargeable by light', 'Kid-safe'],
+      whyChooseThis: 'When you need parts visible in the dark or want that magical glow effect.',
+    },
+    weaknesses: {
+      limitations: ['Very abrasive - wears nozzles', 'Weaker than pure PLA', 'Limited color options', 'Glow fades over time'],
+      commonProblems: ['Rapid nozzle wear', 'Inconsistent glow intensity', 'Clumpy extrusion', 'Brittle parts'],
+      environmentalConcerns: ['Phosphor particles not biodegradable', 'May complicate recycling'],
+      whenNotToUse: ['Structural parts', 'When using brass nozzle long-term', 'Precision mechanical parts'],
+    },
+    practicalContext: {
+      industryAdoption: ['Consumer products', 'Safety equipment', 'Toys', 'Novelty items'],
+      commonApplications: ['Light switch covers', 'Stair markers', 'Toy parts', 'Halloween props', 'Keychains', 'Exit signs'],
+      safetyStandards: ['Strontium aluminate is non-toxic and non-radioactive'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'Modern glow materials can glow for 8+ hours after brief light exposure',
+        'Green-yellow glow is brightest because human eyes are most sensitive to it',
+        'Strontium aluminate replaced zinc sulfide - 10x brighter, 10x longer glow',
+        'Direct sunlight charges faster than indoor lighting',
+      ],
+      whyInvented: 'Created for safety applications and novelty items requiring visibility in darkness.',
+      controversies: [
+        'Older zinc sulfide versions contained trace radioactive materials',
+        'Nozzle wear is often underestimated - can destroy a brass nozzle quickly',
+        'Glow intensity claims are often exaggerated in marketing',
+      ],
+      marketAdoption: 'Steady niche - consistently popular for specific applications.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '30-45', unit: 'MPa', implications: 'Lower than pure PLA. Phosphor particles create weak points.' },
+        { name: 'Elongation at Break', value: '2-4', unit: '%', implications: 'Very brittle. Phosphor loading reduces flexibility.' },
+        { name: 'Phosphor Content', value: '10-30', unit: '%', implications: 'More phosphor = brighter glow but weaker material.' },
+        { name: 'Glow Duration', value: '4-12', unit: 'hours', implications: 'Modern strontium aluminate provides long-lasting glow.' },
+        { name: 'Abrasiveness', value: 'High', unit: '', implications: 'REQUIRES hardened nozzle for any significant use.' },
+      ],
+      notes: 'Glow properties vary by phosphor type, particle size, and loading percentage. Strontium aluminate is far superior to zinc sulfide.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 195, max: 225, optimal: 210 },
+      bedTemp: { min: 50, max: 65, optimal: 55 },
+      coolingFan: { min: 80, max: 100, notes: 'Same as regular PLA - high cooling.' },
+      enclosure: { required: false, notes: 'Not required.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Similar to standard PLA.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Slower to ensure consistent extrusion with abrasive particles.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED - brass will wear quickly',
+        'Use 0.5mm+ nozzle to prevent clogging',
+        'Clean nozzle before switching to other materials',
+        'Charge prints under bright light for best glow',
+        'UV light charges faster than visible light',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'PEI (Textured)', 'Glass with glue'],
+        good: ['Blue tape', 'BuildTak'],
+        poor: ['Bare glass'],
+      },
+      releaseAgents: 'Same as standard PLA.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer.' },
+        { material: 'Clear PLA', bondQuality: 'Strong Chemical Bond', notes: 'Can create interesting glow effects.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on PLA base.' },
+      ],
+      mechanical: ['Sanding possible but reduces glow', 'Can be clear-coated', 'Polish carefully'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'PLA welding'],
+      painting: 'Painting covers the glow effect. Use clear coat if protection needed.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Same as standard PLA.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Phosphor particles not certified food-safe.' },
+      biodegradability: { rating: 'Reduced', notes: 'Inorganic phosphor particles do not biodegrade.' },
+      additionalNotes: [
+        'Modern strontium aluminate is non-toxic',
+        'Avoid older zinc sulfide variants with radioactive additives',
+        'Safe for children\'s toys (modern formulations)',
+      ],
+    },
+  },
+
+  'PLA-Metal': {
+    name: 'PLA-Metal',
+    fullName: 'Metal-Filled Polylactic Acid',
+    origin: {
+      yearInvented: '2014-2015 (3D printing)',
+      originalCompany: 'colorFabb (BrassFill, CopperFill, SteelFill) pioneered commercial offerings',
+      keyMilestones: [
+        '2014: colorFabb launches MetalFill line',
+        '2015: Proto-pasta introduces composite metal PLA',
+        '2017+: Multiple manufacturers offer metal variants',
+        '2020+: Improved formulations with higher metal content',
+      ],
+      majorManufacturers: ['colorFabb', 'Proto-pasta', 'The Virtual Foundry', 'FormFutura', 'eSUN'],
+    },
+    composition: {
+      basePolymer: 'PLA (Polylactic Acid)',
+      chemicalFamily: 'Metal Particle-Filled Thermoplastic Composite',
+      keyAdditives: ['Metal powders (40-80% by weight)', 'Binding agents', 'Flow modifiers'],
+      coloringAgents: 'The metal powder itself provides color',
+      specialFillers: ['Bronze', 'Copper', 'Brass', 'Stainless Steel', 'Iron', 'Aluminum'],
+    },
+    familyContext: {
+      parentPolymer: 'PLA binder with high metal particle loading',
+      variants: ['Bronze PLA', 'Copper PLA', 'Brass PLA', 'Steel PLA', 'Iron PLA', 'Aluminum PLA'],
+      chemicalComparison: 'Much heavier and denser than standard PLA. Metal content provides unique properties.',
+      evolution: 'From novelty to legitimate metal-appearance solution without metal printing costs.',
+    },
+    strengths: {
+      uniqueProperties: ['Real metal appearance and weight', 'Can develop patina', 'Conducts heat', 'Unique tactile feel'],
+      bestUseScenarios: ['Sculptures', 'Props', 'Jewelry', 'Decorative hardware', 'Antique reproductions'],
+      advantagesOverCompetitors: ['Fraction of metal printing cost', 'Standard printer compatible', 'Polishes to metal finish', 'Real weight and feel'],
+      whyChooseThis: 'When you want the look, weight, and feel of metal without metal printing equipment.',
+    },
+    weaknesses: {
+      limitations: ['Very abrasive', 'Heavy = slow printing', 'Expensive', 'Brittle', 'Not actually metal strength'],
+      commonProblems: ['Rapid nozzle wear', 'Clogging', 'Stringing', 'Delamination with improper settings'],
+      environmentalConcerns: ['Metal particles in waste', 'High embodied energy in metal production'],
+      whenNotToUse: ['Structural applications', 'When actual metal is needed', 'Cost-sensitive projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Art', 'Props/costumes', 'Jewelry prototyping', 'Decorative items'],
+      commonApplications: ['Statues', 'Figurines', 'Hardware replicas', 'Costume jewelry', 'Film props', 'Awards/trophies'],
+      safetyStandards: ['Generally safe - metal powders are inert in bound form'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'Copper-fill can develop real verdigris patina over time',
+        'Parts are significantly heavier than standard PLA - feels like real metal',
+        'You can use liver of sulfur to antique bronze and copper fills',
+        'Some brands achieve 80%+ metal content for truly metallic feel',
+      ],
+      whyInvented: 'Created to bring metal aesthetics to FDM printing without expensive metal printers.',
+      controversies: [
+        'Metal content varies wildly between brands',
+        'Nozzle wear more severe than most users expect',
+        'Polishing required for true metal appearance - raw prints look plastic',
+      ],
+      marketAdoption: 'Established niche for artists and prop makers.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '15-30', unit: 'MPa', implications: 'Much weaker than pure PLA. Metal particles don\'t bond like polymers.' },
+        { name: 'Elongation at Break', value: '1-3', unit: '%', implications: 'Extremely brittle. Handle with care.' },
+        { name: 'Density', value: '2.5-6.0', unit: 'g/cm³', implications: '2-5x heavier than standard PLA. Significant weight.' },
+        { name: 'Metal Content', value: '40-80', unit: '%', implications: 'Higher content = more metallic but harder to print.' },
+        { name: 'Abrasiveness', value: 'Very High', unit: '', implications: 'HARDENED NOZZLE MANDATORY.' },
+      ],
+      notes: 'Properties vary significantly with metal type and content. All metal PLA is brittle and abrasive.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 195, max: 230, optimal: 210 },
+      bedTemp: { min: 50, max: 65, optimal: 55 },
+      coolingFan: { min: 50, max: 100, notes: 'Moderate to high. High metal content may need reduced cooling.' },
+      enclosure: { required: false, notes: 'Not required but can help with large parts.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Standard PLA drying protocol.' },
+      printSpeed: { recommended: '20-40 mm/s', notes: 'Slow for consistent extrusion. Heavy material = more inertia.' },
+      additionalNotes: [
+        'HARDENED NOZZLE ABSOLUTELY REQUIRED',
+        'Use 0.5mm+ nozzle to prevent clogging',
+        'Print slower than normal - heavy material has more momentum',
+        'Increase flow rate slightly (105-110%) to compensate for density',
+        'Supports are harder to remove than standard PLA',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Glass with glue', 'Blue tape'],
+        good: ['PEI (Smooth)', 'BuildTak'],
+        poor: ['Bare glass - weight can cause warping'],
+      },
+      releaseAgents: 'Glue stick helps. Parts are heavy - ensure good adhesion.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Mechanical Bond', notes: 'Reasonable adhesion but different shrinkage.' },
+        { material: 'Different metals', bondQuality: 'Weak Bond', notes: 'Can combine metals for multi-metal look.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on PLA base.' },
+        { method: 'Patina solutions', effectiveness: 'Excellent', notes: 'Liver of sulfur, vinegar, etc. for aging effect.' },
+      ],
+      mechanical: ['Steel wool polishing essential', 'Brass brush creates metal shine', 'Burnishing works', 'Can use metal polish'],
+      glues: ['Epoxy (metal-filled)', 'Cyanoacrylate', 'Mechanical fastening'],
+      painting: 'Usually not painted - polishing is the finish. Clear coat protects polish.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Similar to PLA. Metal is bound in polymer.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Metal particles may leach. Not food-safe.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Metal particles prevent composting.' },
+      additionalNotes: [
+        'Wear gloves when polishing - metal dust is irritating',
+        'Dust mask recommended for extended polishing',
+        'Wash hands after handling raw/polished parts',
+      ],
+    },
+  },
+
+  'PLA-Marble': {
+    name: 'PLA-Marble',
+    fullName: 'Marble-Effect Polylactic Acid',
+    origin: {
+      yearInvented: '2017-2018 (3D printing)',
+      originalCompany: 'Multiple manufacturers developed similar concepts',
+      keyMilestones: [
+        '2017: First marble-look filaments appear',
+        '2018+: Stone/marble PLA becomes established category',
+        '2020+: Multiple variants (granite, marble, stone) available',
+      ],
+      majorManufacturers: ['Sunlu', 'Eryone', 'eSUN', 'Polymaker', 'Hatchbox', 'Ziro'],
+    },
+    composition: {
+      basePolymer: 'PLA (Polylactic Acid)',
+      chemicalFamily: 'Multi-Pigment Filled Thermoplastic',
+      keyAdditives: ['Contrasting color particles', 'Mineral-like pigments', 'Sometimes actual stone powder'],
+      coloringAgents: 'Randomly dispersed pigment particles create veining effect',
+      specialFillers: ['Some contain actual mineral powder', 'Most use only pigments'],
+    },
+    familyContext: {
+      parentPolymer: 'PLA base with distributed pigment particles',
+      variants: ['White Marble', 'Black Marble', 'Granite', 'Stone', 'Terrazzo'],
+      chemicalComparison: 'Same as standard PLA with visual additives. Properties nearly identical.',
+      evolution: 'From novelty to popular architectural and decorative material.',
+    },
+    strengths: {
+      uniqueProperties: ['Realistic stone appearance', 'Unique random veining pattern', 'No two prints identical', 'Hides layer lines'],
+      bestUseScenarios: ['Architectural models', 'Decorative items', 'Vases', 'Planters', 'Display pieces'],
+      advantagesOverCompetitors: ['Beautiful finish with no post-processing', 'Prints like standard PLA', 'Affordable', 'Hides imperfections'],
+      whyChooseThis: 'When you want the elegant look of stone without the weight or cost of actual stone.',
+    },
+    weaknesses: {
+      limitations: ['Same strength as PLA', 'Low heat resistance', 'Can\'t match specific stone patterns'],
+      commonProblems: ['Veining pattern is random', 'Color consistency varies between rolls', 'Some brands have weak veining'],
+      environmentalConcerns: ['Standard PLA concerns apply'],
+      whenNotToUse: ['Structural applications', 'When specific marble pattern needed', 'Outdoor use'],
+    },
+    practicalContext: {
+      industryAdoption: ['Architecture models', 'Interior design', 'Home decor', 'Art'],
+      commonApplications: ['Vases', 'Planters', 'Busts', 'Architectural models', 'Coasters', 'Decorative bowls'],
+      safetyStandards: ['Same as standard PLA'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'The veining effect is created by partially mixed pigments that separate during extrusion',
+        'Print orientation affects veining direction and appearance',
+        'Some brands achieve more realistic patterns than others',
+        'Layer height affects how veining appears - experiment!',
+      ],
+      whyInvented: 'Created to provide stone aesthetics for decorative 3D printing without the weight of real stone.',
+      controversies: [
+        'Pattern consistency varies widely between brands',
+        'Marketing photos often show best-case results',
+        '"Stone-filled" claims are sometimes exaggerated',
+      ],
+      marketAdoption: 'Popular in the decorative printing segment.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '45-55', unit: 'MPa', implications: 'Similar to standard PLA.' },
+        { name: 'Elongation at Break', value: '4-6', unit: '%', implications: 'Same brittleness as PLA.' },
+        { name: 'Glass Transition (Tg)', value: '55-60', unit: '°C', implications: 'Standard PLA heat resistance.' },
+        { name: 'Appearance', value: 'Veined Stone', unit: '', implications: 'Random pattern varies with each print.' },
+      ],
+      notes: 'Mechanical properties essentially identical to standard PLA. Chosen for aesthetics.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 195, max: 220, optimal: 205 },
+      bedTemp: { min: 50, max: 65, optimal: 55 },
+      coolingFan: { min: 80, max: 100, notes: 'Standard PLA cooling.' },
+      enclosure: { required: false, notes: 'Not required.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Standard PLA drying.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Normal PLA speeds work fine.' },
+      additionalNotes: [
+        'Veining pattern affected by print orientation',
+        'Wall line count affects visibility of pattern',
+        'Random seam can enhance natural look',
+        'Experiment with temps for best color separation',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'PEI (Textured)', 'Glass', 'Blue tape'],
+        good: ['BuildTak'],
+        poor: ['Bare aluminum'],
+      },
+      releaseAgents: 'Same as standard PLA.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer.' },
+        { material: 'White/Black PLA', bondQuality: 'Strong Chemical Bond', notes: 'Can accent marble effect.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on PLA base.' },
+      ],
+      mechanical: ['Can be sanded carefully', 'Polish with fine grit', 'Clear coat enhances look'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'PLA welding'],
+      painting: 'Painting defeats the purpose. Clear coat or matte sealer to protect.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Same as standard PLA.' },
+      foodSafety: { rating: 'Depends on brand', notes: 'Some mineral additives may not be food-safe. Check with manufacturer.' },
+      biodegradability: { rating: 'Same as PLA', notes: 'Industrial composting only.' },
+    },
+  },
+
+  'PVC': {
+    name: 'PVC',
+    fullName: 'Polyvinyl Chloride',
+    origin: {
+      yearInvented: '1872 (discovery), 1926 (commercialized)',
+      originalCompany: 'Waldo Semon at B.F. Goodrich (plasticized PVC)',
+      keyMilestones: [
+        '1872: PVC first synthesized by Eugen Baumann',
+        '1926: Waldo Semon patents plasticized PVC',
+        '1930s: Commercial production begins',
+        '2015+: Limited 3D printing filament attempts',
+      ],
+      majorManufacturers: ['Very few 3D printing manufacturers', 'Primarily industrial PVC suppliers'],
+    },
+    composition: {
+      basePolymer: 'Polyvinyl Chloride',
+      chemicalFamily: 'Vinyl Polymer (Halogenated)',
+      keyAdditives: ['Plasticizers (phthalates in flexible PVC)', 'Heat stabilizers', 'UV stabilizers', 'Lubricants'],
+      coloringAgents: 'Wide range of pigments available',
+      specialFillers: ['Calcium carbonate', 'Clay', 'Glass fiber (rarely)'],
+    },
+    familyContext: {
+      parentPolymer: 'Vinyl chloride monomer polymerization',
+      variants: ['Rigid PVC (uPVC)', 'Flexible PVC (plasticized)', 'Chlorinated PVC (CPVC)'],
+      chemicalComparison: 'Contains chlorine, which enables flame retardancy but also releases HCl when overheated.',
+      evolution: 'From industrial pipes and construction to very limited 3D printing experiments.',
+    },
+    strengths: {
+      uniqueProperties: ['Excellent chemical resistance', 'Self-extinguishing flame behavior', 'Low cost industrially', 'Water resistant'],
+      bestUseScenarios: ['Pipe prototypes', 'Chemical-resistant parts', 'Wire insulation prototypes'],
+      advantagesOverCompetitors: ['Flame retardant without additives', 'Very low moisture absorption', 'Good electrical insulation'],
+      whyChooseThis: 'Very rarely used in 3D printing due to safety concerns. Only for specific chemical resistance needs.',
+    },
+    weaknesses: {
+      limitations: ['RELEASES TOXIC HYDROGEN CHLORIDE (HCl) FUMES', 'Narrow processing window', 'Very few filament options', 'Degrades quickly when overheated'],
+      commonProblems: ['Toxic fume generation', 'Thermal degradation', 'Difficult temperature control', 'Health hazards'],
+      environmentalConcerns: ['HCl release during printing', 'Difficult to recycle', 'Dioxin concerns when incinerated', 'Microplastic issues'],
+      whenNotToUse: ['Home/unventilated environments', 'Most applications - safer alternatives exist', 'Without industrial ventilation'],
+    },
+    practicalContext: {
+      industryAdoption: ['Extremely limited in 3D printing', 'Industrial prototyping only'],
+      commonApplications: ['Industrial pipe fittings (rare)', 'Chemical container prototypes'],
+      safetyStandards: ['Industrial safety protocols required', 'Proper fume extraction mandatory'],
+      costPosition: 'Budget',
+    },
+    trivia: {
+      funFacts: [
+        'PVC is the world\'s third-most widely produced plastic but rarely 3D printed',
+        'The chlorine content makes it naturally fire-resistant',
+        'PVC pipes have been in use for water systems since the 1930s',
+        'The smell of new car interior is largely plasticizers from PVC',
+      ],
+      whyInvented: 'Originally developed for wire insulation and later expanded to pipes and construction.',
+      controversies: [
+        'HCl fumes are extremely corrosive and toxic',
+        'Phthalate plasticizers linked to health concerns',
+        'Environmental groups call PVC the "poison plastic"',
+        'Banned from some recycling streams',
+      ],
+      marketAdoption: 'Almost non-existent in consumer 3D printing due to safety concerns.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '40-50 (rigid)', unit: 'MPa', implications: 'Good strength for rigid PVC.' },
+        { name: 'Elongation at Break', value: '20-80', unit: '%', implications: 'Varies with plasticizer content.' },
+        { name: 'Heat Deflection', value: '60-80', unit: '°C', implications: 'Moderate heat resistance.' },
+        { name: 'Degradation Temp', value: '~200', unit: '°C', implications: 'CRITICAL - begins degrading and releasing HCl at printing temps!' },
+        { name: 'Chemical Resistance', value: 'Excellent', unit: '', implications: 'Resists acids, bases, and many solvents.' },
+      ],
+      notes: 'PVC degrades and releases toxic HCl gas at temperatures used for 3D printing. EXTREME CAUTION REQUIRED.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 170, max: 200, optimal: 185 },
+      bedTemp: { min: 60, max: 80, optimal: 70 },
+      coolingFan: { min: 50, max: 100, notes: 'Standard cooling. Monitor for degradation.' },
+      enclosure: { required: true, notes: 'SEALED with EXTERNAL EXHAUST to outdoors. HCl fumes are extremely dangerous.' },
+      drying: { temp: 60, duration: '4 hours', notes: 'PVC is not very hygroscopic.' },
+      printSpeed: { recommended: '20-40 mm/s', notes: 'Slow to prevent overheating and degradation.' },
+      additionalNotes: [
+        'INDUSTRIAL VENTILATION REQUIRED - HCl fumes are corrosive and toxic',
+        'Temperature control is CRITICAL - overheating causes rapid degradation',
+        'Fumes will corrode printer components over time',
+        'Not recommended for home/hobby use under any circumstances',
+        'Consider PETG or ASA as safer alternatives for most applications',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Glass with PVC-specific adhesive'],
+        good: ['Blue tape'],
+        poor: ['PEI - fumes may damage surface'],
+      },
+      releaseAgents: 'Specialty adhesives required.',
+      multiMaterial: [
+        { material: 'Other materials', bondQuality: 'No Bond', notes: 'PVC is rarely compatible with other materials.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'THF', effectiveness: 'Good', notes: 'Works but adds to toxicity concerns.' },
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'Limited effect on PVC.' },
+      ],
+      mechanical: ['Sands easily', 'Can be machined', 'Takes adhesives well'],
+      glues: ['PVC cement', 'Cyanoacrylate', 'Specialty PVC adhesives'],
+      painting: 'Accepts paint after proper surface preparation.',
+    },
+    safety: {
+      fumes: { level: 'High', notes: 'PRODUCES TOXIC HCl GAS when overheated. Industrial ventilation MANDATORY.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Plasticizer concerns. Not suitable for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Persistent in environment. Recycling is difficult.' },
+      additionalNotes: [
+        'DANGER: HCl fumes are corrosive and toxic',
+        'Can damage printer components (corrosive fumes)',
+        'Industrial safety protocols required',
+        'Avoid in home/hobby environments',
+        'Consider safer alternatives like PETG or ASA',
+      ],
+    },
+  },
+
+  'allPHA': {
+    name: 'allPHA',
+    fullName: 'Polyhydroxyalkanoates',
+    origin: {
+      yearInvented: '1926 (discovery), 2010s (3D printing)',
+      originalCompany: 'Maurice Lemoigne at Institut Pasteur (discovery)',
+      keyMilestones: [
+        '1926: PHB discovered by Maurice Lemoigne',
+        '1980s: ICI commercializes Biopol',
+        '2010s: colorFabb develops PHA blends for 3D printing',
+        '2020+: Multiple brands offer PHA and PHA-blend filaments',
+      ],
+      majorManufacturers: ['colorFabb (allPHA)', 'Fillamentum', 'Proto-pasta', 'MCPP (Danimer Scientific)'],
+    },
+    composition: {
+      basePolymer: 'Polyhydroxyalkanoates (biopolyester family)',
+      chemicalFamily: 'Biopolyester (Bacterially Produced)',
+      keyAdditives: ['Plasticizers for flexibility', 'Processing aids', 'Nucleating agents'],
+      coloringAgents: 'Natural color is off-white, can be pigmented',
+      specialFillers: ['Generally unfilled to maintain biodegradability'],
+    },
+    familyContext: {
+      parentPolymer: 'Produced by bacteria from organic substrates',
+      variants: ['PHB', 'PHBV', 'P3HB4HB', 'PHBHHx', 'Various copolymers'],
+      chemicalComparison: 'Truly biodegradable in natural environments unlike PLA. More flexible than PLA.',
+      evolution: 'From laboratory curiosity to commercial biodegradable plastic and 3D printing material.',
+    },
+    strengths: {
+      uniqueProperties: ['Marine biodegradable', 'Home compostable', 'UV resistant', 'Good barrier properties'],
+      bestUseScenarios: ['Eco-friendly projects', 'Single-use items', 'Outdoor degradable parts', 'Marine applications'],
+      advantagesOverCompetitors: ['Actually biodegrades in nature (unlike PLA)', 'Produced from renewable resources', 'Non-toxic degradation products'],
+      whyChooseThis: 'When genuine environmental biodegradability is required - truly decomposes in natural environments.',
+    },
+    weaknesses: {
+      limitations: ['More expensive than PLA', 'Narrower processing window', 'Lower strength than PETG', 'Limited availability'],
+      commonProblems: ['Moisture sensitivity', 'Slow crystallization', 'Brittleness in some grades', 'Variable properties'],
+      environmentalConcerns: ['Production uses significant resources', 'Bacterial fermentation energy costs'],
+      whenNotToUse: ['Structural applications', 'When cost is primary factor', 'High-temperature applications'],
+    },
+    practicalContext: {
+      industryAdoption: ['Packaging', 'Agriculture', 'Medical devices', 'Food service'],
+      commonApplications: ['Biodegradable packaging', 'Agricultural films', 'Medical sutures (surgical grades)', 'Compostable items'],
+      safetyStandards: ['FDA approved grades for food contact', 'Biocompatible for medical applications'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'PHAs are produced by bacteria as energy storage - similar to animal fat',
+        'Can biodegrade in soil, freshwater, and seawater',
+        'Some medical implants use PHA because it\'s absorbed by the body',
+        'Danimer Scientific produces PHA called Nodax used by major brands',
+      ],
+      whyInvented: 'Discovered as bacterial energy storage granules, developed as truly biodegradable plastic alternative.',
+      controversies: [
+        'Production costs remain higher than petroleum plastics',
+        'Some "PHA" products contain minimal actual PHA content',
+        'Biodegradation rates vary significantly with conditions',
+      ],
+      marketAdoption: 'Growing as sustainability concerns increase, but still niche compared to PLA.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '25-40', unit: 'MPa', implications: 'Lower than PLA. Sufficient for non-structural use.' },
+        { name: 'Elongation at Break', value: '3-8', unit: '%', implications: 'Brittle like PLA. Some grades more flexible.' },
+        { name: 'Biodegradation', value: 'Natural', unit: '', implications: 'Degrades in soil, water, marine environments.' },
+        { name: 'Glass Transition (Tg)', value: '0-5', unit: '°C', implications: 'Very low Tg means softens at room temperature. Blends improve this.' },
+        { name: 'Melting Point', value: '160-180', unit: '°C', implications: 'Lower than PLA, similar to some polyesters.' },
+      ],
+      notes: 'Properties vary significantly between PHA types. Most 3D printing PHA is blended for improved printability.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 180, max: 210, optimal: 195 },
+      bedTemp: { min: 30, max: 60, optimal: 45 },
+      coolingFan: { min: 50, max: 100, notes: 'Moderate to high cooling, similar to PLA.' },
+      enclosure: { required: false, notes: 'Not required for most PHA blends.' },
+      drying: { temp: 50, duration: '4-6 hours', notes: 'Hygroscopic - drying recommended before printing.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Slightly slower than PLA for best results.' },
+      additionalNotes: [
+        'Print settings similar to PLA',
+        'May require lower temps than PLA',
+        'Good bed adhesion on most surfaces',
+        'Drying important for consistent results',
+        'Some grades have narrower temp window',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'Glass with glue', 'Blue tape'],
+        good: ['PEI (Textured)', 'BuildTak'],
+        poor: ['Bare glass at high temps'],
+      },
+      releaseAgents: 'Similar to PLA - glue stick if needed.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Weak Bond', notes: 'Related biopolymers but different chemistry.' },
+        { material: 'PLA/PHA blends', bondQuality: 'Strong Chemical Bond', notes: 'Common commercial blend.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect on PHA.' },
+      ],
+      mechanical: ['Sands easily', 'Can be primed and painted', 'Standard finishing techniques'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'Biobased adhesives'],
+      painting: 'Accepts standard paints and finishes.',
+    },
+    safety: {
+      fumes: { level: 'Very Low', notes: 'Biobased material with minimal emissions. Very safe to print.' },
+      foodSafety: { rating: 'FDA Approved Grades', notes: 'Some grades are FDA approved for food contact.' },
+      biodegradability: { rating: 'Excellent - Natural Degradation', notes: 'Truly biodegrades in soil, freshwater, and marine environments.' },
+      additionalNotes: [
+        'One of the safest materials to print',
+        'No toxic degradation products',
+        'Truly environmentally friendly end-of-life',
+        'Safe for children and educational use',
+      ],
+    },
+  },
+
+  'Cleaning': {
+    name: 'Cleaning',
+    fullName: 'Nozzle Cleaning Filament',
+    origin: {
+      yearInvented: '2010s (3D printing maintenance)',
+      originalCompany: 'Multiple manufacturers developed cleaning filaments',
+      keyMilestones: [
+        '2012+: First cleaning filaments appear',
+        '2015+: Becomes standard maintenance product',
+        '2020+: Specialty formulations for different residues',
+      ],
+      majorManufacturers: ['eSUN', 'Polymaker', 'MatterHackers', 'Atomic Filament', 'E3D'],
+    },
+    composition: {
+      basePolymer: 'Varies - often based on high-Tg polymers',
+      chemicalFamily: 'Specialty Maintenance Compound',
+      keyAdditives: ['Cleaning agents', 'Softeners for residue removal', 'High-temp stabilizers'],
+      coloringAgents: 'Usually natural/white for visibility of removed residue',
+      specialFillers: ['Some contain mild abrasives', 'Surfactant compounds'],
+    },
+    familyContext: {
+      parentPolymer: 'Various - formulated for cleaning properties, not structural use',
+      variants: ['Standard cleaning', 'High-temp cleaning', 'Cold pull cleaning', 'Purge filament'],
+      chemicalComparison: 'Not designed for printing - designed to bind and remove residual material.',
+      evolution: 'From DIY solutions (nylon) to purpose-made cleaning filaments.',
+    },
+    strengths: {
+      uniqueProperties: ['Removes buildup and clogs', 'Binds to residual material', 'High-temp formulations available', 'Prevents cross-contamination'],
+      bestUseScenarios: ['Nozzle maintenance', 'Material changes', 'Clearing partial clogs', 'After printing abrasive materials'],
+      advantagesOverCompetitors: ['Purpose-designed for cleaning', 'More effective than random filament', 'Available for high-temp work'],
+      whyChooseThis: 'Essential maintenance material for keeping your hotend clean and preventing clogs.',
+    },
+    weaknesses: {
+      limitations: ['Not for actual printing', 'Consumable with no printed output', 'Adds cost to printing'],
+      commonProblems: ['Still may not clear severe clogs', 'Some brands ineffective', 'Can be messy'],
+      environmentalConcerns: ['Creates waste', 'Not recyclable'],
+      whenNotToUse: ['As a printing material', 'For severe mechanical clogs (needs disassembly)'],
+    },
+    practicalContext: {
+      industryAdoption: ['Universal in 3D printing', 'Professional and hobbyist'],
+      commonApplications: ['Hotend cleaning', 'Material transitions', 'Maintenance routines', 'Post-abrasive printing'],
+      safetyStandards: ['Generally safe to handle'],
+      costPosition: 'Budget',
+    },
+    trivia: {
+      funFacts: [
+        'Before cleaning filament, people used nylon fishing line for cold pulls',
+        'White/natural color makes it easy to see what you\'re removing',
+        'Some printing professionals run cleaning filament daily',
+        'High-temp cleaning filament can handle temps up to 280°C+',
+      ],
+      whyInvented: 'Created to provide an easy, purpose-built solution for hotend maintenance.',
+      controversies: [
+        'Some claim it\'s just overpriced nylon',
+        'Effectiveness varies significantly between brands',
+        'May not be necessary with regular maintenance',
+      ],
+      marketAdoption: 'Standard maintenance product - most serious printers keep it on hand.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Purpose', value: 'Cleaning', unit: '', implications: 'NOT for printed parts. Maintenance material only.' },
+        { name: 'Temperature Range', value: '180-280+', unit: '°C', implications: 'Varies by formulation. High-temp versions for PEEK/PEI work.' },
+        { name: 'Binding Properties', value: 'High', unit: '', implications: 'Designed to adhere to and remove residual material.' },
+        { name: 'Cold Pull Capability', value: 'Excellent', unit: '', implications: 'Pulls cleanly from cooled hotend, bringing residue with it.' },
+      ],
+      notes: 'Properties are designed for cleaning effectiveness, not mechanical strength or printability.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 200, max: 280, optimal: 240 },
+      bedTemp: { min: 0, max: 0, optimal: 0 },
+      coolingFan: { min: 0, max: 0, notes: 'N/A - not for printing.' },
+      enclosure: { required: false, notes: 'N/A' },
+      drying: { temp: 60, duration: '2-4 hours', notes: 'Can be dried if stored improperly.' },
+      printSpeed: { recommended: 'N/A', notes: 'Manually extrude or use cold pull technique.' },
+      additionalNotes: [
+        'Heat to printing temp of previous material',
+        'Manually extrude until clean',
+        'For cold pull: heat to 200°C, extrude, cool to 90°C, pull firmly',
+        'Repeat until pulled material is clean',
+        'Use after printing abrasive or high-temp materials',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['N/A - not for printing'],
+        good: ['N/A'],
+        poor: ['N/A'],
+      },
+      releaseAgents: 'N/A',
+      multiMaterial: [],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'N/A', effectiveness: 'Not Possible', notes: 'Not a printing material.' },
+      ],
+      mechanical: ['N/A - discard after use'],
+      glues: ['N/A'],
+      painting: 'N/A',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Similar to standard printing. Use normal ventilation.' },
+      foodSafety: { rating: 'N/A', notes: 'Not a printing material.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Dispose as plastic waste.' },
+      additionalNotes: [
+        'Safe to handle',
+        'Dispose of used cleaning filament as plastic waste',
+        'May release more fumes during cleaning due to burning residue',
+      ],
+    },
+  },
+
+  'SimuBone': {
+    name: 'SimuBone',
+    fullName: 'Bone-Simulating Filament',
+    origin: {
+      yearInvented: '2018+ (specialized medical/educational)',
+      originalCompany: 'Various medical simulation companies',
+      keyMilestones: [
+        '2018+: Medical simulation 3D printing materials emerge',
+        '2020+: Specialized bone-like filaments developed',
+      ],
+      majorManufacturers: ['Fillamentum (Timberfill)', 'colorFabb', 'Medical simulation companies'],
+    },
+    composition: {
+      basePolymer: 'PLA or similar biopolymer base',
+      chemicalFamily: 'Mineral-Filled Thermoplastic Composite',
+      keyAdditives: ['Calcium-based fillers', 'Mineral powders', 'Whiteners'],
+      coloringAgents: 'Natural bone-white color',
+      specialFillers: ['Hydroxyapatite (HA) in some grades', 'Calcium carbite', 'Bone-mimicking minerals'],
+    },
+    familyContext: {
+      parentPolymer: 'Usually PLA or medical-grade polymer base',
+      variants: ['Cortical bone simulation', 'Cancellous/trabecular simulation', 'Dental model material'],
+      chemicalComparison: 'Engineered to mimic mechanical and cutting properties of human bone.',
+      evolution: 'From research/medical use to available specialty filament.',
+    },
+    strengths: {
+      uniqueProperties: ['Mimics bone cutting feel', 'Bone-like appearance', 'Suitable for surgical training', 'Realistic tactile properties'],
+      bestUseScenarios: ['Surgical simulation', 'Medical education', 'Dental models', 'Anatomical models'],
+      advantagesOverCompetitors: ['More realistic than standard plastics', 'Purpose-designed for medical training', 'Consistent properties'],
+      whyChooseThis: 'When you need models that simulate the feel and properties of real bone for training or education.',
+    },
+    weaknesses: {
+      limitations: ['Very specialized use case', 'Higher cost', 'Limited color options', 'May require hardened nozzle'],
+      commonProblems: ['Abrasive mineral content', 'Limited availability', 'Niche market means less support'],
+      environmentalConcerns: ['Mineral fillers may complicate disposal', 'Specialty waste in medical settings'],
+      whenNotToUse: ['General printing', 'When standard materials suffice', 'Cost-sensitive applications'],
+    },
+    practicalContext: {
+      industryAdoption: ['Medical education', 'Surgical training', 'Dental schools', 'Research'],
+      commonApplications: ['Surgical practice models', 'Anatomy teaching aids', 'Dental implant planning', 'Orthopedic training'],
+      safetyStandards: ['Medical simulation standards', 'Educational use certified'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'Surgeons use bone-simulation prints to practice before complex operations',
+        'Some formulations use actual hydroxyapatite - the mineral in real bones',
+        'Drilling and sawing feel similar to actual bone surgery',
+        'Patient-specific bone models are printed from CT scans',
+      ],
+      whyInvented: 'Created to provide realistic surgical training without cadavers or live patients.',
+      controversies: [
+        'Claims of "bone-like" properties vary between brands',
+        'Validation of training effectiveness ongoing',
+        'Cost limits accessibility for some institutions',
+      ],
+      marketAdoption: 'Niche but important in medical education and surgical planning.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '30-50', unit: 'MPa', implications: 'Designed to mimic bone, not maximize strength.' },
+        { name: 'Cutting Properties', value: 'Bone-Like', unit: '', implications: 'Key feature - feels like cutting real bone.' },
+        { name: 'Appearance', value: 'Bone White', unit: '', implications: 'Visually realistic for training.' },
+        { name: 'Mineral Content', value: '20-40', unit: '%', implications: 'Provides bone-like feel and properties.' },
+      ],
+      notes: 'Properties optimized for simulation realism, not mechanical performance.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 195, max: 220, optimal: 205 },
+      bedTemp: { min: 50, max: 65, optimal: 55 },
+      coolingFan: { min: 50, max: 100, notes: 'Standard PLA-like cooling.' },
+      enclosure: { required: false, notes: 'Not required.' },
+      drying: { temp: 45, duration: '4-6 hours', notes: 'Similar to PLA base material.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Moderate speeds for consistent extrusion.' },
+      additionalNotes: [
+        'Hardened nozzle recommended due to mineral content',
+        'Use 0.4mm+ nozzle for reliable extrusion',
+        'Print settings similar to filled PLA',
+        'May require flow adjustments',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Smooth)', 'Glass with glue'],
+        good: ['PEI (Textured)', 'Blue tape'],
+        poor: ['Bare glass'],
+      },
+      releaseAgents: 'Similar to PLA - glue stick if needed.',
+      multiMaterial: [
+        { material: 'PLA', bondQuality: 'Strong Chemical Bond', notes: 'Same base polymer compatibility.' },
+        { material: 'Soft tissue simulation', bondQuality: 'Mechanical Bond', notes: 'Can combine with flexible materials for anatomy.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'PLA base - no acetone effect.' },
+      ],
+      mechanical: ['Can be drilled and cut', 'Sands like bone', 'Accepts pins and screws'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'Medical-grade adhesives'],
+      painting: 'Can be painted for anatomical coloring if needed.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Similar to filled PLA.' },
+      foodSafety: { rating: 'Not Applicable', notes: 'Medical/educational use only.' },
+      biodegradability: { rating: 'Limited', notes: 'Mineral content may slow degradation.' },
+      additionalNotes: [
+        'Handle finished models with appropriate care',
+        'Dispose according to institutional policies',
+        'Dust from cutting/drilling may be irritating',
+      ],
+    },
+  },
+
+  'Ryno': {
+    name: 'Ryno',
+    fullName: 'Ryno High-Performance Copolymer',
+    origin: {
+      yearInvented: '2019-2020',
+      originalCompany: 'colorFabb',
+      keyMilestones: [
+        '2020: colorFabb introduces Ryno as tough engineering material',
+        '2021+: Gains recognition for impact resistance',
+      ],
+      majorManufacturers: ['colorFabb (exclusive)'],
+    },
+    composition: {
+      basePolymer: 'Proprietary copolyester/copolymer blend',
+      chemicalFamily: 'Engineered Copolymer',
+      keyAdditives: ['Impact modifiers', 'Toughening agents', 'Processing aids'],
+      coloringAgents: 'Limited color options',
+      specialFillers: ['Generally unfilled for maximum toughness'],
+    },
+    familyContext: {
+      parentPolymer: 'Proprietary colorFabb formulation',
+      variants: ['Standard Ryno'],
+      chemicalComparison: 'Designed to bridge gap between easy-printing PETG and tough polycarbonate.',
+      evolution: 'Purpose-developed by colorFabb for high-impact applications.',
+    },
+    strengths: {
+      uniqueProperties: ['Exceptional impact resistance', 'Good layer adhesion', 'Chemical resistance', 'Easy to print for its performance'],
+      bestUseScenarios: ['Functional parts', 'Impact-resistant applications', 'Tool handles', 'Protective equipment'],
+      advantagesOverCompetitors: ['Easier than PC', 'Tougher than PETG', 'No enclosure required', 'Excellent layer bonding'],
+      whyChooseThis: 'When you need polycarbonate-like toughness with PETG-like printability.',
+    },
+    weaknesses: {
+      limitations: ['Single-source material', 'Limited colors', 'Higher cost than PETG', 'Less heat resistant than PC'],
+      commonProblems: ['Can be stringy', 'Moisture sensitive', 'Bed adhesion can be tricky'],
+      environmentalConcerns: ['Petroleum-based', 'Not biodegradable', 'Single-brand means supply constraints'],
+      whenNotToUse: ['High-temperature applications', 'When PETG suffices', 'Budget-constrained projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Prototyping', 'Functional parts', 'Tool making', 'Industrial applications'],
+      commonApplications: ['Protective housings', 'Tool handles', 'Mechanical parts', 'Enclosures', 'Jigs'],
+      safetyStandards: ['Industrial-grade material'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'Named to evoke strength (like a rhino)',
+        'Developed specifically to fill the PETG-to-PC gap',
+        'colorFabb claims it\'s the toughest material that prints like PETG',
+        'Designed for users who found PC too difficult',
+      ],
+      whyInvented: 'Created to provide polycarbonate-level toughness for users who can\'t print PC.',
+      controversies: [
+        'Single-source supply raises availability concerns',
+        'Premium pricing compared to alternatives',
+        'Some question if it truly rivals PC performance',
+      ],
+      marketAdoption: 'Niche but growing among users needing tough parts without PC complexity.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '50-60', unit: 'MPa', implications: 'High. Comparable to good PETG, approaching PC.' },
+        { name: 'Impact Strength', value: '50-70', unit: 'kJ/m² (Notched)', implications: 'Very High. The main selling point - exceptional toughness.' },
+        { name: 'Elongation at Break', value: '100-200', unit: '%', implications: 'Excellent ductility. Bends before breaking.' },
+        { name: 'Heat Deflection', value: '70-80', unit: '°C', implications: 'Similar to PETG. Not as heat-resistant as PC.' },
+        { name: 'Layer Adhesion', value: 'Excellent', unit: '', implications: 'Strong interlayer bonding for functional parts.' },
+      ],
+      notes: 'Designed to maximize toughness while maintaining printability. Trade-off is heat resistance vs PC.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 240, max: 265, optimal: 255 },
+      bedTemp: { min: 70, max: 90, optimal: 80 },
+      coolingFan: { min: 30, max: 70, notes: 'Moderate cooling for best layer adhesion.' },
+      enclosure: { required: false, notes: 'Not required but can help with large parts.' },
+      drying: { temp: 65, duration: '4-6 hours', notes: 'Hygroscopic - drying recommended.' },
+      printSpeed: { recommended: '40-60 mm/s', notes: 'Moderate speeds similar to PETG.' },
+      additionalNotes: [
+        'Print settings similar to PETG but higher temps',
+        'Good bed adhesion on textured PEI',
+        'Use release agent on smooth PEI',
+        'Drying is important for best results',
+        'Higher temps improve layer adhesion',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['PEI (Textured)', 'Glass with glue'],
+        good: ['PEI (Smooth) with release agent', 'BuildTak'],
+        poor: ['Bare smooth PEI - sticks too well'],
+      },
+      releaseAgents: 'Glue stick on smooth surfaces recommended.',
+      multiMaterial: [
+        { material: 'PETG', bondQuality: 'Mechanical Bond', notes: 'Related polymer families.' },
+        { material: 'TPU', bondQuality: 'Weak Bond', notes: 'Some adhesion possible.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Acetone', effectiveness: 'Not Possible', notes: 'No effect.' },
+        { method: 'Dichloromethane', effectiveness: 'Good', notes: 'Works but extremely toxic.' },
+      ],
+      mechanical: ['Sands well', 'Can be drilled', 'Taps threads well', 'Machines reasonably'],
+      glues: ['Cyanoacrylate', 'Epoxy', 'Specialty copolyester adhesives'],
+      painting: 'Accepts paint after proper surface preparation.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Similar to PETG. Standard ventilation recommended.' },
+      foodSafety: { rating: 'Not Certified', notes: 'Check with colorFabb for food-safe certification status.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Petroleum-based copolymer.' },
+    },
+  },
+
+  'Carbon Fiber': {
+    name: 'Carbon Fiber',
+    fullName: 'Carbon Fiber Reinforced Composites',
+    origin: {
+      yearInvented: '1860 (carbon fiber), 2014+ (3D printing composites)',
+      originalCompany: 'Joseph Swan (carbon fiber), Various (3D printing composites)',
+      keyMilestones: [
+        '1860: Joseph Swan produces carbon fiber for light bulbs',
+        '1958: Roger Bacon creates high-strength carbon fiber',
+        '2014+: Carbon fiber filaments become available for FDM',
+        '2015+: Major brands offer CF-reinforced materials',
+      ],
+      majorManufacturers: ['3DXTech', 'Polymaker', 'colorFabb', 'Markforged', 'Proto-pasta', 'eSUN'],
+    },
+    composition: {
+      basePolymer: 'Various - PLA, PETG, Nylon, PC, PEEK (host polymer for CF)',
+      chemicalFamily: 'Fiber-Reinforced Thermoplastic Composite',
+      keyAdditives: ['Chopped carbon fiber (typically 10-20%)', 'Coupling agents', 'Flow modifiers'],
+      coloringAgents: 'Carbon fiber gives characteristic black/gray color',
+      specialFillers: ['Chopped carbon fiber', 'Sometimes continuous carbon fiber (Markforged)'],
+    },
+    familyContext: {
+      parentPolymer: 'Carbon fiber is added to various base polymers',
+      variants: ['PLA-CF', 'PETG-CF', 'Nylon-CF', 'PC-CF', 'PEEK-CF', 'ABS-CF', 'ASA-CF'],
+      chemicalComparison: 'CF dramatically increases stiffness and reduces weight. Properties depend on base polymer.',
+      evolution: 'From aerospace material to accessible 3D printing reinforcement.',
+    },
+    strengths: {
+      uniqueProperties: ['Very high stiffness', 'Excellent strength-to-weight', 'Dimensional stability', 'Professional appearance'],
+      bestUseScenarios: ['Structural parts', 'Drone frames', 'Jigs and fixtures', 'Weight-critical applications'],
+      advantagesOverCompetitors: ['Stiffest FDM material option', 'Lightest for given stiffness', 'Matte professional finish'],
+      whyChooseThis: 'When you need maximum stiffness and minimum weight - metal replacement applications.',
+    },
+    weaknesses: {
+      limitations: ['Very abrasive - requires hardened nozzle', 'Reduced impact resistance vs unfilled', 'Higher cost', 'Anisotropic properties'],
+      commonProblems: ['Rapid nozzle wear', 'Layer adhesion varies', 'Can be stringy', 'Brittleness in Z-axis'],
+      environmentalConcerns: ['Energy-intensive carbon fiber production', 'Difficult to recycle', 'Not biodegradable'],
+      whenNotToUse: ['When impact resistance is critical', 'Budget projects', 'Without hardened nozzle'],
+    },
+    practicalContext: {
+      industryAdoption: ['Aerospace', 'Automotive', 'Drones', 'Industrial tooling', 'Prosthetics'],
+      commonApplications: ['Drone frames', 'Jigs and fixtures', 'End-effectors', 'Brackets', 'Replacement for aluminum'],
+      safetyStandards: ['Aerospace-grade available', 'Industrial-grade common'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'Carbon fiber is 5x stronger than steel at 1/5 the weight',
+        'The first carbon fibers were made for Edison\'s light bulbs',
+        'Most "carbon fiber" filaments use chopped fiber, not continuous',
+        'Continuous fiber (Markforged) approaches injection-molded strength',
+      ],
+      whyInvented: 'Carbon fiber developed for aerospace, adapted to 3D printing for lightweight structural parts.',
+      controversies: [
+        'Many cheap CF filaments use minimal fiber content',
+        'Nozzle wear often severely underestimated',
+        'Z-axis strength much lower than XY - parts can delaminate',
+      ],
+      marketAdoption: 'Established professional material, growing hobby adoption.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '60-100+', unit: 'MPa', implications: 'High. Varies significantly with base polymer and CF content.' },
+        { name: 'Tensile Modulus', value: '5000-15000', unit: 'MPa', implications: 'Very High Stiffness. The primary benefit of CF reinforcement.' },
+        { name: 'Elongation at Break', value: '1-5', unit: '%', implications: 'Low - CF composites are stiff but brittle.' },
+        { name: 'CF Content', value: '10-20', unit: '%', implications: 'More CF = stiffer but more abrasive and brittle.' },
+        { name: 'Density', value: '1.1-1.3', unit: 'g/cm³', implications: 'Slightly higher than unfilled, but stiffness increase is dramatic.' },
+        { name: 'Abrasiveness', value: 'Very High', unit: '', implications: 'HARDENED NOZZLE MANDATORY.' },
+      ],
+      notes: 'Properties heavily depend on base polymer. Nylon-CF is much stronger than PLA-CF.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 200, max: 300 },
+      bedTemp: { min: 50, max: 110 },
+      coolingFan: { min: 0, max: 100, notes: 'Depends on base polymer. Nylon-CF: minimal. PLA-CF: high.' },
+      enclosure: { required: false, notes: 'Depends on base polymer. Required for Nylon-CF, PC-CF, PEEK-CF.' },
+      drying: { temp: 60, duration: '4-8 hours', notes: 'Critical for Nylon-CF. Important for all CF materials.' },
+      printSpeed: { recommended: '30-60 mm/s', notes: 'Moderate speeds. Higher CF content may need slower speeds.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED - steel, ruby, or tungsten carbide',
+        'Print settings follow base polymer guidelines',
+        'Slightly higher temps often improve layer adhesion',
+        'Z-axis strength is lower - orient parts accordingly',
+        'Drying is especially critical for Nylon-CF',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Depends on base polymer'],
+        good: ['PEI generally works well'],
+        poor: ['Follow base polymer guidance'],
+      },
+      releaseAgents: 'Follow base polymer guidelines.',
+      multiMaterial: [
+        { material: 'Same base polymer (unfilled)', bondQuality: 'Strong Chemical Bond', notes: 'Best practice for multi-material.' },
+        { material: 'Different base polymer', bondQuality: 'No Bond', notes: 'Generally incompatible.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Varies', effectiveness: 'Difficult', notes: 'CF disrupts smoothing. Generally not recommended.' },
+      ],
+      mechanical: ['Sands with difficulty', 'Can be machined carefully', 'CF creates dust - wear mask', 'Can be tapped'],
+      glues: ['Epoxy (best)', 'Cyanoacrylate', 'Specialty CF adhesives'],
+      painting: 'Surface prep required. Often left unpainted for matte CF appearance.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'CF itself doesn\'t add fumes. Follow base polymer guidance.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'CF particles not suitable for food contact.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Carbon fiber persists indefinitely.' },
+      additionalNotes: [
+        'WEAR MASK when sanding - carbon fiber dust is a respiratory hazard',
+        'CF dust can irritate skin and eyes',
+        'Use wet sanding when possible to control dust',
+        'Dispose of CF waste properly',
+      ],
+    },
+  },
 };
 
 export function getMaterialReference(material: string): MaterialReferenceInfo | undefined {
