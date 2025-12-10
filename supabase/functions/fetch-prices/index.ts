@@ -28,20 +28,22 @@ interface PackInfo {
 function detectSpoolWeightKg(title: string, html: string, url: string = ''): number {
   const combinedText = `${title.toLowerCase()} ${url.toLowerCase()}`;
   
-  // Common weight patterns - check for 2kg, 3kg, etc.
+  // Common weight patterns - check for multi-kg spools (5kg, 10kg, etc.)
+  // Order matters - more specific patterns first
   const weightPatterns = [
-    /\b(\d+(?:\.\d+)?)\s*kg\b/i,           // "2kg", "2.2kg"
-    /\b(\d+(?:\.\d+)?)\s*kilogram/i,       // "2 kilogram"
-    /\b(\d+(?:\.\d+)?)-?kg\b/i,            // "2-kg"
-    /\b(\d+)\s*(?:kilo|kilos)\b/i,         // "2 kilo", "2 kilos"
+    /\b(\d+(?:\.\d+)?)\s*kg\b/i,           // "5kg", "2.2kg", "10kg"
+    /\b(\d+(?:\.\d+)?)\s*kilogram/i,       // "5 kilogram"
+    /\b(\d+(?:\.\d+)?)-?kg\b/i,            // "5-kg"
+    /\b(\d+)\s*(?:kilo|kilos)\b/i,         // "5 kilo", "5 kilos"
+    /(\d+(?:\.\d+)?)\s*kg\s*(?:spool|roll|filament|pla|petg|abs|tpu)/i, // "5kg PLA"
   ];
   
   for (const pattern of weightPatterns) {
     const match = combinedText.match(pattern);
     if (match && match[1]) {
       const weight = parseFloat(match[1]);
-      // Valid spool weights: 0.25kg to 5kg
-      if (weight >= 0.25 && weight <= 5) {
+      // Valid spool weights: 0.25kg to 10kg (industrial spools can be up to 10kg)
+      if (weight >= 0.25 && weight <= 10) {
         console.log(`  ⚖️ Spool weight detected: ${weight}kg from pattern "${pattern}"`);
         return weight;
       }
@@ -53,15 +55,34 @@ function detectSpoolWeightKg(title: string, html: string, url: string = ''): num
     /net\s*weight[:\s]*(\d+(?:\.\d+)?)\s*kg/i,
     /spool\s*weight[:\s]*(\d+(?:\.\d+)?)\s*kg/i,
     /(\d+(?:\.\d+)?)\s*kg\s*(?:spool|roll|filament)/i,
+    /weight[:\s]*(\d+(?:\.\d+)?)\s*kg/i,    // "Weight: 5kg"
+    /"weight"[:\s]*"?(\d+(?:\.\d+)?)\s*kg/i, // JSON: "weight": "5kg"
   ];
   
   for (const pattern of htmlWeightPatterns) {
     const match = html.toLowerCase().match(pattern);
     if (match && match[1]) {
       const weight = parseFloat(match[1]);
-      if (weight >= 0.25 && weight <= 5) {
+      if (weight >= 0.25 && weight <= 10) {
         console.log(`  ⚖️ Spool weight detected from HTML: ${weight}kg`);
         return weight;
+      }
+    }
+  }
+  
+  // Check for gram-based weights and convert (e.g., "5000g" = 5kg)
+  const gramPatterns = [
+    /\b(\d{4,5})\s*g(?:rams?)?\b/i,  // "5000g", "5000 grams"
+  ];
+  
+  for (const pattern of gramPatterns) {
+    const match = combinedText.match(pattern);
+    if (match && match[1]) {
+      const grams = parseInt(match[1]);
+      const kg = grams / 1000;
+      if (kg >= 0.25 && kg <= 10) {
+        console.log(`  ⚖️ Spool weight detected from grams: ${kg}kg (${grams}g)`);
+        return kg;
       }
     }
   }
@@ -217,8 +238,8 @@ function extractWeight(html: string, url: string): number | null {
           weightInGrams = value * 453.592;
         }
         
-        // Sanity check: filament spools are typically 250g-5000g
-        if (weightInGrams >= 100 && weightInGrams <= 10000) {
+        // Sanity check: filament spools are typically 250g-10000g (up to 10kg industrial)
+        if (weightInGrams >= 100 && weightInGrams <= 12000) {
           console.log(`Found weight: ${weightInGrams}g (original: ${value} ${unit})`);
           return Math.round(weightInGrams);
         }
@@ -653,8 +674,8 @@ Deno.serve(async (req) => {
               // No explicit weight in title/URL, check other sources
               if (extractedWeight && extractedWeight > 0) {
                 const extractedKg = extractedWeight / 1000;
-                // Only use extracted weight if it's reasonable (0.25-5kg)
-                if (extractedKg >= 0.25 && extractedKg <= 5) {
+                // Only use extracted weight if it's reasonable (0.25-10kg)
+                if (extractedKg >= 0.25 && extractedKg <= 10) {
                   spoolWeightKg = extractedKg;
                 }
               } else if (filament.net_weight_g && filament.net_weight_g > 0) {
