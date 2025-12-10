@@ -128,3 +128,6 @@ verify_jwt = true
 
 [functions.audit-filament-data]
 verify_jwt = true
+
+[functions.scrape-accessory-tds]
+verify_jwt = true

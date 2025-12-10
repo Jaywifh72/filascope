@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, ExternalLink, Thermometer, CircleDot, Wrench, Package, Printer, ImageIcon, AlertTriangle, Link2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Thermometer, CircleDot, Wrench, Package, Printer, ImageIcon, AlertTriangle, Link2, FileText } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -354,6 +354,19 @@ export default function NozzleDetail() {
                       </Button>
                     </a>
                   </div>
+                )}
+                {/* TDS Link */}
+                {(specs?.tds_url || (nozzle as any).tds_url) && (
+                  <a
+                    href={String(specs?.tds_url || (nozzle as any).tds_url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" className="w-full gap-2">
+                      <FileText className="h-4 w-4" />
+                      View Technical Data Sheet
+                    </Button>
+                  </a>
                 )}
               </CardContent>
             </Card>

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe, Upload, Link as LinkIcon, Sparkles, Package, Printer } from "lucide-react";
+import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe, Upload, Link as LinkIcon, Sparkles, Package, Printer, FileText } from "lucide-react";
 
 interface PrinterImageResult {
   printerId: string;
@@ -159,6 +159,20 @@ const AdminMaintenance = () => {
     updated: number;
     failed: number;
     results: Array<{ id: string; title: string; price: number | null; temps: boolean; error?: string }>;
+  } | null>(null);
+  
+  // Accessory TDS scraping state
+  const [isScrapingAccessoryTds, setIsScrapingAccessoryTds] = useState(false);
+  const [accessoryTdsType, setAccessoryTdsType] = useState("all");
+  const [accessoryTdsLimit, setAccessoryTdsLimit] = useState("10");
+  const [forceAccessoryTdsRescrape, setForceAccessoryTdsRescrape] = useState(false);
+  const [accessoryTdsResult, setAccessoryTdsResult] = useState<{
+    success: boolean;
+    total_processed: number;
+    tds_found: number;
+    specs_extracted: number;
+    failed: number;
+    results: Array<{ id: string; name: string; status: string; tds_url?: string; specs_extracted?: number; error?: string }>;
   } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -807,6 +821,53 @@ const AdminMaintenance = () => {
       });
     } finally {
       setIsScrapingParamount(false);
+    }
+  };
+
+  const runAccessoryTdsScraper = async () => {
+    setIsScrapingAccessoryTds(true);
+    setAccessoryTdsResult(null);
+
+    toast({
+      title: "Accessory TDS Scraping Started",
+      description: "Discovering TDS links and extracting specifications with AI...",
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-accessory-tds', {
+        method: 'POST',
+        body: { 
+          accessoryType: accessoryTdsType === "all" ? null : accessoryTdsType,
+          forceRescrape: forceAccessoryTdsRescrape,
+          limit: parseInt(accessoryTdsLimit)
+        }
+      });
+
+      if (error) {
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('FunctionsFetchError')) {
+          toast({
+            title: "Running in Background",
+            description: "The scraper is still running. Refresh in 2-3 minutes to see results.",
+          });
+          return;
+        }
+        throw error;
+      }
+
+      setAccessoryTdsResult(data);
+      toast({
+        title: "Accessory TDS Scraping Complete",
+        description: `Found: ${data.tds_found} TDS, Extracted specs: ${data.specs_extracted}, Failed: ${data.failed}`,
+      });
+    } catch (error) {
+      console.error('Accessory TDS scraping error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to run accessory TDS scraper",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScrapingAccessoryTds(false);
     }
   };
 
@@ -2479,6 +2540,144 @@ const AdminMaintenance = () => {
                           </div>
                           <Badge variant={result.price ? "default" : "destructive"}>
                             {result.price ? "success" : "failed"}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Accessory TDS Scraper Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            <CardTitle>Accessory TDS Scraper</CardTitle>
+          </div>
+          <CardDescription>
+            Discover Technical Data Sheet links from product pages and extract specifications using AI
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Accessory Type</Label>
+              <Select value={accessoryTdsType} onValueChange={setAccessoryTdsType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="hotend">Hotends</SelectItem>
+                  <SelectItem value="build_plate">Build Plates</SelectItem>
+                  <SelectItem value="ams_mmu">AMS/MMU</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Limit</Label>
+              <Input
+                type="number"
+                value={accessoryTdsLimit}
+                onChange={(e) => setAccessoryTdsLimit(e.target.value)}
+                min="1"
+                max="50"
+                className="w-full"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="force-tds-rescrape"
+              checked={forceAccessoryTdsRescrape}
+              onCheckedChange={(checked) => setForceAccessoryTdsRescrape(checked === true)}
+            />
+            <Label htmlFor="force-tds-rescrape" className="text-sm font-normal">
+              Force rescrape (re-check accessories with existing TDS)
+            </Label>
+          </div>
+
+          <Button 
+            onClick={runAccessoryTdsScraper} 
+            disabled={isScrapingAccessoryTds}
+            className="w-full sm:w-auto"
+          >
+            {isScrapingAccessoryTds ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Scraping TDS...
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4 mr-2" />
+                Scrape Accessory TDS
+              </>
+            )}
+          </Button>
+
+          {accessoryTdsResult && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{accessoryTdsResult.total_processed}</div>
+                  <div className="text-sm text-muted-foreground">Processed</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{accessoryTdsResult.tds_found}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">TDS Found</div>
+                </div>
+                <div className="bg-blue-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-blue-500" />
+                    <div className="text-2xl font-bold">{accessoryTdsResult.specs_extracted}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Specs Extracted</div>
+                </div>
+                <div className="bg-red-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <div className="text-2xl font-bold">{accessoryTdsResult.failed}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Failed</div>
+                </div>
+              </div>
+
+              {accessoryTdsResult.results && accessoryTdsResult.results.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Processing Details:</h3>
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {accessoryTdsResult.results.map((result, idx) => (
+                      <div key={idx} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="font-medium">{result.name}</div>
+                            {result.tds_url && (
+                              <a href={result.tds_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline truncate block max-w-md">
+                                {result.tds_url}
+                              </a>
+                            )}
+                            {result.specs_extracted !== undefined && result.specs_extracted > 0 && (
+                              <div className="text-xs text-muted-foreground">{result.specs_extracted} specs extracted</div>
+                            )}
+                            {result.error && (
+                              <div className="text-xs text-destructive">{result.error}</div>
+                            )}
+                          </div>
+                          <Badge variant={
+                            result.status === "extracted" ? "default" :
+                            result.status === "found" ? "secondary" :
+                            result.status === "not_found" ? "outline" : "destructive"
+                          }>
+                            {result.status}
                           </Badge>
                         </div>
                       </div>

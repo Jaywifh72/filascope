@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ExternalLink, Layers, Check, X, ImageIcon, AlertTriangle, Link2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Layers, Check, X, ImageIcon, AlertTriangle, Link2, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
@@ -35,6 +35,7 @@ interface AMSSpecs {
   supported_diameters?: string;
   interface_type?: string;
   power_requirements?: string;
+  tds_url?: string;
 }
 
 export default function AMSDetail() {
@@ -384,6 +385,20 @@ export default function AMSDetail() {
                   </Button>
                 </a>
               </div>
+            )}
+            
+            {/* TDS Link */}
+            {(specs?.tds_url || (ams as any).tds_url) && (
+              <a
+                href={String(specs?.tds_url || (ams as any).tds_url)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" className="w-full gap-2">
+                  <FileText className="h-4 w-4" />
+                  View Technical Data Sheet
+                </Button>
+              </a>
             )}
           </div>
         </div>
