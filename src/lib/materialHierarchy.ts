@@ -66,6 +66,7 @@ export const MATERIAL_CATEGORIES: MaterialCategory[] = [
       'LW-PLA-HT',
       'rPLA',
       'Standard PLA+',
+      'EasyPrint PLA',
       'Silk PLA+',
     ],
   },
