@@ -39,6 +39,7 @@ const Accessories = lazy(() => import("./pages/Accessories"));
 const HotendDetail = lazy(() => import("./pages/HotendDetail"));
 const BuildPlateDetail = lazy(() => import("./pages/BuildPlateDetail"));
 const AMSDetail = lazy(() => import("./pages/AMSDetail"));
+const Settings = lazy(() => import("./pages/Settings"));
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => (
               <Route path="/wizard" element={<Wizard />} />
               <Route path="/diagnose" element={<Diagnose />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/vault" element={<Vault />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/import" element={<AdminImport />} />

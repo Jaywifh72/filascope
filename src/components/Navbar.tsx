@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogIn, LogOut, User, Shield, Archive, Database } from "lucide-react";
+import { LogIn, LogOut, User, Shield, Archive, Database, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/filascope-logo.png";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -85,6 +85,12 @@ const Navbar = () => {
                     <Link to="/vault" className="flex items-center font-mono text-xs">
                       <Archive className="w-3 h-3 mr-2" />
                       MY VAULT
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings" className="flex items-center font-mono text-xs">
+                      <Settings className="w-3 h-3 mr-2" />
+                      SETTINGS
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-[#333]" />
