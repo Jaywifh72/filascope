@@ -14,6 +14,7 @@ interface Filament {
   color_hex: string | null;
   variant_price: number | null;
   net_weight_g: number | null;
+  pack_quantity: number | null;
   featured_image: string | null;
   value_score: number | null;
   printability_index: number | null;
@@ -73,8 +74,14 @@ const BentoGrid = () => {
   });
 
   const getTrueCost = (filament: Filament) => {
-    if (!filament.variant_price) return null;
-    return filament.variant_price;
+    if (!filament.variant_price || !filament.net_weight_g) return null;
+    const packQty = filament.pack_quantity || 1;
+    const weightKg = filament.net_weight_g / 1000;
+    const totalWeightKg = weightKg * packQty;
+    const pricePerKg = filament.variant_price / totalWeightKg;
+    // Validate: must be reasonable per-kg price
+    if (pricePerKg < 5 || pricePerKg > 500) return null;
+    return pricePerKg;
   };
 
   return (
