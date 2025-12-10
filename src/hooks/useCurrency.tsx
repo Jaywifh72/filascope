@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'JPY' | 'CHF' | 'SEK' | 'CNY' | 'KRW' | 'INR' | 'MXN' | 'BRL' | 'NZD';
 
@@ -96,12 +97,16 @@ function detectCurrencyFromLocale(): CurrencyCode {
   return 'USD';
 }
 
+function isValidCurrency(value: string | null | undefined): value is CurrencyCode {
+  return value !== null && value !== undefined && value in CURRENCIES;
+}
+
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored && stored in CURRENCIES) {
-        return stored as CurrencyCode;
+      if (isValidCurrency(stored)) {
+        return stored;
       }
       // No stored preference, detect from browser locale
       return detectCurrencyFromLocale();
@@ -109,9 +114,53 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     return 'USD';
   });
 
-  const setCurrency = (newCurrency: CurrencyCode) => {
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load currency preference from profile when user logs in
+  useEffect(() => {
+    if (!userId) return;
+
+    const loadProfileCurrency = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('preferred_currency')
+        .eq('id', userId)
+        .single();
+
+      if (!error && data?.preferred_currency && isValidCurrency(data.preferred_currency)) {
+        setCurrencyState(data.preferred_currency);
+        localStorage.setItem(STORAGE_KEY, data.preferred_currency);
+      }
+    };
+
+    loadProfileCurrency();
+  }, [userId]);
+
+  const setCurrency = async (newCurrency: CurrencyCode) => {
     setCurrencyState(newCurrency);
     localStorage.setItem(STORAGE_KEY, newCurrency);
+
+    // If user is logged in, save to profile
+    if (userId) {
+      await supabase
+        .from('profiles')
+        .update({ preferred_currency: newCurrency })
+        .eq('id', userId);
+    }
   };
 
   const currencyInfo = CURRENCIES[currency];
@@ -136,13 +185,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     }
     return `${currencyInfo.symbol}${formatted}`;
   };
-
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && stored in CURRENCIES) {
-      setCurrencyState(stored as CurrencyCode);
-    }
-  }, []);
 
   return (
     <CurrencyContext.Provider value={{ currency, setCurrency, currencyInfo, formatPrice, convertPrice }}>

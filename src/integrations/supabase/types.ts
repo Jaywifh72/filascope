@@ -1285,6 +1285,7 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          preferred_currency: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1293,6 +1294,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id: string
+          preferred_currency?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1301,6 +1303,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          preferred_currency?: string | null
           updated_at?: string | null
         }
         Relationships: []
