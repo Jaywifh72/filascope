@@ -8,39 +8,39 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Pure dark theme with neon cyan accents */
-    --background: 0 0% 4%; /* #0A0A0A */
+    /* Pure black theme with electric cyan accents - FilaScope branding */
+    --background: 0 0% 0%; /* Pure Black #000000 */
     --foreground: 0 0% 95%;
 
-    --card: 0 0% 6%; /* Slightly lighter than background */
+    --card: 0 0% 5%; /* Slightly lighter than pure black */
     --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 8%;
+    --popover: 0 0% 6%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 180 100% 50%; /* Neon Cyan #00FFFF */
-    --primary-foreground: 0 0% 4%;
+    --primary: 187 94% 54%; /* Electric Cyan #22D3EE / cyan-400 */
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 0 0% 12%;
+    --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 95%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 240 5% 65%; /* zinc-400 equivalent */
 
-    --accent: 0 0% 15%;
+    --accent: 0 0% 12%;
     --accent-foreground: 0 0% 95%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 95%;
 
-    --border: 0 0% 20%; /* #333333 */
-    --border-hover: 180 100% 50%; /* Neon Cyan for hover */
-    --input: 0 0% 15%;
-    --ring: 180 100% 50%;
+    --border: 0 0% 18%;
+    --border-hover: 187 94% 54%; /* Electric Cyan for hover */
+    --input: 0 0% 12%;
+    --ring: 187 94% 54%;
 
     --radius: 0.5rem;
 
-    --chart-1: 180 100% 50%;
+    --chart-1: 187 94% 54%;
     --chart-2: 160 80% 45%;
     --chart-3: 200 40% 30%;
     --chart-4: 45 80% 60%;
@@ -49,52 +49,53 @@ All colors MUST be HSL.
     --amazon: 36 100% 50%;
     --amazon-foreground: 0 0% 0%;
 
-    --sidebar-background: 0 0% 4%;
+    --sidebar-background: 0 0% 0%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 180 100% 50%;
-    --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 0 0% 12%;
+    --sidebar-primary: 187 94% 54%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 180 100% 50%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 187 94% 54%;
 
-    /* Custom effects */
-    --gradient-cyan: linear-gradient(135deg, hsl(180 100% 50%), hsl(160 80% 45%));
-    --shadow-glow: 0 0 20px hsla(180 100% 50% / 0.3);
-    --shadow-glow-strong: 0 0 30px hsla(180 100% 50% / 0.5);
+    /* Custom effects - FilaScope glow */
+    --gradient-cyan: linear-gradient(135deg, hsl(187 94% 54%), hsl(160 80% 45%));
+    --shadow-glow: 0 0 20px hsla(187 94% 54% / 0.3);
+    --shadow-glow-strong: 0 0 40px hsla(187 94% 54% / 0.5);
+    --glow-radial: radial-gradient(ellipse at center, hsla(187 94% 54% / 0.15) 0%, transparent 70%);
   }
 
   .dark {
-    --background: 0 0% 4%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 95%;
 
-    --card: 0 0% 6%;
+    --card: 0 0% 5%;
     --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 8%;
+    --popover: 0 0% 6%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 180 100% 50%;
-    --primary-foreground: 0 0% 4%;
+    --primary: 187 94% 54%;
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 0 0% 12%;
+    --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 95%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 240 5% 65%;
 
-    --accent: 0 0% 15%;
+    --accent: 0 0% 12%;
     --accent-foreground: 0 0% 95%;
 
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 95%;
 
-    --border: 0 0% 20%;
-    --border-hover: 180 100% 50%;
-    --input: 0 0% 15%;
-    --ring: 180 100% 50%;
+    --border: 0 0% 18%;
+    --border-hover: 187 94% 54%;
+    --input: 0 0% 12%;
+    --ring: 187 94% 54%;
 
-    --chart-1: 180 100% 50%;
+    --chart-1: 187 94% 54%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
@@ -109,7 +110,11 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
   
   h1, h2, h3, h4, h5, h6 {
