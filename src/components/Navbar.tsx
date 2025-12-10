@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogIn, LogOut, User, Shield, Archive, Database, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/filascope-logo.png";
@@ -16,10 +18,52 @@ import {
 const Navbar = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setAvatarUrl(null);
+      setDisplayName(null);
+      return;
+    }
+
+    const loadProfile = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("avatar_url, display_name")
+        .eq("id", user.id)
+        .single();
+
+      if (data) {
+        setAvatarUrl(data.avatar_url);
+        setDisplayName(data.display_name);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const getInitials = () => {
+    if (displayName) {
+      return displayName.slice(0, 2).toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.slice(0, 2).toUpperCase();
+    }
+    return 'U';
+  };
+
+  const getDisplayLabel = () => {
+    if (displayName) {
+      return displayName;
+    }
+    return user?.email?.split("@")[0] || 'User';
   };
 
   return (
@@ -71,14 +115,32 @@ const Navbar = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="border-[#333] bg-[#1A1A1A] font-mono text-xs">
-                    <User className="w-3 h-3 mr-1.5" />
-                    {user.email?.split("@")[0]}
+                  <Button variant="outline" size="sm" className="border-[#333] bg-[#1A1A1A] font-mono text-xs gap-2 pl-1.5 pr-3">
+                    <Avatar className="w-6 h-6">
+                      <AvatarImage src={avatarUrl || undefined} alt="Profile" />
+                      <AvatarFallback className="text-[10px] bg-muted">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden sm:inline">{getDisplayLabel()}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-[#1A1A1A] border-[#333]">
-                  <div className="px-2 py-1.5 text-xs text-muted-foreground font-mono">
-                    {user.email}
+                  <div className="flex items-center gap-3 px-2 py-2">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={avatarUrl || undefined} alt="Profile" />
+                      <AvatarFallback className="text-sm bg-muted">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      {displayName && (
+                        <span className="text-sm font-medium">{displayName}</span>
+                      )}
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {user.email}
+                      </span>
+                    </div>
                   </div>
                   <DropdownMenuSeparator className="bg-[#333]" />
                   <DropdownMenuItem asChild>
