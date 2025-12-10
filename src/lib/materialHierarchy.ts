@@ -116,6 +116,9 @@ export const MATERIAL_CATEGORIES: MaterialCategory[] = [
     description: 'Rubber-like, flexible materials',
     materials: [
       'TPU',
+      'TPU 95A',
+      'TPU 85A',
+      'TPU 75A',
       'TPU-CF',
       'TPE',
       'TPC',
