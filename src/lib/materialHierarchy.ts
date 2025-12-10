@@ -8,6 +8,16 @@ export interface MaterialCategory {
   icon?: string;
 }
 
+export interface MaterialRequirements {
+  minNozzleTemp?: number;
+  maxNozzleTemp?: number;
+  minBedTemp?: number;
+  maxBedTemp?: number;
+  needsEnclosure?: boolean;
+  isAbrasive?: boolean;
+  needsDirectDrive?: boolean;
+}
+
 export interface MaterialInfo {
   name: string;
   category: string;
@@ -20,6 +30,7 @@ export interface MaterialInfo {
   };
   useCases: string[];
   requirements?: string[];
+  specs?: MaterialRequirements;
 }
 
 export const MATERIAL_CATEGORIES: MaterialCategory[] = [
