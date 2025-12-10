@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,22 +9,29 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, User, Globe, Shield, Loader2 } from "lucide-react";
+import { ArrowLeft, User, Globe, Shield, Loader2, Camera, Trash2 } from "lucide-react";
 import { z } from "zod";
 
 const displayNameSchema = z.string().trim().max(50, "Display name must be less than 50 characters").optional();
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 const Settings = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currency, setCurrency } = useCurrency();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -36,13 +43,14 @@ const Settings = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, email")
+        .select("display_name, email, avatar_url")
         .eq("id", user.id)
         .single();
 
       if (!error && data) {
         setDisplayName(data.display_name || "");
         setEmail(data.email || user.email || "");
+        setAvatarUrl(data.avatar_url || null);
       } else {
         setEmail(user.email || "");
       }
@@ -100,6 +108,141 @@ const Settings = () => {
     }
   };
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload a JPEG, PNG, WebP, or GIF image.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File Too Large",
+        description: "Please upload an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Add cache-busting parameter
+      const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
+
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          avatar_url: urlWithCacheBust,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(urlWithCacheBust);
+      toast({
+        title: "Avatar Updated",
+        description: "Your profile picture has been updated successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload avatar. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingAvatar(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return;
+
+    setUploadingAvatar(true);
+
+    try {
+      // List files in user's folder
+      const { data: files } = await supabase.storage
+        .from('avatars')
+        .list(user.id);
+
+      // Delete all files in user's folder
+      if (files && files.length > 0) {
+        const filePaths = files.map(f => `${user.id}/${f.name}`);
+        await supabase.storage.from('avatars').remove(filePaths);
+      }
+
+      // Update profile to remove avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          avatar_url: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(null);
+      toast({
+        title: "Avatar Removed",
+        description: "Your profile picture has been removed.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove avatar. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const getInitials = () => {
+    if (displayName) {
+      return displayName.slice(0, 2).toUpperCase();
+    }
+    if (email) {
+      return email.slice(0, 2).toUpperCase();
+    }
+    return 'U';
+  };
+
   if (!user) {
     return null;
   }
@@ -144,7 +287,77 @@ const Settings = () => {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
+                {/* Avatar Upload */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Profile Picture</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative group">
+                      <Avatar className="w-20 h-20 border-2 border-border">
+                        <AvatarImage src={avatarUrl || undefined} alt="Profile" />
+                        <AvatarFallback className="text-lg bg-muted">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <button
+                        onClick={handleAvatarClick}
+                        disabled={uploadingAvatar}
+                        className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        {uploadingAvatar ? (
+                          <Loader2 className="w-6 h-6 text-white animate-spin" />
+                        ) : (
+                          <Camera className="w-6 h-6 text-white" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAvatarClick}
+                        disabled={uploadingAvatar}
+                      >
+                        {uploadingAvatar ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Camera className="w-4 h-4 mr-2" />
+                            Upload Photo
+                          </>
+                        )}
+                      </Button>
+                      {avatarUrl && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveAvatar}
+                          disabled={uploadingAvatar}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Upload a JPEG, PNG, WebP, or GIF image (max 5MB).
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
+
+                <Separator className="bg-border/50" />
+
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                   <Input 
