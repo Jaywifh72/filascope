@@ -88,6 +88,29 @@ const COLOR_PATTERNS: Record<string, { hex: string; family: string }> = {
   'transparent': { hex: '#FFFFFF', family: 'Clear' },
 };
 
+// Suffixes to strip from product titles (compatibility notes, not product descriptors)
+const TITLE_CLEANUP_SUFFIXES = [
+  /\s*-?\s*Bambu\s+AMS\s+Compatible\s*$/i,
+  /\s*-?\s*AMS\s+Compatible\s*$/i,
+  /\s*-?\s*Bambu\s+Compatible\s*$/i,
+  /\s*\|\s*Matter3D\s*$/i,
+  /\s*\|\s*[\w\s]+$/i,  // " | BrandName" suffixes
+];
+
+// Normalize product title by removing marketing/compatibility suffixes
+function normalizeProductTitle(title: string): string {
+  let cleaned = title.trim();
+  
+  for (const pattern of TITLE_CLEANUP_SUFFIXES) {
+    cleaned = cleaned.replace(pattern, '').trim();
+  }
+  
+  // Remove duplicate spaces
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  
+  return cleaned;
+}
+
 function detectMaterial(title: string, description?: string): string | null {
   const text = `${title} ${description || ''}`;
   
@@ -305,9 +328,12 @@ async function fetchShopifyProducts(websiteUrl: string, brandName: string): Prom
       const material = detectMaterial(product.title, product.body_html);
       const colorInfo = extractColorInfo(product.title);
       
+      // Normalize the product title to remove marketing suffixes
+      const normalizedTitle = normalizeProductTitle(product.title);
+      
       const discoveredProduct: DiscoveredProduct = {
         product_id: String(product.id),
-        product_title: product.title,
+        product_title: normalizedTitle,
         product_handle: product.handle,
         product_url: `${baseUrl}/products/${product.handle}`,
         vendor: brandName,
