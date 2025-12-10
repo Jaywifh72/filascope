@@ -24,6 +24,7 @@ import { checkHotendFilamentCompatibility, checkBuildPlateFilamentCompatibility,
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { AccessoryCompatibilityBadge } from "@/components/AccessoryCompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { normalizeColorHex } from "@/lib/utils";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -1145,15 +1146,15 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                     {filament.color_family && (
                       <Badge variant="outline" className="text-sm px-3 py-1.5 flex items-center gap-2">
                         {filament.color_hex && (
-                          <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: filament.color_hex }} />
+                          <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: normalizeColorHex(filament.color_hex) }} />
                         )}
                         {filament.color_family}
                       </Badge>
                     )}
                     {filament.color_hex && (
                       <Badge variant="outline" className="text-sm px-3 py-1.5 flex items-center gap-2 font-mono">
-                        <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: filament.color_hex }} />
-                        {filament.color_hex.toUpperCase()}
+                        <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: normalizeColorHex(filament.color_hex) }} />
+                        {normalizeColorHex(filament.color_hex).toUpperCase()}
                       </Badge>
                     )}
                     {filament.finish_type && (
@@ -1196,8 +1197,8 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                                       <div 
                                         className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 shadow-inner"
                                         style={{ 
-                                          backgroundColor: variant.color_hex,
-                                          boxShadow: variant.color_hex?.toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
+                                          backgroundColor: normalizeColorHex(variant.color_hex),
+                                          boxShadow: normalizeColorHex(variant.color_hex).toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
                                         }}
                                       />
                                     ) : (
@@ -1214,8 +1215,8 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                                       <div 
                                         className="w-4 h-4 rounded-full border border-border shadow-sm"
                                         style={{ 
-                                          backgroundColor: variant.color_hex,
-                                          boxShadow: variant.color_hex?.toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
+                                          backgroundColor: normalizeColorHex(variant.color_hex),
+                                          boxShadow: normalizeColorHex(variant.color_hex).toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
                                         }}
                                       />
                                     ) : (
@@ -2162,9 +2163,9 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                       <div className="flex items-center gap-2">
                         <div 
                           className="w-8 h-8 rounded-lg border-2 border-border shadow-sm"
-                          style={{ backgroundColor: filament.color_hex }}
+                          style={{ backgroundColor: normalizeColorHex(filament.color_hex) }}
                         />
-                        <span className="text-sm font-mono text-foreground">{filament.color_hex}</span>
+                        <span className="text-sm font-mono text-foreground">{normalizeColorHex(filament.color_hex)}</span>
                       </div>
                     </div>
                   )}

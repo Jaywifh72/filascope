@@ -16,6 +16,7 @@ import {
   Palette, FileText, Link2, Search, TestTube, Loader2, Globe, Wrench
 } from "lucide-react";
 import { toast } from "sonner";
+import { normalizeColorHex } from "@/lib/utils";
 
 interface FilamentData {
   id: string;
@@ -694,7 +695,7 @@ const AdminFilamentAudit = () => {
                                           {f.color_hex ? (
                                             <div 
                                               className="w-4 h-4 rounded-full mx-auto border border-border"
-                                              style={{ backgroundColor: f.color_hex }}
+                                              style={{ backgroundColor: normalizeColorHex(f.color_hex) }}
                                             />
                                           ) : (
                                             <XCircle className="w-4 h-4 text-red-500 mx-auto" />
