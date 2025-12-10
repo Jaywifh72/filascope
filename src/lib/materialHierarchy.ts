@@ -8,6 +8,20 @@ export interface MaterialCategory {
   icon?: string;
 }
 
+export interface MaterialInfo {
+  name: string;
+  category: string;
+  description: string;
+  properties: {
+    printability: 'Easy' | 'Medium' | 'Hard' | 'Expert';
+    strength: 'Low' | 'Medium' | 'High' | 'Very High';
+    flexibility: 'Rigid' | 'Semi-Flexible' | 'Flexible' | 'Very Flexible';
+    heatResistance: 'Low' | 'Medium' | 'High' | 'Very High';
+  };
+  useCases: string[];
+  requirements?: string[];
+}
+
 export const MATERIAL_CATEGORIES: MaterialCategory[] = [
   {
     id: 'pla-family',
@@ -214,6 +228,262 @@ export const MATERIAL_CATEGORIES: MaterialCategory[] = [
   },
 ];
 
+// Material information with properties and use cases
+export const MATERIAL_INFO: Record<string, MaterialInfo> = {
+  // PLA Family
+  'PLA': {
+    name: 'PLA',
+    category: 'pla-family',
+    description: 'Polylactic acid - the most popular 3D printing material. Biodegradable, easy to print.',
+    properties: { printability: 'Easy', strength: 'Medium', flexibility: 'Rigid', heatResistance: 'Low' },
+    useCases: ['Prototypes', 'Decorative items', 'Low-stress parts', 'Beginner projects'],
+  },
+  'PLA+': {
+    name: 'PLA+',
+    category: 'pla-family',
+    description: 'Enhanced PLA with improved strength and layer adhesion.',
+    properties: { printability: 'Easy', strength: 'Medium', flexibility: 'Rigid', heatResistance: 'Low' },
+    useCases: ['Functional prototypes', 'Mechanical parts', 'Improved durability needs'],
+  },
+  'PLA-CF': {
+    name: 'PLA-CF',
+    category: 'pla-family',
+    description: 'Carbon fiber reinforced PLA for increased stiffness and reduced weight.',
+    properties: { printability: 'Medium', strength: 'High', flexibility: 'Rigid', heatResistance: 'Low' },
+    useCases: ['RC parts', 'Drone frames', 'Lightweight structural parts'],
+    requirements: ['Hardened nozzle recommended'],
+  },
+  'PLA-Wood': {
+    name: 'PLA-Wood',
+    category: 'pla-family',
+    description: 'Wood-filled PLA for a natural wood-like appearance and texture.',
+    properties: { printability: 'Medium', strength: 'Low', flexibility: 'Rigid', heatResistance: 'Low' },
+    useCases: ['Decorative items', 'Art projects', 'Wood-look finishes'],
+  },
+  'PLA-Silk': {
+    name: 'PLA-Silk',
+    category: 'pla-family',
+    description: 'Shiny, silk-like finish PLA for aesthetic prints.',
+    properties: { printability: 'Easy', strength: 'Medium', flexibility: 'Rigid', heatResistance: 'Low' },
+    useCases: ['Display pieces', 'Decorative prints', 'Gifts'],
+  },
+  'PLA-Glow': {
+    name: 'PLA-Glow',
+    category: 'pla-family',
+    description: 'Glow-in-the-dark PLA with phosphorescent additives.',
+    properties: { printability: 'Medium', strength: 'Medium', flexibility: 'Rigid', heatResistance: 'Low' },
+    useCases: ['Night visibility items', 'Toys', 'Decorative pieces'],
+    requirements: ['Hardened nozzle recommended'],
+  },
+  'HTPLA': {
+    name: 'HTPLA',
+    category: 'pla-family',
+    description: 'High-temperature PLA that can be heat-treated for improved thermal resistance.',
+    properties: { printability: 'Easy', strength: 'Medium', flexibility: 'Rigid', heatResistance: 'Medium' },
+    useCases: ['Heat-resistant parts', 'Automotive interior', 'Functional parts'],
+    requirements: ['Annealing required for heat resistance'],
+  },
+  
+  // PETG Family
+  'PETG': {
+    name: 'PETG',
+    category: 'petg-family',
+    description: 'Glycol-modified PET - excellent balance of printability, strength, and chemical resistance.',
+    properties: { printability: 'Easy', strength: 'High', flexibility: 'Semi-Flexible', heatResistance: 'Medium' },
+    useCases: ['Functional parts', 'Food containers', 'Outdoor use', 'Mechanical parts'],
+  },
+  'PETG-CF': {
+    name: 'PETG-CF',
+    category: 'petg-family',
+    description: 'Carbon fiber reinforced PETG for enhanced stiffness and dimensional stability.',
+    properties: { printability: 'Medium', strength: 'Very High', flexibility: 'Rigid', heatResistance: 'Medium' },
+    useCases: ['Structural parts', 'Tool handles', 'High-stress applications'],
+    requirements: ['Hardened nozzle required'],
+  },
+  'Pro PETG': {
+    name: 'Pro PETG',
+    category: 'petg-family',
+    description: 'Professional-grade PETG with improved clarity and layer adhesion.',
+    properties: { printability: 'Easy', strength: 'High', flexibility: 'Semi-Flexible', heatResistance: 'Medium' },
+    useCases: ['Production parts', 'Clear containers', 'Professional prototypes'],
+  },
+  
+  // ABS Family
+  'ABS': {
+    name: 'ABS',
+    category: 'abs-family',
+    description: 'Acrylonitrile Butadiene Styrene - strong, heat-resistant, widely used in industry.',
+    properties: { printability: 'Hard', strength: 'High', flexibility: 'Semi-Flexible', heatResistance: 'High' },
+    useCases: ['Automotive parts', 'Electronics housings', 'Functional prototypes'],
+    requirements: ['Enclosed printer recommended', 'Heated bed required'],
+  },
+  'ABS-CF': {
+    name: 'ABS-CF',
+    category: 'abs-family',
+    description: 'Carbon fiber reinforced ABS for maximum stiffness and heat resistance.',
+    properties: { printability: 'Hard', strength: 'Very High', flexibility: 'Rigid', heatResistance: 'High' },
+    useCases: ['High-performance parts', 'Automotive', 'Aerospace prototypes'],
+    requirements: ['Hardened nozzle required', 'Enclosure required'],
+  },
+  
+  // ASA Family
+  'ASA': {
+    name: 'ASA',
+    category: 'asa-family',
+    description: 'Acrylonitrile Styrene Acrylate - UV-resistant alternative to ABS for outdoor use.',
+    properties: { printability: 'Medium', strength: 'High', flexibility: 'Semi-Flexible', heatResistance: 'High' },
+    useCases: ['Outdoor parts', 'Automotive exterior', 'Weather-exposed items'],
+    requirements: ['Enclosed printer recommended'],
+  },
+  'ASA-CF': {
+    name: 'ASA-CF',
+    category: 'asa-family',
+    description: 'Carbon fiber reinforced ASA for outdoor structural applications.',
+    properties: { printability: 'Hard', strength: 'Very High', flexibility: 'Rigid', heatResistance: 'High' },
+    useCases: ['Outdoor structural parts', 'Automotive', 'Drone frames'],
+    requirements: ['Hardened nozzle required', 'Enclosure required'],
+  },
+  
+  // Flexible
+  'TPU': {
+    name: 'TPU',
+    category: 'flexible',
+    description: 'Thermoplastic Polyurethane - flexible, rubber-like material with excellent abrasion resistance.',
+    properties: { printability: 'Medium', strength: 'High', flexibility: 'Flexible', heatResistance: 'Medium' },
+    useCases: ['Phone cases', 'Gaskets', 'Shoe soles', 'Flexible hinges'],
+    requirements: ['Direct drive extruder recommended', 'Slow print speeds'],
+  },
+  'TPE': {
+    name: 'TPE',
+    category: 'flexible',
+    description: 'Thermoplastic Elastomer - softer and more flexible than TPU.',
+    properties: { printability: 'Hard', strength: 'Medium', flexibility: 'Very Flexible', heatResistance: 'Low' },
+    useCases: ['Soft grips', 'Seals', 'Flexible parts'],
+    requirements: ['Direct drive extruder required'],
+  },
+  'PEBA': {
+    name: 'PEBA',
+    category: 'flexible',
+    description: 'Polyether Block Amide - premium flexible material with excellent recovery.',
+    properties: { printability: 'Hard', strength: 'High', flexibility: 'Flexible', heatResistance: 'Medium' },
+    useCases: ['Athletic footwear', 'Medical devices', 'High-performance flexible parts'],
+  },
+  
+  // Nylon Family
+  'Nylon': {
+    name: 'Nylon',
+    category: 'nylon-family',
+    description: 'Polyamide - strong, wear-resistant engineering plastic with excellent durability.',
+    properties: { printability: 'Hard', strength: 'Very High', flexibility: 'Semi-Flexible', heatResistance: 'High' },
+    useCases: ['Gears', 'Bearings', 'Hinges', 'Functional mechanical parts'],
+    requirements: ['Dry storage required', 'Enclosure recommended'],
+  },
+  'Nylon-CF': {
+    name: 'Nylon-CF',
+    category: 'nylon-family',
+    description: 'Carbon fiber reinforced Nylon for maximum strength and dimensional stability.',
+    properties: { printability: 'Hard', strength: 'Very High', flexibility: 'Rigid', heatResistance: 'High' },
+    useCases: ['Load-bearing parts', 'Jigs and fixtures', 'End-use parts'],
+    requirements: ['Hardened nozzle required', 'Dry storage essential'],
+  },
+  'Nylon-GF': {
+    name: 'Nylon-GF',
+    category: 'nylon-family',
+    description: 'Glass fiber reinforced Nylon for improved stiffness at lower cost.',
+    properties: { printability: 'Hard', strength: 'Very High', flexibility: 'Rigid', heatResistance: 'High' },
+    useCases: ['Industrial parts', 'Structural components', 'Cost-effective reinforced parts'],
+    requirements: ['Hardened nozzle required'],
+  },
+  
+  // Polycarbonate
+  'PC': {
+    name: 'PC',
+    category: 'polycarbonate',
+    description: 'Polycarbonate - extremely strong and heat-resistant engineering thermoplastic.',
+    properties: { printability: 'Expert', strength: 'Very High', flexibility: 'Semi-Flexible', heatResistance: 'Very High' },
+    useCases: ['Impact-resistant parts', 'High-temp applications', 'Safety equipment'],
+    requirements: ['High-temp hotend', 'Enclosure required', '110°C+ bed'],
+  },
+  'PC-CF': {
+    name: 'PC-CF',
+    category: 'polycarbonate',
+    description: 'Carbon fiber reinforced Polycarbonate for ultimate performance.',
+    properties: { printability: 'Expert', strength: 'Very High', flexibility: 'Rigid', heatResistance: 'Very High' },
+    useCases: ['Aerospace', 'Automotive', 'High-performance tooling'],
+    requirements: ['Hardened nozzle required', 'All-metal hotend', 'Enclosure required'],
+  },
+  'PC-ABS': {
+    name: 'PC-ABS',
+    category: 'polycarbonate',
+    description: 'Polycarbonate-ABS blend combining strength of PC with printability of ABS.',
+    properties: { printability: 'Hard', strength: 'Very High', flexibility: 'Semi-Flexible', heatResistance: 'High' },
+    useCases: ['Automotive interior', 'Electronics housings', 'Functional prototypes'],
+    requirements: ['Enclosure recommended'],
+  },
+  
+  // High Performance
+  'PEEK': {
+    name: 'PEEK',
+    category: 'high-performance',
+    description: 'Polyether Ether Ketone - premium industrial polymer with exceptional properties.',
+    properties: { printability: 'Expert', strength: 'Very High', flexibility: 'Rigid', heatResistance: 'Very High' },
+    useCases: ['Aerospace', 'Medical implants', 'High-temp industrial parts'],
+    requirements: ['400°C+ hotend', 'Heated chamber required', 'Special equipment'],
+  },
+  'PEI': {
+    name: 'PEI',
+    category: 'high-performance',
+    description: 'Polyetherimide (Ultem) - high-performance thermoplastic for demanding applications.',
+    properties: { printability: 'Expert', strength: 'Very High', flexibility: 'Rigid', heatResistance: 'Very High' },
+    useCases: ['Aerospace components', 'Automotive under-hood', 'Medical devices'],
+    requirements: ['High-temp printer required', 'Heated chamber'],
+  },
+  
+  // Copolyester
+  'CPE': {
+    name: 'CPE',
+    category: 'copolyester',
+    description: 'Copolyester - enhanced PETG with improved chemical resistance and clarity.',
+    properties: { printability: 'Easy', strength: 'High', flexibility: 'Semi-Flexible', heatResistance: 'Medium' },
+    useCases: ['Clear parts', 'Chemical containers', 'Professional prototypes'],
+  },
+  'Pro PCTG': {
+    name: 'Pro PCTG',
+    category: 'copolyester',
+    description: 'Professional PCTG copolyester with excellent impact resistance and clarity.',
+    properties: { printability: 'Easy', strength: 'High', flexibility: 'Semi-Flexible', heatResistance: 'Medium' },
+    useCases: ['Impact-resistant parts', 'Clear containers', 'Food-safe applications'],
+  },
+  
+  // Polypropylene
+  'PP': {
+    name: 'PP',
+    category: 'polypropylene',
+    description: 'Polypropylene - chemical-resistant, fatigue-resistant with living hinge capability.',
+    properties: { printability: 'Hard', strength: 'Medium', flexibility: 'Semi-Flexible', heatResistance: 'Medium' },
+    useCases: ['Living hinges', 'Chemical containers', 'Food packaging'],
+    requirements: ['PP-specific bed adhesion solution'],
+  },
+  
+  // Support Materials
+  'PVA': {
+    name: 'PVA',
+    category: 'support-materials',
+    description: 'Polyvinyl Alcohol - water-soluble support material for complex geometries.',
+    properties: { printability: 'Medium', strength: 'Low', flexibility: 'Rigid', heatResistance: 'Low' },
+    useCases: ['Dissolvable supports', 'Complex overhangs', 'Multi-material printing'],
+    requirements: ['Dry storage essential', 'Dual extrusion printer'],
+  },
+  'HIPS': {
+    name: 'HIPS',
+    category: 'support-materials',
+    description: 'High Impact Polystyrene - limonene-soluble support for ABS prints.',
+    properties: { printability: 'Medium', strength: 'Low', flexibility: 'Rigid', heatResistance: 'Low' },
+    useCases: ['Supports for ABS', 'Complex geometries'],
+    requirements: ['Dual extrusion printer', 'Limonene for dissolving'],
+  },
+};
+
 // Flat map of material to category for quick lookup
 export const MATERIAL_TO_CATEGORY: Record<string, string> = {};
 MATERIAL_CATEGORIES.forEach(category => {
@@ -229,6 +499,45 @@ export function getMaterialCategory(material: string): MaterialCategory | undefi
   const categoryId = MATERIAL_TO_CATEGORY[material];
   if (!categoryId) return undefined;
   return MATERIAL_CATEGORIES.find(c => c.id === categoryId);
+}
+
+/**
+ * Get detailed info for a material
+ */
+export function getMaterialInfo(material: string): MaterialInfo | undefined {
+  // Try exact match first
+  if (MATERIAL_INFO[material]) {
+    return MATERIAL_INFO[material];
+  }
+  
+  // Try to find base material (e.g., "PLA-Marble" -> "PLA")
+  const baseMaterial = material.split('-')[0].split(' ')[0];
+  if (MATERIAL_INFO[baseMaterial]) {
+    return {
+      ...MATERIAL_INFO[baseMaterial],
+      name: material,
+      description: `Variant of ${baseMaterial}. ${MATERIAL_INFO[baseMaterial].description}`,
+    };
+  }
+  
+  // Return a generic info based on category
+  const category = getMaterialCategory(material);
+  if (category) {
+    return {
+      name: material,
+      category: category.id,
+      description: category.description,
+      properties: {
+        printability: 'Medium',
+        strength: 'Medium',
+        flexibility: 'Rigid',
+        heatResistance: 'Medium',
+      },
+      useCases: ['General purpose'],
+    };
+  }
+  
+  return undefined;
 }
 
 /**

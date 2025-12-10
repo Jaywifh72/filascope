@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MaterialBadge } from "@/components/MaterialBadge";
 import { ExternalLink, ChevronDown, GitCompare, X, LayoutGrid, List, CheckCircle, XCircle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -1079,9 +1080,11 @@ const Finder = () => {
                           <span className="text-sm text-muted-foreground truncate block">{filament.product_title}</span>
                         </td>
                         <td className="py-3 px-3">
-                          <Badge variant="outline" className="text-xs border-primary/30 text-primary">
-                            {filament.material || "—"}
-                          </Badge>
+                          {filament.material ? (
+                            <MaterialBadge material={filament.material} />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="py-3 px-3 text-right">
                           <span className="font-mono text-sm font-bold text-orange-400">
@@ -1188,7 +1191,9 @@ const Finder = () => {
                         <p className="font-semibold text-foreground truncate">{filament.product_title}</p>
                         <p className="text-sm text-muted-foreground">{filament.vendor}</p>
                         {filament.material && (
-                          <p className="text-xs text-primary mt-0.5">{filament.material}</p>
+                          <div className="mt-1">
+                            <MaterialBadge material={filament.material} />
+                          </div>
                         )}
                         {filament.diameter_nominal_mm && (
                           <span className="text-xs text-muted-foreground">{filament.diameter_nominal_mm}mm</span>
