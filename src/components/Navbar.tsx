@@ -178,48 +178,8 @@ const Navbar = () => {
             />
           </Link>
 
-          {/* Command Search Bar */}
-          <div className="relative flex-1 max-w-xl">
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                <Terminal className="w-4 h-4 text-primary" />
-                <span className="text-xs text-muted-foreground font-mono">&gt;</span>
-              </div>
-              <input
-                ref={searchRef}
-                type="text"
-                value={searchValue}
-                onChange={handleSearchChange}
-                onKeyDown={handleSearchKeyDown}
-                onFocus={() => searchValue.startsWith("/") && setShowCommands(true)}
-                onBlur={() => setTimeout(() => setShowCommands(false), 200)}
-                placeholder="Type / for commands or search filaments..."
-                className="w-full h-10 pl-12 pr-4 bg-[#1A1A1A] border border-[#333] rounded-lg text-white placeholder:text-muted-foreground font-mono text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all"
-              />
-              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground bg-[#252525] rounded border border-[#333]">
-                ESC
-              </kbd>
-            </div>
-
-            {/* Slash Commands Dropdown */}
-            {showCommands && filteredCommands.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-[#1A1A1A] border border-[#333] rounded-lg overflow-hidden shadow-xl z-50">
-                <div className="p-2 border-b border-[#333]">
-                  <span className="text-xs text-muted-foreground font-mono">SLASH COMMANDS</span>
-                </div>
-                {filteredCommands.map((cmd) => (
-                  <button
-                    key={cmd.command}
-                    onClick={() => handleCommandClick(cmd)}
-                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-primary/10 transition-colors text-left"
-                  >
-                    <code className="text-primary font-mono text-sm">{cmd.command}</code>
-                    <span className="text-muted-foreground text-sm">{cmd.description}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Spacer for layout balance */}
+          <div className="flex-1" />
 
           {/* Navigation Links */}
           <div className="hidden lg:flex items-center gap-1">
