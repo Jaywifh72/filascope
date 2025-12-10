@@ -116,7 +116,7 @@ const isHardenedNozzle = (hotendSpecs: Record<string, unknown> | null, hotendNam
 
 export function MaterialRecommendations() {
   const { selectedPrinter, selectedHotend, compatibleHotends } = usePrinterSelection();
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const recommendations = useMemo(() => {
     if (!selectedPrinter) return null;
