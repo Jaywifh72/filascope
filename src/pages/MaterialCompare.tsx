@@ -29,11 +29,18 @@ import MaterialReference from "@/components/MaterialReference";
 // Helper to get numeric value from property level for comparison
 const getPropertyValue = (level: string): number => {
   const levelMap: Record<string, number> = {
+    // General levels
     'Very Low': 1, 'Low': 2, 'Medium': 3, 'High': 4, 'Very High': 5,
     'Easy': 4, 'Hard': 2, 'Expert': 1,
     'Rigid': 1, 'Semi-Flexible': 2, 'Flexible': 3, 'Very Flexible': 4,
-    'Excellent': 4, 'Good': 3, 'Difficult': 2, 'Not Possible': 1,
+    'Excellent': 5, 'Good': 4, 'Difficult': 2, 'Not Possible': 1,
     'Strong Chemical Bond': 4, 'Mechanical Bond': 3, 'Weak Bond': 2, 'No Bond': 1,
+    // Food Safety rankings
+    'FDA Approved': 5, 'Food Safe': 5, 'Possible with Certification': 3, 
+    'Conditional': 2, 'Not Safe': 1, 'Not Food Safe': 1,
+    // Biodegradability rankings
+    'Fully Biodegradable': 5, 'Compostable': 4, 'Industrial Compostable': 3,
+    'Partially Biodegradable': 2, 'Not Biodegradable': 1, 'Non-Biodegradable': 1,
   };
   return levelMap[level] || 0;
 };
