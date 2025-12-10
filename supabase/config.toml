@@ -122,3 +122,6 @@ verify_jwt = true
 
 [functions.discover-filament-brand]
 verify_jwt = true
+
+[functions.parse-filament-tds]
+verify_jwt = true
