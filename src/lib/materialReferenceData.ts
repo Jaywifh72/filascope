@@ -3500,6 +3500,475 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
     },
   },
 
+  'Nylon-CF': {
+    name: 'Nylon-CF',
+    fullName: 'Carbon Fiber Reinforced Polyamide (PA-CF)',
+    origin: {
+      yearInvented: '2014-2015 (3D printing filaments)',
+      originalCompany: 'Multiple pioneers including Markforged, 3DXTech',
+      keyMilestones: [
+        '2014: Markforged introduces continuous carbon fiber nylon',
+        '2015: Short carbon fiber PA filaments become available',
+        '2017: PA-CF becomes mainstream engineering filament',
+        '2020+: Wide adoption for functional prototypes and end-use parts',
+      ],
+      majorManufacturers: ['Markforged', '3DXTech', 'Polymaker', 'colorFabb', 'Matterhackers', 'Fiberlogy'],
+    },
+    composition: {
+      basePolymer: 'Polyamide (typically PA6, PA66, or PA12)',
+      chemicalFamily: 'Carbon Fiber Reinforced Polyamide Composite',
+      keyAdditives: ['Chopped carbon fibers (10-20%)', 'Coupling agents', 'Lubricants'],
+      coloringAgents: 'Black/dark grey due to carbon fibers',
+      specialFillers: ['PAN-based carbon fibers', 'Pitch-based carbon fibers (rare)'],
+    },
+    familyContext: {
+      parentPolymer: 'Nylon (Polyamide)',
+      variants: ['PA6-CF', 'PA12-CF', 'PA66-CF', 'High-CF content variants'],
+      chemicalComparison: 'Similar to Nylon-GF but lighter, stiffer, and stronger. Electrically conductive unlike GF.',
+      evolution: 'Premium composite developed for maximum stiffness-to-weight ratio in 3D printing.',
+    },
+    strengths: {
+      uniqueProperties: ['Exceptional stiffness', 'High strength-to-weight ratio', 'Excellent dimensional stability', 'Low thermal expansion', 'Professional appearance'],
+      bestUseScenarios: ['Structural parts', 'Tooling and fixtures', 'Drone components', 'Automotive parts', 'Prosthetics'],
+      advantagesOverCompetitors: ['Stiffest 3D printing material available', 'Lighter than GF equivalent', 'Better thermal stability', 'Professional matte finish'],
+      whyChooseThis: 'When you need maximum stiffness and strength with minimum weight for demanding engineering applications.',
+    },
+    weaknesses: {
+      limitations: ['Very abrasive - requires hardened nozzle', 'Expensive', 'Hygroscopic', 'Electrically conductive', 'Brittle in thin sections'],
+      commonProblems: ['Destroys brass nozzles quickly', 'Moisture absorption', 'Warping', 'Poor layer adhesion if wet', 'Anisotropic properties'],
+      environmentalConcerns: ['Carbon fibers non-biodegradable', 'Dust hazard', 'Difficult to recycle', 'High embodied energy'],
+      whenNotToUse: ['Electrical insulation required', 'Impact-resistant parts', 'Flexible parts', 'Budget projects'],
+    },
+    practicalContext: {
+      industryAdoption: ['Aerospace', 'Automotive', 'Robotics', 'Medical devices', 'Tooling', 'Drones'],
+      commonApplications: ['Drone frames', 'End effectors', 'Jigs and fixtures', 'Brackets', 'Prosthetic components', 'Race car parts'],
+      safetyStandards: ['Various aerospace and automotive certifications available'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'CF-nylon can be as stiff as aluminum at 1/3 the weight',
+        'Short fibers orient during printing, creating strongest parts in XY direction',
+        'Markforged pioneered continuous carbon fiber which is even stronger',
+        'The matte black finish is prized for aesthetic as well as functional parts',
+      ],
+      whyInvented: 'Developed to bring aerospace-grade composite performance to desktop 3D printing.',
+      controversies: [
+        'Often over-specified when simpler materials would suffice',
+        'Marketing claims of "metal replacement" can be misleading',
+        'Health concerns about carbon fiber dust during post-processing',
+      ],
+      marketAdoption: 'The go-to material for serious engineering applications in FDM 3D printing.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '90-150', unit: 'MPa', implications: 'Excellent strength - among the highest for FDM materials.' },
+        { name: 'Tensile Modulus', value: '8000-14000', unit: 'MPa', implications: 'Extremely stiff. 5-7x stiffer than unfilled nylon.' },
+        { name: 'Elongation at Break', value: '1.5-4', unit: '%', implications: 'Very low. Material is stiff but brittle.' },
+        { name: 'Heat Deflection (HDT)', value: '180-250', unit: '°C (1.8 MPa)', implications: 'Excellent heat resistance. Maintains stiffness at high temps.' },
+        { name: 'Density', value: '1.1-1.2', unit: 'g/cm³', implications: 'Light - carbon fiber is less dense than glass.' },
+        { name: 'Fiber Content', value: '10-20', unit: '%', implications: 'Optimized for printability vs stiffness balance.' },
+      ],
+      notes: 'Properties highly anisotropic. XY direction (along fibers) much stronger than Z direction.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 255, max: 290, optimal: 275 },
+      bedTemp: { min: 80, max: 110, optimal: 95 },
+      coolingFan: { min: 0, max: 20, notes: 'Minimal cooling for best layer adhesion.' },
+      enclosure: { required: true, notes: 'Required. Chamber temp 50-70°C recommended.' },
+      drying: { temp: 80, duration: '8-12 hours', notes: 'Critical - moisture destroys print quality. Use dry box during printing.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Moderate speeds. Slower for better fiber orientation.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED - CF destroys brass rapidly',
+        'Use 0.5mm+ nozzle to prevent clogging',
+        'Print from dry box essential',
+        'Garolite provides best bed adhesion',
+        'Larger layer heights improve Z-strength',
+        'Wear mask when sanding - carbon dust hazardous',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Garolite (G10)', 'Nylon-specific sheets'],
+        good: ['PEI with glue', 'Glass with specialty adhesive'],
+        poor: ['Bare PEI', 'Blue tape'],
+      },
+      releaseAgents: 'Strong adhesion to Garolite. Cool completely before removal.',
+      multiMaterial: [
+        { material: 'Nylon', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer base. Excellent for reinforced sections.' },
+        { material: 'Nylon-GF', bondQuality: 'Strong Chemical Bond', notes: 'Compatible - can mix for cost optimization.' },
+        { material: 'TPU', bondQuality: 'Mechanical Bond', notes: 'Useful for rigid-flexible combinations.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Chemical', effectiveness: 'Difficult', notes: 'Not recommended - fibers remain exposed.' },
+      ],
+      mechanical: ['Sanding possible with PPE', 'Machining possible but dulls tools', 'Tumbling for edge smoothing'],
+      glues: ['Epoxy (best)', 'Cyanoacrylate with activator', 'Structural adhesives'],
+      painting: 'Usually left natural (matte black). Prime heavily if painting needed.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Nylon fumes plus carbon particles. Use ventilation and filtration.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Fiber exposure and porosity concerns.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Carbon fibers persist indefinitely.' },
+      additionalNotes: [
+        'WEAR RESPIRATORY PROTECTION when sanding',
+        'Carbon fiber dust is a respiratory hazard',
+        'Use HEPA filtration during printing',
+        'Carbon fibers can irritate skin',
+      ],
+    },
+  },
+
+  'Nylon-AF': {
+    name: 'Nylon-AF',
+    fullName: 'Aramid Fiber Reinforced Polyamide (Kevlar-Nylon)',
+    origin: {
+      yearInvented: '2016-2017 (3D printing filaments)',
+      originalCompany: 'DuPont (Kevlar fiber), adapted for 3D printing by various manufacturers',
+      keyMilestones: [
+        '1965: DuPont invents Kevlar aramid fiber',
+        '2016: Aramid-reinforced nylon filaments emerge',
+        '2018: Matterhackers NylonK and others launch',
+        '2020+: Niche adoption for impact-critical applications',
+      ],
+      majorManufacturers: ['Matterhackers (NylonK)', 'Fillamentum', 'Recreus', 'Spectrum'],
+    },
+    composition: {
+      basePolymer: 'Polyamide (typically PA6 or PA12)',
+      chemicalFamily: 'Aramid Fiber Reinforced Polyamide Composite',
+      keyAdditives: ['Chopped aramid fibers (Kevlar/Twaron) 10-20%', 'Coupling agents'],
+      coloringAgents: 'Yellow-tan due to aramid fiber color (Kevlar yellow)',
+      specialFillers: ['Para-aramid fibers (Kevlar, Twaron)'],
+    },
+    familyContext: {
+      parentPolymer: 'Nylon (Polyamide)',
+      variants: ['NylonK (Matterhackers)', 'Various branded AF-nylons'],
+      chemicalComparison: 'Less stiff than CF but much tougher. Excellent impact resistance unlike brittle CF.',
+      evolution: 'Developed to combine nylon\'s toughness with aramid\'s energy absorption.',
+    },
+    strengths: {
+      uniqueProperties: ['Exceptional impact resistance', 'Excellent abrasion resistance', 'High fatigue life', 'Good vibration damping', 'No electrical conductivity'],
+      bestUseScenarios: ['Impact-resistant parts', 'Wear surfaces', 'Protective equipment', 'Vibration damping', 'Parts that must not shatter'],
+      advantagesOverCompetitors: ['Much tougher than CF-nylon', 'Better impact resistance than GF', 'Electrically insulating', 'Excellent fatigue resistance'],
+      whyChooseThis: 'When parts must withstand impacts, vibration, or repeated stress cycles without fracturing.',
+    },
+    weaknesses: {
+      limitations: ['Less stiff than CF', 'Moisture sensitive', 'Limited color options (yellow-tan)', 'Difficult to sand smooth'],
+      commonProblems: ['Fuzzy surface finish from protruding fibers', 'Hygroscopic', 'Warping', 'Fibers can clog nozzles'],
+      environmentalConcerns: ['Aramid non-biodegradable', 'Difficult to recycle', 'Dust concerns'],
+      whenNotToUse: ['Maximum stiffness required (use CF)', 'Aesthetic parts (fuzzy finish)', 'When appearance matters more than function'],
+    },
+    practicalContext: {
+      industryAdoption: ['Protective equipment', 'Automotive', 'Aerospace', 'Industrial', 'Sports equipment'],
+      commonApplications: ['Protective covers', 'Impact guards', 'Wear pads', 'Vibration dampers', 'Hinges', 'Repeated-stress components'],
+      safetyStandards: ['Kevlar is used in bulletproof vests - aramid nylon inherits some protective properties'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'Kevlar was invented by Stephanie Kwolek at DuPont in 1965',
+        'Aramid fibers are 5x stronger than steel by weight',
+        'The yellow color is characteristic of Kevlar - can\'t be hidden easily',
+        'Unlike CF, aramid fibers don\'t splinter when broken - safer handling',
+      ],
+      whyInvented: 'Created to bring Kevlar\'s legendary toughness to 3D printed parts.',
+      controversies: [
+        'Often confused with CF-nylon despite very different properties',
+        'The fuzzy surface finish is polarizing - some love it, some hate it',
+      ],
+      marketAdoption: 'Niche material for specific impact/wear applications. Less common than CF or GF.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '60-90', unit: 'MPa', implications: 'Good strength. Lower than CF but more ductile.' },
+        { name: 'Tensile Modulus', value: '3000-5000', unit: 'MPa', implications: 'Moderate stiffness. Less stiff than CF or GF.' },
+        { name: 'Elongation at Break', value: '6-12', unit: '%', implications: 'Higher than CF. More forgiving before failure.' },
+        { name: 'Impact Strength', value: '150-250', unit: 'J/m', implications: 'Excellent - the key advantage of aramid reinforcement.' },
+        { name: 'Abrasion Resistance', value: 'Excellent', unit: '', implications: 'Outstanding wear resistance for sliding applications.' },
+        { name: 'Fiber Content', value: '10-20', unit: '%', implications: 'Balanced for printability and toughness.' },
+      ],
+      notes: 'Trades stiffness for toughness compared to CF. The go-to when impact resistance matters.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 250, max: 280, optimal: 265 },
+      bedTemp: { min: 75, max: 100, optimal: 90 },
+      coolingFan: { min: 0, max: 30, notes: 'Low cooling for layer adhesion.' },
+      enclosure: { required: true, notes: 'Recommended for consistent results.' },
+      drying: { temp: 75, duration: '8-12 hours', notes: 'Critical - hygroscopic like all nylons.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Moderate speeds. Aramid fibers are less abrasive than CF.' },
+      additionalNotes: [
+        'Hardened nozzle recommended but less critical than CF',
+        'Aramid is less abrasive than carbon or glass fiber',
+        'Surface will have characteristic fuzzy texture',
+        'Print from dry box for best results',
+        'Garolite or glue on PEI for bed adhesion',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Garolite (G10)', 'PEI with glue stick'],
+        good: ['Glass with adhesive', 'BuildTak'],
+        poor: ['Bare smooth PEI', 'Blue tape'],
+      },
+      releaseAgents: 'Glue stick helps with adhesion and release.',
+      multiMaterial: [
+        { material: 'Nylon', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer base.' },
+        { material: 'Nylon-CF', bondQuality: 'Strong Chemical Bond', notes: 'Can combine for stiffness+toughness.' },
+        { material: 'TPU', bondQuality: 'Mechanical Bond', notes: 'Useful for flexible-tough combinations.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Chemical', effectiveness: 'Difficult', notes: 'Not practical - fibers remain fuzzy.' },
+      ],
+      mechanical: ['Difficult to sand smooth', 'Can be tumbled', 'Trimming with scissors/knife works well'],
+      glues: ['Epoxy', 'Cyanoacrylate with activator', 'Contact adhesive'],
+      painting: 'Difficult due to texture. Accept natural finish or use thick primer.',
+    },
+    safety: {
+      fumes: { level: 'Low', notes: 'Aramid produces fewer harmful particles than CF. Still use ventilation.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Fiber exposure concerns.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Aramid persists in environment.' },
+      additionalNotes: [
+        'Safer to handle than CF - fibers don\'t splinter',
+        'Still use dust mask when sanding',
+        'Less skin irritation than glass or carbon fiber',
+      ],
+    },
+  },
+
+  'NylonG': {
+    name: 'NylonG',
+    fullName: 'Glass Fiber Reinforced Nylon (Matterhackers)',
+    origin: {
+      yearInvented: '2017',
+      originalCompany: 'Matterhackers',
+      keyMilestones: [
+        '2017: Matterhackers launches NylonG as part of PRO series',
+        '2018+: Becomes popular entry point for reinforced nylon',
+        '2020+: Widely recommended for functional parts',
+      ],
+      majorManufacturers: ['Matterhackers'],
+    },
+    composition: {
+      basePolymer: 'Polyamide (proprietary blend)',
+      chemicalFamily: 'Glass Fiber Reinforced Polyamide',
+      keyAdditives: ['Short glass fibers (~20%)', 'Processing aids'],
+      coloringAgents: 'Natural grey/off-white',
+      specialFillers: ['E-glass fibers'],
+    },
+    familyContext: {
+      parentPolymer: 'Nylon (Polyamide)',
+      variants: ['NylonG is Matterhackers\' branded GF-nylon'],
+      chemicalComparison: 'Similar to generic PA-GF30. Optimized for FDM printing.',
+      evolution: 'Branded version of glass-filled nylon optimized for Matterhackers ecosystem.',
+    },
+    strengths: {
+      uniqueProperties: ['High stiffness', 'Good strength', 'Dimensional stability', 'Electrical insulation', 'Cost-effective composite'],
+      bestUseScenarios: ['Structural parts', 'Housings', 'Brackets', 'Jigs and fixtures', 'Electrical enclosures'],
+      advantagesOverCompetitors: ['Well-characterized for FDM', 'Good documentation', 'Reliable performance', 'Cheaper than CF-nylon'],
+      whyChooseThis: 'When you want reliable glass-filled nylon performance with good documentation and support.',
+    },
+    weaknesses: {
+      limitations: ['Abrasive - requires hardened nozzle', 'Hygroscopic', 'Less stiff than NylonX (CF)'],
+      commonProblems: ['Wears brass nozzles', 'Moisture absorption', 'Warping on large parts'],
+      environmentalConcerns: ['Glass fibers non-biodegradable', 'Dust hazard during post-processing'],
+      whenNotToUse: ['Maximum stiffness (use NylonX)', 'When surface finish is critical', 'Without hardened nozzle'],
+    },
+    practicalContext: {
+      industryAdoption: ['Prototyping', 'Light industrial', 'DIY/Maker', 'Small batch production'],
+      commonApplications: ['Brackets', 'Mounts', 'Housings', 'Functional prototypes', 'End-use parts'],
+      safetyStandards: ['General engineering use'],
+      costPosition: 'Standard',
+    },
+    trivia: {
+      funFacts: [
+        'NylonG is part of Matterhackers\' "Build" series alongside NylonX',
+        'The "G" stands for Glass (fiber)',
+        'Often recommended as more affordable alternative to NylonX for many applications',
+      ],
+      whyInvented: 'Created to offer accessible, well-documented glass-filled nylon for the maker community.',
+      controversies: [
+        'Some debate whether it\'s worth the premium over generic PA-GF filaments',
+      ],
+      marketAdoption: 'Popular in North American maker/prosumer market.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '85-95', unit: 'MPa', implications: 'Good strength for structural applications.' },
+        { name: 'Tensile Modulus', value: '5500-6500', unit: 'MPa', implications: 'High stiffness. Significant improvement over unfilled.' },
+        { name: 'Elongation at Break', value: '3-5', unit: '%', implications: 'Low elongation. Stiff but less ductile.' },
+        { name: 'Heat Deflection', value: '180-200', unit: '°C', implications: 'Good heat resistance.' },
+        { name: 'Glass Fiber Content', value: '~20', unit: '%', implications: 'Balanced for printability and performance.' },
+      ],
+      notes: 'Well-characterized for FDM printing. Consistent lot-to-lot properties.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 255, max: 275, optimal: 265 },
+      bedTemp: { min: 80, max: 100, optimal: 90 },
+      coolingFan: { min: 0, max: 20, notes: 'Minimal cooling.' },
+      enclosure: { required: true, notes: 'Recommended for best results.' },
+      drying: { temp: 75, duration: '8-12 hours', notes: 'Must dry thoroughly before printing.' },
+      printSpeed: { recommended: '35-50 mm/s', notes: 'Moderate speeds work well.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED',
+        'Print from dry box',
+        'Garolite or glue stick on PEI for adhesion',
+        '0.4mm+ nozzle recommended',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Garolite (G10)'],
+        good: ['PEI with glue', 'Glass with adhesive'],
+        poor: ['Bare PEI', 'Blue tape'],
+      },
+      releaseAgents: 'Wait for cooling. Garolite may require scraper.',
+      multiMaterial: [
+        { material: 'Nylon', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer family.' },
+        { material: 'NylonX', bondQuality: 'Strong Chemical Bond', notes: 'Compatible for hybrid structures.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Chemical', effectiveness: 'Difficult', notes: 'Fibers remain rough.' },
+      ],
+      mechanical: ['Sanding possible with PPE', 'Machining possible'],
+      glues: ['Epoxy', 'Cyanoacrylate'],
+      painting: 'Prime heavily for smooth finish.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Nylon fumes plus glass particles. Ventilation required.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Fiber exposure concerns.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Glass fibers persist.' },
+      additionalNotes: [
+        'Wear mask when sanding',
+        'Glass dust is respiratory hazard',
+      ],
+    },
+  },
+
+  'NylonX': {
+    name: 'NylonX',
+    fullName: 'Carbon Fiber Reinforced Nylon (Matterhackers)',
+    origin: {
+      yearInvented: '2016',
+      originalCompany: 'Matterhackers',
+      keyMilestones: [
+        '2016: Matterhackers launches NylonX as flagship engineering filament',
+        '2017: Becomes one of the most popular CF-nylon filaments',
+        '2020+: Industry standard for prosumer CF-nylon',
+      ],
+      majorManufacturers: ['Matterhackers'],
+    },
+    composition: {
+      basePolymer: 'Polyamide (proprietary blend)',
+      chemicalFamily: 'Carbon Fiber Reinforced Polyamide',
+      keyAdditives: ['Chopped carbon fibers (~20%)', 'Processing aids'],
+      coloringAgents: 'Black due to carbon fiber',
+      specialFillers: ['PAN-based carbon fibers'],
+    },
+    familyContext: {
+      parentPolymer: 'Nylon (Polyamide)',
+      variants: ['NylonX is Matterhackers\' flagship CF-nylon'],
+      chemicalComparison: 'Premium CF-nylon optimized for FDM. Comparable to 3DXTech CarbonX.',
+      evolution: 'Developed to democratize carbon fiber nylon for desktop 3D printing.',
+    },
+    strengths: {
+      uniqueProperties: ['Exceptional stiffness', 'High strength', 'Low weight', 'Professional matte finish', 'Dimensional stability'],
+      bestUseScenarios: ['Structural parts', 'Drone components', 'Tooling', 'Automotive parts', 'Professional prototypes'],
+      advantagesOverCompetitors: ['Well-documented', 'Consistent quality', 'Strong community support', 'Optimized for FDM'],
+      whyChooseThis: 'The go-to CF-nylon for makers and prosumers wanting reliable, well-supported material.',
+    },
+    weaknesses: {
+      limitations: ['Very abrasive - hardened nozzle required', 'Expensive', 'Hygroscopic', 'Electrically conductive'],
+      commonProblems: ['Destroys brass nozzles', 'Must be dried', 'Warping', 'Brittle in Z-direction'],
+      environmentalConcerns: ['Carbon fiber non-biodegradable', 'Dust hazard', 'Difficult to recycle'],
+      whenNotToUse: ['Electrical insulation needed', 'Impact-critical parts', 'Without hardened nozzle'],
+    },
+    practicalContext: {
+      industryAdoption: ['Prototyping', 'Drones/UAV', 'Automotive', 'Robotics', 'Tooling'],
+      commonApplications: ['Drone frames', 'Brackets', 'Fixtures', 'Functional prototypes', 'End effectors'],
+      safetyStandards: ['General engineering use'],
+      costPosition: 'Premium',
+    },
+    trivia: {
+      funFacts: [
+        'NylonX was one of the first widely available CF-nylon filaments',
+        'The "X" represents the extreme performance vs regular nylon',
+        'Often the first CF material users try due to good documentation',
+        'Matterhackers pairs it with NylonG for applications needing electrical insulation',
+      ],
+      whyInvented: 'Created to make carbon fiber nylon accessible to the maker and prosumer market.',
+      controversies: [
+        'Price premium debated vs generic CF-nylon options',
+        'Some prefer industrial brands for production use',
+      ],
+      marketAdoption: 'One of the most popular CF-nylon filaments. Strong brand recognition.',
+    },
+    tdsProfile: {
+      properties: [
+        { name: 'Tensile Strength', value: '95-115', unit: 'MPa', implications: 'Excellent strength. Among highest for FDM materials.' },
+        { name: 'Tensile Modulus', value: '8000-9500', unit: 'MPa', implications: 'Very high stiffness. Much stiffer than unfilled nylon.' },
+        { name: 'Elongation at Break', value: '2-4', unit: '%', implications: 'Low. Stiff but brittle.' },
+        { name: 'Heat Deflection', value: '180-200', unit: '°C', implications: 'Excellent heat resistance.' },
+        { name: 'Carbon Fiber Content', value: '~20', unit: '%', implications: 'Optimized for printability and stiffness.' },
+        { name: 'Density', value: '1.1', unit: 'g/cm³', implications: 'Lightweight composite.' },
+      ],
+      notes: 'Industry-standard CF-nylon. Well-characterized and reliable.',
+    },
+    printSettings: {
+      nozzleTemp: { min: 255, max: 280, optimal: 270 },
+      bedTemp: { min: 80, max: 100, optimal: 90 },
+      coolingFan: { min: 0, max: 15, notes: 'Minimal to no cooling.' },
+      enclosure: { required: true, notes: 'Highly recommended for all but smallest parts.' },
+      drying: { temp: 75, duration: '8-12 hours', notes: 'Essential. Print from dry box.' },
+      printSpeed: { recommended: '30-50 mm/s', notes: 'Moderate speeds for best fiber orientation.' },
+      additionalNotes: [
+        'HARDENED NOZZLE REQUIRED - carbon destroys brass rapidly',
+        'Use 0.4mm+ nozzle size',
+        'Garolite provides best bed adhesion',
+        'Print from dry box essential',
+        'Larger layer heights (0.2mm+) improve Z-strength',
+        'Wear PPE when post-processing',
+      ],
+    },
+    adhesion: {
+      bedSurfaces: {
+        excellent: ['Garolite (G10)', 'Matterhackers Build Surface'],
+        good: ['PEI with glue', 'Glass with adhesive'],
+        poor: ['Bare smooth PEI', 'Blue tape'],
+      },
+      releaseAgents: 'Strong adhesion. Cool completely and use scraper if needed.',
+      multiMaterial: [
+        { material: 'Nylon', bondQuality: 'Strong Chemical Bond', notes: 'Same polymer base.' },
+        { material: 'NylonG', bondQuality: 'Strong Chemical Bond', notes: 'Compatible for cost-optimized hybrid parts.' },
+        { material: 'TPU', bondQuality: 'Mechanical Bond', notes: 'Possible for flexible-rigid parts.' },
+      ],
+    },
+    postProcessing: {
+      chemicalSmoothing: [
+        { method: 'Chemical', effectiveness: 'Difficult', notes: 'Not practical.' },
+      ],
+      mechanical: ['Sanding with PPE', 'Machining possible but dulls tools', 'Tumbling for edge work'],
+      glues: ['Epoxy', 'Cyanoacrylate with activator', 'Structural adhesives'],
+      painting: 'Usually left natural matte black. Prime heavily if painting.',
+    },
+    safety: {
+      fumes: { level: 'Moderate', notes: 'Nylon emissions plus carbon particles. Good ventilation needed.' },
+      foodSafety: { rating: 'Not Recommended', notes: 'Fiber exposure and porosity.' },
+      biodegradability: { rating: 'Not Biodegradable', notes: 'Carbon fibers persist indefinitely.' },
+      additionalNotes: [
+        'WEAR RESPIRATORY PROTECTION when sanding',
+        'Carbon dust is respiratory hazard',
+        'Use HEPA filtration if possible',
+        'Wash hands after handling',
+      ],
+    },
+  },
+
   'PC': {
     name: 'PC',
     fullName: 'Polycarbonate',
