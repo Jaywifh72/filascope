@@ -628,11 +628,10 @@ const Finder = () => {
   }).sort((a, b) => {
     // Calculate true per-kg price: total_price / (pack_quantity * weight_per_spool_kg)
     const getPricePerKg = (filament: typeof a) => {
-      if (!filament.variant_price) return 999999;
+      if (!filament.variant_price || !filament.net_weight_g) return 999999;
       const packQty = (filament as any).pack_quantity || 1;
-      const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : 1;
-      const totalWeightKg = weightKg * packQty;
-      return filament.variant_price / totalWeightKg;
+      const weightKg = filament.net_weight_g / 1000;
+      return filament.variant_price / (weightKg * packQty);
     };
 
     switch (sortBy) {
@@ -1054,9 +1053,10 @@ const Finder = () => {
                   {filteredAndSortedFilaments.map((filament) => {
                     // Calculate true per-kg price accounting for pack quantity
                     const packQty = (filament as any).pack_quantity || 1;
-                    const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : 1;
-                    const totalWeightKg = weightKg * packQty;
-                    const pricePerKg = filament.variant_price ? filament.variant_price / totalWeightKg : null;
+                    const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
+                    const pricePerKg = (filament.variant_price && weightKg) 
+                      ? filament.variant_price / (weightKg * packQty) 
+                      : null;
                     const isValidPrice = pricePerKg && pricePerKg > 5 && pricePerKg < 500;
                     const displayPricePerKg = isValidPrice ? pricePerKg : null;
                     // Per-spool price = total price / pack quantity
@@ -1142,12 +1142,12 @@ const Finder = () => {
             {filteredAndSortedFilaments.map((filament) => {
               // Calculate true per-kg price accounting for pack quantity
               const packQty = (filament as any).pack_quantity || 1;
-              const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : 1;
-              const totalWeightKg = weightKg * packQty;
-              const pricePerKg = filament.variant_price ? filament.variant_price / totalWeightKg : null;
+              const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
+              const pricePerKg = (filament.variant_price && weightKg) 
+                ? filament.variant_price / (weightKg * packQty) 
+                : null;
               const isValidPrice = pricePerKg && pricePerKg > 5 && pricePerKg < 500;
               const displayPrice = isValidPrice ? pricePerKg.toFixed(2) : null;
-              const priceLabel = isValidPrice ? '/kg' : null;
               
               const overallScore = filament.value_score || 7.0;
 
