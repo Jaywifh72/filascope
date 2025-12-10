@@ -11,9 +11,7 @@ import {
   Globe, 
   Package, 
   CheckCircle2, 
-  XCircle, 
   Loader2, 
-  Download,
   Upload,
   AlertTriangle,
   Image as ImageIcon,
@@ -21,7 +19,8 @@ import {
   Ruler,
   FileText,
   Tag,
-  Palette
+  Thermometer,
+  Sparkles
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -60,6 +59,8 @@ interface DiscoveredProduct {
   existing_id: string | null;
   raw_data: any;
   selected?: boolean;
+  tds_parsed?: boolean;
+  tds_parsing?: boolean;
 }
 
 interface DiscoveryResult {
@@ -71,6 +72,13 @@ interface DiscoveryResult {
   errors: string[];
 }
 
+interface TDSParseResult {
+  product_id: string;
+  success: boolean;
+  fields_extracted?: number;
+  error?: string;
+}
+
 const AdminImport = () => {
   const [brandName, setBrandName] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -80,6 +88,9 @@ const AdminImport = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
   const [importResults, setImportResults] = useState<{ success: number; updated: number; errors: string[] } | null>(null);
+  const [isParsingTDS, setIsParsingTDS] = useState(false);
+  const [tdsProgress, setTdsProgress] = useState({ current: 0, total: 0 });
+  const [tdsResults, setTdsResults] = useState<TDSParseResult[]>([]);
   
   const { isAdmin, loading } = useAuth();
   const { toast } = useToast();
@@ -233,6 +244,105 @@ const AdminImport = () => {
     });
   };
 
+  const handleParseTDS = async () => {
+    const selectedProducts = products.filter(p => p.selected);
+    if (selectedProducts.length === 0) {
+      toast({
+        title: "No Products Selected",
+        description: "Please select at least one product to parse TDS",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsParsingTDS(true);
+    setTdsProgress({ current: 0, total: selectedProducts.length });
+    setTdsResults([]);
+    
+    const results: TDSParseResult[] = [];
+
+    for (let i = 0; i < selectedProducts.length; i++) {
+      const product = selectedProducts[i];
+      setTdsProgress({ current: i + 1, total: selectedProducts.length });
+      
+      // Mark product as parsing
+      setProducts(prev => prev.map(p => 
+        p.product_id === product.product_id ? { ...p, tds_parsing: true } : p
+      ));
+
+      try {
+        const { data, error } = await supabase.functions.invoke('parse-filament-tds', {
+          body: { 
+            tds_url: product.tds_url,
+            product_url: product.product_url,
+            filament_id: product.existing_id // Only update if already in DB
+          }
+        });
+
+        if (error) throw error;
+
+        if (data.success) {
+          // Update product with extracted data
+          setProducts(prev => prev.map(p => {
+            if (p.product_id === product.product_id) {
+              return {
+                ...p,
+                tds_url: data.tds_url || p.tds_url,
+                nozzle_temp_min_c: data.data?.nozzle_temp_min_c ?? p.nozzle_temp_min_c,
+                nozzle_temp_max_c: data.data?.nozzle_temp_max_c ?? p.nozzle_temp_max_c,
+                bed_temp_min_c: data.data?.bed_temp_min_c ?? p.bed_temp_min_c,
+                bed_temp_max_c: data.data?.bed_temp_max_c ?? p.bed_temp_max_c,
+                is_nozzle_abrasive: data.data?.is_nozzle_abrasive ?? p.is_nozzle_abrasive,
+                tds_parsed: true,
+                tds_parsing: false,
+                data_completeness: Math.min(100, p.data_completeness + (data.fields_extracted || 0) * 5),
+              };
+            }
+            return p;
+          }));
+          
+          results.push({
+            product_id: product.product_id,
+            success: true,
+            fields_extracted: data.fields_extracted,
+          });
+        } else {
+          setProducts(prev => prev.map(p => 
+            p.product_id === product.product_id ? { ...p, tds_parsing: false } : p
+          ));
+          results.push({
+            product_id: product.product_id,
+            success: false,
+            error: data.error,
+          });
+        }
+      } catch (error) {
+        setProducts(prev => prev.map(p => 
+          p.product_id === product.product_id ? { ...p, tds_parsing: false } : p
+        ));
+        results.push({
+          product_id: product.product_id,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+      
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    setTdsResults(results);
+    setIsParsingTDS(false);
+
+    const successCount = results.filter(r => r.success).length;
+    const totalFields = results.reduce((sum, r) => sum + (r.fields_extracted || 0), 0);
+    
+    toast({
+      title: "TDS Parsing Complete",
+      description: `Parsed ${successCount}/${results.length} products, extracted ${totalFields} total fields`,
+    });
+  };
+
   const getCompletenessColor = (percentage: number) => {
     if (percentage >= 80) return 'text-green-500';
     if (percentage >= 50) return 'text-yellow-500';
@@ -242,6 +352,7 @@ const AdminImport = () => {
   const selectedCount = products.filter(p => p.selected).length;
   const newCount = products.filter(p => p.selected && !p.existing_id).length;
   const updateCount = products.filter(p => p.selected && p.existing_id).length;
+  const parsedCount = products.filter(p => p.tds_parsed).length;
   const avgCompleteness = products.length > 0 
     ? Math.round(products.reduce((sum, p) => sum + p.data_completeness, 0) / products.length)
     : 0;
@@ -388,7 +499,7 @@ const AdminImport = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => toggleAll(true)}>
                   Select All
@@ -397,28 +508,89 @@ const AdminImport = () => {
                   Deselect All
                 </Button>
               </div>
-              <Button 
-                onClick={handleImport} 
-                disabled={isImporting || selectedCount === 0}
-                size="lg"
-              >
-                {isImporting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Importing {importProgress.current}/{importProgress.total}...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Import {selectedCount} Products
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="secondary"
+                  onClick={handleParseTDS} 
+                  disabled={isParsingTDS || isImporting || selectedCount === 0}
+                >
+                  {isParsingTDS ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Parsing TDS {tdsProgress.current}/{tdsProgress.total}...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Parse TDS with AI
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  onClick={handleImport} 
+                  disabled={isImporting || isParsingTDS || selectedCount === 0}
+                  size="lg"
+                >
+                  {isImporting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Importing {importProgress.current}/{importProgress.total}...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Import {selectedCount} Products
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
-            {/* Import Progress */}
+            {/* Progress Bars */}
             {isImporting && (
               <Progress value={(importProgress.current / importProgress.total) * 100} />
+            )}
+            {isParsingTDS && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Sparkles className="h-4 w-4" />
+                  <span>AI is extracting print settings from Technical Data Sheets...</span>
+                </div>
+                <Progress value={(tdsProgress.current / tdsProgress.total) * 100} className="bg-purple-100" />
+              </div>
+            )}
+
+            {/* TDS Parse Results */}
+            {tdsResults.length > 0 && !isParsingTDS && (
+              <Card className="border-purple-500">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-4">
+                    <Sparkles className="h-8 w-8 text-purple-500" />
+                    <div>
+                      <p className="font-semibold">TDS Parsing Complete</p>
+                      <p className="text-sm text-muted-foreground">
+                        Success: {tdsResults.filter(r => r.success).length} • 
+                        Failed: {tdsResults.filter(r => !r.success).length} • 
+                        Fields Extracted: {tdsResults.reduce((sum, r) => sum + (r.fields_extracted || 0), 0)}
+                      </p>
+                    </div>
+                  </div>
+                  {tdsResults.some(r => !r.success) && (
+                    <ScrollArea className="h-32 mt-4">
+                      <div className="space-y-1">
+                        {tdsResults.filter(r => !r.success).map((result, i) => {
+                          const product = products.find(p => p.product_id === result.product_id);
+                          return (
+                            <p key={i} className="text-sm text-destructive">
+                              {product?.product_title?.substring(0, 50)}...: {result.error}
+                            </p>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
             )}
 
             {/* Import Results */}
@@ -537,7 +709,23 @@ const AdminImport = () => {
                           <Ruler className={`h-4 w-4 ${product.net_weight_g ? 'text-green-500' : ''}`} />
                           <Tag className={`h-4 w-4 ${product.variant_sku ? 'text-green-500' : ''}`} />
                           <FileText className={`h-4 w-4 ${product.tds_url ? 'text-green-500' : ''}`} />
+                          {product.tds_parsing ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-purple-500" />
+                          ) : (
+                            <Thermometer className={`h-4 w-4 ${product.nozzle_temp_max_c ? 'text-green-500' : product.tds_parsed ? 'text-yellow-500' : ''}`} />
+                          )}
                         </div>
+
+                        {/* Temperature info if parsed */}
+                        {product.nozzle_temp_max_c && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Thermometer className="h-3 w-3" />
+                            <span>{product.nozzle_temp_min_c || '?'}-{product.nozzle_temp_max_c}°C</span>
+                            {product.bed_temp_max_c && (
+                              <span className="text-muted-foreground/60">| Bed: {product.bed_temp_min_c || '?'}-{product.bed_temp_max_c}°C</span>
+                            )}
+                          </div>
+                        )}
 
                         {/* Price */}
                         {product.variant_price && (
