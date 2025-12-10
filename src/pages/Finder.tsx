@@ -18,7 +18,7 @@ import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { isAMSCompatible } from "@/lib/amsCompatibility";
-import Hero from "@/components/Hero";
+import BentoGrid from "@/components/BentoGrid";
 import { FilamentFilters } from "@/components/FilamentFilters";
 
 const Finder = () => {
@@ -665,8 +665,8 @@ const Finder = () => {
 
   return (
     <div className="min-h-screen">
-      {/* FilaScope Hero Section */}
-      <Hero />
+      {/* Bento Grid Hero Section */}
+      <BentoGrid />
       
       {/* Full-width Printer Selector at Top */}
       <div className="p-4 lg:p-6 border-b border-border bg-card/30">
