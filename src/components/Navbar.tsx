@@ -45,6 +45,9 @@ const Navbar = () => {
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
               <Link to="/compare">COMPARE</Link>
             </Button>
+            <Button variant="ghost" size="sm" asChild className="text-cyan-400 hover:text-cyan-300 font-mono text-xs">
+              <Link to="/materials/compare">MATERIALS</Link>
+            </Button>
             <Button variant="ghost" size="sm" asChild className="text-red-400 hover:text-red-300 font-mono text-xs">
               <Link to="/deals">DEALS</Link>
             </Button>
