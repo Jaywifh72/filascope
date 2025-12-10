@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { SlidersHorizontal, X, Zap, Sparkles, Atom, Sun, Package, Recycle, Wallet, Rocket, Leaf } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { SlidersHorizontal, X, Zap, Sparkles, Atom, Sun, Package, Recycle, Wallet, Rocket, Leaf, ChevronDown, ChevronRight, Layers } from "lucide-react";
+import { MATERIAL_CATEGORIES, getMaterialsInCategory } from "@/lib/materialHierarchy";
 
 interface FilterPreset {
   id: string;
@@ -15,6 +17,7 @@ interface FilterPreset {
   description: string;
   filters: {
     materials?: string[];
+    materialCategories?: string[];
     highSpeed?: boolean;
     matte?: boolean;
     carbonFiber?: boolean;
@@ -29,6 +32,10 @@ interface FilamentFiltersProps {
   // Material filters
   selectedMaterials: string[];
   onMaterialChange: (material: string, checked: boolean) => void;
+  
+  // Material category filters
+  selectedCategories?: string[];
+  onCategoryChange?: (categoryId: string, checked: boolean) => void;
   
   // Special properties
   highSpeed: boolean;
@@ -68,8 +75,6 @@ interface FilamentFiltersProps {
   onApplyPreset?: (preset: FilterPreset) => void;
 }
 
-const CORE_MATERIALS = ["PLA", "PETG", "ABS", "ASA", "TPU"];
-
 const FILTER_PRESETS: FilterPreset[] = [
   {
     id: "budget",
@@ -77,7 +82,7 @@ const FILTER_PRESETS: FilterPreset[] = [
     icon: <Wallet className="w-4 h-4 text-emerald-400" />,
     description: "Affordable PLA & PETG under $25/kg",
     filters: {
-      materials: ["PLA", "PETG"],
+      materialCategories: ["pla-family", "petg-family"],
       priceRange: [0, 25],
     },
   },
@@ -85,11 +90,10 @@ const FILTER_PRESETS: FilterPreset[] = [
     id: "performance",
     name: "High Performance",
     icon: <Rocket className="w-4 h-4 text-orange-400" />,
-    description: "High-speed, engineering-grade filaments",
+    description: "Engineering-grade filaments",
     filters: {
-      materials: ["ABS", "ASA", "PETG"],
+      materialCategories: ["nylon-family", "polycarbonate", "high-performance"],
       highSpeed: true,
-      carbonFiber: true,
     },
   },
   {
@@ -98,16 +102,22 @@ const FILTER_PRESETS: FilterPreset[] = [
     icon: <Leaf className="w-4 h-4 text-green-400" />,
     description: "Sustainable materials with cardboard spools",
     filters: {
-      materials: ["PLA"],
+      materialCategories: ["pla-family"],
       cardboardSpool: true,
       plasticSpool: false,
     },
   },
 ];
 
+// Show top categories prominently, rest in expandable section
+const PRIMARY_CATEGORIES = ["pla-family", "petg-family", "abs-family", "asa-family", "flexible", "nylon-family", "polycarbonate"];
+const SECONDARY_CATEGORIES = MATERIAL_CATEGORIES.filter(c => !PRIMARY_CATEGORIES.includes(c.id)).map(c => c.id);
+
 const FilterContent = ({
   selectedMaterials,
   onMaterialChange,
+  selectedCategories = [],
+  onCategoryChange,
   highSpeed,
   onHighSpeedChange,
   matte,
@@ -132,10 +142,128 @@ const FilterContent = ({
   activeFilterCount,
   onApplyPreset,
 }: FilamentFiltersProps) => {
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [showMoreCategories, setShowMoreCategories] = useState(false);
+
   const handlePresetClick = (preset: FilterPreset) => {
     if (onApplyPreset) {
       onApplyPreset(preset);
     }
+  };
+
+  const toggleCategoryExpanded = (categoryId: string) => {
+    setExpandedCategories(prev => 
+      prev.includes(categoryId) 
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const handleCategoryToggle = (categoryId: string, checked: boolean) => {
+    if (onCategoryChange) {
+      onCategoryChange(categoryId, checked);
+    } else {
+      // Fallback: toggle all materials in the category
+      const materials = getMaterialsInCategory(categoryId);
+      materials.forEach(material => {
+        onMaterialChange(material, checked);
+      });
+    }
+  };
+
+  const isCategorySelected = (categoryId: string): boolean => {
+    if (selectedCategories.includes(categoryId)) return true;
+    // Check if any materials from this category are selected
+    const materials = getMaterialsInCategory(categoryId);
+    return materials.some(m => selectedMaterials.includes(m));
+  };
+
+  const isCategoryPartiallySelected = (categoryId: string): boolean => {
+    const materials = getMaterialsInCategory(categoryId);
+    const selectedCount = materials.filter(m => selectedMaterials.includes(m)).length;
+    return selectedCount > 0 && selectedCount < materials.length;
+  };
+
+  const getCategoryCount = (categoryId: string): number => {
+    if (!filterCounts) return 0;
+    const materials = getMaterialsInCategory(categoryId);
+    return materials.reduce((sum, m) => sum + (filterCounts[`material_${m}`] || 0), 0);
+  };
+
+  const renderCategoryItem = (categoryId: string) => {
+    const category = MATERIAL_CATEGORIES.find(c => c.id === categoryId);
+    if (!category) return null;
+
+    const isExpanded = expandedCategories.includes(categoryId);
+    const isSelected = isCategorySelected(categoryId);
+    const isPartial = isCategoryPartiallySelected(categoryId);
+    const count = getCategoryCount(categoryId);
+
+    return (
+      <Collapsible key={categoryId} open={isExpanded} onOpenChange={() => toggleCategoryExpanded(categoryId)}>
+        <div className="rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all">
+          <div className="flex items-center gap-2 py-1.5 px-2">
+            <Checkbox
+              checked={isSelected && !isPartial}
+              ref={(el) => {
+                if (el && isPartial) {
+                  (el as HTMLButtonElement).dataset.state = 'indeterminate';
+                }
+              }}
+              onCheckedChange={(checked) => handleCategoryToggle(categoryId, checked as boolean)}
+              className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500 data-[state=indeterminate]:bg-cyan-500/50 data-[state=indeterminate]:border-cyan-500/50 h-3.5 w-3.5"
+            />
+            <CollapsibleTrigger asChild>
+              <button className="flex-1 flex items-center gap-1.5 text-left group cursor-pointer">
+                {isExpanded ? (
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                )}
+                <span className="text-xs font-medium text-foreground group-hover:text-cyan-400 transition-colors">
+                  {category.name}
+                </span>
+              </button>
+            </CollapsibleTrigger>
+            {count > 0 && (
+              <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-muted/50">
+                {count}
+              </Badge>
+            )}
+          </div>
+          <CollapsibleContent>
+            <div className="pl-7 pb-2 space-y-0.5">
+              <p className="text-[10px] text-muted-foreground mb-1.5 pr-2">{category.description}</p>
+              {category.materials.slice(0, 8).map((material) => (
+                <label
+                  key={material}
+                  className="flex items-center gap-2 py-1 px-2 rounded-md hover:bg-muted/30 cursor-pointer group"
+                >
+                  <Checkbox
+                    checked={selectedMaterials.includes(material)}
+                    onCheckedChange={(checked) => onMaterialChange(material, checked as boolean)}
+                    className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500 h-3 w-3"
+                  />
+                  <span className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors">
+                    {material}
+                  </span>
+                  {filterCounts && filterCounts[`material_${material}`] > 0 && (
+                    <span className="text-[10px] text-muted-foreground/60 ml-auto">
+                      {filterCounts[`material_${material}`]}
+                    </span>
+                  )}
+                </label>
+              ))}
+              {category.materials.length > 8 && (
+                <span className="text-[10px] text-muted-foreground pl-2">
+                  +{category.materials.length - 8} more
+                </span>
+              )}
+            </div>
+          </CollapsibleContent>
+        </div>
+      </Collapsible>
+    );
   };
 
   return (
@@ -184,33 +312,33 @@ const FilterContent = ({
 
       <Separator className="bg-border/50" />
 
-      {/* Material Type */}
+      {/* Material Categories */}
       <div className="space-y-2">
         <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-          <Atom className="w-3 h-3" />
-          Material
+          <Layers className="w-3 h-3" />
+          Material Family
         </h4>
-        <div className="space-y-0.5">
-          {CORE_MATERIALS.map((material) => (
-            <label
-              key={material}
-              className="flex items-center gap-2 py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group"
-            >
-              <Checkbox
-                checked={selectedMaterials.includes(material)}
-                onCheckedChange={(checked) => onMaterialChange(material, checked as boolean)}
-                className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500 h-3.5 w-3.5"
-              />
-              <span className="flex-1 text-xs text-foreground group-hover:text-cyan-400 transition-colors">
-                {material}
-              </span>
-              {filterCounts && (
-                <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-muted/50">
-                  {filterCounts[`material_${material}`] || 0}
-                </Badge>
-              )}
-            </label>
-          ))}
+        <div className="space-y-1">
+          {PRIMARY_CATEGORIES.map(renderCategoryItem)}
+          
+          {/* More Categories */}
+          <Collapsible open={showMoreCategories} onOpenChange={setShowMoreCategories}>
+            <CollapsibleTrigger asChild>
+              <button className="w-full flex items-center gap-2 py-1.5 px-2 rounded-md bg-background/30 hover:bg-background/50 transition-all cursor-pointer group text-left">
+                {showMoreCategories ? (
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                )}
+                <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                  {showMoreCategories ? 'Show Less' : `More Categories (${SECONDARY_CATEGORIES.length})`}
+                </span>
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 mt-1">
+              {SECONDARY_CATEGORIES.map(renderCategoryItem)}
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </div>
 
