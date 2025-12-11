@@ -91,6 +91,8 @@ const AdminBrokenLinks = () => {
   const [fixingIds, setFixingIds] = useState<Set<string>>(new Set());
   const [bulkFixing, setBulkFixing] = useState(false);
   const [rescanningBroken, setRescanningBroken] = useState(false);
+  const [fullScanning, setFullScanning] = useState(false);
+  const [fullScanStatus, setFullScanStatus] = useState<string>("");
 
   useEffect(() => {
     if (!authLoading && user && !isAdmin) {
@@ -455,6 +457,181 @@ const AdminBrokenLinks = () => {
       toast.error("Failed to run scan");
     } finally {
       setScanning(false);
+      setScanProgress(0);
+    }
+  };
+
+  const runFullScan = async () => {
+    setFullScanning(true);
+    setScanProgress(0);
+    
+    const entityTypes: ('filament' | 'printer' | 'accessory')[] = ['filament', 'printer', 'accessory'];
+    let totalProcessed = 0;
+    let totalToProcess = 0;
+    
+    // Calculate total URLs to scan
+    for (const entityType of entityTypes) {
+      const remaining = entityType === 'filament' 
+        ? coverage.filament.total - coverage.filament.scanned
+        : entityType === 'printer'
+        ? coverage.printer.total - coverage.printer.scanned
+        : coverage.accessory.total - coverage.accessory.scanned;
+      totalToProcess += remaining;
+    }
+    
+    if (totalToProcess === 0) {
+      toast.info("All URLs have been scanned");
+      setFullScanning(false);
+      return;
+    }
+    
+    toast.info(`Starting full scan of ${totalToProcess} URLs across all entities...`);
+    
+    try {
+      for (const entityType of entityTypes) {
+        let hasMore = true;
+        
+        while (hasMore && fullScanning) {
+          setFullScanStatus(`Scanning ${entityType}s...`);
+          
+          // Get already scanned entity IDs
+          const { data: alreadyScanned } = await supabase
+            .from("url_validation_results")
+            .select("entity_id, url_field")
+            .eq("entity_type", entityType);
+          
+          const scannedKeys = new Set(
+            alreadyScanned?.map(r => `${r.entity_id}:${r.url_field}`) || []
+          );
+
+          let urls: { entity_type: string; entity_id: string; url_field: string; url: string }[] = [];
+
+          if (entityType === 'filament') {
+            const { data } = await supabase
+              .from("filaments")
+              .select("id, product_url")
+              .not("product_url", "is", null)
+              .limit(100);
+            
+            urls = data?.filter(f => !scannedKeys.has(`${f.id}:product_url`))
+              .map(f => ({
+                entity_type: 'filament',
+                entity_id: f.id,
+                url_field: 'product_url',
+                url: f.product_url!
+              })) || [];
+          } else if (entityType === 'printer') {
+            const { data } = await supabase
+              .from("printers")
+              .select("id, official_store_url, official_product_url")
+              .eq("status", "active")
+              .limit(100);
+            
+            const printerUrls: typeof urls = [];
+            data?.forEach(p => {
+              if (p.official_store_url && !scannedKeys.has(`${p.id}:official_store_url`)) {
+                printerUrls.push({
+                  entity_type: 'printer',
+                  entity_id: p.id,
+                  url_field: 'official_store_url',
+                  url: p.official_store_url
+                });
+              }
+              if (p.official_product_url && !scannedKeys.has(`${p.id}:official_product_url`)) {
+                printerUrls.push({
+                  entity_type: 'printer',
+                  entity_id: p.id,
+                  url_field: 'official_product_url',
+                  url: p.official_product_url
+                });
+              }
+            });
+            urls = printerUrls;
+          } else {
+            const { data } = await supabase
+              .from("printer_accessories")
+              .select("id, product_url")
+              .not("product_url", "is", null)
+              .limit(100);
+            
+            urls = data?.filter(a => !scannedKeys.has(`${a.id}:product_url`))
+              .map(a => ({
+                entity_type: 'accessory',
+                entity_id: a.id,
+                url_field: 'product_url',
+                url: a.product_url!
+              })) || [];
+          }
+
+          if (urls.length === 0) {
+            hasMore = false;
+            continue;
+          }
+
+          // Process batch
+          for (const urlData of urls) {
+            let statusCode = null;
+            let status = 'broken';
+            let redirectUrl = null;
+
+            try {
+              const { data: testResult, error } = await supabase.functions.invoke('test-url', {
+                body: { url: urlData.url }
+              });
+
+              if (!error && testResult) {
+                statusCode = testResult.statusCode;
+                redirectUrl = testResult.redirectLocation || null;
+                if (testResult.ok) {
+                  status = testResult.isRedirect ? 'redirect' : 'valid';
+                } else if (testResult.statusCode === 0) {
+                  status = 'timeout';
+                } else if (testResult.statusCode >= 300 && testResult.statusCode < 400) {
+                  status = 'redirect';
+                }
+              }
+
+              await supabase
+                .from("url_validation_results")
+                .delete()
+                .eq("entity_type", urlData.entity_type)
+                .eq("entity_id", urlData.entity_id)
+                .eq("url_field", urlData.url_field);
+
+              await supabase.from("url_validation_results").insert({
+                entity_type: urlData.entity_type,
+                entity_id: urlData.entity_id,
+                url_field: urlData.url_field,
+                url: urlData.url,
+                status_code: statusCode,
+                status,
+                redirect_url: redirectUrl
+              });
+              
+              totalProcessed++;
+              setScanProgress(Math.round((totalProcessed / totalToProcess) * 100));
+            } catch (e) {
+              console.error("Error testing URL:", urlData.url, e);
+            }
+          }
+          
+          // Refresh results periodically
+          if (totalProcessed % 50 === 0) {
+            await fetchResults();
+            await fetchCoverage();
+          }
+        }
+      }
+
+      toast.success(`Full scan complete! Scanned ${totalProcessed} URLs`);
+      await fetchResults();
+      await fetchCoverage();
+    } catch (error) {
+      console.error("Error running full scan:", error);
+      toast.error("Failed to complete full scan");
+    } finally {
+      setFullScanning(false);
+      setFullScanStatus("");
       setScanProgress(0);
     }
   };
@@ -934,20 +1111,65 @@ const AdminBrokenLinks = () => {
             </div>
           )}
           
-          {/* Re-scan Broken URLs */}
-          {stats.broken > 0 && !scanning && !rescanningBroken && (
-            <div className="mt-4 pt-4 border-t border-border">
+          {/* Full Scan Progress */}
+          {fullScanning && (
+            <div className="mt-4 pt-4 border-t border-border space-y-2">
+              <Progress value={scanProgress} />
+              <p className="text-sm text-muted-foreground">
+                {fullScanStatus} {scanProgress}%
+              </p>
               <Button 
-                onClick={rescanBrokenUrls}
-                variant="secondary"
+                onClick={() => setFullScanning(false)}
+                variant="destructive"
                 size="sm"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Re-scan {stats.broken} Broken URLs
+                Stop Scan
               </Button>
-              <p className="text-xs text-muted-foreground mt-1">
-                Re-check URLs marked as broken to recategorize any that are actually redirects
-              </p>
+            </div>
+          )}
+          
+          {/* Action Buttons */}
+          {!scanning && !fullScanning && !rescanningBroken && (
+            <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-3">
+              {/* Full Scan Button */}
+              {(coverage.filament.scanned < coverage.filament.total || 
+                coverage.printer.scanned < coverage.printer.total || 
+                coverage.accessory.scanned < coverage.accessory.total) && (
+                <div>
+                  <Button 
+                    onClick={runFullScan}
+                    variant="default"
+                    size="sm"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Run Full Scan ({
+                      (coverage.filament.total - coverage.filament.scanned) + 
+                      (coverage.printer.total - coverage.printer.scanned) + 
+                      (coverage.accessory.total - coverage.accessory.scanned)
+                    } URLs remaining)
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Scan all unscanned URLs across filaments, printers, and accessories
+                  </p>
+                </div>
+              )}
+              
+              {/* Re-scan Broken URLs */}
+              {stats.broken > 0 && (
+                <div>
+                  <Button 
+                    onClick={rescanBrokenUrls}
+                    variant="secondary"
+                    size="sm"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Re-scan {stats.broken} Broken URLs
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Re-check URLs marked as broken to recategorize redirects
+                  </p>
+                </div>
+              )}
             </div>
           )}
           
