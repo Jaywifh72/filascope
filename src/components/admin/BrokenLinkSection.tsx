@@ -342,7 +342,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
             .from("printers")
             .select("id, official_store_url, official_product_url")
             .eq("status", "active")
-            .limit(100);
+            .limit(300);
           
           const printerUrls: typeof urls = [];
           data?.forEach(p => {
@@ -353,7 +353,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
               printerUrls.push({ entity_type: 'printer', entity_id: p.id, url_field: 'official_product_url', url: p.official_product_url });
             }
           });
-          urls = printerUrls.slice(0, 50);
+          urls = printerUrls.slice(0, 150);
           
         } else if (ct.entityType === 'accessory' && ct.accessoryType) {
           // Get accessories of this specific type first
@@ -362,7 +362,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
             .select("id, product_url")
             .eq("accessory_type", ct.accessoryType)
             .not("product_url", "is", null)
-            .limit(100);
+            .limit(300);
           
           if (!accessories || accessories.length === 0) {
             continue;
@@ -380,7 +380,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
           const scannedIds = new Set(alreadyScanned?.map(r => r.entity_id) || []);
           
           const unscanned = accessories.filter(a => !scannedIds.has(a.id));
-          urls = unscanned.slice(0, 50).map(a => ({ 
+          urls = unscanned.slice(0, 150).map(a => ({
             entity_type: 'accessory', 
             entity_id: a.id, 
             url_field: 'product_url', 
