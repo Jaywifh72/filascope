@@ -5,6 +5,87 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Accessory brand URL mappings - old URLs to new working URLs
+const ACCESSORY_URL_MAPPINGS: Record<string, Record<string, string>> = {
+  // Snapmaker URL mappings - products were consolidated or renamed
+  "Snapmaker": {
+    // PEI sheets - old URLs redirected to new product pages
+    "pei-sheet-a250-f250": "textured-and-smooth-pei-steel-plate-for-a250-a350",
+    "pei-sheet-a350-f350": "textured-and-smooth-pei-steel-plate-for-a250-a350",
+    "pei-glass-plate-for-snapmaker-artisan": "textured-and-smooth-pei-steel-plate-for-snapmaker-artisan",
+    // Multi-material module renamed to dual extrusion
+    "multi-material-printing-module": "snapmaker-dual-extrusion-3d-printing-module",
+    // Hotends
+    "u1-hardened-steel-hotend-bundle-02mm": "0-2mm-hardened-steel-hotend-for-snapmaker-u1",
+    "u1-hardened-steel-hotend-bundle-04mm": "0-4mm-hardened-steel-hotend-for-snapmaker-u1",
+    "u1-hardened-steel-hotend-bundle-06mm": "0-6mm-hardened-steel-hotend-for-snapmaker-u1",
+    "u1-hardened-steel-hotend-bundle-08mm": "0-8mm-hardened-steel-hotend-for-snapmaker-u1",
+    "extruder-hot-end-kit-snapmaker-original": "3d-printing-module-for-snapmaker-original",
+    // J1 printer 
+    "snapmaker-j1-independent-dual-extruder-3d-printer": "snapmaker-j1-idex-3d-printer",
+  },
+  // QIDI URL mappings - products renamed
+  "QIDI": {
+    // PEI plates renamed to include "dual-sided"
+    "max4-pei-plate": "max4-dual-sided-pei-plate",
+    "q2-pei-plate": "q2-dual-sided-pei-plate",
+    "plus4-pei-plate": "plus4-dual-sided-smooth-pei-plate",
+    // X-Smart 3 was discontinued/renamed
+    "x-smart-3": "qidi-x-smart-3",
+  },
+  // Ultimaker accessory URL mappings - new MakerBot integration format
+  "Ultimaker": {
+    // Factor 4 accessories
+    "factor-4-glass-plate": "makerbot-factor-4-glass-plate",
+    // Method accessories
+    "method-x-build-plate": "build-plate-for-makerbot-method-xl",
+    // S-Series accessories
+    "print-table-glass-s3": "glass-build-plate-for-ultimaker-s3-s5",
+  },
+  // Raise3D URL mappings
+  "Raise3D": {
+    // Pro3 hotends - URL format changed
+    "interchangeable-hot-end-assembly-v3h-nozzle-0-6mm-pro3-series-only": "v3h-hot-end-assembly-06mm-pro3",
+    "interchangeable-hot-end-assembly-v3h-nozzle-0-8mm-pro3-series-only": "v3h-hot-end-assembly-08mm-pro3",
+  },
+  // FlashForge
+  "FlashForge": {
+    "creator-3-glass-plate": "creator-3-pro-glass-plate",
+  },
+};
+
+// Brand-specific URL patterns (for transforming URLs with patterns rather than explicit mappings)
+interface BrandUrlPattern {
+  oldDomain?: string;
+  newDomain?: string;
+  pathTransform?: (path: string) => string;
+}
+
+const BRAND_URL_PATTERNS: Record<string, BrandUrlPattern> = {
+  // Snapmaker: shop.snapmaker.com → us.snapmaker.com
+  "Snapmaker": {
+    oldDomain: "shop.snapmaker.com",
+    newDomain: "us.snapmaker.com",
+  },
+  // QIDI: qidi3d.com → us.qidi3d.com for some products
+  "QIDI": {
+    oldDomain: "qidi3d.com",
+    newDomain: "us.qidi3d.com",
+  },
+  // FLSUN: flsun.com → store.flsun3d.com
+  "FLSUN": {
+    oldDomain: "www.flsun.com",
+    newDomain: "store.flsun3d.com",
+  },
+  // Elegoo: product URLs sometimes need regional prefix
+  "Elegoo": {
+    pathTransform: (path: string) => {
+      // Elegoo product URLs work on main site
+      return path;
+    }
+  },
+};
+
 // Brand-specific configurations for finding product URLs
 const BRAND_CONFIGS: Record<string, {
   searchUrl?: (query: string) => string;
@@ -382,14 +463,183 @@ const BRAND_URL_FIXERS: Record<string, UrlFixer> = {
       return null;
     }
   },
+  
+  "Snapmaker": (currentUrl: string) => {
+    if (!currentUrl) return null;
+    if (!currentUrl.includes('snapmaker.com')) return null;
+    
+    try {
+      const url = new URL(currentUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      const productSlug = pathParts[pathParts.length - 1];
+      
+      // Check accessory URL mappings first
+      const accessoryMappings = ACCESSORY_URL_MAPPINGS["Snapmaker"];
+      if (accessoryMappings && accessoryMappings[productSlug]) {
+        return `https://us.snapmaker.com/products/${accessoryMappings[productSlug]}`;
+      }
+      
+      // Transform shop.snapmaker.com → us.snapmaker.com
+      if (url.hostname === 'shop.snapmaker.com') {
+        return currentUrl.replace('shop.snapmaker.com', 'us.snapmaker.com');
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  },
+  
+  "QIDI": (currentUrl: string) => {
+    if (!currentUrl) return null;
+    if (!currentUrl.includes('qidi3d.com')) return null;
+    
+    try {
+      const url = new URL(currentUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      const productSlug = pathParts[pathParts.length - 1];
+      
+      // Check accessory URL mappings first
+      const accessoryMappings = ACCESSORY_URL_MAPPINGS["QIDI"];
+      if (accessoryMappings && accessoryMappings[productSlug]) {
+        // QIDI products work on both qidi3d.com and us.qidi3d.com
+        return `https://qidi3d.com/products/${accessoryMappings[productSlug]}`;
+      }
+      
+      // Try switching between regional variants
+      if (url.hostname === 'us.qidi3d.com') {
+        // Try main domain
+        return currentUrl.replace('us.qidi3d.com', 'qidi3d.com');
+      } else if (url.hostname === 'qidi3d.com') {
+        // Try US domain
+        return currentUrl.replace('qidi3d.com', 'us.qidi3d.com');
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  },
+  
+  "Raise3D": (currentUrl: string) => {
+    if (!currentUrl) return null;
+    if (!currentUrl.includes('raise3d.com')) return null;
+    
+    try {
+      const url = new URL(currentUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      const productSlug = pathParts[pathParts.length - 1];
+      
+      // Check accessory URL mappings
+      const accessoryMappings = ACCESSORY_URL_MAPPINGS["Raise3D"];
+      if (accessoryMappings && accessoryMappings[productSlug]) {
+        return `https://www.raise3d.com/products/${accessoryMappings[productSlug]}/`;
+      }
+      
+      // Remove trailing slash issues
+      if (currentUrl.endsWith('//')) {
+        return currentUrl.slice(0, -1);
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  },
+  
+  "FlashForge": (currentUrl: string) => {
+    if (!currentUrl) return null;
+    if (!currentUrl.includes('flashforge.com')) return null;
+    
+    try {
+      const url = new URL(currentUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      const productSlug = pathParts[pathParts.length - 1];
+      
+      // Check accessory URL mappings
+      const accessoryMappings = ACCESSORY_URL_MAPPINGS["FlashForge"];
+      if (accessoryMappings && accessoryMappings[productSlug]) {
+        return `https://www.flashforge.com/products/${accessoryMappings[productSlug]}`;
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  },
+  
+  "FLSUN": (currentUrl: string) => {
+    if (!currentUrl) return null;
+    if (!currentUrl.includes('flsun')) return null;
+    
+    try {
+      const url = new URL(currentUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      const productSlug = pathParts[pathParts.length - 1];
+      
+      // Transform www.flsun.com → store.flsun3d.com
+      if (url.hostname === 'www.flsun.com') {
+        return currentUrl.replace('www.flsun.com', 'store.flsun3d.com');
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  },
+  
+  "Elegoo": (currentUrl: string) => {
+    if (!currentUrl) return null;
+    if (!currentUrl.includes('elegoo.com')) return null;
+    
+    try {
+      // Elegoo product URLs sometimes get region prefixes
+      // Try different variants
+      const url = new URL(currentUrl);
+      
+      // If URL doesn't have regional prefix, try adding one
+      if (url.hostname === 'www.elegoo.com') {
+        // The main site should work, but could try regional
+        return null;
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  },
 };
 
-// Try to fix URL using brand-specific logic
+// Try to fix URL using brand-specific logic (also checks accessory mappings)
 function fixBrandUrl(vendor: string, currentUrl: string, productTitle?: string): string | null {
+  // First try filament-specific brand fixers
   const fixer = BRAND_URL_FIXERS[vendor];
   if (fixer) {
-    return fixer(currentUrl, productTitle);
+    const result = fixer(currentUrl, productTitle);
+    if (result) return result;
   }
+  
+  // Also try generic accessory URL mappings for any brand
+  if (currentUrl) {
+    try {
+      const url = new URL(currentUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      const productSlug = pathParts[pathParts.length - 1];
+      
+      // Check all accessory mappings
+      for (const [brand, mappings] of Object.entries(ACCESSORY_URL_MAPPINGS)) {
+        if (mappings[productSlug]) {
+          // Determine correct base URL for the brand
+          const brandPattern = BRAND_URL_PATTERNS[brand];
+          const newDomain = brandPattern?.newDomain || url.hostname;
+          return `https://${newDomain}/products/${mappings[productSlug]}`;
+        }
+      }
+    } catch {
+      // Ignore URL parsing errors
+    }
+  }
+  
   return null;
 }
 
@@ -701,25 +951,48 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { filamentId, productTitle, vendor, currentUrl } = await req.json();
+    const { filamentId, productTitle, vendor, currentUrl, entityType, entityId, urlField } = await req.json();
 
-    if (!filamentId || !productTitle || !vendor) {
+    // Support both legacy (filamentId) and new (entityId + entityType) params
+    const actualEntityId = entityId || filamentId;
+    const actualEntityType = entityType || 'filament';
+    const actualUrlField = urlField || 'product_url';
+
+    if (!actualEntityId || !productTitle) {
       return new Response(
-        JSON.stringify({ success: false, error: "Missing required fields" }),
+        JSON.stringify({ success: false, error: "Missing required fields (entityId, productTitle)" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`\n=== Fixing URL for: ${productTitle} (${vendor}) ===`);
+    // Extract brand from vendor or from URL
+    let brand = vendor || '';
+    if (!brand && currentUrl) {
+      // Try to detect brand from URL
+      if (currentUrl.includes('snapmaker')) brand = 'Snapmaker';
+      else if (currentUrl.includes('qidi')) brand = 'QIDI';
+      else if (currentUrl.includes('ultimaker')) brand = 'Ultimaker';
+      else if (currentUrl.includes('raise3d')) brand = 'Raise3D';
+      else if (currentUrl.includes('flashforge')) brand = 'FlashForge';
+      else if (currentUrl.includes('flsun')) brand = 'FLSUN';
+      else if (currentUrl.includes('elegoo')) brand = 'Elegoo';
+      else if (currentUrl.includes('bambulab')) brand = 'Bambu Lab';
+      else if (currentUrl.includes('prusa')) brand = 'Prusament';
+      else if (currentUrl.includes('colorfabb')) brand = 'ColorFabb';
+      else if (currentUrl.includes('matterhackers')) brand = 'MatterHackers';
+    }
+
+    console.log(`\n=== Fixing URL for: ${productTitle} (${brand || 'Unknown brand'}) ===`);
+    console.log(`Entity type: ${actualEntityType}, Entity ID: ${actualEntityId}`);
     console.log(`Current URL: ${currentUrl}`);
 
     const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
     let newUrl: string | null = null;
 
     // Strategy 0: Brand-specific URL transformations (for known URL pattern changes)
-    if (!newUrl && currentUrl) {
+    if (!newUrl && currentUrl && brand) {
       console.log("Strategy 0: Trying brand-specific URL transformation...");
-      newUrl = fixBrandUrl(vendor, currentUrl, productTitle);
+      newUrl = fixBrandUrl(brand, currentUrl, productTitle);
       if (newUrl) {
         const isValid = await validateUrl(newUrl);
         if (isValid) {
@@ -745,7 +1018,7 @@ Deno.serve(async (req) => {
     }
 
     // Strategy 2: Try Shopify collections if available
-    const brandConfig = BRAND_CONFIGS[vendor];
+    const brandConfig = brand ? BRAND_CONFIGS[brand] : null;
     if (!newUrl && brandConfig?.collectionsUrl && brandConfig?.shopifyStore) {
       console.log("Strategy 2: Searching Shopify collections...");
       newUrl = await findInShopifyCollections(
@@ -763,9 +1036,9 @@ Deno.serve(async (req) => {
     }
 
     // Strategy 3: Try web search via Firecrawl
-    if (!newUrl && firecrawlApiKey) {
+    if (!newUrl && firecrawlApiKey && brand) {
       console.log("Strategy 3: Web search...");
-      newUrl = await findViaWebSearch(vendor, productTitle, firecrawlApiKey);
+      newUrl = await findViaWebSearch(brand, productTitle, firecrawlApiKey);
       if (newUrl) {
         const isValid = await validateUrl(newUrl);
         if (!isValid) {
@@ -781,10 +1054,30 @@ Deno.serve(async (req) => {
       const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       const supabase = createClient(supabaseUrl, supabaseKey);
 
-      const { error: updateError } = await supabase
-        .from("filaments")
-        .update({ product_url: newUrl })
-        .eq("id", filamentId);
+      // Determine which table to update based on entity type
+      let updateError = null;
+      if (actualEntityType === 'filament') {
+        const result = await supabase
+          .from("filaments")
+          .update({ product_url: newUrl })
+          .eq("id", actualEntityId);
+        updateError = result.error;
+      } else if (actualEntityType === 'printer') {
+        // For printers, update the specific URL field
+        const updateData: Record<string, string> = {};
+        updateData[actualUrlField] = newUrl;
+        const result = await supabase
+          .from("printers")
+          .update(updateData)
+          .eq("id", actualEntityId);
+        updateError = result.error;
+      } else if (actualEntityType === 'accessory') {
+        const result = await supabase
+          .from("printer_accessories")
+          .update({ product_url: newUrl })
+          .eq("id", actualEntityId);
+        updateError = result.error;
+      }
 
       if (updateError) {
         console.error("Database update error:", updateError);
