@@ -499,11 +499,14 @@ const AdminBrokenLinks = () => {
     
     toast.info(`Starting full scan of ${totalToProcess} URLs across all entities...`);
     
+    // Use a ref-like variable to track cancellation since state updates are async
+    let isCancelled = false;
+    
     try {
       for (const entityType of entityTypes) {
         let hasMore = true;
         
-        while (hasMore && fullScanning) {
+        while (hasMore && !isCancelled) {
           setFullScanStatus(`Scanning ${entityType}s...`);
           
           // Get already scanned entity IDs
@@ -519,11 +522,22 @@ const AdminBrokenLinks = () => {
           let urls: { entity_type: string; entity_id: string; url_field: string; url: string }[] = [];
 
           if (entityType === 'filament') {
-            const { data } = await supabase
+            // Get entity IDs that have been scanned to exclude them from the query
+            const scannedEntityIds = new Set(
+              alreadyScanned?.filter(r => r.url_field === 'product_url').map(r => r.entity_id) || []
+            );
+            
+            let query = supabase
               .from("filaments")
               .select("id, product_url")
-              .not("product_url", "is", null)
-              .limit(100);
+              .not("product_url", "is", null);
+            
+            const scannedArray = Array.from(scannedEntityIds).slice(0, 1000);
+            if (scannedArray.length > 0 && scannedArray.length < 1000) {
+              query = query.not("id", "in", `(${scannedArray.join(',')})`);
+            }
+            
+            const { data } = await query.limit(100);
             
             urls = data?.filter(f => !scannedKeys.has(`${f.id}:product_url`))
               .map(f => ({
@@ -533,11 +547,31 @@ const AdminBrokenLinks = () => {
                 url: f.product_url!
               })) || [];
           } else if (entityType === 'printer') {
-            const { data } = await supabase
+            // For printers, we need to be careful - a printer can have 2 URLs
+            // Only exclude printers where BOTH URLs have been scanned
+            const scannedBothUrls = new Set<string>();
+            const scannedOneUrl = new Map<string, string>(); // entity_id -> url_field that was scanned
+            
+            alreadyScanned?.forEach(r => {
+              if (scannedOneUrl.has(r.entity_id)) {
+                // Already saw one URL for this printer, now seeing another - both are scanned
+                scannedBothUrls.add(r.entity_id);
+              } else {
+                scannedOneUrl.set(r.entity_id, r.url_field);
+              }
+            });
+            
+            let query = supabase
               .from("printers")
               .select("id, official_store_url, official_product_url")
-              .eq("status", "active")
-              .limit(100);
+              .eq("status", "active");
+            
+            const scannedArray = Array.from(scannedBothUrls).slice(0, 1000);
+            if (scannedArray.length > 0 && scannedArray.length < 1000) {
+              query = query.not("id", "in", `(${scannedArray.join(',')})`);
+            }
+            
+            const { data } = await query.limit(100);
             
             const printerUrls: typeof urls = [];
             data?.forEach(p => {
@@ -560,11 +594,21 @@ const AdminBrokenLinks = () => {
             });
             urls = printerUrls;
           } else {
-            const { data } = await supabase
+            const scannedEntityIds = new Set(
+              alreadyScanned?.filter(r => r.url_field === 'product_url').map(r => r.entity_id) || []
+            );
+            
+            let query = supabase
               .from("printer_accessories")
               .select("id, product_url")
-              .not("product_url", "is", null)
-              .limit(100);
+              .not("product_url", "is", null);
+            
+            const scannedArray = Array.from(scannedEntityIds).slice(0, 1000);
+            if (scannedArray.length > 0 && scannedArray.length < 1000) {
+              query = query.not("id", "in", `(${scannedArray.join(',')})`);
+            }
+            
+            const { data } = await query.limit(100);
             
             urls = data?.filter(a => !scannedKeys.has(`${a.id}:product_url`))
               .map(a => ({
