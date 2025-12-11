@@ -92,6 +92,16 @@ const AdminBrokenLinks = () => {
     setScanProgress(0);
 
     try {
+      // First, get already scanned entity IDs to skip them
+      const { data: alreadyScanned } = await supabase
+        .from("url_validation_results")
+        .select("entity_id, url_field")
+        .eq("entity_type", entityType);
+      
+      const scannedKeys = new Set(
+        alreadyScanned?.map(r => `${r.entity_id}:${r.url_field}`) || []
+      );
+
       let urls: { entity_type: string; entity_id: string; url_field: string; url: string }[] = [];
 
       if (entityType === 'filament') {
@@ -99,32 +109,35 @@ const AdminBrokenLinks = () => {
           .from("filaments")
           .select("id, product_url")
           .not("product_url", "is", null)
-          .limit(50);
+          .limit(200); // Fetch more, then filter
         
-        urls = data?.map(f => ({
-          entity_type: 'filament',
-          entity_id: f.id,
-          url_field: 'product_url',
-          url: f.product_url!
-        })) || [];
+        urls = data?.filter(f => !scannedKeys.has(`${f.id}:product_url`))
+          .slice(0, 50)
+          .map(f => ({
+            entity_type: 'filament',
+            entity_id: f.id,
+            url_field: 'product_url',
+            url: f.product_url!
+          })) || [];
       } else if (entityType === 'printer') {
         const { data } = await supabase
           .from("printers")
           .select("id, official_store_url, official_product_url")
           .eq("status", "active")
-          .limit(50);
+          .limit(200);
         
+        const allUrls: typeof urls = [];
         data?.forEach(p => {
-          if (p.official_store_url) {
-            urls.push({
+          if (p.official_store_url && !scannedKeys.has(`${p.id}:official_store_url`)) {
+            allUrls.push({
               entity_type: 'printer',
               entity_id: p.id,
               url_field: 'official_store_url',
               url: p.official_store_url
             });
           }
-          if (p.official_product_url) {
-            urls.push({
+          if (p.official_product_url && !scannedKeys.has(`${p.id}:official_product_url`)) {
+            allUrls.push({
               entity_type: 'printer',
               entity_id: p.id,
               url_field: 'official_product_url',
@@ -132,19 +145,28 @@ const AdminBrokenLinks = () => {
             });
           }
         });
+        urls = allUrls.slice(0, 50);
       } else {
         const { data } = await supabase
           .from("printer_accessories")
           .select("id, product_url")
           .not("product_url", "is", null)
-          .limit(50);
+          .limit(200);
         
-        urls = data?.map(a => ({
-          entity_type: 'accessory',
-          entity_id: a.id,
-          url_field: 'product_url',
-          url: a.product_url!
-        })) || [];
+        urls = data?.filter(a => !scannedKeys.has(`${a.id}:product_url`))
+          .slice(0, 50)
+          .map(a => ({
+            entity_type: 'accessory',
+            entity_id: a.id,
+            url_field: 'product_url',
+            url: a.product_url!
+          })) || [];
+      }
+
+      if (urls.length === 0) {
+        toast.info(`All ${entityType} URLs have been scanned`);
+        setScanning(false);
+        return;
       }
 
       for (let i = 0; i < urls.length; i++) {
