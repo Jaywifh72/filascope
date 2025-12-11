@@ -336,12 +336,67 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     }));
   };
 
-  const runScan = async () => {
+  const clearCategoryResults = async () => {
+    const categoryTypes = getCategoryEntityTypes(category);
+    
+    for (const ct of categoryTypes) {
+      if (ct.entityType === 'accessory' && ct.accessoryType) {
+        // Get accessory IDs of this type first
+        const { data: accessories } = await supabase
+          .from("printer_accessories")
+          .select("id")
+          .eq("accessory_type", ct.accessoryType);
+        
+        if (accessories && accessories.length > 0) {
+          const accessoryIds = accessories.map(a => a.id);
+          await supabase
+            .from("url_validation_results")
+            .delete()
+            .eq("entity_type", "accessory")
+            .in("entity_id", accessoryIds);
+        }
+      } else {
+        await supabase
+          .from("url_validation_results")
+          .delete()
+          .eq("entity_type", ct.entityType);
+      }
+    }
+  };
+
+  const rescanAll = async () => {
+    if (!confirm(`This will clear all existing scan results for ${title} and rescan from scratch. Continue?`)) {
+      return;
+    }
+    
     setScanning(true);
     setScanProgress(0);
-
+    
     try {
-      const categoryTypes = getCategoryEntityTypes(category);
+      // Clear existing results for this category
+      await clearCategoryResults();
+      toast.info(`Cleared existing results for ${title}`);
+      
+      // Reset stats and coverage
+      setStats({ total: 0, valid: 0, broken: 0, amazonBroken: 0, redirect: 0, timeout: 0, verified: 0 });
+      setResults([]);
+      
+      // Refresh coverage to get new counts
+      await fetchCoverageInternal();
+      
+      // Now run the scan
+      await runScanInternal();
+    } catch (error) {
+      console.error("Error during rescan all:", error);
+      toast.error("Failed to rescan all");
+    } finally {
+      setScanning(false);
+      await fetchData();
+    }
+  };
+
+  const runScanInternal = async () => {
+    const categoryTypes = getCategoryEntityTypes(category);
       let urls: { entity_type: string; entity_id: string; url_field: string; url: string }[] = [];
 
       for (const ct of categoryTypes) {
@@ -442,7 +497,6 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       }
       if (urls.length === 0) {
         toast.info(`All ${title} URLs have been scanned`);
-        setScanning(false);
         return;
       }
 
@@ -488,15 +542,18 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
         }
       }
 
-      toast.success(`Scanned ${urls.length} ${title} URLs`);
-      await fetchData();
-      onRefresh();
-    } catch (error) {
-      console.error("Error running scan:", error);
-      toast.error("Failed to run scan");
+    toast.success(`Scanned ${urls.length} ${title} URLs`);
+    onRefresh();
+  };
+
+  const runScan = async () => {
+    setScanning(true);
+    setScanProgress(0);
+    try {
+      await runScanInternal();
     } finally {
       setScanning(false);
-      setScanProgress(0);
+      await fetchData();
     }
   };
 
@@ -785,6 +842,15 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
                 {coverage.scanned >= coverage.total 
                   ? "All Scanned" 
                   : `Scan Next ${batchSize} (${coverage.total - coverage.scanned} remaining)`}
+              </Button>
+              <Button 
+                onClick={rescanAll} 
+                variant="outline" 
+                size="sm"
+                className="text-destructive border-destructive/50 hover:bg-destructive/10"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Rescan All
               </Button>
               <Button onClick={() => fetchData()} variant="ghost" size="sm" disabled={loading}>
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
