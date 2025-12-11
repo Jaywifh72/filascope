@@ -86,6 +86,10 @@ const BRAND_CONFIGS: Record<string, {
     shopifyStore: "https://voxelpla.com",
     collectionsUrl: "https://voxelpla.com/collections/all.json",
   },
+  "Bambu Lab": {
+    shopifyStore: "https://us.store.bambulab.com",
+    collectionsUrl: "https://us.store.bambulab.com/collections/all.json",
+  },
 };
 
 // Normalize text for matching
@@ -167,7 +171,10 @@ async function findViaWebSearch(
   firecrawlApiKey: string
 ): Promise<string | null> {
   try {
-    const searchQuery = `${vendor} ${productTitle} buy`;
+    // Remove vendor name from product title if already present to avoid duplication
+    const vendorPattern = new RegExp(`^${vendor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'i');
+    const cleanedTitle = productTitle.replace(vendorPattern, '').trim();
+    const searchQuery = `${vendor} ${cleanedTitle} buy`;
     console.log(`Web search query: ${searchQuery}`);
     
     const response = await fetch("https://api.firecrawl.dev/v1/search", {
