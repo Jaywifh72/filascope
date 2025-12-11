@@ -116,6 +116,117 @@ function calculateSimilarity(str1: string, str2: string): number {
   return matches / Math.max(words1.size, words2.size);
 }
 
+// Try to find product by searching parent directory of broken URL
+async function findInParentDirectory(
+  currentUrl: string,
+  productTitle: string,
+  firecrawlApiKey: string
+): Promise<string | null> {
+  try {
+    if (!currentUrl) return null;
+    
+    const url = new URL(currentUrl);
+    const pathParts = url.pathname.split('/').filter(p => p);
+    
+    // Go up one level - e.g., /products/thermax-peek-1-75mm -> /products/
+    if (pathParts.length < 2) return null;
+    
+    const parentPath = '/' + pathParts.slice(0, -1).join('/') + '/';
+    const parentUrl = `${url.origin}${parentPath}`;
+    const brokenSlug = pathParts[pathParts.length - 1];
+    
+    console.log(`Searching parent directory: ${parentUrl}`);
+    console.log(`Looking for products similar to slug: ${brokenSlug}`);
+    
+    // Try to fetch and scrape the parent directory page
+    const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${firecrawlApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url: parentUrl,
+        formats: ["links"],
+        onlyMainContent: false,
+      }),
+    });
+    
+    if (!response.ok) {
+      console.log(`Parent directory scrape failed: ${response.status}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    const links: string[] = data.data?.links || [];
+    
+    console.log(`Found ${links.length} links in parent directory`);
+    
+    // Extract slug parts for matching (e.g., "thermax-peek-1-75mm" -> ["thermax", "peek"])
+    const slugParts = brokenSlug.toLowerCase()
+      .replace(/[0-9-]+mm$/i, '') // Remove size suffix like "1-75mm"
+      .split('-')
+      .filter(p => p.length > 2);
+    
+    console.log(`Slug parts to match: ${slugParts.join(', ')}`);
+    
+    // Also extract key terms from product title
+    const titleParts = normalizeText(productTitle)
+      .split(' ')
+      .filter(w => w.length > 2 && !['175mm', '285mm', '1kg', '750g'].includes(w));
+    
+    let bestMatch: { url: string; score: number } | null = null;
+    
+    for (const link of links) {
+      if (!link.includes('/products/') && !link.includes('/product/')) continue;
+      
+      try {
+        const linkUrl = new URL(link);
+        // Must be same origin
+        if (linkUrl.origin !== url.origin) continue;
+        
+        const linkSlug = linkUrl.pathname.split('/').pop() || '';
+        const linkSlugLower = linkSlug.toLowerCase();
+        
+        // Skip the broken URL itself
+        if (linkSlugLower === brokenSlug.toLowerCase()) continue;
+        
+        // Calculate match score based on shared slug parts
+        let score = 0;
+        for (const part of slugParts) {
+          if (linkSlugLower.includes(part)) {
+            score += 2; // Higher weight for slug matches
+          }
+        }
+        
+        // Also check title parts
+        for (const part of titleParts) {
+          if (linkSlugLower.includes(part)) {
+            score += 1;
+          }
+        }
+        
+        if (score > 0 && (!bestMatch || score > bestMatch.score)) {
+          bestMatch = { url: link, score };
+          console.log(`Potential match: ${link} (score: ${score})`);
+        }
+      } catch {
+        continue;
+      }
+    }
+    
+    if (bestMatch) {
+      console.log(`Best parent directory match: ${bestMatch.url} (score: ${bestMatch.score})`);
+      return bestMatch.url;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error searching parent directory:", error);
+    return null;
+  }
+}
+
 // Try to find product in Shopify collections
 async function findInShopifyCollections(
   collectionsUrl: string,
@@ -304,27 +415,47 @@ Deno.serve(async (req) => {
     const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
     let newUrl: string | null = null;
 
-    // Strategy 1: Try Shopify collections if available
+    // Strategy 1: Search parent directory of broken URL (most reliable for minor path changes)
+    if (!newUrl && currentUrl && firecrawlApiKey) {
+      console.log("Strategy 1: Searching parent directory...");
+      newUrl = await findInParentDirectory(currentUrl, productTitle, firecrawlApiKey);
+      if (newUrl) {
+        const isValid = await validateUrl(newUrl);
+        if (!isValid) {
+          console.log(`Parent directory URL failed validation: ${newUrl}`);
+          newUrl = null;
+        }
+      }
+    }
+
+    // Strategy 2: Try Shopify collections if available
     const brandConfig = BRAND_CONFIGS[vendor];
-    if (brandConfig?.collectionsUrl && brandConfig?.shopifyStore) {
+    if (!newUrl && brandConfig?.collectionsUrl && brandConfig?.shopifyStore) {
+      console.log("Strategy 2: Searching Shopify collections...");
       newUrl = await findInShopifyCollections(
         brandConfig.collectionsUrl,
         productTitle,
         brandConfig.shopifyStore
       );
+      if (newUrl) {
+        const isValid = await validateUrl(newUrl);
+        if (!isValid) {
+          console.log(`Shopify collections URL failed validation: ${newUrl}`);
+          newUrl = null;
+        }
+      }
     }
 
-    // Strategy 2: Try web search via Firecrawl
+    // Strategy 3: Try web search via Firecrawl
     if (!newUrl && firecrawlApiKey) {
+      console.log("Strategy 3: Web search...");
       newUrl = await findViaWebSearch(vendor, productTitle, firecrawlApiKey);
-    }
-
-    // Validate the found URL
-    if (newUrl) {
-      const isValid = await validateUrl(newUrl);
-      if (!isValid) {
-        console.log(`Found URL failed validation: ${newUrl}`);
-        newUrl = null;
+      if (newUrl) {
+        const isValid = await validateUrl(newUrl);
+        if (!isValid) {
+          console.log(`Web search URL failed validation: ${newUrl}`);
+          newUrl = null;
+        }
       }
     }
 
