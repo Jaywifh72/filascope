@@ -96,7 +96,8 @@ const BRAND_CONFIGS: Record<string, {
 };
 
 // Ultimaker URL mapping - old product URLs to new S-Series URLs
-// New URL format: https://store.ultimaker.com/3d-printer-materials/s-series-materials/{product-slug}
+// New URL format: https://store.ultimaker.com/ultimaker-s-series-{material}-material (direct at root)
+// Some materials also work at: https://store.ultimaker.com/3d-printer-materials/s-series-materials/{product-slug}
 const ULTIMAKER_URL_MAPPINGS: Record<string, string> = {
   // CPE materials
   "ultimaker-cpe-filament-2-85mm": "ultimaker-s-series-cpe-material",
@@ -109,26 +110,28 @@ const ULTIMAKER_URL_MAPPINGS: Record<string, string> = {
   "ultimaker-abs-filament-2-85mm": "ultimaker-s-series-abs-material",
   // PETG materials
   "ultimaker-petg-filament-2-85mm": "ultimaker-s-series-petg-material",
+  // PET CF materials (note: no hyphen in petcf)
+  "ultimaker-pet-cf-filament-2-85mm": "ultimaker-s-series-petcf-material",
   // Nylon materials
   "ultimaker-nylon-filament-2-85mm": "ultimaker-s-series-nylon-material",
-  "ultimaker-nylon-cf-filament-2-85mm": "ultimaker-s-series-nylon-cf-material",
+  "ultimaker-nylon-cf-filament-2-85mm": "ultimaker-s-series-nyloncf-material",
   // PC materials
   "ultimaker-pc-filament-2-85mm": "ultimaker-s-series-pc-material",
-  "ultimaker-pc-abs-filament-2-85mm": "ultimaker-s-series-pc-abs-material",
+  "ultimaker-pc-abs-filament-2-85mm": "ultimaker-s-series-pcabs-material",
   // PP materials
   "ultimaker-pp-filament-2-85mm": "ultimaker-s-series-pp-material",
   // TPU materials
-  "ultimaker-tpu-95a-filament-2-85mm": "ultimaker-s-series-tpu-95a-material",
+  "ultimaker-tpu-95a-filament-2-85mm": "ultimaker-s-series-tpu95a-material",
   // PVA materials
   "ultimaker-pva-filament-2-85mm": "ultimaker-s-series-pva-material",
   // Breakaway materials
   "ultimaker-breakaway-filament-2-85mm": "ultimaker-s-series-breakaway-material",
-  // Specialty / Composite materials
-  "ultimaker-pla-carbon-fiber-filament-2-85mm": "ultimaker-s-series-pla-carbon-fiber-material",
-  "ultimaker-metal-pla-filament-2-85mm": "ultimaker-s-series-metal-pla-material",
-  "ultimaker-glass-filled-nylon-filament-2-85mm": "ultimaker-s-series-glass-filled-nylon-material",
+  // Specialty / Composite materials (note: hyphens removed in new URLs for composites)
+  "ultimaker-pla-carbon-fiber-filament-2-85mm": "ultimaker-s-series-placf-material",
+  "ultimaker-metal-pla-filament-2-85mm": "ultimaker-s-series-metalpla-material",
+  "ultimaker-glass-filled-nylon-filament-2-85mm": "ultimaker-s-series-glassfilled-nylon-material",
   "ultimaker-pei-filament-2-85mm": "ultimaker-s-series-pei-material",
-  "ultimaker-abs-cf-filament-2-85mm": "ultimaker-s-series-abs-cf-material",
+  "ultimaker-abs-cf-filament-2-85mm": "ultimaker-s-series-abscf-material",
   // Color variants - PLA colors
   "ultimaker-pla-black-filament-2-85mm": "ultimaker-s-series-pla-material",
   "ultimaker-pla-white-filament-2-85mm": "ultimaker-s-series-pla-material",
@@ -169,10 +172,10 @@ const ULTIMAKER_URL_MAPPINGS: Record<string, string> = {
   "ultimaker-pc-white-filament-2-85mm": "ultimaker-s-series-pc-material",
   "ultimaker-pc-transparent-filament-2-85mm": "ultimaker-s-series-pc-material",
   // Color variants - TPU colors
-  "ultimaker-tpu-95a-black-filament-2-85mm": "ultimaker-s-series-tpu-95a-material",
-  "ultimaker-tpu-95a-white-filament-2-85mm": "ultimaker-s-series-tpu-95a-material",
-  "ultimaker-tpu-95a-red-filament-2-85mm": "ultimaker-s-series-tpu-95a-material",
-  "ultimaker-tpu-95a-blue-filament-2-85mm": "ultimaker-s-series-tpu-95a-material",
+  "ultimaker-tpu-95a-black-filament-2-85mm": "ultimaker-s-series-tpu95a-material",
+  "ultimaker-tpu-95a-white-filament-2-85mm": "ultimaker-s-series-tpu95a-material",
+  "ultimaker-tpu-95a-red-filament-2-85mm": "ultimaker-s-series-tpu95a-material",
+  "ultimaker-tpu-95a-blue-filament-2-85mm": "ultimaker-s-series-tpu95a-material",
 };
 
 // Prusa URL mappings - old /product/ format to new /e-shop/ format
@@ -228,8 +231,8 @@ const BRAND_URL_FIXERS: Record<string, UrlFixer> = {
       const pathParts = url.pathname.split('/').filter(p => p);
       const productSlug = pathParts[pathParts.length - 1];
       
-      // New URL format: https://store.ultimaker.com/3d-printer-materials/s-series-materials/{slug}
-      const newBaseUrl = "https://store.ultimaker.com/3d-printer-materials/s-series-materials";
+      // New URL format: https://store.ultimaker.com/{product-slug} (direct at root)
+      const newBaseUrl = "https://store.ultimaker.com";
       
       // Check direct mapping first
       if (ULTIMAKER_URL_MAPPINGS[productSlug]) {
@@ -238,24 +241,47 @@ const BRAND_URL_FIXERS: Record<string, UrlFixer> = {
       
       // Pattern matching for old /products/ URLs
       // ultimaker-{material}-filament-2-85mm -> ultimaker-s-series-{material}-material
-      const materialMatch = productSlug.match(/^ultimaker-(.+?)-filament-?/i);
+      const materialMatch = productSlug.match(/^ultimaker-(.+?)-filament/i);
       if (materialMatch) {
         let material = materialMatch[1];
-        // Clean up material name - remove color suffixes and standardize
+        // Clean up material name - remove color suffixes, diameter suffix, and standardize
         material = material
           .replace(/-2-85mm$/, '')
           .replace(/-(black|white|red|blue|green|yellow|orange|grey|silver|natural|transparent|dark-grey|light-grey|pearl-white|silver-metallic)$/i, '');
+        
+        // For composite materials (containing -cf, -gf, etc.), remove the hyphen
+        // e.g., pet-cf -> petcf, nylon-cf -> nyloncf, abs-cf -> abscf
+        const compositeMatch = material.match(/^(.+?)-(cf|gf|plus)$/i);
+        if (compositeMatch) {
+          material = compositeMatch[1] + compositeMatch[2].toLowerCase();
+        }
+        
+        // Also handle special cases like tpu-95a -> tpu95a, pc-abs -> pcabs
+        material = material
+          .replace(/-95a$/i, '95a')
+          .replace(/^pc-abs$/i, 'pcabs')
+          .replace(/^tough-pla$/i, 'tough-pla'); // keep tough-pla as is
+        
         return `${newBaseUrl}/ultimaker-s-series-${material}-material`;
       }
       
       // If URL is in old /products/ format, try to convert
       if (url.pathname.includes('/products/')) {
         // Extract product slug and try direct conversion
-        const slug = productSlug
-          .replace(/-filament-2-85mm$/, '-material')
-          .replace(/-2-85mm$/, '')
+        let slug = productSlug
+          .replace(/-filament-2-85mm$/, '')
+          .replace(/-filament$/, '')
+          .replace(/-2-85mm$/, '');
+        
+        // Remove hyphens for composite materials
+        slug = slug
+          .replace(/-cf$/i, 'cf')
+          .replace(/-gf$/i, 'gf')
+          .replace(/-95a$/i, '95a')
+          .replace(/^ultimaker-pc-abs$/i, 'ultimaker-pcabs')
           .replace(/^ultimaker-/, 'ultimaker-s-series-');
-        return `${newBaseUrl}/${slug}`;
+        
+        return `${newBaseUrl}/${slug}-material`;
       }
       
       return null;
