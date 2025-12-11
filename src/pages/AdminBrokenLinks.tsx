@@ -8,11 +8,38 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   Link2, RefreshCw, CheckCircle, XCircle, AlertTriangle, 
   ExternalLink, Package, Database, Wrench, Play, Search, ArrowRight, Loader2, Trash2
 } from "lucide-react";
 import { toast } from "sonner";
+
+// HTTP status code explanations and fix strategies
+const HTTP_STATUS_INFO: Record<number, { label: string; description: string; fixStrategy: string }> = {
+  200: { label: "OK", description: "The request succeeded.", fixStrategy: "No action needed" },
+  301: { label: "Moved Permanently", description: "The URL has been permanently moved to a new location.", fixStrategy: "Update to the new redirect URL" },
+  302: { label: "Found (Redirect)", description: "The URL temporarily redirects to another location.", fixStrategy: "Update to the redirect URL or keep monitoring" },
+  303: { label: "See Other", description: "The server redirects to a different resource.", fixStrategy: "Update to the redirect URL" },
+  307: { label: "Temporary Redirect", description: "The URL temporarily redirects, preserving the request method.", fixStrategy: "Update to the redirect URL or keep monitoring" },
+  308: { label: "Permanent Redirect", description: "The URL has been permanently moved, preserving the request method.", fixStrategy: "Update to the new redirect URL" },
+  400: { label: "Bad Request", description: "The server cannot process the request due to malformed syntax.", fixStrategy: "Check URL format and special characters" },
+  401: { label: "Unauthorized", description: "Authentication is required to access this resource.", fixStrategy: "URL may require login - search for public alternative" },
+  403: { label: "Forbidden", description: "The server refuses to authorize access. Often due to geo-blocking, bot detection, or access restrictions.", fixStrategy: "Product may be discontinued or region-locked. Search for alternative URL" },
+  404: { label: "Not Found", description: "The page no longer exists at this URL.", fixStrategy: "Product likely discontinued or URL changed. Search for replacement" },
+  410: { label: "Gone", description: "The resource has been permanently removed.", fixStrategy: "Product discontinued. Remove or find alternative" },
+  429: { label: "Too Many Requests", description: "Rate limited by the server.", fixStrategy: "Temporary issue - re-scan later" },
+  500: { label: "Internal Server Error", description: "The server encountered an unexpected error.", fixStrategy: "Temporary server issue - re-scan later" },
+  502: { label: "Bad Gateway", description: "The server received an invalid response from upstream.", fixStrategy: "Temporary server issue - re-scan later" },
+  503: { label: "Service Unavailable", description: "The server is temporarily unavailable (maintenance or overload).", fixStrategy: "Temporary issue - re-scan later. If persistent, search for alternative" },
+  504: { label: "Gateway Timeout", description: "The server didn't receive a timely response from upstream.", fixStrategy: "Temporary timeout - re-scan later" },
+  0: { label: "Timeout/No Response", description: "The request timed out or the server didn't respond.", fixStrategy: "Server may be down or blocking requests. Try again or search for alternative" },
+};
+
+const getStatusCodeInfo = (code: number | null): { label: string; description: string; fixStrategy: string } => {
+  if (code === null) return { label: "Unknown", description: "No status code received", fixStrategy: "Re-scan to check status" };
+  return HTTP_STATUS_INFO[code] || { label: `HTTP ${code}`, description: "Unrecognized status code", fixStrategy: "Investigate manually" };
+};
 
 interface UrlValidationResult {
   id: string;
@@ -842,9 +869,9 @@ const AdminBrokenLinks = () => {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                {activeTab === 'redirect' && "Redirects will be updated to their destination URL"}
-                {activeTab === 'broken' && "Broken links will attempt to find replacement URLs"}
-                {activeTab === 'timeout' && "Timed out links will attempt to find replacement URLs"}
+                {activeTab === 'redirect' && "Redirects will be updated to their destination URL automatically"}
+                {activeTab === 'broken' && "Broken links will search for replacement URLs via web search (best for 404/410 errors)"}
+                {activeTab === 'timeout' && "Timed out links may be temporary - re-scan first, or search for replacements if persistent"}
               </p>
             </Card>
           )}
@@ -886,10 +913,28 @@ const AdminBrokenLinks = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        {result.status_code && (
-                          <Badge variant={result.status_code === 200 ? "default" : "destructive"}>
-                            {result.status_code}
-                          </Badge>
+                        {result.status_code !== null && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge 
+                                  variant={result.status_code === 200 ? "default" : "destructive"}
+                                  className="cursor-help"
+                                >
+                                  {result.status_code}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <div className="space-y-1">
+                                  <p className="font-semibold">{getStatusCodeInfo(result.status_code).label}</p>
+                                  <p className="text-xs">{getStatusCodeInfo(result.status_code).description}</p>
+                                  <p className="text-xs text-muted-foreground italic">
+                                    Fix: {getStatusCodeInfo(result.status_code).fixStrategy}
+                                  </p>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                         
                         {/* Action buttons based on status */}
