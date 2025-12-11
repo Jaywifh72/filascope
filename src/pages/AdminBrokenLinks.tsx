@@ -783,7 +783,9 @@ const AdminBrokenLinks = () => {
       // Invoke the fix-filament-url function with correct parameters
       const { data, error } = await supabase.functions.invoke('fix-filament-url', {
         body: { 
-          filamentId: result.entity_id,
+          entityId: result.entity_id,
+          entityType: result.entity_type,
+          urlField: result.url_field,
           productTitle,
           vendor,
           currentUrl: result.url
@@ -893,7 +895,9 @@ const AdminBrokenLinks = () => {
 
           const { data, error } = await supabase.functions.invoke('fix-filament-url', {
             body: { 
-              filamentId: result.entity_id,
+              entityId: result.entity_id,
+              entityType: result.entity_type,
+              urlField: result.url_field,
               productTitle,
               vendor,
               currentUrl: result.url
