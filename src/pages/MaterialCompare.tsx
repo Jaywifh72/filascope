@@ -35,8 +35,9 @@ const getPropertyValue = (level: string): number => {
     'Rigid': 1, 'Semi-Flexible': 2, 'Flexible': 3, 'Very Flexible': 4,
     'Excellent': 5, 'Good': 4, 'Difficult': 2, 'Not Possible': 1,
     'Strong Chemical Bond': 4, 'Mechanical Bond': 3, 'Weak Bond': 2, 'No Bond': 1,
-    // Food Safety rankings
-    'FDA Approved': 5, 'Food Safe': 5, 'Possible with Certification': 3, 
+    // Food Safety rankings (higher = safer)
+    'FDA Approved': 6, 'Food Safe': 6, 'Generally Safe': 5, 
+    'Possible (Specific Grades)': 4, 'Possible with Certification': 4, 
     'Conditional': 2, 'Not Safe': 1, 'Not Food Safe': 1,
     // Biodegradability rankings
     'Fully Biodegradable': 5, 'Compostable': 4, 'Industrial Compostable': 3,
