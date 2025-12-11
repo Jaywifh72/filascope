@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Link2, RefreshCw, CheckCircle, XCircle, AlertTriangle, 
-  ExternalLink, Package, Database, Wrench, Play
+  ExternalLink, Package, Database, Wrench, Play, Search, ArrowRight, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,6 +22,7 @@ interface UrlValidationResult {
   url: string;
   status_code: number | null;
   status: string;
+  redirect_url?: string | null;
   checked_at: string;
 }
 
@@ -41,6 +43,9 @@ const AdminBrokenLinks = () => {
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [activeTab, setActiveTab] = useState("broken");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [fixingIds, setFixingIds] = useState<Set<string>>(new Set());
+  const [bulkFixing, setBulkFixing] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user && !isAdmin) {
@@ -67,7 +72,6 @@ const AdminBrokenLinks = () => {
     if (!error && data) {
       setResults(data);
       
-      // Calculate stats
       const statsCalc = data.reduce((acc, r) => {
         acc.total++;
         if (r.status === 'valid') acc.valid++;
@@ -80,6 +84,7 @@ const AdminBrokenLinks = () => {
       setStats(statsCalc);
     }
     setLoading(false);
+    setSelectedIds(new Set());
   };
 
   const runScan = async (entityType: 'filament' | 'printer' | 'accessory') => {
@@ -142,7 +147,6 @@ const AdminBrokenLinks = () => {
         })) || [];
       }
 
-      // Test URLs one by one
       for (let i = 0; i < urls.length; i++) {
         const urlData = urls[i];
         setScanProgress(Math.round(((i + 1) / urls.length) * 100));
@@ -154,9 +158,11 @@ const AdminBrokenLinks = () => {
 
           let status = 'broken';
           let statusCode = null;
+          let redirectUrl = null;
 
           if (!error && testResult) {
             statusCode = testResult.statusCode;
+            redirectUrl = testResult.redirectLocation || null;
             if (testResult.ok) {
               status = testResult.isRedirect ? 'redirect' : 'valid';
             } else if (testResult.statusCode === 0) {
@@ -164,7 +170,6 @@ const AdminBrokenLinks = () => {
             }
           }
 
-          // Delete old result for this URL
           await supabase
             .from("url_validation_results")
             .delete()
@@ -172,14 +177,14 @@ const AdminBrokenLinks = () => {
             .eq("entity_id", urlData.entity_id)
             .eq("url_field", urlData.url_field);
 
-          // Insert new result
           await supabase.from("url_validation_results").insert({
             entity_type: urlData.entity_type,
             entity_id: urlData.entity_id,
             url_field: urlData.url_field,
             url: urlData.url,
             status_code: statusCode,
-            status
+            status,
+            redirect_url: redirectUrl
           });
         } catch (e) {
           console.error("Error testing URL:", urlData.url, e);
@@ -194,6 +199,193 @@ const AdminBrokenLinks = () => {
     } finally {
       setScanning(false);
       setScanProgress(0);
+    }
+  };
+
+  const updateToRedirectUrl = async (result: UrlValidationResult) => {
+    if (!result.redirect_url) {
+      toast.error("No redirect URL available");
+      return;
+    }
+
+    setFixingIds(prev => new Set(prev).add(result.id));
+
+    try {
+      const tableName = result.entity_type === 'filament' ? 'filaments' 
+        : result.entity_type === 'printer' ? 'printers' 
+        : 'printer_accessories';
+
+      const { error } = await supabase
+        .from(tableName)
+        .update({ [result.url_field]: result.redirect_url })
+        .eq('id', result.entity_id);
+
+      if (error) throw error;
+
+      // Update the validation result to valid
+      await supabase
+        .from("url_validation_results")
+        .update({ status: 'valid', url: result.redirect_url, status_code: 200 })
+        .eq('id', result.id);
+
+      toast.success("URL updated to redirect destination");
+      fetchResults();
+    } catch (error) {
+      console.error("Error updating URL:", error);
+      toast.error("Failed to update URL");
+    } finally {
+      setFixingIds(prev => {
+        const next = new Set(prev);
+        next.delete(result.id);
+        return next;
+      });
+    }
+  };
+
+  const findReplacementUrl = async (result: UrlValidationResult) => {
+    setFixingIds(prev => new Set(prev).add(result.id));
+
+    try {
+      // Invoke the fix-filament-url function to find a replacement
+      const { data, error } = await supabase.functions.invoke('fix-filament-url', {
+        body: { 
+          entityType: result.entity_type,
+          entityId: result.entity_id,
+          urlField: result.url_field,
+          currentUrl: result.url
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.newUrl) {
+        const tableName = result.entity_type === 'filament' ? 'filaments' 
+          : result.entity_type === 'printer' ? 'printers' 
+          : 'printer_accessories';
+
+        await supabase
+          .from(tableName)
+          .update({ [result.url_field]: data.newUrl })
+          .eq('id', result.entity_id);
+
+        // Update validation result
+        await supabase
+          .from("url_validation_results")
+          .update({ status: 'valid', url: data.newUrl, status_code: 200 })
+          .eq('id', result.id);
+
+        toast.success("Found and applied replacement URL");
+        fetchResults();
+      } else {
+        toast.error("Could not find a replacement URL");
+      }
+    } catch (error) {
+      console.error("Error finding replacement:", error);
+      toast.error("Failed to find replacement URL");
+    } finally {
+      setFixingIds(prev => {
+        const next = new Set(prev);
+        next.delete(result.id);
+        return next;
+      });
+    }
+  };
+
+  const fixSelected = async () => {
+    const selectedResults = results.filter(r => selectedIds.has(r.id));
+    if (selectedResults.length === 0) {
+      toast.error("No items selected");
+      return;
+    }
+
+    setBulkFixing(true);
+    let fixed = 0;
+    let failed = 0;
+
+    for (const result of selectedResults) {
+      try {
+        if (result.status === 'redirect' && result.redirect_url) {
+          // For redirects, update to the redirect URL
+          const tableName = result.entity_type === 'filament' ? 'filaments' 
+            : result.entity_type === 'printer' ? 'printers' 
+            : 'printer_accessories';
+
+          const { error } = await supabase
+            .from(tableName)
+            .update({ [result.url_field]: result.redirect_url })
+            .eq('id', result.entity_id);
+
+          if (!error) {
+            await supabase
+              .from("url_validation_results")
+              .update({ status: 'valid', url: result.redirect_url, status_code: 200 })
+              .eq('id', result.id);
+            fixed++;
+          } else {
+            failed++;
+          }
+        } else if (result.status === 'broken' || result.status === 'timeout') {
+          // For broken/timeout, try to find replacement
+          const { data, error } = await supabase.functions.invoke('fix-filament-url', {
+            body: { 
+              entityType: result.entity_type,
+              entityId: result.entity_id,
+              urlField: result.url_field,
+              currentUrl: result.url
+            }
+          });
+
+          if (!error && data?.newUrl) {
+            const tableName = result.entity_type === 'filament' ? 'filaments' 
+              : result.entity_type === 'printer' ? 'printers' 
+              : 'printer_accessories';
+
+            await supabase
+              .from(tableName)
+              .update({ [result.url_field]: data.newUrl })
+              .eq('id', result.entity_id);
+
+            await supabase
+              .from("url_validation_results")
+              .update({ status: 'valid', url: data.newUrl, status_code: 200 })
+              .eq('id', result.id);
+            fixed++;
+          } else {
+            failed++;
+          }
+        }
+      } catch (e) {
+        console.error("Error fixing item:", result.id, e);
+        failed++;
+      }
+    }
+
+    setBulkFixing(false);
+    setSelectedIds(new Set());
+    toast.success(`Fixed ${fixed} URLs${failed > 0 ? `, ${failed} failed` : ''}`);
+    fetchResults();
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    const currentFiltered = filteredResults;
+    const allSelected = currentFiltered.every(r => selectedIds.has(r.id));
+    
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(currentFiltered.map(r => r.id)));
     }
   };
 
@@ -218,6 +410,10 @@ const AdminBrokenLinks = () => {
     if (activeTab === 'all') return true;
     return r.status === activeTab;
   });
+
+  const selectedCount = Array.from(selectedIds).filter(id => 
+    filteredResults.some(r => r.id === id)
+  ).length;
 
   if (authLoading) {
     return (
@@ -294,16 +490,53 @@ const AdminBrokenLinks = () => {
         </Card>
 
         {/* Results Table */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">All ({stats.total})</TabsTrigger>
-            <TabsTrigger value="broken">Broken ({stats.broken})</TabsTrigger>
-            <TabsTrigger value="redirect">Redirects ({stats.redirect})</TabsTrigger>
-            <TabsTrigger value="timeout">Timeouts ({stats.timeout})</TabsTrigger>
-            <TabsTrigger value="valid">Valid ({stats.valid})</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setSelectedIds(new Set()); }}>
+          <div className="flex items-center justify-between mb-4">
+            <TabsList>
+              <TabsTrigger value="all">All ({stats.total})</TabsTrigger>
+              <TabsTrigger value="broken">Broken ({stats.broken})</TabsTrigger>
+              <TabsTrigger value="redirect">Redirects ({stats.redirect})</TabsTrigger>
+              <TabsTrigger value="timeout">Timeouts ({stats.timeout})</TabsTrigger>
+              <TabsTrigger value="valid">Valid ({stats.valid})</TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value={activeTab} className="mt-4">
+          {/* Bulk Actions Bar */}
+          {(activeTab === 'broken' || activeTab === 'redirect' || activeTab === 'timeout') && filteredResults.length > 0 && (
+            <Card className="p-3 mb-4 bg-muted/30 border-primary/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Checkbox 
+                    checked={filteredResults.length > 0 && filteredResults.every(r => selectedIds.has(r.id))}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {selectedCount > 0 ? `${selectedCount} selected` : 'Select all'}
+                  </span>
+                </div>
+                <Button 
+                  onClick={fixSelected} 
+                  disabled={selectedCount === 0 || bulkFixing}
+                  size="sm"
+                  className="gap-2"
+                >
+                  {bulkFixing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Wrench className="w-4 h-4" />
+                  )}
+                  Fix Selected ({selectedCount})
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {activeTab === 'redirect' && "Redirects will be updated to their destination URL"}
+                {activeTab === 'broken' && "Broken links will attempt to find replacement URLs"}
+                {activeTab === 'timeout' && "Timed out links will attempt to find replacement URLs"}
+              </p>
+            </Card>
+          )}
+
+          <TabsContent value={activeTab} className="mt-0">
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
             ) : filteredResults.length === 0 ? (
@@ -313,24 +546,74 @@ const AdminBrokenLinks = () => {
             ) : (
               <div className="space-y-2">
                 {filteredResults.map((result) => (
-                  <Card key={result.id} className="p-3 bg-card border-border">
-                    <div className="flex items-center justify-between">
+                  <Card key={result.id} className={`p-3 bg-card border-border ${selectedIds.has(result.id) ? 'border-primary' : ''}`}>
+                    <div className="flex items-center gap-3">
+                      {(result.status === 'broken' || result.status === 'redirect' || result.status === 'timeout') && (
+                        <Checkbox 
+                          checked={selectedIds.has(result.id)}
+                          onCheckedChange={() => toggleSelect(result.id)}
+                        />
+                      )}
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         {getStatusIcon(result.status)}
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs shrink-0">
                           {getEntityIcon(result.entity_type)}
                           <span className="ml-1 capitalize">{result.entity_type}</span>
                         </Badge>
-                        <span className="text-sm text-muted-foreground truncate flex-1">
-                          {result.url}
-                        </span>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm text-muted-foreground truncate block">
+                            {result.url}
+                          </span>
+                          {result.redirect_url && (
+                            <span className="text-xs text-yellow-600 flex items-center gap-1 mt-1">
+                              <ArrowRight className="w-3 h-3" />
+                              {result.redirect_url}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0">
                         {result.status_code && (
                           <Badge variant={result.status_code === 200 ? "default" : "destructive"}>
                             {result.status_code}
                           </Badge>
                         )}
+                        
+                        {/* Action buttons based on status */}
+                        {result.status === 'redirect' && result.redirect_url && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateToRedirectUrl(result)}
+                            disabled={fixingIds.has(result.id)}
+                            className="gap-1"
+                          >
+                            {fixingIds.has(result.id) ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <ArrowRight className="w-3 h-3" />
+                            )}
+                            Update
+                          </Button>
+                        )}
+                        
+                        {(result.status === 'broken' || result.status === 'timeout') && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => findReplacementUrl(result)}
+                            disabled={fixingIds.has(result.id)}
+                            className="gap-1"
+                          >
+                            {fixingIds.has(result.id) ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Search className="w-3 h-3" />
+                            )}
+                            Find Link
+                          </Button>
+                        )}
+                        
                         <Button
                           variant="ghost"
                           size="sm"
