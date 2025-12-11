@@ -1496,33 +1496,42 @@ export type Database = {
           entity_id: string
           entity_type: string
           id: string
+          manually_verified: boolean | null
           redirect_url: string | null
           status: string
           status_code: number | null
           url: string
           url_field: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           checked_at?: string | null
           entity_id: string
           entity_type: string
           id?: string
+          manually_verified?: boolean | null
           redirect_url?: string | null
           status: string
           status_code?: number | null
           url: string
           url_field: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           checked_at?: string | null
           entity_id?: string
           entity_type?: string
           id?: string
+          manually_verified?: boolean | null
           redirect_url?: string | null
           status?: string
           status_code?: number | null
           url?: string
           url_field?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }

@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   Link2, RefreshCw, CheckCircle, XCircle, AlertTriangle, 
-  ExternalLink, Package, Database, Wrench, Play, Search, ArrowRight, Loader2, Trash2
+  ExternalLink, Package, Database, Wrench, Play, Search, ArrowRight, Loader2, Trash2, ShieldCheck
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -51,6 +51,9 @@ interface UrlValidationResult {
   status: string;
   redirect_url?: string | null;
   checked_at: string;
+  manually_verified?: boolean;
+  verified_at?: string | null;
+  verified_by?: string | null;
 }
 
 interface ValidationStats {
@@ -611,6 +614,50 @@ const AdminBrokenLinks = () => {
     fetchResults();
   };
 
+  const markAsVerified = async (result: UrlValidationResult) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from("url_validation_results")
+        .update({ 
+          manually_verified: true, 
+          verified_at: new Date().toISOString(),
+          verified_by: user.id
+        })
+        .eq('id', result.id);
+
+      if (error) throw error;
+      
+      toast.success("URL marked as verified");
+      fetchResults();
+    } catch (error) {
+      console.error("Error marking as verified:", error);
+      toast.error("Failed to mark as verified");
+    }
+  };
+
+  const unmarkAsVerified = async (result: UrlValidationResult) => {
+    try {
+      const { error } = await supabase
+        .from("url_validation_results")
+        .update({ 
+          manually_verified: false, 
+          verified_at: null,
+          verified_by: null
+        })
+        .eq('id', result.id);
+
+      if (error) throw error;
+      
+      toast.success("Verification removed");
+      fetchResults();
+    } catch (error) {
+      console.error("Error removing verification:", error);
+      toast.error("Failed to remove verification");
+    }
+  };
+
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
@@ -914,6 +961,26 @@ const AdminBrokenLinks = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
+                        {/* Verified badge */}
+                        {result.manually_verified && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="cursor-help">
+                                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30 gap-1">
+                                  <ShieldCheck className="w-3 h-3" />
+                                  Verified
+                                </Badge>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Manually verified as working</p>
+                              <p className="text-xs text-muted-foreground">
+                                {result.verified_at && `Verified ${new Date(result.verified_at).toLocaleDateString()}`}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        
                         {result.status_code !== null && (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -956,20 +1023,57 @@ const AdminBrokenLinks = () => {
                         )}
                         
                         {(result.status === 'broken' || result.status === 'timeout') && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => findReplacementUrl(result)}
-                            disabled={fixingIds.has(result.id)}
-                            className="gap-1"
-                          >
-                            {fixingIds.has(result.id) ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => findReplacementUrl(result)}
+                              disabled={fixingIds.has(result.id)}
+                              className="gap-1"
+                            >
+                              {fixingIds.has(result.id) ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Search className="w-3 h-3" />
+                              )}
+                              Find Link
+                            </Button>
+                            
+                            {/* Mark as Verified button for broken/timeout URLs */}
+                            {result.manually_verified ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => unmarkAsVerified(result)}
+                                    className="gap-1 text-green-600"
+                                  >
+                                    <ShieldCheck className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Remove verification</TooltipContent>
+                              </Tooltip>
                             ) : (
-                              <Search className="w-3 h-3" />
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => markAsVerified(result)}
+                                    className="gap-1"
+                                  >
+                                    <ShieldCheck className="w-4 h-4" />
+                                    Verify
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Mark as manually verified</p>
+                                  <p className="text-xs text-muted-foreground">Use when URL works in browser but fails automated scan (bot protection)</p>
+                                </TooltipContent>
+                              </Tooltip>
                             )}
-                            Find Link
-                          </Button>
+                          </>
                         )}
                         
                         <Button
