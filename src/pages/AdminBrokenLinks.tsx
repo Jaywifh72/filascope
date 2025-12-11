@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Link2, RefreshCw, Trash2, Package, Database, Wrench, Layers, Box
 } from "lucide-react";
@@ -24,6 +25,7 @@ const AdminBrokenLinks = () => {
   const [globalStats, setGlobalStats] = useState<GlobalStats>({ totalScanned: 0, totalBroken: 0, totalRedirects: 0, totalTimeouts: 0 });
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activeTab, setActiveTab] = useState("filament");
 
   useEffect(() => {
     if (!authLoading && user && !isAdmin) {
@@ -134,51 +136,86 @@ const AdminBrokenLinks = () => {
             </Card>
           </div>
 
-          {/* Category Sections */}
-          <BrokenLinkSection
-            key={`filament-${refreshKey}`}
-            category="filament"
-            title="Filaments"
-            icon={<Package className="w-5 h-5 text-blue-500" />}
-            userId={user?.id}
-            onRefresh={handleRefresh}
-          />
+          {/* Tabbed Category Sections */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-5 mb-4">
+              <TabsTrigger value="filament" className="flex items-center gap-2">
+                <Package className="w-4 h-4" />
+                <span className="hidden sm:inline">Filaments</span>
+              </TabsTrigger>
+              <TabsTrigger value="printer" className="flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                <span className="hidden sm:inline">Printers</span>
+              </TabsTrigger>
+              <TabsTrigger value="hotend" className="flex items-center gap-2">
+                <Wrench className="w-4 h-4" />
+                <span className="hidden sm:inline">Hotends</span>
+              </TabsTrigger>
+              <TabsTrigger value="build_plate" className="flex items-center gap-2">
+                <Layers className="w-4 h-4" />
+                <span className="hidden sm:inline">Build Plates</span>
+              </TabsTrigger>
+              <TabsTrigger value="other" className="flex items-center gap-2">
+                <Box className="w-4 h-4" />
+                <span className="hidden sm:inline">AMS/MMU</span>
+              </TabsTrigger>
+            </TabsList>
 
-          <BrokenLinkSection
-            key={`printer-${refreshKey}`}
-            category="printer"
-            title="Printers"
-            icon={<Database className="w-5 h-5 text-green-500" />}
-            userId={user?.id}
-            onRefresh={handleRefresh}
-          />
+            <TabsContent value="filament">
+              <BrokenLinkSection
+                key={`filament-${refreshKey}`}
+                category="filament"
+                title="Filaments"
+                icon={<Package className="w-5 h-5 text-blue-500" />}
+                userId={user?.id}
+                onRefresh={handleRefresh}
+              />
+            </TabsContent>
 
-          <BrokenLinkSection
-            key={`hotend-${refreshKey}`}
-            category="hotend"
-            title="Hotends / Nozzles"
-            icon={<Wrench className="w-5 h-5 text-orange-500" />}
-            userId={user?.id}
-            onRefresh={handleRefresh}
-          />
+            <TabsContent value="printer">
+              <BrokenLinkSection
+                key={`printer-${refreshKey}`}
+                category="printer"
+                title="Printers"
+                icon={<Database className="w-5 h-5 text-green-500" />}
+                userId={user?.id}
+                onRefresh={handleRefresh}
+              />
+            </TabsContent>
 
-          <BrokenLinkSection
-            key={`build_plate-${refreshKey}`}
-            category="build_plate"
-            title="Build Plates"
-            icon={<Layers className="w-5 h-5 text-purple-500" />}
-            userId={user?.id}
-            onRefresh={handleRefresh}
-          />
+            <TabsContent value="hotend">
+              <BrokenLinkSection
+                key={`hotend-${refreshKey}`}
+                category="hotend"
+                title="Hotends / Nozzles"
+                icon={<Wrench className="w-5 h-5 text-orange-500" />}
+                userId={user?.id}
+                onRefresh={handleRefresh}
+              />
+            </TabsContent>
 
-          <BrokenLinkSection
-            key={`other-${refreshKey}`}
-            category="other"
-            title="Others (AMS/MMU)"
-            icon={<Box className="w-5 h-5 text-cyan-500" />}
-            userId={user?.id}
-            onRefresh={handleRefresh}
-          />
+            <TabsContent value="build_plate">
+              <BrokenLinkSection
+                key={`build_plate-${refreshKey}`}
+                category="build_plate"
+                title="Build Plates"
+                icon={<Layers className="w-5 h-5 text-purple-500" />}
+                userId={user?.id}
+                onRefresh={handleRefresh}
+              />
+            </TabsContent>
+
+            <TabsContent value="other">
+              <BrokenLinkSection
+                key={`other-${refreshKey}`}
+                category="other"
+                title="Others (AMS/MMU)"
+                icon={<Box className="w-5 h-5 text-cyan-500" />}
+                userId={user?.id}
+                onRefresh={handleRefresh}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </TooltipProvider>
