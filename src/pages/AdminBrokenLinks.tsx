@@ -61,6 +61,7 @@ interface ValidationStats {
   total: number;
   valid: number;
   broken: number;
+  amazonBroken: number;
   redirect: number;
   timeout: number;
   verified: number;
@@ -76,7 +77,7 @@ const AdminBrokenLinks = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading } = useAuth();
   const [results, setResults] = useState<UrlValidationResult[]>([]);
-  const [stats, setStats] = useState<ValidationStats>({ total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0, verified: 0 });
+  const [stats, setStats] = useState<ValidationStats>({ total: 0, valid: 0, broken: 0, amazonBroken: 0, redirect: 0, timeout: 0, verified: 0 });
   const [coverage, setCoverage] = useState<ScanCoverage>({
     filament: { total: 0, scanned: 0 },
     printer: { total: 0, scanned: 0 },
@@ -141,16 +142,21 @@ const AdminBrokenLinks = () => {
       const resultsWithNames = await resolveEntityNames(data);
       setResults(resultsWithNames);
       
+      const isAmazonUrl = (url: string) => url?.toLowerCase().includes('amazon.');
+      
       const statsCalc = data.reduce((acc, r) => {
         acc.total++;
         if (r.manually_verified) acc.verified++;
         // Don't count verified URLs in broken/timeout stats
         if (r.status === 'valid') acc.valid++;
-        else if (r.status === 'broken' && !r.manually_verified) acc.broken++;
+        else if (r.status === 'broken' && !r.manually_verified) {
+          if (isAmazonUrl(r.url)) acc.amazonBroken++;
+          else acc.broken++;
+        }
         else if (r.status === 'redirect') acc.redirect++;
         else if (r.status === 'timeout' && !r.manually_verified) acc.timeout++;
         return acc;
-      }, { total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0, verified: 0 });
+      }, { total: 0, valid: 0, broken: 0, amazonBroken: 0, redirect: 0, timeout: 0, verified: 0 });
       
       setStats(statsCalc);
     }
@@ -217,7 +223,7 @@ const AdminBrokenLinks = () => {
     } else {
       toast.success("All results cleared - ready to scan fresh");
       setResults([]);
-      setStats({ total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0, verified: 0 });
+      setStats({ total: 0, valid: 0, broken: 0, amazonBroken: 0, redirect: 0, timeout: 0, verified: 0 });
       fetchCoverage();
     }
     setLoading(false);
@@ -767,11 +773,14 @@ const AdminBrokenLinks = () => {
     }
   };
 
+  const isAmazonUrl = (url: string) => url?.toLowerCase().includes('amazon.');
+  
   const filteredResults = results.filter(r => {
     if (activeTab === 'all') return true;
     if (activeTab === 'verified') return r.manually_verified;
     // Exclude verified URLs from broken/timeout tabs
-    if (activeTab === 'broken') return r.status === 'broken' && !r.manually_verified;
+    if (activeTab === 'broken') return r.status === 'broken' && !r.manually_verified && !isAmazonUrl(r.url);
+    if (activeTab === 'amazon') return r.status === 'broken' && !r.manually_verified && isAmazonUrl(r.url);
     if (activeTab === 'timeout') return r.status === 'timeout' && !r.manually_verified;
     return r.status === activeTab;
   });
@@ -956,6 +965,7 @@ const AdminBrokenLinks = () => {
             <TabsList>
               <TabsTrigger value="all">All ({stats.total})</TabsTrigger>
               <TabsTrigger value="broken">Broken ({stats.broken})</TabsTrigger>
+              <TabsTrigger value="amazon" className="text-orange-500">Amazon ({stats.amazonBroken})</TabsTrigger>
               <TabsTrigger value="redirect">Redirects ({stats.redirect})</TabsTrigger>
               <TabsTrigger value="timeout">Timeouts ({stats.timeout})</TabsTrigger>
               <TabsTrigger value="valid">Valid ({stats.valid})</TabsTrigger>
@@ -967,7 +977,7 @@ const AdminBrokenLinks = () => {
           </div>
 
           {/* Bulk Actions Bar */}
-          {(activeTab === 'broken' || activeTab === 'redirect' || activeTab === 'timeout') && filteredResults.length > 0 && (
+          {(activeTab === 'broken' || activeTab === 'amazon' || activeTab === 'redirect' || activeTab === 'timeout') && filteredResults.length > 0 && (
             <Card className="p-3 mb-4 bg-muted/30 border-primary/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -996,6 +1006,7 @@ const AdminBrokenLinks = () => {
               <p className="text-xs text-muted-foreground mt-2">
                 {activeTab === 'redirect' && "Redirects will be updated to their destination URL automatically"}
                 {activeTab === 'broken' && "Broken links will search for replacement URLs via web search (best for 404/410 errors)"}
+                {activeTab === 'amazon' && "Amazon links often break due to region restrictions or product unavailability - consider removing or finding alternatives"}
                 {activeTab === 'timeout' && "Timed out links may be temporary - re-scan first, or search for replacements if persistent"}
               </p>
             </Card>
