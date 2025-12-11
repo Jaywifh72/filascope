@@ -173,36 +173,178 @@ const ULTIMAKER_URL_MAPPINGS: Record<string, string> = {
   "ultimaker-tpu-95a-blue-filament-2-85mm": "ultimaker-s-series-tpu-95a-material",
 };
 
-// Try to fix Ultimaker URL using known mappings
-function fixUltimakerUrl(currentUrl: string): string | null {
-  if (!currentUrl || !currentUrl.includes('store.ultimaker.com')) return null;
+// Prusa URL mappings - old /product/ format to new /e-shop/ format
+const PRUSA_URL_MAPPINGS: Record<string, string> = {
+  // Prusament PLA
+  "prusament-pla-prusa-galaxy-black-1kg": "prusament-pla-galaxy-black-1kg",
+  "prusament-pla-prusa-orange-1kg": "prusament-pla-prusa-orange-1kg",
+  // Prusament PETG
+  "prusament-petg-prusa-orange-1kg": "prusament-petg-prusa-orange-1kg",
+  "prusament-petg-jet-black-1kg": "prusament-petg-jet-black-1kg",
+};
+
+// ColorFabb URL mappings
+const COLORFABB_URL_MAPPINGS: Record<string, string> = {
+  // Economy PLA to standard collections
+  "economy-pla-black": "pla-economy-black",
+  "economy-pla-white": "pla-economy-white",
+};
+
+// Bambu Lab URL mappings - regional store changes
+const BAMBU_URL_MAPPINGS: Record<string, string> = {
+  // Old global store to US store format
+  "bambu-pla-basic-filament": "pla-basic-filament",
+  "bambu-pla-matte-filament": "pla-matte-filament",
+  "bambu-petg-basic-filament": "petg-basic-filament",
+  "bambu-abs-filament": "abs-filament",
+  "bambu-tpu-95a-filament": "tpu-95a-filament",
+  "bambu-pla-silk-filament": "pla-silk-filament",
+  "bambu-pla-sparkle-filament": "pla-sparkle-filament",
+  "bambu-pla-metal-filament": "pla-metal-filament",
+  "bambu-pla-marble-filament": "pla-marble-filament",
+  "bambu-pla-glow-filament": "pla-glow-filament",
+  "bambu-pla-galaxy-filament": "pla-galaxy-filament",
+  "bambu-support-for-pla": "support-for-pla",
+  "bambu-support-for-pa-pet": "support-for-pa-pet",
+  "bambu-pa6-cf-filament": "pa6-cf-filament",
+  "bambu-paht-cf-filament": "paht-cf-filament",
+  "bambu-ppa-cf-filament": "ppa-cf-filament",
+  "bambu-pc-filament": "pc-filament",
+  "bambu-asa-filament": "asa-filament",
+  "bambu-petg-cf-filament": "petg-cf-filament",
+};
+
+// Brand-specific URL fixing functions
+type UrlFixer = (currentUrl: string, productTitle?: string) => string | null;
+
+const BRAND_URL_FIXERS: Record<string, UrlFixer> = {
+  "Ultimaker": (currentUrl: string) => {
+    if (!currentUrl || !currentUrl.includes('store.ultimaker.com')) return null;
+    
+    try {
+      const url = new URL(currentUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      const productSlug = pathParts[pathParts.length - 1];
+      
+      // Check direct mapping first
+      if (ULTIMAKER_URL_MAPPINGS[productSlug]) {
+        return `https://store.ultimaker.com/${ULTIMAKER_URL_MAPPINGS[productSlug]}`;
+      }
+      
+      // Pattern matching: ultimaker-{material}-filament-2-85mm -> ultimaker-s-series-{material}-material
+      const materialMatch = productSlug.match(/^ultimaker-(.+?)-filament/i);
+      if (materialMatch) {
+        const material = materialMatch[1];
+        return `https://store.ultimaker.com/ultimaker-s-series-${material}-material`;
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  },
   
-  try {
-    const url = new URL(currentUrl);
-    const pathParts = url.pathname.split('/').filter(p => p);
+  "Prusament": (currentUrl: string) => {
+    if (!currentUrl || !currentUrl.includes('prusa3d.com')) return null;
     
-    // Get the product slug (last part of path)
-    const productSlug = pathParts[pathParts.length - 1];
-    
-    // Check if we have a direct mapping
-    if (ULTIMAKER_URL_MAPPINGS[productSlug]) {
-      return `https://store.ultimaker.com/${ULTIMAKER_URL_MAPPINGS[productSlug]}`;
+    try {
+      const url = new URL(currentUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      const productSlug = pathParts[pathParts.length - 1];
+      
+      // Check direct mapping
+      if (PRUSA_URL_MAPPINGS[productSlug]) {
+        return `https://www.prusa3d.com/product/${PRUSA_URL_MAPPINGS[productSlug]}`;
+      }
+      
+      // If URL contains /product/ but returns 404, try /e-shop/ path
+      if (currentUrl.includes('/product/')) {
+        return currentUrl.replace('/product/', '/e-shop/');
+      }
+      
+      return null;
+    } catch {
+      return null;
     }
+  },
+  
+  "ColorFabb": (currentUrl: string) => {
+    if (!currentUrl || !currentUrl.includes('colorfabb.com')) return null;
     
-    // Try to construct a new URL by pattern matching
-    // Old format: ultimaker-{material}-filament-2-85mm
-    // New format: ultimaker-s-series-{material}-material
-    const materialMatch = productSlug.match(/^ultimaker-(.+?)-filament/i);
-    if (materialMatch) {
-      const material = materialMatch[1].replace(/-/g, '-');
-      const newSlug = `ultimaker-s-series-${material}-material`;
-      return `https://store.ultimaker.com/${newSlug}`;
+    try {
+      const url = new URL(currentUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      const productSlug = pathParts[pathParts.length - 1];
+      
+      if (COLORFABB_URL_MAPPINGS[productSlug]) {
+        return `https://colorfabb.com/collections/all/products/${COLORFABB_URL_MAPPINGS[productSlug]}`;
+      }
+      
+      // Try alternative path structure
+      if (currentUrl.includes('/shop/') && !currentUrl.includes('/products/')) {
+        const newUrl = currentUrl.replace('/shop/', '/collections/all/products/');
+        return newUrl;
+      }
+      
+      return null;
+    } catch {
+      return null;
     }
+  },
+  
+  "Bambu Lab": (currentUrl: string) => {
+    if (!currentUrl || !currentUrl.includes('bambulab.com')) return null;
     
-    return null;
-  } catch {
-    return null;
+    try {
+      const url = new URL(currentUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      const productSlug = pathParts[pathParts.length - 1];
+      
+      // Check direct mapping
+      if (BAMBU_URL_MAPPINGS[productSlug]) {
+        return `https://us.store.bambulab.com/products/${BAMBU_URL_MAPPINGS[productSlug]}`;
+      }
+      
+      // Handle regional store changes (store.bambulab.com -> us.store.bambulab.com)
+      if (url.hostname === 'store.bambulab.com') {
+        return currentUrl.replace('store.bambulab.com', 'us.store.bambulab.com');
+      }
+      
+      // Handle EU/UK/other regional stores
+      if (url.hostname.match(/^(eu|uk|au|ca)\.store\.bambulab\.com/)) {
+        // Try US store as fallback
+        return currentUrl.replace(url.hostname, 'us.store.bambulab.com');
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  },
+  
+  "MatterHackers": (currentUrl: string) => {
+    if (!currentUrl || !currentUrl.includes('matterhackers.com')) return null;
+    
+    try {
+      // MatterHackers sometimes changes /store/ to /products/ paths
+      if (currentUrl.includes('/store/') && !currentUrl.includes('/products/')) {
+        return currentUrl.replace('/store/', '/products/');
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  },
+};
+
+// Try to fix URL using brand-specific logic
+function fixBrandUrl(vendor: string, currentUrl: string, productTitle?: string): string | null {
+  const fixer = BRAND_URL_FIXERS[vendor];
+  if (fixer) {
+    return fixer(currentUrl, productTitle);
   }
+  return null;
 }
 
 // Normalize text for matching
@@ -529,15 +671,15 @@ Deno.serve(async (req) => {
     let newUrl: string | null = null;
 
     // Strategy 0: Brand-specific URL transformations (for known URL pattern changes)
-    if (!newUrl && vendor === "Ultimaker" && currentUrl) {
-      console.log("Strategy 0: Trying Ultimaker URL transformation...");
-      newUrl = fixUltimakerUrl(currentUrl);
+    if (!newUrl && currentUrl) {
+      console.log("Strategy 0: Trying brand-specific URL transformation...");
+      newUrl = fixBrandUrl(vendor, currentUrl, productTitle);
       if (newUrl) {
         const isValid = await validateUrl(newUrl);
         if (isValid) {
-          console.log(`Ultimaker URL transformation successful: ${newUrl}`);
+          console.log(`Brand URL transformation successful: ${newUrl}`);
         } else {
-          console.log(`Ultimaker transformed URL failed validation: ${newUrl}`);
+          console.log(`Brand transformed URL failed validation: ${newUrl}`);
           newUrl = null;
         }
       }
