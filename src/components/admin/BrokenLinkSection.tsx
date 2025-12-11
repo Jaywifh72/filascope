@@ -307,7 +307,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
           let offset = 0;
           const batchSize = 200;
           
-          while (unscanned.length < 50 && offset < 2000) {
+          while (unscanned.length < 150 && offset < 3000) {
             const { data } = await supabase
               .from("filaments")
               .select("id, product_url")
@@ -321,7 +321,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
             offset += batchSize;
           }
           
-          urls = unscanned.slice(0, 50).map(f => ({ 
+          urls = unscanned.slice(0, 150).map(f => ({ 
             entity_type: 'filament', 
             entity_id: f.id, 
             url_field: 'product_url', 
@@ -721,7 +721,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
                 <Play className="w-4 h-4 mr-2" />
                 {coverage.scanned >= coverage.total 
                   ? "All Scanned" 
-                  : `Scan Next 50 (${coverage.total - coverage.scanned} remaining)`}
+                  : `Scan Next 150 (${coverage.total - coverage.scanned} remaining)`}
               </Button>
               <Button onClick={() => fetchData()} variant="ghost" size="sm" disabled={loading}>
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -846,7 +846,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
 
           {stats.total === 0 && !loading && (
             <div className="text-center py-4 text-muted-foreground">
-              No URLs scanned yet. Click "Scan Next 50" to start.
+              No URLs scanned yet. Click "Scan Next 150" to start.
             </div>
           )}
         </div>
