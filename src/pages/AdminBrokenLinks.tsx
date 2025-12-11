@@ -62,6 +62,7 @@ interface ValidationStats {
   broken: number;
   redirect: number;
   timeout: number;
+  verified: number;
 }
 
 interface ScanCoverage {
@@ -74,7 +75,7 @@ const AdminBrokenLinks = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading } = useAuth();
   const [results, setResults] = useState<UrlValidationResult[]>([]);
-  const [stats, setStats] = useState<ValidationStats>({ total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0 });
+  const [stats, setStats] = useState<ValidationStats>({ total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0, verified: 0 });
   const [coverage, setCoverage] = useState<ScanCoverage>({
     filament: { total: 0, scanned: 0 },
     printer: { total: 0, scanned: 0 },
@@ -139,12 +140,13 @@ const AdminBrokenLinks = () => {
       
       const statsCalc = data.reduce((acc, r) => {
         acc.total++;
+        if (r.manually_verified) acc.verified++;
         if (r.status === 'valid') acc.valid++;
         else if (r.status === 'broken') acc.broken++;
         else if (r.status === 'redirect') acc.redirect++;
         else if (r.status === 'timeout') acc.timeout++;
         return acc;
-      }, { total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0 });
+      }, { total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0, verified: 0 });
       
       setStats(statsCalc);
     }
@@ -169,7 +171,7 @@ const AdminBrokenLinks = () => {
     } else {
       toast.success("All results cleared - ready to scan fresh");
       setResults([]);
-      setStats({ total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0 });
+      setStats({ total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0, verified: 0 });
       fetchCoverage();
     }
     setLoading(false);
@@ -700,6 +702,7 @@ const AdminBrokenLinks = () => {
 
   const filteredResults = results.filter(r => {
     if (activeTab === 'all') return true;
+    if (activeTab === 'verified') return r.manually_verified;
     return r.status === activeTab;
   });
 
@@ -886,6 +889,10 @@ const AdminBrokenLinks = () => {
               <TabsTrigger value="redirect">Redirects ({stats.redirect})</TabsTrigger>
               <TabsTrigger value="timeout">Timeouts ({stats.timeout})</TabsTrigger>
               <TabsTrigger value="valid">Valid ({stats.valid})</TabsTrigger>
+              <TabsTrigger value="verified" className="text-green-600">
+                <ShieldCheck className="w-3 h-3 mr-1" />
+                Verified ({stats.verified})
+              </TabsTrigger>
             </TabsList>
           </div>
 
