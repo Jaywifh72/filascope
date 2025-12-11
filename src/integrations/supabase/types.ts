@@ -49,6 +49,36 @@ export type Database = {
           },
         ]
       }
+      admin_activity_log: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       affiliate_configs: {
         Row: {
           affiliate_url_pattern: string | null
@@ -217,6 +247,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      duplicate_candidates: {
+        Row: {
+          confidence: string
+          created_at: string | null
+          entity_id_a: string
+          entity_id_b: string
+          entity_type: string
+          id: string
+          match_reason: string | null
+          resolution: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          confidence: string
+          created_at?: string | null
+          entity_id_a: string
+          entity_id_b: string
+          entity_type: string
+          id?: string
+          match_reason?: string | null
+          resolution?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          confidence?: string
+          created_at?: string | null
+          entity_id_a?: string
+          entity_id_b?: string
+          entity_type?: string
+          id?: string
+          match_reason?: string | null
+          resolution?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: []
       }
       filament_comments: {
         Row: {
@@ -1381,6 +1453,78 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scheduled_task_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_log: string | null
+          id: string
+          items_failed: number | null
+          items_processed: number | null
+          started_at: string
+          status: string
+          task_name: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_log?: string | null
+          id?: string
+          items_failed?: number | null
+          items_processed?: number | null
+          started_at?: string
+          status?: string
+          task_name: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_log?: string | null
+          id?: string
+          items_failed?: number | null
+          items_processed?: number | null
+          started_at?: string
+          status?: string
+          task_name?: string
+        }
+        Relationships: []
+      }
+      url_validation_results: {
+        Row: {
+          checked_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          redirect_url: string | null
+          status: string
+          status_code: number | null
+          url: string
+          url_field: string
+        }
+        Insert: {
+          checked_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          redirect_url?: string | null
+          status: string
+          status_code?: number | null
+          url: string
+          url_field: string
+        }
+        Update: {
+          checked_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          redirect_url?: string | null
+          status?: string
+          status_code?: number | null
+          url?: string
+          url_field?: string
+        }
+        Relationships: []
       }
       user_favorites: {
         Row: {
