@@ -246,6 +246,9 @@ const AdminBrokenLinks = () => {
               status = testResult.isRedirect ? 'redirect' : 'valid';
             } else if (testResult.statusCode === 0) {
               status = 'timeout';
+            } else if (testResult.statusCode >= 300 && testResult.statusCode < 400) {
+              // 3xx status codes are redirects, not broken
+              status = 'redirect';
             }
           }
 
