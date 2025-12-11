@@ -90,7 +90,68 @@ const BRAND_CONFIGS: Record<string, {
     shopifyStore: "https://us.store.bambulab.com",
     collectionsUrl: "https://us.store.bambulab.com/collections/all.json",
   },
+  "Ultimaker": {
+    shopifyStore: "https://store.ultimaker.com",
+  },
 };
+
+// Ultimaker URL mapping - old product URLs to new URLs
+const ULTIMAKER_URL_MAPPINGS: Record<string, string> = {
+  // CPE materials
+  "ultimaker-cpe-filament-2-85mm": "ultimaker-s-series-cpe-material",
+  "ultimaker-cpe-plus-filament-2-85mm": "ultimaker-s-series-cpe-plus-material",
+  // PLA materials
+  "ultimaker-pla-filament-2-85mm": "ultimaker-s-series-pla-material",
+  "ultimaker-tough-pla-filament-2-85mm": "ultimaker-s-series-tough-pla-material",
+  // ABS materials
+  "ultimaker-abs-filament-2-85mm": "ultimaker-s-series-abs-material",
+  // PETG materials
+  "ultimaker-petg-filament-2-85mm": "ultimaker-s-series-petg-material",
+  // Nylon materials
+  "ultimaker-nylon-filament-2-85mm": "ultimaker-s-series-nylon-material",
+  // PC materials
+  "ultimaker-pc-filament-2-85mm": "ultimaker-s-series-pc-material",
+  // PP materials
+  "ultimaker-pp-filament-2-85mm": "ultimaker-s-series-pp-material",
+  // TPU materials
+  "ultimaker-tpu-95a-filament-2-85mm": "ultimaker-s-series-tpu-95a-material",
+  // PVA materials
+  "ultimaker-pva-filament-2-85mm": "ultimaker-s-series-pva-material",
+  // Breakaway materials
+  "ultimaker-breakaway-filament-2-85mm": "ultimaker-s-series-breakaway-material",
+};
+
+// Try to fix Ultimaker URL using known mappings
+function fixUltimakerUrl(currentUrl: string): string | null {
+  if (!currentUrl || !currentUrl.includes('store.ultimaker.com')) return null;
+  
+  try {
+    const url = new URL(currentUrl);
+    const pathParts = url.pathname.split('/').filter(p => p);
+    
+    // Get the product slug (last part of path)
+    const productSlug = pathParts[pathParts.length - 1];
+    
+    // Check if we have a direct mapping
+    if (ULTIMAKER_URL_MAPPINGS[productSlug]) {
+      return `https://store.ultimaker.com/${ULTIMAKER_URL_MAPPINGS[productSlug]}`;
+    }
+    
+    // Try to construct a new URL by pattern matching
+    // Old format: ultimaker-{material}-filament-2-85mm
+    // New format: ultimaker-s-series-{material}-material
+    const materialMatch = productSlug.match(/^ultimaker-(.+?)-filament/i);
+    if (materialMatch) {
+      const material = materialMatch[1].replace(/-/g, '-');
+      const newSlug = `ultimaker-s-series-${material}-material`;
+      return `https://store.ultimaker.com/${newSlug}`;
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 // Normalize text for matching
 function normalizeText(text: string): string {
@@ -414,6 +475,21 @@ Deno.serve(async (req) => {
 
     const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
     let newUrl: string | null = null;
+
+    // Strategy 0: Brand-specific URL transformations (for known URL pattern changes)
+    if (!newUrl && vendor === "Ultimaker" && currentUrl) {
+      console.log("Strategy 0: Trying Ultimaker URL transformation...");
+      newUrl = fixUltimakerUrl(currentUrl);
+      if (newUrl) {
+        const isValid = await validateUrl(newUrl);
+        if (isValid) {
+          console.log(`Ultimaker URL transformation successful: ${newUrl}`);
+        } else {
+          console.log(`Ultimaker transformed URL failed validation: ${newUrl}`);
+          newUrl = null;
+        }
+      }
+    }
 
     // Strategy 1: Search parent directory of broken URL (most reliable for minor path changes)
     if (!newUrl && currentUrl && firecrawlApiKey) {
