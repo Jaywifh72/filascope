@@ -7,10 +7,12 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   RefreshCw, CheckCircle, XCircle, AlertTriangle, 
   ExternalLink, Package, Database, Wrench, Play, Search, ArrowRight, Loader2, Trash2, ShieldCheck,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, Edit
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -112,6 +114,8 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState(true);
   const [initialized, setInitialized] = useState(false);
+  const [editingResult, setEditingResult] = useState<UrlValidationResult | null>(null);
+  const [newUrl, setNewUrl] = useState("");
 
   const fetchData = async () => {
     if (!expanded) return;
@@ -503,6 +507,49 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     }
   };
 
+  const openManualEdit = (result: UrlValidationResult) => {
+    setEditingResult(result);
+    setNewUrl(result.url);
+  };
+
+  const saveManualUrl = async () => {
+    if (!editingResult || !newUrl.trim()) return;
+    
+    // Basic URL validation
+    try {
+      new URL(newUrl.trim());
+    } catch {
+      toast.error("Please enter a valid URL");
+      return;
+    }
+
+    setFixingIds(prev => new Set(prev).add(editingResult.id));
+
+    try {
+      const tableName = editingResult.entity_type === 'filament' ? 'filaments' 
+        : editingResult.entity_type === 'printer' ? 'printers' 
+        : 'printer_accessories';
+
+      await supabase.from(tableName).update({ [editingResult.url_field]: newUrl.trim() }).eq('id', editingResult.entity_id);
+      await supabase.from("url_validation_results").update({ 
+        status: 'valid', 
+        url: newUrl.trim(), 
+        status_code: 200,
+        manually_verified: true,
+        verified_at: new Date().toISOString()
+      }).eq('id', editingResult.id);
+
+      toast.success("URL updated manually");
+      setEditingResult(null);
+      setNewUrl("");
+      await fetchResultsInternal();
+    } catch (error) {
+      toast.error("Failed to update URL");
+    } finally {
+      setFixingIds(prev => { const next = new Set(prev); next.delete(editingResult.id); return next; });
+    }
+  };
+
   const fixSelected = async () => {
     const selectedResults = results.filter(r => selectedIds.has(r.id));
     if (selectedResults.length === 0) return;
@@ -756,6 +803,14 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
                             
                             {(result.status === 'broken' || result.status === 'timeout') && (
                               <>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => openManualEdit(result)}>
+                                      <Edit className="w-3 h-3" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit URL manually</TooltipContent>
+                                </Tooltip>
                                 <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => findReplacementUrl(result)} disabled={fixingIds.has(result.id)}>
                                   {fixingIds.has(result.id) ? <Loader2 className="w-3 h-3 animate-spin" /> : <Search className="w-3 h-3" />}
                                 </Button>
@@ -796,6 +851,41 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
           )}
         </div>
       )}
+
+      {/* Manual URL Edit Dialog */}
+      <Dialog open={!!editingResult} onOpenChange={(open) => !open && setEditingResult(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit URL Manually</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Product:</p>
+              <p className="text-sm font-medium">{editingResult?.entity_name || 'Unknown'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Current URL:</p>
+              <p className="text-xs text-muted-foreground break-all">{editingResult?.url}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">New URL:</p>
+              <Input 
+                value={newUrl} 
+                onChange={(e) => setNewUrl(e.target.value)} 
+                placeholder="https://..."
+                className="font-mono text-sm"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingResult(null)}>Cancel</Button>
+            <Button onClick={saveManualUrl} disabled={!newUrl.trim() || fixingIds.has(editingResult?.id || '')}>
+              {fixingIds.has(editingResult?.id || '') ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Save URL
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
