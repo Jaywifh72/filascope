@@ -298,14 +298,25 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
           
           const scannedIds = new Set(alreadyScanned?.map(r => r.entity_id) || []);
 
-          // Get unscanned filaments with product_url
-          const { data } = await supabase
-            .from("filaments")
-            .select("id, product_url")
-            .not("product_url", "is", null)
-            .limit(100);
+          // Get filaments with product_url - fetch enough to find 50 unscanned
+          let unscanned: { id: string; product_url: string }[] = [];
+          let offset = 0;
+          const batchSize = 200;
           
-          const unscanned = data?.filter(f => !scannedIds.has(f.id)) || [];
+          while (unscanned.length < 50 && offset < 2000) {
+            const { data } = await supabase
+              .from("filaments")
+              .select("id, product_url")
+              .not("product_url", "is", null)
+              .range(offset, offset + batchSize - 1);
+            
+            if (!data || data.length === 0) break;
+            
+            const filtered = data.filter(f => !scannedIds.has(f.id));
+            unscanned = [...unscanned, ...filtered];
+            offset += batchSize;
+          }
+          
           urls = unscanned.slice(0, 50).map(f => ({ 
             entity_type: 'filament', 
             entity_id: f.id, 
