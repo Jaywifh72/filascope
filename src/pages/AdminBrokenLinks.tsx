@@ -111,12 +111,23 @@ const AdminBrokenLinks = () => {
   }, [isAdmin]);
 
   const fetchCoverage = async () => {
-    // Get total counts
-    const [filamentTotal, printerTotal, accessoryTotal] = await Promise.all([
+    // Get total counts - for printers, count URLs not entities since each printer can have 2 URL fields
+    const [filamentTotal, accessoryTotal] = await Promise.all([
       supabase.from("filaments").select("id", { count: "exact", head: true }).not("product_url", "is", null),
-      supabase.from("printers").select("id", { count: "exact", head: true }).eq("status", "active"),
       supabase.from("printer_accessories").select("id", { count: "exact", head: true }).not("product_url", "is", null)
     ]);
+    
+    // For printers, count actual URLs (official_store_url + official_product_url)
+    const { data: printerUrls } = await supabase
+      .from("printers")
+      .select("official_store_url, official_product_url")
+      .eq("status", "active");
+    
+    let printerUrlCount = 0;
+    printerUrls?.forEach(p => {
+      if (p.official_store_url) printerUrlCount++;
+      if (p.official_product_url) printerUrlCount++;
+    });
 
     // Get scanned counts per entity type
     const [filamentScanned, printerScanned, accessoryScanned] = await Promise.all([
@@ -127,7 +138,7 @@ const AdminBrokenLinks = () => {
 
     setCoverage({
       filament: { total: filamentTotal.count || 0, scanned: filamentScanned.count || 0 },
-      printer: { total: printerTotal.count || 0, scanned: printerScanned.count || 0 },
+      printer: { total: printerUrlCount, scanned: printerScanned.count || 0 },
       accessory: { total: accessoryTotal.count || 0, scanned: accessoryScanned.count || 0 }
     });
   };
