@@ -93,6 +93,7 @@ const AdminBrokenLinks = () => {
   const [rescanningBroken, setRescanningBroken] = useState(false);
   const [fullScanning, setFullScanning] = useState(false);
   const [fullScanStatus, setFullScanStatus] = useState<string>("");
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!authLoading && user && !isAdmin) {
@@ -889,6 +890,90 @@ const AdminBrokenLinks = () => {
     }
   };
 
+  const deleteEntity = async (result: UrlValidationResult) => {
+    if (result.entity_type !== 'filament') {
+      toast.error("Only filaments can be deleted from this view");
+      return;
+    }
+
+    const confirmed = window.confirm(`Are you sure you want to permanently delete this filament?\n\n${result.entity_name || "Unknown filament"}\n\nThis action cannot be undone.`);
+    if (!confirmed) return;
+
+    setDeletingIds(prev => new Set(prev).add(result.id));
+
+    try {
+      // Delete the filament
+      const { error: deleteError } = await supabase
+        .from('filaments')
+        .delete()
+        .eq('id', result.entity_id);
+
+      if (deleteError) throw deleteError;
+
+      // Delete the URL validation result
+      await supabase
+        .from('url_validation_results')
+        .delete()
+        .eq('id', result.id);
+
+      toast.success("Filament deleted successfully");
+      fetchResults();
+      fetchCoverage();
+    } catch (error) {
+      console.error("Error deleting filament:", error);
+      toast.error("Failed to delete filament");
+    } finally {
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(result.id);
+        return next;
+      });
+    }
+  };
+
+  const deleteSelectedFilaments = async () => {
+    const selectedFilaments = results.filter(r => selectedIds.has(r.id) && r.entity_type === 'filament');
+    if (selectedFilaments.length === 0) {
+      toast.error("No filaments selected");
+      return;
+    }
+
+    const confirmed = window.confirm(`Are you sure you want to permanently delete ${selectedFilaments.length} filament(s)?\n\nThis action cannot be undone.`);
+    if (!confirmed) return;
+
+    setBulkFixing(true);
+    let deleted = 0;
+    let failed = 0;
+
+    for (const result of selectedFilaments) {
+      try {
+        const { error } = await supabase
+          .from('filaments')
+          .delete()
+          .eq('id', result.entity_id);
+
+        if (!error) {
+          await supabase
+            .from('url_validation_results')
+            .delete()
+            .eq('id', result.id);
+          deleted++;
+        } else {
+          failed++;
+        }
+      } catch (e) {
+        console.error("Error deleting filament:", result.entity_id, e);
+        failed++;
+      }
+    }
+
+    setBulkFixing(false);
+    setSelectedIds(new Set());
+    toast.success(`Deleted ${deleted} filament(s)${failed > 0 ? `, ${failed} failed` : ''}`);
+    fetchResults();
+    fetchCoverage();
+  };
+
   const unmarkAsVerified = async (result: UrlValidationResult) => {
     try {
       const { error } = await supabase
@@ -1211,19 +1296,31 @@ const AdminBrokenLinks = () => {
                     {selectedCount > 0 ? `${selectedCount} selected` : 'Select all'}
                   </span>
                 </div>
-                <Button 
-                  onClick={fixSelected} 
-                  disabled={selectedCount === 0 || bulkFixing}
-                  size="sm"
-                  className="gap-2"
-                >
-                  {bulkFixing ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Wrench className="w-4 h-4" />
-                  )}
-                  Fix Selected ({selectedCount})
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={fixSelected} 
+                    disabled={selectedCount === 0 || bulkFixing}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    {bulkFixing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Wrench className="w-4 h-4" />
+                    )}
+                    Fix Selected ({selectedCount})
+                  </Button>
+                  <Button 
+                    onClick={deleteSelectedFilaments} 
+                    disabled={selectedCount === 0 || bulkFixing || !results.some(r => selectedIds.has(r.id) && r.entity_type === 'filament')}
+                    size="sm"
+                    variant="destructive"
+                    className="gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Filaments
+                  </Button>
+                </div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 {activeTab === 'redirect' && "Redirects will be updated to their destination URL automatically"}
@@ -1390,6 +1487,28 @@ const AdminBrokenLinks = () => {
                                   <p>Mark as manually verified</p>
                                   <p className="text-xs text-muted-foreground">Use when URL works in browser but fails automated scan (bot protection)</p>
                                 </TooltipContent>
+                              </Tooltip>
+                            )}
+                            
+                            {/* Delete filament button */}
+                            {result.entity_type === 'filament' && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => deleteEntity(result)}
+                                    disabled={deletingIds.has(result.id)}
+                                    className="gap-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  >
+                                    {deletingIds.has(result.id) ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete this filament permanently</TooltipContent>
                               </Tooltip>
                             )}
                           </>
