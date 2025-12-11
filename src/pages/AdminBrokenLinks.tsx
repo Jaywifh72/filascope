@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Link2, RefreshCw, CheckCircle, XCircle, AlertTriangle, 
-  ExternalLink, Package, Database, Wrench, Play, Search, ArrowRight, Loader2
+  ExternalLink, Package, Database, Wrench, Play, Search, ArrowRight, Loader2, Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -85,6 +85,28 @@ const AdminBrokenLinks = () => {
     }
     setLoading(false);
     setSelectedIds(new Set());
+  };
+
+  const clearAllResults = async () => {
+    if (!confirm("Are you sure you want to clear all scan results? This will allow you to start fresh.")) {
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase
+      .from("url_validation_results")
+      .delete()
+      .neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all
+
+    if (error) {
+      toast.error("Failed to clear results");
+      console.error(error);
+    } else {
+      toast.success("All results cleared - ready to scan fresh");
+      setResults([]);
+      setStats({ total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0 });
+    }
+    setLoading(false);
   };
 
   const runScan = async (entityType: 'filament' | 'printer' | 'accessory') => {
@@ -521,10 +543,16 @@ const AdminBrokenLinks = () => {
             <Link2 className="w-8 h-8 text-orange-500" />
             <h1 className="text-3xl font-bold text-foreground">Broken Link Monitor</h1>
           </div>
-          <Button onClick={fetchResults} variant="outline" size="sm" disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={clearAllResults} variant="outline" size="sm" disabled={loading || stats.total === 0}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Clear All
+            </Button>
+            <Button onClick={fetchResults} variant="outline" size="sm" disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
