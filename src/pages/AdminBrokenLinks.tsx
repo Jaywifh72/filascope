@@ -57,6 +57,7 @@ const AdminBrokenLinks = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [fixingIds, setFixingIds] = useState<Set<string>>(new Set());
   const [bulkFixing, setBulkFixing] = useState(false);
+  const [rescanningBroken, setRescanningBroken] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user && !isAdmin) {
@@ -142,6 +143,74 @@ const AdminBrokenLinks = () => {
       fetchCoverage();
     }
     setLoading(false);
+  };
+
+  const rescanBrokenUrls = async () => {
+    // Get all URLs currently marked as "broken"
+    const brokenResults = results.filter(r => r.status === 'broken');
+    
+    if (brokenResults.length === 0) {
+      toast.info("No broken URLs to re-scan");
+      return;
+    }
+
+    setRescanningBroken(true);
+    setScanProgress(0);
+
+    try {
+      let processed = 0;
+
+      for (const result of brokenResults) {
+        try {
+          const { data: testResult, error } = await supabase.functions.invoke('test-url', {
+            body: { url: result.url }
+          });
+
+          let newStatus = 'broken';
+          let statusCode = null;
+          let redirectUrl = null;
+
+          if (!error && testResult) {
+            statusCode = testResult.statusCode;
+            redirectUrl = testResult.redirectLocation || null;
+            if (testResult.ok) {
+              newStatus = testResult.isRedirect ? 'redirect' : 'valid';
+            } else if (testResult.statusCode === 0) {
+              newStatus = 'timeout';
+            } else if (testResult.statusCode >= 300 && testResult.statusCode < 400) {
+              // 3xx status codes are redirects, not broken
+              newStatus = 'redirect';
+            }
+          }
+
+          // Update the result in database
+          await supabase
+            .from("url_validation_results")
+            .update({
+              status: newStatus,
+              status_code: statusCode,
+              redirect_url: redirectUrl,
+              checked_at: new Date().toISOString()
+            })
+            .eq('id', result.id);
+
+          processed++;
+          setScanProgress(Math.round((processed / brokenResults.length) * 100));
+        } catch (err) {
+          console.error("Error re-scanning URL:", result.url, err);
+        }
+      }
+
+      toast.success(`Re-scanned ${processed} URLs`);
+      await fetchResults();
+      await fetchCoverage();
+    } catch (error) {
+      console.error("Error re-scanning broken URLs:", error);
+      toast.error("Failed to re-scan broken URLs");
+    } finally {
+      setRescanningBroken(false);
+      setScanProgress(0);
+    }
   };
 
   const runScan = async (entityType: 'filament' | 'printer' | 'accessory') => {
@@ -705,6 +774,30 @@ const AdminBrokenLinks = () => {
                     : `Scan Next 50 (${coverage.accessory.total - coverage.accessory.scanned} remaining)`}
                 </Button>
               </div>
+            </div>
+          )}
+          
+          {/* Re-scan Broken URLs */}
+          {stats.broken > 0 && !scanning && !rescanningBroken && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <Button 
+                onClick={rescanBrokenUrls}
+                variant="secondary"
+                size="sm"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Re-scan {stats.broken} Broken URLs
+              </Button>
+              <p className="text-xs text-muted-foreground mt-1">
+                Re-check URLs marked as broken to recategorize any that are actually redirects
+              </p>
+            </div>
+          )}
+          
+          {rescanningBroken && (
+            <div className="mt-4 pt-4 border-t border-border space-y-2">
+              <Progress value={scanProgress} />
+              <p className="text-sm text-muted-foreground">Re-scanning broken URLs... {scanProgress}%</p>
             </div>
           )}
         </Card>
