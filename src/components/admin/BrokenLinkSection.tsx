@@ -289,59 +289,90 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       let urls: { entity_type: string; entity_id: string; url_field: string; url: string }[] = [];
 
       for (const ct of categoryTypes) {
-        // Get already scanned
-        const { data: alreadyScanned } = await supabase
-          .from("url_validation_results")
-          .select("entity_id, url_field")
-          .eq("entity_type", ct.entityType);
-        
-        const scannedKeys = new Set(alreadyScanned?.map(r => `${r.entity_id}:${r.url_field}`) || []);
-
         if (ct.entityType === 'filament') {
-          const scannedEntityIds = new Set(alreadyScanned?.map(r => r.entity_id) || []);
-          const scannedArray = Array.from(scannedEntityIds).slice(0, 1000);
+          // Get already scanned filament IDs
+          const { data: alreadyScanned } = await supabase
+            .from("url_validation_results")
+            .select("entity_id")
+            .eq("entity_type", "filament");
           
-          let query = supabase.from("filaments").select("id, product_url").not("product_url", "is", null);
-          if (scannedArray.length > 0 && scannedArray.length < 1000) {
-            query = query.not("id", "in", `(${scannedArray.join(',')})`);
-          }
+          const scannedIds = new Set(alreadyScanned?.map(r => r.entity_id) || []);
+
+          // Get unscanned filaments with product_url
+          const { data } = await supabase
+            .from("filaments")
+            .select("id, product_url")
+            .not("product_url", "is", null)
+            .limit(100);
           
-          const { data } = await query.limit(50);
-          urls = data?.filter(f => !scannedKeys.has(`${f.id}:product_url`))
-            .map(f => ({ entity_type: 'filament', entity_id: f.id, url_field: 'product_url', url: f.product_url! })) || [];
+          const unscanned = data?.filter(f => !scannedIds.has(f.id)) || [];
+          urls = unscanned.slice(0, 50).map(f => ({ 
+            entity_type: 'filament', 
+            entity_id: f.id, 
+            url_field: 'product_url', 
+            url: f.product_url! 
+          }));
+          
         } else if (ct.entityType === 'printer') {
-          const scannedEntityIds = new Set(alreadyScanned?.map(r => r.entity_id) || []);
-          const scannedArray = Array.from(scannedEntityIds).slice(0, 1000);
+          // Get already scanned printer URL keys
+          const { data: alreadyScanned } = await supabase
+            .from("url_validation_results")
+            .select("entity_id, url_field")
+            .eq("entity_type", "printer");
           
-          let query = supabase.from("printers").select("id, official_store_url, official_product_url").eq("status", "active");
-          if (scannedArray.length > 0 && scannedArray.length < 1000) {
-            query = query.not("id", "in", `(${scannedArray.join(',')})`);
-          }
+          const scannedKeys = new Set(alreadyScanned?.map(r => `${r.entity_id}:${r.url_field}`) || []);
+
+          // Get printers with URLs
+          const { data } = await supabase
+            .from("printers")
+            .select("id, official_store_url, official_product_url")
+            .eq("status", "active")
+            .limit(100);
           
-          const { data } = await query.limit(100);
+          const printerUrls: typeof urls = [];
           data?.forEach(p => {
             if (p.official_store_url && !scannedKeys.has(`${p.id}:official_store_url`)) {
-              urls.push({ entity_type: 'printer', entity_id: p.id, url_field: 'official_store_url', url: p.official_store_url });
+              printerUrls.push({ entity_type: 'printer', entity_id: p.id, url_field: 'official_store_url', url: p.official_store_url });
             }
             if (p.official_product_url && !scannedKeys.has(`${p.id}:official_product_url`)) {
-              urls.push({ entity_type: 'printer', entity_id: p.id, url_field: 'official_product_url', url: p.official_product_url });
+              printerUrls.push({ entity_type: 'printer', entity_id: p.id, url_field: 'official_product_url', url: p.official_product_url });
             }
           });
-          urls = urls.slice(0, 50);
+          urls = printerUrls.slice(0, 50);
+          
         } else if (ct.entityType === 'accessory' && ct.accessoryType) {
-          // Get accessories of this type
+          // Get accessories of this specific type first
           const { data: accessories } = await supabase
             .from("printer_accessories")
             .select("id, product_url")
             .eq("accessory_type", ct.accessoryType)
             .not("product_url", "is", null)
-            .limit(50);
+            .limit(100);
           
-          urls = accessories?.filter(a => !scannedKeys.has(`${a.id}:product_url`))
-            .map(a => ({ entity_type: 'accessory', entity_id: a.id, url_field: 'product_url', url: a.product_url! })) || [];
+          if (!accessories || accessories.length === 0) {
+            continue;
+          }
+          
+          const accessoryIds = accessories.map(a => a.id);
+          
+          // Get already scanned accessory IDs of THIS type
+          const { data: alreadyScanned } = await supabase
+            .from("url_validation_results")
+            .select("entity_id")
+            .eq("entity_type", "accessory")
+            .in("entity_id", accessoryIds);
+          
+          const scannedIds = new Set(alreadyScanned?.map(r => r.entity_id) || []);
+          
+          const unscanned = accessories.filter(a => !scannedIds.has(a.id));
+          urls = unscanned.slice(0, 50).map(a => ({ 
+            entity_type: 'accessory', 
+            entity_id: a.id, 
+            url_field: 'product_url', 
+            url: a.product_url! 
+          }));
         }
       }
-
       if (urls.length === 0) {
         toast.info(`All ${title} URLs have been scanned`);
         setScanning(false);
