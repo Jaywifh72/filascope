@@ -28,6 +28,10 @@ const AdminDataQuality = lazy(() => import("./pages/AdminDataQuality"));
 const AdminFilaments = lazy(() => import("./pages/AdminFilaments"));
 const AdminAmazonLinks = lazy(() => import("./pages/AdminAmazonLinks"));
 const AdminFilamentAudit = lazy(() => import("./pages/AdminFilamentAudit"));
+const AdminBrands = lazy(() => import("./pages/AdminBrands"));
+const AdminBrokenLinks = lazy(() => import("./pages/AdminBrokenLinks"));
+const AdminDuplicates = lazy(() => import("./pages/AdminDuplicates"));
+const AdminScheduler = lazy(() => import("./pages/AdminScheduler"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
@@ -83,6 +87,10 @@ const App = () => (
               <Route path="/admin/filaments" element={<AdminFilaments />} />
               <Route path="/admin/amazon-links" element={<AdminAmazonLinks />} />
               <Route path="/admin/filament-audit" element={<AdminFilamentAudit />} />
+              <Route path="/admin/brands" element={<AdminBrands />} />
+              <Route path="/admin/broken-links" element={<AdminBrokenLinks />} />
+              <Route path="/admin/duplicates" element={<AdminDuplicates />} />
+              <Route path="/admin/scheduler" element={<AdminScheduler />} />
               <Route path="/filament/:id" element={<FilamentDetail />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
