@@ -246,12 +246,56 @@ const AdminBrokenLinks = () => {
     setFixingIds(prev => new Set(prev).add(result.id));
 
     try {
-      // Invoke the fix-filament-url function to find a replacement
+      // First, fetch the entity details to get product title and vendor
+      let productTitle = '';
+      let vendor = '';
+
+      if (result.entity_type === 'filament') {
+        const { data: filament } = await supabase
+          .from('filaments')
+          .select('product_title, vendor')
+          .eq('id', result.entity_id)
+          .maybeSingle();
+        
+        if (filament) {
+          productTitle = filament.product_title;
+          vendor = filament.vendor || '';
+        }
+      } else if (result.entity_type === 'printer') {
+        const { data: printer } = await supabase
+          .from('printers')
+          .select('model_name, printer_brands(brand)')
+          .eq('id', result.entity_id)
+          .maybeSingle();
+        
+        if (printer) {
+          productTitle = printer.model_name;
+          vendor = (printer.printer_brands as any)?.brand || '';
+        }
+      } else if (result.entity_type === 'accessory') {
+        const { data: accessory } = await supabase
+          .from('printer_accessories')
+          .select('name, brand')
+          .eq('id', result.entity_id)
+          .maybeSingle();
+        
+        if (accessory) {
+          productTitle = accessory.name;
+          vendor = accessory.brand || '';
+        }
+      }
+
+      if (!productTitle) {
+        toast.error("Could not find entity details");
+        return;
+      }
+
+      // Invoke the fix-filament-url function with correct parameters
       const { data, error } = await supabase.functions.invoke('fix-filament-url', {
         body: { 
-          entityType: result.entity_type,
-          entityId: result.entity_id,
-          urlField: result.url_field,
+          filamentId: result.entity_id,
+          productTitle,
+          vendor,
           currentUrl: result.url
         }
       });
@@ -259,15 +303,6 @@ const AdminBrokenLinks = () => {
       if (error) throw error;
 
       if (data?.newUrl) {
-        const tableName = result.entity_type === 'filament' ? 'filaments' 
-          : result.entity_type === 'printer' ? 'printers' 
-          : 'printer_accessories';
-
-        await supabase
-          .from(tableName)
-          .update({ [result.url_field]: data.newUrl })
-          .eq('id', result.entity_id);
-
         // Update validation result
         await supabase
           .from("url_validation_results")
@@ -277,7 +312,7 @@ const AdminBrokenLinks = () => {
         toast.success("Found and applied replacement URL");
         fetchResults();
       } else {
-        toast.error("Could not find a replacement URL");
+        toast.error(data?.error || "Could not find a replacement URL");
       }
     } catch (error) {
       console.error("Error finding replacement:", error);
@@ -325,26 +360,57 @@ const AdminBrokenLinks = () => {
             failed++;
           }
         } else if (result.status === 'broken' || result.status === 'timeout') {
-          // For broken/timeout, try to find replacement
+          // For broken/timeout, try to find replacement - need to fetch entity details first
+          let productTitle = '';
+          let vendor = '';
+
+          if (result.entity_type === 'filament') {
+            const { data: filament } = await supabase
+              .from('filaments')
+              .select('product_title, vendor')
+              .eq('id', result.entity_id)
+              .maybeSingle();
+            if (filament) {
+              productTitle = filament.product_title;
+              vendor = filament.vendor || '';
+            }
+          } else if (result.entity_type === 'printer') {
+            const { data: printer } = await supabase
+              .from('printers')
+              .select('model_name, printer_brands(brand)')
+              .eq('id', result.entity_id)
+              .maybeSingle();
+            if (printer) {
+              productTitle = printer.model_name;
+              vendor = (printer.printer_brands as any)?.brand || '';
+            }
+          } else if (result.entity_type === 'accessory') {
+            const { data: accessory } = await supabase
+              .from('printer_accessories')
+              .select('name, brand')
+              .eq('id', result.entity_id)
+              .maybeSingle();
+            if (accessory) {
+              productTitle = accessory.name;
+              vendor = accessory.brand || '';
+            }
+          }
+
+          if (!productTitle) {
+            failed++;
+            continue;
+          }
+
           const { data, error } = await supabase.functions.invoke('fix-filament-url', {
             body: { 
-              entityType: result.entity_type,
-              entityId: result.entity_id,
-              urlField: result.url_field,
+              filamentId: result.entity_id,
+              productTitle,
+              vendor,
               currentUrl: result.url
             }
           });
 
           if (!error && data?.newUrl) {
-            const tableName = result.entity_type === 'filament' ? 'filaments' 
-              : result.entity_type === 'printer' ? 'printers' 
-              : 'printer_accessories';
-
-            await supabase
-              .from(tableName)
-              .update({ [result.url_field]: data.newUrl })
-              .eq('id', result.entity_id);
-
             await supabase
               .from("url_validation_results")
               .update({ status: 'valid', url: data.newUrl, status_code: 200 })
