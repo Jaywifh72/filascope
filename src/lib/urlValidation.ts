@@ -13,6 +13,28 @@ const BRAND_URL_FIXES: Record<string, { pattern: RegExp; fix: (url: string) => s
   'Bambu Lab': {
     pattern: /^https?:\/\/store\.bambulab\.com\/products\//,
     fix: (url: string) => url.replace('store.bambulab.com/products/', 'us.store.bambulab.com/products/')
+  },
+  'Ultimaker': {
+    // Ultimaker S-Series materials use new path format: /3d-printer-materials/s-series-materials/um-{material}-packaged
+    pattern: /^https?:\/\/store\.ultimaker\.com\/products\//,
+    fix: (url: string) => {
+      // Extract product slug from old /products/ URL
+      const match = url.match(/\/products\/ultimaker-(.+?)-(?:3d-printer-)?filament/i);
+      if (match) {
+        const material = match[1].toLowerCase()
+          .replace(/-2-85mm$/, '')
+          .replace(/-(black|white|red|blue|green|yellow|orange|grey|silver|natural|transparent)$/i, '');
+        
+        // High-temp materials use packaged format
+        if (['pps-cf', 'peek', 'pei'].includes(material)) {
+          return `https://store.ultimaker.com/3d-printer-materials/s-series-materials/um-${material}-packaged`;
+        }
+        // Standard materials use s-series format
+        const cleanMaterial = material.replace(/-cf$/i, 'cf').replace(/-95a$/i, '95a');
+        return `https://store.ultimaker.com/ultimaker-s-series-${cleanMaterial}-material`;
+      }
+      return url;
+    }
   }
 };
 

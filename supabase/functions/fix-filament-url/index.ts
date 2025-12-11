@@ -177,9 +177,15 @@ const BRAND_CONFIGS: Record<string, {
 };
 
 // Ultimaker URL mapping - old product URLs to new S-Series URLs
-// New URL format: https://store.ultimaker.com/ultimaker-s-series-{material}-material (direct at root)
-// Some materials also work at: https://store.ultimaker.com/3d-printer-materials/s-series-materials/{product-slug}
+// New URL format: https://store.ultimaker.com/3d-printer-materials/s-series-materials/um-{material}-packaged
+// Some materials use direct format: https://store.ultimaker.com/ultimaker-s-series-{material}-material
 const ULTIMAKER_URL_MAPPINGS: Record<string, string> = {
+  // PPS CF - S-Series packaged format
+  "ultimaker-pps-cf-filament-2-85mm": "3d-printer-materials/s-series-materials/um-pps-cf-packaged",
+  "ultimaker-pps-cf-3d-printer-filament-2-85mm": "3d-printer-materials/s-series-materials/um-pps-cf-packaged",
+  // PEEK - S-Series packaged format
+  "ultimaker-peek-filament-2-85mm": "3d-printer-materials/s-series-materials/um-peek-packaged",
+  "ultimaker-peek-3d-printer-filament-2-85mm": "3d-printer-materials/s-series-materials/um-peek-packaged",
   // CPE materials
   "ultimaker-cpe-filament-2-85mm": "ultimaker-s-series-cpe-material",
   "ultimaker-cpeplus-filament-2-85mm": "ultimaker-s-series-cpe-plus-material",
