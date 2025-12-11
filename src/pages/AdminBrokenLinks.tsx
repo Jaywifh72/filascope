@@ -54,6 +54,7 @@ interface UrlValidationResult {
   manually_verified?: boolean;
   verified_at?: string | null;
   verified_by?: string | null;
+  entity_name?: string; // Resolved from entity tables
 }
 
 interface ValidationStats {
@@ -136,7 +137,9 @@ const AdminBrokenLinks = () => {
       .limit(500);
 
     if (!error && data) {
-      setResults(data);
+      // Fetch entity names for each result
+      const resultsWithNames = await resolveEntityNames(data);
+      setResults(resultsWithNames);
       
       const statsCalc = data.reduce((acc, r) => {
         acc.total++;
@@ -153,6 +156,38 @@ const AdminBrokenLinks = () => {
     }
     setLoading(false);
     setSelectedIds(new Set());
+  };
+
+  const resolveEntityNames = async (results: UrlValidationResult[]): Promise<UrlValidationResult[]> => {
+    // Group entity IDs by type
+    const filamentIds = results.filter(r => r.entity_type === 'filament').map(r => r.entity_id);
+    const printerIds = results.filter(r => r.entity_type === 'printer').map(r => r.entity_id);
+    const accessoryIds = results.filter(r => r.entity_type === 'accessory').map(r => r.entity_id);
+
+    // Fetch names in parallel
+    const [filaments, printers, accessories] = await Promise.all([
+      filamentIds.length > 0 
+        ? supabase.from("filaments").select("id, product_title").in("id", filamentIds)
+        : { data: [] },
+      printerIds.length > 0
+        ? supabase.from("printers").select("id, model_name").in("id", printerIds)
+        : { data: [] },
+      accessoryIds.length > 0
+        ? supabase.from("printer_accessories").select("id, name").in("id", accessoryIds)
+        : { data: [] }
+    ]);
+
+    // Create lookup maps
+    const nameMap = new Map<string, string>();
+    filaments.data?.forEach(f => nameMap.set(f.id, f.product_title));
+    printers.data?.forEach(p => nameMap.set(p.id, p.model_name));
+    accessories.data?.forEach(a => nameMap.set(a.id, a.name));
+
+    // Attach names to results
+    return results.map(r => ({
+      ...r,
+      entity_name: nameMap.get(r.entity_id) || undefined
+    }));
   };
 
   const clearAllResults = async () => {
@@ -976,10 +1011,19 @@ const AdminBrokenLinks = () => {
                       )}
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         {getStatusIcon(result.status)}
-                        <Badge variant="outline" className="text-xs shrink-0">
-                          {getEntityIcon(result.entity_type)}
-                          <span className="ml-1 capitalize">{result.entity_type}</span>
-                        </Badge>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="cursor-help">
+                              <Badge variant="outline" className="text-xs shrink-0">
+                                {getEntityIcon(result.entity_type)}
+                                <span className="ml-1 capitalize">{result.entity_type}</span>
+                              </Badge>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-sm">
+                            <p className="font-medium">{result.entity_name || "Unknown"}</p>
+                          </TooltipContent>
+                        </Tooltip>
                         <div className="flex-1 min-w-0">
                           <span className="text-sm text-muted-foreground truncate block">
                             {result.url}
