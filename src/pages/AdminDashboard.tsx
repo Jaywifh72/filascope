@@ -11,7 +11,7 @@ import { RecentActivityLog } from "@/components/admin/RecentActivityLog";
 import { 
   Database, Users, Package, Upload, TrendingUp, Shield, ExternalLink, 
   BarChart3, ShoppingCart, ClipboardCheck, Wrench, RefreshCw, Building2,
-  Link2, Copy, Calendar
+  Link2, Copy, Calendar, DollarSign
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -78,6 +78,7 @@ const AdminDashboard = () => {
     { to: "/admin/broken-links", icon: Link2, title: "Broken Links", desc: "URL validation & fixes", color: "text-orange-500" },
     { to: "/admin/duplicates", icon: Copy, title: "Duplicates", desc: "Find & merge duplicates", color: "text-yellow-500" },
     { to: "/admin/scheduler", icon: Calendar, title: "Scheduler", desc: "Automated tasks & cron jobs", color: "text-indigo-500" },
+    { to: "/admin/price-anomalies", icon: DollarSign, title: "Price Anomalies", desc: "Flag suspicious pricing", color: "text-red-500" },
     { to: "/admin/affiliates", icon: ExternalLink, title: "Affiliate Links", desc: "Configure affiliate URLs", color: "text-primary" },
     { to: "/admin/amazon-links", icon: ShoppingCart, title: "Amazon Links", desc: "Find Amazon product links", color: "text-orange-500" },
     { to: "/admin/users", icon: Users, title: "User Management", desc: "Manage accounts & roles", color: "text-primary" },
