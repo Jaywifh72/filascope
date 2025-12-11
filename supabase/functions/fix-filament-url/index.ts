@@ -95,10 +95,12 @@ const BRAND_CONFIGS: Record<string, {
   },
 };
 
-// Ultimaker URL mapping - old product URLs to new URLs
+// Ultimaker URL mapping - old product URLs to new S-Series URLs
+// New URL format: https://store.ultimaker.com/3d-printer-materials/s-series-materials/{product-slug}
 const ULTIMAKER_URL_MAPPINGS: Record<string, string> = {
   // CPE materials
   "ultimaker-cpe-filament-2-85mm": "ultimaker-s-series-cpe-material",
+  "ultimaker-cpeplus-filament-2-85mm": "ultimaker-s-series-cpe-plus-material",
   "ultimaker-cpe-plus-filament-2-85mm": "ultimaker-s-series-cpe-plus-material",
   // PLA materials
   "ultimaker-pla-filament-2-85mm": "ultimaker-s-series-pla-material",
@@ -226,16 +228,34 @@ const BRAND_URL_FIXERS: Record<string, UrlFixer> = {
       const pathParts = url.pathname.split('/').filter(p => p);
       const productSlug = pathParts[pathParts.length - 1];
       
+      // New URL format: https://store.ultimaker.com/3d-printer-materials/s-series-materials/{slug}
+      const newBaseUrl = "https://store.ultimaker.com/3d-printer-materials/s-series-materials";
+      
       // Check direct mapping first
       if (ULTIMAKER_URL_MAPPINGS[productSlug]) {
-        return `https://store.ultimaker.com/${ULTIMAKER_URL_MAPPINGS[productSlug]}`;
+        return `${newBaseUrl}/${ULTIMAKER_URL_MAPPINGS[productSlug]}`;
       }
       
-      // Pattern matching: ultimaker-{material}-filament-2-85mm -> ultimaker-s-series-{material}-material
-      const materialMatch = productSlug.match(/^ultimaker-(.+?)-filament/i);
+      // Pattern matching for old /products/ URLs
+      // ultimaker-{material}-filament-2-85mm -> ultimaker-s-series-{material}-material
+      const materialMatch = productSlug.match(/^ultimaker-(.+?)-filament-?/i);
       if (materialMatch) {
-        const material = materialMatch[1];
-        return `https://store.ultimaker.com/ultimaker-s-series-${material}-material`;
+        let material = materialMatch[1];
+        // Clean up material name - remove color suffixes and standardize
+        material = material
+          .replace(/-2-85mm$/, '')
+          .replace(/-(black|white|red|blue|green|yellow|orange|grey|silver|natural|transparent|dark-grey|light-grey|pearl-white|silver-metallic)$/i, '');
+        return `${newBaseUrl}/ultimaker-s-series-${material}-material`;
+      }
+      
+      // If URL is in old /products/ format, try to convert
+      if (url.pathname.includes('/products/')) {
+        // Extract product slug and try direct conversion
+        const slug = productSlug
+          .replace(/-filament-2-85mm$/, '-material')
+          .replace(/-2-85mm$/, '')
+          .replace(/^ultimaker-/, 'ultimaker-s-series-');
+        return `${newBaseUrl}/${slug}`;
       }
       
       return null;
