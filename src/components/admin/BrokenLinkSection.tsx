@@ -123,7 +123,11 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     
     setLoading(true);
     try {
-      await Promise.all([fetchResultsInternal(), fetchCoverageInternal()]);
+      // Fetch all data independently
+      await Promise.all([
+        fetchResultsAndStats(),
+        fetchCoverageInternal()
+      ]);
     } finally {
       setLoading(false);
       setInitialized(true);
@@ -143,15 +147,28 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
 
     for (const ct of categoryTypes) {
       if (ct.entityType === 'filament') {
-        const { count } = await supabase.from("filaments").select("id", { count: "exact", head: true }).not("product_url", "is", null);
-        totalCount += count || 0;
+        // Count total filaments with product_url
+        const { count: total } = await supabase
+          .from("filaments")
+          .select("id", { count: "exact", head: true })
+          .not("product_url", "is", null);
+        totalCount += total || 0;
         
-        const { count: scanned } = await supabase.from("url_validation_results").select("id", { count: "exact", head: true }).eq("entity_type", "filament");
-        scannedCount += scanned || 0;
+        // Count unique filament entity_ids in url_validation_results
+        const { data: scannedData } = await supabase
+          .from("url_validation_results")
+          .select("entity_id")
+          .eq("entity_type", "filament");
+        
+        // Use Set to count unique entity_ids
+        const uniqueScannedIds = new Set(scannedData?.map(r => r.entity_id) || []);
+        scannedCount += uniqueScannedIds.size;
+        
       } else if (ct.entityType === 'printer') {
+        // For printers, we count individual URLs, not printers
         const { data: printerUrls } = await supabase
           .from("printers")
-          .select("official_store_url, official_product_url")
+          .select("id, official_store_url, official_product_url")
           .eq("status", "active");
         
         printerUrls?.forEach(p => {
@@ -159,30 +176,35 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
           if (p.official_product_url) totalCount++;
         });
         
-        const { count: scanned } = await supabase.from("url_validation_results").select("id", { count: "exact", head: true }).eq("entity_type", "printer");
-        scannedCount += scanned || 0;
+        // Count scanned printer URLs (unique entity_id + url_field combinations)
+        const { data: scannedData } = await supabase
+          .from("url_validation_results")
+          .select("entity_id, url_field")
+          .eq("entity_type", "printer");
+        
+        scannedCount += scannedData?.length || 0;
+        
       } else if (ct.entityType === 'accessory' && ct.accessoryType) {
-        const { count } = await supabase
-          .from("printer_accessories")
-          .select("id", { count: "exact", head: true })
-          .eq("accessory_type", ct.accessoryType)
-          .not("product_url", "is", null);
-        totalCount += count || 0;
-
-        // Get scanned accessory IDs for this type
+        // Count accessories of this type with product_url
         const { data: accessories } = await supabase
           .from("printer_accessories")
           .select("id")
-          .eq("accessory_type", ct.accessoryType);
+          .eq("accessory_type", ct.accessoryType)
+          .not("product_url", "is", null);
         
         const accessoryIds = accessories?.map(a => a.id) || [];
+        totalCount += accessoryIds.length;
+
         if (accessoryIds.length > 0) {
-          const { count: scanned } = await supabase
+          // Count scanned accessories of this type
+          const { data: scannedData } = await supabase
             .from("url_validation_results")
-            .select("id", { count: "exact", head: true })
+            .select("entity_id")
             .eq("entity_type", "accessory")
             .in("entity_id", accessoryIds);
-          scannedCount += scanned || 0;
+          
+          const uniqueScannedIds = new Set(scannedData?.map(r => r.entity_id) || []);
+          scannedCount += uniqueScannedIds.size;
         }
       }
     }
@@ -190,21 +212,22 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     setCoverage({ total: totalCount, scanned: scannedCount });
   };
 
-  const fetchResultsInternal = async () => {
+  const fetchResultsAndStats = async () => {
     const categoryTypes = getCategoryEntityTypes(category);
     let allResults: UrlValidationResult[] = [];
-    let entityIds: string[] = [];
+    let accessoryIdsForCategory: string[] = [];
 
+    // Fetch results for display (limited to 200)
     for (const ct of categoryTypes) {
       if (ct.entityType === 'accessory' && ct.accessoryType) {
-        // For accessories, first get IDs of this type
         const { data: accessories } = await supabase
           .from("printer_accessories")
           .select("id")
           .eq("accessory_type", ct.accessoryType);
         
         const accessoryIds = accessories?.map(a => a.id) || [];
-        entityIds = [...entityIds, ...accessoryIds];
+        accessoryIdsForCategory = accessoryIds;
+        
         if (accessoryIds.length > 0) {
           const { data } = await supabase
             .from("url_validation_results")
@@ -230,28 +253,35 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     const resultsWithNames = await resolveEntityNames(allResults);
     setResults(resultsWithNames);
 
-    // Calculate stats from FULL database, not limited results
-    await fetchStatsInternal(categoryTypes, entityIds);
+    // Fetch stats from ALL records (no limit)
+    await fetchStatsInternal(categoryTypes, accessoryIdsForCategory);
     setSelectedIds(new Set());
   };
 
-  const fetchStatsInternal = async (categoryTypes: { entityType: string; accessoryType?: string }[], accessoryEntityIds: string[]) => {
+  const fetchStatsInternal = async (categoryTypes: { entityType: string; accessoryType?: string }[], accessoryIdsForCategory: string[]) => {
     const isAmazonUrl = (url: string) => url?.toLowerCase().includes('amazon.');
     let statsCalc = { total: 0, valid: 0, broken: 0, amazonBroken: 0, redirect: 0, timeout: 0, verified: 0 };
 
     for (const ct of categoryTypes) {
-      let query = supabase.from("url_validation_results").select("status, url, manually_verified");
+      let data: { status: string; url: string; manually_verified: boolean | null }[] | null = null;
       
-      if (ct.entityType === 'accessory' && ct.accessoryType && accessoryEntityIds.length > 0) {
-        query = query.eq("entity_type", "accessory").in("entity_id", accessoryEntityIds);
-      } else if (ct.entityType !== 'accessory') {
-        query = query.eq("entity_type", ct.entityType);
+      if (ct.entityType === 'accessory' && ct.accessoryType) {
+        if (accessoryIdsForCategory.length > 0) {
+          const result = await supabase
+            .from("url_validation_results")
+            .select("status, url, manually_verified")
+            .eq("entity_type", "accessory")
+            .in("entity_id", accessoryIdsForCategory);
+          data = result.data;
+        }
       } else {
-        continue;
+        const result = await supabase
+          .from("url_validation_results")
+          .select("status, url, manually_verified")
+          .eq("entity_type", ct.entityType);
+        data = result.data;
       }
 
-      const { data } = await query;
-      
       data?.forEach(r => {
         statsCalc.total++;
         if (r.manually_verified) statsCalc.verified++;
@@ -483,7 +513,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       await supabase.from("url_validation_results").update({ status: 'valid', url: result.redirect_url, status_code: 200 }).eq('id', result.id);
 
       toast.success("URL updated");
-      await fetchResultsInternal();
+      await fetchResultsAndStats();
     } catch (error) {
       toast.error("Failed to update URL");
     } finally {
@@ -518,7 +548,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       if (!error && data?.newUrl) {
         await supabase.from("url_validation_results").update({ status: 'valid', url: data.newUrl, status_code: 200 }).eq('id', result.id);
         toast.success("Found and applied replacement URL");
-        await fetchResultsInternal();
+        await fetchResultsAndStats();
       } else {
         toast.error(data?.error || "Could not find a replacement URL");
       }
@@ -564,7 +594,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       toast.success("URL updated manually");
       setEditingResult(null);
       setNewUrl("");
-      await fetchResultsInternal();
+      await fetchResultsAndStats();
     } catch (error) {
       toast.error("Failed to update URL");
     } finally {
@@ -618,7 +648,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     setBulkFixing(false);
     setSelectedIds(new Set());
     toast.success(`Fixed ${fixed} URLs`);
-    await fetchResultsInternal();
+    await fetchResultsAndStats();
   };
 
   const markAsVerified = async (result: UrlValidationResult) => {
@@ -627,7 +657,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       manually_verified: true, verified_at: new Date().toISOString(), verified_by: userId 
     }).eq('id', result.id);
     toast.success("URL marked as verified");
-    await fetchResultsInternal();
+    await fetchResultsAndStats();
   };
 
   const unmarkAsVerified = async (result: UrlValidationResult) => {
@@ -635,7 +665,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       manually_verified: false, verified_at: null, verified_by: null 
     }).eq('id', result.id);
     toast.success("Verification removed");
-    await fetchResultsInternal();
+    await fetchResultsAndStats();
   };
 
   const deleteEntity = async (result: UrlValidationResult) => {
@@ -650,7 +680,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       await supabase.from('filaments').delete().eq('id', result.entity_id);
       await supabase.from('url_validation_results').delete().eq('id', result.id);
       toast.success("Deleted");
-      await fetchResultsInternal();
+      await fetchResultsAndStats();
       await fetchCoverageInternal();
       onRefresh();
     } catch (error) {
