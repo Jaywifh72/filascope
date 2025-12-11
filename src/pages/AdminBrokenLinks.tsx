@@ -257,6 +257,9 @@ const AdminBrokenLinks = () => {
         .select("entity_id, url_field")
         .eq("entity_type", entityType);
       
+      const scannedEntityIds = new Set(
+        alreadyScanned?.map(r => r.entity_id) || []
+      );
       const scannedKeys = new Set(
         alreadyScanned?.map(r => `${r.entity_id}:${r.url_field}`) || []
       );
@@ -264,14 +267,21 @@ const AdminBrokenLinks = () => {
       let urls: { entity_type: string; entity_id: string; url_field: string; url: string }[] = [];
 
       if (entityType === 'filament') {
-        const { data } = await supabase
+        // Build query - exclude already scanned IDs if we have them
+        let query = supabase
           .from("filaments")
           .select("id, product_url")
-          .not("product_url", "is", null)
-          .limit(200); // Fetch more, then filter
+          .not("product_url", "is", null);
+        
+        // Use NOT IN filter if we have scanned IDs (up to 1000 to avoid query limits)
+        const scannedArray = Array.from(scannedEntityIds).slice(0, 1000);
+        if (scannedArray.length > 0 && scannedArray.length < 1000) {
+          query = query.not("id", "in", `(${scannedArray.join(',')})`);
+        }
+        
+        const { data } = await query.limit(50);
         
         urls = data?.filter(f => !scannedKeys.has(`${f.id}:product_url`))
-          .slice(0, 50)
           .map(f => ({
             entity_type: 'filament',
             entity_id: f.id,
@@ -279,11 +289,17 @@ const AdminBrokenLinks = () => {
             url: f.product_url!
           })) || [];
       } else if (entityType === 'printer') {
-        const { data } = await supabase
+        let query = supabase
           .from("printers")
           .select("id, official_store_url, official_product_url")
-          .eq("status", "active")
-          .limit(200);
+          .eq("status", "active");
+        
+        const scannedArray = Array.from(scannedEntityIds).slice(0, 1000);
+        if (scannedArray.length > 0 && scannedArray.length < 1000) {
+          query = query.not("id", "in", `(${scannedArray.join(',')})`);
+        }
+        
+        const { data } = await query.limit(100);
         
         const allUrls: typeof urls = [];
         data?.forEach(p => {
@@ -306,14 +322,19 @@ const AdminBrokenLinks = () => {
         });
         urls = allUrls.slice(0, 50);
       } else {
-        const { data } = await supabase
+        let query = supabase
           .from("printer_accessories")
           .select("id, product_url")
-          .not("product_url", "is", null)
-          .limit(200);
+          .not("product_url", "is", null);
+        
+        const scannedArray = Array.from(scannedEntityIds).slice(0, 1000);
+        if (scannedArray.length > 0 && scannedArray.length < 1000) {
+          query = query.not("id", "in", `(${scannedArray.join(',')})`);
+        }
+        
+        const { data } = await query.limit(50);
         
         urls = data?.filter(a => !scannedKeys.has(`${a.id}:product_url`))
-          .slice(0, 50)
           .map(a => ({
             entity_type: 'accessory',
             entity_id: a.id,
