@@ -671,6 +671,7 @@ const AdminBrokenLinks = () => {
   if (!isAdmin) return null;
 
   return (
+    <TooltipProvider>
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
@@ -914,27 +915,25 @@ const AdminBrokenLinks = () => {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {result.status_code !== null && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge 
-                                  variant={result.status_code === 200 ? "default" : "destructive"}
-                                  className="cursor-help"
-                                >
-                                  {result.status_code}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-xs">
-                                <div className="space-y-1">
-                                  <p className="font-semibold">{getStatusCodeInfo(result.status_code).label}</p>
-                                  <p className="text-xs">{getStatusCodeInfo(result.status_code).description}</p>
-                                  <p className="text-xs text-muted-foreground italic">
-                                    Fix: {getStatusCodeInfo(result.status_code).fixStrategy}
-                                  </p>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge 
+                                variant={result.status_code === 200 ? "default" : "destructive"}
+                                className="cursor-help"
+                              >
+                                {result.status_code}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <div className="space-y-1">
+                                <p className="font-semibold">{getStatusCodeInfo(result.status_code).label}</p>
+                                <p className="text-xs">{getStatusCodeInfo(result.status_code).description}</p>
+                                <p className="text-xs text-muted-foreground italic">
+                                  Fix: {getStatusCodeInfo(result.status_code).fixStrategy}
+                                </p>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                         
                         {/* Action buttons based on status */}
@@ -989,6 +988,7 @@ const AdminBrokenLinks = () => {
         </Tabs>
       </div>
     </div>
+    </TooltipProvider>
   );
 };
 
