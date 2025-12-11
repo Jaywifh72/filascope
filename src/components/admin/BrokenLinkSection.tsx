@@ -116,6 +116,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
   const [initialized, setInitialized] = useState(false);
   const [editingResult, setEditingResult] = useState<UrlValidationResult | null>(null);
   const [newUrl, setNewUrl] = useState("");
+  const [batchSize, setBatchSize] = useState(150);
 
   const fetchData = async () => {
     if (!expanded) return;
@@ -302,26 +303,26 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
           
           const scannedIds = new Set(alreadyScanned?.map(r => r.entity_id) || []);
 
-          // Get filaments with product_url - fetch enough to find 50 unscanned
+          // Get filaments with product_url - fetch enough to find unscanned
           let unscanned: { id: string; product_url: string }[] = [];
           let offset = 0;
-          const batchSize = 200;
+          const fetchBatchSize = 200;
           
-          while (unscanned.length < 150 && offset < 3000) {
+          while (unscanned.length < batchSize && offset < 3000) {
             const { data } = await supabase
               .from("filaments")
               .select("id, product_url")
               .not("product_url", "is", null)
-              .range(offset, offset + batchSize - 1);
+              .range(offset, offset + fetchBatchSize - 1);
             
             if (!data || data.length === 0) break;
             
             const filtered = data.filter(f => !scannedIds.has(f.id));
             unscanned = [...unscanned, ...filtered];
-            offset += batchSize;
+            offset += fetchBatchSize;
           }
           
-          urls = unscanned.slice(0, 150).map(f => ({ 
+          urls = unscanned.slice(0, batchSize).map(f => ({ 
             entity_type: 'filament', 
             entity_id: f.id, 
             url_field: 'product_url', 
@@ -342,7 +343,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
             .from("printers")
             .select("id, official_store_url, official_product_url")
             .eq("status", "active")
-            .limit(300);
+            .limit(batchSize * 2);
           
           const printerUrls: typeof urls = [];
           data?.forEach(p => {
@@ -353,7 +354,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
               printerUrls.push({ entity_type: 'printer', entity_id: p.id, url_field: 'official_product_url', url: p.official_product_url });
             }
           });
-          urls = printerUrls.slice(0, 150);
+          urls = printerUrls.slice(0, batchSize);
           
         } else if (ct.entityType === 'accessory' && ct.accessoryType) {
           // Get accessories of this specific type first
@@ -362,7 +363,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
             .select("id, product_url")
             .eq("accessory_type", ct.accessoryType)
             .not("product_url", "is", null)
-            .limit(300);
+            .limit(batchSize * 2);
           
           if (!accessories || accessories.length === 0) {
             continue;
@@ -380,7 +381,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
           const scannedIds = new Set(alreadyScanned?.map(r => r.entity_id) || []);
           
           const unscanned = accessories.filter(a => !scannedIds.has(a.id));
-          urls = unscanned.slice(0, 150).map(a => ({
+          urls = unscanned.slice(0, batchSize).map(a => ({
             entity_type: 'accessory', 
             entity_id: a.id, 
             url_field: 'product_url', 
@@ -712,6 +713,17 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
           {/* Scan Actions */}
           {!scanning && (
             <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Batch:</span>
+                <Input
+                  type="number"
+                  value={batchSize}
+                  onChange={(e) => setBatchSize(Math.max(10, Math.min(500, parseInt(e.target.value) || 150)))}
+                  className="w-20 h-8 text-sm"
+                  min={10}
+                  max={500}
+                />
+              </div>
               <Button 
                 onClick={runScan} 
                 variant="outline" 
@@ -721,7 +733,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
                 <Play className="w-4 h-4 mr-2" />
                 {coverage.scanned >= coverage.total 
                   ? "All Scanned" 
-                  : `Scan Next 150 (${coverage.total - coverage.scanned} remaining)`}
+                  : `Scan Next ${batchSize} (${coverage.total - coverage.scanned} remaining)`}
               </Button>
               <Button onClick={() => fetchData()} variant="ghost" size="sm" disabled={loading}>
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -846,7 +858,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
 
           {stats.total === 0 && !loading && (
             <div className="text-center py-4 text-muted-foreground">
-              No URLs scanned yet. Click "Scan Next 150" to start.
+              No URLs scanned yet. Click "Scan Next" to start.
             </div>
           )}
         </div>
