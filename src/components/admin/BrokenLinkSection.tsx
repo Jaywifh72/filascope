@@ -193,6 +193,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
   const fetchResultsInternal = async () => {
     const categoryTypes = getCategoryEntityTypes(category);
     let allResults: UrlValidationResult[] = [];
+    let entityIds: string[] = [];
 
     for (const ct of categoryTypes) {
       if (ct.entityType === 'accessory' && ct.accessoryType) {
@@ -203,6 +204,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
           .eq("accessory_type", ct.accessoryType);
         
         const accessoryIds = accessories?.map(a => a.id) || [];
+        entityIds = [...entityIds, ...accessoryIds];
         if (accessoryIds.length > 0) {
           const { data } = await supabase
             .from("url_validation_results")
@@ -228,23 +230,42 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     const resultsWithNames = await resolveEntityNames(allResults);
     setResults(resultsWithNames);
 
-    // Calculate stats
+    // Calculate stats from FULL database, not limited results
+    await fetchStatsInternal(categoryTypes, entityIds);
+    setSelectedIds(new Set());
+  };
+
+  const fetchStatsInternal = async (categoryTypes: { entityType: string; accessoryType?: string }[], accessoryEntityIds: string[]) => {
     const isAmazonUrl = (url: string) => url?.toLowerCase().includes('amazon.');
-    const statsCalc = allResults.reduce((acc, r) => {
-      acc.total++;
-      if (r.manually_verified) acc.verified++;
-      if (r.status === 'valid') acc.valid++;
-      else if (r.status === 'broken' && !r.manually_verified) {
-        if (isAmazonUrl(r.url)) acc.amazonBroken++;
-        else acc.broken++;
+    let statsCalc = { total: 0, valid: 0, broken: 0, amazonBroken: 0, redirect: 0, timeout: 0, verified: 0 };
+
+    for (const ct of categoryTypes) {
+      let query = supabase.from("url_validation_results").select("status, url, manually_verified");
+      
+      if (ct.entityType === 'accessory' && ct.accessoryType && accessoryEntityIds.length > 0) {
+        query = query.eq("entity_type", "accessory").in("entity_id", accessoryEntityIds);
+      } else if (ct.entityType !== 'accessory') {
+        query = query.eq("entity_type", ct.entityType);
+      } else {
+        continue;
       }
-      else if (r.status === 'redirect') acc.redirect++;
-      else if (r.status === 'timeout' && !r.manually_verified) acc.timeout++;
-      return acc;
-    }, { total: 0, valid: 0, broken: 0, amazonBroken: 0, redirect: 0, timeout: 0, verified: 0 });
+
+      const { data } = await query;
+      
+      data?.forEach(r => {
+        statsCalc.total++;
+        if (r.manually_verified) statsCalc.verified++;
+        if (r.status === 'valid') statsCalc.valid++;
+        else if (r.status === 'broken' && !r.manually_verified) {
+          if (isAmazonUrl(r.url)) statsCalc.amazonBroken++;
+          else statsCalc.broken++;
+        }
+        else if (r.status === 'redirect') statsCalc.redirect++;
+        else if (r.status === 'timeout' && !r.manually_verified) statsCalc.timeout++;
+      });
+    }
     
     setStats(statsCalc);
-    setSelectedIds(new Set());
   };
 
   const resolveEntityNames = async (results: UrlValidationResult[]): Promise<UrlValidationResult[]> => {
