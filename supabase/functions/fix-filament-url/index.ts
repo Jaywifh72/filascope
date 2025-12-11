@@ -109,8 +109,10 @@ const ULTIMAKER_URL_MAPPINGS: Record<string, string> = {
   "ultimaker-petg-filament-2-85mm": "ultimaker-s-series-petg-material",
   // Nylon materials
   "ultimaker-nylon-filament-2-85mm": "ultimaker-s-series-nylon-material",
+  "ultimaker-nylon-cf-filament-2-85mm": "ultimaker-s-series-nylon-cf-material",
   // PC materials
   "ultimaker-pc-filament-2-85mm": "ultimaker-s-series-pc-material",
+  "ultimaker-pc-abs-filament-2-85mm": "ultimaker-s-series-pc-abs-material",
   // PP materials
   "ultimaker-pp-filament-2-85mm": "ultimaker-s-series-pp-material",
   // TPU materials
@@ -119,6 +121,56 @@ const ULTIMAKER_URL_MAPPINGS: Record<string, string> = {
   "ultimaker-pva-filament-2-85mm": "ultimaker-s-series-pva-material",
   // Breakaway materials
   "ultimaker-breakaway-filament-2-85mm": "ultimaker-s-series-breakaway-material",
+  // Specialty / Composite materials
+  "ultimaker-pla-carbon-fiber-filament-2-85mm": "ultimaker-s-series-pla-carbon-fiber-material",
+  "ultimaker-metal-pla-filament-2-85mm": "ultimaker-s-series-metal-pla-material",
+  "ultimaker-glass-filled-nylon-filament-2-85mm": "ultimaker-s-series-glass-filled-nylon-material",
+  "ultimaker-pei-filament-2-85mm": "ultimaker-s-series-pei-material",
+  "ultimaker-abs-cf-filament-2-85mm": "ultimaker-s-series-abs-cf-material",
+  // Color variants - PLA colors
+  "ultimaker-pla-black-filament-2-85mm": "ultimaker-s-series-pla-material",
+  "ultimaker-pla-white-filament-2-85mm": "ultimaker-s-series-pla-material",
+  "ultimaker-pla-red-filament-2-85mm": "ultimaker-s-series-pla-material",
+  "ultimaker-pla-blue-filament-2-85mm": "ultimaker-s-series-pla-material",
+  "ultimaker-pla-green-filament-2-85mm": "ultimaker-s-series-pla-material",
+  "ultimaker-pla-yellow-filament-2-85mm": "ultimaker-s-series-pla-material",
+  "ultimaker-pla-orange-filament-2-85mm": "ultimaker-s-series-pla-material",
+  "ultimaker-pla-silver-metallic-filament-2-85mm": "ultimaker-s-series-pla-material",
+  "ultimaker-pla-pearl-white-filament-2-85mm": "ultimaker-s-series-pla-material",
+  // Color variants - Tough PLA colors
+  "ultimaker-tough-pla-black-filament-2-85mm": "ultimaker-s-series-tough-pla-material",
+  "ultimaker-tough-pla-white-filament-2-85mm": "ultimaker-s-series-tough-pla-material",
+  "ultimaker-tough-pla-red-filament-2-85mm": "ultimaker-s-series-tough-pla-material",
+  "ultimaker-tough-pla-green-filament-2-85mm": "ultimaker-s-series-tough-pla-material",
+  // Color variants - ABS colors
+  "ultimaker-abs-black-filament-2-85mm": "ultimaker-s-series-abs-material",
+  "ultimaker-abs-white-filament-2-85mm": "ultimaker-s-series-abs-material",
+  "ultimaker-abs-red-filament-2-85mm": "ultimaker-s-series-abs-material",
+  "ultimaker-abs-blue-filament-2-85mm": "ultimaker-s-series-abs-material",
+  "ultimaker-abs-grey-filament-2-85mm": "ultimaker-s-series-abs-material",
+  "ultimaker-abs-orange-filament-2-85mm": "ultimaker-s-series-abs-material",
+  "ultimaker-abs-yellow-filament-2-85mm": "ultimaker-s-series-abs-material",
+  "ultimaker-abs-green-filament-2-85mm": "ultimaker-s-series-abs-material",
+  "ultimaker-abs-silver-metallic-filament-2-85mm": "ultimaker-s-series-abs-material",
+  // Color variants - CPE colors
+  "ultimaker-cpe-black-filament-2-85mm": "ultimaker-s-series-cpe-material",
+  "ultimaker-cpe-white-filament-2-85mm": "ultimaker-s-series-cpe-material",
+  "ultimaker-cpe-yellow-filament-2-85mm": "ultimaker-s-series-cpe-material",
+  "ultimaker-cpe-dark-grey-filament-2-85mm": "ultimaker-s-series-cpe-material",
+  "ultimaker-cpe-light-grey-filament-2-85mm": "ultimaker-s-series-cpe-material",
+  "ultimaker-cpe-transparent-filament-2-85mm": "ultimaker-s-series-cpe-material",
+  // Color variants - Nylon colors
+  "ultimaker-nylon-black-filament-2-85mm": "ultimaker-s-series-nylon-material",
+  "ultimaker-nylon-natural-filament-2-85mm": "ultimaker-s-series-nylon-material",
+  // Color variants - PC colors
+  "ultimaker-pc-black-filament-2-85mm": "ultimaker-s-series-pc-material",
+  "ultimaker-pc-white-filament-2-85mm": "ultimaker-s-series-pc-material",
+  "ultimaker-pc-transparent-filament-2-85mm": "ultimaker-s-series-pc-material",
+  // Color variants - TPU colors
+  "ultimaker-tpu-95a-black-filament-2-85mm": "ultimaker-s-series-tpu-95a-material",
+  "ultimaker-tpu-95a-white-filament-2-85mm": "ultimaker-s-series-tpu-95a-material",
+  "ultimaker-tpu-95a-red-filament-2-85mm": "ultimaker-s-series-tpu-95a-material",
+  "ultimaker-tpu-95a-blue-filament-2-85mm": "ultimaker-s-series-tpu-95a-material",
 };
 
 // Try to fix Ultimaker URL using known mappings
