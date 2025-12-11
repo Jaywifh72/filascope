@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -114,22 +114,24 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
   const [initialized, setInitialized] = useState(false);
 
   const fetchData = async () => {
-    if (!expanded && initialized) return;
+    if (!expanded) return;
     
     setLoading(true);
-    await Promise.all([fetchResults(), fetchCoverage()]);
-    setLoading(false);
-    setInitialized(true);
+    try {
+      await Promise.all([fetchResultsInternal(), fetchCoverageInternal()]);
+    } finally {
+      setLoading(false);
+      setInitialized(true);
+    }
   };
 
-  // Fetch when expanded changes
-  useState(() => {
-    if (expanded) {
+  useEffect(() => {
+    if (expanded && !initialized) {
       fetchData();
     }
-  });
+  }, [expanded]);
 
-  const fetchCoverage = async () => {
+  const fetchCoverageInternal = async () => {
     const categoryTypes = getCategoryEntityTypes(category);
     let totalCount = 0;
     let scannedCount = 0;
@@ -183,7 +185,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     setCoverage({ total: totalCount, scanned: scannedCount });
   };
 
-  const fetchResults = async () => {
+  const fetchResultsInternal = async () => {
     const categoryTypes = getCategoryEntityTypes(category);
     let allResults: UrlValidationResult[] = [];
 
@@ -413,7 +415,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       await supabase.from("url_validation_results").update({ status: 'valid', url: result.redirect_url, status_code: 200 }).eq('id', result.id);
 
       toast.success("URL updated");
-      await fetchResults();
+      await fetchResultsInternal();
     } catch (error) {
       toast.error("Failed to update URL");
     } finally {
@@ -448,7 +450,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       if (!error && data?.newUrl) {
         await supabase.from("url_validation_results").update({ status: 'valid', url: data.newUrl, status_code: 200 }).eq('id', result.id);
         toast.success("Found and applied replacement URL");
-        await fetchResults();
+        await fetchResultsInternal();
       } else {
         toast.error(data?.error || "Could not find a replacement URL");
       }
@@ -505,7 +507,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     setBulkFixing(false);
     setSelectedIds(new Set());
     toast.success(`Fixed ${fixed} URLs`);
-    await fetchResults();
+    await fetchResultsInternal();
   };
 
   const markAsVerified = async (result: UrlValidationResult) => {
@@ -514,7 +516,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       manually_verified: true, verified_at: new Date().toISOString(), verified_by: userId 
     }).eq('id', result.id);
     toast.success("URL marked as verified");
-    await fetchResults();
+    await fetchResultsInternal();
   };
 
   const unmarkAsVerified = async (result: UrlValidationResult) => {
@@ -522,7 +524,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       manually_verified: false, verified_at: null, verified_by: null 
     }).eq('id', result.id);
     toast.success("Verification removed");
-    await fetchResults();
+    await fetchResultsInternal();
   };
 
   const deleteEntity = async (result: UrlValidationResult) => {
@@ -537,8 +539,8 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
       await supabase.from('filaments').delete().eq('id', result.entity_id);
       await supabase.from('url_validation_results').delete().eq('id', result.id);
       toast.success("Deleted");
-      await fetchResults();
-      await fetchCoverage();
+      await fetchResultsInternal();
+      await fetchCoverageInternal();
       onRefresh();
     } catch (error) {
       toast.error("Failed to delete");
@@ -578,10 +580,6 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
 
   const selectedCount = Array.from(selectedIds).filter(id => filteredResults.some(r => r.id === id)).length;
 
-  // Load data when component mounts or when expanded
-  if (!initialized && expanded) {
-    fetchData();
-  }
 
   return (
     <Card className="mb-4">
