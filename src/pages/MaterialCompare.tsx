@@ -1419,13 +1419,13 @@ const MaterialCompare = () => {
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="mb-6">
-            <TabsTrigger value="comparison" className="flex items-center gap-2">
-              <GitCompare className="w-4 h-4" />
-              Material Comparison
-            </TabsTrigger>
             <TabsTrigger value="reference" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
               Reference
+            </TabsTrigger>
+            <TabsTrigger value="comparison" className="flex items-center gap-2">
+              <GitCompare className="w-4 h-4" />
+              Material Comparison
             </TabsTrigger>
           </TabsList>
 
