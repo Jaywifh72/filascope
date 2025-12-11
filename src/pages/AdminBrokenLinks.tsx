@@ -164,24 +164,34 @@ const AdminBrokenLinks = () => {
     const printerIds = results.filter(r => r.entity_type === 'printer').map(r => r.entity_id);
     const accessoryIds = results.filter(r => r.entity_type === 'accessory').map(r => r.entity_id);
 
-    // Fetch names in parallel
+    // Fetch names in parallel (including vendor/brand info)
     const [filaments, printers, accessories] = await Promise.all([
       filamentIds.length > 0 
-        ? supabase.from("filaments").select("id, product_title").in("id", filamentIds)
+        ? supabase.from("filaments").select("id, product_title, vendor").in("id", filamentIds)
         : { data: [] },
       printerIds.length > 0
-        ? supabase.from("printers").select("id, model_name").in("id", printerIds)
+        ? supabase.from("printers").select("id, model_name, printer_brands(brand)").in("id", printerIds)
         : { data: [] },
       accessoryIds.length > 0
-        ? supabase.from("printer_accessories").select("id, name").in("id", accessoryIds)
+        ? supabase.from("printer_accessories").select("id, name, brand").in("id", accessoryIds)
         : { data: [] }
     ]);
 
-    // Create lookup maps
+    // Create lookup maps with brand + name
     const nameMap = new Map<string, string>();
-    filaments.data?.forEach(f => nameMap.set(f.id, f.product_title));
-    printers.data?.forEach(p => nameMap.set(p.id, p.model_name));
-    accessories.data?.forEach(a => nameMap.set(a.id, a.name));
+    filaments.data?.forEach(f => {
+      const name = f.vendor ? `${f.vendor} - ${f.product_title}` : f.product_title;
+      nameMap.set(f.id, name);
+    });
+    printers.data?.forEach(p => {
+      const brand = (p.printer_brands as any)?.brand;
+      const name = brand ? `${brand} - ${p.model_name}` : p.model_name;
+      nameMap.set(p.id, name);
+    });
+    accessories.data?.forEach(a => {
+      const name = a.brand ? `${a.brand} - ${a.name}` : a.name;
+      nameMap.set(a.id, name);
+    });
 
     // Attach names to results
     return results.map(r => ({
