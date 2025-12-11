@@ -34,11 +34,22 @@ interface ValidationStats {
   timeout: number;
 }
 
+interface ScanCoverage {
+  filament: { total: number; scanned: number };
+  printer: { total: number; scanned: number };
+  accessory: { total: number; scanned: number };
+}
+
 const AdminBrokenLinks = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading } = useAuth();
   const [results, setResults] = useState<UrlValidationResult[]>([]);
   const [stats, setStats] = useState<ValidationStats>({ total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0 });
+  const [coverage, setCoverage] = useState<ScanCoverage>({
+    filament: { total: 0, scanned: 0 },
+    printer: { total: 0, scanned: 0 },
+    accessory: { total: 0, scanned: 0 }
+  });
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
@@ -58,8 +69,31 @@ const AdminBrokenLinks = () => {
   useEffect(() => {
     if (isAdmin) {
       fetchResults();
+      fetchCoverage();
     }
   }, [isAdmin]);
+
+  const fetchCoverage = async () => {
+    // Get total counts
+    const [filamentTotal, printerTotal, accessoryTotal] = await Promise.all([
+      supabase.from("filaments").select("id", { count: "exact", head: true }).not("product_url", "is", null),
+      supabase.from("printers").select("id", { count: "exact", head: true }).eq("status", "active"),
+      supabase.from("printer_accessories").select("id", { count: "exact", head: true }).not("product_url", "is", null)
+    ]);
+
+    // Get scanned counts per entity type
+    const [filamentScanned, printerScanned, accessoryScanned] = await Promise.all([
+      supabase.from("url_validation_results").select("id", { count: "exact", head: true }).eq("entity_type", "filament"),
+      supabase.from("url_validation_results").select("id", { count: "exact", head: true }).eq("entity_type", "printer"),
+      supabase.from("url_validation_results").select("id", { count: "exact", head: true }).eq("entity_type", "accessory")
+    ]);
+
+    setCoverage({
+      filament: { total: filamentTotal.count || 0, scanned: filamentScanned.count || 0 },
+      printer: { total: printerTotal.count || 0, scanned: printerScanned.count || 0 },
+      accessory: { total: accessoryTotal.count || 0, scanned: accessoryScanned.count || 0 }
+    });
+  };
 
   const fetchResults = async () => {
     setLoading(true);
@@ -105,6 +139,7 @@ const AdminBrokenLinks = () => {
       toast.success("All results cleared - ready to scan fresh");
       setResults([]);
       setStats({ total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0 });
+      fetchCoverage();
     }
     setLoading(false);
   };
@@ -237,6 +272,7 @@ const AdminBrokenLinks = () => {
 
       toast.success(`Scanned ${urls.length} ${entityType} URLs`);
       fetchResults();
+      fetchCoverage();
     } catch (error) {
       console.error("Error running scan:", error);
       toast.error("Failed to run scan");
@@ -588,19 +624,84 @@ const AdminBrokenLinks = () => {
               <p className="text-sm text-muted-foreground">Scanning... {scanProgress}%</p>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={() => runScan('filament')} variant="outline" size="sm">
-                <Play className="w-4 h-4 mr-2" />
-                Scan Filaments (50)
-              </Button>
-              <Button onClick={() => runScan('printer')} variant="outline" size="sm">
-                <Play className="w-4 h-4 mr-2" />
-                Scan Printers (50)
-              </Button>
-              <Button onClick={() => runScan('accessory')} variant="outline" size="sm">
-                <Play className="w-4 h-4 mr-2" />
-                Scan Accessories (50)
-              </Button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Filaments */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Filaments</span>
+                  <span className={coverage.filament.scanned >= coverage.filament.total ? "text-green-500" : "text-foreground"}>
+                    {coverage.filament.scanned} / {coverage.filament.total}
+                  </span>
+                </div>
+                <Progress 
+                  value={coverage.filament.total > 0 ? (coverage.filament.scanned / coverage.filament.total) * 100 : 0} 
+                  className="h-2"
+                />
+                <Button 
+                  onClick={() => runScan('filament')} 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  disabled={coverage.filament.scanned >= coverage.filament.total}
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  {coverage.filament.scanned >= coverage.filament.total 
+                    ? "All Scanned" 
+                    : `Scan Next 50 (${coverage.filament.total - coverage.filament.scanned} remaining)`}
+                </Button>
+              </div>
+
+              {/* Printers */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Printers</span>
+                  <span className={coverage.printer.scanned >= coverage.printer.total ? "text-green-500" : "text-foreground"}>
+                    {coverage.printer.scanned} / {coverage.printer.total}
+                  </span>
+                </div>
+                <Progress 
+                  value={coverage.printer.total > 0 ? (coverage.printer.scanned / coverage.printer.total) * 100 : 0} 
+                  className="h-2"
+                />
+                <Button 
+                  onClick={() => runScan('printer')} 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  disabled={coverage.printer.scanned >= coverage.printer.total}
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  {coverage.printer.scanned >= coverage.printer.total 
+                    ? "All Scanned" 
+                    : `Scan Next 50 (${coverage.printer.total - coverage.printer.scanned} remaining)`}
+                </Button>
+              </div>
+
+              {/* Accessories */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Accessories</span>
+                  <span className={coverage.accessory.scanned >= coverage.accessory.total ? "text-green-500" : "text-foreground"}>
+                    {coverage.accessory.scanned} / {coverage.accessory.total}
+                  </span>
+                </div>
+                <Progress 
+                  value={coverage.accessory.total > 0 ? (coverage.accessory.scanned / coverage.accessory.total) * 100 : 0} 
+                  className="h-2"
+                />
+                <Button 
+                  onClick={() => runScan('accessory')} 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  disabled={coverage.accessory.scanned >= coverage.accessory.total}
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  {coverage.accessory.scanned >= coverage.accessory.total 
+                    ? "All Scanned" 
+                    : `Scan Next 50 (${coverage.accessory.total - coverage.accessory.scanned} remaining)`}
+                </Button>
+              </div>
             </div>
           )}
         </Card>
