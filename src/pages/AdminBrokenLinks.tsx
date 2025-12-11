@@ -917,12 +917,13 @@ const AdminBrokenLinks = () => {
                         {result.status_code !== null && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Badge 
-                                variant={result.status_code === 200 ? "default" : "destructive"}
-                                className="cursor-help"
-                              >
-                                {result.status_code}
-                              </Badge>
+                              <span className="cursor-help">
+                                <Badge 
+                                  variant={result.status_code === 200 ? "default" : "destructive"}
+                                >
+                                  {result.status_code}
+                                </Badge>
+                              </span>
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs">
                               <div className="space-y-1">
