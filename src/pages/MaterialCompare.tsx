@@ -1391,7 +1391,7 @@ const ComparisonContent = () => {
 
 const MaterialCompare = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") || "comparison";
+  const activeTab = searchParams.get("tab") || "reference";
 
   const handleTabChange = (value: string) => {
     setSearchParams({ tab: value });
