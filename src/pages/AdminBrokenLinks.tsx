@@ -141,10 +141,11 @@ const AdminBrokenLinks = () => {
       const statsCalc = data.reduce((acc, r) => {
         acc.total++;
         if (r.manually_verified) acc.verified++;
+        // Don't count verified URLs in broken/timeout stats
         if (r.status === 'valid') acc.valid++;
-        else if (r.status === 'broken') acc.broken++;
+        else if (r.status === 'broken' && !r.manually_verified) acc.broken++;
         else if (r.status === 'redirect') acc.redirect++;
-        else if (r.status === 'timeout') acc.timeout++;
+        else if (r.status === 'timeout' && !r.manually_verified) acc.timeout++;
         return acc;
       }, { total: 0, valid: 0, broken: 0, redirect: 0, timeout: 0, verified: 0 });
       
@@ -178,8 +179,8 @@ const AdminBrokenLinks = () => {
   };
 
   const rescanBrokenUrls = async () => {
-    // Get all URLs currently marked as "broken"
-    const brokenResults = results.filter(r => r.status === 'broken');
+    // Get all URLs currently marked as "broken" (excluding verified ones)
+    const brokenResults = results.filter(r => r.status === 'broken' && !r.manually_verified);
     
     if (brokenResults.length === 0) {
       toast.info("No broken URLs to re-scan");
@@ -703,6 +704,9 @@ const AdminBrokenLinks = () => {
   const filteredResults = results.filter(r => {
     if (activeTab === 'all') return true;
     if (activeTab === 'verified') return r.manually_verified;
+    // Exclude verified URLs from broken/timeout tabs
+    if (activeTab === 'broken') return r.status === 'broken' && !r.manually_verified;
+    if (activeTab === 'timeout') return r.status === 'timeout' && !r.manually_verified;
     return r.status === activeTab;
   });
 
