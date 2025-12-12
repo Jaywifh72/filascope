@@ -41,6 +41,9 @@ interface SoftwareRelease {
   download_url: string | null;
   is_latest: boolean;
   source_url: string | null;
+  is_mobile_app: boolean;
+  google_play_url: string | null;
+  app_store_url: string | null;
 }
 
 async function scrapeWithFirecrawl(url: string, apiKey: string): Promise<any> {
@@ -90,11 +93,12 @@ async function useAIToExtractSoftware(
 Extract information about SLICERS, STUDIO SOFTWARE, and MOBILE APPS - NOT printer firmware.
 
 For ${brandName}, look for:
-${brandName === 'Bambu Lab' ? '- Bambu Studio (slicer/studio)\n- Bambu Handy (mobile app)\n- Network plugin' : ''}
-${brandName === 'Prusa Research' ? '- PrusaSlicer (slicer)\n- Prusa Connect (app/cloud)' : ''}
-${brandName === 'Creality' ? '- Creality Print (slicer)\n- Creality Cloud (app)' : ''}
-${brandName === 'Anycubic' ? '- Anycubic Slicer\n- Anycubic App' : ''}
+${brandName === 'Bambu Lab' ? '- Bambu Studio (slicer/studio)\n- Bambu Handy (MOBILE APP - include app store links!)\n- Network plugin' : ''}
+${brandName === 'Prusa Research' ? '- PrusaSlicer (slicer)\n- Prusa Connect (app/cloud)\n- Prusa App (MOBILE APP)' : ''}
+${brandName === 'Creality' ? '- Creality Print (slicer)\n- Creality Cloud (MOBILE APP - include app store links!)' : ''}
+${brandName === 'Anycubic' ? '- Anycubic Slicer\n- Anycubic App (MOBILE APP - include app store links!)' : ''}
 ${brandName === 'QIDI' ? '- QIDI Slicer\n- QIDI Print' : ''}
+${brandName === 'Elegoo' ? '- CHITUBOX (slicer)\n- Elegoo Mars (MOBILE APP)' : ''}
 
 For EACH software release you find, extract:
 1. **software_name** (required): The name of the software (e.g., "Bambu Studio", "PrusaSlicer")
@@ -109,12 +113,17 @@ For EACH software release you find, extract:
    Format as readable summary with bullet points if multiple items.
 6. **changelog**: Additional technical changes if available
 7. **download_url**: Direct download link if available
+8. **is_mobile_app**: Boolean - true if this is a mobile app (iOS/Android), false for desktop software
+9. **google_play_url**: If this is a mobile app, provide the Google Play Store URL (e.g., "https://play.google.com/store/apps/details?id=...")
+10. **app_store_url**: If this is a mobile app, provide the Apple App Store URL (e.g., "https://apps.apple.com/app/...")
 
 IMPORTANT:
 - Extract software that works with ${brandName} printers, especially ${printerName}
 - DO NOT include printer firmware versions
 - Extract ALL version releases found, not just the latest
 - Include detailed release notes about actual changes
+- For mobile apps, ALWAYS set is_mobile_app=true and include app store links when available
+- Known mobile apps: Bambu Handy, Creality Cloud, Anycubic App, Prusa App, etc.
 
 Return a JSON object with a "releases" array. Example:
 {
@@ -124,9 +133,24 @@ Return a JSON object with a "releases" array. Example:
       "software_type": "slicer",
       "version": "1.9.5",
       "release_date": "2024-12-01",
-      "release_notes": "### New Features\\n- Added support for new filament profiles\\n- Improved print time estimation\\n\\n### Bug Fixes\\n- Fixed layer height preview",
+      "release_notes": "### New Features\\n- Added support for new filament profiles",
       "changelog": null,
-      "download_url": "https://..."
+      "download_url": "https://...",
+      "is_mobile_app": false,
+      "google_play_url": null,
+      "app_store_url": null
+    },
+    {
+      "software_name": "Bambu Handy",
+      "software_type": "app",
+      "version": "2.4.1",
+      "release_date": "2024-12-01",
+      "release_notes": "### New Features\\n- Improved print monitoring",
+      "changelog": null,
+      "download_url": null,
+      "is_mobile_app": true,
+      "google_play_url": "https://play.google.com/store/apps/details?id=com.bambulab.handy",
+      "app_store_url": "https://apps.apple.com/app/bambu-handy/id1234567890"
     }
   ]
 }
@@ -204,6 +228,9 @@ ${truncatedMarkdown}`;
       download_url: sw.download_url || null,
       is_latest: false, // Will be set later per software_name
       source_url: sourceUrl,
+      is_mobile_app: sw.is_mobile_app === true || sw.software_type === 'app',
+      google_play_url: sw.google_play_url || null,
+      app_store_url: sw.app_store_url || null,
     }));
   } catch (error) {
     console.error('AI extraction error:', error);

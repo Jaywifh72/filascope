@@ -859,11 +859,14 @@ export type Database = {
       }
       printer_software: {
         Row: {
+          app_store_url: string | null
           changelog: string | null
           created_at: string | null
           download_url: string | null
+          google_play_url: string | null
           id: string
           is_latest: boolean | null
+          is_mobile_app: boolean | null
           printer_id: string | null
           release_date: string | null
           release_notes: string | null
@@ -874,11 +877,14 @@ export type Database = {
           version: string
         }
         Insert: {
+          app_store_url?: string | null
           changelog?: string | null
           created_at?: string | null
           download_url?: string | null
+          google_play_url?: string | null
           id?: string
           is_latest?: boolean | null
+          is_mobile_app?: boolean | null
           printer_id?: string | null
           release_date?: string | null
           release_notes?: string | null
@@ -889,11 +895,14 @@ export type Database = {
           version: string
         }
         Update: {
+          app_store_url?: string | null
           changelog?: string | null
           created_at?: string | null
           download_url?: string | null
+          google_play_url?: string | null
           id?: string
           is_latest?: boolean | null
+          is_mobile_app?: boolean | null
           printer_id?: string | null
           release_date?: string | null
           release_notes?: string | null
