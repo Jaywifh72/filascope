@@ -402,6 +402,11 @@ export type Database = {
           variant_price: number | null
           variant_sku: string | null
           vendor: string | null
+          wood_fiber_length_mm: number | null
+          wood_particle_size_microns: number | null
+          wood_powder_percentage: number | null
+          wood_scent_level: string | null
+          wood_type: string | null
         }
         Insert: {
           amazon_link_de?: string | null
@@ -469,6 +474,11 @@ export type Database = {
           variant_price?: number | null
           variant_sku?: string | null
           vendor?: string | null
+          wood_fiber_length_mm?: number | null
+          wood_particle_size_microns?: number | null
+          wood_powder_percentage?: number | null
+          wood_scent_level?: string | null
+          wood_type?: string | null
         }
         Update: {
           amazon_link_de?: string | null
@@ -536,6 +546,11 @@ export type Database = {
           variant_price?: number | null
           variant_sku?: string | null
           vendor?: string | null
+          wood_fiber_length_mm?: number | null
+          wood_particle_size_microns?: number | null
+          wood_powder_percentage?: number | null
+          wood_scent_level?: string | null
+          wood_type?: string | null
         }
         Relationships: []
       }
