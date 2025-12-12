@@ -462,6 +462,19 @@ const Finder = () => {
     return filament.glass_fiber_percentage ?? null;
   };
 
+  // Helper to check if filament is a carbon fiber filament
+  const isCarbonFiberFilament = (filament: any): boolean => {
+    const material = filament.material?.toLowerCase() || '';
+    const title = filament.product_title?.toLowerCase() || '';
+    const hasCFContent = filament.carbon_fiber_percentage !== null && filament.carbon_fiber_percentage !== undefined && filament.carbon_fiber_percentage > 0;
+    return hasCFContent || material.includes('-cf') || material.includes(' cf') || title.includes('carbon fiber') || title.includes('carbon-fiber');
+  };
+
+  // Get carbon fiber percentage for display
+  const getCarbonFiberPercentage = (filament: any): number | null => {
+    return filament.carbon_fiber_percentage ?? null;
+  };
+
   // Calculate filter counts based on currently applied filters (excluding the filter being counted)
   const filterCounts = useMemo(() => {
     if (!filaments) return {};
@@ -1130,6 +1143,12 @@ const Finder = () => {
                                 {getGlassFiberPercentage(filament) ? `${getGlassFiberPercentage(filament)}% GF` : 'GF'}
                               </Badge>
                             )}
+                            {isCarbonFiberFilament(filament) && (
+                              <Badge variant="outline" className="bg-gray-500/10 border-gray-500/30 text-gray-600 dark:text-gray-400 text-[10px] px-1.5 py-0 gap-1">
+                                <Layers className="w-3 h-3" />
+                                {getCarbonFiberPercentage(filament) ? `${getCarbonFiberPercentage(filament)}% CF` : 'CF'}
+                              </Badge>
+                            )}
                           </div>
                         </td>
                         <td className="py-3 px-3 text-right">
@@ -1252,6 +1271,12 @@ const Finder = () => {
                               <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/30 text-cyan-600 text-[10px] px-1.5 py-0.5 gap-1">
                                 <Layers className="w-3 h-3" />
                                 {getGlassFiberPercentage(filament) ? `${getGlassFiberPercentage(filament)}% Glass Fiber` : 'Glass Fiber'}
+                              </Badge>
+                            )}
+                            {isCarbonFiberFilament(filament) && (
+                              <Badge variant="outline" className="bg-gray-500/10 border-gray-500/30 text-gray-600 dark:text-gray-400 text-[10px] px-1.5 py-0.5 gap-1">
+                                <Layers className="w-3 h-3" />
+                                {getCarbonFiberPercentage(filament) ? `${getCarbonFiberPercentage(filament)}% Carbon Fiber` : 'Carbon Fiber'}
                               </Badge>
                             )}
                           </div>

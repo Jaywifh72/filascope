@@ -342,6 +342,7 @@ export type Database = {
           amazon_link_us: string | null
           bed_temp_max_c: number | null
           bed_temp_min_c: number | null
+          carbon_fiber_percentage: number | null
           color_family: string | null
           color_hex: string | null
           created_at: string | null
@@ -415,6 +416,7 @@ export type Database = {
           amazon_link_us?: string | null
           bed_temp_max_c?: number | null
           bed_temp_min_c?: number | null
+          carbon_fiber_percentage?: number | null
           color_family?: string | null
           color_hex?: string | null
           created_at?: string | null
@@ -488,6 +490,7 @@ export type Database = {
           amazon_link_us?: string | null
           bed_temp_max_c?: number | null
           bed_temp_min_c?: number | null
+          carbon_fiber_percentage?: number | null
           color_family?: string | null
           color_hex?: string | null
           created_at?: string | null
