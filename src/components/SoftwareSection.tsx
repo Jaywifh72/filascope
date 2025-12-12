@@ -431,24 +431,7 @@ export const SoftwareSection = ({ printerId, brandName, printerName }: SoftwareS
                                     </div>
                                   )}
 
-                                  <div className="flex flex-wrap gap-2 pt-2">
-                                    {sw.download_url && (
-                                      <a href={sw.download_url} target="_blank" rel="noopener noreferrer">
-                                        <Button size="sm" className="gap-2">
-                                          <Download className="h-3 w-3" />
-                                          Download
-                                        </Button>
-                                      </a>
-                                    )}
-                                    {sw.source_url && (
-                                      <a href={sw.source_url} target="_blank" rel="noopener noreferrer">
-                                        <Button size="sm" variant="outline" className="gap-2">
-                                          <ExternalLink className="h-3 w-3" />
-                                          View Source
-                                        </Button>
-                                      </a>
-                                    )}
-                                  </div>
+                                  {/* No download links for older versions - only release notes */}
                                 </div>
                               </AccordionContent>
                             </AccordionItem>

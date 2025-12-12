@@ -3,41 +3,52 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Brand-specific software page URL patterns
+// Brand-specific software page URL patterns - prioritize GitHub releases for version history
 const BRAND_SOFTWARE_URLS: Record<string, (printerName: string) => string[]> = {
   'Bambu Lab': () => [
-    'https://wiki.bambulab.com/en/software/bambu-studio',
+    // GitHub releases first - has comprehensive version history
     'https://github.com/bambulab/BambuStudio/releases',
+    'https://wiki.bambulab.com/en/software/bambu-studio/release-notes',
+    'https://wiki.bambulab.com/en/software/bambu-studio',
     'https://bambulab.com/en/download',
-    'https://apps.apple.com/app/bambu-handy/id1589027990',
-    'https://play.google.com/store/apps/details?id=com.bambulab.handy',
   ],
   'Prusa Research': () => [
-    'https://www.prusa3d.com/page/prusaslicer_424/',
+    // GitHub releases for full version history
     'https://github.com/prusa3d/PrusaSlicer/releases',
+    'https://www.prusa3d.com/page/prusaslicer_424/',
     'https://help.prusa3d.com/tag/prusaslicer',
-    'https://apps.apple.com/app/prusa/id1497002502',
-    'https://play.google.com/store/apps/details?id=cz.prusa3d.connect',
   ],
   'Creality': () => [
+    'https://github.com/CrealityOfficial/CrealityPrint/releases',
     'https://www.creality.com/pages/download',
-    'https://github.com/CrealityOfficial/Ender-3S1/releases',
-    'https://apps.apple.com/app/creality-cloud/id1581055918',
-    'https://play.google.com/store/apps/details?id=com.creality.crealitycloud',
   ],
   'Anycubic': () => [
     'https://www.anycubic.com/pages/firmware-software',
-    'https://apps.apple.com/app/anycubic/id1599852498',
-    'https://play.google.com/store/apps/details?id=com.anycubic.anycubicapp',
   ],
   'QIDI': () => [
-    'https://wiki.qidi3d.com/en/software',
     'https://github.com/QIDITECH/QIDISlicer/releases',
+    'https://wiki.qidi3d.com/en/software',
   ],
   'Elegoo': () => [
     'https://www.elegoo.com/pages/3d-printing-user-support',
-    'https://apps.apple.com/app/elegoo-link/id1625893710',
-    'https://play.google.com/store/apps/details?id=com.elegoo.link',
+  ],
+  'UltiMaker': () => [
+    'https://github.com/Ultimaker/Cura/releases',
+    'https://ultimaker.com/software/ultimaker-cura/',
+  ],
+  'FlashForge': () => [
+    'https://www.flashforge.com/download-center',
+  ],
+  'Raise3D': () => [
+    'https://github.com/nickvf/ideaMaker/releases',
+    'https://www.raise3d.com/ideamaker/',
+  ],
+  'Snapmaker': () => [
+    'https://github.com/Snapmaker/Luban/releases',
+    'https://snapmaker.com/snapmaker-luban',
+  ],
+  'Sovol': () => [
+    'https://github.com/Sovol3d/SV08/releases',
   ],
 };
 
@@ -187,6 +198,9 @@ interface SoftwareRelease {
 async function scrapeWithFirecrawl(url: string, apiKey: string): Promise<any> {
   console.log(`Scraping software page: ${url}`);
   
+  // For GitHub releases, we want more content
+  const isGitHub = url.includes('github.com');
+  
   const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
     method: 'POST',
     headers: {
@@ -196,8 +210,8 @@ async function scrapeWithFirecrawl(url: string, apiKey: string): Promise<any> {
     body: JSON.stringify({
       url,
       formats: ['markdown', 'links'],
-      onlyMainContent: true,
-      waitFor: 3000,
+      onlyMainContent: !isGitHub, // Get full page for GitHub to capture all releases
+      waitFor: isGitHub ? 5000 : 3000, // Wait longer for GitHub pages
     }),
   });
 
@@ -224,7 +238,9 @@ async function useAIToExtractSoftware(
   
   console.log(`Using AI to extract software for ${printerName}`);
   
-  const truncatedMarkdown = markdown.slice(0, 30000);
+  // Increase limit for GitHub releases pages which have more content
+  const isGitHubReleases = sourceUrl.includes('github.com') && sourceUrl.includes('releases');
+  const truncatedMarkdown = markdown.slice(0, isGitHubReleases ? 60000 : 30000);
   
   // Brand-specific software information
   const BRAND_SOFTWARE_INFO: Record<string, string> = {
@@ -281,22 +297,25 @@ ${brandInfo}
 CRITICAL INSTRUCTIONS:
 1. Extract ONLY software (slicers, studio apps, mobile apps, plugins)
 2. Do NOT extract printer firmware
-3. Include ALL version releases you find, not just the latest
-4. For mobile apps, ALWAYS include app store links
+3. **EXTRACT ALL VERSION RELEASES YOU FIND** - This is a GitHub releases page or changelog. Extract EVERY version listed, not just the latest. We need a complete version history (aim for 10-20+ versions if available).
+4. For each version, extract the FULL release notes including all bullet points, features, fixes, and changes.
+5. For mobile apps, ALWAYS include app store links
 
 For EACH software release, extract:
 1. **software_name** (required): The name (e.g., "Bambu Studio", "PrusaSlicer")
 2. **software_type** (required): One of: "slicer", "studio", "app", "plugin"
-3. **version** (required): The exact version number
+3. **version** (required): The exact version number (e.g., "2.1.0", "1.9.5")
 4. **release_date**: The release date in YYYY-MM-DD format
-5. **release_notes**: Detailed description of changes, features, bug fixes
+5. **release_notes**: DETAILED description - include ALL bullet points, features, bug fixes, and improvements. Format as markdown with headers and lists.
 6. **changelog**: Additional technical changes
-7. **download_url**: Direct download link
+7. **download_url**: Direct download link (only for the current/latest version)
 8. **is_mobile_app**: Boolean - true for iOS/Android apps
 9. **google_play_url**: Google Play Store URL for mobile apps
 10. **app_store_url**: Apple App Store URL for mobile apps
 
-Return a JSON object with a "releases" array. Example:
+IMPORTANT: Extract as many historical versions as you can find. If this is a GitHub releases page, there should be many versions listed. Include them ALL with their complete release notes.
+
+Return a JSON object with a "releases" array. Example with multiple versions:
 {
   "releases": [
     {
@@ -304,7 +323,7 @@ Return a JSON object with a "releases" array. Example:
       "software_type": "slicer",
       "version": "2.1.0",
       "release_date": "2024-12-01",
-      "release_notes": "### New Features\\n- Added support for new filament profiles",
+      "release_notes": "### New Features\\n- Added support for new filament profiles\\n- Improved slicing speed\\n\\n### Bug Fixes\\n- Fixed layer height issue",
       "changelog": null,
       "download_url": "https://...",
       "is_mobile_app": false,
@@ -312,16 +331,28 @@ Return a JSON object with a "releases" array. Example:
       "app_store_url": null
     },
     {
-      "software_name": "Bambu Handy",
-      "software_type": "app",
-      "version": "2.4.1",
-      "release_date": "2024-12-01",
-      "release_notes": "Improved print monitoring",
+      "software_name": "Bambu Studio",
+      "software_type": "slicer",
+      "version": "2.0.3",
+      "release_date": "2024-11-15",
+      "release_notes": "### Bug Fixes\\n- Fixed crash on startup\\n- Improved stability",
       "changelog": null,
       "download_url": null,
-      "is_mobile_app": true,
-      "google_play_url": "https://play.google.com/store/apps/details?id=com.bambulab.handy",
-      "app_store_url": "https://apps.apple.com/app/bambu-handy/id1589027990"
+      "is_mobile_app": false,
+      "google_play_url": null,
+      "app_store_url": null
+    },
+    {
+      "software_name": "Bambu Studio",
+      "software_type": "slicer",
+      "version": "2.0.0",
+      "release_date": "2024-10-01",
+      "release_notes": "### Major Release\\n- New UI design\\n- Performance improvements",
+      "changelog": null,
+      "download_url": null,
+      "is_mobile_app": false,
+      "google_play_url": null,
+      "app_store_url": null
     }
   ]
 }
