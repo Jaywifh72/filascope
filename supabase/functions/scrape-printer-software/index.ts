@@ -304,6 +304,7 @@ CRITICAL INSTRUCTIONS:
 3. **EXTRACT ALL VERSION RELEASES YOU FIND** - This is a GitHub releases page or changelog. Extract EVERY version listed, not just the latest. We need a complete version history (aim for 10-20+ versions if available).
 4. For each version, extract the FULL release notes including all bullet points, features, fixes, and changes.
 5. For mobile apps, ALWAYS include app store links
+6. **EXTRACT OS-SPECIFIC DOWNLOAD URLs** - GitHub releases typically have separate downloads for Windows (.exe, .msi), Mac (.dmg, .app.zip, arm64.dmg, x64.dmg), and Linux (.AppImage, .deb, .tar.gz). Extract ALL of them.
 
 For EACH software release, extract:
 1. **software_name** (required): The name (e.g., "Bambu Studio", "PrusaSlicer")
@@ -312,14 +313,25 @@ For EACH software release, extract:
 4. **release_date**: The release date in YYYY-MM-DD format
 5. **release_notes**: DETAILED description - include ALL bullet points, features, bug fixes, and improvements. Format as markdown with headers and lists.
 6. **changelog**: Additional technical changes
-7. **download_url**: Direct download link (only for the current/latest version)
-8. **is_mobile_app**: Boolean - true for iOS/Android apps
-9. **google_play_url**: Google Play Store URL for mobile apps
-10. **app_store_url**: Apple App Store URL for mobile apps
+7. **download_url**: Generic download link if no OS-specific URLs found
+8. **download_url_windows**: Direct download URL for Windows installer (.exe, .msi)
+9. **download_url_mac**: Direct download URL for macOS installer (.dmg or .app.zip)
+10. **download_url_linux**: Direct download URL for Linux package (.AppImage, .deb, or .tar.gz)
+11. **supported_platforms**: Array of platforms this software supports (e.g., ["windows", "mac", "linux"] or ["ios", "android"])
+12. **is_mobile_app**: Boolean - true for iOS/Android apps
+13. **google_play_url**: Google Play Store URL for mobile apps
+14. **app_store_url**: Apple App Store URL for mobile apps
+
+OS-SPECIFIC URL EXTRACTION RULES:
+- For Windows: Look for links containing ".exe", ".msi", or "win64" in the filename
+- For macOS: Look for links containing ".dmg", ".app.zip", "macos", or "darwin" in the filename
+- For Linux: Look for links containing ".AppImage", ".deb", ".tar.gz", or "linux" in the filename
+- GitHub release assets are usually under /releases/download/v{version}/
+- ONLY extract OS-specific URLs for the CURRENT/LATEST version. Older versions should have null for download URLs.
 
 IMPORTANT: Extract as many historical versions as you can find. If this is a GitHub releases page, there should be many versions listed. Include them ALL with their complete release notes.
 
-Return a JSON object with a "releases" array. Example with multiple versions:
+Return a JSON object with a "releases" array. Example with OS-specific URLs:
 {
   "releases": [
     {
@@ -329,7 +341,11 @@ Return a JSON object with a "releases" array. Example with multiple versions:
       "release_date": "2024-12-01",
       "release_notes": "### New Features\\n- Added support for new filament profiles\\n- Improved slicing speed\\n\\n### Bug Fixes\\n- Fixed layer height issue",
       "changelog": null,
-      "download_url": "https://...",
+      "download_url": null,
+      "download_url_windows": "https://github.com/bambulab/BambuStudio/releases/download/v2.1.0/Bambu_Studio-win64-v2.1.0.exe",
+      "download_url_mac": "https://github.com/bambulab/BambuStudio/releases/download/v2.1.0/Bambu_Studio-macos-v2.1.0.dmg",
+      "download_url_linux": "https://github.com/bambulab/BambuStudio/releases/download/v2.1.0/Bambu_Studio-linux-v2.1.0.AppImage",
+      "supported_platforms": ["windows", "mac", "linux"],
       "is_mobile_app": false,
       "google_play_url": null,
       "app_store_url": null
@@ -342,18 +358,10 @@ Return a JSON object with a "releases" array. Example with multiple versions:
       "release_notes": "### Bug Fixes\\n- Fixed crash on startup\\n- Improved stability",
       "changelog": null,
       "download_url": null,
-      "is_mobile_app": false,
-      "google_play_url": null,
-      "app_store_url": null
-    },
-    {
-      "software_name": "Bambu Studio",
-      "software_type": "slicer",
-      "version": "2.0.0",
-      "release_date": "2024-10-01",
-      "release_notes": "### Major Release\\n- New UI design\\n- Performance improvements",
-      "changelog": null,
-      "download_url": null,
+      "download_url_windows": null,
+      "download_url_mac": null,
+      "download_url_linux": null,
+      "supported_platforms": ["windows", "mac", "linux"],
       "is_mobile_app": false,
       "google_play_url": null,
       "app_store_url": null
