@@ -254,7 +254,10 @@ export const SoftwareSection = ({ printerId, brandName, printerName }: SoftwareS
                 );
               }
               
-              // Regular software with version history
+              // Regular software with version history - separate into Current and Older
+              const currentRelease = latestRelease;
+              const olderReleases = releases.filter(r => r.id !== currentRelease.id);
+              
               return (
                 <Card key={name} className="bg-muted/30">
                   <CardHeader className="pb-2">
@@ -270,121 +273,189 @@ export const SoftwareSection = ({ printerId, brandName, printerName }: SoftwareS
                           </Badge>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-2">
-                          <Badge className="bg-primary text-primary-foreground">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Latest: v{latestRelease.version}
-                          </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Current Version Section */}
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Current Version
+                      </h4>
+                      <div className="border rounded-lg p-4 bg-primary/5 border-primary/20">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <Badge className="bg-primary text-primary-foreground font-mono text-sm">
+                              v{currentRelease.version}
+                            </Badge>
+                            {currentRelease.release_date && (
+                              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {format(new Date(currentRelease.release_date), "MMM d, yyyy")}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {currentRelease.download_url && (
+                              <a href={currentRelease.download_url} target="_blank" rel="noopener noreferrer">
+                                <Button size="sm" className="gap-2">
+                                  <Download className="h-3 w-3" />
+                                  Download
+                                </Button>
+                              </a>
+                            )}
+                            {currentRelease.source_url && (
+                              <a href={currentRelease.source_url} target="_blank" rel="noopener noreferrer">
+                                <Button size="sm" variant="outline" className="gap-2">
+                                  <ExternalLink className="h-3 w-3" />
+                                  View Source
+                                </Button>
+                              </a>
+                            )}
+                          </div>
                         </div>
-                        {latestRelease.release_date && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1 justify-end mt-1">
-                            <Calendar className="h-3 w-3" />
-                            {format(new Date(latestRelease.release_date), "MMM d, yyyy")}
-                          </span>
+                        
+                        {currentRelease.release_notes && (
+                          <div className="space-y-2">
+                            <h5 className="text-sm font-semibold flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-primary" />
+                              Release Notes
+                            </h5>
+                            <div className="text-sm text-muted-foreground bg-background/50 p-3 rounded-lg prose prose-sm dark:prose-invert max-w-none">
+                              <div 
+                                dangerouslySetInnerHTML={{ 
+                                  __html: currentRelease.release_notes
+                                    .replace(/^### (.*$)/gm, '<h4 class="text-sm font-semibold mt-3 mb-1">$1</h4>')
+                                    .replace(/^## (.*$)/gm, '<h3 class="text-base font-semibold mt-4 mb-2">$1</h3>')
+                                    .replace(/^# (.*$)/gm, '<h2 class="text-lg font-bold mt-4 mb-2">$1</h2>')
+                                    .replace(/^\- (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
+                                    .replace(/^\* (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
+                                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                    .replace(/`(.*?)`/g, '<code class="bg-muted px-1 py-0.5 rounded text-xs">$1</code>')
+                                    .replace(/\n\n/g, '<br/><br/>')
+                                    .replace(/\n/g, '<br/>')
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {currentRelease.changelog && (
+                          <div className="space-y-2 mt-3">
+                            <h5 className="text-sm font-semibold">Changelog</h5>
+                            <div className="text-sm text-muted-foreground bg-background/50 p-3 rounded-lg">
+                              <div 
+                                dangerouslySetInnerHTML={{ 
+                                  __html: currentRelease.changelog
+                                    .replace(/^\- (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
+                                    .replace(/^\* (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
+                                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                    .replace(/\n/g, '<br/>')
+                                }}
+                              />
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Accordion type="single" collapsible className="space-y-2">
-                      {releases.map((sw) => (
-                        <AccordionItem
-                          key={sw.id}
-                          value={sw.id}
-                          className="border rounded-lg px-4 bg-background hover:bg-muted/30 transition-colors"
-                        >
-                          <AccordionTrigger className="hover:no-underline py-3">
-                            <div className="flex items-center gap-4 w-full">
-                              <div className="flex items-center gap-2 min-w-[100px]">
-                                <span className="font-mono font-bold">v{sw.version}</span>
-                                {sw.is_latest && (
-                                  <Badge variant="secondary" className="text-xs">Latest</Badge>
-                                )}
-                              </div>
-                              {sw.release_date && (
-                                <span className="text-sm text-muted-foreground">
-                                  {format(new Date(sw.release_date), "MMM d, yyyy")}
-                                </span>
-                              )}
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent className="pb-4">
-                            <div className="space-y-4 pt-2">
-                              {sw.release_notes && (
-                                <div className="space-y-2">
-                                  <h5 className="text-sm font-semibold flex items-center gap-2">
-                                    <FileText className="h-4 w-4 text-primary" />
-                                    Release Notes
-                                  </h5>
-                                  <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg prose prose-sm dark:prose-invert max-w-none">
-                                    <div 
-                                      dangerouslySetInnerHTML={{ 
-                                        __html: sw.release_notes
-                                          .replace(/^### (.*$)/gm, '<h4 class="text-sm font-semibold mt-3 mb-1">$1</h4>')
-                                          .replace(/^## (.*$)/gm, '<h3 class="text-base font-semibold mt-4 mb-2">$1</h3>')
-                                          .replace(/^# (.*$)/gm, '<h2 class="text-lg font-bold mt-4 mb-2">$1</h2>')
-                                          .replace(/^\- (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
-                                          .replace(/^\* (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
-                                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                          .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                                          .replace(/`(.*?)`/g, '<code class="bg-muted px-1 py-0.5 rounded text-xs">$1</code>')
-                                          .replace(/\n\n/g, '<br/><br/>')
-                                          .replace(/\n/g, '<br/>')
-                                      }}
-                                    />
+                    
+                    {/* Older Versions Section */}
+                    {olderReleases.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                          <Layers className="h-4 w-4" />
+                          Older Versions ({olderReleases.length})
+                        </h4>
+                        <Accordion type="single" collapsible className="space-y-2">
+                          {olderReleases.map((sw) => (
+                            <AccordionItem
+                              key={sw.id}
+                              value={sw.id}
+                              className="border rounded-lg px-4 bg-background hover:bg-muted/30 transition-colors"
+                            >
+                              <AccordionTrigger className="hover:no-underline py-3">
+                                <div className="flex items-center gap-4 w-full">
+                                  <div className="flex items-center gap-2 min-w-[100px]">
+                                    <span className="font-mono font-bold">v{sw.version}</span>
+                                  </div>
+                                  {sw.release_date && (
+                                    <span className="text-sm text-muted-foreground">
+                                      {format(new Date(sw.release_date), "MMM d, yyyy")}
+                                    </span>
+                                  )}
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent className="pb-4">
+                                <div className="space-y-4 pt-2">
+                                  {sw.release_notes && (
+                                    <div className="space-y-2">
+                                      <h5 className="text-sm font-semibold flex items-center gap-2">
+                                        <FileText className="h-4 w-4 text-primary" />
+                                        Release Notes
+                                      </h5>
+                                      <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg prose prose-sm dark:prose-invert max-w-none">
+                                        <div 
+                                          dangerouslySetInnerHTML={{ 
+                                            __html: sw.release_notes
+                                              .replace(/^### (.*$)/gm, '<h4 class="text-sm font-semibold mt-3 mb-1">$1</h4>')
+                                              .replace(/^## (.*$)/gm, '<h3 class="text-base font-semibold mt-4 mb-2">$1</h3>')
+                                              .replace(/^# (.*$)/gm, '<h2 class="text-lg font-bold mt-4 mb-2">$1</h2>')
+                                              .replace(/^\- (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
+                                              .replace(/^\* (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
+                                              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                              .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                              .replace(/`(.*?)`/g, '<code class="bg-muted px-1 py-0.5 rounded text-xs">$1</code>')
+                                              .replace(/\n\n/g, '<br/><br/>')
+                                              .replace(/\n/g, '<br/>')
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {sw.changelog && (
+                                    <div className="space-y-2">
+                                      <h5 className="text-sm font-semibold">Changelog</h5>
+                                      <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
+                                        <div 
+                                          dangerouslySetInnerHTML={{ 
+                                            __html: sw.changelog
+                                              .replace(/^\- (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
+                                              .replace(/^\* (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
+                                              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                              .replace(/\n/g, '<br/>')
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="flex flex-wrap gap-2 pt-2">
+                                    {sw.download_url && (
+                                      <a href={sw.download_url} target="_blank" rel="noopener noreferrer">
+                                        <Button size="sm" className="gap-2">
+                                          <Download className="h-3 w-3" />
+                                          Download
+                                        </Button>
+                                      </a>
+                                    )}
+                                    {sw.source_url && (
+                                      <a href={sw.source_url} target="_blank" rel="noopener noreferrer">
+                                        <Button size="sm" variant="outline" className="gap-2">
+                                          <ExternalLink className="h-3 w-3" />
+                                          View Source
+                                        </Button>
+                                      </a>
+                                    )}
                                   </div>
                                 </div>
-                              )}
-
-                              {sw.changelog && (
-                                <div className="space-y-2">
-                                  <h5 className="text-sm font-semibold">Changelog</h5>
-                                  <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
-                                    <div 
-                                      dangerouslySetInnerHTML={{ 
-                                        __html: sw.changelog
-                                          .replace(/^\- (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
-                                          .replace(/^\* (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
-                                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                          .replace(/\n/g, '<br/>')
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                              )}
-
-                              <div className="flex flex-wrap gap-2 pt-2">
-                                {sw.download_url && (
-                                  <a
-                                    href={sw.download_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Button size="sm" className="gap-2">
-                                      <Download className="h-3 w-3" />
-                                      Download
-                                    </Button>
-                                  </a>
-                                )}
-                                {sw.source_url && (
-                                  <a
-                                    href={sw.source_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Button size="sm" variant="outline" className="gap-2">
-                                      <ExternalLink className="h-3 w-3" />
-                                      View Source
-                                    </Button>
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))}
+                        </Accordion>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );
