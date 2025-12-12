@@ -134,3 +134,6 @@ verify_jwt = true
 
 [functions.get-affiliate-url]
 verify_jwt = false
+
+[functions.scrape-printer-firmware]
+verify_jwt = true

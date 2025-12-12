@@ -734,6 +734,62 @@ export type Database = {
           },
         ]
       }
+      printer_firmware: {
+        Row: {
+          changelog: string | null
+          created_at: string | null
+          download_url: string | null
+          file_size_mb: number | null
+          id: string
+          is_latest: boolean | null
+          known_issues: string | null
+          printer_id: string | null
+          release_date: string | null
+          release_notes: string | null
+          source_url: string | null
+          updated_at: string | null
+          version: string
+        }
+        Insert: {
+          changelog?: string | null
+          created_at?: string | null
+          download_url?: string | null
+          file_size_mb?: number | null
+          id?: string
+          is_latest?: boolean | null
+          known_issues?: string | null
+          printer_id?: string | null
+          release_date?: string | null
+          release_notes?: string | null
+          source_url?: string | null
+          updated_at?: string | null
+          version: string
+        }
+        Update: {
+          changelog?: string | null
+          created_at?: string | null
+          download_url?: string | null
+          file_size_mb?: number | null
+          id?: string
+          is_latest?: boolean | null
+          known_issues?: string | null
+          printer_id?: string | null
+          release_date?: string | null
+          release_notes?: string | null
+          source_url?: string | null
+          updated_at?: string | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_firmware_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       printer_price_history: {
         Row: {
           currency: string
@@ -871,6 +927,7 @@ export type Database = {
           filter_type: string | null
           firmware_family: string | null
           firmware_open_source: boolean | null
+          firmware_url: string | null
           first_layer_assist_features: string | null
           flow_calibration_supported: boolean | null
           frame_material: string | null
@@ -1056,6 +1113,7 @@ export type Database = {
           filter_type?: string | null
           firmware_family?: string | null
           firmware_open_source?: boolean | null
+          firmware_url?: string | null
           first_layer_assist_features?: string | null
           flow_calibration_supported?: boolean | null
           frame_material?: string | null
@@ -1241,6 +1299,7 @@ export type Database = {
           filter_type?: string | null
           firmware_family?: string | null
           firmware_open_source?: boolean | null
+          firmware_url?: string | null
           first_layer_assist_features?: string | null
           flow_calibration_supported?: boolean | null
           frame_material?: string | null
