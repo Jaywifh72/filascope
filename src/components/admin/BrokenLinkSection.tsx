@@ -12,9 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { 
   RefreshCw, CheckCircle, XCircle, AlertTriangle, 
   ExternalLink, Package, Database, Wrench, Play, Search, ArrowRight, Loader2, Trash2, ShieldCheck,
-  ChevronDown, ChevronUp, Edit
+  ChevronDown, ChevronUp, Edit, Ban
 } from "lucide-react";
 import { toast } from "sonner";
+import { DISCONTINUED_MARKER } from "@/lib/urlValidation";
 
 // HTTP status code explanations
 const HTTP_STATUS_INFO: Record<number, { label: string; description: string; fixStrategy: string }> = {
@@ -112,6 +113,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
   const [fixingIds, setFixingIds] = useState<Set<string>>(new Set());
   const [bulkFixing, setBulkFixing] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const [discontinuingIds, setDiscontinuingIds] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState(true);
   const [initialized, setInitialized] = useState(false);
   const [editingResult, setEditingResult] = useState<UrlValidationResult | null>(null);
@@ -795,6 +797,46 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     }
   };
 
+  const markAsDiscontinued = async (result: UrlValidationResult) => {
+    if (!window.confirm(`Mark ${result.entity_name || 'this product'} as discontinued? This will replace the product URL with "DISCONTINUED".`)) return;
+
+    setDiscontinuingIds(prev => new Set(prev).add(result.id));
+    try {
+      // Update the product URL to DISCONTINUED based on entity type
+      const urlColumn = result.url_field;
+      let error: Error | null = null;
+      
+      if (result.entity_type === 'filament') {
+        const updateData: Record<string, string> = { [urlColumn]: DISCONTINUED_MARKER };
+        const res = await supabase.from('filaments').update(updateData as any).eq('id', result.entity_id);
+        if (res.error) error = res.error;
+      } else if (result.entity_type === 'printer') {
+        const updateData: Record<string, string> = { [urlColumn]: DISCONTINUED_MARKER };
+        const res = await supabase.from('printers').update(updateData as any).eq('id', result.entity_id);
+        if (res.error) error = res.error;
+      } else if (result.entity_type === 'accessory') {
+        const updateData: Record<string, string> = { [urlColumn]: DISCONTINUED_MARKER };
+        const res = await supabase.from('printer_accessories').update(updateData as any).eq('id', result.entity_id);
+        if (res.error) error = res.error;
+      }
+
+      if (error) throw error;
+      
+      // Remove from url_validation_results since it's now handled
+      await supabase.from('url_validation_results').delete().eq('id', result.id);
+      
+      toast.success(`${result.entity_name || 'Product'} marked as discontinued`);
+      await fetchResultsAndStats();
+      await fetchCoverageInternal();
+      onRefresh();
+    } catch (error) {
+      console.error("Error marking as discontinued:", error);
+      toast.error("Failed to mark as discontinued");
+    } finally {
+      setDiscontinuingIds(prev => { const next = new Set(prev); next.delete(result.id); return next; });
+    }
+  };
+
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
@@ -999,6 +1041,26 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
                                   <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => markAsVerified(result)}>
                                     <ShieldCheck className="w-3 h-3" />
                                   </Button>
+                                )}
+                                {/* Mark as Discontinued button - show for 404/410 errors */}
+                                {(result.status_code === 404 || result.status_code === 410) && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="h-7 text-xs gap-1 text-orange-600 border-orange-300 hover:bg-orange-50"
+                                        onClick={() => markAsDiscontinued(result)} 
+                                        disabled={discontinuingIds.has(result.id)}
+                                      >
+                                        {discontinuingIds.has(result.id) ? <Loader2 className="w-3 h-3 animate-spin" /> : <Ban className="w-3 h-3" />}
+                                        <span>Discontinued</span>
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Mark product as discontinued (replaces URL with "DISCONTINUED")</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                 )}
                                 {(result.entity_type === 'filament' || result.entity_type === 'accessory') && (
                                   <Button variant="ghost" size="sm" className="h-7 text-destructive" onClick={() => deleteEntity(result)} disabled={deletingIds.has(result.id)}>

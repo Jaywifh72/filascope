@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, ExternalLink, Thermometer, CircleDot, Wrench, Package, Printer, ImageIcon, AlertTriangle, Link2, FileText } from "lucide-react";
+import { ArrowLeft, ExternalLink, Thermometer, CircleDot, Wrench, Package, Printer, ImageIcon, AlertTriangle, Link2, FileText, Ban } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { validateProductUrl } from "@/lib/urlValidation";
+import { validateProductUrl, isDiscontinuedUrl } from "@/lib/urlValidation";
 
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
 
@@ -322,7 +322,12 @@ export default function NozzleDetail() {
                     {formatPrice(nozzle.price)}
                   </div>
                 )}
-                {nozzle.product_url && (
+                {nozzle.product_url && isDiscontinuedUrl(nozzle.product_url) ? (
+                  <Badge variant="outline" className="text-orange-600 border-orange-300 bg-orange-50 dark:bg-orange-950/30 py-2 px-4">
+                    <Ban className="h-4 w-4 mr-2" />
+                    Discontinued
+                  </Badge>
+                ) : nozzle.product_url && (
                   <div className="space-y-2">
                     {/* URL validation warning for admins */}
                     {isAdmin && urlValidation && !urlValidation.isValid && (

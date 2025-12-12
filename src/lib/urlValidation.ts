@@ -104,3 +104,11 @@ export function validateMultipleUrls(items: Array<{ id: string; url: string | nu
     validation: validateProductUrl(item.url, item.brand)
   }));
 }
+
+// Check if a URL is marked as discontinued
+export const DISCONTINUED_MARKER = 'DISCONTINUED';
+
+export function isDiscontinuedUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return url.toUpperCase() === DISCONTINUED_MARKER;
+}

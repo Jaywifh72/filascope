@@ -50,7 +50,9 @@ import {
   ChevronRight,
   X,
   ImagePlus,
+  Ban,
 } from "lucide-react";
+import { isDiscontinuedUrl } from "@/lib/urlValidation";
 
 const PrinterDetail = () => {
   const { id } = useParams();
@@ -445,7 +447,12 @@ const PrinterDetail = () => {
 
                 {(printer.official_product_url || printer.official_store_url || printer.amazon_url_us) && (
                   <div className="flex flex-wrap gap-3 pt-2">
-                    {printer.official_product_url && (
+                    {printer.official_product_url && isDiscontinuedUrl(printer.official_product_url) ? (
+                      <Badge variant="outline" className="text-orange-600 border-orange-300 bg-orange-50 dark:bg-orange-950/30 py-2 px-4">
+                        <Ban className="h-4 w-4 mr-2" />
+                        Discontinued
+                      </Badge>
+                    ) : printer.official_product_url && (
                       <a href={getAffiliateUrl(printer.official_product_url, printerBrand) || printer.official_product_url} target="_blank" rel="noopener noreferrer">
                         <Button size="lg" className="gap-2">
                           <ExternalLink className="h-4 w-4" />
@@ -453,7 +460,7 @@ const PrinterDetail = () => {
                         </Button>
                       </a>
                     )}
-                    {printer.official_store_url && (
+                    {printer.official_store_url && !isDiscontinuedUrl(printer.official_store_url) && (
                       <a href={getAffiliateUrl(printer.official_store_url, printerBrand) || printer.official_store_url} target="_blank" rel="noopener noreferrer">
                         <Button size="lg" variant="outline" className="gap-2">
                           <ExternalLink className="h-4 w-4" />
@@ -461,7 +468,7 @@ const PrinterDetail = () => {
                         </Button>
                       </a>
                     )}
-                    {printer.amazon_url_us && (
+                    {printer.amazon_url_us && !isDiscontinuedUrl(printer.amazon_url_us) && (
                       <a href={getAmazonUrl(printer.amazon_url_us, "us") || printer.amazon_url_us} target="_blank" rel="noopener noreferrer">
                         <Button size="lg" variant="outline" className="gap-2">
                           <ExternalLink className="h-4 w-4" />

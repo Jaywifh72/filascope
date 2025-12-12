@@ -9,13 +9,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, ExternalLink, Square, Check, X, ImageIcon, AlertTriangle, Link2, FileText } from "lucide-react";
+import { ArrowLeft, ExternalLink, Square, Check, X, ImageIcon, AlertTriangle, Link2, FileText, Ban } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { validateProductUrl, fixProductUrl } from "@/lib/urlValidation";
+import { validateProductUrl, fixProductUrl, isDiscontinuedUrl } from "@/lib/urlValidation";
 
 export default function BuildPlateDetail() {
   const { id } = useParams<{ id: string }>();
@@ -289,7 +289,14 @@ export default function BuildPlateDetail() {
               </div>
 
               {/* Buy button */}
-              {buildPlate.product_url && (
+              {buildPlate.product_url && isDiscontinuedUrl(buildPlate.product_url) ? (
+                <div className="mt-4">
+                  <Badge variant="outline" className="text-orange-600 border-orange-300 bg-orange-50 dark:bg-orange-950/30 py-1.5 px-3">
+                    <Ban className="h-3.5 w-3.5 mr-1.5" />
+                    Discontinued
+                  </Badge>
+                </div>
+              ) : buildPlate.product_url && (
                 <div className="mt-4 space-y-2">
                   {/* URL validation warning for admins */}
                   {isAdmin && urlValidation && !urlValidation.isValid && (

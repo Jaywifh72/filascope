@@ -9,12 +9,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ExternalLink, Layers, Check, X, ImageIcon, AlertTriangle, Link2, FileText } from "lucide-react";
+import { ArrowLeft, ExternalLink, Layers, Check, X, ImageIcon, AlertTriangle, Link2, FileText, Ban } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
-import { validateProductUrl } from "@/lib/urlValidation";
+import { validateProductUrl, isDiscontinuedUrl } from "@/lib/urlValidation";
 
 interface AMSSpecs {
   max_spools?: number;
@@ -353,7 +353,12 @@ export default function AMSDetail() {
             )}
 
             {/* Store Link */}
-            {ams.product_url && (
+            {ams.product_url && isDiscontinuedUrl(ams.product_url) ? (
+              <Badge variant="outline" className="text-orange-600 border-orange-300 bg-orange-50 dark:bg-orange-950/30 py-2 px-4">
+                <Ban className="h-4 w-4 mr-2" />
+                Discontinued
+              </Badge>
+            ) : ams.product_url && (
               <div className="space-y-2">
                 {/* URL validation warning for admins */}
                 {isAdmin && urlValidation && !urlValidation.isValid && (
