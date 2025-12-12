@@ -295,8 +295,17 @@ ${truncatedMarkdown}`;
       if (combined.includes('bambu studio') || combined.includes('bambustudio')) return true;
       if (combined.includes('orcaslicer') || combined.includes('orca slicer')) return true;
       if (combined.includes('prusaslicer') || combined.includes('prusa slicer')) return true;
+      if (combined.includes('bambu handy')) return true;
+      if (combined.includes('farm manager')) return true;
+      if (combined.includes('bambu suite')) return true;
       if (downloadUrl.includes('bambustudio') || downloadUrl.includes('bambu-studio')) return true;
       if (downloadUrl.includes('github.com/bambulab/bambustudio')) return true;
+      
+      // Filter out forum scraping garbage
+      if (combined.includes('forum.bambulab.com')) return true;
+      if (combined.includes('user_avatar')) return true;
+      if (combined.includes('letter_avatar')) return true;
+      if (notes.includes('views') && notes.includes('likes') && notes.includes('users')) return true;
       
       return false;
     };
@@ -307,8 +316,8 @@ ${truncatedMarkdown}`;
       const v = version.replace(/^v/i, '').trim();
       
       // Software versions like 2.4.1.80, 2.9.1, 2.2.1.58 (Bambu Studio format)
-      // These start with 2.x and typically have 3-4 segments
-      if (/^2\.\d+\.\d+(\.\d+)?$/.test(v)) {
+      // These start with 2.x or 3.x and typically have 3-4 segments
+      if (/^[23]\.\d+\.\d+(\.\d+)?$/.test(v)) {
         return true;
       }
       
@@ -318,6 +327,19 @@ ${truncatedMarkdown}`;
       if (/^[1-9]\.[0-9]+\.[0-9]+$/.test(v) && !v.includes('01.')) {
         return true;
       }
+      
+      return false;
+    };
+    
+    // Check if release notes look like junk/forum scraping
+    const isJunkContent = (fw: any): boolean => {
+      const notes = (fw.release_notes || '');
+      
+      // Forum metadata patterns
+      if (/\d+\s*views\s*\d+\s*likes/i.test(notes)) return true;
+      if (/\d+\s*users\s*read/i.test(notes)) return true;
+      if (/Post date|Last edited by/i.test(notes)) return true;
+      if (/!\[.*\]\(https:\/\/forum/i.test(notes)) return true;
       
       return false;
     };
@@ -336,6 +358,12 @@ ${truncatedMarkdown}`;
       // Check if version looks like software (2.x.x patterns)
       if (isSoftwareVersionPattern(version)) {
         console.log(`Filtering out software version pattern: ${version}`);
+        return false;
+      }
+      
+      // Filter out junk/forum content
+      if (isJunkContent(fw)) {
+        console.log(`Filtering out junk content: ${version}`);
         return false;
       }
       
