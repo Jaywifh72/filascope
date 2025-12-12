@@ -140,6 +140,13 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     }
   }, [expanded]);
 
+  // Refetch results when tab changes (only if already initialized)
+  useEffect(() => {
+    if (initialized && expanded) {
+      fetchResultsAndStats(activeTab);
+    }
+  }, [activeTab]);
+
   const fetchCoverageInternal = async () => {
     const categoryTypes = getCategoryEntityTypes(category);
     let totalCount = 0;
@@ -212,12 +219,41 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     setCoverage({ total: totalCount, scanned: scannedCount });
   };
 
-  const fetchResultsAndStats = async () => {
+  const fetchResultsAndStats = async (tabFilter?: string) => {
     const categoryTypes = getCategoryEntityTypes(category);
     let allResults: UrlValidationResult[] = [];
     let accessoryIdsForCategory: string[] = [];
+    const currentTab = tabFilter || activeTab;
 
-    // Fetch results for display (limited to 200)
+    // Build status filters based on tab
+    const buildQuery = (baseQuery: any) => {
+      switch (currentTab) {
+        case 'broken':
+          return baseQuery
+            .eq("status", "broken")
+            .eq("manually_verified", false)
+            .not("url", "ilike", "%amazon.%");
+        case 'amazon':
+          return baseQuery
+            .eq("status", "broken")
+            .ilike("url", "%amazon.%");
+        case 'redirect':
+          return baseQuery.eq("status", "redirect");
+        case 'timeout':
+          return baseQuery
+            .eq("status", "timeout")
+            .eq("manually_verified", false);
+        case 'valid':
+          return baseQuery.eq("status", "valid").eq("manually_verified", false);
+        case 'verified':
+          return baseQuery.eq("manually_verified", true);
+        case 'all':
+        default:
+          return baseQuery;
+      }
+    };
+
+    // Fetch results for display (filtered by tab, limited to 200)
     for (const ct of categoryTypes) {
       if (ct.entityType === 'accessory' && ct.accessoryType) {
         const { data: accessories } = await supabase
@@ -229,20 +265,26 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
         accessoryIdsForCategory = accessoryIds;
         
         if (accessoryIds.length > 0) {
-          const { data } = await supabase
+          let query = supabase
             .from("url_validation_results")
             .select("*")
             .eq("entity_type", "accessory")
-            .in("entity_id", accessoryIds)
+            .in("entity_id", accessoryIds);
+          
+          query = buildQuery(query);
+          const { data } = await query
             .order("checked_at", { ascending: false })
             .limit(200);
           if (data) allResults = [...allResults, ...data];
         }
       } else {
-        const { data } = await supabase
+        let query = supabase
           .from("url_validation_results")
           .select("*")
-          .eq("entity_type", ct.entityType)
+          .eq("entity_type", ct.entityType);
+        
+        query = buildQuery(query);
+        const { data } = await query
           .order("checked_at", { ascending: false })
           .limit(200);
         if (data) allResults = [...allResults, ...data];
@@ -253,8 +295,10 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     const resultsWithNames = await resolveEntityNames(allResults);
     setResults(resultsWithNames);
 
-    // Fetch stats from ALL records (no limit)
-    await fetchStatsInternal(categoryTypes, accessoryIdsForCategory);
+    // Fetch stats from ALL records (no limit) - only on initial load or all tab
+    if (currentTab === 'all' || !tabFilter) {
+      await fetchStatsInternal(categoryTypes, accessoryIdsForCategory);
+    }
     setSelectedIds(new Set());
   };
 
