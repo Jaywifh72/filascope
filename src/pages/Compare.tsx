@@ -5,11 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { GitCompare, ArrowLeft, ExternalLink } from "lucide-react";
+import { GitCompare, ArrowLeft, ExternalLink, Trophy } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Filament = Tables<"filaments">;
+
+type CompareMode = "higher" | "lower" | "none";
 
 const Compare = () => {
   const [searchParams] = useSearchParams();
@@ -83,26 +85,67 @@ const Compare = () => {
     return ((price / weight) * 1000).toFixed(2);
   };
 
+  // Find best values: "higher" = higher is better, "lower" = lower is better
+  const findBestIndices = (values: (string | number | null | boolean)[], mode: CompareMode): number[] => {
+    if (mode === "none") return [];
+    
+    const numericValues = values.map(v => {
+      if (v === null || v === undefined) return null;
+      if (typeof v === "boolean") return v ? 1 : 0;
+      if (typeof v === "number") return v;
+      const parsed = parseFloat(String(v));
+      return isNaN(parsed) ? null : parsed;
+    });
+
+    const validValues = numericValues.filter((v): v is number => v !== null);
+    if (validValues.length === 0) return [];
+
+    const bestValue = mode === "higher" 
+      ? Math.max(...validValues) 
+      : Math.min(...validValues);
+
+    // Find all indices that have the best value (handles ties)
+    return numericValues
+      .map((v, idx) => (v === bestValue ? idx : -1))
+      .filter(idx => idx !== -1);
+  };
+
   const ComparisonRow = ({ 
     label, 
     values, 
     unit = "",
-    highlight = false 
+    compareMode = "none"
   }: { 
     label: string; 
-    values: (string | number | null)[]; 
+    values: (string | number | null | boolean)[]; 
     unit?: string;
-    highlight?: boolean;
-  }) => (
-    <div className={`grid gap-4 py-3 ${highlight ? "bg-accent/50" : ""}`} style={{ gridTemplateColumns: `200px repeat(${filaments.length}, 1fr)` }}>
-      <div className="font-medium text-sm text-muted-foreground">{label}</div>
-      {values.map((value, idx) => (
-        <div key={idx} className="text-sm">
-          {value !== null && value !== undefined ? `${value}${unit}` : "—"}
-        </div>
-      ))}
-    </div>
-  );
+    compareMode?: CompareMode;
+  }) => {
+    const bestIndices = findBestIndices(values, compareMode);
+    
+    return (
+      <div className="grid gap-4 py-3" style={{ gridTemplateColumns: `200px repeat(${filaments.length}, 1fr)` }}>
+        <div className="font-medium text-sm text-muted-foreground">{label}</div>
+        {values.map((value, idx) => {
+          const isBest = bestIndices.includes(idx);
+          const displayValue = value !== null && value !== undefined 
+            ? (typeof value === "boolean" ? (value ? "Yes" : "No") : `${value}${unit}`)
+            : "—";
+          
+          return (
+            <div key={idx} className={`text-sm flex items-center gap-2 ${isBest ? "font-semibold" : ""}`}>
+              {isBest && compareMode !== "none" && (
+                <Trophy className="w-4 h-4 text-amber-500 shrink-0" />
+              )}
+              <span className={isBest && compareMode !== "none" ? "text-amber-500" : ""}>
+                {displayValue}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen p-8">
@@ -166,6 +209,7 @@ const Compare = () => {
               label="Nozzle Temp Min" 
               values={filaments.map(f => f.nozzle_temp_min_c)} 
               unit="°C"
+              compareMode="lower"
             />
             <Separator />
             <ComparisonRow 
@@ -178,13 +222,13 @@ const Compare = () => {
               label="Nozzle Temp Sweetspot" 
               values={filaments.map(f => f.nozzle_temp_sweetspot_c)} 
               unit="°C"
-              highlight
             />
             <Separator />
             <ComparisonRow 
               label="Bed Temp Min" 
               values={filaments.map(f => f.bed_temp_min_c)} 
               unit="°C"
+              compareMode="lower"
             />
             <Separator />
             <ComparisonRow 
@@ -197,6 +241,7 @@ const Compare = () => {
               label="Max Print Speed" 
               values={filaments.map(f => f.print_speed_max_mms)} 
               unit=" mm/s"
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
@@ -223,41 +268,48 @@ const Compare = () => {
               label="Tensile Strength (XY)" 
               values={filaments.map(f => f.tensile_strength_xy_mpa)} 
               unit=" MPa"
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
               label="Tensile Modulus (XY)" 
               values={filaments.map(f => f.tensile_modulus_xy_mpa)} 
               unit=" MPa"
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
               label="Elongation at Break" 
               values={filaments.map(f => f.elongation_break_xy_percent)} 
               unit="%"
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
               label="Flexural Strength" 
               values={filaments.map(f => f.flexural_strength_mpa)} 
               unit=" MPa"
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
               label="Shore Hardness D" 
               values={filaments.map(f => f.shore_hardness_d)} 
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
               label="Glass Transition Temp" 
               values={filaments.map(f => f.tg_c)} 
               unit="°C"
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
               label="Density" 
               values={filaments.map(f => f.density_g_cm3)} 
               unit=" g/cm³"
+              compareMode="lower"
             />
           </CardContent>
         </Card>
@@ -272,27 +324,32 @@ const Compare = () => {
               label="Ease of Printing" 
               values={filaments.map(f => f.ease_of_printing_score)} 
               unit="/10"
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
               label="Dimensional Accuracy" 
               values={filaments.map(f => f.dimensional_accuracy_score)} 
               unit="/10"
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
               label="Strength Index" 
               values={filaments.map(f => f.strength_index)} 
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
               label="Printability Index" 
               values={filaments.map(f => f.printability_index)} 
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
               label="Value Score" 
               values={filaments.map(f => f.value_score)} 
+              compareMode="higher"
             />
           </CardContent>
         </Card>
@@ -307,6 +364,7 @@ const Compare = () => {
               label="Net Weight" 
               values={filaments.map(f => f.net_weight_g)} 
               unit="g"
+              compareMode="higher"
             />
             <Separator />
             <ComparisonRow 
@@ -329,7 +387,8 @@ const Compare = () => {
             <Separator />
             <ComparisonRow 
               label="AMS Compatible" 
-              values={filaments.map(f => f.spool_ams_fit !== null ? (f.spool_ams_fit ? "Yes" : "No") : null)} 
+              values={filaments.map(f => f.spool_ams_fit)} 
+              compareMode="higher"
             />
           </CardContent>
         </Card>
@@ -342,7 +401,8 @@ const Compare = () => {
           <CardContent>
             <ComparisonRow 
               label="Nozzle Abrasive" 
-              values={filaments.map(f => f.is_nozzle_abrasive !== null ? (f.is_nozzle_abrasive ? "Yes" : "No") : null)} 
+              values={filaments.map(f => f.is_nozzle_abrasive)} 
+              compareMode="lower"
             />
             <Separator />
             <ComparisonRow 
@@ -359,12 +419,14 @@ const Compare = () => {
               label="Drying Temperature" 
               values={filaments.map(f => f.drying_temp_c)} 
               unit="°C"
+              compareMode="lower"
             />
             <Separator />
             <ComparisonRow 
               label="Drying Time" 
               values={filaments.map(f => f.drying_time_hours)} 
               unit=" hours"
+              compareMode="lower"
             />
             <Separator />
             <ComparisonRow 
