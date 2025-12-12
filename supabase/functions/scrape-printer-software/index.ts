@@ -101,6 +101,74 @@ const KNOWN_MOBILE_APPS: Record<string, { name: string; google_play_url: string;
   ],
 };
 
+// Known desktop software with download URLs
+const KNOWN_DESKTOP_SOFTWARE: Record<string, { name: string; software_type: string; download_url: string; description: string }[]> = {
+  'Bambu Lab': [
+    {
+      name: 'Bambu Studio',
+      software_type: 'slicer',
+      download_url: 'https://bambulab.com/en/download/studio',
+      description: 'Official slicer software for Bambu Lab printers. Slice 3D models and manage print settings.',
+    },
+  ],
+  'Prusa Research': [
+    {
+      name: 'PrusaSlicer',
+      software_type: 'slicer',
+      download_url: 'https://www.prusa3d.com/page/prusaslicer_424/',
+      description: 'Official slicer software for Prusa printers. Open-source with advanced features.',
+    },
+  ],
+  'Creality': [
+    {
+      name: 'Creality Print',
+      software_type: 'slicer',
+      download_url: 'https://www.creality.com/pages/download',
+      description: 'Official slicer software for Creality printers.',
+    },
+  ],
+  'QIDI': [
+    {
+      name: 'QIDI Slicer',
+      software_type: 'slicer',
+      download_url: 'https://github.com/QIDITECH/QIDISlicer/releases',
+      description: 'Official slicer software for QIDI printers based on OrcaSlicer.',
+    },
+  ],
+  'UltiMaker': [
+    {
+      name: 'UltiMaker Cura',
+      software_type: 'slicer',
+      download_url: 'https://ultimaker.com/software/ultimaker-cura/',
+      description: 'Popular open-source slicer software developed by UltiMaker.',
+    },
+  ],
+  'FlashForge': [
+    {
+      name: 'FlashPrint',
+      software_type: 'slicer',
+      download_url: 'https://www.flashforge.com/download-center',
+      description: 'Official slicer software for FlashForge printers.',
+    },
+  ],
+  'Raise3D': [
+    {
+      name: 'ideaMaker',
+      software_type: 'slicer',
+      download_url: 'https://www.raise3d.com/ideamaker/',
+      description: 'Official slicer software for Raise3D printers with advanced features.',
+    },
+  ],
+  'Snapmaker': [
+    {
+      name: 'Snapmaker Luban',
+      software_type: 'studio',
+      download_url: 'https://snapmaker.com/snapmaker-luban',
+      description: 'All-in-one software for Snapmaker machines: 3D printing, CNC, and laser.',
+    },
+  ],
+};
+
 interface SoftwareRelease {
   software_name: string;
   software_type: string;
@@ -158,42 +226,75 @@ async function useAIToExtractSoftware(
   
   const truncatedMarkdown = markdown.slice(0, 30000);
   
+  // Brand-specific software information
+  const BRAND_SOFTWARE_INFO: Record<string, string> = {
+    'Bambu Lab': `Known Bambu Lab software:
+- Bambu Studio: Desktop slicer software (versions like 1.x.x, 2.x.x). INCLUDE ALL VERSIONS.
+- Bambu Handy: Mobile app for iOS/Android. INCLUDE with app store links.
+- Network Plugin: Browser plugin for connecting to printers.
+
+IMPORTANT: Bambu Studio versions are like 1.9.5, 2.0.0, 2.1.0 - these are SOFTWARE, NOT firmware.
+Bambu Lab FIRMWARE uses format 01.xx.xx.xx (starts with 0). Do NOT include firmware versions.`,
+    'Prusa Research': `Known Prusa software:
+- PrusaSlicer: Desktop slicer (versions like 2.x.x). INCLUDE ALL VERSIONS.
+- Prusa Connect: Cloud/mobile app. INCLUDE with app store links.
+- Prusa App: Mobile companion app.
+
+Prusa FIRMWARE uses format 5.x.x or 4.x.x. PrusaSlicer is SOFTWARE (2.x.x format).`,
+    'Creality': `Known Creality software:
+- Creality Print: Desktop slicer software. INCLUDE ALL VERSIONS.
+- Creality Cloud: Mobile app. INCLUDE with app store links.
+- Creality Sonic: Audio monitoring app.`,
+    'Anycubic': `Known Anycubic software:
+- Anycubic Slicer: Desktop slicer software.
+- Anycubic Photon Workshop: Resin printer slicer.
+- Anycubic App: Mobile companion app. INCLUDE with app store links.`,
+    'QIDI': `Known QIDI software:
+- QIDI Slicer / QIDISlicer: Desktop slicer software. INCLUDE ALL VERSIONS.
+- QIDI Print: Alternative slicer software.`,
+    'Elegoo': `Known Elegoo software:
+- CHITUBOX: Supported slicer for resin printers.
+- ELEGOO Link: Mobile app. INCLUDE with app store links.`,
+    'FlashForge': `Known FlashForge software:
+- FlashPrint: Desktop slicer software.
+- FlashCloud: Mobile app and cloud service.
+- FlashDLPrint: Resin printer slicer.`,
+    'Raise3D': `Known Raise3D software:
+- ideaMaker: Desktop slicer software. INCLUDE ALL VERSIONS.
+- RaiseCloud: Cloud management and mobile app.`,
+    'UltiMaker': `Known UltiMaker software:
+- UltiMaker Cura: Desktop slicer software (versions like 5.x.x). INCLUDE ALL VERSIONS.
+- UltiMaker Digital Factory: Cloud management platform.`,
+    'Snapmaker': `Known Snapmaker software:
+- Snapmaker Luban: Desktop software for 3D printing, CNC, and laser. INCLUDE ALL VERSIONS.`,
+    'Sovol': `Known Sovol software:
+- Klipper/Mainsail/Fluidd: Web interfaces for Klipper-based printers.
+- Sovol Cura profile: Cura slicer profiles.`,
+  };
+  
+  const brandInfo = BRAND_SOFTWARE_INFO[brandName] || `Extract all slicer software, studio apps, and mobile apps for ${brandName} printers.`;
+  
   const prompt = `You are extracting SOFTWARE release information for the "${brandName}" 3D printer brand from this webpage content.
 
-Extract information about SLICERS, STUDIO SOFTWARE, and MOBILE APPS - NOT printer firmware.
+${brandInfo}
 
-For ${brandName}, look for:
-${brandName === 'Bambu Lab' ? '- Bambu Studio (slicer/studio)\n- Bambu Handy (MOBILE APP - include app store links!)\n- Network plugin' : ''}
-${brandName === 'Prusa Research' ? '- PrusaSlicer (slicer)\n- Prusa Connect (app/cloud)\n- Prusa App (MOBILE APP)' : ''}
-${brandName === 'Creality' ? '- Creality Print (slicer)\n- Creality Cloud (MOBILE APP - include app store links!)' : ''}
-${brandName === 'Anycubic' ? '- Anycubic Slicer\n- Anycubic App (MOBILE APP - include app store links!)' : ''}
-${brandName === 'QIDI' ? '- QIDI Slicer\n- QIDI Print' : ''}
-${brandName === 'Elegoo' ? '- CHITUBOX (slicer)\n- Elegoo Mars (MOBILE APP)' : ''}
+CRITICAL INSTRUCTIONS:
+1. Extract ONLY software (slicers, studio apps, mobile apps, plugins)
+2. Do NOT extract printer firmware
+3. Include ALL version releases you find, not just the latest
+4. For mobile apps, ALWAYS include app store links
 
-For EACH software release you find, extract:
-1. **software_name** (required): The name of the software (e.g., "Bambu Studio", "PrusaSlicer")
+For EACH software release, extract:
+1. **software_name** (required): The name (e.g., "Bambu Studio", "PrusaSlicer")
 2. **software_type** (required): One of: "slicer", "studio", "app", "plugin"
-3. **version** (required): The exact version number (e.g., "1.9.5", "2.8.0")
+3. **version** (required): The exact version number
 4. **release_date**: The release date in YYYY-MM-DD format
-5. **release_notes**: DETAILED description of what's in this release including:
-   - New features added
-   - Bug fixes
-   - Improvements
-   - New printer/material profiles
-   Format as readable summary with bullet points if multiple items.
-6. **changelog**: Additional technical changes if available
-7. **download_url**: Direct download link if available
-8. **is_mobile_app**: Boolean - true if this is a mobile app (iOS/Android), false for desktop software
-9. **google_play_url**: If this is a mobile app, provide the Google Play Store URL (e.g., "https://play.google.com/store/apps/details?id=...")
-10. **app_store_url**: If this is a mobile app, provide the Apple App Store URL (e.g., "https://apps.apple.com/app/...")
-
-IMPORTANT:
-- Extract software that works with ${brandName} printers, especially ${printerName}
-- DO NOT include printer firmware versions
-- Extract ALL version releases found, not just the latest
-- Include detailed release notes about actual changes
-- For mobile apps, ALWAYS set is_mobile_app=true and include app store links when available
-- Known mobile apps: Bambu Handy, Creality Cloud, Anycubic App, Prusa App, etc.
+5. **release_notes**: Detailed description of changes, features, bug fixes
+6. **changelog**: Additional technical changes
+7. **download_url**: Direct download link
+8. **is_mobile_app**: Boolean - true for iOS/Android apps
+9. **google_play_url**: Google Play Store URL for mobile apps
+10. **app_store_url**: Apple App Store URL for mobile apps
 
 Return a JSON object with a "releases" array. Example:
 {
@@ -201,7 +302,7 @@ Return a JSON object with a "releases" array. Example:
     {
       "software_name": "Bambu Studio",
       "software_type": "slicer",
-      "version": "1.9.5",
+      "version": "2.1.0",
       "release_date": "2024-12-01",
       "release_notes": "### New Features\\n- Added support for new filament profiles",
       "changelog": null,
@@ -215,12 +316,12 @@ Return a JSON object with a "releases" array. Example:
       "software_type": "app",
       "version": "2.4.1",
       "release_date": "2024-12-01",
-      "release_notes": "### New Features\\n- Improved print monitoring",
+      "release_notes": "Improved print monitoring",
       "changelog": null,
       "download_url": null,
       "is_mobile_app": true,
       "google_play_url": "https://play.google.com/store/apps/details?id=com.bambulab.handy",
-      "app_store_url": "https://apps.apple.com/app/bambu-handy/id1234567890"
+      "app_store_url": "https://apps.apple.com/app/bambu-handy/id1589027990"
     }
   ]
 }
@@ -240,7 +341,7 @@ ${truncatedMarkdown}`;
         messages: [
           { 
             role: 'system', 
-            content: 'You are a software changelog parser. Extract detailed, accurate software release information from webpage content. Return valid JSON only. Focus on slicer software and apps, NOT firmware.' 
+            content: 'You are a software changelog parser. Extract detailed, accurate software release information from webpage content. Return valid JSON only. Focus on slicer software and apps, NOT firmware. Be thorough and include all versions found.' 
           },
           { role: 'user', content: prompt }
         ],
@@ -266,55 +367,70 @@ ${truncatedMarkdown}`;
     const parsed = JSON.parse(jsonContent);
     const softwareArray = Array.isArray(parsed) ? parsed : (parsed.releases || parsed.software || []);
     
-    // Brand-specific firmware version patterns (what to EXCLUDE from software)
-    const BRAND_FIRMWARE_VERSION_PATTERNS: Record<string, RegExp[]> = {
-      // Bambu Lab firmware: 01.xx.xx.xx format (always starts with 0)
+    // Brand-specific FIRMWARE version patterns (what to EXCLUDE)
+    const BRAND_FIRMWARE_PATTERNS: Record<string, RegExp[]> = {
+      // Bambu Lab firmware: 01.xx.xx.xx format (STARTS with 0, 4 segments)
       'Bambu Lab': [/^0[0-9]\.\d{2}\.\d{2}\.\d{2}$/],
-      // Prusa firmware: 5.x.x or 4.x.x format
-      'Prusa Research': [/^[345]\.\d+\.\d+(-\w+)?$/],
-      // Creality firmware: Various formats
-      'Creality': [/^[12]\.\d+\.\d+(\.\d+)?$/],
-      // Anycubic firmware: V1.x.x or similar
+      // Prusa firmware: 5.x.x or 4.x.x (higher major versions)
+      'Prusa Research': [/^[45]\.\d+\.\d+(-\w+)?$/],
+      // Creality firmware
+      'Creality': [/^V?[12]\.\d+\.\d+(\.\d+)?$/i],
+      // Anycubic firmware
       'Anycubic': [/^V?[12]\.\d+\.\d+$/i],
-      // QIDI firmware: V2.x.x or V3.x.x  
+      // QIDI firmware
       'QIDI': [/^V?[23]\.\d+\.\d+$/i],
     };
     
-    // Check if version matches firmware pattern for this brand
+    // Check if version matches FIRMWARE pattern for this brand (to exclude)
     const isFirmwareVersion = (version: string): boolean => {
       const v = version.replace(/^v/i, '').trim();
-      const patterns = BRAND_FIRMWARE_VERSION_PATTERNS[brandName];
+      const patterns = BRAND_FIRMWARE_PATTERNS[brandName];
       if (patterns) {
-        return patterns.some(pattern => pattern.test(v) || pattern.test(version));
+        const matches = patterns.some(pattern => pattern.test(v) || pattern.test(version));
+        if (matches) {
+          console.log(`Detected firmware version pattern: ${version}`);
+          return true;
+        }
       }
-      // Generic firmware pattern (4-part with leading zeros like 01.02.03.04)
-      if (/^0[0-9]\.\d{2}\.\d{2}\.\d{2}$/.test(v)) return true;
       return false;
     };
     
-    // Filter out anything that looks like firmware
+    // Check if the software name indicates it's actually firmware
+    const isFirmwareByName = (name: string): boolean => {
+      const n = (name || '').toLowerCase();
+      if (n.includes('firmware')) return true;
+      // But NOT if it mentions software names
+      if (n.includes('studio') || n.includes('slicer') || n.includes('handy') || 
+          n.includes('app') || n.includes('plugin') || n.includes('connect') ||
+          n.includes('print') || n.includes('luban') || n.includes('cura')) {
+        return false;
+      }
+      return false;
+    };
+    
+    // Filter out entries that are actually firmware
     const filteredSoftware = softwareArray.filter((sw: any) => {
       const name = (sw.software_name || '').toLowerCase();
-      const notes = (sw.release_notes || '').toLowerCase();
       const version = sw.version || '';
-      const combined = `${name} ${notes}`;
       
-      // Skip if name contains "firmware"
-      if (name.includes('firmware')) {
-        console.log(`Filtering out firmware by name: ${sw.software_name} ${version}`);
+      // Skip if name indicates firmware
+      if (isFirmwareByName(name)) {
+        console.log(`Filtering out by name (firmware): ${sw.software_name} ${version}`);
         return false;
       }
       
-      // Skip if notes primarily discuss firmware
-      if (notes.includes('firmware') && !notes.includes('slicer') && !notes.includes('studio')) {
-        console.log(`Filtering out firmware by notes: ${sw.software_name} ${version}`);
-        return false;
-      }
-      
-      // Skip if version matches firmware pattern
+      // Skip if version matches firmware pattern AND name doesn't clearly indicate software
       if (isFirmwareVersion(version)) {
-        console.log(`Filtering out firmware version pattern: ${sw.software_name} ${version}`);
-        return false;
+        // Double check - is this clearly software by name?
+        const isClearlySoftware = name.includes('studio') || name.includes('slicer') || 
+                                   name.includes('handy') || name.includes('app') ||
+                                   name.includes('plugin') || name.includes('connect') ||
+                                   name.includes('luban') || name.includes('cura') ||
+                                   name.includes('ideamaker') || name.includes('print');
+        if (!isClearlySoftware) {
+          console.log(`Filtering out by firmware version pattern: ${sw.software_name} ${version}`);
+          return false;
+        }
       }
       
       return true;
@@ -457,6 +573,37 @@ Deno.serve(async (req) => {
             app_store_url: app.app_store_url,
           });
           console.log(`Added known mobile app: ${app.name}`);
+        }
+      }
+    }
+    
+    // Ensure known desktop software for this brand is included
+    const knownDesktopSoftware = KNOWN_DESKTOP_SOFTWARE[brandName];
+    if (knownDesktopSoftware) {
+      for (const software of knownDesktopSoftware) {
+        // Check if we already have this software in our scraped results
+        const existingSoftware = allSoftware.find(sw => 
+          sw.software_name.toLowerCase().includes(software.name.toLowerCase()) ||
+          software.name.toLowerCase().includes(sw.software_name.toLowerCase())
+        );
+        
+        if (!existingSoftware) {
+          // Add known desktop software as a placeholder entry
+          allSoftware.push({
+            software_name: software.name,
+            software_type: software.software_type,
+            version: 'Latest',
+            release_date: null,
+            release_notes: software.description,
+            changelog: null,
+            download_url: software.download_url,
+            is_latest: true,
+            source_url: software.download_url,
+            is_mobile_app: false,
+            google_play_url: null,
+            app_store_url: null,
+          });
+          console.log(`Added known desktop software: ${software.name}`);
         }
       }
     }
