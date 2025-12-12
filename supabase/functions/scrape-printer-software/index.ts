@@ -266,20 +266,54 @@ ${truncatedMarkdown}`;
     const parsed = JSON.parse(jsonContent);
     const softwareArray = Array.isArray(parsed) ? parsed : (parsed.releases || parsed.software || []);
     
-    // Filter out anything that looks like firmware
-    const firmwarePatterns = [
-      /firmware/i,
-      /^v?\d+\.\d+\.\d+\.\d+$/,  // Firmware often has 4-part version
-    ];
+    // Brand-specific firmware version patterns (what to EXCLUDE from software)
+    const BRAND_FIRMWARE_VERSION_PATTERNS: Record<string, RegExp[]> = {
+      // Bambu Lab firmware: 01.xx.xx.xx format (always starts with 0)
+      'Bambu Lab': [/^0[0-9]\.\d{2}\.\d{2}\.\d{2}$/],
+      // Prusa firmware: 5.x.x or 4.x.x format
+      'Prusa Research': [/^[345]\.\d+\.\d+(-\w+)?$/],
+      // Creality firmware: Various formats
+      'Creality': [/^[12]\.\d+\.\d+(\.\d+)?$/],
+      // Anycubic firmware: V1.x.x or similar
+      'Anycubic': [/^V?[12]\.\d+\.\d+$/i],
+      // QIDI firmware: V2.x.x or V3.x.x  
+      'QIDI': [/^V?[23]\.\d+\.\d+$/i],
+    };
     
+    // Check if version matches firmware pattern for this brand
+    const isFirmwareVersion = (version: string): boolean => {
+      const v = version.replace(/^v/i, '').trim();
+      const patterns = BRAND_FIRMWARE_VERSION_PATTERNS[brandName];
+      if (patterns) {
+        return patterns.some(pattern => pattern.test(v) || pattern.test(version));
+      }
+      // Generic firmware pattern (4-part with leading zeros like 01.02.03.04)
+      if (/^0[0-9]\.\d{2}\.\d{2}\.\d{2}$/.test(v)) return true;
+      return false;
+    };
+    
+    // Filter out anything that looks like firmware
     const filteredSoftware = softwareArray.filter((sw: any) => {
-      const name = sw.software_name || '';
-      const notes = sw.release_notes || '';
-      const combined = `${name} ${notes}`.toLowerCase();
+      const name = (sw.software_name || '').toLowerCase();
+      const notes = (sw.release_notes || '').toLowerCase();
+      const version = sw.version || '';
+      const combined = `${name} ${notes}`;
       
-      // Skip if it looks like firmware
-      if (combined.includes('firmware')) {
-        console.log(`Filtering out firmware entry: ${name} ${sw.version}`);
+      // Skip if name contains "firmware"
+      if (name.includes('firmware')) {
+        console.log(`Filtering out firmware by name: ${sw.software_name} ${version}`);
+        return false;
+      }
+      
+      // Skip if notes primarily discuss firmware
+      if (notes.includes('firmware') && !notes.includes('slicer') && !notes.includes('studio')) {
+        console.log(`Filtering out firmware by notes: ${sw.software_name} ${version}`);
+        return false;
+      }
+      
+      // Skip if version matches firmware pattern
+      if (isFirmwareVersion(version)) {
+        console.log(`Filtering out firmware version pattern: ${sw.software_name} ${version}`);
         return false;
       }
       
