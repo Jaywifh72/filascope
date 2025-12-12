@@ -472,7 +472,13 @@ const Finder = () => {
     const material = filament.material?.toLowerCase() || '';
     const title = filament.product_title?.toLowerCase() || '';
     const hasCFContent = filament.carbon_fiber_percentage !== null && filament.carbon_fiber_percentage !== undefined && filament.carbon_fiber_percentage > 0;
-    return hasCFContent || material.includes('-cf') || material.includes(' cf') || title.includes('carbon fiber') || title.includes('carbon-fiber');
+    // Match patterns: -CF, +CF, CF+, _CF, material ending in CF, "carbon fiber" - but exclude "Polycarbonate" (PC)
+    const hasPolycarbonate = title.includes('polycarbonate');
+    return hasCFContent || (!hasPolycarbonate && (
+      material.includes('-cf') || material.includes('+cf') || material.endsWith('cf') ||
+      title.includes('+cf') || title.includes('-cf') || title.includes('cf+') ||
+      title.includes('carbon fiber') || title.includes('carbon-fiber')
+    ));
   };
 
   // Get carbon fiber percentage for display
