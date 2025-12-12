@@ -33,6 +33,9 @@ interface SoftwareRelease {
   is_latest: boolean;
   source_url: string | null;
   created_at: string;
+  is_mobile_app: boolean | null;
+  google_play_url: string | null;
+  app_store_url: string | null;
 }
 
 interface SoftwareSectionProps {
@@ -54,6 +57,19 @@ const softwareTypeLabels: Record<string, string> = {
   app: "Mobile App",
   plugin: "Plugin",
 };
+
+// App store icons as inline SVGs for consistency
+const PlayStoreIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+    <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 0 1 0 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z"/>
+  </svg>
+);
+
+const AppStoreIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+    <path d="M11.624 7.222c-.876 0-2.232-.996-3.66-.96-1.884.024-3.612 1.092-4.584 2.784-1.956 3.396-.504 8.412 1.404 11.172.936 1.344 2.04 2.856 3.504 2.808 1.404-.06 1.932-.912 3.636-.912 1.692 0 2.172.912 3.66.876 1.512-.024 2.472-1.368 3.396-2.724 1.068-1.56 1.512-3.072 1.536-3.156-.036-.012-2.94-1.128-2.976-4.488-.024-2.808 2.292-4.152 2.4-4.212-1.32-1.932-3.348-2.148-4.056-2.196-1.848-.144-3.396 1.008-4.26 1.008zm3.12-2.832c.78-.936 1.296-2.244 1.152-3.54-1.116.048-2.46.744-3.264 1.68-.72.828-1.344 2.16-1.176 3.432 1.236.096 2.508-.636 3.288-1.572z"/>
+  </svg>
+);
 
 export const SoftwareSection = ({ printerId, brandName, printerName }: SoftwareSectionProps) => {
   const { isAdmin } = useAuth();
@@ -189,7 +205,15 @@ export const SoftwareSection = ({ printerId, brandName, printerName }: SoftwareS
                           {softwareTypeIcons[softwareType] || <AppWindow className="h-4 w-4" />}
                         </div>
                         <div>
-                          <CardTitle className="text-lg">{name}</CardTitle>
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            {name}
+                            {latestRelease.is_mobile_app && (
+                              <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+                                <Smartphone className="h-3 w-3 mr-1" />
+                                Mobile App
+                              </Badge>
+                            )}
+                          </CardTitle>
                           <Badge variant="secondary" className="mt-1">
                             {softwareTypeLabels[softwareType] || softwareType}
                           </Badge>
@@ -289,6 +313,30 @@ export const SoftwareSection = ({ printerId, brandName, printerName }: SoftwareS
                                     <Button size="sm" className="gap-2">
                                       <Download className="h-3 w-3" />
                                       Download
+                                    </Button>
+                                  </a>
+                                )}
+                                {sw.google_play_url && (
+                                  <a
+                                    href={sw.google_play_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Button size="sm" variant="outline" className="gap-2 bg-green-500/10 border-green-500/30 text-green-600 hover:bg-green-500/20">
+                                      <PlayStoreIcon />
+                                      Google Play
+                                    </Button>
+                                  </a>
+                                )}
+                                {sw.app_store_url && (
+                                  <a
+                                    href={sw.app_store_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Button size="sm" variant="outline" className="gap-2 bg-blue-500/10 border-blue-500/30 text-blue-600 hover:bg-blue-500/20">
+                                      <AppStoreIcon />
+                                      App Store
                                     </Button>
                                   </a>
                                 )}
