@@ -282,12 +282,45 @@ ${truncatedMarkdown}`;
       /mobile\s*app/i,
     ];
     
+    // Software version patterns - these are NOT firmware versions
+    // Bambu Studio uses 2.x.x.x format, firmware uses 01.xx.xx.xx or 1.xx.xx.xx
+    const isSoftwareVersionPattern = (version: string): boolean => {
+      const v = version.replace(/^v/i, '').trim();
+      
+      // Software versions like 2.4.1.80, 2.9.1, 2.2.1.58 (Bambu Studio format)
+      // These start with 2.x and typically have 3-4 segments
+      if (/^2\.\d+\.\d+(\.\d+)?$/.test(v)) {
+        return true;
+      }
+      
+      // Detect version patterns that look like slicer/studio versions
+      // (starting with small numbers like 1.x.x or 2.x.x without leading zeros)
+      // Firmware typically uses 01.xx.xx.xx format with leading zeros
+      if (/^[1-9]\.[0-9]+\.[0-9]+$/.test(v) && !v.includes('01.')) {
+        return true;
+      }
+      
+      return false;
+    };
+    
     const filteredFirmware = firmwareArray.filter((fw: any) => {
       const version = fw.version || '';
       const notes = fw.release_notes || '';
       const combined = `${version} ${notes}`.toLowerCase();
       
-      // Check if this looks like software, not firmware
+      // Check if version looks like software (2.x.x patterns)
+      if (isSoftwareVersionPattern(version)) {
+        console.log(`Filtering out software version pattern: ${version}`);
+        return false;
+      }
+      
+      // Filter out "Unknown" versions
+      if (version === 'Unknown' || version === '') {
+        console.log(`Filtering out invalid version: ${version}`);
+        return false;
+      }
+      
+      // Check if this looks like software, not firmware based on content
       for (const pattern of softwarePatterns) {
         if (pattern.test(combined) && !combined.includes('firmware')) {
           console.log(`Filtering out software version: ${version}`);
