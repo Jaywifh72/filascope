@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { SlidersHorizontal, X, Zap, Sparkles, Atom, Sun, Package, Recycle, Wallet, Rocket, Leaf, ChevronDown, ChevronRight, Layers } from "lucide-react";
+import { SlidersHorizontal, X, Zap, Sparkles, Atom, Sun, Package, Recycle, ChevronDown, ChevronRight, Layers } from "lucide-react";
 import { MATERIAL_CATEGORIES, getMaterialsInCategory } from "@/lib/materialHierarchy";
 
 interface FilterPreset {
@@ -81,39 +81,6 @@ interface FilamentFiltersProps {
   onApplyPreset?: (preset: FilterPreset) => void;
 }
 
-const FILTER_PRESETS: FilterPreset[] = [
-  {
-    id: "budget",
-    name: "Budget Friendly",
-    icon: <Wallet className="w-4 h-4 text-emerald-400" />,
-    description: "Affordable PLA & PETG under $25/kg",
-    filters: {
-      materialCategories: ["pla-family", "petg-family"],
-      priceRange: [0, 25],
-    },
-  },
-  {
-    id: "performance",
-    name: "High Performance",
-    icon: <Rocket className="w-4 h-4 text-orange-400" />,
-    description: "Engineering-grade filaments",
-    filters: {
-      materialCategories: ["nylon-family", "polycarbonate", "high-performance"],
-      highSpeed: true,
-    },
-  },
-  {
-    id: "eco",
-    name: "Eco-Friendly",
-    icon: <Leaf className="w-4 h-4 text-green-400" />,
-    description: "Sustainable materials with cardboard spools",
-    filters: {
-      materialCategories: ["pla-family"],
-      cardboardSpool: true,
-      plasticSpool: false,
-    },
-  },
-];
 
 // Show top categories prominently, rest in expandable section
 const PRIMARY_CATEGORIES = ["pla-family", "petg-family", "abs-family", "asa-family", "flexible", "nylon-family", "polycarbonate"];
@@ -293,34 +260,6 @@ const FilterContent = ({
           </Button>
         )}
       </div>
-
-      {/* Filter Presets */}
-      <div className="space-y-2">
-        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3" />
-          Quick Presets
-        </h4>
-        <div className="space-y-1">
-          {FILTER_PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              onClick={() => handlePresetClick(preset)}
-              className="w-full flex items-center gap-2 p-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/30 transition-all cursor-pointer group text-left"
-            >
-              <div className="shrink-0 w-6 h-6 rounded bg-muted/50 flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
-                {preset.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="block text-xs font-medium text-foreground group-hover:text-cyan-400 transition-colors">
-                  {preset.name}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <Separator className="bg-border/50" />
 
       {/* Material Categories */}
       <div className="space-y-2">
