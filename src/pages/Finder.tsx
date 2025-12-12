@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MaterialBadge } from "@/components/MaterialBadge";
-import { ExternalLink, ChevronDown, GitCompare, X, LayoutGrid, List, CheckCircle, XCircle, TreeDeciduous } from "lucide-react";
+import { ExternalLink, ChevronDown, GitCompare, X, LayoutGrid, List, CheckCircle, XCircle, TreeDeciduous, Layers } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "@/components/LikeButton";
@@ -447,6 +447,19 @@ const Finder = () => {
   // Get wood percentage for display
   const getWoodPercentage = (filament: any): number | null => {
     return filament.wood_powder_percentage ?? null;
+  };
+
+  // Helper to check if filament is a glass fiber filament
+  const isGlassFiberFilament = (filament: any): boolean => {
+    const material = filament.material?.toLowerCase() || '';
+    const title = filament.product_title?.toLowerCase() || '';
+    const hasGFContent = filament.glass_fiber_percentage !== null && filament.glass_fiber_percentage !== undefined && filament.glass_fiber_percentage > 0;
+    return hasGFContent || material.includes('-gf') || material.includes(' gf') || title.includes('glass fiber') || title.includes('glass-fiber');
+  };
+
+  // Get glass fiber percentage for display
+  const getGlassFiberPercentage = (filament: any): number | null => {
+    return filament.glass_fiber_percentage ?? null;
   };
 
   // Calculate filter counts based on currently applied filters (excluding the filter being counted)
@@ -1111,6 +1124,12 @@ const Finder = () => {
                                 {getWoodPercentage(filament) ? `${getWoodPercentage(filament)}%` : 'Wood'}
                               </Badge>
                             )}
+                            {isGlassFiberFilament(filament) && (
+                              <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/30 text-cyan-600 text-[10px] px-1.5 py-0 gap-1">
+                                <Layers className="w-3 h-3" />
+                                {getGlassFiberPercentage(filament) ? `${getGlassFiberPercentage(filament)}% GF` : 'GF'}
+                              </Badge>
+                            )}
                           </div>
                         </td>
                         <td className="py-3 px-3 text-right">
@@ -1227,6 +1246,12 @@ const Finder = () => {
                               <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-600 text-[10px] px-1.5 py-0.5 gap-1">
                                 <TreeDeciduous className="w-3 h-3" />
                                 {getWoodPercentage(filament) ? `${getWoodPercentage(filament)}% Wood` : 'Wood'}
+                              </Badge>
+                            )}
+                            {isGlassFiberFilament(filament) && (
+                              <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/30 text-cyan-600 text-[10px] px-1.5 py-0.5 gap-1">
+                                <Layers className="w-3 h-3" />
+                                {getGlassFiberPercentage(filament) ? `${getGlassFiberPercentage(filament)}% Glass Fiber` : 'Glass Fiber'}
                               </Badge>
                             )}
                           </div>
