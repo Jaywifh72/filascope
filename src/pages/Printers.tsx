@@ -440,20 +440,10 @@ export default function Printers() {
                             <PrinterIcon className="h-10 w-10 text-muted-foreground/30" />
                           </div>
                         )}
-                        {/* Brand Logo Overlay */}
-                        {getBrandLogo(printer.brand?.brand || null) && (
-                          <div className="absolute bottom-1 right-1 p-1 bg-background/80 rounded border border-border/50 backdrop-blur-sm">
-                            <img 
-                              src={getBrandLogo(printer.brand?.brand || null)!} 
-                              alt={`${printer.brand?.brand} logo`}
-                              className="h-4 w-auto object-contain max-w-[40px]"
-                            />
-                          </div>
-                        )}
                       </div>
 
                       {/* Card Content - Right Side */}
-                      <div className="flex-1 p-3 min-w-0 space-y-1.5">
+                      <div className="flex-1 p-3 min-w-0 flex flex-col">
                         {/* Header with Name and Price */}
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
@@ -466,29 +456,39 @@ export default function Printers() {
                               </span>
                             )}
                           </div>
-                          {/* Price */}
-                          <div className="shrink-0 text-right">
+                          {/* Price and Brand Logo */}
+                          <div className="shrink-0 text-right space-y-1">
                             {printer.current_price_usd_store ? (
-                              <div className="text-sm font-bold text-primary flex items-center gap-1">
+                              <div className="text-sm font-bold text-primary flex items-center justify-end gap-1">
                                 <Store className="h-3 w-3" />
                                 <span>{formatPrice(printer.current_price_usd_store)}</span>
                               </div>
                             ) : printer.current_price_usd_amazon ? (
-                              <div className="text-sm font-bold text-primary flex items-center gap-1">
+                              <div className="text-sm font-bold text-primary flex items-center justify-end gap-1">
                                 <ShoppingCart className="h-3 w-3" />
                                 <span>{formatPrice(printer.current_price_usd_amazon)}</span>
                               </div>
                             ) : printer.msrp_usd ? (
-                              <div className="text-sm font-bold text-primary flex items-center gap-1">
+                              <div className="text-sm font-bold text-primary flex items-center justify-end gap-1">
                                 <Tag className="h-3 w-3" />
                                 <span>{formatPrice(printer.msrp_usd)}</span>
                               </div>
                             ) : null}
+                            {/* Brand Logo */}
+                            {getBrandLogo(printer.brand?.brand || null) && (
+                              <div className="flex justify-end">
+                                <img 
+                                  src={getBrandLogo(printer.brand?.brand || null)!} 
+                                  alt={`${printer.brand?.brand} logo`}
+                                  className="h-4 w-auto object-contain max-w-[50px] opacity-70"
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
 
                         {/* Key Specs - Compact */}
-                        <div className="text-xs text-muted-foreground space-y-0.5">
+                        <div className="text-xs text-muted-foreground space-y-0.5 mt-1.5">
                           {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
                             <div>
                               {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
@@ -500,7 +500,7 @@ export default function Printers() {
                         </div>
 
                         {/* Features - Compact */}
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1 mt-auto pt-1.5">
                           {printer.has_enclosure && (
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Enclosure</Badge>
                           )}
