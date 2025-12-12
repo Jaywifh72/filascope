@@ -857,6 +857,62 @@ export type Database = {
           },
         ]
       }
+      printer_software: {
+        Row: {
+          changelog: string | null
+          created_at: string | null
+          download_url: string | null
+          id: string
+          is_latest: boolean | null
+          printer_id: string | null
+          release_date: string | null
+          release_notes: string | null
+          software_name: string
+          software_type: string
+          source_url: string | null
+          updated_at: string | null
+          version: string
+        }
+        Insert: {
+          changelog?: string | null
+          created_at?: string | null
+          download_url?: string | null
+          id?: string
+          is_latest?: boolean | null
+          printer_id?: string | null
+          release_date?: string | null
+          release_notes?: string | null
+          software_name: string
+          software_type: string
+          source_url?: string | null
+          updated_at?: string | null
+          version: string
+        }
+        Update: {
+          changelog?: string | null
+          created_at?: string | null
+          download_url?: string | null
+          id?: string
+          is_latest?: boolean | null
+          printer_id?: string | null
+          release_date?: string | null
+          release_notes?: string | null
+          software_name?: string
+          software_type?: string
+          source_url?: string | null
+          updated_at?: string | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_software_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       printers: {
         Row: {
           abl_technique: string | null

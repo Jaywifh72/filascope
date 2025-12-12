@@ -22,6 +22,7 @@ import {
 } from "@/lib/accessoryCompatibility";
 import { AccessoryCompatibilityBadge } from "@/components/AccessoryCompatibilityBadge";
 import { FirmwareSection } from "@/components/FirmwareSection";
+import { SoftwareSection } from "@/components/SoftwareSection";
 import {
   ArrowLeft,
   Box,
@@ -53,6 +54,7 @@ import {
   ImagePlus,
   Ban,
   FileCode,
+  AppWindow,
   Download,
   RefreshCw,
   Calendar,
@@ -698,6 +700,10 @@ const PrinterDetail = () => {
               <FileCode className="h-4 w-4 mr-2" />
               Firmware
             </TabsTrigger>
+            <TabsTrigger value="software" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <AppWindow className="h-4 w-4 mr-2" />
+              Software
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="build" className="space-y-4 mt-6">
@@ -1193,6 +1199,10 @@ const PrinterDetail = () => {
 
           <TabsContent value="firmware" className="space-y-4 mt-6">
             <FirmwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
+          </TabsContent>
+
+          <TabsContent value="software" className="space-y-4 mt-6">
+            <SoftwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
           </TabsContent>
         </Tabs>
 
