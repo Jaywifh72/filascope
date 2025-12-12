@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"; // utility for conditional classnames
 import { BRAND_REGIONAL_AVAILABILITY } from "@/lib/brandRegionalAvailability";
 
 function BrandAvailabilityDisplay({ brand }: { brand: string }) {
