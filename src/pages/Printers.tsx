@@ -365,7 +365,7 @@ export default function Printers() {
                 <p className="text-muted-foreground">No printers found matching your criteria</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredPrinters.map((printer) => {
                   // Extract product image from scraped_data
                   const scrapedData = printer.scraped_data as Record<string, unknown> | null;
@@ -377,117 +377,101 @@ export default function Printers() {
               <div key={printer.id} className="relative">
                 <Link to={`/printers/${printer.id}`}>
                   <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                    {/* Product Image */}
-                    <div className="relative h-48 bg-muted/30">
-                      {productImage ? (
-                        <img 
-                          src={productImage} 
-                          alt={printer.model_name}
-                          className="w-full h-full object-contain p-4"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <PrinterIcon className="h-16 w-16 text-muted-foreground/30" />
-                        </div>
-                      )}
-                      {/* Brand Logo Overlay */}
-                      {getBrandLogo(printer.brand?.brand || null) && (
-                        <div className="absolute bottom-2 left-2 p-1.5 bg-background/80 rounded-md border border-border/50 backdrop-blur-sm">
+                    <div className="flex">
+                      {/* Product Image - Left Side */}
+                      <div className="relative w-28 h-28 shrink-0 bg-muted/30">
+                        {productImage ? (
                           <img 
-                            src={getBrandLogo(printer.brand?.brand || null)!} 
-                            alt={`${printer.brand?.brand} logo`}
-                            className="h-8 w-auto object-contain max-w-[60px]"
+                            src={productImage} 
+                            alt={printer.model_name}
+                            className="w-full h-full object-contain p-2"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
                           />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Card Content */}
-                    <div className="p-4 space-y-3">
-                      {/* Header */}
-                      <div className="space-y-1">
-                        <h3 className="text-lg font-bold line-clamp-1">
-                          {printer.model_name}
-                        </h3>
-                        <div className="flex flex-wrap gap-1">
-                          {printer.series?.series_name && (
-                            <Badge variant="secondary" className="text-xs">{printer.series.series_name}</Badge>
-                          )}
-                          {printer.variant_or_bundle_name && (
-                            <span className="text-xs text-muted-foreground">
-                              {printer.variant_or_bundle_name}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                    {/* Prices */}
-                    {(printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd) && (
-                      <div className="space-y-1">
-                        {printer.current_price_usd_store && (
-                          <div className="text-xl font-bold text-primary flex items-center gap-1.5">
-                            <Store className="h-4 w-4 shrink-0" />
-                            <span>{formatPrice(printer.current_price_usd_store)}</span>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <PrinterIcon className="h-10 w-10 text-muted-foreground/30" />
                           </div>
                         )}
-                        {printer.current_price_usd_amazon && (
-                          <div className={`flex items-center gap-1.5 ${printer.current_price_usd_store ? 'text-sm text-muted-foreground' : 'text-xl font-bold text-primary'}`}>
-                            <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
-                            <span>{formatPrice(printer.current_price_usd_amazon)}</span>
-                          </div>
-                        )}
-                        {printer.msrp_usd && !printer.current_price_usd_store && !printer.current_price_usd_amazon && (
-                          <div className="text-xl font-bold text-primary flex items-center gap-1.5">
-                            <Tag className="h-4 w-4 shrink-0" />
-                            <span>{formatPrice(printer.msrp_usd)}</span>
+                        {/* Brand Logo Overlay */}
+                        {getBrandLogo(printer.brand?.brand || null) && (
+                          <div className="absolute bottom-1 left-1 p-1 bg-background/80 rounded border border-border/50 backdrop-blur-sm">
+                            <img 
+                              src={getBrandLogo(printer.brand?.brand || null)!} 
+                              alt={`${printer.brand?.brand} logo`}
+                              className="h-4 w-auto object-contain max-w-[40px]"
+                            />
                           </div>
                         )}
                       </div>
-                    )}
 
-                    {/* Key Specs */}
-                      <div className="space-y-1 text-sm">
-                        {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Build Volume:</span>
-                            <span className="font-medium">
+                      {/* Card Content - Right Side */}
+                      <div className="flex-1 p-3 min-w-0 space-y-1.5">
+                        {/* Header with Name and Price */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="text-sm font-bold line-clamp-1">
+                              {printer.model_name}
+                            </h3>
+                            {printer.variant_or_bundle_name && (
+                              <span className="text-xs text-muted-foreground line-clamp-1">
+                                {printer.variant_or_bundle_name}
+                              </span>
+                            )}
+                          </div>
+                          {/* Price */}
+                          <div className="shrink-0 text-right">
+                            {printer.current_price_usd_store ? (
+                              <div className="text-sm font-bold text-primary flex items-center gap-1">
+                                <Store className="h-3 w-3" />
+                                <span>{formatPrice(printer.current_price_usd_store)}</span>
+                              </div>
+                            ) : printer.current_price_usd_amazon ? (
+                              <div className="text-sm font-bold text-primary flex items-center gap-1">
+                                <ShoppingCart className="h-3 w-3" />
+                                <span>{formatPrice(printer.current_price_usd_amazon)}</span>
+                              </div>
+                            ) : printer.msrp_usd ? (
+                              <div className="text-sm font-bold text-primary flex items-center gap-1">
+                                <Tag className="h-3 w-3" />
+                                <span>{formatPrice(printer.msrp_usd)}</span>
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {/* Key Specs - Compact */}
+                        <div className="text-xs text-muted-foreground space-y-0.5">
+                          {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
+                            <div>
                               {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
-                            </span>
-                          </div>
-                        )}
-                        
-                        {printer.max_print_speed_mms && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Max Speed:</span>
-                            <span className="font-medium">{printer.max_print_speed_mms} mm/s</span>
-                          </div>
-                        )}
-                      </div>
+                            </div>
+                          )}
+                          {printer.max_print_speed_mms && (
+                            <div>{printer.max_print_speed_mms} mm/s</div>
+                          )}
+                        </div>
 
-                      {/* Features */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {printer.has_enclosure && (
-                          <Badge variant="outline" className="text-xs">Enclosure</Badge>
-                        )}
-                        {printer.auto_bed_leveling && (
-                          <Badge variant="outline" className="text-xs">Auto Level</Badge>
-                        )}
-                        {printer.multi_material_supported && (
-                          <Badge variant="outline" className="text-xs">Multi-Material</Badge>
-                        )}
-                        {printer.has_wifi && (
-                          <Badge variant="outline" className="text-xs">WiFi</Badge>
-                        )}
+                        {/* Features - Compact */}
+                        <div className="flex flex-wrap gap-1">
+                          {printer.has_enclosure && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Enclosure</Badge>
+                          )}
+                          {printer.multi_material_supported && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Multi-Mat</Badge>
+                          )}
+                          {printer.auto_bed_leveling && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">ABL</Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Card>
                 </Link>
 
-                {/* Interactive Controls - Positioned absolutely over the card */}
-                <div className="absolute top-2 right-2 flex gap-1 z-10">
+                {/* Interactive Controls - Top Right */}
+                <div className="absolute top-1 right-1 flex gap-0.5 z-10">
                   {BRAND_WIKI_URLS[printer.brand?.brand || ""] && (
                     <a
                       href={BRAND_WIKI_URLS[printer.brand?.brand || ""]}
@@ -495,43 +479,44 @@ export default function Printers() {
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
                       title={`${printer.brand?.brand} Wiki`}
-                      className="bg-background/80 backdrop-blur-sm rounded-md p-1.5 hover:bg-background transition-colors"
+                      className="bg-background/80 backdrop-blur-sm rounded p-1 hover:bg-background transition-colors"
                     >
-                      <BookOpen className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                      <BookOpen className="h-3 w-3 text-muted-foreground hover:text-primary" />
                     </a>
                   )}
                   {isAdmin && (
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      className="h-7 w-7 bg-background/80 backdrop-blur-sm hover:bg-background"
+                      className="h-5 w-5 bg-background/80 backdrop-blur-sm hover:bg-background"
                       onClick={(e) => openImageEditDialog(printer, e)}
                       title="Edit printer image"
                     >
-                      <ImageIcon className="h-4 w-4" />
+                      <ImageIcon className="h-3 w-3" />
                     </Button>
                   )}
                   {isAdmin && printer.official_product_url && (
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      className="h-7 w-7 bg-background/80 backdrop-blur-sm hover:bg-background"
+                      className="h-5 w-5 bg-background/80 backdrop-blur-sm hover:bg-background"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         rescrapeMutation.mutate(printer.id);
                       }}
                       disabled={rescrapeMutation.isPending}
-                      title="Re-scrape printer data from official product page"
+                      title="Re-scrape printer data"
                     >
-                      <RefreshCw className={`h-4 w-4 ${rescrapeMutation.isPending ? 'animate-spin' : ''}`} />
+                      <RefreshCw className={`h-3 w-3 ${rescrapeMutation.isPending ? 'animate-spin' : ''}`} />
                     </Button>
                   )}
                   <div 
-                    className="bg-background/80 backdrop-blur-sm rounded-md p-1.5 hover:bg-background transition-colors"
+                    className="bg-background/80 backdrop-blur-sm rounded p-1 hover:bg-background transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Checkbox
+                      className="h-3.5 w-3.5"
                       checked={selectedForCompare.includes(printer.printer_id)}
                       onCheckedChange={() => toggleCompareSelection(printer.printer_id)}
                     />
