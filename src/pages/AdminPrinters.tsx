@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles, Cpu, Globe } from "lucide-react";
+import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles, Cpu, Globe, FileCode } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -90,6 +90,11 @@ export default function AdminPrinters() {
   const [globalPriceRegions, setGlobalPriceRegions] = useState<string[]>(["US"]);
   const [globalPriceLimit, setGlobalPriceLimit] = useState<number>(5);
   const [globalPriceResults, setGlobalPriceResults] = useState<any>(null);
+  
+  // Firmware scraping state
+  const [firmwareScrapingBrand, setFirmwareScrapingBrand] = useState<string>("");
+  const [firmwareScraping, setFirmwareScraping] = useState(false);
+  const [firmwareScrapeStats, setFirmwareScrapeStats] = useState<{ total: number; completed: number; successful: number } | null>(null);
 
   // Query ALL printers and count pricing status in memory for accuracy
   const { data: allPrinters, refetch: refetchAllPrinters } = useQuery({
@@ -794,6 +799,106 @@ export default function AdminPrinters() {
       }
     } finally {
       setGlobalPriceUpdating(false);
+    }
+  };
+
+  const handleBatchFirmwareScrape = async () => {
+    if (!firmwareScrapingBrand) {
+      toast({
+        title: "No brand selected",
+        description: "Please select a brand to scrape firmware for",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setFirmwareScraping(true);
+      setFirmwareScrapeStats(null);
+
+      // Fetch all active printers for the selected brand
+      const selectedBrandObj = brands?.find(b => b.id === firmwareScrapingBrand);
+      if (!selectedBrandObj) {
+        throw new Error("Brand not found");
+      }
+
+      const { data: brandPrinters, error: fetchError } = await supabase
+        .from('printers')
+        .select('id, model_name')
+        .eq('brand_id', firmwareScrapingBrand)
+        .eq('status', 'active');
+
+      if (fetchError) throw fetchError;
+
+      if (!brandPrinters || brandPrinters.length === 0) {
+        toast({
+          title: "No printers found",
+          description: `No active printers found for ${selectedBrandObj.brand}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setFirmwareScrapeStats({ total: brandPrinters.length, completed: 0, successful: 0 });
+
+      toast({
+        title: "Firmware scraping started",
+        description: `Scraping firmware for ${brandPrinters.length} ${selectedBrandObj.brand} printers...`,
+      });
+
+      // Process printers in batches
+      const batchSize = 3;
+      let completed = 0;
+      let successful = 0;
+
+      for (let i = 0; i < brandPrinters.length; i += batchSize) {
+        const batch = brandPrinters.slice(i, i + batchSize);
+
+        await Promise.all(
+          batch.map(async (printer) => {
+            try {
+              const { data, error } = await supabase.functions.invoke('scrape-printer-firmware', {
+                body: {
+                  printerId: printer.id,
+                  brandName: selectedBrandObj.brand,
+                  printerName: printer.model_name,
+                },
+              });
+
+              if (!error && data?.firmware_count > 0) {
+                successful++;
+              }
+              completed++;
+              setFirmwareScrapeStats({ total: brandPrinters.length, completed, successful });
+            } catch (error) {
+              console.error(`Failed to scrape firmware for ${printer.model_name}:`, error);
+              completed++;
+              setFirmwareScrapeStats({ total: brandPrinters.length, completed, successful });
+            }
+          })
+        );
+
+        // Small delay between batches
+        if (i + batchSize < brandPrinters.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      toast({
+        title: "Firmware scraping completed",
+        description: `Found firmware for ${successful} out of ${brandPrinters.length} printers`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["printer-firmware"] });
+    } catch (error: any) {
+      console.error("Firmware scrape error:", error);
+      toast({
+        title: "Firmware scraping failed",
+        description: error.message || "An error occurred during firmware scraping",
+        variant: "destructive",
+      });
+    } finally {
+      setFirmwareScraping(false);
     }
   };
 
@@ -1530,7 +1635,92 @@ export default function AdminPrinters() {
 
             <Separator />
 
-            {/* Dynamic Brand Nozzle Scraping Section */}
+            {/* Batch Firmware Scraping Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileCode className="h-5 w-5" />
+                  Batch Firmware Scraping
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Scrape firmware release history for all printers of a selected brand. Extracts version numbers, release dates, release notes, and download links.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Brand</label>
+                  <Select value={firmwareScrapingBrand} onValueChange={setFirmwareScrapingBrand}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a brand..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {brandsLoading ? (
+                        <div className="p-2 text-center text-sm text-muted-foreground">
+                          Loading brands...
+                        </div>
+                      ) : brands && brands.length > 0 ? (
+                        brands.map((brand) => (
+                          <SelectItem key={brand.id} value={brand.id}>
+                            {brand.brand}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="p-2 text-center text-sm text-muted-foreground">
+                          No brands found
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {firmwareScrapeStats && (
+                  <div className="space-y-2 p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">Progress:</span>
+                      <span className="text-muted-foreground">
+                        {firmwareScrapeStats.completed} / {firmwareScrapeStats.total} printers
+                      </span>
+                    </div>
+                    <Progress 
+                      value={(firmwareScrapeStats.completed / firmwareScrapeStats.total) * 100} 
+                      className="h-2"
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      Found firmware for {firmwareScrapeStats.successful} printers
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleBatchFirmwareScrape}
+                  disabled={!firmwareScrapingBrand || firmwareScraping || brandsLoading}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  {firmwareScraping ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Scraping Firmware...
+                    </>
+                  ) : (
+                    <>
+                      <FileCode className="h-4 w-4" />
+                      Scrape All Firmware
+                      {firmwareScrapingBrand && brands && (
+                        <span className="opacity-70">
+                          ({brands.find(b => b.id === firmwareScrapingBrand)?.brand})
+                        </span>
+                      )}
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Separator />
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
