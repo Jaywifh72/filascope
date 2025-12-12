@@ -280,7 +280,26 @@ ${truncatedMarkdown}`;
       /network\s*plugin/i,
       /desktop\s*app/i,
       /mobile\s*app/i,
+      /slicer/i,
+      /studio/i,
     ];
+    
+    // Check if download URL or notes indicate software, not firmware
+    const isSoftwareByContent = (fw: any): boolean => {
+      const downloadUrl = (fw.download_url || '').toLowerCase();
+      const notes = (fw.release_notes || '').toLowerCase();
+      const changelog = (fw.changelog || '').toLowerCase();
+      const combined = `${downloadUrl} ${notes} ${changelog}`;
+      
+      // Check for software-related content
+      if (combined.includes('bambu studio') || combined.includes('bambustudio')) return true;
+      if (combined.includes('orcaslicer') || combined.includes('orca slicer')) return true;
+      if (combined.includes('prusaslicer') || combined.includes('prusa slicer')) return true;
+      if (downloadUrl.includes('bambustudio') || downloadUrl.includes('bambu-studio')) return true;
+      if (downloadUrl.includes('github.com/bambulab/bambustudio')) return true;
+      
+      return false;
+    };
     
     // Software version patterns - these are NOT firmware versions
     // Bambu Studio uses 2.x.x.x format, firmware uses 01.xx.xx.xx or 1.xx.xx.xx
@@ -308,6 +327,12 @@ ${truncatedMarkdown}`;
       const notes = fw.release_notes || '';
       const combined = `${version} ${notes}`.toLowerCase();
       
+      // Check content first - most reliable filter
+      if (isSoftwareByContent(fw)) {
+        console.log(`Filtering out software by content: ${version}`);
+        return false;
+      }
+      
       // Check if version looks like software (2.x.x patterns)
       if (isSoftwareVersionPattern(version)) {
         console.log(`Filtering out software version pattern: ${version}`);
@@ -320,7 +345,7 @@ ${truncatedMarkdown}`;
         return false;
       }
       
-      // Check if this looks like software, not firmware based on content
+      // Check if this looks like software, not firmware based on content patterns
       for (const pattern of softwarePatterns) {
         if (pattern.test(combined) && !combined.includes('firmware')) {
           console.log(`Filtering out software version: ${version}`);
