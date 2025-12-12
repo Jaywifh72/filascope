@@ -181,9 +181,16 @@ async function useAIToExtractFirmware(
   // Truncate markdown to avoid token limits but keep more for detailed notes
   const truncatedMarkdown = markdown.slice(0, 30000);
   
-  const prompt = `You are extracting DETAILED firmware release information for the "${brandName} ${printerName}" 3D printer from this webpage content.
+  const prompt = `You are extracting DETAILED PRINTER FIRMWARE release information for the "${brandName} ${printerName}" 3D printer from this webpage content.
 
-For EACH firmware release you find, extract:
+CRITICAL - ONLY EXTRACT PRINTER FIRMWARE:
+- INCLUDE: Printer firmware (runs on the printer itself, controls motion, heating, AMS, etc.)
+- EXCLUDE: Slicer software (Bambu Studio, PrusaSlicer, Cura, OrcaSlicer, etc.)
+- EXCLUDE: Desktop/mobile apps
+- EXCLUDE: Network plugins or add-ons
+- EXCLUDE: Handy app versions
+
+For EACH printer firmware release you find, extract:
 1. **version** (required): The exact version number (e.g., "1.2.3.4", "v2.0.1")
 2. **release_date**: The release date in YYYY-MM-DD format
 3. **release_notes**: DETAILED description of what's in this release. Include:
@@ -192,16 +199,16 @@ For EACH firmware release you find, extract:
    - Improvements and optimizations
    - Hardware compatibility changes
    - Print quality improvements
-   - UI/UX changes
    Format as a readable summary with bullet points if multiple items. Be comprehensive but concise (max 2000 chars).
 4. **changelog**: Additional technical changes if available (separate from release_notes)
 5. **known_issues**: Any bugs or limitations mentioned for this version
 6. **download_url**: Direct download link to the firmware file if available
 
 IMPORTANT:
-- Only include firmware specifically for "${printerName}" or its variants
-- Extract ALL version releases found, not just the latest
-- The release_notes should contain the ACTUAL content of what changed, not just "firmware update for ${printerName}"
+- Only include PRINTER FIRMWARE specifically for "${printerName}" or its variants
+- DO NOT include Bambu Studio, Bambu Handy, PrusaSlicer, or any other software versions
+- Extract ALL firmware releases found, not just the latest
+- The release_notes should contain the ACTUAL content of what changed
 - If release notes list specific improvements like "improved first layer calibration", include those details
 
 Return a JSON object with a "releases" array. Example:
@@ -263,7 +270,36 @@ ${truncatedMarkdown}`;
     
     console.log(`AI extracted ${firmwareArray.length} firmware releases`);
     
-    return firmwareArray.map((fw: any, idx: number) => ({
+    // Filter out software versions (Bambu Studio, slicers, apps, etc.)
+    const softwarePatterns = [
+      /bambu\s*studio/i,
+      /orca\s*slicer/i,
+      /prusa\s*slicer/i,
+      /cura/i,
+      /handy/i,
+      /network\s*plugin/i,
+      /desktop\s*app/i,
+      /mobile\s*app/i,
+    ];
+    
+    const filteredFirmware = firmwareArray.filter((fw: any) => {
+      const version = fw.version || '';
+      const notes = fw.release_notes || '';
+      const combined = `${version} ${notes}`.toLowerCase();
+      
+      // Check if this looks like software, not firmware
+      for (const pattern of softwarePatterns) {
+        if (pattern.test(combined) && !combined.includes('firmware')) {
+          console.log(`Filtering out software version: ${version}`);
+          return false;
+        }
+      }
+      return true;
+    });
+    
+    console.log(`AI extracted ${firmwareArray.length} releases, kept ${filteredFirmware.length} after filtering software`);
+    
+    return filteredFirmware.map((fw: any, idx: number) => ({
       version: fw.version || 'Unknown',
       release_date: fw.release_date || null,
       release_notes: fw.release_notes || null,
