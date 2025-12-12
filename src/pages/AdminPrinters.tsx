@@ -985,7 +985,9 @@ export default function AdminPrinters() {
             try {
               const { data, error } = await supabase.functions.invoke('scrape-printer-software', {
                 body: {
-                  printer_id: printer.id,
+                  printerId: printer.id,
+                  brandName: selectedBrandObj.brand,
+                  printerName: printer.model_name,
                 },
               });
 
