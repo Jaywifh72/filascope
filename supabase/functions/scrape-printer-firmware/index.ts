@@ -282,7 +282,43 @@ ${truncatedMarkdown}`;
       /mobile\s*app/i,
       /slicer/i,
       /studio/i,
+      /luban/i,
+      /creality\s*print/i,
+      /flashprint/i,
+      /ideamaker/i,
+      /qidi\s*slicer/i,
+      /elegoo\s*link/i,
+      /anycubic\s*app/i,
     ];
+    
+    // Brand-specific software names to exclude from firmware
+    const BRAND_SOFTWARE_NAMES: Record<string, string[]> = {
+      'Bambu Lab': ['Bambu Studio', 'Bambu Handy', 'Bambu Suite', 'Network Plugin', 'Farm Manager'],
+      'Prusa Research': ['PrusaSlicer', 'Prusa Connect', 'Prusa App'],
+      'Creality': ['Creality Print', 'Creality Cloud', 'Creality Sonic'],
+      'Anycubic': ['Anycubic Slicer', 'Anycubic Photon Workshop', 'Anycubic App'],
+      'QIDI': ['QIDI Slicer', 'QIDI Print', 'QIDISlicer'],
+      'Elegoo': ['CHITUBOX', 'ELEGOO Link', 'Elegoo Mars'],
+      'FlashForge': ['FlashPrint', 'FlashCloud', 'FlashDLPrint'],
+      'Raise3D': ['ideaMaker', 'RaiseCloud'],
+      'UltiMaker': ['UltiMaker Cura', 'UltiMaker Digital Factory'],
+      'Sovol': ['Sovol Cura', 'Klipper'],
+      'Snapmaker': ['Snapmaker Luban'],
+    };
+    
+    // Brand-specific firmware version patterns (what IS firmware)
+    const BRAND_FIRMWARE_VERSION_PATTERNS: Record<string, RegExp[]> = {
+      // Bambu Lab firmware: 01.xx.xx.xx format (always starts with 0)
+      'Bambu Lab': [/^0[0-9]\.\d{2}\.\d{2}\.\d{2}$/],
+      // Prusa firmware: 5.x.x or 4.x.x format
+      'Prusa Research': [/^[345]\.\d+\.\d+(-\w+)?$/],
+      // Creality firmware: Various formats
+      'Creality': [/^[12]\.\d+\.\d+(\.\d+)?$/, /^Marlin/i],
+      // Anycubic firmware: V1.x.x or similar
+      'Anycubic': [/^V?[12]\.\d+\.\d+$/i],
+      // QIDI firmware: V2.x.x or V3.x.x
+      'QIDI': [/^V?[23]\.\d+\.\d+$/i],
+    };
     
     // Check if download URL or notes indicate software, not firmware
     const isSoftwareByContent = (fw: any): boolean => {
@@ -291,6 +327,15 @@ ${truncatedMarkdown}`;
       const changelog = (fw.changelog || '').toLowerCase();
       const combined = `${downloadUrl} ${notes} ${changelog}`;
       
+      // Check for brand-specific software names
+      const brandSoftware = BRAND_SOFTWARE_NAMES[brandName] || [];
+      for (const swName of brandSoftware) {
+        if (combined.includes(swName.toLowerCase())) {
+          console.log(`Filtering by brand software name: ${swName}`);
+          return true;
+        }
+      }
+      
       // Check for software-related content
       if (combined.includes('bambu studio') || combined.includes('bambustudio')) return true;
       if (combined.includes('orcaslicer') || combined.includes('orca slicer')) return true;
@@ -298,8 +343,16 @@ ${truncatedMarkdown}`;
       if (combined.includes('bambu handy')) return true;
       if (combined.includes('farm manager')) return true;
       if (combined.includes('bambu suite')) return true;
+      if (combined.includes('network plugin')) return true;
+      if (combined.includes('flashprint')) return true;
+      if (combined.includes('ideamaker')) return true;
+      if (combined.includes('creality print')) return true;
+      if (combined.includes('creality cloud')) return true;
+      if (combined.includes('chitubox')) return true;
       if (downloadUrl.includes('bambustudio') || downloadUrl.includes('bambu-studio')) return true;
       if (downloadUrl.includes('github.com/bambulab/bambustudio')) return true;
+      if (downloadUrl.includes('github.com/prusa3d/prusaslicer')) return true;
+      if (downloadUrl.includes('github.com/softfever/orcaslicer')) return true;
       
       // Filter out forum scraping garbage
       if (combined.includes('forum.bambulab.com')) return true;
@@ -311,12 +364,28 @@ ${truncatedMarkdown}`;
     };
     
     // Software version patterns - these are NOT firmware versions
-    // Bambu Studio uses 2.x.x.x format, firmware uses 01.xx.xx.xx or 1.xx.xx.xx
     const isSoftwareVersionPattern = (version: string): boolean => {
       const v = version.replace(/^v/i, '').trim();
       
-      // Software versions like 2.4.1.80, 2.9.1, 2.2.1.58 (Bambu Studio format)
-      // These start with 2.x or 3.x and typically have 3-4 segments
+      // Check if version matches brand-specific firmware pattern (whitelist approach)
+      const firmwarePatterns = BRAND_FIRMWARE_VERSION_PATTERNS[brandName];
+      if (firmwarePatterns) {
+        const matchesFirmwarePattern = firmwarePatterns.some(pattern => pattern.test(v) || pattern.test(version));
+        if (matchesFirmwarePattern) {
+          return false; // This IS firmware, not software
+        }
+      }
+      
+      // Bambu Studio/software uses 2.x.x.x or 3.x.x format (without leading zero)
+      // While Bambu firmware uses 01.xx.xx.xx format
+      if (brandName === 'Bambu Lab') {
+        // Software: 2.x.x, 2.x.x.x, 3.x.x
+        if (/^[23]\.\d+\.\d+(\.\d+)?$/.test(v)) return true;
+        // Check for firmware format - 01.xx.xx.xx
+        if (/^0[0-9]\.\d{2}\.\d{2}\.\d{2}$/.test(v)) return false; // This IS firmware
+      }
+      
+      // Generic software patterns (starting with 2.x or 3.x for slicers)
       if (/^[23]\.\d+\.\d+(\.\d+)?$/.test(v)) {
         return true;
       }
@@ -325,7 +394,10 @@ ${truncatedMarkdown}`;
       // (starting with small numbers like 1.x.x or 2.x.x without leading zeros)
       // Firmware typically uses 01.xx.xx.xx format with leading zeros
       if (/^[1-9]\.[0-9]+\.[0-9]+$/.test(v) && !v.includes('01.')) {
-        return true;
+        // But some brands use this for firmware too, check brand-specific
+        if (brandName !== 'Prusa Research' && brandName !== 'Creality') {
+          return true;
+        }
       }
       
       return false;
