@@ -51,6 +51,7 @@ export default function Printers() {
   const { formatPrice } = useCurrency();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
+  const [sortBy, setSortBy] = useState("name-asc");
   
   const [hasEnclosure, setHasEnclosure] = useState(false);
   const [multiMaterial, setMultiMaterial] = useState(false);
@@ -109,11 +110,11 @@ export default function Printers() {
   });
 
 
-  // Filter by brand and other criteria on client side
+  // Filter and sort by brand and other criteria on client side
   const filteredPrinters = useMemo(() => {
     if (!printers) return [];
 
-    return printers.filter(printer => {
+    const filtered = printers.filter(printer => {
       if (selectedBrand !== "all" && printer.brand?.brand !== selectedBrand) {
         return false;
       }
@@ -149,7 +150,34 @@ export default function Printers() {
 
       return true;
     });
-  }, [printers, selectedBrand, selectedSize, selectedSpeed]);
+
+    // Sort the filtered results
+    return filtered.sort((a, b) => {
+      const getPrice = (p: Printer) => p.current_price_usd_store || p.current_price_usd_amazon || p.msrp_usd || Infinity;
+      const getVolume = (p: Printer) => (p.build_volume_x_mm || 0) * (p.build_volume_y_mm || 0) * (p.build_volume_z_mm || 0);
+      
+      switch (sortBy) {
+        case "name-asc":
+          return a.model_name.localeCompare(b.model_name);
+        case "name-desc":
+          return b.model_name.localeCompare(a.model_name);
+        case "price-asc":
+          return getPrice(a) - getPrice(b);
+        case "price-desc":
+          return getPrice(b) - getPrice(a);
+        case "speed-desc":
+          return (b.max_print_speed_mms || 0) - (a.max_print_speed_mms || 0);
+        case "speed-asc":
+          return (a.max_print_speed_mms || 0) - (b.max_print_speed_mms || 0);
+        case "volume-desc":
+          return getVolume(b) - getVolume(a);
+        case "volume-asc":
+          return getVolume(a) - getVolume(b);
+        default:
+          return 0;
+      }
+    });
+  }, [printers, selectedBrand, selectedSize, selectedSpeed, sortBy]);
 
   const toggleCompareSelection = (printerId: string) => {
     setSelectedForCompare(prev => 
@@ -332,11 +360,29 @@ export default function Printers() {
               </div>
             </div>
 
-            {/* Results Count */}
+            {/* Results Count & Sort */}
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">
                 {filteredPrinters?.length || 0} <span className="text-muted-foreground font-normal">printers</span>
               </h2>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Sort by:</span>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[160px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                    <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                    <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                    <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                    <SelectItem value="speed-desc">Speed: Fastest</SelectItem>
+                    <SelectItem value="speed-asc">Speed: Slowest</SelectItem>
+                    <SelectItem value="volume-desc">Build Volume: Largest</SelectItem>
+                    <SelectItem value="volume-asc">Build Volume: Smallest</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Compare Bar */}
