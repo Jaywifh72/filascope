@@ -258,7 +258,7 @@ const Compare = () => {
             : "—";
           
           return (
-            <div key={idx} className={`text-sm flex items-center gap-2 ${isBest ? "font-semibold" : ""}`}>
+            <div key={idx} className={`text-sm flex items-center justify-center gap-2 ${isBest ? "font-semibold" : ""}`}>
               {isBest && compareMode !== "none" && (
                 <Trophy className="w-4 h-4 text-amber-500 shrink-0" />
               )}
