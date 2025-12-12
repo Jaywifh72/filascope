@@ -137,3 +137,6 @@ verify_jwt = false
 
 [functions.scrape-printer-firmware]
 verify_jwt = true
+
+[functions.scrape-printer-software]
+verify_jwt = true
