@@ -711,9 +711,12 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
   const markAsVerified = async (result: UrlValidationResult) => {
     if (!userId) return;
     await supabase.from("url_validation_results").update({ 
-      manually_verified: true, verified_at: new Date().toISOString(), verified_by: userId 
+      manually_verified: true, 
+      verified_at: new Date().toISOString(), 
+      verified_by: userId,
+      status: 'valid' // Mark as valid when manually verified
     }).eq('id', result.id);
-    toast.success("URL marked as verified");
+    toast.success("URL marked as verified and valid");
     await fetchResultsAndStats();
   };
 
