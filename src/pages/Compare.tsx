@@ -285,53 +285,44 @@ const Compare = () => {
           <p className="text-muted-foreground">Side-by-side comparison of {filaments.length} filaments</p>
         </div>
 
-        {/* Filament Headers */}
-        <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: `200px repeat(${filaments.length}, 1fr)` }}>
-          <div></div>
-          {filaments.map((filament) => (
-            <Card key={filament.id} className="bg-card border-border">
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  {filament.vendor && getBrandLogo(filament.vendor) && (
-                    <div className="flex justify-center">
-                      <img
-                        src={getBrandLogo(filament.vendor)!}
-                        alt={filament.vendor}
-                        className="h-12 object-contain"
-                      />
+        {/* Sticky Filament Headers */}
+        <div className="sticky top-0 z-20 bg-background pb-4 -mx-8 px-8 pt-2">
+          <div className="grid gap-4" style={{ gridTemplateColumns: `200px repeat(${filaments.length}, 1fr)` }}>
+            <div></div>
+            {filaments.map((filament) => (
+              <Card key={filament.id} className="bg-card border-border shadow-md">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      {filament.vendor && getBrandLogo(filament.vendor) && (
+                        <img
+                          src={getBrandLogo(filament.vendor)!}
+                          alt={filament.vendor}
+                          className="h-8 object-contain shrink-0"
+                        />
+                      )}
+                      <h3 className="font-semibold text-sm line-clamp-2 flex-1">{filament.product_title}</h3>
                     </div>
-                  )}
-                  <h3 className="font-semibold text-lg line-clamp-2">{filament.product_title}</h3>
-                  <div className="space-y-2">
-                    {filament.vendor && <Badge variant="secondary">{filament.vendor}</Badge>}
-                    {filament.material && <Badge variant="outline">{filament.material}</Badge>}
-                  </div>
-                  {filament.variant_price && filament.net_weight_g && (
-                    <div className={`text-2xl font-bold ${bestPriceIndices.includes(filaments.indexOf(filament)) ? "text-amber-500" : "text-primary"}`}>
-                      <div className="flex items-center gap-2">
-                        {bestPriceIndices.includes(filaments.indexOf(filament)) && (
-                          <Trophy className="w-5 h-5 shrink-0" />
-                        )}
-                        <span>
-                          ${getPricePerKgFormatted(filament.variant_price, filament.net_weight_g)} <span className="text-sm font-medium">USD/kg</span>
-                        </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex gap-1 flex-wrap">
+                        {filament.material && <Badge variant="outline" className="text-xs">{filament.material}</Badge>}
                       </div>
-                      {bestPriceIndices.includes(filaments.indexOf(filament)) && (
-                        <div className="text-xs font-medium mt-1">Best Price</div>
+                      {filament.variant_price && filament.net_weight_g && (
+                        <div className={`text-lg font-bold shrink-0 ${bestPriceIndices.includes(filaments.indexOf(filament)) ? "text-amber-500" : "text-primary"}`}>
+                          <div className="flex items-center gap-1">
+                            {bestPriceIndices.includes(filaments.indexOf(filament)) && (
+                              <Trophy className="w-4 h-4 shrink-0" />
+                            )}
+                            <span>${getPricePerKgFormatted(filament.variant_price, filament.net_weight_g)}/kg</span>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  )}
-                  {filament.product_url && (
-                    <Button size="sm" variant="outline" className="w-full" asChild>
-                      <a href={filament.product_url} target="_blank" rel="noopener noreferrer">
-                        View Product <ExternalLink className="w-3 h-3 ml-2" />
-                      </a>
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
         {/* Print Settings */}
