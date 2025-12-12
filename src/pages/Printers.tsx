@@ -504,11 +504,11 @@ export default function Printers() {
                           </div>
                           {/* Brand Logo - Bottom Right */}
                           {getBrandLogo(printer.brand?.brand || null) && (
-                            <div className="shrink-0 px-1.5 py-1 bg-muted/50 rounded border border-border/30">
+                            <div className="shrink-0 px-2 py-1.5 bg-muted/50 rounded border border-border/30">
                               <img 
                                 src={getBrandLogo(printer.brand?.brand || null)!} 
                                 alt={`${printer.brand?.brand} logo`}
-                                className="h-5 w-auto object-contain max-w-[60px]"
+                                className="h-10 w-auto object-contain max-w-[120px]"
                               />
                             </div>
                           )}
