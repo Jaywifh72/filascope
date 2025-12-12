@@ -121,6 +121,7 @@ const FilterContent = ({
 }: FilamentFiltersProps) => {
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [showMoreCategories, setShowMoreCategories] = useState(false);
+  const [fullyExpandedCategories, setFullyExpandedCategories] = useState<string[]>([]);
 
   const handlePresetClick = (preset: FilterPreset) => {
     if (onApplyPreset) {
@@ -211,7 +212,7 @@ const FilterContent = ({
           <CollapsibleContent>
             <div className="pl-7 pb-2 space-y-0.5">
               <p className="text-[10px] text-muted-foreground mb-1.5 pr-2">{category.description}</p>
-              {category.materials.slice(0, 8).map((material) => (
+              {(fullyExpandedCategories.includes(categoryId) ? category.materials : category.materials.slice(0, 8)).map((material) => (
                 <label
                   key={material}
                   className="flex items-center gap-2 py-1 px-2 rounded-md hover:bg-muted/30 cursor-pointer group"
@@ -231,10 +232,26 @@ const FilterContent = ({
                   )}
                 </label>
               ))}
-              {category.materials.length > 8 && (
-                <span className="text-[10px] text-muted-foreground pl-2">
-                  +{category.materials.length - 8} more
-                </span>
+              {category.materials.length > 8 && !fullyExpandedCategories.includes(categoryId) && (
+                <div className="flex items-center gap-2 pl-2">
+                  <span className="text-[10px] text-muted-foreground">
+                    +{category.materials.length - 8} more
+                  </span>
+                  <button
+                    onClick={() => setFullyExpandedCategories(prev => [...prev, categoryId])}
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
+                    View all
+                  </button>
+                </div>
+              )}
+              {category.materials.length > 8 && fullyExpandedCategories.includes(categoryId) && (
+                <button
+                  onClick={() => setFullyExpandedCategories(prev => prev.filter(id => id !== categoryId))}
+                  className="text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors pl-2"
+                >
+                  Show less
+                </button>
               )}
             </div>
           </CollapsibleContent>
