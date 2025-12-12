@@ -2503,6 +2503,85 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                 </CardContent>
               </Card>
 
+              {/* Wood Properties - Only show for wood filaments */}
+              {((filament as any).wood_powder_percentage !== null && (filament as any).wood_powder_percentage !== undefined) && (
+                <Card className="bg-gradient-to-br from-amber-500/5 to-orange-500/5 border-amber-500/20 hover:shadow-lg transition-shadow md:col-span-2">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2.5 text-lg font-semibold">
+                      <span className="text-2xl">🪵</span>
+                      Wood Composition
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {/* Wood Powder Percentage */}
+                      <div className="p-4 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                        <div className="text-xs text-muted-foreground mb-1">Wood Content</div>
+                        <div className="text-2xl font-bold text-amber-600">
+                          {(filament as any).wood_powder_percentage}%
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">wood powder/fiber</div>
+                      </div>
+                      
+                      {/* Wood Type */}
+                      {(filament as any).wood_type && (
+                        <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                          <div className="text-xs text-muted-foreground mb-1">Wood Type</div>
+                          <div className="text-lg font-semibold text-orange-600">
+                            {(filament as any).wood_type}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Particle Size */}
+                      {(filament as any).wood_particle_size_microns && (
+                        <div className="p-4 bg-background rounded-lg border border-border">
+                          <div className="text-xs text-muted-foreground mb-1">Particle Size</div>
+                          <div className="text-lg font-semibold">
+                            {(filament as any).wood_particle_size_microns} µm
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Fiber Length */}
+                      {(filament as any).wood_fiber_length_mm && (
+                        <div className="p-4 bg-background rounded-lg border border-border">
+                          <div className="text-xs text-muted-foreground mb-1">Fiber Length</div>
+                          <div className="text-lg font-semibold">
+                            {(filament as any).wood_fiber_length_mm} mm
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Scent Level */}
+                      {(filament as any).wood_scent_level && (
+                        <div className="p-4 bg-background rounded-lg border border-border">
+                          <div className="text-xs text-muted-foreground mb-1">Wood Scent</div>
+                          <div className="text-lg font-semibold">
+                            {(filament as any).wood_scent_level}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Wood-specific tips */}
+                    <div className="mt-4 p-4 bg-muted/30 rounded-lg">
+                      <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+                        <span>💡</span> Wood Filament Tips
+                      </h4>
+                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Use a larger nozzle (≥0.5mm) to prevent clogging from wood particles</li>
+                        <li>Vary temperature between layers for a realistic wood grain effect</li>
+                        <li>Post-process with sandpaper, stain, or wood finish for enhanced appearance</li>
+                        {(filament as any).wood_powder_percentage >= 30 && (
+                          <li>High wood content — expect more brittle prints, ideal for decorative pieces</li>
+                        )}
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Application Tags */}
               <Card className="bg-card border-border md:col-span-2 hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
