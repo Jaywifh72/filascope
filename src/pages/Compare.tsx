@@ -80,10 +80,23 @@ const Compare = () => {
     );
   }
 
-  const getPricePerKg = (price: number | null, weight: number | null) => {
+  const getPricePerKg = (price: number | null, weight: number | null): number | null => {
     if (!price || !weight) return null;
-    return ((price / weight) * 1000).toFixed(2);
+    return (price / weight) * 1000;
   };
+
+  const getPricePerKgFormatted = (price: number | null, weight: number | null): string | null => {
+    const pricePerKg = getPricePerKg(price, weight);
+    return pricePerKg !== null ? pricePerKg.toFixed(2) : null;
+  };
+
+  // Find the index of the filament with the best (lowest) price per kg
+  const pricesPerKg = filaments.map(f => getPricePerKg(f.variant_price, f.net_weight_g));
+  const validPrices = pricesPerKg.filter((p): p is number => p !== null);
+  const bestPricePerKg = validPrices.length > 0 ? Math.min(...validPrices) : null;
+  const bestPriceIndices = pricesPerKg
+    .map((p, idx) => (p !== null && p === bestPricePerKg ? idx : -1))
+    .filter(idx => idx !== -1);
 
   // Find best values: "higher" = higher is better, "lower" = lower is better
   const findBestIndices = (values: (string | number | null | boolean)[], mode: CompareMode): number[] => {
@@ -182,8 +195,18 @@ const Compare = () => {
                     {filament.material && <Badge variant="outline">{filament.material}</Badge>}
                   </div>
                   {filament.variant_price && filament.net_weight_g && (
-                    <div className="text-2xl font-bold text-primary">
-                      ${getPricePerKg(filament.variant_price, filament.net_weight_g)} <span className="text-sm font-medium">USD/kg</span>
+                    <div className={`text-2xl font-bold ${bestPriceIndices.includes(filaments.indexOf(filament)) ? "text-amber-500" : "text-primary"}`}>
+                      <div className="flex items-center gap-2">
+                        {bestPriceIndices.includes(filaments.indexOf(filament)) && (
+                          <Trophy className="w-5 h-5 shrink-0" />
+                        )}
+                        <span>
+                          ${getPricePerKgFormatted(filament.variant_price, filament.net_weight_g)} <span className="text-sm font-medium">USD/kg</span>
+                        </span>
+                      </div>
+                      {bestPriceIndices.includes(filaments.indexOf(filament)) && (
+                        <div className="text-xs font-medium mt-1">Best Price</div>
+                      )}
                     </div>
                   )}
                   {filament.product_url && (
