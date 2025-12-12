@@ -123,6 +123,63 @@ const Compare = () => {
       .filter(idx => idx !== -1);
   };
 
+  // Define all comparison categories for win counting
+  type ComparisonCategory = {
+    label: string;
+    values: (string | number | null | boolean)[];
+    mode: CompareMode;
+  };
+
+  const allCategories: ComparisonCategory[] = [
+    // Price (special case - lower is better)
+    { label: "Price per kg", values: pricesPerKg, mode: "lower" },
+    // Print Settings
+    { label: "Nozzle Temp Min", values: filaments.map(f => f.nozzle_temp_min_c), mode: "lower" },
+    { label: "Bed Temp Min", values: filaments.map(f => f.bed_temp_min_c), mode: "lower" },
+    { label: "Max Print Speed", values: filaments.map(f => f.print_speed_max_mms), mode: "higher" },
+    // Material Properties
+    { label: "Tensile Strength", values: filaments.map(f => f.tensile_strength_xy_mpa), mode: "higher" },
+    { label: "Tensile Modulus", values: filaments.map(f => f.tensile_modulus_xy_mpa), mode: "higher" },
+    { label: "Elongation at Break", values: filaments.map(f => f.elongation_break_xy_percent), mode: "higher" },
+    { label: "Flexural Strength", values: filaments.map(f => f.flexural_strength_mpa), mode: "higher" },
+    { label: "Shore Hardness", values: filaments.map(f => f.shore_hardness_d), mode: "higher" },
+    { label: "Glass Transition Temp", values: filaments.map(f => f.tg_c), mode: "higher" },
+    { label: "Density", values: filaments.map(f => f.density_g_cm3), mode: "lower" },
+    // Performance Scores
+    { label: "Ease of Printing", values: filaments.map(f => f.ease_of_printing_score), mode: "higher" },
+    { label: "Dimensional Accuracy", values: filaments.map(f => f.dimensional_accuracy_score), mode: "higher" },
+    { label: "Strength Index", values: filaments.map(f => f.strength_index), mode: "higher" },
+    { label: "Printability Index", values: filaments.map(f => f.printability_index), mode: "higher" },
+    { label: "Value Score", values: filaments.map(f => f.value_score), mode: "higher" },
+    // Spool
+    { label: "Net Weight", values: filaments.map(f => f.net_weight_g), mode: "higher" },
+    { label: "AMS Compatible", values: filaments.map(f => f.spool_ams_fit), mode: "higher" },
+    // Care
+    { label: "Nozzle Abrasive", values: filaments.map(f => f.is_nozzle_abrasive), mode: "lower" },
+    { label: "Drying Temperature", values: filaments.map(f => f.drying_temp_c), mode: "lower" },
+    { label: "Drying Time", values: filaments.map(f => f.drying_time_hours), mode: "lower" },
+  ];
+
+  // Count wins for each filament
+  const winCounts = filaments.map((_, idx) => {
+    let wins = 0;
+    allCategories.forEach(cat => {
+      const bestIndices = findBestIndices(cat.values, cat.mode);
+      if (bestIndices.includes(idx)) wins++;
+    });
+    return wins;
+  });
+
+  const maxWins = Math.max(...winCounts);
+  const overallWinnerIndices = winCounts
+    .map((count, idx) => (count === maxWins ? idx : -1))
+    .filter(idx => idx !== -1);
+  
+  const totalCategories = allCategories.filter(cat => {
+    const bestIndices = findBestIndices(cat.values, cat.mode);
+    return bestIndices.length > 0;
+  }).length;
+
   const ComparisonRow = ({ 
     label, 
     values, 
@@ -172,6 +229,51 @@ const Compare = () => {
           <h1 className="text-4xl font-bold mb-2">Compare Filaments</h1>
           <p className="text-muted-foreground">Side-by-side comparison of {filaments.length} filaments</p>
         </div>
+
+        {/* Overall Winner Summary */}
+        <Card className="mb-6 border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-transparent">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Trophy className="w-5 h-5 text-amber-500" />
+              Overall Winner Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${filaments.length}, 1fr)` }}>
+              {filaments.map((filament, idx) => {
+                const isOverallWinner = overallWinnerIndices.includes(idx);
+                return (
+                  <div 
+                    key={filament.id} 
+                    className={`p-4 rounded-lg text-center ${
+                      isOverallWinner 
+                        ? "bg-amber-500/20 border-2 border-amber-500" 
+                        : "bg-muted/50 border border-border"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      {isOverallWinner && <Trophy className="w-6 h-6 text-amber-500" />}
+                      <span className={`text-3xl font-bold ${isOverallWinner ? "text-amber-500" : "text-foreground"}`}>
+                        {winCounts[idx]}
+                      </span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      wins out of {totalCategories}
+                    </div>
+                    <div className="text-xs font-medium mt-1 line-clamp-1">
+                      {filament.product_title}
+                    </div>
+                    {isOverallWinner && (
+                      <Badge className="mt-2 bg-amber-500 text-amber-950 hover:bg-amber-400">
+                        Overall Winner
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Filament Headers */}
         <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: `200px repeat(${filaments.length}, 1fr)` }}>
