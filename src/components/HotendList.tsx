@@ -501,21 +501,33 @@ export default function HotendList() {
               </div>
 
               {/* Hotend Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {groupedByBrand[brand].map(group => {
                   const nozzle = group.primaryVariant;
                   const specs = nozzle.specs as Record<string, unknown> | null;
                   const isSelected = group.variants.some(v => selectedIds.has(v.id));
                   
+                  // Get price range
+                  const prices = group.variants.filter(v => v.price).map(v => v.price!);
+                  const minPrice = prices.length > 0 ? Math.min(...prices) : null;
+                  const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
+                  
                   return (
                     <div key={`${group.brand}::${group.baseName}`} className="relative">
-                      {/* Admin Controls */}
+                      {/* Admin Controls - Top Right */}
                       {isAdmin && (
-                        <div className="absolute top-2 left-2 right-2 z-10 flex items-center justify-between">
+                        <div className="absolute top-1 right-1 flex gap-0.5 z-10">
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="h-6 w-6 bg-background/80 backdrop-blur-sm"
+                            onClick={(e) => openImageEditor(nozzle, e)}
+                          >
+                            <ImageIcon className="h-3 w-3" />
+                          </Button>
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => {
-                              // Toggle all variants
                               const newSet = new Set(selectedIds);
                               if (isSelected) {
                                 group.variants.forEach(v => newSet.delete(v.id));
@@ -525,102 +537,104 @@ export default function HotendList() {
                               setSelectedIds(newSet);
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-background/80 backdrop-blur-sm"
+                            className="bg-background/80 backdrop-blur-sm h-5 w-5"
                           />
-                          <Button
-                            variant="secondary"
-                            size="icon"
-                            className="h-7 w-7 bg-background/80 backdrop-blur-sm"
-                            onClick={(e) => openImageEditor(nozzle, e)}
-                          >
-                            <ImageIcon className="h-3.5 w-3.5" />
-                          </Button>
                         </div>
                       )}
 
                       <Link to={`/hotends/${nozzle.id}`}>
-                        <Card className={`p-4 hover:shadow-lg transition-shadow cursor-pointer h-full ${isSelected ? 'ring-2 ring-primary' : ''}`}>
-                          {/* Image */}
-                          <div className="aspect-square mb-4 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                            {nozzle.image_url ? (
-                              <img
-                                src={nozzle.image_url}
-                                alt={nozzle.name}
-                                className="w-full h-full object-contain"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                                }}
-                              />
-                            ) : null}
-                            <div className={`flex flex-col items-center justify-center text-muted-foreground ${nozzle.image_url ? 'hidden' : ''}`}>
-                              <CircleDot className="h-12 w-12 mb-2 opacity-30" />
-                              <span className="text-xs">No image</span>
+                        <Card className={`overflow-hidden hover:shadow-lg transition-shadow cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}>
+                          <div className="flex">
+                            {/* Product Image - Left Side */}
+                            <div className="relative w-28 h-28 shrink-0 bg-muted/30">
+                              {nozzle.image_url ? (
+                                <img
+                                  src={nozzle.image_url}
+                                  alt={nozzle.name}
+                                  className="w-full h-full object-contain p-2"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <CircleDot className="h-10 w-10 text-muted-foreground/30" />
+                                </div>
+                              )}
                             </div>
-                          </div>
 
-                          {/* Name - Use base name */}
-                          <h4 className="font-semibold text-sm line-clamp-2 mb-2">{group.baseName}</h4>
-
-                          {/* Available Diameters */}
-                          {group.diameters.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mb-2">
-                              {group.diameters.map(d => (
-                                <Badge 
-                                  key={d} 
-                                  variant="secondary" 
-                                  className="text-xs px-2 py-0.5"
-                                >
-                                  {d}mm
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Quick Specs */}
-                          <div className="space-y-1.5 text-xs">
-                            {specs?.material && (
-                              <div className="flex items-center gap-1.5 text-muted-foreground">
-                                <Package className="h-3.5 w-3.5" />
-                                <span>{String(specs.material)}</span>
+                            {/* Card Content - Right Side */}
+                            <div className="flex-1 p-3 min-w-0 flex flex-col">
+                              {/* Header with Name and Price */}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <h4 className="text-sm font-bold line-clamp-1">{group.baseName}</h4>
+                                  {nozzle.model && (
+                                    <span className="text-xs text-muted-foreground line-clamp-1">{nozzle.model}</span>
+                                  )}
+                                </div>
+                                {/* Price */}
+                                <div className="shrink-0 text-right">
+                                  {minPrice !== null && (
+                                    <div className="text-sm font-bold text-primary">
+                                      {minPrice === maxPrice 
+                                        ? `$${minPrice.toFixed(2)}` 
+                                        : `$${minPrice.toFixed(2)}+`}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            )}
 
-                            {specs?.max_temp && (
-                              <div className="flex items-center gap-1.5 text-muted-foreground">
-                                <Thermometer className="h-3.5 w-3.5" />
-                                <span>Up to {String(specs.max_temp)}°C</span>
+                              {/* Quick Specs - Compact */}
+                              <div className="text-xs text-muted-foreground space-y-0.5 mt-1.5">
+                                {specs?.material && (
+                                  <div className="flex items-center gap-1">
+                                    <Package className="h-3 w-3" />
+                                    <span>{String(specs.material)}</span>
+                                  </div>
+                                )}
+                                {specs?.max_temp && (
+                                  <div className="flex items-center gap-1">
+                                    <Thermometer className="h-3 w-3" />
+                                    <span>Up to {String(specs.max_temp)}°C</span>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
 
-                          {/* Badges */}
-                          <div className="flex flex-wrap gap-1 mt-3">
-                            {specs?.hardened && (
-                              <Badge variant="outline" className="text-xs">Hardened</Badge>
-                            )}
-                            {nozzle.model && (
-                              <Badge variant="secondary" className="text-xs">{nozzle.model}</Badge>
-                            )}
-                          </div>
-
-                          {/* Price Range */}
-                          {group.variants.some(v => v.price) && (
-                            <div className="mt-3 pt-3 border-t">
-                              {(() => {
-                                const prices = group.variants.filter(v => v.price).map(v => v.price!);
-                                const minPrice = Math.min(...prices);
-                                const maxPrice = Math.max(...prices);
-                                return (
-                                  <span className="font-bold text-primary">
-                                    {minPrice === maxPrice 
-                                      ? `$${minPrice.toFixed(2)} USD` 
-                                      : `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)} USD`}
-                                  </span>
-                                );
-                              })()}
+                              {/* Diameters and Brand Logo Row */}
+                              <div className="flex items-end justify-between gap-2 mt-auto pt-1.5">
+                                <div className="flex flex-wrap gap-1">
+                                  {group.diameters.slice(0, 4).map(d => (
+                                    <Badge 
+                                      key={d} 
+                                      variant="outline" 
+                                      className="text-[10px] px-1.5 py-0 h-4"
+                                    >
+                                      {d}mm
+                                    </Badge>
+                                  ))}
+                                  {group.diameters.length > 4 && (
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+                                      +{group.diameters.length - 4}
+                                    </Badge>
+                                  )}
+                                  {specs?.hardened && (
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">Hardened</Badge>
+                                  )}
+                                </div>
+                                {/* Brand Logo - Bottom Right */}
+                                {getBrandLogo(group.brand) && (
+                                  <div className="shrink-0 px-2 py-1.5 bg-muted/50 rounded border border-border/30">
+                                    <img 
+                                      src={getBrandLogo(group.brand)!} 
+                                      alt={`${group.brand} logo`}
+                                      className="h-10 w-auto object-contain max-w-[120px]"
+                                    />
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          )}
+                          </div>
                         </Card>
                       </Link>
                     </div>
