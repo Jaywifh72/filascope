@@ -2582,6 +2582,46 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                 </Card>
               )}
 
+              {/* Glass Fiber Properties - Only show for GF filaments */}
+              {((filament as any).glass_fiber_percentage !== null && (filament as any).glass_fiber_percentage !== undefined) && (
+                <Card className="bg-gradient-to-br from-cyan-500/5 to-blue-500/5 border-cyan-500/20 hover:shadow-lg transition-shadow md:col-span-2">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2.5 text-lg font-semibold">
+                      <span className="text-2xl">🔷</span>
+                      Glass Fiber Composition
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {/* Glass Fiber Percentage */}
+                      <div className="p-4 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                        <div className="text-xs text-muted-foreground mb-1">Glass Fiber Content</div>
+                        <div className="text-2xl font-bold text-cyan-600">
+                          {(filament as any).glass_fiber_percentage}%
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">glass fiber reinforcement</div>
+                      </div>
+                    </div>
+                    
+                    {/* Glass fiber-specific tips */}
+                    <div className="mt-4 p-4 bg-muted/30 rounded-lg">
+                      <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+                        <span>💡</span> Glass Fiber Filament Tips
+                      </h4>
+                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Use a hardened steel or ruby nozzle — glass fibers are highly abrasive</li>
+                        <li>Print slower than standard materials to reduce nozzle wear</li>
+                        <li>Expect increased stiffness and dimensional stability vs non-reinforced variants</li>
+                        <li>Reduced warping compared to unfilled counterparts</li>
+                        {(filament as any).glass_fiber_percentage >= 25 && (
+                          <li>High fiber content — excellent rigidity, but more brittle than low-fiber variants</li>
+                        )}
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Application Tags */}
               <Card className="bg-card border-border md:col-span-2 hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">

@@ -359,6 +359,7 @@ export type Database = {
           finish_type: string | null
           flexural_strength_mpa: number | null
           food_contact_rating: string | null
+          glass_fiber_percentage: number | null
           gtin: string | null
           high_speed_capable: boolean | null
           id: string
@@ -431,6 +432,7 @@ export type Database = {
           finish_type?: string | null
           flexural_strength_mpa?: number | null
           food_contact_rating?: string | null
+          glass_fiber_percentage?: number | null
           gtin?: string | null
           high_speed_capable?: boolean | null
           id?: string
@@ -503,6 +505,7 @@ export type Database = {
           finish_type?: string | null
           flexural_strength_mpa?: number | null
           food_contact_rating?: string | null
+          glass_fiber_percentage?: number | null
           gtin?: string | null
           high_speed_capable?: boolean | null
           id?: string
