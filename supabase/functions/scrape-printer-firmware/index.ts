@@ -167,7 +167,8 @@ function extractFirmwareFromMarkdown(markdown: string, printerName: string): Fir
 async function useAIToExtractFirmware(
   markdown: string,
   printerName: string,
-  brandName: string
+  brandName: string,
+  sourceUrl: string
 ): Promise<FirmwareRelease[]> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!apiKey) {
@@ -177,25 +178,51 @@ async function useAIToExtractFirmware(
   
   console.log(`Using AI to extract firmware for ${printerName}`);
   
-  // Truncate markdown to avoid token limits
-  const truncatedMarkdown = markdown.slice(0, 15000);
+  // Truncate markdown to avoid token limits but keep more for detailed notes
+  const truncatedMarkdown = markdown.slice(0, 30000);
   
-  const prompt = `Extract all firmware releases for the ${printerName} 3D printer from this content. 
-For each firmware release, extract:
-- version (required): The version number (e.g., "1.2.3" or "v1.2.3.4")
-- release_date: Date in YYYY-MM-DD format if found
-- release_notes: Summary of what's new/fixed (max 500 chars)
-- known_issues: Any known problems mentioned
-- download_url: Direct download link if available
+  const prompt = `You are extracting DETAILED firmware release information for the "${brandName} ${printerName}" 3D printer from this webpage content.
 
-Only include firmware specifically for ${printerName} or compatible with it.
-Return a JSON array of objects. If no firmware found, return empty array [].
+For EACH firmware release you find, extract:
+1. **version** (required): The exact version number (e.g., "1.2.3.4", "v2.0.1")
+2. **release_date**: The release date in YYYY-MM-DD format
+3. **release_notes**: DETAILED description of what's in this release. Include:
+   - New features added
+   - Bug fixes
+   - Improvements and optimizations
+   - Hardware compatibility changes
+   - Print quality improvements
+   - UI/UX changes
+   Format as a readable summary with bullet points if multiple items. Be comprehensive but concise (max 2000 chars).
+4. **changelog**: Additional technical changes if available (separate from release_notes)
+5. **known_issues**: Any bugs or limitations mentioned for this version
+6. **download_url**: Direct download link to the firmware file if available
 
-Content:
+IMPORTANT:
+- Only include firmware specifically for "${printerName}" or its variants
+- Extract ALL version releases found, not just the latest
+- The release_notes should contain the ACTUAL content of what changed, not just "firmware update for ${printerName}"
+- If release notes list specific improvements like "improved first layer calibration", include those details
+
+Return a JSON object with a "releases" array. Example:
+{
+  "releases": [
+    {
+      "version": "1.2.3.4",
+      "release_date": "2024-12-01",
+      "release_notes": "### New Features\\n- Added support for high-speed PLA profiles\\n- Improved AMS material detection\\n\\n### Bug Fixes\\n- Fixed first layer calibration issue\\n- Resolved WiFi connectivity problems",
+      "changelog": "Technical: Updated motion control algorithms",
+      "known_issues": "May require bed re-leveling after update",
+      "download_url": "https://..."
+    }
+  ]
+}
+
+Content to extract from:
 ${truncatedMarkdown}`;
 
   try {
-    const response = await fetch('https://api.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -204,10 +231,12 @@ ${truncatedMarkdown}`;
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a firmware data extractor. Return only valid JSON arrays.' },
+          { 
+            role: 'system', 
+            content: 'You are a firmware changelog parser. Extract detailed, accurate firmware release information from webpage content. Return valid JSON only. Include comprehensive release notes with specific features and fixes mentioned in the source.' 
+          },
           { role: 'user', content: prompt }
         ],
-        response_format: { type: 'json_object' },
       }),
     });
 
@@ -221,9 +250,18 @@ ${truncatedMarkdown}`;
     
     if (!content) return [];
     
+    // Extract JSON from markdown code blocks if present
+    let jsonContent = content;
+    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) {
+      jsonContent = jsonMatch[1].trim();
+    }
+    
     // Parse the JSON response
-    const parsed = JSON.parse(content);
-    const firmwareArray = Array.isArray(parsed) ? parsed : (parsed.firmware || parsed.releases || []);
+    const parsed = JSON.parse(jsonContent);
+    const firmwareArray = Array.isArray(parsed) ? parsed : (parsed.releases || parsed.firmware || []);
+    
+    console.log(`AI extracted ${firmwareArray.length} firmware releases`);
     
     return firmwareArray.map((fw: any, idx: number) => ({
       version: fw.version || 'Unknown',
@@ -231,15 +269,109 @@ ${truncatedMarkdown}`;
       release_notes: fw.release_notes || null,
       changelog: fw.changelog || null,
       download_url: fw.download_url || null,
-      file_size_mb: fw.file_size_mb || null,
+      file_size_mb: fw.file_size_mb ? parseFloat(fw.file_size_mb) : null,
       known_issues: fw.known_issues || null,
       is_latest: idx === 0,
-      source_url: null,
+      source_url: sourceUrl,
     }));
   } catch (error) {
     console.error('AI extraction error:', error);
     return [];
   }
+}
+
+// Fetch detailed release notes from individual source pages
+async function fetchDetailedReleaseNotes(
+  firmware: FirmwareRelease[],
+  firecrawlKey: string,
+  printerName: string,
+  brandName: string
+): Promise<FirmwareRelease[]> {
+  const apiKey = Deno.env.get('LOVABLE_API_KEY');
+  if (!apiKey) return firmware;
+  
+  // Only fetch details for releases with source URLs that have sparse notes
+  const needsDetails = firmware.filter(f => 
+    f.source_url && 
+    (!f.release_notes || f.release_notes.length < 100)
+  ).slice(0, 3); // Limit to 3 to avoid timeouts
+  
+  if (needsDetails.length === 0) return firmware;
+  
+  console.log(`Fetching detailed notes for ${needsDetails.length} releases`);
+  
+  for (const release of needsDetails) {
+    if (!release.source_url) continue;
+    
+    try {
+      const scrapeResult = await scrapeWithFirecrawl(release.source_url, firecrawlKey);
+      
+      if (scrapeResult?.success && scrapeResult?.data?.markdown) {
+        const markdown = scrapeResult.data.markdown.slice(0, 20000);
+        
+        const detailPrompt = `Extract the detailed release notes for firmware version "${release.version}" of the ${brandName} ${printerName} from this content.
+
+Include:
+- All new features
+- Bug fixes
+- Improvements
+- Any compatibility notes
+- Known issues
+
+Return a JSON object with:
+{
+  "release_notes": "detailed notes here with markdown formatting",
+  "changelog": "technical changelog if separate",
+  "known_issues": "any known issues",
+  "download_url": "direct download link if found"
+}
+
+Content:
+${markdown}`;
+
+        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: 'Extract detailed firmware release notes. Return valid JSON only.' },
+              { role: 'user', content: detailPrompt }
+            ],
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const content = data.choices?.[0]?.message?.content;
+          
+          if (content) {
+            let jsonContent = content;
+            const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+            if (jsonMatch) jsonContent = jsonMatch[1].trim();
+            
+            const details = JSON.parse(jsonContent);
+            
+            // Update the release with detailed info
+            const idx = firmware.findIndex(f => f.version === release.version);
+            if (idx !== -1) {
+              if (details.release_notes) firmware[idx].release_notes = details.release_notes;
+              if (details.changelog) firmware[idx].changelog = details.changelog;
+              if (details.known_issues) firmware[idx].known_issues = details.known_issues;
+              if (details.download_url) firmware[idx].download_url = details.download_url;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching details for ${release.version}:`, error);
+    }
+  }
+  
+  return firmware;
 }
 
 Deno.serve(async (req) => {
@@ -314,11 +446,11 @@ Deno.serve(async (req) => {
         if (scrapeResult?.success && scrapeResult?.data?.markdown) {
           const markdown = scrapeResult.data.markdown;
           
-          // Try AI extraction first
-          const aiFirmware = await useAIToExtractFirmware(markdown, printerName, brandName);
+          // Try AI extraction first with source URL
+          const aiFirmware = await useAIToExtractFirmware(markdown, printerName, brandName, url);
           
           if (aiFirmware.length > 0) {
-            allFirmware = [...allFirmware, ...aiFirmware.map(f => ({ ...f, source_url: url }))];
+            allFirmware = [...allFirmware, ...aiFirmware];
             sourceUrl = url;
             console.log(`AI extracted ${aiFirmware.length} firmware releases from ${url}`);
           } else {
@@ -340,17 +472,29 @@ Deno.serve(async (req) => {
     const uniqueFirmware = new Map<string, FirmwareRelease>();
     for (const fw of allFirmware) {
       const existing = uniqueFirmware.get(fw.version);
-      if (!existing || (fw.release_notes && !existing.release_notes)) {
+      if (!existing || (fw.release_notes && fw.release_notes.length > (existing.release_notes?.length || 0))) {
         uniqueFirmware.set(fw.version, fw);
       }
     }
     
-    const finalFirmware = Array.from(uniqueFirmware.values());
+    let finalFirmware = Array.from(uniqueFirmware.values());
     
-    // Mark the latest one
+    // Mark the latest one (sort by date first if available)
+    finalFirmware.sort((a, b) => {
+      if (a.release_date && b.release_date) {
+        return new Date(b.release_date).getTime() - new Date(a.release_date).getTime();
+      }
+      if (a.release_date) return -1;
+      if (b.release_date) return 1;
+      return 0;
+    });
+    
     if (finalFirmware.length > 0) {
       finalFirmware.forEach((f, i) => f.is_latest = i === 0);
     }
+    
+    // Fetch detailed release notes for releases with sparse notes
+    finalFirmware = await fetchDetailedReleaseNotes(finalFirmware, firecrawlKey, printerName, brandName);
     
     console.log(`Total unique firmware releases found: ${finalFirmware.length}`);
     
