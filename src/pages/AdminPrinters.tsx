@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles, Cpu, Globe, FileCode } from "lucide-react";
+import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles, Cpu, Globe, FileCode, AppWindow, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -91,10 +91,17 @@ export default function AdminPrinters() {
   const [globalPriceLimit, setGlobalPriceLimit] = useState<number>(5);
   const [globalPriceResults, setGlobalPriceResults] = useState<any>(null);
   
-  // Firmware scraping state
+  // Firmware and Software scraping state
   const [firmwareScrapingBrand, setFirmwareScrapingBrand] = useState<string>("");
   const [firmwareScraping, setFirmwareScraping] = useState(false);
-  const [firmwareScrapeStats, setFirmwareScrapeStats] = useState<{ total: number; completed: number; successful: number } | null>(null);
+  const [firmwareScrapeStats, setFirmwareScrapeStats] = useState<{ 
+    total: number; 
+    completed: number; 
+    firmwareSuccessful: number;
+    softwareSuccessful: number;
+    softwareCleaned: number;
+    phase: 'cleanup' | 'firmware' | 'software' | 'done';
+  } | null>(null);
 
   // Query ALL printers and count pricing status in memory for accuracy
   const { data: allPrinters, refetch: refetchAllPrinters } = useQuery({
@@ -802,11 +809,11 @@ export default function AdminPrinters() {
     }
   };
 
-  const handleBatchFirmwareScrape = async () => {
+  const handleBatchFirmwareAndSoftwareScrape = async () => {
     if (!firmwareScrapingBrand) {
       toast({
         title: "No brand selected",
-        description: "Please select a brand to scrape firmware for",
+        description: "Please select a brand to scrape firmware and software for",
         variant: "destructive",
       });
       return;
@@ -839,17 +846,79 @@ export default function AdminPrinters() {
         return;
       }
 
-      setFirmwareScrapeStats({ total: brandPrinters.length, completed: 0, successful: 0 });
+      // Phase 1: Clean up software entries from firmware table
+      setFirmwareScrapeStats({ 
+        total: brandPrinters.length, 
+        completed: 0, 
+        firmwareSuccessful: 0,
+        softwareSuccessful: 0,
+        softwareCleaned: 0,
+        phase: 'cleanup'
+      });
 
+      toast({
+        title: "Cleaning up misplaced software entries",
+        description: `Checking firmware table for software entries to remove...`,
+      });
+
+      // Software keywords to detect misplaced entries in firmware table
+      const softwareKeywords = ['studio', 'slicer', 'handy', 'app', 'software', 'orca', 'cura', 'prusa'];
+      
+      let softwareCleaned = 0;
+      for (const printer of brandPrinters) {
+        // Fetch firmware entries for this printer
+        const { data: firmwareEntries, error: fwError } = await supabase
+          .from('printer_firmware')
+          .select('id, version, release_notes')
+          .eq('printer_id', printer.id);
+        
+        if (!fwError && firmwareEntries) {
+          // Find entries that look like software (not firmware)
+          const softwareEntries = firmwareEntries.filter(fw => {
+            const versionLower = (fw.version || '').toLowerCase();
+            const notesLower = (fw.release_notes || '').toLowerCase();
+            return softwareKeywords.some(kw => 
+              versionLower.includes(kw) || notesLower.includes(kw)
+            );
+          });
+          
+          if (softwareEntries.length > 0) {
+            const idsToDelete = softwareEntries.map(e => e.id);
+            const { error: deleteError } = await supabase
+              .from('printer_firmware')
+              .delete()
+              .in('id', idsToDelete);
+            
+            if (!deleteError) {
+              softwareCleaned += softwareEntries.length;
+              console.log(`Cleaned ${softwareEntries.length} software entries from firmware for ${printer.model_name}`);
+            }
+          }
+        }
+      }
+
+      setFirmwareScrapeStats(prev => prev ? { 
+        ...prev, 
+        softwareCleaned,
+        phase: 'firmware'
+      } : null);
+
+      if (softwareCleaned > 0) {
+        toast({
+          title: "Cleanup complete",
+          description: `Removed ${softwareCleaned} software entries from firmware table`,
+        });
+      }
+
+      // Phase 2: Scrape firmware
       toast({
         title: "Firmware scraping started",
         description: `Scraping firmware for ${brandPrinters.length} ${selectedBrandObj.brand} printers...`,
       });
 
-      // Process printers in batches
       const batchSize = 3;
       let completed = 0;
-      let successful = 0;
+      let firmwareSuccessful = 0;
 
       for (let i = 0; i < brandPrinters.length; i += batchSize) {
         const batch = brandPrinters.slice(i, i + batchSize);
@@ -866,35 +935,105 @@ export default function AdminPrinters() {
               });
 
               if (!error && data?.firmware_count > 0) {
-                successful++;
+                firmwareSuccessful++;
               }
               completed++;
-              setFirmwareScrapeStats({ total: brandPrinters.length, completed, successful });
+              setFirmwareScrapeStats(prev => prev ? { 
+                ...prev, 
+                completed, 
+                firmwareSuccessful,
+                phase: 'firmware'
+              } : null);
             } catch (error) {
               console.error(`Failed to scrape firmware for ${printer.model_name}:`, error);
               completed++;
-              setFirmwareScrapeStats({ total: brandPrinters.length, completed, successful });
+              setFirmwareScrapeStats(prev => prev ? { 
+                ...prev, 
+                completed, 
+                firmwareSuccessful,
+                phase: 'firmware'
+              } : null);
             }
           })
         );
 
-        // Small delay between batches
         if (i + batchSize < brandPrinters.length) {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
 
+      // Phase 3: Scrape software
+      setFirmwareScrapeStats(prev => prev ? { 
+        ...prev, 
+        completed: 0,
+        phase: 'software'
+      } : null);
+
       toast({
-        title: "Firmware scraping completed",
-        description: `Found firmware for ${successful} out of ${brandPrinters.length} printers`,
+        title: "Software scraping started",
+        description: `Scraping software for ${brandPrinters.length} ${selectedBrandObj.brand} printers...`,
+      });
+
+      completed = 0;
+      let softwareSuccessful = 0;
+
+      for (let i = 0; i < brandPrinters.length; i += batchSize) {
+        const batch = brandPrinters.slice(i, i + batchSize);
+
+        await Promise.all(
+          batch.map(async (printer) => {
+            try {
+              const { data, error } = await supabase.functions.invoke('scrape-printer-software', {
+                body: {
+                  printer_id: printer.id,
+                },
+              });
+
+              if (!error && data?.software_count > 0) {
+                softwareSuccessful++;
+              }
+              completed++;
+              setFirmwareScrapeStats(prev => prev ? { 
+                ...prev, 
+                completed, 
+                softwareSuccessful,
+                phase: 'software'
+              } : null);
+            } catch (error) {
+              console.error(`Failed to scrape software for ${printer.model_name}:`, error);
+              completed++;
+              setFirmwareScrapeStats(prev => prev ? { 
+                ...prev, 
+                completed, 
+                softwareSuccessful,
+                phase: 'software'
+              } : null);
+            }
+          })
+        );
+
+        if (i + batchSize < brandPrinters.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      setFirmwareScrapeStats(prev => prev ? { 
+        ...prev, 
+        phase: 'done'
+      } : null);
+
+      toast({
+        title: "Firmware & Software scraping completed",
+        description: `Firmware: ${firmwareSuccessful}/${brandPrinters.length} | Software: ${softwareSuccessful}/${brandPrinters.length} | Cleaned: ${softwareCleaned}`,
       });
 
       queryClient.invalidateQueries({ queryKey: ["printer-firmware"] });
+      queryClient.invalidateQueries({ queryKey: ["printer-software"] });
     } catch (error: any) {
-      console.error("Firmware scrape error:", error);
+      console.error("Firmware/Software scrape error:", error);
       toast({
-        title: "Firmware scraping failed",
-        description: error.message || "An error occurred during firmware scraping",
+        title: "Scraping failed",
+        description: error.message || "An error occurred during scraping",
         variant: "destructive",
       });
     } finally {
@@ -1635,18 +1774,18 @@ export default function AdminPrinters() {
 
             <Separator />
 
-            {/* Batch Firmware Scraping Section */}
+            {/* Batch Firmware and Software Scraping Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileCode className="h-5 w-5" />
-                  Batch Firmware Scraping
+                  Batch Firmware & Software Scraping
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    Scrape firmware release history for all printers of a selected brand. Extracts version numbers, release dates, release notes, and download links.
+                    Scrape firmware and software (slicers, apps) for all printers of a selected brand. Also cleans up any software entries incorrectly placed in the firmware table.
                   </p>
                 </div>
 
@@ -1677,9 +1816,13 @@ export default function AdminPrinters() {
                 </div>
 
                 {firmwareScrapeStats && (
-                  <div className="space-y-2 p-4 bg-muted rounded-lg">
+                  <div className="space-y-3 p-4 bg-muted rounded-lg">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">Progress:</span>
+                      <span className="font-medium">
+                        Phase: {firmwareScrapeStats.phase === 'cleanup' ? 'Cleaning up...' : 
+                               firmwareScrapeStats.phase === 'firmware' ? 'Scraping Firmware...' : 
+                               firmwareScrapeStats.phase === 'software' ? 'Scraping Software...' : 'Complete'}
+                      </span>
                       <span className="text-muted-foreground">
                         {firmwareScrapeStats.completed} / {firmwareScrapeStats.total} printers
                       </span>
@@ -1688,14 +1831,25 @@ export default function AdminPrinters() {
                       value={(firmwareScrapeStats.completed / firmwareScrapeStats.total) * 100} 
                       className="h-2"
                     />
-                    <div className="text-xs text-muted-foreground">
-                      Found firmware for {firmwareScrapeStats.successful} printers
+                    <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Trash2 className="h-3 w-3" />
+                        Cleaned: {firmwareScrapeStats.softwareCleaned}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <FileCode className="h-3 w-3" />
+                        Firmware: {firmwareScrapeStats.firmwareSuccessful}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <AppWindow className="h-3 w-3" />
+                        Software: {firmwareScrapeStats.softwareSuccessful}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 <Button
-                  onClick={handleBatchFirmwareScrape}
+                  onClick={handleBatchFirmwareAndSoftwareScrape}
                   disabled={!firmwareScrapingBrand || firmwareScraping || brandsLoading}
                   className="w-full gap-2"
                   size="lg"
@@ -1703,12 +1857,14 @@ export default function AdminPrinters() {
                   {firmwareScraping ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Scraping Firmware...
+                      {firmwareScrapeStats?.phase === 'cleanup' ? 'Cleaning Up...' :
+                       firmwareScrapeStats?.phase === 'firmware' ? 'Scraping Firmware...' :
+                       firmwareScrapeStats?.phase === 'software' ? 'Scraping Software...' : 'Processing...'}
                     </>
                   ) : (
                     <>
                       <FileCode className="h-4 w-4" />
-                      Scrape All Firmware
+                      Scrape Firmware & Software
                       {firmwareScrapingBrand && brands && (
                         <span className="opacity-70">
                           ({brands.find(b => b.id === firmwareScrapingBrand)?.brand})
