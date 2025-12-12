@@ -424,21 +424,36 @@ export default function Printers() {
                 <Link to={`/printers/${printer.id}`}>
                   <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
                     <div className="flex">
-                      {/* Product Image - Left Side */}
-                      <div className="relative w-28 h-28 shrink-0 bg-muted/30">
-                        {productImage ? (
-                          <img 
-                            src={productImage} 
-                            alt={printer.model_name}
-                            className="w-full h-full object-contain p-2"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <PrinterIcon className="h-10 w-10 text-muted-foreground/30" />
-                          </div>
+                      {/* Product Image and Wiki Link - Left Side */}
+                      <div className="flex flex-col shrink-0">
+                        <div className="relative w-28 h-28 bg-muted/30">
+                          {productImage ? (
+                            <img 
+                              src={productImage} 
+                              alt={printer.model_name}
+                              className="w-full h-full object-contain p-2"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <PrinterIcon className="h-10 w-10 text-muted-foreground/30" />
+                            </div>
+                          )}
+                        </div>
+                        {/* Wiki Link - Below Image */}
+                        {BRAND_WIKI_URLS[printer.brand?.brand || ""] && (
+                          <a
+                            href={BRAND_WIKI_URLS[printer.brand?.brand || ""]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center justify-center gap-1 py-1.5 text-xs text-muted-foreground hover:text-primary bg-muted/20 hover:bg-muted/40 transition-colors"
+                          >
+                            <BookOpen className="h-3 w-3" />
+                            <span>Wiki</span>
+                          </a>
                         )}
                       </div>
 
@@ -520,18 +535,6 @@ export default function Printers() {
 
                 {/* Interactive Controls - Top Right */}
                 <div className="absolute top-1 right-1 flex gap-0.5 z-10">
-                  {BRAND_WIKI_URLS[printer.brand?.brand || ""] && (
-                    <a
-                      href={BRAND_WIKI_URLS[printer.brand?.brand || ""]}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      title={`${printer.brand?.brand} Wiki`}
-                      className="bg-background/80 backdrop-blur-sm rounded p-1 hover:bg-background transition-colors"
-                    >
-                      <BookOpen className="h-3 w-3 text-muted-foreground hover:text-primary" />
-                    </a>
-                  )}
                   {isAdmin && (
                     <Button 
                       variant="ghost" 
