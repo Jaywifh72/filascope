@@ -773,15 +773,16 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
   };
 
   const deleteEntity = async (result: UrlValidationResult) => {
-    if (result.entity_type !== 'filament') {
-      toast.error("Only filaments can be deleted from this view");
+    if (result.entity_type !== 'filament' && result.entity_type !== 'accessory') {
+      toast.error("Only filaments and accessories can be deleted from this view");
       return;
     }
     if (!window.confirm(`Delete ${result.entity_name}?`)) return;
 
     setDeletingIds(prev => new Set(prev).add(result.id));
     try {
-      await supabase.from('filaments').delete().eq('id', result.entity_id);
+      const tableName = result.entity_type === 'filament' ? 'filaments' : 'printer_accessories';
+      await supabase.from(tableName).delete().eq('id', result.entity_id);
       await supabase.from('url_validation_results').delete().eq('id', result.id);
       toast.success("Deleted");
       await fetchResultsAndStats();
@@ -999,7 +1000,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
                                     <ShieldCheck className="w-3 h-3" />
                                   </Button>
                                 )}
-                                {result.entity_type === 'filament' && (
+                                {(result.entity_type === 'filament' || result.entity_type === 'accessory') && (
                                   <Button variant="ghost" size="sm" className="h-7 text-destructive" onClick={() => deleteEntity(result)} disabled={deletingIds.has(result.id)}>
                                     {deletingIds.has(result.id) ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
                                   </Button>
