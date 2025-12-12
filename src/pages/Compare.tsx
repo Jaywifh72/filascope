@@ -17,6 +17,12 @@ import {
   Legend,
   ResponsiveContainer,
   Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Cell,
 } from "recharts";
 
 type Filament = Tables<"filaments">;
@@ -373,6 +379,143 @@ const Compare = () => {
             <p className="text-xs text-muted-foreground text-center mt-2">
               Values normalized to 0-100% scale relative to compared filaments
             </p>
+          </CardContent>
+        </Card>
+
+        {/* Bar Chart - Raw Values Comparison */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Direct Value Comparison</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-8">
+              {/* Strength Metrics */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-3">Mechanical Properties</h4>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        {
+                          metric: "Tensile Strength (MPa)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.tensile_strength_xy_mpa || 0]))
+                        },
+                        {
+                          metric: "Flexural Strength (MPa)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.flexural_strength_mpa || 0]))
+                        },
+                        {
+                          metric: "Elongation (%)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.elongation_break_xy_percent || 0]))
+                        },
+                      ]}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px"
+                        }}
+                      />
+                      {filaments.map((f, idx) => (
+                        <Bar key={f.id} dataKey={`f${idx}`} name={f.product_title?.substring(0, 25) || `Filament ${idx + 1}`} fill={chartColors[idx % chartColors.length]} />
+                      ))}
+                      <Legend formatter={(value) => <span className="text-xs">{value}</span>} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Performance Scores */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-3">Performance Scores</h4>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        {
+                          metric: "Strength Index",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.strength_index || 0]))
+                        },
+                        {
+                          metric: "Printability",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.printability_index || 0]))
+                        },
+                        {
+                          metric: "Value Score",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.value_score || 0]))
+                        },
+                        {
+                          metric: "Ease of Print",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.ease_of_printing_score || 0]))
+                        },
+                      ]}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px"
+                        }}
+                      />
+                      {filaments.map((f, idx) => (
+                        <Bar key={f.id} dataKey={`f${idx}`} name={f.product_title?.substring(0, 25) || `Filament ${idx + 1}`} fill={chartColors[idx % chartColors.length]} />
+                      ))}
+                      <Legend formatter={(value) => <span className="text-xs">{value}</span>} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Thermal Properties */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-3">Thermal & Print Settings</h4>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        {
+                          metric: "Glass Transition (°C)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.tg_c || 0]))
+                        },
+                        {
+                          metric: "Max Nozzle Temp (°C)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.nozzle_temp_max_c || 0]))
+                        },
+                        {
+                          metric: "Max Print Speed (mm/s)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.print_speed_max_mms || 0]))
+                        },
+                      ]}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px"
+                        }}
+                      />
+                      {filaments.map((f, idx) => (
+                        <Bar key={f.id} dataKey={`f${idx}`} name={f.product_title?.substring(0, 25) || `Filament ${idx + 1}`} fill={chartColors[idx % chartColors.length]} />
+                      ))}
+                      <Legend formatter={(value) => <span className="text-xs">{value}</span>} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
