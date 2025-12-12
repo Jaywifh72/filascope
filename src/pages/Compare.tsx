@@ -8,6 +8,16 @@ import { Separator } from "@/components/ui/separator";
 import { GitCompare, ArrowLeft, ExternalLink, Trophy } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import type { Tables } from "@/integrations/supabase/types";
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 
 type Filament = Tables<"filaments">;
 
@@ -180,6 +190,45 @@ const Compare = () => {
     return bestIndices.length > 0;
   }).length;
 
+  // Prepare radar chart data - normalize values to 0-100 scale
+  const radarMetrics = [
+    { key: "strength", label: "Strength", getValue: (f: Filament) => f.strength_index, mode: "higher" as CompareMode },
+    { key: "printability", label: "Printability", getValue: (f: Filament) => f.printability_index, mode: "higher" as CompareMode },
+    { key: "value", label: "Value", getValue: (f: Filament) => f.value_score, mode: "higher" as CompareMode },
+    { key: "heatResist", label: "Heat Resistance", getValue: (f: Filament) => f.tg_c, mode: "higher" as CompareMode },
+    { key: "flexibility", label: "Flexibility", getValue: (f: Filament) => f.elongation_break_xy_percent, mode: "higher" as CompareMode },
+    { key: "easeOfPrint", label: "Ease of Printing", getValue: (f: Filament) => f.ease_of_printing_score, mode: "higher" as CompareMode },
+  ];
+
+  const normalizeValue = (value: number | null, allValues: (number | null)[], mode: CompareMode): number => {
+    if (value === null) return 0;
+    const validValues = allValues.filter((v): v is number => v !== null);
+    if (validValues.length === 0) return 0;
+    const min = Math.min(...validValues);
+    const max = Math.max(...validValues);
+    if (max === min) return 50;
+    const normalized = ((value - min) / (max - min)) * 100;
+    return mode === "lower" ? 100 - normalized : normalized;
+  };
+
+  const radarData = radarMetrics.map(metric => {
+    const allValues = filaments.map(f => metric.getValue(f));
+    const dataPoint: Record<string, string | number> = { metric: metric.label };
+    filaments.forEach((f, idx) => {
+      dataPoint[`filament${idx}`] = normalizeValue(metric.getValue(f), allValues, metric.mode);
+    });
+    return dataPoint;
+  });
+
+  // Colors for radar chart lines
+  const chartColors = [
+    "hsl(var(--primary))",
+    "hsl(45, 93%, 47%)", // amber
+    "hsl(142, 71%, 45%)", // green
+    "hsl(271, 91%, 65%)", // purple
+    "hsl(199, 89%, 48%)", // blue
+  ];
+
   const ComparisonRow = ({ 
     label, 
     values, 
@@ -272,6 +321,58 @@ const Compare = () => {
                 );
               })}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Radar Chart Visualization */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Performance Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[400px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={radarData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
+                  <PolarGrid stroke="hsl(var(--border))" />
+                  <PolarAngleAxis 
+                    dataKey="metric" 
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                  />
+                  <PolarRadiusAxis 
+                    angle={30} 
+                    domain={[0, 100]} 
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                    tickCount={5}
+                  />
+                  {filaments.map((filament, idx) => (
+                    <Radar
+                      key={filament.id}
+                      name={filament.product_title?.substring(0, 30) || `Filament ${idx + 1}`}
+                      dataKey={`filament${idx}`}
+                      stroke={chartColors[idx % chartColors.length]}
+                      fill={chartColors[idx % chartColors.length]}
+                      fillOpacity={0.15}
+                      strokeWidth={2}
+                    />
+                  ))}
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px"
+                    }}
+                    formatter={(value: number) => [`${Math.round(value)}%`, "Score"]}
+                  />
+                  <Legend 
+                    wrapperStyle={{ paddingTop: 20 }}
+                    formatter={(value) => <span className="text-sm text-foreground">{value}</span>}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Values normalized to 0-100% scale relative to compared filaments
+            </p>
           </CardContent>
         </Card>
 
