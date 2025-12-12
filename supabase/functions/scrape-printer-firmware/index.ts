@@ -416,12 +416,50 @@ ${truncatedMarkdown}`;
       return false;
     };
     
+    // Strict firmware version validation - WHITELIST approach for brands with known patterns
+    const isValidFirmwareVersion = (version: string): boolean => {
+      const v = version.replace(/^v/i, '').trim();
+      
+      // Bambu Lab: MUST match 01.xx.xx.xx format (starts with 0, 4 segments of 2 digits)
+      if (brandName === 'Bambu Lab') {
+        const isValid = /^0[0-9]\.\d{2}\.\d{2}\.\d{2}$/.test(v);
+        if (!isValid) {
+          console.log(`[Bambu] Rejecting non-firmware version format: ${version}`);
+        }
+        return isValid;
+      }
+      
+      // Prusa: Must match 5.x.x, 4.x.x, or 3.x.x format
+      if (brandName === 'Prusa Research') {
+        return /^[345]\.\d+\.\d+(-\w+)?$/.test(v);
+      }
+      
+      // Other brands - use existing logic but be strict about software patterns
+      const firmwarePatterns = BRAND_FIRMWARE_VERSION_PATTERNS[brandName];
+      if (firmwarePatterns) {
+        return firmwarePatterns.some(pattern => pattern.test(v) || pattern.test(version));
+      }
+      
+      // Default: reject obvious software version patterns (2.x.x, 3.x.x)
+      if (/^[23]\.\d+\.\d+(\.\d+)?$/.test(v)) {
+        console.log(`Rejecting software version pattern: ${version}`);
+        return false;
+      }
+      
+      return true;
+    };
+    
     const filteredFirmware = firmwareArray.filter((fw: any) => {
       const version = fw.version || '';
       const notes = fw.release_notes || '';
       const combined = `${version} ${notes}`.toLowerCase();
       
-      // Check content first - most reliable filter
+      // FIRST: Validate firmware version format (whitelist for Bambu Lab)
+      if (!isValidFirmwareVersion(version)) {
+        return false;
+      }
+      
+      // Check content for software indicators
       if (isSoftwareByContent(fw)) {
         console.log(`Filtering out software by content: ${version}`);
         return false;
