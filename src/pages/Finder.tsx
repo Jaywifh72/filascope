@@ -454,7 +454,12 @@ const Finder = () => {
     const material = filament.material?.toLowerCase() || '';
     const title = filament.product_title?.toLowerCase() || '';
     const hasGFContent = filament.glass_fiber_percentage !== null && filament.glass_fiber_percentage !== undefined && filament.glass_fiber_percentage > 0;
-    return hasGFContent || material.includes('-gf') || material.includes(' gf') || title.includes('glass fiber') || title.includes('glass-fiber');
+    // Match patterns: -GF, +GF, GF+, _GF, " GF", "glass fiber", NylonG, material ending in GF
+    return hasGFContent || 
+      material.includes('-gf') || material.includes('+gf') || material.endsWith('gf') ||
+      title.includes('+gf') || title.includes('gf+') || title.includes('-gf') ||
+      title.includes('glass fiber') || title.includes('glass-fiber') ||
+      material.includes('nylong');
   };
 
   // Get glass fiber percentage for display
