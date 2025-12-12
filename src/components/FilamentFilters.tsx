@@ -21,6 +21,8 @@ interface FilterPreset {
     highSpeed?: boolean;
     matte?: boolean;
     carbonFiber?: boolean;
+    glassFiber?: boolean;
+    woodFilled?: boolean;
     glow?: boolean;
     plasticSpool?: boolean;
     cardboardSpool?: boolean;
@@ -44,6 +46,10 @@ interface FilamentFiltersProps {
   onMatteChange: (checked: boolean) => void;
   carbonFiber: boolean;
   onCarbonFiberChange: (checked: boolean) => void;
+  glassFiber: boolean;
+  onGlassFiberChange: (checked: boolean) => void;
+  woodFilled: boolean;
+  onWoodFilledChange: (checked: boolean) => void;
   glow: boolean;
   onGlowChange: (checked: boolean) => void;
   
@@ -124,6 +130,10 @@ const FilterContent = ({
   onMatteChange,
   carbonFiber,
   onCarbonFiberChange,
+  glassFiber,
+  onGlassFiberChange,
+  woodFilled,
+  onWoodFilledChange,
   glow,
   onGlowChange,
   plasticSpool,
@@ -383,6 +393,30 @@ const FilterContent = ({
             <Switch
               checked={carbonFiber}
               onCheckedChange={onCarbonFiberChange}
+              className="data-[state=checked]:bg-cyan-500 scale-75"
+            />
+          </label>
+          
+          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
+            <div className="flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Glass Fiber</span>
+            </div>
+            <Switch
+              checked={glassFiber}
+              onCheckedChange={onGlassFiberChange}
+              className="data-[state=checked]:bg-cyan-500 scale-75"
+            />
+          </label>
+          
+          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">🪵</span>
+              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Wood Filled</span>
+            </div>
+            <Switch
+              checked={woodFilled}
+              onCheckedChange={onWoodFilledChange}
               className="data-[state=checked]:bg-cyan-500 scale-75"
             />
           </label>

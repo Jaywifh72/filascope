@@ -46,6 +46,8 @@ const Finder = () => {
   const [highSpeed, setHighSpeed] = useState(false);
   const [matte, setMatte] = useState(false);
   const [carbonFiber, setCarbonFiber] = useState(false);
+  const [glassFiber, setGlassFiber] = useState(false);
+  const [woodFilled, setWoodFilled] = useState(false);
   const [glow, setGlow] = useState(false);
   const [plasticSpool, setPlasticSpool] = useState(false);
   const [cardboardSpool, setCardboardSpool] = useState(false);
@@ -664,7 +666,13 @@ const Finder = () => {
     if (matte && f.finish_type?.toLowerCase() !== 'matte') return false;
     
     // Apply carbon fiber filter
-    if (carbonFiber && !f.material?.toLowerCase().includes('cf') && !f.material?.toLowerCase().includes('carbon')) return false;
+    if (carbonFiber && !isCarbonFiberFilament(f)) return false;
+    
+    // Apply glass fiber filter
+    if (glassFiber && !isGlassFiberFilament(f)) return false;
+    
+    // Apply wood filled filter
+    if (woodFilled && !isWoodFilament(f)) return false;
     
     // Apply glow filter
     if (glow && !f.material?.toLowerCase().includes('glow') && !f.product_title?.toLowerCase().includes('glow')) return false;
@@ -753,6 +761,10 @@ const Finder = () => {
           onMatteChange={setMatte}
           carbonFiber={carbonFiber}
           onCarbonFiberChange={setCarbonFiber}
+          glassFiber={glassFiber}
+          onGlassFiberChange={setGlassFiber}
+          woodFilled={woodFilled}
+          onWoodFilledChange={setWoodFilled}
           glow={glow}
           onGlowChange={setGlow}
           plasticSpool={plasticSpool}
@@ -772,6 +784,8 @@ const Finder = () => {
             setHighSpeed(false);
             setMatte(false);
             setCarbonFiber(false);
+            setGlassFiber(false);
+            setWoodFilled(false);
             setGlow(false);
             setPlasticSpool(false);
             setCardboardSpool(false);
@@ -784,6 +798,8 @@ const Finder = () => {
             (highSpeed ? 1 : 0) +
             (matte ? 1 : 0) +
             (carbonFiber ? 1 : 0) +
+            (glassFiber ? 1 : 0) +
+            (woodFilled ? 1 : 0) +
             (glow ? 1 : 0) +
             (plasticSpool ? 1 : 0) +
             (cardboardSpool ? 1 : 0) +
@@ -797,6 +813,8 @@ const Finder = () => {
             setHighSpeed(preset.filters.highSpeed ?? false);
             setMatte(preset.filters.matte ?? false);
             setCarbonFiber(preset.filters.carbonFiber ?? false);
+            setGlassFiber(preset.filters.glassFiber ?? false);
+            setWoodFilled(preset.filters.woodFilled ?? false);
             setGlow(preset.filters.glow ?? false);
             setPlasticSpool(preset.filters.plasticSpool ?? false);
             setCardboardSpool(preset.filters.cardboardSpool ?? false);
