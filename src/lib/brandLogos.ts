@@ -3,8 +3,8 @@
 export const brandLogos: Record<string, string> = {
   // Filament brands
   "Bambu Lab": "/images/brands/bambu-lab.webp",
-  "Overture": "/images/brands/overture.webp",
-  "Overture 3D": "/images/brands/overture.webp",
+  "Overture": "/images/brands/overture.png",
+  "Overture 3D": "/images/brands/overture.png",
   "3DXTech": "/images/brands/3dxtech-new.png",
   "Filamentum": "/images/brands/filamentum.webp",
   "Fillamentum": "/images/brands/filamentum.webp", // Alternate spelling
