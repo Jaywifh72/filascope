@@ -442,7 +442,7 @@ export default function Printers() {
                         )}
                         {/* Brand Logo Overlay */}
                         {getBrandLogo(printer.brand?.brand || null) && (
-                          <div className="absolute bottom-1 left-1 p-1 bg-background/80 rounded border border-border/50 backdrop-blur-sm">
+                          <div className="absolute bottom-1 right-1 p-1 bg-background/80 rounded border border-border/50 backdrop-blur-sm">
                             <img 
                               src={getBrandLogo(printer.brand?.brand || null)!} 
                               alt={`${printer.brand?.brand} logo`}
