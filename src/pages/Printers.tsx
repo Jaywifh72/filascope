@@ -443,7 +443,7 @@ export default function Printers() {
                       </div>
 
                       {/* Card Content - Right Side */}
-                      <div className="flex-1 p-3 min-w-0 flex flex-col">
+                      <div className="flex-1 p-3 min-w-0 flex flex-col relative">
                         {/* Header with Name and Price */}
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
@@ -456,8 +456,8 @@ export default function Printers() {
                               </span>
                             )}
                           </div>
-                          {/* Price and Brand Logo */}
-                          <div className="shrink-0 text-right space-y-1">
+                          {/* Price */}
+                          <div className="shrink-0 text-right">
                             {printer.current_price_usd_store ? (
                               <div className="text-sm font-bold text-primary flex items-center justify-end gap-1">
                                 <Store className="h-3 w-3" />
@@ -474,18 +474,6 @@ export default function Printers() {
                                 <span>{formatPrice(printer.msrp_usd)}</span>
                               </div>
                             ) : null}
-                            {/* Brand Logo */}
-                            {getBrandLogo(printer.brand?.brand || null) && (
-                              <div className="flex justify-end">
-                                <div className="px-1.5 py-1 bg-muted/50 rounded border border-border/30">
-                                  <img 
-                                    src={getBrandLogo(printer.brand?.brand || null)!} 
-                                    alt={`${printer.brand?.brand} logo`}
-                                    className="h-5 w-auto object-contain max-w-[60px]"
-                                  />
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </div>
 
@@ -501,16 +489,28 @@ export default function Printers() {
                           )}
                         </div>
 
-                        {/* Features - Compact */}
-                        <div className="flex flex-wrap gap-1 mt-auto pt-1.5">
-                          {printer.has_enclosure && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Enclosure</Badge>
-                          )}
-                          {printer.multi_material_supported && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Multi-Mat</Badge>
-                          )}
-                          {printer.auto_bed_leveling && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">ABL</Badge>
+                        {/* Features and Brand Logo Row */}
+                        <div className="flex items-end justify-between gap-2 mt-auto pt-1.5">
+                          <div className="flex flex-wrap gap-1">
+                            {printer.has_enclosure && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Enclosure</Badge>
+                            )}
+                            {printer.multi_material_supported && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Multi-Mat</Badge>
+                            )}
+                            {printer.auto_bed_leveling && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">ABL</Badge>
+                            )}
+                          </div>
+                          {/* Brand Logo - Bottom Right */}
+                          {getBrandLogo(printer.brand?.brand || null) && (
+                            <div className="shrink-0 px-1.5 py-1 bg-muted/50 rounded border border-border/30">
+                              <img 
+                                src={getBrandLogo(printer.brand?.brand || null)!} 
+                                alt={`${printer.brand?.brand} logo`}
+                                className="h-5 w-auto object-contain max-w-[60px]"
+                              />
+                            </div>
                           )}
                         </div>
                       </div>
