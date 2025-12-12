@@ -196,6 +196,65 @@ export const SoftwareSection = ({ printerId, brandName, printerName }: SoftwareS
               const latestRelease = releases.find(r => r.is_latest) || releases[0];
               const softwareType = latestRelease.software_type;
               
+              const isMobileApp = latestRelease.is_mobile_app;
+              
+              // For mobile apps, show simplified card without version history
+              if (isMobileApp) {
+                return (
+                  <Card key={name} className="bg-muted/30">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-green-500/10">
+                            <Smartphone className="h-5 w-5 text-green-600" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              {name}
+                              <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+                                Mobile App
+                              </Badge>
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Official mobile app for {brandName} printers
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-3">
+                        {latestRelease.google_play_url && (
+                          <a
+                            href={latestRelease.google_play_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Button size="default" variant="outline" className="gap-2 bg-green-500/10 border-green-500/30 text-green-600 hover:bg-green-500/20">
+                              <PlayStoreIcon />
+                              Google Play
+                            </Button>
+                          </a>
+                        )}
+                        {latestRelease.app_store_url && (
+                          <a
+                            href={latestRelease.app_store_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Button size="default" variant="outline" className="gap-2 bg-blue-500/10 border-blue-500/30 text-blue-600 hover:bg-blue-500/20">
+                              <AppStoreIcon />
+                              App Store
+                            </Button>
+                          </a>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              }
+              
+              // Regular software with version history
               return (
                 <Card key={name} className="bg-muted/30">
                   <CardHeader className="pb-2">
@@ -205,15 +264,7 @@ export const SoftwareSection = ({ printerId, brandName, printerName }: SoftwareS
                           {softwareTypeIcons[softwareType] || <AppWindow className="h-4 w-4" />}
                         </div>
                         <div>
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            {name}
-                            {latestRelease.is_mobile_app && (
-                              <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
-                                <Smartphone className="h-3 w-3 mr-1" />
-                                Mobile App
-                              </Badge>
-                            )}
-                          </CardTitle>
+                          <CardTitle className="text-lg">{name}</CardTitle>
                           <Badge variant="secondary" className="mt-1">
                             {softwareTypeLabels[softwareType] || softwareType}
                           </Badge>
@@ -313,30 +364,6 @@ export const SoftwareSection = ({ printerId, brandName, printerName }: SoftwareS
                                     <Button size="sm" className="gap-2">
                                       <Download className="h-3 w-3" />
                                       Download
-                                    </Button>
-                                  </a>
-                                )}
-                                {sw.google_play_url && (
-                                  <a
-                                    href={sw.google_play_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Button size="sm" variant="outline" className="gap-2 bg-green-500/10 border-green-500/30 text-green-600 hover:bg-green-500/20">
-                                      <PlayStoreIcon />
-                                      Google Play
-                                    </Button>
-                                  </a>
-                                )}
-                                {sw.app_store_url && (
-                                  <a
-                                    href={sw.app_store_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Button size="sm" variant="outline" className="gap-2 bg-blue-500/10 border-blue-500/30 text-blue-600 hover:bg-blue-500/20">
-                                      <AppStoreIcon />
-                                      App Store
                                     </Button>
                                   </a>
                                 )}
