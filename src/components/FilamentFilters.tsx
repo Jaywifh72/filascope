@@ -311,82 +311,70 @@ const FilterContent = ({
       <Separator className="bg-border/50" />
 
       {/* Special Properties */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
           <Sparkles className="w-3 h-3" />
           Special Properties
         </h4>
-        <div className="space-y-0.5">
-          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
-            <div className="flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">High Speed</span>
-            </div>
+        <div className="grid grid-cols-2 gap-1">
+          <label className="flex items-center gap-1.5 py-1 px-1.5 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
             <Switch
               checked={highSpeed}
               onCheckedChange={onHighSpeedChange}
-              className="data-[state=checked]:bg-cyan-500 scale-75"
+              className="data-[state=checked]:bg-cyan-500 scale-[0.6]"
             />
+            <Zap className="w-3 h-3 text-amber-400" />
+            <span className="text-[10px] text-foreground group-hover:text-cyan-400 transition-colors">High Speed</span>
           </label>
           
-          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
-            <div className="flex items-center gap-1.5">
-              <div className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-muted to-muted-foreground/50" />
-              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Matte Finish</span>
-            </div>
+          <label className="flex items-center gap-1.5 py-1 px-1.5 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
             <Switch
               checked={matte}
               onCheckedChange={onMatteChange}
-              className="data-[state=checked]:bg-cyan-500 scale-75"
+              className="data-[state=checked]:bg-cyan-500 scale-[0.6]"
             />
+            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-muted to-muted-foreground/50" />
+            <span className="text-[10px] text-foreground group-hover:text-cyan-400 transition-colors">Matte</span>
           </label>
           
-          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
-            <div className="flex items-center gap-1.5">
-              <Atom className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Carbon Fiber</span>
-            </div>
+          <label className="flex items-center gap-1.5 py-1 px-1.5 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
             <Switch
               checked={carbonFiber}
               onCheckedChange={onCarbonFiberChange}
-              className="data-[state=checked]:bg-cyan-500 scale-75"
+              className="data-[state=checked]:bg-cyan-500 scale-[0.6]"
             />
+            <Atom className="w-3 h-3 text-slate-400" />
+            <span className="text-[10px] text-foreground group-hover:text-cyan-400 transition-colors">Carbon</span>
           </label>
           
-          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
-            <div className="flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Glass Fiber</span>
-            </div>
+          <label className="flex items-center gap-1.5 py-1 px-1.5 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
             <Switch
               checked={glassFiber}
               onCheckedChange={onGlassFiberChange}
-              className="data-[state=checked]:bg-cyan-500 scale-75"
+              className="data-[state=checked]:bg-cyan-500 scale-[0.6]"
             />
+            <Layers className="w-3 h-3 text-cyan-400" />
+            <span className="text-[10px] text-foreground group-hover:text-cyan-400 transition-colors">Glass</span>
           </label>
           
-          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm">🪵</span>
-              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Wood Filled</span>
-            </div>
+          <label className="flex items-center gap-1.5 py-1 px-1.5 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
             <Switch
               checked={woodFilled}
               onCheckedChange={onWoodFilledChange}
-              className="data-[state=checked]:bg-cyan-500 scale-75"
+              className="data-[state=checked]:bg-cyan-500 scale-[0.6]"
             />
+            <span className="text-xs">🪵</span>
+            <span className="text-[10px] text-foreground group-hover:text-cyan-400 transition-colors">Wood</span>
           </label>
           
-          <label className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
-            <div className="flex items-center gap-1.5">
-              <Sun className="w-3.5 h-3.5 text-green-400" />
-              <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Glow in Dark</span>
-            </div>
+          <label className="flex items-center gap-1.5 py-1 px-1.5 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
             <Switch
               checked={glow}
               onCheckedChange={onGlowChange}
-              className="data-[state=checked]:bg-cyan-500 scale-75"
+              className="data-[state=checked]:bg-cyan-500 scale-[0.6]"
             />
+            <Sun className="w-3 h-3 text-green-400" />
+            <span className="text-[10px] text-foreground group-hover:text-cyan-400 transition-colors">Glow</span>
           </label>
         </div>
       </div>
