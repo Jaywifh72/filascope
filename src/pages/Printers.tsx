@@ -477,11 +477,13 @@ export default function Printers() {
                             {/* Brand Logo */}
                             {getBrandLogo(printer.brand?.brand || null) && (
                               <div className="flex justify-end">
-                                <img 
-                                  src={getBrandLogo(printer.brand?.brand || null)!} 
-                                  alt={`${printer.brand?.brand} logo`}
-                                  className="h-4 w-auto object-contain max-w-[50px] opacity-70"
-                                />
+                                <div className="px-1.5 py-1 bg-muted/50 rounded border border-border/30">
+                                  <img 
+                                    src={getBrandLogo(printer.brand?.brand || null)!} 
+                                    alt={`${printer.brand?.brand} logo`}
+                                    className="h-5 w-auto object-contain max-w-[60px]"
+                                  />
+                                </div>
                               </div>
                             )}
                           </div>
