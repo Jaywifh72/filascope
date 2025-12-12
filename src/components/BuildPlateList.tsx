@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Square } from "lucide-react";
+import { Square, Thermometer } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 
 interface BuildPlate {
@@ -110,9 +110,9 @@ export default function BuildPlateList() {
           <Skeleton className="h-10" />
           <Skeleton className="h-10" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-64" />
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-28" />
           ))}
         </div>
       </div>
@@ -168,55 +168,85 @@ export default function BuildPlateList() {
               </div>
 
               {/* Build plate grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {plates.map((plate) => {
                   const specs = plate.specs as Record<string, unknown> | null;
                   const surface = specs?.surface as string | undefined;
                   const isMagnetic = specs?.magnetic as boolean | undefined;
+                  const maxTemp = specs?.max_temp_c as number | undefined;
                   
                   return (
                     <Link key={plate.id} to={`/build-plates/${plate.id}`}>
-                      <Card className="p-4 hover:shadow-lg transition-shadow cursor-pointer h-full">
-                        {/* Image */}
-                        <div className="aspect-square mb-4 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                          {plate.image_url ? (
-                            <img
-                              src={plate.image_url}
-                              alt={plate.name}
-                              className="w-full h-full object-contain"
-                              onError={(e) => {
-                                const target = e.currentTarget;
-                                target.style.display = 'none';
-                                const fallback = target.parentElement?.querySelector('.image-fallback');
-                                if (fallback) fallback.classList.remove('hidden');
-                              }}
-                            />
-                          ) : null}
-                          <div className={`image-fallback flex flex-col items-center justify-center text-muted-foreground ${plate.image_url ? 'hidden' : ''}`}>
-                            <Square className="h-12 w-12 mb-2 opacity-30" />
-                            <span className="text-xs">No image</span>
+                      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                        <div className="flex">
+                          {/* Product Image - Left Side */}
+                          <div className="relative w-28 h-28 shrink-0 bg-muted/30">
+                            {plate.image_url ? (
+                              <img
+                                src={plate.image_url}
+                                alt={plate.name}
+                                className="w-full h-full object-contain p-2"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Square className="h-10 w-10 text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Card Content - Right Side */}
+                          <div className="flex-1 p-3 min-w-0 flex flex-col">
+                            {/* Header with Name and Price */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <h4 className="text-sm font-bold line-clamp-1">{plate.name}</h4>
+                                {surface && (
+                                  <span className="text-xs text-muted-foreground line-clamp-1">{surface}</span>
+                                )}
+                              </div>
+                              {/* Price */}
+                              <div className="shrink-0 text-right">
+                                {plate.price && (
+                                  <div className="text-sm font-bold text-primary">
+                                    ${plate.price.toFixed(2)}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Quick Specs - Compact */}
+                            <div className="text-xs text-muted-foreground space-y-0.5 mt-1.5">
+                              {maxTemp && (
+                                <div className="flex items-center gap-1">
+                                  <Thermometer className="h-3 w-3" />
+                                  <span>Up to {maxTemp}°C</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Badges and Brand Logo Row */}
+                            <div className="flex items-end justify-between gap-2 mt-auto pt-1.5">
+                              <div className="flex flex-wrap gap-1">
+                                {isMagnetic && (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Magnetic</Badge>
+                                )}
+                              </div>
+                              {/* Brand Logo - Bottom Right */}
+                              {brandLogo && (
+                                <div className="shrink-0 px-2 py-1.5 bg-muted/50 rounded border border-border/30">
+                                  <img 
+                                    src={brandLogo} 
+                                    alt={`${brand} logo`}
+                                    className="h-10 w-auto object-contain max-w-[120px]"
+                                  />
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-
-                        {/* Name */}
-                        <h4 className="font-semibold text-sm line-clamp-2 mb-2">{plate.name}</h4>
-
-                        {/* Specs badges */}
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {surface && (
-                            <Badge variant="outline" className="text-xs">{surface}</Badge>
-                          )}
-                          {isMagnetic && (
-                            <Badge variant="outline" className="text-xs">Magnetic</Badge>
-                          )}
-                        </div>
-
-                        {/* Price */}
-                        {plate.price && (
-                          <p className="text-primary font-bold">
-                            ${plate.price.toFixed(2)} <span className="text-sm font-medium">{plate.currency || "USD"}</span>
-                          </p>
-                        )}
                       </Card>
                     </Link>
                   );

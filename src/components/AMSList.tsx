@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layers } from "lucide-react";
+import { getBrandLogo } from "@/lib/brandLogos";
 
 interface AMS {
   id: string;
@@ -114,9 +115,9 @@ export default function AMSList() {
           <Skeleton className="h-10" />
           <Skeleton className="h-10" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map(i => (
-            <Skeleton key={i} className="h-64" />
+            <Skeleton key={i} className="h-28" />
           ))}
         </div>
       </div>
@@ -158,69 +159,109 @@ export default function AMSList() {
           <p className="text-muted-foreground">No AMS/MMU systems found</p>
         </div>
       ) : (
-        groupedAMS.map(([brand, systems]) => (
-          <div key={brand} className="space-y-4">
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold">{brand}</h3>
-              <Badge variant="secondary">{systems.length}</Badge>
-            </div>
+        <div className="space-y-8">
+          {groupedAMS.map(([brand, systems]) => {
+            const brandLogo = getBrandLogo(brand);
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {systems.map(ams => (
-                <Link key={ams.id} to={`/ams/${ams.id}`}>
-                  <Card className="p-4 hover:shadow-lg transition-shadow cursor-pointer h-full">
-                    {/* Image */}
-                    <div className="aspect-square mb-4 bg-muted/30 rounded-lg flex items-center justify-center overflow-hidden">
-                      {ams.image_url ? (
-                        <img
-                          src={ams.image_url}
-                          alt={ams.name}
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            const target = e.currentTarget;
-                            target.style.display = 'none';
-                            const fallback = target.parentElement?.querySelector('.image-fallback');
-                            if (fallback) fallback.classList.remove('hidden');
-                          }}
-                        />
-                      ) : null}
-                      <div className={`image-fallback flex flex-col items-center justify-center text-muted-foreground ${ams.image_url ? 'hidden' : ''}`}>
-                        <Layers className="h-12 w-12 mb-2 opacity-30" />
-                        <span className="text-xs">No image</span>
-                      </div>
-                    </div>
+            return (
+              <div key={brand} className="space-y-4">
+                {/* Brand header */}
+                <div className="flex items-center gap-3 border-b pb-2">
+                  {brandLogo && (
+                    <img
+                      src={brandLogo}
+                      alt={brand}
+                      className="h-6 w-auto object-contain"
+                    />
+                  )}
+                  <h3 className="text-lg font-semibold">{brand}</h3>
+                  <Badge variant="secondary">{systems.length}</Badge>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {systems.map(ams => (
+                    <Link key={ams.id} to={`/ams/${ams.id}`}>
+                      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                        <div className="flex">
+                          {/* Product Image - Left Side */}
+                          <div className="relative w-28 h-28 shrink-0 bg-muted/30">
+                            {ams.image_url ? (
+                              <img
+                                src={ams.image_url}
+                                alt={ams.name}
+                                className="w-full h-full object-contain p-2"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Layers className="h-10 w-10 text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
 
-                    {/* Name */}
-                    <h4 className="font-semibold mb-2 line-clamp-2">{ams.name}</h4>
+                          {/* Card Content - Right Side */}
+                          <div className="flex-1 p-3 min-w-0 flex flex-col">
+                            {/* Header with Name and Price */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <h4 className="text-sm font-bold line-clamp-1">{ams.name}</h4>
+                                {ams.specs?.max_spools && (
+                                  <span className="text-xs text-muted-foreground">{ams.specs.max_spools} Spools</span>
+                                )}
+                              </div>
+                              {/* Price */}
+                              <div className="shrink-0 text-right">
+                                {ams.price && (
+                                  <div className="text-sm font-bold text-primary">
+                                    ${ams.price}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
 
-                    {/* Key Specs */}
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {ams.specs?.max_spools && (
-                        <Badge variant="outline" className="text-xs">
-                          {ams.specs.max_spools} Spools
-                        </Badge>
-                      )}
-                      {ams.specs?.drying_capability && (
-                        <Badge variant="outline" className="text-xs">Drying</Badge>
-                      )}
-                      {ams.specs?.humidity_control && (
-                        <Badge variant="outline" className="text-xs">Humidity Control</Badge>
-                      )}
-                      {ams.specs?.color_mixing && (
-                        <Badge variant="outline" className="text-xs">Color Mixing</Badge>
-                      )}
-                    </div>
+                            {/* Quick Specs - Compact */}
+                            <div className="text-xs text-muted-foreground space-y-0.5 mt-1.5">
+                              {ams.specs?.filament_types && (
+                                <div className="line-clamp-1">{ams.specs.filament_types}</div>
+                              )}
+                            </div>
 
-                    {/* Price */}
-                    {ams.price && (
-                      <p className="text-lg font-bold text-primary">${ams.price} <span className="text-sm font-medium">USD</span></p>
-                    )}
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </div>
-        ))
+                            {/* Badges and Brand Logo Row */}
+                            <div className="flex items-end justify-between gap-2 mt-auto pt-1.5">
+                              <div className="flex flex-wrap gap-1">
+                                {ams.specs?.drying_capability && (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Drying</Badge>
+                                )}
+                                {ams.specs?.humidity_control && (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Humidity</Badge>
+                                )}
+                                {ams.specs?.color_mixing && (
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">Color Mix</Badge>
+                                )}
+                              </div>
+                              {/* Brand Logo - Bottom Right */}
+                              {brandLogo && (
+                                <div className="shrink-0 px-2 py-1.5 bg-muted/50 rounded border border-border/30">
+                                  <img 
+                                    src={brandLogo} 
+                                    alt={`${brand} logo`}
+                                    className="h-10 w-auto object-contain max-w-[120px]"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
