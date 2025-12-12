@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MaterialBadge } from "@/components/MaterialBadge";
-import { ExternalLink, ChevronDown, GitCompare, X, LayoutGrid, List, CheckCircle, XCircle } from "lucide-react";
+import { ExternalLink, ChevronDown, GitCompare, X, LayoutGrid, List, CheckCircle, XCircle, TreeDeciduous } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "@/components/LikeButton";
@@ -434,6 +434,19 @@ const Finder = () => {
     if (score >= 8) return "text-green-400";
     if (score >= 6) return "text-cyan-400";
     return "text-orange-400";
+  };
+
+  // Helper to check if filament is a wood filament
+  const isWoodFilament = (filament: any): boolean => {
+    const material = filament.material?.toLowerCase() || '';
+    const title = filament.product_title?.toLowerCase() || '';
+    const hasWoodContent = filament.wood_powder_percentage !== null && filament.wood_powder_percentage !== undefined && filament.wood_powder_percentage > 0;
+    return hasWoodContent || material.includes('wood') || title.includes('wood') || title.includes('timber') || material.includes('cork');
+  };
+
+  // Get wood percentage for display
+  const getWoodPercentage = (filament: any): number | null => {
+    return filament.wood_powder_percentage ?? null;
   };
 
   // Calculate filter counts based on currently applied filters (excluding the filter being counted)
@@ -1086,11 +1099,19 @@ const Finder = () => {
                           <span className="text-sm text-muted-foreground truncate block">{filament.product_title}</span>
                         </td>
                         <td className="py-3 px-3">
-                          {filament.material ? (
-                            <MaterialBadge material={filament.material} />
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {filament.material ? (
+                              <MaterialBadge material={filament.material} />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                            {isWoodFilament(filament) && (
+                              <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-600 text-[10px] px-1.5 py-0 gap-1">
+                                <TreeDeciduous className="w-3 h-3" />
+                                {getWoodPercentage(filament) ? `${getWoodPercentage(filament)}%` : 'Wood'}
+                              </Badge>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3 px-3 text-right">
                           <span className="font-mono text-sm font-bold text-orange-400">
@@ -1200,8 +1221,14 @@ const Finder = () => {
                         <p className="font-semibold text-foreground truncate">{filament.product_title}</p>
                         <p className="text-sm text-muted-foreground">{filament.vendor}</p>
                         {filament.material && (
-                          <div className="mt-1">
+                          <div className="mt-1 flex items-center gap-2 flex-wrap">
                             <MaterialBadge material={filament.material} />
+                            {isWoodFilament(filament) && (
+                              <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-600 text-[10px] px-1.5 py-0.5 gap-1">
+                                <TreeDeciduous className="w-3 h-3" />
+                                {getWoodPercentage(filament) ? `${getWoodPercentage(filament)}% Wood` : 'Wood'}
+                              </Badge>
+                            )}
                           </div>
                         )}
                         {filament.diameter_nominal_mm && (
