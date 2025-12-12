@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles, Cpu, Globe, FileCode, AppWindow, Trash2 } from "lucide-react";
+import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles, Cpu, Globe, FileCode, AppWindow, Trash2, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -101,7 +101,8 @@ export default function AdminPrinters() {
     softwareSuccessful: number;
     softwareCleaned: number;
     mobileAppsFound: number;
-    phase: 'cleanup' | 'firmware' | 'software' | 'done';
+    auditDeleted?: number;
+    phase: 'cleanup' | 'firmware' | 'software' | 'audit' | 'done';
   } | null>(null);
 
   // Query ALL printers and count pricing status in memory for accuracy
@@ -1029,14 +1030,133 @@ export default function AdminPrinters() {
         }
       }
 
+      // Phase 4: Global firmware audit - validate ALL firmware entries across ALL brands
       setFirmwareScrapeStats(prev => prev ? { 
         ...prev, 
+        completed: 0,
+        phase: 'audit'
+      } : null);
+
+      toast({
+        title: "Auditing firmware entries",
+        description: `Validating all firmware entries across all brands...`,
+      });
+
+      // Brand-specific firmware version patterns (whitelist)
+      const BRAND_FIRMWARE_PATTERNS: Record<string, RegExp[]> = {
+        'Bambu Lab': [/^0[0-9]\.\d{2}\.\d{2}\.\d{2}$/], // 01.xx.xx.xx format
+        'Prusa Research': [/^[345]\.\d+\.\d+(-\w+)?$/], // 5.x.x, 4.x.x, 3.x.x
+        'Creality': [/^[12]\.\d+\.\d+(\.\d+)?$/, /^V?[12]\.\d+\.\d+$/i, /^Marlin/i],
+        'Anycubic': [/^V?[12]\.\d+\.\d+$/i],
+        'QIDI': [/^V?[23]\.\d+\.\d+$/i],
+        'Elegoo': [/^V?[12]\.\d+\.\d+$/i],
+        'Sovol': [/^V?[12]\.\d+\.\d+$/i],
+        'FlashForge': [/^V?[12]\.\d+\.\d+$/i],
+        'Raise3D': [/^[12]\.\d+\.\d+(\.\d+)?$/],
+        'UltiMaker': [/^[0-9]+\.\d+\.\d+$/],
+      };
+
+      // Invalid patterns that should NEVER be in firmware
+      const INVALID_FIRMWARE_PATTERNS = [
+        /^[23]\.\d+\.\d+(\.\d+)?$/, // Software versions (2.x.x, 3.x.x) except for brands that use them
+        /forum\.bambulab\.com/i,
+        /user_avatar/i,
+        /letter_avatar/i,
+        /\d+\s*views.*\d+\s*likes/i,
+        /bambu\s*studio/i,
+        /orca\s*slicer/i,
+        /prusa\s*slicer/i,
+        /bambu\s*handy/i,
+        /farm\s*manager/i,
+      ];
+
+      // Fetch all firmware with brand info
+      const { data: allFirmware, error: fwFetchError } = await supabase
+        .from('printer_firmware')
+        .select(`
+          id, 
+          version, 
+          release_notes,
+          printer_id,
+          printers!inner(
+            id,
+            model_name,
+            printer_brands(brand)
+          )
+        `);
+
+      let invalidEntriesDeleted = 0;
+      const invalidEntryIds: string[] = [];
+
+      if (!fwFetchError && allFirmware) {
+        for (const fw of allFirmware) {
+          const brandName = (fw.printers as any)?.printer_brands?.brand || '';
+          const version = (fw.version || '').trim();
+          const notes = (fw.release_notes || '').toLowerCase();
+          
+          let isInvalid = false;
+          let reason = '';
+
+          // Check if version matches brand-specific firmware pattern (whitelist)
+          const firmwarePatterns = BRAND_FIRMWARE_PATTERNS[brandName];
+          if (firmwarePatterns) {
+            const v = version.replace(/^v/i, '');
+            const matchesFirmware = firmwarePatterns.some(p => p.test(v) || p.test(version));
+            if (!matchesFirmware) {
+              // For brands with patterns, version MUST match
+              isInvalid = true;
+              reason = `Version "${version}" doesn't match ${brandName} firmware pattern`;
+            }
+          }
+
+          // Check against invalid patterns (blacklist)
+          for (const pattern of INVALID_FIRMWARE_PATTERNS) {
+            if (pattern.test(version) || pattern.test(notes)) {
+              // But don't flag Prusa/Creality versions that look like x.x.x
+              if (brandName === 'Prusa Research' || brandName === 'Creality') {
+                if (/^[345]\.\d+\.\d+/.test(version)) continue;
+              }
+              isInvalid = true;
+              reason = `Matches invalid pattern: ${pattern}`;
+              break;
+            }
+          }
+
+          // Check for forum junk content
+          if (notes.includes('views') && notes.includes('likes') && notes.includes('users')) {
+            isInvalid = true;
+            reason = 'Contains forum metadata';
+          }
+
+          if (isInvalid) {
+            console.log(`[Audit] Invalid firmware: ${brandName} - ${version} - ${reason}`);
+            invalidEntryIds.push(fw.id);
+          }
+        }
+
+        // Delete all invalid entries
+        if (invalidEntryIds.length > 0) {
+          const { error: deleteError } = await supabase
+            .from('printer_firmware')
+            .delete()
+            .in('id', invalidEntryIds);
+          
+          if (!deleteError) {
+            invalidEntriesDeleted = invalidEntryIds.length;
+            console.log(`[Audit] Deleted ${invalidEntriesDeleted} invalid firmware entries`);
+          }
+        }
+      }
+
+      setFirmwareScrapeStats(prev => prev ? { 
+        ...prev, 
+        auditDeleted: invalidEntriesDeleted,
         phase: 'done'
       } : null);
 
       toast({
         title: "Firmware & Software scraping completed",
-        description: `Firmware: ${firmwareSuccessful}/${brandPrinters.length} | Software: ${softwareSuccessful}/${brandPrinters.length} | Mobile Apps: ${mobileAppsFound} | Cleaned: ${softwareCleaned}`,
+        description: `Firmware: ${firmwareSuccessful}/${brandPrinters.length} | Software: ${softwareSuccessful}/${brandPrinters.length} | Mobile Apps: ${mobileAppsFound} | Cleaned: ${softwareCleaned} | Audit deleted: ${invalidEntriesDeleted}`,
       });
 
       queryClient.invalidateQueries({ queryKey: ["printer-firmware"] });
@@ -1841,17 +1961,20 @@ export default function AdminPrinters() {
                       <span className="font-medium">
                         Phase: {firmwareScrapeStats.phase === 'cleanup' ? 'Cleaning up...' : 
                                firmwareScrapeStats.phase === 'firmware' ? 'Scraping Firmware...' : 
-                               firmwareScrapeStats.phase === 'software' ? 'Scraping Software...' : 'Complete'}
+                               firmwareScrapeStats.phase === 'software' ? 'Scraping Software...' : 
+                               firmwareScrapeStats.phase === 'audit' ? 'Auditing All Brands...' : 'Complete'}
                       </span>
                       <span className="text-muted-foreground">
-                        {firmwareScrapeStats.completed} / {firmwareScrapeStats.total} printers
+                        {firmwareScrapeStats.phase === 'audit' ? 'Validating entries...' : 
+                          `${firmwareScrapeStats.completed} / ${firmwareScrapeStats.total} printers`}
                       </span>
                     </div>
                     <Progress 
-                      value={(firmwareScrapeStats.completed / firmwareScrapeStats.total) * 100} 
+                      value={firmwareScrapeStats.phase === 'audit' ? 100 : 
+                        (firmwareScrapeStats.completed / firmwareScrapeStats.total) * 100} 
                       className="h-2"
                     />
-                    <div className="grid grid-cols-4 gap-2 text-xs text-muted-foreground">
+                    <div className="grid grid-cols-5 gap-2 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Trash2 className="h-3 w-3" />
                         Cleaned: {firmwareScrapeStats.softwareCleaned}
@@ -1870,6 +1993,10 @@ export default function AdminPrinters() {
                         </svg>
                         Apps: {firmwareScrapeStats.mobileAppsFound || 0}
                       </div>
+                      <div className="flex items-center gap-1 text-destructive">
+                        <AlertTriangle className="h-3 w-3" />
+                        Audit: {firmwareScrapeStats.auditDeleted || 0}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1885,7 +2012,8 @@ export default function AdminPrinters() {
                       <Loader2 className="h-4 w-4 animate-spin" />
                       {firmwareScrapeStats?.phase === 'cleanup' ? 'Cleaning Up...' :
                        firmwareScrapeStats?.phase === 'firmware' ? 'Scraping Firmware...' :
-                       firmwareScrapeStats?.phase === 'software' ? 'Scraping Software...' : 'Processing...'}
+                       firmwareScrapeStats?.phase === 'software' ? 'Scraping Software...' : 
+                       firmwareScrapeStats?.phase === 'audit' ? 'Auditing...' : 'Processing...'}
                     </>
                   ) : (
                     <>
