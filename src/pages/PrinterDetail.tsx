@@ -21,6 +21,7 @@ import {
   checkAmsPrinterCompatibility 
 } from "@/lib/accessoryCompatibility";
 import { AccessoryCompatibilityBadge } from "@/components/AccessoryCompatibilityBadge";
+import { FirmwareSection } from "@/components/FirmwareSection";
 import {
   ArrowLeft,
   Box,
@@ -51,6 +52,11 @@ import {
   X,
   ImagePlus,
   Ban,
+  FileCode,
+  Download,
+  RefreshCw,
+  Calendar,
+  AlertTriangle,
 } from "lucide-react";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 
@@ -688,6 +694,10 @@ const PrinterDetail = () => {
               <Package className="h-4 w-4 mr-2" />
               Accessories
             </TabsTrigger>
+            <TabsTrigger value="firmware" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <FileCode className="h-4 w-4 mr-2" />
+              Firmware
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="build" className="space-y-4 mt-6">
@@ -1179,6 +1189,10 @@ const PrinterDetail = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="firmware" className="space-y-4 mt-6">
+            <FirmwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
           </TabsContent>
         </Tabs>
 
