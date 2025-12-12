@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette, Ban } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ import { AccessoryCompatibilityBadge } from "@/components/AccessoryCompatibility
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { normalizeColorHex } from "@/lib/utils";
+import { isDiscontinuedUrl } from "@/lib/urlValidation";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -1291,7 +1292,12 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3 pt-2">
                   <LikeButton filamentId={filament.id} size="lg" />
-                  {filament.product_url && (
+                  {filament.product_url && isDiscontinuedUrl(filament.product_url) ? (
+                    <Badge variant="outline" className="text-orange-600 border-orange-300 bg-orange-50 dark:bg-orange-950/30 py-2 px-4 text-sm">
+                      <Ban className="w-4 h-4 mr-2" />
+                      Discontinued
+                    </Badge>
+                  ) : filament.product_url && (
                     <Button asChild variant="default" size="lg" className="hover:scale-105 transition-transform">
                       <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
                         <ShoppingCart className="w-4 h-4 mr-2" />
