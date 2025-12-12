@@ -188,6 +188,10 @@ interface SoftwareRelease {
   release_notes: string | null;
   changelog: string | null;
   download_url: string | null;
+  download_url_windows: string | null;
+  download_url_mac: string | null;
+  download_url_linux: string | null;
+  supported_platforms: string[];
   is_latest: boolean;
   source_url: string | null;
   is_mobile_app: boolean;
@@ -477,6 +481,10 @@ ${truncatedMarkdown}`;
       release_notes: sw.release_notes || null,
       changelog: sw.changelog || null,
       download_url: sw.download_url || null,
+      download_url_windows: sw.download_url_windows || null,
+      download_url_mac: sw.download_url_mac || null,
+      download_url_linux: sw.download_url_linux || null,
+      supported_platforms: sw.supported_platforms || ['windows', 'mac', 'linux'],
       is_latest: false, // Will be set later per software_name
       source_url: sourceUrl,
       is_mobile_app: sw.is_mobile_app === true || sw.software_type === 'app',
@@ -597,6 +605,10 @@ Deno.serve(async (req) => {
             release_notes: `Official mobile app for ${brandName} 3D printers. Download from your device's app store.`,
             changelog: null,
             download_url: null,
+            download_url_windows: null,
+            download_url_mac: null,
+            download_url_linux: null,
+            supported_platforms: ['ios', 'android'],
             is_latest: true,
             source_url: app.app_store_url,
             is_mobile_app: true,
@@ -628,6 +640,10 @@ Deno.serve(async (req) => {
             release_notes: software.description,
             changelog: null,
             download_url: software.download_url,
+            download_url_windows: null,
+            download_url_mac: null,
+            download_url_linux: null,
+            supported_platforms: ['windows', 'mac', 'linux'],
             is_latest: true,
             source_url: software.download_url,
             is_mobile_app: false,

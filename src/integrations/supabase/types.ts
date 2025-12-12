@@ -863,6 +863,9 @@ export type Database = {
           changelog: string | null
           created_at: string | null
           download_url: string | null
+          download_url_linux: string | null
+          download_url_mac: string | null
+          download_url_windows: string | null
           google_play_url: string | null
           id: string
           is_latest: boolean | null
@@ -873,6 +876,7 @@ export type Database = {
           software_name: string
           software_type: string
           source_url: string | null
+          supported_platforms: string[] | null
           updated_at: string | null
           version: string
         }
@@ -881,6 +885,9 @@ export type Database = {
           changelog?: string | null
           created_at?: string | null
           download_url?: string | null
+          download_url_linux?: string | null
+          download_url_mac?: string | null
+          download_url_windows?: string | null
           google_play_url?: string | null
           id?: string
           is_latest?: boolean | null
@@ -891,6 +898,7 @@ export type Database = {
           software_name: string
           software_type: string
           source_url?: string | null
+          supported_platforms?: string[] | null
           updated_at?: string | null
           version: string
         }
@@ -899,6 +907,9 @@ export type Database = {
           changelog?: string | null
           created_at?: string | null
           download_url?: string | null
+          download_url_linux?: string | null
+          download_url_mac?: string | null
+          download_url_windows?: string | null
           google_play_url?: string | null
           id?: string
           is_latest?: boolean | null
@@ -909,6 +920,7 @@ export type Database = {
           software_name?: string
           software_type?: string
           source_url?: string | null
+          supported_platforms?: string[] | null
           updated_at?: string | null
           version?: string
         }
