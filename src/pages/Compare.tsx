@@ -285,240 +285,6 @@ const Compare = () => {
           <p className="text-muted-foreground">Side-by-side comparison of {filaments.length} filaments</p>
         </div>
 
-        {/* Overall Winner Summary */}
-        <Card className="mb-6 border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-transparent">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Trophy className="w-5 h-5 text-amber-500" />
-              Overall Winner Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${filaments.length}, 1fr)` }}>
-              {filaments.map((filament, idx) => {
-                const isOverallWinner = overallWinnerIndices.includes(idx);
-                return (
-                  <div 
-                    key={filament.id} 
-                    className={`p-4 rounded-lg text-center ${
-                      isOverallWinner 
-                        ? "bg-amber-500/20 border-2 border-amber-500" 
-                        : "bg-muted/50 border border-border"
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      {isOverallWinner && <Trophy className="w-6 h-6 text-amber-500" />}
-                      <span className={`text-3xl font-bold ${isOverallWinner ? "text-amber-500" : "text-foreground"}`}>
-                        {winCounts[idx]}
-                      </span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      wins out of {totalCategories}
-                    </div>
-                    <div className="text-xs font-medium mt-1 line-clamp-1">
-                      {filament.product_title}
-                    </div>
-                    {isOverallWinner && (
-                      <Badge className="mt-2 bg-amber-500 text-amber-950 hover:bg-amber-400">
-                        Overall Winner
-                      </Badge>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Radar Chart Visualization */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Performance Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[400px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
-                  <PolarGrid stroke="hsl(var(--border))" />
-                  <PolarAngleAxis 
-                    dataKey="metric" 
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                  />
-                  <PolarRadiusAxis 
-                    angle={30} 
-                    domain={[0, 100]} 
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
-                    tickCount={5}
-                  />
-                  {filaments.map((filament, idx) => (
-                    <Radar
-                      key={filament.id}
-                      name={filament.product_title?.substring(0, 30) || `Filament ${idx + 1}`}
-                      dataKey={`filament${idx}`}
-                      stroke={chartColors[idx % chartColors.length]}
-                      fill={chartColors[idx % chartColors.length]}
-                      fillOpacity={0.15}
-                      strokeWidth={2}
-                    />
-                  ))}
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px"
-                    }}
-                    formatter={(value: number) => [`${Math.round(value)}%`, "Score"]}
-                  />
-                  <Legend 
-                    wrapperStyle={{ paddingTop: 20 }}
-                    formatter={(value) => <span className="text-sm text-foreground">{value}</span>}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              Values normalized to 0-100% scale relative to compared filaments
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Bar Chart - Raw Values Comparison */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Direct Value Comparison</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-8">
-              {/* Strength Metrics */}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-3">Mechanical Properties</h4>
-                <div className="h-[200px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={[
-                        {
-                          metric: "Tensile Strength (MPa)",
-                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.tensile_strength_xy_mpa || 0]))
-                        },
-                        {
-                          metric: "Flexural Strength (MPa)",
-                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.flexural_strength_mpa || 0]))
-                        },
-                        {
-                          metric: "Elongation (%)",
-                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.elongation_break_xy_percent || 0]))
-                        },
-                      ]}
-                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px"
-                        }}
-                      />
-                      {filaments.map((f, idx) => (
-                        <Bar key={f.id} dataKey={`f${idx}`} name={f.product_title?.substring(0, 25) || `Filament ${idx + 1}`} fill={chartColors[idx % chartColors.length]} />
-                      ))}
-                      <Legend formatter={(value) => <span className="text-xs">{value}</span>} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Performance Scores */}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-3">Performance Scores</h4>
-                <div className="h-[200px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={[
-                        {
-                          metric: "Strength Index",
-                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.strength_index || 0]))
-                        },
-                        {
-                          metric: "Printability",
-                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.printability_index || 0]))
-                        },
-                        {
-                          metric: "Value Score",
-                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.value_score || 0]))
-                        },
-                        {
-                          metric: "Ease of Print",
-                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.ease_of_printing_score || 0]))
-                        },
-                      ]}
-                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px"
-                        }}
-                      />
-                      {filaments.map((f, idx) => (
-                        <Bar key={f.id} dataKey={`f${idx}`} name={f.product_title?.substring(0, 25) || `Filament ${idx + 1}`} fill={chartColors[idx % chartColors.length]} />
-                      ))}
-                      <Legend formatter={(value) => <span className="text-xs">{value}</span>} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Thermal Properties */}
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-3">Thermal & Print Settings</h4>
-                <div className="h-[200px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={[
-                        {
-                          metric: "Glass Transition (°C)",
-                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.tg_c || 0]))
-                        },
-                        {
-                          metric: "Max Nozzle Temp (°C)",
-                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.nozzle_temp_max_c || 0]))
-                        },
-                        {
-                          metric: "Max Print Speed (mm/s)",
-                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.print_speed_max_mms || 0]))
-                        },
-                      ]}
-                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px"
-                        }}
-                      />
-                      {filaments.map((f, idx) => (
-                        <Bar key={f.id} dataKey={`f${idx}`} name={f.product_title?.substring(0, 25) || `Filament ${idx + 1}`} fill={chartColors[idx % chartColors.length]} />
-                      ))}
-                      <Legend formatter={(value) => <span className="text-xs">{value}</span>} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Filament Headers */}
         <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: `200px repeat(${filaments.length}, 1fr)` }}>
           <div></div>
@@ -802,6 +568,240 @@ const Compare = () => {
               label="Moisture Sensitivity" 
               values={filaments.map(f => f.moisture_sensitivity_level)} 
             />
+          </CardContent>
+        </Card>
+
+        {/* Overall Winner Summary */}
+        <Card className="mb-6 border-amber-500/50 bg-gradient-to-r from-amber-500/10 to-transparent">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Trophy className="w-5 h-5 text-amber-500" />
+              Overall Winner Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${filaments.length}, 1fr)` }}>
+              {filaments.map((filament, idx) => {
+                const isOverallWinner = overallWinnerIndices.includes(idx);
+                return (
+                  <div 
+                    key={filament.id} 
+                    className={`p-4 rounded-lg text-center ${
+                      isOverallWinner 
+                        ? "bg-amber-500/20 border-2 border-amber-500" 
+                        : "bg-muted/50 border border-border"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      {isOverallWinner && <Trophy className="w-6 h-6 text-amber-500" />}
+                      <span className={`text-3xl font-bold ${isOverallWinner ? "text-amber-500" : "text-foreground"}`}>
+                        {winCounts[idx]}
+                      </span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      wins out of {totalCategories}
+                    </div>
+                    <div className="text-xs font-medium mt-1 line-clamp-1">
+                      {filament.product_title}
+                    </div>
+                    {isOverallWinner && (
+                      <Badge className="mt-2 bg-amber-500 text-amber-950 hover:bg-amber-400">
+                        Overall Winner
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Radar Chart Visualization */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Performance Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[400px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={radarData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
+                  <PolarGrid stroke="hsl(var(--border))" />
+                  <PolarAngleAxis 
+                    dataKey="metric" 
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                  />
+                  <PolarRadiusAxis 
+                    angle={30} 
+                    domain={[0, 100]} 
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                    tickCount={5}
+                  />
+                  {filaments.map((filament, idx) => (
+                    <Radar
+                      key={filament.id}
+                      name={filament.product_title?.substring(0, 30) || `Filament ${idx + 1}`}
+                      dataKey={`filament${idx}`}
+                      stroke={chartColors[idx % chartColors.length]}
+                      fill={chartColors[idx % chartColors.length]}
+                      fillOpacity={0.15}
+                      strokeWidth={2}
+                    />
+                  ))}
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px"
+                    }}
+                    formatter={(value: number) => [`${Math.round(value)}%`, "Score"]}
+                  />
+                  <Legend 
+                    wrapperStyle={{ paddingTop: 20 }}
+                    formatter={(value) => <span className="text-sm text-foreground">{value}</span>}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Values normalized to 0-100% scale relative to compared filaments
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Bar Chart - Raw Values Comparison */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Direct Value Comparison</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-8">
+              {/* Strength Metrics */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-3">Mechanical Properties</h4>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        {
+                          metric: "Tensile Strength (MPa)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.tensile_strength_xy_mpa || 0]))
+                        },
+                        {
+                          metric: "Flexural Strength (MPa)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.flexural_strength_mpa || 0]))
+                        },
+                        {
+                          metric: "Elongation (%)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.elongation_break_xy_percent || 0]))
+                        },
+                      ]}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px"
+                        }}
+                      />
+                      {filaments.map((f, idx) => (
+                        <Bar key={f.id} dataKey={`f${idx}`} name={f.product_title?.substring(0, 25) || `Filament ${idx + 1}`} fill={chartColors[idx % chartColors.length]} />
+                      ))}
+                      <Legend formatter={(value) => <span className="text-xs">{value}</span>} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Performance Scores */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-3">Performance Scores</h4>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        {
+                          metric: "Strength Index",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.strength_index || 0]))
+                        },
+                        {
+                          metric: "Printability",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.printability_index || 0]))
+                        },
+                        {
+                          metric: "Value Score",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.value_score || 0]))
+                        },
+                        {
+                          metric: "Ease of Print",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.ease_of_printing_score || 0]))
+                        },
+                      ]}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px"
+                        }}
+                      />
+                      {filaments.map((f, idx) => (
+                        <Bar key={f.id} dataKey={`f${idx}`} name={f.product_title?.substring(0, 25) || `Filament ${idx + 1}`} fill={chartColors[idx % chartColors.length]} />
+                      ))}
+                      <Legend formatter={(value) => <span className="text-xs">{value}</span>} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Thermal Properties */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-3">Thermal & Print Settings</h4>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        {
+                          metric: "Glass Transition (°C)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.tg_c || 0]))
+                        },
+                        {
+                          metric: "Max Nozzle Temp (°C)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.nozzle_temp_max_c || 0]))
+                        },
+                        {
+                          metric: "Max Print Speed (mm/s)",
+                          ...Object.fromEntries(filaments.map((f, i) => [`f${i}`, f.print_speed_max_mms || 0]))
+                        },
+                      ]}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px"
+                        }}
+                      />
+                      {filaments.map((f, idx) => (
+                        <Bar key={f.id} dataKey={`f${idx}`} name={f.product_title?.substring(0, 25) || `Filament ${idx + 1}`} fill={chartColors[idx % chartColors.length]} />
+                      ))}
+                      <Legend formatter={(value) => <span className="text-xs">{value}</span>} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
