@@ -100,6 +100,7 @@ export default function AdminPrinters() {
     firmwareSuccessful: number;
     softwareSuccessful: number;
     softwareCleaned: number;
+    mobileAppsFound: number;
     phase: 'cleanup' | 'firmware' | 'software' | 'done';
   } | null>(null);
 
@@ -853,6 +854,7 @@ export default function AdminPrinters() {
         firmwareSuccessful: 0,
         softwareSuccessful: 0,
         softwareCleaned: 0,
+        mobileAppsFound: 0,
         phase: 'cleanup'
       });
 
@@ -976,6 +978,7 @@ export default function AdminPrinters() {
 
       completed = 0;
       let softwareSuccessful = 0;
+      let mobileAppsFound = 0;
 
       for (let i = 0; i < brandPrinters.length; i += batchSize) {
         const batch = brandPrinters.slice(i, i + batchSize);
@@ -993,12 +996,18 @@ export default function AdminPrinters() {
 
               if (!error && data?.software_count > 0) {
                 softwareSuccessful++;
+                // Count mobile apps from the response
+                if (data?.software && Array.isArray(data.software)) {
+                  const appCount = data.software.filter((sw: any) => sw.is_mobile_app === true).length;
+                  mobileAppsFound += appCount;
+                }
               }
               completed++;
               setFirmwareScrapeStats(prev => prev ? { 
                 ...prev, 
                 completed, 
                 softwareSuccessful,
+                mobileAppsFound,
                 phase: 'software'
               } : null);
             } catch (error) {
@@ -1008,6 +1017,7 @@ export default function AdminPrinters() {
                 ...prev, 
                 completed, 
                 softwareSuccessful,
+                mobileAppsFound,
                 phase: 'software'
               } : null);
             }
@@ -1026,7 +1036,7 @@ export default function AdminPrinters() {
 
       toast({
         title: "Firmware & Software scraping completed",
-        description: `Firmware: ${firmwareSuccessful}/${brandPrinters.length} | Software: ${softwareSuccessful}/${brandPrinters.length} | Cleaned: ${softwareCleaned}`,
+        description: `Firmware: ${firmwareSuccessful}/${brandPrinters.length} | Software: ${softwareSuccessful}/${brandPrinters.length} | Mobile Apps: ${mobileAppsFound} | Cleaned: ${softwareCleaned}`,
       });
 
       queryClient.invalidateQueries({ queryKey: ["printer-firmware"] });
@@ -1785,9 +1795,17 @@ export default function AdminPrinters() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Scrape firmware and software (slicers, apps) for all printers of a selected brand. Also cleans up any software entries incorrectly placed in the firmware table.
+                    Comprehensive firmware & software discovery for all printers of a selected brand:
+                  </p>
+                  <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
+                    <li><span className="font-medium text-foreground">Firmware:</span> All firmware versions, release notes, changelogs, and download links</li>
+                    <li><span className="font-medium text-foreground">Software:</span> Slicers, studio apps, plugins with version history and downloads</li>
+                    <li><span className="font-medium text-foreground">Mobile Apps:</span> iOS/Android apps with App Store and Google Play links</li>
+                  </ul>
+                  <p className="text-xs text-muted-foreground italic">
+                    Also cleans up any software entries incorrectly placed in the firmware table.
                   </p>
                 </div>
 
@@ -1833,7 +1851,7 @@ export default function AdminPrinters() {
                       value={(firmwareScrapeStats.completed / firmwareScrapeStats.total) * 100} 
                       className="h-2"
                     />
-                    <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                    <div className="grid grid-cols-4 gap-2 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Trash2 className="h-3 w-3" />
                         Cleaned: {firmwareScrapeStats.softwareCleaned}
@@ -1845,6 +1863,12 @@ export default function AdminPrinters() {
                       <div className="flex items-center gap-1">
                         <AppWindow className="h-3 w-3" />
                         Software: {firmwareScrapeStats.softwareSuccessful}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M17.5 1.917a6.4 6.4 0 0 0-5.5 3.3 6.4 6.4 0 0 0-5.5-3.3A6.8 6.8 0 0 0 0 8.617c0 7.8 12 13.5 12 13.5s12-5.7 12-13.5a6.8 6.8 0 0 0-6.5-6.7z"/>
+                        </svg>
+                        Apps: {firmwareScrapeStats.mobileAppsFound || 0}
                       </div>
                     </div>
                   </div>
