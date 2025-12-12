@@ -9,18 +9,26 @@ const BRAND_SOFTWARE_URLS: Record<string, (printerName: string) => string[]> = {
     'https://wiki.bambulab.com/en/software/bambu-studio',
     'https://github.com/bambulab/BambuStudio/releases',
     'https://bambulab.com/en/download',
+    'https://apps.apple.com/app/bambu-handy/id1589027990',
+    'https://play.google.com/store/apps/details?id=com.bambulab.handy',
   ],
   'Prusa Research': () => [
     'https://www.prusa3d.com/page/prusaslicer_424/',
     'https://github.com/prusa3d/PrusaSlicer/releases',
     'https://help.prusa3d.com/tag/prusaslicer',
+    'https://apps.apple.com/app/prusa/id1497002502',
+    'https://play.google.com/store/apps/details?id=cz.prusa3d.connect',
   ],
   'Creality': () => [
     'https://www.creality.com/pages/download',
     'https://github.com/CrealityOfficial/Ender-3S1/releases',
+    'https://apps.apple.com/app/creality-cloud/id1581055918',
+    'https://play.google.com/store/apps/details?id=com.creality.crealitycloud',
   ],
   'Anycubic': () => [
     'https://www.anycubic.com/pages/firmware-software',
+    'https://apps.apple.com/app/anycubic/id1599852498',
+    'https://play.google.com/store/apps/details?id=com.anycubic.anycubicapp',
   ],
   'QIDI': () => [
     'https://wiki.qidi3d.com/en/software',
@@ -28,6 +36,68 @@ const BRAND_SOFTWARE_URLS: Record<string, (printerName: string) => string[]> = {
   ],
   'Elegoo': () => [
     'https://www.elegoo.com/pages/3d-printing-user-support',
+    'https://apps.apple.com/app/elegoo-link/id1625893710',
+    'https://play.google.com/store/apps/details?id=com.elegoo.link',
+  ],
+};
+
+// Known mobile apps with their app store URLs
+const KNOWN_MOBILE_APPS: Record<string, { name: string; google_play_url: string; app_store_url: string }[]> = {
+  'Bambu Lab': [
+    {
+      name: 'Bambu Handy',
+      google_play_url: 'https://play.google.com/store/apps/details?id=com.bambulab.handy',
+      app_store_url: 'https://apps.apple.com/app/bambu-handy/id1589027990',
+    },
+  ],
+  'Prusa Research': [
+    {
+      name: 'Prusa',
+      google_play_url: 'https://play.google.com/store/apps/details?id=cz.prusa3d.connect',
+      app_store_url: 'https://apps.apple.com/app/prusa/id1497002502',
+    },
+  ],
+  'Creality': [
+    {
+      name: 'Creality Cloud',
+      google_play_url: 'https://play.google.com/store/apps/details?id=com.creality.crealitycloud',
+      app_store_url: 'https://apps.apple.com/app/creality-cloud/id1581055918',
+    },
+  ],
+  'Anycubic': [
+    {
+      name: 'Anycubic',
+      google_play_url: 'https://play.google.com/store/apps/details?id=com.anycubic.anycubicapp',
+      app_store_url: 'https://apps.apple.com/app/anycubic/id1599852498',
+    },
+  ],
+  'Elegoo': [
+    {
+      name: 'ELEGOO Link',
+      google_play_url: 'https://play.google.com/store/apps/details?id=com.elegoo.link',
+      app_store_url: 'https://apps.apple.com/app/elegoo-link/id1625893710',
+    },
+  ],
+  'FlashForge': [
+    {
+      name: 'FlashCloud',
+      google_play_url: 'https://play.google.com/store/apps/details?id=com.flashforge.flashcloud',
+      app_store_url: 'https://apps.apple.com/app/flashcloud/id1492131878',
+    },
+  ],
+  'Raise3D': [
+    {
+      name: 'Raise3D',
+      google_play_url: 'https://play.google.com/store/apps/details?id=com.raise3d.raise3d',
+      app_store_url: 'https://apps.apple.com/app/raise3d/id1456391305',
+    },
+  ],
+  'Snapmaker': [
+    {
+      name: 'Snapmaker Luban',
+      google_play_url: 'https://play.google.com/store/apps/details?id=com.snapmaker.luban',
+      app_store_url: 'https://apps.apple.com/app/snapmaker-luban/id1593159908',
+    },
   ],
 };
 
@@ -314,6 +384,46 @@ Deno.serve(async (req) => {
         }
       } catch (error) {
         console.error(`Error scraping ${url}:`, error);
+      }
+    }
+    
+    // Ensure known mobile apps for this brand are included with proper app store links
+    const knownApps = KNOWN_MOBILE_APPS[brandName];
+    if (knownApps) {
+      for (const app of knownApps) {
+        // Check if we already have this app in our scraped results
+        const existingApp = allSoftware.find(sw => 
+          sw.software_name.toLowerCase().includes(app.name.toLowerCase()) ||
+          app.name.toLowerCase().includes(sw.software_name.toLowerCase())
+        );
+        
+        if (existingApp) {
+          // Update existing app with app store URLs if missing
+          if (!existingApp.google_play_url) {
+            existingApp.google_play_url = app.google_play_url;
+          }
+          if (!existingApp.app_store_url) {
+            existingApp.app_store_url = app.app_store_url;
+          }
+          existingApp.is_mobile_app = true;
+        } else {
+          // Add the known app as a placeholder entry
+          allSoftware.push({
+            software_name: app.name,
+            software_type: 'app',
+            version: 'Latest',
+            release_date: null,
+            release_notes: `Official mobile app for ${brandName} 3D printers. Download from your device's app store.`,
+            changelog: null,
+            download_url: null,
+            is_latest: true,
+            source_url: app.app_store_url,
+            is_mobile_app: true,
+            google_play_url: app.google_play_url,
+            app_store_url: app.app_store_url,
+          });
+          console.log(`Added known mobile app: ${app.name}`);
+        }
       }
     }
     
