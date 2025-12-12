@@ -6,6 +6,7 @@ import type { Database } from "@/integrations/supabase/types";
 type Printer = Database["public"]["Tables"]["printers"]["Row"];
 type PrinterBrand = Database["public"]["Tables"]["printer_brands"]["Row"];
 type PrinterAccessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
+type PrinterFirmware = Database["public"]["Tables"]["printer_firmware"]["Row"];
 
 export function usePrinterSelection() {
   const [selectedBrand, setSelectedBrand] = useState<string>(() => {
@@ -16,6 +17,9 @@ export function usePrinterSelection() {
   });
   const [selectedHotendId, setSelectedHotendId] = useState<string>(() => {
     return localStorage.getItem("selected_hotend_id") || "";
+  });
+  const [selectedFirmwareVersion, setSelectedFirmwareVersion] = useState<string>(() => {
+    return localStorage.getItem("selected_firmware_version") || "";
   });
   const [isInitialMount, setIsInitialMount] = useState(true);
 
@@ -82,6 +86,29 @@ export function usePrinterSelection() {
       };
     },
   });
+
+  // Fetch firmware versions for selected printer
+  const { data: firmwareVersions, isLoading: firmwareLoading } = useQuery({
+    queryKey: ["printer-firmware-versions", selectedPrinter?.id],
+    enabled: !!selectedPrinter?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("printer_firmware")
+        .select("*")
+        .eq("printer_id", selectedPrinter!.id)
+        .order("release_date", { ascending: false });
+
+      if (error) throw error;
+      return data as PrinterFirmware[];
+    },
+  });
+
+  // Get latest firmware version
+  const latestFirmware = firmwareVersions?.[0] || null;
+  
+  // Check if there's a newer firmware available
+  const hasNewerFirmware = selectedFirmwareVersion && latestFirmware && 
+    selectedFirmwareVersion !== latestFirmware.version;
 
   // Fetch compatible hotends for selected printer
   const { data: compatibleHotends, isLoading: hotendsLoading } = useQuery({
@@ -231,13 +258,15 @@ export function usePrinterSelection() {
     } else {
       setSelectedPrinterId("");
       setSelectedHotendId("");
+      setSelectedFirmwareVersion("");
     }
   }, [selectedBrand]);
 
-  // Clear hotend selection when printer changes (but not on initial mount)
+  // Clear hotend and firmware selection when printer changes (but not on initial mount)
   useEffect(() => {
     if (!isInitialMount && selectedPrinterId) {
       setSelectedHotendId("");
+      setSelectedFirmwareVersion("");
     }
   }, [selectedPrinterId]);
 
@@ -262,6 +291,14 @@ export function usePrinterSelection() {
     }
   }, [selectedHotendId]);
 
+  useEffect(() => {
+    if (selectedFirmwareVersion) {
+      localStorage.setItem("selected_firmware_version", selectedFirmwareVersion);
+    } else {
+      localStorage.removeItem("selected_firmware_version");
+    }
+  }, [selectedFirmwareVersion]);
+
   return {
     brands,
     brandsLoading,
@@ -279,5 +316,11 @@ export function usePrinterSelection() {
     setSelectedHotendId,
     selectedHotend,
     hotendLoading,
+    firmwareVersions,
+    firmwareLoading,
+    selectedFirmwareVersion,
+    setSelectedFirmwareVersion,
+    latestFirmware,
+    hasNewerFirmware,
   };
 }

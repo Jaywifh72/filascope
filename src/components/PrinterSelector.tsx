@@ -1,7 +1,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, Printer, Flame } from "lucide-react";
+import { Loader2, Printer, Flame, FileCode, AlertTriangle } from "lucide-react";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function PrinterSelector() {
   const {
@@ -17,6 +18,12 @@ export function PrinterSelector() {
     hotendsLoading,
     selectedHotendId,
     setSelectedHotendId,
+    firmwareVersions,
+    firmwareLoading,
+    selectedFirmwareVersion,
+    setSelectedFirmwareVersion,
+    latestFirmware,
+    hasNewerFirmware,
   } = usePrinterSelection();
 
   return (
@@ -27,7 +34,7 @@ export function PrinterSelector() {
           <h3 className="font-semibold whitespace-nowrap">Your Printer</h3>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end flex-1 max-w-4xl sm:ml-8">
+        <div className="grid grid-cols-1 sm:grid-cols-6 gap-3 items-end flex-1 max-w-5xl sm:ml-8">
         {/* Brand Selection */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="printer-brand" className="text-sm font-medium">
@@ -83,6 +90,43 @@ export function PrinterSelector() {
           )}
         </div>
 
+        {/* Firmware Version Selection */}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="printer-firmware" className="text-sm font-medium flex items-center gap-1.5">
+            <FileCode className="h-3.5 w-3.5 text-blue-500" />
+            Firmware
+          </Label>
+          {firmwareLoading ? (
+            <div className="flex items-center justify-center h-9 border rounded-md bg-muted/50">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Select
+              value={selectedFirmwareVersion}
+              onValueChange={setSelectedFirmwareVersion}
+              disabled={!selectedPrinterId || !firmwareVersions || firmwareVersions.length === 0}
+            >
+              <SelectTrigger id="printer-firmware" className="h-9">
+                <SelectValue placeholder={
+                  !selectedPrinterId 
+                    ? "Select printer" 
+                    : firmwareVersions?.length === 0 
+                      ? "No firmware data" 
+                      : "Your version"
+                } />
+              </SelectTrigger>
+              <SelectContent className="bg-popover max-h-60">
+                {firmwareVersions?.map((fw) => (
+                  <SelectItem key={fw.id} value={fw.version}>
+                    {fw.version}
+                    {fw.is_latest && " (Latest)"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
         {/* Hotend Selection */}
         <div className="flex flex-col gap-1.5 sm:col-span-3">
           <Label htmlFor="printer-hotend" className="text-sm font-medium flex items-center gap-1.5">
@@ -130,6 +174,21 @@ export function PrinterSelector() {
         </div>
         </div>
       </div>
+
+      {/* Firmware Update Alert */}
+      {hasNewerFirmware && latestFirmware && (
+        <Alert className="mt-3 sm:ml-[132px] border-amber-500/50 bg-amber-500/10">
+          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="text-sm">
+            <span className="font-medium text-amber-600 dark:text-amber-400">Firmware update available!</span>
+            {" "}You're on <span className="font-mono text-xs bg-muted px-1 py-0.5 rounded">{selectedFirmwareVersion}</span>, 
+            latest is <span className="font-mono text-xs bg-primary/10 text-primary px-1 py-0.5 rounded">{latestFirmware.version}</span>
+            {latestFirmware.release_date && (
+              <span className="text-muted-foreground"> (released {new Date(latestFirmware.release_date).toLocaleDateString()})</span>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {!selectedBrand && (
         <p className="text-sm text-muted-foreground mt-3 sm:ml-[132px]">
