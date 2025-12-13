@@ -474,7 +474,14 @@ const PrinterDetail = () => {
                           <ExternalLink className="h-4 w-4" />
                           Official Store
                           {printer.current_price_usd_store && (
-                            <span className="font-bold text-primary">${printer.current_price_usd_store}</span>
+                            <span className="font-bold text-primary">
+                              ${printer.current_price_usd_store}
+                              {printer.msrp_usd && printer.current_price_usd_store < printer.msrp_usd && (
+                                <sup className="ml-1 text-xs text-green-500 font-semibold">
+                                  {Math.round((1 - printer.current_price_usd_store / printer.msrp_usd) * 100)}% off
+                                </sup>
+                              )}
+                            </span>
                           )}
                         </Button>
                       </a>
