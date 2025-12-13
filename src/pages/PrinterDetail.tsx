@@ -78,7 +78,7 @@ const PrinterDetail = () => {
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [imagePreviewError, setImagePreviewError] = useState(false);
-
+  const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
   const { data: printer, isLoading } = useQuery({
     queryKey: ["printer-detail", id],
     queryFn: async () => {
@@ -414,20 +414,72 @@ const PrinterDetail = () => {
                 );
               })()}
               
-              {/* Admin: Update Image Button */}
+              {/* Admin: Update Image & Refresh Prices Buttons */}
               {isAdmin && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute top-4 left-4 gap-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setImageDialogOpen(true);
-                  }}
-                >
-                  <ImagePlus className="h-4 w-4" />
-                  Update Image
-                </Button>
+                <div className="absolute top-4 left-4 flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setImageDialogOpen(true);
+                    }}
+                  >
+                    <ImagePlus className="h-4 w-4" />
+                    Update Image
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    disabled={isUpdatingPrices}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      setIsUpdatingPrices(true);
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        const response = await supabase.functions.invoke('fetch-printer-prices', {
+                          body: { printerIds: [printer.id] }
+                        });
+                        
+                        if (response.error) {
+                          throw new Error(response.error.message || 'Failed to fetch prices');
+                        }
+                        
+                        const result = response.data;
+                        if (result?.results?.[0]) {
+                          const printerResult = result.results[0];
+                          if (printerResult.msrp_usd || printerResult.current_price_usd_store) {
+                            toast({
+                              title: "Prices Updated",
+                              description: `MSRP: $${printerResult.msrp_usd || 'N/A'}, Store: $${printerResult.current_price_usd_store || 'N/A'}`
+                            });
+                          } else {
+                            toast({
+                              title: "No Prices Found",
+                              description: "Could not extract prices from the product page",
+                              variant: "destructive"
+                            });
+                          }
+                        }
+                        
+                        queryClient.invalidateQueries({ queryKey: ["printer-detail", id] });
+                      } catch (error: any) {
+                        toast({
+                          title: "Error",
+                          description: error.message || "Failed to update prices",
+                          variant: "destructive"
+                        });
+                      } finally {
+                        setIsUpdatingPrices(false);
+                      }
+                    }}
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
+                    {isUpdatingPrices ? 'Updating...' : 'Refresh Prices'}
+                  </Button>
+                </div>
               )}
 
               <div className="flex-1 space-y-4">
