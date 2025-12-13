@@ -22,6 +22,7 @@ import {
   Monitor,
 } from "lucide-react";
 import { format } from "date-fns";
+import DOMPurify from "dompurify";
 
 interface SoftwareRelease {
   id: string;
@@ -96,9 +97,15 @@ const AppStoreIcon = () => (
   </svg>
 );
 
-// Helper to render markdown-style release notes
-const renderReleaseNotes = (text: string) => {
-  return text
+// Sanitization configuration for release notes
+const SANITIZE_CONFIG = {
+  ALLOWED_TAGS: ['h2', 'h3', 'h4', 'strong', 'em', 'code', 'br', 'li', 'ul', 'ol'],
+  ALLOWED_ATTR: ['class'],
+};
+
+// Helper to render and sanitize markdown-style release notes
+const renderReleaseNotes = (text: string): string => {
+  const html = text
     .replace(/^### (.*$)/gm, '<h4 class="text-sm font-semibold mt-3 mb-1">$1</h4>')
     .replace(/^## (.*$)/gm, '<h3 class="text-base font-semibold mt-4 mb-2">$1</h3>')
     .replace(/^# (.*$)/gm, '<h2 class="text-lg font-bold mt-4 mb-2">$1</h2>')
@@ -109,6 +116,8 @@ const renderReleaseNotes = (text: string) => {
     .replace(/`(.*?)`/g, '<code class="bg-muted px-1 py-0.5 rounded text-xs">$1</code>')
     .replace(/\n\n/g, '<br/><br/>')
     .replace(/\n/g, '<br/>');
+  
+  return DOMPurify.sanitize(html, SANITIZE_CONFIG);
 };
 
 // Helper to determine supported platforms display text
