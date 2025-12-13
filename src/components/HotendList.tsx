@@ -386,7 +386,7 @@ export default function HotendList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Input
