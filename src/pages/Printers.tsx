@@ -472,7 +472,7 @@ export default function Printers() {
                             )}
                           </div>
                           {/* Price */}
-                          <div className="shrink-0 text-right">
+                          <div className="shrink-0 text-right mr-8">
                             {printer.current_price_usd_store ? (
                               <div className="text-sm font-bold text-primary flex items-center justify-end gap-1">
                                 <Store className="h-3 w-3" />
