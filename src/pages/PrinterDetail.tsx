@@ -473,6 +473,9 @@ const PrinterDetail = () => {
                         <Button size="lg" variant="outline" className="gap-2">
                           <ExternalLink className="h-4 w-4" />
                           Official Store
+                          {printer.current_price_usd_store && (
+                            <span className="font-bold text-primary">${printer.current_price_usd_store}</span>
+                          )}
                         </Button>
                       </a>
                     )}
