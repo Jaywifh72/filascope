@@ -450,15 +450,16 @@ const PrinterDetail = () => {
                         const result = response.data;
                         if (result?.results?.[0]) {
                           const printerResult = result.results[0];
-                          if (printerResult.msrp_usd || printerResult.current_price_usd_store) {
+                          if (printerResult.success && printerResult.prices) {
+                            const { msrp_usd, current_price_usd_store } = printerResult.prices;
                             toast({
                               title: "Prices Updated",
-                              description: `MSRP: $${printerResult.msrp_usd || 'N/A'}, Store: $${printerResult.current_price_usd_store || 'N/A'}`
+                              description: `MSRP: ${msrp_usd ? `$${msrp_usd}` : 'N/A'}, Store: ${current_price_usd_store ? `$${current_price_usd_store}` : 'N/A'}`
                             });
                           } else {
                             toast({
                               title: "No Prices Found",
-                              description: "Could not extract prices from the product page",
+                              description: printerResult.error || "Could not extract prices from the product page",
                               variant: "destructive"
                             });
                           }
