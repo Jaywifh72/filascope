@@ -574,7 +574,7 @@ export default function HotendList() {
                                   )}
                                 </div>
                                 {/* Price */}
-                                <div className="shrink-0 text-right">
+                                <div className={`shrink-0 text-right ${isAdmin ? 'mr-10' : ''}`}>
                                   {minPrice !== null && (
                                     <div className="text-sm font-bold text-primary">
                                       {minPrice === maxPrice 
