@@ -207,13 +207,17 @@ export default function BuildPlateList() {
                                   <span className="text-xs text-muted-foreground line-clamp-1">{surface}</span>
                                 )}
                               </div>
-                              {/* Price */}
+                              {/* Price or Discontinued */}
                               <div className="shrink-0 text-right">
-                                {plate.price && (
+                                {plate.product_url === 'DISCONTINUED' ? (
+                                  <div className="text-sm font-semibold text-orange-500">
+                                    Discontinued
+                                  </div>
+                                ) : plate.price ? (
                                   <div className="text-sm font-bold text-primary">
                                     ${plate.price.toFixed(2)}
                                   </div>
-                                )}
+                                ) : null}
                               </div>
                             </div>
 
