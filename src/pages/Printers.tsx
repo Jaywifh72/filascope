@@ -474,9 +474,27 @@ export default function Printers() {
                           {/* Price */}
                           <div className="shrink-0 text-right mr-8">
                             {printer.current_price_usd_store ? (
-                              <div className="text-sm font-bold text-primary flex items-center justify-end gap-1">
-                                <Store className="h-3 w-3" />
-                                <span>{formatPrice(printer.current_price_usd_store)}</span>
+                              <div className="flex flex-col items-end">
+                                {printer.msrp_usd && printer.current_price_usd_store < printer.msrp_usd ? (
+                                  <>
+                                    <div className="text-xs text-muted-foreground line-through flex items-center gap-1">
+                                      <Tag className="h-3 w-3" />
+                                      <span>{formatPrice(printer.msrp_usd)}</span>
+                                    </div>
+                                    <div className="text-sm font-bold text-yellow-500 flex items-center gap-1">
+                                      <Store className="h-3 w-3" />
+                                      <span>{formatPrice(printer.current_price_usd_store)}</span>
+                                      <span className="text-xs font-semibold">
+                                        ({Math.round((1 - printer.current_price_usd_store / printer.msrp_usd) * 100)}% off)
+                                      </span>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="text-sm font-bold text-primary flex items-center gap-1">
+                                    <Store className="h-3 w-3" />
+                                    <span>{formatPrice(printer.current_price_usd_store)}</span>
+                                  </div>
+                                )}
                               </div>
                             ) : printer.current_price_usd_amazon ? (
                               <div className="text-sm font-bold text-primary flex items-center justify-end gap-1">
