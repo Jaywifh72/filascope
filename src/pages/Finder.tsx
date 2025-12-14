@@ -28,7 +28,8 @@ import { PrinterContextBar } from "@/components/filters/PrinterContextBar";
 import { HorizontalFilterBar } from "@/components/filters/HorizontalFilterBar";
 import { ActiveFilterTags, type ActiveFilter } from "@/components/filters/ActiveFilterTags";
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { MoreFiltersModal } from "@/components/filters/MoreFiltersModal";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -1003,168 +1004,39 @@ const Finder = () => {
         </SheetContent>
       </Sheet>
 
-      {/* More Filters Sheet */}
-      <Sheet open={moreFiltersOpen} onOpenChange={setMoreFiltersOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Advanced Filters</SheetTitle>
-          </SheetHeader>
-          <div className="mt-6 space-y-6">
-            {/* Special Properties */}
-            <div>
-              <h4 className="text-sm font-medium mb-3">Special Properties</h4>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={highSpeed} onCheckedChange={(c) => setHighSpeed(c as boolean)} />
-                  <span className="text-sm">High Speed</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={matte} onCheckedChange={(c) => setMatte(c as boolean)} />
-                  <span className="text-sm">Matte Finish</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={glow} onCheckedChange={(c) => setGlow(c as boolean)} />
-                  <span className="text-sm">Glow in Dark</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Composite Materials */}
-            <div>
-              <h4 className="text-sm font-medium mb-3">Composite Materials</h4>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={carbonFiber} onCheckedChange={(c) => setCarbonFiber(c as boolean)} />
-                  <span className="text-sm">Carbon Fiber</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={glassFiber} onCheckedChange={(c) => setGlassFiber(c as boolean)} />
-                  <span className="text-sm">Glass Fiber</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={woodFilled} onCheckedChange={(c) => setWoodFilled(c as boolean)} />
-                  <span className="text-sm">Wood Filled</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Spool Type */}
-            <div>
-              <h4 className="text-sm font-medium mb-3">Spool Type</h4>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={plasticSpool} onCheckedChange={(c) => setPlasticSpool(c as boolean)} />
-                  <span className="text-sm">Plastic Spool</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={cardboardSpool} onCheckedChange={(c) => setCardboardSpool(c as boolean)} />
-                  <span className="text-sm">Cardboard Spool</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Pack Size */}
-            <div>
-              <h4 className="text-sm font-medium mb-3">Pack Size</h4>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={singleSpool} onCheckedChange={(c) => setSingleSpool(c as boolean)} />
-                  <span className="text-sm">Single Spool</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={multiPack} onCheckedChange={(c) => setMultiPack(c as boolean)} />
-                  <span className="text-sm">Multi-Pack</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Compatibility */}
-            <div>
-              <h4 className="text-sm font-medium mb-3">Compatibility</h4>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={brassOnly} onCheckedChange={(c) => setBrassOnly(c as boolean)} />
-                  <span className="text-sm">Brass Safe (Non-Abrasive)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={foodContact} onCheckedChange={(c) => setFoodContact(c as boolean)} />
-                  <span className="text-sm">Food Contact</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox checked={amsOnly} onCheckedChange={(c) => setAmsOnly(c as boolean)} />
-                  <span className="text-sm">AMS/MMU Compatible</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Color Selection */}
-            <div>
-              <h4 className="text-sm font-medium mb-3">Color Filter</h4>
-              <div className="grid grid-cols-8 gap-2">
-                {COLOR_FAMILIES.map((color) => {
-                  const isSelected = selectedColorFamilies.includes(color.name);
-                  const isGradient = color.hex.startsWith('linear-gradient');
-                  return (
-                    <Tooltip key={color.name}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedColorFamilies(prev => prev.filter(c => c !== color.name));
-                            } else {
-                              setSelectedColorFamilies(prev => [...prev, color.name]);
-                            }
-                          }}
-                          className={`w-8 h-8 rounded-md border-2 transition-all hover:scale-110 ${
-                            isSelected 
-                              ? 'border-primary ring-2 ring-primary/50' 
-                              : 'border-border hover:border-muted-foreground'
-                          }`}
-                          style={{
-                            background: isGradient ? color.hex : color.hex,
-                            ...(color.name === 'White' ? { border: '2px solid hsl(var(--border))' } : {}),
-                          }}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
-                        <p className="text-xs">{color.name}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-border">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setHighSpeed(false);
-                  setMatte(false);
-                  setCarbonFiber(false);
-                  setGlassFiber(false);
-                  setWoodFilled(false);
-                  setGlow(false);
-                  setPlasticSpool(false);
-                  setCardboardSpool(false);
-                  setSingleSpool(false);
-                  setMultiPack(false);
-                  setBrassOnly(false);
-                  setFoodContact(false);
-                  setAmsOnly(false);
-                  setSelectedColorFamilies([]);
-                }}
-              >
-                Reset All
-              </Button>
-              <Button onClick={() => setMoreFiltersOpen(false)}>
-                Apply Filters
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* More Filters Modal */}
+      <MoreFiltersModal
+        open={moreFiltersOpen}
+        onOpenChange={setMoreFiltersOpen}
+        highSpeed={highSpeed}
+        onHighSpeedChange={setHighSpeed}
+        matte={matte}
+        onMatteChange={setMatte}
+        glow={glow}
+        onGlowChange={setGlow}
+        carbonFiber={carbonFiber}
+        onCarbonFiberChange={setCarbonFiber}
+        glassFiber={glassFiber}
+        onGlassFiberChange={setGlassFiber}
+        woodFilled={woodFilled}
+        onWoodFilledChange={setWoodFilled}
+        plasticSpool={plasticSpool}
+        onPlasticSpoolChange={setPlasticSpool}
+        cardboardSpool={cardboardSpool}
+        onCardboardSpoolChange={setCardboardSpool}
+        singleSpool={singleSpool}
+        onSingleSpoolChange={setSingleSpool}
+        multiPack={multiPack}
+        onMultiPackChange={setMultiPack}
+        brassOnly={brassOnly}
+        onBrassOnlyChange={setBrassOnly}
+        foodContact={foodContact}
+        onFoodContactChange={setFoodContact}
+        amsOnly={amsOnly}
+        onAmsOnlyChange={setAmsOnly}
+        selectedColorFamilies={selectedColorFamilies}
+        onColorFamiliesChange={setSelectedColorFamilies}
+      />
 
       {/* Main Content - Full Width */}
       <main className="max-w-[1800px] mx-auto px-4 lg:px-8 py-6">
