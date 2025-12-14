@@ -562,52 +562,52 @@ const PrinterDetail = () => {
                 )}
               </div>
 
-              {/* Key Specs Card - Directly below CTAs */}
-              <Card className="bg-background/50 border-border/50 mt-4">
-                <CardContent className="p-5 space-y-4">
-                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Key Specs</h3>
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                    {printer.build_volume_x_mm && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Box className="h-4 w-4 text-primary" />
-                          <span className="text-sm text-muted-foreground">Build Volume</span>
-                        </div>
-                        <span className="font-semibold text-sm">
-                          {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
-                        </span>
-                      </div>
-                    )}
-                    {printer.max_print_speed_mms && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Gauge className="h-4 w-4 text-primary" />
-                          <span className="text-sm text-muted-foreground">Max Speed</span>
-                        </div>
-                        <span className="font-semibold text-sm">{printer.max_print_speed_mms} mm/s</span>
-                      </div>
-                    )}
-                    {printer.max_nozzle_temp_c && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Thermometer className="h-4 w-4 text-primary" />
-                          <span className="text-sm text-muted-foreground">Max Nozzle</span>
-                        </div>
-                        <span className="font-semibold text-sm">{printer.max_nozzle_temp_c}°C</span>
-                      </div>
-                    )}
-                    {printer.bed_max_temp_c && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Flame className="h-4 w-4 text-primary" />
-                          <span className="text-sm text-muted-foreground">Max Bed</span>
-                        </div>
-                        <span className="font-semibold text-sm">{printer.bed_max_temp_c}°C</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Key Specs Card - Hero Element */}
+              <div className="bg-[#1A1A1A] border border-[hsl(180_100%_41%/0.3)] rounded-xl p-4 md:p-6 shadow-[0_4px_20px_hsl(180_100%_41%/0.1)] mt-4">
+                <h3 className="text-xs uppercase tracking-[0.1em] text-[hsl(180_100%_41%/0.8)] font-medium mb-5">
+                  KEY SPECS
+                </h3>
+                <dl className="space-y-4">
+                  {printer.build_volume_x_mm && (
+                    <div className="flex items-center justify-between">
+                      <dt className="flex items-center gap-3">
+                        <Box className="h-5 w-5 text-[hsl(180_100%_41%)] flex-shrink-0" />
+                        <span className="text-sm font-medium text-[#9CA3AF]">Build Volume</span>
+                      </dt>
+                      <dd className="text-base font-bold text-white">
+                        {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
+                      </dd>
+                    </div>
+                  )}
+                  {printer.max_print_speed_mms && (
+                    <div className="flex items-center justify-between">
+                      <dt className="flex items-center gap-3">
+                        <Zap className="h-5 w-5 text-[hsl(180_100%_41%)] flex-shrink-0" />
+                        <span className="text-sm font-medium text-[#9CA3AF]">Max Speed</span>
+                      </dt>
+                      <dd className="text-base font-bold text-white">{printer.max_print_speed_mms} mm/s</dd>
+                    </div>
+                  )}
+                  {printer.max_nozzle_temp_c && (
+                    <div className="flex items-center justify-between">
+                      <dt className="flex items-center gap-3">
+                        <Thermometer className="h-5 w-5 text-[hsl(180_100%_41%)] flex-shrink-0" />
+                        <span className="text-sm font-medium text-[#9CA3AF]">Max Nozzle</span>
+                      </dt>
+                      <dd className="text-base font-bold text-white">{printer.max_nozzle_temp_c}°C</dd>
+                    </div>
+                  )}
+                  {printer.bed_max_temp_c && (
+                    <div className="flex items-center justify-between">
+                      <dt className="flex items-center gap-3">
+                        <Flame className="h-5 w-5 text-[hsl(180_100%_41%)] flex-shrink-0" />
+                        <span className="text-sm font-medium text-[#9CA3AF]">Max Bed</span>
+                      </dt>
+                      <dd className="text-base font-bold text-white">{printer.bed_max_temp_c}°C</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
             </div>
           </div>
         </div>
