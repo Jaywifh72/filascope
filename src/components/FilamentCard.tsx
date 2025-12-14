@@ -61,6 +61,7 @@ import { useSimilarFilaments } from "@/hooks/useSimilarFilaments";
 import { PriceSparkline } from "./PriceSparkline";
 import { useToast } from "@/hooks/use-toast";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useCompare } from "@/hooks/useCompare";
 
 // Material badge colors matching the plan
 const MATERIAL_BADGE_COLORS: Record<string, string> = {
@@ -141,36 +142,31 @@ function getAvailabilityStatus(filament: Filament) {
 
 interface FilamentCardProps {
   filament: Filament;
-  isSelected?: boolean;
-  onToggleCompare?: (id: string) => void;
   colorMatchPercent?: number | null;
   priceTrend?: number | null; // percentage, negative = price drop
-  compareCount?: number;
-  maxCompare?: number;
 }
 
 export function FilamentCard({
   filament,
-  isSelected = false,
-  onToggleCompare,
   colorMatchPercent,
   priceTrend,
-  compareCount = 0,
-  maxCompare = 4,
 }: FilamentCardProps) {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [displayScore, setDisplayScore] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
   const [isPulsing, setIsPulsing] = useState(false);
-  const [showCheckmark, setShowCheckmark] = useState(isSelected);
   const [imageError, setImageError] = useState(false);
   const [retailerPopoverOpen, setRetailerPopoverOpen] = useState(false);
   
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
+  const { addItem, removeItem, isInCompare, isFull, count, maxItems } = useCompare();
+  
+  // Check if this filament is selected for compare
+  const isSelected = isInCompare(filament.id);
   
   // Check if compare tray is full
-  const isCompareDisabled = compareCount >= maxCompare && !isSelected;
+  const isCompareDisabled = isFull && !isSelected;
 
   // Calculate price per kg
   const packQty = filament.pack_quantity || 1;
@@ -691,26 +687,21 @@ export function FilamentCard({
   
   // Handle compare with feedback
   const handleCompare = () => {
-    if (isCompareDisabled) {
-      toast({
-        title: "Compare tray full",
-        description: "Remove an item before adding more (4 max)",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsPulsing(true);
-    setTimeout(() => setIsPulsing(false), 500);
-    
-    const willBeSelected = !isSelected;
-    setShowCheckmark(willBeSelected);
-    onToggleCompare?.(filament.id);
-    
-    if (willBeSelected) {
-      toast({
-        title: "Added to comparison",
-        description: `${compareCount + 1}/${maxCompare} filaments selected`,
+    if (isSelected) {
+      removeItem(filament.id);
+    } else if (!isFull) {
+      setIsPulsing(true);
+      setTimeout(() => setIsPulsing(false), 500);
+      
+      addItem({
+        id: filament.id,
+        product_title: filament.product_title,
+        vendor: filament.vendor || null,
+        material: filament.material || null,
+        color_hex: filament.color_hex || null,
+        variant_price: filament.variant_price || null,
+        net_weight_g: filament.net_weight_g || null,
+        featured_image: filament.featured_image,
       });
     }
   };
