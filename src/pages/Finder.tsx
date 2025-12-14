@@ -24,6 +24,11 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { isAMSCompatible } from "@/lib/amsCompatibility";
 import HeroSection from "@/components/HeroSection";
 import { FilamentFilters } from "@/components/FilamentFilters";
+import { PrinterContextBar } from "@/components/filters/PrinterContextBar";
+import { HorizontalFilterBar } from "@/components/filters/HorizontalFilterBar";
+import { ActiveFilterTags, type ActiveFilter } from "@/components/filters/ActiveFilterTags";
+import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -108,9 +113,11 @@ const Finder = () => {
   const [brassOnly, setBrassOnly] = useState(false);
   const [foodContact, setFoodContact] = useState(false);
   const [amsOnly, setAmsOnly] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState("all");
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [maxPrice, setMaxPrice] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(true);
+  const [printerSelectorOpen, setPrinterSelectorOpen] = useState(false);
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("truecost-asc");
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
@@ -400,7 +407,7 @@ const Finder = () => {
   });
 
   const { data: filaments, isLoading } = useQuery({
-    queryKey: ["filaments", searchTerm, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrand, materials],
+    queryKey: ["filaments", searchTerm, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrands, materials],
     enabled: !!materials, // Wait for materials to load first
     queryFn: async () => {
       let query = supabase.from("filaments").select("*");
@@ -444,8 +451,9 @@ const Finder = () => {
 
       // AMS filtering is done client-side using isAMSCompatible function
 
-      if (selectedBrand !== "all") {
-        query = query.eq("vendor", selectedBrand);
+      if (selectedBrands.length > 0) {
+        const brandFilters = selectedBrands.map(b => `vendor.eq.${b}`).join(",");
+        query = query.or(brandFilters);
       }
 
       const { data, error } = await query;
@@ -707,7 +715,7 @@ const Finder = () => {
       }
       
       // Apply brand filter
-      if (selectedBrand !== "all" && f.vendor !== selectedBrand) return false;
+      if (selectedBrands.length > 0 && !selectedBrands.includes(f.vendor || '')) return false;
       
       return true;
     });
@@ -725,7 +733,7 @@ const Finder = () => {
     });
 
     return counts;
-  }, [filaments, searchTerm, maxPrice, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrand, materials]);
+  }, [filaments, searchTerm, maxPrice, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrands, materials]);
 
   // Helper function to get count for a material (checks both base and variants)
   const getMaterialCount = (baseMaterial: string) => {
@@ -867,638 +875,299 @@ const Finder = () => {
         filamentCount={filamentCount || 1881}
         brandCount={brands?.length || 28}
       />
-      
-      {/* Full-width Printer Selector at Top */}
-      <div className="p-4 lg:p-6 border-b border-border bg-card/30">
-        <div className="max-w-[1800px] mx-auto space-y-4">
-          <PrinterSelector />
-          <MaterialRecommendations />
-        </div>
-      </div>
 
-      <div className="flex">
-        {/* Sidebar Filters */}
-        <FilamentFilters
-          selectedMaterials={selectedMaterials.includes("All") ? [] : selectedMaterials}
-          onMaterialChange={(material, checked) => {
-            if (checked) {
-              setSelectedMaterials(prev => 
-                prev.includes("All") ? [material] : [...prev, material]
-              );
-            } else {
-              setSelectedMaterials(prev => {
-                const newMaterials = prev.filter(m => m !== material);
-                return newMaterials.length === 0 ? ["All"] : newMaterials;
-              });
-            }
-          }}
-          highSpeed={highSpeed}
-          onHighSpeedChange={setHighSpeed}
-          matte={matte}
-          onMatteChange={setMatte}
-          carbonFiber={carbonFiber}
-          onCarbonFiberChange={setCarbonFiber}
-          glassFiber={glassFiber}
-          onGlassFiberChange={setGlassFiber}
-          woodFilled={woodFilled}
-          onWoodFilledChange={setWoodFilled}
-          glow={glow}
-          onGlowChange={setGlow}
-          plasticSpool={plasticSpool}
-          onPlasticSpoolChange={setPlasticSpool}
-          cardboardSpool={cardboardSpool}
-          onCardboardSpoolChange={setCardboardSpool}
-          singleSpool={singleSpool}
-          onSingleSpoolChange={setSingleSpool}
-          multiPack={multiPack}
-          onMultiPackChange={setMultiPack}
-          priceRange={priceRange}
-          onPriceRangeChange={setPriceRange}
-          maxPriceLimit={MAX_PRICE_LIMIT}
-          filterCounts={filterCounts}
-          onReset={() => {
+      {/* Printer Context Bar - Sticky */}
+      <PrinterContextBar
+        compatibleCount={filteredAndSortedFilaments?.length || 0}
+        onChangePrinter={() => setPrinterSelectorOpen(true)}
+      />
+
+      {/* Horizontal Filter Bar */}
+      <HorizontalFilterBar
+        materialCategories={[
+          { name: "All", count: filamentCount || 0 },
+          ...MATERIAL_CATEGORIES.map(cat => ({
+            name: cat.name,
+            count: cat.materials.reduce((sum, mat) => sum + (filterCounts[`material_${mat}`] || 0), 0)
+          }))
+        ]}
+        selectedMaterial={selectedMaterials.includes("All") ? "All" : selectedMaterials[0] || "All"}
+        onMaterialChange={(material) => {
+          if (material === "All") {
             setSelectedMaterials(["All"]);
-            setHighSpeed(false);
-            setMatte(false);
-            setCarbonFiber(false);
-            setGlassFiber(false);
-            setWoodFilled(false);
-            setGlow(false);
-            setPlasticSpool(false);
-            setCardboardSpool(false);
-            setSingleSpool(false);
-            setMultiPack(false);
-            setPriceRange([0, MAX_PRICE_LIMIT]);
-          }}
-          activeFilterCount={
-            (selectedMaterials.includes("All") ? 0 : selectedMaterials.length) +
-            (highSpeed ? 1 : 0) +
-            (matte ? 1 : 0) +
-            (carbonFiber ? 1 : 0) +
-            (glassFiber ? 1 : 0) +
-            (woodFilled ? 1 : 0) +
-            (glow ? 1 : 0) +
-            (plasticSpool ? 1 : 0) +
-            (cardboardSpool ? 1 : 0) +
-            (singleSpool ? 1 : 0) +
-            (multiPack ? 1 : 0) +
-            (priceRange[0] > 0 || priceRange[1] < MAX_PRICE_LIMIT ? 1 : 0)
+          } else {
+            // Find the category and set the base materials
+            const category = MATERIAL_CATEGORIES.find(cat => cat.name === material);
+            if (category) {
+              setSelectedMaterials(category.materials);
+            } else {
+              setSelectedMaterials([material]);
+            }
           }
-          onApplyPreset={(preset) => {
-            // Reset all filters first
-            setSelectedMaterials(preset.filters.materials || ["All"]);
-            setHighSpeed(preset.filters.highSpeed ?? false);
-            setMatte(preset.filters.matte ?? false);
-            setCarbonFiber(preset.filters.carbonFiber ?? false);
-            setGlassFiber(preset.filters.glassFiber ?? false);
-            setWoodFilled(preset.filters.woodFilled ?? false);
-            setGlow(preset.filters.glow ?? false);
-            setPlasticSpool(preset.filters.plasticSpool ?? false);
-            setCardboardSpool(preset.filters.cardboardSpool ?? false);
-            setSingleSpool(false);
-            setMultiPack(false);
-            setPriceRange(preset.filters.priceRange ?? [0, MAX_PRICE_LIMIT]);
-          }}
-        />
+        }}
+        brands={(brands || []).map(b => ({ name: b, count: filterCounts[`brand_${b}`] || 0 }))}
+        selectedBrands={selectedBrands}
+        onBrandsChange={setSelectedBrands}
+        priceRange={priceRange}
+        maxPriceLimit={MAX_PRICE_LIMIT}
+        onPriceRangeChange={setPriceRange}
+        onOpenMoreFilters={() => setMoreFiltersOpen(true)}
+        moreFiltersCount={
+          (highSpeed ? 1 : 0) +
+          (matte ? 1 : 0) +
+          (carbonFiber ? 1 : 0) +
+          (glassFiber ? 1 : 0) +
+          (woodFilled ? 1 : 0) +
+          (glow ? 1 : 0) +
+          (plasticSpool ? 1 : 0) +
+          (cardboardSpool ? 1 : 0) +
+          (singleSpool ? 1 : 0) +
+          (multiPack ? 1 : 0) +
+          (brassOnly ? 1 : 0) +
+          (foodContact ? 1 : 0) +
+          (amsOnly ? 1 : 0)
+        }
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
 
-      {/* Main Content */}
-      <main className="flex-1 p-4 lg:p-8 max-w-[1600px] mx-auto w-full">
+      {/* Active Filter Tags */}
+      <ActiveFilterTags
+        filters={[
+          ...(!selectedMaterials.includes("All") ? selectedMaterials.map(m => ({ id: m, label: m, type: 'material' as const })) : []),
+          ...selectedBrands.map(b => ({ id: b, label: b, type: 'brand' as const })),
+          ...(priceRange[0] > 0 || priceRange[1] < MAX_PRICE_LIMIT ? [{ id: 'price', label: `$${priceRange[0]}-$${priceRange[1]}/kg`, type: 'price' as const }] : []),
+          ...(highSpeed ? [{ id: 'highSpeed', label: 'High Speed', type: 'property' as const }] : []),
+          ...(matte ? [{ id: 'matte', label: 'Matte Finish', type: 'property' as const }] : []),
+          ...(carbonFiber ? [{ id: 'carbonFiber', label: 'Carbon Fiber', type: 'property' as const }] : []),
+          ...(glassFiber ? [{ id: 'glassFiber', label: 'Glass Fiber', type: 'property' as const }] : []),
+          ...(woodFilled ? [{ id: 'woodFilled', label: 'Wood Filled', type: 'property' as const }] : []),
+          ...(glow ? [{ id: 'glow', label: 'Glow', type: 'property' as const }] : []),
+          ...(brassOnly ? [{ id: 'brassOnly', label: 'Brass Safe', type: 'property' as const }] : []),
+          ...(foodContact ? [{ id: 'foodContact', label: 'Food Safe', type: 'property' as const }] : []),
+          ...(amsOnly ? [{ id: 'amsOnly', label: 'AMS Compatible', type: 'property' as const }] : []),
+          ...selectedColorFamilies.map(c => ({ id: c, label: c, type: 'color' as const })),
+        ]}
+        onRemove={(id, type) => {
+          if (type === 'material') {
+            const newMaterials = selectedMaterials.filter(m => m !== id);
+            setSelectedMaterials(newMaterials.length === 0 ? ["All"] : newMaterials);
+          } else if (type === 'brand') {
+            setSelectedBrands(selectedBrands.filter(b => b !== id));
+          } else if (type === 'price') {
+            setPriceRange([0, MAX_PRICE_LIMIT]);
+          } else if (type === 'color') {
+            setSelectedColorFamilies(selectedColorFamilies.filter(c => c !== id));
+          } else if (type === 'property') {
+            switch (id) {
+              case 'highSpeed': setHighSpeed(false); break;
+              case 'matte': setMatte(false); break;
+              case 'carbonFiber': setCarbonFiber(false); break;
+              case 'glassFiber': setGlassFiber(false); break;
+              case 'woodFilled': setWoodFilled(false); break;
+              case 'glow': setGlow(false); break;
+              case 'brassOnly': setBrassOnly(false); break;
+              case 'foodContact': setFoodContact(false); break;
+              case 'amsOnly': setAmsOnly(false); break;
+            }
+          }
+        }}
+        onClearAll={() => {
+          setSelectedMaterials(["All"]);
+          setSelectedBrands([]);
+          setPriceRange([0, MAX_PRICE_LIMIT]);
+          setHighSpeed(false);
+          setMatte(false);
+          setCarbonFiber(false);
+          setGlassFiber(false);
+          setWoodFilled(false);
+          setGlow(false);
+          setBrassOnly(false);
+          setFoodContact(false);
+          setAmsOnly(false);
+          setSelectedColorFamilies([]);
+          setHexSearch("");
+        }}
+      />
 
-        {/* Search Bar and Sort */}
-        <div className="mb-4 flex flex-col sm:flex-row gap-4">
-          <Input
-            type="text"
-            placeholder="Search filaments by name or vendor..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 max-w-xl bg-background border-border"
-          />
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-[200px] bg-background border-border">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border-border z-50">
-              <SelectItem value="truecost-asc">True Cost: Low to High</SelectItem>
-              <SelectItem value="truecost-desc">True Cost: High to Low</SelectItem>
-              <SelectItem value="print-desc">Print: High to Low</SelectItem>
-              <SelectItem value="print-asc">Print: Low to High</SelectItem>
-              <SelectItem value="strength-desc">Strength: High to Low</SelectItem>
-              <SelectItem value="strength-asc">Strength: Low to High</SelectItem>
-              <SelectItem value="heat-desc">Heat: High to Low</SelectItem>
-              <SelectItem value="heat-asc">Heat: Low to High</SelectItem>
-              <SelectItem value="score-desc">Score: High to Low</SelectItem>
-              <SelectItem value="score-asc">Score: Low to High</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Top Filters - Brand, Price, Compatibility */}
-        <div className="mb-6 flex flex-wrap items-center gap-4 p-4 bg-card/50 rounded-lg border border-border">
-          {/* Brand */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">Brand:</span>
-            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-              <SelectTrigger className="w-[160px] h-9 bg-background border-border text-sm">
-                <SelectValue placeholder="All Brands" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border-border z-50 max-h-[300px]">
-                <SelectItem value="all">All Brands</SelectItem>
-                {brands?.map((brand) => (
-                  <SelectItem key={brand} value={brand}>
-                    <div className="flex items-center justify-between w-full gap-2">
-                      <span>{brand}</span>
-                      <span className="text-muted-foreground text-xs">({filterCounts[`brand_${brand}`] || 0})</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* Printer Selector Sheet */}
+      <Sheet open={printerSelectorOpen} onOpenChange={setPrinterSelectorOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Select Your Printer</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <PrinterSelector />
+            <MaterialRecommendations />
           </div>
+        </SheetContent>
+      </Sheet>
 
-          <div className="w-px h-6 bg-border hidden sm:block" />
-
-          {/* Price */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">Max $/kg:</span>
-            <Input
-              type="number"
-              placeholder="Any"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-24 h-9 bg-background border-border text-sm"
-            />
-          </div>
-
-          <div className="w-px h-6 bg-border hidden sm:block" />
-
-          {/* Compatibility */}
-          <div className="flex items-center gap-4">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <label className="flex items-center gap-2 text-sm cursor-pointer group">
-                  <Checkbox checked={brassOnly} onCheckedChange={(checked) => setBrassOnly(checked as boolean)} />
-                  <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">Brass safe</span>
-                  <span className="text-xs text-muted-foreground">({filterCounts['brass_safe'] || 0})</span>
+      {/* More Filters Sheet */}
+      <Sheet open={moreFiltersOpen} onOpenChange={setMoreFiltersOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Advanced Filters</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-6">
+            {/* Special Properties */}
+            <div>
+              <h4 className="text-sm font-medium mb-3">Special Properties</h4>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={highSpeed} onCheckedChange={(c) => setHighSpeed(c as boolean)} />
+                  <span className="text-sm">High Speed</span>
                 </label>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Non-abrasive filaments safe for brass nozzles</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <label className="flex items-center gap-2 text-sm cursor-pointer group">
-                  <Checkbox checked={foodContact} onCheckedChange={(checked) => setFoodContact(checked as boolean)} />
-                  <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">Food safe</span>
-                  <span className="text-xs text-muted-foreground">({filterCounts['food_contact'] || 0})</span>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={matte} onCheckedChange={(c) => setMatte(c as boolean)} />
+                  <span className="text-sm">Matte Finish</span>
                 </label>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Filaments rated for food contact applications</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <label className="flex items-center gap-2 text-sm cursor-pointer group">
-                  <Checkbox checked={amsOnly} onCheckedChange={(checked) => setAmsOnly(checked as boolean)} />
-                  <span className="text-muted-foreground group-hover:text-foreground transition-colors text-xs">AMS/MMU</span>
-                  <span className="text-xs text-muted-foreground">({filterCounts['ams_fit'] || 0})</span>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={glow} onCheckedChange={(c) => setGlow(c as boolean)} />
+                  <span className="text-sm">Glow in Dark</span>
                 </label>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Compatible with automatic material systems (multi-color/multi-material)</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-
-          <div className="w-px h-6 bg-border hidden sm:block" />
-
-          {/* Color Filter Toggle */}
-          <Collapsible open={colorSectionOpen} onOpenChange={setColorSectionOpen}>
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 gap-2">
-                <Palette className="w-4 h-4" />
-                <span className="text-xs">Color</span>
-                {(selectedColorFamilies.length > 0 || hexSearch) && (
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
-                    {selectedColorFamilies.length + (hexSearch ? 1 : 0)}
-                  </Badge>
-                )}
-                <ChevronDown className={`w-3 h-3 transition-transform ${colorSectionOpen ? 'rotate-180' : ''}`} />
-              </Button>
-            </CollapsibleTrigger>
-          </Collapsible>
-        </div>
-
-        {/* Color Filter Section - Collapsible */}
-        <Collapsible open={colorSectionOpen} onOpenChange={setColorSectionOpen}>
-          <CollapsibleContent>
-            <div className="mb-6 p-4 bg-card/50 rounded-lg border border-border">
-              <div className="space-y-4">
-                {/* Mode Toggle */}
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-medium text-muted-foreground">Color Selection</h4>
-                  <div className="flex items-center border border-border rounded-lg overflow-hidden">
-                    <button
-                      onClick={() => setColorPickerMode("grid")}
-                      className={`px-3 py-1 text-xs transition-colors ${
-                        colorPickerMode === "grid" 
-                          ? "bg-primary text-primary-foreground" 
-                          : "bg-muted text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      Grid
-                    </button>
-                    <button
-                      onClick={() => setColorPickerMode("spectrum")}
-                      className={`px-3 py-1 text-xs transition-colors ${
-                        colorPickerMode === "spectrum" 
-                          ? "bg-primary text-primary-foreground" 
-                          : "bg-muted text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      Spectrum
-                    </button>
-                  </div>
-                </div>
-
-                {colorPickerMode === "grid" ? (
-                  /* Color Family Grid */
-                  <div>
-                    <div className="grid grid-cols-8 sm:grid-cols-16 gap-2">
-                      {COLOR_FAMILIES.map((color) => {
-                        const isSelected = selectedColorFamilies.includes(color.name);
-                        const isGradient = color.hex.startsWith('linear-gradient');
-                        return (
-                          <Tooltip key={color.name}>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => {
-                                  if (isSelected) {
-                                    setSelectedColorFamilies(prev => prev.filter(c => c !== color.name));
-                                  } else {
-                                    setSelectedColorFamilies(prev => [...prev, color.name]);
-                                  }
-                                }}
-                                className={`w-8 h-8 rounded-md border-2 transition-all hover:scale-110 ${
-                                  isSelected 
-                                    ? 'border-primary ring-2 ring-primary/50' 
-                                    : 'border-border hover:border-muted-foreground'
-                                }`}
-                                style={{
-                                  background: isGradient ? color.hex : color.hex,
-                                  ...(color.name === 'White' ? { border: '2px solid hsl(var(--border))' } : {}),
-                                }}
-                              />
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom">
-                              <p className="text-xs">{color.name}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  /* Color Spectrum Picker */
-                  <div className="space-y-3">
-                    {/* Hue Spectrum Bar */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-muted-foreground">Hue</span>
-                        <span className="text-xs font-mono text-muted-foreground">{spectrumHue}°</span>
-                      </div>
-                      <div 
-                        className="h-6 rounded-md cursor-pointer relative"
-                        style={{
-                          background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)'
-                        }}
-                        onClick={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const x = e.clientX - rect.left;
-                          const hue = Math.round((x / rect.width) * 360);
-                          setSpectrumHue(Math.max(0, Math.min(360, hue)));
-                          setHexSearch(hslToHex(hue, spectrumSaturation, spectrumLightness));
-                        }}
-                      >
-                        <div 
-                          className="absolute top-0 w-1 h-full bg-white border border-black/50 rounded-sm"
-                          style={{ left: `${(spectrumHue / 360) * 100}%`, transform: 'translateX(-50%)' }}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Saturation Slider */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-muted-foreground">Saturation</span>
-                        <span className="text-xs font-mono text-muted-foreground">{spectrumSaturation}%</span>
-                      </div>
-                      <div 
-                        className="h-6 rounded-md cursor-pointer relative"
-                        style={{
-                          background: `linear-gradient(to right, hsl(${spectrumHue}, 0%, ${spectrumLightness}%), hsl(${spectrumHue}, 100%, ${spectrumLightness}%))`
-                        }}
-                        onClick={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const x = e.clientX - rect.left;
-                          const sat = Math.round((x / rect.width) * 100);
-                          setSpectrumSaturation(Math.max(0, Math.min(100, sat)));
-                          setHexSearch(hslToHex(spectrumHue, sat, spectrumLightness));
-                        }}
-                      >
-                        <div 
-                          className="absolute top-0 w-1 h-full bg-white border border-black/50 rounded-sm"
-                          style={{ left: `${spectrumSaturation}%`, transform: 'translateX(-50%)' }}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Lightness Slider */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-muted-foreground">Lightness</span>
-                        <span className="text-xs font-mono text-muted-foreground">{spectrumLightness}%</span>
-                      </div>
-                      <div 
-                        className="h-6 rounded-md cursor-pointer relative"
-                        style={{
-                          background: `linear-gradient(to right, hsl(${spectrumHue}, ${spectrumSaturation}%, 0%), hsl(${spectrumHue}, ${spectrumSaturation}%, 50%), hsl(${spectrumHue}, ${spectrumSaturation}%, 100%))`
-                        }}
-                        onClick={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const x = e.clientX - rect.left;
-                          const light = Math.round((x / rect.width) * 100);
-                          setSpectrumLightness(Math.max(0, Math.min(100, light)));
-                          setHexSearch(hslToHex(spectrumHue, spectrumSaturation, light));
-                        }}
-                      >
-                        <div 
-                          className="absolute top-0 w-1 h-full bg-white border border-black/50 rounded-sm"
-                          style={{ left: `${spectrumLightness}%`, transform: 'translateX(-50%)' }}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Preview & Apply */}
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-12 h-12 rounded-lg border-2 border-border shadow-sm"
-                        style={{ backgroundColor: hslToHex(spectrumHue, spectrumSaturation, spectrumLightness) }}
-                      />
-                      <div className="flex-1">
-                        <div className="text-xs text-muted-foreground mb-1">Selected Color</div>
-                        <div className="font-mono text-sm">{hslToHex(spectrumHue, spectrumSaturation, spectrumLightness).toUpperCase()}</div>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => setHexSearch(hslToHex(spectrumHue, spectrumSaturation, spectrumLightness))}
-                        className="gap-1"
-                      >
-                        <Palette className="w-3.5 h-3.5" />
-                        Apply
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* HEX Color Search */}
-                <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-border">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground">Exact HEX:</span>
-                    <div className="flex items-center gap-1">
-                      <Input
-                        type="text"
-                        placeholder="#FF5733"
-                        value={hexSearch}
-                        onChange={(e) => setHexSearch(e.target.value)}
-                        className="w-24 h-8 bg-background border-border text-sm font-mono"
-                        maxLength={7}
-                      />
-                      <input
-                        type="color"
-                        value={hexSearch.startsWith('#') ? hexSearch : `#${hexSearch || '000000'}`}
-                        onChange={(e) => setHexSearch(e.target.value)}
-                        className="w-8 h-8 rounded cursor-pointer border border-border"
-                        title="Pick a color"
-                      />
-                      {hexSearch && (
-                        <div 
-                          className="w-8 h-8 rounded border border-border"
-                          style={{ backgroundColor: hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}` }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                  
-                  {hexSearch && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">Tolerance:</span>
-                      <Slider
-                        value={[colorTolerance]}
-                        onValueChange={(value) => setColorTolerance(value[0])}
-                        min={5}
-                        max={80}
-                        step={5}
-                        className="w-24"
-                      />
-                      <span className="text-xs text-muted-foreground w-8">{colorTolerance}</span>
-                    </div>
-                  )}
-
-                  {(selectedColorFamilies.length > 0 || hexSearch) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedColorFamilies([]);
-                        setHexSearch("");
-                      }}
-                      className="h-7 text-xs"
-                    >
-                      Clear colors
-                    </Button>
-                  )}
-                </div>
               </div>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
 
-        {/* Active Filter Chips */}
-        {(searchTerm || maxPrice || (selectedMaterials.length > 1 || (selectedMaterials.length === 1 && selectedMaterials[0] !== "All")) || Object.keys(selectedVariants).length > 0 || selectedBrand !== "all" || brassOnly || foodContact || amsOnly || selectedColorFamilies.length > 0 || hexSearch) && (
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-sm text-muted-foreground">Active filters:</span>
-            
-            {searchTerm && (
-              <Badge variant="secondary" className="gap-1">
-                Search: {searchTerm}
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
-            
-            {maxPrice && (
-              <Badge variant="secondary" className="gap-1">
-                Max Price: ${maxPrice}/kg
-                <button
-                  onClick={() => setMaxPrice("")}
-                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
-            
-            {selectedMaterials.filter(m => m !== "All").map(material => (
-              <Badge key={material} variant="secondary" className="gap-1">
-                {material}
-                <button
-                  onClick={() => {
-                    const newMaterials = selectedMaterials.filter(m => m !== material);
-                    setSelectedMaterials(newMaterials.length === 0 ? ["All"] : newMaterials);
-                  }}
-                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-            
-            {Object.entries(selectedVariants).map(([material, variants]) => 
-              variants.map(variant => (
-                <Badge key={`${material}-${variant}`} variant="secondary" className="gap-1">
-                  {variant}
-                  <button
-                    onClick={() => {
-                      const newVariants = { ...selectedVariants };
-                      newVariants[material] = newVariants[material].filter(v => v !== variant);
-                      if (newVariants[material].length === 0) {
-                        delete newVariants[material];
-                      }
-                      setSelectedVariants(newVariants);
-                    }}
-                    className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))
-            )}
-            
-            {selectedBrand !== "all" && (
-              <Badge variant="secondary" className="gap-1">
-                Brand: {selectedBrand}
-                <button
-                  onClick={() => setSelectedBrand("all")}
-                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
-            
-            {brassOnly && (
-              <Badge variant="secondary" className="gap-1">
-                Brass Safe
-                <button
-                  onClick={() => setBrassOnly(false)}
-                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
-            
-            {foodContact && (
-              <Badge variant="secondary" className="gap-1">
-                Food Contact
-                <button
-                  onClick={() => setFoodContact(false)}
-                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
-            
-            {amsOnly && (
-              <Badge variant="secondary" className="gap-1">
-                AMS Compatible
-                <button
-                  onClick={() => setAmsOnly(false)}
-                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
+            {/* Composite Materials */}
+            <div>
+              <h4 className="text-sm font-medium mb-3">Composite Materials</h4>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={carbonFiber} onCheckedChange={(c) => setCarbonFiber(c as boolean)} />
+                  <span className="text-sm">Carbon Fiber</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={glassFiber} onCheckedChange={(c) => setGlassFiber(c as boolean)} />
+                  <span className="text-sm">Glass Fiber</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={woodFilled} onCheckedChange={(c) => setWoodFilled(c as boolean)} />
+                  <span className="text-sm">Wood Filled</span>
+                </label>
+              </div>
+            </div>
 
-            {/* Color filter chips */}
-            {selectedColorFamilies.map(colorFamily => {
-              const colorDef = COLOR_FAMILIES.find(c => c.name === colorFamily);
-              return (
-                <Badge key={colorFamily} variant="secondary" className="gap-1 pl-1">
-                  <span 
-                    className="w-3 h-3 rounded-full border border-border" 
-                    style={{ 
-                      background: colorDef?.hex.startsWith('linear-gradient') 
-                        ? colorDef.hex 
-                        : colorDef?.hex || '#888' 
-                    }}
-                  />
-                  {colorFamily}
-                  <button
-                    onClick={() => setSelectedColorFamilies(prev => prev.filter(c => c !== colorFamily))}
-                    className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              );
-            })}
+            {/* Spool Type */}
+            <div>
+              <h4 className="text-sm font-medium mb-3">Spool Type</h4>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={plasticSpool} onCheckedChange={(c) => setPlasticSpool(c as boolean)} />
+                  <span className="text-sm">Plastic Spool</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={cardboardSpool} onCheckedChange={(c) => setCardboardSpool(c as boolean)} />
+                  <span className="text-sm">Cardboard Spool</span>
+                </label>
+              </div>
+            </div>
 
-            {hexSearch && (
-              <Badge variant="secondary" className="gap-1 pl-1">
-                <span 
-                  className="w-3 h-3 rounded-full border border-border" 
-                  style={{ backgroundColor: hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}` }}
-                />
-                {hexSearch.toUpperCase()}
-                <button
-                  onClick={() => setHexSearch("")}
-                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            )}
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSearchTerm("");
-                setMaxPrice("");
-                setSelectedMaterials(["All"]);
-                setSelectedVariants({});
-                setSelectedBrand("all");
-                setBrassOnly(false);
-                setFoodContact(false);
-                setAmsOnly(false);
-                setSelectedColorFamilies([]);
-                setHexSearch("");
-              }}
-              className="h-7 text-xs"
-            >
-              Clear all
-            </Button>
+            {/* Pack Size */}
+            <div>
+              <h4 className="text-sm font-medium mb-3">Pack Size</h4>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={singleSpool} onCheckedChange={(c) => setSingleSpool(c as boolean)} />
+                  <span className="text-sm">Single Spool</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={multiPack} onCheckedChange={(c) => setMultiPack(c as boolean)} />
+                  <span className="text-sm">Multi-Pack</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Compatibility */}
+            <div>
+              <h4 className="text-sm font-medium mb-3">Compatibility</h4>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={brassOnly} onCheckedChange={(c) => setBrassOnly(c as boolean)} />
+                  <span className="text-sm">Brass Safe (Non-Abrasive)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={foodContact} onCheckedChange={(c) => setFoodContact(c as boolean)} />
+                  <span className="text-sm">Food Contact</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox checked={amsOnly} onCheckedChange={(c) => setAmsOnly(c as boolean)} />
+                  <span className="text-sm">AMS/MMU Compatible</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Color Selection */}
+            <div>
+              <h4 className="text-sm font-medium mb-3">Color Filter</h4>
+              <div className="grid grid-cols-8 gap-2">
+                {COLOR_FAMILIES.map((color) => {
+                  const isSelected = selectedColorFamilies.includes(color.name);
+                  const isGradient = color.hex.startsWith('linear-gradient');
+                  return (
+                    <Tooltip key={color.name}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedColorFamilies(prev => prev.filter(c => c !== color.name));
+                            } else {
+                              setSelectedColorFamilies(prev => [...prev, color.name]);
+                            }
+                          }}
+                          className={`w-8 h-8 rounded-md border-2 transition-all hover:scale-110 ${
+                            isSelected 
+                              ? 'border-primary ring-2 ring-primary/50' 
+                              : 'border-border hover:border-muted-foreground'
+                          }`}
+                          style={{
+                            background: isGradient ? color.hex : color.hex,
+                            ...(color.name === 'White' ? { border: '2px solid hsl(var(--border))' } : {}),
+                          }}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p className="text-xs">{color.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between pt-4 border-t border-border">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setHighSpeed(false);
+                  setMatte(false);
+                  setCarbonFiber(false);
+                  setGlassFiber(false);
+                  setWoodFilled(false);
+                  setGlow(false);
+                  setPlasticSpool(false);
+                  setCardboardSpool(false);
+                  setSingleSpool(false);
+                  setMultiPack(false);
+                  setBrassOnly(false);
+                  setFoodContact(false);
+                  setAmsOnly(false);
+                  setSelectedColorFamilies([]);
+                }}
+              >
+                Reset All
+              </Button>
+              <Button onClick={() => setMoreFiltersOpen(false)}>
+                Apply Filters
+              </Button>
+            </div>
           </div>
-        )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Main Content - Full Width */}
+      <main className="max-w-[1800px] mx-auto px-4 lg:px-8 py-6">
 
         {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
@@ -1996,7 +1665,6 @@ const Finder = () => {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 };
