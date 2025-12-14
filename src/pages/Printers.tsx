@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, ImageIcon, Store, ShoppingCart, Tag } from "lucide-react";
+import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, ImageIcon, Store, ShoppingCart, Tag, Search } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -283,13 +283,14 @@ export default function Printers() {
           </div>
 
           {/* Hero Search Bar */}
-          <div className="w-full max-w-[600px] mx-auto">
+          <div className="w-full max-w-[600px] mx-auto relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search 105 printers by name, brand, or feature..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-[56px] text-lg px-6 rounded-full border-2 border-muted focus:border-primary shadow-sm"
+              className="w-full h-[56px] text-lg pl-12 pr-6 rounded-full border-2 border-muted focus:border-primary shadow-sm"
             />
           </div>
         </section>
