@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Slider } from "@/components/ui/slider";
 import { MaterialBadge } from "@/components/MaterialBadge";
-import { ExternalLink, ChevronDown, GitCompare, X, LayoutGrid, List, CheckCircle, XCircle, TreeDeciduous, Layers } from "lucide-react";
+import { ExternalLink, ChevronDown, GitCompare, X, LayoutGrid, List, CheckCircle, XCircle, TreeDeciduous, Layers, Palette } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "@/components/LikeButton";
@@ -23,6 +24,58 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { isAMSCompatible } from "@/lib/amsCompatibility";
 import BentoGrid from "@/components/BentoGrid";
 import { FilamentFilters } from "@/components/FilamentFilters";
+
+// Color family definitions with representative HEX colors
+const COLOR_FAMILIES = [
+  { name: "Red", hex: "#DC2626", families: ["Red", "Burgundy", "Maroon", "Crimson"] },
+  { name: "Orange", hex: "#EA580C", families: ["Orange", "Coral", "Peach"] },
+  { name: "Yellow", hex: "#EAB308", families: ["Yellow", "Gold", "Amber", "Mustard"] },
+  { name: "Green", hex: "#16A34A", families: ["Green", "Olive", "Lime", "Forest", "Mint", "Sage"] },
+  { name: "Teal", hex: "#0D9488", families: ["Teal", "Turquoise", "Aqua"] },
+  { name: "Blue", hex: "#2563EB", families: ["Blue", "Navy", "Sky", "Royal", "Cobalt"] },
+  { name: "Purple", hex: "#9333EA", families: ["Purple", "Violet", "Lavender", "Plum"] },
+  { name: "Pink", hex: "#EC4899", families: ["Pink", "Magenta", "Rose", "Fuchsia"] },
+  { name: "Brown", hex: "#92400E", families: ["Brown", "Tan", "Chocolate", "Coffee", "Mocha"] },
+  { name: "Beige", hex: "#D4A574", families: ["Beige", "Cream", "Ivory", "Natural", "Nude"] },
+  { name: "Black", hex: "#1A1A1A", families: ["Black", "Charcoal", "Ebony"] },
+  { name: "White", hex: "#F5F5F5", families: ["White", "Ivory", "Snow"] },
+  { name: "Gray", hex: "#6B7280", families: ["Gray", "Grey", "Silver", "Slate", "Ash"] },
+  { name: "Clear", hex: "#E0F2FE", families: ["Clear", "Transparent", "Translucent", "Crystal"] },
+  { name: "Multi", hex: "linear-gradient(135deg, #DC2626, #EA580C, #EAB308, #16A34A, #2563EB, #9333EA)", families: ["Rainbow", "Multi", "Multicolor", "Gradient", "Silk"] },
+  { name: "Glow", hex: "#84CC16", families: ["Glow", "Phosphorescent", "Luminous"] },
+];
+
+// Helper to convert HEX to RGB
+const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
+};
+
+// Calculate color distance (Euclidean in RGB space, approximates delta-E)
+const colorDistance = (hex1: string, hex2: string): number => {
+  const rgb1 = hexToRgb(hex1);
+  const rgb2 = hexToRgb(hex2);
+  if (!rgb1 || !rgb2) return Infinity;
+  
+  // Weighted Euclidean distance (human eye is more sensitive to green)
+  const rMean = (rgb1.r + rgb2.r) / 2;
+  const deltaR = rgb1.r - rgb2.r;
+  const deltaG = rgb1.g - rgb2.g;
+  const deltaB = rgb1.b - rgb2.b;
+  
+  // Redmean color difference formula (better perceptual accuracy)
+  const weightR = 2 + rMean / 256;
+  const weightG = 4;
+  const weightB = 2 + (255 - rMean) / 256;
+  
+  return Math.sqrt(weightR * deltaR * deltaR + weightG * deltaG * deltaG + weightB * deltaB * deltaB);
+};
 
 const Finder = () => {
   const navigate = useNavigate();
@@ -55,6 +108,12 @@ const Finder = () => {
   const [multiPack, setMultiPack] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const MAX_PRICE_LIMIT = 100;
+  
+  // Color filter states
+  const [selectedColorFamilies, setSelectedColorFamilies] = useState<string[]>([]);
+  const [hexSearch, setHexSearch] = useState("");
+  const [colorTolerance, setColorTolerance] = useState(30);
+  const [colorSectionOpen, setColorSectionOpen] = useState(false);
   
   // Persist viewMode to localStorage
   useEffect(() => {
@@ -696,6 +755,26 @@ const Finder = () => {
     if (singleSpool && !multiPack && packQty !== 1) return false;
     if (multiPack && !singleSpool && packQty <= 1) return false;
     
+    // Apply color family filter
+    if (selectedColorFamilies.length > 0) {
+      const filamentColorFamily = f.color_family?.toLowerCase() || '';
+      const matchesFamily = selectedColorFamilies.some(family => {
+        const colorDef = COLOR_FAMILIES.find(c => c.name === family);
+        if (!colorDef) return false;
+        return colorDef.families.some(fam => filamentColorFamily.includes(fam.toLowerCase()));
+      });
+      if (!matchesFamily) return false;
+    }
+    
+    // Apply HEX color search filter
+    if (hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/)) {
+      const searchHex = hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`;
+      const filamentHex = f.color_hex;
+      if (!filamentHex) return false;
+      const distance = colorDistance(searchHex, filamentHex);
+      if (distance > colorTolerance) return false;
+    }
+    
     return true;
   }).sort((a, b) => {
     // Calculate true per-kg price: total_price / (pack_quantity * weight_per_spool_kg)
@@ -943,10 +1022,134 @@ const Finder = () => {
               </TooltipContent>
             </Tooltip>
           </div>
+
+          <div className="w-px h-6 bg-border hidden sm:block" />
+
+          {/* Color Filter Toggle */}
+          <Collapsible open={colorSectionOpen} onOpenChange={setColorSectionOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2">
+                <Palette className="w-4 h-4" />
+                <span className="text-xs">Color</span>
+                {(selectedColorFamilies.length > 0 || hexSearch) && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
+                    {selectedColorFamilies.length + (hexSearch ? 1 : 0)}
+                  </Badge>
+                )}
+                <ChevronDown className={`w-3 h-3 transition-transform ${colorSectionOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+          </Collapsible>
         </div>
 
+        {/* Color Filter Section - Collapsible */}
+        <Collapsible open={colorSectionOpen} onOpenChange={setColorSectionOpen}>
+          <CollapsibleContent>
+            <div className="mb-6 p-4 bg-card/50 rounded-lg border border-border">
+              <div className="space-y-4">
+                {/* Color Family Grid */}
+                <div>
+                  <h4 className="text-xs font-medium text-muted-foreground mb-3">Color Family</h4>
+                  <div className="grid grid-cols-8 sm:grid-cols-16 gap-2">
+                    {COLOR_FAMILIES.map((color) => {
+                      const isSelected = selectedColorFamilies.includes(color.name);
+                      const isGradient = color.hex.startsWith('linear-gradient');
+                      return (
+                        <Tooltip key={color.name}>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => {
+                                if (isSelected) {
+                                  setSelectedColorFamilies(prev => prev.filter(c => c !== color.name));
+                                } else {
+                                  setSelectedColorFamilies(prev => [...prev, color.name]);
+                                }
+                              }}
+                              className={`w-8 h-8 rounded-md border-2 transition-all hover:scale-110 ${
+                                isSelected 
+                                  ? 'border-primary ring-2 ring-primary/50' 
+                                  : 'border-border hover:border-muted-foreground'
+                              }`}
+                              style={{
+                                background: isGradient ? color.hex : color.hex,
+                                ...(color.name === 'White' ? { border: '2px solid hsl(var(--border))' } : {}),
+                              }}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p className="text-xs">{color.name}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* HEX Color Search */}
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">Exact HEX:</span>
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="text"
+                        placeholder="#FF5733"
+                        value={hexSearch}
+                        onChange={(e) => setHexSearch(e.target.value)}
+                        className="w-24 h-8 bg-background border-border text-sm font-mono"
+                        maxLength={7}
+                      />
+                      <input
+                        type="color"
+                        value={hexSearch.startsWith('#') ? hexSearch : `#${hexSearch || '000000'}`}
+                        onChange={(e) => setHexSearch(e.target.value)}
+                        className="w-8 h-8 rounded cursor-pointer border border-border"
+                        title="Pick a color"
+                      />
+                      {hexSearch && (
+                        <div 
+                          className="w-8 h-8 rounded border border-border"
+                          style={{ backgroundColor: hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}` }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  
+                  {hexSearch && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground">Tolerance:</span>
+                      <Slider
+                        value={[colorTolerance]}
+                        onValueChange={(value) => setColorTolerance(value[0])}
+                        min={5}
+                        max={80}
+                        step={5}
+                        className="w-24"
+                      />
+                      <span className="text-xs text-muted-foreground w-8">{colorTolerance}</span>
+                    </div>
+                  )}
+
+                  {(selectedColorFamilies.length > 0 || hexSearch) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedColorFamilies([]);
+                        setHexSearch("");
+                      }}
+                      className="h-7 text-xs"
+                    >
+                      Clear colors
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
         {/* Active Filter Chips */}
-        {(searchTerm || maxPrice || (selectedMaterials.length > 1 || (selectedMaterials.length === 1 && selectedMaterials[0] !== "All")) || Object.keys(selectedVariants).length > 0 || selectedBrand !== "all" || brassOnly || foodContact || amsOnly) && (
+        {(searchTerm || maxPrice || (selectedMaterials.length > 1 || (selectedMaterials.length === 1 && selectedMaterials[0] !== "All")) || Object.keys(selectedVariants).length > 0 || selectedBrand !== "all" || brassOnly || foodContact || amsOnly || selectedColorFamilies.length > 0 || hexSearch) && (
           <div className="mb-6 flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted-foreground">Active filters:</span>
             
@@ -1057,6 +1260,46 @@ const Finder = () => {
                 </button>
               </Badge>
             )}
+
+            {/* Color filter chips */}
+            {selectedColorFamilies.map(colorFamily => {
+              const colorDef = COLOR_FAMILIES.find(c => c.name === colorFamily);
+              return (
+                <Badge key={colorFamily} variant="secondary" className="gap-1 pl-1">
+                  <span 
+                    className="w-3 h-3 rounded-full border border-border" 
+                    style={{ 
+                      background: colorDef?.hex.startsWith('linear-gradient') 
+                        ? colorDef.hex 
+                        : colorDef?.hex || '#888' 
+                    }}
+                  />
+                  {colorFamily}
+                  <button
+                    onClick={() => setSelectedColorFamilies(prev => prev.filter(c => c !== colorFamily))}
+                    className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              );
+            })}
+
+            {hexSearch && (
+              <Badge variant="secondary" className="gap-1 pl-1">
+                <span 
+                  className="w-3 h-3 rounded-full border border-border" 
+                  style={{ backgroundColor: hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}` }}
+                />
+                {hexSearch.toUpperCase()}
+                <button
+                  onClick={() => setHexSearch("")}
+                  className="ml-1 hover:bg-muted/50 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
             
             <Button
               variant="ghost"
@@ -1070,6 +1313,8 @@ const Finder = () => {
                 setBrassOnly(false);
                 setFoodContact(false);
                 setAmsOnly(false);
+                setSelectedColorFamilies([]);
+                setHexSearch("");
               }}
               className="h-7 text-xs"
             >
