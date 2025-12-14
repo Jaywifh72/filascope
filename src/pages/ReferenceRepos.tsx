@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, FolderGit2, Building2, Target, DollarSign, Server, Users, Check, X, Star, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Download, Smartphone } from "lucide-react";
+import { ArrowLeft, ExternalLink, FolderGit2, Building2, Target, DollarSign, Server, Users, Check, X, Star, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Download, Smartphone, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -9,6 +9,13 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { repoData } from "@/lib/repoData";
 
 const repoComparison = [
@@ -21,6 +28,9 @@ const repoComparison = [
   { name: "Creality Cloud", owner: "Creality", model: "Mobile Sub", free: true, paid: true, quality: 2, community: 2, monetization: 3, search: 3, ux: 3, mobile: true, fileTypes: "STL/G-code", standout: "Phone-to-Print" },
   { name: "GrabCAD", owner: "Stratasys", model: "Lead Gen", free: true, paid: false, quality: 5, community: 4, monetization: 1, search: 4, ux: 4, mobile: false, fileTypes: "STEP/IGES/CAD", standout: "Engineering CAD Files" },
 ];
+
+const businessModels = ["All", "Loss-Leader", "Hybrid", "Ad-Supported", "Marketplace", "Premium", "Search + Sub", "Mobile Sub", "Lead Gen"];
+const fileFormats = ["All", "STL", "3MF", "OBJ", "G-code", "CAD/STEP"];
 
 type SortKey = "name" | "owner" | "model" | "quality" | "community" | "monetization" | "search" | "ux";
 type SortDir = "asc" | "desc";
@@ -84,6 +94,8 @@ const SortHeader = ({
 const ReferenceRepos = () => {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [modelFilter, setModelFilter] = useState<string>("All");
+  const [formatFilter, setFormatFilter] = useState<string>("All");
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -94,10 +106,39 @@ const ReferenceRepos = () => {
     }
   };
 
-  const sortedRepos = useMemo(() => {
-    if (!sortKey) return repoComparison;
+  const filteredAndSortedRepos = useMemo(() => {
+    let result = [...repoComparison];
     
-    return [...repoComparison].sort((a, b) => {
+    // Apply model filter
+    if (modelFilter !== "All") {
+      result = result.filter(repo => repo.model === modelFilter);
+    }
+    
+    // Apply format filter
+    if (formatFilter !== "All") {
+      result = result.filter(repo => {
+        const fileTypes = repo.fileTypes.toLowerCase();
+        switch (formatFilter) {
+          case "STL":
+            return fileTypes.includes("stl");
+          case "3MF":
+            return fileTypes.includes("3mf");
+          case "OBJ":
+            return fileTypes.includes("obj");
+          case "G-code":
+            return fileTypes.includes("g-code") || fileTypes.includes("gcode");
+          case "CAD/STEP":
+            return fileTypes.includes("step") || fileTypes.includes("iges") || fileTypes.includes("cad") || fileTypes.includes("30+");
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Apply sorting
+    if (!sortKey) return result;
+    
+    return result.sort((a, b) => {
       let aVal: number | string = a[sortKey];
       let bVal: number | string = b[sortKey];
       
@@ -114,7 +155,14 @@ const ReferenceRepos = () => {
         ? String(aVal).localeCompare(String(bVal))
         : String(bVal).localeCompare(String(aVal));
     });
-  }, [sortKey, sortDir]);
+  }, [sortKey, sortDir, modelFilter, formatFilter]);
+
+  const clearFilters = () => {
+    setModelFilter("All");
+    setFormatFilter("All");
+  };
+
+  const hasActiveFilters = modelFilter !== "All" || formatFilter !== "All";
 
   return (
     <div className="min-h-screen bg-background">
@@ -177,6 +225,47 @@ const ReferenceRepos = () => {
               </div>
             </div>
           </div>
+
+          {/* Filter Controls */}
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Filters:</span>
+            </div>
+            <Select value={modelFilter} onValueChange={setModelFilter}>
+              <SelectTrigger className="w-[160px] h-8 text-xs bg-background border-border">
+                <SelectValue placeholder="Business Model" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border z-50">
+                {businessModels.map((model) => (
+                  <SelectItem key={model} value={model} className="text-xs">
+                    {model === "All" ? "All Models" : model}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={formatFilter} onValueChange={setFormatFilter}>
+              <SelectTrigger className="w-[140px] h-8 text-xs bg-background border-border">
+                <SelectValue placeholder="File Format" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border z-50">
+                {fileFormats.map((format) => (
+                  <SelectItem key={format} value={format} className="text-xs">
+                    {format === "All" ? "All Formats" : format}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs text-muted-foreground hover:text-foreground">
+                Clear filters
+              </Button>
+            )}
+            <span className="text-xs text-muted-foreground ml-auto">
+              Showing {filteredAndSortedRepos.length} of {repoComparison.length} platforms
+            </span>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
@@ -197,7 +286,7 @@ const ReferenceRepos = () => {
                 </tr>
               </thead>
               <tbody>
-                {sortedRepos.map((repo, index) => (
+                {filteredAndSortedRepos.map((repo, index) => (
                   <tr 
                     key={index} 
                     className="border-b border-border/50 hover:bg-muted/20 transition-colors"
