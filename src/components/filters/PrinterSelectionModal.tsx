@@ -90,7 +90,7 @@ export function PrinterSelectionModal({
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string | null>(null);
   const [showGenericProfiles, setShowGenericProfiles] = useState(false);
 
-  // Fetch all printers for search
+  // Fetch all printers for search (include active and pending so users can select newer models)
   const { data: allPrinters } = useQuery({
     queryKey: ["all-printers-for-search"],
     queryFn: async () => {
@@ -101,7 +101,7 @@ export function PrinterSelectionModal({
           model_name,
           brand:printer_brands(brand)
         `)
-        .eq("status", "active")
+        .in("status", ["active", "pending"])
         .order("model_name");
 
       if (error) throw error;
