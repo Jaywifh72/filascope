@@ -29,12 +29,15 @@ interface MiniFilamentCardProps {
   isDragging?: boolean;
   isDragOver?: boolean;
   isDuplicatePulse?: boolean;
+  isFocused?: boolean;
+  isFiltered?: boolean;
   dragDirection?: 'left' | 'right';
   onDragStart?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDragLeave?: () => void;
   onDrop?: () => void;
   onDragEnd?: () => void;
+  cardIndex?: number;
 }
 
 export function MiniFilamentCard({ 
@@ -45,12 +48,15 @@ export function MiniFilamentCard({
   isDragging,
   isDragOver,
   isDuplicatePulse,
+  isFocused,
+  isFiltered,
   dragDirection,
   onDragStart,
   onDragOver,
   onDragLeave,
   onDrop,
-  onDragEnd
+  onDragEnd,
+  cardIndex,
 }: MiniFilamentCardProps) {
   const brandLogo = item.vendor ? getBrandLogo(item.vendor) : null;
   const pricePerKg = item.variant_price && item.net_weight_g 
@@ -116,7 +122,9 @@ export function MiniFilamentCard({
         isDragging && "mini-card-dragging opacity-90",
         isDragOver && dragDirection === 'right' && "mini-card-drag-over",
         isDragOver && dragDirection === 'left' && "mini-card-drag-left",
-        isDuplicatePulse && "duplicate-pulse"
+        isDuplicatePulse && "duplicate-pulse",
+        isFocused && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+        isFiltered && "opacity-40"
       )}
     >
       {/* Drag Handle */}
