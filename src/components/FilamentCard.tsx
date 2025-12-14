@@ -730,6 +730,13 @@ export function FilamentCard({
       if (cardRef.current && trayElement) {
         const cardRect = cardRef.current.getBoundingClientRect();
         const trayRect = trayElement.getBoundingClientRect();
+        
+        // Add fading class to source card during flight
+        cardRef.current.classList.add('card-flying');
+        setTimeout(() => {
+          cardRef.current?.classList.remove('card-flying');
+        }, 500);
+        
         createFlyingClone(cardRect, trayRect);
       }
       

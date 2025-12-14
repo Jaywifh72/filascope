@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GitCompare, ChevronUp, ChevronDown, Trash2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,10 @@ import { EmptySlot } from "@/components/compare/EmptySlot";
 export function CompareTray() {
   const navigate = useNavigate();
   const trayRef = useRef<HTMLDivElement>(null);
+  const [hasEntered, setHasEntered] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  
   const { 
     items, 
     removeItem, 
@@ -21,7 +25,11 @@ export function CompareTray() {
     isExpanded,
     setIsExpanded,
     setTrayElement,
-    isGlowing
+    isGlowing,
+    lastAction,
+    reorderItems,
+    newItemId,
+    isFirstItem
   } = useCompare();
 
   // Register tray element for fly animation targeting
@@ -29,6 +37,15 @@ export function CompareTray() {
     setTrayElement(trayRef.current);
     return () => setTrayElement(null);
   }, [setTrayElement]);
+
+  // Track first entrance
+  useEffect(() => {
+    if (count > 0 && !hasEntered) {
+      setHasEntered(true);
+    } else if (count === 0) {
+      setHasEntered(false);
+    }
+  }, [count, hasEntered]);
 
   // Don't render if no items
   if (count === 0) {
@@ -48,16 +65,59 @@ export function CompareTray() {
     navigate('/');
   };
 
+  // Drag handlers
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (index: number) => {
+    if (draggedIndex !== null && draggedIndex !== index) {
+      reorderItems(draggedIndex, index);
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   // Build slots array
   const slots = [];
   
   // Add filled cards
-  items.forEach((item) => {
+  items.forEach((item, index) => {
+    const isNew = item.id === newItemId;
+    const isDragging = draggedIndex === index;
+    const isDragOver = dragOverIndex === index;
+    const dragDirection = dragOverIndex !== null && draggedIndex !== null && draggedIndex < dragOverIndex ? 'left' : 'right';
+    
     slots.push(
       <MiniFilamentCard 
         key={item.id} 
         item={item} 
         onRemove={removeItem}
+        isNew={isNew}
+        isDragging={isDragging}
+        isDragOver={isDragOver}
+        dragDirection={dragDirection}
+        onDragStart={() => handleDragStart(index)}
+        onDragOver={(e) => handleDragOver(e, index)}
+        onDragLeave={handleDragLeave}
+        onDrop={() => handleDrop(index)}
+        onDragEnd={handleDragEnd}
       />
     );
   });
@@ -83,19 +143,26 @@ export function CompareTray() {
     );
   }
 
+  // Count badge animation class
+  const countBadgeClass = lastAction === 'add' 
+    ? 'badge-pop-add' 
+    : lastAction === 'remove' 
+    ? 'badge-pop-remove' 
+    : '';
+
   return (
     <div 
       ref={trayRef}
       className={cn(
-        "fixed bottom-4 left-1/2 -translate-x-1/2 z-40",
+        "fixed bottom-4 left-1/2 z-40",
         "w-[95vw] max-w-[1100px]",
         "bg-card/95 backdrop-blur-md",
         "border border-primary/20 rounded-xl",
         "shadow-[0_-4px_30px_rgba(0,0,0,0.4)]",
-        "transition-all duration-300 ease-out",
-        "compare-tray-enter",
+        isFirstItem ? "tray-entrance" : "-translate-x-1/2",
         isGlowing && "tray-success-glow"
       )}
+      style={!isFirstItem ? { transform: 'translateX(-50%)' } : undefined}
       role="region"
       aria-label={`Compare tray containing ${count} of ${maxItems} materials`}
     >
@@ -109,8 +176,14 @@ export function CompareTray() {
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <GitCompare className="w-4 h-4 text-primary" />
             </div>
-            <span className="text-sm font-medium">
-              Compare ({count})
+            <span className="text-sm font-medium flex items-center gap-1">
+              Compare 
+              <span className={cn(
+                "inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold",
+                countBadgeClass
+              )}>
+                {count}
+              </span>
             </span>
             {!canCompare && (
               <span className="text-xs text-muted-foreground">
@@ -131,7 +204,7 @@ export function CompareTray() {
 
       {/* Expanded View */}
       {isExpanded && (
-        <div className="p-4">
+        <div className={cn("p-4", isFirstItem && "tray-content-enter")}>
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -147,8 +220,11 @@ export function CompareTray() {
                 <span className="text-sm font-semibold">
                   Compare Tray
                 </span>
-                <span className="text-xs text-muted-foreground">
-                  ({count}/{maxItems} items)
+                <span className={cn(
+                  "inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-medium",
+                  countBadgeClass
+                )}>
+                  {count}/{maxItems}
                 </span>
               </div>
             </div>
@@ -198,7 +274,7 @@ export function CompareTray() {
           {/* Helper text */}
           {count === 1 && (
             <p className="text-xs text-muted-foreground text-center mt-3">
-              Add 1 more material to enable comparison
+              Add 1 more material to enable comparison • Drag to reorder
             </p>
           )}
         </div>
