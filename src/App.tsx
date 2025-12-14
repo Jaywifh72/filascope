@@ -45,6 +45,7 @@ const HotendDetail = lazy(() => import("./pages/HotendDetail"));
 const BuildPlateDetail = lazy(() => import("./pages/BuildPlateDetail"));
 const AMSDetail = lazy(() => import("./pages/AMSDetail"));
 const Settings = lazy(() => import("./pages/Settings"));
+const ReferenceSlicers = lazy(() => import("./pages/ReferenceSlicers"));
 
 const queryClient = new QueryClient();
 
@@ -94,6 +95,7 @@ const App = () => (
               <Route path="/admin/scheduler" element={<AdminScheduler />} />
               <Route path="/admin/price-anomalies" element={<AdminPriceAnomalies />} />
               <Route path="/filament/:id" element={<FilamentDetail />} />
+              <Route path="/reference/slicers" element={<ReferenceSlicers />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
