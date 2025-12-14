@@ -488,6 +488,16 @@ const Finder = () => {
     return filament.carbon_fiber_percentage ?? null;
   };
 
+  // Helper to strip vendor name from product title
+  const getDisplayTitle = (filament: any): string => {
+    const title = filament.product_title || '';
+    const vendor = filament.vendor || '';
+    if (vendor && title.toLowerCase().startsWith(vendor.toLowerCase())) {
+      return title.slice(vendor.length).trim();
+    }
+    return title;
+  };
+
   // Calculate filter counts based on currently applied filters (excluding the filter being counted)
   const filterCounts = useMemo(() => {
     if (!filaments) return {};
@@ -1307,7 +1317,7 @@ const Finder = () => {
                         );
                       })()}
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-foreground truncate">{filament.product_title}</p>
+                        <p className="font-semibold text-foreground truncate">{getDisplayTitle(filament)}</p>
                         {filament.material && (
                           <div className="mt-1 flex items-center gap-2 flex-wrap">
                             <MaterialBadge material={filament.material} />
