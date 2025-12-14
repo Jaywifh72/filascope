@@ -11,6 +11,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Slider } from "@/components/ui/slider";
 import { MaterialBadge } from "@/components/MaterialBadge";
 import { ExternalLink, ChevronDown, GitCompare, X, LayoutGrid, List, CheckCircle, XCircle, TreeDeciduous, Layers, Palette } from "lucide-react";
+import FilamentCard from "@/components/FilamentCard";
+import { FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "@/components/LikeButton";
@@ -1074,7 +1076,7 @@ const Finder = () => {
 
         {/* Filaments Display */}
         {isLoading ? (
-          <div className="text-center py-16 text-muted-foreground">Loading filaments...</div>
+          <FilamentCardSkeletonGrid count={12} />
         ) : filteredAndSortedFilaments && filteredAndSortedFilaments.length > 0 ? (
           viewMode === "list" ? (
             /* List View - Compact Table */
@@ -1258,243 +1260,29 @@ const Finder = () => {
               </table>
             </div>
           ) : (
-            /* Grid View - Original Cards */
-            <div className="space-y-3">
-            {filteredAndSortedFilaments.map((filament) => {
-              // Calculate true per-kg price accounting for pack quantity
-              const packQty = (filament as any).pack_quantity || 1;
-              const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
-              const rawPricePerKg = (filament.variant_price && weightKg) 
-                ? filament.variant_price / (weightKg * packQty) 
-                : null;
-              const isValidPrice = rawPricePerKg && rawPricePerKg > 0 && rawPricePerKg < 500;
-              const displayPrice = isValidPrice ? formatPrice(rawPricePerKg, false) : null;
-              const listPrice = isValidPrice && filament.net_weight_g 
-                ? formatPrice(rawPricePerKg * (filament.net_weight_g / 1000)) 
-                : null;
-              
-              const overallScore = filament.value_score || 7.0;
+            /* Grid View - Redesigned Cards */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {filteredAndSortedFilaments.map((filament) => {
+                // Calculate color match percentage for hex search
+                const isHexSearchActive = hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/);
+                const searchHex = isHexSearchActive ? (hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`) : null;
+                const normalizedHex = filament.color_hex 
+                  ? (filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`)
+                  : null;
+                const colorMatchPercent = searchHex && normalizedHex 
+                  ? getColorMatchPercent(searchHex, normalizedHex) 
+                  : null;
 
-              return (
-                <div
-                  key={filament.id}
-                  className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-md transition-all"
-                >
-                  <div className="flex flex-col lg:grid lg:grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 lg:gap-6 items-start lg:items-center">
-                    {/* Checkbox */}
-                    <div className="self-start lg:self-center">
-                      <Checkbox 
-                        checked={selectedForCompare.includes(filament.id)}
-                        onCheckedChange={() => toggleCompareSelection(filament.id)}
-                      />
-                    </div>
-
-                    {/* Filament Info */}
-                    <div className="flex items-start gap-4 min-w-0 flex-1">
-                      {/* Color Swatch */}
-                      {filament.color_hex && (() => {
-                        const normalizedHex = filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`;
-                        const isHexSearchActive = hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/);
-                        const searchHex = isHexSearchActive ? (hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`) : null;
-                        const matchPercent = searchHex ? getColorMatchPercent(searchHex, normalizedHex) : null;
-                        
-                        return (
-                          <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                            <div className="relative">
-                              <div 
-                                className="w-10 h-10 rounded-md border border-border shadow-sm"
-                                style={{ backgroundColor: normalizedHex }}
-                                title={filament.color_family || 'Color'}
-                              />
-                              {matchPercent !== null && (
-                                <div className={`absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full flex items-center justify-center text-[9px] font-bold ${
-                                  matchPercent >= 95 ? 'bg-green-500 text-white' : 
-                                  matchPercent >= 85 ? 'bg-cyan-500 text-white' : 
-                                  'bg-amber-500 text-white'
-                                }`}>
-                                  {matchPercent}%
-                                </div>
-                              )}
-                            </div>
-                            <span className="text-[9px] font-mono text-muted-foreground uppercase">
-                              {normalizedHex}
-                            </span>
-                          </div>
-                        );
-                      })()}
-                      {filament.vendor && (() => {
-                        const logoPath = getBrandLogo(filament.vendor);
-                        return logoPath ? (
-                          <img
-                            src={logoPath}
-                            alt={`${filament.vendor} logo`}
-                            className="w-16 h-16 rounded-md object-contain flex-shrink-0 border border-border bg-muted p-1"
-                            onError={(e) => {
-                              // Fallback to text if image fails to load
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-16 h-16 rounded-md flex items-center justify-center flex-shrink-0 border border-border bg-muted">
-                            <span className="text-xs font-bold text-muted-foreground text-center px-1 leading-tight">
-                              {filament.vendor}
-                            </span>
-                          </div>
-                        );
-                      })()}
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-foreground truncate">{getDisplayTitle(filament)}</p>
-                        {filament.material && (
-                          <div className="mt-1 flex items-center gap-2 flex-wrap">
-                            <MaterialBadge material={filament.material} />
-                            {isWoodFilament(filament) && (
-                              <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-600 text-[10px] px-1.5 py-0.5 gap-1">
-                                <TreeDeciduous className="w-3 h-3" />
-                                {getWoodPercentage(filament) ? `${getWoodPercentage(filament)}% Wood` : 'Wood'}
-                              </Badge>
-                            )}
-                            {isGlassFiberFilament(filament) && (
-                              <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/30 text-cyan-600 text-[10px] px-1.5 py-0.5 gap-1">
-                                <Layers className="w-3 h-3" />
-                                {getGlassFiberPercentage(filament) ? `${getGlassFiberPercentage(filament)}% Glass Fiber` : 'Glass Fiber'}
-                              </Badge>
-                            )}
-                            {isCarbonFiberFilament(filament) && (
-                              <Badge variant="outline" className="bg-gray-500/10 border-gray-500/30 text-gray-600 dark:text-gray-400 text-[10px] px-1.5 py-0.5 gap-1">
-                                <Layers className="w-3 h-3" />
-                                {getCarbonFiberPercentage(filament) ? `${getCarbonFiberPercentage(filament)}% Carbon Fiber` : 'Carbon Fiber'}
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-                        {filament.diameter_nominal_mm && (
-                          <span className="text-xs text-muted-foreground">{filament.diameter_nominal_mm}mm</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Scores */}
-                    <div className="space-y-1.5 w-full lg:w-40">
-                      <div className="flex items-center gap-2 text-xs">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-muted-foreground w-12 flex-shrink-0 cursor-help border-b border-dotted border-muted-foreground/50">Print</span>
-                          </TooltipTrigger>
-                          <TooltipContent side="left" className="max-w-[200px]">
-                            <p className="text-xs">Ease of printing - higher means easier to print with less tuning required</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <div className="score-bar flex-1">
-                          <div className="score-fill print" style={{ width: `${(filament.ease_of_printing_score || 7) * 10}%` }} />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-muted-foreground w-12 flex-shrink-0 cursor-help border-b border-dotted border-muted-foreground/50">Strength</span>
-                          </TooltipTrigger>
-                          <TooltipContent side="left" className="max-w-[200px]">
-                            <p className="text-xs">Mechanical strength - tensile and impact resistance of printed parts</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <div className="score-bar flex-1">
-                          <div className="score-fill strength" style={{ width: `${(filament.strength_index || 7) * 10}%` }} />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-muted-foreground w-12 flex-shrink-0 cursor-help border-b border-dotted border-muted-foreground/50">Heat</span>
-                          </TooltipTrigger>
-                          <TooltipContent side="left" className="max-w-[200px]">
-                            <p className="text-xs">Heat resistance - temperature at which the material begins to deform (Tg)</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <div className="score-bar flex-1">
-                          <div className="score-fill heat" style={{ width: `${Math.min((filament.tg_c || 70) / 2, 100)}%` }} />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Overall Score */}
-                    <div className="flex items-center gap-4 lg:flex-col lg:gap-0">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="text-xs text-muted-foreground lg:mb-1 cursor-help border-b border-dotted border-muted-foreground/50">Score</span>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-[200px]">
-                          <p className="text-xs">Overall value score - combines print quality, strength, and price-to-performance ratio</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <span className={`text-3xl font-bold ${getScoreColor(overallScore)}`}>
-                        {overallScore.toFixed(1)}
-                      </span>
-                    </div>
-
-                    {/* True Cost */}
-                    <div className="flex items-center gap-4 lg:flex-col lg:gap-1 lg:text-center">
-                      <span className="text-xs text-orange-400 lg:mb-0 font-medium">True Cost</span>
-                      {displayPrice ? (
-                        <div>
-                          <p className="font-mono font-bold text-orange-400 text-lg">{displayPrice} <span className="text-xs font-medium">{currencyInfo.code}/kg</span></p>
-                          {listPrice && (
-                            <p className="text-xs text-muted-foreground">
-                              {listPrice} list
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">—</p>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-3 self-start lg:self-center">
-                      <LikeButton filamentId={filament.id} size="sm" />
-                      <div className="flex flex-col gap-1">
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="h-6 w-full justify-center"
-                          asChild
-                        >
-                          <Link to={`/filament/${filament.id}`}>
-                            <span className="text-xs">View</span>
-                          </Link>
-                        </Button>
-                        {filament.product_url && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-6 w-full justify-center border-primary/30 text-primary hover:bg-primary/10"
-                            asChild
-                          >
-                            <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="w-3 h-3 mr-1" />
-                              <span className="text-xs">Buy at Store</span>
-                            </a>
-                          </Button>
-                        )}
-                        {filament.amazon_link_us && (
-                          <Button
-                            size="sm"
-                            variant="amazon"
-                            className="h-6 w-full justify-center"
-                            asChild
-                          >
-                            <a href={getAffiliateUrl(filament.amazon_link_us, "Amazon") || filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
-                              <span className="text-xs">View on Amazon</span>
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                return (
+                  <FilamentCard
+                    key={filament.id}
+                    filament={filament}
+                    isSelected={selectedForCompare.includes(filament.id)}
+                    onToggleCompare={toggleCompareSelection}
+                    colorMatchPercent={colorMatchPercent}
+                  />
+                );
+              })}
             </div>
           )
         ) : (
