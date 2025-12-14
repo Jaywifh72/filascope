@@ -23,6 +23,7 @@ export function WatchlistModule() {
   return (
     <SidebarModule
       title="Your Watchlist"
+      moduleName="watchlist"
       icon={<Heart className="h-4 w-4 fill-red-500 text-red-500" />}
       badge={totalUpdates > 0 ? (
         <Badge variant="secondary" className="bg-red-500/10 text-red-500 text-xs">

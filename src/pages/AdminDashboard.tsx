@@ -11,7 +11,7 @@ import { RecentActivityLog } from "@/components/admin/RecentActivityLog";
 import { 
   Database, Users, Package, Upload, TrendingUp, Shield, ExternalLink, 
   BarChart3, ShoppingCart, ClipboardCheck, Wrench, RefreshCw, Building2,
-  Link2, Copy, Calendar, DollarSign
+  Link2, Copy, Calendar, DollarSign, PieChart, Star, FlaskConical
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -74,6 +74,9 @@ const AdminDashboard = () => {
     { to: "/admin/maintenance", icon: Wrench, title: "Maintenance", desc: "Scraping & data tools", color: "text-cyan-500" },
     { to: "/admin/data-quality", icon: BarChart3, title: "Data Quality", desc: "Completeness metrics", color: "text-cyan-500" },
     { to: "/admin/filament-audit", icon: ClipboardCheck, title: "Filament Audit", desc: "Quality audit & URL testing", color: "text-green-500" },
+    { to: "/admin/module-analytics", icon: PieChart, title: "Module Analytics", desc: "Sidebar engagement metrics", color: "text-pink-500" },
+    { to: "/admin/featured-content", icon: Star, title: "Featured Content", desc: "Curate sidebar content", color: "text-amber-500" },
+    { to: "/admin/ab-tests", icon: FlaskConical, title: "A/B Tests", desc: "Experiments & optimization", color: "text-violet-500" },
     { to: "/admin/brands", icon: Building2, title: "Brand Management", desc: "All brands in one place", color: "text-purple-500" },
     { to: "/admin/broken-links", icon: Link2, title: "Broken Links", desc: "URL validation & fixes", color: "text-orange-500" },
     { to: "/admin/duplicates", icon: Copy, title: "Duplicates", desc: "Find & merge duplicates", color: "text-yellow-500" },

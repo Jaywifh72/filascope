@@ -133,6 +133,7 @@ export function SafetyAlertsModule() {
       <SidebarModule
         icon={<AlertTriangle className="h-5 w-5" />}
         title="Safety Alert"
+        moduleName="safety"
         isLoading={isLoading}
         isEmpty={false}
         accentColor="amber"

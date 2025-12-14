@@ -54,6 +54,7 @@ export function ContextualModule() {
   return (
     <SidebarModule
       title="For You"
+      moduleName="contextual"
       icon={<Sparkles className="h-4 w-4" />}
     >
       <div className="space-y-3">
