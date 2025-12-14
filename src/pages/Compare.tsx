@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertTriangle, RefreshCcw } from "lucide-react";
 import { GitCompare, ArrowLeft, Trophy, Share2, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -45,29 +46,50 @@ const Compare = () => {
   const navigate = useNavigate();
   const [filaments, setFilaments] = useState<Filament[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchFilaments = async () => {
-      const ids = searchParams.get("ids")?.split(",") || [];
-      
-      if (ids.length === 0) {
-        setLoading(false);
-        return;
-      }
+  const fetchFilaments = async () => {
+    const ids = searchParams.get("ids")?.split(",") || [];
+    
+    if (ids.length === 0) {
+      setLoading(false);
+      return;
+    }
 
-      const { data, error } = await supabase
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: fetchError } = await supabase
         .from("filaments")
         .select("*")
         .in("id", ids);
 
-      if (error) {
-        console.error("Error fetching filaments:", error);
-      } else {
-        setFilaments(data || []);
+      if (fetchError) throw fetchError;
+      
+      setFilaments(data || []);
+      // Cache for offline access
+      const cacheKey = `compare_cache_${ids.join(',')}`;
+      sessionStorage.setItem(cacheKey, JSON.stringify(data));
+    } catch (err) {
+      console.error("Error fetching filaments:", err);
+      setError("Unable to load comparison. Please try again.");
+      
+      // Try loading from cache
+      const cacheKey = `compare_cache_${searchParams.get("ids")}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        setFilaments(JSON.parse(cached));
+        toast.info("Showing cached data", {
+          description: "Some information may be outdated"
+        });
       }
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchFilaments();
   }, [searchParams]);
 
@@ -107,6 +129,32 @@ const Compare = () => {
           </div>
           <Skeleton className="h-64 rounded-lg mb-6" />
           <Skeleton className="h-64 rounded-lg" />
+        </div>
+      </div>
+    );
+  }
+
+  // Error state with no cached data
+  if (error && filaments.length === 0) {
+    return (
+      <div className="min-h-screen p-8">
+        <div className="max-w-7xl mx-auto">
+          <Button variant="ghost" onClick={handleBack} className="mb-6">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Materials
+          </Button>
+          
+          <Card className="bg-destructive/10 border-destructive/30">
+            <CardContent className="py-12 text-center">
+              <AlertTriangle className="w-10 h-10 text-destructive mx-auto mb-4" />
+              <p className="text-destructive font-medium text-lg mb-2">{error}</p>
+              <p className="text-muted-foreground text-sm mb-6">Check your connection and try again</p>
+              <Button onClick={fetchFilaments} className="gap-2">
+                <RefreshCcw className="w-4 h-4" />
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
