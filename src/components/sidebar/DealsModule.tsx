@@ -5,12 +5,14 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useCompare } from "@/hooks/useCompare";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 export function DealsModule() {
   const { data: deals, isLoading, error } = useTopDeals();
   const navigate = useNavigate();
   const { addItem, isInCompare } = useCompare();
   const { getAffiliateUrl } = useAffiliateLinks();
+  const { trackDealClick } = useConversionTracking();
 
   const handleAddToCompare = (deal: TopDeal) => {
     addItem({
@@ -33,10 +35,15 @@ export function DealsModule() {
   const now = new Date();
   const updateTime = `${now.getHours()}:${now.getMinutes().toString().padStart(2, "0")} ${now.getHours() >= 12 ? "PM" : "AM"}`;
 
+  const handleAffiliateClick = (deal: TopDeal) => {
+    trackDealClick(deal.id, deal.current_price, 'store');
+  };
+
   return (
     <SidebarModule
       icon={<DollarSign className="h-5 w-5" />}
       title="Best Deals Today"
+      moduleName="deals"
       isLoading={isLoading}
       isEmpty={!deals || deals.length === 0}
       emptyMessage="No significant deals found today"
@@ -124,6 +131,7 @@ export function DealsModule() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="ml-auto"
+                      onClick={() => handleAffiliateClick(deal)}
                     >
                       <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-primary">
                         <ExternalLink className="h-3 w-3" />

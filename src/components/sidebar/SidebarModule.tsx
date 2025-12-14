@@ -1,10 +1,12 @@
-import { ReactNode } from "react";
+import { ReactNode, useRef, useEffect, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useModuleAnalytics } from "@/hooks/useModuleAnalytics";
 
 interface SidebarModuleProps {
   icon: ReactNode;
   title: string;
+  moduleName: string; // For tracking
   children: ReactNode;
   isLoading?: boolean;
   isEmpty?: boolean;
@@ -13,6 +15,7 @@ interface SidebarModuleProps {
   accentColor?: "cyan" | "amber" | "green" | "red" | "orange";
   headerAction?: ReactNode;
   badge?: ReactNode;
+  onInteraction?: () => void;
 }
 
 const accentColors = {
@@ -26,6 +29,7 @@ const accentColors = {
 export function SidebarModule({
   icon,
   title,
+  moduleName,
   children,
   isLoading = false,
   isEmpty = false,
@@ -34,13 +38,69 @@ export function SidebarModule({
   accentColor = "cyan",
   headerAction,
   badge,
+  onInteraction,
 }: SidebarModuleProps) {
+  const moduleRef = useRef<HTMLDivElement>(null);
+  const { trackView, trackTimeSpent, trackScrollPast, trackClick } = useModuleAnalytics();
+  const hasTrackedView = useRef(false);
+  const hasInteracted = useRef(false);
+  const viewStartTime = useRef<number | null>(null);
+  
+  // Track clicks within the module
+  const handleClick = useCallback(() => {
+    if (!hasInteracted.current) {
+      hasInteracted.current = true;
+      trackClick(moduleName);
+      onInteraction?.();
+    }
+  }, [moduleName, trackClick, onInteraction]);
+  
+  // Set up IntersectionObserver for view tracking
+  useEffect(() => {
+    if (!moduleRef.current || isEmpty) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            // Module is 50%+ visible
+            if (!hasTrackedView.current) {
+              trackView(moduleName);
+              hasTrackedView.current = true;
+              viewStartTime.current = Date.now();
+            }
+          } else if (hasTrackedView.current && !entry.isIntersecting) {
+            // Module left viewport
+            if (viewStartTime.current) {
+              const timeSpent = Date.now() - viewStartTime.current;
+              if (!hasInteracted.current) {
+                trackScrollPast(moduleName);
+              } else {
+                trackTimeSpent(moduleName);
+              }
+              viewStartTime.current = null;
+            }
+            hasTrackedView.current = false;
+            hasInteracted.current = false;
+          }
+        });
+      },
+      { threshold: [0, 0.5, 1] }
+    );
+    
+    observer.observe(moduleRef.current);
+    
+    return () => observer.disconnect();
+  }, [moduleName, isEmpty, trackView, trackTimeSpent, trackScrollPast]);
+
   if (isEmpty && !isLoading) {
     return null; // Don't render empty modules
   }
 
   return (
     <div
+      ref={moduleRef}
+      onClick={handleClick}
       className={cn(
         "bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg p-4",
         "animate-in fade-in-0 slide-in-from-right-2 duration-300",

@@ -17,6 +17,7 @@ export function RecentlyViewedModule() {
   return (
     <SidebarModule
       title="Recently Viewed"
+      moduleName="recent"
       icon={<History className="h-4 w-4" />}
     >
       <div className="space-y-3">

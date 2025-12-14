@@ -36,6 +36,7 @@ export function TrendingModule() {
     <SidebarModule
       icon={<Flame className="h-5 w-5" />}
       title="Trending This Week"
+      moduleName="trending"
       isLoading={isLoading}
       isEmpty={!activeTrends || activeTrends.length === 0}
       emptyMessage="No trending materials this week"

@@ -35,6 +35,9 @@ const AdminBrokenLinks = lazy(() => import("./pages/AdminBrokenLinks"));
 const AdminDuplicates = lazy(() => import("./pages/AdminDuplicates"));
 const AdminScheduler = lazy(() => import("./pages/AdminScheduler"));
 const AdminPriceAnomalies = lazy(() => import("./pages/AdminPriceAnomalies"));
+const AdminModuleAnalytics = lazy(() => import("./pages/AdminModuleAnalytics"));
+const AdminFeaturedContent = lazy(() => import("./pages/AdminFeaturedContent"));
+const AdminABTests = lazy(() => import("./pages/AdminABTests"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
@@ -101,6 +104,9 @@ const App = () => (
                 <Route path="/admin/duplicates" element={<AdminDuplicates />} />
                 <Route path="/admin/scheduler" element={<AdminScheduler />} />
                 <Route path="/admin/price-anomalies" element={<AdminPriceAnomalies />} />
+                <Route path="/admin/module-analytics" element={<AdminModuleAnalytics />} />
+                <Route path="/admin/featured-content" element={<AdminFeaturedContent />} />
+                <Route path="/admin/ab-tests" element={<AdminABTests />} />
                 <Route path="/filament/:id" element={<FilamentDetail />} />
                 <Route path="/reference/slicers" element={<ReferenceSlicers />} />
                 <Route path="/reference/cad" element={<ReferenceCAD />} />
