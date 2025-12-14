@@ -9,6 +9,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cadData } from "@/lib/cadData";
 import Navbar from "@/components/Navbar";
 
@@ -148,6 +149,8 @@ const CADSortHeader = ({
 const ReferenceCAD = () => {
   const [sortKey, setSortKey] = useState<CADSortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [priceFilter, setPriceFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
 
   const handleSort = (key: CADSortKey) => {
     if (sortKey === key) {
@@ -158,10 +161,35 @@ const ReferenceCAD = () => {
     }
   };
 
-  const sortedCAD = useMemo(() => {
-    if (!sortKey) return cadComparison;
+  const clearFilters = () => {
+    setPriceFilter("all");
+    setTypeFilter("all");
+  };
+
+  const hasFilters = priceFilter !== "all" || typeFilter !== "all";
+
+  // Extract unique types for filter
+  const types = useMemo(() => {
+    const typeSet = new Set<string>();
+    cadComparison.forEach(s => typeSet.add(s.type));
+    return Array.from(typeSet).sort();
+  }, []);
+
+  const filteredAndSortedCAD = useMemo(() => {
+    let filtered = [...cadComparison];
+
+    // Apply filters
+    if (priceFilter !== "all") {
+      filtered = filtered.filter(s => s.price === priceFilter);
+    }
+    if (typeFilter !== "all") {
+      filtered = filtered.filter(s => s.type === typeFilter);
+    }
+
+    // Apply sorting
+    if (!sortKey) return filtered;
     
-    return [...cadComparison].sort((a, b) => {
+    return filtered.sort((a, b) => {
       let aVal: number | string = a[sortKey as keyof typeof a];
       let bVal: number | string = b[sortKey as keyof typeof b];
       
@@ -181,7 +209,7 @@ const ReferenceCAD = () => {
         ? String(aVal).localeCompare(String(bVal))
         : String(bVal).localeCompare(String(aVal));
     });
-  }, [sortKey, sortDir]);
+  }, [sortKey, sortDir, priceFilter, typeFilter]);
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -263,6 +291,50 @@ const ReferenceCAD = () => {
             <BarChart3 className="w-6 h-6 text-cyan-400" />
             <h2 className="text-xl font-bold font-mono text-foreground">Comparative Features Matrix</h2>
           </div>
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Price:</span>
+              <Select value={priceFilter} onValueChange={setPriceFilter}>
+                <SelectTrigger className="w-36 bg-background">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="Free">Free</SelectItem>
+                  <SelectItem value="Freemium">Freemium</SelectItem>
+                  <SelectItem value="One-Time">One-Time</SelectItem>
+                  <SelectItem value="Perpetual">Perpetual</SelectItem>
+                  <SelectItem value="Subscription">Subscription</SelectItem>
+                  <SelectItem value="Paid">Paid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Type:</span>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-32 bg-background">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="all">All</SelectItem>
+                  {types.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {hasFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+                <X className="h-4 w-4 mr-1" />
+                Clear filters
+              </Button>
+            )}
+            <span className="text-sm text-muted-foreground ml-auto">
+              Showing {filteredAndSortedCAD.length} of {cadComparison.length} software
+            </span>
+          </div>
+
           <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
             <p className="text-muted-foreground text-sm">
               Side-by-side comparison of CAD software capabilities, ratings (1-5), and standout features.
@@ -302,7 +374,7 @@ const ReferenceCAD = () => {
                 </tr>
               </thead>
               <tbody>
-                {sortedCAD.map((software, index) => (
+                {filteredAndSortedCAD.map((software, index) => (
                   <tr 
                     key={index} 
                     className="border-b border-border/50 hover:bg-muted/20 transition-colors"

@@ -9,6 +9,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { slicerData } from "@/lib/slicerData";
 import Navbar from "@/components/Navbar";
 
@@ -100,6 +101,8 @@ const SortHeader = ({
 const ReferenceSlicers = () => {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [priceFilter, setPriceFilter] = useState<string>("all");
+  const [focusFilter, setFocusFilter] = useState<string>("all");
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -110,10 +113,28 @@ const ReferenceSlicers = () => {
     }
   };
 
-  const sortedSlicers = useMemo(() => {
-    if (!sortKey) return slicerComparison;
+  const clearFilters = () => {
+    setPriceFilter("all");
+    setFocusFilter("all");
+  };
+
+  const hasFilters = priceFilter !== "all" || focusFilter !== "all";
+
+  const filteredAndSortedSlicers = useMemo(() => {
+    let filtered = [...slicerComparison];
+
+    // Apply filters
+    if (priceFilter !== "all") {
+      filtered = filtered.filter(s => s.price === priceFilter);
+    }
+    if (focusFilter !== "all") {
+      filtered = filtered.filter(s => s.focus === focusFilter || s.focus === "Both" || s.focus === "All");
+    }
+
+    // Apply sorting
+    if (!sortKey) return filtered;
     
-    return [...slicerComparison].sort((a, b) => {
+    return filtered.sort((a, b) => {
       let aVal: number | string = a[sortKey];
       let bVal: number | string = b[sortKey];
       
@@ -134,7 +155,7 @@ const ReferenceSlicers = () => {
         ? String(aVal).localeCompare(String(bVal))
         : String(bVal).localeCompare(String(aVal));
     });
-  }, [sortKey, sortDir]);
+  }, [sortKey, sortDir, priceFilter, focusFilter]);
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -177,6 +198,47 @@ const ReferenceSlicers = () => {
             <BarChart3 className="w-6 h-6 text-emerald-400" />
             <h2 className="text-xl font-bold font-mono text-foreground">Comparative Features Matrix</h2>
           </div>
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Price:</span>
+              <Select value={priceFilter} onValueChange={setPriceFilter}>
+                <SelectTrigger className="w-32 bg-background">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="Free">Free</SelectItem>
+                  <SelectItem value="Freemium">Freemium</SelectItem>
+                  <SelectItem value="Paid">Paid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Focus:</span>
+              <Select value={focusFilter} onValueChange={setFocusFilter}>
+                <SelectTrigger className="w-32 bg-background">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="FDM">FDM</SelectItem>
+                  <SelectItem value="SLA">SLA</SelectItem>
+                  <SelectItem value="Both">Both</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {hasFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+                <X className="h-4 w-4 mr-1" />
+                Clear filters
+              </Button>
+            )}
+            <span className="text-sm text-muted-foreground ml-auto">
+              Showing {filteredAndSortedSlicers.length} of {slicerComparison.length} slicers
+            </span>
+          </div>
+
           <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
             <p className="text-muted-foreground text-sm">
               Side-by-side comparison of slicer capabilities, ratings (1-5), and standout features.
@@ -217,7 +279,7 @@ const ReferenceSlicers = () => {
                 </tr>
               </thead>
               <tbody>
-                {sortedSlicers.map((slicer, index) => (
+                {filteredAndSortedSlicers.map((slicer, index) => (
                   <tr 
                     key={index} 
                     className="border-b border-border/50 hover:bg-muted/20 transition-colors"
