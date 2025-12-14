@@ -77,6 +77,15 @@ const colorDistance = (hex1: string, hex2: string): number => {
   return Math.sqrt(weightR * deltaR * deltaR + weightG * deltaG * deltaG + weightB * deltaB * deltaB);
 };
 
+// Calculate color match percentage (100% = exact match, 0% = max difference)
+const getColorMatchPercent = (searchHex: string, filamentHex: string): number => {
+  const distance = colorDistance(searchHex, filamentHex);
+  // Max distance in redmean formula is ~764 (black to white)
+  const maxDistance = 764;
+  const percent = Math.max(0, Math.min(100, 100 - (distance / maxDistance) * 100));
+  return Math.round(percent);
+};
+
 const Finder = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -1404,18 +1413,36 @@ const Finder = () => {
                           />
                         </td>
                         <td className="py-3 px-3">
-                          {filament.color_hex ? (
-                            <div className="flex flex-col items-center gap-0.5">
-                              <div 
-                                className="w-6 h-6 rounded border border-border"
-                                style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
-                                title={filament.color_family || 'Color'}
-                              />
-                              <span className="text-[8px] font-mono text-muted-foreground uppercase">
-                                {(filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`).slice(0, 7)}
-                              </span>
-                            </div>
-                          ) : (
+                          {filament.color_hex ? (() => {
+                            const normalizedHex = filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`;
+                            const isHexSearchActive = hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/);
+                            const searchHex = isHexSearchActive ? (hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`) : null;
+                            const matchPercent = searchHex ? getColorMatchPercent(searchHex, normalizedHex) : null;
+                            
+                            return (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <div className="relative">
+                                  <div 
+                                    className="w-6 h-6 rounded border border-border"
+                                    style={{ backgroundColor: normalizedHex }}
+                                    title={filament.color_family || 'Color'}
+                                  />
+                                  {matchPercent !== null && (
+                                    <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold ${
+                                      matchPercent >= 95 ? 'bg-green-500 text-white' : 
+                                      matchPercent >= 85 ? 'bg-cyan-500 text-white' : 
+                                      'bg-amber-500 text-white'
+                                    }`}>
+                                      {matchPercent}
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="text-[8px] font-mono text-muted-foreground uppercase">
+                                  {normalizedHex.slice(0, 7)}
+                                </span>
+                              </div>
+                            );
+                          })() : (
                             <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </td>
@@ -1557,18 +1584,36 @@ const Finder = () => {
                     {/* Filament Info */}
                     <div className="flex items-start gap-4 min-w-0 flex-1">
                       {/* Color Swatch */}
-                      {filament.color_hex && (
-                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                          <div 
-                            className="w-10 h-10 rounded-md border border-border shadow-sm"
-                            style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
-                            title={filament.color_family || 'Color'}
-                          />
-                          <span className="text-[9px] font-mono text-muted-foreground uppercase">
-                            {filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`}
-                          </span>
-                        </div>
-                      )}
+                      {filament.color_hex && (() => {
+                        const normalizedHex = filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`;
+                        const isHexSearchActive = hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/);
+                        const searchHex = isHexSearchActive ? (hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`) : null;
+                        const matchPercent = searchHex ? getColorMatchPercent(searchHex, normalizedHex) : null;
+                        
+                        return (
+                          <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                            <div className="relative">
+                              <div 
+                                className="w-10 h-10 rounded-md border border-border shadow-sm"
+                                style={{ backgroundColor: normalizedHex }}
+                                title={filament.color_family || 'Color'}
+                              />
+                              {matchPercent !== null && (
+                                <div className={`absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                                  matchPercent >= 95 ? 'bg-green-500 text-white' : 
+                                  matchPercent >= 85 ? 'bg-cyan-500 text-white' : 
+                                  'bg-amber-500 text-white'
+                                }`}>
+                                  {matchPercent}%
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-[9px] font-mono text-muted-foreground uppercase">
+                              {normalizedHex}
+                            </span>
+                          </div>
+                        );
+                      })()}
                       {filament.vendor && (() => {
                         const logoPath = getBrandLogo(filament.vendor);
                         return logoPath ? (
