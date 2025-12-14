@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   Star, 
-  Heart, 
   Check, 
   ArrowRight,
   Shield,
@@ -12,7 +11,11 @@ import {
   Thermometer,
   Printer,
   TrendingDown,
-  TrendingUp
+  TrendingUp,
+  AlertTriangle,
+  Award,
+  Clock,
+  BarChart3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +24,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "./LikeButton";
+import { getMaterialAverage, getScoreComparison } from "@/lib/materialAverages";
 
 // Material badge colors matching the plan
 const MATERIAL_BADGE_COLORS: Record<string, string> = {
@@ -64,6 +68,7 @@ interface Filament {
   tg_c?: number | null;
   diameter_nominal_mm?: number | null;
   featured_image?: string | null;
+  updated_at?: string | null;
 }
 
 interface FilamentCardProps {
@@ -82,6 +87,8 @@ export function FilamentCard({
   priceTrend,
 }: FilamentCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [displayScore, setDisplayScore] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
 
   // Calculate price per kg
   const packQty = filament.pack_quantity || 1;
@@ -97,6 +104,48 @@ export function FilamentCard({
   const strengthScore = filament.strength_index || 7;
   // Derive value score from price efficiency (lower price = higher value)
   const valueScore = pricePerKg ? Math.max(1, Math.min(10, 10 - (pricePerKg / 10))) : 6;
+
+  // Material average comparison
+  const materialAvg = getMaterialAverage(filament.material);
+  const scoreComparison = getScoreComparison(overallScore, materialAvg);
+
+  // Check for limited data
+  const dataPoints = [
+    filament.ease_of_printing_score,
+    filament.strength_index,
+    filament.printability_index,
+    filament.variant_price,
+  ].filter(v => v !== null && v !== undefined);
+  const hasLimitedData = dataPoints.length < 3;
+
+  // Format update date
+  const getUpdateDate = () => {
+    if (!filament.updated_at) return null;
+    const date = new Date(filament.updated_at);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  };
+
+  // Score count-up animation
+  useEffect(() => {
+    if (!hasAnimated) {
+      const duration = 600;
+      const startTime = Date.now();
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+        setDisplayScore(overallScore * eased);
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          setHasAnimated(true);
+        }
+      };
+      requestAnimationFrame(animate);
+    } else {
+      setDisplayScore(overallScore);
+    }
+  }, [overallScore, hasAnimated]);
 
   // Get max temp
   const maxTemp = filament.nozzle_temp_max_c || filament.tg_c;
@@ -117,6 +166,28 @@ export function FilamentCard({
     if (score >= 6) return "text-primary";
     return "text-amber-400";
   };
+
+  // Check if score qualifies for special treatment
+  const isTopRated = overallScore >= 8.0;
+  const hasGlow = overallScore >= 8.5;
+
+  // Score bar component
+  const ScoreBar = ({ value, max = 10 }: { value: number; max?: number }) => (
+    <div className="flex items-center gap-2 w-full">
+      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+        <div 
+          className={cn(
+            "h-full rounded-full transition-all duration-300",
+            value >= 8 ? "bg-green-500" : value >= 6 ? "bg-primary" : "bg-amber-500"
+          )}
+          style={{ width: `${(value / max) * 100}%` }}
+        />
+      </div>
+      <span className={cn("text-xs font-medium tabular-nums", getScoreColor(value))}>
+        {value.toFixed(0)}
+      </span>
+    </div>
+  );
 
   // Display title without brand name
   const getDisplayTitle = () => {
@@ -235,36 +306,102 @@ export function FilamentCard({
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="flex items-center gap-2 mb-3 cursor-help">
-            <Star className={cn("w-5 h-5 fill-current", getScoreColor(overallScore))} />
-            <span className={cn("text-2xl font-bold", getScoreColor(overallScore))}>
-              {overallScore.toFixed(1)}
-            </span>
-            <span className="text-sm text-muted-foreground">/10</span>
+            <div className={cn(
+              "flex items-center gap-2",
+              hasGlow && "score-glow"
+            )}>
+              <Star className={cn("w-5 h-5 fill-current", getScoreColor(overallScore))} />
+              <span className={cn(
+                "text-2xl font-bold tabular-nums",
+                getScoreColor(overallScore),
+                hasLimitedData && "opacity-70"
+              )}>
+                {displayScore.toFixed(1)}
+              </span>
+              <span className="text-sm text-muted-foreground">/10</span>
+            </div>
+            
+            {/* Top Rated Badge */}
+            {isTopRated && !hasLimitedData && (
+              <Badge className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/40 text-amber-400 text-[10px] px-1.5 py-0 gap-0.5">
+                <Award className="w-3 h-3" />
+                Top Rated
+              </Badge>
+            )}
+            
+            {/* Limited Data Warning */}
+            {hasLimitedData && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge className="bg-amber-500/15 border-amber-500/40 text-amber-400 text-[10px] px-1.5 py-0 gap-0.5 cursor-help">
+                    <AlertTriangle className="w-3 h-3" />
+                    Limited Data
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[200px] text-xs">
+                  Score based on limited specifications - may not be fully representative
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </TooltipTrigger>
         <TooltipContent 
           side="top" 
-          className="w-64 p-3 bg-card border-border"
+          className="w-72 p-4 bg-card border-border"
           sideOffset={8}
         >
-          <p className="font-semibold text-sm mb-2">FilaScope Score: {overallScore.toFixed(1)}/10</p>
-          <div className="space-y-1.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Printability:</span>
-              <span className={getScoreColor(printScore)}>{printScore.toFixed(0)}/10</span>
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-semibold text-sm">FilaScope Score</p>
+            <span className={cn("text-lg font-bold", getScoreColor(overallScore))}>
+              {overallScore.toFixed(1)}/10
+            </span>
+          </div>
+          
+          {/* Visual Score Bars */}
+          <div className="space-y-2.5 mb-3">
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted-foreground">Printability</span>
+              </div>
+              <ScoreBar value={printScore} />
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Strength:</span>
-              <span className={getScoreColor(strengthScore)}>{strengthScore.toFixed(0)}/10</span>
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted-foreground">Strength</span>
+              </div>
+              <ScoreBar value={strengthScore} />
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Value for Money:</span>
-              <span className={getScoreColor(valueScore)}>{valueScore.toFixed(0)}/10</span>
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted-foreground">Value for Money</span>
+              </div>
+              <ScoreBar value={valueScore} />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
-            Based on material specs & pricing
-          </p>
+          
+          {/* Material Comparison */}
+          {scoreComparison && materialAvg && (
+            <div className="flex items-center gap-2 py-2 border-t border-border">
+              <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className={cn(
+                "text-xs font-medium",
+                scoreComparison.isAbove ? "text-green-400" : "text-amber-400"
+              )}>
+                {scoreComparison.text} for {filament.material?.split(" ")[0]}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                (avg: {materialAvg.toFixed(1)})
+              </span>
+            </div>
+          )}
+          
+          {/* Last Updated */}
+          {getUpdateDate() && (
+            <div className="flex items-center gap-2 pt-2 border-t border-border text-xs text-muted-foreground">
+              <Clock className="w-3 h-3" />
+              Last updated: {getUpdateDate()}
+            </div>
+          )}
         </TooltipContent>
       </Tooltip>
 
