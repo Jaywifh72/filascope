@@ -1392,41 +1392,45 @@ const Finder = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-wrap gap-2 self-start lg:self-center">
+                    <div className="flex items-center gap-3 self-start lg:self-center">
                       <LikeButton filamentId={filament.id} size="sm" />
-                      <Button
-                        size="sm"
-                        variant="default"
-                        asChild
-                      >
-                        <Link to={`/filament/${filament.id}`}>
-                          <span className="text-xs">View</span>
-                        </Link>
-                      </Button>
-                      {filament.product_url && (
+                      <div className="flex flex-col gap-1.5">
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="border-primary/30 text-primary hover:bg-primary/10"
+                          variant="default"
+                          className="w-full justify-center"
                           asChild
                         >
-                          <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="w-3 h-3 mr-1" />
-                            <span className="text-xs">Buy at Store</span>
-                          </a>
+                          <Link to={`/filament/${filament.id}`}>
+                            <span className="text-xs">View</span>
+                          </Link>
                         </Button>
-                      )}
-                      {filament.amazon_link_us && (
-                        <Button
-                          size="sm"
-                          variant="amazon"
-                          asChild
-                        >
-                          <a href={getAffiliateUrl(filament.amazon_link_us, "Amazon") || filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
-                            <span className="text-xs">View on Amazon</span>
-                          </a>
-                        </Button>
-                      )}
+                        {filament.product_url && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full justify-center border-primary/30 text-primary hover:bg-primary/10"
+                            asChild
+                          >
+                            <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              <span className="text-xs">Buy at Store</span>
+                            </a>
+                          </Button>
+                        )}
+                        {filament.amazon_link_us && (
+                          <Button
+                            size="sm"
+                            variant="amazon"
+                            className="w-full justify-center"
+                            asChild
+                          >
+                            <a href={getAffiliateUrl(filament.amazon_link_us, "Amazon") || filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
+                              <span className="text-xs">View on Amazon</span>
+                            </a>
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
