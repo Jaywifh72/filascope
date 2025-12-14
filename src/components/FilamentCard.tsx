@@ -15,16 +15,28 @@ import {
   AlertTriangle,
   Award,
   Clock,
-  BarChart3
+  BarChart3,
+  Bell,
+  BellRing,
+  PiggyBank,
+  Scale,
+  Crown,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { LikeButton } from "./LikeButton";
 import { getMaterialAverage, getScoreComparison } from "@/lib/materialAverages";
+import { getPriceContext } from "@/lib/materialPriceTiers";
+import { usePriceHistory } from "@/hooks/usePriceHistory";
+import { usePriceAlerts } from "@/hooks/usePriceAlerts";
+import { PriceSparkline } from "./PriceSparkline";
 
 // Material badge colors matching the plan
 const MATERIAL_BADGE_COLORS: Record<string, string> = {
@@ -188,6 +200,207 @@ export function FilamentCard({
       </span>
     </div>
   );
+
+  // Price Section Component (internal)
+  const PriceSection = ({ 
+    filamentId, 
+    pricePerKg, 
+    material, 
+    priceTrend: propTrend 
+  }: { 
+    filamentId: string; 
+    pricePerKg: number | null; 
+    material: string | null | undefined;
+    priceTrend: number | null | undefined;
+  }) => {
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [targetPrice, setTargetPrice] = useState("");
+    
+    const priceHistory = usePriceHistory(filamentId, pricePerKg);
+    const { hasAlert, setAlert, removeAlert, getAlert } = usePriceAlerts();
+    
+    const priceContext = pricePerKg ? getPriceContext(pricePerKg, material) : null;
+    const alertSet = hasAlert(filamentId);
+    const existingAlert = getAlert(filamentId);
+    
+    // Use fetched trend or prop trend
+    const trendPercent = priceHistory.trendPercent ?? propTrend;
+    
+    const handleSetAlert = () => {
+      const price = parseFloat(targetPrice);
+      if (price > 0) {
+        setAlert(filamentId, price);
+        setAlertOpen(false);
+        setTargetPrice("");
+      }
+    };
+    
+    const handleRemoveAlert = () => {
+      removeAlert(filamentId);
+      setAlertOpen(false);
+    };
+
+    const PriceContextIcon = priceContext?.iconName === "piggy-bank" ? PiggyBank 
+      : priceContext?.iconName === "crown" ? Crown 
+      : Scale;
+
+    if (!pricePerKg) {
+      return (
+        <div className="mb-4">
+          <span className="text-lg text-muted-foreground">Price unavailable</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mb-4 space-y-1.5">
+        {/* Main Price Row */}
+        <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-baseline gap-2 cursor-help">
+                <span className="text-2xl font-bold text-primary font-mono">
+                  ${pricePerKg.toFixed(2)}
+                </span>
+                <span className="text-sm text-muted-foreground">/kg</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent 
+              side="top" 
+              className="w-56 p-3 bg-card border-border"
+              sideOffset={8}
+            >
+              {priceHistory.prices.length > 1 ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">30-Day Price History</p>
+                  <PriceSparkline 
+                    prices={priceHistory.prices}
+                    currentPrice={pricePerKg}
+                    min={priceHistory.min}
+                    max={priceHistory.max}
+                  />
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Low</span>
+                      <p className="font-medium text-green-400">${priceHistory.min.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Avg</span>
+                      <p className="font-medium">${priceHistory.avg.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">High</span>
+                      <p className="font-medium text-red-400">${priceHistory.max.toFixed(2)}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">No price history available</p>
+              )}
+            </TooltipContent>
+          </Tooltip>
+          
+          {/* Trend Indicator */}
+          {trendPercent !== null && trendPercent !== undefined && Math.abs(trendPercent) >= 2 && (
+            <span className={cn(
+              "text-xs font-medium flex items-center gap-0.5",
+              trendPercent < 0 ? "text-green-400" : "text-red-400"
+            )}>
+              {trendPercent < 0 ? (
+                <TrendingDown className="w-3.5 h-3.5" />
+              ) : (
+                <TrendingUp className="w-3.5 h-3.5" />
+              )}
+              {Math.abs(trendPercent)}%
+            </span>
+          )}
+          
+          {/* Price Alert Bell */}
+          <Popover open={alertOpen} onOpenChange={setAlertOpen}>
+            <PopoverTrigger asChild>
+              <button 
+                className={cn(
+                  "p-1 rounded-full transition-colors",
+                  alertSet 
+                    ? "text-primary bg-primary/20" 
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                )}
+                aria-label={alertSet ? "Price alert set" : "Set price alert"}
+              >
+                {alertSet ? (
+                  <BellRing className="w-4 h-4" />
+                ) : (
+                  <Bell className="w-4 h-4" />
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3" side="top">
+              <div className="space-y-3">
+                <div className="text-sm font-medium">Price Alert</div>
+                {alertSet ? (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Alert set for: <span className="text-primary font-mono">${existingAlert?.targetPrice.toFixed(2)}/kg</span>
+                    </p>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={handleRemoveAlert}
+                      className="w-full"
+                    >
+                      Remove Alert
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Current: <span className="font-mono">${pricePerKg.toFixed(2)}/kg</span>
+                    </p>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                        <Input
+                          type="number"
+                          placeholder="Target"
+                          value={targetPrice}
+                          onChange={(e) => setTargetPrice(e.target.value)}
+                          className="pl-6 h-8 text-sm"
+                          step="0.01"
+                        />
+                      </div>
+                      <Button 
+                        size="sm" 
+                        onClick={handleSetAlert}
+                        disabled={!targetPrice || parseFloat(targetPrice) <= 0}
+                      >
+                        Set
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+        
+        {/* Best Price Badge */}
+        {(priceHistory.isBestIn6Months || priceHistory.isBestIn30Days) && (
+          <Badge className="best-price-badge bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/40 text-amber-400 text-[10px] px-2 py-0.5 gap-1">
+            <Sparkles className="w-3 h-3" />
+            {priceHistory.isBestIn6Months ? "Best price in 6 months!" : "Best price in 30 days!"}
+          </Badge>
+        )}
+        
+        {/* Price Context Label */}
+        {priceContext && (
+          <div className={cn("flex items-center gap-1 text-xs", priceContext.colorClass)}>
+            <PriceContextIcon className="w-3 h-3" />
+            <span>{priceContext.label}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Display title without brand name
   const getDisplayTitle = () => {
@@ -410,32 +623,12 @@ export function FilamentCard({
       </p>
 
       {/* Price Section */}
-      <div className="mb-4">
-        {isValidPrice ? (
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-primary font-mono">
-              ${pricePerKg!.toFixed(2)}
-            </span>
-            <span className="text-sm text-muted-foreground">/kg</span>
-            
-            {priceTrend !== null && priceTrend !== undefined && priceTrend !== 0 && (
-              <span className={cn(
-                "text-xs font-medium flex items-center gap-0.5",
-                priceTrend < 0 ? "text-green-400" : "text-red-400"
-              )}>
-                {priceTrend < 0 ? (
-                  <TrendingDown className="w-3 h-3" />
-                ) : (
-                  <TrendingUp className="w-3 h-3" />
-                )}
-                {Math.abs(priceTrend)}%
-              </span>
-            )}
-          </div>
-        ) : (
-          <span className="text-lg text-muted-foreground">Price unavailable</span>
-        )}
-      </div>
+      <PriceSection 
+        filamentId={filament.id}
+        pricePerKg={isValidPrice ? pricePerKg : null}
+        material={filament.material}
+        priceTrend={priceTrend}
+      />
 
       {/* Properties Section */}
       <div className="flex flex-wrap gap-1.5 mb-3">
