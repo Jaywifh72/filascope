@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, SlidersHorizontal, Check, Search } from "lucide-react";
+import { ChevronDown, SlidersHorizontal, Check, Search, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -96,6 +96,8 @@ export function HorizontalFilterBar({
   const [brandSearch, setBrandSearch] = useState("");
   const [tempPriceRange, setTempPriceRange] = useState<[number, number]>(priceRange);
   const [tempSelectedBrands, setTempSelectedBrands] = useState<string[]>(selectedBrands);
+  const [isApplying, setIsApplying] = useState<'brand' | 'price' | null>(null);
+  const [showSuccess, setShowSuccess] = useState<'brand' | 'price' | null>(null);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
   const brandSearchRef = useRef<HTMLInputElement>(null);
@@ -155,13 +157,33 @@ export function HorizontalFilterBar({
   const otherBrands = filteredBrands.filter(b => !TOP_BRANDS.includes(b.name));
 
   const applyBrandFilter = () => {
-    onBrandsChange(tempSelectedBrands);
-    setOpenDropdown(null);
+    setIsApplying('brand');
+    // Brief loading state
+    setTimeout(() => {
+      onBrandsChange(tempSelectedBrands);
+      setIsApplying(null);
+      setShowSuccess('brand');
+      // Hide success after animation
+      setTimeout(() => {
+        setShowSuccess(null);
+        setOpenDropdown(null);
+      }, 400);
+    }, 150);
   };
 
   const applyPriceFilter = () => {
-    onPriceRangeChange(tempPriceRange);
-    setOpenDropdown(null);
+    setIsApplying('price');
+    // Brief loading state
+    setTimeout(() => {
+      onPriceRangeChange(tempPriceRange);
+      setIsApplying(null);
+      setShowSuccess('price');
+      // Hide success after animation
+      setTimeout(() => {
+        setShowSuccess(null);
+        setOpenDropdown(null);
+      }, 400);
+    }, 150);
   };
 
   const getSelectedMaterialLabel = () => {
@@ -227,7 +249,7 @@ export function HorizontalFilterBar({
               size="sm"
               onClick={() => toggleDropdown('material')}
               className={cn(
-                "h-9 gap-2 min-w-[140px] justify-between",
+                "h-9 gap-2 min-w-[140px] justify-between filter-btn-hover",
                 openDropdown === 'material' && "ring-2 ring-primary/50",
                 selectedMaterial !== "All" && "border-primary/50 bg-primary/5"
               )}
@@ -241,7 +263,7 @@ export function HorizontalFilterBar({
 
             {/* Material Dropdown Panel */}
             {openDropdown === 'material' && (
-              <div className="absolute top-full left-0 mt-2 w-72 bg-popover border border-border rounded-lg shadow-lg z-50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+              <div className="absolute top-full left-0 mt-2 w-72 bg-popover border border-border rounded-lg shadow-lg z-50 dropdown-panel">
                 <div className="p-2 max-h-[400px] overflow-y-auto">
                   {materialCategories.map((category) => (
                     <button
@@ -288,7 +310,7 @@ export function HorizontalFilterBar({
               size="sm"
               onClick={() => toggleDropdown('brand')}
               className={cn(
-                "h-9 gap-2 min-w-[120px] justify-between",
+                "h-9 gap-2 min-w-[120px] justify-between filter-btn-hover",
                 openDropdown === 'brand' && "ring-2 ring-primary/50",
                 selectedBrands.length > 0 && "border-primary/50 bg-primary/5"
               )}
@@ -302,7 +324,7 @@ export function HorizontalFilterBar({
 
             {/* Brand Dropdown Panel */}
             {openDropdown === 'brand' && (
-              <div className="absolute top-full left-0 mt-2 w-80 bg-popover border border-border rounded-lg shadow-lg z-50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+              <div className="absolute top-full left-0 mt-2 w-80 bg-popover border border-border rounded-lg shadow-lg z-50 dropdown-panel">
                 {/* Search */}
                 <div className="p-3 border-b border-border">
                   <div className="relative">
@@ -386,8 +408,16 @@ export function HorizontalFilterBar({
                   <Button
                     size="sm"
                     onClick={applyBrandFilter}
+                    disabled={isApplying === 'brand'}
+                    className="min-w-[70px]"
                   >
-                    Apply
+                    {isApplying === 'brand' ? (
+                      <Loader2 className="h-4 w-4 filter-spinner" />
+                    ) : showSuccess === 'brand' ? (
+                      <CheckCircle className="h-4 w-4 text-green-400 success-check" />
+                    ) : (
+                      "Apply"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -401,7 +431,7 @@ export function HorizontalFilterBar({
               size="sm"
               onClick={() => toggleDropdown('price')}
               className={cn(
-                "h-9 gap-2 min-w-[130px] justify-between",
+                "h-9 gap-2 min-w-[130px] justify-between filter-btn-hover",
                 openDropdown === 'price' && "ring-2 ring-primary/50",
                 (priceRange[0] > 0 || priceRange[1] < maxPriceLimit) && "border-primary/50 bg-primary/5"
               )}
@@ -415,7 +445,7 @@ export function HorizontalFilterBar({
 
             {/* Price Dropdown Panel */}
             {openDropdown === 'price' && (
-              <div className="absolute top-full left-0 mt-2 w-72 bg-popover border border-border rounded-lg shadow-lg z-50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+              <div className="absolute top-full left-0 mt-2 w-72 bg-popover border border-border rounded-lg shadow-lg z-50 dropdown-panel">
                 <div className="p-4 space-y-4">
                   <div className="text-sm font-medium">Price per kg (USD)</div>
                   
@@ -480,8 +510,16 @@ export function HorizontalFilterBar({
                   <Button
                     size="sm"
                     onClick={applyPriceFilter}
+                    disabled={isApplying === 'price'}
+                    className="min-w-[70px]"
                   >
-                    Apply
+                    {isApplying === 'price' ? (
+                      <Loader2 className="h-4 w-4 filter-spinner" />
+                    ) : showSuccess === 'price' ? (
+                      <CheckCircle className="h-4 w-4 text-green-400 success-check" />
+                    ) : (
+                      "Apply"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -494,7 +532,7 @@ export function HorizontalFilterBar({
             size="sm"
             onClick={onOpenMoreFilters}
             className={cn(
-              "h-9 gap-2",
+              "h-9 gap-2 filter-btn-hover",
               moreFiltersCount > 0 && "border-primary/50 bg-primary/5"
             )}
           >
