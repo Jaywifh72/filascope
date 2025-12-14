@@ -287,4 +287,42 @@ All colors MUST be HSL.
       filter: drop-shadow(0 0 12px hsl(var(--primary) / 0.5));
     }
   }
+
+  /* Best price badge pulse animation */
+  .best-price-badge {
+    animation: bestPricePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes bestPricePulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsla(45 100% 50% / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 8px 2px hsla(45 100% 50% / 0.2);
+    }
+  }
+
+  /* Sparkline drawing animation */
+  .sparkline-line {
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    animation: sparklineDraw 0.6s ease-out forwards;
+  }
+
+  @keyframes sparklineDraw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  .sparkline-dot {
+    opacity: 0;
+    animation: sparklineDotAppear 0.3s ease-out 0.5s forwards;
+  }
+
+  @keyframes sparklineDotAppear {
+    to {
+      opacity: 1;
+    }
+  }
 }
