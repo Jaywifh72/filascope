@@ -2051,6 +2051,74 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity: {
+        Row: {
+          activity_type: string
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          entity_value: string | null
+          id: string
+          metadata: Json | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          entity_value?: string | null
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          entity_value?: string | null
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_browse_history: {
+        Row: {
+          filament_id: string | null
+          id: string
+          session_id: string | null
+          user_id: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          filament_id?: string | null
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          filament_id?: string | null
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_browse_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_favorites: {
         Row: {
           created_at: string | null
@@ -2086,6 +2154,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_material_interests: {
+        Row: {
+          id: string
+          interest_score: number | null
+          last_interaction: string | null
+          material: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          interest_score?: number | null
+          last_interaction?: string | null
+          material: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          interest_score?: number | null
+          last_interaction?: string | null
+          material?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       user_purchases: {
         Row: {
@@ -2147,6 +2242,36 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_sidebar_preferences: {
+        Row: {
+          hidden_modules: string[] | null
+          id: string
+          module_engagement: Json | null
+          module_order: Json | null
+          price_sensitivity: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          hidden_modules?: string[] | null
+          id?: string
+          module_engagement?: Json | null
+          module_order?: Json | null
+          price_sensitivity?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          hidden_modules?: string[] | null
+          id?: string
+          module_engagement?: Json | null
+          module_order?: Json | null
+          price_sensitivity?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

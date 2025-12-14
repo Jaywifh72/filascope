@@ -12,6 +12,7 @@ interface SidebarModuleProps {
   className?: string;
   accentColor?: "cyan" | "amber" | "green" | "red" | "orange";
   headerAction?: ReactNode;
+  badge?: ReactNode;
 }
 
 const accentColors = {
@@ -32,6 +33,7 @@ export function SidebarModule({
   className,
   accentColor = "cyan",
   headerAction,
+  badge,
 }: SidebarModuleProps) {
   if (isEmpty && !isLoading) {
     return null; // Don't render empty modules
@@ -52,6 +54,7 @@ export function SidebarModule({
           <h3 className="font-semibold text-sm uppercase tracking-wide text-foreground">
             {title}
           </h3>
+          {badge}
         </div>
         {headerAction}
       </div>
