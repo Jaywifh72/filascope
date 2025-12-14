@@ -160,11 +160,23 @@ export function FilamentCard({
   const [retailerPopoverOpen, setRetailerPopoverOpen] = useState(false);
   
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
-  const { addItem, removeItem, isInCompare, isFull, trayElement, triggerGlow } = useCompare();
+  const { 
+    addItem, 
+    removeItem, 
+    isInCompare, 
+    isFull, 
+    trayElement, 
+    triggerGlow,
+    isMultiSelectMode,
+    addToPending,
+    removeFromPending,
+    isPending,
+  } = useCompare();
   const cardRef = React.useRef<HTMLDivElement>(null);
   
-  // Check if this filament is selected for compare
+  // Check if this filament is selected for compare or pending in multi-select
   const isSelected = isInCompare(filament.id);
+  const isPendingSelection = isPending(filament.id);
   
   // Check if compare tray is full
   const isCompareDisabled = isFull && !isSelected;
@@ -720,14 +732,36 @@ export function FilamentCard({
 
   // Handle compare with feedback
   const handleCompare = () => {
+    // Handle multi-select mode
+    if (isMultiSelectMode) {
+      if (isPendingSelection) {
+        removeFromPending(filament.id);
+      } else if (isSelected) {
+        removeItem(filament.id);
+      } else {
+        addToPending({
+          id: filament.id,
+          product_title: filament.product_title,
+          vendor: filament.vendor || null,
+          material: filament.material || null,
+          color_hex: filament.color_hex || null,
+          variant_price: filament.variant_price || null,
+          net_weight_g: filament.net_weight_g || null,
+          featured_image: filament.featured_image,
+        });
+      }
+      return;
+    }
+
+    // Normal mode
     if (isSelected) {
       removeItem(filament.id);
-    } else if (!isFull) {
+    } else {
       setIsPulsing(true);
       setTimeout(() => setIsPulsing(false), 500);
       
-      // Create fly animation if tray is available
-      if (cardRef.current && trayElement) {
+      // Create fly animation if tray is available and not full
+      if (cardRef.current && trayElement && !isFull) {
         const cardRect = cardRef.current.getBoundingClientRect();
         const trayRect = trayElement.getBoundingClientRect();
         
@@ -788,11 +822,15 @@ export function FilamentCard({
         "group relative bg-card border rounded-xl p-5 card-3d-hover overflow-hidden",
         isSelected 
           ? "border-2 border-primary bg-primary/5" 
+          : isPendingSelection
+          ? "border-2 border-primary/60 bg-primary/5"
           : "border-border hover:border-primary/50",
-        isPulsing && "compare-pulse"
+        isPulsing && "compare-pulse",
+        isMultiSelectMode && "cursor-pointer"
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={isMultiSelectMode ? handleCompare : undefined}
     >
       {/* Compare Checkbox - Top Left (shows on hover) */}
       <div 
@@ -1177,10 +1215,15 @@ export function FilamentCard({
               }}
               aria-label={`Add ${filament.product_title} to comparison`}
             >
-              {isSelected ? (
+            {isSelected ? (
                 <>
                   <Check className="w-4 h-4 mr-1" />
-                  Added
+                  ✓ In Compare
+                </>
+              ) : isPendingSelection ? (
+                <>
+                  <Check className="w-4 h-4 mr-1" />
+                  Pending
                 </>
               ) : (
                 "Compare"

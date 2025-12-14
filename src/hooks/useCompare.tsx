@@ -17,6 +17,7 @@ type ActionType = 'add' | 'remove' | null;
 interface CompareContextType {
   items: CompareItem[];
   addItem: (item: CompareItem) => void;
+  addItemSilent: (item: CompareItem) => void;
   removeItem: (id: string) => void;
   clearAll: () => void;
   isInCompare: (id: string) => boolean;
@@ -38,6 +39,19 @@ interface CompareContextType {
   newItemId: string | null;
   // First item tracking for tray entrance
   isFirstItem: boolean;
+  // Multi-select mode
+  isMultiSelectMode: boolean;
+  setMultiSelectMode: (enabled: boolean) => void;
+  pendingItems: CompareItem[];
+  addToPending: (item: CompareItem) => void;
+  removeFromPending: (id: string) => void;
+  commitPendingItems: () => void;
+  clearPendingItems: () => void;
+  isPending: (id: string) => boolean;
+  // Swap functionality
+  pendingSwapItem: CompareItem | null;
+  setPendingSwapItem: (item: CompareItem | null) => void;
+  swapItem: (oldId: string, newItem: CompareItem) => void;
 }
 
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
@@ -66,6 +80,13 @@ export function CompareProvider({ children }: { children: ReactNode }) {
   const [newItemId, setNewItemId] = useState<string | null>(null);
   const prevCountRef = useRef(items.length);
 
+  // Multi-select mode state
+  const [isMultiSelectMode, setMultiSelectMode] = useState(false);
+  const [pendingItems, setPendingItems] = useState<CompareItem[]>([]);
+
+  // Swap functionality state
+  const [pendingSwapItem, setPendingSwapItem] = useState<CompareItem | null>(null);
+
   // Track if this is the first item being added (for tray entrance animation)
   const isFirstItem = prevCountRef.current === 0 && items.length === 1;
 
@@ -86,9 +107,8 @@ export function CompareProvider({ children }: { children: ReactNode }) {
   const addItem = useCallback((item: CompareItem) => {
     setItems(prev => {
       if (prev.length >= MAX_ITEMS) {
-        toast.error("Compare tray is full", {
-          description: "Remove an item first to add a new one",
-        });
+        // Instead of error, trigger swap modal
+        setPendingSwapItem(item);
         return prev;
       }
       if (prev.some(i => i.id === item.id)) {
@@ -109,6 +129,15 @@ export function CompareProvider({ children }: { children: ReactNode }) {
       // Clear action after animation
       setTimeout(() => setLastAction(null), 400);
       
+      return [...prev, item];
+    });
+  }, []);
+
+  // Silent add for multi-select mode (no toast, no animation)
+  const addItemSilent = useCallback((item: CompareItem) => {
+    setItems(prev => {
+      if (prev.length >= MAX_ITEMS) return prev;
+      if (prev.some(i => i.id === item.id)) return prev;
       return [...prev, item];
     });
   }, []);
@@ -143,6 +172,73 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // Multi-select pending items functions
+  const addToPending = useCallback((item: CompareItem) => {
+    setPendingItems(prev => {
+      if (prev.some(i => i.id === item.id)) return prev;
+      return [...prev, item];
+    });
+  }, []);
+
+  const removeFromPending = useCallback((id: string) => {
+    setPendingItems(prev => prev.filter(i => i.id !== id));
+  }, []);
+
+  const isPending = useCallback((id: string) => {
+    return pendingItems.some(i => i.id === id);
+  }, [pendingItems]);
+
+  const commitPendingItems = useCallback(() => {
+    if (pendingItems.length === 0) return;
+
+    const availableSlots = MAX_ITEMS - items.length;
+    const itemsToAdd = pendingItems.slice(0, availableSlots);
+    
+    if (itemsToAdd.length > 0) {
+      setItems(prev => {
+        const newItems = [...prev];
+        itemsToAdd.forEach(item => {
+          if (!newItems.some(i => i.id === item.id)) {
+            newItems.push(item);
+          }
+        });
+        return newItems.slice(0, MAX_ITEMS);
+      });
+      
+      toast.success(`${itemsToAdd.length} material${itemsToAdd.length > 1 ? 's' : ''} added to compare`);
+      setIsExpanded(true);
+      setLastAction('add');
+      setTimeout(() => setLastAction(null), 400);
+    }
+    
+    setPendingItems([]);
+  }, [pendingItems, items.length]);
+
+  const clearPendingItems = useCallback(() => {
+    setPendingItems([]);
+  }, []);
+
+  // Swap item function
+  const swapItem = useCallback((oldId: string, newItem: CompareItem) => {
+    setItems(prev => {
+      const index = prev.findIndex(i => i.id === oldId);
+      if (index === -1) return prev;
+      
+      const newItems = [...prev];
+      newItems[index] = newItem;
+      return newItems;
+    });
+    
+    setPendingSwapItem(null);
+    toast.success(`Swapped material`, {
+      description: newItem.product_title,
+    });
+    setLastAction('add');
+    setNewItemId(newItem.id);
+    setTimeout(() => setNewItemId(null), 500);
+    setTimeout(() => setLastAction(null), 400);
+  }, []);
+
   // Update prev count ref
   useEffect(() => {
     prevCountRef.current = items.length;
@@ -155,6 +251,7 @@ export function CompareProvider({ children }: { children: ReactNode }) {
   const value: CompareContextType = {
     items,
     addItem,
+    addItemSilent,
     removeItem,
     clearAll,
     isInCompare,
@@ -171,6 +268,19 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     reorderItems,
     newItemId,
     isFirstItem,
+    // Multi-select
+    isMultiSelectMode,
+    setMultiSelectMode,
+    pendingItems,
+    addToPending,
+    removeFromPending,
+    commitPendingItems,
+    clearPendingItems,
+    isPending,
+    // Swap
+    pendingSwapItem,
+    setPendingSwapItem,
+    swapItem,
   };
 
   return (

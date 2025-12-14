@@ -700,4 +700,56 @@ All colors MUST be HSL.
   .similar-mini-card:hover {
     @apply bg-muted/50;
   }
+
+  /* Multi-select mode banner animation */
+  .multi-select-banner {
+    animation: slideDown 0.2s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  /* Swap modal entrance animation */
+  .swap-modal-enter {
+    animation: swapModalIn 0.2s ease-out;
+  }
+
+  @keyframes swapModalIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Suggestion chips animation */
+  .suggestion-chip {
+    animation: chipFadeIn 0.3s ease-out;
+  }
+
+  @keyframes chipFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .suggestion-chip:nth-child(1) { animation-delay: 0ms; }
+  .suggestion-chip:nth-child(2) { animation-delay: 100ms; }
+  .suggestion-chip:nth-child(3) { animation-delay: 200ms; }
 }
