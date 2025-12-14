@@ -23,6 +23,11 @@ interface CompareContextType {
   maxItems: number;
   isExpanded: boolean;
   setIsExpanded: (expanded: boolean) => void;
+  // Fly animation support
+  trayElement: HTMLElement | null;
+  setTrayElement: (el: HTMLElement | null) => void;
+  isGlowing: boolean;
+  triggerGlow: () => void;
 }
 
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
@@ -45,6 +50,13 @@ export function CompareProvider({ children }: { children: ReactNode }) {
   });
   
   const [isExpanded, setIsExpanded] = useState(true);
+  const [trayElement, setTrayElement] = useState<HTMLElement | null>(null);
+  const [isGlowing, setIsGlowing] = useState(false);
+
+  const triggerGlow = useCallback(() => {
+    setIsGlowing(true);
+    setTimeout(() => setIsGlowing(false), 600);
+  }, []);
 
   // Sync to localStorage whenever items change
   useEffect(() => {
@@ -110,6 +122,10 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     maxItems: MAX_ITEMS,
     isExpanded,
     setIsExpanded,
+    trayElement,
+    setTrayElement,
+    isGlowing,
+    triggerGlow,
   };
 
   return (
