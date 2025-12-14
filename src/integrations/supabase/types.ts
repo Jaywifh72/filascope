@@ -1739,48 +1739,107 @@ export type Database = {
         }
         Relationships: []
       }
+      trend_upvotes: {
+        Row: {
+          anonymous_id: string | null
+          created_at: string | null
+          id: string
+          trend_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          anonymous_id?: string | null
+          created_at?: string | null
+          id?: string
+          trend_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          anonymous_id?: string | null
+          created_at?: string | null
+          id?: string
+          trend_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trend_upvotes_trend_id_fkey"
+            columns: ["trend_id"]
+            isOneToOne: false
+            referencedRelation: "trending_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trending_materials: {
         Row: {
           article_url: string | null
           context: string | null
           created_at: string | null
           description: string | null
+          extended_context: string | null
           id: string
           is_active: boolean | null
+          is_prediction: boolean | null
           material_filter: string | null
           position: number | null
+          prediction_reason: string | null
+          related_content_count: number | null
+          related_content_url: string | null
           search_increase_percent: number | null
+          sparkline_data: Json | null
           title: string
+          trend_velocity: string | null
           updated_at: string | null
+          upvote_count: number | null
           week_of: string | null
+          why_now: string | null
         }
         Insert: {
           article_url?: string | null
           context?: string | null
           created_at?: string | null
           description?: string | null
+          extended_context?: string | null
           id?: string
           is_active?: boolean | null
+          is_prediction?: boolean | null
           material_filter?: string | null
           position?: number | null
+          prediction_reason?: string | null
+          related_content_count?: number | null
+          related_content_url?: string | null
           search_increase_percent?: number | null
+          sparkline_data?: Json | null
           title: string
+          trend_velocity?: string | null
           updated_at?: string | null
+          upvote_count?: number | null
           week_of?: string | null
+          why_now?: string | null
         }
         Update: {
           article_url?: string | null
           context?: string | null
           created_at?: string | null
           description?: string | null
+          extended_context?: string | null
           id?: string
           is_active?: boolean | null
+          is_prediction?: boolean | null
           material_filter?: string | null
           position?: number | null
+          prediction_reason?: string | null
+          related_content_count?: number | null
+          related_content_url?: string | null
           search_increase_percent?: number | null
+          sparkline_data?: Json | null
           title?: string
+          trend_velocity?: string | null
           updated_at?: string | null
+          upvote_count?: number | null
           week_of?: string | null
+          why_now?: string | null
         }
         Relationships: []
       }
