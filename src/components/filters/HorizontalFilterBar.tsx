@@ -6,6 +6,40 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 
+// Material color mapping for visual swatches
+const MATERIAL_COLORS: Record<string, string> = {
+  'All': '#6b7280',
+  'PLA Family': '#22c55e',
+  'PETG Family': '#3b82f6',
+  'ABS Family': '#71717a',
+  'ASA Family': '#f97316',
+  'Flexible/TPU': '#06b6d4',
+  'Nylon/PA Family': '#eab308',
+  'Polycarbonate': '#6366f1',
+  'High Performance': '#a855f7',
+  'Copolyester': '#14b8a6',
+  'PET Family': '#0ea5e9',
+  'Polypropylene': '#78716c',
+  'Support Materials': '#ec4899',
+  'Specialty': '#f43f5e',
+};
+
+// Top 10 popular brands
+const TOP_BRANDS = [
+  'Bambu Lab', 'Prusament', 'eSun', 'Overture', 'Hatchbox',
+  'Polymaker', 'Sunlu', 'Inland', 'ColorFabb', 'Fillamentum'
+];
+
+// Letter groupings for alphabetical sections
+const LETTER_GROUPS = [
+  { label: 'A-D', letters: ['A', 'B', 'C', 'D'] },
+  { label: 'E-H', letters: ['E', 'F', 'G', 'H'] },
+  { label: 'I-L', letters: ['I', 'J', 'K', 'L'] },
+  { label: 'M-P', letters: ['M', 'N', 'O', 'P'] },
+  { label: 'Q-T', letters: ['Q', 'R', 'S', 'T'] },
+  { label: 'U-Z', letters: ['U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] },
+];
+
 interface MaterialCategory {
   name: string;
   count: number;
@@ -64,6 +98,7 @@ export function HorizontalFilterBar({
   const [tempSelectedBrands, setTempSelectedBrands] = useState<string[]>(selectedBrands);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const brandSearchRef = useRef<HTMLInputElement>(null);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -82,6 +117,8 @@ export function HorizontalFilterBar({
     if (openDropdown === 'brand') {
       setTempSelectedBrands(selectedBrands);
       setBrandSearch("");
+      // Focus search input after a short delay
+      setTimeout(() => brandSearchRef.current?.focus(), 50);
     }
     if (openDropdown === 'price') {
       setTempPriceRange(priceRange);
@@ -103,12 +140,19 @@ export function HorizontalFilterBar({
     setOpenDropdown(prev => prev === dropdown ? null : dropdown);
   };
 
+  // Filter brands by search
   const filteredBrands = brands.filter(brand => 
     brand.name.toLowerCase().includes(brandSearch.toLowerCase())
   );
 
-  // Sort brands by count (popular first)
-  const sortedBrands = [...filteredBrands].sort((a, b) => b.count - a.count);
+  // Get popular brands (intersection of TOP_BRANDS and available brands)
+  const popularBrands = TOP_BRANDS
+    .map(name => brands.find(b => b.name === name))
+    .filter((b): b is Brand => b !== undefined)
+    .filter(b => !brandSearch || b.name.toLowerCase().includes(brandSearch.toLowerCase()));
+
+  // Get other brands (not in popular list), grouped alphabetically
+  const otherBrands = filteredBrands.filter(b => !TOP_BRANDS.includes(b.name));
 
   const applyBrandFilter = () => {
     onBrandsChange(tempSelectedBrands);
@@ -138,6 +182,39 @@ export function HorizontalFilterBar({
     return `$${priceRange[0]}-$${priceRange[1]}/kg`;
   };
 
+  // Brand row component for reuse
+  const BrandRow = ({ brand }: { brand: Brand }) => {
+    const isSelected = tempSelectedBrands.includes(brand.name);
+    return (
+      <label
+        className={cn(
+          "flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition-colors",
+          isSelected
+            ? "bg-primary/10 border border-primary/30"
+            : "hover:bg-muted border border-transparent"
+        )}
+      >
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={(checked) => {
+              if (checked) {
+                setTempSelectedBrands(prev => [...prev, brand.name]);
+              } else {
+                setTempSelectedBrands(prev => prev.filter(b => b !== brand.name));
+              }
+            }}
+          />
+          <span className="text-sm">{brand.name}</span>
+          {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
+        </div>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {brand.count.toLocaleString()}
+        </span>
+      </label>
+    );
+  };
+
   return (
     <div className="bg-card/50 border-b border-border relative" ref={dropdownRef}>
       <div className="max-w-[1800px] mx-auto px-4 lg:px-6 h-14 flex items-center justify-between gap-4">
@@ -164,7 +241,7 @@ export function HorizontalFilterBar({
 
             {/* Material Dropdown Panel */}
             {openDropdown === 'material' && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-popover border border-border rounded-lg shadow-lg z-50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+              <div className="absolute top-full left-0 mt-2 w-72 bg-popover border border-border rounded-lg shadow-lg z-50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
                 <div className="p-2 max-h-[400px] overflow-y-auto">
                   {materialCategories.map((category) => (
                     <button
@@ -174,22 +251,28 @@ export function HorizontalFilterBar({
                         setOpenDropdown(null);
                       }}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                        "w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm transition-colors group",
                         selectedMaterial === category.name
                           ? "bg-primary/10 text-primary"
-                          : "hover:bg-muted"
+                          : "hover:bg-muted/80"
                       )}
                     >
-                      <div className="flex items-center gap-2">
-                        {selectedMaterial === category.name && (
-                          <Check className="h-4 w-4" />
+                      <div className="flex items-center gap-3">
+                        {/* Color swatch */}
+                        <span 
+                          className="w-3 h-3 rounded-full shrink-0 ring-1 ring-white/20"
+                          style={{ backgroundColor: MATERIAL_COLORS[category.name] || '#6b7280' }}
+                        />
+                        {/* Checkmark for selected */}
+                        {selectedMaterial === category.name ? (
+                          <Check className="h-4 w-4 text-primary shrink-0" />
+                        ) : (
+                          <span className="w-4" />
                         )}
-                        <span className={selectedMaterial === category.name ? "" : "ml-6"}>
-                          {category.name}
-                        </span>
+                        <span>{category.name}</span>
                       </div>
-                      <span className="text-muted-foreground text-xs">
-                        ({category.count.toLocaleString()})
+                      <span className="text-muted-foreground text-xs tabular-nums">
+                        {category.count.toLocaleString()}
                       </span>
                     </button>
                   ))}
@@ -219,12 +302,13 @@ export function HorizontalFilterBar({
 
             {/* Brand Dropdown Panel */}
             {openDropdown === 'brand' && (
-              <div className="absolute top-full left-0 mt-2 w-72 bg-popover border border-border rounded-lg shadow-lg z-50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+              <div className="absolute top-full left-0 mt-2 w-80 bg-popover border border-border rounded-lg shadow-lg z-50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
                 {/* Search */}
                 <div className="p-3 border-b border-border">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
+                      ref={brandSearchRef}
                       placeholder="Search brands..."
                       value={brandSearch}
                       onChange={(e) => setBrandSearch(e.target.value)}
@@ -234,35 +318,58 @@ export function HorizontalFilterBar({
                 </div>
 
                 {/* Brand List */}
-                <div className="p-2 max-h-[300px] overflow-y-auto">
-                  {sortedBrands.length === 0 ? (
+                <div className="max-h-[350px] overflow-y-auto">
+                  {filteredBrands.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No brands found
                     </p>
                   ) : (
-                    sortedBrands.map((brand) => (
-                      <label
-                        key={brand.name}
-                        className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={tempSelectedBrands.includes(brand.name)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setTempSelectedBrands(prev => [...prev, brand.name]);
-                              } else {
-                                setTempSelectedBrands(prev => prev.filter(b => b !== brand.name));
-                              }
-                            }}
-                          />
-                          <span className="text-sm">{brand.name}</span>
+                    <>
+                      {/* Top 10 Popular Section */}
+                      {popularBrands.length > 0 && !brandSearch && (
+                        <div className="p-2 border-b border-border">
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Top 10 Popular
+                          </div>
+                          {popularBrands.map((brand) => (
+                            <BrandRow key={brand.name} brand={brand} />
+                          ))}
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          ({brand.count})
-                        </span>
-                      </label>
-                    ))
+                      )}
+
+                      {/* All Brands - Alphabetical Groups */}
+                      <div className="p-2">
+                        {!brandSearch && (
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            All Brands
+                          </div>
+                        )}
+                        {brandSearch ? (
+                          // When searching, show flat list
+                          filteredBrands.map((brand) => (
+                            <BrandRow key={brand.name} brand={brand} />
+                          ))
+                        ) : (
+                          // When not searching, show alphabetical groups
+                          LETTER_GROUPS.map(group => {
+                            const groupBrands = otherBrands.filter(b => 
+                              group.letters.includes(b.name.charAt(0).toUpperCase())
+                            );
+                            if (groupBrands.length === 0) return null;
+                            return (
+                              <div key={group.label}>
+                                <div className="px-3 py-1 text-xs text-muted-foreground/70 sticky top-0 bg-popover border-b border-border/50 mb-1">
+                                  {group.label}
+                                </div>
+                                {groupBrands.map((brand) => (
+                                  <BrandRow key={brand.name} brand={brand} />
+                                ))}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
 
