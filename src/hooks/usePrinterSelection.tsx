@@ -299,6 +299,28 @@ export function usePrinterSelection() {
     }
   }, [selectedFirmwareVersion]);
 
+  // Clear printer selection
+  const clearPrinter = () => {
+    setSelectedBrand("");
+    setSelectedPrinterId("");
+    setSelectedHotendId("");
+    setSelectedFirmwareVersion("");
+    localStorage.removeItem("selected_printer_brand");
+    localStorage.removeItem("selected_printer_id");
+    localStorage.removeItem("selected_hotend_id");
+    localStorage.removeItem("selected_firmware_version");
+    localStorage.removeItem("generic_printer_profile");
+  };
+
+  // Set a generic printer profile (for users who don't know their exact model)
+  const setGenericProfile = (profileType: string) => {
+    clearPrinter();
+    localStorage.setItem("generic_printer_profile", profileType);
+  };
+
+  // Get current generic profile if set
+  const genericProfile = localStorage.getItem("generic_printer_profile") || null;
+
   return {
     brands,
     brandsLoading,
@@ -322,5 +344,8 @@ export function usePrinterSelection() {
     setSelectedFirmwareVersion,
     latestFirmware,
     hasNewerFirmware,
+    clearPrinter,
+    setGenericProfile,
+    genericProfile,
   };
 }
