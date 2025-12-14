@@ -286,7 +286,7 @@ export default function Printers() {
           <div className="w-full max-w-[600px] mx-auto">
             <Input
               type="text"
-              placeholder="Search printers by model, brand, or features..."
+              placeholder="Search 105 printers by name, brand, or feature..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full h-[56px] text-lg px-6 rounded-full border-2 border-muted focus:border-primary shadow-sm"
