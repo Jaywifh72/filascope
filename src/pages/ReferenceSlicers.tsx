@@ -100,9 +100,26 @@ const ReferenceSlicers = () => {
             <BarChart3 className="w-6 h-6 text-emerald-400" />
             <h2 className="text-xl font-bold font-mono text-foreground">Comparative Features Matrix</h2>
           </div>
-          <p className="text-muted-foreground text-sm mb-4">
-            Side-by-side comparison of slicer capabilities, ratings (1-5), and standout features.
-          </p>
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+            <p className="text-muted-foreground text-sm">
+              Side-by-side comparison of slicer capabilities, ratings (1-5), and standout features.
+            </p>
+            <div className="flex items-center gap-4 text-xs">
+              <span className="text-muted-foreground">Rating:</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="text-muted-foreground">4-5 (Excellent)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className="text-muted-foreground">3 (Average)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-red-400" />
+                <span className="text-muted-foreground">1-2 (Limited)</span>
+              </div>
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
