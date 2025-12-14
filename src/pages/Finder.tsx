@@ -1280,6 +1280,8 @@ const Finder = () => {
                     isSelected={selectedForCompare.includes(filament.id)}
                     onToggleCompare={toggleCompareSelection}
                     colorMatchPercent={colorMatchPercent}
+                    compareCount={selectedForCompare.length}
+                    maxCompare={4}
                   />
                 );
               })}

@@ -27,7 +27,8 @@ import {
   Gem,
   Sun,
   Leaf,
-  MoreHorizontal
+  MoreHorizontal,
+  ImageOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,7 @@ import { getPriceContext } from "@/lib/materialPriceTiers";
 import { usePriceHistory } from "@/hooks/usePriceHistory";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
 import { PriceSparkline } from "./PriceSparkline";
+import { useToast } from "@/hooks/use-toast";
 
 // Material badge colors matching the plan
 const MATERIAL_BADGE_COLORS: Record<string, string> = {
@@ -99,6 +101,8 @@ interface FilamentCardProps {
   onToggleCompare?: (id: string) => void;
   colorMatchPercent?: number | null;
   priceTrend?: number | null; // percentage, negative = price drop
+  compareCount?: number;
+  maxCompare?: number;
 }
 
 export function FilamentCard({
@@ -107,10 +111,18 @@ export function FilamentCard({
   onToggleCompare,
   colorMatchPercent,
   priceTrend,
+  compareCount = 0,
+  maxCompare = 4,
 }: FilamentCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [displayScore, setDisplayScore] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(false);
+  const [showCheckmark, setShowCheckmark] = useState(isSelected);
+  const [imageError, setImageError] = useState(false);
+  
+  // Check if compare tray is full
+  const isCompareDisabled = compareCount >= maxCompare && !isSelected;
 
   // Calculate price per kg
   const packQty = filament.pack_quantity || 1;
@@ -615,14 +627,42 @@ export function FilamentCard({
 
   const brandLogo = filament.vendor ? getBrandLogo(filament.vendor) : null;
 
+  const { toast } = useToast();
+  
+  // Handle compare with feedback
+  const handleCompare = () => {
+    if (isCompareDisabled) {
+      toast({
+        title: "Compare tray full",
+        description: "Remove an item before adding more (4 max)",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsPulsing(true);
+    setTimeout(() => setIsPulsing(false), 500);
+    
+    const willBeSelected = !isSelected;
+    setShowCheckmark(willBeSelected);
+    onToggleCompare?.(filament.id);
+    
+    if (willBeSelected) {
+      toast({
+        title: "Added to comparison",
+        description: `${compareCount + 1}/${maxCompare} filaments selected`,
+      });
+    }
+  };
+
   return (
     <div
       className={cn(
-        "group relative bg-card border rounded-xl p-5 transition-all duration-200 ease-out",
-        "hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1",
+        "group relative bg-card border rounded-xl p-5 card-3d-hover overflow-hidden",
         isSelected 
           ? "border-2 border-primary bg-primary/5" 
-          : "border-border hover:border-primary/50"
+          : "border-border hover:border-primary/50",
+        isPulsing && "compare-pulse"
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -630,48 +670,53 @@ export function FilamentCard({
       {/* Compare Checkbox - Top Left (shows on hover) */}
       <div 
         className={cn(
-          "absolute top-3 left-3 transition-opacity duration-200",
+          "absolute top-3 left-3 z-10 transition-opacity duration-200",
           isHovered || isSelected ? "opacity-100" : "opacity-0"
         )}
       >
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={() => onToggleCompare?.(filament.id)}
-          aria-label={`Add ${filament.product_title} to comparison`}
-          className="h-5 w-5 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-        />
+        {isSelected ? (
+          <div className="w-5 h-5 bg-primary rounded flex items-center justify-center checkmark-enter">
+            <Check className="w-3 h-3 text-primary-foreground" />
+          </div>
+        ) : (
+          <Checkbox
+            checked={isSelected}
+            disabled={isCompareDisabled}
+            onCheckedChange={handleCompare}
+            aria-label={`Add ${filament.product_title} to comparison`}
+            className="h-5 w-5 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+          />
+        )}
       </div>
 
-      {/* Selected Check Badge */}
-      {isSelected && (
-        <div className="absolute top-3 left-3 w-5 h-5 bg-primary rounded flex items-center justify-center">
-          <Check className="w-3 h-3 text-primary-foreground" />
-        </div>
-      )}
-
       {/* Favorite Button - Top Right */}
-      <div className="absolute top-3 right-3">
+      <div className="absolute top-3 right-3 z-10">
         <LikeButton filamentId={filament.id} size="sm" />
       </div>
 
       {/* Header: Brand + Material Badge */}
       <div className="flex items-center justify-between mb-3 pr-8">
-        <div className="flex items-center gap-2">
-          {brandLogo ? (
+        <div className="flex items-center gap-2 overflow-hidden">
+          {brandLogo && !imageError ? (
             <img 
               src={brandLogo} 
               alt={`${filament.vendor} logo`}
-              className="w-8 h-8 rounded object-contain bg-muted p-0.5"
+              className="w-8 h-8 rounded object-contain bg-muted p-0.5 card-image-zoom"
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
-              <span className="text-[10px] font-bold text-muted-foreground">
-                {filament.vendor?.slice(0, 2).toUpperCase()}
-              </span>
+              {imageError ? (
+                <ImageOff className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <span className="text-[10px] font-bold text-muted-foreground">
+                  {filament.vendor?.slice(0, 2).toUpperCase()}
+                </span>
+              )}
             </div>
           )}
           <span className="text-sm text-muted-foreground font-medium">
-            {filament.vendor}
+            {filament.vendor || "Unknown"}
           </span>
         </div>
         
@@ -835,29 +880,40 @@ export function FilamentCard({
       <PropertiesSection filament={filament} printDifficulty={printDifficulty} maxTemp={maxTemp} />
 
       {/* CTA Section */}
-      <div className="flex items-center gap-2 pt-3 border-t border-border">
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(
-            "flex-1 border-primary/50 text-primary transition-all duration-200",
-            isHovered && "bg-primary text-primary-foreground border-primary"
+      <div className="cta-slide-container flex items-center gap-2 pt-3 border-t border-border">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isCompareDisabled}
+              className={cn(
+                "flex-1 border-primary/50 text-primary transition-all duration-200",
+                isHovered && !isCompareDisabled && "bg-primary text-primary-foreground border-primary",
+                isCompareDisabled && "opacity-50 cursor-not-allowed"
+              )}
+              onClick={(e) => {
+                e.preventDefault();
+                handleCompare();
+              }}
+              aria-label={`Add ${filament.product_title} to comparison`}
+            >
+              {isSelected ? (
+                <>
+                  <Check className="w-4 h-4 mr-1" />
+                  Added
+                </>
+              ) : (
+                "Compare"
+              )}
+            </Button>
+          </TooltipTrigger>
+          {isCompareDisabled && (
+            <TooltipContent side="top" className="text-xs">
+              Compare tray full (4 max)
+            </TooltipContent>
           )}
-          onClick={(e) => {
-            e.preventDefault();
-            onToggleCompare?.(filament.id);
-          }}
-          aria-label={`Add ${filament.product_title} to comparison`}
-        >
-          {isSelected ? (
-            <>
-              <Check className="w-4 h-4 mr-1" />
-              Added
-            </>
-          ) : (
-            "Compare"
-          )}
-        </Button>
+        </Tooltip>
         
         <Button
           variant="ghost"
