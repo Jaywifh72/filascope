@@ -562,65 +562,64 @@ const PrinterDetail = () => {
                 )}
               </div>
 
-              {/* Key Specs & Price Tracker - Side by Side on Desktop */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                {/* Key Specs Card */}
-                <Card className="bg-background/50 border-border/50">
-                  <CardContent className="p-5 space-y-4">
-                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Key Specs</h3>
-                    <div className="space-y-3">
-                      {printer.build_volume_x_mm && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Box className="h-4 w-4 text-primary" />
-                            <span className="text-sm text-muted-foreground">Build Volume</span>
-                          </div>
-                          <span className="font-semibold text-sm">
-                            {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
-                          </span>
+              {/* Key Specs Card - Directly below CTAs */}
+              <Card className="bg-background/50 border-border/50 mt-4">
+                <CardContent className="p-5 space-y-4">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Key Specs</h3>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                    {printer.build_volume_x_mm && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Box className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">Build Volume</span>
                         </div>
-                      )}
-                      {printer.max_print_speed_mms && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Gauge className="h-4 w-4 text-primary" />
-                            <span className="text-sm text-muted-foreground">Max Speed</span>
-                          </div>
-                          <span className="font-semibold text-sm">{printer.max_print_speed_mms} mm/s</span>
+                        <span className="font-semibold text-sm">
+                          {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
+                        </span>
+                      </div>
+                    )}
+                    {printer.max_print_speed_mms && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Gauge className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">Max Speed</span>
                         </div>
-                      )}
-                      {printer.max_nozzle_temp_c && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Thermometer className="h-4 w-4 text-primary" />
-                            <span className="text-sm text-muted-foreground">Max Nozzle</span>
-                          </div>
-                          <span className="font-semibold text-sm">{printer.max_nozzle_temp_c}°C</span>
+                        <span className="font-semibold text-sm">{printer.max_print_speed_mms} mm/s</span>
+                      </div>
+                    )}
+                    {printer.max_nozzle_temp_c && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Thermometer className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">Max Nozzle</span>
                         </div>
-                      )}
-                      {printer.bed_max_temp_c && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Flame className="h-4 w-4 text-primary" />
-                            <span className="text-sm text-muted-foreground">Max Bed</span>
-                          </div>
-                          <span className="font-semibold text-sm">{printer.bed_max_temp_c}°C</span>
+                        <span className="font-semibold text-sm">{printer.max_nozzle_temp_c}°C</span>
+                      </div>
+                    )}
+                    {printer.bed_max_temp_c && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Flame className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-muted-foreground">Max Bed</span>
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Price Tracker Card */}
-                <PrinterPriceChart
-                  printerId={printer.id}
-                  currentStorePrice={printer.current_price_usd_store}
-                  currentAmazonPrice={printer.current_price_usd_amazon}
-                  msrp={printer.msrp_usd}
-                />
-              </div>
+                        <span className="font-semibold text-sm">{printer.bed_max_temp_c}°C</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
+        </div>
+
+        {/* Price Tracker - Full Width Below Hero */}
+        <div className="w-full">
+          <PrinterPriceChart
+            printerId={printer.id}
+            currentStorePrice={printer.current_price_usd_store}
+            currentAmazonPrice={printer.current_price_usd_amazon}
+            msrp={printer.msrp_usd}
+          />
         </div>
 
         {/* Feature Highlights */}
