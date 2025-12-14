@@ -21,7 +21,13 @@ import {
   PiggyBank,
   Scale,
   Crown,
-  Sparkles
+  Sparkles,
+  Ruler,
+  Layers,
+  Gem,
+  Sun,
+  Leaf,
+  MoreHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +87,10 @@ interface Filament {
   diameter_nominal_mm?: number | null;
   featured_image?: string | null;
   updated_at?: string | null;
+  finish_type?: string | null;
+  carbon_fiber_percentage?: number | null;
+  glass_fiber_percentage?: number | null;
+  wood_powder_percentage?: number | null;
 }
 
 interface FilamentCardProps {
@@ -402,6 +412,197 @@ export function FilamentCard({
     );
   };
 
+  // Properties Section Component (internal)
+  const PropertiesSection = ({ 
+    filament, 
+    printDifficulty, 
+    maxTemp 
+  }: { 
+    filament: Filament; 
+    printDifficulty: { label: string; color: string };
+    maxTemp: number | null | undefined;
+  }) => {
+    const [showAll, setShowAll] = useState(false);
+    
+    // Build property tags array with categories
+    interface PropertyTag {
+      id: string;
+      label: string;
+      icon: typeof Shield;
+      category: 'safety' | 'compatibility' | 'special';
+      colorClass: string;
+    }
+    
+    const allTags: PropertyTag[] = [];
+    
+    // Safety properties
+    if (filament.food_contact_rating) {
+      allTags.push({
+        id: 'food-safe',
+        label: 'Food Safe',
+        icon: Utensils,
+        category: 'safety',
+        colorClass: 'bg-green-500/10 border-green-500/30 text-green-400 hover:border-green-500/50'
+      });
+    }
+    if (filament.is_nozzle_abrasive === false) {
+      allTags.push({
+        id: 'brass-safe',
+        label: 'Brass Safe',
+        icon: Shield,
+        category: 'safety',
+        colorClass: 'bg-green-500/10 border-green-500/30 text-green-400 hover:border-green-500/50'
+      });
+    }
+    
+    // Compatibility properties
+    if (filament.spool_ams_fit) {
+      allTags.push({
+        id: 'ams-fit',
+        label: 'AMS/MMU Fit',
+        icon: Box,
+        category: 'compatibility',
+        colorClass: 'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:border-blue-500/50'
+      });
+    }
+    if (filament.is_nozzle_abrasive === false) {
+      allTags.push({
+        id: 'all-hotends',
+        label: 'All Hotends',
+        icon: Layers,
+        category: 'compatibility',
+        colorClass: 'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:border-blue-500/50'
+      });
+    }
+    
+    // Special properties
+    if (filament.high_speed_capable) {
+      allTags.push({
+        id: 'high-speed',
+        label: 'High Speed',
+        icon: Zap,
+        category: 'special',
+        colorClass: 'bg-primary/10 border-primary/30 text-primary hover:border-primary/50'
+      });
+    }
+    if (filament.finish_type?.toLowerCase().includes('matte')) {
+      allTags.push({
+        id: 'matte',
+        label: 'Matte Finish',
+        icon: Gem,
+        category: 'special',
+        colorClass: 'bg-purple-500/10 border-purple-500/30 text-purple-400 hover:border-purple-500/50'
+      });
+    }
+    if (filament.carbon_fiber_percentage && filament.carbon_fiber_percentage > 0) {
+      allTags.push({
+        id: 'carbon-fiber',
+        label: 'Carbon Fiber',
+        icon: Layers,
+        category: 'special',
+        colorClass: 'bg-gray-500/10 border-gray-500/30 text-gray-400 hover:border-gray-500/50'
+      });
+    }
+    if (filament.glass_fiber_percentage && filament.glass_fiber_percentage > 0) {
+      allTags.push({
+        id: 'glass-fiber',
+        label: 'Glass Fiber',
+        icon: Layers,
+        category: 'special',
+        colorClass: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 hover:border-cyan-500/50'
+      });
+    }
+    if (filament.wood_powder_percentage && filament.wood_powder_percentage > 0) {
+      allTags.push({
+        id: 'wood-fill',
+        label: 'Wood Fill',
+        icon: Leaf,
+        category: 'special',
+        colorClass: 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:border-amber-500/50'
+      });
+    }
+    if (filament.material?.toLowerCase().includes('glow')) {
+      allTags.push({
+        id: 'glow',
+        label: 'Glow in Dark',
+        icon: Sun,
+        category: 'special',
+        colorClass: 'bg-lime-500/10 border-lime-500/30 text-lime-400 hover:border-lime-500/50'
+      });
+    }
+    
+    // Remove duplicate tags by id
+    const uniqueTags = allTags.filter((tag, index, self) => 
+      index === self.findIndex(t => t.id === tag.id)
+    );
+    
+    const MAX_VISIBLE = 4;
+    const visibleTags = showAll ? uniqueTags : uniqueTags.slice(0, MAX_VISIBLE);
+    const hiddenCount = uniqueTags.length - MAX_VISIBLE;
+
+    return (
+      <div className="mb-4 space-y-2">
+        {/* Property Tags */}
+        {uniqueTags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {visibleTags.map((tag) => {
+              const IconComponent = tag.icon;
+              return (
+                <Badge 
+                  key={tag.id}
+                  variant="outline" 
+                  className={cn(
+                    "text-[10px] px-2 py-0.5 gap-1 transition-colors",
+                    tag.colorClass
+                  )}
+                >
+                  <IconComponent className="w-3 h-3" />
+                  {tag.label}
+                </Badge>
+              );
+            })}
+            {!showAll && hiddenCount > 0 && (
+              <button
+                onClick={() => setShowAll(true)}
+                className="flex items-center gap-0.5 text-[10px] px-2 py-0.5 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <MoreHorizontal className="w-3 h-3" />
+                +{hiddenCount} more
+              </button>
+            )}
+          </div>
+        )}
+        
+        {/* Technical Specs Row */}
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
+          {maxTemp && (
+            <span className="flex items-center gap-1">
+              <Thermometer className="w-3 h-3" />
+              {maxTemp}°C
+            </span>
+          )}
+          {filament.diameter_nominal_mm && (
+            <>
+              <span className="text-muted-foreground/40">•</span>
+              <span className="flex items-center gap-1">
+                <Ruler className="w-3 h-3" />
+                {filament.diameter_nominal_mm}mm
+              </span>
+            </>
+          )}
+          <span className="text-muted-foreground/40">•</span>
+          <span className={cn(
+            "flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px]",
+            printDifficulty.color
+          )}>
+            <Printer className="w-2.5 h-2.5" />
+            {printDifficulty.label}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   // Display title without brand name
   const getDisplayTitle = () => {
     const title = filament.product_title || "";
@@ -631,53 +832,7 @@ export function FilamentCard({
       />
 
       {/* Properties Section */}
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        {filament.is_nozzle_abrasive === false && (
-          <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-green-500/10 border-green-500/30 text-green-400 gap-1">
-            <Shield className="w-3 h-3" />
-            Brass Safe
-          </Badge>
-        )}
-        {filament.spool_ams_fit && (
-          <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-blue-500/10 border-blue-500/30 text-blue-400 gap-1">
-            <Box className="w-3 h-3" />
-            AMS Fit
-          </Badge>
-        )}
-        {filament.food_contact_rating && (
-          <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-green-500/10 border-green-500/30 text-green-400 gap-1">
-            <Utensils className="w-3 h-3" />
-            Food Safe
-          </Badge>
-        )}
-        {filament.high_speed_capable && (
-          <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-primary/10 border-primary/30 text-primary gap-1">
-            <Zap className="w-3 h-3" />
-            High Speed
-          </Badge>
-        )}
-      </div>
-
-      {/* Additional Properties Line */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 flex-wrap">
-        {maxTemp && (
-          <span className="flex items-center gap-1">
-            <Thermometer className="w-3 h-3" />
-            Max {maxTemp}°C
-          </span>
-        )}
-        {filament.diameter_nominal_mm && (
-          <>
-            <span className="text-muted-foreground/50">•</span>
-            <span>{filament.diameter_nominal_mm}mm</span>
-          </>
-        )}
-        <span className="text-muted-foreground/50">•</span>
-        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 gap-0.5", printDifficulty.color)}>
-          <Printer className="w-2.5 h-2.5" />
-          {printDifficulty.label}
-        </Badge>
-      </div>
+      <PropertiesSection filament={filament} printDifficulty={printDifficulty} maxTemp={maxTemp} />
 
       {/* CTA Section */}
       <div className="flex items-center gap-2 pt-3 border-t border-border">
