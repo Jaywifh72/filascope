@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,7 @@ const getColorMatchPercent = (searchHex: string, filamentHex: string): number =>
 
 const Finder = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>(["All"]);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string[]>>({});
@@ -118,11 +119,14 @@ const Finder = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const MAX_PRICE_LIMIT = 100;
   
-  // Color filter states
+  // Color filter states - initialize from URL params
   const [selectedColorFamilies, setSelectedColorFamilies] = useState<string[]>([]);
-  const [hexSearch, setHexSearch] = useState("");
-  const [colorTolerance, setColorTolerance] = useState(30);
-  const [colorSectionOpen, setColorSectionOpen] = useState(false);
+  const [hexSearch, setHexSearch] = useState(() => searchParams.get("hexSearch") || "");
+  const [colorTolerance, setColorTolerance] = useState(() => {
+    const urlTolerance = searchParams.get("colorTolerance");
+    return urlTolerance ? parseInt(urlTolerance, 10) : 30;
+  });
+  const [colorSectionOpen, setColorSectionOpen] = useState(() => !!searchParams.get("hexSearch"));
   
   // Persist viewMode to localStorage
   useEffect(() => {
