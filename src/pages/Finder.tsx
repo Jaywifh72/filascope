@@ -143,6 +143,10 @@ const Finder = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const MAX_PRICE_LIMIT = 100;
   
+  // Pagination state
+  const ITEMS_PER_PAGE = 16;
+  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+  
   // Color filter states - initialize from URL params
   const [selectedColorFamilies, setSelectedColorFamilies] = useState<string[]>([]);
   const [hexSearch, setHexSearch] = useState(() => searchParams.get("hexSearch") || "");
@@ -160,6 +164,11 @@ const Finder = () => {
   useEffect(() => {
     localStorage.setItem("finderViewMode", viewMode);
   }, [viewMode]);
+  
+  // Reset display count when filters change
+  useEffect(() => {
+    setDisplayCount(ITEMS_PER_PAGE);
+  }, [searchTerm, selectedMaterials, selectedBrands, priceRange, sortBy, hexSearch, selectedColorFamilies, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, brassOnly, foodContact, amsOnly]);
   
   // Printer selection hook
   const { selectedPrinter } = usePrinterSelection();
@@ -854,6 +863,11 @@ const Finder = () => {
     }
   });
 
+  // Pagination: slice the filtered results
+  const displayedFilaments = filteredAndSortedFilaments?.slice(0, displayCount) || [];
+  const totalCount = filteredAndSortedFilaments?.length || 0;
+  const hasMore = displayCount < totalCount;
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -1062,7 +1076,9 @@ const Finder = () => {
         {/* Filaments Display */}
         {isLoading ? (
           <FilamentCardSkeletonGrid count={12} />
-        ) : filteredAndSortedFilaments && filteredAndSortedFilaments.length > 0 ? (
+        ) : displayedFilaments.length > 0 ? (
+          <>
+          {
           viewMode === "list" ? (
             /* List View - Compact Table */
             <div className="overflow-x-auto">
@@ -1082,7 +1098,7 @@ const Finder = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAndSortedFilaments.map((filament) => {
+                  {displayedFilaments.map((filament) => {
                     // Calculate true per-kg price accounting for pack quantity
                     const packQty = (filament as any).pack_quantity || 1;
                     const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
@@ -1262,7 +1278,7 @@ const Finder = () => {
           ) : (
             /* Grid View - Redesigned Cards */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {filteredAndSortedFilaments.map((filament) => {
+              {displayedFilaments.map((filament) => {
                 // Calculate color match percentage for hex search
                 const isHexSearchActive = hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/);
                 const searchHex = isHexSearchActive ? (hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`) : null;
@@ -1282,7 +1298,24 @@ const Finder = () => {
                 );
               })}
             </div>
-          )
+          )}
+          
+          {/* Load More Button */}
+          {hasMore && (
+            <div className="flex flex-col items-center gap-3 mt-10 mb-8">
+              <p className="text-sm text-muted-foreground">
+                Showing {displayedFilaments.length} of {totalCount} filaments
+              </p>
+              <Button 
+                onClick={() => setDisplayCount(prev => prev + ITEMS_PER_PAGE)}
+                variant="outline"
+                className="px-8"
+              >
+                Load More
+              </Button>
+            </div>
+          )}
+          </>
         ) : (
           <div className="text-center py-16">
             <p className="text-muted-foreground text-lg">No filaments found</p>
