@@ -1,17 +1,36 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 
+interface PricePoint {
+  date: string;
+  price: number;
+  x?: number;
+  y?: number;
+}
+
 interface PriceSparklineProps {
-  prices: { date: string; price: number }[];
+  prices: PricePoint[];
   currentPrice: number;
   min: number;
   max: number;
   className?: string;
+  minPoint?: PricePoint | null;
+  maxPoint?: PricePoint | null;
+  showMinMax?: boolean;
 }
 
-export function PriceSparkline({ prices, currentPrice, min, max, className }: PriceSparklineProps) {
-  const { pathD, currentX, currentY, gradientId } = useMemo(() => {
-    if (prices.length === 0) return { pathD: "", currentX: 0, currentY: 0, gradientId: "" };
+export function PriceSparkline({ 
+  prices, 
+  currentPrice, 
+  min, 
+  max, 
+  className,
+  minPoint,
+  maxPoint,
+  showMinMax = false
+}: PriceSparklineProps) {
+  const { pathD, currentX, currentY, gradientId, minCoords, maxCoords } = useMemo(() => {
+    if (prices.length === 0) return { pathD: "", currentX: 0, currentY: 0, gradientId: "", minCoords: null, maxCoords: null };
 
     const width = 120;
     const height = 40;
@@ -24,7 +43,7 @@ export function PriceSparkline({ prices, currentPrice, min, max, className }: Pr
     const points = prices.map((p, i) => {
       const x = padding + (i / (prices.length - 1)) * (width - padding * 2);
       const y = height - padding - ((p.price - min) / range) * (height - padding * 2);
-      return { x, y };
+      return { x, y, price: p.price };
     });
 
     // Create smooth curve path
@@ -36,13 +55,31 @@ export function PriceSparkline({ prices, currentPrice, min, max, className }: Pr
     // Current price position (rightmost)
     const currY = height - padding - ((currentPrice - min) / range) * (height - padding * 2);
 
+    // Calculate min/max point coordinates
+    let minC = null;
+    let maxC = null;
+    
+    if (showMinMax && points.length > 0) {
+      const minIdx = points.findIndex(p => p.price === min);
+      const maxIdx = points.findIndex(p => p.price === max);
+      
+      if (minIdx >= 0) {
+        minC = { x: points[minIdx].x, y: points[minIdx].y };
+      }
+      if (maxIdx >= 0) {
+        maxC = { x: points[maxIdx].x, y: points[maxIdx].y };
+      }
+    }
+
     return {
       pathD: path,
       currentX: width - padding,
       currentY: currY,
       gradientId: gradId,
+      minCoords: minC,
+      maxCoords: maxC,
     };
-  }, [prices, currentPrice, min, max]);
+  }, [prices, currentPrice, min, max, showMinMax]);
 
   if (prices.length < 2) {
     return (
@@ -82,6 +119,32 @@ export function PriceSparkline({ prices, currentPrice, min, max, className }: Pr
         strokeLinejoin="round"
         className="sparkline-line"
       />
+      
+      {/* Min point marker */}
+      {showMinMax && minCoords && (
+        <circle
+          cx={minCoords.x}
+          cy={minCoords.y}
+          r="3"
+          fill="hsl(142 76% 46%)"
+          stroke="hsl(var(--background))"
+          strokeWidth="1.5"
+          className="sparkline-point-min"
+        />
+      )}
+      
+      {/* Max point marker */}
+      {showMinMax && maxCoords && (
+        <circle
+          cx={maxCoords.x}
+          cy={maxCoords.y}
+          r="3"
+          fill="hsl(0 84% 60%)"
+          stroke="hsl(var(--background))"
+          strokeWidth="1.5"
+          className="sparkline-point-max"
+        />
+      )}
       
       {/* Current price dot */}
       <circle
