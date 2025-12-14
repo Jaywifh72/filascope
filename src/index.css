@@ -486,23 +486,76 @@ All colors MUST be HSL.
   animation: pulseOnce 0.4s ease-out;
 }
 
-/* Fly-to-tray animation */
+/* Fly-to-tray animation with motion blur */
 @keyframes flyToTray {
   0% {
     transform: translate(0, 0) scale(1) rotate(0deg);
     opacity: 1;
+    filter: blur(0px);
+  }
+  30% {
+    filter: blur(2px);
   }
   70% {
-    opacity: 0.8;
+    opacity: 0.5;
+    filter: blur(1px);
   }
   100% {
     transform: translate(var(--fly-x), var(--fly-y)) scale(0.15) rotate(-5deg);
     opacity: 0;
+    filter: blur(0px);
   }
 }
 
 .fly-to-tray {
-  animation: flyToTray 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: flyToTray 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Card fade while flying */
+.card-flying {
+  opacity: 0.5 !important;
+  transition: opacity 0.3s ease-out;
+}
+
+/* Tray entrance with curtain raise effect */
+@keyframes traySlideUp {
+  0% {
+    transform: translateX(-50%) translateY(100%);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-50%) translateY(-5px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes trayContentFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes trayEntranceGlow {
+  0% { box-shadow: 0 -4px 30px rgba(0,0,0,0.4), 0 0 0 0 hsl(var(--primary) / 0); }
+  30% { box-shadow: 0 -4px 30px rgba(0,0,0,0.4), 0 0 40px 10px hsl(var(--primary) / 0.5); }
+  100% { box-shadow: 0 -4px 30px rgba(0,0,0,0.4), 0 0 0 0 transparent; }
+}
+
+.tray-entrance {
+  animation: traySlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+             trayEntranceGlow 0.8s ease-out 0.1s;
+}
+
+.tray-content-enter {
+  animation: trayContentFadeIn 0.3s ease-out 0.15s both;
 }
 
 /* Tray success glow */
@@ -514,6 +567,73 @@ All colors MUST be HSL.
 
 .tray-success-glow {
   animation: trayGlow 0.6s ease-out;
+}
+
+/* Mini card bounce on landing */
+@keyframes cardBounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.mini-card-enter {
+  animation: cardBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Drag and drop states */
+.mini-card-dragging {
+  transform: scale(1.05) rotate(2deg) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 20px hsl(var(--primary) / 0.3) !important;
+  z-index: 100;
+  cursor: grabbing !important;
+}
+
+.mini-card-drag-over {
+  transform: translateX(8px);
+  transition: transform 0.2s ease-out;
+}
+
+.mini-card-drag-left {
+  transform: translateX(-8px);
+  transition: transform 0.2s ease-out;
+}
+
+/* Count badge animations */
+@keyframes badgePop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+@keyframes badgeFlashGreen {
+  0% { background-color: hsl(var(--primary)); }
+  50% { background-color: hsl(142 76% 36%); }
+  100% { background-color: hsl(var(--primary)); }
+}
+
+@keyframes badgeFlashRed {
+  0% { background-color: hsl(var(--primary)); }
+  50% { background-color: hsl(0 84% 60%); }
+  100% { background-color: hsl(var(--primary)); }
+}
+
+.badge-pop-add {
+  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), badgeFlashGreen 0.3s ease-out;
+}
+
+.badge-pop-remove {
+  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), badgeFlashRed 0.3s ease-out;
 }
 
 /* Scrollbar styles for compare tray */

@@ -1,4 +1,4 @@
-import { X, ImageOff } from "lucide-react";
+import { X, ImageOff, GripVertical } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -23,9 +23,30 @@ function getMaterialBadgeClass(material: string | null): string {
 interface MiniFilamentCardProps {
   item: CompareItem;
   onRemove: (id: string) => void;
+  isNew?: boolean;
+  isDragging?: boolean;
+  isDragOver?: boolean;
+  dragDirection?: 'left' | 'right';
+  onDragStart?: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: () => void;
+  onDrop?: () => void;
+  onDragEnd?: () => void;
 }
 
-export function MiniFilamentCard({ item, onRemove }: MiniFilamentCardProps) {
+export function MiniFilamentCard({ 
+  item, 
+  onRemove,
+  isNew,
+  isDragging,
+  isDragOver,
+  dragDirection,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd
+}: MiniFilamentCardProps) {
   const brandLogo = item.vendor ? getBrandLogo(item.vendor) : null;
   const pricePerKg = item.variant_price && item.net_weight_g 
     ? item.variant_price / (item.net_weight_g / 1000) 
@@ -37,7 +58,28 @@ export function MiniFilamentCard({ item, onRemove }: MiniFilamentCardProps) {
     .trim() || item.product_title;
 
   return (
-    <div className="relative group/mini w-[200px] h-[110px] flex-shrink-0 bg-card/80 rounded-lg border border-border/50 p-3 transition-all duration-200 hover:border-primary/40 hover:shadow-lg hover:-translate-y-0.5">
+    <div 
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      className={cn(
+        "relative group/mini w-[200px] h-[110px] flex-shrink-0 bg-card/80 rounded-lg border border-border/50 p-3",
+        "transition-all duration-200 cursor-grab",
+        "hover:border-primary/40 hover:shadow-lg hover:-translate-y-0.5",
+        isNew && "mini-card-enter",
+        isDragging && "mini-card-dragging opacity-90",
+        isDragOver && dragDirection === 'right' && "mini-card-drag-over",
+        isDragOver && dragDirection === 'left' && "mini-card-drag-left"
+      )}
+    >
+      {/* Drag Handle */}
+      <div className="absolute top-1 left-1 opacity-0 group-hover/mini:opacity-50 transition-opacity">
+        <GripVertical className="w-3 h-3 text-muted-foreground" />
+      </div>
+
       {/* Remove Button */}
       <button
         onClick={(e) => {
@@ -51,7 +93,7 @@ export function MiniFilamentCard({ item, onRemove }: MiniFilamentCardProps) {
         <X className="w-3 h-3" />
       </button>
 
-      <Link to={`/filament/${item.id}`} className="flex flex-col h-full">
+      <Link to={`/filament/${item.id}`} className="flex flex-col h-full" draggable={false}>
         {/* Header: Brand + Material */}
         <div className="flex items-center gap-2 mb-1.5">
           {brandLogo ? (
@@ -59,6 +101,7 @@ export function MiniFilamentCard({ item, onRemove }: MiniFilamentCardProps) {
               src={brandLogo} 
               alt={item.vendor || ''} 
               className="w-5 h-5 object-contain rounded"
+              draggable={false}
             />
           ) : (
             <div className="w-5 h-5 rounded bg-muted flex items-center justify-center">

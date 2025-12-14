@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from "react";
 import { toast } from "sonner";
 
 export interface CompareItem {
@@ -11,6 +11,8 @@ export interface CompareItem {
   net_weight_g: number | null;
   featured_image?: string | null;
 }
+
+type ActionType = 'add' | 'remove' | null;
 
 interface CompareContextType {
   items: CompareItem[];
@@ -28,6 +30,14 @@ interface CompareContextType {
   setTrayElement: (el: HTMLElement | null) => void;
   isGlowing: boolean;
   triggerGlow: () => void;
+  // Action tracking for animations
+  lastAction: ActionType;
+  // Drag and drop reordering
+  reorderItems: (fromIndex: number, toIndex: number) => void;
+  // New item tracking for bounce animation
+  newItemId: string | null;
+  // First item tracking for tray entrance
+  isFirstItem: boolean;
 }
 
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
@@ -52,6 +62,12 @@ export function CompareProvider({ children }: { children: ReactNode }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [trayElement, setTrayElement] = useState<HTMLElement | null>(null);
   const [isGlowing, setIsGlowing] = useState(false);
+  const [lastAction, setLastAction] = useState<ActionType>(null);
+  const [newItemId, setNewItemId] = useState<string | null>(null);
+  const prevCountRef = useRef(items.length);
+
+  // Track if this is the first item being added (for tray entrance animation)
+  const isFirstItem = prevCountRef.current === 0 && items.length === 1;
 
   const triggerGlow = useCallback(() => {
     setIsGlowing(true);
@@ -85,6 +101,13 @@ export function CompareProvider({ children }: { children: ReactNode }) {
       
       // Expand tray when item is added
       setIsExpanded(true);
+      setLastAction('add');
+      setNewItemId(item.id);
+      
+      // Clear new item ID after animation
+      setTimeout(() => setNewItemId(null), 500);
+      // Clear action after animation
+      setTimeout(() => setLastAction(null), 400);
       
       return [...prev, item];
     });
@@ -98,14 +121,32 @@ export function CompareProvider({ children }: { children: ReactNode }) {
           description: item.product_title,
         });
       }
+      setLastAction('remove');
+      setTimeout(() => setLastAction(null), 400);
       return prev.filter(i => i.id !== id);
     });
   }, []);
 
   const clearAll = useCallback(() => {
     setItems([]);
+    setLastAction('remove');
+    setTimeout(() => setLastAction(null), 400);
     toast.info("Cleared all items from comparison");
   }, []);
+
+  const reorderItems = useCallback((fromIndex: number, toIndex: number) => {
+    setItems(prev => {
+      const newItems = [...prev];
+      const [removed] = newItems.splice(fromIndex, 1);
+      newItems.splice(toIndex, 0, removed);
+      return newItems;
+    });
+  }, []);
+
+  // Update prev count ref
+  useEffect(() => {
+    prevCountRef.current = items.length;
+  }, [items.length]);
 
   const isInCompare = useCallback((id: string) => {
     return items.some(i => i.id === id);
@@ -126,6 +167,10 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     setTrayElement,
     isGlowing,
     triggerGlow,
+    lastAction,
+    reorderItems,
+    newItemId,
+    isFirstItem,
   };
 
   return (
