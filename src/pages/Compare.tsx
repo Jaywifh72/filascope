@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { AlertTriangle, RefreshCcw } from "lucide-react";
 import { GitCompare, ArrowLeft, Trophy, Share2, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -47,6 +49,7 @@ const Compare = () => {
   const [filaments, setFilaments] = useState<Filament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [diffMode, setDiffMode] = useState(false);
 
   const fetchFilaments = async () => {
     const ids = searchParams.get("ids")?.split(",") || [];
@@ -352,6 +355,11 @@ const Compare = () => {
     const bestIndices = findBestIndices(values, compareMode);
     const isDifferent = hasDifference(values);
     
+    // In diff mode, hide rows that are identical
+    if (diffMode && !isDifferent) {
+      return null;
+    }
+    
     return (
       <div 
         className={`grid gap-4 py-3 px-2 -mx-2 rounded-md transition-colors ${isDifferent ? "bg-primary/5" : ""}`} 
@@ -417,6 +425,16 @@ const Compare = () => {
                 Add More ({emptySlots} slots)
               </Button>
             )}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
+              <Switch 
+                id="diff-mode" 
+                checked={diffMode} 
+                onCheckedChange={setDiffMode}
+              />
+              <Label htmlFor="diff-mode" className="text-sm cursor-pointer">
+                Differences only
+              </Label>
+            </div>
             <ExportMenu filaments={filaments} />
             <Button variant="outline" onClick={handleShare} className="gap-2">
               <Share2 className="w-4 h-4" />
