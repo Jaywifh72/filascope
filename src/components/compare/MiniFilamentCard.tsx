@@ -1,8 +1,9 @@
-import { X, ImageOff, GripVertical } from "lucide-react";
+import { X, ImageOff, GripVertical, AlertCircle, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { CompareItem } from "@/hooks/useCompare";
+import { Button } from "@/components/ui/button";
 
 const MATERIAL_BADGE_COLORS: Record<string, string> = {
   "PLA": "bg-blue-500/20 text-blue-400",
@@ -23,9 +24,11 @@ function getMaterialBadgeClass(material: string | null): string {
 interface MiniFilamentCardProps {
   item: CompareItem;
   onRemove: (id: string) => void;
+  onSwapUnavailable?: (id: string) => void;
   isNew?: boolean;
   isDragging?: boolean;
   isDragOver?: boolean;
+  isDuplicatePulse?: boolean;
   dragDirection?: 'left' | 'right';
   onDragStart?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
@@ -37,9 +40,11 @@ interface MiniFilamentCardProps {
 export function MiniFilamentCard({ 
   item, 
   onRemove,
+  onSwapUnavailable,
   isNew,
   isDragging,
   isDragOver,
+  isDuplicatePulse,
   dragDirection,
   onDragStart,
   onDragOver,
@@ -57,6 +62,44 @@ export function MiniFilamentCard({
     ?.replace(new RegExp(`^${item.vendor}\\s*`, 'i'), '')
     .trim() || item.product_title;
 
+  // Unavailable state
+  if (item.unavailable) {
+    return (
+      <div 
+        className="relative w-[200px] h-[110px] flex-shrink-0 bg-muted/50 rounded-lg border border-border/30 p-3"
+      >
+        <div className="absolute inset-0 bg-muted/80 rounded-lg flex items-center justify-center flex-col gap-2 z-10">
+          <AlertCircle className="w-5 h-5 text-amber-500" />
+          <span className="text-xs text-muted-foreground text-center">No longer available</span>
+          <div className="flex gap-2">
+            {onSwapUnavailable && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="h-6 px-2 text-xs"
+                onClick={() => onSwapUnavailable(item.id)}
+              >
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Swap
+              </Button>
+            )}
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="h-6 px-2 text-xs"
+              onClick={() => onRemove(item.id)}
+            >
+              Remove
+            </Button>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground line-clamp-2 opacity-50">
+          {cleanTitle}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div 
       draggable
@@ -72,7 +115,8 @@ export function MiniFilamentCard({
         isNew && "mini-card-enter",
         isDragging && "mini-card-dragging opacity-90",
         isDragOver && dragDirection === 'right' && "mini-card-drag-over",
-        isDragOver && dragDirection === 'left' && "mini-card-drag-left"
+        isDragOver && dragDirection === 'left' && "mini-card-drag-left",
+        isDuplicatePulse && "duplicate-pulse"
       )}
     >
       {/* Drag Handle */}

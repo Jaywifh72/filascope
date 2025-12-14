@@ -782,4 +782,38 @@ All colors MUST be HSL.
       background-color: hsl(var(--primary) / 0.05);
     }
   }
+
+  /* Duplicate pulse animation for already-in-compare items */
+  @keyframes duplicatePulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsl(45 100% 50% / 0);
+      border-color: hsl(var(--border) / 0.5);
+    }
+    25%, 75% {
+      box-shadow: 0 0 15px 3px hsl(45 100% 50% / 0.4);
+      border-color: hsl(45 100% 50%);
+    }
+    50% {
+      box-shadow: 0 0 20px 5px hsl(45 100% 50% / 0.5);
+      border-color: hsl(45 100% 50%);
+    }
+  }
+
+  .duplicate-pulse {
+    animation: duplicatePulse 0.6s ease-out;
+  }
+
+  /* Unavailable overlay fade */
+  @keyframes unavailableFade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .unavailable-overlay {
+    animation: unavailableFade 0.2s ease-out;
+  }
 }

@@ -10,6 +10,7 @@ export interface CompareItem {
   variant_price: number | null;
   net_weight_g: number | null;
   featured_image?: string | null;
+  unavailable?: boolean;
 }
 
 interface StoredComparison {
@@ -64,6 +65,13 @@ interface CompareContextType {
   startFresh: () => void;
   // Restore from history
   restoreFromIds: (ids: string[], names: string[]) => void;
+  // Duplicate pulse
+  duplicatePulseId: string | null;
+  // Mark item unavailable
+  markItemUnavailable: (id: string) => void;
+  // Storage warning
+  storageWarning: boolean;
+  clearOldData: () => void;
 }
 
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
@@ -118,6 +126,12 @@ export function CompareProvider({ children }: { children: ReactNode }) {
   // Swap functionality state
   const [pendingSwapItem, setPendingSwapItem] = useState<CompareItem | null>(null);
 
+  // Duplicate pulse state
+  const [duplicatePulseId, setDuplicatePulseId] = useState<string | null>(null);
+
+  // Storage warning state
+  const [storageWarning, setStorageWarning] = useState(false);
+
   // Track if this is the first item being added (for tray entrance animation)
   const isFirstItem = prevCountRef.current === 0 && items.length === 1;
 
@@ -147,20 +161,46 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Save to storage with error handling
+  const saveToStorage = useCallback((data: StoredComparison) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      setStorageWarning(false);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'QuotaExceededError') {
+        setStorageWarning(true);
+        toast.warning("Storage full", {
+          description: "Some data may not persist. Clear old data to fix.",
+        });
+        // Fallback to sessionStorage
+        try {
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch {
+          console.error("Both localStorage and sessionStorage are full");
+        }
+      }
+    }
+  }, []);
+
+  // Clear old data
+  const clearOldData = useCallback(() => {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('filascope_') && k !== STORAGE_KEY)
+      .forEach(k => localStorage.removeItem(k));
+    setStorageWarning(false);
+    toast.success("Old data cleared");
+  }, []);
+
   // Auto-save with timestamp every 5 seconds
   useEffect(() => {
     if (items.length === 0) return;
 
     const saveWithTimestamp = () => {
-      try {
-        const data: StoredComparison = {
-          items,
-          savedAt: Date.now()
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      } catch (e) {
-        console.error("Failed to auto-save compare items:", e);
-      }
+      const data: StoredComparison = {
+        items,
+        savedAt: Date.now()
+      };
+      saveToStorage(data);
     };
 
     // Save immediately on change
@@ -169,7 +209,7 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     // Also save periodically
     const interval = setInterval(saveWithTimestamp, AUTO_SAVE_INTERVAL);
     return () => clearInterval(interval);
-  }, [items]);
+  }, [items, saveToStorage]);
 
   const dismissRestoration = useCallback(() => {
     setIsRestoring(false);
@@ -206,6 +246,12 @@ export function CompareProvider({ children }: { children: ReactNode }) {
         return prev;
       }
       if (prev.some(i => i.id === item.id)) {
+        // Duplicate - show toast and trigger pulse
+        toast.info("Already in compare", {
+          description: item.product_title,
+        });
+        setDuplicatePulseId(item.id);
+        setTimeout(() => setDuplicatePulseId(null), 600);
         return prev;
       }
       
@@ -225,6 +271,13 @@ export function CompareProvider({ children }: { children: ReactNode }) {
       
       return [...prev, item];
     });
+  }, []);
+
+  // Mark an item as unavailable
+  const markItemUnavailable = useCallback((id: string) => {
+    setItems(prev => prev.map(item => 
+      item.id === id ? { ...item, unavailable: true } : item
+    ));
   }, []);
 
   // Silent add for multi-select mode (no toast, no animation)
@@ -381,6 +434,13 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     dismissRestoration,
     startFresh,
     restoreFromIds,
+    // Duplicate pulse
+    duplicatePulseId,
+    // Unavailable
+    markItemUnavailable,
+    // Storage
+    storageWarning,
+    clearOldData,
   };
 
   return (

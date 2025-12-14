@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { GitCompare, ChevronUp, ChevronDown, Trash2, ArrowRight, Loader2 } from "lucide-react";
+import { GitCompare, ChevronUp, ChevronDown, Trash2, ArrowRight, Loader2, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useCompare } from "@/hooks/useCompare";
 import { useComparisonHistory } from "@/hooks/useComparisonHistory";
@@ -13,6 +15,13 @@ import { SwapModal } from "@/components/compare/SwapModal";
 import { HistoryDropdown } from "@/components/compare/HistoryDropdown";
 import { RestorationToast } from "@/components/compare/RestorationToast";
 
+// Popular comparison suggestions
+const POPULAR_COMPARISONS = [
+  { label: "PLA vs PETG", materials: ["PLA", "PETG"] },
+  { label: "ABS vs ASA", materials: ["ABS", "ASA"] },
+  { label: "TPU vs TPE", materials: ["TPU", "TPE"] },
+];
+
 export function CompareTray() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -21,6 +30,7 @@ export function CompareTray() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [showMinItemsHelp, setShowMinItemsHelp] = useState(false);
   
   const { 
     items, 
@@ -45,7 +55,9 @@ export function CompareTray() {
     restorationDate,
     dismissRestoration,
     startFresh,
-    restoreFromIds,
+    duplicatePulseId,
+    storageWarning,
+    clearOldData,
   } = useCompare();
 
   const { saveToHistory } = useComparisonHistory();
@@ -78,23 +90,34 @@ export function CompareTray() {
   const canCompare = count >= 2;
 
   const handleCompareNow = () => {
-    if (canCompare && !isNavigating) {
-      setIsNavigating(true);
-      // Save to history
-      saveToHistory(
-        items.map(i => i.id),
-        items.map(i => i.product_title)
-      );
-      // Save current finder params to sessionStorage for back navigation
-      const currentParams = new URLSearchParams(window.location.search);
-      if (currentParams.toString()) {
-        sessionStorage.setItem('finder_last_params', currentParams.toString());
-      }
-      const ids = items.map(i => i.id).join(',');
-      // Collapse tray when navigating
-      setIsExpanded(false);
-      navigate(`/compare?ids=${ids}`);
+    if (!canCompare) {
+      setShowMinItemsHelp(true);
+      return;
     }
+    if (isNavigating) return;
+    
+    setIsNavigating(true);
+    setShowMinItemsHelp(false);
+    // Save to history
+    saveToHistory(
+      items.map(i => i.id),
+      items.map(i => i.product_title)
+    );
+    // Save current finder params to sessionStorage for back navigation
+    const currentParams = new URLSearchParams(window.location.search);
+    if (currentParams.toString()) {
+      sessionStorage.setItem('finder_last_params', currentParams.toString());
+    }
+    const ids = items.map(i => i.id).join(',');
+    // Collapse tray when navigating
+    setIsExpanded(false);
+    navigate(`/compare?ids=${ids}`);
+  };
+
+  const handleSuggestedComparison = (materials: string[]) => {
+    // Navigate to finder with material filters
+    setShowMinItemsHelp(false);
+    navigate(`/?material=${materials[0]}`);
   };
 
   const handleRestoreFromHistory = (filamentIds: string[]) => {
@@ -143,6 +166,7 @@ export function CompareTray() {
     const isNew = item.id === newItemId;
     const isDragging = draggedIndex === index;
     const isDragOver = dragOverIndex === index;
+    const isDuplicatePulse = item.id === duplicatePulseId;
     const dragDirection = dragOverIndex !== null && draggedIndex !== null && draggedIndex < dragOverIndex ? 'left' : 'right';
     
     slots.push(
@@ -150,9 +174,15 @@ export function CompareTray() {
         key={item.id} 
         item={item} 
         onRemove={removeItem}
+        onSwapUnavailable={(id) => {
+          // Remove and navigate to finder to find replacement
+          removeItem(id);
+          navigate('/');
+        }}
         isNew={isNew}
         isDragging={isDragging}
         isDragOver={isDragOver}
+        isDuplicatePulse={isDuplicatePulse}
         dragDirection={dragDirection}
         onDragStart={() => handleDragStart(index)}
         onDragOver={(e) => handleDragOver(e, index)}
@@ -283,12 +313,12 @@ export function CompareTray() {
                 </button>
               )}
               
-              <Tooltip>
-                <TooltipTrigger asChild>
+              <Popover open={showMinItemsHelp} onOpenChange={setShowMinItemsHelp}>
+                <PopoverTrigger asChild>
                   <span>
                     <Button
                       onClick={handleCompareNow}
-                      disabled={!canCompare || isNavigating}
+                      disabled={isNavigating}
                       className={cn(
                         "gap-2 font-semibold min-w-[140px]",
                         canCompare && !isNavigating && "animate-pulse-once"
@@ -308,13 +338,39 @@ export function CompareTray() {
                       )}
                     </Button>
                   </span>
-                </TooltipTrigger>
-                {!canCompare && !isNavigating && (
-                  <TooltipContent>
-                    <p>Add at least 2 materials to compare</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 p-4" align="end">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-amber-500">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="font-medium text-sm">Add at least 2 materials</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Select filaments from the grid to compare their properties side-by-side.
+                    </p>
+                    <Separator />
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        Popular comparisons:
+                      </p>
+                      <div className="space-y-1.5">
+                        {POPULAR_COMPARISONS.map((comp) => (
+                          <Button 
+                            key={comp.label}
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full justify-start text-xs h-8"
+                            onClick={() => handleSuggestedComparison(comp.materials)}
+                          >
+                            {comp.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
@@ -356,6 +412,17 @@ export function CompareTray() {
           onDismiss={dismissRestoration}
           onStartFresh={startFresh}
         />
+      )}
+
+      {/* Storage Warning */}
+      {storageWarning && (
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-amber-500/20 border border-amber-500/50 rounded-lg px-4 py-2 flex items-center gap-3">
+          <AlertCircle className="w-4 h-4 text-amber-500" />
+          <span className="text-xs text-amber-200">Storage full</span>
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={clearOldData}>
+            Clear old data
+          </Button>
+        </div>
       )}
     </div>
   );
