@@ -854,8 +854,8 @@ export function FilamentCard({
         )}
       </div>
 
-      {/* Quick Actions Menu - Top Right (shows on hover) */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
+      {/* Quick Actions Menu - Top Right Corner (shows on hover) */}
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-0.5">
         <LikeButton filamentId={filament.id} size="sm" />
         
         <DropdownMenu>
@@ -890,7 +890,7 @@ export function FilamentCard({
       </div>
 
       {/* Header: Brand + Material Badge */}
-      <div className="flex items-center justify-between mb-3 pr-8">
+      <div className="flex items-center justify-between mb-3 pr-16">
         <div className="flex items-center gap-2 overflow-hidden">
           {brandLogo && !imageError ? (
             <img 
