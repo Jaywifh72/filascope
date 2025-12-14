@@ -1,5 +1,6 @@
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Scissors, DollarSign, Monitor, FileCode, Wifi, Clock, Check, X, Star, Zap, BarChart3 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Scissors, DollarSign, Monitor, FileCode, Wifi, Clock, Check, X, Star, Zap, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -12,7 +13,7 @@ import { slicerData } from "@/lib/slicerData";
 import Navbar from "@/components/Navbar";
 
 const slicerComparison = [
-  { name: "UltiMaker Cura", price: "Free", focus: "FDM", os: "Win/Mac/Lin", ease: 5, control: 5, support: 4, speed: 3, ui: 5, connectivity: "Cloud/LAN/USB", step: "Paid Plugin", multiMat: 5, standout: "Marketplace Ecosystem" },
+  { name: "UltiMaker Cura", price: "Free", focus: "FDM", os: "Win/Mac/Lin", ease: 5, control: 5, support: 4, speed: 3, ui: 5, connectivity: "Cloud/LAN/USB", step: "Yes", multiMat: 5, standout: "Marketplace Ecosystem" },
   { name: "PrusaSlicer", price: "Free", focus: "Both", os: "Win/Mac/Lin", ease: 5, control: 5, support: 5, speed: 5, ui: 5, connectivity: "LAN/USB", step: "Yes", multiMat: 5, standout: "Organic Supports" },
   { name: "OrcaSlicer", price: "Free", focus: "FDM", os: "Win/Mac/Lin", ease: 4, control: 5, support: 5, speed: 5, ui: 5, connectivity: "LAN/WiFi", step: "Yes", multiMat: 5, standout: "Built-in Calibration" },
   { name: "Bambu Studio", price: "Free", focus: "FDM", os: "Win/Mac/Lin", ease: 5, control: 4, support: 4, speed: 5, ui: 5, connectivity: "Cloud/LAN", step: "Yes", multiMat: 5, standout: "Multi-Color Painting" },
@@ -33,6 +34,12 @@ const slicerComparison = [
   { name: "Kiri:Moto", price: "Free", focus: "All", os: "Browser", ease: 4, control: 3, support: 2, speed: 3, ui: 4, connectivity: "Export/Onshape", step: "No", multiMat: 2, standout: "Browser-Based CAM" },
   { name: "3DPrinterOS", price: "Paid", focus: "FDM", os: "Web", ease: 5, control: 3, support: 3, speed: 3, ui: 4, connectivity: "Cloud", step: "Yes", multiMat: 3, standout: "Fleet Management" },
 ];
+
+type SortKey = "name" | "price" | "focus" | "ease" | "control" | "support" | "speed" | "ui" | "step" | "multiMat";
+type SortDir = "asc" | "desc";
+
+const priceOrder = { "Free": 0, "Freemium": 1, "Paid": 2 };
+const stepOrder = { "Yes": 0, "Pro Only": 1, "Paid Plugin": 2, "No": 3 };
 
 const RatingDots = ({ rating }: { rating: number }) => {
   return (
@@ -57,7 +64,77 @@ const StepBadge = ({ value }: { value: string }) => {
   return <span className="text-xs text-amber-400">{value}</span>;
 };
 
+const SortHeader = ({ 
+  label, 
+  sortKey, 
+  currentSort, 
+  currentDir, 
+  onSort,
+  center = false 
+}: { 
+  label: string; 
+  sortKey: SortKey; 
+  currentSort: SortKey | null; 
+  currentDir: SortDir;
+  onSort: (key: SortKey) => void;
+  center?: boolean;
+}) => {
+  const isActive = currentSort === sortKey;
+  return (
+    <th 
+      className={`py-2 px-3 font-semibold text-foreground cursor-pointer hover:bg-muted/50 transition-colors select-none ${center ? "text-center" : "text-left"}`}
+      onClick={() => onSort(sortKey)}
+    >
+      <div className={`flex items-center gap-1 ${center ? "justify-center" : ""}`}>
+        <span>{label}</span>
+        {isActive ? (
+          currentDir === "asc" ? <ChevronUp className="w-3 h-3 text-emerald-400" /> : <ChevronDown className="w-3 h-3 text-emerald-400" />
+        ) : (
+          <ChevronsUpDown className="w-3 h-3 text-muted-foreground/50" />
+        )}
+      </div>
+    </th>
+  );
+};
+
 const ReferenceSlicers = () => {
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  };
+
+  const sortedSlicers = useMemo(() => {
+    if (!sortKey) return slicerComparison;
+    
+    return [...slicerComparison].sort((a, b) => {
+      let aVal: number | string = a[sortKey];
+      let bVal: number | string = b[sortKey];
+      
+      // Handle special sorting for price and step
+      if (sortKey === "price") {
+        aVal = priceOrder[a.price as keyof typeof priceOrder] ?? 99;
+        bVal = priceOrder[b.price as keyof typeof priceOrder] ?? 99;
+      } else if (sortKey === "step") {
+        aVal = stepOrder[a.step as keyof typeof stepOrder] ?? 99;
+        bVal = stepOrder[b.step as keyof typeof stepOrder] ?? 99;
+      }
+      
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sortDir === "asc" ? aVal - bVal : bVal - aVal;
+      }
+      
+      return sortDir === "asc" 
+        ? String(aVal).localeCompare(String(bVal))
+        : String(bVal).localeCompare(String(aVal));
+    });
+  }, [sortKey, sortDir]);
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -124,23 +201,23 @@ const ReferenceSlicers = () => {
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left py-2 px-3 font-semibold text-foreground sticky left-0 bg-muted/30 z-10">Software</th>
-                  <th className="text-left py-2 px-3 font-semibold text-foreground">Price</th>
-                  <th className="text-left py-2 px-3 font-semibold text-foreground">Focus</th>
+                  <SortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                  <SortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                  <SortHeader label="Focus" sortKey="focus" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                   <th className="text-left py-2 px-3 font-semibold text-foreground">OS</th>
-                  <th className="text-center py-2 px-3 font-semibold text-foreground">Ease</th>
-                  <th className="text-center py-2 px-3 font-semibold text-foreground">Control</th>
-                  <th className="text-center py-2 px-3 font-semibold text-foreground">Supports</th>
-                  <th className="text-center py-2 px-3 font-semibold text-foreground">Speed</th>
-                  <th className="text-center py-2 px-3 font-semibold text-foreground">UI</th>
+                  <SortHeader label="Ease" sortKey="ease" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                  <SortHeader label="Control" sortKey="control" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                  <SortHeader label="Supports" sortKey="support" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                  <SortHeader label="Speed" sortKey="speed" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                  <SortHeader label="UI" sortKey="ui" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
                   <th className="text-left py-2 px-3 font-semibold text-foreground">Connect</th>
-                  <th className="text-center py-2 px-3 font-semibold text-foreground">STEP</th>
-                  <th className="text-center py-2 px-3 font-semibold text-foreground">Multi-Mat</th>
+                  <SortHeader label="STEP" sortKey="step" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                  <SortHeader label="Multi-Mat" sortKey="multiMat" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
                   <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
                 </tr>
               </thead>
               <tbody>
-                {slicerComparison.map((slicer, index) => (
+                {sortedSlicers.map((slicer, index) => (
                   <tr 
                     key={index} 
                     className="border-b border-border/50 hover:bg-muted/20 transition-colors"
