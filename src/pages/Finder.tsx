@@ -24,6 +24,7 @@ import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { isAMSCompatible } from "@/lib/amsCompatibility";
+import { useCompare } from "@/hooks/useCompare";
 import HeroSection from "@/components/HeroSection";
 import { FilamentFilters } from "@/components/FilamentFilters";
 import { PrinterContextBar } from "@/components/filters/PrinterContextBar";
@@ -121,7 +122,7 @@ const Finder = () => {
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [printerSelectorOpen, setPrinterSelectorOpen] = useState(false);
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
-  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
+  const { isInCompare, addItem, removeItem } = useCompare();
   const [sortBy, setSortBy] = useState<string>("truecost-asc");
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
     const saved = localStorage.getItem("finderViewMode");
@@ -527,23 +528,7 @@ const Finder = () => {
     });
   };
 
-  const toggleCompareSelection = (filamentId: string) => {
-    setSelectedForCompare(prev => 
-      prev.includes(filamentId)
-        ? prev.filter(id => id !== filamentId)
-        : [...prev, filamentId]
-    );
-  };
-
-  const handleCompare = () => {
-    if (selectedForCompare.length > 0) {
-      navigate(`/compare?ids=${selectedForCompare.join(',')}`);
-    }
-  };
-
-  const clearCompareSelection = () => {
-    setSelectedForCompare([]);
-  };
+  // Compare functions removed - now using global useCompare context
 
   const getScoreColor = (score: number) => {
     if (score >= 8) return "text-green-400";
@@ -1118,8 +1103,23 @@ const Finder = () => {
                       >
                         <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
                           <Checkbox 
-                            checked={selectedForCompare.includes(filament.id)}
-                            onCheckedChange={() => toggleCompareSelection(filament.id)}
+                            checked={isInCompare(filament.id)}
+                            onCheckedChange={() => {
+                              if (isInCompare(filament.id)) {
+                                removeItem(filament.id);
+                              } else {
+                                addItem({
+                                  id: filament.id,
+                                  product_title: filament.product_title,
+                                  vendor: filament.vendor,
+                                  material: filament.material,
+                                  color_hex: filament.color_hex,
+                                  variant_price: filament.variant_price,
+                                  net_weight_g: filament.net_weight_g,
+                                  featured_image: filament.featured_image,
+                                });
+                              }
+                            }}
                           />
                         </td>
                         <td className="py-3 px-3">
@@ -1277,11 +1277,7 @@ const Finder = () => {
                   <FilamentCard
                     key={filament.id}
                     filament={filament}
-                    isSelected={selectedForCompare.includes(filament.id)}
-                    onToggleCompare={toggleCompareSelection}
                     colorMatchPercent={colorMatchPercent}
-                    compareCount={selectedForCompare.length}
-                    maxCompare={4}
                   />
                 );
               })}
@@ -1294,38 +1290,7 @@ const Finder = () => {
         )}
       </main>
 
-      {/* Floating Compare Bar */}
-      {selectedForCompare.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50">
-          <div className="max-w-[1600px] mx-auto px-4 py-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <GitCompare className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium">
-                {selectedForCompare.length} filament{selectedForCompare.length > 1 ? 's' : ''} selected
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={clearCompareSelection}
-              >
-                <X className="w-4 h-4 mr-1" />
-                Clear
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleCompare}
-                disabled={selectedForCompare.length < 2}
-              >
-                <GitCompare className="w-4 h-4 mr-2" />
-                Compare ({selectedForCompare.length})
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Old Floating Compare Bar - replaced by global CompareTray */}
     </div>
   );
 };
