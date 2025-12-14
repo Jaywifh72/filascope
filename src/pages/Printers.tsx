@@ -273,92 +273,92 @@ export default function Printers() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-[1800px] mx-auto p-6 space-y-8">
-        {/* Printers Section */}
-        <section className="space-y-6">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">Printers</h1>
-            <p className="text-muted-foreground">
+        {/* Hero Section with Search */}
+        <section className="text-center space-y-6 py-8">
+          <div className="space-y-3">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Printers</h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Browse and compare 3D printers from all major brands
             </p>
           </div>
 
-          {/* Printers Content */}
-            {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <Input
-                type="text"
-                placeholder="Search by model or brand..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="md:col-span-2"
-              />
+          {/* Hero Search Bar */}
+          <div className="max-w-2xl mx-auto">
+            <Input
+              type="text"
+              placeholder="Search printers by model, brand, or features..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-14 text-lg px-6 rounded-full border-2 border-muted focus:border-primary shadow-sm"
+            />
+          </div>
+        </section>
 
-              <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select brand" />
+        {/* Filters Section */}
+        <section className="space-y-6">
+          {/* Filter Row */}
+          <div className="flex flex-wrap items-center gap-4">
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select brand" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Brands</SelectItem>
+                {brands?.map(brand => (
+                  <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox 
+                checked={hasEnclosure} 
+                onCheckedChange={(checked) => setHasEnclosure(checked as boolean)} 
+              />
+              <span className="text-sm">Has Enclosure</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox 
+                checked={multiMaterial} 
+                onCheckedChange={(checked) => setMultiMaterial(checked as boolean)} 
+              />
+              <span className="text-sm">Multi-Material Support</span>
+            </label>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Size:</span>
+              <Select value={selectedSize} onValueChange={setSelectedSize}>
+                <SelectTrigger className="w-[140px] h-8">
+                  <SelectValue placeholder="All Sizes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Brands</SelectItem>
-                  {brands?.map(brand => (
-                    <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-                  ))}
+                  <SelectItem value="all">All Sizes</SelectItem>
+                  <SelectItem value="small">Small (&lt;20L)</SelectItem>
+                  <SelectItem value="medium">Medium (20-40L)</SelectItem>
+                  <SelectItem value="large">Large (40-70L)</SelectItem>
+                  <SelectItem value="xlarge">Extra Large (70L+)</SelectItem>
                 </SelectContent>
               </Select>
-
-
             </div>
 
-            {/* Feature Filters */}
-            <div className="flex flex-wrap gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox 
-                  checked={hasEnclosure} 
-                  onCheckedChange={(checked) => setHasEnclosure(checked as boolean)} 
-                />
-                <span className="text-sm">Has Enclosure</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox 
-                  checked={multiMaterial} 
-                  onCheckedChange={(checked) => setMultiMaterial(checked as boolean)} 
-                />
-                <span className="text-sm">Multi-Material Support</span>
-              </label>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Size:</span>
-                <Select value={selectedSize} onValueChange={setSelectedSize}>
-                  <SelectTrigger className="w-[140px] h-8">
-                    <SelectValue placeholder="All Sizes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Sizes</SelectItem>
-                    <SelectItem value="small">Small (&lt;20L)</SelectItem>
-                    <SelectItem value="medium">Medium (20-40L)</SelectItem>
-                    <SelectItem value="large">Large (40-70L)</SelectItem>
-                    <SelectItem value="xlarge">Extra Large (70L+)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Speed:</span>
-                <Select value={selectedSpeed} onValueChange={setSelectedSpeed}>
-                  <SelectTrigger className="w-[120px] h-8">
-                    <SelectValue placeholder="Any Speed" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Any Speed</SelectItem>
-                    <SelectItem value="200">200+ mm/s</SelectItem>
-                    <SelectItem value="300">300+ mm/s</SelectItem>
-                    <SelectItem value="500">500+ mm/s</SelectItem>
-                    <SelectItem value="700">700+ mm/s</SelectItem>
-                    <SelectItem value="1000">1000+ mm/s</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Speed:</span>
+              <Select value={selectedSpeed} onValueChange={setSelectedSpeed}>
+                <SelectTrigger className="w-[120px] h-8">
+                  <SelectValue placeholder="Any Speed" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Speed</SelectItem>
+                  <SelectItem value="200">200+ mm/s</SelectItem>
+                  <SelectItem value="300">300+ mm/s</SelectItem>
+                  <SelectItem value="500">500+ mm/s</SelectItem>
+                  <SelectItem value="700">700+ mm/s</SelectItem>
+                  <SelectItem value="1000">1000+ mm/s</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
 
             {/* Results Count & Sort */}
             <div className="flex items-center justify-between">
