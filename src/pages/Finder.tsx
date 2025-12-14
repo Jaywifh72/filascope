@@ -1366,6 +1366,7 @@ const Finder = () => {
                 <thead>
                   <tr className="border-b border-gray-800 text-left">
                     <th className="py-3 px-2 w-8"></th>
+                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Color</th>
                     <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Brand</th>
                     <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Product</th>
                     <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Material</th>
@@ -1401,6 +1402,22 @@ const Finder = () => {
                             checked={selectedForCompare.includes(filament.id)}
                             onCheckedChange={() => toggleCompareSelection(filament.id)}
                           />
+                        </td>
+                        <td className="py-3 px-3">
+                          {filament.color_hex ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <div 
+                                className="w-6 h-6 rounded border border-border"
+                                style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
+                                title={filament.color_family || 'Color'}
+                              />
+                              <span className="text-[8px] font-mono text-muted-foreground uppercase">
+                                {(filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`).slice(0, 7)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="py-3 px-3">
                           <span className="text-sm font-medium text-foreground">{filament.vendor}</span>
@@ -1539,6 +1556,19 @@ const Finder = () => {
 
                     {/* Filament Info */}
                     <div className="flex items-start gap-4 min-w-0 flex-1">
+                      {/* Color Swatch */}
+                      {filament.color_hex && (
+                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                          <div 
+                            className="w-10 h-10 rounded-md border border-border shadow-sm"
+                            style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
+                            title={filament.color_family || 'Color'}
+                          />
+                          <span className="text-[9px] font-mono text-muted-foreground uppercase">
+                            {filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`}
+                          </span>
+                        </div>
+                      )}
                       {filament.vendor && (() => {
                         const logoPath = getBrandLogo(filament.vendor);
                         return logoPath ? (
