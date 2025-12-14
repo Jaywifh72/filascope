@@ -48,6 +48,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const ReferenceSlicers = lazy(() => import("./pages/ReferenceSlicers"));
 const ReferenceCAD = lazy(() => import("./pages/ReferenceCAD"));
 const ReferenceRepos = lazy(() => import("./pages/ReferenceRepos"));
+const ReferenceInfluencers = lazy(() => import("./pages/ReferenceInfluencers"));
 
 const queryClient = new QueryClient();
 
@@ -100,6 +101,7 @@ const App = () => (
               <Route path="/reference/slicers" element={<ReferenceSlicers />} />
               <Route path="/reference/cad" element={<ReferenceCAD />} />
               <Route path="/reference/repos" element={<ReferenceRepos />} />
+              <Route path="/reference/influencers" element={<ReferenceInfluencers />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
