@@ -115,6 +115,97 @@ export type Database = {
         }
         Relationships: []
       }
+      community_report_upvotes: {
+        Row: {
+          created_at: string | null
+          id: string
+          report_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          report_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          report_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_report_upvotes_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "community_safety_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_safety_reports: {
+        Row: {
+          admin_notes: string | null
+          batch_number: string | null
+          brand: string
+          created_at: string | null
+          description: string
+          filament_id: string | null
+          id: string
+          issue_type: string
+          material: string
+          severity: string | null
+          status: string | null
+          upvote_count: number | null
+          user_id: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          batch_number?: string | null
+          brand: string
+          created_at?: string | null
+          description: string
+          filament_id?: string | null
+          id?: string
+          issue_type: string
+          material: string
+          severity?: string | null
+          status?: string | null
+          upvote_count?: number | null
+          user_id?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          batch_number?: string | null
+          brand?: string
+          created_at?: string | null
+          description?: string
+          filament_id?: string | null
+          id?: string
+          issue_type?: string
+          material?: string
+          severity?: string | null
+          status?: string | null
+          upvote_count?: number | null
+          user_id?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_safety_reports_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deals: {
         Row: {
           affiliate_link: string | null
@@ -1647,51 +1738,123 @@ export type Database = {
         }
         Relationships: []
       }
+      safety_alert_subscriptions: {
+        Row: {
+          alert_levels: string[] | null
+          brand_filters: string[] | null
+          created_at: string | null
+          email: string
+          email_enabled: boolean | null
+          id: string
+          phone: string | null
+          sms_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_levels?: string[] | null
+          brand_filters?: string[] | null
+          created_at?: string | null
+          email: string
+          email_enabled?: boolean | null
+          id?: string
+          phone?: string | null
+          sms_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_levels?: string[] | null
+          brand_filters?: string[] | null
+          created_at?: string | null
+          email?: string
+          email_enabled?: boolean | null
+          id?: string
+          phone?: string | null
+          sms_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       safety_alerts: {
         Row: {
+          affected_batches: Json | null
           affected_timeframe: string | null
           batch_info: string | null
           brand: string
+          community_report_count: number | null
           created_at: string | null
           details_url: string | null
+          disposal_instructions: string | null
           expires_at: string | null
           filament_id: string | null
           headline: string
           id: string
           is_active: boolean | null
+          manufacturer_contact: string | null
+          manufacturer_statement: string | null
           material: string
           priority: string | null
           reason: string
+          recall_url: string | null
+          replacement_process: string | null
+          resolution_notes: string | null
+          resolution_status: string | null
+          resolved_at: string | null
+          verified_at: string | null
         }
         Insert: {
+          affected_batches?: Json | null
           affected_timeframe?: string | null
           batch_info?: string | null
           brand: string
+          community_report_count?: number | null
           created_at?: string | null
           details_url?: string | null
+          disposal_instructions?: string | null
           expires_at?: string | null
           filament_id?: string | null
           headline: string
           id?: string
           is_active?: boolean | null
+          manufacturer_contact?: string | null
+          manufacturer_statement?: string | null
           material: string
           priority?: string | null
           reason: string
+          recall_url?: string | null
+          replacement_process?: string | null
+          resolution_notes?: string | null
+          resolution_status?: string | null
+          resolved_at?: string | null
+          verified_at?: string | null
         }
         Update: {
+          affected_batches?: Json | null
           affected_timeframe?: string | null
           batch_info?: string | null
           brand?: string
+          community_report_count?: number | null
           created_at?: string | null
           details_url?: string | null
+          disposal_instructions?: string | null
           expires_at?: string | null
           filament_id?: string | null
           headline?: string
           id?: string
           is_active?: boolean | null
+          manufacturer_contact?: string | null
+          manufacturer_statement?: string | null
           material?: string
           priority?: string | null
           reason?: string
+          recall_url?: string | null
+          replacement_process?: string | null
+          resolution_notes?: string | null
+          resolution_status?: string | null
+          resolved_at?: string | null
+          verified_at?: string | null
         }
         Relationships: [
           {

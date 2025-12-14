@@ -16,6 +16,15 @@ export interface SafetyAlert {
   created_at: string;
   expires_at: string | null;
   filament_id: string | null;
+  // Enhanced fields
+  affected_batches: string[] | null;
+  manufacturer_statement: string | null;
+  manufacturer_contact: string | null;
+  recall_url: string | null;
+  replacement_process: string | null;
+  disposal_instructions: string | null;
+  resolution_status: string | null;
+  community_report_count: number | null;
 }
 
 const DISMISSED_ALERTS_KEY = "filascope_dismissed_alerts";
@@ -65,14 +74,28 @@ export function useSafetyAlerts() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("safety_alerts")
-        .select("*")
+        .select(`
+          id, brand, material, batch_info, headline, reason, 
+          affected_timeframe, priority, details_url, is_active, 
+          created_at, expires_at, filament_id,
+          affected_batches, manufacturer_statement, manufacturer_contact,
+          recall_url, replacement_process, disposal_instructions,
+          resolution_status, community_report_count
+        `)
         .eq("is_active", true)
         .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
         .order("priority", { ascending: true }) // critical first
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as SafetyAlert[];
+      
+      // Parse affected_batches if it's a string
+      return (data || []).map(item => ({
+        ...item,
+        affected_batches: typeof item.affected_batches === 'string' 
+          ? JSON.parse(item.affected_batches) 
+          : item.affected_batches
+      })) as SafetyAlert[];
     },
     staleTime: 1000 * 60 * 5, // 5 minute cache
   });
