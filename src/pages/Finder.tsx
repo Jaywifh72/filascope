@@ -22,7 +22,7 @@ import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { isAMSCompatible } from "@/lib/amsCompatibility";
-import BentoGrid from "@/components/BentoGrid";
+import HeroSection from "@/components/HeroSection";
 import { FilamentFilters } from "@/components/FilamentFilters";
 
 // Color family definitions with representative HEX colors
@@ -847,8 +847,13 @@ const Finder = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Bento Grid Hero Section */}
-      <BentoGrid />
+      {/* Hero Section */}
+      <HeroSection 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        filamentCount={filaments?.length || 1881}
+        brandCount={brands?.length || 28}
+      />
       
       {/* Full-width Printer Selector at Top */}
       <div className="p-4 lg:p-6 border-b border-border bg-card/30">
