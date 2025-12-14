@@ -1416,11 +1416,11 @@ const Finder = () => {
                     {/* Actions */}
                     <div className="flex items-center gap-3 self-start lg:self-center">
                       <LikeButton filamentId={filament.id} size="sm" />
-                      <div className="flex flex-col gap-1.5">
+                      <div className="flex flex-col gap-1">
                         <Button
                           size="sm"
                           variant="default"
-                          className="w-full justify-center"
+                          className="h-6 w-full justify-center"
                           asChild
                         >
                           <Link to={`/filament/${filament.id}`}>
@@ -1431,7 +1431,7 @@ const Finder = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="w-full justify-center border-primary/30 text-primary hover:bg-primary/10"
+                            className="h-6 w-full justify-center border-primary/30 text-primary hover:bg-primary/10"
                             asChild
                           >
                             <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
@@ -1444,7 +1444,7 @@ const Finder = () => {
                           <Button
                             size="sm"
                             variant="amazon"
-                            className="w-full justify-center"
+                            className="h-6 w-full justify-center"
                             asChild
                           >
                             <a href={getAffiliateUrl(filament.amazon_link_us, "Amazon") || filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
