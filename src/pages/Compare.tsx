@@ -6,8 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { GitCompare, ArrowLeft, ExternalLink, Trophy } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { GitCompare, ArrowLeft, Trophy, Share2, Plus, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { getBrandLogo } from "@/lib/brandLogos";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   RadarChart,
@@ -23,7 +33,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Cell,
 } from "recharts";
 
 type Filament = Tables<"filaments">;
@@ -61,10 +70,43 @@ const Compare = () => {
     fetchFilaments();
   }, [searchParams]);
 
+  const handleBack = () => {
+    const lastParams = sessionStorage.getItem('finder_last_params');
+    navigate(lastParams ? `/?${lastParams}` : '/');
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied!", {
+        description: "Share this comparison with others"
+      });
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
+  const handleAddMore = () => {
+    const lastParams = sessionStorage.getItem('finder_last_params');
+    navigate(lastParams ? `/?${lastParams}` : '/');
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen p-8 flex items-center justify-center">
-        <p className="text-muted-foreground">Loading filaments...</p>
+      <div className="min-h-screen p-8">
+        <div className="max-w-7xl mx-auto">
+          <Skeleton className="h-6 w-48 mb-6" />
+          <Skeleton className="h-10 w-64 mb-2" />
+          <Skeleton className="h-5 w-96 mb-8" />
+          <div className="grid gap-4 grid-cols-4 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-32 rounded-lg" />
+            ))}
+          </div>
+          <Skeleton className="h-64 rounded-lg mb-6" />
+          <Skeleton className="h-64 rounded-lg" />
+        </div>
       </div>
     );
   }
@@ -73,9 +115,9 @@ const Compare = () => {
     return (
       <div className="min-h-screen p-8">
         <div className="max-w-7xl mx-auto">
-          <Button variant="ghost" onClick={() => navigate("/finder")} className="mb-6">
+          <Button variant="ghost" onClick={handleBack} className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Finder
+            Back to Materials
           </Button>
           
           <Card className="bg-card border-border">
@@ -88,7 +130,10 @@ const Compare = () => {
             <CardContent>
               <div className="text-center py-12 text-muted-foreground">
                 <p>No filaments selected for comparison</p>
-                <p className="text-sm mt-2">Select filaments from the Finder page to compare their properties</p>
+                <p className="text-sm mt-2">Select filaments from the Materials page to compare their properties</p>
+                <Button onClick={handleBack} className="mt-4">
+                  Browse Materials
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -236,6 +281,14 @@ const Compare = () => {
     "hsl(199, 89%, 48%)", // blue
   ];
 
+  // Check if values are different across filaments
+  const hasDifference = (values: (string | number | null | boolean)[]): boolean => {
+    const validValues = values.filter(v => v !== null && v !== undefined);
+    if (validValues.length < 2) return false;
+    const uniqueValues = new Set(validValues.map(v => String(v)));
+    return uniqueValues.size > 1;
+  };
+
   const ComparisonRow = ({ 
     label, 
     values, 
@@ -248,9 +301,13 @@ const Compare = () => {
     compareMode?: CompareMode;
   }) => {
     const bestIndices = findBestIndices(values, compareMode);
+    const isDifferent = hasDifference(values);
     
     return (
-      <div className="grid gap-4 py-3" style={{ gridTemplateColumns: `200px repeat(${filaments.length}, 1fr)` }}>
+      <div 
+        className={`grid gap-4 py-3 px-2 -mx-2 rounded-md transition-colors ${isDifferent ? "bg-primary/5" : ""}`} 
+        style={{ gridTemplateColumns: `200px repeat(${filaments.length}, 1fr)` }}
+      >
         <div className="font-medium text-sm text-muted-foreground">{label}</div>
         {values.map((value, idx) => {
           const isBest = bestIndices.includes(idx);
@@ -273,37 +330,75 @@ const Compare = () => {
     );
   };
 
-  return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate("/finder")} className="mb-6">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Finder
-        </Button>
+  const maxSlots = 4;
+  const emptySlots = maxSlots - filaments.length;
 
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Compare Filaments</h1>
-          <p className="text-muted-foreground">Side-by-side comparison of {filaments.length} filaments</p>
+  return (
+    <div className="min-h-screen p-8 compare-page-enter">
+      <div className="max-w-7xl mx-auto">
+        {/* Breadcrumb */}
+        <Breadcrumb className="mb-4">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink onClick={handleBack} className="cursor-pointer hover:text-primary">
+                Materials
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Comparison</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        {/* Header with actions */}
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <Button variant="ghost" onClick={handleBack} className="mb-4 -ml-4">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Materials
+            </Button>
+            <h1 className="text-4xl font-bold mb-2">Compare Filaments</h1>
+            <p className="text-muted-foreground">Side-by-side comparison of {filaments.length} filaments</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {emptySlots > 0 && (
+              <Button variant="outline" onClick={handleAddMore} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add More ({emptySlots} slots)
+              </Button>
+            )}
+            <Button variant="outline" onClick={handleShare} className="gap-2">
+              <Share2 className="w-4 h-4" />
+              Share
+            </Button>
+          </div>
         </div>
 
         {/* Sticky Filament Headers */}
-        <div className="sticky top-0 z-20 bg-background pb-4 -mx-8 px-8 pt-2">
-          <div className="grid gap-4" style={{ gridTemplateColumns: `200px repeat(${filaments.length}, 1fr)` }}>
+        <div className="sticky top-0 z-20 bg-background pb-4 -mx-8 px-8 pt-2 border-b border-border/50">
+          <div className="grid gap-4" style={{ gridTemplateColumns: `200px repeat(${maxSlots}, 1fr)` }}>
             <div></div>
             {filaments.map((filament) => (
               <Card key={filament.id} className="bg-card border-border shadow-md">
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
+                      {filament.color_hex && (
+                        <div 
+                          className="w-8 h-8 rounded-full border border-border shrink-0"
+                          style={{ backgroundColor: filament.color_hex }}
+                        />
+                      )}
                       {filament.vendor && getBrandLogo(filament.vendor) && (
                         <img
                           src={getBrandLogo(filament.vendor)!}
                           alt={filament.vendor}
-                          className="h-8 object-contain shrink-0"
+                          className="h-6 object-contain shrink-0"
                         />
                       )}
-                      <h3 className="font-semibold text-sm line-clamp-2 flex-1">{filament.product_title}</h3>
                     </div>
+                    <h3 className="font-semibold text-sm line-clamp-2">{filament.product_title}</h3>
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex gap-1 flex-wrap">
                         {filament.material && <Badge variant="outline" className="text-xs">{filament.material}</Badge>}
@@ -320,6 +415,19 @@ const Compare = () => {
                       )}
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            ))}
+            {/* Empty slots */}
+            {Array.from({ length: emptySlots }).map((_, idx) => (
+              <Card 
+                key={`empty-${idx}`} 
+                className="bg-card/50 border-dashed border-border cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={handleAddMore}
+              >
+                <CardContent className="p-4 flex flex-col items-center justify-center h-full min-h-[120px] text-muted-foreground">
+                  <Plus className="w-6 h-6 mb-2" />
+                  <span className="text-sm">Add Material</span>
                 </CardContent>
               </Card>
             ))}

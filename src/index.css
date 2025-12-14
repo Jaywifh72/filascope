@@ -752,4 +752,34 @@ All colors MUST be HSL.
   .suggestion-chip:nth-child(1) { animation-delay: 0ms; }
   .suggestion-chip:nth-child(2) { animation-delay: 100ms; }
   .suggestion-chip:nth-child(3) { animation-delay: 200ms; }
+
+  /* Compare page entrance animation */
+  .compare-page-enter {
+    animation: comparePageFadeIn 0.4s ease-out;
+  }
+
+  @keyframes comparePageFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Difference highlight pulse */
+  .difference-highlight {
+    animation: diffPulse 0.5s ease-out;
+  }
+
+  @keyframes diffPulse {
+    0% {
+      background-color: hsl(var(--primary) / 0.2);
+    }
+    100% {
+      background-color: hsl(var(--primary) / 0.05);
+    }
+  }
 }

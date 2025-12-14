@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { GitCompare, ChevronUp, ChevronDown, Trash2, ArrowRight } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { GitCompare, ChevronUp, ChevronDown, Trash2, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -12,10 +12,12 @@ import { SwapModal } from "@/components/compare/SwapModal";
 
 export function CompareTray() {
   const navigate = useNavigate();
+  const location = useLocation();
   const trayRef = useRef<HTMLDivElement>(null);
   const [hasEntered, setHasEntered] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
   
   const { 
     items, 
@@ -53,6 +55,11 @@ export function CompareTray() {
     }
   }, [count, hasEntered]);
 
+  // Reset navigation state when location changes
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [location]);
+
   // Don't render if no items
   if (count === 0) {
     return null;
@@ -61,8 +68,16 @@ export function CompareTray() {
   const canCompare = count >= 2;
 
   const handleCompareNow = () => {
-    if (canCompare) {
+    if (canCompare && !isNavigating) {
+      setIsNavigating(true);
+      // Save current finder params to sessionStorage for back navigation
+      const currentParams = new URLSearchParams(window.location.search);
+      if (currentParams.toString()) {
+        sessionStorage.setItem('finder_last_params', currentParams.toString());
+      }
       const ids = items.map(i => i.id).join(',');
+      // Collapse tray when navigating
+      setIsExpanded(false);
       navigate(`/compare?ids=${ids}`);
     }
   };
@@ -251,19 +266,28 @@ export function CompareTray() {
                   <span>
                     <Button
                       onClick={handleCompareNow}
-                      disabled={!canCompare}
+                      disabled={!canCompare || isNavigating}
                       className={cn(
-                        "gap-2 font-semibold",
-                        canCompare && "animate-pulse-once"
+                        "gap-2 font-semibold min-w-[140px]",
+                        canCompare && !isNavigating && "animate-pulse-once"
                       )}
                       size="sm"
                     >
-                      Compare Now
-                      <ArrowRight className="w-4 h-4" />
+                      {isNavigating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          Compare Now
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
                     </Button>
                   </span>
                 </TooltipTrigger>
-                {!canCompare && (
+                {!canCompare && !isNavigating && (
                   <TooltipContent>
                     <p>Add at least 2 materials to compare</p>
                   </TooltipContent>
