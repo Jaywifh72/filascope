@@ -1611,6 +1611,98 @@ export type Database = {
           },
         ]
       }
+      quick_tips: {
+        Row: {
+          article_url: string | null
+          created_at: string | null
+          detail_text: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          material_filter: string | null
+          related_material: string | null
+          tip_text: string
+        }
+        Insert: {
+          article_url?: string | null
+          created_at?: string | null
+          detail_text?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          material_filter?: string | null
+          related_material?: string | null
+          tip_text: string
+        }
+        Update: {
+          article_url?: string | null
+          created_at?: string | null
+          detail_text?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          material_filter?: string | null
+          related_material?: string | null
+          tip_text?: string
+        }
+        Relationships: []
+      }
+      safety_alerts: {
+        Row: {
+          affected_timeframe: string | null
+          batch_info: string | null
+          brand: string
+          created_at: string | null
+          details_url: string | null
+          expires_at: string | null
+          filament_id: string | null
+          headline: string
+          id: string
+          is_active: boolean | null
+          material: string
+          priority: string | null
+          reason: string
+        }
+        Insert: {
+          affected_timeframe?: string | null
+          batch_info?: string | null
+          brand: string
+          created_at?: string | null
+          details_url?: string | null
+          expires_at?: string | null
+          filament_id?: string | null
+          headline: string
+          id?: string
+          is_active?: boolean | null
+          material: string
+          priority?: string | null
+          reason: string
+        }
+        Update: {
+          affected_timeframe?: string | null
+          batch_info?: string | null
+          brand?: string
+          created_at?: string | null
+          details_url?: string | null
+          expires_at?: string | null
+          filament_id?: string | null
+          headline?: string
+          id?: string
+          is_active?: boolean | null
+          material?: string
+          priority?: string | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_task_runs: {
         Row: {
           completed_at: string | null
@@ -1644,6 +1736,51 @@ export type Database = {
           started_at?: string
           status?: string
           task_name?: string
+        }
+        Relationships: []
+      }
+      trending_materials: {
+        Row: {
+          article_url: string | null
+          context: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          material_filter: string | null
+          position: number | null
+          search_increase_percent: number | null
+          title: string
+          updated_at: string | null
+          week_of: string | null
+        }
+        Insert: {
+          article_url?: string | null
+          context?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          material_filter?: string | null
+          position?: number | null
+          search_increase_percent?: number | null
+          title: string
+          updated_at?: string | null
+          week_of?: string | null
+        }
+        Update: {
+          article_url?: string | null
+          context?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          material_filter?: string | null
+          position?: number | null
+          search_increase_percent?: number | null
+          title?: string
+          updated_at?: string | null
+          week_of?: string | null
         }
         Relationships: []
       }
