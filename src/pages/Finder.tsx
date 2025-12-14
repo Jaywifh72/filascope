@@ -1206,20 +1206,42 @@ const Finder = () => {
                           </span>
                         </td>
                         <td className="py-3 px-3" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-2">
                             <LikeButton filamentId={filament.id} size="sm" />
-                            {filament.product_url && (
+                            <div className="flex flex-col gap-1">
                               <Button
                                 size="sm"
-                                variant="ghost"
-                                className="h-7 w-7 p-0"
+                                variant="default"
+                                className="h-6 text-[10px] w-full justify-center"
                                 asChild
                               >
-                                <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="w-3 h-3" />
-                                </a>
+                                <Link to={`/filament/${filament.id}`}>View</Link>
                               </Button>
-                            )}
+                              {filament.product_url && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-6 text-[10px] w-full justify-center border-primary/30 text-primary hover:bg-primary/10"
+                                  asChild
+                                >
+                                  <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
+                                    Store
+                                  </a>
+                                </Button>
+                              )}
+                              {filament.amazon_link_us && (
+                                <Button
+                                  size="sm"
+                                  variant="amazon"
+                                  className="h-6 text-[10px] w-full justify-center"
+                                  asChild
+                                >
+                                  <a href={getAffiliateUrl(filament.amazon_link_us, "Amazon") || filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
+                                    Amazon
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>
