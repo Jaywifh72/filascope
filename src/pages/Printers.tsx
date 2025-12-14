@@ -5,13 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { GitCompare, X, RefreshCw, BookOpen, Printer as PrinterIcon, ImageIcon, Store, ShoppingCart, Tag, Search } from "lucide-react";
+import { GitCompare, X, RefreshCw, Printer as PrinterIcon, ImageIcon, Search, Heart, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -412,7 +410,7 @@ export default function Printers() {
                 <p className="text-muted-foreground">No printers found matching your criteria</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredPrinters.map((printer) => {
                   // Extract product image from scraped_data
                   const scrapedData = printer.scraped_data as Record<string, unknown> | null;
@@ -421,182 +419,198 @@ export default function Printers() {
                   const productImage = productImages?.[0];
 
                   return (
-              <div key={printer.id} className="relative">
-                <Link to={`/printers/${printer.id}`}>
-                  <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                    <div className="flex">
-                      {/* Product Image and Wiki Link - Left Side */}
-                      <div className="flex flex-col shrink-0">
-                        <div className="relative w-28 h-28 bg-muted/30">
-                          {productImage ? (
-                            <img 
-                              src={productImage} 
-                              alt={printer.model_name}
-                              className="w-full h-full object-contain p-2"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
+                    <article 
+                      key={printer.id} 
+                      className="group relative"
+                      role="article"
+                      aria-label={`${printer.brand?.brand} ${printer.model_name}`}
+                    >
+                      <Link to={`/printers/${printer.id}`}>
+                        <div 
+                          className="
+                            relative
+                            bg-[hsl(0_0%_10%)] 
+                            border border-white/10 
+                            rounded-xl 
+                            p-5 
+                            transition-all duration-300 ease-out
+                            hover:border-cyan-400 
+                            hover:-translate-y-1 
+                            hover:shadow-[0_8px_30px_rgba(0,212,212,0.15)]
+                            cursor-pointer
+                            h-full
+                            flex flex-col
+                          "
+                        >
+                          {/* Action Icons - Top Right */}
+                          <div className="absolute top-3 right-3 flex gap-1.5 z-10">
+                            <button 
+                              className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
+                              aria-label="Add to favorites"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                // Future: implement favorite toggle
                               }}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <PrinterIcon className="h-10 w-10 text-muted-foreground/30" />
+                            >
+                              <Heart className="h-4 w-4 text-white/70 hover:text-red-400 transition-colors" />
+                            </button>
+                            
+                            <div 
+                              className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                            >
+                              <Checkbox
+                                className="h-4 w-4 border-white/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
+                                checked={selectedForCompare.includes(printer.printer_id)}
+                                onCheckedChange={() => toggleCompareSelection(printer.printer_id)}
+                                aria-label="Add to comparison"
+                              />
                             </div>
-                          )}
-                        </div>
-                        {/* Wiki Link - Below Image */}
-                        {BRAND_WIKI_URLS[printer.brand?.brand || ""] && (
-                          <a
-                            href={BRAND_WIKI_URLS[printer.brand?.brand || ""]}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center justify-center gap-1 py-1.5 text-xs text-muted-foreground hover:text-primary bg-muted/20 hover:bg-muted/40 transition-colors"
-                          >
-                            <BookOpen className="h-3 w-3" />
-                            <span>Wiki</span>
-                          </a>
-                        )}
-                      </div>
+                            
+                            {printer.official_product_url && (
+                              <a
+                                href={printer.official_product_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label="View on manufacturer website"
+                              >
+                                <ExternalLink className="h-4 w-4 text-white/70 hover:text-cyan-400 transition-colors" />
+                              </a>
+                            )}
+                            
+                            {isAdmin && (
+                              <>
+                                <button 
+                                  className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
+                                  onClick={(e) => openImageEditDialog(printer, e)}
+                                  aria-label="Edit printer image"
+                                >
+                                  <ImageIcon className="h-4 w-4 text-white/70" />
+                                </button>
+                                {printer.official_product_url && (
+                                  <button 
+                                    className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      rescrapeMutation.mutate(printer.id);
+                                    }}
+                                    disabled={rescrapeMutation.isPending}
+                                    aria-label="Re-scrape printer data"
+                                  >
+                                    <RefreshCw className={`h-4 w-4 text-white/70 ${rescrapeMutation.isPending ? 'animate-spin' : ''}`} />
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
 
-                      {/* Card Content - Right Side */}
-                      <div className="flex-1 p-3 min-w-0 flex flex-col relative">
-                        {/* Header with Name and Price */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <h3 className="text-sm font-bold line-clamp-1">
-                              {printer.model_name}
-                            </h3>
-                            {printer.variant_or_bundle_name && (
-                              <span className="text-xs text-muted-foreground line-clamp-1">
-                                {printer.variant_or_bundle_name}
+                          {/* Printer Image */}
+                          <div className="relative aspect-square mb-4">
+                            {productImage ? (
+                              <img 
+                                src={productImage} 
+                                alt={`${printer.brand?.brand} ${printer.model_name}`}
+                                className="w-full h-full object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-full h-full flex items-center justify-center ${productImage ? 'hidden' : ''}`}>
+                              <PrinterIcon className="h-16 w-16 text-white/20" />
+                            </div>
+                          </div>
+
+                          {/* Printer Name - Most Prominent */}
+                          <h3 className="text-2xl font-bold text-white mb-1 line-clamp-2">
+                            {printer.brand?.brand} {printer.model_name}
+                          </h3>
+                          {printer.variant_or_bundle_name && (
+                            <p className="text-sm text-gray-400 mb-2">{printer.variant_or_bundle_name}</p>
+                          )}
+
+                          {/* Build Volume + Speed - Single Line */}
+                          <p className="text-sm text-[#9CA3AF] mb-3">
+                            {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
+                              <span>{printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm</span>
+                            )}
+                            {printer.build_volume_x_mm && printer.max_print_speed_mms && <span> • </span>}
+                            {printer.max_print_speed_mms && <span>{printer.max_print_speed_mms}mm/s</span>}
+                          </p>
+
+                          {/* Price Section */}
+                          <div className="mb-4">
+                            {printer.current_price_usd_store ? (
+                              <>
+                                <span className="text-xl font-bold text-[#F59E0B]">
+                                  {formatPrice(printer.current_price_usd_store)}
+                                </span>
+                                {printer.msrp_usd && printer.current_price_usd_store < printer.msrp_usd && (
+                                  <div className="text-sm text-gray-500">
+                                    <span className="line-through">{formatPrice(printer.msrp_usd)}</span>
+                                    <span className="ml-2 text-green-500">
+                                      ({Math.round((1 - printer.current_price_usd_store / printer.msrp_usd) * 100)}% off)
+                                    </span>
+                                  </div>
+                                )}
+                              </>
+                            ) : printer.current_price_usd_amazon ? (
+                              <span className="text-xl font-bold text-[#F59E0B]">
+                                {formatPrice(printer.current_price_usd_amazon)}
+                              </span>
+                            ) : printer.msrp_usd ? (
+                              <span className="text-xl font-bold text-[#F59E0B]">
+                                {formatPrice(printer.msrp_usd)}
+                              </span>
+                            ) : (
+                              <span className="text-lg text-gray-500">Price TBD</span>
+                            )}
+                          </div>
+
+                          {/* Feature Tags - Hidden by Default, Show on Hover */}
+                          <div className="flex flex-wrap gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 mb-3 mt-auto">
+                            {printer.has_enclosure && (
+                              <span className="text-xs text-cyan-400 bg-cyan-400/10 border border-cyan-400/30 px-2 py-1 rounded-md">
+                                Enclosure
+                              </span>
+                            )}
+                            {printer.multi_material_supported && (
+                              <span className="text-xs text-cyan-400 bg-cyan-400/10 border border-cyan-400/30 px-2 py-1 rounded-md">
+                                Multi-Mat
+                              </span>
+                            )}
+                            {printer.auto_bed_leveling && (
+                              <span className="text-xs text-cyan-400 bg-cyan-400/10 border border-cyan-400/30 px-2 py-1 rounded-md">
+                                ABL
                               </span>
                             )}
                           </div>
-                          {/* Price */}
-                          <div className="shrink-0 text-right mr-8">
-                            {printer.current_price_usd_store ? (
-                              <div className="flex flex-col items-end">
-                                {printer.msrp_usd && printer.current_price_usd_store < printer.msrp_usd ? (
-                                  <>
-                                    <div className="text-xs text-muted-foreground line-through flex items-center gap-1">
-                                      <Tag className="h-3 w-3" />
-                                      <span>{formatPrice(printer.msrp_usd)}</span>
-                                    </div>
-                                    <div className="text-sm font-bold text-yellow-500 flex items-center gap-1">
-                                      <Store className="h-3 w-3" />
-                                      <span>{formatPrice(printer.current_price_usd_store)}</span>
-                                      <span className="text-xs font-semibold">
-                                        ({Math.round((1 - printer.current_price_usd_store / printer.msrp_usd) * 100)}% off)
-                                      </span>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <div className="text-sm font-bold text-primary flex items-center gap-1">
-                                    <Store className="h-3 w-3" />
-                                    <span>{formatPrice(printer.current_price_usd_store)}</span>
-                                  </div>
-                                )}
-                              </div>
-                            ) : printer.current_price_usd_amazon ? (
-                              <div className="text-sm font-bold text-primary flex items-center justify-end gap-1">
-                                <ShoppingCart className="h-3 w-3" />
-                                <span>{formatPrice(printer.current_price_usd_amazon)}</span>
-                              </div>
-                            ) : printer.msrp_usd ? (
-                              <div className="text-sm font-bold text-primary flex items-center justify-end gap-1">
-                                <Tag className="h-3 w-3" />
-                                <span>{formatPrice(printer.msrp_usd)}</span>
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
 
-                        {/* Key Specs - Compact */}
-                        <div className="text-xs text-muted-foreground space-y-0.5 mt-1.5">
-                          {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
-                            <div>
-                              {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
-                            </div>
-                          )}
-                          {printer.max_print_speed_mms && (
-                            <div>{printer.max_print_speed_mms} mm/s</div>
-                          )}
-                        </div>
-
-                        {/* Features and Brand Logo Row */}
-                        <div className="flex items-end justify-between gap-2 mt-auto pt-1.5">
-                          <div className="flex flex-wrap gap-1">
-                            {printer.has_enclosure && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Enclosure</Badge>
-                            )}
-                            {printer.multi_material_supported && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Multi-Mat</Badge>
-                            )}
-                            {printer.auto_bed_leveling && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">ABL</Badge>
-                            )}
-                          </div>
-                          {/* Brand Logo - Bottom Right */}
+                          {/* Brand Logo - Bottom Right, Subtle */}
                           {getBrandLogo(printer.brand?.brand || null) && (
-                            <div className="shrink-0 px-2 py-1.5 bg-muted/50 rounded border border-border/30">
+                            <div className="absolute bottom-5 right-5">
                               <img 
                                 src={getBrandLogo(printer.brand?.brand || null)!} 
                                 alt={`${printer.brand?.brand} logo`}
-                                className="h-10 w-auto object-contain max-w-[120px]"
+                                className="h-auto max-w-[40px] object-contain opacity-50"
                               />
                             </div>
                           )}
                         </div>
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-
-                {/* Interactive Controls - Top Right */}
-                <div className="absolute top-1 right-1 flex gap-0.5 z-10">
-                  {isAdmin && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="h-5 w-5 bg-background/80 backdrop-blur-sm hover:bg-background"
-                      onClick={(e) => openImageEditDialog(printer, e)}
-                      title="Edit printer image"
-                    >
-                      <ImageIcon className="h-3 w-3" />
-                    </Button>
-                  )}
-                  {isAdmin && printer.official_product_url && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="h-5 w-5 bg-background/80 backdrop-blur-sm hover:bg-background"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        rescrapeMutation.mutate(printer.id);
-                      }}
-                      disabled={rescrapeMutation.isPending}
-                      title="Re-scrape printer data"
-                    >
-                      <RefreshCw className={`h-3 w-3 ${rescrapeMutation.isPending ? 'animate-spin' : ''}`} />
-                    </Button>
-                  )}
-                  <div 
-                    className="bg-background/80 backdrop-blur-sm rounded p-1 hover:bg-background transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Checkbox
-                      className="h-3.5 w-3.5"
-                      checked={selectedForCompare.includes(printer.printer_id)}
-                      onCheckedChange={() => toggleCompareSelection(printer.printer_id)}
-                    />
-                  </div>
-                </div>
+                      </Link>
+                    </article>
+                  );
+                })}
               </div>
-              );
-            })}
-          </div>
-        )}
+            )}
         </section>
 
         {/* Image Edit Dialog */}
