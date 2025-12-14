@@ -12,6 +12,11 @@ export interface CompareItem {
   featured_image?: string | null;
 }
 
+interface StoredComparison {
+  items: CompareItem[];
+  savedAt: number; // timestamp
+}
+
 type ActionType = 'add' | 'remove' | null;
 
 interface CompareContextType {
@@ -52,20 +57,46 @@ interface CompareContextType {
   pendingSwapItem: CompareItem | null;
   setPendingSwapItem: (item: CompareItem | null) => void;
   swapItem: (oldId: string, newItem: CompareItem) => void;
+  // Restoration state
+  isRestoring: boolean;
+  restorationDate: Date | null;
+  dismissRestoration: () => void;
+  startFresh: () => void;
+  // Restore from history
+  restoreFromIds: (ids: string[], names: string[]) => void;
 }
 
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
 
 const STORAGE_KEY = "filascope_compare_items";
 const MAX_ITEMS = 4;
+const EXPIRY_DAYS = 7;
+const AUTO_SAVE_INTERVAL = 5000; // 5 seconds
 
 export function CompareProvider({ children }: { children: ReactNode }) {
+  // Restoration state
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [restorationDate, setRestorationDate] = useState<Date | null>(null);
+  const hasCheckedStorage = useRef(false);
+
   const [items, setItems] = useState<CompareItem[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        return Array.isArray(parsed) ? parsed.slice(0, MAX_ITEMS) : [];
+        const parsed: StoredComparison = JSON.parse(stored);
+        // Check if new format with timestamp
+        if (parsed.savedAt && Array.isArray(parsed.items)) {
+          const ageInDays = (Date.now() - parsed.savedAt) / (1000 * 60 * 60 * 24);
+          if (ageInDays > EXPIRY_DAYS) {
+            localStorage.removeItem(STORAGE_KEY);
+            return [];
+          }
+          return parsed.items.slice(0, MAX_ITEMS);
+        }
+        // Legacy format - just array
+        if (Array.isArray(parsed)) {
+          return parsed.slice(0, MAX_ITEMS);
+        }
       }
     } catch (e) {
       console.error("Failed to parse compare items from localStorage:", e);
@@ -95,14 +126,77 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     setTimeout(() => setIsGlowing(false), 600);
   }, []);
 
-  // Sync to localStorage whenever items change
+  // Check for restoration on mount
   useEffect(() => {
+    if (hasCheckedStorage.current) return;
+    hasCheckedStorage.current = true;
+
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed: StoredComparison = JSON.parse(stored);
+        if (parsed.savedAt && parsed.items?.length > 0) {
+          setRestorationDate(new Date(parsed.savedAt));
+          setIsRestoring(true);
+          // Auto-dismiss after 5 seconds
+          setTimeout(() => setIsRestoring(false), 5000);
+        }
+      }
     } catch (e) {
-      console.error("Failed to save compare items to localStorage:", e);
+      console.error("Failed to check restoration:", e);
     }
+  }, []);
+
+  // Auto-save with timestamp every 5 seconds
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const saveWithTimestamp = () => {
+      try {
+        const data: StoredComparison = {
+          items,
+          savedAt: Date.now()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error("Failed to auto-save compare items:", e);
+      }
+    };
+
+    // Save immediately on change
+    saveWithTimestamp();
+
+    // Also save periodically
+    const interval = setInterval(saveWithTimestamp, AUTO_SAVE_INTERVAL);
+    return () => clearInterval(interval);
   }, [items]);
+
+  const dismissRestoration = useCallback(() => {
+    setIsRestoring(false);
+  }, []);
+
+  const startFresh = useCallback(() => {
+    setItems([]);
+    setIsRestoring(false);
+    localStorage.removeItem(STORAGE_KEY);
+    toast.info("Started fresh comparison");
+  }, []);
+
+  const restoreFromIds = useCallback((ids: string[], names: string[]) => {
+    // Create minimal items from IDs and names
+    const restoredItems: CompareItem[] = ids.map((id, index) => ({
+      id,
+      product_title: names[index] || "Unknown",
+      vendor: null,
+      material: null,
+      color_hex: null,
+      variant_price: null,
+      net_weight_g: null,
+    }));
+    setItems(restoredItems.slice(0, MAX_ITEMS));
+    setIsExpanded(true);
+    toast.success("Comparison restored!");
+  }, []);
 
   const addItem = useCallback((item: CompareItem) => {
     setItems(prev => {
@@ -281,6 +375,12 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     pendingSwapItem,
     setPendingSwapItem,
     swapItem,
+    // Restoration
+    isRestoring,
+    restorationDate,
+    dismissRestoration,
+    startFresh,
+    restoreFromIds,
   };
 
   return (
