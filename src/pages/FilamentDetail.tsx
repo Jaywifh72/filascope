@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette, Ban } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette, Ban, Search } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -1173,6 +1173,17 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                         <div className="w-3.5 h-3.5 rounded-full border border-border shadow-sm" style={{ backgroundColor: normalizeColorHex(filament.color_hex) }} />
                         {normalizeColorHex(filament.color_hex).toUpperCase()}
                       </Badge>
+                    )}
+                    {filament.color_hex && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-sm px-3 py-1.5 h-auto gap-1.5"
+                        onClick={() => navigate(`/?hexSearch=${encodeURIComponent(normalizeColorHex(filament.color_hex!))}&colorTolerance=25`)}
+                      >
+                        <Search className="w-3.5 h-3.5" />
+                        Find Similar Colors
+                      </Button>
                     )}
                     {filament.finish_type && (
                       <Badge variant="secondary" className="text-sm px-3.5 py-2 font-medium">{filament.finish_type}</Badge>
