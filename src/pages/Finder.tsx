@@ -469,6 +469,19 @@ const Finder = () => {
     },
   });
 
+  // Get accurate total filament count (bypasses 1000 row limit)
+  const { data: filamentCount } = useQuery({
+    queryKey: ["filamentCount"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("filaments")
+        .select("*", { count: "exact", head: true });
+      
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
   const toggleMaterial = (material: string) => {
     if (material === "All") {
       setSelectedMaterials(["All"]);
@@ -851,7 +864,7 @@ const Finder = () => {
       <HeroSection 
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        filamentCount={filaments?.length || 1881}
+        filamentCount={filamentCount || 1881}
         brandCount={brands?.length || 28}
       />
       
