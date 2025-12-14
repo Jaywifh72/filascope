@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { GitCompare, ChevronUp, ChevronDown, Trash2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { EmptySlot } from "@/components/compare/EmptySlot";
 
 export function CompareTray() {
   const navigate = useNavigate();
+  const trayRef = useRef<HTMLDivElement>(null);
   const { 
     items, 
     removeItem, 
@@ -17,8 +19,16 @@ export function CompareTray() {
     maxItems, 
     isFull,
     isExpanded,
-    setIsExpanded
+    setIsExpanded,
+    setTrayElement,
+    isGlowing
   } = useCompare();
+
+  // Register tray element for fly animation targeting
+  useEffect(() => {
+    setTrayElement(trayRef.current);
+    return () => setTrayElement(null);
+  }, [setTrayElement]);
 
   // Don't render if no items
   if (count === 0) {
@@ -75,6 +85,7 @@ export function CompareTray() {
 
   return (
     <div 
+      ref={trayRef}
       className={cn(
         "fixed bottom-4 left-1/2 -translate-x-1/2 z-40",
         "w-[95vw] max-w-[1100px]",
@@ -82,7 +93,8 @@ export function CompareTray() {
         "border border-primary/20 rounded-xl",
         "shadow-[0_-4px_30px_rgba(0,0,0,0.4)]",
         "transition-all duration-300 ease-out",
-        "compare-tray-enter"
+        "compare-tray-enter",
+        isGlowing && "tray-success-glow"
       )}
       role="region"
       aria-label={`Compare tray containing ${count} of ${maxItems} materials`}

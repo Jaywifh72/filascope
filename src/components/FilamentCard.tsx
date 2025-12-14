@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Star, 
@@ -160,7 +160,8 @@ export function FilamentCard({
   const [retailerPopoverOpen, setRetailerPopoverOpen] = useState(false);
   
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
-  const { addItem, removeItem, isInCompare, isFull, count, maxItems } = useCompare();
+  const { addItem, removeItem, isInCompare, isFull, trayElement, triggerGlow } = useCompare();
+  const cardRef = React.useRef<HTMLDivElement>(null);
   
   // Check if this filament is selected for compare
   const isSelected = isInCompare(filament.id);
@@ -685,6 +686,38 @@ export function FilamentCard({
 
   const { toast } = useToast();
   
+  // Create flying clone for animation
+  const createFlyingClone = (sourceRect: DOMRect, targetRect: DOMRect) => {
+    const clone = document.createElement('div');
+    
+    // Position at source
+    clone.style.position = 'fixed';
+    clone.style.left = `${sourceRect.left}px`;
+    clone.style.top = `${sourceRect.top}px`;
+    clone.style.width = `${sourceRect.width}px`;
+    clone.style.height = `${sourceRect.height}px`;
+    clone.style.zIndex = '9999';
+    clone.style.pointerEvents = 'none';
+    
+    // Calculate flight distance
+    const deltaX = (targetRect.left + targetRect.width / 2) - (sourceRect.left + sourceRect.width / 2);
+    const deltaY = targetRect.top - sourceRect.top;
+    
+    clone.style.setProperty('--fly-x', `${deltaX}px`);
+    clone.style.setProperty('--fly-y', `${deltaY}px`);
+    
+    // Style
+    clone.style.background = filament.color_hex || 'hsl(var(--card))';
+    clone.style.borderRadius = '12px';
+    clone.style.border = '2px solid hsl(var(--primary))';
+    clone.style.boxShadow = '0 4px 20px hsla(var(--primary), 0.4)';
+    
+    clone.classList.add('fly-to-tray');
+    document.body.appendChild(clone);
+    
+    setTimeout(() => clone.remove(), 500);
+  };
+
   // Handle compare with feedback
   const handleCompare = () => {
     if (isSelected) {
@@ -693,16 +726,27 @@ export function FilamentCard({
       setIsPulsing(true);
       setTimeout(() => setIsPulsing(false), 500);
       
-      addItem({
-        id: filament.id,
-        product_title: filament.product_title,
-        vendor: filament.vendor || null,
-        material: filament.material || null,
-        color_hex: filament.color_hex || null,
-        variant_price: filament.variant_price || null,
-        net_weight_g: filament.net_weight_g || null,
-        featured_image: filament.featured_image,
-      });
+      // Create fly animation if tray is available
+      if (cardRef.current && trayElement) {
+        const cardRect = cardRef.current.getBoundingClientRect();
+        const trayRect = trayElement.getBoundingClientRect();
+        createFlyingClone(cardRect, trayRect);
+      }
+      
+      // Add item with slight delay to sync with animation start
+      setTimeout(() => {
+        addItem({
+          id: filament.id,
+          product_title: filament.product_title,
+          vendor: filament.vendor || null,
+          material: filament.material || null,
+          color_hex: filament.color_hex || null,
+          variant_price: filament.variant_price || null,
+          net_weight_g: filament.net_weight_g || null,
+          featured_image: filament.featured_image,
+        });
+        triggerGlow();
+      }, 100);
     }
   };
 
@@ -732,6 +776,7 @@ export function FilamentCard({
 
   return (
     <div
+      ref={cardRef}
       className={cn(
         "group relative bg-card border rounded-xl p-5 card-3d-hover overflow-hidden",
         isSelected 
