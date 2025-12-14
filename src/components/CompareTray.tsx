@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useCompare } from "@/hooks/useCompare";
+import { useComparisonHistory } from "@/hooks/useComparisonHistory";
 import { MiniFilamentCard } from "@/components/compare/MiniFilamentCard";
 import { EmptySlot } from "@/components/compare/EmptySlot";
 import { SuggestionChips } from "@/components/compare/SuggestionChips";
 import { SwapModal } from "@/components/compare/SwapModal";
+import { HistoryDropdown } from "@/components/compare/HistoryDropdown";
+import { RestorationToast } from "@/components/compare/RestorationToast";
 
 export function CompareTray() {
   const navigate = useNavigate();
@@ -38,7 +41,14 @@ export function CompareTray() {
     pendingSwapItem,
     setPendingSwapItem,
     swapItem,
+    isRestoring,
+    restorationDate,
+    dismissRestoration,
+    startFresh,
+    restoreFromIds,
   } = useCompare();
+
+  const { saveToHistory } = useComparisonHistory();
 
   // Register tray element for fly animation targeting
   useEffect(() => {
@@ -70,6 +80,11 @@ export function CompareTray() {
   const handleCompareNow = () => {
     if (canCompare && !isNavigating) {
       setIsNavigating(true);
+      // Save to history
+      saveToHistory(
+        items.map(i => i.id),
+        items.map(i => i.product_title)
+      );
       // Save current finder params to sessionStorage for back navigation
       const currentParams = new URLSearchParams(window.location.search);
       if (currentParams.toString()) {
@@ -80,6 +95,11 @@ export function CompareTray() {
       setIsExpanded(false);
       navigate(`/compare?ids=${ids}`);
     }
+  };
+
+  const handleRestoreFromHistory = (filamentIds: string[]) => {
+    // Navigate to compare page with these IDs
+    navigate(`/compare?ids=${filamentIds.join(',')}`);
   };
 
   const handleAddMore = () => {
@@ -248,6 +268,8 @@ export function CompareTray() {
                   {count}/{maxItems}
                 </span>
               </div>
+              {/* History dropdown */}
+              <HistoryDropdown onRestore={handleRestoreFromHistory} />
             </div>
 
             <div className="flex items-center gap-3">
@@ -323,6 +345,16 @@ export function CompareTray() {
           existingItems={items}
           onSwap={(replaceId) => swapItem(replaceId, pendingSwapItem)}
           onCancel={() => setPendingSwapItem(null)}
+        />
+      )}
+
+      {/* Restoration Toast */}
+      {isRestoring && restorationDate && count > 0 && (
+        <RestorationToast
+          itemCount={count}
+          savedDate={restorationDate}
+          onDismiss={dismissRestoration}
+          onStartFresh={startFresh}
         />
       )}
     </div>

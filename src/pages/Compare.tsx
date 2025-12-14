@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { GitCompare, ArrowLeft, Trophy, Share2, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { ExportMenu } from "@/components/compare/ExportMenu";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -368,6 +369,7 @@ const Compare = () => {
                 Add More ({emptySlots} slots)
               </Button>
             )}
+            <ExportMenu filaments={filaments} />
             <Button variant="outline" onClick={handleShare} className="gap-2">
               <Share2 className="w-4 h-4" />
               Share
