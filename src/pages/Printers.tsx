@@ -283,13 +283,13 @@ export default function Printers() {
           </div>
 
           {/* Hero Search Bar */}
-          <div className="max-w-2xl mx-auto">
+          <div className="w-full max-w-[600px] mx-auto">
             <Input
               type="text"
               placeholder="Search printers by model, brand, or features..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-14 text-lg px-6 rounded-full border-2 border-muted focus:border-primary shadow-sm"
+              className="w-full h-14 text-lg px-6 rounded-full border-2 border-muted focus:border-primary shadow-sm"
             />
           </div>
         </section>
