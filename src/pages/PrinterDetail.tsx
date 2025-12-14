@@ -356,148 +356,158 @@ const PrinterDetail = () => {
         </div>
 
         {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-border/50 backdrop-blur-sm">
-          <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
-          <div className="relative p-8 md:p-12">
-            <div className="flex flex-col lg:flex-row gap-8 items-start">
-              {/* Product Images */}
+        <div className="relative bg-[#0A0A0A] rounded-2xl py-10 md:py-14 px-6 md:px-10">
+          {/* Admin: Update Image & Refresh Prices Buttons */}
+          {isAdmin && (
+            <div className="absolute top-4 right-4 flex gap-2 z-10">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImageDialogOpen(true);
+                }}
+              >
+                <ImagePlus className="h-4 w-4" />
+                Update Image
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                disabled={isUpdatingPrices}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  setIsUpdatingPrices(true);
+                  try {
+                    const response = await supabase.functions.invoke('fetch-printer-prices', {
+                      body: { printerIds: [printer.id] }
+                    });
+                    
+                    if (response.error) {
+                      throw new Error(response.error.message || 'Failed to fetch prices');
+                    }
+                    
+                    const result = response.data;
+                    if (result?.results?.[0]) {
+                      const printerResult = result.results[0];
+                      if (printerResult.success && printerResult.prices) {
+                        const { msrp_usd, current_price_usd_store } = printerResult.prices;
+                        toast({
+                          title: "Prices Updated",
+                          description: `MSRP: ${msrp_usd ? `$${msrp_usd}` : 'N/A'}, Store: ${current_price_usd_store ? `$${current_price_usd_store}` : 'N/A'}`
+                        });
+                      } else {
+                        toast({
+                          title: "No Prices Found",
+                          description: printerResult.error || "Could not extract prices from the product page",
+                          variant: "destructive"
+                        });
+                      }
+                    }
+                    
+                    queryClient.invalidateQueries({ queryKey: ["printer-detail", id] });
+                  } catch (error: any) {
+                    toast({
+                      title: "Error",
+                      description: error.message || "Failed to update prices",
+                      variant: "destructive"
+                    });
+                  } finally {
+                    setIsUpdatingPrices(false);
+                  }
+                }}
+              >
+                <RefreshCw className={`h-4 w-4 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
+                {isUpdatingPrices ? 'Updating...' : 'Refresh Prices'}
+              </Button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-10 lg:gap-16 items-start">
+            {/* Left: Printer Image */}
+            <div className="w-full">
               {(() => {
                 const displayImages = productImages.filter(img => validImages.has(img));
-                const isLoading = productImages.length > 0 && checkedImages.size < productImages.length;
+                const isLoadingImages = productImages.length > 0 && checkedImages.size < productImages.length;
                 
-                if (isLoading) {
+                if (isLoadingImages) {
                   return (
-                    <div className="w-full lg:w-auto lg:min-w-[400px]">
-                      <div className="h-[400px] bg-muted/50 rounded-lg animate-pulse flex items-center justify-center">
-                        <span className="text-muted-foreground">Loading images...</span>
-                      </div>
+                    <div className="h-[400px] bg-muted/20 rounded-lg animate-pulse flex items-center justify-center">
+                      <span className="text-muted-foreground">Loading images...</span>
                     </div>
                   );
                 }
                 
-                if (displayImages.length === 0) return null;
+                if (displayImages.length === 0) {
+                  return (
+                    <div className="h-[400px] bg-muted/10 rounded-lg flex items-center justify-center">
+                      <Box className="h-24 w-24 text-muted-foreground/30" />
+                    </div>
+                  );
+                }
                 
                 return (
-                  <div className="w-full lg:w-auto lg:min-w-[400px]">
-                    <Card 
-                      className="overflow-hidden border-2 bg-background/80 backdrop-blur-sm cursor-pointer hover:shadow-xl transition-shadow"
+                  <div className="space-y-3">
+                    {/* Main Image - No container, floating with cyan glow */}
+                    <div 
+                      className="cursor-pointer transition-transform duration-400 ease-out hover:scale-[1.02]"
                       onClick={() => openLightbox(0)}
+                      role="button"
+                      aria-label={`View ${printer.model_name} product image in fullscreen`}
                     >
-                      <CardContent className="p-0">
-                        <img 
-                          src={displayImages[0]} 
-                          alt={`${printer.model_name} product image`}
-                          className="w-full h-auto object-contain max-h-[500px]"
-                        />
-                      </CardContent>
-                    </Card>
+                      <img 
+                        src={displayImages[0]} 
+                        alt={`${printer.model_name} product image`}
+                        className="w-full max-w-[450px] h-auto object-contain mx-auto drop-shadow-[0_20px_60px_rgba(0,212,212,0.15)]"
+                      />
+                    </div>
+                    
+                    {/* Thumbnail Images */}
                     {displayImages.length > 1 && (
-                      <div className="grid grid-cols-4 gap-2 mt-2">
+                      <div className="grid grid-cols-4 gap-2 max-w-[450px] mx-auto">
                         {displayImages.slice(1, 5).map((img: string, idx: number) => (
-                          <Card 
+                          <div 
                             key={idx} 
-                            className="overflow-hidden border bg-background/80 backdrop-blur-sm cursor-pointer hover:shadow-lg transition-shadow"
+                            className="cursor-pointer overflow-hidden rounded-lg border border-white/10 bg-black/30 hover:border-primary transition-all duration-300"
                             onClick={() => openLightbox(idx + 1)}
+                            role="button"
+                            aria-label={`View ${printer.model_name} image ${idx + 2}`}
                           >
-                            <CardContent className="p-1">
-                              <img 
-                                src={img} 
-                                alt={`${printer.model_name} image ${idx + 2}`}
-                                className="w-full h-20 object-cover rounded"
-                              />
-                            </CardContent>
-                          </Card>
+                            <img 
+                              src={img} 
+                              alt={`${printer.model_name} image ${idx + 2}`}
+                              className="w-full h-20 object-cover"
+                              loading="lazy"
+                            />
+                          </div>
                         ))}
                       </div>
                     )}
                   </div>
                 );
               })()}
-              
-              {/* Admin: Update Image & Refresh Prices Buttons */}
-              {isAdmin && (
-                <div className="absolute top-4 left-4 flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setImageDialogOpen(true);
-                    }}
-                  >
-                    <ImagePlus className="h-4 w-4" />
-                    Update Image
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    disabled={isUpdatingPrices}
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      setIsUpdatingPrices(true);
-                      try {
-                        const { data: { session } } = await supabase.auth.getSession();
-                        const response = await supabase.functions.invoke('fetch-printer-prices', {
-                          body: { printerIds: [printer.id] }
-                        });
-                        
-                        if (response.error) {
-                          throw new Error(response.error.message || 'Failed to fetch prices');
-                        }
-                        
-                        const result = response.data;
-                        if (result?.results?.[0]) {
-                          const printerResult = result.results[0];
-                          if (printerResult.success && printerResult.prices) {
-                            const { msrp_usd, current_price_usd_store } = printerResult.prices;
-                            toast({
-                              title: "Prices Updated",
-                              description: `MSRP: ${msrp_usd ? `$${msrp_usd}` : 'N/A'}, Store: ${current_price_usd_store ? `$${current_price_usd_store}` : 'N/A'}`
-                            });
-                          } else {
-                            toast({
-                              title: "No Prices Found",
-                              description: printerResult.error || "Could not extract prices from the product page",
-                              variant: "destructive"
-                            });
-                          }
-                        }
-                        
-                        queryClient.invalidateQueries({ queryKey: ["printer-detail", id] });
-                      } catch (error: any) {
-                        toast({
-                          title: "Error",
-                          description: error.message || "Failed to update prices",
-                          variant: "destructive"
-                        });
-                      } finally {
-                        setIsUpdatingPrices(false);
-                      }
-                    }}
-                  >
-                    <RefreshCw className={`h-4 w-4 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
-                    {isUpdatingPrices ? 'Updating...' : 'Refresh Prices'}
-                  </Button>
-                </div>
-              )}
+            </div>
 
-              <div className="flex-1 space-y-4">
+            {/* Right: Info + Key Specs + Price Tracker */}
+            <div className="space-y-6">
+              {/* Breadcrumbs & Name */}
+              <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="secondary" className="text-sm px-3 py-1">{brand}</Badge>
                   {series && <Badge variant="outline" className="text-sm px-3 py-1">{series}</Badge>}
                   {printer.discontinued && <Badge variant="destructive" className="text-sm px-3 py-1">Discontinued</Badge>}
                 </div>
-                <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-br from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent tracking-tight">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
                   {printer.model_name}
                 </h1>
                 {printer.variant_or_bundle_name && (
                   <p className="text-lg text-muted-foreground">{printer.variant_or_bundle_name}</p>
                 )}
                 
-                {/* Price & Buy Buttons */}
-                <div className="flex flex-wrap items-center gap-4 pt-4">
+                {/* Price */}
+                <div className="flex flex-wrap items-center gap-4 pt-2">
                   {printer.msrp_usd && (
                     <div className="flex items-baseline gap-2">
                       <span className="text-4xl font-bold text-primary">{formatPrice(printer.msrp_usd)}</span>
@@ -506,6 +516,7 @@ const PrinterDetail = () => {
                   )}
                 </div>
 
+                {/* CTA Buttons */}
                 {(printer.official_product_url || printer.official_store_url || printer.amazon_url_us) && (
                   <div className="flex flex-wrap gap-3 pt-2">
                     {printer.official_product_url && isDiscontinuedUrl(printer.official_product_url) ? (
@@ -550,12 +561,12 @@ const PrinterDetail = () => {
                   </div>
                 )}
               </div>
-              
-              {/* Quick Stats & Price Cards */}
-              <div className="w-full md:w-auto md:min-w-[320px] space-y-4">
+
+              {/* Key Specs & Price Tracker - Side by Side on Desktop */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 {/* Key Specs Card */}
-                <Card className="bg-background/80 backdrop-blur-sm border-2">
-                  <CardContent className="p-6 space-y-4">
+                <Card className="bg-background/50 border-border/50">
+                  <CardContent className="p-5 space-y-4">
                     <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Key Specs</h3>
                     <div className="space-y-3">
                       {printer.build_volume_x_mm && (
@@ -564,7 +575,7 @@ const PrinterDetail = () => {
                             <Box className="h-4 w-4 text-primary" />
                             <span className="text-sm text-muted-foreground">Build Volume</span>
                           </div>
-                          <span className="font-semibold">
+                          <span className="font-semibold text-sm">
                             {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
                           </span>
                         </div>
@@ -575,7 +586,7 @@ const PrinterDetail = () => {
                             <Gauge className="h-4 w-4 text-primary" />
                             <span className="text-sm text-muted-foreground">Max Speed</span>
                           </div>
-                          <span className="font-semibold">{printer.max_print_speed_mms} mm/s</span>
+                          <span className="font-semibold text-sm">{printer.max_print_speed_mms} mm/s</span>
                         </div>
                       )}
                       {printer.max_nozzle_temp_c && (
@@ -584,7 +595,7 @@ const PrinterDetail = () => {
                             <Thermometer className="h-4 w-4 text-primary" />
                             <span className="text-sm text-muted-foreground">Max Nozzle</span>
                           </div>
-                          <span className="font-semibold">{printer.max_nozzle_temp_c}°C</span>
+                          <span className="font-semibold text-sm">{printer.max_nozzle_temp_c}°C</span>
                         </div>
                       )}
                       {printer.bed_max_temp_c && (
@@ -593,7 +604,7 @@ const PrinterDetail = () => {
                             <Flame className="h-4 w-4 text-primary" />
                             <span className="text-sm text-muted-foreground">Max Bed</span>
                           </div>
-                          <span className="font-semibold">{printer.bed_max_temp_c}°C</span>
+                          <span className="font-semibold text-sm">{printer.bed_max_temp_c}°C</span>
                         </div>
                       )}
                     </div>
