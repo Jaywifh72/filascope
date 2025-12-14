@@ -46,6 +46,7 @@ const BuildPlateDetail = lazy(() => import("./pages/BuildPlateDetail"));
 const AMSDetail = lazy(() => import("./pages/AMSDetail"));
 const Settings = lazy(() => import("./pages/Settings"));
 const ReferenceSlicers = lazy(() => import("./pages/ReferenceSlicers"));
+const ReferenceCAD = lazy(() => import("./pages/ReferenceCAD"));
 
 const queryClient = new QueryClient();
 
@@ -96,6 +97,7 @@ const App = () => (
               <Route path="/admin/price-anomalies" element={<AdminPriceAnomalies />} />
               <Route path="/filament/:id" element={<FilamentDetail />} />
               <Route path="/reference/slicers" element={<ReferenceSlicers />} />
+              <Route path="/reference/cad" element={<ReferenceCAD />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
