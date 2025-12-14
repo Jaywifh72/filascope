@@ -880,7 +880,6 @@ const Finder = () => {
       {/* Printer Context Bar - Sticky */}
       <PrinterContextBar
         compatibleCount={filteredAndSortedFilaments?.length || 0}
-        onChangePrinter={() => setPrinterSelectorOpen(true)}
       />
 
       {/* Horizontal Filter Bar */}

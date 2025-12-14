@@ -1,65 +1,124 @@
+import { useState } from "react";
 import { Printer, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
+import { PrinterSelectionModal } from "./PrinterSelectionModal";
+import { toast } from "sonner";
 
 interface PrinterContextBarProps {
   compatibleCount: number;
-  onChangePrinter: () => void;
 }
 
-export function PrinterContextBar({ compatibleCount, onChangePrinter }: PrinterContextBarProps) {
-  const { selectedPrinter, selectedBrand } = usePrinterSelection();
+// Generic profile display names
+const GENERIC_PROFILE_NAMES: Record<string, string> = {
+  "direct-drive-all-metal": "Direct Drive (All Metal)",
+  "direct-drive-standard": "Direct Drive (Standard)",
+  "bowden-standard": "Bowden Setup",
+  "corexy-enclosed": "CoreXY Enclosed",
+};
+
+export function PrinterContextBar({ compatibleCount }: PrinterContextBarProps) {
+  const { 
+    selectedPrinter, 
+    selectedBrand, 
+    setSelectedBrand, 
+    setSelectedPrinterId,
+    genericProfile,
+    setGenericProfile,
+    clearPrinter,
+  } = usePrinterSelection();
+  
+  const [modalOpen, setModalOpen] = useState(false);
 
   const hasPrinter = selectedPrinter && selectedBrand;
+  const hasGenericProfile = !!genericProfile;
+  
   const printerName = hasPrinter 
     ? `${selectedPrinter.brand?.brand || selectedBrand} ${selectedPrinter.model_name}`
+    : hasGenericProfile
+    ? GENERIC_PROFILE_NAMES[genericProfile] || genericProfile
     : null;
 
+  const handleSelectPrinter = (printerId: string, brand: string, modelName: string) => {
+    // Clear any generic profile
+    localStorage.removeItem("generic_printer_profile");
+    
+    setSelectedBrand(brand);
+    setSelectedPrinterId(printerId);
+    
+    toast.success(`Printer updated to ${brand} ${modelName}`, {
+      icon: "✓",
+      duration: 3000,
+    });
+  };
+
+  const handleSelectGeneric = (profileType: string) => {
+    setGenericProfile(profileType);
+    
+    const profileName = GENERIC_PROFILE_NAMES[profileType] || profileType;
+    toast.success(`Profile set to ${profileName}`, {
+      icon: "✓",
+      duration: 3000,
+    });
+  };
+
   return (
-    <div className="sticky top-0 z-40 bg-card/95 backdrop-blur-sm border-b border-border">
-      <div className="max-w-[1800px] mx-auto px-4 lg:px-6 h-14 flex items-center justify-between">
-        {hasPrinter ? (
-          <>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-primary">
-                <Printer className="h-5 w-5" />
-                <span className="font-medium">Your Printer:</span>
+    <>
+      <div className="sticky top-0 z-40 bg-card/95 backdrop-blur-sm border-b border-border">
+        <div className="max-w-[1800px] mx-auto px-4 lg:px-6 h-14 flex items-center justify-between">
+          {hasPrinter || hasGenericProfile ? (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-primary">
+                  <Printer className="h-5 w-5" />
+                  <span className="font-medium hidden sm:inline">Your Printer:</span>
+                </div>
+                <span className="font-semibold text-foreground">{printerName}</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setModalOpen(true)}
+                  className="text-muted-foreground hover:text-foreground h-7 px-2"
+                >
+                  Change
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </div>
-              <span className="font-semibold text-foreground">{printerName}</span>
+              <div className="text-sm text-muted-foreground">
+                <span className="hidden sm:inline">Showing </span>
+                <span className="text-primary font-semibold">{compatibleCount.toLocaleString()}</span>
+                <span className="hidden sm:inline"> compatible materials</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Printer className="h-5 w-5" />
+                  <span className="font-medium">No printer selected</span>
+                </div>
+              </div>
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm" 
-                onClick={onChangePrinter}
-                className="text-muted-foreground hover:text-foreground h-7 px-2"
+                onClick={() => setModalOpen(true)}
+                className="border-primary/50 text-primary hover:bg-primary/10"
               >
-                Change
+                Select Your Printer
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Showing <span className="text-primary font-semibold">{compatibleCount.toLocaleString()}</span> compatible materials
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Printer className="h-5 w-5" />
-                <span className="font-medium">No printer selected</span>
-              </div>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onChangePrinter}
-              className="border-primary/50 text-primary hover:bg-primary/10"
-            >
-              Select Your Printer
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+
+      <PrinterSelectionModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onSelect={handleSelectPrinter}
+        onSelectGeneric={handleSelectGeneric}
+        currentPrinterId={selectedPrinter?.printer_id}
+      />
+    </>
   );
 }
