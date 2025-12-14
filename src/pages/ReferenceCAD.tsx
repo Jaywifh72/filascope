@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Check, X, DollarSign, Monitor, FileType, Wifi, Box } from "lucide-react";
+import { ArrowLeft, ExternalLink, Check, X, DollarSign, Monitor, FileType, Wifi, Box, Users, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -10,6 +10,54 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cadData } from "@/lib/cadData";
 import Navbar from "@/components/Navbar";
+
+const recommendationMatrix = [
+  {
+    profile: "Mechanical Engineer (Pro)",
+    recommendation: "SolidWorks",
+    rationale: "Industry standard, robust simulation, manufacturing integration."
+  },
+  {
+    profile: "Mechanical Engineer (Hobby)",
+    recommendation: "Fusion 360",
+    rationale: "Powerful free tier, integrated CAM/Mesh tools, vast community resources."
+  },
+  {
+    profile: "Artistic Sculptor",
+    recommendation: "ZBrush",
+    rationale: "Unrivaled poly count handling, industry standard for figurines."
+  },
+  {
+    profile: "Cosplay / Prop Maker",
+    recommendation: "Blender",
+    rationale: "Free, powerful organic modeling, great plugins (3D Print Toolbox)."
+  },
+  {
+    profile: "Concept Artist (Hard Surface)",
+    recommendation: "Plasticity",
+    rationale: "Fast workflow, perpetual license, great fillet engine."
+  },
+  {
+    profile: "Architect",
+    recommendation: "Rhino 3D",
+    rationale: "ShrinkWrap feature (Rhino 8) solves printing issues; Grasshopper for patterns."
+  },
+  {
+    profile: "Educator / Beginner",
+    recommendation: "Tinkercad",
+    rationale: "Zero barrier to entry, reliable solid exports."
+  },
+  {
+    profile: "Code / Math Enthusiast",
+    recommendation: "OpenSCAD",
+    rationale: "Precise, version-controllable, lightweight."
+  },
+  {
+    profile: "Mobile / Tablet User",
+    recommendation: "Shapr3D / Nomad",
+    rationale: "Shapr3D for parts (Pro required for quality); Nomad for art."
+  }
+];
 
 const ReferenceCAD = () => {
   return (
@@ -31,6 +79,60 @@ const ReferenceCAD = () => {
           <p className="text-muted-foreground">
             Comprehensive guide to CAD and 3D modeling software for additive manufacturing
           </p>
+        </div>
+
+        {/* Recommendation Matrix */}
+        <div className="mb-8 border border-border rounded-lg bg-card p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Users className="w-6 h-6 text-amber-400" />
+            <h2 className="text-xl font-bold font-mono text-foreground">Recommendation Matrix</h2>
+          </div>
+          <p className="text-muted-foreground text-sm mb-4">
+            Quick reference guide to find the best CAD software based on your user profile and needs.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-cyan-400" />
+                      User Profile
+                    </div>
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">
+                    Primary Recommendation
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">
+                    <div className="flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4 text-amber-400" />
+                      Strategic Rationale
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {recommendationMatrix.map((row, index) => (
+                  <tr 
+                    key={index} 
+                    className="border-b border-border/50 hover:bg-muted/20 transition-colors"
+                  >
+                    <td className="py-3 px-4">
+                      <span className="text-sm font-medium text-foreground">{row.profile}</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge variant="secondary" className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 font-mono">
+                        {row.recommendation}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-sm text-muted-foreground">{row.rationale}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <Accordion type="multiple" className="space-y-4">
