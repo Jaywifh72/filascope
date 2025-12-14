@@ -1,8 +1,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface PricePoint {
+  date: string;
+  price: number;
+  x?: number;
+  y?: number;
+}
+
 export interface PriceHistoryData {
-  prices: { date: string; price: number }[];
+  prices: PricePoint[];
   min: number;
   max: number;
   avg: number;
@@ -11,9 +18,11 @@ export interface PriceHistoryData {
   isBestIn6Months: boolean;
   trendPercent: number | null;
   isLoading: boolean;
+  minPoint: PricePoint | null;
+  maxPoint: PricePoint | null;
 }
 
-export function usePriceHistory(filamentId: string, currentPrice: number | null): PriceHistoryData {
+export function usePriceHistory(filamentId: string, currentPrice: number | null, days: number = 30): PriceHistoryData {
   const [data, setData] = useState<PriceHistoryData>({
     prices: [],
     min: 0,
@@ -24,6 +33,8 @@ export function usePriceHistory(filamentId: string, currentPrice: number | null)
     isBestIn6Months: false,
     trendPercent: null,
     isLoading: true,
+    minPoint: null,
+    maxPoint: null,
   });
 
   useEffect(() => {
@@ -81,8 +92,25 @@ export function usePriceHistory(filamentId: string, currentPrice: number | null)
           }
         }
 
+        // Find min and max points with positions
+        let minPoint: PricePoint | null = null;
+        let maxPoint: PricePoint | null = null;
+        let minPrice = Infinity;
+        let maxPrice = -Infinity;
+
+        prices.forEach((p, i) => {
+          if (p.price < minPrice) {
+            minPrice = p.price;
+            minPoint = { ...p, x: i, y: p.price };
+          }
+          if (p.price > maxPrice) {
+            maxPrice = p.price;
+            maxPoint = { ...p, x: i, y: p.price };
+          }
+        });
+
         setData({
-          prices: prices.slice(-30), // Last 30 data points for sparkline
+          prices: prices.slice(-days), // Use configurable days
           min,
           max,
           avg,
@@ -91,6 +119,8 @@ export function usePriceHistory(filamentId: string, currentPrice: number | null)
           isBestIn6Months,
           trendPercent,
           isLoading: false,
+          minPoint,
+          maxPoint,
         });
       } catch (err) {
         console.error("Error fetching price history:", err);
@@ -99,7 +129,7 @@ export function usePriceHistory(filamentId: string, currentPrice: number | null)
     };
 
     fetchPriceHistory();
-  }, [filamentId, currentPrice]);
+  }, [filamentId, currentPrice, days]);
 
   return data;
 }

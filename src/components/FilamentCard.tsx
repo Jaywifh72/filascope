@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Star, 
   Check, 
@@ -28,13 +28,27 @@ import {
   Sun,
   Leaf,
   MoreHorizontal,
-  ImageOff
+  ImageOff,
+  MoreVertical,
+  Heart,
+  Share2,
+  Flag,
+  Package,
+  ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -43,8 +57,10 @@ import { getMaterialAverage, getScoreComparison } from "@/lib/materialAverages";
 import { getPriceContext } from "@/lib/materialPriceTiers";
 import { usePriceHistory } from "@/hooks/usePriceHistory";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
+import { useSimilarFilaments } from "@/hooks/useSimilarFilaments";
 import { PriceSparkline } from "./PriceSparkline";
 import { useToast } from "@/hooks/use-toast";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 // Material badge colors matching the plan
 const MATERIAL_BADGE_COLORS: Record<string, string> = {
@@ -74,6 +90,7 @@ interface Filament {
   color_hex?: string | null;
   color_family?: string | null;
   variant_price?: number | null;
+  variant_available?: boolean | null;
   net_weight_g?: number | null;
   pack_quantity?: number | null;
   value_score?: number | null;
@@ -93,6 +110,33 @@ interface Filament {
   carbon_fiber_percentage?: number | null;
   glass_fiber_percentage?: number | null;
   wood_powder_percentage?: number | null;
+  product_url?: string | null;
+  amazon_link_us?: string | null;
+  amazon_link_uk?: string | null;
+  amazon_link_de?: string | null;
+}
+
+// Material availability helper
+function getAvailabilityStatus(filament: Filament) {
+  const hasProductUrl = !!filament.product_url;
+  const hasAmazonUs = !!filament.amazon_link_us;
+  const hasAmazonUk = !!filament.amazon_link_uk;
+  const hasAmazonDe = !!filament.amazon_link_de;
+  const retailerCount = [hasProductUrl, hasAmazonUs, hasAmazonUk, hasAmazonDe].filter(Boolean).length;
+  
+  if (filament.variant_available === false) {
+    return { status: "oos" as const, label: "Out of stock", colorClass: "availability-oos", retailerCount: 0 };
+  }
+  
+  if (retailerCount >= 2) {
+    return { status: "available" as const, label: `In stock at ${retailerCount} retailers`, colorClass: "availability-available", retailerCount };
+  }
+  
+  if (retailerCount === 1) {
+    return { status: "limited" as const, label: "Limited availability", colorClass: "availability-limited", retailerCount };
+  }
+  
+  return { status: "limited" as const, label: "Check availability", colorClass: "availability-limited", retailerCount: 0 };
 }
 
 interface FilamentCardProps {
@@ -114,12 +158,16 @@ export function FilamentCard({
   compareCount = 0,
   maxCompare = 4,
 }: FilamentCardProps) {
+  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [displayScore, setDisplayScore] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
   const [isPulsing, setIsPulsing] = useState(false);
   const [showCheckmark, setShowCheckmark] = useState(isSelected);
   const [imageError, setImageError] = useState(false);
+  const [retailerPopoverOpen, setRetailerPopoverOpen] = useState(false);
+  
+  const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
   
   // Check if compare tray is full
   const isCompareDisabled = compareCount >= maxCompare && !isSelected;
@@ -626,6 +674,18 @@ export function FilamentCard({
   };
 
   const brandLogo = filament.vendor ? getBrandLogo(filament.vendor) : null;
+  
+  // Material availability
+  const availability = getAvailabilityStatus(filament);
+  
+  // Similar filaments hook
+  const { similars: similarFilaments, count: similarCount } = useSimilarFilaments(
+    filament.id,
+    filament.material,
+    filament.color_family,
+    filament.vendor,
+    filament.variant_price
+  );
 
   const { toast } = useToast();
   
@@ -653,6 +713,30 @@ export function FilamentCard({
         description: `${compareCount + 1}/${maxCompare} filaments selected`,
       });
     }
+  };
+
+  // Handle share
+  const handleShare = async () => {
+    const url = `${window.location.origin}/filament/${filament.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: filament.product_title,
+          text: `Check out ${filament.product_title}`,
+          url,
+        });
+      } catch {
+        // User cancelled or share failed
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link copied to clipboard" });
+    }
+  };
+  
+  // Handle report
+  const handleReport = () => {
+    window.open(`mailto:support@filascope.com?subject=Data issue: ${filament.product_title}&body=Filament ID: ${filament.id}%0D%0A%0D%0APlease describe the issue:`, "_blank");
   };
 
   return (
@@ -689,9 +773,39 @@ export function FilamentCard({
         )}
       </div>
 
-      {/* Favorite Button - Top Right */}
-      <div className="absolute top-3 right-3 z-10">
+      {/* Quick Actions Menu - Top Right (shows on hover) */}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
         <LikeButton filamentId={filament.id} size="sm" />
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button 
+              className={cn(
+                "p-1.5 rounded-full bg-card/80 backdrop-blur border border-border/50 card-quick-actions",
+                "hover:bg-muted transition-colors"
+              )}
+              aria-label="More actions"
+            >
+              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={handleShare}>
+              <Share2 className="w-4 h-4 mr-2" />
+              Share this material
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate(`/filament/${filament.id}#price`)}>
+              <TrendingUp className="w-4 h-4 mr-2" />
+              View price history
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleReport} className="text-muted-foreground">
+              <Flag className="w-4 h-4 mr-2" />
+              Report incorrect data
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Header: Brand + Material Badge */}
@@ -878,6 +992,128 @@ export function FilamentCard({
 
       {/* Properties Section */}
       <PropertiesSection filament={filament} printDifficulty={printDifficulty} maxTemp={maxTemp} />
+
+      {/* Availability Status */}
+      <Popover open={retailerPopoverOpen} onOpenChange={setRetailerPopoverOpen}>
+        <PopoverTrigger asChild>
+          <button 
+            className={cn(
+              "flex items-center gap-2 text-xs px-2 py-1.5 rounded border mb-3 w-full justify-center transition-colors",
+              availability.colorClass
+            )}
+          >
+            <Package className="w-3 h-3" />
+            <span>{availability.label}</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-3" side="top">
+          <p className="text-xs font-medium mb-2">Available at:</p>
+          <div className="space-y-2">
+            {filament.product_url && (
+              <a 
+                href={getAffiliateUrl(filament.product_url, filament.vendor)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm"
+              >
+                <span>{filament.vendor || "Official Store"}</span>
+                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+              </a>
+            )}
+            {filament.amazon_link_us && (
+              <a 
+                href={getAmazonUrl(filament.amazon_link_us, "us")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm"
+              >
+                <span>Amazon US</span>
+                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+              </a>
+            )}
+            {filament.amazon_link_uk && (
+              <a 
+                href={getAmazonUrl(filament.amazon_link_uk, "uk")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm"
+              >
+                <span>Amazon UK</span>
+                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+              </a>
+            )}
+            {filament.amazon_link_de && (
+              <a 
+                href={getAmazonUrl(filament.amazon_link_de, "de")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-sm"
+              >
+                <span>Amazon DE</span>
+                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+              </a>
+            )}
+            {availability.retailerCount === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                No retailers found
+              </p>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      {/* Similar Materials Badge */}
+      {similarCount > 0 && (
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-3">
+              <Layers className="w-3 h-3" />
+              <span>{similarCount} similar materials</span>
+            </button>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-72 p-3" side="top">
+            <p className="text-xs font-medium mb-2 text-muted-foreground">Similar Materials</p>
+            <div className="space-y-1">
+              {similarFilaments.slice(0, 3).map((sim) => {
+                const simWeightKg = sim.net_weight_g ? sim.net_weight_g / 1000 : null;
+                const simPricePerKg = sim.variant_price && simWeightKg 
+                  ? sim.variant_price / simWeightKg 
+                  : null;
+                
+                return (
+                  <Link 
+                    key={sim.id} 
+                    to={`/filament/${sim.id}`}
+                    className="similar-mini-card"
+                  >
+                    {sim.color_hex && (
+                      <div 
+                        className="w-5 h-5 rounded border border-border flex-shrink-0"
+                        style={{ backgroundColor: sim.color_hex.startsWith('#') ? sim.color_hex : `#${sim.color_hex}` }}
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{sim.product_title}</p>
+                      <p className="text-xs text-muted-foreground">{sim.vendor}</p>
+                    </div>
+                    {simPricePerKg && (
+                      <span className="text-xs font-mono text-primary">
+                        ${simPricePerKg.toFixed(0)}/kg
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+            <Link 
+              to={`/finder?material=${encodeURIComponent(filament.material || "")}&color=${encodeURIComponent(filament.color_family || "")}`}
+              className="block text-xs text-primary hover:underline mt-2 text-center"
+            >
+              See all alternatives →
+            </Link>
+          </HoverCardContent>
+        </HoverCard>
+      )}
 
       {/* CTA Section */}
       <div className="cta-slide-container flex items-center gap-2 pt-3 border-t border-border">
