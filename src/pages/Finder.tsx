@@ -86,6 +86,19 @@ const getColorMatchPercent = (searchHex: string, filamentHex: string): number =>
   return Math.round(percent);
 };
 
+// Convert HSL to HEX
+const hslToHex = (h: number, s: number, l: number): string => {
+  s /= 100;
+  l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+};
+
 const Finder = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -127,6 +140,10 @@ const Finder = () => {
     return urlTolerance ? parseInt(urlTolerance, 10) : 30;
   });
   const [colorSectionOpen, setColorSectionOpen] = useState(() => !!searchParams.get("hexSearch"));
+  const [colorPickerMode, setColorPickerMode] = useState<"grid" | "spectrum">("grid");
+  const [spectrumHue, setSpectrumHue] = useState(0);
+  const [spectrumSaturation, setSpectrumSaturation] = useState(100);
+  const [spectrumLightness, setSpectrumLightness] = useState(50);
   
   // Persist viewMode to localStorage
   useEffect(() => {
@@ -1060,46 +1077,175 @@ const Finder = () => {
           <CollapsibleContent>
             <div className="mb-6 p-4 bg-card/50 rounded-lg border border-border">
               <div className="space-y-4">
-                {/* Color Family Grid */}
-                <div>
-                  <h4 className="text-xs font-medium text-muted-foreground mb-3">Color Family</h4>
-                  <div className="grid grid-cols-8 sm:grid-cols-16 gap-2">
-                    {COLOR_FAMILIES.map((color) => {
-                      const isSelected = selectedColorFamilies.includes(color.name);
-                      const isGradient = color.hex.startsWith('linear-gradient');
-                      return (
-                        <Tooltip key={color.name}>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => {
-                                if (isSelected) {
-                                  setSelectedColorFamilies(prev => prev.filter(c => c !== color.name));
-                                } else {
-                                  setSelectedColorFamilies(prev => [...prev, color.name]);
-                                }
-                              }}
-                              className={`w-8 h-8 rounded-md border-2 transition-all hover:scale-110 ${
-                                isSelected 
-                                  ? 'border-primary ring-2 ring-primary/50' 
-                                  : 'border-border hover:border-muted-foreground'
-                              }`}
-                              style={{
-                                background: isGradient ? color.hex : color.hex,
-                                ...(color.name === 'White' ? { border: '2px solid hsl(var(--border))' } : {}),
-                              }}
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom">
-                            <p className="text-xs">{color.name}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
+                {/* Mode Toggle */}
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-medium text-muted-foreground">Color Selection</h4>
+                  <div className="flex items-center border border-border rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => setColorPickerMode("grid")}
+                      className={`px-3 py-1 text-xs transition-colors ${
+                        colorPickerMode === "grid" 
+                          ? "bg-primary text-primary-foreground" 
+                          : "bg-muted text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Grid
+                    </button>
+                    <button
+                      onClick={() => setColorPickerMode("spectrum")}
+                      className={`px-3 py-1 text-xs transition-colors ${
+                        colorPickerMode === "spectrum" 
+                          ? "bg-primary text-primary-foreground" 
+                          : "bg-muted text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Spectrum
+                    </button>
                   </div>
                 </div>
 
+                {colorPickerMode === "grid" ? (
+                  /* Color Family Grid */
+                  <div>
+                    <div className="grid grid-cols-8 sm:grid-cols-16 gap-2">
+                      {COLOR_FAMILIES.map((color) => {
+                        const isSelected = selectedColorFamilies.includes(color.name);
+                        const isGradient = color.hex.startsWith('linear-gradient');
+                        return (
+                          <Tooltip key={color.name}>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setSelectedColorFamilies(prev => prev.filter(c => c !== color.name));
+                                  } else {
+                                    setSelectedColorFamilies(prev => [...prev, color.name]);
+                                  }
+                                }}
+                                className={`w-8 h-8 rounded-md border-2 transition-all hover:scale-110 ${
+                                  isSelected 
+                                    ? 'border-primary ring-2 ring-primary/50' 
+                                    : 'border-border hover:border-muted-foreground'
+                                }`}
+                                style={{
+                                  background: isGradient ? color.hex : color.hex,
+                                  ...(color.name === 'White' ? { border: '2px solid hsl(var(--border))' } : {}),
+                                }}
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">
+                              <p className="text-xs">{color.name}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  /* Color Spectrum Picker */
+                  <div className="space-y-3">
+                    {/* Hue Spectrum Bar */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-muted-foreground">Hue</span>
+                        <span className="text-xs font-mono text-muted-foreground">{spectrumHue}°</span>
+                      </div>
+                      <div 
+                        className="h-6 rounded-md cursor-pointer relative"
+                        style={{
+                          background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)'
+                        }}
+                        onClick={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = e.clientX - rect.left;
+                          const hue = Math.round((x / rect.width) * 360);
+                          setSpectrumHue(Math.max(0, Math.min(360, hue)));
+                          setHexSearch(hslToHex(hue, spectrumSaturation, spectrumLightness));
+                        }}
+                      >
+                        <div 
+                          className="absolute top-0 w-1 h-full bg-white border border-black/50 rounded-sm"
+                          style={{ left: `${(spectrumHue / 360) * 100}%`, transform: 'translateX(-50%)' }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Saturation Slider */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-muted-foreground">Saturation</span>
+                        <span className="text-xs font-mono text-muted-foreground">{spectrumSaturation}%</span>
+                      </div>
+                      <div 
+                        className="h-6 rounded-md cursor-pointer relative"
+                        style={{
+                          background: `linear-gradient(to right, hsl(${spectrumHue}, 0%, ${spectrumLightness}%), hsl(${spectrumHue}, 100%, ${spectrumLightness}%))`
+                        }}
+                        onClick={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = e.clientX - rect.left;
+                          const sat = Math.round((x / rect.width) * 100);
+                          setSpectrumSaturation(Math.max(0, Math.min(100, sat)));
+                          setHexSearch(hslToHex(spectrumHue, sat, spectrumLightness));
+                        }}
+                      >
+                        <div 
+                          className="absolute top-0 w-1 h-full bg-white border border-black/50 rounded-sm"
+                          style={{ left: `${spectrumSaturation}%`, transform: 'translateX(-50%)' }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Lightness Slider */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-muted-foreground">Lightness</span>
+                        <span className="text-xs font-mono text-muted-foreground">{spectrumLightness}%</span>
+                      </div>
+                      <div 
+                        className="h-6 rounded-md cursor-pointer relative"
+                        style={{
+                          background: `linear-gradient(to right, hsl(${spectrumHue}, ${spectrumSaturation}%, 0%), hsl(${spectrumHue}, ${spectrumSaturation}%, 50%), hsl(${spectrumHue}, ${spectrumSaturation}%, 100%))`
+                        }}
+                        onClick={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = e.clientX - rect.left;
+                          const light = Math.round((x / rect.width) * 100);
+                          setSpectrumLightness(Math.max(0, Math.min(100, light)));
+                          setHexSearch(hslToHex(spectrumHue, spectrumSaturation, light));
+                        }}
+                      >
+                        <div 
+                          className="absolute top-0 w-1 h-full bg-white border border-black/50 rounded-sm"
+                          style={{ left: `${spectrumLightness}%`, transform: 'translateX(-50%)' }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Preview & Apply */}
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-12 h-12 rounded-lg border-2 border-border shadow-sm"
+                        style={{ backgroundColor: hslToHex(spectrumHue, spectrumSaturation, spectrumLightness) }}
+                      />
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground mb-1">Selected Color</div>
+                        <div className="font-mono text-sm">{hslToHex(spectrumHue, spectrumSaturation, spectrumLightness).toUpperCase()}</div>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => setHexSearch(hslToHex(spectrumHue, spectrumSaturation, spectrumLightness))}
+                        className="gap-1"
+                      >
+                        <Palette className="w-3.5 h-3.5" />
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* HEX Color Search */}
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-border">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground">Exact HEX:</span>
                     <div className="flex items-center gap-1">
