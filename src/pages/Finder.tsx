@@ -1308,7 +1308,6 @@ const Finder = () => {
                       })()}
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-foreground truncate">{filament.product_title}</p>
-                        <p className="text-sm text-muted-foreground">{filament.vendor}</p>
                         {filament.material && (
                           <div className="mt-1 flex items-center gap-2 flex-wrap">
                             <MaterialBadge material={filament.material} />
