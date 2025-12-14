@@ -122,7 +122,16 @@ const Finder = () => {
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [printerSelectorOpen, setPrinterSelectorOpen] = useState(false);
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
-  const { isInCompare, addItem, removeItem } = useCompare();
+  const { 
+    isInCompare, 
+    addItem, 
+    removeItem, 
+    isMultiSelectMode, 
+    setMultiSelectMode, 
+    pendingItems,
+    commitPendingItems,
+    clearPendingItems 
+  } = useCompare();
   const [sortBy, setSortBy] = useState<string>("truecost-asc");
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
     const saved = localStorage.getItem("finderViewMode");
@@ -159,6 +168,31 @@ const Finder = () => {
   const [spectrumHue, setSpectrumHue] = useState(0);
   const [spectrumSaturation, setSpectrumSaturation] = useState(100);
   const [spectrumLightness, setSpectrumLightness] = useState(50);
+  // Multi-select mode keyboard listeners
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift' && !e.repeat) {
+        setMultiSelectMode(true);
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        commitPendingItems();
+        setMultiSelectMode(false);
+      }
+      if (e.key === 'Escape') {
+        clearPendingItems();
+        setMultiSelectMode(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [setMultiSelectMode, commitPendingItems, clearPendingItems]);
   
   // Persist viewMode to localStorage
   useEffect(() => {
@@ -1322,6 +1356,21 @@ const Finder = () => {
           </div>
         )}
       </main>
+
+      {/* Multi-select mode banner */}
+      {isMultiSelectMode && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 multi-select-banner">
+          <div className="bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium">
+            <span className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
+            Multi-select mode • Click cards to add
+            {pendingItems.length > 0 && (
+              <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full ml-1">
+                {pendingItems.length} selected
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Old Floating Compare Bar - replaced by global CompareTray */}
     </div>

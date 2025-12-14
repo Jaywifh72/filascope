@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { useCompare } from "@/hooks/useCompare";
 import { MiniFilamentCard } from "@/components/compare/MiniFilamentCard";
 import { EmptySlot } from "@/components/compare/EmptySlot";
+import { SuggestionChips } from "@/components/compare/SuggestionChips";
+import { SwapModal } from "@/components/compare/SwapModal";
 
 export function CompareTray() {
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ export function CompareTray() {
     items, 
     removeItem, 
     clearAll, 
+    addItem,
     count, 
     maxItems, 
     isFull,
@@ -29,7 +32,10 @@ export function CompareTray() {
     lastAction,
     reorderItems,
     newItemId,
-    isFirstItem
+    isFirstItem,
+    pendingSwapItem,
+    setPendingSwapItem,
+    swapItem,
   } = useCompare();
 
   // Register tray element for fly animation targeting
@@ -277,7 +283,23 @@ export function CompareTray() {
               Add 1 more material to enable comparison • Drag to reorder
             </p>
           )}
+
+          {/* Suggestions when 1 item */}
+          {count === 1 && items[0] && (
+            <SuggestionChips currentItem={items[0]} onAdd={addItem} />
+          )}
         </div>
+      )}
+
+      {/* Swap Modal */}
+      {pendingSwapItem && (
+        <SwapModal
+          isOpen={!!pendingSwapItem}
+          newItem={pendingSwapItem}
+          existingItems={items}
+          onSwap={(replaceId) => swapItem(replaceId, pendingSwapItem)}
+          onCancel={() => setPendingSwapItem(null)}
+        />
       )}
     </div>
   );
