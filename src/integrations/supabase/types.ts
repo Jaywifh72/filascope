@@ -14,6 +14,124 @@ export type Database = {
   }
   public: {
     Tables: {
+      ab_test_assignments: {
+        Row: {
+          assigned_at: string | null
+          id: string
+          session_id: string | null
+          test_name: string
+          user_id: string | null
+          variant_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          id?: string
+          session_id?: string | null
+          test_name: string
+          user_id?: string | null
+          variant_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          id?: string
+          session_id?: string | null
+          test_name?: string
+          user_id?: string | null
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_test_assignments_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "ab_test_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ab_test_conversions: {
+        Row: {
+          conversion_type: string
+          conversion_value: number | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          session_id: string | null
+          test_name: string
+          user_id: string | null
+          variant_id: string | null
+        }
+        Insert: {
+          conversion_type: string
+          conversion_value?: number | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          test_name: string
+          user_id?: string | null
+          variant_id?: string | null
+        }
+        Update: {
+          conversion_type?: string
+          conversion_value?: number | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          test_name?: string
+          user_id?: string | null
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_test_conversions_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "ab_test_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ab_test_variants: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_control: boolean | null
+          test_name: string
+          updated_at: string | null
+          variant_name: string
+          weight: number | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_control?: boolean | null
+          test_name: string
+          updated_at?: string | null
+          variant_name: string
+          weight?: number | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_control?: boolean | null
+          test_name?: string
+          updated_at?: string | null
+          variant_name?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
       accessory_price_history: {
         Row: {
           accessory_id: string | null
@@ -381,6 +499,63 @@ export type Database = {
         }
         Relationships: []
       }
+      featured_content: {
+        Row: {
+          content_type: string
+          created_at: string | null
+          created_by: string | null
+          cta_text: string | null
+          cta_url: string | null
+          description: string | null
+          end_at: string | null
+          entity_id: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          module_name: string
+          priority: number | null
+          start_at: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content_type: string
+          created_at?: string | null
+          created_by?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          end_at?: string | null
+          entity_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          module_name: string
+          priority?: number | null
+          start_at?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          end_at?: string | null
+          entity_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          module_name?: string
+          priority?: number | null
+          start_at?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       filament_comments: {
         Row: {
           comment_text: string
@@ -648,6 +823,96 @@ export type Database = {
           wood_powder_percentage?: number | null
           wood_scent_level?: string | null
           wood_type?: string | null
+        }
+        Relationships: []
+      }
+      module_engagement_metrics: {
+        Row: {
+          created_at: string | null
+          duration_ms: number | null
+          entity_id: string | null
+          entity_type: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          module_name: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_ms?: number | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          module_name: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_ms?: number | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          module_name?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      module_performance_daily: {
+        Row: {
+          avg_time_spent_ms: number | null
+          click_through_rate: number | null
+          conversion_value: number | null
+          conversions: number | null
+          created_at: string | null
+          cta_clicks: number | null
+          date: string
+          engagement_score: number | null
+          id: string
+          module_name: string
+          scroll_past_count: number | null
+          total_clicks: number | null
+          total_views: number | null
+          unique_users: number | null
+        }
+        Insert: {
+          avg_time_spent_ms?: number | null
+          click_through_rate?: number | null
+          conversion_value?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          cta_clicks?: number | null
+          date: string
+          engagement_score?: number | null
+          id?: string
+          module_name: string
+          scroll_past_count?: number | null
+          total_clicks?: number | null
+          total_views?: number | null
+          unique_users?: number | null
+        }
+        Update: {
+          avg_time_spent_ms?: number | null
+          click_through_rate?: number | null
+          conversion_value?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          cta_clicks?: number | null
+          date?: string
+          engagement_score?: number | null
+          id?: string
+          module_name?: string
+          scroll_past_count?: number | null
+          total_clicks?: number | null
+          total_views?: number | null
+          unique_users?: number | null
         }
         Relationships: []
       }
@@ -1735,6 +2000,48 @@ export type Database = {
           material_filter?: string | null
           related_material?: string | null
           tip_text?: string
+        }
+        Relationships: []
+      }
+      revenue_attribution: {
+        Row: {
+          conversion_type: string
+          created_at: string | null
+          currency: string | null
+          id: string
+          metadata: Json | null
+          revenue_amount: number | null
+          session_id: string | null
+          source_entity_id: string | null
+          source_entity_type: string | null
+          source_module: string
+          user_id: string | null
+        }
+        Insert: {
+          conversion_type: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          revenue_amount?: number | null
+          session_id?: string | null
+          source_entity_id?: string | null
+          source_entity_type?: string | null
+          source_module: string
+          user_id?: string | null
+        }
+        Update: {
+          conversion_type?: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          revenue_amount?: number | null
+          session_id?: string | null
+          source_entity_id?: string | null
+          source_entity_type?: string | null
+          source_module?: string
+          user_id?: string | null
         }
         Relationships: []
       }
