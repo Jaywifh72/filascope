@@ -290,7 +290,7 @@ export default function Printers() {
               placeholder="Search 105 printers by name, brand, or feature..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-[56px] text-lg pl-12 pr-6 rounded-full border-2 border-muted focus:border-primary shadow-sm"
+              className="w-full h-[56px] text-lg pl-12 pr-6 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.4)] focus:border-[#00D4D4] focus:shadow-[0_0_12px_rgba(0,212,212,0.3)] focus:outline-none transition-all duration-200"
             />
           </div>
         </section>
