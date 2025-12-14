@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogIn, LogOut, User, Shield, Archive, Database, Settings } from "lucide-react";
+import { LogIn, LogOut, User, Shield, Archive, Database, Settings, BookOpen, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/filascope-logo.png";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -96,9 +96,47 @@ const Navbar = () => {
             <Button variant="ghost" size="sm" asChild className="text-cyan-400 hover:text-cyan-300 font-mono text-xs">
               <Link to="/materials/compare">MATERIALS</Link>
             </Button>
-            <Button variant="ghost" size="sm" asChild className="text-red-400 hover:text-red-300 font-mono text-xs">
-              <Link to="/deals">DEALS</Link>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-emerald-400 hover:text-emerald-300 font-mono text-xs gap-1">
+                  <BookOpen className="w-3 h-3" />
+                  REFERENCE
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="bg-[#1A1A1A] border-[#333] min-w-[180px]">
+                <DropdownMenuItem asChild>
+                  <Link to="/reference/slicers" className="flex items-center font-mono text-xs">
+                    <Scissors className="w-3 h-3 mr-2" />
+                    SLICERS
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/reference/cad" className="flex items-center font-mono text-xs">
+                    <Box className="w-3 h-3 mr-2" />
+                    3D MODELING / CAD
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/reference/repos" className="flex items-center font-mono text-xs">
+                    <FolderGit2 className="w-3 h-3 mr-2" />
+                    3D PRINT REPOS
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/reference/influencers" className="flex items-center font-mono text-xs">
+                    <Youtube className="w-3 h-3 mr-2" />
+                    YOUTUBE INFLUENCERS
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/reference/specialty" className="flex items-center font-mono text-xs">
+                    <Sparkles className="w-3 h-3 mr-2" />
+                    SPECIALTY
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="ghost" size="sm" asChild className="text-purple-400 hover:text-purple-300 font-mono text-xs">
               <Link to="/wizard">WIZARD</Link>
             </Button>
