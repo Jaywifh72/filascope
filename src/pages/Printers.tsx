@@ -296,7 +296,7 @@ export default function Printers() {
         </section>
 
         {/* Filters Section */}
-        <section className="space-y-6">
+        <section className="space-y-6 mt-8">
           {/* Filter Row */}
           <div className="flex flex-wrap items-center gap-4">
             <Select value={selectedBrand} onValueChange={setSelectedBrand}>
