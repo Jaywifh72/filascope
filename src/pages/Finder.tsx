@@ -33,6 +33,7 @@ import { ActiveFilterTags, type ActiveFilter } from "@/components/filters/Active
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { MoreFiltersModal } from "@/components/filters/MoreFiltersModal";
+import { EngagementSidebar } from "@/components/sidebar/EngagementSidebar";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -1072,8 +1073,10 @@ const Finder = () => {
         onColorFamiliesChange={setSelectedColorFamilies}
       />
 
-      {/* Main Content - Full Width */}
-      <main className="max-w-[1800px] mx-auto px-4 lg:px-8 py-6">
+      {/* Main Content Area with Sidebar */}
+      <div className="max-w-[1800px] mx-auto px-4 lg:px-8 py-6 flex gap-6">
+        {/* Main Content */}
+        <main className="flex-1 min-w-0">
 
         {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
@@ -1356,6 +1359,10 @@ const Finder = () => {
           </div>
         )}
       </main>
+
+        {/* Engagement Sidebar */}
+        <EngagementSidebar currentMaterialFilter={selectedMaterials[0] !== "All" ? selectedMaterials[0] : undefined} />
+      </div>
 
       {/* Multi-select mode banner */}
       {isMultiSelectMode && (
