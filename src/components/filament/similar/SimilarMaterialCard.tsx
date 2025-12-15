@@ -19,6 +19,8 @@ import { QuickComparisonPreview } from "./QuickComparisonPreview";
 import { SideBySideComparisonDialog } from "./SideBySideComparisonDialog";
 import { QuickSwapDropdown } from "./QuickSwapDropdown";
 import { SelectableCardOverlay } from "./BatchSelectControls";
+import { WishlistBadge } from "./WishlistBadge";
+import { PrinterCompatibilityIndicator } from "./PrinterCompatibilityIndicator";
 import { toast } from "sonner";
 import type { EnhancedSimilarFilament } from "@/hooks/useEnhancedSimilarFilaments";
 
@@ -44,6 +46,17 @@ interface SimilarMaterialCardProps {
   isMultiSelectMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: () => void;
+  // Personalization props
+  isInWishlist?: boolean;
+  wishlistSavedDate?: string | null;
+  printerSpecs?: {
+    maxNozzleTemp: number | null;
+    maxBedTemp: number | null;
+    hasEnclosure: boolean | null;
+    abrasiveSupport: boolean | null;
+  } | null;
+  printerName?: string | null;
+  personalizationBadges?: string[];
 }
 
 const MATERIAL_COLORS: Record<string, string> = {
@@ -76,6 +89,11 @@ export function SimilarMaterialCard({
   isMultiSelectMode,
   isSelected,
   onToggleSelect,
+  isInWishlist,
+  wishlistSavedDate,
+  printerSpecs,
+  printerName,
+  personalizationBadges,
 }: SimilarMaterialCardProps) {
   const { addItem, isInCompare, isFull, triggerGlow } = useCompare();
   const isAdded = isInCompare(filament.id);
@@ -190,7 +208,21 @@ export function SimilarMaterialCard({
         </div>
       )}
 
-      {/* Header: Brand + Material Badge */}
+      {/* Wishlist Badge */}
+      {isInWishlist && (
+        <div className="absolute top-3 left-3">
+          <WishlistBadge savedDate={wishlistSavedDate} />
+        </div>
+      )}
+
+      {/* Personalization Badges */}
+      {personalizationBadges && personalizationBadges.length > 0 && !filament.isTrending && !isInWishlist && (
+        <div className="absolute top-3 left-3">
+          <Badge variant="outline" className="border-primary/50 bg-primary/10 text-primary text-xs">
+            {personalizationBadges[0]}
+          </Badge>
+        </div>
+      )}
       <div className="mb-3 mt-4 flex items-center justify-between">
         {brandLogo ? (
           <img
