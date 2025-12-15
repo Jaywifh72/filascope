@@ -6,7 +6,7 @@ import { BigCommerceScraper } from "./scrapers/bigcommerce.ts";
 import { AmazonScraper } from "./scrapers/amazon.ts";
 import { FirecrawlScraper } from "./scrapers/firecrawl.ts";
 import type { BaseScraper, ScrapedProduct } from "./scrapers/base.ts";
-import { calculateHash } from "./utils.ts";
+import { calculateHash, detectMaterial, extractColor, extractWeight, extractDiameter } from "./utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +23,7 @@ interface ScrapeRequest {
 
 interface ScrapeStats {
   processed: number;
+  created: number;
   updated: number;
   unchanged: number;
   errors: number;
@@ -40,6 +41,15 @@ interface SyncLog {
   started_at: string;
 }
 
+interface AutomatedBrandConfig {
+  id: string;
+  brand_name: string;
+  brand_slug: string;
+  auto_create_products: boolean;
+  scraping_enabled: boolean;
+  default_currency: string;
+}
+
 function getScraper(config: BrandConfig): BaseScraper {
   switch (config.platform) {
     case "shopify":
@@ -55,6 +65,72 @@ function getScraper(config: BrandConfig): BaseScraper {
     default:
       throw new Error(`Unknown platform: ${config.platform}`);
   }
+}
+
+// Get brand config from database for auto-creation settings
+async function getBrandConfig(supabase: SupabaseClient, vendor: string): Promise<AutomatedBrandConfig | null> {
+  const { data, error } = await supabase
+    .from("automated_brands")
+    .select("id, brand_name, brand_slug, auto_create_products, scraping_enabled, default_currency")
+    .or(`brand_name.ilike.%${vendor}%,brand_slug.eq.${vendor.toLowerCase().replace(/\s+/g, '-')}`)
+    .maybeSingle();
+  
+  if (error) {
+    console.error(`Error fetching brand config for ${vendor}:`, error);
+    return null;
+  }
+  
+  return data;
+}
+
+// Create a new filament from scraped product data
+async function createFilamentFromScrapedProduct(
+  supabase: SupabaseClient,
+  vendor: string,
+  brandConfig: AutomatedBrandConfig | null,
+  product: ScrapedProduct,
+  staticConfig: BrandConfig
+): Promise<boolean> {
+  const material = detectMaterial(product.title);
+  const colorInfo = extractColor(product.title);
+  const weight = extractWeight(product.title);
+  const diameter = extractDiameter(product.title);
+  
+  // Extract handle from URL
+  const urlParts = product.url.split('/');
+  const handle = urlParts[urlParts.length - 1] || product.productId;
+  
+  const filamentData = {
+    product_id: product.productId,
+    product_title: product.title,
+    product_handle: handle,
+    product_url: product.url,
+    vendor: vendor,
+    brand_id: brandConfig?.id || null,
+    material: material,
+    color_family: colorInfo?.family || null,
+    color_hex: colorInfo?.hex || null,
+    net_weight_g: weight,
+    diameter_nominal_mm: diameter || 1.75,
+    variant_price: product.price,
+    variant_compare_at_price: product.compareAtPrice,
+    variant_available: product.available,
+    variant_sku: product.sku || null,
+    auto_created: true,
+    auto_updated: true,
+    last_scraped_at: new Date().toISOString(),
+    sync_status: "synced",
+  };
+  
+  const { error } = await supabase.from("filaments").insert(filamentData);
+  
+  if (error) {
+    console.error(`❌ Failed to create filament ${product.title}:`, error);
+    throw error;
+  }
+  
+  console.log(`✨ Created: ${product.title} [${material || 'Unknown'}]`);
+  return true;
 }
 
 async function createSyncLog(
@@ -93,14 +169,16 @@ async function updateSyncLog(
       status,
       completed_at: new Date().toISOString(),
       records_fetched: stats.processed,
-      records_updated: stats.updated,
+      records_updated: stats.updated + stats.created,
       records_failed: stats.errors,
       duration_seconds: duration,
       success_details: {
+        created: stats.created,
+        updated: stats.updated,
         priceChanges: stats.priceChanges,
         availabilityChanges: stats.availabilityChanges,
         unchanged: stats.unchanged,
-        errorDetails: stats.errorDetails.slice(0, 50), // Limit error details
+        errorDetails: stats.errorDetails.slice(0, 50),
       },
       error_message: error || null,
     })
@@ -112,10 +190,12 @@ async function processScrapedProducts(
   products: ScrapedProduct[],
   vendor: string,
   dryRun: boolean,
-  force: boolean
+  force: boolean,
+  staticConfig: BrandConfig
 ): Promise<{ stats: ScrapeStats; results: unknown[] }> {
   const stats: ScrapeStats = {
     processed: 0,
+    created: 0,
     updated: 0,
     unchanged: 0,
     errors: 0,
@@ -125,6 +205,14 @@ async function processScrapedProducts(
     errorDetails: [],
   };
   const results: unknown[] = [];
+
+  // Get brand config from database for auto-creation settings
+  const brandConfig = await getBrandConfig(supabase, vendor);
+  const canAutoCreate = brandConfig?.auto_create_products ?? false;
+  
+  if (canAutoCreate) {
+    console.log(`🔧 Auto-creation enabled for ${vendor}`);
+  }
 
   for (const product of products) {
     stats.processed++;
@@ -145,7 +233,35 @@ async function processScrapedProducts(
         continue;
       }
 
+      // AUTO-CREATE: If no matching filament found and auto-creation is enabled
       if (!filament) {
+        if (canAutoCreate && !dryRun) {
+          try {
+            await createFilamentFromScrapedProduct(supabase, vendor, brandConfig, product, staticConfig);
+            stats.created++;
+            results.push({
+              productId: product.productId,
+              title: product.title,
+              status: "created",
+            });
+            continue;
+          } catch (createError) {
+            console.error(`Failed to create filament ${product.title}:`, createError);
+            stats.errors++;
+            stats.errorDetails.push(`${product.productId}: Creation failed`);
+            continue;
+          }
+        } else if (canAutoCreate && dryRun) {
+          stats.created++;
+          results.push({
+            productId: product.productId,
+            title: product.title,
+            status: "would_create",
+          });
+          continue;
+        }
+        
+        // No auto-create - log as not found
         console.log(`No matching filament found for: ${product.title} (${product.productId})`);
         stats.errors++;
         results.push({
@@ -325,6 +441,7 @@ Deno.serve(async (req) => {
     const allResults: Record<string, { stats: ScrapeStats; results: unknown[] }> = {};
     const totalStats: ScrapeStats = {
       processed: 0,
+      created: 0,
       updated: 0,
       unchanged: 0,
       errors: 0,
@@ -348,13 +465,15 @@ Deno.serve(async (req) => {
           products,
           v,
           dryRun,
-          force
+          force,
+          config
         );
 
         allResults[v] = { stats, results };
 
         // Aggregate stats
         totalStats.processed += stats.processed;
+        totalStats.created += stats.created;
         totalStats.updated += stats.updated;
         totalStats.unchanged += stats.unchanged;
         totalStats.errors += stats.errors;
@@ -368,6 +487,7 @@ Deno.serve(async (req) => {
         allResults[v] = {
           stats: {
             processed: 0,
+            created: 0,
             updated: 0,
             unchanged: 0,
             errors: 1,
@@ -390,7 +510,7 @@ Deno.serve(async (req) => {
       await updateSyncLog(supabase, syncLog.id, totalStats, executionTime);
     }
 
-    console.log(`\n✅ Completed in ${executionTime.toFixed(1)}s: ${totalStats.processed} processed, ${totalStats.updated} updated, ${totalStats.priceChanges} price changes`);
+    console.log(`\n✅ Completed in ${executionTime.toFixed(1)}s: ${totalStats.processed} processed, ${totalStats.created} created, ${totalStats.updated} updated, ${totalStats.priceChanges} price changes`);
 
     return new Response(
       JSON.stringify({
