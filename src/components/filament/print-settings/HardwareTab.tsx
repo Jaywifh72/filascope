@@ -1,6 +1,12 @@
 import { Flame, Package, Layers } from "lucide-react";
 import { HardwareSearchList } from "./HardwareSearchList";
+import { PrinterHardwareStatus } from "./PrinterHardwareStatus";
+import { CompatibilityWarningBanner } from "./CompatibilityWarningBanner";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import type { Database } from "@/integrations/supabase/types";
+
+type Filament = Database["public"]["Tables"]["filaments"]["Row"];
+type Printer = Database["public"]["Tables"]["printers"]["Row"];
 
 interface HardwareItem {
   id: string;
@@ -8,6 +14,9 @@ interface HardwareItem {
   brand: string | null;
   image_url: string | null;
   product_url: string | null;
+  price?: number | null;
+  currency?: string | null;
+  specs?: Record<string, unknown> | null;
   compatibility: {
     rating: 'green' | 'orange' | 'red';
     reason: string;
@@ -20,6 +29,8 @@ interface HardwareTabProps {
   compatibleBuildPlates: HardwareItem[];
   compatibleAms: HardwareItem[];
   printerModel: string;
+  printer?: Printer | null;
+  filament?: Filament | null;
 }
 
 export function HardwareTab({
@@ -27,6 +38,8 @@ export function HardwareTab({
   compatibleBuildPlates,
   compatibleAms,
   printerModel,
+  printer,
+  filament,
 }: HardwareTabProps) {
   const { getAffiliateUrl } = useAffiliateLinks();
 
@@ -47,6 +60,24 @@ export function HardwareTab({
         Hardware Compatibility
       </h3>
       
+      {/* Printer Hardware Status */}
+      {printerModel && filament && (
+        <PrinterHardwareStatus
+          printerModel={printerModel}
+          filamentMaterial={filament.material || ""}
+          isAbrasive={filament.is_nozzle_abrasive || false}
+          requiredNozzleTemp={filament.nozzle_temp_sweetspot_c || filament.nozzle_temp_max_c || 200}
+        />
+      )}
+      
+      {/* Compatibility Warnings */}
+      {printer && filament && (
+        <CompatibilityWarningBanner
+          printer={printer}
+          filament={filament}
+        />
+      )}
+      
       {/* Hotends */}
       <HardwareSearchList
         title="Compatible Hotends"
@@ -59,6 +90,7 @@ export function HardwareTab({
         detailPath="/hotends"
         emptyMessage="No hotends found for this printer"
         getAffiliateUrl={getAffiliateUrl}
+        accessoryType="hotend"
       />
       
       {/* Build Plates */}
@@ -71,6 +103,7 @@ export function HardwareTab({
         detailPath="/build-plates"
         emptyMessage="No build plates found"
         getAffiliateUrl={getAffiliateUrl}
+        accessoryType="build_plate"
       />
       
       {/* AMS/MMU Systems */}
@@ -82,6 +115,7 @@ export function HardwareTab({
         detailPath="/ams"
         emptyMessage="No AMS/MMU systems found"
         getAffiliateUrl={getAffiliateUrl}
+        accessoryType="ams_mmu"
       />
     </div>
   );
