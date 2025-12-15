@@ -19,6 +19,8 @@ interface ScrapeRequest {
   limit?: number;
   force?: boolean;
   dryRun?: boolean;
+  parseTds?: boolean; // Auto-parse TDS after scraping for filaments missing specs
+  tdsLimit?: number;  // Limit TDS parsing to prevent timeouts
 }
 
 interface ScrapeStats {
@@ -30,6 +32,8 @@ interface ScrapeStats {
   priceChanges: number;
   availabilityChanges: number;
   priceHistoryLogged: number;
+  tdsFound: number;
+  tdsParsed: number;
   errorDetails: string[];
 }
 
@@ -214,6 +218,8 @@ async function processScrapedProducts(
     priceChanges: 0,
     availabilityChanges: 0,
     priceHistoryLogged: 0,
+    tdsFound: 0,
+    tdsParsed: 0,
     errorDetails: [],
   };
   const results: unknown[] = [];
@@ -381,7 +387,8 @@ async function processScrapedProducts(
       }
       if (product.tdsUrl && !overrides.includes("tds_url") && !filament.tds_url) {
         updates.tds_url = product.tdsUrl;
-        console.log(`📄 Adding TDS for ${product.title}`);
+        stats.tdsFound++;
+        console.log(`📄 Adding TDS for ${product.title}: ${product.tdsUrl}`);
       }
       if (product.colorHex && !overrides.includes("color_hex") && !filament.color_hex) {
         updates.color_hex = product.colorHex;
@@ -446,6 +453,145 @@ async function processScrapedProducts(
   return { stats, results };
 }
 
+// Parse TDS for filaments that have TDS URLs but missing temperature data
+async function parseTdsForVendor(
+  supabase: SupabaseClient,
+  vendor: string,
+  limit: number = 10
+): Promise<{ parsed: number; failed: number; details: string[] }> {
+  const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
+  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+  
+  if (!firecrawlApiKey || !lovableApiKey) {
+    console.log("⚠️ Missing API keys for TDS parsing");
+    return { parsed: 0, failed: 0, details: ["Missing FIRECRAWL_API_KEY or LOVABLE_API_KEY"] };
+  }
+  
+  // Find filaments with TDS URLs but missing print settings
+  const { data: filaments, error } = await supabase
+    .from("filaments")
+    .select("id, product_title, tds_url, nozzle_temp_min_c, bed_temp_min_c")
+    .ilike("vendor", `%${vendor}%`)
+    .not("tds_url", "is", null)
+    .or("nozzle_temp_min_c.is.null,bed_temp_min_c.is.null")
+    .limit(limit);
+  
+  if (error || !filaments?.length) {
+    console.log(`📄 No filaments need TDS parsing for ${vendor}`);
+    return { parsed: 0, failed: 0, details: [] };
+  }
+  
+  console.log(`📄 Parsing TDS for ${filaments.length} filaments from ${vendor}`);
+  
+  const result = { parsed: 0, failed: 0, details: [] as string[] };
+  
+  for (const filament of filaments) {
+    try {
+      console.log(`  → Parsing TDS: ${filament.product_title}`);
+      
+      // Fetch TDS content
+      const tdsResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: filament.tds_url,
+          formats: ['markdown'],
+          onlyMainContent: false,
+          waitFor: 3000,
+        }),
+      });
+      
+      if (!tdsResponse.ok) {
+        console.log(`    ✗ Failed to fetch TDS`);
+        result.failed++;
+        result.details.push(`${filament.product_title}: Fetch failed`);
+        continue;
+      }
+      
+      const tdsData = await tdsResponse.json();
+      const markdown = tdsData.data?.markdown || '';
+      
+      if (markdown.length < 100) {
+        console.log(`    ✗ TDS content too short`);
+        result.failed++;
+        continue;
+      }
+      
+      // Extract with AI
+      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${lovableApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{
+            role: 'user',
+            content: `Extract 3D filament specs from this TDS. Return JSON with these fields (use null if not found):
+nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, bed_temp_max_c, 
+drying_temp_c, drying_time_hours, density_g_cm3, tensile_strength_xy_mpa,
+tensile_modulus_xy_mpa, elongation_break_xy_percent, tg_c, melt_temp_c.
+Return ONLY valid JSON.
+
+TDS Content:
+${markdown.substring(0, 12000)}`
+          }],
+        }),
+      });
+      
+      if (!aiResponse.ok) {
+        console.log(`    ✗ AI extraction failed`);
+        result.failed++;
+        continue;
+      }
+      
+      const aiData = await aiResponse.json();
+      let content = aiData.choices?.[0]?.message?.content || '';
+      
+      // Extract JSON from response
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) content = jsonMatch[1];
+      
+      const extracted = JSON.parse(content.trim());
+      
+      // Build update object
+      const updates: Record<string, unknown> = {};
+      if (extracted.nozzle_temp_min_c) updates.nozzle_temp_min_c = extracted.nozzle_temp_min_c;
+      if (extracted.nozzle_temp_max_c) updates.nozzle_temp_max_c = extracted.nozzle_temp_max_c;
+      if (extracted.bed_temp_min_c) updates.bed_temp_min_c = extracted.bed_temp_min_c;
+      if (extracted.bed_temp_max_c) updates.bed_temp_max_c = extracted.bed_temp_max_c;
+      if (extracted.drying_temp_c) updates.drying_temp_c = extracted.drying_temp_c;
+      if (extracted.drying_time_hours) updates.drying_time_hours = extracted.drying_time_hours;
+      if (extracted.density_g_cm3) updates.density_g_cm3 = extracted.density_g_cm3;
+      if (extracted.tensile_strength_xy_mpa) updates.tensile_strength_xy_mpa = extracted.tensile_strength_xy_mpa;
+      if (extracted.tensile_modulus_xy_mpa) updates.tensile_modulus_xy_mpa = extracted.tensile_modulus_xy_mpa;
+      if (extracted.elongation_break_xy_percent) updates.elongation_break_xy_percent = extracted.elongation_break_xy_percent;
+      if (extracted.tg_c) updates.tg_c = extracted.tg_c;
+      if (extracted.melt_temp_c) updates.melt_temp_c = extracted.melt_temp_c;
+      
+      if (Object.keys(updates).length > 0) {
+        await supabase.from("filaments").update(updates).eq("id", filament.id);
+        result.parsed++;
+        result.details.push(`${filament.product_title}: Extracted ${Object.keys(updates).length} fields`);
+        console.log(`    ✓ Extracted ${Object.keys(updates).length} fields`);
+      } else {
+        result.failed++;
+        console.log(`    ✗ No data extracted`);
+      }
+      
+    } catch (err) {
+      console.log(`    ✗ Error: ${err instanceof Error ? err.message : 'Unknown'}`);
+      result.failed++;
+    }
+  }
+  
+  return result;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -459,9 +605,9 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body: ScrapeRequest = req.method === "POST" ? await req.json() : {};
-    const { vendor, all = false, limit = 100, force = false, dryRun = false } = body;
+    const { vendor, all = false, limit = 100, force = false, dryRun = false, parseTds = false, tdsLimit = 10 } = body;
 
-    console.log(`🚀 Scrape request: vendor=${vendor}, all=${all}, limit=${limit}, force=${force}, dryRun=${dryRun}`);
+    console.log(`🚀 Scrape request: vendor=${vendor}, all=${all}, limit=${limit}, force=${force}, dryRun=${dryRun}, parseTds=${parseTds}`);
 
     // Determine which vendors to scrape
     const vendorsToScrape: string[] = [];
@@ -499,6 +645,8 @@ Deno.serve(async (req) => {
       priceChanges: 0,
       availabilityChanges: 0,
       priceHistoryLogged: 0,
+      tdsFound: 0,
+      tdsParsed: 0,
       errorDetails: [],
     };
 
@@ -542,7 +690,19 @@ Deno.serve(async (req) => {
         totalStats.priceChanges += stats.priceChanges;
         totalStats.availabilityChanges += stats.availabilityChanges;
         totalStats.priceHistoryLogged += stats.priceHistoryLogged;
+        totalStats.tdsFound += stats.tdsFound;
         totalStats.errorDetails.push(...stats.errorDetails);
+
+        // Parse TDS if requested
+        if (parseTds && !dryRun) {
+          console.log(`\n📄 Parsing TDS for ${v}...`);
+          const tdsResult = await parseTdsForVendor(supabase, v, tdsLimit);
+          totalStats.tdsParsed += tdsResult.parsed;
+          if (tdsResult.details.length > 0) {
+            totalStats.errorDetails.push(...tdsResult.details);
+          }
+          console.log(`📄 TDS parsed: ${tdsResult.parsed} success, ${tdsResult.failed} failed`);
+        }
       } catch (err) {
         console.error(`❌ Error scraping ${v}:`, err);
         const errorMsg = err instanceof Error ? err.message : "Unknown error";
@@ -556,6 +716,8 @@ Deno.serve(async (req) => {
           priceChanges: 0,
           availabilityChanges: 0,
           priceHistoryLogged: 0,
+          tdsFound: 0,
+          tdsParsed: 0,
           errorDetails: [errorMsg],
         };
         
