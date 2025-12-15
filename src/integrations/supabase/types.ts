@@ -601,6 +601,60 @@ export type Database = {
           },
         ]
       }
+      filament_inventory: {
+        Row: {
+          currency: string | null
+          estimated_ship_days: number | null
+          filament_id: string
+          id: string
+          last_checked: string | null
+          price: number | null
+          product_url: string | null
+          retailer_id: string
+          stock_quantity: number | null
+          stock_status: string
+        }
+        Insert: {
+          currency?: string | null
+          estimated_ship_days?: number | null
+          filament_id: string
+          id?: string
+          last_checked?: string | null
+          price?: number | null
+          product_url?: string | null
+          retailer_id: string
+          stock_quantity?: number | null
+          stock_status?: string
+        }
+        Update: {
+          currency?: string | null
+          estimated_ship_days?: number | null
+          filament_id?: string
+          id?: string
+          last_checked?: string | null
+          price?: number | null
+          product_url?: string | null
+          retailer_id?: string
+          stock_quantity?: number | null
+          stock_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filament_inventory_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_inventory_retailer_id_fkey"
+            columns: ["retailer_id"]
+            isOneToOne: false
+            referencedRelation: "retailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filament_score_history: {
         Row: {
           change_reason: string | null
@@ -1960,6 +2014,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          amazon_prime_member: boolean | null
           avatar_url: string | null
           created_at: string | null
           display_name: string | null
@@ -1967,12 +2022,16 @@ export type Database = {
           id: string
           preferred_currency: string | null
           preferred_slicer: string | null
+          retailer_memberships: Json | null
+          shipping_country: string | null
+          shipping_zip_code: string | null
           updated_at: string | null
           wishlist_email_digest: boolean | null
           wishlist_price_alerts: boolean | null
           wishlist_restock_alerts: boolean | null
         }
         Insert: {
+          amazon_prime_member?: boolean | null
           avatar_url?: string | null
           created_at?: string | null
           display_name?: string | null
@@ -1980,12 +2039,16 @@ export type Database = {
           id: string
           preferred_currency?: string | null
           preferred_slicer?: string | null
+          retailer_memberships?: Json | null
+          shipping_country?: string | null
+          shipping_zip_code?: string | null
           updated_at?: string | null
           wishlist_email_digest?: boolean | null
           wishlist_price_alerts?: boolean | null
           wishlist_restock_alerts?: boolean | null
         }
         Update: {
+          amazon_prime_member?: boolean | null
           avatar_url?: string | null
           created_at?: string | null
           display_name?: string | null
@@ -1993,6 +2056,9 @@ export type Database = {
           id?: string
           preferred_currency?: string | null
           preferred_slicer?: string | null
+          retailer_memberships?: Json | null
+          shipping_country?: string | null
+          shipping_zip_code?: string | null
           updated_at?: string | null
           wishlist_email_digest?: boolean | null
           wishlist_price_alerts?: boolean | null
@@ -2104,6 +2170,66 @@ export type Database = {
           material_filter?: string | null
           related_material?: string | null
           tip_text?: string
+        }
+        Relationships: []
+      }
+      retailers: {
+        Row: {
+          created_at: string | null
+          customer_service_rating: number | null
+          flat_rate_shipping: number | null
+          free_shipping_threshold: number | null
+          id: string
+          logo_url: string | null
+          membership_program: string | null
+          name: string
+          regions_served: string[] | null
+          restocking_fee_percent: number | null
+          return_policy_days: number | null
+          return_policy_type: string | null
+          shipping_speed_rating: number | null
+          slug: string
+          trust_score: number | null
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_service_rating?: number | null
+          flat_rate_shipping?: number | null
+          free_shipping_threshold?: number | null
+          id?: string
+          logo_url?: string | null
+          membership_program?: string | null
+          name: string
+          regions_served?: string[] | null
+          restocking_fee_percent?: number | null
+          return_policy_days?: number | null
+          return_policy_type?: string | null
+          shipping_speed_rating?: number | null
+          slug: string
+          trust_score?: number | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_service_rating?: number | null
+          flat_rate_shipping?: number | null
+          free_shipping_threshold?: number | null
+          id?: string
+          logo_url?: string | null
+          membership_program?: string | null
+          name?: string
+          regions_served?: string[] | null
+          restocking_fee_percent?: number | null
+          return_policy_days?: number | null
+          return_policy_type?: string | null
+          shipping_speed_rating?: number | null
+          slug?: string
+          trust_score?: number | null
+          updated_at?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -2353,6 +2479,56 @@ export type Database = {
             columns: ["collection_id"]
             isOneToOne: false
             referencedRelation: "wishlist_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_estimates: {
+        Row: {
+          carrier: string | null
+          dest_country: string
+          dest_zip_prefix: string | null
+          id: string
+          max_days: number | null
+          min_days: number | null
+          origin_region: string
+          retailer_id: string
+          shipping_cost: number | null
+          shipping_currency: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          carrier?: string | null
+          dest_country: string
+          dest_zip_prefix?: string | null
+          id?: string
+          max_days?: number | null
+          min_days?: number | null
+          origin_region: string
+          retailer_id: string
+          shipping_cost?: number | null
+          shipping_currency?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          carrier?: string | null
+          dest_country?: string
+          dest_zip_prefix?: string | null
+          id?: string
+          max_days?: number | null
+          min_days?: number | null
+          origin_region?: string
+          retailer_id?: string
+          shipping_cost?: number | null
+          shipping_currency?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_estimates_retailer_id_fkey"
+            columns: ["retailer_id"]
+            isOneToOne: false
+            referencedRelation: "retailers"
             referencedColumns: ["id"]
           },
         ]
