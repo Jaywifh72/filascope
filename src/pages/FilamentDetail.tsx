@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette, Ban, Search } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette, Ban, Search, PlayCircle } from "lucide-react";
 import { ScoreCardsSection } from "@/components/filament/ScoreCardsSection";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -31,6 +31,11 @@ import { normalizeColorHex } from "@/lib/utils";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { MaterialValueProposition } from "@/components/filament/MaterialValueProposition";
 import { PurchaseSection } from "@/components/filament/PurchaseSection";
+import { CommonMistakesPanel } from "@/components/filament/education/CommonMistakesPanel";
+import { VideoThumbnail } from "@/components/filament/education/VideoThumbnail";
+import { VideoPlayerModal } from "@/components/filament/education/VideoPlayerModal";
+import { getVideosByMaterial } from "@/lib/videoTutorials";
+import { useAchievements } from "@/hooks/useAchievements";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -62,6 +67,7 @@ const FilamentDetail = () => {
   const [savingUrl, setSavingUrl] = useState(false);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
   const { formatPrice, currencyInfo } = useCurrency();
+  const { incrementStat } = useAchievements();
 
   const compatibility = selectedPrinter && filament 
     ? checkPrinterFilamentCompatibility(selectedPrinter, filament)
@@ -83,6 +89,13 @@ const FilamentDetail = () => {
   useEffect(() => {
     fetchFilament();
   }, [id]);
+
+  // Track material exploration for achievements
+  useEffect(() => {
+    if (filament?.id) {
+      incrementStat('materials_explored');
+    }
+  }, [filament?.id]);
 
   // Fetch compatible hotends when printer is selected
   useEffect(() => {
@@ -1298,6 +1311,37 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   printerBrand={selectedPrinter?.brand?.brand}
                   printerName={selectedPrinter?.model_name}
                 />
+
+                {/* Common Mistakes Panel */}
+                {filament.material && (
+                  <CommonMistakesPanel 
+                    material={filament.material} 
+                    compact 
+                    maxItems={3}
+                  />
+                )}
+
+                {/* Helpful Videos Section */}
+                {filament.material && getVideosByMaterial(filament.material).length > 0 && (
+                  <Card className="bg-card/50 border-border">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <PlayCircle className="w-4 h-4 text-primary" />
+                        Helpful Videos for {filament.material}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {getVideosByMaterial(filament.material).slice(0, 3).map(video => (
+                          <VideoThumbnail
+                            key={video.id}
+                            videoId={video.id}
+                          />
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </CardContent>
