@@ -33,12 +33,9 @@ interface ScrapeStats {
   errorDetails: string[];
 }
 
-interface SyncLog {
-  id: string;
-  sync_type: string;
-  data_source: string;
-  status: string;
-  started_at: string;
+// Convert vendor name to brand_slug format
+function toBrandSlug(vendor: string): string {
+  return vendor.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
 
 interface AutomatedBrandConfig {
@@ -133,56 +130,44 @@ async function createFilamentFromScrapedProduct(
   return true;
 }
 
-async function createSyncLog(
+// Create sync log using proper RPC function that writes to brand_sync_logs
+async function createBrandSyncLog(
   supabase: SupabaseClient,
-  dataSource: string
-): Promise<SyncLog | null> {
-  const { data, error } = await supabase
-    .from("sync_logs")
-    .insert({
-      sync_type: "filaments",
-      data_source: dataSource,
-      status: "running",
-    })
-    .select()
-    .single();
+  brandSlug: string
+): Promise<string | null> {
+  const { data, error } = await supabase.rpc('create_brand_sync_log', {
+    p_brand_slug: brandSlug,
+    p_sync_type: 'full_scrape',
+    p_triggered_by: 'manual'
+  });
 
   if (error) {
-    console.error("Failed to create sync log:", error);
+    console.error(`Failed to create brand sync log for ${brandSlug}:`, error);
     return null;
   }
   return data;
 }
 
-async function updateSyncLog(
+// Complete sync log using proper RPC function that updates brand_sync_logs AND automated_brands
+async function completeBrandSyncLog(
   supabase: SupabaseClient,
-  logId: string,
-  stats: ScrapeStats,
-  duration: number,
-  error?: string
+  syncLogId: string,
+  stats: ScrapeStats
 ): Promise<void> {
-  const status = error ? "failed" : stats.errors > 0 ? "partial" : "completed";
-  
-  await supabase
-    .from("sync_logs")
-    .update({
-      status,
-      completed_at: new Date().toISOString(),
-      records_fetched: stats.processed,
-      records_updated: stats.updated + stats.created,
-      records_failed: stats.errors,
-      duration_seconds: duration,
-      success_details: {
-        created: stats.created,
-        updated: stats.updated,
-        priceChanges: stats.priceChanges,
-        availabilityChanges: stats.availabilityChanges,
-        unchanged: stats.unchanged,
-        errorDetails: stats.errorDetails.slice(0, 50),
-      },
-      error_message: error || null,
-    })
-    .eq("id", logId);
+  const { error } = await supabase.rpc('complete_brand_scrape', {
+    p_sync_log_id: syncLogId,
+    p_success: stats.errors === 0,
+    p_products_discovered: stats.processed,
+    p_products_created: stats.created,
+    p_products_updated: stats.updated,
+    p_products_failed: stats.errors,
+    p_price_changes: stats.priceChanges,
+    p_error_message: stats.errors > 0 ? stats.errorDetails.slice(0, 5).join('; ') : null
+  });
+
+  if (error) {
+    console.error(`Failed to complete brand sync log ${syncLogId}:`, error);
+  }
 }
 
 async function processScrapedProducts(
@@ -432,13 +417,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create sync log
-    const syncLog = await createSyncLog(
-      supabase,
-      vendor || "multi-brand-scrape"
-    );
-
-    const allResults: Record<string, { stats: ScrapeStats; results: unknown[] }> = {};
+    const allResults: Record<string, { stats: ScrapeStats; results: unknown[]; syncLogId?: string }> = {};
     const totalStats: ScrapeStats = {
       processed: 0,
       created: 0,
@@ -455,6 +434,11 @@ Deno.serve(async (req) => {
       console.log(`\n=== Scraping ${v} ===`);
       const config = BRAND_CONFIGS[v];
       const scraper = getScraper(config);
+      
+      // Convert vendor name to brand_slug and create sync log for this vendor
+      const brandSlug = toBrandSlug(v);
+      console.log(`📝 Creating sync log for brand_slug: ${brandSlug}`);
+      const syncLogId = await createBrandSyncLog(supabase, brandSlug);
 
       try {
         const products = await scraper.scrapeAllProducts(limit);
@@ -469,7 +453,13 @@ Deno.serve(async (req) => {
           config
         );
 
-        allResults[v] = { stats, results };
+        allResults[v] = { stats, results, syncLogId: syncLogId || undefined };
+
+        // Complete the sync log for this vendor (updates brand_sync_logs AND automated_brands)
+        if (syncLogId) {
+          await completeBrandSyncLog(supabase, syncLogId, stats);
+          console.log(`✅ Completed sync log for ${v}: ${stats.created} created, ${stats.updated} updated`);
+        }
 
         // Aggregate stats
         totalStats.processed += stats.processed;
@@ -484,31 +474,36 @@ Deno.serve(async (req) => {
       } catch (err) {
         console.error(`❌ Error scraping ${v}:`, err);
         const errorMsg = err instanceof Error ? err.message : "Unknown error";
-        allResults[v] = {
-          stats: {
-            processed: 0,
-            created: 0,
-            updated: 0,
-            unchanged: 0,
-            errors: 1,
-            priceChanges: 0,
-            availabilityChanges: 0,
-            priceHistoryLogged: 0,
-            errorDetails: [errorMsg],
-          },
-          results: [{ status: "error", error: errorMsg }],
+        
+        const errorStats: ScrapeStats = {
+          processed: 0,
+          created: 0,
+          updated: 0,
+          unchanged: 0,
+          errors: 1,
+          priceChanges: 0,
+          availabilityChanges: 0,
+          priceHistoryLogged: 0,
+          errorDetails: [errorMsg],
         };
+        
+        allResults[v] = {
+          stats: errorStats,
+          results: [{ status: "error", error: errorMsg }],
+          syncLogId: syncLogId || undefined,
+        };
+        
+        // Complete sync log with error status
+        if (syncLogId) {
+          await completeBrandSyncLog(supabase, syncLogId, errorStats);
+        }
+        
         totalStats.errors++;
         totalStats.errorDetails.push(`${v}: ${errorMsg}`);
       }
     }
 
     const executionTime = (Date.now() - startTime) / 1000;
-
-    // Update sync log
-    if (syncLog) {
-      await updateSyncLog(supabase, syncLog.id, totalStats, executionTime);
-    }
 
     console.log(`\n✅ Completed in ${executionTime.toFixed(1)}s: ${totalStats.processed} processed, ${totalStats.created} created, ${totalStats.updated} updated, ${totalStats.priceChanges} price changes`);
 
@@ -520,7 +515,6 @@ Deno.serve(async (req) => {
         totalStats,
         vendorResults: allResults,
         executionTime: `${executionTime.toFixed(1)}s`,
-        syncLogId: syncLog?.id,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
