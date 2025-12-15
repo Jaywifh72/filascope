@@ -2,12 +2,17 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   calculatePriceComparison,
-  generateDifferentiators,
+  generateEnhancedDifferentiators,
   getBestForDescription,
   calculateOverallScore,
   calculatePricePerKg,
+  generateCostBenefitAnalysis,
+  getStandoutBadges,
+  getMaterialCategory,
   type PriceComparison,
-  type Differentiator,
+  type EnhancedDifferentiator,
+  type CostBenefitAnalysis,
+  type StandoutBadge,
 } from "@/lib/filamentDifferentiators";
 import {
   calculateRecommendationFactors,
@@ -34,9 +39,13 @@ export interface EnhancedSimilarFilament {
   ease_of_printing_score: number | null;
   strength_index: number | null;
   printability_index: number | null;
+  tg_c: number | null;
+  high_speed_capable: boolean | null;
   overallScore: number | null;
   priceComparison: PriceComparison | null;
-  differentiators: Differentiator[];
+  differentiators: EnhancedDifferentiator[];
+  costBenefitAnalysis: CostBenefitAnalysis | null;
+  standoutBadges: StandoutBadge[];
   bestFor: string;
   factors: RecommendationFactors;
   explanation: RecommendationExplanation;
@@ -59,8 +68,12 @@ interface UseEnhancedSimilarFilamentsResult {
 
 interface ExtendedCandidate extends ScoredCandidate {
   featured_image: string | null;
-  differentiators: Differentiator[];
+  differentiators: EnhancedDifferentiator[];
+  costBenefitAnalysis: CostBenefitAnalysis | null;
+  standoutBadges: StandoutBadge[];
   bestFor: string;
+  tg_c: number | null;
+  high_speed_capable: boolean | null;
 }
 
 export function useEnhancedSimilarFilaments(
@@ -73,6 +86,7 @@ export function useEnhancedSimilarFilaments(
     value_score?: number | null;
     strength_index?: number | null;
     printability_index?: number | null;
+    tg_c?: number | null;
   },
   options: UseEnhancedSimilarFilamentsOptions = {}
 ): UseEnhancedSimilarFilamentsResult {
@@ -88,7 +102,7 @@ export function useEnhancedSimilarFilaments(
     limit = 6,
   } = options;
 
-  // Fetch candidates
+  // Fetch candidates with expanded fields
   useEffect(() => {
     if (!filamentId || !material) {
       setIsLoading(false);
@@ -106,7 +120,8 @@ export function useEnhancedSimilarFilaments(
             id, product_id, product_title, vendor, material, featured_image,
             variant_price, net_weight_g, value_score, ease_of_printing_score,
             strength_index, printability_index, use_case_tags,
-            nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, is_nozzle_abrasive
+            nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, is_nozzle_abrasive,
+            tg_c, high_speed_capable, tensile_strength_xy_mpa, finish_type
           `)
           .neq("id", filamentId)
           .ilike("material", `${baseMaterial}%`)
@@ -161,6 +176,9 @@ export function useEnhancedSimilarFilaments(
     [filamentId, vendor, material, currentScores]
   );
 
+  // Get material category for contextual metrics
+  const materialCategory = useMemo(() => getMaterialCategory(material || null), [material]);
+
   // Process and score recommendations
   const recommendations = useMemo(() => {
     if (candidates.length === 0) return [];
@@ -194,17 +212,37 @@ export function useEnhancedSimilarFilaments(
       );
 
       const priceComparison = calculatePriceComparison(currentPricePerKg, pricePerKg);
-      const differentiators = generateDifferentiators(currentScores, {
-        ease_of_printing_score: candidate.ease_of_printing_score,
-        value_score: candidate.value_score,
-        strength_index: candidate.strength_index,
-        printability_index: candidate.printability_index,
-      });
+      
+      // Generate enhanced differentiators with real-world impact
+      const differentiators = generateEnhancedDifferentiators(
+        { ...currentScores, tg_c: currentScores.tg_c },
+        {
+          ease_of_printing_score: candidate.ease_of_printing_score,
+          value_score: candidate.value_score,
+          strength_index: candidate.strength_index,
+          printability_index: candidate.printability_index,
+          tg_c: candidate.tg_c,
+          high_speed_capable: candidate.high_speed_capable,
+        },
+        materialCategory
+      );
+
+      // Calculate strength and ease diffs for cost-benefit
+      const strengthDiff = currentScores.strength_index != null && candidate.strength_index != null
+        ? ((candidate.strength_index - currentScores.strength_index) / Math.abs(currentScores.strength_index || 0.01)) * 100
+        : null;
+      const easeDiff = currentScores.printability_index != null && candidate.printability_index != null
+        ? ((candidate.printability_index - currentScores.printability_index) / Math.abs(currentScores.printability_index || 0.01)) * 100
+        : null;
+
+      const costBenefitAnalysis = generateCostBenefitAnalysis(priceComparison, strengthDiff, easeDiff);
+
       const bestFor = getBestForDescription(candidate.material, {
         ease_of_printing_score: candidate.ease_of_printing_score,
         value_score: candidate.value_score,
         strength_index: candidate.strength_index,
       });
+      
       const overallScore = calculateOverallScore(candidate);
       const isTrending = factors.trendingScore > 0.6;
 
@@ -216,13 +254,24 @@ export function useEnhancedSimilarFilaments(
         overallScore,
         isTrending,
         differentiators,
+        costBenefitAnalysis,
+        standoutBadges: [], // Will be calculated after we have all candidates
         bestFor,
         featured_image: candidate.featured_image,
+        tg_c: candidate.tg_c,
+        high_speed_capable: candidate.high_speed_capable,
       });
     }
 
     // Apply diversity enforcement
     const diverse = ensureDiversity(scoredCandidates, vendor, limit);
+
+    // Calculate standout badges based on the diverse set
+    const allScores = diverse.map(c => ({
+      value_score: c.value_score,
+      ease_of_printing_score: c.ease_of_printing_score,
+      strength_index: c.strength_index,
+    }));
 
     // Generate explanations and build final result
     return diverse.map((candidate) => {
@@ -232,6 +281,17 @@ export function useEnhancedSimilarFilaments(
         candidate.factors,
         vendor,
         userContext
+      );
+
+      // Calculate standout badges for this candidate
+      const standoutBadges = getStandoutBadges(
+        {
+          value_score: candidate.value_score,
+          ease_of_printing_score: candidate.ease_of_printing_score,
+          strength_index: candidate.strength_index,
+          high_speed_capable: extCandidate.high_speed_capable,
+        },
+        allScores
       );
 
       return {
@@ -247,16 +307,20 @@ export function useEnhancedSimilarFilaments(
         ease_of_printing_score: candidate.ease_of_printing_score,
         strength_index: candidate.strength_index,
         printability_index: candidate.printability_index,
+        tg_c: extCandidate.tg_c,
+        high_speed_capable: extCandidate.high_speed_capable,
         overallScore: candidate.overallScore,
         priceComparison: candidate.priceComparison,
         differentiators: extCandidate.differentiators,
+        costBenefitAnalysis: extCandidate.costBenefitAnalysis,
+        standoutBadges,
         bestFor: extCandidate.bestFor,
         factors: candidate.factors,
         explanation,
         isTrending: candidate.isTrending || false,
       } as EnhancedSimilarFilament;
     });
-  }, [candidates, currentPricePerKg, currentScores, vendor, currentFilament, userContext, limit]);
+  }, [candidates, currentPricePerKg, currentScores, vendor, currentFilament, userContext, limit, materialCategory]);
 
   return { recommendations, isLoading };
 }

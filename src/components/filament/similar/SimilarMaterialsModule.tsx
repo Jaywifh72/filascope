@@ -159,7 +159,7 @@ export function SimilarMaterialsModule({
         >
           {recommendations.map((rec) => (
             <div key={rec.id} className="snap-start">
-              <SimilarMaterialCard filament={rec} />
+              <SimilarMaterialCard filament={rec} currentScores={currentScores} />
             </div>
           ))}
         </div>
