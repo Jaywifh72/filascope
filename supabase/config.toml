@@ -140,3 +140,6 @@ verify_jwt = true
 
 [functions.scrape-printer-software]
 verify_jwt = true
+
+[functions.scrape-brand-data]
+verify_jwt = true
