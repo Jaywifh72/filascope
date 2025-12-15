@@ -4,6 +4,7 @@ import { ShopifyScraper } from "./scrapers/shopify.ts";
 import { WooCommerceScraper } from "./scrapers/woocommerce.ts";
 import { BigCommerceScraper } from "./scrapers/bigcommerce.ts";
 import { AmazonScraper } from "./scrapers/amazon.ts";
+import { FirecrawlScraper } from "./scrapers/firecrawl.ts";
 import type { BaseScraper, ScrapedProduct } from "./scrapers/base.ts";
 import { calculateHash } from "./utils.ts";
 
@@ -49,6 +50,8 @@ function getScraper(config: BrandConfig): BaseScraper {
       return new BigCommerceScraper(config);
     case "amazon":
       return new AmazonScraper(config);
+    case "firecrawl":
+      return new FirecrawlScraper(config);
     default:
       throw new Error(`Unknown platform: ${config.platform}`);
   }
