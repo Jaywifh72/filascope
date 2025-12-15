@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Printer, Dumbbell, Coins, Info, ChartBar, Star, ExternalLink } from 'lucide-react';
+import { Printer, Dumbbell, Coins, Info, ChartBar, Star, ExternalLink, Globe, Layers } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ScoreCardData, SCORE_COLORS, DEFAULT_MATERIAL_STATS, normalizeStrengthIndex } from '@/lib/scoreCardService';
@@ -9,8 +9,15 @@ import { ContextualComparisons } from './ContextualComparisons';
 import { ScoreTrendIndicator, TrendData } from './ScoreTrendIndicator';
 import { CategoryBreakdown } from './CategoryBreakdown';
 import { InfoTooltip } from './education/InfoTooltip';
+import { ConditionalScore } from './ConditionalScore';
+import { CommunityVsLabScore } from './CommunityVsLabScore';
+import { ScoreHistoryChart } from './ScoreHistoryChart';
 import { useContextualComparisons } from '@/hooks/useContextualComparisons';
 import { useCategoryComparisons } from '@/hooks/useCategoryComparisons';
+import { useScoreHistory } from '@/hooks/useScoreHistory';
+import { ConditionalScoreResult } from '@/lib/conditionalScoring';
+import { CommunityRatingStats } from '@/hooks/useCommunityRatings';
+import { ScoringMode } from './ScoringModeToggle';
 
 interface ScoreCardProps {
   data: ScoreCardData;
@@ -18,6 +25,10 @@ interface ScoreCardProps {
   material: string | null;
   onMethodologyClick: () => void;
   animationDelay?: number;
+  scoringMode?: ScoringMode;
+  conditionalScore?: ConditionalScoreResult;
+  printerName?: string;
+  communityStats?: CommunityRatingStats | null;
 }
 
 const ICONS = {
@@ -73,8 +84,19 @@ function generateTrendData(currentScore: number): TrendData {
   };
 }
 
-export function ScoreCard({ data, filamentId, material, onMethodologyClick, animationDelay = 0 }: ScoreCardProps) {
+export function ScoreCard({ 
+  data, 
+  filamentId, 
+  material, 
+  onMethodologyClick, 
+  animationDelay = 0,
+  scoringMode = 'absolute',
+  conditionalScore,
+  printerName,
+  communityStats
+}: ScoreCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const Icon = ICONS[data.icon];
   const colors = SCORE_COLORS[data.rating];
   
@@ -93,6 +115,14 @@ export function ScoreCard({ data, filamentId, material, onMethodologyClick, anim
     data.id,
     data.displayScore
   );
+  
+  // Fetch score history
+  const scoreHistory = useScoreHistory(filamentId);
+  const historyForType = data.id === 'ease_of_printing' 
+    ? scoreHistory.easeOfPrinting 
+    : data.id === 'strength_index'
+      ? scoreHistory.strengthIndex
+      : scoreHistory.valueScore;
   
   // Generate trend data
   const trendData = generateTrendData(data.displayScore);
@@ -119,6 +149,11 @@ export function ScoreCard({ data, filamentId, material, onMethodologyClick, anim
   
   const distributionBounds = getDistributionBounds();
   
+  // Determine which score to show based on mode
+  const displayScore = conditionalScore && printerName 
+    ? conditionalScore.adjustedScore 
+    : data.displayScore;
+  
   return (
     <div
       className={cn(
@@ -140,38 +175,73 @@ export function ScoreCard({ data, filamentId, material, onMethodologyClick, anim
           <span className="font-semibold text-foreground">{data.label}</span>
           <InfoTooltip term={data.id} side="right" />
         </div>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button 
-                onClick={onMethodologyClick}
-                className="p-1.5 rounded-full hover:bg-muted/50 transition-colors"
-                aria-label="View methodology"
-                data-coach="methodology-button"
-              >
-                <Info className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Click for score breakdown</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex items-center gap-1">
+          {/* Scoring mode indicator */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={cn(
+                  "px-1.5 py-0.5 rounded text-[10px] font-medium flex items-center gap-1",
+                  scoringMode === 'relative' 
+                    ? "bg-cyan-500/20 text-cyan-400" 
+                    : "bg-muted/50 text-muted-foreground"
+                )}>
+                  {scoringMode === 'relative' ? (
+                    <>
+                      <Layers className="w-3 h-3" />
+                      vs {material?.split('-')[0]?.split(' ')[0] || 'Same'}
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="w-3 h-3" />
+                      vs All
+                    </>
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">
+                  {scoringMode === 'relative' 
+                    ? 'Compared within same material type' 
+                    : 'Compared against all materials'}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button 
+                  onClick={onMethodologyClick}
+                  className="p-1.5 rounded-full hover:bg-muted/50 transition-colors"
+                  aria-label="View methodology"
+                  data-coach="methodology-button"
+                >
+                  <Info className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Click for score breakdown</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
       
       {/* Score Display */}
       <div className="text-center mb-4">
         <div className="flex items-center justify-center gap-2 mb-2">
           <span className={cn('text-4xl font-bold tabular-nums', colors.text)}>
-            {data.displayScore.toFixed(1)}
+            {displayScore.toFixed(1)}
           </span>
           <span className="text-xl text-muted-foreground">/10</span>
         </div>
         
         {/* Star Rating (only for scores 4+) */}
-        {data.displayScore >= 4 && (
+        {displayScore >= 4 && (
           <div className="flex justify-center mb-3">
-            <StarRating score={data.displayScore} />
+            <StarRating score={displayScore} />
           </div>
         )}
         
@@ -188,6 +258,17 @@ export function ScoreCard({ data, filamentId, material, onMethodologyClick, anim
       <p className="text-sm text-muted-foreground leading-relaxed mb-4">
         {data.description}
       </p>
+      
+      {/* Conditional Score (printer-based adjustments) */}
+      {conditionalScore && printerName && conditionalScore.adjustments.length > 0 && (
+        <div className="mb-4">
+          <ConditionalScore
+            result={conditionalScore}
+            printerName={printerName}
+            scoreLabel={data.label}
+          />
+        </div>
+      )}
       
       {/* Context Note (for special cases like low PLA strength) */}
       {data.contextNote && (
@@ -212,13 +293,38 @@ export function ScoreCard({ data, filamentId, material, onMethodologyClick, anim
         </div>
       )}
       
+      {/* Community vs Lab Score */}
+      {communityStats && (
+        <div className="mb-4">
+          <CommunityVsLabScore
+            labScore={data.displayScore}
+            communityStats={communityStats}
+            scoreLabel={data.label}
+          />
+        </div>
+      )}
+      
+      {/* Score History Chart */}
+      {(historyForType.length > 0 || showHistory) && (
+        <div className="mb-4">
+          <ScoreHistoryChart
+            history={historyForType}
+            currentScore={data.displayScore}
+            scoreLabel={data.label}
+            color={colors.text.includes('green') ? 'hsl(var(--chart-2))' : 
+                   colors.text.includes('cyan') ? 'hsl(var(--chart-1))' : 
+                   'hsl(var(--chart-3))'}
+          />
+        </div>
+      )}
+      
       {/* Enhanced Comparison Section */}
       {data.comparison && (
         <div className="bg-muted/30 rounded-lg p-3 space-y-4" data-coach="comparison-section">
           {/* Header */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-foreground">
-              You: <span className="font-semibold">{data.displayScore.toFixed(1)}</span>
+              You: <span className="font-semibold">{displayScore.toFixed(1)}</span>
             </span>
             <span className="text-muted-foreground">
               Avg: <span className="font-medium">{data.comparison.average.toFixed(1)}</span>
@@ -230,7 +336,7 @@ export function ScoreCard({ data, filamentId, material, onMethodologyClick, anim
             min={distributionBounds.min}
             max={distributionBounds.max}
             mean={distributionBounds.mean}
-            currentScore={data.displayScore}
+            currentScore={displayScore}
             percentile={data.comparison.percentile}
             colorClass={colors.fill}
           />
@@ -244,7 +350,7 @@ export function ScoreCard({ data, filamentId, material, onMethodologyClick, anim
               budget={categoryData.budget}
               midRange={categoryData.midRange}
               premium={categoryData.premium}
-              currentScore={data.displayScore}
+              currentScore={displayScore}
               materialType={data.comparison.materialType}
             />
           )}
@@ -255,7 +361,7 @@ export function ScoreCard({ data, filamentId, material, onMethodologyClick, anim
               betterThan={contextualData.betterThan}
               similarTo={contextualData.similarTo}
               notAsGoodAs={contextualData.notAsGoodAs}
-              currentScore={data.displayScore}
+              currentScore={displayScore}
             />
           )}
         </div>
