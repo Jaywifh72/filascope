@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
-import { CheckSquare, X, ArrowRight, Printer as PrinterIcon, Loader2 } from "lucide-react";
+import { CheckSquare, X, ArrowRight, Printer as PrinterIcon, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export function PrinterCompareBar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { selectedPrinters, removePrinter, clearAll, count } = usePrinterCompare();
+  const { selectedPrinters, removePrinter, clearAll, count, recentlyAdded } = usePrinterCompare();
   const [isNavigating, setIsNavigating] = useState(false);
 
   // Hide on compare page
@@ -42,7 +43,7 @@ export function PrinterCompareBar() {
         "border-t-2 border-[hsl(180_100%_41%/0.4)]",
         "md:rounded-t-2xl md:border md:border-[hsl(180_100%_41%/0.4)]",
         "shadow-[0_-4px_20px_rgba(0,0,0,0.5)]",
-        "animate-in slide-in-from-bottom duration-400"
+        "animate-slide-up-bounce"
       )}
       role="region"
       aria-label={`Printer comparison bar with ${count} printers selected`}
@@ -62,70 +63,85 @@ export function PrinterCompareBar() {
         </div>
 
         {/* Center: Printer Thumbnails */}
-        <div className="flex items-center gap-2 overflow-x-auto max-w-full md:max-w-none pb-2 md:pb-0">
-          {visiblePrinters.map((printer) => (
-            <div
-              key={printer.id}
-              className="relative flex-shrink-0 group"
-            >
+        <TooltipProvider delayDuration={200}>
+          <div className="flex items-center gap-2 overflow-x-auto max-w-full md:max-w-none pb-2 md:pb-0">
+            {visiblePrinters.map((printer) => (
+              <Tooltip key={printer.id}>
+                <TooltipTrigger asChild>
+                  <div className="relative flex-shrink-0 group">
+                    <div
+                      className={cn(
+                        "w-[50px] h-[50px] md:w-[60px] md:h-[60px]",
+                        "rounded-lg border-2 border-[hsl(180_100%_41%/0.5)]",
+                        "bg-[hsl(0_0%_10%)] overflow-hidden",
+                        "flex items-center justify-center"
+                      )}
+                    >
+                      {printer.imageUrl ? (
+                        <img
+                          src={printer.imageUrl}
+                          alt={printer.name}
+                          className="w-full h-full object-contain p-1"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                          }}
+                        />
+                      ) : null}
+                      <PrinterIcon
+                        className={cn(
+                          "h-6 w-6 text-muted-foreground",
+                          printer.imageUrl ? "hidden" : ""
+                        )}
+                      />
+                    </div>
+                    {/* Success checkmark overlay */}
+                    {recentlyAdded.has(printer.id) && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-green-500/80 rounded-lg animate-success-check">
+                        <Check className="h-6 w-6 text-white" />
+                      </div>
+                    )}
+                    {/* Remove button */}
+                    <button
+                      onClick={() => removePrinter(printer.id)}
+                      className={cn(
+                        "absolute -top-2 -right-2",
+                        "w-5 h-5 rounded-full",
+                        "bg-destructive hover:bg-destructive/80",
+                        "flex items-center justify-center",
+                        "transition-colors duration-200",
+                        "opacity-0 group-hover:opacity-100 md:opacity-100"
+                      )}
+                      aria-label={`Remove ${printer.name} from comparison`}
+                    >
+                      <X className="h-3 w-3 text-white" />
+                    </button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-card border-primary/30">
+                  <p className="font-medium text-foreground">{printer.name}</p>
+                  {printer.brand && (
+                    <p className="text-xs text-muted-foreground">{printer.brand}</p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            ))}
+            {overflowCount > 0 && (
               <div
                 className={cn(
                   "w-[50px] h-[50px] md:w-[60px] md:h-[60px]",
-                  "rounded-lg border-2 border-[hsl(180_100%_41%/0.5)]",
-                  "bg-[hsl(0_0%_10%)] overflow-hidden",
+                  "rounded-lg border-2 border-[hsl(180_100%_41%/0.3)]",
+                  "bg-[hsl(0_0%_10%)]",
                   "flex items-center justify-center"
                 )}
               >
-                {printer.imageUrl ? (
-                  <img
-                    src={printer.imageUrl}
-                    alt={printer.name}
-                    className="w-full h-full object-contain p-1"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                      e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                    }}
-                  />
-                ) : null}
-                <PrinterIcon
-                  className={cn(
-                    "h-6 w-6 text-muted-foreground",
-                    printer.imageUrl ? "hidden" : ""
-                  )}
-                />
+                <span className="text-sm font-medium text-[hsl(180_100%_41%)]">
+                  +{overflowCount}
+                </span>
               </div>
-              {/* Remove button */}
-              <button
-                onClick={() => removePrinter(printer.id)}
-                className={cn(
-                  "absolute -top-2 -right-2",
-                  "w-5 h-5 rounded-full",
-                  "bg-destructive hover:bg-destructive/80",
-                  "flex items-center justify-center",
-                  "transition-colors duration-200",
-                  "opacity-0 group-hover:opacity-100 md:opacity-100"
-                )}
-                aria-label={`Remove ${printer.name} from comparison`}
-              >
-                <X className="h-3 w-3 text-white" />
-              </button>
-            </div>
-          ))}
-          {overflowCount > 0 && (
-            <div
-              className={cn(
-                "w-[50px] h-[50px] md:w-[60px] md:h-[60px]",
-                "rounded-lg border-2 border-[hsl(180_100%_41%/0.3)]",
-                "bg-[hsl(0_0%_10%)]",
-                "flex items-center justify-center"
-              )}
-            >
-              <span className="text-sm font-medium text-[hsl(180_100%_41%)]">
-                +{overflowCount}
-              </span>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </TooltipProvider>
 
         {/* Right: Actions */}
         <div className="flex items-center gap-3">

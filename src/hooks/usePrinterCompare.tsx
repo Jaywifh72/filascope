@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { toast } from "sonner";
 
 export interface PrinterCompareItem {
@@ -17,6 +17,7 @@ interface PrinterCompareContextType {
   isMaxReached: boolean;
   count: number;
   maxPrinters: number;
+  recentlyAdded: Set<string>;
 }
 
 const STORAGE_KEY = "filascope_printer_compare";
@@ -38,6 +39,16 @@ export function PrinterCompareProvider({ children }: { children: ReactNode }) {
     return [];
   });
 
+  const [recentlyAdded, setRecentlyAdded] = useState<Set<string>>(new Set());
+  const timeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+    };
+  }, []);
+
   // Persist to localStorage
   useEffect(() => {
     try {
@@ -56,6 +67,25 @@ export function PrinterCompareProvider({ children }: { children: ReactNode }) {
       if (prev.some((p) => p.id === printer.id)) {
         return prev;
       }
+      
+      // Track recently added for animation
+      setRecentlyAdded((prevSet) => new Set(prevSet).add(printer.id));
+      
+      // Clear any existing timeout for this printer
+      const existingTimeout = timeoutsRef.current.get(printer.id);
+      if (existingTimeout) clearTimeout(existingTimeout);
+      
+      // Remove from recentlyAdded after animation
+      const timeout = setTimeout(() => {
+        setRecentlyAdded((prevSet) => {
+          const newSet = new Set(prevSet);
+          newSet.delete(printer.id);
+          return newSet;
+        });
+        timeoutsRef.current.delete(printer.id);
+      }, 1500);
+      timeoutsRef.current.set(printer.id, timeout);
+      
       toast.success(`${printer.name} added to comparison`);
       return [...prev, printer];
     });
@@ -90,6 +120,7 @@ export function PrinterCompareProvider({ children }: { children: ReactNode }) {
     isMaxReached: selectedPrinters.length >= MAX_PRINTERS,
     count: selectedPrinters.length,
     maxPrinters: MAX_PRINTERS,
+    recentlyAdded,
   };
 
   return (
