@@ -2439,6 +2439,42 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_settings: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          filament_id: string | null
+          id: string
+          printer_id: string | null
+          settings: Json
+          short_code: string
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          filament_id?: string | null
+          id?: string
+          printer_id?: string | null
+          settings: Json
+          short_code: string
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          filament_id?: string | null
+          id?: string
+          printer_id?: string | null
+          settings?: Json
+          short_code?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       shared_wishlists: {
         Row: {
           collection_id: string | null
@@ -2928,6 +2964,39 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings_history: {
+        Row: {
+          created_at: string | null
+          filament_id: string
+          id: string
+          notes: string | null
+          printer_id: string | null
+          session_id: string | null
+          settings: Json
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          filament_id: string
+          id?: string
+          notes?: string | null
+          printer_id?: string | null
+          session_id?: string | null
+          settings: Json
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          filament_id?: string
+          id?: string
+          notes?: string | null
+          printer_id?: string | null
+          session_id?: string | null
+          settings?: Json
+          user_id?: string | null
         }
         Relationships: []
       }
