@@ -23,6 +23,7 @@ import {
 import { AccessoryCompatibilityBadge } from "@/components/AccessoryCompatibilityBadge";
 import { FirmwareSection } from "@/components/FirmwareSection";
 import { SoftwareSection } from "@/components/SoftwareSection";
+import BuildVolumeVisualization from "@/components/printer/BuildVolumeVisualization";
 import {
   ArrowLeft,
   Box,
@@ -779,19 +780,8 @@ const PrinterDetail = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="build" className="space-y-4 mt-6">
-            <SpecSection title="Build Volume & Dimensions" icon={Box}>
-              <SpecRow label="Build Volume X" value={printer.build_volume_x_mm} unit=" mm" />
-              <SpecRow label="Build Volume Y" value={printer.build_volume_y_mm} unit=" mm" />
-              <SpecRow label="Build Volume Z" value={printer.build_volume_z_mm} unit=" mm" />
-              <SpecRow label="Build Volume Shape" value={printer.build_volume_shape} />
-              <SpecRow label="Machine Width" value={printer.machine_width_mm} unit=" mm" />
-              <SpecRow label="Machine Depth" value={printer.machine_depth_mm} unit=" mm" />
-              <SpecRow label="Machine Height" value={printer.machine_height_mm} unit=" mm" />
-              <SpecRow label="Machine Weight" value={printer.machine_weight_kg} unit=" kg" />
-              <SpecRow label="Frame Material" value={printer.frame_material} />
-              <SpecRow label="Machine Style" value={printer.machine_style} />
-            </SpecSection>
+          <TabsContent value="build" className="space-y-6 mt-6">
+            <BuildVolumeVisualization printer={printer} />
 
             <SpecSection title="Enclosure" icon={Package}>
               <SpecRow label="Has Enclosure" value={printer.has_enclosure} />
