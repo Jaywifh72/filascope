@@ -7,6 +7,7 @@ interface ShopifyProduct {
   handle: string;
   vendor: string;
   product_type: string;
+  body_html: string | null;
   variants: ShopifyVariant[];
   images: { src: string }[];
 }
@@ -66,6 +67,9 @@ export class ShopifyScraper extends BaseScraper {
         url,
         scrapedAt: new Date(),
         source: `shopify-${this.config.vendor.toLowerCase()}`,
+        imageUrl: product.images?.[0]?.src || null,
+        barcode: variant.barcode || null,
+        description: product.body_html || null,
       };
     } catch (error) {
       this.logError(`Error scraping ${url}:`, error);
@@ -134,6 +138,9 @@ export class ShopifyScraper extends BaseScraper {
             url: `${this.config.baseUrl}/products/${product.handle}`,
             scrapedAt: new Date(),
             source: `shopify-${this.config.vendor.toLowerCase()}`,
+            imageUrl: product.images?.[0]?.src || null,
+            barcode: variant.barcode || null,
+            description: product.body_html || null,
           });
 
           if (products.length >= limit) break;

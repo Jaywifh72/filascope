@@ -6,7 +6,7 @@ import { BigCommerceScraper } from "./scrapers/bigcommerce.ts";
 import { AmazonScraper } from "./scrapers/amazon.ts";
 import { FirecrawlScraper } from "./scrapers/firecrawl.ts";
 import type { BaseScraper, ScrapedProduct } from "./scrapers/base.ts";
-import { calculateHash, detectMaterial, extractColor, extractWeight, extractDiameter } from "./utils.ts";
+import { calculateHash, detectMaterial, extractColor, extractWeight, extractDiameter, parseBarcodeFields } from "./utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -132,6 +132,9 @@ async function createFilamentFromScrapedProduct(
     auto_updated: true,
     last_scraped_at: new Date().toISOString(),
     sync_status: "synced",
+    // Enhanced fields from scrapers
+    featured_image: product.imageUrl || null,
+    ...parseBarcodeFields(product.barcode),
   };
   
   const { error } = await supabase.from("filaments").insert(filamentData);
@@ -222,7 +225,7 @@ async function processScrapedProducts(
       // Use limit(1) to handle duplicate SKUs gracefully, prioritize by product_id
       const { data: filaments, error: findError } = await supabase
         .from("filaments")
-        .select("id, variant_price, variant_available, product_title, external_data_hash, user_override_fields, product_id")
+        .select("id, variant_price, variant_available, product_title, external_data_hash, user_override_fields, product_id, featured_image, upc, ean, gtin")
         .ilike("vendor", `%${vendor}%`)
         .or(`product_id.eq.${product.productId},variant_sku.eq.${product.sku || "___NONE___"}`)
         .order('product_id', { ascending: false, nullsFirst: false })
@@ -341,6 +344,26 @@ async function processScrapedProducts(
 
       if (!overrides.includes("variant_compare_at_price") && product.compareAtPrice !== null) {
         updates.variant_compare_at_price = product.compareAtPrice;
+      }
+
+      // Update image if scraped and not already set or overridden
+      if (product.imageUrl && !overrides.includes("featured_image") && !filament.featured_image) {
+        updates.featured_image = product.imageUrl;
+        console.log(`📸 Adding image for ${product.title}: ${product.imageUrl.substring(0, 50)}...`);
+      }
+
+      // Update barcode fields if scraped and not overridden
+      if (product.barcode) {
+        const barcodeFields = parseBarcodeFields(product.barcode);
+        if (barcodeFields.upc && !overrides.includes("upc")) {
+          updates.upc = barcodeFields.upc;
+        }
+        if (barcodeFields.ean && !overrides.includes("ean")) {
+          updates.ean = barcodeFields.ean;
+        }
+        if (barcodeFields.gtin && !overrides.includes("gtin")) {
+          updates.gtin = barcodeFields.gtin;
+        }
       }
 
       // Update filament (trigger will log to price_history if price changed)
