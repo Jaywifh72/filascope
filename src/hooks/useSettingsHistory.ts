@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import type { Json } from '@/integrations/supabase/types';
 
 interface SettingsEntry {
   nozzleTemp: number;
@@ -70,21 +71,16 @@ export function useSettingsHistory(filamentId: string) {
       printerId?: string;
       notes?: string;
     }) => {
-      const insertData: Record<string, unknown> = {
-        filament_id: filamentId,
-        printer_id: printerId || null,
-        settings: settings as unknown as Record<string, unknown>,
-        notes: notes || null,
-      };
-      
-      if (user?.id) {
-        insertData.user_id = user.id;
-      } else {
-        insertData.session_id = sessionId;
-      }
       const { error } = await supabase
         .from('user_settings_history')
-        .insert([insertData as { filament_id: string; settings: Record<string, unknown> }]);
+        .insert({
+          user_id: user?.id || null,
+          session_id: user?.id ? null : sessionId,
+          filament_id: filamentId,
+          printer_id: printerId || null,
+          settings: settings as unknown as Json,
+          notes: notes || null,
+        });
       if (error) throw error;
     },
     onSuccess: () => {
