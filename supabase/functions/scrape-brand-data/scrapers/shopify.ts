@@ -80,8 +80,16 @@ export class ShopifyScraper extends BaseScraper {
 
     this.log(`Starting scrape (limit: ${limit})`);
 
+    // Use collection endpoint if collectionHandle is specified, otherwise use all products
+    const collectionHandle = (this.config as any).collectionHandle;
+    const baseEndpoint = collectionHandle 
+      ? `${this.config.baseUrl}/collections/${collectionHandle}/products.json`
+      : `${this.config.baseUrl}/products.json`;
+    
+    this.log(`Using endpoint: ${baseEndpoint}`);
+
     while (products.length < limit) {
-      const url = `${this.config.baseUrl}/products.json?limit=${perPage}&page=${page}`;
+      const url = `${baseEndpoint}?limit=${perPage}&page=${page}`;
       this.log(`Fetching page ${page}: ${url}`);
 
       try {
@@ -101,9 +109,11 @@ export class ShopifyScraper extends BaseScraper {
           break;
         }
 
+        this.log(`Found ${data.products.length} products on page ${page}`);
+
         for (const product of data.products) {
-          // Filter to filament products only
-          if (!this.isFilamentProduct(product)) {
+          // Only filter if we're NOT using a collection (collection already filtered)
+          if (!collectionHandle && !this.isFilamentProduct(product)) {
             continue;
           }
 
