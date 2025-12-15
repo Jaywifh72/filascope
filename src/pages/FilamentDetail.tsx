@@ -28,6 +28,7 @@ import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { normalizeColorHex } from "@/lib/utils";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
+import { MaterialValueProposition } from "@/components/filament/MaterialValueProposition";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -1273,7 +1274,16 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                       })}
                     </div>
                   </div>
-                )}
+              )}
+                
+                {/* Material Value Proposition */}
+                <MaterialValueProposition
+                  material={filament.material}
+                  productTitle={filament.product_title}
+                  filamentId={filament.id}
+                  vendor={filament.vendor}
+                />
+
                 {(filament.ease_of_printing_score || filament.strength_index || filament.value_score) && (
                   <div className="grid grid-cols-3 gap-4 lg:gap-6 pt-2">
                     {filament.ease_of_printing_score && (
