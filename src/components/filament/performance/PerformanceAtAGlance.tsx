@@ -7,17 +7,22 @@ import { useEnhancedSimilarFilaments } from '@/hooks/useEnhancedSimilarFilaments
 import { 
   getPerformanceData, 
   calculateOverallScore,
+  generateChartAnnotations,
   type SuggestedComparison 
 } from '@/lib/performanceProfileService';
 import { PerformanceRadarChart } from './PerformanceRadarChart';
 import { MetricBreakdownCard } from './MetricBreakdownCard';
 import { PerformanceProfile } from './PerformanceProfile';
 import { CategoryPositionBar } from './CategoryPositionBar';
-import { PerformanceInsights } from './PerformanceInsights';
-import { ComparisonQuickPicks } from './ComparisonQuickPicks';
+import { PerformanceNarrative } from './PerformanceNarrative';
+import { DecisionFramework } from './DecisionFramework';
+import { ScenarioGuidance } from './ScenarioGuidance';
+import { ComparisonLandscape } from './ComparisonLandscape';
+import { InlineAnnotations } from './ChartAnnotation';
 
 interface PerformanceAtAGlanceProps {
   filamentId: string;
+  filamentName: string;
   material: string | null;
   vendor: string | null;
   ease_of_printing_score: number | null;
@@ -30,6 +35,7 @@ interface PerformanceAtAGlanceProps {
 
 export function PerformanceAtAGlance({
   filamentId,
+  filamentName,
   material,
   vendor,
   ease_of_printing_score,
@@ -41,11 +47,12 @@ export function PerformanceAtAGlance({
 }: PerformanceAtAGlanceProps) {
   const { addItem, items } = useCompare();
 
-  // Get similar filaments for comparison suggestions
+  // Calculate price per kg
   const pricePerKg = variant_price && net_weight_g 
     ? (variant_price / net_weight_g) * 1000 
     : null;
 
+  // Get similar filaments for comparison suggestions
   const { recommendations, isLoading: loadingSimilar } = useEnhancedSimilarFilaments(
     filamentId,
     material,
@@ -100,6 +107,11 @@ export function PerformanceAtAGlance({
     pricePerKg
   ]);
 
+  // Generate chart annotations
+  const annotations = useMemo(() => {
+    return generateChartAnnotations(performanceData.metrics, material);
+  }, [performanceData.metrics, material]);
+
   // Don't render if no metrics
   if (!performanceData.metrics.length) {
     return null;
@@ -109,7 +121,7 @@ export function PerformanceAtAGlance({
     if (!items.find(i => i.id === filamentId)) {
       addItem({
         id: filamentId,
-        product_title: 'This Material',
+        product_title: filamentName,
         vendor: vendor,
         material: material,
         color_hex: null,
@@ -122,7 +134,7 @@ export function PerformanceAtAGlance({
 
   return (
     <section 
-      className="bg-primary/[0.03] border border-primary/15 rounded-2xl p-6 sm:p-8 space-y-6"
+      className="bg-primary/[0.03] border border-primary/15 rounded-2xl p-6 sm:p-8 space-y-8"
       aria-label="Performance at a Glance"
     >
       {/* Section Header */}
@@ -138,14 +150,27 @@ export function PerformanceAtAGlance({
         </p>
       </div>
 
+      {/* Performance Narrative - Leads with the story */}
+      <PerformanceNarrative
+        ease_of_printing_score={ease_of_printing_score}
+        printability_index={printability_index}
+        strength_index={strength_index}
+        value_score={value_score}
+        material={material}
+        pricePerKg={pricePerKg}
+      />
+
       {/* Main Content - Two Columns on Desktop */}
       <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
-        {/* Left: Radar Chart */}
+        {/* Left: Radar Chart with Annotations */}
         <div className="space-y-4">
           <PerformanceRadarChart 
             metrics={performanceData.metrics}
             categoryName={performanceData.categoryComparison.category}
           />
+          
+          {/* Inline Annotations for context */}
+          <InlineAnnotations annotations={annotations} />
           
           {/* Category Position Bar */}
           <CategoryPositionBar comparison={performanceData.categoryComparison} />
@@ -170,16 +195,32 @@ export function PerformanceAtAGlance({
         </div>
       </div>
 
-      {/* Insights Section */}
-      {performanceData.insights.length > 0 && (
-        <PerformanceInsights insights={performanceData.insights} />
-      )}
+      {/* Decision Framework */}
+      <DecisionFramework
+        ease_of_printing_score={ease_of_printing_score}
+        printability_index={printability_index}
+        strength_index={strength_index}
+        value_score={value_score}
+        material={material}
+      />
 
-      {/* Comparison Quick Picks */}
-      {!loadingSimilar && performanceData.suggestedComparisons.length > 0 && (
-        <ComparisonQuickPicks 
-          currentFilamentId={filamentId}
-          suggestions={performanceData.suggestedComparisons}
+      {/* Scenario Guidance - Use This If / Consider Alternatives If */}
+      <ScenarioGuidance
+        ease_of_printing_score={ease_of_printing_score}
+        printability_index={printability_index}
+        strength_index={strength_index}
+        value_score={value_score}
+        material={material}
+      />
+
+      {/* Comparison Landscape - Budget / Balanced / Premium */}
+      {!loadingSimilar && recommendations.length > 0 && (
+        <ComparisonLandscape
+          currentId={filamentId}
+          currentName={filamentName}
+          currentPrice={pricePerKg}
+          currentScore={performanceData.overallScore}
+          recommendations={performanceData.suggestedComparisons}
         />
       )}
 
