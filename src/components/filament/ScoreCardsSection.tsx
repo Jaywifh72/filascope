@@ -82,6 +82,7 @@ export function ScoreCardsSection({ filament }: ScoreCardsSectionProps) {
         isOpen={!!methodologyOpen}
         onClose={() => setMethodologyOpen(null)}
         scoreData={openMethodology}
+        filamentId={filament.id}
       />
     </>
   );
