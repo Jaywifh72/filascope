@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MaterialBadge } from "@/components/MaterialBadge";
-import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, Users, Globe, TrendingUp, Filter, Palette, Loader2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, Users, Globe, TrendingUp, Filter, Palette, Loader2, CheckCircle2, Clock, AlertCircle, RefreshCw } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { getBrandInfo } from "@/lib/brandInfo";
 import type { Tables } from "@/integrations/supabase/types";
@@ -13,6 +13,16 @@ import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { normalizeColorHex } from "@/lib/utils";
+
+// Platform color mapping
+const PLATFORM_COLORS: Record<string, string> = {
+  shopify: "bg-green-500",
+  amazon: "bg-orange-500",
+  woocommerce: "bg-purple-500",
+  bigcommerce: "bg-blue-500",
+  magento: "bg-red-500",
+  custom: "bg-zinc-500",
+};
 
 type Filament = Tables<"filaments">;
 
@@ -304,6 +314,23 @@ const BrandDetail = () => {
     }
   };
 
+  // Fetch automated brand data (for sync status, platform info)
+  const { data: automatedBrand } = useQuery({
+    queryKey: ["automated-brand", decodedBrand],
+    queryFn: async () => {
+      // Try to find by brand_name or brand_slug
+      const { data, error } = await supabase
+        .from("automated_brands")
+        .select("*")
+        .or(`brand_name.ilike.${decodedBrand},brand_slug.eq.${decodedBrand.toLowerCase().replace(/\s+/g, '-')}`)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!decodedBrand,
+  });
+
   const { data: filaments, isLoading } = useQuery({
     queryKey: ["brand-filaments", decodedBrand],
     queryFn: async () => {
@@ -439,6 +466,11 @@ const BrandDetail = () => {
                         {getCompanyTypeLabel(brandInfo.companyType)}
                       </Badge>
                     )}
+                    {automatedBrand?.platform_type && (
+                      <Badge className={`${PLATFORM_COLORS[automatedBrand.platform_type] || 'bg-zinc-500'} text-white capitalize`}>
+                        {automatedBrand.platform_type}
+                      </Badge>
+                    )}
                   </div>
                   
                   {/* Quick Info Row */}
@@ -543,6 +575,70 @@ const BrandDetail = () => {
                   <p className="text-muted-foreground italic">
                     Information about {decodedBrand} coming soon.
                   </p>
+                )}
+
+                {/* Admin: Scraping Status Card */}
+                {isAdmin && automatedBrand && (
+                  <div className="mt-4 p-4 bg-muted/30 rounded-lg border">
+                    <div className="flex items-center gap-2 mb-3">
+                      <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Scraping Status</span>
+                      {automatedBrand.scraping_active && (
+                        <Badge className="bg-primary/20 text-primary text-xs">
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          Running
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Status</div>
+                        <div className="flex items-center gap-1.5">
+                          {automatedBrand.scraping_enabled ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                              <span className="text-green-500 font-medium">Enabled</span>
+                            </>
+                          ) : (
+                            <>
+                              <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                              <span className="text-amber-500 font-medium">Disabled</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Last Sync</div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span>
+                            {automatedBrand.last_scrape_at 
+                              ? new Date(automatedBrand.last_scrape_at).toLocaleDateString()
+                              : "Never"}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Success Rate</div>
+                        <div className="font-medium">
+                          {automatedBrand.total_scrapes && automatedBrand.total_scrapes > 0
+                            ? `${Math.round((automatedBrand.successful_scrapes || 0) / automatedBrand.total_scrapes * 100)}%`
+                            : "N/A"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Products with URLs</div>
+                        <div className="font-medium">
+                          {automatedBrand.products_with_urls || 0} / {automatedBrand.product_count || 0}
+                        </div>
+                      </div>
+                    </div>
+                    {automatedBrand.last_error && (
+                      <div className="mt-3 p-2 bg-destructive/10 rounded border border-destructive/20 text-xs text-destructive">
+                        <span className="font-medium">Last Error:</span> {automatedBrand.last_error}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
