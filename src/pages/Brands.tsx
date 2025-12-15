@@ -171,14 +171,15 @@ const Brands = () => {
     },
   });
 
-  // Fetch filament stats (existing logic)
+  // Fetch filament stats (existing logic) - use high limit to avoid 1000 row default
   const { data: brands, isLoading } = useQuery({
     queryKey: ["brands-page"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("filaments")
         .select("vendor, spool_material, transmission_distance, high_speed_capable, color_hex")
-        .not("vendor", "is", null);
+        .not("vendor", "is", null)
+        .limit(10000); // Override default 1000 row limit
       
       if (error) throw error;
       
