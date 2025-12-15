@@ -1,9 +1,18 @@
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, ArrowRight, Dna } from "lucide-react";
 import { getMaterialValueProposition, getComparisonMaterial } from "@/lib/materialValuePropositions";
 import { cn } from "@/lib/utils";
 import { Database } from "@/integrations/supabase/types";
 import { useIntelligentContent } from "@/hooks/useIntelligentContent";
+import { useSmartComparisons } from "@/hooks/useSmartComparisons";
+import { useComparisonPreview } from "@/hooks/useComparisonPreview";
+import { useCompare } from "@/hooks/useCompare";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { ComparisonPreviewTooltip } from "./ComparisonPreviewTooltip";
+import { MultiCompareCards } from "./MultiCompareCards";
+import { ComparisonHistoryContext } from "./ComparisonHistoryContext";
+import { SmartComparisonSuggestion } from "@/lib/smartComparisonService";
 
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -30,10 +39,57 @@ export function MaterialValueProposition({
   hotend,
 }: MaterialValuePropositionProps) {
   const navigate = useNavigate();
+  const { addItem, items } = useCompare();
   
   const proposition = getMaterialValueProposition(material, productTitle);
   const comparisonMaterial = getComparisonMaterial(material);
   const intelligentContent = useIntelligentContent(filament || null, printer || null, hotend || null);
+  
+  // Smart comparison suggestions
+  const filamentForComparison = useMemo(() => {
+    if (!filament) return null;
+    return {
+      id: filament.id,
+      product_title: filament.product_title,
+      material: filament.material,
+      vendor: filament.vendor,
+      variant_price: filament.variant_price,
+      net_weight_g: filament.net_weight_g,
+      strength_index: filament.strength_index,
+      printability_index: filament.printability_index,
+      color_hex: filament.color_hex
+    };
+  }, [filament]);
+  
+  const { suggestions, primarySuggestion, isLoading: suggestionsLoading } = useSmartComparisons(filamentForComparison, 3);
+  
+  // Comparison preview for hover
+  const primaryComparisonFilament = useMemo(() => {
+    if (!primarySuggestion) return null;
+    return {
+      product_title: primarySuggestion.name,
+      variant_price: primarySuggestion.price,
+      net_weight_g: null, // Not available from suggestion
+      strength_index: primarySuggestion.strength_index,
+      printability_index: primarySuggestion.printability_index
+    };
+  }, [primarySuggestion]);
+  
+  const currentFilamentForPreview = useMemo(() => {
+    if (!filament) return null;
+    return {
+      product_title: filament.product_title,
+      variant_price: filament.variant_price,
+      net_weight_g: filament.net_weight_g,
+      strength_index: filament.strength_index,
+      printability_index: filament.printability_index
+    };
+  }, [filament]);
+  
+  const previewData = useComparisonPreview(currentFilamentForPreview, primaryComparisonFilament);
+  
+  // Track which items are in the compare tray
+  const addedIds = useMemo(() => new Set(items.map(i => i.id)), [items]);
 
   if (!material) return null;
 
@@ -64,6 +120,68 @@ export function MaterialValueProposition({
 
   const handleProjectClick = (url: string) => {
     navigate(url);
+  };
+
+  const handleSmartCompare = (suggestion: SmartComparisonSuggestion) => {
+    navigate(`/materials/compare?ids=${filamentId},${suggestion.id}`);
+  };
+
+  const handleAddToCompare = (suggestion: SmartComparisonSuggestion) => {
+    // Add current filament first if not in tray
+    if (filament && !addedIds.has(filament.id)) {
+      addItem({
+        id: filament.id,
+        product_title: filament.product_title,
+        vendor: filament.vendor,
+        material: filament.material,
+        color_hex: filament.color_hex,
+        variant_price: filament.variant_price,
+        net_weight_g: filament.net_weight_g,
+        featured_image: filament.featured_image
+      });
+    }
+    // Add the suggestion
+    if (!addedIds.has(suggestion.id)) {
+      addItem({
+        id: suggestion.id,
+        product_title: suggestion.name,
+        vendor: suggestion.vendor,
+        material: suggestion.material,
+        color_hex: suggestion.color_hex,
+        variant_price: suggestion.price,
+        net_weight_g: null
+      });
+    }
+  };
+
+  const handleAddAllToCompare = () => {
+    // Add current filament first
+    if (filament && !addedIds.has(filament.id)) {
+      addItem({
+        id: filament.id,
+        product_title: filament.product_title,
+        vendor: filament.vendor,
+        material: filament.material,
+        color_hex: filament.color_hex,
+        variant_price: filament.variant_price,
+        net_weight_g: filament.net_weight_g,
+        featured_image: filament.featured_image
+      });
+    }
+    // Add all suggestions
+    suggestions.forEach(suggestion => {
+      if (!addedIds.has(suggestion.id)) {
+        addItem({
+          id: suggestion.id,
+          product_title: suggestion.name,
+          vendor: suggestion.vendor,
+          material: suggestion.material,
+          color_hex: suggestion.color_hex,
+          variant_price: suggestion.price,
+          net_weight_g: null
+        });
+      }
+    });
   };
 
   return (
@@ -230,38 +348,112 @@ export function MaterialValueProposition({
         </div>
       )}
 
-      {/* CTA Links - Pill-shaped buttons */}
-      <div className="flex flex-wrap gap-3 pt-1">
-        {comparisonMaterial && (
-          <button
-            onClick={handleCompare}
-            className={cn(
-              "group inline-flex items-center gap-1.5",
-              "px-4 py-2 rounded-full",
-              "text-sm font-medium text-primary",
-              "bg-primary/10 border border-primary/20",
-              "hover:bg-primary/20 hover:border-primary/30",
-              "transition-all duration-200"
-            )}
-          >
-            Compare with {comparisonMaterial}
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-          </button>
+      {/* Smart Comparison Section */}
+      <div className="space-y-4 pt-4 border-t border-border/50">
+        {/* Primary Smart Comparison with Hover Preview */}
+        {primarySuggestion && (
+          <div className="flex flex-wrap gap-3">
+            <HoverCard openDelay={200} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <button
+                  onClick={() => handleSmartCompare(primarySuggestion)}
+                  className={cn(
+                    "group inline-flex items-center gap-1.5",
+                    "px-4 py-2 rounded-full",
+                    "text-sm font-medium text-primary",
+                    "bg-primary/10 border border-primary/20",
+                    "hover:bg-primary/20 hover:border-primary/30",
+                    "transition-all duration-200"
+                  )}
+                >
+                  Compare with {primarySuggestion.name.length > 25 
+                    ? primarySuggestion.name.substring(0, 25) + "..." 
+                    : primarySuggestion.name}
+                  <span className="text-xs text-muted-foreground ml-1">
+                    ({primarySuggestion.relevanceReason})
+                  </span>
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                </button>
+              </HoverCardTrigger>
+              {previewData && (
+                <HoverCardContent side="top" align="start" className="p-0 border-border/50">
+                  <ComparisonPreviewTooltip
+                    current={previewData.current}
+                    comparison={previewData.comparison}
+                    diffs={previewData.diffs}
+                  />
+                </HoverCardContent>
+              )}
+            </HoverCard>
+
+            <button
+              onClick={handleSimilar}
+              className={cn(
+                "group inline-flex items-center gap-1.5",
+                "px-4 py-2 rounded-full",
+                "text-sm font-medium text-primary",
+                "bg-primary/10 border border-primary/20",
+                "hover:bg-primary/20 hover:border-primary/30",
+                "transition-all duration-200"
+              )}
+            >
+              View similar materials
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
         )}
-        <button
-          onClick={handleSimilar}
-          className={cn(
-            "group inline-flex items-center gap-1.5",
-            "px-4 py-2 rounded-full",
-            "text-sm font-medium text-primary",
-            "bg-primary/10 border border-primary/20",
-            "hover:bg-primary/20 hover:border-primary/30",
-            "transition-all duration-200"
-          )}
-        >
-          View similar materials
-          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-        </button>
+
+        {/* Fallback if no smart suggestions */}
+        {!primarySuggestion && !suggestionsLoading && comparisonMaterial && (
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleCompare}
+              className={cn(
+                "group inline-flex items-center gap-1.5",
+                "px-4 py-2 rounded-full",
+                "text-sm font-medium text-primary",
+                "bg-primary/10 border border-primary/20",
+                "hover:bg-primary/20 hover:border-primary/30",
+                "transition-all duration-200"
+              )}
+            >
+              Compare with {comparisonMaterial}
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+            <button
+              onClick={handleSimilar}
+              className={cn(
+                "group inline-flex items-center gap-1.5",
+                "px-4 py-2 rounded-full",
+                "text-sm font-medium text-primary",
+                "bg-primary/10 border border-primary/20",
+                "hover:bg-primary/20 hover:border-primary/30",
+                "transition-all duration-200"
+              )}
+            >
+              View similar materials
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
+        )}
+
+        {/* Multi-Compare Mini Cards */}
+        {suggestions.length > 0 && (
+          <MultiCompareCards
+            suggestions={suggestions}
+            onAddToCompare={handleAddToCompare}
+            onAddAllToCompare={handleAddAllToCompare}
+            addedIds={addedIds}
+          />
+        )}
+
+        {/* User Comparison History */}
+        {filament && (
+          <ComparisonHistoryContext
+            currentFilamentId={filamentId}
+            currentFilamentName={filament.product_title}
+          />
+        )}
       </div>
     </section>
   );
