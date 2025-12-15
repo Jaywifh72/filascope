@@ -219,12 +219,14 @@ async function processScrapedProducts(
 
     try {
       // Find matching filament in database using flexible vendor matching
-      const { data: filament, error: findError } = await supabase
+      // Use limit(1) to handle duplicate SKUs gracefully, prioritize by product_id
+      const { data: filaments, error: findError } = await supabase
         .from("filaments")
-        .select("id, variant_price, variant_available, product_title, external_data_hash, user_override_fields")
+        .select("id, variant_price, variant_available, product_title, external_data_hash, user_override_fields, product_id")
         .ilike("vendor", `%${vendor}%`)
-        .or(`product_id.eq.${product.productId},variant_sku.eq.${product.sku || ""}`)
-        .maybeSingle();
+        .or(`product_id.eq.${product.productId},variant_sku.eq.${product.sku || "___NONE___"}`)
+        .order('product_id', { ascending: false, nullsFirst: false })
+        .limit(1);
 
       if (findError) {
         console.error(`Error finding filament for ${product.title}:`, findError);
@@ -232,6 +234,9 @@ async function processScrapedProducts(
         stats.errorDetails.push(`${product.productId}: DB lookup failed`);
         continue;
       }
+      
+      // Get first match (or null if no results)
+      const filament = filaments && filaments.length > 0 ? filaments[0] : null;
 
       // AUTO-CREATE: If no matching filament found and auto-creation is enabled
       if (!filament) {
