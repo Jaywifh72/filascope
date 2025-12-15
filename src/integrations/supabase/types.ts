@@ -892,6 +892,7 @@ export type Database = {
           ean: string | null
           ease_of_printing_score: number | null
           elongation_break_xy_percent: number | null
+          external_data_hash: string | null
           fan_max_percent: number | null
           fan_min_percent: number | null
           featured_image: string | null
@@ -904,6 +905,7 @@ export type Database = {
           id: string
           industry_tags: string[] | null
           is_nozzle_abrasive: boolean | null
+          last_external_sync_at: string | null
           material: string | null
           melt_temp_c: number | null
           moisture_care: string | null
@@ -929,6 +931,7 @@ export type Database = {
           spool_outer_d_mm: number | null
           spool_width_mm: number | null
           strength_index: number | null
+          sync_status: string | null
           tds_url: string | null
           tensile_modulus_xy_mpa: number | null
           tensile_strength_xy_mpa: number | null
@@ -937,8 +940,10 @@ export type Database = {
           upc: string | null
           updated_at: string | null
           use_case_tags: string[] | null
+          user_override_fields: string[] | null
           value_score: number | null
           variant_available: boolean | null
+          variant_compare_at_price: number | null
           variant_price: number | null
           variant_sku: string | null
           vendor: string | null
@@ -966,6 +971,7 @@ export type Database = {
           ean?: string | null
           ease_of_printing_score?: number | null
           elongation_break_xy_percent?: number | null
+          external_data_hash?: string | null
           fan_max_percent?: number | null
           fan_min_percent?: number | null
           featured_image?: string | null
@@ -978,6 +984,7 @@ export type Database = {
           id?: string
           industry_tags?: string[] | null
           is_nozzle_abrasive?: boolean | null
+          last_external_sync_at?: string | null
           material?: string | null
           melt_temp_c?: number | null
           moisture_care?: string | null
@@ -1003,6 +1010,7 @@ export type Database = {
           spool_outer_d_mm?: number | null
           spool_width_mm?: number | null
           strength_index?: number | null
+          sync_status?: string | null
           tds_url?: string | null
           tensile_modulus_xy_mpa?: number | null
           tensile_strength_xy_mpa?: number | null
@@ -1011,8 +1019,10 @@ export type Database = {
           upc?: string | null
           updated_at?: string | null
           use_case_tags?: string[] | null
+          user_override_fields?: string[] | null
           value_score?: number | null
           variant_available?: boolean | null
+          variant_compare_at_price?: number | null
           variant_price?: number | null
           variant_sku?: string | null
           vendor?: string | null
@@ -1040,6 +1050,7 @@ export type Database = {
           ean?: string | null
           ease_of_printing_score?: number | null
           elongation_break_xy_percent?: number | null
+          external_data_hash?: string | null
           fan_max_percent?: number | null
           fan_min_percent?: number | null
           featured_image?: string | null
@@ -1052,6 +1063,7 @@ export type Database = {
           id?: string
           industry_tags?: string[] | null
           is_nozzle_abrasive?: boolean | null
+          last_external_sync_at?: string | null
           material?: string | null
           melt_temp_c?: number | null
           moisture_care?: string | null
@@ -1077,6 +1089,7 @@ export type Database = {
           spool_outer_d_mm?: number | null
           spool_width_mm?: number | null
           strength_index?: number | null
+          sync_status?: string | null
           tds_url?: string | null
           tensile_modulus_xy_mpa?: number | null
           tensile_strength_xy_mpa?: number | null
@@ -1085,8 +1098,10 @@ export type Database = {
           upc?: string | null
           updated_at?: string | null
           use_case_tags?: string[] | null
+          user_override_fields?: string[] | null
           value_score?: number | null
           variant_available?: boolean | null
+          variant_compare_at_price?: number | null
           variant_price?: number | null
           variant_sku?: string | null
           vendor?: string | null
@@ -2805,6 +2820,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sync_logs: {
+        Row: {
+          completed_at: string | null
+          data_source: string
+          duration_seconds: number | null
+          error_message: string | null
+          id: string
+          records_failed: number | null
+          records_fetched: number | null
+          records_updated: number | null
+          started_at: string | null
+          status: string | null
+          success_details: Json | null
+          sync_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          data_source: string
+          duration_seconds?: number | null
+          error_message?: string | null
+          id?: string
+          records_failed?: number | null
+          records_fetched?: number | null
+          records_updated?: number | null
+          started_at?: string | null
+          status?: string | null
+          success_details?: Json | null
+          sync_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          data_source?: string
+          duration_seconds?: number | null
+          error_message?: string | null
+          id?: string
+          records_failed?: number | null
+          records_fetched?: number | null
+          records_updated?: number | null
+          started_at?: string | null
+          status?: string | null
+          success_details?: Json | null
+          sync_type?: string
+        }
+        Relationships: []
       }
       trend_upvotes: {
         Row: {
