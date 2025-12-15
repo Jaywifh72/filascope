@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Star, Plus, Check, TrendingUp, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,9 @@ import { CostBenefitSection } from "./CostBenefitSection";
 import { PropertyInspector } from "./PropertyInspector";
 import { QuickComparisonPreview } from "./QuickComparisonPreview";
 import { SideBySideComparisonDialog } from "./SideBySideComparisonDialog";
+import { QuickSwapDropdown } from "./QuickSwapDropdown";
+import { SelectableCardOverlay } from "./BatchSelectControls";
+import { toast } from "sonner";
 import type { EnhancedSimilarFilament } from "@/hooks/useEnhancedSimilarFilaments";
 
 interface SimilarMaterialCardProps {
@@ -37,6 +40,10 @@ interface SimilarMaterialCardProps {
     ease_of_printing_score?: number | null;
     tg_c?: number | null;
   };
+  // Batch selection props
+  isMultiSelectMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 const MATERIAL_COLORS: Record<string, string> = {
@@ -65,29 +72,51 @@ function getScoreColor(score: number | null): string {
 export function SimilarMaterialCard({ 
   filament, 
   currentFilament,
-  currentScores 
+  currentScores,
+  isMultiSelectMode,
+  isSelected,
+  onToggleSelect,
 }: SimilarMaterialCardProps) {
-  const { addItem, isInCompare } = useCompare();
+  const { addItem, isInCompare, isFull, triggerGlow } = useCompare();
   const isAdded = isInCompare(filament.id);
   const brandLogo = filament.vendor ? getBrandLogo(filament.vendor) : null;
   const materialBase = filament.material?.split(/[\s-]/)[0] || "Unknown";
   const [showCompareDialog, setShowCompareDialog] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const handleCompare = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isAdded) {
-      addItem({
-        id: filament.id,
-        product_title: filament.product_title,
-        vendor: filament.vendor,
-        material: filament.material,
-        color_hex: null,
-        variant_price: filament.variant_price,
-        net_weight_g: filament.net_weight_g,
-        featured_image: filament.featured_image,
-      });
-    }
+    
+    if (isAdded) return;
+
+    // Add with animation feedback
+    setShowSuccessAnimation(true);
+    
+    addItem({
+      id: filament.id,
+      product_title: filament.product_title,
+      vendor: filament.vendor,
+      material: filament.material,
+      color_hex: null,
+      variant_price: filament.variant_price,
+      net_weight_g: filament.net_weight_g,
+      featured_image: filament.featured_image,
+    });
+
+    // Trigger tray glow
+    triggerGlow();
+
+    // Show toast
+    toast.success("Added to comparison", {
+      description: filament.product_title.slice(0, 40) + "...",
+    });
+
+    // Reset animation after delay
+    setTimeout(() => {
+      setShowSuccessAnimation(false);
+    }, 1500);
   };
 
   const handleSideBySide = (e: React.MouseEvent) => {
@@ -107,7 +136,32 @@ export function SimilarMaterialCard({
     : null;
 
   const cardContent = (
-    <div className="group relative min-w-[280px] max-w-[320px] flex-shrink-0 rounded-xl border border-primary/20 bg-card/80 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10">
+    <div 
+      ref={cardRef}
+      className={`similar-card group relative min-w-[280px] max-w-[320px] flex-shrink-0 rounded-xl border bg-card/80 p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 ${
+        isSelected 
+          ? "border-primary ring-2 ring-primary/30" 
+          : "border-primary/20 hover:border-primary/40"
+      } ${showSuccessAnimation ? "compare-pulse" : ""}`}
+    >
+      {/* Multi-select checkbox overlay */}
+      {isMultiSelectMode && onToggleSelect && (
+        <SelectableCardOverlay
+          filamentId={filament.id}
+          isSelected={isSelected || false}
+          onToggle={onToggleSelect}
+        />
+      )}
+
+      {/* Success animation overlay */}
+      {showSuccessAnimation && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center rounded-xl bg-green-500/10 pointer-events-none">
+          <div className="checkmark-enter rounded-full bg-green-500 p-2">
+            <Check className="h-6 w-6 text-white" />
+          </div>
+        </div>
+      )}
+
       {/* Explanation Badge */}
       <div className="absolute -top-2.5 -right-2 z-10">
         <TooltipProvider>
@@ -270,7 +324,32 @@ export function SimilarMaterialCard({
 
       {/* CTAs */}
       <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
-        {currentFilament ? (
+        {isMultiSelectMode ? (
+          // In multi-select mode, clicking card toggles selection
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleSelect?.();
+            }}
+            className={`flex-1 ${isSelected ? 'border-primary bg-primary/20 text-primary' : 'border-primary/50 text-primary hover:bg-primary/10'}`}
+          >
+            {isSelected ? (
+              <>
+                <Check className="mr-1.5 h-3.5 w-3.5" />
+                Selected
+              </>
+            ) : (
+              <>
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                Select
+              </>
+            )}
+          </Button>
+        ) : currentFilament ? (
+          // Side-by-side comparison mode
           <Button
             variant="outline"
             size="sm"
@@ -280,7 +359,11 @@ export function SimilarMaterialCard({
             <ArrowLeftRight className="mr-1.5 h-3.5 w-3.5" />
             Compare
           </Button>
+        ) : isFull && !isAdded ? (
+          // Tray is full - show swap dropdown
+          <QuickSwapDropdown filament={filament} />
         ) : (
+          // Normal add to compare
           <Button
             variant="outline"
             size="sm"
