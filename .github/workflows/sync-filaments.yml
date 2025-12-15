@@ -37,8 +37,32 @@ jobs:
     
     strategy:
       matrix:
-        brand: ['Prusament', 'Overture 3D', '3D-Fuel', '3DXTech']
-      max-parallel: 2
+        brand: [
+          'Prusament',
+          'Overture 3D',
+          '3D-Fuel',
+          '3DXTech',
+          'Bambu Lab',
+          'Polymaker',
+          'eSUN',
+          'Sunlu',
+          'Amolen',
+          'Anycubic',
+          'Eryone',
+          'Elegoo',
+          'Creality',
+          'TTYT3D',
+          'ColorFabb',
+          'Fiberlogy',
+          'Ultimaker',
+          'Printed Solid',
+          'Push Plastic',
+          'Fusion Filaments',
+          'Ziro',
+          'Paramount 3D',
+          'Inland'
+        ]
+      max-parallel: 3
       fail-fast: false
     
     steps:
