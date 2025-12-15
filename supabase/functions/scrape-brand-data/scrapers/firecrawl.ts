@@ -203,6 +203,32 @@ export class FirecrawlScraper extends BaseScraper {
   }
 
   private extractHtmlPrice(html: string): number | null {
+    // Platform-specific patterns first
+    const platformPatterns = [
+      // Microcenter patterns
+      /id=["']pricing["'][^>]*>.*?[\$€£]\s*([\d.,]+)/gis,
+      /class=["'][^"']*productPrice[^"']*["'][^>]*>\s*[\$€£]?\s*([\d.,]+)/gi,
+      
+      // Magento patterns
+      /class=["'][^"']*price-box[^"']*["'].*?[\$€£]\s*([\d.,]+)/gis,
+      /class=["'][^"']*product-info-price[^"']*["'].*?[\$€£]\s*([\d.,]+)/gis,
+      /data-price-type=["']finalPrice["'][^>]*data-price-amount=["']([\d.,]+)["']/gi,
+      
+      // PrestaShop patterns
+      /class=["'][^"']*current-price[^"']*["'][^>]*>.*?[\$€£]\s*([\d.,]+)/gis,
+      /itemprop=["']price["'][^>]*content=["']([\d.,]+)["']/gi,
+    ];
+
+    for (const pattern of platformPatterns) {
+      const matches = html.matchAll(pattern);
+      for (const match of matches) {
+        const price = this.parsePrice(match[1]);
+        if (price && price > 5 && price < 500) {
+          return price;
+        }
+      }
+    }
+    
     // Common e-commerce price class patterns
     const patterns = [
       /class=["'][^"']*price[^"']*["'][^>]*>\s*(?:[\$€£]\s*)?([\d.,]+)/gi,
@@ -289,6 +315,12 @@ export class FirecrawlScraper extends BaseScraper {
   }
 
   private extractProductIdFromUrl(url: string): string {
+    // Microcenter: /product/{sku}/product-name
+    const microcenterMatch = url.match(/microcenter\.com\/product\/(\d+)/);
+    if (microcenterMatch) {
+      return microcenterMatch[1];
+    }
+
     // FormFutura: /products/product-name
     const formFuturaMatch = url.match(/formfutura\.com\/[^/]+\/([^/?]+)/);
     if (formFuturaMatch) {
@@ -299,6 +331,18 @@ export class FirecrawlScraper extends BaseScraper {
     const matterHackersMatch = url.match(/matterhackers\.com\/store\/l\/([^/?]+)/);
     if (matterHackersMatch) {
       return matterHackersMatch[1];
+    }
+
+    // Magento: /catalog/product/view/id/{id}
+    const magentoMatch = url.match(/\/catalog\/product\/view\/id\/(\d+)/);
+    if (magentoMatch) {
+      return magentoMatch[1];
+    }
+
+    // PrestaShop: /{category}/{id}-{slug}.html
+    const prestashopMatch = url.match(/\/(\d+)-[^/]+\.html/);
+    if (prestashopMatch) {
+      return prestashopMatch[1];
     }
 
     // Generic: last path segment

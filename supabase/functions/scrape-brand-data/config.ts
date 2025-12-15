@@ -356,8 +356,8 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   },
   Inland: {
     vendor: "Inland",
-    platform: "amazon",
-    baseUrl: "https://www.amazon.com",
+    platform: "firecrawl", // Mixed URLs: Microcenter.com store brand
+    baseUrl: "https://www.microcenter.com",
     currency: "USD",
     exchangeRate: 1,
     productsPerPage: 20,
