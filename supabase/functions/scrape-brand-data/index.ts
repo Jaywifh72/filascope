@@ -33,8 +33,23 @@ interface ScrapeStats {
   errorDetails: string[];
 }
 
-// Convert vendor name to brand_slug format
-function toBrandSlug(vendor: string): string {
+// Convert vendor name to brand_slug format - lookup from database for accuracy
+async function getBrandSlugFromDB(supabase: SupabaseClient, vendor: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("automated_brands")
+    .select("brand_slug")
+    .or(`brand_name.ilike.${vendor},brand_name.ilike.%${vendor}%`)
+    .maybeSingle();
+  
+  if (error || !data) {
+    console.warn(`Could not find brand_slug for vendor: ${vendor}, using fallback`);
+    return null;
+  }
+  return data.brand_slug;
+}
+
+// Fallback slug generation if database lookup fails
+function toBrandSlugFallback(vendor: string): string {
   return vendor.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
 
@@ -435,8 +450,8 @@ Deno.serve(async (req) => {
       const config = BRAND_CONFIGS[v];
       const scraper = getScraper(config);
       
-      // Convert vendor name to brand_slug and create sync log for this vendor
-      const brandSlug = toBrandSlug(v);
+      // Get brand_slug from database (accurate) or fallback to generated slug
+      const brandSlug = await getBrandSlugFromDB(supabase, v) || toBrandSlugFallback(v);
       console.log(`📝 Creating sync log for brand_slug: ${brandSlug}`);
       const syncLogId = await createBrandSyncLog(supabase, brandSlug);
 
