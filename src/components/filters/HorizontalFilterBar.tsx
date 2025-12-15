@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 // Material color mapping for visual swatches
 const MATERIAL_COLORS: Record<string, string> = {
@@ -24,8 +26,8 @@ const MATERIAL_COLORS: Record<string, string> = {
   'Specialty': '#f43f5e',
 };
 
-// Top 10 popular brands
-const TOP_BRANDS = [
+// Fallback top brands if DB fetch fails
+const FALLBACK_TOP_BRANDS = [
   'Bambu Lab', 'Prusament', 'eSun', 'Overture', 'Hatchbox',
   'Polymaker', 'Sunlu', 'Inland', 'ColorFabb', 'Fillamentum'
 ];
@@ -102,6 +104,27 @@ export function HorizontalFilterBar({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const brandSearchRef = useRef<HTMLInputElement>(null);
 
+  // Fetch featured brands from automated_brands table
+  const { data: featuredBrandsData } = useQuery({
+    queryKey: ["featured-brands-filter"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("automated_brands")
+        .select("display_name")
+        .eq("featured", true)
+        .eq("is_visible", true)
+        .order("display_order")
+        .limit(10);
+      
+      if (error) throw error;
+      return data?.map(b => b.display_name) || [];
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
+
+  // Use fetched featured brands or fallback
+  const topBrands = featuredBrandsData?.length ? featuredBrandsData : FALLBACK_TOP_BRANDS;
+
   // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -147,14 +170,14 @@ export function HorizontalFilterBar({
     brand.name.toLowerCase().includes(brandSearch.toLowerCase())
   );
 
-  // Get popular brands (intersection of TOP_BRANDS and available brands)
-  const popularBrands = TOP_BRANDS
+  // Get popular brands (intersection of topBrands and available brands)
+  const popularBrands = topBrands
     .map(name => brands.find(b => b.name === name))
     .filter((b): b is Brand => b !== undefined)
     .filter(b => !brandSearch || b.name.toLowerCase().includes(brandSearch.toLowerCase()));
 
   // Get other brands (not in popular list), grouped alphabetically
-  const otherBrands = filteredBrands.filter(b => !TOP_BRANDS.includes(b.name));
+  const otherBrands = filteredBrands.filter(b => !topBrands.includes(b.name));
 
   const applyBrandFilter = () => {
     setIsApplying('brand');
