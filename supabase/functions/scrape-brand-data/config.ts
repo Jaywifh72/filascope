@@ -581,6 +581,20 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     userAgent: DEFAULT_USER_AGENT,
     productCount: 50,
   },
+  Elegoo: {
+    vendor: "Elegoo",
+    platform: "shopify",
+    baseUrl: "https://store.elegoo.com",
+    apiEndpoint: "https://store.elegoo.com/products.json",
+    collectionHandle: "filament",
+    currency: "USD",
+    exchangeRate: 1,
+    productsPerPage: 250,
+    requestDelay: 500,
+    timeout: 10000,
+    userAgent: DEFAULT_USER_AGENT,
+    productCount: 20,
+  },
 };
 
 export function getBrandConfig(vendor: string): BrandConfig | null {
