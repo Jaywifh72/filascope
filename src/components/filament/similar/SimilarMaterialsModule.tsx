@@ -1,15 +1,20 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEnhancedSimilarFilaments } from "@/hooks/useEnhancedSimilarFilaments";
 import { SimilarMaterialCard } from "./SimilarMaterialCard";
 import { MaterialJourney, filterByTier } from "./MaterialJourney";
 import { RecommendationFilters, applyRecommendationFilter, type FilterType } from "./RecommendationFilters";
+import { BatchSelectControls } from "./BatchSelectControls";
+import { ComparisonSuggestionTip } from "./ComparisonSuggestionTip";
+import { ComparisonHistoryBanner } from "./ComparisonHistoryBanner";
 import { useCompare } from "@/hooks/useCompare";
+import { useComparePresets } from "@/hooks/useComparePresets";
 import { useUserPersonalization } from "@/hooks/useUserPersonalization";
 import { useUserSkillLevel } from "@/hooks/useUserSkillLevel";
+import { toast } from "sonner";
 
 interface SimilarMaterialsModuleProps {
   filamentId: string;
@@ -66,10 +71,15 @@ export function SimilarMaterialsModule({
     }
   );
   const { addItem } = useCompare();
+  const { savePreset } = useComparePresets();
 
   // Filtering state
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [activeTier, setActiveTier] = useState<string | null>(null);
+
+  // Batch selection state
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Apply filters
   const filteredRecommendations = useMemo(() => {
@@ -149,6 +159,57 @@ export function SimilarMaterialsModule({
     }
   };
 
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleSaveGroup = () => {
+    if (!currentFilament) return;
+
+    // Create items array including current filament + recommendations
+    const items = [
+      {
+        id: currentFilament.id,
+        product_title: currentFilament.product_title,
+        vendor: currentFilament.vendor,
+        material: currentFilament.material,
+        color_hex: null,
+        variant_price: currentFilament.variant_price,
+        net_weight_g: currentFilament.net_weight_g,
+        featured_image: currentFilament.featured_image,
+      },
+      ...filteredRecommendations.slice(0, 3).map((rec) => ({
+        id: rec.id,
+        product_title: rec.product_title,
+        vendor: rec.vendor,
+        material: rec.material,
+        color_hex: null,
+        variant_price: rec.variant_price,
+        net_weight_g: rec.net_weight_g,
+        featured_image: rec.featured_image,
+      })),
+    ];
+
+    const preset = savePreset(
+      `${material || "Material"} Comparison`,
+      items
+    );
+
+    if (preset) {
+      toast.success("Comparison saved!", {
+        description: "Access it later from your saved presets",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="my-10 rounded-2xl border border-primary/15 bg-primary/[0.03] p-6 md:p-8">
@@ -171,6 +232,16 @@ export function SimilarMaterialsModule({
 
   return (
     <div className="my-10 rounded-2xl border border-primary/15 bg-primary/[0.03] p-6 md:p-8">
+      {/* Comparison History Banner */}
+      <ComparisonHistoryBanner currentMaterial={material} />
+
+      {/* Comparison Suggestion Tip */}
+      <ComparisonSuggestionTip
+        currentFilament={currentFilament}
+        currentPricePerKg={currentPricePerKg}
+        recommendations={recommendations}
+      />
+
       {/* Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -181,17 +252,48 @@ export function SimilarMaterialsModule({
             </h3>
           </div>
           
-          {/* Filter dropdown */}
-          <RecommendationFilters
-            activeFilter={activeFilter}
-            onFilterChange={setActiveFilter}
-            currentVendor={vendor}
-          />
+          <div className="flex items-center gap-2">
+            {/* Batch select controls */}
+            <BatchSelectControls
+              recommendations={filteredRecommendations}
+              isMultiSelectMode={isMultiSelectMode}
+              onToggleMode={() => {
+                setIsMultiSelectMode(!isMultiSelectMode);
+                setSelectedIds(new Set());
+              }}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+            />
+
+            {/* Save group button */}
+            {currentFilament && !isMultiSelectMode && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSaveGroup}
+                className="text-muted-foreground hover:text-primary"
+              >
+                <Bookmark className="mr-1.5 h-3.5 w-3.5" />
+                Save
+              </Button>
+            )}
+
+            {/* Filter dropdown */}
+            {!isMultiSelectMode && (
+              <RecommendationFilters
+                activeFilter={activeFilter}
+                onFilterChange={setActiveFilter}
+                currentVendor={vendor}
+              />
+            )}
+          </div>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          {activeTier || activeFilter !== "all" 
-            ? `Showing ${filteredRecommendations.length} filtered results`
-            : "Personalized recommendations based on your preferences"
+          {isMultiSelectMode 
+            ? "Select 2-4 materials to compare together"
+            : activeTier || activeFilter !== "all" 
+              ? `Showing ${filteredRecommendations.length} filtered results`
+              : "Personalized recommendations based on your preferences"
           }
         </p>
       </div>
@@ -229,7 +331,10 @@ export function SimilarMaterialsModule({
               <SimilarMaterialCard 
                 filament={rec} 
                 currentFilament={currentFilament}
-                currentScores={currentScores} 
+                currentScores={currentScores}
+                isMultiSelectMode={isMultiSelectMode}
+                isSelected={selectedIds.has(rec.id)}
+                onToggleSelect={() => handleToggleSelect(rec.id)}
               />
             </div>
           ))}
