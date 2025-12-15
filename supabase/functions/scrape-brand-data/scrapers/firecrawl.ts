@@ -1,0 +1,313 @@
+import { BaseScraper, type ScrapedProduct } from "./base.ts";
+import type { BrandConfig } from "../config.ts";
+import { extractPrice, extractAvailability } from "../utils.ts";
+
+/**
+ * FirecrawlScraper - Generic HTML scraper using Firecrawl API
+ * Used for custom/Magento platforms like FormFutura and MatterHackers
+ */
+export class FirecrawlScraper extends BaseScraper {
+  private firecrawlApiKey: string | undefined;
+
+  constructor(config: BrandConfig) {
+    super(config);
+    this.firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
+  }
+
+  async scrapeProduct(url: string): Promise<ScrapedProduct | null> {
+    if (!this.firecrawlApiKey) {
+      this.logError("FIRECRAWL_API_KEY not configured");
+      return null;
+    }
+
+    try {
+      this.log(`Scraping via Firecrawl: ${url}`);
+
+      const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.firecrawlApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url,
+          formats: ["markdown", "html"],
+          onlyMainContent: true,
+          waitFor: 3000,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        this.logError(`Firecrawl error: ${response.status} - ${error}`);
+        return null;
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        this.logError(`Firecrawl failed: ${data.error}`);
+        return null;
+      }
+
+      return this.parseResponse(data, url);
+    } catch (error) {
+      this.logError(`Error scraping ${url}:`, error);
+      return null;
+    }
+  }
+
+  async scrapeAllProducts(limit: number = 50): Promise<ScrapedProduct[]> {
+    // Firecrawl scraper relies on product URLs stored in the database
+    // We fetch filaments for this vendor and scrape their product_url
+    this.log(`Firecrawl scraper requires specific product URLs for ${this.config.vendor}`);
+    this.log(`Use scrapeProduct() with individual product URLs`);
+    return [];
+  }
+
+  private parseResponse(data: any, url: string): ScrapedProduct | null {
+    const content = data.data || data;
+    const html = content.html || "";
+    const markdown = content.markdown || "";
+    const metadata = content.metadata || {};
+
+    // Extract title from metadata or markdown
+    const title = this.extractTitle(metadata, markdown, html);
+
+    if (!title) {
+      this.log(`Could not extract title from ${url}`);
+      return null;
+    }
+
+    // Extract price using multiple strategies
+    const price = this.extractPriceFromContent(html, markdown);
+
+    // Extract availability
+    const available = this.extractAvailabilityFromContent(html, markdown);
+
+    // Extract product ID from URL
+    const productId = this.extractProductIdFromUrl(url);
+
+    return {
+      productId,
+      sku: productId,
+      title,
+      price: price ? this.convertToUSD(price) : null,
+      compareAtPrice: this.extractCompareAtPrice(html, markdown),
+      available,
+      currency: this.config.currency,
+      url,
+      scrapedAt: new Date(),
+      source: `firecrawl-${this.config.vendor.toLowerCase().replace(/\s+/g, "-")}`,
+    };
+  }
+
+  private extractTitle(metadata: any, markdown: string, html: string): string | null {
+    // Try metadata title first
+    if (metadata.title) {
+      // Clean up common suffixes
+      return metadata.title
+        .replace(/\s*[-|–]\s*(FormFutura|MatterHackers|Shop|Buy|Order).*$/i, "")
+        .replace(/\s*\|\s*.*$/, "")
+        .trim();
+    }
+
+    // Try H1 from markdown
+    const h1Match = markdown.match(/^#\s+(.+)$/m);
+    if (h1Match) {
+      return h1Match[1].trim();
+    }
+
+    // Try HTML title or h1
+    const htmlTitleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+    if (htmlTitleMatch) {
+      return htmlTitleMatch[1].trim();
+    }
+
+    return null;
+  }
+
+  private extractPriceFromContent(html: string, markdown: string): number | null {
+    // Strategy 1: JSON-LD structured data
+    const jsonLdPrice = this.extractJsonLdPrice(html);
+    if (jsonLdPrice) return jsonLdPrice;
+
+    // Strategy 2: Meta tags
+    const metaPrice = this.extractMetaPrice(html);
+    if (metaPrice) return metaPrice;
+
+    // Strategy 3: Common price class patterns
+    const htmlPrice = this.extractHtmlPrice(html);
+    if (htmlPrice) return htmlPrice;
+
+    // Strategy 4: Markdown price patterns
+    const mdPrice = extractPrice(markdown);
+    if (mdPrice) return mdPrice;
+
+    return null;
+  }
+
+  private extractJsonLdPrice(html: string): number | null {
+    try {
+      // Match JSON-LD script blocks
+      const jsonLdMatches = html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+      
+      for (const match of jsonLdMatches) {
+        try {
+          const data = JSON.parse(match[1]);
+          
+          // Direct price
+          if (data.offers?.price) {
+            return this.parsePrice(data.offers.price);
+          }
+          
+          // Array of offers
+          if (Array.isArray(data.offers)) {
+            for (const offer of data.offers) {
+              if (offer.price) {
+                return this.parsePrice(offer.price);
+              }
+            }
+          }
+
+          // Product with offers
+          if (data["@type"] === "Product" && data.offers?.price) {
+            return this.parsePrice(data.offers.price);
+          }
+        } catch {
+          continue;
+        }
+      }
+    } catch {
+      // Ignore JSON parsing errors
+    }
+
+    return null;
+  }
+
+  private extractMetaPrice(html: string): number | null {
+    const patterns = [
+      /property=["']og:price:amount["'][^>]*content=["']([^"']+)["']/i,
+      /name=["']price["'][^>]*content=["']([^"']+)["']/i,
+      /itemprop=["']price["'][^>]*content=["']([^"']+)["']/i,
+    ];
+
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match) {
+        return this.parsePrice(match[1]);
+      }
+    }
+
+    return null;
+  }
+
+  private extractHtmlPrice(html: string): number | null {
+    // Common e-commerce price class patterns
+    const patterns = [
+      /class=["'][^"']*price[^"']*["'][^>]*>\s*(?:[\$€£]\s*)?([\d.,]+)/gi,
+      /id=["']product-price[^"']*["'][^>]*>\s*(?:[\$€£]\s*)?([\d.,]+)/gi,
+      /class=["'][^"']*current-price[^"']*["'][^>]*>\s*(?:[\$€£]\s*)?([\d.,]+)/gi,
+      /data-price=["']([\d.,]+)["']/gi,
+      /<span[^>]*class=["'][^"']*woocommerce-Price-amount[^"']*["'][^>]*>.*?([\d.,]+)/gi,
+    ];
+
+    for (const pattern of patterns) {
+      const matches = html.matchAll(pattern);
+      for (const match of matches) {
+        const price = this.parsePrice(match[1]);
+        if (price && price > 5 && price < 500) {
+          return price;
+        }
+      }
+    }
+
+    // Last resort: find any price-like pattern
+    const genericMatch = html.match(/(?:€|\$|£|EUR|USD)\s*([\d.,]+)/);
+    if (genericMatch) {
+      return this.parsePrice(genericMatch[1]);
+    }
+
+    return null;
+  }
+
+  private extractCompareAtPrice(html: string, markdown: string): number | null {
+    // Look for original/compare-at price patterns
+    const patterns = [
+      /class=["'][^"']*(?:was-price|compare-at|original-price|old-price)[^"']*["'][^>]*>\s*(?:[\$€£]\s*)?([\d.,]+)/gi,
+      /data-compare-at-price=["']([\d.,]+)["']/gi,
+    ];
+
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match) {
+        return this.parsePrice(match[1]);
+      }
+    }
+
+    return null;
+  }
+
+  private extractAvailabilityFromContent(html: string, markdown: string): boolean {
+    const combined = html + markdown;
+    
+    // Check for out of stock indicators
+    const outOfStockPatterns = [
+      /out\s*of\s*stock/i,
+      /sold\s*out/i,
+      /unavailable/i,
+      /not\s*available/i,
+      /currently\s*not\s*in\s*stock/i,
+      /"availability":\s*"OutOfStock"/i,
+      /"availability":\s*"https?:\/\/schema\.org\/OutOfStock"/i,
+    ];
+
+    for (const pattern of outOfStockPatterns) {
+      if (pattern.test(combined)) {
+        return false;
+      }
+    }
+
+    // Check for in stock indicators
+    const inStockPatterns = [
+      /in\s*stock/i,
+      /add\s*to\s*cart/i,
+      /add\s*to\s*basket/i,
+      /buy\s*now/i,
+      /"availability":\s*"InStock"/i,
+      /"availability":\s*"https?:\/\/schema\.org\/InStock"/i,
+    ];
+
+    for (const pattern of inStockPatterns) {
+      if (pattern.test(combined)) {
+        return true;
+      }
+    }
+
+    // Default to available if no clear indicator
+    return true;
+  }
+
+  private extractProductIdFromUrl(url: string): string {
+    // FormFutura: /products/product-name
+    const formFuturaMatch = url.match(/formfutura\.com\/[^/]+\/([^/?]+)/);
+    if (formFuturaMatch) {
+      return formFuturaMatch[1];
+    }
+
+    // MatterHackers: /store/l/product-name/ln/sku
+    const matterHackersMatch = url.match(/matterhackers\.com\/store\/l\/([^/?]+)/);
+    if (matterHackersMatch) {
+      return matterHackersMatch[1];
+    }
+
+    // Generic: last path segment
+    const genericMatch = url.match(/\/([^/?]+)\/?(?:\?.*)?$/);
+    if (genericMatch) {
+      return genericMatch[1];
+    }
+
+    // Fallback: hash the URL
+    return url.split("/").pop() || url;
+  }
+}

@@ -1,6 +1,6 @@
 export interface BrandConfig {
   vendor: string;
-  platform: "shopify" | "woocommerce" | "bigcommerce" | "amazon";
+  platform: "shopify" | "woocommerce" | "bigcommerce" | "amazon" | "firecrawl";
   baseUrl: string;
   apiEndpoint?: string;
   collectionHandle?: string;
@@ -365,6 +365,46 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     timeout: 20000,
     userAgent: DEFAULT_USER_AGENT,
     productCount: 16,
+  },
+  // Shopify via reseller (3DmakerWorld)
+  Taulman3D: {
+    vendor: "Taulman3D",
+    platform: "shopify",
+    baseUrl: "https://3dmakerworld.com",
+    apiEndpoint: "https://3dmakerworld.com/products.json",
+    collectionHandle: "taulman",
+    currency: "USD",
+    exchangeRate: 1,
+    productsPerPage: 250,
+    requestDelay: 500,
+    timeout: 10000,
+    userAgent: DEFAULT_USER_AGENT,
+    productCount: 6,
+  },
+  // Firecrawl-based scrapers (custom platforms)
+  FormFutura: {
+    vendor: "FormFutura",
+    platform: "firecrawl",
+    baseUrl: "https://www.formfutura.com",
+    currency: "EUR",
+    exchangeRate: 1.08,
+    productsPerPage: 20,
+    requestDelay: 2000,
+    timeout: 20000,
+    userAgent: DEFAULT_USER_AGENT,
+    productCount: 19,
+  },
+  MatterHackers: {
+    vendor: "MatterHackers",
+    platform: "firecrawl",
+    baseUrl: "https://www.matterhackers.com",
+    currency: "USD",
+    exchangeRate: 1,
+    productsPerPage: 20,
+    requestDelay: 2000,
+    timeout: 20000,
+    userAgent: DEFAULT_USER_AGENT,
+    productCount: 37,
   },
 };
 

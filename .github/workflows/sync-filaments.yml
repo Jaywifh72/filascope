@@ -60,7 +60,10 @@ jobs:
           'Fusion Filaments',
           'Ziro',
           'Paramount 3D',
-          'Inland'
+          'Inland',
+          'Taulman3D',
+          'FormFutura',
+          'MatterHackers'
         ]
       max-parallel: 3
       fail-fast: false
