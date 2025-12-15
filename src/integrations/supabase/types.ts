@@ -236,17 +236,23 @@ export type Database = {
       automated_brands: {
         Row: {
           active_product_count: number | null
+          api_endpoint: string | null
+          auth_type: string | null
+          auto_create_products: boolean | null
           availability_selectors: Json | null
           avg_scrape_duration_seconds: number | null
           base_url: string
+          batch_size: number | null
           brand_name: string
           brand_slug: string
           color_primary: string | null
           color_secondary: string | null
+          color_selectors: Json | null
           created_at: string
           created_by: string | null
           default_currency: string | null
           description: string | null
+          diameter_selectors: Json | null
           display_name: string
           display_order: number | null
           failed_scrapes: number | null
@@ -259,17 +265,27 @@ export type Database = {
           last_error_at: string | null
           last_scrape_at: string | null
           logo_url: string | null
+          material_selectors: Json | null
+          max_pages: number | null
           max_retries: number | null
           next_scrape_at: string | null
           notes: string | null
+          pagination_enabled: boolean | null
           platform_type: string
           price_selectors: Json | null
           product_count: number | null
+          product_list_selector: string | null
+          product_url_pattern: string | null
+          products_created: number | null
+          products_updated: number | null
+          products_url: string | null
+          products_with_prices: number | null
           products_with_urls: number | null
           rate_limit_ms: number | null
           requires_auth: boolean | null
           requires_currency_conversion: boolean | null
           scrape_frequency_hours: number | null
+          scrape_schedule: string | null
           scraping_active: boolean | null
           scraping_enabled: boolean | null
           successful_scrapes: number | null
@@ -279,20 +295,27 @@ export type Database = {
           total_scrapes: number | null
           updated_at: string
           website_url: string | null
+          weight_selectors: Json | null
         }
         Insert: {
           active_product_count?: number | null
+          api_endpoint?: string | null
+          auth_type?: string | null
+          auto_create_products?: boolean | null
           availability_selectors?: Json | null
           avg_scrape_duration_seconds?: number | null
           base_url: string
+          batch_size?: number | null
           brand_name: string
           brand_slug: string
           color_primary?: string | null
           color_secondary?: string | null
+          color_selectors?: Json | null
           created_at?: string
           created_by?: string | null
           default_currency?: string | null
           description?: string | null
+          diameter_selectors?: Json | null
           display_name: string
           display_order?: number | null
           failed_scrapes?: number | null
@@ -305,17 +328,27 @@ export type Database = {
           last_error_at?: string | null
           last_scrape_at?: string | null
           logo_url?: string | null
+          material_selectors?: Json | null
+          max_pages?: number | null
           max_retries?: number | null
           next_scrape_at?: string | null
           notes?: string | null
+          pagination_enabled?: boolean | null
           platform_type: string
           price_selectors?: Json | null
           product_count?: number | null
+          product_list_selector?: string | null
+          product_url_pattern?: string | null
+          products_created?: number | null
+          products_updated?: number | null
+          products_url?: string | null
+          products_with_prices?: number | null
           products_with_urls?: number | null
           rate_limit_ms?: number | null
           requires_auth?: boolean | null
           requires_currency_conversion?: boolean | null
           scrape_frequency_hours?: number | null
+          scrape_schedule?: string | null
           scraping_active?: boolean | null
           scraping_enabled?: boolean | null
           successful_scrapes?: number | null
@@ -325,20 +358,27 @@ export type Database = {
           total_scrapes?: number | null
           updated_at?: string
           website_url?: string | null
+          weight_selectors?: Json | null
         }
         Update: {
           active_product_count?: number | null
+          api_endpoint?: string | null
+          auth_type?: string | null
+          auto_create_products?: boolean | null
           availability_selectors?: Json | null
           avg_scrape_duration_seconds?: number | null
           base_url?: string
+          batch_size?: number | null
           brand_name?: string
           brand_slug?: string
           color_primary?: string | null
           color_secondary?: string | null
+          color_selectors?: Json | null
           created_at?: string
           created_by?: string | null
           default_currency?: string | null
           description?: string | null
+          diameter_selectors?: Json | null
           display_name?: string
           display_order?: number | null
           failed_scrapes?: number | null
@@ -351,17 +391,27 @@ export type Database = {
           last_error_at?: string | null
           last_scrape_at?: string | null
           logo_url?: string | null
+          material_selectors?: Json | null
+          max_pages?: number | null
           max_retries?: number | null
           next_scrape_at?: string | null
           notes?: string | null
+          pagination_enabled?: boolean | null
           platform_type?: string
           price_selectors?: Json | null
           product_count?: number | null
+          product_list_selector?: string | null
+          product_url_pattern?: string | null
+          products_created?: number | null
+          products_updated?: number | null
+          products_url?: string | null
+          products_with_prices?: number | null
           products_with_urls?: number | null
           rate_limit_ms?: number | null
           requires_auth?: boolean | null
           requires_currency_conversion?: boolean | null
           scrape_frequency_hours?: number | null
+          scrape_schedule?: string | null
           scraping_active?: boolean | null
           scraping_enabled?: boolean | null
           successful_scrapes?: number | null
@@ -371,8 +421,100 @@ export type Database = {
           total_scrapes?: number | null
           updated_at?: string
           website_url?: string | null
+          weight_selectors?: Json | null
         }
         Relationships: []
+      }
+      brand_sync_logs: {
+        Row: {
+          brand_id: string | null
+          brand_slug: string
+          completed_at: string | null
+          created_at: string | null
+          duration_seconds: number | null
+          error_details: Json | null
+          id: string
+          notes: string | null
+          price_changes: number | null
+          products_created: number | null
+          products_discovered: number | null
+          products_failed: number | null
+          products_processed: Json | null
+          products_updated: number | null
+          started_at: string
+          status: string
+          success_details: Json | null
+          sync_type: string
+          triggered_by: string | null
+          triggered_by_user: string | null
+        }
+        Insert: {
+          brand_id?: string | null
+          brand_slug: string
+          completed_at?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          error_details?: Json | null
+          id?: string
+          notes?: string | null
+          price_changes?: number | null
+          products_created?: number | null
+          products_discovered?: number | null
+          products_failed?: number | null
+          products_processed?: Json | null
+          products_updated?: number | null
+          started_at?: string
+          status: string
+          success_details?: Json | null
+          sync_type: string
+          triggered_by?: string | null
+          triggered_by_user?: string | null
+        }
+        Update: {
+          brand_id?: string | null
+          brand_slug?: string
+          completed_at?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          error_details?: Json | null
+          id?: string
+          notes?: string | null
+          price_changes?: number | null
+          products_created?: number | null
+          products_discovered?: number | null
+          products_failed?: number | null
+          products_processed?: Json | null
+          products_updated?: number | null
+          started_at?: string
+          status?: string
+          success_details?: Json | null
+          sync_type?: string
+          triggered_by?: string | null
+          triggered_by_user?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_sync_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "automated_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       community_report_upvotes: {
         Row: {
@@ -1019,8 +1161,11 @@ export type Database = {
           amazon_link_de: string | null
           amazon_link_uk: string | null
           amazon_link_us: string | null
+          auto_created: boolean | null
+          auto_updated: boolean | null
           bed_temp_max_c: number | null
           bed_temp_min_c: number | null
+          brand_id: string | null
           carbon_fiber_percentage: number | null
           color_family: string | null
           color_hex: string | null
@@ -1047,12 +1192,14 @@ export type Database = {
           industry_tags: string[] | null
           is_nozzle_abrasive: boolean | null
           last_external_sync_at: string | null
+          last_scraped_at: string | null
           material: string | null
           melt_temp_c: number | null
           moisture_care: string | null
           moisture_sensitivity_level: string | null
           mpn: string | null
           net_weight_g: number | null
+          next_scrape_at: string | null
           nozzle_care: string | null
           nozzle_temp_max_c: number | null
           nozzle_temp_min_c: number | null
@@ -1066,6 +1213,7 @@ export type Database = {
           product_url: string | null
           published_at: string | null
           recommended_nozzle_type: string | null
+          scrape_frequency_hours: number | null
           shore_hardness_d: number | null
           spool_ams_fit: boolean | null
           spool_material: string | null
@@ -1098,8 +1246,11 @@ export type Database = {
           amazon_link_de?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
+          auto_created?: boolean | null
+          auto_updated?: boolean | null
           bed_temp_max_c?: number | null
           bed_temp_min_c?: number | null
+          brand_id?: string | null
           carbon_fiber_percentage?: number | null
           color_family?: string | null
           color_hex?: string | null
@@ -1126,12 +1277,14 @@ export type Database = {
           industry_tags?: string[] | null
           is_nozzle_abrasive?: boolean | null
           last_external_sync_at?: string | null
+          last_scraped_at?: string | null
           material?: string | null
           melt_temp_c?: number | null
           moisture_care?: string | null
           moisture_sensitivity_level?: string | null
           mpn?: string | null
           net_weight_g?: number | null
+          next_scrape_at?: string | null
           nozzle_care?: string | null
           nozzle_temp_max_c?: number | null
           nozzle_temp_min_c?: number | null
@@ -1145,6 +1298,7 @@ export type Database = {
           product_url?: string | null
           published_at?: string | null
           recommended_nozzle_type?: string | null
+          scrape_frequency_hours?: number | null
           shore_hardness_d?: number | null
           spool_ams_fit?: boolean | null
           spool_material?: string | null
@@ -1177,8 +1331,11 @@ export type Database = {
           amazon_link_de?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
+          auto_created?: boolean | null
+          auto_updated?: boolean | null
           bed_temp_max_c?: number | null
           bed_temp_min_c?: number | null
+          brand_id?: string | null
           carbon_fiber_percentage?: number | null
           color_family?: string | null
           color_hex?: string | null
@@ -1205,12 +1362,14 @@ export type Database = {
           industry_tags?: string[] | null
           is_nozzle_abrasive?: boolean | null
           last_external_sync_at?: string | null
+          last_scraped_at?: string | null
           material?: string | null
           melt_temp_c?: number | null
           moisture_care?: string | null
           moisture_sensitivity_level?: string | null
           mpn?: string | null
           net_weight_g?: number | null
+          next_scrape_at?: string | null
           nozzle_care?: string | null
           nozzle_temp_max_c?: number | null
           nozzle_temp_min_c?: number | null
@@ -1224,6 +1383,7 @@ export type Database = {
           product_url?: string | null
           published_at?: string | null
           recommended_nozzle_type?: string | null
+          scrape_frequency_hours?: number | null
           shore_hardness_d?: number | null
           spool_ams_fit?: boolean | null
           spool_material?: string | null
@@ -1252,7 +1412,29 @@ export type Database = {
           wood_scent_level?: string | null
           wood_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "automated_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       module_engagement_metrics: {
         Row: {
@@ -2350,6 +2532,91 @@ export type Database = {
             columns: ["series_id"]
             isOneToOne: false
             referencedRelation: "printer_series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_discovery_queue: {
+        Row: {
+          attempts: number | null
+          brand_id: string | null
+          brand_slug: string
+          created_at: string | null
+          discovered_at: string | null
+          discovery_method: string | null
+          error_message: string | null
+          filament_id: string | null
+          id: string
+          last_attempt_at: string | null
+          max_attempts: number | null
+          next_attempt_at: string | null
+          priority: number | null
+          product_handle: string | null
+          product_title: string | null
+          product_url: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          brand_id?: string | null
+          brand_slug: string
+          created_at?: string | null
+          discovered_at?: string | null
+          discovery_method?: string | null
+          error_message?: string | null
+          filament_id?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          max_attempts?: number | null
+          next_attempt_at?: string | null
+          priority?: number | null
+          product_handle?: string | null
+          product_title?: string | null
+          product_url: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          brand_id?: string | null
+          brand_slug?: string
+          created_at?: string | null
+          discovered_at?: string | null
+          discovery_method?: string | null
+          error_message?: string | null
+          filament_id?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          max_attempts?: number | null
+          next_attempt_at?: string | null
+          priority?: number | null
+          product_handle?: string | null
+          product_title?: string | null
+          product_url?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_discovery_queue_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "automated_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_discovery_queue_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_discovery_queue_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brands_overview"
             referencedColumns: ["id"]
           },
         ]
@@ -3821,9 +4088,145 @@ export type Database = {
         }
         Relationships: []
       }
+      v_brands_overview: {
+        Row: {
+          active_product_count: number | null
+          auto_create_products: boolean | null
+          avg_scrape_duration_seconds: number | null
+          brand_name: string | null
+          brand_slug: string | null
+          display_name: string | null
+          failed_scrapes: number | null
+          id: string | null
+          last_error: string | null
+          last_error_at: string | null
+          last_scrape_at: string | null
+          next_scrape_at: string | null
+          platform_type: string | null
+          product_count: number | null
+          products_created: number | null
+          products_updated: number | null
+          products_with_prices: number | null
+          products_with_urls: number | null
+          scraping_active: boolean | null
+          scraping_enabled: boolean | null
+          success_rate_percent: number | null
+          successful_scrapes: number | null
+          total_scrapes: number | null
+        }
+        Insert: {
+          active_product_count?: number | null
+          auto_create_products?: boolean | null
+          avg_scrape_duration_seconds?: number | null
+          brand_name?: string | null
+          brand_slug?: string | null
+          display_name?: string | null
+          failed_scrapes?: number | null
+          id?: string | null
+          last_error?: string | null
+          last_error_at?: string | null
+          last_scrape_at?: string | null
+          next_scrape_at?: string | null
+          platform_type?: string | null
+          product_count?: number | null
+          products_created?: number | null
+          products_updated?: number | null
+          products_with_prices?: number | null
+          products_with_urls?: number | null
+          scraping_active?: boolean | null
+          scraping_enabled?: boolean | null
+          success_rate_percent?: never
+          successful_scrapes?: number | null
+          total_scrapes?: number | null
+        }
+        Update: {
+          active_product_count?: number | null
+          auto_create_products?: boolean | null
+          avg_scrape_duration_seconds?: number | null
+          brand_name?: string | null
+          brand_slug?: string | null
+          display_name?: string | null
+          failed_scrapes?: number | null
+          id?: string | null
+          last_error?: string | null
+          last_error_at?: string | null
+          last_scrape_at?: string | null
+          next_scrape_at?: string | null
+          platform_type?: string | null
+          product_count?: number | null
+          products_created?: number | null
+          products_updated?: number | null
+          products_with_prices?: number | null
+          products_with_urls?: number | null
+          scraping_active?: boolean | null
+          scraping_enabled?: boolean | null
+          success_rate_percent?: never
+          successful_scrapes?: number | null
+          total_scrapes?: number | null
+        }
+        Relationships: []
+      }
+      v_pending_discoveries: {
+        Row: {
+          attempts: number | null
+          brand_display_name: string | null
+          brand_slug: string | null
+          discovered_at: string | null
+          error_message: string | null
+          id: string | null
+          last_attempt_at: string | null
+          priority: number | null
+          product_title: string | null
+          product_url: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
+      v_recent_syncs: {
+        Row: {
+          brand_slug: string | null
+          completed_at: string | null
+          display_name: string | null
+          duration_seconds: number | null
+          error_details: Json | null
+          id: string | null
+          platform_type: string | null
+          price_changes: number | null
+          products_created: number | null
+          products_discovered: number | null
+          products_failed: number | null
+          products_updated: number | null
+          started_at: string | null
+          status: string | null
+          sync_type: string | null
+          triggered_by: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_old_price_history: { Args: never; Returns: number }
+      complete_brand_scrape: {
+        Args: {
+          p_error_message?: string
+          p_price_changes?: number
+          p_products_created?: number
+          p_products_discovered?: number
+          p_products_failed?: number
+          p_products_updated?: number
+          p_success: boolean
+          p_sync_log_id: string
+        }
+        Returns: undefined
+      }
+      create_brand_sync_log: {
+        Args: {
+          p_brand_slug: string
+          p_sync_type?: string
+          p_triggered_by?: string
+        }
+        Returns: string
+      }
       get_brands_needing_scrape: {
         Args: never
         Returns: {
@@ -3870,6 +4273,7 @@ export type Database = {
         Returns: boolean
       }
       is_at_all_time_low: { Args: { p_filament_id: string }; Returns: boolean }
+      link_filaments_to_brands: { Args: never; Returns: undefined }
       record_scrape_result: {
         Args: {
           p_brand_slug: string
