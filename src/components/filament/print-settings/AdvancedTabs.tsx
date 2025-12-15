@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Printer, ChevronUp } from "lucide-react";
+import { Printer, ChevronUp, Sliders } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { QuickTips } from "./QuickTips";
 import { WarningBanner } from "./WarningBanner";
@@ -9,6 +9,7 @@ import { HardwareTab } from "./HardwareTab";
 import { PrintSettingsData } from "@/lib/printSettingsData";
 import { SlicerActions } from "@/components/filament/SlicerActions";
 import { cn } from "@/lib/utils";
+import { SettingsImpactSimulator } from "@/components/filament/education/SettingsImpactSimulator";
 
 interface HardwareItem {
   id: string;
@@ -93,7 +94,7 @@ export function AdvancedTabs({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full grid grid-cols-3 h-12 bg-muted/50">
+        <TabsList className="w-full grid grid-cols-4 h-12 bg-muted/50">
           <TabsTrigger 
             value="quick-start" 
             className={cn(
@@ -111,6 +112,16 @@ export function AdvancedTabs({
             )}
           >
             Temperature
+          </TabsTrigger>
+          <TabsTrigger 
+            value="simulator"
+            className={cn(
+              "data-[state=active]:bg-primary/10 data-[state=active]:text-primary",
+              "data-[state=active]:border-b-2 data-[state=active]:border-primary"
+            )}
+          >
+            <Sliders className="w-4 h-4 mr-1.5" />
+            Simulator
           </TabsTrigger>
           <TabsTrigger 
             value="hardware"
@@ -168,6 +179,15 @@ export function AdvancedTabs({
         {/* Temperature Tab */}
         <TabsContent value="temperature" className="mt-6 animate-fade-in">
           <TemperatureTab settings={settings} />
+        </TabsContent>
+
+        {/* Simulator Tab */}
+        <TabsContent value="simulator" className="mt-6 animate-fade-in">
+          <SettingsImpactSimulator 
+            material={filament.material || undefined}
+            baseSpeed={settings.quickStart.nozzleTemp}
+            baseTemp={settings.quickStart.nozzleTemp}
+          />
         </TabsContent>
 
         {/* Hardware Tab */}

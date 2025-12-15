@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, User, Globe, Shield, Loader2, Camera, Trash2 } from "lucide-react";
+import { ArrowLeft, User, Globe, Shield, Loader2, Camera, Trash2, TrendingUp } from "lucide-react";
 import { z } from "zod";
+import { ProgressDashboard } from "@/components/filament/education/ProgressDashboard";
 
 const displayNameSchema = z.string().trim().max(50, "Display name must be less than 50 characters").optional();
 
@@ -492,6 +493,24 @@ const Settings = () => {
                     </p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Learning Progress Section */}
+            <Card className="border-border/50">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-green-500/10">
+                    <TrendingUp className="w-5 h-5 text-green-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Learning Progress</CardTitle>
+                    <CardDescription>Track your 3D printing journey</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ProgressDashboard />
               </CardContent>
             </Card>
           </div>

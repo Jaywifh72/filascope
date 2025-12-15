@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { PrintSettingsData } from "@/lib/printSettingsData";
 import { SlicerActions } from "@/components/filament/SlicerActions";
 import { cn } from "@/lib/utils";
+import { GlossaryTerm } from "@/components/filament/education/GlossaryTerm";
 
 interface QuickStartViewProps {
   settings: PrintSettingsData;
@@ -81,7 +82,7 @@ export function QuickStartView({ settings, filament, onChangePrinter, onShowAdva
           <div className="grid gap-3">
             {/* Nozzle Temperature */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Nozzle Temperature</span>
+              <GlossaryTerm termId="nozzle_temperature" className="text-sm text-muted-foreground" />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="text-base font-semibold text-foreground cursor-help flex items-center gap-1.5">
@@ -100,7 +101,7 @@ export function QuickStartView({ settings, filament, onChangePrinter, onShowAdva
             
             {/* Bed Temperature */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Bed Temperature</span>
+              <GlossaryTerm termId="bed_temperature" className="text-sm text-muted-foreground" />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="text-base font-semibold text-foreground cursor-help flex items-center gap-1.5">
@@ -119,7 +120,7 @@ export function QuickStartView({ settings, filament, onChangePrinter, onShowAdva
             
             {/* Print Speed */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Print Speed</span>
+              <GlossaryTerm termId="print_speed" className="text-sm text-muted-foreground" />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="text-base font-semibold text-foreground cursor-help flex items-center gap-1.5">
@@ -138,7 +139,7 @@ export function QuickStartView({ settings, filament, onChangePrinter, onShowAdva
             
             {/* Build Surface */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Build Surface</span>
+              <GlossaryTerm termId="build_surface" className="text-sm text-muted-foreground" />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="text-base font-semibold text-foreground cursor-help flex items-center gap-1.5">

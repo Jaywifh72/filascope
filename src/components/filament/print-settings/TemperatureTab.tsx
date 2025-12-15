@@ -8,6 +8,7 @@ import { MaterialTemperatureNotes } from "./MaterialTemperatureNotes";
 import { CopyFormatSelector } from "@/components/filament/export/CopyFormatSelector";
 import { PrintSettingsData } from "@/lib/printSettingsData";
 import type { PrintSettings } from "@/lib/settingsFormatters";
+import { GlossaryTerm } from "@/components/filament/education/GlossaryTerm";
 
 interface TemperatureTabProps {
   settings: PrintSettingsData;
@@ -55,7 +56,7 @@ export function TemperatureTab({ settings, material, productTitle, vendor }: Tem
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-foreground flex items-center gap-2">
             <Flame className="w-4 h-4 text-orange-500" />
-            Bed Temperature
+            <GlossaryTerm termId="bed_temperature" />
           </span>
           <div className="text-right">
             <span className="text-2xl font-bold text-foreground">
