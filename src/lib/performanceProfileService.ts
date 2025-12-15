@@ -399,6 +399,396 @@ export function buildCategoryComparison(scores: FilamentScores): CategoryCompari
   };
 }
 
+// Generate prose narrative that tells the material's story
+export function generatePerformanceNarrative(
+  scores: FilamentScores,
+  pricePerKg: number | null,
+  categoryPriceAvg: number = 22
+): string {
+  const baseMaterial = getBaseMaterial(scores.material || '');
+  const printability = scores.ease_of_printing_score || scores.printability_index || 0;
+  const strengthRaw = scores.strength_index || 0;
+  const strength = strengthRaw < 1 ? normalizeStrengthIndex(strengthRaw) : strengthRaw;
+  const value = scores.value_score || 0;
+  
+  const sentences: string[] = [];
+  
+  // Opening: Lead with strongest attribute
+  if (printability >= 9) {
+    sentences.push(`This material excels at printability **(${printability.toFixed(1)}/10)**, making it perfect for beginners and complex prints with minimal failed attempts.`);
+  } else if (strength >= 7) {
+    sentences.push(`This material prioritizes mechanical strength **(${strength.toFixed(1)}/10)**, delivering excellent performance for functional parts and load-bearing applications.`);
+  } else if (value >= 8) {
+    sentences.push(`This is a value champion **(${value.toFixed(1)}/10 value score)**, delivering solid performance at an unbeatable price point.`);
+  } else if (printability >= 7) {
+    sentences.push(`This material offers reliable printability **(${printability.toFixed(1)}/10)**, working well with standard slicer settings.`);
+  } else {
+    sentences.push(`This material delivers balanced performance across all metrics, suitable for a variety of applications.`);
+  }
+  
+  // Trade-off section
+  if (printability >= 8 && strength < 4) {
+    sentences.push(`The trade-off is lower strength **(${strength.toFixed(1)}/10)**, which is standard for ${baseMaterial} materials—ideal for prototypes but not load-bearing parts.`);
+  } else if (strength >= 7 && printability < 6) {
+    sentences.push(`It requires more careful tuning **(printability: ${printability.toFixed(1)}/10)** but rewards patience with superior durability.`);
+  } else if (value < 5 && printability >= 7) {
+    sentences.push(`Premium pricing **(${value.toFixed(1)}/10 value)** reflects brand quality and specialty features.`);
+  }
+  
+  // Price context
+  if (pricePerKg) {
+    const priceDiff = ((pricePerKg - categoryPriceAvg) / categoryPriceAvg) * 100;
+    if (Math.abs(priceDiff) >= 15) {
+      const direction = priceDiff > 0 ? 'more' : 'less';
+      const absPercent = Math.abs(Math.round(priceDiff));
+      
+      if (priceDiff > 0 && value >= 7) {
+        sentences.push(`At **$${pricePerKg.toFixed(2)}/kg**, you're paying ${absPercent}% ${direction} than average for enhanced quality and reliability.`);
+      } else if (priceDiff < 0) {
+        sentences.push(`At **$${pricePerKg.toFixed(2)}/kg**, it's ${absPercent}% ${direction} than the category average, making it a budget-friendly choice.`);
+      } else {
+        sentences.push(`At **$${pricePerKg.toFixed(2)}/kg**, it's positioned as a premium option in the ${baseMaterial} category.`);
+      }
+    }
+  }
+  
+  return sentences.join(' ');
+}
+
+// Decision framework item type
+export interface DecisionItem {
+  priority: string;
+  icon: 'check' | 'warning' | 'dollar' | 'fire' | 'x';
+  fit: 'excellent' | 'good' | 'consider' | 'poor';
+  label: string;
+  suggestion?: string;
+}
+
+// Generate decision framework
+export function generateDecisionFramework(scores: FilamentScores): DecisionItem[] {
+  const baseMaterial = getBaseMaterial(scores.material || '');
+  const printability = scores.ease_of_printing_score || scores.printability_index || 0;
+  const strengthRaw = scores.strength_index || 0;
+  const strength = strengthRaw < 1 ? normalizeStrengthIndex(strengthRaw) : strengthRaw;
+  const value = scores.value_score || 0;
+  
+  const items: DecisionItem[] = [];
+  
+  // Easy printing priority
+  if (printability >= 8) {
+    items.push({
+      priority: 'Easy printing',
+      icon: 'check',
+      fit: 'excellent',
+      label: 'This is excellent'
+    });
+  } else if (printability >= 6) {
+    items.push({
+      priority: 'Easy printing',
+      icon: 'check',
+      fit: 'good',
+      label: 'Good with minor tuning'
+    });
+  } else {
+    items.push({
+      priority: 'Easy printing',
+      icon: 'warning',
+      fit: 'consider',
+      label: 'Requires experience',
+      suggestion: 'PLA or PLA+ for easier printing'
+    });
+  }
+  
+  // Strength priority
+  if (strength >= 7) {
+    items.push({
+      priority: 'Maximum strength',
+      icon: 'check',
+      fit: 'excellent',
+      label: 'Excellent for functional parts'
+    });
+  } else if (strength >= 5) {
+    items.push({
+      priority: 'Maximum strength',
+      icon: 'warning',
+      fit: 'consider',
+      label: 'Moderate strength only',
+      suggestion: 'PETG or Nylon for more strength'
+    });
+  } else {
+    items.push({
+      priority: 'Maximum strength',
+      icon: 'warning',
+      fit: 'poor',
+      label: 'Consider alternatives',
+      suggestion: 'PETG, ABS, or Nylon'
+    });
+  }
+  
+  // Value priority
+  if (value >= 8) {
+    items.push({
+      priority: 'Best value',
+      icon: 'dollar',
+      fit: 'excellent',
+      label: 'Outstanding value'
+    });
+  } else if (value >= 6) {
+    items.push({
+      priority: 'Best value',
+      icon: 'dollar',
+      fit: 'good',
+      label: 'Fair price for quality'
+    });
+  } else {
+    items.push({
+      priority: 'Best value',
+      icon: 'dollar',
+      fit: 'consider',
+      label: `Budget ${baseMaterial} options exist`,
+      suggestion: `Basic ${baseMaterial} for savings`
+    });
+  }
+  
+  // Heat resistance (based on material type)
+  if (['ABS', 'ASA', 'PC', 'PEEK', 'Nylon'].includes(baseMaterial)) {
+    items.push({
+      priority: 'Heat resistance',
+      icon: 'fire',
+      fit: 'excellent',
+      label: 'Good heat tolerance'
+    });
+  } else if (['PETG', 'PLA+'].includes(baseMaterial)) {
+    items.push({
+      priority: 'Heat resistance',
+      icon: 'warning',
+      fit: 'consider',
+      label: 'Limited heat tolerance',
+      suggestion: 'ABS or ASA for hot environments'
+    });
+  } else {
+    items.push({
+      priority: 'Heat resistance',
+      icon: 'x',
+      fit: 'poor',
+      label: 'Not suitable',
+      suggestion: 'ABS, ASA, or PC'
+    });
+  }
+  
+  return items;
+}
+
+// Scenario guidance type
+export interface ScenarioGuidance {
+  useIf: string[];
+  alternativeIf: string[];
+}
+
+// Generate scenario-based guidance
+export function generateScenarioGuidance(scores: FilamentScores): ScenarioGuidance {
+  const baseMaterial = getBaseMaterial(scores.material || '');
+  const printability = scores.ease_of_printing_score || scores.printability_index || 0;
+  const strengthRaw = scores.strength_index || 0;
+  const strength = strengthRaw < 1 ? normalizeStrengthIndex(strengthRaw) : strengthRaw;
+  const value = scores.value_score || 0;
+  
+  const useIf: string[] = [];
+  const alternativeIf: string[] = [];
+  
+  // Use if conditions
+  if (printability >= 8) {
+    useIf.push("You're new to 3D printing");
+    useIf.push("You need complex geometries");
+  }
+  
+  if (value >= 7) {
+    useIf.push("You want good value for money");
+  }
+  
+  if (strength >= 7) {
+    useIf.push("Parts need mechanical strength");
+    useIf.push("Building functional prototypes");
+  }
+  
+  if (['PLA', 'PLA+'].includes(baseMaterial)) {
+    useIf.push("Prototyping and rapid iteration");
+    if (baseMaterial === 'PLA+') {
+      useIf.push("You want better than basic PLA");
+    }
+  }
+  
+  if (['PETG', 'ABS', 'ASA'].includes(baseMaterial)) {
+    useIf.push("Parts need outdoor durability");
+  }
+  
+  // Alternative if conditions
+  if (strength < 5) {
+    alternativeIf.push("Parts will bear significant loads");
+    alternativeIf.push("You need maximum durability");
+  }
+  
+  if (printability < 6) {
+    alternativeIf.push("You're a beginner printer");
+    alternativeIf.push("You want hassle-free printing");
+  }
+  
+  if (value < 5) {
+    alternativeIf.push("Budget is your top priority");
+  }
+  
+  if (['PLA', 'PLA+'].includes(baseMaterial)) {
+    alternativeIf.push("Parts need heat resistance above 60°C");
+    alternativeIf.push("Outdoor UV exposure is expected");
+  }
+  
+  // Ensure we have items
+  if (useIf.length === 0) {
+    useIf.push("General purpose printing");
+    useIf.push("Balanced performance matters");
+  }
+  
+  if (alternativeIf.length === 0) {
+    alternativeIf.push("Specialty requirements exist");
+  }
+  
+  return { 
+    useIf: useIf.slice(0, 4), 
+    alternativeIf: alternativeIf.slice(0, 4) 
+  };
+}
+
+// Comparison landscape type
+export interface ComparisonLandscapeItem {
+  tier: 'budget' | 'balanced' | 'premium';
+  label: string;
+  item: SuggestedComparison | null;
+  summary: string;
+  isCurrent?: boolean;
+}
+
+// Select comparison landscape options
+export function selectComparisonLandscape(
+  currentPrice: number | null,
+  currentScore: number,
+  currentName: string,
+  currentId: string,
+  recommendations: SuggestedComparison[]
+): ComparisonLandscapeItem[] {
+  const landscape: ComparisonLandscapeItem[] = [];
+  
+  // Find budget option (cheaper, decent score)
+  const budgetOption = recommendations.find(r => 
+    r.pricePerKg && currentPrice && 
+    r.pricePerKg < currentPrice * 0.85
+  );
+  
+  // Find premium option (more expensive, higher score)
+  const premiumOption = recommendations.find(r => 
+    r.pricePerKg && currentPrice && 
+    r.pricePerKg > currentPrice * 1.15 &&
+    r.overallScore >= currentScore
+  );
+  
+  landscape.push({
+    tier: 'budget',
+    label: 'Budget Route',
+    item: budgetOption || null,
+    summary: budgetOption 
+      ? 'Maximum value, standard quality'
+      : 'No cheaper alternatives found'
+  });
+  
+  landscape.push({
+    tier: 'balanced',
+    label: 'Current Choice',
+    item: {
+      id: currentId,
+      name: currentName,
+      price: null,
+      pricePerKg: currentPrice,
+      overallScore: currentScore,
+      differentiator: 'Your selection'
+    },
+    summary: 'Balanced performance and price',
+    isCurrent: true
+  });
+  
+  landscape.push({
+    tier: 'premium',
+    label: 'Premium Route',
+    item: premiumOption || null,
+    summary: premiumOption 
+      ? 'Best quality, premium price'
+      : 'Already top-tier in category'
+  });
+  
+  return landscape;
+}
+
+// Chart annotation type
+export interface ChartAnnotation {
+  metric: string;
+  position: 'top' | 'left' | 'right';
+  text: string;
+  subtext: string;
+}
+
+// Generate chart annotations
+export function generateChartAnnotations(metrics: PerformanceMetric[], material: string | null): ChartAnnotation[] {
+  const baseMaterial = getBaseMaterial(material || '');
+  const annotations: ChartAnnotation[] = [];
+  
+  metrics.forEach((m, index) => {
+    const positions: ('top' | 'left' | 'right')[] = ['top', 'left', 'right'];
+    const position = positions[index % 3];
+    
+    let text = '';
+    let subtext = '';
+    
+    if (m.id === 'printability') {
+      if (m.normalizedScore >= 9) {
+        text = 'High printability →';
+        subtext = 'Great for beginners';
+      } else if (m.normalizedScore >= 7) {
+        text = 'Good printability →';
+        subtext = 'Reliable results';
+      } else {
+        text = 'Needs tuning →';
+        subtext = 'For experienced users';
+      }
+    } else if (m.id === 'strength') {
+      if (m.normalizedScore >= 7) {
+        text = '← Strong material';
+        subtext = 'Good for functional parts';
+      } else if (['PLA', 'PLA+'].includes(baseMaterial)) {
+        text = `← Typical for ${baseMaterial}`;
+        subtext = 'Consider PETG for strength';
+      } else {
+        text = '← Standard strength';
+        subtext = 'Adequate for prototypes';
+      }
+    } else if (m.id === 'value') {
+      if (m.normalizedScore >= 8) {
+        text = 'Great value →';
+        subtext = 'Excellent price/quality';
+      } else if (m.normalizedScore >= 6) {
+        text = 'Fair value →';
+        subtext = 'Competitive pricing';
+      } else {
+        text = 'Premium pricing →';
+        subtext = 'Quality comes at a cost';
+      }
+    }
+    
+    if (text) {
+      annotations.push({ metric: m.name, position, text, subtext });
+    }
+  });
+  
+  return annotations;
+}
+
 // Main function to get complete performance data
 export function getPerformanceData(
   scores: FilamentScores,

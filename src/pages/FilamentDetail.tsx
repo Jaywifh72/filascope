@@ -2228,6 +2228,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
             {/* Performance at a Glance */}
             <PerformanceAtAGlance
               filamentId={filament.id}
+              filamentName={filament.product_title}
               material={filament.material}
               vendor={filament.vendor}
               ease_of_printing_score={filament.ease_of_printing_score}
