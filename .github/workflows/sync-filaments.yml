@@ -63,7 +63,14 @@ jobs:
           'Inland',
           'Taulman3D',
           'FormFutura',
-          'MatterHackers'
+          'MatterHackers',
+          'Matter3D',
+          'Siraya Tech',
+          'Atomic Filament',
+          'Proto-Pasta',
+          'VoxelPLA',
+          'NinjaTek',
+          'Fillamentum'
         ]
       max-parallel: 3
       fail-fast: false
