@@ -584,9 +584,9 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   Elegoo: {
     vendor: "Elegoo",
     platform: "shopify",
-    baseUrl: "https://store.elegoo.com",
-    apiEndpoint: "https://store.elegoo.com/products.json",
-    collectionHandle: "filament",
+    baseUrl: "https://us.elegoo.com",
+    apiEndpoint: "https://us.elegoo.com/products.json",
+    collectionHandle: "filaments",
     currency: "USD",
     exchangeRate: 1,
     productsPerPage: 250,
