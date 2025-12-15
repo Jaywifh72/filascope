@@ -233,6 +233,147 @@ export type Database = {
         }
         Relationships: []
       }
+      automated_brands: {
+        Row: {
+          active_product_count: number | null
+          availability_selectors: Json | null
+          avg_scrape_duration_seconds: number | null
+          base_url: string
+          brand_name: string
+          brand_slug: string
+          color_primary: string | null
+          color_secondary: string | null
+          created_at: string
+          created_by: string | null
+          default_currency: string | null
+          description: string | null
+          display_name: string
+          display_order: number | null
+          failed_scrapes: number | null
+          featured: boolean | null
+          has_api: boolean | null
+          id: string
+          image_selectors: Json | null
+          is_visible: boolean | null
+          last_error: string | null
+          last_error_at: string | null
+          last_scrape_at: string | null
+          logo_url: string | null
+          max_retries: number | null
+          next_scrape_at: string | null
+          notes: string | null
+          platform_type: string
+          price_selectors: Json | null
+          product_count: number | null
+          products_with_urls: number | null
+          rate_limit_ms: number | null
+          requires_auth: boolean | null
+          requires_currency_conversion: boolean | null
+          scrape_frequency_hours: number | null
+          scraping_active: boolean | null
+          scraping_enabled: boolean | null
+          successful_scrapes: number | null
+          supported_regions: string[] | null
+          timeout_ms: number | null
+          title_selectors: Json | null
+          total_scrapes: number | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          active_product_count?: number | null
+          availability_selectors?: Json | null
+          avg_scrape_duration_seconds?: number | null
+          base_url: string
+          brand_name: string
+          brand_slug: string
+          color_primary?: string | null
+          color_secondary?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_currency?: string | null
+          description?: string | null
+          display_name: string
+          display_order?: number | null
+          failed_scrapes?: number | null
+          featured?: boolean | null
+          has_api?: boolean | null
+          id?: string
+          image_selectors?: Json | null
+          is_visible?: boolean | null
+          last_error?: string | null
+          last_error_at?: string | null
+          last_scrape_at?: string | null
+          logo_url?: string | null
+          max_retries?: number | null
+          next_scrape_at?: string | null
+          notes?: string | null
+          platform_type: string
+          price_selectors?: Json | null
+          product_count?: number | null
+          products_with_urls?: number | null
+          rate_limit_ms?: number | null
+          requires_auth?: boolean | null
+          requires_currency_conversion?: boolean | null
+          scrape_frequency_hours?: number | null
+          scraping_active?: boolean | null
+          scraping_enabled?: boolean | null
+          successful_scrapes?: number | null
+          supported_regions?: string[] | null
+          timeout_ms?: number | null
+          title_selectors?: Json | null
+          total_scrapes?: number | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          active_product_count?: number | null
+          availability_selectors?: Json | null
+          avg_scrape_duration_seconds?: number | null
+          base_url?: string
+          brand_name?: string
+          brand_slug?: string
+          color_primary?: string | null
+          color_secondary?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_currency?: string | null
+          description?: string | null
+          display_name?: string
+          display_order?: number | null
+          failed_scrapes?: number | null
+          featured?: boolean | null
+          has_api?: boolean | null
+          id?: string
+          image_selectors?: Json | null
+          is_visible?: boolean | null
+          last_error?: string | null
+          last_error_at?: string | null
+          last_scrape_at?: string | null
+          logo_url?: string | null
+          max_retries?: number | null
+          next_scrape_at?: string | null
+          notes?: string | null
+          platform_type?: string
+          price_selectors?: Json | null
+          product_count?: number | null
+          products_with_urls?: number | null
+          rate_limit_ms?: number | null
+          requires_auth?: boolean | null
+          requires_currency_conversion?: boolean | null
+          scrape_frequency_hours?: number | null
+          scraping_active?: boolean | null
+          scraping_enabled?: boolean | null
+          successful_scrapes?: number | null
+          supported_regions?: string[] | null
+          timeout_ms?: number | null
+          title_selectors?: Json | null
+          total_scrapes?: number | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       community_report_upvotes: {
         Row: {
           created_at: string | null
@@ -3605,9 +3746,94 @@ export type Database = {
         }
         Relationships: []
       }
+      v_active_brands: {
+        Row: {
+          actual_product_count: number | null
+          actual_products_with_urls: number | null
+          avg_product_price: number | null
+          brand_name: string | null
+          brand_slug: string | null
+          color_primary: string | null
+          display_name: string | null
+          display_order: number | null
+          featured: boolean | null
+          id: string | null
+          last_product_sync: string | null
+          last_scrape_at: string | null
+          logo_url: string | null
+          platform_type: string | null
+          product_count: number | null
+          products_with_prices: number | null
+          scraping_active: boolean | null
+          scraping_enabled: boolean | null
+          website_url: string | null
+        }
+        Relationships: []
+      }
+      v_brand_scraping_stats: {
+        Row: {
+          avg_scrape_duration_seconds: number | null
+          brand_name: string | null
+          brand_slug: string | null
+          failed_scrapes: number | null
+          last_error: string | null
+          last_error_at: string | null
+          last_scrape_at: string | null
+          next_scrape_at: string | null
+          platform_type: string | null
+          scraping_active: boolean | null
+          scraping_enabled: boolean | null
+          success_rate_percent: number | null
+          successful_scrapes: number | null
+          total_scrapes: number | null
+        }
+        Insert: {
+          avg_scrape_duration_seconds?: number | null
+          brand_name?: string | null
+          brand_slug?: string | null
+          failed_scrapes?: number | null
+          last_error?: string | null
+          last_error_at?: string | null
+          last_scrape_at?: string | null
+          next_scrape_at?: string | null
+          platform_type?: string | null
+          scraping_active?: boolean | null
+          scraping_enabled?: boolean | null
+          success_rate_percent?: never
+          successful_scrapes?: number | null
+          total_scrapes?: number | null
+        }
+        Update: {
+          avg_scrape_duration_seconds?: number | null
+          brand_name?: string | null
+          brand_slug?: string | null
+          failed_scrapes?: number | null
+          last_error?: string | null
+          last_error_at?: string | null
+          last_scrape_at?: string | null
+          next_scrape_at?: string | null
+          platform_type?: string | null
+          scraping_active?: boolean | null
+          scraping_enabled?: boolean | null
+          success_rate_percent?: never
+          successful_scrapes?: number | null
+          total_scrapes?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_old_price_history: { Args: never; Returns: number }
+      get_brands_needing_scrape: {
+        Args: never
+        Returns: {
+          brand_name: string
+          brand_slug: string
+          last_scrape_at: string
+          platform_type: string
+          scrape_frequency_hours: number
+        }[]
+      }
       get_deal_alerts: {
         Args: { min_discount_percent?: number }
         Returns: {
@@ -3644,6 +3870,22 @@ export type Database = {
         Returns: boolean
       }
       is_at_all_time_low: { Args: { p_filament_id: string }; Returns: boolean }
+      record_scrape_result: {
+        Args: {
+          p_brand_slug: string
+          p_duration_seconds: number
+          p_error_message?: string
+          p_products_processed?: number
+          p_products_updated?: number
+          p_success: boolean
+        }
+        Returns: undefined
+      }
+      start_brand_scrape: { Args: { p_brand_slug: string }; Returns: boolean }
+      update_brand_product_counts: {
+        Args: { p_brand_slug?: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "user" | "admin"
