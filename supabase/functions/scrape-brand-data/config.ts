@@ -240,16 +240,16 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   },
   NinjaTek: {
     vendor: "NinjaTek",
-    platform: "shopify",
+    platform: "woocommerce", // Fixed: Was shopify, but NinjaTek uses WooCommerce
     baseUrl: "https://ninjatek.com",
-    apiEndpoint: "https://ninjatek.com/products.json",
+    apiEndpoint: "https://ninjatek.com/wp-json/wc/store/v1/products",
     currency: "USD",
     exchangeRate: 1,
-    productsPerPage: 250,
-    requestDelay: 500,
-    timeout: 10000,
+    productsPerPage: 100,
+    requestDelay: 1000,
+    timeout: 15000,
     userAgent: DEFAULT_USER_AGENT,
-    productCount: 6,
+    productCount: 8,
   },
   ColorFabb: {
     vendor: "ColorFabb",
@@ -414,6 +414,7 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     platform: "shopify",
     baseUrl: "https://recreus.com",
     apiEndpoint: "https://recreus.com/products.json",
+    collectionHandle: "filaflex", // Fixed: Use filaflex collection for TPU filaments
     currency: "EUR",
     exchangeRate: 1.08,
     productsPerPage: 250,
@@ -657,7 +658,7 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     platform: "shopify",
     baseUrl: "https://kingroon.com",
     apiEndpoint: "https://kingroon.com/products.json",
-    collectionHandle: "pla-filament", // Fixed: "filament" collection empty, use "pla-filament"
+    collectionHandle: "3d-printer-filament", // Fixed: Correct collection with 40+ products
     currency: "USD",
     exchangeRate: 1,
     productsPerPage: 250,
@@ -695,14 +696,13 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   },
   "IC3D Printers": {
     vendor: "IC3D Printers",
-    platform: "woocommerce",
-    baseUrl: "https://www.ic3dprinters.com",
-    apiEndpoint: "https://www.ic3dprinters.com/wp-json/wc/store/v1/products",
+    platform: "firecrawl", // Fixed: WooCommerce Store API disabled, needs HTML scraping
+    baseUrl: "https://www.ic3dprinters.com/shop/",
     currency: "USD",
     exchangeRate: 1,
-    productsPerPage: 100,
-    requestDelay: 1000,
-    timeout: 15000,
+    productsPerPage: 50,
+    requestDelay: 2000,
+    timeout: 20000,
     userAgent: DEFAULT_USER_AGENT,
     productCount: 50,
   },
