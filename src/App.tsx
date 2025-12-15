@@ -43,6 +43,7 @@ const AdminABTests = lazy(() => import("./pages/AdminABTests"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
+const SharedWishlist = lazy(() => import("./pages/SharedWishlist"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Printers = lazy(() => import("./pages/Printers"));
 const PrinterCompare = lazy(() => import("./pages/PrinterCompare"));
@@ -91,6 +92,7 @@ const App = () => (
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/vault" element={<Vault />} />
+                <Route path="/wishlist/:shareCode" element={<SharedWishlist />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/import" element={<AdminImport />} />
                 <Route path="/admin/users" element={<AdminUsers />} />

@@ -1967,6 +1967,9 @@ export type Database = {
           id: string
           preferred_currency: string | null
           updated_at: string | null
+          wishlist_email_digest: boolean | null
+          wishlist_price_alerts: boolean | null
+          wishlist_restock_alerts: boolean | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1976,6 +1979,9 @@ export type Database = {
           id: string
           preferred_currency?: string | null
           updated_at?: string | null
+          wishlist_email_digest?: boolean | null
+          wishlist_price_alerts?: boolean | null
+          wishlist_restock_alerts?: boolean | null
         }
         Update: {
           avatar_url?: string | null
@@ -1985,6 +1991,9 @@ export type Database = {
           id?: string
           preferred_currency?: string | null
           updated_at?: string | null
+          wishlist_email_digest?: boolean | null
+          wishlist_price_alerts?: boolean | null
+          wishlist_restock_alerts?: boolean | null
         }
         Relationships: []
       }
@@ -2301,6 +2310,50 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_wishlists: {
+        Row: {
+          collection_id: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          share_code: string
+          title: string | null
+          user_id: string
+          views_count: number | null
+        }
+        Insert: {
+          collection_id?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          share_code: string
+          title?: string | null
+          user_id: string
+          views_count?: number | null
+        }
+        Update: {
+          collection_id?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          share_code?: string
+          title?: string | null
+          user_id?: string
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_wishlists_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "wishlist_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trend_upvotes: {
         Row: {
           anonymous_id: string | null
@@ -2520,24 +2573,43 @@ export type Database = {
       }
       user_favorites: {
         Row: {
+          collection_id: string | null
           created_at: string | null
           filament_id: string | null
           id: string
+          notes: string | null
+          price_when_added: number | null
+          tags: string[] | null
           user_id: string | null
         }
         Insert: {
+          collection_id?: string | null
           created_at?: string | null
           filament_id?: string | null
           id?: string
+          notes?: string | null
+          price_when_added?: number | null
+          tags?: string[] | null
           user_id?: string | null
         }
         Update: {
+          collection_id?: string | null
           created_at?: string | null
           filament_id?: string | null
           id?: string
+          notes?: string | null
+          price_when_added?: number | null
+          tags?: string[] | null
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "user_favorites_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "wishlist_collections"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_favorites_filament_id_fkey"
             columns: ["filament_id"]
@@ -2671,6 +2743,45 @@ export type Database = {
           price_sensitivity?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      wishlist_collections: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          sort_order: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          sort_order?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          sort_order?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

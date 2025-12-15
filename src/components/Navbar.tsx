@@ -7,6 +7,7 @@ import { LogIn, LogOut, User, Shield, Archive, Database, Settings, BookOpen, Che
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/filascope-logo.png";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -152,6 +153,7 @@ const Navbar = () => {
 
           {/* User Actions */}
           <div className="flex items-center gap-3 shrink-0">
+            <WishlistButton />
             <CurrencySelector />
             {user ? (
               <DropdownMenu>
