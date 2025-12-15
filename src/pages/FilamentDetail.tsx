@@ -1282,6 +1282,9 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   productTitle={filament.product_title}
                   filamentId={filament.id}
                   vendor={filament.vendor}
+                  filament={filament}
+                  printer={selectedPrinter}
+                  hotend={compatibleHotends.length > 0 ? compatibleHotends[0] : null}
                 />
 
                 {(filament.ease_of_printing_score || filament.strength_index || filament.value_score) && (
