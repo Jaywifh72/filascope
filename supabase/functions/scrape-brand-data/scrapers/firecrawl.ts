@@ -58,11 +58,124 @@ export class FirecrawlScraper extends BaseScraper {
   }
 
   async scrapeAllProducts(limit: number = 50): Promise<ScrapedProduct[]> {
-    // Firecrawl scraper relies on product URLs stored in the database
-    // We fetch filaments for this vendor and scrape their product_url
-    this.log(`Firecrawl scraper requires specific product URLs for ${this.config.vendor}`);
-    this.log(`Use scrapeProduct() with individual product URLs`);
-    return [];
+    if (!this.firecrawlApiKey) {
+      this.logError("FIRECRAWL_API_KEY not configured");
+      return [];
+    }
+
+    const products: ScrapedProduct[] = [];
+    const baseUrl = this.config.baseUrl;
+    
+    this.log(`Discovering products via Firecrawl Map API from: ${baseUrl}`);
+
+    try {
+      // Step 1: Use Firecrawl Map API to discover all URLs on the shop
+      const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.firecrawlApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: baseUrl,
+          search: "filament PLA PETG ABS TPU nylon",
+          limit: 200,
+          includeSubdomains: false,
+        }),
+      });
+
+      if (!mapResponse.ok) {
+        const error = await mapResponse.text();
+        this.logError(`Firecrawl Map error: ${mapResponse.status} - ${error}`);
+        return [];
+      }
+
+      const mapData = await mapResponse.json();
+      
+      if (!mapData.success || !mapData.links) {
+        this.logError(`Firecrawl Map failed: ${mapData.error || 'No links returned'}`);
+        return [];
+      }
+
+      this.log(`Map discovered ${mapData.links.length} URLs`);
+
+      // Step 2: Filter for product URLs (exclude category pages, cart, checkout, etc.)
+      const productUrls = mapData.links.filter((url: string) => {
+        const lowerUrl = url.toLowerCase();
+        
+        // Exclude non-product pages
+        if (lowerUrl.includes('/cart') || 
+            lowerUrl.includes('/checkout') ||
+            lowerUrl.includes('/account') ||
+            lowerUrl.includes('/login') ||
+            lowerUrl.includes('/contact') ||
+            lowerUrl.includes('/about') ||
+            lowerUrl.includes('/faq') ||
+            lowerUrl.includes('/page/') ||
+            lowerUrl.includes('?') ||
+            lowerUrl.includes('#') ||
+            lowerUrl.endsWith('/shop/') ||
+            lowerUrl.endsWith('/shop')) {
+          return false;
+        }
+        
+        // Include URLs that look like product pages
+        // IC3D pattern: /shop/category/product-name/
+        // Generic patterns: /product/, /products/, contains filament keywords
+        const isProductLike = 
+          (lowerUrl.includes('/shop/') && lowerUrl.split('/').filter(Boolean).length >= 4) ||
+          lowerUrl.includes('/product/') ||
+          lowerUrl.includes('/products/') ||
+          lowerUrl.includes('filament') ||
+          lowerUrl.includes('-pla') ||
+          lowerUrl.includes('-petg') ||
+          lowerUrl.includes('-abs') ||
+          lowerUrl.includes('-tpu');
+        
+        return isProductLike;
+      });
+
+      this.log(`Filtered to ${productUrls.length} potential product URLs`);
+
+      // Step 3: Scrape each product URL (up to limit)
+      const urlsToScrape = productUrls.slice(0, limit);
+      
+      for (const url of urlsToScrape) {
+        try {
+          this.log(`Scraping product: ${url}`);
+          const product = await this.scrapeProduct(url);
+          
+          if (product && product.title && product.price) {
+            // Additional filter: ensure it's actually a filament product
+            const title = product.title.toLowerCase();
+            if (title.includes('filament') || 
+                title.includes('pla') || 
+                title.includes('petg') || 
+                title.includes('abs') ||
+                title.includes('tpu') ||
+                title.includes('nylon') ||
+                title.includes('cf-') ||
+                title.includes('carbon fiber')) {
+              products.push(product);
+              this.log(`✓ Found filament: ${product.title} - $${product.price}`);
+            } else {
+              this.log(`✗ Skipped non-filament: ${product.title}`);
+            }
+          }
+          
+          // Rate limiting between requests
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (err) {
+          this.logError(`Failed to scrape ${url}:`, err);
+        }
+      }
+
+      this.log(`Successfully scraped ${products.length} filament products`);
+      return products;
+    } catch (error) {
+      this.logError(`Error in scrapeAllProducts:`, error);
+      return [];
+    }
   }
 
   private parseResponse(data: any, url: string): ScrapedProduct | null {
