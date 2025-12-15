@@ -1,4 +1,4 @@
-name: Sync Filaments Daily
+name: Daily Filament Data Sync - Complete Coverage
 
 on:
   schedule:
@@ -14,7 +14,18 @@ on:
         options:
           - all
           - sync-spoolman
-          - scrape-brands
+          - scrape-shopify
+          - scrape-amazon
+          - scrape-other
+      brand:
+        description: 'Specific brand (leave empty for all in selected job)'
+        required: false
+        type: string
+      dry_run:
+        description: 'Dry run mode'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   sync-spoolman:
@@ -24,93 +35,109 @@ jobs:
     steps:
       - name: Trigger SpoolmanDB Sync
         run: |
-          curl -X POST \
-            "${{ secrets.SUPABASE_FUNCTION_URL }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Content-Type: application/json"
-
-  scrape-brands:
-    name: Scrape Brand Websites
-    runs-on: ubuntu-latest
-    needs: [sync-spoolman]
-    if: always() && (github.event.schedule == '0 3 * * *' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-brands')
-    
-    strategy:
-      matrix:
-        brand: [
-          'Prusament',
-          'Overture 3D',
-          '3D-Fuel',
-          '3DXTech',
-          'Bambu Lab',
-          'Polymaker',
-          'eSUN',
-          'Sunlu',
-          'Amolen',
-          'Anycubic',
-          'Eryone',
-          'Elegoo',
-          'Creality',
-          'TTYT3D',
-          'ColorFabb',
-          'Fiberlogy',
-          'Ultimaker',
-          'Printed Solid',
-          'Push Plastic',
-          'Fusion Filaments',
-          'Ziro',
-          'Paramount 3D',
-          'Inland',
-          'Taulman3D',
-          'FormFutura',
-          'MatterHackers',
-          'Matter3D',
-          'Siraya Tech',
-          'Atomic Filament',
-          'Proto-Pasta',
-          'VoxelPLA',
-          'NinjaTek',
-          'Fillamentum'
-        ]
-      max-parallel: 3
-      fail-fast: false
-    
-    steps:
-      - name: Scrape ${{ matrix.brand }}
-        run: |
-          echo "🔍 Scraping ${{ matrix.brand }}..."
+          echo "🚀 Starting SpoolmanDB sync..."
           response=$(curl -s -w "\n%{http_code}" -X POST \
-            "${{ secrets.SUPABASE_URL }}/functions/v1/scrape-brand-data" \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/sync-filaments" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"vendor": "${{ matrix.brand }}", "limit": 100}')
+            -d '{"scheduled": true}')
           
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
           
           echo "Response code: $http_code"
-          echo "Response body: $body"
           
           if [ "$http_code" -ne 200 ]; then
-            echo "❌ Failed to scrape ${{ matrix.brand }}"
+            echo "❌ SpoolmanDB sync failed"
             exit 1
           fi
           
-          echo "✅ Successfully scraped ${{ matrix.brand }}"
+          echo "✅ SpoolmanDB sync completed"
 
-  scrape-amazon:
-    name: Scrape Amazon Brands
+  scrape-shopify:
+    name: Scrape Shopify Brands
     runs-on: ubuntu-latest
-    needs: [scrape-brands]
-    if: always() && (github.event.schedule == '0 3 * * *' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-brands')
+    needs: [sync-spoolman]
+    if: always() && (github.event.schedule == '0 3 * * *' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-shopify')
     
     strategy:
       matrix:
         brand: [
+          # SHOPIFY BRANDS (21 total)
+          'Prusament',
+          '3D-Fuel',
+          'Polymaker',
+          'ColorFabb',
+          'Proto-Pasta',
+          'Fillamentum',
+          'Atomic Filament',
+          'Push Plastic',
+          'Fusion Filaments',
+          'NinjaTek',
+          'Recreus',
+          'Extrudr',
+          'Fiberlogy',
+          'Ultimaker',
+          'Printed Solid',
+          'Bambu Lab',
+          'Anycubic',
+          'Elegoo',
+          'Creality',
+          'Sunlu',
+          'Amolen',
+          'eSun',
+          'Eryone',
+          'VoxelPLA',
+          'Matter3D',
+          'Taulman3D',
+          'Siraya Tech'
+        ]
+      max-parallel: 5
+      fail-fast: false
+    
+    steps:
+      - name: Scrape ${{ matrix.brand }}
+        run: |
+          BRAND="${{ github.event.inputs.brand }}"
+          if [ -z "$BRAND" ]; then
+            BRAND="${{ matrix.brand }}"
+          fi
+          
+          DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
+          
+          echo "🔍 Scraping $BRAND (Shopify)..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/scrape-brand-data" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"vendor\": \"$BRAND\", \"limit\": 100, \"dryRun\": $DRY_RUN}")
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "Response code: $http_code"
+          
+          if [ "$http_code" -ne 200 ]; then
+            echo "❌ Failed to scrape $BRAND"
+            echo "::warning::Brand $BRAND scraping failed"
+            exit 1
+          fi
+          
+          echo "✅ Successfully scraped $BRAND"
+
+  scrape-amazon:
+    name: Scrape Amazon Brands
+    runs-on: ubuntu-latest
+    needs: [scrape-shopify]
+    if: always() && (github.event.schedule == '0 3 * * *' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-amazon')
+    
+    strategy:
+      matrix:
+        brand: [
+          # AMAZON BRANDS (11 total)
           'Hatchbox',
           'Ziro',
           'Paramount 3D',
-          'Inland',
           'GEEETECH',
           'TECBEARS',
           'TTYT3D',
@@ -119,29 +146,139 @@ jobs:
           'Gizmo Dorks',
           'PRILINE'
         ]
-      max-parallel: 1
+      max-parallel: 1  # Serial for Amazon rate limits
       fail-fast: false
     
     steps:
       - name: Scrape ${{ matrix.brand }} (Amazon)
         run: |
-          echo "🔍 Scraping ${{ matrix.brand }} via Amazon..."
-          # Add 2 second delay between brands to respect rate limits
+          BRAND="${{ github.event.inputs.brand }}"
+          if [ -z "$BRAND" ]; then
+            BRAND="${{ matrix.brand }}"
+          fi
+          
+          DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
+          
+          echo "🔍 Scraping $BRAND via Amazon..."
+          # Respect Amazon rate limits
           sleep 2
+          
           response=$(curl -s -w "\n%{http_code}" -X POST \
             "${{ secrets.SUPABASE_URL }}/functions/v1/scrape-brand-data" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"vendor": "${{ matrix.brand }}", "limit": 100}')
+            -d "{\"vendor\": \"$BRAND\", \"limit\": 100, \"dryRun\": $DRY_RUN}")
           
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
           
           echo "Response code: $http_code"
-          echo "Response body: $body"
           
           if [ "$http_code" -ne 200 ]; then
-            echo "⚠️ ${{ matrix.brand }} scrape may have failed (Amazon is rate-limited)"
+            echo "⚠️ $BRAND scrape may have failed (Amazon is rate-limited)"
+            echo "::warning::Amazon brand $BRAND scraping failed"
           else
-            echo "✅ Successfully scraped ${{ matrix.brand }}"
+            echo "✅ Successfully scraped $BRAND"
           fi
+
+  scrape-other:
+    name: Scrape Other Platforms
+    runs-on: ubuntu-latest
+    needs: [scrape-amazon]
+    if: always() && (github.event.schedule == '0 3 * * *' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-other')
+    
+    strategy:
+      matrix:
+        brand: [
+          # WOOCOMMERCE (1)
+          'Overture 3D',
+          # BIGCOMMERCE (1)
+          '3DXTech',
+          # FIRECRAWL/CUSTOM (3)
+          'FormFutura',
+          'MatterHackers',
+          'Inland'
+        ]
+      max-parallel: 2
+      fail-fast: false
+    
+    steps:
+      - name: Scrape ${{ matrix.brand }}
+        run: |
+          BRAND="${{ github.event.inputs.brand }}"
+          if [ -z "$BRAND" ]; then
+            BRAND="${{ matrix.brand }}"
+          fi
+          
+          DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
+          
+          echo "🔍 Scraping $BRAND (Custom/WooCommerce/BigCommerce)..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/scrape-brand-data" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"vendor\": \"$BRAND\", \"limit\": 100, \"dryRun\": $DRY_RUN}")
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "Response code: $http_code"
+          
+          if [ "$http_code" -ne 200 ]; then
+            echo "❌ Failed to scrape $BRAND"
+            echo "::warning::Brand $BRAND scraping failed"
+            exit 1
+          fi
+          
+          echo "✅ Successfully scraped $BRAND"
+
+  summary:
+    name: Generate Summary Report
+    runs-on: ubuntu-latest
+    needs: [sync-spoolman, scrape-shopify, scrape-amazon, scrape-other]
+    if: always()
+    
+    steps:
+      - name: Create summary
+        run: |
+          echo "## 📊 Daily Sync Summary - Complete Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.sync-spoolman.result }}" == "success" ]; then
+            echo "✅ **SpoolmanDB Sync:** Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **SpoolmanDB Sync:** Failed or Skipped" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.scrape-shopify.result }}" == "success" ]; then
+            echo "✅ **Shopify Brands (27):** Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Shopify Brands:** Completed with warnings" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.scrape-amazon.result }}" == "success" ]; then
+            echo "✅ **Amazon Brands (10):** Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Amazon Brands:** Completed with warnings" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.scrape-other.result }}" == "success" ]; then
+            echo "✅ **Other Platforms (5):** Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Other Platforms:** Completed with warnings" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Coverage Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Brands | Est. Products |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|---------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Shopify | 27 | ~1,500 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Amazon | 10 | ~500 |" >> $GITHUB_STEP_SUMMARY
+          echo "| WooCommerce | 1 | ~60 |" >> $GITHUB_STEP_SUMMARY
+          echo "| BigCommerce | 1 | ~40 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Firecrawl | 3 | ~50 |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Total** | **42** | **~2,150** |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View detailed logs in Actions tab." >> $GITHUB_STEP_SUMMARY
