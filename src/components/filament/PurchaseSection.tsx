@@ -33,11 +33,11 @@ interface RetailerInfo {
 
 interface PurchaseSectionProps {
   filament: Filament;
-  onProfileDownload: (slicerType: 'prusaslicer' | 'orcaslicer' | 'cura' | 'bambu') => void;
-  onCopyProfile: () => void;
+  printerBrand?: string | null;
+  printerName?: string | null;
 }
 
-export function PurchaseSection({ filament, onProfileDownload, onCopyProfile }: PurchaseSectionProps) {
+export function PurchaseSection({ filament, printerBrand, printerName }: PurchaseSectionProps) {
   const [quantity, setQuantity] = useState(1);
   const [showAdvancedPricing, setShowAdvancedPricing] = useState(false);
   
@@ -142,8 +142,9 @@ export function PurchaseSection({ filament, onProfileDownload, onCopyProfile }: 
         </div>
         
         <SlicerActions 
-          onDownload={onProfileDownload}
-          onCopy={onCopyProfile}
+          filament={filament}
+          printerBrand={printerBrand}
+          printerName={printerName}
         />
         
         <div className="border-t border-border/30 pt-4">
@@ -229,8 +230,9 @@ export function PurchaseSection({ filament, onProfileDownload, onCopyProfile }: 
       {/* Slicer Actions */}
       <div className="border-t border-border/30 pt-4">
         <SlicerActions 
-          onDownload={onProfileDownload}
-          onCopy={onCopyProfile}
+          filament={filament}
+          printerBrand={printerBrand}
+          printerName={printerName}
         />
       </div>
       

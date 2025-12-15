@@ -1295,8 +1295,8 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                 {/* Tiered Purchase Section */}
                 <PurchaseSection
                   filament={filament}
-                  onProfileDownload={generateSlicerProfile}
-                  onCopyProfile={handleCopyProfile}
+                  printerBrand={selectedPrinter?.brand?.brand}
+                  printerName={selectedPrinter?.model_name}
                 />
               </div>
             </div>

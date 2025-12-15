@@ -66,22 +66,37 @@ export function useSlicerProfiles() {
     }
 
     try {
-      const { error } = await supabase
-        .from('user_slicer_profiles')
-        .upsert({
-          user_id: user.id,
-          filament_id: filamentId,
-          slicer_type: slicerType,
-          profile_name: filamentName,
-          profile_data: profileData as unknown as Record<string, unknown>,
-          is_custom: isCustom,
-          custom_notes: notes || null,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id,filament_id,slicer_type',
-        });
+      // Check if profile already exists
+      const existingProfile = profiles.find(
+        p => p.filament_id === filamentId && p.slicer_type === slicerType
+      );
 
-      if (error) throw error;
+      if (existingProfile) {
+        const { error: updateError } = await supabase
+          .from('user_slicer_profiles')
+          .update({
+            profile_name: filamentName,
+            profile_data: profileData as never,
+            is_custom: isCustom,
+            custom_notes: notes || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingProfile.id);
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('user_slicer_profiles')
+          .insert({
+            user_id: user.id,
+            filament_id: filamentId,
+            slicer_type: slicerType as string,
+            profile_name: filamentName,
+            profile_data: profileData as never,
+            is_custom: isCustom,
+            custom_notes: notes || null,
+          } as never);
+        if (insertError) throw insertError;
+      }
 
       toast.success("Profile saved to your library");
       await fetchProfiles();
