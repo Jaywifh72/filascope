@@ -40,8 +40,8 @@ export function SlicerQRCode({
       n: profile.material_name.substring(0, 30),
     };
     
-    // Use base64 encoding for compactness
-    const encoded = btoa(JSON.stringify(payload));
+    // Use base64 encoding for compactness (encodeURIComponent handles Unicode)
+    const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
     
     // Generate a web URL that can be opened on mobile
     const baseUrl = window.location.origin;
