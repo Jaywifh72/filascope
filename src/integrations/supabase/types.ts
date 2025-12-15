@@ -1966,6 +1966,7 @@ export type Database = {
           email: string | null
           id: string
           preferred_currency: string | null
+          preferred_slicer: string | null
           updated_at: string | null
           wishlist_email_digest: boolean | null
           wishlist_price_alerts: boolean | null
@@ -1978,6 +1979,7 @@ export type Database = {
           email?: string | null
           id: string
           preferred_currency?: string | null
+          preferred_slicer?: string | null
           updated_at?: string | null
           wishlist_email_digest?: boolean | null
           wishlist_price_alerts?: boolean | null
@@ -1990,6 +1992,7 @@ export type Database = {
           email?: string | null
           id?: string
           preferred_currency?: string | null
+          preferred_slicer?: string | null
           updated_at?: string | null
           wishlist_email_digest?: boolean | null
           wishlist_price_alerts?: boolean | null
@@ -2745,6 +2748,53 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      user_slicer_profiles: {
+        Row: {
+          created_at: string | null
+          custom_notes: string | null
+          filament_id: string
+          id: string
+          is_custom: boolean | null
+          profile_data: Json
+          profile_name: string
+          slicer_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          custom_notes?: string | null
+          filament_id: string
+          id?: string
+          is_custom?: boolean | null
+          profile_data: Json
+          profile_name: string
+          slicer_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          custom_notes?: string | null
+          filament_id?: string
+          id?: string
+          is_custom?: boolean | null
+          profile_data?: Json
+          profile_name?: string
+          slicer_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_slicer_profiles_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wishlist_collections: {
         Row: {
