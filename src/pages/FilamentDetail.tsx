@@ -36,6 +36,7 @@ import { VideoThumbnail } from "@/components/filament/education/VideoThumbnail";
 import { VideoPlayerModal } from "@/components/filament/education/VideoPlayerModal";
 import { getVideosByMaterial } from "@/lib/videoTutorials";
 import { useAchievements } from "@/hooks/useAchievements";
+import { SimilarMaterialsModule } from "@/components/filament/similar/SimilarMaterialsModule";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -1347,6 +1348,25 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
           </CardContent>
         </Card>
 
+        {/* Similar Materials Comparison Module */}
+        {filament && id && (
+          <SimilarMaterialsModule
+            filamentId={id}
+            material={filament.material}
+            vendor={filament.vendor}
+            currentPricePerKg={
+              filament.variant_price && filament.net_weight_g
+                ? filament.variant_price / (filament.net_weight_g / 1000)
+                : null
+            }
+            currentScores={{
+              ease_of_printing_score: filament.ease_of_printing_score,
+              value_score: filament.value_score,
+              strength_index: filament.strength_index,
+              printability_index: filament.printability_index,
+            }}
+          />
+        )}
         {/* Printer Compatibility Section - Featured & Dynamic */}
         {selectedPrinter && compatibility ? (
           <Card className="bg-gradient-to-br from-primary/10 via-card to-primary/5 border-primary/30 shadow-xl mb-8 animate-fade-in">

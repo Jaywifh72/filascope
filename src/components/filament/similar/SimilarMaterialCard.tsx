@@ -1,0 +1,181 @@
+import { Link } from "react-router-dom";
+import { Star, Plus, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useCompare } from "@/hooks/useCompare";
+import { getBrandLogo } from "@/lib/brandLogos";
+import type { EnhancedSimilarFilament } from "@/hooks/useEnhancedSimilarFilaments";
+
+interface SimilarMaterialCardProps {
+  filament: EnhancedSimilarFilament;
+}
+
+const MATERIAL_COLORS: Record<string, string> = {
+  PLA: "bg-green-500/20 text-green-400 border-green-500/30",
+  PETG: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  ABS: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+  ASA: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+  TPU: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+  NYLON: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  PC: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+};
+
+function getMaterialColor(material: string | null): string {
+  if (!material) return "bg-muted text-muted-foreground border-border";
+  const base = material.split(/[\s-]/)[0].toUpperCase();
+  return MATERIAL_COLORS[base] || "bg-muted text-muted-foreground border-border";
+}
+
+function getScoreColor(score: number | null): string {
+  if (!score) return "text-muted-foreground";
+  if (score >= 8) return "text-green-400";
+  if (score >= 6) return "text-primary";
+  return "text-amber-400";
+}
+
+export function SimilarMaterialCard({ filament }: SimilarMaterialCardProps) {
+  const { addItem, isInCompare } = useCompare();
+  const isAdded = isInCompare(filament.id);
+  const brandLogo = filament.vendor ? getBrandLogo(filament.vendor) : null;
+  const materialBase = filament.material?.split(/[\s-]/)[0] || "Unknown";
+
+  const handleCompare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAdded) {
+      addItem({
+        id: filament.id,
+        product_title: filament.product_title,
+        vendor: filament.vendor,
+        material: filament.material,
+        color_hex: null,
+        variant_price: filament.variant_price,
+        net_weight_g: filament.net_weight_g,
+        featured_image: filament.featured_image,
+      });
+    }
+  };
+
+  return (
+    <Link
+      to={`/filament/${filament.id}`}
+      className="group block min-w-[280px] max-w-[320px] flex-shrink-0 rounded-xl border border-primary/20 bg-card/80 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10"
+    >
+      {/* Header: Brand + Material Badge */}
+      <div className="mb-3 flex items-center justify-between">
+        {brandLogo ? (
+          <img
+            src={brandLogo}
+            alt={filament.vendor || "Brand"}
+            className="h-8 w-8 rounded object-contain"
+          />
+        ) : (
+          <div className="flex h-8 w-8 items-center justify-center rounded bg-muted text-xs font-medium text-muted-foreground">
+            {filament.vendor?.charAt(0) || "?"}
+          </div>
+        )}
+        <Badge variant="outline" className={`text-xs ${getMaterialColor(filament.material)}`}>
+          {materialBase}
+        </Badge>
+      </div>
+
+      {/* Product Title */}
+      <h4 className="mb-2 line-clamp-2 text-base font-semibold text-foreground group-hover:text-primary">
+        {filament.product_title}
+      </h4>
+
+      {/* Overall Score */}
+      {filament.overallScore && (
+        <div className={`mb-3 flex items-center gap-1.5 text-sm ${getScoreColor(filament.overallScore)}`}>
+          <Star className="h-4 w-4 fill-current" />
+          <span className="font-medium">{filament.overallScore.toFixed(1)}/10</span>
+        </div>
+      )}
+
+      {/* Price Comparison */}
+      <div className="mb-4">
+        {filament.pricePerKg && (
+          <p className="text-lg font-bold text-primary">
+            ${filament.pricePerKg.toFixed(2)}/kg
+          </p>
+        )}
+        {filament.priceComparison && filament.priceComparison.arrow !== '=' && (
+          <div className="mt-1 space-y-0.5">
+            <p className={`text-sm font-medium ${
+              filament.priceComparison.color === 'green' ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {filament.priceComparison.arrow} {filament.priceComparison.label}
+            </p>
+            {filament.priceComparison.savingsText && (
+              <p className="text-xs text-muted-foreground">
+                {filament.priceComparison.savingsText}
+              </p>
+            )}
+          </div>
+        )}
+        {filament.priceComparison?.arrow === '=' && (
+          <p className="mt-1 text-sm text-muted-foreground">
+            {filament.priceComparison.label}
+          </p>
+        )}
+      </div>
+
+      {/* Differentiators */}
+      {filament.differentiators.length > 0 && (
+        <div className="mb-4 space-y-1.5 border-t border-border/50 pt-3">
+          {filament.differentiators.map((diff, idx) => (
+            <p
+              key={idx}
+              className={`text-sm ${
+                diff.type === 'positive'
+                  ? 'text-green-400'
+                  : diff.type === 'warning'
+                  ? 'text-amber-400'
+                  : 'text-red-400'
+              }`}
+            >
+              {diff.icon} {diff.text}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {/* Best For */}
+      <div className="mb-4 border-t border-border/50 pt-3">
+        <p className="text-xs font-medium text-muted-foreground">Best for:</p>
+        <p className="text-sm text-foreground/80">{filament.bestFor}</p>
+      </div>
+
+      {/* CTAs */}
+      <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleCompare}
+          disabled={isAdded}
+          className={`flex-1 ${isAdded ? 'border-green-500/50 text-green-400' : 'border-primary/50 text-primary hover:bg-primary/10'}`}
+        >
+          {isAdded ? (
+            <>
+              <Check className="mr-1.5 h-3.5 w-3.5" />
+              Added
+            </>
+          ) : (
+            <>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Compare
+            </>
+          )}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-primary hover:text-primary/80"
+          asChild
+        >
+          <span>View →</span>
+        </Button>
+      </div>
+    </Link>
+  );
+}
