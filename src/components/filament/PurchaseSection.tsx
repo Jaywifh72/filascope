@@ -4,12 +4,18 @@ import { PrimaryBuyButton } from "./PrimaryBuyButton";
 import { SecondaryRetailers } from "./SecondaryRetailers";
 import { SlicerActions } from "./SlicerActions";
 import { QuickActions } from "./QuickActions";
+import { PriceTrendBadge } from "./PriceTrendBadge";
+import { TotalCostCalculator } from "./TotalCostCalculator";
+import { VolumeDiscountSlider } from "./VolumeDiscountSlider";
+import { PricingTips } from "./PricingTips";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { Badge } from "@/components/ui/badge";
 import { Ban } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -32,6 +38,9 @@ interface PurchaseSectionProps {
 }
 
 export function PurchaseSection({ filament, onProfileDownload, onCopyProfile }: PurchaseSectionProps) {
+  const [quantity, setQuantity] = useState(1);
+  const [showAdvancedPricing, setShowAdvancedPricing] = useState(false);
+  
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
   const { formatPrice, convertPrice, currencyInfo } = useCurrency();
   const { trackAffiliateClick, trackStoreClick } = useConversionTracking();
@@ -61,7 +70,7 @@ export function PurchaseSection({ filament, onProfileDownload, onCopyProfile }: 
       name: 'Amazon',
       region: 'US',
       url: getAmazonUrl(filament.amazon_link_us, "us") || filament.amazon_link_us,
-      price: null, // We don't have Amazon prices stored
+      price: null,
       currency: 'USD',
       isPrimary: false,
       available: true,
@@ -132,7 +141,6 @@ export function PurchaseSection({ filament, onProfileDownload, onCopyProfile }: 
           </Badge>
         </div>
         
-        {/* Still show slicer actions and quick actions */}
         <SlicerActions 
           onDownload={onProfileDownload}
           onCopy={onCopyProfile}
@@ -151,6 +159,39 @@ export function PurchaseSection({ filament, onProfileDownload, onCopyProfile }: 
 
   return (
     <div className="bg-card/50 border border-primary/20 rounded-xl p-6 space-y-5">
+      {/* Price Trend Display */}
+      {primaryRetailer?.price && (
+        <PriceTrendBadge 
+          filamentId={filament.id}
+          currentPrice={primaryRetailer.price}
+        />
+      )}
+      
+      {/* Total Cost Calculator (collapsible for advanced options) */}
+      {primaryRetailer?.price && (
+        <Collapsible open={showAdvancedPricing} onOpenChange={setShowAdvancedPricing}>
+          <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full justify-between">
+            <span>Calculate total cost</span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${showAdvancedPricing ? 'rotate-180' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-4 space-y-4">
+            <TotalCostCalculator
+              price={primaryRetailer.price}
+              vendor={filament.vendor || 'default'}
+              quantity={quantity}
+              onQuantityChange={setQuantity}
+            />
+            
+            <VolumeDiscountSlider
+              price={primaryRetailer.price}
+              vendor={filament.vendor || 'default'}
+              quantity={quantity}
+              onQuantityChange={setQuantity}
+            />
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+      
       {/* Primary CTA */}
       {primaryRetailer && (
         <PrimaryBuyButton
@@ -158,8 +199,19 @@ export function PurchaseSection({ filament, onProfileDownload, onCopyProfile }: 
           url={primaryRetailer.url}
           price={primaryRetailer.price}
           currency={primaryRetailer.currency}
+          quantity={quantity}
           hasBestPrice={hasBestPrice}
           onClick={handlePrimaryClick}
+        />
+      )}
+      
+      {/* Pricing Tips */}
+      {primaryRetailer?.price && (
+        <PricingTips
+          filamentId={filament.id}
+          price={primaryRetailer.price}
+          vendor={filament.vendor || 'default'}
+          quantity={quantity}
         />
       )}
       
