@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePrinterCompare } from "@/hooks/usePrinterCompare";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -56,7 +57,8 @@ export default function Printers() {
   const [selectedSize, setSelectedSize] = useState("all");
   const [selectedSpeed, setSelectedSpeed] = useState("all");
   
-  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
+  // Printer compare context
+  const { addPrinter, removePrinter, isSelected, isMaxReached } = usePrinterCompare();
   
   // Image edit dialog state
   const [imageEditPrinter, setImageEditPrinter] = useState<Printer | null>(null);
@@ -177,22 +179,22 @@ export default function Printers() {
     });
   }, [printers, selectedBrand, selectedSize, selectedSpeed, sortBy]);
 
-  const toggleCompareSelection = (printerId: string) => {
-    setSelectedForCompare(prev => 
-      prev.includes(printerId)
-        ? prev.filter(id => id !== printerId)
-        : [...prev, printerId]
-    );
-  };
+  const toggleCompareSelection = (printer: Printer) => {
+    const scrapedData = printer.scraped_data as Record<string, unknown> | null;
+    const images = scrapedData?.images as Record<string, unknown> | null;
+    const productImages = images?.product_images as string[] | null;
+    const productImage = productImages?.[0] || null;
 
-  const handleCompare = () => {
-    if (selectedForCompare.length > 0) {
-      navigate(`/printers/compare?ids=${selectedForCompare.join(',')}`);
+    if (isSelected(printer.id)) {
+      removePrinter(printer.id);
+    } else {
+      addPrinter({
+        id: printer.id,
+        name: `${printer.brand?.brand || ""} ${printer.model_name}`.trim(),
+        imageUrl: productImage,
+        brand: printer.brand?.brand || null,
+      });
     }
-  };
-
-  const clearCompareSelection = () => {
-    setSelectedForCompare([]);
   };
 
   const rescrapeMutation = useMutation({
@@ -384,21 +386,6 @@ export default function Printers() {
               </div>
             </div>
 
-            {/* Compare Bar */}
-            {selectedForCompare.length > 0 && (
-              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-card border rounded-lg shadow-lg p-4 flex items-center gap-4 z-50">
-                <span className="text-sm font-medium">
-                  {selectedForCompare.length} printer{selectedForCompare.length !== 1 ? 's' : ''} selected
-                </span>
-                <Button onClick={handleCompare} size="sm" className="gap-2">
-                  <GitCompare className="h-4 w-4" />
-                  Compare
-                </Button>
-                <Button onClick={clearCompareSelection} variant="ghost" size="sm">
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
 
             {/* Printer Grid */}
             {isLoading ? (
@@ -465,8 +452,9 @@ export default function Printers() {
                             >
                               <Checkbox
                                 className="h-4 w-4 border-white/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
-                                checked={selectedForCompare.includes(printer.printer_id)}
-                                onCheckedChange={() => toggleCompareSelection(printer.printer_id)}
+                                checked={isSelected(printer.id)}
+                                onCheckedChange={() => toggleCompareSelection(printer)}
+                                disabled={isMaxReached && !isSelected(printer.id)}
                                 aria-label="Add to comparison"
                               />
                             </div>

@@ -8,6 +8,8 @@ import Navbar from "./components/Navbar";
 import { CurrencyProvider } from "./hooks/useCurrency";
 import { CompareProvider } from "./hooks/useCompare";
 import { CompareTray } from "./components/CompareTray";
+import { PrinterCompareProvider } from "./hooks/usePrinterCompare";
+import { PrinterCompareBar } from "./components/PrinterCompareBar";
 
 // Lazy load route components for better performance
 const Finder = lazy(() => import("./pages/Finder"));
@@ -62,13 +64,14 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <CurrencyProvider>
       <CompareProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Navbar />
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-muted-foreground">Loading...</div></div>}>
-              <Routes>
+        <PrinterCompareProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Navbar />
+              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-muted-foreground">Loading...</div></div>}>
+                <Routes>
                 <Route path="/" element={<Finder />} />
                 <Route path="/brands" element={<Brands />} />
                 <Route path="/brands/:brand" element={<BrandDetail />} />
@@ -118,11 +121,13 @@ const App = () => (
               </Routes>
             </Suspense>
             <CompareTray />
+            <PrinterCompareBar />
           </BrowserRouter>
         </TooltipProvider>
-      </CompareProvider>
-    </CurrencyProvider>
-  </QueryClientProvider>
+      </PrinterCompareProvider>
+    </CompareProvider>
+  </CurrencyProvider>
+</QueryClientProvider>
 );
 
 export default App;
