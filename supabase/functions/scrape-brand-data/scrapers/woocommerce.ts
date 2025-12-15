@@ -68,7 +68,8 @@ export class WooCommerceScraper extends BaseScraper {
     this.log(`Trying WooCommerce Store API`);
 
     while (products.length < limit) {
-      const url = `${this.config.apiEndpoint}?per_page=${perPage}&page=${page}&category=filament`;
+      // Don't filter by category - fetch all and filter client-side for filament products
+      const url = `${this.config.apiEndpoint}?per_page=${perPage}&page=${page}`;
       this.log(`Fetching API page ${page}`);
 
       try {
@@ -89,6 +90,15 @@ export class WooCommerceScraper extends BaseScraper {
         }
 
         for (const product of data) {
+          // Filter for filament products client-side
+          const productName = product.name?.toLowerCase() || "";
+          const productSlug = product.slug?.toLowerCase() || "";
+          const isFilament = this.isFilamentProduct(productName, productSlug);
+          
+          if (!isFilament) {
+            continue;
+          }
+
           const price = this.parsePrice(product.prices?.price);
           const regularPrice = this.parsePrice(product.prices?.regular_price);
 
@@ -120,6 +130,26 @@ export class WooCommerceScraper extends BaseScraper {
     return products;
   }
 
+  private isFilamentProduct(name: string, slug: string): boolean {
+    const combined = `${name} ${slug}`.toLowerCase();
+    const filamentKeywords = [
+      "pla", "petg", "abs", "asa", "tpu", "tpe", "nylon", "pa", 
+      "pc", "polycarbonate", "filament", "flex", "silk", "matte",
+      "wood", "carbon", "cf", "gf", "hips", "pva", "filaflex"
+    ];
+    const excludeKeywords = [
+      "printer", "nozzle", "bed", "hotend", "extruder", "fan",
+      "belt", "motor", "kit", "tool", "adhesive", "glue", "tape"
+    ];
+    
+    // Check if any filament keyword is present
+    const hasFilamentKeyword = filamentKeywords.some(kw => combined.includes(kw));
+    // Check if any exclude keyword is present
+    const hasExcludeKeyword = excludeKeywords.some(kw => combined.includes(kw));
+    
+    return hasFilamentKeyword && !hasExcludeKeyword;
+  }
+
   private async scrapeViaHtml(limit: number): Promise<ScrapedProduct[]> {
     const products: ScrapedProduct[] = [];
     let page = 1;
@@ -127,40 +157,54 @@ export class WooCommerceScraper extends BaseScraper {
     this.log(`Scraping via HTML`);
 
     while (products.length < limit) {
-      const url = `${this.config.baseUrl}/shop/page/${page}/`;
-      this.log(`Fetching HTML page ${page}`);
+      // Try different pagination patterns
+      const urls = [
+        `${this.config.baseUrl}/shop/page/${page}/`,
+        `${this.config.baseUrl}/shop/?paged=${page}`,
+        page === 1 ? `${this.config.baseUrl}/shop/` : null,
+      ].filter(Boolean) as string[];
 
-      try {
-        const response = await this.fetchWithRetry(url);
+      let foundProducts = false;
 
-        if (!response.ok) {
-          this.log(`Page ${page} returned ${response.status}`);
-          break;
-        }
+      for (const url of urls) {
+        this.log(`Fetching HTML: ${url}`);
 
-        const html = await response.text();
-        const pageProducts = this.parseProductList(html);
+        try {
+          const response = await this.fetchWithRetry(url);
 
-        if (pageProducts.length === 0) {
-          this.log(`No products found on page ${page}`);
-          break;
-        }
-
-        // Fetch individual product pages for detailed data
-        for (const productUrl of pageProducts) {
-          if (products.length >= limit) break;
-
-          const product = await this.scrapeProduct(productUrl);
-          if (product) {
-            products.push(product);
+          if (!response.ok) {
+            this.log(`${url} returned ${response.status}`);
+            continue;
           }
-        }
 
-        page++;
-      } catch (error) {
-        this.logError(`HTML error on page ${page}:`, error);
+          const html = await response.text();
+          const pageProducts = this.parseProductList(html);
+
+          if (pageProducts.length > 0) {
+            foundProducts = true;
+            
+            // Fetch individual product pages for detailed data
+            for (const productUrl of pageProducts) {
+              if (products.length >= limit) break;
+
+              const product = await this.scrapeProduct(productUrl);
+              if (product) {
+                products.push(product);
+              }
+            }
+            break; // Found products with this URL pattern, don't try others
+          }
+        } catch (error) {
+          this.logError(`HTML error on ${url}:`, error);
+        }
+      }
+
+      if (!foundProducts) {
+        this.log(`No products found on page ${page}`);
         break;
       }
+
+      page++;
     }
 
     this.log(`HTML scraped ${products.length} products`);
