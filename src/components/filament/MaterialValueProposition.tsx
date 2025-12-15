@@ -47,7 +47,8 @@ export function MaterialValueProposition({
       aria-label="Material value proposition"
       className={cn(
         "rounded-xl p-6 lg:p-6 md:p-5",
-        "bg-primary/5 border border-primary/20",
+        "bg-gradient-to-r from-primary/10 via-primary/5 to-transparent",
+        "border-l-2 border-l-primary/50 border-y border-r border-y-primary/15 border-r-primary/15",
         "transition-all duration-300",
         "hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.01]",
         "animate-fade-in"
@@ -55,10 +56,10 @@ export function MaterialValueProposition({
     >
       {/* Headline with Icon */}
       <div className="flex items-start gap-3 mb-4">
-        <span className="text-2xl" role="img" aria-hidden="true">
+        <span className="text-3xl" role="img" aria-hidden="true">
           {proposition.icon}
         </span>
-        <h2 className="text-lg lg:text-xl font-bold text-primary leading-tight">
+        <h2 className="text-xl lg:text-[22px] font-bold text-primary leading-tight">
           {material} — {proposition.headline}
         </h2>
       </div>
@@ -97,11 +98,11 @@ export function MaterialValueProposition({
       {/* Perfect For / Not Ideal For */}
       <div className="space-y-3 mb-5">
         {/* Perfect For */}
-        <div className="flex items-start gap-2">
-          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0" />
           <div className="text-sm">
             <span className="sr-only">Perfect for: </span>
-            <span className="text-green-500 font-medium">Perfect for: </span>
+            <span className="text-green-400 font-medium">Perfect for: </span>
             <span className="text-foreground/80">
               {proposition.perfectFor.join(", ")}
             </span>
@@ -110,11 +111,14 @@ export function MaterialValueProposition({
 
         {/* Not Ideal For - Enhanced with explanations */}
         {proposition.notIdealFor.map((item, index) => (
-          <div key={index} className="flex items-start gap-2">
+          <div 
+            key={index} 
+            className="inline-flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20"
+          >
             <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
             <div className="text-sm">
               <span className="sr-only">Not ideal for: </span>
-              <span className="text-amber-500 font-medium">{item.issue}</span>
+              <span className="text-amber-400 font-medium">{item.issue}</span>
               <span className="text-muted-foreground"> — {item.reason}</span>
             </div>
           </div>
@@ -139,12 +143,19 @@ export function MaterialValueProposition({
         </div>
       )}
 
-      {/* CTA Links */}
-      <div className="flex flex-wrap gap-4 pt-1">
+      {/* CTA Links - Pill-shaped buttons */}
+      <div className="flex flex-wrap gap-3 pt-1">
         {comparisonMaterial && (
           <button
             onClick={handleCompare}
-            className="group inline-flex items-center gap-1 text-sm text-primary hover:underline transition-all"
+            className={cn(
+              "group inline-flex items-center gap-1.5",
+              "px-4 py-2 rounded-full",
+              "text-sm font-medium text-primary",
+              "bg-primary/10 border border-primary/20",
+              "hover:bg-primary/20 hover:border-primary/30",
+              "transition-all duration-200"
+            )}
           >
             Compare with {comparisonMaterial}
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
@@ -152,7 +163,14 @@ export function MaterialValueProposition({
         )}
         <button
           onClick={handleSimilar}
-          className="group inline-flex items-center gap-1 text-sm text-primary hover:underline transition-all"
+          className={cn(
+            "group inline-flex items-center gap-1.5",
+            "px-4 py-2 rounded-full",
+            "text-sm font-medium text-primary",
+            "bg-primary/10 border border-primary/20",
+            "hover:bg-primary/20 hover:border-primary/30",
+            "transition-all duration-200"
+          )}
         >
           View similar materials
           <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
