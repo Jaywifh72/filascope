@@ -1,30 +1,34 @@
-import { Copy, ThermometerSun, Flame, Wind, Snowflake, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ThermometerSun, Flame, Wind, Snowflake, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { TemperatureSlider } from "./TemperatureSlider";
 import { TroubleshootingGuide } from "./TroubleshootingGuide";
 import { SpeedTempCalculator } from "./SpeedTempCalculator";
 import { SeasonalAdjustments } from "./SeasonalAdjustments";
 import { MaterialTemperatureNotes } from "./MaterialTemperatureNotes";
+import { CopyFormatSelector } from "@/components/filament/export/CopyFormatSelector";
 import { PrintSettingsData } from "@/lib/printSettingsData";
-import { toast } from "sonner";
+import type { PrintSettings } from "@/lib/settingsFormatters";
 
 interface TemperatureTabProps {
   settings: PrintSettingsData;
   material?: string;
   productTitle?: string;
+  vendor?: string;
 }
 
-export function TemperatureTab({ settings, material, productTitle }: TemperatureTabProps) {
+export function TemperatureTab({ settings, material, productTitle, vendor }: TemperatureTabProps) {
   const { temperature, additionalSettings } = settings;
 
-  const handleCopy = () => {
-    const text = `Nozzle: ${temperature.nozzle.recommended}°C (Range: ${temperature.nozzle.range[0]}-${temperature.nozzle.range[1]}°C)
-Bed: ${temperature.bed.recommended}°C (Range: ${temperature.bed.range[0]}-${temperature.bed.range[1]}°C)
-Cooling: ${additionalSettings.cooling}`;
-    
-    navigator.clipboard.writeText(text);
-    toast.success("Temperature settings copied!");
+  const copySettings: PrintSettings = {
+    filamentName: productTitle || 'Filament',
+    material: material || 'Unknown',
+    vendor: vendor || 'Unknown',
+    nozzleTemp: temperature.nozzle.recommended,
+    nozzleTempMin: temperature.nozzle.range[0],
+    nozzleTempMax: temperature.nozzle.range[1],
+    bedTemp: temperature.bed.recommended,
+    bedTempMin: temperature.bed.range[0],
+    bedTempMax: temperature.bed.range[1],
   };
 
   return (
@@ -34,10 +38,7 @@ Cooling: ${additionalSettings.cooling}`;
           <ThermometerSun className="w-5 h-5 text-primary" />
           Temperature Ranges & Guidance
         </h3>
-        <Button variant="outline" size="sm" onClick={handleCopy}>
-          <Copy className="w-4 h-4 mr-2" />
-          Copy All
-        </Button>
+        <CopyFormatSelector settings={copySettings} />
       </div>
 
       {/* Nozzle Temperature with predictions */}
