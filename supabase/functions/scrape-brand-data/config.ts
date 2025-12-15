@@ -329,6 +329,43 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     userAgent: DEFAULT_USER_AGENT,
     productCount: 40,
   },
+  // Amazon-based brands (use amazon_link_us column)
+  Ziro: {
+    vendor: "Ziro",
+    platform: "amazon",
+    baseUrl: "https://www.amazon.com",
+    currency: "USD",
+    exchangeRate: 1,
+    productsPerPage: 20,
+    requestDelay: 2000,
+    timeout: 20000,
+    userAgent: DEFAULT_USER_AGENT,
+    productCount: 15,
+  },
+  "Paramount 3D": {
+    vendor: "Paramount 3D",
+    platform: "amazon",
+    baseUrl: "https://www.amazon.com",
+    currency: "USD",
+    exchangeRate: 1,
+    productsPerPage: 20,
+    requestDelay: 2000,
+    timeout: 20000,
+    userAgent: DEFAULT_USER_AGENT,
+    productCount: 12,
+  },
+  Inland: {
+    vendor: "Inland",
+    platform: "amazon",
+    baseUrl: "https://www.amazon.com",
+    currency: "USD",
+    exchangeRate: 1,
+    productsPerPage: 20,
+    requestDelay: 2000,
+    timeout: 20000,
+    userAgent: DEFAULT_USER_AGENT,
+    productCount: 16,
+  },
 };
 
 export function getBrandConfig(vendor: string): BrandConfig | null {
