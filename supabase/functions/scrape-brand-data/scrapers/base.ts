@@ -16,6 +16,25 @@ export interface ScrapedProduct {
   imageUrl: string | null;
   barcode: string | null;
   description: string | null;
+  // NEW: Additional identifiers
+  mpn: string | null;
+  // NEW: TDS Discovery
+  tdsUrl: string | null;
+  // NEW: Color extraction
+  colorHex: string | null;
+  colorName: string | null;
+  // NEW: Print settings from product page
+  nozzleTempMin: number | null;
+  nozzleTempMax: number | null;
+  bedTempMin: number | null;
+  bedTempMax: number | null;
+  // NEW: Physical specs
+  spoolMaterial: string | null;
+  netWeightG: number | null;
+  diameterMm: number | null;
+  // NEW: Spool dimensions
+  spoolOuterDiameterMm: number | null;
+  spoolWidthMm: number | null;
 }
 
 export abstract class BaseScraper {

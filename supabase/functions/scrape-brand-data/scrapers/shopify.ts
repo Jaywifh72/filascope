@@ -1,5 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
+import { findTdsUrl, extractPrintSettings, extractColorFromHtml, extractSpoolSpecs } from "../utils.ts";
 
 interface ShopifyProduct {
   id: number;
@@ -10,6 +11,8 @@ interface ShopifyProduct {
   body_html: string | null;
   variants: ShopifyVariant[];
   images: { src: string }[];
+  tags?: string[];
+  metafields?: ShopifyMetafield[];
 }
 
 interface ShopifyVariant {
@@ -20,6 +23,15 @@ interface ShopifyVariant {
   compare_at_price: string | null;
   available: boolean;
   barcode: string | null;
+  option1?: string | null;
+  option2?: string | null;
+  option3?: string | null;
+}
+
+interface ShopifyMetafield {
+  key: string;
+  value: string;
+  namespace: string;
 }
 
 interface ShopifyProductsResponse {
@@ -55,6 +67,16 @@ export class ShopifyScraper extends BaseScraper {
 
       const price = this.parsePrice(variant.price);
       const compareAtPrice = this.parsePrice(variant.compare_at_price);
+      const bodyHtml = product.body_html || "";
+
+      // Extract enhanced data from body_html
+      const tdsUrl = findTdsUrl(bodyHtml);
+      const printSettings = extractPrintSettings(bodyHtml);
+      const colorInfo = extractColorFromHtml(bodyHtml, variant.option1, variant.option2, product.title);
+      const spoolSpecs = extractSpoolSpecs(bodyHtml, product.title);
+
+      // Extract MPN from metafields or SKU pattern
+      const mpn = this.extractMpn(product, variant);
 
       return {
         productId: String(product.id),
@@ -69,7 +91,21 @@ export class ShopifyScraper extends BaseScraper {
         source: `shopify-${this.config.vendor.toLowerCase()}`,
         imageUrl: product.images?.[0]?.src || null,
         barcode: variant.barcode || null,
-        description: product.body_html || null,
+        description: bodyHtml,
+        // Enhanced fields
+        mpn,
+        tdsUrl,
+        colorHex: colorInfo?.hex || null,
+        colorName: colorInfo?.name || null,
+        nozzleTempMin: printSettings?.nozzleTempMin || null,
+        nozzleTempMax: printSettings?.nozzleTempMax || null,
+        bedTempMin: printSettings?.bedTempMin || null,
+        bedTempMax: printSettings?.bedTempMax || null,
+        spoolMaterial: spoolSpecs?.material || null,
+        netWeightG: spoolSpecs?.weightG || null,
+        diameterMm: spoolSpecs?.diameterMm || null,
+        spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
+        spoolWidthMm: spoolSpecs?.widthMm || null,
       };
     } catch (error) {
       this.logError(`Error scraping ${url}:`, error);
@@ -126,6 +162,14 @@ export class ShopifyScraper extends BaseScraper {
 
           const price = this.parsePrice(variant.price);
           const compareAtPrice = this.parsePrice(variant.compare_at_price);
+          const bodyHtml = product.body_html || "";
+
+          // Extract enhanced data
+          const tdsUrl = findTdsUrl(bodyHtml);
+          const printSettings = extractPrintSettings(bodyHtml);
+          const colorInfo = extractColorFromHtml(bodyHtml, variant.option1, variant.option2, product.title);
+          const spoolSpecs = extractSpoolSpecs(bodyHtml, product.title);
+          const mpn = this.extractMpn(product, variant);
 
           products.push({
             productId: String(product.id),
@@ -140,7 +184,21 @@ export class ShopifyScraper extends BaseScraper {
             source: `shopify-${this.config.vendor.toLowerCase()}`,
             imageUrl: product.images?.[0]?.src || null,
             barcode: variant.barcode || null,
-            description: product.body_html || null,
+            description: bodyHtml,
+            // Enhanced fields
+            mpn,
+            tdsUrl,
+            colorHex: colorInfo?.hex || null,
+            colorName: colorInfo?.name || null,
+            nozzleTempMin: printSettings?.nozzleTempMin || null,
+            nozzleTempMax: printSettings?.nozzleTempMax || null,
+            bedTempMin: printSettings?.bedTempMin || null,
+            bedTempMax: printSettings?.bedTempMax || null,
+            spoolMaterial: spoolSpecs?.material || null,
+            netWeightG: spoolSpecs?.weightG || null,
+            diameterMm: spoolSpecs?.diameterMm || null,
+            spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
+            spoolWidthMm: spoolSpecs?.widthMm || null,
           });
 
           if (products.length >= limit) break;
@@ -160,6 +218,32 @@ export class ShopifyScraper extends BaseScraper {
 
     this.log(`Scraped ${products.length} products`);
     return products;
+  }
+
+  private extractMpn(product: ShopifyProduct, variant: ShopifyVariant): string | null {
+    // Check metafields for MPN
+    if (product.metafields) {
+      for (const mf of product.metafields) {
+        if (mf.key.toLowerCase() === 'mpn' || mf.key.toLowerCase() === 'manufacturer_part_number') {
+          return mf.value;
+        }
+      }
+    }
+
+    // Check tags for MPN pattern
+    if (product.tags) {
+      for (const tag of product.tags) {
+        const mpnMatch = tag.match(/^mpn[:\-_](.+)$/i);
+        if (mpnMatch) return mpnMatch[1];
+      }
+    }
+
+    // Many brands use SKU as MPN
+    if (variant.sku && /^[A-Z0-9-]+$/i.test(variant.sku)) {
+      return variant.sku;
+    }
+
+    return null;
   }
 
   private selectBestVariant(variants: ShopifyVariant[]): ShopifyVariant | null {

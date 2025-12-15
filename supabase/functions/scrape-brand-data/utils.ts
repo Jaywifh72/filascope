@@ -287,3 +287,310 @@ export function parseBarcodeFields(barcode: string | null): { upc?: string; ean?
   
   return {};
 }
+
+// ============================================================================
+// ENHANCED EXTRACTION HELPERS FOR COMPREHENSIVE SCRAPING
+// ============================================================================
+
+// Find TDS/PDF links in HTML content
+export function findTdsUrl(html: string): string | null {
+  if (!html) return null;
+  
+  const patterns = [
+    // Direct PDF links with TDS keywords
+    /href=["']([^"']*(?:tds|datasheet|technical[-_]?data|spec[-_]?sheet|specifications)(?:[^"']*\.pdf)?[^"']*)["']/gi,
+    // PDF links near TDS text
+    /(?:tds|datasheet|technical\s*data\s*sheet|specifications?)[\s\S]{0,100}href=["']([^"']+\.pdf)["']/gi,
+    // Links containing 'tds' in the URL
+    /href=["']([^"']*\/tds\/[^"']+)["']/gi,
+    // Common filament brand TDS patterns
+    /href=["']([^"']*cdn[^"']*(?:tds|datasheet)[^"']*\.pdf)["']/gi,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match && match[1]) {
+      let url = match[1];
+      // Clean up URL
+      if (url.startsWith('//')) url = 'https:' + url;
+      if (!url.startsWith('http')) continue;
+      return url;
+    }
+  }
+  
+  return null;
+}
+
+// Extract print settings from HTML/text content
+export function extractPrintSettings(text: string): { 
+  nozzleTempMin: number | null; 
+  nozzleTempMax: number | null; 
+  bedTempMin: number | null; 
+  bedTempMax: number | null;
+} | null {
+  if (!text) return null;
+  
+  const result: { 
+    nozzleTempMin: number | null; 
+    nozzleTempMax: number | null; 
+    bedTempMin: number | null; 
+    bedTempMax: number | null;
+  } = {
+    nozzleTempMin: null,
+    nozzleTempMax: null,
+    bedTempMin: null,
+    bedTempMax: null,
+  };
+  
+  // Nozzle temperature patterns
+  const nozzlePatterns = [
+    /nozzle[^:]*:\s*(\d{3})\s*[-–—]\s*(\d{3})\s*°?C/gi,
+    /(?:printing|print|extrusion|extruder|hotend)\s*temp[^:]*:\s*(\d{3})\s*[-–—]\s*(\d{3})\s*°?C/gi,
+    /(\d{3})\s*[-–—]\s*(\d{3})\s*°?C\s*(?:nozzle|print|extrusion)/gi,
+    /(?:nozzle|printing)\s*:\s*(\d{3})\s*°?C/gi, // Single temp
+  ];
+  
+  for (const pattern of nozzlePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      if (match[2]) {
+        result.nozzleTempMin = parseInt(match[1]);
+        result.nozzleTempMax = parseInt(match[2]);
+      } else if (match[1]) {
+        // Single temperature - use as both min and max
+        const temp = parseInt(match[1]);
+        result.nozzleTempMin = temp - 10;
+        result.nozzleTempMax = temp + 10;
+      }
+      break;
+    }
+  }
+  
+  // Bed temperature patterns
+  const bedPatterns = [
+    /(?:bed|plate|platform|build\s*plate)[^:]*:\s*(\d{2,3})\s*[-–—]\s*(\d{2,3})\s*°?C/gi,
+    /(\d{2,3})\s*[-–—]\s*(\d{2,3})\s*°?C\s*(?:bed|plate|platform)/gi,
+    /(?:bed|plate)\s*temp[^:]*:\s*(\d{2,3})\s*°?C/gi, // Single temp
+  ];
+  
+  for (const pattern of bedPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      if (match[2]) {
+        result.bedTempMin = parseInt(match[1]);
+        result.bedTempMax = parseInt(match[2]);
+      } else if (match[1]) {
+        const temp = parseInt(match[1]);
+        result.bedTempMin = temp;
+        result.bedTempMax = temp + 20;
+      }
+      break;
+    }
+  }
+  
+  // Only return if we found something
+  if (result.nozzleTempMin || result.bedTempMin) {
+    return result;
+  }
+  
+  return null;
+}
+
+// Color hex extraction with lookup table
+const HEX_COLORS: Record<string, string> = {
+  'black': '#000000',
+  'white': '#FFFFFF',
+  'red': '#FF0000',
+  'blue': '#0000FF',
+  'green': '#00FF00',
+  'yellow': '#FFFF00',
+  'orange': '#FFA500',
+  'purple': '#800080',
+  'pink': '#FFC0CB',
+  'gray': '#808080',
+  'grey': '#808080',
+  'silver': '#C0C0C0',
+  'gold': '#FFD700',
+  'bronze': '#CD7F32',
+  'brown': '#8B4513',
+  'beige': '#F5F5DC',
+  'natural': '#F5F5DC',
+  'clear': '#FFFFFF',
+  'transparent': '#FFFFFF',
+  'cyan': '#00FFFF',
+  'teal': '#008080',
+  'navy': '#000080',
+  'magenta': '#FF00FF',
+  'violet': '#EE82EE',
+  'lime': '#00FF00',
+  'olive': '#808000',
+  'maroon': '#800000',
+  'crimson': '#DC143C',
+  'sky blue': '#87CEEB',
+  'royal blue': '#4169E1',
+  'forest green': '#228B22',
+  'burgundy': '#800020',
+  'champagne': '#F7E7CE',
+  'ivory': '#FFFFF0',
+  'cream': '#FFFDD0',
+  'coral': '#FF7F50',
+  'salmon': '#FA8072',
+  'peach': '#FFDAB9',
+  'mint': '#98FF98',
+  'lavender': '#E6E6FA',
+  'copper': '#B87333',
+  'rose gold': '#B76E79',
+};
+
+export function extractColorFromHtml(
+  html: string | null, 
+  option1: string | null | undefined, 
+  option2: string | null | undefined,
+  title: string
+): { name: string; hex: string } | null {
+  // Check options first (Shopify variant options often contain color)
+  const options = [option1, option2].filter(Boolean).join(' ').toLowerCase();
+  const combined = `${options} ${title}`.toLowerCase();
+  
+  // Try to find a hex color in the content
+  const hexMatch = html?.match(/#([A-Fa-f0-9]{6})\b/);
+  if (hexMatch) {
+    // Try to find associated color name
+    for (const [name, hex] of Object.entries(HEX_COLORS)) {
+      if (combined.includes(name)) {
+        return { name: name.charAt(0).toUpperCase() + name.slice(1), hex: `#${hexMatch[1]}` };
+      }
+    }
+    return { name: 'Custom', hex: `#${hexMatch[1]}` };
+  }
+  
+  // Match from color name lookup
+  for (const [name, hex] of Object.entries(HEX_COLORS)) {
+    if (combined.includes(name)) {
+      return { name: name.charAt(0).toUpperCase() + name.slice(1), hex };
+    }
+  }
+  
+  return null;
+}
+
+// Extract spool specifications from content
+export function extractSpoolSpecs(text: string, title: string): {
+  material: string | null;
+  weightG: number | null;
+  diameterMm: number | null;
+  outerDiameterMm: number | null;
+  widthMm: number | null;
+} | null {
+  if (!text && !title) return null;
+  
+  const combined = `${text || ''} ${title}`.toLowerCase();
+  
+  const result: {
+    material: string | null;
+    weightG: number | null;
+    diameterMm: number | null;
+    outerDiameterMm: number | null;
+    widthMm: number | null;
+  } = {
+    material: null,
+    weightG: null,
+    diameterMm: null,
+    outerDiameterMm: null,
+    widthMm: null,
+  };
+  
+  // Extract weight
+  const kgMatch = combined.match(/(\d+(?:\.\d+)?)\s*kg/);
+  if (kgMatch) {
+    result.weightG = Math.round(parseFloat(kgMatch[1]) * 1000);
+  } else {
+    const gMatch = combined.match(/(\d+)\s*g(?:ram)?s?(?:\s|$)/);
+    if (gMatch) {
+      result.weightG = parseInt(gMatch[1]);
+    }
+  }
+  
+  // Extract diameter (filament diameter)
+  const diamMatch = combined.match(/(\d+(?:\.\d+)?)\s*mm\s*(?:filament|diameter)/);
+  if (diamMatch) {
+    const diam = parseFloat(diamMatch[1]);
+    if (diam >= 1.5 && diam <= 3.0) {
+      result.diameterMm = diam;
+    }
+  } else if (combined.includes('1.75')) {
+    result.diameterMm = 1.75;
+  } else if (combined.includes('2.85')) {
+    result.diameterMm = 2.85;
+  }
+  
+  // Extract spool outer diameter
+  const outerMatch = combined.match(/(?:spool|outer)\s*(?:diameter|dia)[:\s]*(\d+)\s*mm/);
+  if (outerMatch) {
+    result.outerDiameterMm = parseInt(outerMatch[1]);
+  }
+  
+  // Extract spool width
+  const widthMatch = combined.match(/(?:spool\s*)?width[:\s]*(\d+)\s*mm/);
+  if (widthMatch) {
+    result.widthMm = parseInt(widthMatch[1]);
+  }
+  
+  // Spool material detection
+  if (combined.includes('cardboard spool') || combined.includes('eco spool') || combined.includes('recyclable spool')) {
+    result.material = 'Cardboard';
+  } else if (combined.includes('plastic spool')) {
+    result.material = 'Plastic';
+  } else if (combined.includes('reusable spool') || combined.includes('master spool')) {
+    result.material = 'Reusable';
+  }
+  
+  return result;
+}
+
+// Extract MPN from HTML content
+export function extractMpnFromHtml(html: string): string | null {
+  if (!html) return null;
+  
+  const patterns = [
+    /itemprop=["']mpn["'][^>]*content=["']([^"']+)["']/i,
+    /"mpn":\s*"([^"]+)"/i,
+    /mpn[:\s]+([A-Z0-9-]+)/i,
+    /manufacturer\s*part\s*(?:number|#)?[:\s]+([A-Z0-9-]+)/i,
+    /part\s*(?:number|#|no\.?)[:\s]+([A-Z0-9-]+)/i,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match && match[1] && match[1].length >= 3) {
+      return match[1];
+    }
+  }
+  
+  return null;
+}
+
+// Extract barcode from HTML (structured data)
+export function extractBarcodeFromHtml(html: string): string | null {
+  if (!html) return null;
+  
+  const patterns = [
+    /"gtin14":\s*"(\d+)"/i,
+    /"gtin13":\s*"(\d+)"/i,
+    /"gtin12":\s*"(\d+)"/i,
+    /"gtin":\s*"(\d+)"/i,
+    /"ean":\s*"(\d+)"/i,
+    /"upc":\s*"(\d+)"/i,
+    /itemprop=["']gtin["'][^>]*content=["'](\d+)["']/i,
+    /data-barcode=["'](\d+)["']/i,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match && match[1] && match[1].length >= 8) {
+      return match[1];
+    }
+  }
+  
+  return null;
+}

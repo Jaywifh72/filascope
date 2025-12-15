@@ -120,10 +120,10 @@ async function createFilamentFromScrapedProduct(
     vendor: vendor,
     brand_id: brandConfig?.id || null,
     material: material,
-    color_family: colorInfo?.family || null,
-    color_hex: colorInfo?.hex || null,
-    net_weight_g: weight,
-    diameter_nominal_mm: diameter || 1.75,
+    color_family: colorInfo?.family || product.colorName || null,
+    color_hex: product.colorHex || colorInfo?.hex || null,
+    net_weight_g: product.netWeightG || weight,
+    diameter_nominal_mm: product.diameterMm || diameter || 1.75,
     variant_price: product.price,
     variant_compare_at_price: product.compareAtPrice,
     variant_available: product.available,
@@ -134,6 +134,15 @@ async function createFilamentFromScrapedProduct(
     sync_status: "synced",
     // Enhanced fields from scrapers
     featured_image: product.imageUrl || null,
+    mpn: product.mpn || null,
+    tds_url: product.tdsUrl || null,
+    nozzle_temp_min_c: product.nozzleTempMin || null,
+    nozzle_temp_max_c: product.nozzleTempMax || null,
+    bed_temp_min_c: product.bedTempMin || null,
+    bed_temp_max_c: product.bedTempMax || null,
+    spool_material: product.spoolMaterial || null,
+    spool_outer_d_mm: product.spoolOuterDiameterMm || null,
+    spool_width_mm: product.spoolWidthMm || null,
     ...parseBarcodeFields(product.barcode),
   };
   
@@ -225,7 +234,7 @@ async function processScrapedProducts(
       // Use limit(1) to handle duplicate SKUs gracefully, prioritize by product_id
       const { data: filaments, error: findError } = await supabase
         .from("filaments")
-        .select("id, variant_price, variant_available, product_title, external_data_hash, user_override_fields, product_id, featured_image, upc, ean, gtin")
+        .select("id, variant_price, variant_available, product_title, external_data_hash, user_override_fields, product_id, featured_image, upc, ean, gtin, mpn, tds_url, color_hex, nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, bed_temp_max_c")
         .ilike("vendor", `%${vendor}%`)
         .or(`product_id.eq.${product.productId},variant_sku.eq.${product.sku || "___NONE___"}`)
         .order('product_id', { ascending: false, nullsFirst: false })
@@ -364,6 +373,26 @@ async function processScrapedProducts(
         if (barcodeFields.gtin && !overrides.includes("gtin")) {
           updates.gtin = barcodeFields.gtin;
         }
+      }
+
+      // Update enhanced fields if scraped and not overridden
+      if (product.mpn && !overrides.includes("mpn") && !filament.mpn) {
+        updates.mpn = product.mpn;
+      }
+      if (product.tdsUrl && !overrides.includes("tds_url") && !filament.tds_url) {
+        updates.tds_url = product.tdsUrl;
+        console.log(`📄 Adding TDS for ${product.title}`);
+      }
+      if (product.colorHex && !overrides.includes("color_hex") && !filament.color_hex) {
+        updates.color_hex = product.colorHex;
+      }
+      if (product.nozzleTempMin && !overrides.includes("nozzle_temp_min_c") && !filament.nozzle_temp_min_c) {
+        updates.nozzle_temp_min_c = product.nozzleTempMin;
+        updates.nozzle_temp_max_c = product.nozzleTempMax;
+      }
+      if (product.bedTempMin && !overrides.includes("bed_temp_min_c") && !filament.bed_temp_min_c) {
+        updates.bed_temp_min_c = product.bedTempMin;
+        updates.bed_temp_max_c = product.bedTempMax;
       }
 
       // Update filament (trigger will log to price_history if price changed)

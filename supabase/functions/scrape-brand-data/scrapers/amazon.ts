@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { extractPrice, extractAvailability } from "../utils.ts";
+import { extractPrice, extractAvailability, extractColorFromHtml, extractSpoolSpecs } from "../utils.ts";
 
 export class AmazonScraper extends BaseScraper {
   private firecrawlApiKey: string | undefined;
@@ -118,6 +118,10 @@ export class AmazonScraper extends BaseScraper {
     // Extract image
     const imageUrl = this.extractAmazonImage(html, metadata);
 
+    // Extract enhanced data
+    const colorInfo = extractColorFromHtml(html, null, null, title);
+    const spoolSpecs = extractSpoolSpecs(markdown, title);
+
     return {
       productId: asin,
       sku: asin,
@@ -131,7 +135,21 @@ export class AmazonScraper extends BaseScraper {
       source: `amazon-${this.config.vendor.toLowerCase()}`,
       imageUrl,
       barcode: null, // Amazon doesn't expose barcodes
-      description: null,
+      description: markdown?.substring(0, 2000) || null,
+      // Enhanced fields
+      mpn: null, // Amazon doesn't typically expose MPN
+      tdsUrl: null, // Amazon listings don't have TDS links
+      colorHex: colorInfo?.hex || null,
+      colorName: colorInfo?.name || null,
+      nozzleTempMin: null, // Rarely in Amazon listings
+      nozzleTempMax: null,
+      bedTempMin: null,
+      bedTempMax: null,
+      spoolMaterial: spoolSpecs?.material || null,
+      netWeightG: spoolSpecs?.weightG || null,
+      diameterMm: spoolSpecs?.diameterMm || null,
+      spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
+      spoolWidthMm: spoolSpecs?.widthMm || null,
     };
   }
 
