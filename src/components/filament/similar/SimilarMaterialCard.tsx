@@ -10,10 +10,18 @@ import {
 } from "@/components/ui/tooltip";
 import { useCompare } from "@/hooks/useCompare";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { MetricComparisonBar } from "./MetricComparisonBar";
+import { StandoutBadges } from "./StandoutBadges";
+import { CostBenefitSection } from "./CostBenefitSection";
 import type { EnhancedSimilarFilament } from "@/hooks/useEnhancedSimilarFilaments";
 
 interface SimilarMaterialCardProps {
   filament: EnhancedSimilarFilament;
+  currentScores?: {
+    printability_index?: number | null;
+    strength_index?: number | null;
+    value_score?: number | null;
+  };
 }
 
 const MATERIAL_COLORS: Record<string, string> = {
@@ -39,7 +47,7 @@ function getScoreColor(score: number | null): string {
   return "text-amber-400";
 }
 
-export function SimilarMaterialCard({ filament }: SimilarMaterialCardProps) {
+export function SimilarMaterialCard({ filament, currentScores }: SimilarMaterialCardProps) {
   const { addItem, isInCompare } = useCompare();
   const isAdded = isInCompare(filament.id);
   const brandLogo = filament.vendor ? getBrandLogo(filament.vendor) : null;
@@ -61,6 +69,11 @@ export function SimilarMaterialCard({ filament }: SimilarMaterialCardProps) {
       });
     }
   };
+
+  // Extract enhanced differentiators with real-world impact
+  const enhancedDiffs = filament.differentiators.filter(
+    d => 'realWorldImpact' in d && d.realWorldImpact
+  );
 
   return (
     <Link
@@ -118,6 +131,13 @@ export function SimilarMaterialCard({ filament }: SimilarMaterialCardProps) {
         {filament.product_title}
       </h4>
 
+      {/* Standout Badges */}
+      {filament.standoutBadges && filament.standoutBadges.length > 0 && (
+        <div className="mb-2">
+          <StandoutBadges badges={filament.standoutBadges} />
+        </div>
+      )}
+
       {/* Overall Score */}
       {filament.overallScore && (
         <div className={`mb-3 flex items-center gap-1.5 text-sm ${getScoreColor(filament.overallScore)}`}>
@@ -132,7 +152,7 @@ export function SimilarMaterialCard({ filament }: SimilarMaterialCardProps) {
       )}
 
       {/* Price Comparison */}
-      <div className="mb-4">
+      <div className="mb-3">
         {filament.pricePerKg && (
           <p className="text-lg font-bold text-primary">
             ${filament.pricePerKg.toFixed(2)}/kg
@@ -145,36 +165,69 @@ export function SimilarMaterialCard({ filament }: SimilarMaterialCardProps) {
             }`}>
               {filament.priceComparison.arrow} {filament.priceComparison.label}
             </p>
-            {filament.priceComparison.savingsText && (
-              <p className="text-xs text-muted-foreground">
-                {filament.priceComparison.savingsText}
-              </p>
-            )}
           </div>
-        )}
-        {filament.priceComparison?.arrow === '=' && (
-          <p className="mt-1 text-sm text-muted-foreground">
-            {filament.priceComparison.label}
-          </p>
         )}
       </div>
 
-      {/* Differentiators */}
-      {filament.differentiators.length > 0 && (
-        <div className="mb-4 space-y-1.5 border-t border-border/50 pt-3">
-          {filament.differentiators.slice(0, 3).map((diff, idx) => (
-            <p
-              key={idx}
-              className={`text-sm ${
-                diff.type === 'positive'
-                  ? 'text-green-400'
-                  : diff.type === 'warning'
-                  ? 'text-amber-400'
-                  : 'text-red-400'
-              }`}
-            >
-              {diff.icon} {diff.text}
-            </p>
+      {/* Visual Metric Comparison Bars */}
+      {currentScores && (
+        <div className="mb-3 space-y-2 border-t border-border/50 pt-3">
+          {currentScores.printability_index != null && filament.printability_index != null && (
+            <MetricComparisonBar
+              label="Printability"
+              currentValue={currentScores.printability_index}
+              compareValue={filament.printability_index}
+              maxValue={10}
+            />
+          )}
+          {currentScores.strength_index != null && filament.strength_index != null && (
+            <MetricComparisonBar
+              label="Strength"
+              currentValue={currentScores.strength_index * 10}
+              compareValue={filament.strength_index * 10}
+              maxValue={10}
+            />
+          )}
+          {currentScores.value_score != null && filament.value_score != null && (
+            <MetricComparisonBar
+              label="Value"
+              currentValue={currentScores.value_score}
+              compareValue={filament.value_score}
+              maxValue={10}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Cost-Benefit Analysis */}
+      {filament.costBenefitAnalysis && (
+        <div className="mb-3">
+          <CostBenefitSection analysis={filament.costBenefitAnalysis} />
+        </div>
+      )}
+
+      {/* Enhanced Differentiators with Real-World Impact */}
+      {enhancedDiffs.length > 0 && (
+        <div className="mb-3 space-y-1.5 border-t border-border/50 pt-3">
+          {enhancedDiffs.slice(0, 2).map((diff, idx) => (
+            <div key={idx} className="space-y-0.5">
+              <p
+                className={`text-sm font-medium ${
+                  diff.type === 'positive' || diff.type === 'standout'
+                    ? 'text-green-400'
+                    : diff.type === 'warning'
+                    ? 'text-amber-400'
+                    : 'text-red-400'
+                }`}
+              >
+                {diff.icon} {diff.text}
+              </p>
+              {'realWorldImpact' in diff && diff.realWorldImpact && (
+                <p className="text-xs text-muted-foreground pl-5">
+                  → {diff.realWorldImpact}
+                </p>
+              )}
+            </div>
           ))}
         </div>
       )}
