@@ -204,3 +204,8 @@ export function calculateOverallScore(filament: {
   
   return scores.reduce((a, b) => a + b, 0) / scores.length;
 }
+
+export function calculatePricePerKg(price: number | null, weightG: number | null): number | null {
+  if (!price || !weightG || weightG <= 0) return null;
+  return price / (weightG / 1000);
+}

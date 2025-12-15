@@ -6,6 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEnhancedSimilarFilaments } from "@/hooks/useEnhancedSimilarFilaments";
 import { SimilarMaterialCard } from "./SimilarMaterialCard";
 import { useCompare } from "@/hooks/useCompare";
+import { useUserPersonalization } from "@/hooks/useUserPersonalization";
+import { useUserSkillLevel } from "@/hooks/useUserSkillLevel";
 
 interface SimilarMaterialsModuleProps {
   filamentId: string;
@@ -27,12 +29,28 @@ export function SimilarMaterialsModule({
   currentPricePerKg,
   currentScores,
 }: SimilarMaterialsModuleProps) {
+  // Get user context for personalized recommendations
+  const {
+    favoriteFilamentIds,
+    printerSpecs,
+    priceSensitivity,
+    recentlyViewed,
+  } = useUserPersonalization();
+  const { skillLevel } = useUserSkillLevel();
+
   const { recommendations, isLoading } = useEnhancedSimilarFilaments(
     filamentId,
     material,
     vendor,
     currentPricePerKg,
-    currentScores
+    currentScores,
+    {
+      favoriteFilamentIds,
+      printerSpecs,
+      skillLevel,
+      priceSensitivity,
+      limit: 6,
+    }
   );
   const { addItem } = useCompare();
 
@@ -115,7 +133,7 @@ export function SimilarMaterialsModule({
           </h3>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Users also considered these alternatives
+          Personalized recommendations based on your preferences
         </p>
       </div>
 
