@@ -2,16 +2,92 @@ name: Sync Filaments Daily
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # Runs at 2 AM UTC daily
-  workflow_dispatch:  # Allows manual triggering
+    - cron: '0 2 * * *'  # SpoolmanDB sync at 2 AM UTC
+    - cron: '0 3 * * *'  # Brand scraping at 3 AM UTC
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Which job to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - sync-spoolman
+          - scrape-brands
 
 jobs:
-  sync:
+  sync-spoolman:
+    name: Sync SpoolmanDB
     runs-on: ubuntu-latest
+    if: github.event.schedule == '0 2 * * *' || github.event.inputs.job == 'all' || github.event.inputs.job == 'sync-spoolman'
     steps:
-      - name: Trigger Supabase Edge Function
+      - name: Trigger SpoolmanDB Sync
         run: |
           curl -X POST \
             "${{ secrets.SUPABASE_FUNCTION_URL }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json"
+
+  scrape-brands:
+    name: Scrape Brand Websites
+    runs-on: ubuntu-latest
+    needs: [sync-spoolman]
+    if: always() && (github.event.schedule == '0 3 * * *' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-brands')
+    
+    strategy:
+      matrix:
+        brand: ['Prusament', 'Overture 3D', '3D-Fuel', '3DXTech']
+      max-parallel: 2
+      fail-fast: false
+    
+    steps:
+      - name: Scrape ${{ matrix.brand }}
+        run: |
+          echo "🔍 Scraping ${{ matrix.brand }}..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/scrape-brand-data" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"vendor": "${{ matrix.brand }}", "limit": 100}')
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "Response code: $http_code"
+          echo "Response body: $body"
+          
+          if [ "$http_code" -ne 200 ]; then
+            echo "❌ Failed to scrape ${{ matrix.brand }}"
+            exit 1
+          fi
+          
+          echo "✅ Successfully scraped ${{ matrix.brand }}"
+
+  scrape-amazon:
+    name: Scrape Amazon (Hatchbox)
+    runs-on: ubuntu-latest
+    needs: [scrape-brands]
+    if: always() && (github.event.schedule == '0 3 * * *' || github.event.inputs.job == 'all' || github.event.inputs.job == 'scrape-brands')
+    
+    steps:
+      - name: Scrape Hatchbox (Amazon)
+        run: |
+          echo "🔍 Scraping Hatchbox via Amazon..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/scrape-brand-data" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"vendor": "Hatchbox", "limit": 100}')
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "Response code: $http_code"
+          echo "Response body: $body"
+          
+          if [ "$http_code" -ne 200 ]; then
+            echo "⚠️ Hatchbox scrape may have failed (Amazon is rate-limited)"
+          else
+            echo "✅ Successfully scraped Hatchbox"
+          fi
