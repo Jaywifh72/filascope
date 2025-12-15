@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { extractPrice, extractAvailability } from "../utils.ts";
+import { extractPrice, extractAvailability, findTdsUrl, extractPrintSettings, extractColorFromHtml, extractSpoolSpecs } from "../utils.ts";
 
 export class BigCommerceScraper extends BaseScraper {
   constructor(config: BrandConfig) {
@@ -107,7 +107,7 @@ export class BigCommerceScraper extends BaseScraper {
           for (const item of data.itemListElement) {
             const product = item.item || item;
             if (product["@type"] === "Product") {
-              const scraped = this.parseJsonLdProduct(product);
+              const scraped = this.parseJsonLdProduct(product, html);
               if (scraped) products.push(scraped);
             }
           }
@@ -115,7 +115,7 @@ export class BigCommerceScraper extends BaseScraper {
 
         // Handle single Product
         if (data["@type"] === "Product") {
-          const scraped = this.parseJsonLdProduct(data);
+          const scraped = this.parseJsonLdProduct(data, html);
           if (scraped) products.push(scraped);
         }
       } catch {
@@ -126,11 +126,18 @@ export class BigCommerceScraper extends BaseScraper {
     return products;
   }
 
-  private parseJsonLdProduct(data: any): ScrapedProduct | null {
+  private parseJsonLdProduct(data: any, html: string): ScrapedProduct | null {
     if (!data.name) return null;
 
     const offer = Array.isArray(data.offers) ? data.offers[0] : data.offers;
     const price = offer?.price ? this.parsePrice(offer.price) : null;
+    const description = data.description || "";
+
+    // Extract enhanced data
+    const tdsUrl = findTdsUrl(html);
+    const printSettings = extractPrintSettings(description);
+    const colorInfo = extractColorFromHtml(html, null, null, data.name);
+    const spoolSpecs = extractSpoolSpecs(description, data.name);
 
     return {
       productId: data.sku || data.productID || data.url?.split("/").pop() || "",
@@ -145,7 +152,21 @@ export class BigCommerceScraper extends BaseScraper {
       source: `bigcommerce-${this.config.vendor.toLowerCase()}`,
       imageUrl: data.image || null,
       barcode: data.gtin || data.gtin13 || data.gtin12 || null,
-      description: data.description || null,
+      description,
+      // Enhanced fields
+      mpn: data.mpn || data.sku || null,
+      tdsUrl,
+      colorHex: colorInfo?.hex || null,
+      colorName: colorInfo?.name || null,
+      nozzleTempMin: printSettings?.nozzleTempMin || null,
+      nozzleTempMax: printSettings?.nozzleTempMax || null,
+      bedTempMin: printSettings?.bedTempMin || null,
+      bedTempMax: printSettings?.bedTempMax || null,
+      spoolMaterial: spoolSpecs?.material || null,
+      netWeightG: spoolSpecs?.weightG || null,
+      diameterMm: spoolSpecs?.diameterMm || null,
+      spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
+      spoolWidthMm: spoolSpecs?.widthMm || null,
     };
   }
 
@@ -211,6 +232,12 @@ export class BigCommerceScraper extends BaseScraper {
                        html.match(/data-image-gallery-new-image-url="([^"]+)"/);
     const imageUrl = imageMatch ? imageMatch[1] : null;
 
+    // Extract enhanced data
+    const tdsUrl = findTdsUrl(html);
+    const printSettings = extractPrintSettings(html);
+    const colorInfo = extractColorFromHtml(html, null, null, title);
+    const spoolSpecs = extractSpoolSpecs(html, title);
+
     return {
       productId,
       sku,
@@ -225,6 +252,20 @@ export class BigCommerceScraper extends BaseScraper {
       imageUrl,
       barcode: null,
       description: null,
+      // Enhanced fields
+      mpn: sku,
+      tdsUrl,
+      colorHex: colorInfo?.hex || null,
+      colorName: colorInfo?.name || null,
+      nozzleTempMin: printSettings?.nozzleTempMin || null,
+      nozzleTempMax: printSettings?.nozzleTempMax || null,
+      bedTempMin: printSettings?.bedTempMin || null,
+      bedTempMax: printSettings?.bedTempMax || null,
+      spoolMaterial: spoolSpecs?.material || null,
+      netWeightG: spoolSpecs?.weightG || null,
+      diameterMm: spoolSpecs?.diameterMm || null,
+      spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
+      spoolWidthMm: spoolSpecs?.widthMm || null,
     };
   }
 

@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { extractPrice, extractAvailability } from "../utils.ts";
+import { extractPrice, extractAvailability, findTdsUrl, extractPrintSettings, extractColorFromHtml, extractSpoolSpecs, extractMpnFromHtml } from "../utils.ts";
 
 /**
  * FirecrawlScraper - Generic HTML scraper using Firecrawl API
@@ -207,6 +207,13 @@ export class FirecrawlScraper extends BaseScraper {
     // Extract barcode/GTIN from structured data
     const barcode = this.extractBarcode(html);
 
+    // Extract enhanced data
+    const tdsUrl = findTdsUrl(html) || this.extractTdsFromMarkdown(markdown);
+    const printSettings = extractPrintSettings(html) || extractPrintSettings(markdown);
+    const colorInfo = extractColorFromHtml(html, null, null, title);
+    const spoolSpecs = extractSpoolSpecs(markdown, title);
+    const mpn = extractMpnFromHtml(html);
+
     return {
       productId,
       sku: productId,
@@ -221,7 +228,41 @@ export class FirecrawlScraper extends BaseScraper {
       imageUrl,
       barcode,
       description: markdown?.substring(0, 2000) || null,
+      // Enhanced fields
+      mpn,
+      tdsUrl,
+      colorHex: colorInfo?.hex || null,
+      colorName: colorInfo?.name || null,
+      nozzleTempMin: printSettings?.nozzleTempMin || null,
+      nozzleTempMax: printSettings?.nozzleTempMax || null,
+      bedTempMin: printSettings?.bedTempMin || null,
+      bedTempMax: printSettings?.bedTempMax || null,
+      spoolMaterial: spoolSpecs?.material || null,
+      netWeightG: spoolSpecs?.weightG || null,
+      diameterMm: spoolSpecs?.diameterMm || null,
+      spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
+      spoolWidthMm: spoolSpecs?.widthMm || null,
     };
+  }
+
+  private extractTdsFromMarkdown(markdown: string): string | null {
+    if (!markdown) return null;
+    
+    // Look for TDS/datasheet links in markdown
+    const patterns = [
+      /\[(?:TDS|Technical Data Sheet|Datasheet|Specifications?)\]\(([^)]+\.pdf)\)/gi,
+      /\[(?:Download|View)\s+(?:TDS|Technical Data Sheet)\]\(([^)]+)\)/gi,
+      /(?:TDS|datasheet|technical[\s-]?data)[\s\S]{0,50}(https?:\/\/[^\s]+\.pdf)/gi,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = markdown.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    return null;
   }
 
   private extractImageFromContent(html: string, metadata: any): string | null {

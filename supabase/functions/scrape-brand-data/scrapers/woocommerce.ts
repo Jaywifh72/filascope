@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { extractPrice, extractAvailability } from "../utils.ts";
+import { extractPrice, extractAvailability, findTdsUrl, extractPrintSettings, extractColorFromHtml, extractSpoolSpecs, extractMpnFromHtml, extractBarcodeFromHtml } from "../utils.ts";
 
 interface WooCommerceProduct {
   id: number;
@@ -103,6 +103,13 @@ export class WooCommerceScraper extends BaseScraper {
 
           const price = this.parsePrice(product.prices?.price);
           const regularPrice = this.parsePrice(product.prices?.regular_price);
+          const description = product.description || "";
+          
+          // Extract enhanced data
+          const tdsUrl = findTdsUrl(description);
+          const printSettings = extractPrintSettings(description);
+          const colorInfo = extractColorFromHtml(description, null, null, product.name);
+          const spoolSpecs = extractSpoolSpecs(description, product.name);
 
           products.push({
             productId: String(product.id),
@@ -117,7 +124,21 @@ export class WooCommerceScraper extends BaseScraper {
             source: `woocommerce-${this.config.vendor.toLowerCase()}`,
             imageUrl: product.images?.[0]?.src || null,
             barcode: null,
-            description: product.description || null,
+            description,
+            // Enhanced fields
+            mpn: product.sku || null, // Many WC stores use SKU as MPN
+            tdsUrl,
+            colorHex: colorInfo?.hex || null,
+            colorName: colorInfo?.name || null,
+            nozzleTempMin: printSettings?.nozzleTempMin || null,
+            nozzleTempMax: printSettings?.nozzleTempMax || null,
+            bedTempMin: printSettings?.bedTempMin || null,
+            bedTempMax: printSettings?.bedTempMax || null,
+            spoolMaterial: spoolSpecs?.material || null,
+            netWeightG: spoolSpecs?.weightG || null,
+            diameterMm: spoolSpecs?.diameterMm || null,
+            spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
+            spoolWidthMm: spoolSpecs?.widthMm || null,
           });
 
           if (products.length >= limit) break;
@@ -265,6 +286,14 @@ export class WooCommerceScraper extends BaseScraper {
                        html.match(/<img[^>]*class="[^"]*wp-post-image[^"]*"[^>]*src="([^"]+)"/);
     const imageUrl = imageMatch ? imageMatch[1] : null;
 
+    // Extract enhanced data
+    const tdsUrl = findTdsUrl(html);
+    const printSettings = extractPrintSettings(html);
+    const colorInfo = extractColorFromHtml(html, null, null, title);
+    const spoolSpecs = extractSpoolSpecs(html, title);
+    const mpn = extractMpnFromHtml(html) || sku;
+    const barcode = extractBarcodeFromHtml(html);
+
     return {
       productId,
       sku,
@@ -277,8 +306,22 @@ export class WooCommerceScraper extends BaseScraper {
       scrapedAt: new Date(),
       source: `woocommerce-${this.config.vendor.toLowerCase()}`,
       imageUrl,
-      barcode: null,
+      barcode,
       description: null,
+      // Enhanced fields
+      mpn,
+      tdsUrl,
+      colorHex: colorInfo?.hex || null,
+      colorName: colorInfo?.name || null,
+      nozzleTempMin: printSettings?.nozzleTempMin || null,
+      nozzleTempMax: printSettings?.nozzleTempMax || null,
+      bedTempMin: printSettings?.bedTempMin || null,
+      bedTempMax: printSettings?.bedTempMax || null,
+      spoolMaterial: spoolSpecs?.material || null,
+      netWeightG: spoolSpecs?.weightG || null,
+      diameterMm: spoolSpecs?.diameterMm || null,
+      spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
+      spoolWidthMm: spoolSpecs?.widthMm || null,
     };
   }
 
