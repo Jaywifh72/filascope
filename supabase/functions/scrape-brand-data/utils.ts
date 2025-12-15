@@ -292,29 +292,59 @@ export function parseBarcodeFields(barcode: string | null): { upc?: string; ean?
 // ENHANCED EXTRACTION HELPERS FOR COMPREHENSIVE SCRAPING
 // ============================================================================
 
-// Find TDS/PDF links in HTML content
+// Find TDS/PDF links in HTML content - comprehensive patterns
 export function findTdsUrl(html: string): string | null {
   if (!html) return null;
   
+  // Normalize HTML for better matching
+  const normalizedHtml = html.replace(/\s+/g, ' ').toLowerCase();
+  const originalHtml = html; // Keep original for URL extraction
+  
   const patterns = [
-    // Direct PDF links with TDS keywords
-    /href=["']([^"']*(?:tds|datasheet|technical[-_]?data|spec[-_]?sheet|specifications)(?:[^"']*\.pdf)?[^"']*)["']/gi,
-    // PDF links near TDS text
-    /(?:tds|datasheet|technical\s*data\s*sheet|specifications?)[\s\S]{0,100}href=["']([^"']+\.pdf)["']/gi,
-    // Links containing 'tds' in the URL
+    // Direct PDF links with TDS keywords (most specific)
+    /href=["']([^"']*(?:tds|datasheet|technical[-_]?data|spec[-_]?sheet|specifications)[^"']*\.pdf)["']/gi,
+    // PDF links in CDN paths
+    /href=["']([^"']*(?:cdn|assets|files|uploads|downloads)[^"']*(?:tds|datasheet|specification)[^"']*\.pdf)["']/gi,
+    // PDF links with data sheet in text nearby
+    /(?:technical\s*data\s*sheet|tds|datasheet|specifications?|data\s*sheet)[^<]*<a[^>]*href=["']([^"']+\.pdf)["']/gi,
+    // Links containing 'tds' in the URL path
     /href=["']([^"']*\/tds\/[^"']+)["']/gi,
-    // Common filament brand TDS patterns
-    /href=["']([^"']*cdn[^"']*(?:tds|datasheet)[^"']*\.pdf)["']/gi,
+    /href=["']([^"']*\/tds[^"']*\.pdf)["']/gi,
+    // Links to pages with 'tds' or 'data-sheet' in name
+    /href=["']([^"']*(?:\/data[-_]?sheet|\/technical[-_]?data)[^"']*)["']/gi,
+    // Shopify file CDN with PDF extensions
+    /href=["']([^"']*cdn\.shopify\.com[^"']*\.pdf)["']/gi,
+    // Any PDF link in files/downloads section
+    /href=["']([^"']*(?:\/files\/|\/downloads\/)[^"']*\.pdf)["']/gi,
+    // Links with 'download' attribute containing PDF
+    /href=["']([^"']+\.pdf)["'][^>]*download/gi,
+    // Button/link with TDS text pointing to PDF
+    /<a[^>]*href=["']([^"']+\.pdf)["'][^>]*>(?:[^<]*(?:TDS|Technical Data|Data Sheet|Download PDF))/gi,
   ];
   
   for (const pattern of patterns) {
-    const match = html.match(pattern);
-    if (match && match[1]) {
+    pattern.lastIndex = 0; // Reset regex state
+    const matches = [...originalHtml.matchAll(pattern)];
+    for (const match of matches) {
       let url = match[1];
+      if (!url) continue;
+      
+      // Skip SDS (Safety Data Sheet) - we want TDS only
+      if (url.toLowerCase().includes('sds') || 
+          url.toLowerCase().includes('safety') || 
+          url.toLowerCase().includes('msds')) {
+        continue;
+      }
+      
       // Clean up URL
       if (url.startsWith('//')) url = 'https:' + url;
+      if (url.startsWith('/')) continue; // Skip relative URLs without base
       if (!url.startsWith('http')) continue;
-      return url;
+      
+      // Validate it's actually a file or page URL
+      if (url.includes('.pdf') || url.includes('/tds') || url.includes('/datasheet')) {
+        return url;
+      }
     }
   }
   
