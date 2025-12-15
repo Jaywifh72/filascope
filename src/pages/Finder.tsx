@@ -513,15 +513,43 @@ const Finder = () => {
   const { data: brands } = useQuery({
     queryKey: ["brands"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch from automated_brands (primary source - all configured brands)
+      const { data: automatedBrands, error: automatedError } = await supabase
+        .from("automated_brands")
+        .select("display_name, brand_name")
+        .eq("is_visible", true)
+        .order("display_name");
+      
+      if (automatedError) throw automatedError;
+      
+      // Also fetch vendors from filaments to catch any not in automated_brands
+      const { data: filamentVendors, error: filamentError } = await supabase
         .from("filaments")
         .select("vendor")
         .not("vendor", "is", null);
       
-      if (error) throw error;
+      if (filamentError) throw filamentError;
       
-      const uniqueBrands = Array.from(new Set(data.map(f => f.vendor))).sort();
-      return uniqueBrands;
+      // Create set of automated brand names (both display_name and brand_name)
+      const automatedNames = new Set(
+        automatedBrands.flatMap(b => [
+          b.display_name.toLowerCase(), 
+          b.brand_name.toLowerCase()
+        ])
+      );
+      
+      // Get all automated brand display names
+      const allBrands = automatedBrands.map(b => b.display_name);
+      
+      // Add any vendors from filaments that aren't in automated_brands
+      const uniqueVendors = Array.from(new Set(filamentVendors.map(f => f.vendor)));
+      for (const vendor of uniqueVendors) {
+        if (!automatedNames.has(vendor.toLowerCase())) {
+          allBrands.push(vendor);
+        }
+      }
+      
+      return allBrands.sort();
     },
   });
 
