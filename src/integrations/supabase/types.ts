@@ -319,8 +319,29 @@ export type Database = {
             foreignKeyName: "community_safety_reports_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "community_safety_reports_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_safety_reports_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "community_safety_reports_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
         ]
       }
@@ -363,8 +384,29 @@ export type Database = {
             foreignKeyName: "deals_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "deals_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "deals_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
         ]
       }
@@ -589,8 +631,29 @@ export type Database = {
             foreignKeyName: "filament_comments_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_comments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_comments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_comments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
           {
             foreignKeyName: "filament_comments_user_id_fkey"
@@ -643,8 +706,29 @@ export type Database = {
             foreignKeyName: "filament_inventory_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_inventory_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_inventory_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_inventory_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
           {
             foreignKeyName: "filament_inventory_retailer_id_fkey"
@@ -688,8 +772,29 @@ export type Database = {
             foreignKeyName: "filament_score_history_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_score_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_score_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_score_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
         ]
       }
@@ -735,8 +840,29 @@ export type Database = {
             foreignKeyName: "filament_user_ratings_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_user_ratings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_user_ratings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_user_ratings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
           {
             foreignKeyName: "filament_user_ratings_printer_id_fkey"
@@ -1064,33 +1190,72 @@ export type Database = {
       }
       price_history: {
         Row: {
+          available: boolean | null
+          compare_at_price: number | null
+          currency: string | null
           filament_id: string | null
           id: string
+          notes: string | null
           price: number
           recorded_at: string | null
           region: string
+          source: string | null
+          variant_id: string | null
         }
         Insert: {
+          available?: boolean | null
+          compare_at_price?: number | null
+          currency?: string | null
           filament_id?: string | null
           id?: string
+          notes?: string | null
           price: number
           recorded_at?: string | null
           region: string
+          source?: string | null
+          variant_id?: string | null
         }
         Update: {
+          available?: boolean | null
+          compare_at_price?: number | null
+          currency?: string | null
           filament_id?: string | null
           id?: string
+          notes?: string | null
           price?: number
           recorded_at?: string | null
           region?: string
+          source?: string | null
+          variant_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "price_history_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
         ]
       }
@@ -1231,8 +1396,29 @@ export type Database = {
             foreignKeyName: "printer_compatibility_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "printer_compatibility_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printer_compatibility_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "printer_compatibility_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
         ]
       }
@@ -2099,8 +2285,29 @@ export type Database = {
             foreignKeyName: "project_filaments_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "project_filaments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_filaments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "project_filaments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
           {
             foreignKeyName: "project_filaments_project_id_fkey"
@@ -2407,8 +2614,29 @@ export type Database = {
             foreignKeyName: "safety_alerts_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "safety_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "safety_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
         ]
       }
@@ -2814,8 +3042,29 @@ export type Database = {
             foreignKeyName: "user_browse_history_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_browse_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_browse_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_browse_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
         ]
       }
@@ -2862,8 +3111,29 @@ export type Database = {
             foreignKeyName: "user_favorites_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_favorites_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_favorites_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_favorites_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
           {
             foreignKeyName: "user_favorites_user_id_fkey"
@@ -3003,8 +3273,29 @@ export type Database = {
             foreignKeyName: "user_purchases_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_purchases_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_purchases_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_purchases_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
           {
             foreignKeyName: "user_purchases_user_id_fkey"
@@ -3141,8 +3432,29 @@ export type Database = {
             foreignKeyName: "user_slicer_profiles_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_slicer_profiles_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_slicer_profiles_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_slicer_profiles_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
           },
         ]
       }
@@ -3187,9 +3499,83 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      all_time_low_prices: {
+        Row: {
+          all_time_low: number | null
+          current_price: number | null
+          difference: number | null
+          filament_id: string | null
+          percent_above_low: number | null
+          product_id: string | null
+          product_title: string | null
+          product_url: string | null
+          vendor: string | null
+        }
+        Relationships: []
+      }
+      price_trends_90d: {
+        Row: {
+          avg_price_90d: number | null
+          current_price: number | null
+          days_tracked: number | null
+          filament_id: string | null
+          max_price_90d: number | null
+          min_price_90d: number | null
+          price_samples: number | null
+          price_volatility: number | null
+          product_id: string | null
+          product_title: string | null
+          vendor: string | null
+        }
+        Relationships: []
+      }
+      recent_price_drops: {
+        Row: {
+          current_price: number | null
+          filament_id: string | null
+          material: string | null
+          old_price: number | null
+          percent_change: number | null
+          previous_price_date: string | null
+          price_change: number | null
+          product_id: string | null
+          product_title: string | null
+          product_url: string | null
+          vendor: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      cleanup_old_price_history: { Args: never; Returns: number }
+      get_deal_alerts: {
+        Args: { min_discount_percent?: number }
+        Returns: {
+          filament_id: string
+          new_price: number
+          old_price: number
+          percent_off: number
+          product_id: string
+          product_title: string
+          product_url: string
+          savings: number
+          vendor: string
+        }[]
+      }
+      get_filament_price_history: {
+        Args: { days_back?: number; p_filament_id: string }
+        Returns: {
+          available: boolean
+          compare_at_price: number
+          price: number
+          recorded_at: string
+          source: string
+        }[]
+      }
+      get_filament_price_stats: {
+        Args: { p_filament_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3197,6 +3583,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_at_all_time_low: { Args: { p_filament_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "user" | "admin"
