@@ -68,6 +68,8 @@ export function ScoreCardsSection({ filament }: ScoreCardsSectionProps) {
           >
             <ScoreCard
               data={card}
+              filamentId={filament.id}
+              material={filament.material}
               onMethodologyClick={() => setMethodologyOpen(card.id)}
               animationDelay={index * 100}
             />
