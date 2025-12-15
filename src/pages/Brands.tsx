@@ -237,20 +237,41 @@ const Brands = () => {
     },
   });
 
-  // Merge automated brand metadata with filament stats
+  // Merge automated brand metadata with filament stats - automated_brands is PRIMARY source
   const mergedBrands = useMemo(() => {
-    if (!brands) return [];
+    if (!automatedBrands) return [];
     
-    return brands.map(brand => {
-      const automatedData = automatedBrands?.find(
-        ab => ab.brand_name.toLowerCase() === brand.name.toLowerCase() ||
-              ab.display_name.toLowerCase() === brand.name.toLowerCase()
+    // Start with all automated brands as the primary source
+    const fromAutomated = automatedBrands.map(ab => {
+      const filamentStats = brands?.find(
+        b => b.name.toLowerCase() === ab.brand_name.toLowerCase() ||
+             b.name.toLowerCase() === ab.display_name.toLowerCase()
       );
       return {
-        ...brand,
-        automated: automatedData || null,
+        name: ab.display_name,
+        count: filamentStats?.count || ab.product_count || 0,
+        spoolMaterial: filamentStats?.spoolMaterial || null,
+        hasHighSpeed: filamentStats?.hasHighSpeed || false,
+        avgTransmissionDistance: filamentStats?.avgTransmissionDistance || null,
+        colors: filamentStats?.colors || [],
+        automated: ab,
       };
     });
+
+    // Also include any brands from filaments that aren't in automated_brands
+    const automatedNames = new Set(
+      automatedBrands.map(ab => ab.brand_name.toLowerCase())
+        .concat(automatedBrands.map(ab => ab.display_name.toLowerCase()))
+    );
+    
+    const additionalBrands = (brands || [])
+      .filter(b => !automatedNames.has(b.name.toLowerCase()))
+      .map(b => ({
+        ...b,
+        automated: null,
+      }));
+
+    return [...fromAutomated, ...additionalBrands].sort((a, b) => b.count - a.count);
   }, [brands, automatedBrands]);
 
   // Get featured brands
