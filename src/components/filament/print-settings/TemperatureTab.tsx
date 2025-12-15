@@ -1,16 +1,21 @@
-import { Copy, ThermometerSun, Flame, Wind, Snowflake } from "lucide-react";
+import { Copy, ThermometerSun, Flame, Wind, Snowflake, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { TemperatureSlider } from "./TemperatureSlider";
+import { TroubleshootingGuide } from "./TroubleshootingGuide";
+import { SpeedTempCalculator } from "./SpeedTempCalculator";
+import { SeasonalAdjustments } from "./SeasonalAdjustments";
+import { MaterialTemperatureNotes } from "./MaterialTemperatureNotes";
 import { PrintSettingsData } from "@/lib/printSettingsData";
 import { toast } from "sonner";
-import { ChevronDown } from "lucide-react";
 
 interface TemperatureTabProps {
   settings: PrintSettingsData;
+  material?: string;
+  productTitle?: string;
 }
 
-export function TemperatureTab({ settings }: TemperatureTabProps) {
+export function TemperatureTab({ settings, material, productTitle }: TemperatureTabProps) {
   const { temperature, additionalSettings } = settings;
 
   const handleCopy = () => {
@@ -31,16 +36,17 @@ Cooling: ${additionalSettings.cooling}`;
         </h3>
         <Button variant="outline" size="sm" onClick={handleCopy}>
           <Copy className="w-4 h-4 mr-2" />
-          Copy Settings
+          Copy All
         </Button>
       </div>
 
-      {/* Nozzle Temperature */}
+      {/* Nozzle Temperature with predictions */}
       <TemperatureSlider
         label="Nozzle Temperature"
         recommended={temperature.nozzle.recommended}
         range={temperature.nozzle.range}
         guidance={temperature.nozzle.guidance}
+        showPredictions={true}
       />
 
       {/* Bed Temperature */}
@@ -72,11 +78,37 @@ Cooling: ${additionalSettings.cooling}`;
         </div>
       </div>
 
+      {/* Material-specific notes */}
+      {material && (
+        <MaterialTemperatureNotes 
+          material={material}
+          productTitle={productTitle || ''}
+          baseNozzleTemp={temperature.nozzle.recommended}
+        />
+      )}
+
+      {/* Speed-Temperature Calculator */}
+      <SpeedTempCalculator baseNozzleTemp={temperature.nozzle.recommended} />
+
+      {/* Troubleshooting Guide */}
+      <TroubleshootingGuide 
+        currentNozzleTemp={temperature.nozzle.recommended}
+        currentBedTemp={temperature.bed.recommended}
+        nozzleRange={temperature.nozzle.range}
+        bedRange={temperature.bed.range}
+      />
+
+      {/* Seasonal/Environment Adjustments */}
+      <SeasonalAdjustments 
+        baseNozzleTemp={temperature.nozzle.recommended}
+        baseBedTemp={temperature.bed.recommended}
+      />
+
       {/* Advanced Temperature Settings */}
       <Collapsible>
-        <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group">
+        <CollapsibleTrigger className="flex items-center gap-2 w-full p-4 bg-muted/30 rounded-lg border border-border hover:bg-muted/50 transition-colors group">
           <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]:rotate-180" />
-          Advanced Temperature Settings
+          <span className="text-sm font-medium">Advanced Temperature Settings</span>
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-4">
           <div className="grid gap-3 p-4 bg-muted/30 rounded-lg border border-border">

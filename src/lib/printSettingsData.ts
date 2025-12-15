@@ -3,6 +3,223 @@ import { Database } from "@/integrations/supabase/types";
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Printer = Database["public"]["Tables"]["printers"]["Row"];
 
+// ============================================
+// TROUBLESHOOTING GUIDE
+// ============================================
+
+export interface TroubleshootingItem {
+  id: string;
+  icon: string;
+  issue: string;
+  tempType: 'nozzle' | 'bed';
+  adjustment: number;
+  additionalTips: string[];
+  learnMoreUrl?: string;
+}
+
+export const TROUBLESHOOTING_GUIDE: TroubleshootingItem[] = [
+  {
+    id: 'stringing',
+    icon: '🕸️',
+    issue: 'Stringing / Oozing',
+    tempType: 'nozzle',
+    adjustment: -7,
+    additionalTips: ['Increase retraction distance', 'Enable coasting', 'Check for wet filament'],
+    learnMoreUrl: '/reference/troubleshooting/stringing',
+  },
+  {
+    id: 'under-extrusion',
+    icon: '⛔',
+    issue: 'Under-extrusion / Gaps',
+    tempType: 'nozzle',
+    adjustment: 7,
+    additionalTips: ['Check for partial clog', 'Increase flow rate 2-5%', 'Slow down print speed'],
+    learnMoreUrl: '/reference/troubleshooting/under-extrusion',
+  },
+  {
+    id: 'warping',
+    icon: '📐',
+    issue: 'Warping / Corner Lifting',
+    tempType: 'bed',
+    adjustment: 7,
+    additionalTips: ['Check for drafts', 'Add brim or raft', 'Use enclosure'],
+    learnMoreUrl: '/reference/troubleshooting/warping',
+  },
+  {
+    id: 'layer-adhesion',
+    icon: '🧱',
+    issue: 'Poor Layer Adhesion',
+    tempType: 'nozzle',
+    adjustment: 7,
+    additionalTips: ['Reduce fan speed', 'Slow down print', 'Check layer height'],
+    learnMoreUrl: '/reference/troubleshooting/layer-adhesion',
+  },
+  {
+    id: 'surface-finish',
+    icon: '🎨',
+    issue: 'Poor Surface Finish',
+    tempType: 'nozzle',
+    adjustment: -5,
+    additionalTips: ['Increase fan speed', 'Reduce print speed', 'Check belt tension'],
+    learnMoreUrl: '/reference/troubleshooting/surface-finish',
+  },
+  {
+    id: 'bubbling',
+    icon: '💧',
+    issue: 'Bubbling / Popping Sounds',
+    tempType: 'nozzle',
+    adjustment: 0,
+    additionalTips: ['Filament is wet! Dry before printing', 'Not a temperature issue', 'Store filament properly'],
+    learnMoreUrl: '/reference/troubleshooting/wet-filament',
+  },
+];
+
+// ============================================
+// MATERIAL TEMPERATURE NOTES
+// ============================================
+
+export interface MaterialTemperatureNote {
+  generalTip: string;
+  firstLayers: { count: number; adjustment: number; reason: string };
+  lastLayers: { count: number; adjustment: number; reason: string };
+  highSpeed?: { threshold: number; adjustment: number };
+  specificNotes?: string[];
+}
+
+export const MATERIAL_TEMP_NOTES: Record<string, MaterialTemperatureNote> = {
+  'PLA': {
+    generalTip: 'PLA prints well at lower temperatures. Excess heat causes stringing and poor overhangs.',
+    firstLayers: { count: 2, adjustment: 5, reason: 'Better bed adhesion' },
+    lastLayers: { count: 3, adjustment: -5, reason: 'Cleaner top surface' },
+    highSpeed: { threshold: 80, adjustment: 10 },
+    specificNotes: ['Watch for heat creep in long prints', 'Active cooling essential after first layers'],
+  },
+  'PLA+': {
+    generalTip: 'PLA+ benefits from slightly higher temps than standard PLA for improved layer bonding.',
+    firstLayers: { count: 2, adjustment: 5, reason: 'Better bed adhesion' },
+    lastLayers: { count: 3, adjustment: -5, reason: 'Reduced stringing on finish' },
+    highSpeed: { threshold: 80, adjustment: 10 },
+    specificNotes: ['Higher temps (215-220°C) improve toughness', 'Can handle faster speeds than standard PLA'],
+  },
+  'PETG': {
+    generalTip: 'PETG requires higher temperatures and is prone to stringing. Reduce retraction aggressiveness.',
+    firstLayers: { count: 2, adjustment: 5, reason: 'Improved adhesion to bed' },
+    lastLayers: { count: 5, adjustment: -5, reason: 'Better surface finish' },
+    highSpeed: { threshold: 60, adjustment: 10 },
+    specificNotes: ['Reduce fan to 50% max', 'Too hot causes stringing, too cold causes layer separation'],
+  },
+  'ABS': {
+    generalTip: 'ABS needs consistent high temperatures and enclosed printing for best results.',
+    firstLayers: { count: 3, adjustment: 5, reason: 'Critical for adhesion' },
+    lastLayers: { count: 0, adjustment: 0, reason: 'Maintain temp throughout' },
+    highSpeed: { threshold: 60, adjustment: 10 },
+    specificNotes: ['Enclosure strongly recommended', 'Avoid drafts completely', 'ABS juice helps adhesion'],
+  },
+  'ASA': {
+    generalTip: 'ASA prints similarly to ABS but with better UV resistance. Enclosure recommended.',
+    firstLayers: { count: 3, adjustment: 5, reason: 'Improved first layer adhesion' },
+    lastLayers: { count: 0, adjustment: 0, reason: 'Maintain consistent temp' },
+    highSpeed: { threshold: 60, adjustment: 10 },
+    specificNotes: ['Less warping than ABS', 'Still benefits from enclosure', 'Good for outdoor parts'],
+  },
+  'TPU': {
+    generalTip: 'TPU requires slow speeds and careful temperature control. Direct drive extruder preferred.',
+    firstLayers: { count: 2, adjustment: 5, reason: 'Better adhesion' },
+    lastLayers: { count: 0, adjustment: 0, reason: 'Maintain flexibility' },
+    highSpeed: { threshold: 30, adjustment: 5 },
+    specificNotes: ['Print SLOW (20-30mm/s)', 'Disable retraction or use minimal', 'Bowden setups struggle'],
+  },
+  'NYLON': {
+    generalTip: 'Nylon absorbs moisture rapidly. Always dry before printing and use enclosure.',
+    firstLayers: { count: 3, adjustment: 10, reason: 'Critical for bed adhesion' },
+    lastLayers: { count: 0, adjustment: 0, reason: 'Maintain strength' },
+    highSpeed: { threshold: 50, adjustment: 10 },
+    specificNotes: ['Dry at 70°C for 6+ hours before use', 'Garolite/G10 bed surface works best', 'Warps significantly without enclosure'],
+  },
+  'PC': {
+    generalTip: 'Polycarbonate requires very high temperatures and enclosed printing environment.',
+    firstLayers: { count: 3, adjustment: 10, reason: 'Essential for adhesion' },
+    lastLayers: { count: 0, adjustment: 0, reason: 'Maintain throughout' },
+    highSpeed: { threshold: 40, adjustment: 10 },
+    specificNotes: ['All-metal hotend required', 'Enclosure mandatory', 'Extremely prone to warping'],
+  },
+};
+
+// ============================================
+// SPEED-TEMPERATURE RELATIONSHIP
+// ============================================
+
+export interface SpeedTempRecommendation {
+  minSpeed: number;
+  maxSpeed: number;
+  tempAdjustment: number;
+  note: string;
+}
+
+export const SPEED_TEMP_BRACKETS: SpeedTempRecommendation[] = [
+  { minSpeed: 0, maxSpeed: 40, tempAdjustment: -5, note: 'Detail-focused printing - lower temp for precision' },
+  { minSpeed: 40, maxSpeed: 80, tempAdjustment: 0, note: 'Balanced printing - standard temperature works well' },
+  { minSpeed: 80, maxSpeed: 150, tempAdjustment: 7, note: 'Higher flow rate needed - increase temp for flow' },
+  { minSpeed: 150, maxSpeed: 999, tempAdjustment: 12, note: 'Maximum flow - ensure hotend can keep up' },
+];
+
+export function getSpeedTempRecommendation(baseTemp: number, speed: number): { min: number; max: number; note: string } {
+  const bracket = SPEED_TEMP_BRACKETS.find(b => speed >= b.minSpeed && speed < b.maxSpeed) || SPEED_TEMP_BRACKETS[1];
+  return {
+    min: baseTemp + bracket.tempAdjustment,
+    max: baseTemp + bracket.tempAdjustment + 5,
+    note: bracket.note,
+  };
+}
+
+// ============================================
+// ENVIRONMENT/SEASONAL ADJUSTMENTS
+// ============================================
+
+export interface EnvironmentAdjustment {
+  id: 'cold' | 'normal' | 'hot';
+  label: string;
+  tempRange: string;
+  nozzleAdjust: number;
+  bedAdjust: number;
+  fanAdjust: number;
+  tips: string[];
+}
+
+export const ENVIRONMENT_ADJUSTMENTS: EnvironmentAdjustment[] = [
+  {
+    id: 'cold',
+    label: 'Cold',
+    tempRange: '<18°C',
+    nozzleAdjust: 5,
+    bedAdjust: 10,
+    fanAdjust: -10,
+    tips: ['Allow longer warm-up time', 'Consider using enclosure or draft shield', 'First layer may need extra adhesion help'],
+  },
+  {
+    id: 'normal',
+    label: 'Normal',
+    tempRange: '18-26°C',
+    nozzleAdjust: 0,
+    bedAdjust: 0,
+    fanAdjust: 0,
+    tips: ['Standard settings should work well', 'No adjustments needed'],
+  },
+  {
+    id: 'hot',
+    label: 'Hot',
+    tempRange: '>26°C',
+    nozzleAdjust: -5,
+    bedAdjust: -5,
+    fanAdjust: 15,
+    tips: ['Increase cooling fan speed', 'Watch for heat creep with PLA', 'May need to slow down prints'],
+  },
+];
+
+// ============================================
+// EXISTING TYPES
+// ============================================
+
 export interface CompatibilityStatus {
   status: 'fully_compatible' | 'requires_upgrade' | 'not_recommended';
   requirements: string[];
