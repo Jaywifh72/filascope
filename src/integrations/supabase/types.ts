@@ -2832,6 +2832,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_printers: {
+        Row: {
+          created_at: string
+          hardware_config: Json | null
+          id: string
+          is_primary: boolean | null
+          nickname: string | null
+          printer_id: string
+          session_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          hardware_config?: Json | null
+          id?: string
+          is_primary?: boolean | null
+          nickname?: string | null
+          printer_id: string
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          hardware_config?: Json | null
+          id?: string
+          is_primary?: boolean | null
+          nickname?: string | null
+          printer_id?: string
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_purchases: {
         Row: {
           created_at: string | null

@@ -18,8 +18,15 @@ import {
   HelpCircle,
   X,
   Check,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSmartPrinterDetection } from "@/hooks/useSmartPrinterDetection";
+import { useMultiplePrinters } from "@/hooks/useMultiplePrinters";
+import { SmartDetectionBanner } from "./SmartDetectionBanner";
+import { PrinterProfileCard } from "./PrinterProfileCard";
+import { GuidedPrinterWizard } from "./GuidedPrinterWizard";
+import { CommunityPrinterStats } from "./CommunityPrinterStats";
 
 interface PrinterSelectionModalProps {
   open: boolean;
@@ -89,6 +96,11 @@ export function PrinterSelectionModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string | null>(null);
   const [showGenericProfiles, setShowGenericProfiles] = useState(false);
+  const [showGuidedWizard, setShowGuidedWizard] = useState(false);
+  const [dismissedDetection, setDismissedDetection] = useState(false);
+
+  const { detection, hasDetection } = useSmartPrinterDetection();
+  const { addPrinter } = useMultiplePrinters();
 
   // Fetch all printers for search (include active and pending so users can select newer models)
   const { data: allPrinters } = useQuery({
@@ -180,6 +192,18 @@ export function PrinterSelectionModal({
     setSearchQuery("");
     setSelectedBrandFilter(null);
     setShowGenericProfiles(false);
+    setShowGuidedWizard(false);
+    setDismissedDetection(false);
+  };
+
+  const handleConfirmDetection = () => {
+    if (detection) {
+      // Add to user's printers
+      addPrinter({ printerId: detection.printerId });
+      onSelect(detection.printerId, detection.brand, detection.modelName);
+      onOpenChange(false);
+      resetState();
+    }
   };
 
   const handleClose = () => {
@@ -224,8 +248,34 @@ export function PrinterSelectionModal({
 
         <ScrollArea className="flex-1 min-h-0">
           <div className="p-6 space-y-6">
+            {/* Smart Detection Banner */}
+            {hasDetection && detection && !dismissedDetection && !currentPrinterId && !showGuidedWizard && (
+              <SmartDetectionBanner
+                modelName={detection.modelName}
+                brand={detection.brand}
+                imageUrl={detection.imageUrl}
+                confidence={detection.confidence}
+                reason={detection.reason}
+                onConfirm={handleConfirmDetection}
+                onReject={() => setDismissedDetection(true)}
+              />
+            )}
+
+            {/* Guided Wizard Mode */}
+            {showGuidedWizard && (
+              <GuidedPrinterWizard
+                onSelect={(printerId, brand, modelName) => {
+                  addPrinter({ printerId });
+                  onSelect(printerId, brand, modelName);
+                  onOpenChange(false);
+                  resetState();
+                }}
+                onBack={() => setShowGuidedWizard(false)}
+              />
+            )}
+
             {/* Search Results */}
-            {(searchQuery.length >= 2 || selectedBrandFilter) && filteredPrinters.length > 0 && (
+            {!showGuidedWizard && (searchQuery.length >= 2 || selectedBrandFilter) && filteredPrinters.length > 0 && (
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">
                   {searchQuery ? "Search Results" : `${selectedBrandFilter} Models`}
@@ -280,7 +330,7 @@ export function PrinterSelectionModal({
             )}
 
             {/* Default view (no search active) */}
-            {!searchQuery && !selectedBrandFilter && (
+            {!showGuidedWizard && !searchQuery && !selectedBrandFilter && (
               <>
                 {/* Popular Models */}
                 <div>
@@ -347,6 +397,18 @@ export function PrinterSelectionModal({
                       </Button>
                     </div>
                   )}
+                </div>
+
+                {/* Guided wizard trigger */}
+                <div className="pt-2 border-t border-border/50">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowGuidedWizard(true)}
+                    className="w-full gap-2 justify-start"
+                  >
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Help me find my printer (3 questions)
+                  </Button>
                 </div>
 
                 {/* I don't know my model */}
