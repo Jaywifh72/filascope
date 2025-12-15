@@ -30,6 +30,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { normalizeColorHex } from "@/lib/utils";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { MaterialValueProposition } from "@/components/filament/MaterialValueProposition";
+import { PurchaseSection } from "@/components/filament/PurchaseSection";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -1291,93 +1292,12 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                 {/* Redesigned Score Cards */}
                 <ScoreCardsSection filament={filament} />
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <LikeButton filamentId={filament.id} size="lg" />
-                  {filament.product_url && isDiscontinuedUrl(filament.product_url) ? (
-                    <Badge variant="outline" className="text-orange-600 border-orange-300 bg-orange-50 dark:bg-orange-950/30 py-2 px-4 text-sm">
-                      <Ban className="w-4 h-4 mr-2" />
-                      Discontinued
-                    </Badge>
-                  ) : filament.product_url && (
-                    <Button asChild variant="default" size="lg" className="hover:scale-105 transition-transform">
-                      <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        Buy from {filament.vendor}
-                      </a>
-                    </Button>
-                  )}
-                  {filament.amazon_link_us && (
-                    <Button asChild variant="outline" size="lg" className="hover:scale-105 transition-transform">
-                      <a href={getAmazonUrl(filament.amazon_link_us, "us") || filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        Amazon US
-                      </a>
-                    </Button>
-                  )}
-                  {filament.amazon_link_uk && (
-                    <Button asChild variant="outline" size="lg" className="hover:scale-105 transition-transform">
-                      <a href={getAmazonUrl(filament.amazon_link_uk, "uk") || filament.amazon_link_uk} target="_blank" rel="noopener noreferrer">
-                        Amazon UK
-                      </a>
-                    </Button>
-                  )}
-                  {filament.amazon_link_de && (
-                    <Button asChild variant="outline" size="lg" className="hover:scale-105 transition-transform">
-                      <a href={getAmazonUrl(filament.amazon_link_de, "de") || filament.amazon_link_de} target="_blank" rel="noopener noreferrer">
-                        Amazon DE
-                      </a>
-                    </Button>
-                  )}
-                  {filament.tds_url && (
-                    <Button asChild variant="secondary" size="lg" className="hover:scale-105 transition-transform">
-                      <a href={filament.tds_url} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Technical Data Sheet
-                      </a>
-                    </Button>
-                  )}
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    onClick={handleCopyProfile}
-                    className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] transition-all duration-300"
-                  >
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy Profile
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="lg" 
-                        className="border-purple-500 text-purple-400 hover:bg-purple-500/10 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all duration-300"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Export to Slicer
-                        <ChevronDown className="w-4 h-4 ml-2" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => generateSlicerProfile('prusaslicer')} className="cursor-pointer">
-                        <span className="font-medium">PrusaSlicer</span>
-                        <span className="ml-auto text-xs text-muted-foreground">.ini</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => generateSlicerProfile('orcaslicer')} className="cursor-pointer">
-                        <span className="font-medium">OrcaSlicer</span>
-                        <span className="ml-auto text-xs text-muted-foreground">.json</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => generateSlicerProfile('cura')} className="cursor-pointer">
-                        <span className="font-medium">Cura</span>
-                        <span className="ml-auto text-xs text-muted-foreground">.fdm_material</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => generateSlicerProfile('bambu')} className="cursor-pointer">
-                        <span className="font-medium">Bambu Studio</span>
-                        <span className="ml-auto text-xs text-muted-foreground">.json</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                {/* Tiered Purchase Section */}
+                <PurchaseSection
+                  filament={filament}
+                  onProfileDownload={generateSlicerProfile}
+                  onCopyProfile={handleCopyProfile}
+                />
               </div>
             </div>
           </CardContent>
