@@ -657,7 +657,7 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     platform: "shopify",
     baseUrl: "https://kingroon.com",
     apiEndpoint: "https://kingroon.com/products.json",
-    collectionHandle: "filament",
+    collectionHandle: "pla-filament", // Fixed: "filament" collection empty, use "pla-filament"
     currency: "USD",
     exchangeRate: 1,
     productsPerPage: 250,
@@ -684,7 +684,7 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     platform: "shopify",
     baseUrl: "https://www.sainsmart.com",
     apiEndpoint: "https://www.sainsmart.com/products.json",
-    collectionHandle: "3d-printer-filaments",
+    // No collectionHandle - use general products.json, scraper will filter for filament products
     currency: "USD",
     exchangeRate: 1,
     productsPerPage: 250,
@@ -692,6 +692,19 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     timeout: 10000,
     userAgent: DEFAULT_USER_AGENT,
     productCount: 80,
+  },
+  "IC3D Printers": {
+    vendor: "IC3D Printers",
+    platform: "woocommerce",
+    baseUrl: "https://www.ic3dprinters.com",
+    apiEndpoint: "https://www.ic3dprinters.com/wp-json/wc/store/v1/products",
+    currency: "USD",
+    exchangeRate: 1,
+    productsPerPage: 100,
+    requestDelay: 1000,
+    timeout: 15000,
+    userAgent: DEFAULT_USER_AGENT,
+    productCount: 50,
   },
   Jayo: {
     vendor: "Jayo",
