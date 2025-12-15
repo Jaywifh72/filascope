@@ -8,6 +8,7 @@ import { ScoreDistributionChart } from './ScoreDistributionChart';
 import { ContextualComparisons } from './ContextualComparisons';
 import { ScoreTrendIndicator, TrendData } from './ScoreTrendIndicator';
 import { CategoryBreakdown } from './CategoryBreakdown';
+import { InfoTooltip } from './education/InfoTooltip';
 import { useContextualComparisons } from '@/hooks/useContextualComparisons';
 import { useCategoryComparisons } from '@/hooks/useCategoryComparisons';
 
@@ -137,6 +138,7 @@ export function ScoreCard({ data, filamentId, material, onMethodologyClick, anim
         <div className="flex items-center gap-2">
           <Icon className={cn('w-5 h-5', colors.text)} />
           <span className="font-semibold text-foreground">{data.label}</span>
+          <InfoTooltip term={data.id} side="right" />
         </div>
         <TooltipProvider>
           <Tooltip>
@@ -145,6 +147,7 @@ export function ScoreCard({ data, filamentId, material, onMethodologyClick, anim
                 onClick={onMethodologyClick}
                 className="p-1.5 rounded-full hover:bg-muted/50 transition-colors"
                 aria-label="View methodology"
+                data-coach="methodology-button"
               >
                 <Info className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -211,7 +214,7 @@ export function ScoreCard({ data, filamentId, material, onMethodologyClick, anim
       
       {/* Enhanced Comparison Section */}
       {data.comparison && (
-        <div className="bg-muted/30 rounded-lg p-3 space-y-4">
+        <div className="bg-muted/30 rounded-lg p-3 space-y-4" data-coach="comparison-section">
           {/* Header */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-foreground">
