@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette, Ban, Search } from "lucide-react";
+import { ScoreCardsSection } from "@/components/filament/ScoreCardsSection";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -1287,31 +1288,8 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   hotend={compatibleHotends.length > 0 ? compatibleHotends[0] : null}
                 />
 
-                {(filament.ease_of_printing_score || filament.strength_index || filament.value_score) && (
-                  <div className="grid grid-cols-3 gap-4 lg:gap-6 pt-2">
-                    {filament.ease_of_printing_score && (
-                      <div className="bg-accent/40 rounded-xl p-5 text-center border border-accent/50">
-                        <Zap className="w-6 h-6 mx-auto mb-2 text-primary" />
-                        <div className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">{filament.ease_of_printing_score}/10</div>
-                        <div className="text-xs lg:text-sm text-muted-foreground font-medium mt-1">Ease of Printing</div>
-                      </div>
-                    )}
-                    {filament.strength_index && (
-                      <div className="bg-accent/40 rounded-xl p-5 text-center border border-accent/50">
-                        <Award className="w-6 h-6 mx-auto mb-2 text-primary" />
-                        <div className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">{filament.strength_index}/10</div>
-                        <div className="text-xs lg:text-sm text-muted-foreground font-medium mt-1">Strength Index</div>
-                      </div>
-                    )}
-                    {filament.value_score && (
-                      <div className="bg-accent/40 rounded-xl p-5 text-center border border-accent/50">
-                        <Gauge className="w-6 h-6 mx-auto mb-2 text-primary" />
-                        <div className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">{filament.value_score}/10</div>
-                        <div className="text-xs lg:text-sm text-muted-foreground font-medium mt-1">Value Score</div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* Redesigned Score Cards */}
+                <ScoreCardsSection filament={filament} />
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3 pt-2">
