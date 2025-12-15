@@ -12,6 +12,10 @@ export interface ScrapedProduct {
   url: string;
   scrapedAt: Date;
   source: string;
+  // Enhanced fields for comprehensive data capture
+  imageUrl: string | null;
+  barcode: string | null;
+  description: string | null;
 }
 
 export abstract class BaseScraper {

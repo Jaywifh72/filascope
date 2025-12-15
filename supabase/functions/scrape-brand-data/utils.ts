@@ -244,3 +244,46 @@ export function extractDiameter(title: string, variants?: string[]): number | nu
   // Default to 1.75mm if not found (most common)
   return null;
 }
+
+// Parse barcode into appropriate fields (UPC, EAN, GTIN)
+export function parseBarcodeFields(barcode: string | null): { upc?: string; ean?: string; gtin?: string } {
+  if (!barcode) return {};
+  
+  // Clean the barcode - remove spaces and non-digits
+  const cleaned = barcode.replace(/\D/g, '');
+  
+  if (!cleaned) return {};
+  
+  const length = cleaned.length;
+  
+  // UPC-A is 12 digits
+  if (length === 12) {
+    return { upc: cleaned };
+  }
+  
+  // EAN-13 is 13 digits
+  if (length === 13) {
+    return { ean: cleaned };
+  }
+  
+  // GTIN-14 is 14 digits
+  if (length === 14) {
+    return { gtin: cleaned };
+  }
+  
+  // For other lengths, try to classify
+  if (length >= 8 && length <= 12) {
+    return { upc: cleaned.padStart(12, '0') };
+  }
+  
+  if (length === 13) {
+    return { ean: cleaned };
+  }
+  
+  // Default: store as GTIN
+  if (length > 0) {
+    return { gtin: cleaned };
+  }
+  
+  return {};
+}

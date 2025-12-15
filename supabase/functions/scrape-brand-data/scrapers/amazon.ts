@@ -115,6 +115,9 @@ export class AmazonScraper extends BaseScraper {
                       url.match(/\/product\/([A-Z0-9]{10})/i);
     const asin = asinMatch ? asinMatch[1] : this.extractIdFromUrl(url);
 
+    // Extract image
+    const imageUrl = this.extractAmazonImage(html, metadata);
+
     return {
       productId: asin,
       sku: asin,
@@ -126,6 +129,9 @@ export class AmazonScraper extends BaseScraper {
       url,
       scrapedAt: new Date(),
       source: `amazon-${this.config.vendor.toLowerCase()}`,
+      imageUrl,
+      barcode: null, // Amazon doesn't expose barcodes
+      description: null,
     };
   }
 
@@ -187,6 +193,31 @@ export class AmazonScraper extends BaseScraper {
     }
 
     return true; // Default to available
+  }
+
+  private extractAmazonImage(html: string, metadata: any): string | null {
+    // Try metadata OG image first
+    if (metadata?.ogImage?.[0]?.url) {
+      return metadata.ogImage[0].url;
+    }
+    
+    // Try main product image patterns
+    const patterns = [
+      /id="landingImage"[^>]*src="([^"]+)"/,
+      /id="imgBlkFront"[^>]*src="([^"]+)"/,
+      /class="[^"]*a-dynamic-image[^"]*"[^>]*src="([^"]+)"/,
+      /"hiRes":"([^"]+)"/,
+      /"large":"([^"]+)"/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+
+    return null;
   }
 
   private extractFromMarkdown(markdown: string, pattern: RegExp): string | null {

@@ -143,6 +143,9 @@ export class BigCommerceScraper extends BaseScraper {
       url: data.url || "",
       scrapedAt: new Date(),
       source: `bigcommerce-${this.config.vendor.toLowerCase()}`,
+      imageUrl: data.image || null,
+      barcode: data.gtin || data.gtin13 || data.gtin12 || null,
+      description: data.description || null,
     };
   }
 
@@ -202,6 +205,12 @@ export class BigCommerceScraper extends BaseScraper {
                     html.match(/product[_-]id[:\s"]+(\d+)/i);
     const productId = idMatch ? idMatch[1] : this.extractIdFromUrl(url);
 
+    // Extract image
+    const imageMatch = html.match(/class="[^"]*productView-image--default[^"]*"[^>]*src="([^"]+)"/) ||
+                       html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/) ||
+                       html.match(/data-image-gallery-new-image-url="([^"]+)"/);
+    const imageUrl = imageMatch ? imageMatch[1] : null;
+
     return {
       productId,
       sku,
@@ -213,6 +222,9 @@ export class BigCommerceScraper extends BaseScraper {
       url,
       scrapedAt: new Date(),
       source: `bigcommerce-${this.config.vendor.toLowerCase()}`,
+      imageUrl,
+      barcode: null,
+      description: null,
     };
   }
 

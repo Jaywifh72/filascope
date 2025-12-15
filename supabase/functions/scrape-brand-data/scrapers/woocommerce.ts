@@ -8,6 +8,8 @@ interface WooCommerceProduct {
   slug: string;
   permalink: string;
   sku: string;
+  description?: string;
+  images?: { src: string }[];
   prices: {
     price: string;
     regular_price: string;
@@ -113,6 +115,9 @@ export class WooCommerceScraper extends BaseScraper {
             url: product.permalink,
             scrapedAt: new Date(),
             source: `woocommerce-${this.config.vendor.toLowerCase()}`,
+            imageUrl: product.images?.[0]?.src || null,
+            barcode: null,
+            description: product.description || null,
           });
 
           if (products.length >= limit) break;
@@ -254,6 +259,12 @@ export class WooCommerceScraper extends BaseScraper {
     const compareMatch = html.match(/<del[^>]*>.*?\$([\d.,]+).*?<\/del>/s);
     const compareAtPrice = compareMatch ? this.parsePrice(compareMatch[1]) : null;
 
+    // Extract image
+    const imageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/) ||
+                       html.match(/class="[^"]*woocommerce-product-gallery__image[^"]*"[^>]*data-thumb="([^"]+)"/) ||
+                       html.match(/<img[^>]*class="[^"]*wp-post-image[^"]*"[^>]*src="([^"]+)"/);
+    const imageUrl = imageMatch ? imageMatch[1] : null;
+
     return {
       productId,
       sku,
@@ -265,6 +276,9 @@ export class WooCommerceScraper extends BaseScraper {
       url,
       scrapedAt: new Date(),
       source: `woocommerce-${this.config.vendor.toLowerCase()}`,
+      imageUrl,
+      barcode: null,
+      description: null,
     };
   }
 

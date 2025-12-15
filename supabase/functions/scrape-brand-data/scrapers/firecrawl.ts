@@ -201,6 +201,12 @@ export class FirecrawlScraper extends BaseScraper {
     // Extract product ID from URL
     const productId = this.extractProductIdFromUrl(url);
 
+    // Extract image from multiple sources
+    const imageUrl = this.extractImageFromContent(html, metadata);
+
+    // Extract barcode/GTIN from structured data
+    const barcode = this.extractBarcode(html);
+
     return {
       productId,
       sku: productId,
@@ -212,7 +218,63 @@ export class FirecrawlScraper extends BaseScraper {
       url,
       scrapedAt: new Date(),
       source: `firecrawl-${this.config.vendor.toLowerCase().replace(/\s+/g, "-")}`,
+      imageUrl,
+      barcode,
+      description: markdown?.substring(0, 2000) || null,
     };
+  }
+
+  private extractImageFromContent(html: string, metadata: any): string | null {
+    // Try OG image first
+    if (metadata?.ogImage?.[0]?.url) {
+      return metadata.ogImage[0].url;
+    }
+
+    // Try meta og:image
+    const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+    if (ogMatch) return ogMatch[1];
+
+    // Try JSON-LD image
+    const jsonLdMatch = html.match(/"image":\s*"([^"]+)"/);
+    if (jsonLdMatch) return jsonLdMatch[1];
+
+    // Try common product image patterns
+    const patterns = [
+      /<img[^>]*class="[^"]*product[^"]*image[^"]*"[^>]*src="([^"]+)"/i,
+      /<img[^>]*id="[^"]*product[^"]*image[^"]*"[^>]*src="([^"]+)"/i,
+      /data-zoom-image="([^"]+)"/i,
+    ];
+
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match && match[1] && !match[1].includes('placeholder')) {
+        return match[1];
+      }
+    }
+
+    return null;
+  }
+
+  private extractBarcode(html: string): string | null {
+    // Try JSON-LD GTIN patterns
+    const patterns = [
+      /"gtin14":\s*"([^"]+)"/,
+      /"gtin13":\s*"([^"]+)"/,
+      /"gtin12":\s*"([^"]+)"/,
+      /"gtin":\s*"([^"]+)"/,
+      /"ean":\s*"([^"]+)"/,
+      /"upc":\s*"([^"]+)"/,
+      /itemprop=["']gtin["'][^>]*content=["']([^"']+)["']/i,
+    ];
+
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+
+    return null;
   }
 
   private extractTitle(metadata: any, markdown: string, html: string): string | null {
