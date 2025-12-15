@@ -2016,6 +2016,7 @@ export type Database = {
         Row: {
           amazon_prime_member: boolean | null
           avatar_url: string | null
+          completed_tutorials: Json | null
           created_at: string | null
           display_name: string | null
           email: string | null
@@ -2023,8 +2024,10 @@ export type Database = {
           preferred_currency: string | null
           preferred_slicer: string | null
           retailer_memberships: Json | null
+          settings_visibility: string | null
           shipping_country: string | null
           shipping_zip_code: string | null
+          skill_level: string | null
           updated_at: string | null
           wishlist_email_digest: boolean | null
           wishlist_price_alerts: boolean | null
@@ -2033,6 +2036,7 @@ export type Database = {
         Insert: {
           amazon_prime_member?: boolean | null
           avatar_url?: string | null
+          completed_tutorials?: Json | null
           created_at?: string | null
           display_name?: string | null
           email?: string | null
@@ -2040,8 +2044,10 @@ export type Database = {
           preferred_currency?: string | null
           preferred_slicer?: string | null
           retailer_memberships?: Json | null
+          settings_visibility?: string | null
           shipping_country?: string | null
           shipping_zip_code?: string | null
+          skill_level?: string | null
           updated_at?: string | null
           wishlist_email_digest?: boolean | null
           wishlist_price_alerts?: boolean | null
@@ -2050,6 +2056,7 @@ export type Database = {
         Update: {
           amazon_prime_member?: boolean | null
           avatar_url?: string | null
+          completed_tutorials?: Json | null
           created_at?: string | null
           display_name?: string | null
           email?: string | null
@@ -2057,8 +2064,10 @@ export type Database = {
           preferred_currency?: string | null
           preferred_slicer?: string | null
           retailer_memberships?: Json | null
+          settings_visibility?: string | null
           shipping_country?: string | null
           shipping_zip_code?: string | null
+          skill_level?: string | null
           updated_at?: string | null
           wishlist_email_digest?: boolean | null
           wishlist_price_alerts?: boolean | null
@@ -2718,6 +2727,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          progress: Json | null
+          unlocked_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          progress?: Json | null
+          unlocked_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          progress?: Json | null
+          unlocked_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_activity: {
         Row: {
           activity_type: string
@@ -2900,6 +2933,42 @@ export type Database = {
           printer_id?: string
           session_id?: string | null
           updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_printing_stats: {
+        Row: {
+          comparisons_made: number | null
+          glossary_lookups: number | null
+          id: string
+          materials_explored: number | null
+          printers_configured: number | null
+          settings_exported: number | null
+          tutorials_watched: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          comparisons_made?: number | null
+          glossary_lookups?: number | null
+          id?: string
+          materials_explored?: number | null
+          printers_configured?: number | null
+          settings_exported?: number | null
+          tutorials_watched?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          comparisons_made?: number | null
+          glossary_lookups?: number | null
+          id?: string
+          materials_explored?: number | null
+          printers_configured?: number | null
+          settings_exported?: number | null
+          tutorials_watched?: number | null
+          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
