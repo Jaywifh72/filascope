@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
-import { CheckSquare, X, ArrowRight, Printer as PrinterIcon } from "lucide-react";
+import { CheckSquare, X, ArrowRight, Printer as PrinterIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +9,7 @@ export function PrinterCompareBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPrinters, removePrinter, clearAll, count } = usePrinterCompare();
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Hide on compare page
   if (location.pathname === "/printers/compare") {
@@ -20,8 +22,11 @@ export function PrinterCompareBar() {
   }
 
   const handleCompare = () => {
+    setIsNavigating(true);
     const ids = selectedPrinters.map((p) => p.id).join(",");
-    navigate(`/printers/compare?ids=${ids}`);
+    setTimeout(() => {
+      navigate(`/printers/compare?ids=${ids}`);
+    }, 150);
   };
 
   // Show max 4 thumbnails, with "+X more" indicator if needed
@@ -134,6 +139,7 @@ export function PrinterCompareBar() {
           </Button>
           <Button
             onClick={handleCompare}
+            disabled={isNavigating}
             className={cn(
               "h-11 md:h-12 px-6 md:px-8",
               "bg-gradient-to-r from-[hsl(180_100%_41%)] to-[hsl(180_100%_33%)]",
@@ -142,12 +148,23 @@ export function PrinterCompareBar() {
               "hover:scale-105 hover:brightness-110",
               "active:scale-98",
               "transition-all duration-200",
-              "animate-pulse-subtle"
+              !isNavigating && "animate-pulse-subtle",
+              isNavigating && "opacity-80 cursor-not-allowed"
             )}
+            aria-label={isNavigating ? "Loading comparison page" : `Compare ${count} selected printers`}
           >
-            <span className="hidden md:inline">Compare Now</span>
-            <span className="md:hidden">Compare</span>
-            <ArrowRight className="h-4 w-4 ml-2" />
+            {isNavigating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <span>Loading...</span>
+              </>
+            ) : (
+              <>
+                <span className="hidden md:inline">Compare Now</span>
+                <span className="md:hidden">Compare</span>
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </>
+            )}
           </Button>
         </div>
       </div>
