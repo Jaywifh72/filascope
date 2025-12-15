@@ -37,6 +37,7 @@ import { VideoPlayerModal } from "@/components/filament/education/VideoPlayerMod
 import { getVideosByMaterial } from "@/lib/videoTutorials";
 import { useAchievements } from "@/hooks/useAchievements";
 import { SimilarMaterialsModule } from "@/components/filament/similar/SimilarMaterialsModule";
+import { PerformanceAtAGlance } from "@/components/filament/performance/PerformanceAtAGlance";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -2224,45 +2225,18 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
               </Card>
             </div>
 
-            {/* Performance Indexes */}
-            {(filament.printability_index || filament.strength_index || filament.value_score) && (
-              <Card className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-primary/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="w-5 h-5 text-primary" />
-                    Performance Indexes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    {filament.printability_index && (
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-primary mb-1">{filament.printability_index}/10</div>
-                        <div className="text-sm text-muted-foreground">Printability</div>
-                      </div>
-                    )}
-                    {filament.ease_of_printing_score && (
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-primary mb-1">{filament.ease_of_printing_score}/10</div>
-                        <div className="text-sm text-muted-foreground">Ease of Use</div>
-                      </div>
-                    )}
-                    {filament.strength_index && (
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-primary mb-1">{filament.strength_index}/10</div>
-                        <div className="text-sm text-muted-foreground">Strength</div>
-                      </div>
-                    )}
-                    {filament.value_score && (
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-primary mb-1">{filament.value_score}/10</div>
-                        <div className="text-sm text-muted-foreground">Value</div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* Performance at a Glance */}
+            <PerformanceAtAGlance
+              filamentId={filament.id}
+              material={filament.material}
+              vendor={filament.vendor}
+              ease_of_printing_score={filament.ease_of_printing_score}
+              printability_index={filament.printability_index}
+              strength_index={filament.strength_index}
+              value_score={filament.value_score}
+              variant_price={filament.variant_price}
+              net_weight_g={filament.net_weight_g}
+            />
           </TabsContent>
 
           {/* Print Settings Tab */}
