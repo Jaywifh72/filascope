@@ -1,7 +1,13 @@
 import { Link } from "react-router-dom";
-import { Star, Plus, Check } from "lucide-react";
+import { Star, Plus, Check, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useCompare } from "@/hooks/useCompare";
 import { getBrandLogo } from "@/lib/brandLogos";
 import type { EnhancedSimilarFilament } from "@/hooks/useEnhancedSimilarFilaments";
@@ -59,10 +65,38 @@ export function SimilarMaterialCard({ filament }: SimilarMaterialCardProps) {
   return (
     <Link
       to={`/filament/${filament.id}`}
-      className="group block min-w-[280px] max-w-[320px] flex-shrink-0 rounded-xl border border-primary/20 bg-card/80 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10"
+      className="group relative block min-w-[280px] max-w-[320px] flex-shrink-0 rounded-xl border border-primary/20 bg-card/80 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10"
     >
+      {/* Explanation Badge */}
+      <div className="absolute -top-2.5 -right-2 z-10">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge 
+                className="cursor-help bg-primary/90 text-primary-foreground text-xs font-medium shadow-md"
+              >
+                {filament.explanation.icon} {filament.explanation.headline}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[200px]">
+              <p className="text-sm">{filament.explanation.description}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
+      {/* Trending Indicator */}
+      {filament.isTrending && (
+        <div className="absolute top-3 left-3">
+          <Badge variant="outline" className="border-amber-500/50 bg-amber-500/10 text-amber-400 text-xs">
+            <TrendingUp className="mr-1 h-3 w-3" />
+            Trending
+          </Badge>
+        </div>
+      )}
+
       {/* Header: Brand + Material Badge */}
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 mt-4 flex items-center justify-between">
         {brandLogo ? (
           <img
             src={brandLogo}
@@ -89,6 +123,11 @@ export function SimilarMaterialCard({ filament }: SimilarMaterialCardProps) {
         <div className={`mb-3 flex items-center gap-1.5 text-sm ${getScoreColor(filament.overallScore)}`}>
           <Star className="h-4 w-4 fill-current" />
           <span className="font-medium">{filament.overallScore.toFixed(1)}/10</span>
+          {filament.factors.relevanceScore > 0.7 && (
+            <span className="ml-2 text-xs text-muted-foreground">
+              ({Math.round(filament.factors.relevanceScore * 100)}% match)
+            </span>
+          )}
         </div>
       )}
 
@@ -123,7 +162,7 @@ export function SimilarMaterialCard({ filament }: SimilarMaterialCardProps) {
       {/* Differentiators */}
       {filament.differentiators.length > 0 && (
         <div className="mb-4 space-y-1.5 border-t border-border/50 pt-3">
-          {filament.differentiators.map((diff, idx) => (
+          {filament.differentiators.slice(0, 3).map((diff, idx) => (
             <p
               key={idx}
               className={`text-sm ${
