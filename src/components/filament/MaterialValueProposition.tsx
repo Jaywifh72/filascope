@@ -1,13 +1,23 @@
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, AlertTriangle, ArrowRight, Dna } from "lucide-react";
+import { AlertTriangle, ArrowRight, Dna } from "lucide-react";
 import { getMaterialValueProposition, getComparisonMaterial } from "@/lib/materialValuePropositions";
 import { cn } from "@/lib/utils";
+import { Database } from "@/integrations/supabase/types";
+import { useIntelligentContent } from "@/hooks/useIntelligentContent";
+
+
+type Filament = Database["public"]["Tables"]["filaments"]["Row"];
+type Printer = Database["public"]["Tables"]["printers"]["Row"];
+type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
 
 interface MaterialValuePropositionProps {
   material: string | null | undefined;
   productTitle: string;
   filamentId: string;
   vendor?: string | null;
+  filament?: Filament | null;
+  printer?: Printer | null;
+  hotend?: Accessory | null;
 }
 
 export function MaterialValueProposition({
@@ -15,13 +25,23 @@ export function MaterialValueProposition({
   productTitle,
   filamentId,
   vendor,
+  filament,
+  printer,
+  hotend,
 }: MaterialValuePropositionProps) {
   const navigate = useNavigate();
   
   const proposition = getMaterialValueProposition(material, productTitle);
   const comparisonMaterial = getComparisonMaterial(material);
+  const intelligentContent = useIntelligentContent(filament || null, printer || null, hotend || null);
 
   if (!material) return null;
+
+  // Merge static and dynamic "perfect for" items
+  const allPerfectFor = [
+    ...proposition.perfectFor,
+    ...(intelligentContent?.dynamicPerfectFor || [])
+  ].filter((item, index, self) => self.indexOf(item) === index); // dedupe
 
   const handleCompare = () => {
     if (comparisonMaterial) {
@@ -42,6 +62,10 @@ export function MaterialValueProposition({
     }
   };
 
+  const handleProjectClick = (url: string) => {
+    navigate(url);
+  };
+
   return (
     <section
       aria-label="Material value proposition"
@@ -54,6 +78,21 @@ export function MaterialValueProposition({
         "animate-fade-in"
       )}
     >
+      {/* Context Badges - Trending/New/Seasonal */}
+      {intelligentContent && intelligentContent.contextBadges.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {intelligentContent.contextBadges.map((badge, i) => (
+            <div
+              key={i}
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full text-sm"
+            >
+              <span>{badge.icon}</span>
+              <span className="text-orange-400 font-medium">{badge.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Headline with Icon */}
       <div className="flex items-start gap-3 mb-4">
         <span className="text-3xl" role="img" aria-hidden="true">
@@ -68,6 +107,32 @@ export function MaterialValueProposition({
       <p className="text-base text-muted-foreground leading-relaxed mb-5">
         {proposition.description}
       </p>
+
+      {/* Printer Compatibility Warnings */}
+      {intelligentContent && intelligentContent.printerWarnings.length > 0 && (
+        <div className="space-y-2 mb-5 p-3 rounded-lg bg-red-500/5 border border-red-500/20">
+          <h4 className="text-sm font-semibold text-red-400 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            Compatibility Notes for Your Printer
+          </h4>
+          {intelligentContent.printerWarnings.map((warning, i) => (
+            <div key={i} className="flex items-start gap-2 text-sm">
+              <span className="shrink-0">{warning.icon}</span>
+              <div>
+                <span className={cn(
+                  "font-medium",
+                  warning.severity === "error" ? "text-red-400" : "text-amber-400"
+                )}>
+                  {warning.text}
+                </span>
+                {warning.subtext && (
+                  <p className="text-muted-foreground text-xs mt-0.5">{warning.subtext}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Why Choose This? - Differentiator Badges */}
       {proposition.differentiators && proposition.differentiators.length > 0 && (
@@ -97,14 +162,14 @@ export function MaterialValueProposition({
 
       {/* Perfect For / Not Ideal For */}
       <div className="space-y-3 mb-5">
-        {/* Perfect For */}
+        {/* Perfect For - Merged static + dynamic */}
         <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
           <div className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0" />
           <div className="text-sm">
             <span className="sr-only">Perfect for: </span>
             <span className="text-green-400 font-medium">Perfect for: </span>
             <span className="text-foreground/80">
-              {proposition.perfectFor.join(", ")}
+              {allPerfectFor.join(", ")}
             </span>
           </div>
         </div>
@@ -124,6 +189,28 @@ export function MaterialValueProposition({
           </div>
         ))}
       </div>
+
+      {/* Project Type Suggestions */}
+      {intelligentContent && intelligentContent.projectSuggestions.length > 0 && (
+        <div className="mb-5">
+          <h4 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mb-2">
+            Suggested Projects
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {intelligentContent.projectSuggestions.map((suggestion, i) => (
+              <button
+                key={i}
+                onClick={() => suggestion.link && handleProjectClick(suggestion.link.url)}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors"
+              >
+                <span>{suggestion.icon}</span>
+                <span className="text-sm">{suggestion.text}</span>
+                <ArrowRight className="w-3 h-3 text-primary" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Material Family Context */}
       {proposition.familyInfo && (
