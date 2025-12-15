@@ -4,10 +4,27 @@ import { extractPrice, extractAvailability } from "../utils.ts";
 
 export class AmazonScraper extends BaseScraper {
   private firecrawlApiKey: string | undefined;
+  
+  // Global rate limiting for ALL Amazon scrapers (1.1s between requests)
+  private static lastAmazonRequest: number = 0;
+  private static readonly AMAZON_RATE_LIMIT_MS = 1100;
 
   constructor(config: BrandConfig) {
     super(config);
     this.firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
+  }
+
+  private async respectGlobalRateLimit(): Promise<void> {
+    const now = Date.now();
+    const timeSinceLastRequest = now - AmazonScraper.lastAmazonRequest;
+    
+    if (timeSinceLastRequest < AmazonScraper.AMAZON_RATE_LIMIT_MS) {
+      const waitTime = AmazonScraper.AMAZON_RATE_LIMIT_MS - timeSinceLastRequest;
+      this.log(`Rate limiting: waiting ${waitTime}ms before next Amazon request`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    
+    AmazonScraper.lastAmazonRequest = Date.now();
   }
 
   async scrapeProduct(url: string): Promise<ScrapedProduct | null> {
@@ -17,6 +34,9 @@ export class AmazonScraper extends BaseScraper {
     }
 
     try {
+      // Enforce global rate limit before making request
+      await this.respectGlobalRateLimit();
+      
       this.log(`Scraping via Firecrawl: ${url}`);
 
       const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
