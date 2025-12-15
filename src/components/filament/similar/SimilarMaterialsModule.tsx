@@ -1,10 +1,12 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEnhancedSimilarFilaments } from "@/hooks/useEnhancedSimilarFilaments";
 import { SimilarMaterialCard } from "./SimilarMaterialCard";
+import { MaterialJourney, filterByTier } from "./MaterialJourney";
+import { RecommendationFilters, applyRecommendationFilter, type FilterType } from "./RecommendationFilters";
 import { useCompare } from "@/hooks/useCompare";
 import { useUserPersonalization } from "@/hooks/useUserPersonalization";
 import { useUserSkillLevel } from "@/hooks/useUserSkillLevel";
@@ -19,6 +21,16 @@ interface SimilarMaterialsModuleProps {
     value_score?: number | null;
     strength_index?: number | null;
     printability_index?: number | null;
+    tg_c?: number | null;
+  };
+  currentFilament?: {
+    id: string;
+    product_title: string;
+    vendor?: string | null;
+    material?: string | null;
+    featured_image?: string | null;
+    variant_price?: number | null;
+    net_weight_g?: number | null;
   };
 }
 
@@ -28,6 +40,7 @@ export function SimilarMaterialsModule({
   vendor,
   currentPricePerKg,
   currentScores,
+  currentFilament,
 }: SimilarMaterialsModuleProps) {
   // Get user context for personalized recommendations
   const {
@@ -49,10 +62,29 @@ export function SimilarMaterialsModule({
       printerSpecs,
       skillLevel,
       priceSensitivity,
-      limit: 6,
+      limit: 12, // Fetch more for filtering
     }
   );
   const { addItem } = useCompare();
+
+  // Filtering state
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [activeTier, setActiveTier] = useState<string | null>(null);
+
+  // Apply filters
+  const filteredRecommendations = useMemo(() => {
+    let result = recommendations;
+    
+    // Apply tier filter first
+    if (activeTier) {
+      result = filterByTier(result, activeTier);
+    }
+    
+    // Apply dropdown filter
+    result = applyRecommendationFilter(result, activeFilter, vendor);
+    
+    return result.slice(0, 6); // Limit to 6 visible
+  }, [recommendations, activeFilter, activeTier, vendor]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -77,7 +109,14 @@ export function SimilarMaterialsModule({
     el.addEventListener("scroll", updateScrollState);
     updateScrollState();
     return () => el.removeEventListener("scroll", updateScrollState);
-  }, [updateScrollState, recommendations]);
+  }, [updateScrollState, filteredRecommendations]);
+
+  // Reset scroll when filters change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    }
+  }, [activeFilter, activeTier]);
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -88,7 +127,7 @@ export function SimilarMaterialsModule({
 
   const handleSeeFullComparison = () => {
     // Add recommendations to compare
-    recommendations.slice(0, 3).forEach((rec) => {
+    filteredRecommendations.slice(0, 3).forEach((rec) => {
       addItem({
         id: rec.id,
         product_title: rec.product_title,
@@ -100,6 +139,14 @@ export function SimilarMaterialsModule({
         featured_image: rec.featured_image,
       });
     });
+  };
+
+  const handleTierClick = (tier: string) => {
+    setActiveTier(tier || null);
+    // Reset dropdown filter when tier is clicked
+    if (tier) {
+      setActiveFilter("all");
+    }
   };
 
   if (isLoading) {
@@ -125,17 +172,37 @@ export function SimilarMaterialsModule({
   return (
     <div className="my-10 rounded-2xl border border-primary/15 bg-primary/[0.03] p-6 md:p-8">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3">
-          <Search className="h-6 w-6 text-primary" />
-          <h3 className="text-xl font-semibold text-primary md:text-2xl">
-            Compare Similar Materials
-          </h3>
+      <div className="mb-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <Search className="h-6 w-6 text-primary" />
+            <h3 className="text-xl font-semibold text-primary md:text-2xl">
+              Compare Similar Materials
+            </h3>
+          </div>
+          
+          {/* Filter dropdown */}
+          <RecommendationFilters
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+            currentVendor={vendor}
+          />
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Personalized recommendations based on your preferences
+          {activeTier || activeFilter !== "all" 
+            ? `Showing ${filteredRecommendations.length} filtered results`
+            : "Personalized recommendations based on your preferences"
+          }
         </p>
       </div>
+
+      {/* Material Journey Tier Bar */}
+      <MaterialJourney
+        currentPricePerKg={currentPricePerKg}
+        recommendations={recommendations}
+        onTierClick={handleTierClick}
+        activeTier={activeTier}
+      />
 
       {/* Carousel */}
       <div className="relative">
@@ -157,15 +224,25 @@ export function SimilarMaterialsModule({
           className="scrollbar-hide flex gap-4 overflow-x-auto scroll-smooth pb-4 snap-x snap-mandatory"
           style={{ scrollSnapType: "x mandatory" }}
         >
-          {recommendations.map((rec) => (
+          {filteredRecommendations.map((rec) => (
             <div key={rec.id} className="snap-start">
-              <SimilarMaterialCard filament={rec} currentScores={currentScores} />
+              <SimilarMaterialCard 
+                filament={rec} 
+                currentFilament={currentFilament}
+                currentScores={currentScores} 
+              />
             </div>
           ))}
+          
+          {filteredRecommendations.length === 0 && (
+            <div className="flex h-[380px] w-full items-center justify-center text-muted-foreground">
+              <p>No materials match the current filter.</p>
+            </div>
+          )}
         </div>
 
         {/* Right Arrow */}
-        {canScrollRight && (
+        {canScrollRight && filteredRecommendations.length > 0 && (
           <Button
             variant="ghost"
             size="icon"
@@ -178,9 +255,9 @@ export function SimilarMaterialsModule({
       </div>
 
       {/* Dot Indicators */}
-      {recommendations.length > 3 && (
+      {filteredRecommendations.length > 3 && (
         <div className="mt-4 flex justify-center gap-1.5">
-          {recommendations.map((_, idx) => (
+          {filteredRecommendations.map((_, idx) => (
             <button
               key={idx}
               onClick={() => {

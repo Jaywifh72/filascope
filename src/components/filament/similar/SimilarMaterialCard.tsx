@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Star, Plus, Check, TrendingUp } from "lucide-react";
+import { Star, Plus, Check, TrendingUp, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,14 +14,28 @@ import { getBrandLogo } from "@/lib/brandLogos";
 import { MetricComparisonBar } from "./MetricComparisonBar";
 import { StandoutBadges } from "./StandoutBadges";
 import { CostBenefitSection } from "./CostBenefitSection";
+import { PropertyInspector } from "./PropertyInspector";
+import { QuickComparisonPreview } from "./QuickComparisonPreview";
+import { SideBySideComparisonDialog } from "./SideBySideComparisonDialog";
 import type { EnhancedSimilarFilament } from "@/hooks/useEnhancedSimilarFilaments";
 
 interface SimilarMaterialCardProps {
   filament: EnhancedSimilarFilament;
+  currentFilament?: {
+    id: string;
+    product_title: string;
+    vendor?: string | null;
+    material?: string | null;
+    featured_image?: string | null;
+    variant_price?: number | null;
+    net_weight_g?: number | null;
+  };
   currentScores?: {
     printability_index?: number | null;
     strength_index?: number | null;
     value_score?: number | null;
+    ease_of_printing_score?: number | null;
+    tg_c?: number | null;
   };
 }
 
@@ -47,11 +62,16 @@ function getScoreColor(score: number | null): string {
   return "text-amber-400";
 }
 
-export function SimilarMaterialCard({ filament, currentScores }: SimilarMaterialCardProps) {
+export function SimilarMaterialCard({ 
+  filament, 
+  currentFilament,
+  currentScores 
+}: SimilarMaterialCardProps) {
   const { addItem, isInCompare } = useCompare();
   const isAdded = isInCompare(filament.id);
   const brandLogo = filament.vendor ? getBrandLogo(filament.vendor) : null;
   const materialBase = filament.material?.split(/[\s-]/)[0] || "Unknown";
+  const [showCompareDialog, setShowCompareDialog] = useState(false);
 
   const handleCompare = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -70,16 +90,24 @@ export function SimilarMaterialCard({ filament, currentScores }: SimilarMaterial
     }
   };
 
+  const handleSideBySide = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowCompareDialog(true);
+  };
+
   // Extract enhanced differentiators with real-world impact
   const enhancedDiffs = filament.differentiators.filter(
     d => 'realWorldImpact' in d && d.realWorldImpact
   );
 
-  return (
-    <Link
-      to={`/filament/${filament.id}`}
-      className="group relative block min-w-[280px] max-w-[320px] flex-shrink-0 rounded-xl border border-primary/20 bg-card/80 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10"
-    >
+  // Calculate current price per kg for dialog
+  const currentPricePerKg = currentFilament?.variant_price && currentFilament?.net_weight_g
+    ? (currentFilament.variant_price / currentFilament.net_weight_g) * 1000
+    : null;
+
+  const cardContent = (
+    <div className="group relative min-w-[280px] max-w-[320px] flex-shrink-0 rounded-xl border border-primary/20 bg-card/80 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10">
       {/* Explanation Badge */}
       <div className="absolute -top-2.5 -right-2 z-10">
         <TooltipProvider>
@@ -206,28 +234,30 @@ export function SimilarMaterialCard({ filament, currentScores }: SimilarMaterial
         </div>
       )}
 
-      {/* Enhanced Differentiators with Real-World Impact */}
+      {/* Enhanced Differentiators with Real-World Impact - Now with Property Inspector */}
       {enhancedDiffs.length > 0 && (
         <div className="mb-3 space-y-1.5 border-t border-border/50 pt-3">
           {enhancedDiffs.slice(0, 2).map((diff, idx) => (
-            <div key={idx} className="space-y-0.5">
-              <p
-                className={`text-sm font-medium ${
-                  diff.type === 'positive' || diff.type === 'standout'
-                    ? 'text-green-400'
-                    : diff.type === 'warning'
-                    ? 'text-amber-400'
-                    : 'text-red-400'
-                }`}
-              >
-                {diff.icon} {diff.text}
-              </p>
-              {'realWorldImpact' in diff && diff.realWorldImpact && (
-                <p className="text-xs text-muted-foreground pl-5">
-                  → {diff.realWorldImpact}
+            <PropertyInspector key={idx} differentiator={diff}>
+              <div className="space-y-0.5">
+                <p
+                  className={`text-sm font-medium ${
+                    diff.type === 'positive' || diff.type === 'standout'
+                      ? 'text-green-400'
+                      : diff.type === 'warning'
+                      ? 'text-amber-400'
+                      : 'text-red-400'
+                  }`}
+                >
+                  {diff.icon} {diff.text}
                 </p>
-              )}
-            </div>
+                {'realWorldImpact' in diff && diff.realWorldImpact && (
+                  <p className="text-xs text-muted-foreground pl-5">
+                    → {diff.realWorldImpact}
+                  </p>
+                )}
+              </div>
+            </PropertyInspector>
           ))}
         </div>
       )}
@@ -240,25 +270,37 @@ export function SimilarMaterialCard({ filament, currentScores }: SimilarMaterial
 
       {/* CTAs */}
       <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCompare}
-          disabled={isAdded}
-          className={`flex-1 ${isAdded ? 'border-green-500/50 text-green-400' : 'border-primary/50 text-primary hover:bg-primary/10'}`}
-        >
-          {isAdded ? (
-            <>
-              <Check className="mr-1.5 h-3.5 w-3.5" />
-              Added
-            </>
-          ) : (
-            <>
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
-              Compare
-            </>
-          )}
-        </Button>
+        {currentFilament ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSideBySide}
+            className="flex-1 border-primary/50 text-primary hover:bg-primary/10"
+          >
+            <ArrowLeftRight className="mr-1.5 h-3.5 w-3.5" />
+            Compare
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCompare}
+            disabled={isAdded}
+            className={`flex-1 ${isAdded ? 'border-green-500/50 text-green-400' : 'border-primary/50 text-primary hover:bg-primary/10'}`}
+          >
+            {isAdded ? (
+              <>
+                <Check className="mr-1.5 h-3.5 w-3.5" />
+                Added
+              </>
+            ) : (
+              <>
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                Compare
+              </>
+            )}
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -268,6 +310,33 @@ export function SimilarMaterialCard({ filament, currentScores }: SimilarMaterial
           <span>View →</span>
         </Button>
       </div>
-    </Link>
+
+      {/* Side-by-Side Comparison Dialog */}
+      {currentFilament && (
+        <SideBySideComparisonDialog
+          open={showCompareDialog}
+          onOpenChange={setShowCompareDialog}
+          currentFilament={{
+            ...currentFilament,
+            pricePerKg: currentPricePerKg,
+            printability_index: currentScores?.printability_index,
+            strength_index: currentScores?.strength_index,
+            value_score: currentScores?.value_score,
+            ease_of_printing_score: currentScores?.ease_of_printing_score,
+            tg_c: currentScores?.tg_c,
+          }}
+          compareFilament={filament}
+        />
+      )}
+    </div>
+  );
+
+  // Wrap with QuickComparisonPreview hover card
+  return (
+    <QuickComparisonPreview filament={filament} currentScores={currentScores}>
+      <Link to={`/filament/${filament.id}`}>
+        {cardContent}
+      </Link>
+    </QuickComparisonPreview>
   );
 }
