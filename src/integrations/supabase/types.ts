@@ -601,6 +601,98 @@ export type Database = {
           },
         ]
       }
+      filament_score_history: {
+        Row: {
+          change_reason: string | null
+          created_at: string | null
+          filament_id: string
+          id: string
+          recorded_at: string
+          score: number
+          score_type: string
+        }
+        Insert: {
+          change_reason?: string | null
+          created_at?: string | null
+          filament_id: string
+          id?: string
+          recorded_at?: string
+          score: number
+          score_type: string
+        }
+        Update: {
+          change_reason?: string | null
+          created_at?: string | null
+          filament_id?: string
+          id?: string
+          recorded_at?: string
+          score?: number
+          score_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filament_score_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filament_user_ratings: {
+        Row: {
+          created_at: string | null
+          filament_id: string
+          id: string
+          issues: string[] | null
+          printer_id: string | null
+          rating: number
+          review_text: string | null
+          score_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          filament_id: string
+          id?: string
+          issues?: string[] | null
+          printer_id?: string | null
+          rating: number
+          review_text?: string | null
+          score_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          filament_id?: string
+          id?: string
+          issues?: string[] | null
+          printer_id?: string | null
+          rating?: number
+          review_text?: string | null
+          score_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filament_user_ratings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_user_ratings_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filaments: {
         Row: {
           amazon_link_de: string | null

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BookOpen } from 'lucide-react';
 import { ScoreCard } from './ScoreCard';
 import { ScoreMethodologyModal } from './ScoreMethodologyModal';
@@ -6,6 +6,13 @@ import { getScoreCardData, ScoreCardData, ScoreType } from '@/lib/scoreCardServi
 import { ScoreRecommendations } from './education/ScoreRecommendations';
 import { ScoreGuideModal } from './education/ScoreGuideModal';
 import { PrintSuccessPredictor } from './education/PrintSuccessPredictor';
+import { ScoringModeToggle, ScoringMode } from './ScoringModeToggle';
+import { ScoreConfidenceIndicator } from './ScoreConfidenceIndicator';
+import { CommunityVsLabScore } from './CommunityVsLabScore';
+import { calculateConfidence } from '@/lib/scoreConfidence';
+import { useCommunityRatings } from '@/hooks/useCommunityRatings';
+import { usePrinterSelection } from '@/hooks/usePrinterSelection';
+import { getAllConditionalScores } from '@/lib/conditionalScoring';
 import type { Database } from '@/integrations/supabase/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -50,6 +57,39 @@ function ScoresPendingState() {
 export function ScoreCardsSection({ filament }: ScoreCardsSectionProps) {
   const [methodologyOpen, setMethodologyOpen] = useState<ScoreType | null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [scoringMode, setScoringMode] = useState<ScoringMode>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('filascope_scoring_mode') as ScoringMode) || 'absolute';
+    }
+    return 'absolute';
+  });
+  
+  // Persist scoring mode
+  useEffect(() => {
+    localStorage.setItem('filascope_scoring_mode', scoringMode);
+  }, [scoringMode]);
+  
+  // Get printer selection for conditional scoring
+  const { selectedPrinter } = usePrinterSelection();
+  
+  // Get community ratings
+  const communityRatings = useCommunityRatings(filament.id);
+  
+  // Calculate conditional scores based on selected printer
+  const conditionalScores = getAllConditionalScores(filament, selectedPrinter);
+  
+  // Calculate confidence
+  const confidence = calculateConfidence({
+    hasEaseScore: filament.ease_of_printing_score !== null,
+    hasStrengthScore: filament.strength_index !== null,
+    hasValueScore: filament.value_score !== null,
+    hasTensileStrength: filament.tensile_strength_xy_mpa !== null,
+    hasFlexuralStrength: filament.flexural_strength_mpa !== null,
+    hasTDS: !!filament.tds_url,
+    communityReviewCount: communityRatings.overallStats.totalReviews,
+    createdAt: filament.created_at ? new Date(filament.created_at) : null,
+    updatedAt: filament.updated_at ? new Date(filament.updated_at) : null,
+  });
   
   // Get score card data
   const scoreCards = getScoreCardData(filament);
@@ -68,6 +108,16 @@ export function ScoreCardsSection({ filament }: ScoreCardsSectionProps) {
   
   return (
     <>
+      {/* Scoring Mode Toggle & Confidence */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <ScoringModeToggle
+          mode={scoringMode}
+          onModeChange={setScoringMode}
+          material={filament.material}
+        />
+        <ScoreConfidenceIndicator confidence={confidence} compact />
+      </div>
+      
       {/* Score Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 pt-2">
         {scoreCards.map((card, index) => (
@@ -83,13 +133,26 @@ export function ScoreCardsSection({ filament }: ScoreCardsSectionProps) {
               material={filament.material}
               onMethodologyClick={() => setMethodologyOpen(card.id)}
               animationDelay={index * 100}
+              scoringMode={scoringMode}
+              conditionalScore={conditionalScores[card.id]}
+              printerName={selectedPrinter?.model_name}
+              communityStats={
+                card.id === 'ease_of_printing' ? communityRatings.easeOfPrinting :
+                card.id === 'strength_index' ? communityRatings.strengthIndex :
+                communityRatings.valueScore
+              }
             />
           </div>
         ))}
       </div>
       
-      {/* Educational Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mt-6">
+      {/* Advanced Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6 mt-6">
+        {/* Confidence Details */}
+        <div className="lg:col-span-1">
+          <ScoreConfidenceIndicator confidence={confidence} />
+        </div>
+        
         {/* Recommendations */}
         <div className="lg:col-span-2">
           <ScoreRecommendations
@@ -101,7 +164,7 @@ export function ScoreCardsSection({ filament }: ScoreCardsSectionProps) {
         </div>
         
         {/* Success Predictor */}
-        <div>
+        <div className="lg:col-span-1">
           <PrintSuccessPredictor
             filament={filament}
             easeScore={easeScore}
