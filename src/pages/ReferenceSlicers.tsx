@@ -13,6 +13,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { slicerData } from "@/lib/slicerData";
 import Navbar from "@/components/Navbar";
 
+// Logo mapping for slicers
+const slicerLogos: Record<string, string> = {
+  "UltiMaker Cura": "/images/slicers/cura.png",
+  "PrusaSlicer": "/images/slicers/prusaslicer.png",
+  "OrcaSlicer": "/images/slicers/orcaslicer.png",
+  "Bambu Studio": "/images/slicers/bambustudio.png",
+  "Simplify3D": "/images/slicers/simplify3d.png",
+  "Creality Print": "/images/slicers/crealityprint.png",
+  "ideaMaker": "/images/slicers/ideamaker.png",
+  "SuperSlicer": "/images/slicers/superslicer.png",
+  "FlashPrint": "/images/slicers/flashprint.png",
+  "Anycubic Slicer": "/images/brands/anycubic.webp",
+  "Lychee Slicer": "/images/slicers/lychee.jpg",
+  "ChiTuBox": "/images/slicers/chitubox.png",
+  "VoxelDance Tango": "/images/slicers/voxeldance.png",
+  "Repetier-Host": "/images/slicers/repetier.png",
+  "Slic3r": "/images/slicers/slic3r.png",
+  "KISSlicer": "/images/slicers/kisslicer.png",
+  "MatterControl": "/images/slicers/mattercontrol.png",
+  "CraftWare": "/images/slicers/craftware.png",
+  "Kiri:Moto": "/images/slicers/kirimoto.png",
+  "3DPrinterOS": "/images/slicers/3dprinteros.png",
+};
+
 const slicerComparison = [
   { name: "UltiMaker Cura", price: "Free", focus: "FDM", os: "Win/Mac/Lin", ease: 5, control: 5, support: 4, speed: 3, ui: 5, connectivity: "Cloud/LAN/USB", step: "Yes", multiMat: 5, standout: "Marketplace Ecosystem" },
   { name: "PrusaSlicer", price: "Free", focus: "Both", os: "Win/Mac/Lin", ease: 5, control: 5, support: 5, speed: 5, ui: 5, connectivity: "LAN/USB", step: "Yes", multiMat: 5, standout: "Organic Supports" },
@@ -284,7 +308,18 @@ const ReferenceSlicers = () => {
                     key={index} 
                     className="border-b border-border/50 hover:bg-muted/20 transition-colors"
                   >
-                    <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">{slicer.name}</td>
+                    <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {slicerLogos[slicer.name] && (
+                          <img 
+                            src={slicerLogos[slicer.name]} 
+                            alt={`${slicer.name} logo`}
+                            className="w-5 h-5 rounded object-contain"
+                          />
+                        )}
+                        {slicer.name}
+                      </div>
+                    </td>
                     <td className="py-2 px-3">
                       <Badge 
                         variant="outline" 
@@ -330,6 +365,13 @@ const ReferenceSlicers = () => {
                   <span className="text-xs font-mono text-muted-foreground w-6">
                     {String(index + 1).padStart(2, '0')}
                   </span>
+                  {slicerLogos[slicer.name] && (
+                    <img 
+                      src={slicerLogos[slicer.name]} 
+                      alt={`${slicer.name} logo`}
+                      className="w-8 h-8 rounded object-contain"
+                    />
+                  )}
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">{slicer.name}</h3>
                     <p className="text-sm text-muted-foreground line-clamp-1 max-w-2xl">
