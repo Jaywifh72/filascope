@@ -42,7 +42,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
   };
 
   return (
-    <section className="relative overflow-hidden border-b border-border">
+    <section className="relative overflow-x-clip border-b border-border">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-background to-background" />
       
