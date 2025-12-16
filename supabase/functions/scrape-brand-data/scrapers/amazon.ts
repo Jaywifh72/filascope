@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { extractPrice, extractAvailability, extractColorFromHtml, extractSpoolSpecs, detectMaterial, extractColor, extractWeight, extractDiameter, COLOR_HEX_MAP, intelligentTitleClean } from "../utils.ts";
+import { extractPrice, extractAvailability, extractColorFromHtml, extractSpoolSpecs, detectMaterial, extractColor, extractWeight, extractDiameter, COLOR_HEX_MAP, intelligentTitleClean, extractDataFromTitle } from "../utils.ts";
 
 interface AmazonSearchResult {
   title: string;
@@ -1088,9 +1088,13 @@ export class AmazonScraper extends BaseScraper {
       }
     }
     
-    // Clean the title intelligently
-    const cleanedTitle = intelligentTitleClean(details.title, vendor);
+    // Clean the title intelligently - first extract data, then clean
+    const extractedData = extractDataFromTitle(details.title);
+    const cleanedTitle = intelligentTitleClean(extractedData.cleanedTitle, vendor);
     this.log(`📝 Title cleaned: "${details.title.substring(0, 50)}..." → "${cleanedTitle}"`);
+    
+    // Use extracted weight if we got it from title patterns like [MOQ: 6KG]
+    const finalWeight = details.weightG || extractedData.netWeightG;
     
     return {
       productId: details.asin,
@@ -1124,8 +1128,8 @@ export class AmazonScraper extends BaseScraper {
       bedTempMin: bedTempMin,
       bedTempMax: bedTempMax,
       
-      // Physical specs
-      netWeightG: details.weightG,
+      // Physical specs - use extracted weight from title if available
+      netWeightG: finalWeight,
       diameterMm: details.diameterMm || 1.75,
       
       // TDS
@@ -1378,8 +1382,9 @@ export class AmazonScraper extends BaseScraper {
                                titleLower.includes("nylon") ||
                                titleLower.includes("asa");
     
-    // Exclude non-filament products
+    // Exclude non-filament products - comprehensive list
     const excludePatterns = [
+      // Hardware/accessories
       "3d pen",
       "cleaning",
       "nozzle",
@@ -1389,18 +1394,39 @@ export class AmazonScraper extends BaseScraper {
       "bed tape",
       "adhesive",
       "dryer",
+      "dry box",
       "storage box",
       "holder",
       "rack",
       "spool holder",
       "desiccant",
       "vacuum bag",
-      // Skip discontinued and bundle products
+      "enclosure",
+      "connector",
+      "splicer",
+      "build plate",
+      "filament hub",
+      "resin",
+      // Discontinued/bundle
       "discontinued",
       "bundle",
-      // Skip mystery boxes and multi-roll packs
+      // Mystery/promotional
       "mystery",
       "rolls",
+      // Promotional variants
+      "buy 1 get",
+      "buy 2 get", 
+      "buy 3 get",
+      "flash sale",
+      "flash deal",
+      "bulk sale",
+      "christmas bulk",
+      "prime deal",
+      "10-100kg",
+      // Gift/promo items
+      "prize claim",
+      "gift card",
+      "gift item",
     ];
     
     const isExcluded = excludePatterns.some(pattern => titleLower.includes(pattern));

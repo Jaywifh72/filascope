@@ -166,12 +166,20 @@ export class WooCommerceScraper extends BaseScraper {
       "wood", "carbon", "cf", "gf", "hips", "pva", "filaflex"
     ];
     const excludeKeywords = [
+      // Hardware/accessories
       "printer", "nozzle", "bed", "hotend", "extruder", "fan",
       "belt", "motor", "kit", "tool", "adhesive", "glue", "tape",
-      // Skip discontinued and bundle products
+      "dryer", "dry box", "enclosure", "connector", "splicer",
+      "build plate", "filament hub",
+      // Discontinued/bundle
       "discontinued", "bundle",
-      // Skip mystery boxes and multi-roll packs
-      "mystery", "rolls"
+      // Mystery/promotional
+      "mystery", "rolls",
+      // Promotional variants  
+      "buy 1 get", "buy 2 get", "buy 3 get", "flash sale", "flash deal",
+      "bulk sale", "christmas bulk", "prime deal", "10-100kg",
+      // Gift/promo items
+      "prize claim", "gift card", "gift item", "resin"
     ];
     
     // Check if any filament keyword is present
