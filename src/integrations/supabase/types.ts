@@ -236,6 +236,8 @@ export type Database = {
       automated_brands: {
         Row: {
           active_product_count: number | null
+          amazon_last_scrape_at: string | null
+          amazon_store_url: string | null
           api_endpoint: string | null
           auth_type: string | null
           auto_create_products: boolean | null
@@ -257,6 +259,7 @@ export type Database = {
           display_order: number | null
           failed_scrapes: number | null
           featured: boolean | null
+          has_amazon_store: boolean | null
           has_api: boolean | null
           id: string
           image_selectors: Json | null
@@ -279,6 +282,7 @@ export type Database = {
           products_created: number | null
           products_updated: number | null
           products_url: string | null
+          products_with_amazon_prices: number | null
           products_with_codes: number | null
           products_with_color_hex: number | null
           products_with_images: number | null
@@ -304,6 +308,8 @@ export type Database = {
         }
         Insert: {
           active_product_count?: number | null
+          amazon_last_scrape_at?: string | null
+          amazon_store_url?: string | null
           api_endpoint?: string | null
           auth_type?: string | null
           auto_create_products?: boolean | null
@@ -325,6 +331,7 @@ export type Database = {
           display_order?: number | null
           failed_scrapes?: number | null
           featured?: boolean | null
+          has_amazon_store?: boolean | null
           has_api?: boolean | null
           id?: string
           image_selectors?: Json | null
@@ -347,6 +354,7 @@ export type Database = {
           products_created?: number | null
           products_updated?: number | null
           products_url?: string | null
+          products_with_amazon_prices?: number | null
           products_with_codes?: number | null
           products_with_color_hex?: number | null
           products_with_images?: number | null
@@ -372,6 +380,8 @@ export type Database = {
         }
         Update: {
           active_product_count?: number | null
+          amazon_last_scrape_at?: string | null
+          amazon_store_url?: string | null
           api_endpoint?: string | null
           auth_type?: string | null
           auto_create_products?: boolean | null
@@ -393,6 +403,7 @@ export type Database = {
           display_order?: number | null
           failed_scrapes?: number | null
           featured?: boolean | null
+          has_amazon_store?: boolean | null
           has_api?: boolean | null
           id?: string
           image_selectors?: Json | null
@@ -415,6 +426,7 @@ export type Database = {
           products_created?: number | null
           products_updated?: number | null
           products_url?: string | null
+          products_with_amazon_prices?: number | null
           products_with_codes?: number | null
           products_with_color_hex?: number | null
           products_with_images?: number | null
@@ -1176,6 +1188,8 @@ export type Database = {
           amazon_link_de: string | null
           amazon_link_uk: string | null
           amazon_link_us: string | null
+          amazon_price_usd: number | null
+          amazon_prices_last_updated_at: string | null
           auto_created: boolean | null
           auto_updated: boolean | null
           bed_temp_max_c: number | null
@@ -1261,6 +1275,8 @@ export type Database = {
           amazon_link_de?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
+          amazon_price_usd?: number | null
+          amazon_prices_last_updated_at?: string | null
           auto_created?: boolean | null
           auto_updated?: boolean | null
           bed_temp_max_c?: number | null
@@ -1346,6 +1362,8 @@ export type Database = {
           amazon_link_de?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
+          amazon_price_usd?: number | null
+          amazon_prices_last_updated_at?: string | null
           auto_created?: boolean | null
           auto_updated?: boolean | null
           bed_temp_max_c?: number | null

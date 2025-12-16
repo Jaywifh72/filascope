@@ -15,7 +15,7 @@ import {
   Building2, Search, Package, RefreshCw, CheckCircle2, XCircle, 
   Clock, TrendingUp, AlertCircle, Play, Activity,
   Zap, Database, ChevronDown, ChevronUp, Image, FileText, 
-  Palette, Thermometer, Barcode, Tag, PlayCircle
+  Palette, Thermometer, Barcode, Tag, PlayCircle, ShoppingCart
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,6 +40,7 @@ interface AutomatedBrand {
   products_with_mpn: number;
   products_with_codes: number;
   products_with_color_hex: number;
+  products_with_amazon_prices: number;
   total_scrapes: number;
   successful_scrapes: number;
   failed_scrapes: number;
@@ -50,6 +51,9 @@ interface AutomatedBrand {
   avg_scrape_duration_seconds: number | null;
   description: string | null;
   logo_url: string | null;
+  has_amazon_store: boolean;
+  amazon_store_url: string | null;
+  amazon_last_scrape_at: string | null;
 }
 
 interface SuccessDetails {
@@ -125,6 +129,11 @@ const AdminBrands = () => {
   const [scrapingBrandId, setScrapingBrandId] = useState<string | null>(null);
   const [scrapeProgress, setScrapeProgress] = useState<number>(0);
   const scrapeStartTimeRef = useRef<number | null>(null);
+  
+  // Amazon scraping progress state
+  const [amazonScrapingBrandId, setAmazonScrapingBrandId] = useState<string | null>(null);
+  const [amazonScrapeProgress, setAmazonScrapeProgress] = useState<number>(0);
+  const amazonScrapeStartTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!authLoading && user && !isAdmin) {
@@ -169,7 +178,24 @@ const AdminBrands = () => {
     return () => clearInterval(interval);
   }, [scrapingBrandId, brands]);
 
-  // Fetch recent sync logs with enhanced details
+  // Progress animation effect for Amazon scraping
+  useEffect(() => {
+    if (!amazonScrapingBrandId || !amazonScrapeStartTimeRef.current) return;
+    
+    // Amazon scraping is generally faster - estimate 20 seconds
+    const estimatedDuration = 20 * 1000;
+    
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - (amazonScrapeStartTimeRef.current || Date.now());
+      const rawProgress = Math.min((elapsed / estimatedDuration) * 85, 95);
+      const easedProgress = rawProgress < 85 
+        ? rawProgress 
+        : 85 + (rawProgress - 85) * 0.3;
+      setAmazonScrapeProgress(easedProgress);
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, [amazonScrapingBrandId]);
   const { data: syncLogs, isLoading: logsLoading, refetch: refetchLogs } = useQuery({
     queryKey: ["admin-sync-logs"],
     queryFn: async () => {
@@ -261,6 +287,38 @@ const AdminBrands = () => {
       setScrapeProgress(0);
       scrapeStartTimeRef.current = null;
       toast.error(`Failed to scrape ${brand.display_name}: ${error.message}`);
+    },
+  });
+
+  // Trigger Amazon price scrape
+  const scrapeAmazonPrices = useMutation({
+    mutationFn: async (brand: AutomatedBrand) => {
+      setAmazonScrapingBrandId(brand.id);
+      amazonScrapeStartTimeRef.current = Date.now();
+      setAmazonScrapeProgress(0);
+      
+      const { data, error } = await supabase.functions.invoke("scrape-amazon-prices", {
+        body: { vendor: brand.brand_name, limit: 100 },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data, brand) => {
+      setAmazonScrapeProgress(100);
+      setTimeout(() => {
+        setAmazonScrapingBrandId(null);
+        setAmazonScrapeProgress(0);
+        amazonScrapeStartTimeRef.current = null;
+      }, 800);
+      
+      queryClient.invalidateQueries({ queryKey: ["admin-automated-brands"] });
+      toast.success(`${brand.display_name}: ${data?.updated || 0} Amazon prices updated`);
+    },
+    onError: (error, brand) => {
+      setAmazonScrapingBrandId(null);
+      setAmazonScrapeProgress(0);
+      amazonScrapeStartTimeRef.current = null;
+      toast.error(`Failed to scrape Amazon prices for ${brand.display_name}: ${error.message}`);
     },
   });
 
@@ -675,17 +733,35 @@ const AdminBrands = () => {
                             </div>
                           </div>
                         </div>
-                        <Button
-                          size="sm"
-                          onClick={() => triggerScrape.mutate(brand)}
-                          disabled={!brand.scraping_enabled || triggerScrape.isPending || brand.scraping_active}
-                        >
-                          {triggerScrape.isPending || brand.scraping_active ? (
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Play className="w-4 h-4" />
+                        <div className="flex items-center gap-2">
+                          {brand.has_amazon_store && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="bg-orange-500/10 border-orange-500/50 hover:bg-orange-500/20 text-orange-400"
+                              onClick={() => scrapeAmazonPrices.mutate(brand)}
+                              disabled={scrapeAmazonPrices.isPending || amazonScrapingBrandId === brand.id}
+                              title="Scrape Amazon prices"
+                            >
+                              {scrapeAmazonPrices.isPending && amazonScrapingBrandId === brand.id ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <ShoppingCart className="w-4 h-4" />
+                              )}
+                            </Button>
                           )}
-                        </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => triggerScrape.mutate(brand)}
+                            disabled={!brand.scraping_enabled || triggerScrape.isPending || brand.scraping_active}
+                          >
+                            {triggerScrape.isPending || brand.scraping_active ? (
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Play className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -713,7 +789,24 @@ const AdminBrands = () => {
                         </div>
                       )}
 
-                      {/* Stats Row */}
+                      {/* Amazon Scraping Progress Bar */}
+                      {amazonScrapingBrandId === brand.id && (
+                        <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                              <ShoppingCart className="w-3 h-3 animate-pulse text-orange-400" />
+                              Scraping Amazon prices...
+                            </span>
+                            <span className="text-xs font-medium text-orange-400 tabular-nums">
+                              {Math.round(amazonScrapeProgress)}%
+                            </span>
+                          </div>
+                          <Progress 
+                            value={amazonScrapeProgress} 
+                            className="h-2 [&>div]:bg-orange-500"
+                          />
+                        </div>
+                      )}
                       <div className="grid grid-cols-5 gap-2 mb-3 text-center">
                         <div>
                           <p className="text-lg font-semibold text-foreground">{brand.product_count || 0}</p>
@@ -769,6 +862,13 @@ const AdminBrands = () => {
                           <span className="text-sm font-medium text-foreground">{brand.products_with_color_hex || 0}</span>
                           <span className="text-xs text-muted-foreground">colors</span>
                         </div>
+                        {brand.has_amazon_store && (
+                          <div className="flex items-center gap-1.5">
+                            <ShoppingCart className="w-3.5 h-3.5 text-orange-500" />
+                            <span className="text-sm font-medium text-orange-400">{brand.products_with_amazon_prices || 0}</span>
+                            <span className="text-xs text-muted-foreground">Amazon</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Controls Row */}

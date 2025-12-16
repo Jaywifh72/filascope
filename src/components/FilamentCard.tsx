@@ -115,6 +115,7 @@ interface Filament {
   amazon_link_us?: string | null;
   amazon_link_uk?: string | null;
   amazon_link_de?: string | null;
+  amazon_price_usd?: number | null;
 }
 
 // Material availability helper
@@ -285,12 +286,16 @@ export function FilamentCard({
     filamentId, 
     pricePerKg, 
     material, 
-    priceTrend: propTrend 
+    priceTrend: propTrend,
+    amazonPrice,
+    hasAmazonLink
   }: { 
     filamentId: string; 
     pricePerKg: number | null; 
     material: string | null | undefined;
     priceTrend: number | null | undefined;
+    amazonPrice: number | null | undefined;
+    hasAmazonLink: boolean;
   }) => {
     const [alertOpen, setAlertOpen] = useState(false);
     const [targetPrice, setTargetPrice] = useState("");
@@ -475,6 +480,14 @@ export function FilamentCard({
           <div className={cn("flex items-center gap-1 text-xs", priceContext.colorClass)}>
             <PriceContextIcon className="w-3 h-3" />
             <span>{priceContext.label}</span>
+          </div>
+        )}
+        
+        {/* Amazon Price Indicator */}
+        {hasAmazonLink && amazonPrice && (
+          <div className="flex items-center gap-1.5 text-xs text-orange-400">
+            <Package className="w-3 h-3" />
+            <span>Amazon: ${amazonPrice.toFixed(2)}</span>
           </div>
         )}
       </div>
@@ -1069,6 +1082,8 @@ export function FilamentCard({
         pricePerKg={isValidPrice ? pricePerKg : null}
         material={filament.material}
         priceTrend={priceTrend}
+        amazonPrice={filament.amazon_price_usd}
+        hasAmazonLink={!!filament.amazon_link_us}
       />
 
       {/* Properties Section */}
