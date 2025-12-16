@@ -376,6 +376,19 @@ export class ShopifyScraper extends BaseScraper {
       "stepper", "motor", "belt", "pulley", "bearing", "fan", "cover",
       "enclosure", "dryer", "dry box", "accessory", "part", "spare",
       "connector", "splicer", "build plate", "filament hub",
+      // CNC/router (SainSmart)
+      "cnc", "router", "planer", "spindle", "collet", "wasteboard",
+      "dust shoe", "touch plate", "spoilboard", "bit set",
+      // Protection plans
+      "protection plan", "shipping protection", "warranty",
+      // Clothing/merchandise
+      "t-shirt", "tshirt", "shirt", "hoodie", "hat", "sticker",
+      // Test/placeholder products
+      "test link", "not for sale", "misc charge", "placeholder",
+      // Combo packs with printers
+      "combo pack", "pro pack", "+ printer", "printer +", "printer combo",
+      // Sensors (except "filament sensor" context)
+      "temperature sensor", "humidity sensor", "led panel",
       // Discontinued/bundle
       "discontinued", "bundle",
       // Mystery/promotional
@@ -384,7 +397,7 @@ export class ShopifyScraper extends BaseScraper {
       "buy 1 get", "buy 2 get", "buy 3 get", "flash sale", "flash deal",
       "bulk sale", "christmas bulk", "prime deal", "10-100kg",
       // Gift/promo items
-      "prize claim", "gift card", "gift item"
+      "prize claim", "gift card", "gift item", "promotional container"
     ];
     const isExcluded = excludeKeywords.some((kw) => combined.includes(kw));
 

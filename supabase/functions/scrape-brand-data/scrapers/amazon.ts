@@ -1385,48 +1385,33 @@ export class AmazonScraper extends BaseScraper {
     // Exclude non-filament products - comprehensive list
     const excludePatterns = [
       // Hardware/accessories
-      "3d pen",
-      "cleaning",
-      "nozzle",
-      "extruder",
-      "hot end",
-      "hotend",
-      "bed tape",
-      "adhesive",
-      "dryer",
-      "dry box",
-      "storage box",
-      "holder",
-      "rack",
-      "spool holder",
-      "desiccant",
-      "vacuum bag",
-      "enclosure",
-      "connector",
-      "splicer",
-      "build plate",
-      "filament hub",
-      "resin",
+      "3d pen", "cleaning", "nozzle", "extruder", "hot end", "hotend",
+      "bed tape", "adhesive", "dryer", "dry box", "storage box",
+      "holder", "rack", "spool holder", "desiccant", "vacuum bag",
+      "enclosure", "connector", "splicer", "build plate", "filament hub",
+      "resin", "printer kit", "heater block", "thermistor", "heat break",
+      // CNC/router (SainSmart)
+      "cnc", "router", "planer", "spindle", "collet", "wasteboard",
+      "dust shoe", "touch plate", "spoilboard", "bit set", "router bit",
+      // Protection plans
+      "protection plan", "shipping protection", "warranty", "replacement part",
+      // Clothing/merchandise
+      "t-shirt", "tshirt", "shirt", "hoodie", "hat", "sticker",
+      // Test/placeholder products  
+      "test link", "not for sale", "misc charge", "placeholder",
+      // Combo packs with printers
+      "combo pack", "pro pack", "printer combo", "printer +", "+ printer",
+      // Sensors/electronics
+      "temperature sensor", "humidity sensor", "led panel", "led light",
       // Discontinued/bundle
-      "discontinued",
-      "bundle",
+      "discontinued", "bundle",
       // Mystery/promotional
-      "mystery",
-      "rolls",
+      "mystery", "rolls",
       // Promotional variants
-      "buy 1 get",
-      "buy 2 get", 
-      "buy 3 get",
-      "flash sale",
-      "flash deal",
-      "bulk sale",
-      "christmas bulk",
-      "prime deal",
-      "10-100kg",
+      "buy 1 get", "buy 2 get", "buy 3 get", "flash sale", "flash deal",
+      "bulk sale", "christmas bulk", "prime deal", "10-100kg",
       // Gift/promo items
-      "prize claim",
-      "gift card",
-      "gift item",
+      "prize claim", "gift card", "gift item", "promotional container",
     ];
     
     const isExcluded = excludePatterns.some(pattern => titleLower.includes(pattern));
