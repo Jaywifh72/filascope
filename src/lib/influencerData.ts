@@ -312,36 +312,6 @@ export const influencerData: InfluencerData[] = [
     ratings: { reach: 2, technical: 3, entertainment: 4, influence: 3, monetization: 3 }
   },
   {
-    id: "ivan-miranda",
-    name: "Ivan Miranda",
-    channelName: "Ivan Miranda",
-    location: "Spain",
-    subscribers: "~529,000",
-    totalViews: "~37 Million",
-    joinDate: "~2006 (Active later)",
-    niche: "Large-Scale Projects, CNC, Heavy Fabrication",
-    businessModel: "Digital File Sales (DXF/STL), AdSense, Sponsorships",
-    keyAsset: "Giant Projects (3D Printed Tank, Giant Printer, Hovercraft)",
-    brandIdentity: "Ivan Miranda is the 'Hyperactive Builder.' His brand is defined by scale and energy. Miranda doesn't just print a benchy; he prints a tank that he can drive. He builds 3D printers big enough to print a life-size replica of himself. His content showcases the 'extreme' possibilities of digital fabrication, delivered with a fast-paced, humorous editing style.",
-    contentStrategy: "Miranda's content focuses on 'Spectacle Engineering.' He identifies a massive, seemingly impossible project—like a 3D printed hovercraft—and attacks it with brute force and 3D printing. He often designs his own large-scale CNC machines and printers to facilitate these builds. His business model is heavily reliant on selling project files.",
-    economicImpact: "Miranda drives the market for large-format components. His projects require hundreds of kilograms of filament, demonstrating the reliability of E3D hotends and extruders he often uses. He partners with component suppliers to show their parts can handle 'heavy duty' applications. He is a primary inspirer for makers who want to build vehicles.",
-    futureOutlook: "Miranda is consistently scaling up. His 'Giant 3D Printer' series continues to evolve, pushing the boundaries of what can be built in a home garage. He represents the 'heavy industry' side of the maker movement.",
-    strengths: [
-      { title: "Scale Pioneer", description: "Demonstrates extreme possibilities of digital fabrication" },
-      { title: "Component Showcase", description: "Proves reliability of components under heavy-duty conditions" },
-      { title: "File Sales Model", description: "Monetizes R&D through project file sales" }
-    ],
-    weaknesses: [
-      { title: "Accessibility", description: "Large-scale projects require significant resources to replicate" },
-      { title: "Niche Appeal", description: "Extreme projects may not relate to typical hobbyist goals" }
-    ],
-    links: {
-      youtube: "https://www.youtube.com/@ivanmiranda",
-      website: "https://ivanmiranda.com"
-    },
-    ratings: { reach: 4, technical: 4, entertainment: 5, influence: 4, monetization: 4 }
-  },
-  {
     id: "zack-freedman",
     name: "Zack Freedman",
     channelName: "Zack Freedman",
