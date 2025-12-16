@@ -945,37 +945,49 @@ export class FirecrawlScraper extends BaseScraper {
         }
         
         // Extract colors from the color section
-        const colorSectionMatch = markdown.match(/###\s*color[\s\S]*?(?=###|$)/i);
+        // Known color names for validation
+        const KNOWN_COLORS = ['black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 
+          'grey', 'gray', 'silver', 'gold', 'bronze', 'transparent', 'clear', 'natural', 'nature', 'anthracite', 
+          'anthracit', 'navy', 'cyan', 'magenta', 'lime', 'turquoise', 'teal', 'beige', 'cream', 'ivory',
+          'copper', 'brass', 'pearl', 'signal', 'traffic', 'steel', 'smoke', 'venom', 'terracotta', 'sapphire'];
+        
         const colors: string[] = [];
         
-        if (colorSectionMatch) {
-          // Look for color names in the section - typically listed as bullet points or links
-          const colorLines = colorSectionMatch[0].match(/(?:^|\n)\s*[-*]?\s*\[?([a-z][a-z\s]{2,20})\]?/gim);
-          if (colorLines) {
-            for (const line of colorLines) {
-              const colorName = line.replace(/^[\s\-*\[\]]+/, '').trim().toLowerCase();
-              // Filter out non-color words
-              if (colorName && colorName.length > 1 && colorName.length < 25 && 
-                  !colorName.includes('http') && !colorName.includes('extrudr') &&
-                  !colorName.includes('filament') && !colorName.includes('diameter')) {
-                colors.push(colorName);
+        // Look for color names in markdown - split by newlines and filter
+        const lines = markdown.split('\n');
+        for (const line of lines) {
+          const cleanLine = line.replace(/[\[\]\*\-#]/g, '').trim().toLowerCase();
+          // Check if this line matches a known color or color pattern
+          if (cleanLine.length >= 3 && cleanLine.length <= 25) {
+            // Check against known colors
+            for (const knownColor of KNOWN_COLORS) {
+              if (cleanLine === knownColor || cleanLine.startsWith(knownColor + ' ') || cleanLine.endsWith(' ' + knownColor)) {
+                if (!colors.includes(cleanLine) && !cleanLine.includes('view') && !cleanLine.includes('option') && 
+                    !cleanLine.includes('available') && !cleanLine.includes('diameter') && !cleanLine.includes('filament')) {
+                  colors.push(cleanLine);
+                  break;
+                }
               }
             }
           }
         }
         
-        // If no colors found, try alternative patterns
+        // Fallback: look for color pattern in specific section
         if (colors.length === 0) {
-          const altColorMatch = markdown.match(/colors?[:\s]+([^\n]+)/i);
-          if (altColorMatch) {
-            const colorList = altColorMatch[1].split(/[,|\/]/).map((c: string) => c.trim().toLowerCase()).filter((c: string) => c.length > 1 && c.length < 20);
-            colors.push(...colorList);
+          const colorSectionMatch = markdown.match(/###\s*color[s]?[\s\S]*?(?=###|$)/i);
+          if (colorSectionMatch) {
+            for (const knownColor of KNOWN_COLORS) {
+              const regex = new RegExp(`\\b${knownColor}\\b`, 'gi');
+              if (regex.test(colorSectionMatch[0])) {
+                colors.push(knownColor);
+              }
+            }
           }
         }
         
-        // Fallback to common colors if still none found
+        // Final fallback to natural/default
         if (colors.length === 0) {
-          colors.push('natural'); // Default color
+          colors.push('natural');
         }
         
         // Extract weight options
