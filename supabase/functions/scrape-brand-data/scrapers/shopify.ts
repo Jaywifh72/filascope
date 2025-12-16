@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { findTdsUrl, extractPrintSettings, extractSpoolSpecs, classifyVariant, extractColorInfo, COLOR_HEX_MAP, intelligentTitleClean } from "../utils.ts";
+import { findTdsUrl, extractPrintSettings, extractSpoolSpecs, classifyVariant, extractColorInfo, COLOR_HEX_MAP, intelligentTitleClean, extractDataFromTitle } from "../utils.ts";
 
 interface ShopifyProduct {
   id: number;
@@ -86,8 +86,9 @@ export class ShopifyScraper extends BaseScraper {
       // Extract MPN from metafields or SKU pattern
       const mpn = this.extractMpn(product, variant);
 
-      // Clean the title intelligently
-      const cleanedTitle = intelligentTitleClean(product.title, product.vendor);
+      // Clean the title intelligently - first extract data, then clean
+      const extractedData = extractDataFromTitle(product.title);
+      const cleanedTitle = intelligentTitleClean(extractedData.cleanedTitle, product.vendor);
 
       return {
         productId: String(product.id),
@@ -367,16 +368,23 @@ export class ShopifyScraper extends BaseScraper {
     ];
     const isFilament = filamentKeywords.some((kw) => combined.includes(kw));
 
-    // Exclude non-filament items - more comprehensive exclusions
+    // Exclude non-filament items - comprehensive exclusions
     const excludeKeywords = [
+      // Hardware/accessories
       "nozzle", "bed", "sheet", "tool", "kit", "sample", "bundle pack",
       "printer", "resin", "lcd", "screen", "extruder", "hotend", "heater",
       "stepper", "motor", "belt", "pulley", "bearing", "fan", "cover",
       "enclosure", "dryer", "dry box", "accessory", "part", "spare",
-      // Skip discontinued and bundle products
+      "connector", "splicer", "build plate", "filament hub",
+      // Discontinued/bundle
       "discontinued", "bundle",
-      // Skip mystery boxes and multi-roll packs
-      "mystery", "rolls"
+      // Mystery/promotional
+      "mystery", "rolls",
+      // Promotional variants
+      "buy 1 get", "buy 2 get", "buy 3 get", "flash sale", "flash deal",
+      "bulk sale", "christmas bulk", "prime deal", "10-100kg",
+      // Gift/promo items
+      "prize claim", "gift card", "gift item"
     ];
     const isExcluded = excludeKeywords.some((kw) => combined.includes(kw));
 

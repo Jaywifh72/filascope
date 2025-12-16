@@ -6,7 +6,7 @@ import { BigCommerceScraper } from "./scrapers/bigcommerce.ts";
 import { AmazonScraper } from "./scrapers/amazon.ts";
 import { FirecrawlScraper } from "./scrapers/firecrawl.ts";
 import type { BaseScraper, ScrapedProduct } from "./scrapers/base.ts";
-import { calculateHash, detectMaterial, extractColor, extractWeight, extractDiameter, parseBarcodeFields, intelligentTitleClean } from "./utils.ts";
+import { calculateHash, detectMaterial, extractColor, extractWeight, extractDiameter, parseBarcodeFields, intelligentTitleClean, extractDataFromTitle } from "./utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -117,13 +117,19 @@ async function createFilamentFromScrapedProduct(
   product: ScrapedProduct,
   staticConfig: BrandConfig
 ): Promise<boolean> {
-  // Clean the title intelligently before saving
-  const cleanedTitle = intelligentTitleClean(product.title, vendor);
+  // Step 1: Extract data from title before cleaning (MOQ, weight patterns)
+  const extractedData = extractDataFromTitle(product.title);
+  
+  // Step 2: Clean the title intelligently
+  const cleanedTitle = intelligentTitleClean(extractedData.cleanedTitle, vendor);
   console.log(`📝 Cleaning title: "${product.title.substring(0, 50)}..." → "${cleanedTitle}"`);
   
-  const material = detectMaterial(product.title); // Use original title for material detection
-  const colorInfo = extractColor(product.title); // Use original title for color detection
-  const weight = extractWeight(product.title);
+  // Step 3: Detect material and color from ORIGINAL title (before cleaning)
+  const material = detectMaterial(product.title);
+  const colorInfo = extractColor(product.title);
+  
+  // Step 4: Use extracted weight if available, otherwise try to extract from title
+  const weight = extractedData.netWeightG || extractWeight(product.title);
   const diameter = extractDiameter(product.title);
   
   // Extract handle from URL
@@ -146,6 +152,7 @@ async function createFilamentFromScrapedProduct(
     variant_compare_at_price: product.compareAtPrice,
     variant_available: product.available,
     variant_sku: product.sku || null,
+    pack_quantity: extractedData.packQuantity || null,
     auto_created: true,
     auto_updated: true,
     last_scraped_at: new Date().toISOString(),
@@ -171,7 +178,7 @@ async function createFilamentFromScrapedProduct(
     throw error;
   }
   
-  console.log(`✨ Created: ${product.title} [${material || 'Unknown'}]`);
+  console.log(`✨ Created: ${cleanedTitle} [${material || 'Unknown'}]${extractedData.netWeightG ? ` (${extractedData.netWeightG}g extracted from title)` : ''}`);
   return true;
 }
 

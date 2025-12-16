@@ -115,6 +115,67 @@ export function cleanProductTitle(title: string): string {
 // INTELLIGENT TITLE CLEANING - Extract meaningful product names from bloated titles
 // ============================================================================
 
+// ============================================================================
+// DATA EXTRACTION FROM TITLE - Extract weight/pack info before cleaning
+// ============================================================================
+
+export interface ExtractedTitleData {
+  netWeightG: number | null;
+  packQuantity: number | null;
+  cleanedTitle: string;
+}
+
+/**
+ * Extract intelligent data from product title before cleaning
+ * Handles patterns like [MOQ: 6KG], 3KG Large Spool, 10KG Bulk, etc.
+ */
+export function extractDataFromTitle(title: string): ExtractedTitleData {
+  let cleanedTitle = title;
+  let netWeightG: number | null = null;
+  let packQuantity: number | null = null;
+  
+  // Pattern 1: [MOQ: XKG] format (Sunlu style)
+  const moqMatch = title.match(/\[MOQ:\s*(\d+(?:\.\d+)?)\s*KG\]/i);
+  if (moqMatch) {
+    netWeightG = Math.round(parseFloat(moqMatch[1]) * 1000);
+    cleanedTitle = cleanedTitle.replace(/\[MOQ:\s*\d+(?:\.\d+)?\s*KG\]/gi, '');
+  }
+  
+  // Pattern 2: XKG Large Spool / XKG Spool format  
+  const largeSpoolMatch = title.match(/(\d+(?:\.\d+)?)\s*KG\s*(?:Large\s*)?Spool/i);
+  if (largeSpoolMatch && !netWeightG) {
+    netWeightG = Math.round(parseFloat(largeSpoolMatch[1]) * 1000);
+  }
+  
+  // Pattern 3: Leading weight like "3KG PLA" or "10KG SILK"
+  const leadingWeightMatch = title.match(/^(\d+(?:\.\d+)?)\s*KG\s+/i);
+  if (leadingWeightMatch && !netWeightG) {
+    netWeightG = Math.round(parseFloat(leadingWeightMatch[1]) * 1000);
+  }
+  
+  // Pattern 4: Weight in brackets like (1KG) or [2KG]
+  const bracketWeightMatch = title.match(/[\[\(](\d+(?:\.\d+)?)\s*KG[\]\)]/i);
+  if (bracketWeightMatch && !netWeightG) {
+    netWeightG = Math.round(parseFloat(bracketWeightMatch[1]) * 1000);
+  }
+  
+  // Pattern 5: Pack quantity like "6 Pack" or "Pack of 4"
+  const packMatch = title.match(/(?:(\d+)\s*Pack|Pack\s*(?:of\s*)?(\d+))/i);
+  if (packMatch) {
+    packQuantity = parseInt(packMatch[1] || packMatch[2]);
+  }
+  
+  // Remove common bracket patterns that have been processed
+  cleanedTitle = cleanedTitle
+    .replace(/\[MOQ:\s*\d+(?:\.\d+)?\s*KG\]/gi, '')
+    .replace(/\[Bigger\s*Size[^\]]*\]/gi, '')
+    .replace(/\[Get\s*\d+\s*for[^\]]*\]/gi, '')
+    .replace(/\[USA\s*Resin[^\]]*\]/gi, '')
+    .replace(/\[No\s*Waste[^\]]*\]/gi, '');
+  
+  return { netWeightG, packQuantity, cleanedTitle };
+}
+
 // Patterns to remove from titles
 const TITLE_FLUFF_PATTERNS = [
   // Diameter specifications
@@ -129,13 +190,17 @@ const TITLE_FLUFF_PATTERNS = [
   /\b\d+(?:\.\d+)?\s*(?:lb|lbs|pound|pounds)\b/gi,
   /\b\d+(?:\.\d+)?\s*(?:oz|ounce|ounces)\b/gi,
   
-  // Generic product descriptors
+  // Generic product descriptors - EXPANDED
   /\b3d\s*print(?:ing|er)?\s*(?:filament|material|supplies?|consumable)s?\b/gi,
   /\bfilament\s*(?:for\s*)?3d\s*print(?:ing|er)?\b/gi,
+  /\b3d\s*filament\b/gi,
   /\bprinter\s*filament\b/gi,
+  /\bprinting\s*filament\b/gi,
   /\bprinting\s*material\b/gi,
   /\bfdm\s*filament\b/gi,
   /\bfilament\s*spool\b/gi,
+  /\bfilament\s*collection\b/gi,
+  /\bfilament\s*series\b/gi,
   
   // Marketing fluff
   /\bmost\s*(?:basic|popular|common|best|top)\b/gi,
@@ -145,6 +210,7 @@ const TITLE_FLUFF_PATTERNS = [
   /\bbest\s*(?:selling|seller|quality|value)\b/gi,
   /\bnew\s*(?:arrival|version|release|design)\b/gi,
   /\bhot\s*sale\b/gi,
+  /\bflash\s*(?:sale|deal)\b/gi,
   /\bfree\s*shipping\b/gi,
   /\bfast\s*(?:delivery|shipping)\b/gi,
   /\bquick(?:ly)?\b/gi,
@@ -170,6 +236,10 @@ const TITLE_FLUFF_PATTERNS = [
   /\bno\s*bubble\b/gi,
   /\bwarp\s*free\b/gi,
   /\bno\s*warp(?:ing)?\b/gi,
+  /\blarge\s*spool\b/gi,
+  /\bbigger\s*size\b/gi,
+  /\blonger\s*use\b/gi,
+  /\bno\s*waste\b/gi,
   
   // Brand suffix patterns (e.g., "by BRANDNAME", "from BRAND")
   /\bby\s+[A-Z][A-Za-z0-9]+(?:\s*3D)?\s*$/i,
@@ -185,8 +255,14 @@ const TITLE_FLUFF_PATTERNS = [
   /\b(?:nozzle|hotend|extruder)\s*(?:temp(?:erature)?)?[:\s]*\d+\s*[-–]\s*\d+\s*[°]?c?\b/gi,
   /\b(?:bed|platform|plate)\s*(?:temp(?:erature)?)?[:\s]*\d+\s*[-–]\s*\d+\s*[°]?c?\b/gi,
   
-  // Parenthetical additions often contain fluff
+  // Parenthetical additions with fluff
   /\([^)]*(?:diameter|weight|kg|lb|mm|pack|pcs|spool)[^)]*\)/gi,
+  
+  // Parenthetical expansions like "PLA+(PLA Plus)" or "HS_PLA"
+  /\((?:PLA|PETG|ABS|ASA|TPU)\s*(?:Plus|\+|Pro)\)/gi,
+  /\(HS[_\s]?PLA\)/gi,
+  /\(High\s*Speed[^)]*\)/gi,
+  /\(Nylon[^)]*Carbon[^)]*\)/gi,
 ];
 
 // Common color terms to preserve
