@@ -428,34 +428,5 @@ export const influencerData: InfluencerData[] = [
       youtube: "https://www.youtube.com/@NathanBuildsRobots"
     },
     ratings: { reach: 1, technical: 5, entertainment: 3, influence: 4, monetization: 2 }
-  },
-  {
-    id: "modbot",
-    name: "Daniel Pizzata",
-    channelName: "ModBot",
-    location: "Australia",
-    subscribers: "~166,000",
-    totalViews: "~35 Million",
-    joinDate: "~2010",
-    niche: "News, Reviews, Variety",
-    businessModel: "Patreon, Affiliates, AdSense",
-    keyAsset: "Comprehensive Coverage of All Printers",
-    brandIdentity: "ModBot, hosted by Daniel Pizzata, is the 'Industry News Ticker.' Based in Australia, ModBot creates a high volume of consistent content, covering news, unboxings, and tutorials. If a printer exists, ModBot has likely reviewed it. He provides a broad overview of the market, from budget entry-level machines to expensive industrial units.",
-    contentStrategy: "ModBot's strategy is ubiquity. By covering a vast array of machines, he captures search traffic for almost any printer model a consumer might research. His reviews are balanced and approachable. He also covers modifications and community news, acting as a digest for the busy hobbyist.",
-    economicImpact: "ModBot provides crucial visibility for smaller or new manufacturers. A review from him can put a new brand on the map. His consistent coverage helps maintain interest in the hobby by constantly showcasing 'what's new'.",
-    futureOutlook: "ModBot is expanding into Shorts and live streaming to maintain engagement in the fast-paced algorithm landscape. He continues to be a reliable source for keeping up with rapid hardware release cycles.",
-    strengths: [
-      { title: "Comprehensive Coverage", description: "Captures search traffic for virtually any printer model" },
-      { title: "Discovery Platform", description: "Provides visibility for smaller/new manufacturers" },
-      { title: "Consistent Output", description: "High volume keeps audience engaged with industry" }
-    ],
-    weaknesses: [
-      { title: "Depth vs Breadth", description: "Volume may limit depth of individual reviews" },
-      { title: "Differentiation", description: "Balanced approach may lack distinctive voice" }
-    ],
-    links: {
-      youtube: "https://www.youtube.com/@ModBot"
-    },
-    ratings: { reach: 2, technical: 4, entertainment: 3, influence: 3, monetization: 3 }
   }
 ];
