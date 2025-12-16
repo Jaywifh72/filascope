@@ -22,8 +22,14 @@ interface FilamentRecord {
   amazon_link_us: string | null;
 }
 
-// Build search query for Amazon
-function buildSearchQuery(filament: FilamentRecord): string {
+interface BrandConfig {
+  brand_name: string;
+  amazon_store_url: string | null;
+  has_amazon_store: boolean;
+}
+
+// Build search query for Amazon - prioritizes store-based search if available
+function buildSearchQuery(filament: FilamentRecord, brandConfig?: BrandConfig): string {
   const parts = [filament.vendor];
   
   if (filament.material) {
@@ -32,8 +38,8 @@ function buildSearchQuery(filament: FilamentRecord): string {
   
   // Extract key words from product title (color, type)
   const titleWords = filament.product_title
-    .replace(filament.vendor, '')
-    .replace(filament.material || '', '')
+    .replace(new RegExp(filament.vendor, 'gi'), '')
+    .replace(new RegExp(filament.material || '', 'gi'), '')
     .trim();
   
   if (titleWords) {
@@ -142,6 +148,56 @@ async function searchAmazon(query: string, serpApiKey: string): Promise<AmazonSe
   }));
 }
 
+// Search Amazon store products via SerpApi
+async function searchAmazonStore(brandName: string, storeUrl: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
+  // Extract store name from URL for better search
+  const storeMatch = storeUrl.match(/\/stores\/([^\/]+)/);
+  const storeName = storeMatch ? storeMatch[1] : brandName;
+  
+  // Search for brand filament products to find store products
+  const params = new URLSearchParams({
+    engine: 'amazon',
+    amazon_domain: 'amazon.com',
+    k: `${brandName} filament 1.75mm`,
+    api_key: serpApiKey,
+  });
+  
+  console.log(`Searching Amazon store products for: ${brandName}`);
+  
+  const response = await fetch(`https://serpapi.com/search?${params}`);
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('SerpApi store search error:', errorText);
+    throw new Error(`SerpApi request failed: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  
+  // Collect all filament products from results
+  const results: AmazonSearchResult[] = [];
+  
+  if (data.organic_results && Array.isArray(data.organic_results)) {
+    for (const result of data.organic_results) {
+      // Filter to only include products from this brand
+      const title = (result.title || '').toLowerCase();
+      if (title.includes(brandName.toLowerCase()) || 
+          title.includes(brandName.toLowerCase().replace(' ', ''))) {
+        results.push({
+          title: result.title || '',
+          link: result.link || '',
+          price: result.price?.raw ? parseFloat(result.price.raw.replace(/[^0-9.]/g, '')) : 
+                 result.price?.extracted ? result.price.extracted : null,
+          asin: result.asin || extractAsin(result.link || ''),
+          thumbnail: result.thumbnail,
+        });
+      }
+    }
+  }
+  
+  return results;
+}
+
 // Rate limiting
 const RATE_LIMIT_MS = 1500;
 let lastRequestTime = 0;
@@ -187,6 +243,15 @@ Deno.serve(async (req) => {
 
     console.log(`Discovering Amazon products for vendor: ${vendor}`);
 
+    // Fetch brand config including Amazon store URL
+    const { data: brandConfig } = await supabase
+      .from('automated_brands')
+      .select('brand_name, amazon_store_url, has_amazon_store')
+      .ilike('brand_name', vendor)
+      .single();
+
+    console.log(`Brand config:`, brandConfig);
+
     // Fetch filaments without Amazon links (or with low confidence)
     const { data: filaments, error: fetchError } = await supabase
       .from('filaments')
@@ -222,12 +287,41 @@ Deno.serve(async (req) => {
     let lowConfidence = 0;
     let updated = 0;
 
-    for (const filament of filaments) {
+    // If brand has Amazon store URL, first get all store products
+    let storeProducts: AmazonSearchResult[] = [];
+    if (brandConfig?.amazon_store_url) {
       try {
         await respectRateLimit();
+        storeProducts = await searchAmazonStore(vendor, brandConfig.amazon_store_url, serpApiKey);
+        console.log(`Found ${storeProducts.length} products from store search`);
+      } catch (err) {
+        console.error('Error fetching store products:', err);
+      }
+    }
+
+    for (const filament of filaments) {
+      try {
+        let amazonResults: AmazonSearchResult[] = [];
         
-        const searchQuery = buildSearchQuery(filament);
-        const amazonResults = await searchAmazon(searchQuery, serpApiKey);
+        // First try to match against store products if available
+        if (storeProducts.length > 0) {
+          // Score each store product against this filament
+          const scoredProducts = storeProducts.map(product => ({
+            product,
+            confidence: calculateMatchConfidence(filament, product)
+          })).sort((a, b) => b.confidence - a.confidence);
+          
+          if (scoredProducts.length > 0 && scoredProducts[0].confidence >= 70) {
+            amazonResults = [scoredProducts[0].product];
+          }
+        }
+        
+        // If no good match from store, do individual search
+        if (amazonResults.length === 0) {
+          await respectRateLimit();
+          const searchQuery = buildSearchQuery(filament, brandConfig || undefined);
+          amazonResults = await searchAmazon(searchQuery, serpApiKey);
+        }
         
         if (amazonResults.length === 0) {
           results.push({
