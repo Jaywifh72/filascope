@@ -67,51 +67,53 @@ export class FirecrawlScraper extends BaseScraper {
     const baseUrl = this.config.baseUrl;
     const vendor = this.config.vendor.toLowerCase();
     
-    this.log(`Discovering products via Firecrawl Map API from: ${baseUrl}`);
+    this.log(`Discovering products via Firecrawl from: ${baseUrl}`);
 
     try {
+      // For GEEETECH, use fast HTML extraction (single call, no individual product scraping)
+      if (vendor === 'geeetech') {
+        this.log(`Using FAST category page extraction for GEEETECH`);
+        const geeetechProducts = await this.extractGeeetechProductsFromHtml(baseUrl);
+        this.log(`Successfully extracted ${geeetechProducts.length} GEEETECH products`);
+        return geeetechProducts.slice(0, limit);
+      }
+
       let productUrls: string[] = [];
       
-      // For GEEETECH, use HTML extraction instead of Map API (Map API doesn't work well with their site)
-      if (vendor === 'geeetech') {
-        this.log(`Using HTML extraction for GEEETECH products`);
-        productUrls = await this.extractProductUrlsFromHtml(baseUrl);
-      } else {
-        // Step 1: Use Firecrawl Map API to discover all URLs on the shop
-        const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${this.firecrawlApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            url: baseUrl,
-            search: "filament PLA PETG ABS TPU nylon",
-            limit: 200,
-            includeSubdomains: false,
-          }),
-        });
+      // Step 1: Use Firecrawl Map API to discover all URLs on the shop
+      const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.firecrawlApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: baseUrl,
+          search: "filament PLA PETG ABS TPU nylon",
+          limit: 200,
+          includeSubdomains: false,
+        }),
+      });
 
-        if (!mapResponse.ok) {
-          const error = await mapResponse.text();
-          this.logError(`Firecrawl Map error: ${mapResponse.status} - ${error}`);
-          return [];
-        }
-
-        const mapData = await mapResponse.json();
-        
-        if (!mapData.success || !mapData.links) {
-          this.logError(`Firecrawl Map failed: ${mapData.error || 'No links returned'}`);
-          return [];
-        }
-
-        this.log(`Map discovered ${mapData.links.length} URLs`);
-
-        // Filter for product URLs using brand-specific patterns
-        productUrls = mapData.links.filter((url: string) => {
-          return this.isProductUrl(url, vendor);
-        });
+      if (!mapResponse.ok) {
+        const error = await mapResponse.text();
+        this.logError(`Firecrawl Map error: ${mapResponse.status} - ${error}`);
+        return [];
       }
+
+      const mapData = await mapResponse.json();
+      
+      if (!mapData.success || !mapData.links) {
+        this.logError(`Firecrawl Map failed: ${mapData.error || 'No links returned'}`);
+        return [];
+      }
+
+      this.log(`Map discovered ${mapData.links.length} URLs`);
+
+      // Filter for product URLs using brand-specific patterns
+      productUrls = mapData.links.filter((url: string) => {
+        return this.isProductUrl(url, vendor);
+      });
 
       this.log(`Filtered to ${productUrls.length} potential product URLs`);
 
@@ -159,55 +161,219 @@ export class FirecrawlScraper extends BaseScraper {
   }
 
   /**
-   * Extract product URLs directly from category page HTML (for sites where Map API doesn't work)
+   * GEEETECH Fast Extraction - Extract ALL product data from category page HTML in single call
+   * This avoids timeouts by not making individual product page requests
    */
-  private async extractProductUrlsFromHtml(categoryUrl: string): Promise<string[]> {
-    try {
-      // Scrape the category page to get HTML
-      const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.firecrawlApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: categoryUrl,
-          formats: ["html"],
-          waitFor: 3000,
-        }),
-      });
+  private async extractGeeetechProductsFromHtml(categoryUrl: string): Promise<ScrapedProduct[]> {
+    const products: ScrapedProduct[] = [];
+    const seenIds = new Set<string>();
+    
+    // All GEEETECH filament category URLs to scrape
+    const categoryUrls = [
+      categoryUrl, // Main filament page
+      "https://www.geeetech.com/filament-pla-c-83_111.html",
+      "https://www.geeetech.com/filament-petg-c-83_124.html",
+      "https://www.geeetech.com/filament-silksilk-dual-tricolor-c-83_113.html",
+      "https://www.geeetech.com/filament-tpu-c-83_130.html",
+      "https://www.geeetech.com/filament-absasapcnyloncf-c-83_129.html",
+    ];
 
-      if (!scrapeResponse.ok) {
-        this.logError(`Failed to scrape category page: ${scrapeResponse.status}`);
-        return [];
+    for (const url of categoryUrls) {
+      try {
+        this.log(`Extracting products from: ${url}`);
+        
+        const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.firecrawlApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url,
+            formats: ["html"],
+            waitFor: 3000,
+          }),
+        });
+
+        if (!scrapeResponse.ok) {
+          this.logError(`Failed to scrape ${url}: ${scrapeResponse.status}`);
+          continue;
+        }
+
+        const data = await scrapeResponse.json();
+        const html = data.data?.html || data.html || "";
+        
+        if (!html) {
+          this.log(`No HTML returned for ${url}`);
+          continue;
+        }
+
+        // Extract product blocks - GEEETECH uses products-list-item divs
+        // Pattern matches the product container including all data
+        const productBlockPattern = /<div[^>]*class="[^"]*products-list-item[^"]*"[^>]*>([\s\S]*?)(?=<div[^>]*class="[^"]*products-list-item[^"]*"|<\/div>\s*<\/div>\s*<\/div>\s*<div[^>]*class="[^"]*pagination|$)/gi;
+        
+        let match;
+        let blockCount = 0;
+        
+        // Alternative: split by product blocks more reliably
+        const productBlocks = html.split(/(?=<div[^>]*class="[^"]*products-list-item(?:\s|")[^"]*")/gi);
+        
+        for (const block of productBlocks) {
+          if (!block.includes('products-list-item')) continue;
+          blockCount++;
+          
+          // Extract product URL
+          const urlMatch = block.match(/href=["'](https?:\/\/www\.geeetech\.com\/[a-z0-9-]+-p-\d+\.html)["']/i) ||
+                          block.match(/href=["']\/([a-z0-9-]+-p-\d+\.html)["']/i);
+          
+          // Extract title
+          const titleMatch = block.match(/class="[^"]*products-list-item-name[^"]*"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/i) ||
+                            block.match(/<a[^>]*class="[^"]*product-title[^"]*"[^>]*>([^<]+)<\/a>/i) ||
+                            block.match(/title=["']([^"']+)["'][^>]*class="[^"]*product/i);
+          
+          // Extract image
+          const imgMatch = block.match(/<img[^>]*src=["']([^"']+)["'][^>]*alt/i) ||
+                          block.match(/data-src=["']([^"']+)["']/i);
+          
+          // Extract sale price (special price)
+          const priceMatch = block.match(/class="[^"]*products-list-item-price-special[^"]*"[^>]*>\s*\$?([\d.,]+)/i) ||
+                            block.match(/class="[^"]*special-price[^"]*"[^>]*>\s*\$?([\d.,]+)/i) ||
+                            block.match(/class="[^"]*price[^"]*"[^>]*>\s*\$?([\d.,]+)/i);
+          
+          // Extract compare-at price (normal/old price)
+          const compareMatch = block.match(/class="[^"]*products-list-item-price-normal[^"]*"[^>]*>\s*\$?([\d.,]+)/i) ||
+                              block.match(/class="[^"]*old-price[^"]*"[^>]*>\s*\$?([\d.,]+)/i);
+          
+          // Extract nozzle temperature
+          const tempMatch = block.match(/Nozzle\s*Temp[:\s]*(\d+)\s*°?C?\s*[-–]\s*(\d+)/i) ||
+                           block.match(/(\d{3})\s*°?C?\s*[-–]\s*(\d{3})/);
+          
+          // Extract product ID
+          const idMatch = block.match(/data-products-id=["'](\d+)["']/i) ||
+                         block.match(/-p-(\d+)\.html/i);
+          
+          if (titleMatch && priceMatch) {
+            const title = titleMatch[1].trim();
+            const productUrl = urlMatch ? 
+              (urlMatch[1].startsWith('http') ? urlMatch[1] : `https://www.geeetech.com/${urlMatch[1]}`) : 
+              '';
+            const productId = idMatch?.[1] || this.extractProductIdFromUrl(productUrl);
+            
+            // Skip if we've already seen this product
+            if (seenIds.has(productId)) continue;
+            seenIds.add(productId);
+            
+            const price = parseFloat(priceMatch[1].replace(',', ''));
+            const comparePrice = compareMatch ? parseFloat(compareMatch[1].replace(',', '')) : null;
+            
+            // Detect material from title
+            const material = this.detectMaterial(title);
+            const colorInfo = this.extractColorFromText(title);
+            
+            const product: ScrapedProduct = {
+              productId,
+              sku: productId,
+              title,
+              price: price > 0 ? price : null,
+              compareAtPrice: comparePrice,
+              available: true,
+              currency: "USD",
+              url: productUrl,
+              scrapedAt: new Date(),
+              source: "firecrawl-geeetech",
+              imageUrl: imgMatch?.[1] || null,
+              barcode: null,
+              description: null,
+              mpn: null,
+              tdsUrl: null,
+              colorHex: colorInfo?.hex || null,
+              colorName: colorInfo?.name || null,
+              nozzleTempMin: tempMatch ? parseInt(tempMatch[1]) : null,
+              nozzleTempMax: tempMatch ? parseInt(tempMatch[2]) : null,
+              bedTempMin: null,
+              bedTempMax: null,
+              spoolMaterial: null,
+              netWeightG: this.extractWeightFromTitle(title),
+              diameterMm: this.extractDiameterFromTitle(title),
+              spoolOuterDiameterMm: null,
+              spoolWidthMm: null,
+            };
+            
+            products.push(product);
+            this.log(`✓ Extracted: ${title} - $${price}${material ? ` (${material})` : ''}`);
+          }
+        }
+        
+        this.log(`Found ${blockCount} product blocks in ${url}`);
+        
+        // Small delay between category pages
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+      } catch (error) {
+        this.logError(`Error extracting from ${url}:`, error);
       }
-
-      const data = await scrapeResponse.json();
-      const html = data.data?.html || data.html || "";
-      
-      // Extract GEEETECH product URLs: pattern is /product-name-p-123.html
-      const productUrlPattern = /href=["'](https?:\/\/www\.geeetech\.com\/[a-z0-9-]+-p-\d+\.html)["']/gi;
-      const matches = html.matchAll(productUrlPattern);
-      
-      const urls = new Set<string>();
-      for (const match of matches) {
-        urls.add(match[1]);
-      }
-
-      // Also try relative URLs
-      const relativePattern = /href=["']\/([a-z0-9-]+-p-\d+\.html)["']/gi;
-      const relMatches = html.matchAll(relativePattern);
-      for (const match of relMatches) {
-        urls.add(`https://www.geeetech.com/${match[1]}`);
-      }
-
-      this.log(`Extracted ${urls.size} product URLs from HTML`);
-      return Array.from(urls);
-    } catch (error) {
-      this.logError(`Error extracting URLs from HTML:`, error);
-      return [];
     }
+    
+    this.log(`Total unique GEEETECH products extracted: ${products.length}`);
+    return products;
   }
+
+  /**
+   * Detect material type from product title
+   */
+  private detectMaterial(title: string): string | null {
+    const titleLower = title.toLowerCase();
+    
+    const materials = [
+      { pattern: /\bpetg\b/i, name: 'PETG' },
+      { pattern: /\btpu\b/i, name: 'TPU' },
+      { pattern: /\babs\b/i, name: 'ABS' },
+      { pattern: /\basa\b/i, name: 'ASA' },
+      { pattern: /\bnylon\b/i, name: 'Nylon' },
+      { pattern: /\bpa[\s-]?cf\b/i, name: 'PA-CF' },
+      { pattern: /\bpc\b/i, name: 'PC' },
+      { pattern: /\bsilk\b/i, name: 'PLA-Silk' },
+      { pattern: /\bpla\+?\b/i, name: 'PLA' },
+      { pattern: /\bmatte\b/i, name: 'PLA-Matte' },
+    ];
+    
+    for (const { pattern, name } of materials) {
+      if (pattern.test(titleLower)) {
+        return name;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Extract weight from title (e.g., "1kg", "1000g")
+   */
+  private extractWeightFromTitle(title: string): number | null {
+    const kgMatch = title.match(/(\d+(?:\.\d+)?)\s*kg/i);
+    if (kgMatch) {
+      return Math.round(parseFloat(kgMatch[1]) * 1000);
+    }
+    
+    const gMatch = title.match(/(\d+)\s*g\b/i);
+    if (gMatch) {
+      return parseInt(gMatch[1]);
+    }
+    
+    return null;
+  }
+
+  /**
+   * Extract diameter from title (e.g., "1.75mm", "2.85mm")
+   */
+  private extractDiameterFromTitle(title: string): number | null {
+    const match = title.match(/(1\.75|2\.85|3\.0|3)\s*mm/i);
+    if (match) {
+      return parseFloat(match[1]);
+    }
+    return null;
+  }
+
 
   /**
    * Brand-specific product URL detection
