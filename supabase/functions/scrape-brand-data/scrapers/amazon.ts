@@ -273,66 +273,120 @@ export class AmazonScraper extends BaseScraper {
     }
   }
 
-  // Use Firecrawl Map API to discover ALL product URLs in the store
+  // Map entire Amazon store using multiple strategies for reliable discovery
   private async mapEntireAmazonStore(storeUrl: string): Promise<string[]> {
-    if (!this.firecrawlApiKey) {
-      this.log("FIRECRAWL_API_KEY not available - cannot map store");
-      return [];
+    const asins = new Set<string>();
+    
+    // Method 1: Try SerpApi site-specific search (most reliable for Amazon)
+    if (this.serpApiKey) {
+      try {
+        const brandName = this.config.vendor;
+        this.log(`[SERPAPI] Searching Amazon for ${brandName} filament products`);
+        
+        await this.respectGlobalRateLimit();
+        
+        const url = new URL("https://serpapi.com/search.json");
+        url.searchParams.set("engine", "amazon");
+        url.searchParams.set("amazon_domain", "amazon.com");
+        url.searchParams.set("k", `${brandName} filament`);
+        url.searchParams.set("api_key", this.serpApiKey);
+        
+        const response = await fetch(url.toString());
+        if (response.ok) {
+          const data = await response.json();
+          if (data.organic_results) {
+            for (const result of data.organic_results) {
+              if (result.asin) asins.add(result.asin);
+            }
+            this.log(`[SERPAPI] Found ${data.organic_results.length} products, ASINs: ${asins.size}`);
+          }
+        }
+      } catch (error) {
+        this.log(`SerpApi search failed: ${error}`);
+      }
     }
     
-    try {
-      await this.respectGlobalRateLimit();
-      
-      this.log(`Using Firecrawl Map API on: ${storeUrl}`);
-      
-      const response = await fetch("https://api.firecrawl.dev/v1/map", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.firecrawlApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: storeUrl,
-          search: "dp/B", // Filter for product pages only
-          limit: 500,     // Get up to 500 URLs
-          includeSubdomains: false,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        this.log(`Firecrawl Map API error: ${response.status} - ${error}`);
-        return [];
-      }
-
-      const data = await response.json();
-      
-      if (!data.success) {
-        this.log(`Firecrawl Map API failed: ${data.error}`);
-        return [];
-      }
-
-      const links = data.links || [];
-      this.log(`Map API returned ${links.length} links`);
-      
-      // Extract unique ASINs from all discovered URLs
-      const asins = new Set<string>();
-      const asinPattern = /\/dp\/([A-Z0-9]{10})/gi;
-      
-      for (const link of links) {
-        const matches = link.matchAll(asinPattern);
-        for (const match of matches) {
-          asins.add(match[1].toUpperCase());
+    // Method 2: Try ScrapingDog search for brand products
+    if (asins.size < 10 && this.scrapingDogApiKey) {
+      try {
+        const brandName = this.config.vendor;
+        this.log(`[SCRAPINGDOG] Searching for ${brandName} filament`);
+        
+        await this.respectGlobalRateLimit();
+        
+        const url = new URL("https://api.scrapingdog.com/amazon/search");
+        url.searchParams.set("api_key", this.scrapingDogApiKey);
+        url.searchParams.set("domain", "com");
+        url.searchParams.set("query", `${brandName} filament`);
+        url.searchParams.set("page", "1");
+        url.searchParams.set("country", "us");
+        
+        const response = await fetch(url.toString());
+        if (response.ok) {
+          const data = await response.json();
+          const results = data.results || [];
+          for (const result of results) {
+            if (result.asin && !asins.has(result.asin)) {
+              asins.add(result.asin);
+            }
+          }
+          this.log(`[SCRAPINGDOG] Found ${results.length} products, total ASINs: ${asins.size}`);
         }
+      } catch (error) {
+        this.log(`ScrapingDog search failed: ${error}`);
       }
-      
-      this.log(`Extracted ${asins.size} unique ASINs from Map API`);
-      return Array.from(asins);
-      
-    } catch (error) {
-      this.logError(`Error mapping Amazon store:`, error);
-      return [];
     }
+
+    // Method 3: Try Firecrawl Map API on store URL
+    if (asins.size < 10 && this.firecrawlApiKey) {
+      try {
+        this.log(`[FIRECRAWL MAP] Mapping store URL: ${storeUrl}`);
+        
+        await this.respectGlobalRateLimit();
+        
+        const response = await fetch("https://api.firecrawl.dev/v1/map", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${this.firecrawlApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: storeUrl,
+            search: "dp/B",
+            limit: 500,
+            includeSubdomains: false,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.links) {
+            const asinPattern = /\/dp\/([A-Z0-9]{10})/gi;
+            for (const link of data.links) {
+              let match;
+              while ((match = asinPattern.exec(link)) !== null) {
+                asins.add(match[1].toUpperCase());
+              }
+            }
+            this.log(`[FIRECRAWL MAP] Found ${asins.size} total ASINs from ${data.links.length} links`);
+          }
+        }
+      } catch (error) {
+        this.log(`Firecrawl Map failed: ${error}`);
+      }
+    }
+
+    // Method 4: Final fallback - scrape store page directly
+    if (asins.size < 5) {
+      this.log(`[FALLBACK] Direct page scraping for ASINs`);
+      const fallbackAsins = await this.extractAsinsFromStorePage(storeUrl);
+      for (const asin of fallbackAsins) {
+        asins.add(asin);
+      }
+    }
+
+    this.log(`Total unique ASINs discovered: ${asins.size}`);
+    return Array.from(asins);
   }
 
   // Extract ASINs from an Amazon store page using Firecrawl Scrape (fallback)
@@ -447,10 +501,12 @@ export class AmazonScraper extends BaseScraper {
         return null;
       }
       
-      // Extract identifiers from product_information
+      // Extract identifiers from product_information with enhanced search
       const productInfo = data.product_information || {};
-      const { upc, ean, gtin } = this.extractIdentifiers(productInfo);
+      const featureBullets: string[] = data.feature_bullets || data.about_item || [];
+      const { upc, ean, gtin } = this.extractIdentifiers(productInfo, featureBullets, data.description);
       const mpn = this.extractMpn(productInfo);
+      
       
       // Extract all images
       const images: string[] = [];
@@ -467,9 +523,6 @@ export class AmazonScraper extends BaseScraper {
       if (data.thumbnail && !images.includes(data.thumbnail)) {
         images.push(data.thumbnail);
       }
-      
-      // Extract feature bullets
-      const featureBullets: string[] = data.feature_bullets || data.about_item || [];
       
       // Parse pricing
       const currentPrice = this.parsePriceValue(data.price || data.buybox_price || data.pricing);
@@ -538,10 +591,54 @@ export class AmazonScraper extends BaseScraper {
   // INTELLIGENT PARSING HELPERS
   // ============================================================================
 
-  // Extract UPC, EAN, GTIN identifiers with validation
-  private extractIdentifiers(productInfo: Record<string, any>): { upc: string | null; ean: string | null; gtin: string | null } {
+  // Default print settings by material type (used when Amazon doesn't provide temps)
+  private getDefaultPrintSettings(material: string | null): {
+    nozzleTempMin: number | null;
+    nozzleTempMax: number | null;
+    bedTempMin: number | null;
+    bedTempMax: number | null;
+  } {
+    if (!material) return { nozzleTempMin: null, nozzleTempMax: null, bedTempMin: null, bedTempMax: null };
+    
+    const materialUpper = material.toUpperCase();
+    
+    // PLA and variants
+    if (materialUpper.includes('PLA')) {
+      return { nozzleTempMin: 190, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 };
+    }
+    // PETG
+    if (materialUpper.includes('PETG')) {
+      return { nozzleTempMin: 220, nozzleTempMax: 250, bedTempMin: 70, bedTempMax: 85 };
+    }
+    // ABS
+    if (materialUpper.includes('ABS')) {
+      return { nozzleTempMin: 230, nozzleTempMax: 260, bedTempMin: 95, bedTempMax: 110 };
+    }
+    // ASA
+    if (materialUpper.includes('ASA')) {
+      return { nozzleTempMin: 235, nozzleTempMax: 260, bedTempMin: 90, bedTempMax: 110 };
+    }
+    // TPU/TPE
+    if (materialUpper.includes('TPU') || materialUpper.includes('TPE')) {
+      return { nozzleTempMin: 210, nozzleTempMax: 240, bedTempMin: 40, bedTempMax: 60 };
+    }
+    // Nylon/PA
+    if (materialUpper.includes('NYLON') || materialUpper.includes('PA')) {
+      return { nozzleTempMin: 240, nozzleTempMax: 270, bedTempMin: 70, bedTempMax: 90 };
+    }
+    // PC/Polycarbonate
+    if (materialUpper.includes('PC') || materialUpper.includes('POLYCARBONATE')) {
+      return { nozzleTempMin: 260, nozzleTempMax: 300, bedTempMin: 100, bedTempMax: 120 };
+    }
+    
+    return { nozzleTempMin: null, nozzleTempMax: null, bedTempMin: null, bedTempMax: null };
+  }
+
+  // Extract UPC, EAN, GTIN identifiers with validation - enhanced with text search
+  private extractIdentifiers(productInfo: Record<string, any>, featureBullets?: string[], description?: string): { upc: string | null; ean: string | null; gtin: string | null } {
     const result = { upc: null as string | null, ean: null as string | null, gtin: null as string | null };
     
+    // Method 1: Extract from product information table
     // UPC patterns
     const upcKeys = ['UPC', 'UPCundefined', 'upc'];
     for (const key of upcKeys) {
@@ -580,6 +677,36 @@ export class AmazonScraper extends BaseScraper {
         if (cleaned.length === 14 && this.validateCheckDigit(cleaned, 14)) {
           result.gtin = cleaned;
           break;
+        }
+      }
+    }
+    
+    // Method 2: Search feature bullets and description for barcode patterns
+    if (!result.upc && !result.ean && !result.gtin && (featureBullets || description)) {
+      const searchText = [
+        ...(featureBullets || []),
+        description || '',
+      ].join(' ');
+      
+      // Look for explicit barcode mentions
+      if (!result.upc) {
+        const upcMatch = searchText.match(/\bUPC[:\s]*(\d{12})\b/i);
+        if (upcMatch && this.validateCheckDigit(upcMatch[1], 12)) {
+          result.upc = upcMatch[1];
+        }
+      }
+      
+      if (!result.ean) {
+        const eanMatch = searchText.match(/\bEAN[:\s]*(\d{13})\b/i);
+        if (eanMatch && this.validateCheckDigit(eanMatch[1], 13)) {
+          result.ean = eanMatch[1];
+        }
+      }
+      
+      if (!result.gtin) {
+        const gtinMatch = searchText.match(/\bGTIN[:\s]*(\d{14})\b/i);
+        if (gtinMatch && this.validateCheckDigit(gtinMatch[1], 14)) {
+          result.gtin = gtinMatch[1];
         }
       }
     }
@@ -943,6 +1070,24 @@ export class AmazonScraper extends BaseScraper {
     const description = details.description || 
       (details.featureBullets.length > 0 ? details.featureBullets.join('\n• ') : null);
     
+    // Get print settings - use extracted values, or fall back to material defaults
+    let nozzleTempMin = details.nozzleTempMin;
+    let nozzleTempMax = details.nozzleTempMax;
+    let bedTempMin = details.bedTempMin;
+    let bedTempMax = details.bedTempMax;
+    
+    // Apply default print settings if none extracted from Amazon
+    if (!nozzleTempMin && !bedTempMin && details.material) {
+      const defaults = this.getDefaultPrintSettings(details.material);
+      nozzleTempMin = defaults.nozzleTempMin;
+      nozzleTempMax = defaults.nozzleTempMax;
+      bedTempMin = defaults.bedTempMin;
+      bedTempMax = defaults.bedTempMax;
+      if (nozzleTempMin) {
+        this.log(`📋 Using default temps for ${details.material}: nozzle ${nozzleTempMin}-${nozzleTempMax}°C, bed ${bedTempMin}-${bedTempMax}°C`);
+      }
+    }
+    
     return {
       productId: details.asin,
       sku: details.asin,
@@ -969,11 +1114,11 @@ export class AmazonScraper extends BaseScraper {
       colorHex: details.colorHex,
       colorName: details.color,
       
-      // Print settings
-      nozzleTempMin: details.nozzleTempMin,
-      nozzleTempMax: details.nozzleTempMax,
-      bedTempMin: details.bedTempMin,
-      bedTempMax: details.bedTempMax,
+      // Print settings (with defaults applied)
+      nozzleTempMin: nozzleTempMin,
+      nozzleTempMax: nozzleTempMax,
+      bedTempMin: bedTempMin,
+      bedTempMax: bedTempMax,
       
       // Physical specs
       netWeightG: details.weightG,
