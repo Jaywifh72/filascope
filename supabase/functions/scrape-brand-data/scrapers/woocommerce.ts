@@ -170,7 +170,19 @@ export class WooCommerceScraper extends BaseScraper {
       "printer", "nozzle", "bed", "hotend", "extruder", "fan",
       "belt", "motor", "kit", "tool", "adhesive", "glue", "tape",
       "dryer", "dry box", "enclosure", "connector", "splicer",
-      "build plate", "filament hub",
+      "build plate", "filament hub", "heater block", "thermistor",
+      // CNC/router
+      "cnc", "router", "planer", "spindle", "collet", "bit set",
+      // Protection plans
+      "protection plan", "shipping protection", "warranty", "replacement part",
+      // Clothing/merchandise
+      "t-shirt", "tshirt", "shirt", "hoodie", "sticker",
+      // Test/placeholder
+      "test link", "not for sale", "misc charge", "placeholder",
+      // Combo packs
+      "combo pack", "pro pack", "printer combo",
+      // Sensors/electronics
+      "temperature sensor", "humidity sensor", "led panel",
       // Discontinued/bundle
       "discontinued", "bundle",
       // Mystery/promotional
@@ -179,7 +191,7 @@ export class WooCommerceScraper extends BaseScraper {
       "buy 1 get", "buy 2 get", "buy 3 get", "flash sale", "flash deal",
       "bulk sale", "christmas bulk", "prime deal", "10-100kg",
       // Gift/promo items
-      "prize claim", "gift card", "gift item", "resin"
+      "prize claim", "gift card", "gift item", "resin", "promotional container"
     ];
     
     // Check if any filament keyword is present

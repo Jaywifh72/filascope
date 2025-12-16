@@ -312,6 +312,23 @@ export function intelligentTitleClean(title: string, brandName?: string): string
   
   let cleaned = title;
   
+  // Step 0: Decode HTML entities FIRST
+  cleaned = cleaned
+    .replace(/&#8211;/g, '-')      // en-dash
+    .replace(/&#8212;/g, '-')      // em-dash
+    .replace(/&ndash;/g, '-')
+    .replace(/&mdash;/g, '-')
+    .replace(/&amp;/g, '&')
+    .replace(/&#038;/g, '&')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&#34;/g, '"')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#160;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+  
   // Step 1: Normalize whitespace and quotes
   cleaned = cleaned
     .replace(/\s+/g, ' ')
