@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogIn, LogOut, User, Shield, Archive, Database, Settings, BookOpen, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles } from "lucide-react";
+import { LogIn, LogOut, Shield, Archive, Database, Settings, BookOpen, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/filascope-logo.png";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
-import { PrinterSelectorHeader } from "@/components/PrinterSelectorHeader";
 import { TrendingTriggerButton } from "@/components/TrendingTriggerButton";
 import { TrendingPanel } from "@/components/TrendingPanel";
 import { useTrendingPanel } from "@/hooks/useTrendingPanel";
@@ -20,23 +19,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface NavbarProps {
-  compatibleCount?: number;
-}
-
-const Navbar = ({ compatibleCount = 0 }: NavbarProps) => {
+const Navbar = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   
   // Trending panel state
   const trendingPanel = useTrendingPanel();
-
-  // Show printer selector only on Finder page (/)
-  const showPrinterSelector = location.pathname === "/" || location.pathname === "/materials";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -114,15 +105,8 @@ const Navbar = ({ compatibleCount = 0 }: NavbarProps) => {
             />
           </Link>
 
-          {/* Printer Selector - Center (only on Finder) */}
-          {showPrinterSelector && (
-            <div className="hidden lg:flex flex-1 justify-center">
-              <PrinterSelectorHeader compatibleCount={compatibleCount} />
-            </div>
-          )}
-
           {/* Navigation Links */}
-          <div className={`hidden lg:flex items-center gap-1 ${showPrinterSelector ? "" : "flex-1"}`}>
+          <div className="hidden lg:flex items-center gap-1 flex-1">
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
               <Link to="/printers">PRINTERS</Link>
             </Button>
@@ -188,9 +172,6 @@ const Navbar = ({ compatibleCount = 0 }: NavbarProps) => {
               </Button>
             )}
           </div>
-
-          {/* Spacer */}
-          {!showPrinterSelector && <div className="flex-1" />}
 
           {/* User Actions */}
           <div className="flex items-center gap-3 shrink-0">
@@ -278,13 +259,6 @@ const Navbar = ({ compatibleCount = 0 }: NavbarProps) => {
             )}
           </div>
         </div>
-
-        {/* Mobile Printer Selector Row */}
-        {showPrinterSelector && (
-          <div className="lg:hidden px-4 pb-3 border-t border-[#333]/50 pt-2">
-            <PrinterSelectorHeader compatibleCount={compatibleCount} />
-          </div>
-        )}
       </nav>
       
       {/* Trending Panel */}

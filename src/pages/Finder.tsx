@@ -953,6 +953,7 @@ const Finder = () => {
         onSearchChange={setSearchTerm}
         filamentCount={filamentCount || 1881}
         brandCount={brands?.length || 28}
+        compatibleCount={totalCount}
       />
 
       {/* Printer Context Bar removed - now in Navbar header */}
