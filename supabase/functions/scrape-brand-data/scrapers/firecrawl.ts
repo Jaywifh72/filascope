@@ -126,6 +126,22 @@ export class FirecrawlScraper extends BaseScraper {
         return spectrumProducts.slice(0, limit);
       }
 
+      // CC3D - WooCommerce platform
+      if (vendor === 'cc3d' || baseUrl.includes('cc3dglobal.com')) {
+        this.log(`Using CC3D extraction`);
+        const cc3dProducts = await this.extractCC3DProducts(baseUrl);
+        this.log(`Successfully extracted ${cc3dProducts.length} CC3D products`);
+        return cc3dProducts.slice(0, limit);
+      }
+
+      // Gizmo Dorks - BigCommerce platform
+      if (vendor === 'gizmo dorks' || baseUrl.includes('gizmodorks.com')) {
+        this.log(`Using Gizmo Dorks extraction`);
+        const gizmoDorksProducts = await this.extractGizmoDorksProducts(baseUrl);
+        this.log(`Successfully extracted ${gizmoDorksProducts.length} Gizmo Dorks products`);
+        return gizmoDorksProducts.slice(0, limit);
+      }
+
       let productUrls: string[] = [];
       
       // Step 1: Use Firecrawl Map API to discover all URLs on the shop
@@ -1297,15 +1313,17 @@ export class FirecrawlScraper extends BaseScraper {
       
       this.log(`Discovered ${urls.length} URLs`);
 
-      // Filter for product URLs (IdoSell pattern: /eng_m_CATEGORY/PRODUCT-ID.html)
+      // Filter for product URLs (IdoSell pattern: /product-eng-ID-name.html)
       const productUrls = urls.filter((url: string) => {
-        return url.match(/shop\.spectrumfilaments\.com\/[a-z_]+\/[\w-]+-\d+\.html$/i) &&
+        return url.match(/shop\.spectrumfilaments\.com\/product-eng-\d+-[\w-]+\.html$/i) &&
                (url.toLowerCase().includes('pla') || 
                 url.toLowerCase().includes('petg') || 
                 url.toLowerCase().includes('abs') ||
                 url.toLowerCase().includes('filament') ||
                 url.toLowerCase().includes('asa') ||
-                url.toLowerCase().includes('tpu'));
+                url.toLowerCase().includes('tpu') ||
+                url.toLowerCase().includes('nylon') ||
+                url.toLowerCase().includes('hips'));
       });
 
       this.log(`Filtered to ${productUrls.length} product URLs`);
@@ -1491,7 +1509,7 @@ export class FirecrawlScraper extends BaseScraper {
         /extrudr\.com\/en\/inlt\/[^\/]+/i,
       ],
       'spectrum filaments': [
-        /shop\.spectrumfilaments\.com\/[a-z-]+\/\d+-[a-z0-9-]+\.html$/i, // PrestaShop pattern
+        /shop\.spectrumfilaments\.com\/product-eng-\d+-[\w-]+\.html$/i, // IdoSell pattern
       ],
       'matterhackers': [
         /matterhackers\.com\/store\/l\/[^\/]+\/ln\//i,
@@ -1952,5 +1970,292 @@ export class FirecrawlScraper extends BaseScraper {
     }
     
     return null;
+  }
+
+  /**
+   * CC3D Products Extraction - WooCommerce platform
+   */
+  private async extractCC3DProducts(baseUrl: string): Promise<ScrapedProduct[]> {
+    const products: ScrapedProduct[] = [];
+    const seenIds = new Set<string>();
+    
+    // CC3D category pages to scrape
+    const categoryPages = [
+      'https://cc3dglobal.com/product-category/silk-pla/',
+      'https://cc3dglobal.com/product-category/pla-normal/',
+      'https://cc3dglobal.com/product-category/pla-max-filament/',
+      'https://cc3dglobal.com/product-category/petg/',
+      'https://cc3dglobal.com/product-category/abs/',
+      'https://cc3dglobal.com/product-category/tpu/',
+      'https://cc3dglobal.com/products/', // Main products page
+    ];
+
+    try {
+      for (const categoryUrl of categoryPages) {
+        this.log(`Scraping CC3D category: ${categoryUrl}`);
+        
+        const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.firecrawlApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: categoryUrl,
+            formats: ["markdown", "html"],
+            onlyMainContent: true,
+            waitFor: 3000,
+          }),
+        });
+
+        if (!response.ok) {
+          this.log(`Failed to scrape CC3D category: ${categoryUrl}`);
+          continue;
+        }
+
+        const data = await response.json();
+        const html = data.data?.html || data.html || "";
+        const markdown = data.data?.markdown || data.markdown || "";
+        
+        // Extract product links from WooCommerce structure
+        const productLinkMatches = html.matchAll(/href="(https:\/\/cc3dglobal\.com\/product\/[^"]+)"/gi);
+        const productUrls = [...new Set([...productLinkMatches].map(m => m[1]))];
+        
+        this.log(`Found ${productUrls.length} product links in ${categoryUrl}`);
+        
+        // Scrape individual product pages
+        for (const productUrl of productUrls.slice(0, 20)) {
+          try {
+            const productId = productUrl.split('/product/')[1]?.replace(/\/$/, '') || '';
+            if (seenIds.has(productId) || !productId) continue;
+            seenIds.add(productId);
+            
+            const prodResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${this.firecrawlApiKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                url: productUrl,
+                formats: ["markdown"],
+                onlyMainContent: true,
+                waitFor: 2000,
+              }),
+            });
+
+            if (!prodResponse.ok) continue;
+
+            const prodData = await prodResponse.json();
+            const prodMarkdown = prodData.data?.markdown || prodData.markdown || "";
+            const metadata = prodData.data?.metadata || {};
+            
+            // Extract title
+            const title = metadata.title?.replace(/\s*[-–|]\s*CC3D.*$/i, '').trim() ||
+                         prodMarkdown.match(/^#\s+(.+)$/m)?.[1]?.trim();
+            
+            if (!title || !title.toLowerCase().includes('filament') && !title.toLowerCase().includes('pla') && !title.toLowerCase().includes('petg')) continue;
+            
+            // Extract price
+            const priceMatch = prodMarkdown.match(/\$\s*([\d.,]+)/) || prodMarkdown.match(/([\d.,]+)\s*USD/i);
+            const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '')) : null;
+            
+            // Extract image
+            const imageUrl = metadata.ogImage?.[0]?.url || null;
+            
+            const material = this.detectMaterial(title);
+            const colorInfo = this.extractColorFromText(title);
+            
+            const product: ScrapedProduct = {
+              productId,
+              sku: productId,
+              title,
+              price,
+              compareAtPrice: null,
+              available: true,
+              currency: "USD",
+              url: productUrl,
+              scrapedAt: new Date(),
+              source: "firecrawl-cc3d",
+              imageUrl,
+              barcode: null,
+              description: material ? `${material} filament` : null,
+              mpn: null,
+              tdsUrl: null,
+              colorHex: colorInfo?.hex || null,
+              colorName: colorInfo?.name || null,
+              nozzleTempMin: null,
+              nozzleTempMax: null,
+              bedTempMin: null,
+              bedTempMax: null,
+              spoolMaterial: null,
+              netWeightG: 1000,
+              diameterMm: 1.75,
+              spoolOuterDiameterMm: null,
+              spoolWidthMm: null,
+            };
+            
+            products.push(product);
+            this.log(`✓ CC3D product: ${title} - $${price}`);
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } catch (err) {
+            this.logError(`Error scraping CC3D product:`, err);
+          }
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    } catch (error) {
+      this.logError(`CC3D extraction error:`, error);
+    }
+    
+    return products;
+  }
+
+  /**
+   * Gizmo Dorks Products Extraction - BigCommerce platform
+   */
+  private async extractGizmoDorksProducts(baseUrl: string): Promise<ScrapedProduct[]> {
+    const products: ScrapedProduct[] = [];
+    const seenIds = new Set<string>();
+    
+    // Gizmo Dorks category pages
+    const categoryPages = [
+      'https://gizmodorks.com/3d-printer-filament-1kg/',
+      'https://gizmodorks.com/3d-printer-filament-250g/',
+    ];
+
+    try {
+      for (const categoryUrl of categoryPages) {
+        this.log(`Scraping Gizmo Dorks category: ${categoryUrl}`);
+        
+        const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.firecrawlApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: categoryUrl,
+            formats: ["markdown", "html"],
+            onlyMainContent: true,
+            waitFor: 3000,
+          }),
+        });
+
+        if (!response.ok) {
+          this.log(`Failed to scrape Gizmo Dorks category: ${categoryUrl}`);
+          continue;
+        }
+
+        const data = await response.json();
+        const html = data.data?.html || data.html || "";
+        const markdown = data.data?.markdown || data.markdown || "";
+        
+        // Extract product links from BigCommerce structure
+        const productLinkMatches = html.matchAll(/href="(https:\/\/gizmodorks\.com\/[^"]+filament[^"]*\/)"/gi);
+        const productUrls = [...new Set([...productLinkMatches].map(m => m[1]))];
+        
+        this.log(`Found ${productUrls.length} product links in ${categoryUrl}`);
+        
+        // Scrape individual product pages
+        for (const productUrl of productUrls.slice(0, 30)) {
+          try {
+            const urlParts = productUrl.replace(/\/$/, '').split('/');
+            const productId = urlParts[urlParts.length - 1] || '';
+            if (seenIds.has(productId) || !productId) continue;
+            seenIds.add(productId);
+            
+            const prodResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${this.firecrawlApiKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                url: productUrl,
+                formats: ["markdown"],
+                onlyMainContent: true,
+                waitFor: 2000,
+              }),
+            });
+
+            if (!prodResponse.ok) continue;
+
+            const prodData = await prodResponse.json();
+            const prodMarkdown = prodData.data?.markdown || prodData.markdown || "";
+            const metadata = prodData.data?.metadata || {};
+            
+            // Extract title
+            const title = metadata.title?.replace(/\s*[-–|]\s*Gizmo\s*Dorks.*$/i, '').trim() ||
+                         prodMarkdown.match(/^#\s+(.+)$/m)?.[1]?.trim();
+            
+            if (!title) continue;
+            
+            // Extract price (BigCommerce format)
+            const priceMatch = prodMarkdown.match(/\$\s*([\d.,]+)/) || prodMarkdown.match(/([\d.,]+)\s*USD/i);
+            const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '')) : null;
+            
+            // Extract image
+            const imageUrl = metadata.ogImage?.[0]?.url || null;
+            
+            const material = this.detectMaterial(title);
+            const colorInfo = this.extractColorFromText(title);
+            
+            // Extract weight from title (e.g., "1kg" or "250g")
+            const weightMatch = title.match(/(\d+)\s*(kg|g)\b/i);
+            let netWeightG = 1000;
+            if (weightMatch) {
+              netWeightG = weightMatch[2].toLowerCase() === 'kg' 
+                ? parseInt(weightMatch[1]) * 1000 
+                : parseInt(weightMatch[1]);
+            }
+            
+            const product: ScrapedProduct = {
+              productId,
+              sku: productId,
+              title,
+              price,
+              compareAtPrice: null,
+              available: true,
+              currency: "USD",
+              url: productUrl,
+              scrapedAt: new Date(),
+              source: "firecrawl-gizmodorks",
+              imageUrl,
+              barcode: null,
+              description: material ? `${material} filament` : null,
+              mpn: null,
+              tdsUrl: null,
+              colorHex: colorInfo?.hex || null,
+              colorName: colorInfo?.name || null,
+              nozzleTempMin: null,
+              nozzleTempMax: null,
+              bedTempMin: null,
+              bedTempMax: null,
+              spoolMaterial: null,
+              netWeightG,
+              diameterMm: 1.75,
+              spoolOuterDiameterMm: null,
+              spoolWidthMm: null,
+            };
+            
+            products.push(product);
+            this.log(`✓ Gizmo Dorks product: ${title} - $${price}`);
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } catch (err) {
+            this.logError(`Error scraping Gizmo Dorks product:`, err);
+          }
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    } catch (error) {
+      this.logError(`Gizmo Dorks extraction error:`, error);
+    }
+    
+    return products;
   }
 }
