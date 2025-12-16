@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { extractPrice, extractAvailability, findTdsUrl, extractPrintSettings, extractColorFromHtml, extractSpoolSpecs, extractMpnFromHtml, extractBarcodeFromHtml } from "../utils.ts";
+import { extractPrice, extractAvailability, findTdsUrl, extractPrintSettings, extractSpoolSpecs, extractMpnFromHtml, extractBarcodeFromHtml, classifyVariant, extractColorInfo, COLOR_HEX_MAP } from "../utils.ts";
 
 interface WooCommerceProduct {
   id: number;
@@ -108,8 +108,10 @@ export class WooCommerceScraper extends BaseScraper {
           // Extract enhanced data
           const tdsUrl = findTdsUrl(description);
           const printSettings = extractPrintSettings(description);
-          const colorInfo = extractColorFromHtml(description, null, null, product.name);
           const spoolSpecs = extractSpoolSpecs(description, product.name);
+          
+          // Use intelligent color extraction from product name
+          const colorInfo = this.extractColorFromText(product.name);
 
           products.push({
             productId: String(product.id),
@@ -289,10 +291,12 @@ export class WooCommerceScraper extends BaseScraper {
     // Extract enhanced data
     const tdsUrl = findTdsUrl(html);
     const printSettings = extractPrintSettings(html);
-    const colorInfo = extractColorFromHtml(html, null, null, title);
     const spoolSpecs = extractSpoolSpecs(html, title);
     const mpn = extractMpnFromHtml(html) || sku;
     const barcode = extractBarcodeFromHtml(html);
+    
+    // Use intelligent color extraction
+    const colorInfo = this.extractColorFromText(title);
 
     return {
       productId,
@@ -339,5 +343,38 @@ export class WooCommerceScraper extends BaseScraper {
       lower.includes("tpu") ||
       lower.includes("filament")
     );
+  }
+
+  /**
+   * Intelligent color extraction from product text
+   * Uses classifyVariant to properly identify colors vs non-color values
+   */
+  private extractColorFromText(text: string): { name: string; hex: string } | null {
+    if (!text) return null;
+    
+    const words = text.split(/[\s\-_,]+/);
+    
+    // Try each word to see if it's a color
+    for (const word of words) {
+      const classification = classifyVariant(word);
+      
+      if (classification.isColorVariant && classification.colorName) {
+        const info = extractColorInfo(classification.colorName);
+        if (info) {
+          this.log(`🎨 Color detected: "${word}" -> ${info.hex}`);
+          return { name: info.name, hex: info.hex };
+        }
+      }
+    }
+    
+    // Fallback: search in comprehensive color map
+    const textLower = text.toLowerCase();
+    for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
+      if (textLower.includes(colorName)) {
+        return { name: colorName.charAt(0).toUpperCase() + colorName.slice(1), hex };
+      }
+    }
+    
+    return null;
   }
 }

@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { findTdsUrl, extractPrintSettings, extractColorFromHtml, extractSpoolSpecs } from "../utils.ts";
+import { findTdsUrl, extractPrintSettings, extractSpoolSpecs, classifyVariant, extractColorInfo, COLOR_HEX_MAP } from "../utils.ts";
 
 interface ShopifyProduct {
   id: number;
@@ -13,6 +13,12 @@ interface ShopifyProduct {
   images: { src: string }[];
   tags?: string[];
   metafields?: ShopifyMetafield[];
+  options?: ShopifyOption[];
+}
+
+interface ShopifyOption {
+  name: string;
+  values: string[];
 }
 
 interface ShopifyVariant {
@@ -72,8 +78,10 @@ export class ShopifyScraper extends BaseScraper {
       // Extract enhanced data from body_html
       const tdsUrl = findTdsUrl(bodyHtml);
       const printSettings = extractPrintSettings(bodyHtml);
-      const colorInfo = extractColorFromHtml(bodyHtml, variant.option1, variant.option2, product.title);
       const spoolSpecs = extractSpoolSpecs(bodyHtml, product.title);
+
+      // Use intelligent color extraction from variant options
+      const colorInfo = this.extractColorFromVariant(variant, product);
 
       // Extract MPN from metafields or SKU pattern
       const mpn = this.extractMpn(product, variant);
@@ -173,9 +181,11 @@ export class ShopifyScraper extends BaseScraper {
           // Extract enhanced data
           const tdsUrl = findTdsUrl(bodyHtml);
           const printSettings = extractPrintSettings(bodyHtml);
-          const colorInfo = extractColorFromHtml(bodyHtml, variant.option1, variant.option2, product.title);
           const spoolSpecs = extractSpoolSpecs(bodyHtml, product.title);
           const mpn = this.extractMpn(product, variant);
+          
+          // Use intelligent color extraction from variant options
+          const colorInfo = this.extractColorFromVariant(variant, product);
 
           products.push({
             productId: String(product.id),
@@ -249,6 +259,71 @@ export class ShopifyScraper extends BaseScraper {
       return variant.sku;
     }
 
+    return null;
+  }
+
+  /**
+   * Intelligent color extraction from Shopify variant
+   * Uses classifyVariant to filter out non-color values like "1kg", "Refill", etc.
+   */
+  private extractColorFromVariant(
+    variant: ShopifyVariant, 
+    product: ShopifyProduct
+  ): { name: string; hex: string } | null {
+    const options = [variant.option1, variant.option2, variant.option3].filter(Boolean) as string[];
+    
+    // First, try to identify which option is the color option
+    if (product.options) {
+      for (let i = 0; i < product.options.length; i++) {
+        const opt = product.options[i];
+        const optName = opt.name.toLowerCase();
+        
+        // Check if this option is explicitly named as color
+        if (optName.includes('color') || optName.includes('colour') || optName.includes('farbe')) {
+          const variantValue = i === 0 ? variant.option1 : i === 1 ? variant.option2 : variant.option3;
+          if (variantValue) {
+            const classification = classifyVariant(variantValue);
+            if (classification.isColorVariant && classification.colorName) {
+              const info = extractColorInfo(classification.colorName);
+              if (info) {
+                this.log(`🎨 Color from option "${opt.name}": "${variantValue}" -> ${info.hex}`);
+                return { name: info.name, hex: info.hex };
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // If no explicit color option, check each variant option with intelligent classification
+    for (const opt of options) {
+      const classification = classifyVariant(opt);
+      
+      if (classification.isColorVariant && classification.colorName) {
+        const info = extractColorInfo(classification.colorName);
+        if (info) {
+          this.log(`🎨 Color detected: "${opt}" -> ${info.hex} (confidence: ${classification.confidence})`);
+          return { name: info.name, hex: info.hex };
+        }
+        
+        // Even without hex match, if high confidence, use the color name
+        if (classification.confidence === 'high' || classification.confidence === 'medium') {
+          this.log(`🎨 Color (no hex): "${classification.colorName}" (confidence: ${classification.confidence})`);
+          return { name: classification.colorName, hex: '#CCCCCC' }; // Default gray hex
+        }
+      } else if (classification.excludeReason) {
+        this.log(`⚠️ Filtered non-color: "${opt}" -> Reason: ${classification.excludeReason}`);
+      }
+    }
+    
+    // Fallback: try to extract color from product title
+    const titleLower = product.title.toLowerCase();
+    for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
+      if (titleLower.includes(colorName)) {
+        return { name: colorName.charAt(0).toUpperCase() + colorName.slice(1), hex };
+      }
+    }
+    
     return null;
   }
 
