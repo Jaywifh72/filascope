@@ -1343,7 +1343,7 @@ const Finder = () => {
           ) : (
             /* Grid View - Redesigned Cards */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {displayedFilaments.map((filament) => {
+              {displayedFilaments.map((filament, index) => {
                 // Calculate color match percentage for hex search
                 const isHexSearchActive = hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/);
                 const searchHex = isHexSearchActive ? (hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`) : null;
@@ -1359,6 +1359,7 @@ const Finder = () => {
                     key={filament.id}
                     filament={filament}
                     colorMatchPercent={colorMatchPercent}
+                    index={index}
                   />
                 );
               })}

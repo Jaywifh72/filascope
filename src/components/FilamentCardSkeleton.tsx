@@ -7,8 +7,11 @@ interface FilamentCardSkeletonProps {
 export function FilamentCardSkeleton({ index = 0 }: FilamentCardSkeletonProps) {
   return (
     <div 
-      className="relative rounded-2xl bg-white/[0.03] border border-white/[0.08] min-h-[320px]"
-      style={{ animationDelay: `${index * 50}ms` }}
+      className="relative rounded-2xl bg-white/[0.03] border border-white/[0.08] min-h-[380px]"
+      style={{ 
+        animationDelay: `${index * 50}ms`,
+        animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s both`
+      }}
     >
       {/* Checkbox placeholder */}
       <div className="absolute top-4 left-4">
@@ -54,9 +57,14 @@ export function FilamentCardSkeleton({ index = 0 }: FilamentCardSkeletonProps) {
         <Skeleton className="h-8 w-24 rounded-md" />
       </div>
 
+      {/* Availability Section */}
+      <div className="px-6 py-3 border-b border-white/[0.05]">
+        <Skeleton className="h-7 w-24 rounded-md" />
+      </div>
+
       {/* CTA Button */}
-      <div className="px-6 pb-6">
-        <Skeleton className="h-11 w-full rounded-lg" />
+      <div className="px-6 pt-5 pb-6">
+        <Skeleton className="h-12 w-full rounded-lg" />
       </div>
     </div>
   );
