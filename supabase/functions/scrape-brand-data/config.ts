@@ -503,14 +503,14 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   // ============================================================================
   TECBEARS: {
     vendor: "TECBEARS",
-    platform: "amazon",
-    baseUrl: "https://www.amazon.com",
+    platform: "firecrawl",
+    baseUrl: "https://3dfilamentprofiles.com/filaments/tecbears",
     apiEndpoint: "",
     currency: "USD",
     exchangeRate: 1.0,
     productsPerPage: 50,
     requestDelay: 2000,
-    timeout: 15000,
+    timeout: 30000,
     userAgent: DEFAULT_USER_AGENT,
     productCount: 40,
   },
