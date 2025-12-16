@@ -374,7 +374,9 @@ export class ShopifyScraper extends BaseScraper {
       "stepper", "motor", "belt", "pulley", "bearing", "fan", "cover",
       "enclosure", "dryer", "dry box", "accessory", "part", "spare",
       // Skip discontinued and bundle products
-      "discontinued", "bundle"
+      "discontinued", "bundle",
+      // Skip mystery boxes and multi-roll packs
+      "mystery", "rolls"
     ];
     const isExcluded = excludeKeywords.some((kw) => combined.includes(kw));
 

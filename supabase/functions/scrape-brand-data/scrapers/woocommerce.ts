@@ -169,7 +169,9 @@ export class WooCommerceScraper extends BaseScraper {
       "printer", "nozzle", "bed", "hotend", "extruder", "fan",
       "belt", "motor", "kit", "tool", "adhesive", "glue", "tape",
       // Skip discontinued and bundle products
-      "discontinued", "bundle"
+      "discontinued", "bundle",
+      // Skip mystery boxes and multi-roll packs
+      "mystery", "rolls"
     ];
     
     // Check if any filament keyword is present
