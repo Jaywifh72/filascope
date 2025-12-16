@@ -298,24 +298,50 @@ async function searchAmazonBySKU(sku: string, vendor: string, serpApiKey: string
   }));
 }
 
-// Extract search query from Amazon search URL (e.g., https://www.amazon.com/s?k=sunlu+filament)
-function extractSearchQueryFromUrl(url: string): string | null {
+// Extract search query from Amazon URL - handles multiple formats
+function extractSearchQueryFromUrl(url: string, brandName?: string): string | null {
   try {
     const urlObj = new URL(url);
-    // Handle /s?k= format (search URLs)
+    
+    // Handle /s?k= format (search URLs) - PRIORITY 1
     if (urlObj.pathname === '/s' && urlObj.searchParams.has('k')) {
-      return urlObj.searchParams.get('k');
+      const query = urlObj.searchParams.get('k');
+      console.log(`[URL] Extracted search query from URL: "${query}"`);
+      return query;
     }
+    
+    // Handle /stores/BrandName/ format (store pages) - PRIORITY 2
+    const storeMatch = urlObj.pathname.match(/\/stores\/([^\/]+)/i);
+    if (storeMatch) {
+      const storeBrand = decodeURIComponent(storeMatch[1]).replace(/[_-]/g, ' ');
+      const query = `${storeBrand} filament`;
+      console.log(`[URL] Extracted brand from store URL: "${storeBrand}" -> query: "${query}"`);
+      return query;
+    }
+    
+    // Handle brand search in URL params
+    if (urlObj.searchParams.has('me') || urlObj.searchParams.has('seller')) {
+      // Seller-specific URL - use brand name
+      if (brandName) {
+        const query = `${brandName} filament`;
+        console.log(`[URL] Seller URL detected, using brand name: "${query}"`);
+        return query;
+      }
+    }
+    
     return null;
-  } catch {
+  } catch (err) {
+    console.error(`[URL] Error parsing URL "${url}":`, err);
     return null;
   }
 }
 
 // Search Amazon store products via SerpApi using brand's configured search URL
 async function searchAmazonStore(brandName: string, storeUrl: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
+  console.log(`[STORE] Using configured Amazon URL for ${brandName}: ${storeUrl}`);
+  
   // Extract the search query from the brand's Amazon URL
-  const searchQuery = extractSearchQueryFromUrl(storeUrl);
+  const searchQuery = extractSearchQueryFromUrl(storeUrl, brandName);
   
   // Use extracted query or fallback to brand name search
   const query = searchQuery || `${brandName} filament`;
@@ -327,7 +353,7 @@ async function searchAmazonStore(brandName: string, storeUrl: string, serpApiKey
     api_key: serpApiKey,
   });
   
-  console.log(`[STORE] Searching Amazon with brand URL query: "${query}" (from: ${storeUrl})`);
+  console.log(`[STORE] Final search query: "${query}"`);
   
   const response = await fetch(`https://serpapi.com/search?${params}`);
   
