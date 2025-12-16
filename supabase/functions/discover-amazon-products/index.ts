@@ -298,17 +298,36 @@ async function searchAmazonBySKU(sku: string, vendor: string, serpApiKey: string
   }));
 }
 
-// Search Amazon store products via SerpApi
+// Extract search query from Amazon search URL (e.g., https://www.amazon.com/s?k=sunlu+filament)
+function extractSearchQueryFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    // Handle /s?k= format (search URLs)
+    if (urlObj.pathname === '/s' && urlObj.searchParams.has('k')) {
+      return urlObj.searchParams.get('k');
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Search Amazon store products via SerpApi using brand's configured search URL
 async function searchAmazonStore(brandName: string, storeUrl: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
-  // Search for brand filament products to find store products
+  // Extract the search query from the brand's Amazon URL
+  const searchQuery = extractSearchQueryFromUrl(storeUrl);
+  
+  // Use extracted query or fallback to brand name search
+  const query = searchQuery || `${brandName} filament`;
+  
   const params = new URLSearchParams({
     engine: 'amazon',
     amazon_domain: 'amazon.com',
-    k: `${brandName} filament 1.75mm`,
+    k: query,
     api_key: serpApiKey,
   });
   
-  console.log(`[STORE] Searching Amazon store products for: ${brandName}`);
+  console.log(`[STORE] Searching Amazon with brand URL query: "${query}" (from: ${storeUrl})`);
   
   const response = await fetch(`https://serpapi.com/search?${params}`);
   
@@ -327,8 +346,10 @@ async function searchAmazonStore(brandName: string, storeUrl: string, serpApiKey
     for (const result of data.organic_results) {
       // Filter to only include products from this brand
       const title = (result.title || '').toLowerCase();
-      if (title.includes(brandName.toLowerCase()) || 
-          title.includes(brandName.toLowerCase().replace(' ', ''))) {
+      const brandLower = brandName.toLowerCase();
+      const brandNoSpace = brandLower.replace(/\s+/g, '');
+      
+      if (title.includes(brandLower) || title.includes(brandNoSpace)) {
         results.push({
           title: result.title || '',
           link: result.link || '',
@@ -340,6 +361,8 @@ async function searchAmazonStore(brandName: string, storeUrl: string, serpApiKey
       }
     }
   }
+  
+  console.log(`[STORE] Found ${results.length} products matching brand "${brandName}"`);
   
   return results;
 }
