@@ -15,7 +15,8 @@ import {
   Building2, Search, Package, RefreshCw, CheckCircle2, XCircle, 
   Clock, TrendingUp, AlertCircle, Play, Activity,
   Zap, Database, ChevronDown, ChevronUp, Image, FileText, 
-  Palette, Thermometer, Barcode, Tag, PlayCircle, ShoppingCart
+  Palette, Thermometer, Barcode, Tag, PlayCircle, ShoppingCart,
+  Link, DollarSign
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,6 +42,7 @@ interface AutomatedBrand {
   products_with_codes: number;
   products_with_color_hex: number;
   products_with_amazon_prices: number;
+  products_with_amazon_links: number;
   total_scrapes: number;
   successful_scrapes: number;
   failed_scrapes: number;
@@ -133,6 +135,11 @@ const AdminBrands = () => {
   // Amazon scraping progress state
   const [amazonScrapingBrandId, setAmazonScrapingBrandId] = useState<string | null>(null);
   const [amazonScrapeProgress, setAmazonScrapeProgress] = useState<number>(0);
+  
+  // Amazon discovery progress state
+  const [amazonDiscoveryBrandId, setAmazonDiscoveryBrandId] = useState<string | null>(null);
+  const [amazonDiscoveryProgress, setAmazonDiscoveryProgress] = useState<number>(0);
+  const amazonDiscoveryStartTimeRef = useRef<number | null>(null);
   const amazonScrapeStartTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -196,6 +203,26 @@ const AdminBrands = () => {
     
     return () => clearInterval(interval);
   }, [amazonScrapingBrandId]);
+
+  // Progress animation effect for Amazon discovery
+  useEffect(() => {
+    if (!amazonDiscoveryBrandId || !amazonDiscoveryStartTimeRef.current) return;
+    
+    // Discovery takes longer due to API calls - estimate 45 seconds
+    const estimatedDuration = 45 * 1000;
+    
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - (amazonDiscoveryStartTimeRef.current || Date.now());
+      const rawProgress = Math.min((elapsed / estimatedDuration) * 85, 95);
+      const easedProgress = rawProgress < 85 
+        ? rawProgress 
+        : 85 + (rawProgress - 85) * 0.3;
+      setAmazonDiscoveryProgress(easedProgress);
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, [amazonDiscoveryBrandId]);
+
   const { data: syncLogs, isLoading: logsLoading, refetch: refetchLogs } = useQuery({
     queryKey: ["admin-sync-logs"],
     queryFn: async () => {
@@ -319,6 +346,38 @@ const AdminBrands = () => {
       setAmazonScrapeProgress(0);
       amazonScrapeStartTimeRef.current = null;
       toast.error(`Failed to scrape Amazon prices for ${brand.display_name}: ${error.message}`);
+    },
+  });
+
+  // Discover Amazon products via SerpApi
+  const discoverAmazonProducts = useMutation({
+    mutationFn: async (brand: AutomatedBrand) => {
+      setAmazonDiscoveryBrandId(brand.id);
+      amazonDiscoveryStartTimeRef.current = Date.now();
+      setAmazonDiscoveryProgress(0);
+      
+      const { data, error } = await supabase.functions.invoke("discover-amazon-products", {
+        body: { vendor: brand.brand_name, limit: 30 },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data, brand) => {
+      setAmazonDiscoveryProgress(100);
+      setTimeout(() => {
+        setAmazonDiscoveryBrandId(null);
+        setAmazonDiscoveryProgress(0);
+        amazonDiscoveryStartTimeRef.current = null;
+      }, 800);
+      
+      queryClient.invalidateQueries({ queryKey: ["admin-automated-brands"] });
+      toast.success(`${brand.display_name}: ${data?.high_confidence || 0} Amazon products discovered (${data?.updated || 0} updated)`);
+    },
+    onError: (error, brand) => {
+      setAmazonDiscoveryBrandId(null);
+      setAmazonDiscoveryProgress(0);
+      amazonDiscoveryStartTimeRef.current = null;
+      toast.error(`Failed to discover Amazon products for ${brand.display_name}: ${error.message}`);
     },
   });
 
@@ -735,20 +794,38 @@ const AdminBrands = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           {brand.has_amazon_store && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="bg-orange-500/10 border-orange-500/50 hover:bg-orange-500/20 text-orange-400"
-                              onClick={() => scrapeAmazonPrices.mutate(brand)}
-                              disabled={scrapeAmazonPrices.isPending || amazonScrapingBrandId === brand.id}
-                              title="Scrape Amazon prices"
-                            >
-                              {scrapeAmazonPrices.isPending && amazonScrapingBrandId === brand.id ? (
-                                <RefreshCw className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <ShoppingCart className="w-4 h-4" />
-                              )}
-                            </Button>
+                            <>
+                              {/* Discover Amazon Products Button - Cyan */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="bg-cyan-500/10 border-cyan-500/50 hover:bg-cyan-500/20 text-cyan-400"
+                                onClick={() => discoverAmazonProducts.mutate(brand)}
+                                disabled={discoverAmazonProducts.isPending || amazonDiscoveryBrandId === brand.id}
+                                title="Find Amazon products"
+                              >
+                                {discoverAmazonProducts.isPending && amazonDiscoveryBrandId === brand.id ? (
+                                  <RefreshCw className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Search className="w-4 h-4" />
+                                )}
+                              </Button>
+                              {/* Scrape Amazon Prices Button - Orange */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="bg-orange-500/10 border-orange-500/50 hover:bg-orange-500/20 text-orange-400"
+                                onClick={() => scrapeAmazonPrices.mutate(brand)}
+                                disabled={scrapeAmazonPrices.isPending || amazonScrapingBrandId === brand.id}
+                                title="Scrape Amazon prices"
+                              >
+                                {scrapeAmazonPrices.isPending && amazonScrapingBrandId === brand.id ? (
+                                  <RefreshCw className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <DollarSign className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </>
                           )}
                           <Button
                             size="sm"
@@ -794,7 +871,7 @@ const AdminBrands = () => {
                         <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                              <ShoppingCart className="w-3 h-3 animate-pulse text-orange-400" />
+                              <DollarSign className="w-3 h-3 animate-pulse text-orange-400" />
                               Scraping Amazon prices...
                             </span>
                             <span className="text-xs font-medium text-orange-400 tabular-nums">
@@ -804,6 +881,25 @@ const AdminBrands = () => {
                           <Progress 
                             value={amazonScrapeProgress} 
                             className="h-2 [&>div]:bg-orange-500"
+                          />
+                        </div>
+                      )}
+
+                      {/* Amazon Discovery Progress Bar */}
+                      {amazonDiscoveryBrandId === brand.id && (
+                        <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                              <Search className="w-3 h-3 animate-pulse text-cyan-400" />
+                              Discovering Amazon products...
+                            </span>
+                            <span className="text-xs font-medium text-cyan-400 tabular-nums">
+                              {Math.round(amazonDiscoveryProgress)}%
+                            </span>
+                          </div>
+                          <Progress 
+                            value={amazonDiscoveryProgress} 
+                            className="h-2 [&>div]:bg-cyan-500"
                           />
                         </div>
                       )}
@@ -863,11 +959,18 @@ const AdminBrands = () => {
                           <span className="text-xs text-muted-foreground">colors</span>
                         </div>
                         {brand.has_amazon_store && (
-                          <div className="flex items-center gap-1.5">
-                            <ShoppingCart className="w-3.5 h-3.5 text-orange-500" />
-                            <span className="text-sm font-medium text-orange-400">{brand.products_with_amazon_prices || 0}</span>
-                            <span className="text-xs text-muted-foreground">Amazon</span>
-                          </div>
+                          <>
+                            <div className="flex items-center gap-1.5">
+                              <Link className="w-3.5 h-3.5 text-cyan-500" />
+                              <span className="text-sm font-medium text-cyan-400">{brand.products_with_amazon_links || 0}</span>
+                              <span className="text-xs text-muted-foreground">links</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <DollarSign className="w-3.5 h-3.5 text-orange-500" />
+                              <span className="text-sm font-medium text-orange-400">{brand.products_with_amazon_prices || 0}</span>
+                              <span className="text-xs text-muted-foreground">$</span>
+                            </div>
+                          </>
                         )}
                       </div>
 
