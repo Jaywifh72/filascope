@@ -104,41 +104,78 @@ export class AmazonScraper extends BaseScraper {
   // Discover and scrape products from an Amazon store page
   private async scrapeAmazonStore(vendor: string, storeUrl: string, limit: number): Promise<ScrapedProduct[]> {
     const products: ScrapedProduct[] = [];
+    const seenAsins = new Set<string>();
     
     try {
-      // Use SerpApi Amazon search with site restriction to find products from this brand
-      const searchResults = await this.searchAmazon(`${vendor} filament`, limit * 2);
+      // Step 1: Extract ASINs directly from the store page
+      this.log(`Step 1: Extracting ASINs from store page: ${storeUrl}`);
+      const storeAsins = await this.extractAsinsFromStorePage(storeUrl);
+      this.log(`Found ${storeAsins.length} ASINs on store page`);
       
-      if (searchResults.length === 0) {
-        this.log(`No products found via search for ${vendor}`);
-        return [];
+      // Step 2: Get full product details for each ASIN using ScrapingDog Product API
+      if (storeAsins.length > 0) {
+        this.log(`Step 2: Fetching product details for ${storeAsins.length} ASINs`);
+        
+        for (const asin of storeAsins) {
+          if (products.length >= limit) break;
+          if (seenAsins.has(asin)) continue;
+          seenAsins.add(asin);
+          
+          try {
+            const productData = await this.getProductByAsin(asin);
+            
+            if (!productData) {
+              this.log(`Could not fetch details for ASIN: ${asin}`);
+              continue;
+            }
+            
+            // For store-sourced products, we trust they're from the brand
+            // Only filter for filament relevance, not strict brand name match
+            if (!this.isFilamentProduct(productData.title)) {
+              this.log(`Skipping non-filament: ${productData.title}`);
+              continue;
+            }
+            
+            const product = this.convertSearchResultToProduct(productData, vendor);
+            if (product) {
+              products.push(product);
+              this.log(`✓ Found [${asin}]: ${productData.title.substring(0, 60)}...`);
+            }
+          } catch (err) {
+            this.log(`Error fetching ASIN ${asin}: ${err}`);
+          }
+        }
       }
-
-      this.log(`Found ${searchResults.length} potential products for ${vendor}`);
-
-      // Filter and convert search results to ScrapedProducts
-      for (const result of searchResults) {
-        if (products.length >= limit) break;
+      
+      // Step 3: If store page extraction found few products, supplement with search
+      if (products.length < 5) {
+        this.log(`Step 3: Store page found only ${products.length} products, supplementing with search...`);
+        const searchResults = await this.searchAmazon(`${vendor} filament`, limit * 2);
         
-        // Verify this is actually the right brand (case-insensitive)
-        const titleLower = result.title.toLowerCase();
-        const vendorLower = vendor.toLowerCase();
-        
-        if (!titleLower.includes(vendorLower)) {
-          this.log(`Skipping non-matching result: ${result.title}`);
-          continue;
-        }
+        for (const result of searchResults) {
+          if (products.length >= limit) break;
+          
+          const asin = result.asin || this.extractAsinFromUrl(result.link);
+          if (asin && seenAsins.has(asin)) continue;
+          if (asin) seenAsins.add(asin);
+          
+          // For search results, still verify brand match
+          const titleLower = result.title.toLowerCase();
+          const vendorLower = vendor.toLowerCase();
+          
+          if (!titleLower.includes(vendorLower)) {
+            continue;
+          }
 
-        // Filter for filament products
-        if (!this.isFilamentProduct(result.title)) {
-          this.log(`Skipping non-filament: ${result.title}`);
-          continue;
-        }
+          if (!this.isFilamentProduct(result.title)) {
+            continue;
+          }
 
-        const product = this.convertSearchResultToProduct(result, vendor);
-        if (product) {
-          products.push(product);
-          this.log(`✓ Found: ${result.title}`);
+          const product = this.convertSearchResultToProduct(result, vendor);
+          if (product) {
+            products.push(product);
+            this.log(`✓ Found via search: ${result.title.substring(0, 60)}...`);
+          }
         }
       }
 
@@ -148,6 +185,137 @@ export class AmazonScraper extends BaseScraper {
     } catch (error) {
       this.logError(`Error scraping Amazon store for ${vendor}:`, error);
       return [];
+    }
+  }
+
+  // Extract ASINs from an Amazon store page using Firecrawl
+  private async extractAsinsFromStorePage(storeUrl: string): Promise<string[]> {
+    if (!this.firecrawlApiKey) {
+      this.log("FIRECRAWL_API_KEY not available - cannot scrape store page");
+      return [];
+    }
+    
+    try {
+      await this.respectGlobalRateLimit();
+      
+      this.log(`Scraping store page for ASINs: ${storeUrl}`);
+      
+      const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.firecrawlApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: storeUrl,
+          formats: ["markdown", "html"],
+          onlyMainContent: false, // We want full page to get all product links
+          waitFor: 3000, // Wait for dynamic content
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        this.log(`Firecrawl store page error: ${response.status} - ${error}`);
+        return [];
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        this.log(`Firecrawl store page failed: ${data.error}`);
+        return [];
+      }
+
+      const content = data.data || data;
+      const html = content.html || "";
+      const markdown = content.markdown || "";
+      
+      // Extract ASINs from both HTML and markdown
+      const asinPattern = /\/dp\/([A-Z0-9]{10})/gi;
+      const asins = new Set<string>();
+      
+      // Extract from HTML
+      let match;
+      while ((match = asinPattern.exec(html)) !== null) {
+        asins.add(match[1].toUpperCase());
+      }
+      
+      // Reset regex and extract from markdown
+      asinPattern.lastIndex = 0;
+      while ((match = asinPattern.exec(markdown)) !== null) {
+        asins.add(match[1].toUpperCase());
+      }
+      
+      // Also look for ASIN patterns in links like /gp/product/
+      const altPattern = /\/gp\/product\/([A-Z0-9]{10})/gi;
+      while ((match = altPattern.exec(html)) !== null) {
+        asins.add(match[1].toUpperCase());
+      }
+      
+      this.log(`Extracted ${asins.size} unique ASINs from store page`);
+      return Array.from(asins);
+      
+    } catch (error) {
+      this.logError(`Error extracting ASINs from store page:`, error);
+      return [];
+    }
+  }
+
+  // Get product details by ASIN using ScrapingDog Product API
+  private async getProductByAsin(asin: string): Promise<AmazonSearchResult | null> {
+    if (!this.scrapingDogApiKey) {
+      this.log("SCRAPINGDOG_API_KEY not available - cannot fetch product details");
+      return null;
+    }
+    
+    try {
+      await this.respectGlobalRateLimit();
+      
+      const url = new URL("https://api.scrapingdog.com/amazon/product");
+      url.searchParams.set("api_key", this.scrapingDogApiKey);
+      url.searchParams.set("domain", "com");
+      url.searchParams.set("asin", asin);
+
+      this.log(`Fetching product details for ASIN: ${asin}`);
+
+      const response = await fetch(url.toString());
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.log(`ScrapingDog product API error for ${asin}: ${response.status}`);
+        return null;
+      }
+
+      const data = await response.json();
+      
+      // ScrapingDog product API returns product details directly
+      if (!data || !data.title) {
+        this.log(`No product data returned for ASIN: ${asin}`);
+        return null;
+      }
+      
+      // Extract price from various possible formats
+      let price: string | undefined;
+      if (data.price) {
+        price = data.price;
+      } else if (data.buybox_price) {
+        price = data.buybox_price;
+      } else if (data.pricing) {
+        price = data.pricing;
+      }
+      
+      return {
+        title: data.title,
+        link: `https://www.amazon.com/dp/${asin}`,
+        price: price,
+        asin: data.product_information?.ASIN || asin,
+        thumbnail: data.main_image || data.images?.[0] || data.thumbnail,
+      };
+      
+    } catch (error) {
+      this.logError(`Error fetching product ${asin}:`, error);
+      return null;
     }
   }
 
