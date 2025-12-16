@@ -259,6 +259,8 @@ async function searchAmazonSerpApi(query: string, serpApiKey: string): Promise<A
 
 // Unified search with automatic fallback
 async function searchAmazon(query: string, apiKeys: ApiKeys): Promise<AmazonSearchResult[]> {
+  await respectRateLimit();
+  
   // If we've already switched to ScrapingDog, use it directly
   if (!usingSerpApi && apiKeys.scrapingDogKey) {
     return await searchWithScrapingDog(query, apiKeys.scrapingDogKey);
@@ -279,6 +281,7 @@ async function searchAmazon(query: string, apiKeys: ApiKeys): Promise<AmazonSear
 
 // Search Amazon by barcode (UPC/EAN/GTIN) - PRIORITY 1
 async function searchAmazonByBarcode(barcode: string, apiKeys: ApiKeys): Promise<AmazonSearchResult[]> {
+  await respectRateLimit();
   console.log(`[BARCODE] Searching Amazon for barcode: ${barcode}`);
   
   try {
@@ -292,6 +295,7 @@ async function searchAmazonByBarcode(barcode: string, apiKeys: ApiKeys): Promise
 
 // Search Amazon by MPN - PRIORITY 2
 async function searchAmazonByMPN(mpn: string, vendor: string, apiKeys: ApiKeys): Promise<AmazonSearchResult[]> {
+  await respectRateLimit();
   const query = `${vendor} ${mpn}`;
   console.log(`[MPN] Searching Amazon for: ${query}`);
   
@@ -305,6 +309,7 @@ async function searchAmazonByMPN(mpn: string, vendor: string, apiKeys: ApiKeys):
 
 // Search Amazon by SKU - PRIORITY 3
 async function searchAmazonBySKU(sku: string, vendor: string, apiKeys: ApiKeys): Promise<AmazonSearchResult[]> {
+  await respectRateLimit();
   const query = `${vendor} ${sku} filament`;
   console.log(`[SKU] Searching Amazon for: ${query}`);
   
@@ -449,8 +454,8 @@ async function discoverAmazonProduct(
   return { results, method: 'text' };
 }
 
-// Rate limiting
-const RATE_LIMIT_MS = 1500;
+// Rate limiting - Amazon requires slower pace
+const RATE_LIMIT_MS = 2000;
 let lastRequestTime = 0;
 
 async function respectRateLimit(): Promise<void> {
@@ -585,9 +590,7 @@ Deno.serve(async (req) => {
 
     for (const filament of filaments) {
       try {
-        await respectRateLimit();
-        
-        // Use multi-strategy discovery
+        // Use multi-strategy discovery (rate limiting handled by individual search functions)
         const discovery = await discoverAmazonProduct(
           filament as FilamentRecord, 
           apiKeys, 
