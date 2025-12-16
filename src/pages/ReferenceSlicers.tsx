@@ -11,7 +11,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { slicerData } from "@/lib/slicerData";
-import Navbar from "@/components/Navbar";
 
 // Logo mapping for slicers
 const slicerLogos: Record<string, string> = {
@@ -182,7 +181,6 @@ const ReferenceSlicers = () => {
   }, [sortKey, sortDir, priceFilter, focusFilter]);
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">

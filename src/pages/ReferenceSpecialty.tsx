@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import Navbar from "@/components/Navbar";
 import { specialtyTools, categoryLabels, pricingLabels, SpecialtyTool } from "@/lib/specialtyData";
 import {
   Table,

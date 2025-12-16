@@ -11,7 +11,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cadData } from "@/lib/cadData";
-import Navbar from "@/components/Navbar";
 
 // Logo mapping for CAD software
 const cadLogos: Record<string, string> = {
@@ -258,7 +257,6 @@ const ReferenceCAD = () => {
   }, [sortKey, sortDir, priceFilter, typeFilter]);
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild className="mb-4">
