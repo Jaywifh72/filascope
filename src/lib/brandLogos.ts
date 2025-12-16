@@ -54,6 +54,14 @@ export const brandLogos: Record<string, string> = {
   "Push Plastic": "/images/brands/push-plastic.png",
   "Fusion Filaments": "/images/brands/fusion-filaments.png",
   "Spectrum Filaments": "/images/brands/spectrum-filaments.svg",
+  "Kingroon": "/images/brands/kingroon.png",
+  "KINGROON": "/images/brands/kingroon.png",
+  "Recreus": "/images/brands/recreus.png",
+  "IC3D": "/images/brands/ic3d.png",
+  "IC3D Printers": "/images/brands/ic3d.png",
+  "CC3D": "/images/brands/cc3d.png",
+  "Duramic 3D": "/images/brands/duramic3d.png",
+  "DURAMIC 3D": "/images/brands/duramic3d.png",
   
   // Printer brands
   "AnkerMake": "/images/brands/ankermake.png",
