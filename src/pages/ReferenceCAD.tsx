@@ -47,6 +47,17 @@ const cadLogos: Record<string, string> = {
   "Autodesk AutoCAD": "/images/cad/autocad.svg",
 };
 
+// Dark logos that need brightness filter for dark backgrounds
+const darkLogos = [
+  "Fusion 360", "Autodesk Fusion 360",
+  "AutoCAD", "Autodesk AutoCAD",
+  "3ds Max", "Autodesk 3ds Max",
+  "Maya", "Autodesk Maya",
+  "Meshmixer", "Autodesk Meshmixer",
+];
+
+const needsBrightness = (name: string) => darkLogos.includes(name);
+
 const cadComparison = [
   { name: "Fusion 360", price: "Freemium", type: "Solid/Mesh", os: "Win/Mac", ease: 4, precision: 5, sculpt: 3, printReady: 5, parametric: 5, cloud: "Yes", perpetual: "No", standout: "Integrated CAD/CAM/CAE" },
   { name: "Blender", price: "Free", type: "Mesh", os: "Win/Mac/Lin", ease: 2, precision: 3, sculpt: 5, printReady: 4, parametric: 2, cloud: "No", perpetual: "Yes", standout: "Complete 3D Suite" },
@@ -419,7 +430,7 @@ const ReferenceCAD = () => {
                           <img 
                             src={cadLogos[software.name]} 
                             alt={`${software.name} logo`}
-                            className="w-5 h-5 rounded object-contain"
+                            className={`w-5 h-5 rounded object-contain ${needsBrightness(software.name) ? 'brightness-150 invert' : ''}`}
                           />
                         )}
                         {software.name}
@@ -470,7 +481,7 @@ const ReferenceCAD = () => {
                     <img 
                       src={cadLogos[software.name]} 
                       alt={`${software.name} logo`}
-                      className="w-8 h-8 rounded object-contain"
+                      className={`w-8 h-8 rounded object-contain ${needsBrightness(software.name) ? 'brightness-150 invert' : ''}`}
                     />
                   )}
                   <div>
