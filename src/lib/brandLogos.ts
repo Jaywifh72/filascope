@@ -62,6 +62,8 @@ export const brandLogos: Record<string, string> = {
   "CC3D": "/images/brands/cc3d.png",
   "Duramic 3D": "/images/brands/duramic3d.png",
   "DURAMIC 3D": "/images/brands/duramic3d.png",
+  "Extrudr": "/images/brands/extrudr.ico",
+  "Filaments.ca": "/images/brands/filaments-ca.png",
   
   // Printer brands
   "AnkerMake": "/images/brands/ankermake.png",
