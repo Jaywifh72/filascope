@@ -458,6 +458,9 @@ async function processScrapedProducts(
       }
 
       // Update enhanced fields if scraped and not overridden
+      // Track whether we're actually adding temp specs (for counter accuracy)
+      let tempSpecsAdded = false;
+      
       if (product.mpn && !overrides.includes("mpn") && !filament.mpn) {
         updates.mpn = product.mpn;
         stats.mpnsExtracted++;
@@ -471,15 +474,24 @@ async function processScrapedProducts(
         updates.color_hex = product.colorHex;
         stats.colorHexCaptured++;
       }
+      
+      // FIX: Only count tempSpecsExtracted when we actually save the data
       if (product.nozzleTempMin && !overrides.includes("nozzle_temp_min_c") && !filament.nozzle_temp_min_c) {
         updates.nozzle_temp_min_c = product.nozzleTempMin;
         updates.nozzle_temp_max_c = product.nozzleTempMax;
-        stats.tempSpecsExtracted++;
+        tempSpecsAdded = true;
+        console.log(`🌡️ Adding nozzle temps for ${product.title}: ${product.nozzleTempMin}-${product.nozzleTempMax}°C`);
       }
       if (product.bedTempMin && !overrides.includes("bed_temp_min_c") && !filament.bed_temp_min_c) {
         updates.bed_temp_min_c = product.bedTempMin;
         updates.bed_temp_max_c = product.bedTempMax;
-        if (!product.nozzleTempMin) stats.tempSpecsExtracted++; // Only count once
+        tempSpecsAdded = true;
+        console.log(`🛏️ Adding bed temps for ${product.title}: ${product.bedTempMin}-${product.bedTempMax}°C`);
+      }
+      
+      // Only increment counter once per product if any temp specs were added
+      if (tempSpecsAdded) {
+        stats.tempSpecsExtracted++;
       }
 
       // Update filament (trigger will log to price_history if price changed)
