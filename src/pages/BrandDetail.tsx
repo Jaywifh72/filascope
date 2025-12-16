@@ -356,6 +356,36 @@ const BrandDetail = () => {
     return Array.from(materials).sort();
   }, [filaments]);
 
+  // Deduplicate variants by color_hex within a group
+  // Keeps first occurrence of each unique color_hex, and all variants without color_hex
+  const deduplicateVariantsByColor = (variants: Filament[]): Filament[] => {
+    const seenColorHexes = new Set<string>();
+    const result: Filament[] = [];
+    
+    for (const variant of variants) {
+      const normalizedHex = variant.color_hex 
+        ? normalizeColorHex(variant.color_hex).toUpperCase() 
+        : null;
+      
+      if (!normalizedHex) {
+        // No color_hex - keep variant but check for duplicate titles
+        const hasSimilarVariant = result.some(v => 
+          !v.color_hex && v.product_title === variant.product_title
+        );
+        if (!hasSimilarVariant) {
+          result.push(variant);
+        }
+      } else if (!seenColorHexes.has(normalizedHex)) {
+        // New unique color - add it
+        seenColorHexes.add(normalizedHex);
+        result.push(variant);
+      }
+      // Skip duplicate color_hex values
+    }
+    
+    return result;
+  };
+
   // Group filaments by base product name
   const groupedProducts = useMemo(() => {
     if (!filaments) return [];
@@ -406,7 +436,13 @@ const BrandDetail = () => {
       }
     });
 
-    return Array.from(groups.values()).sort((a, b) => a.baseName.localeCompare(b.baseName));
+    // Deduplicate variants by color within each group
+    const result = Array.from(groups.values()).map(group => ({
+      ...group,
+      variants: deduplicateVariantsByColor(group.variants),
+    }));
+
+    return result.sort((a, b) => a.baseName.localeCompare(b.baseName));
   }, [filaments, selectedMaterial]);
 
   const getPricePerKg = (price: number | null) => {
