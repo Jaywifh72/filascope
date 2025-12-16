@@ -386,16 +386,29 @@ const ReferenceInfluencers = () => {
                       </div>
                     </div>
 
+                    {/* Top 2025 Video Thumbnail */}
+                    {influencer.topVideo2025 && (
+                      <a 
+                        href={influencer.topVideo2025} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="block relative group w-fit"
+                      >
+                        <img 
+                          src={`https://img.youtube.com/vi/${influencer.topVideo2025.split('v=')[1]?.split('&')[0]}/mqdefault.jpg`}
+                          alt="Top 2025 Video"
+                          className="rounded-lg w-64 h-auto transition-transform group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="bg-red-600 rounded-full p-3 opacity-90 group-hover:opacity-100 transition-opacity">
+                            <Youtube className="h-6 w-6 text-white" />
+                          </div>
+                        </div>
+                      </a>
+                    )}
+
                     {/* Links */}
                     <div className="flex flex-wrap gap-2">
-                      {influencer.topVideo2025 && (
-                        <a href={influencer.topVideo2025} target="_blank" rel="noopener noreferrer">
-                          <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">
-                            <Youtube className="h-4 w-4 mr-2" />
-                            Top 2025 Video
-                          </Button>
-                        </a>
-                      )}
                       {influencer.links.youtube && (
                         <a href={influencer.links.youtube} target="_blank" rel="noopener noreferrer">
                           <Button variant="outline" size="sm">
