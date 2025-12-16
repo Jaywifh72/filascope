@@ -372,7 +372,9 @@ export class ShopifyScraper extends BaseScraper {
       "nozzle", "bed", "sheet", "tool", "kit", "sample", "bundle pack",
       "printer", "resin", "lcd", "screen", "extruder", "hotend", "heater",
       "stepper", "motor", "belt", "pulley", "bearing", "fan", "cover",
-      "enclosure", "dryer", "dry box", "accessory", "part", "spare"
+      "enclosure", "dryer", "dry box", "accessory", "part", "spare",
+      // Skip discontinued and bundle products
+      "discontinued", "bundle"
     ];
     const isExcluded = excludeKeywords.some((kw) => combined.includes(kw));
 
