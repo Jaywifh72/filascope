@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/filascope-logo.png";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
+import { PrinterSelectorHeader } from "@/components/PrinterSelectorHeader";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,11 +17,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const Navbar = () => {
+interface NavbarProps {
+  compatibleCount?: number;
+}
+
+const Navbar = ({ compatibleCount = 0 }: NavbarProps) => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Show printer selector only on Finder page (/)
+  const showPrinterSelector = location.pathname === "/" || location.pathname === "/materials";
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -69,19 +87,36 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 border-b border-[#333] bg-[#0A0A0A]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/80">
-        <div className="flex h-20 md:h-32 items-center px-6 gap-6">
+      <nav 
+        className={`sticky top-0 z-50 border-b border-[#333] transition-all duration-300 ${
+          isScrolled 
+            ? "bg-[#0A0A0A]/98 backdrop-blur-xl shadow-[0_4px_12px_rgba(0,0,0,0.2)]" 
+            : "bg-[#0A0A0A]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/80"
+        }`}
+      >
+        <div className={`flex items-center px-6 gap-4 transition-all duration-300 ${
+          isScrolled ? "h-16 md:h-20" : "h-20 md:h-24"
+        }`}>
           {/* Logo */}
           <Link to="/" className="flex items-center shrink-0">
             <img 
               src={filascopeLogo} 
               alt="FilaScope" 
-              className="h-16 md:h-28 w-auto object-contain"
+              className={`w-auto object-contain transition-all duration-300 ${
+                isScrolled ? "h-12 md:h-16" : "h-16 md:h-24"
+              }`}
             />
           </Link>
 
+          {/* Printer Selector - Center (only on Finder) */}
+          {showPrinterSelector && (
+            <div className="hidden lg:flex flex-1 justify-center">
+              <PrinterSelectorHeader compatibleCount={compatibleCount} />
+            </div>
+          )}
+
           {/* Navigation Links */}
-          <div className="hidden lg:flex items-center gap-1">
+          <div className={`hidden lg:flex items-center gap-1 ${showPrinterSelector ? "" : "flex-1"}`}>
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
               <Link to="/printers">PRINTERS</Link>
             </Button>
@@ -149,7 +184,7 @@ const Navbar = () => {
           </div>
 
           {/* Spacer */}
-          <div className="flex-1" />
+          {!showPrinterSelector && <div className="flex-1" />}
 
           {/* User Actions */}
           <div className="flex items-center gap-3 shrink-0">
@@ -232,6 +267,13 @@ const Navbar = () => {
             )}
           </div>
         </div>
+
+        {/* Mobile Printer Selector Row */}
+        {showPrinterSelector && (
+          <div className="lg:hidden px-4 pb-3 border-t border-[#333]/50 pt-2">
+            <PrinterSelectorHeader compatibleCount={compatibleCount} />
+          </div>
+        )}
       </nav>
     </>
   );

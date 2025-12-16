@@ -25,9 +25,10 @@ import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { isAMSCompatible } from "@/lib/amsCompatibility";
 import { useCompare } from "@/hooks/useCompare";
+import { useCompatibleCount } from "@/hooks/useCompatibleCount";
 import HeroSection from "@/components/HeroSection";
 import { FilamentFilters } from "@/components/FilamentFilters";
-import { PrinterContextBar } from "@/components/filters/PrinterContextBar";
+// PrinterContextBar removed - now in Navbar
 import { HorizontalFilterBar } from "@/components/filters/HorizontalFilterBar";
 import { ActiveFilterTags, type ActiveFilter } from "@/components/filters/ActiveFilterTags";
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
@@ -207,6 +208,9 @@ const Finder = () => {
   
   // Printer selection hook
   const { selectedPrinter } = usePrinterSelection();
+  
+  // Compatible count context - update navbar badge
+  const { setCount: setCompatibleCount } = useCompatibleCount();
   
   // Affiliate links hook
   const { getAffiliateUrl } = useAffiliateLinks();
@@ -931,6 +935,11 @@ const Finder = () => {
   const totalCount = filteredAndSortedFilaments?.length || 0;
   const hasMore = displayCount < totalCount;
 
+  // Update navbar compatible count
+  useEffect(() => {
+    setCompatibleCount(totalCount);
+  }, [totalCount, setCompatibleCount]);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -941,10 +950,7 @@ const Finder = () => {
         brandCount={brands?.length || 28}
       />
 
-      {/* Printer Context Bar - Sticky */}
-      <PrinterContextBar
-        compatibleCount={filteredAndSortedFilaments?.length || 0}
-      />
+      {/* Printer Context Bar removed - now in Navbar header */}
 
       {/* Horizontal Filter Bar */}
       <HorizontalFilterBar
