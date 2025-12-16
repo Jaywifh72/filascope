@@ -167,7 +167,9 @@ export class WooCommerceScraper extends BaseScraper {
     ];
     const excludeKeywords = [
       "printer", "nozzle", "bed", "hotend", "extruder", "fan",
-      "belt", "motor", "kit", "tool", "adhesive", "glue", "tape"
+      "belt", "motor", "kit", "tool", "adhesive", "glue", "tape",
+      // Skip discontinued and bundle products
+      "discontinued", "bundle"
     ];
     
     // Check if any filament keyword is present

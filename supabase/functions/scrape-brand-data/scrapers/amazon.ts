@@ -1395,6 +1395,9 @@ export class AmazonScraper extends BaseScraper {
       "spool holder",
       "desiccant",
       "vacuum bag",
+      // Skip discontinued and bundle products
+      "discontinued",
+      "bundle",
     ];
     
     const isExcluded = excludePatterns.some(pattern => titleLower.includes(pattern));
