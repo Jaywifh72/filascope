@@ -342,35 +342,6 @@ export const influencerData: InfluencerData[] = [
     ratings: { reach: 4, technical: 4, entertainment: 5, influence: 4, monetization: 4 }
   },
   {
-    id: "rclifeon",
-    name: "Simon Sörensen",
-    channelName: "RCLifeOn",
-    location: "Sweden",
-    subscribers: "~908,000",
-    totalViews: "~135 Million",
-    joinDate: "~2011/2012",
-    niche: "RC Vehicles, Solar, Practical Prints",
-    businessModel: "AdSense, Brand Deals, Affiliates",
-    keyAsset: "RC + 3D Printing Integration, Solar Projects",
-    brandIdentity: "Simon Sörensen of RCLifeOn bridges the gap between the Radio Control (RC) hobby and 3D printing. He is the 'Practical Modder.' His content explores how 3D printing can create custom chassis, parts, and modifications for RC cars, planes, and boats. He also explores general life hacks and renewable energy projects.",
-    contentStrategy: "Sörensen's videos often pose a hypothesis: 'Can I 3D print a working snowblower?' or 'Can I make a solar-powered RC plane?' He then designs, prints, and tests in the real world. His testing is often destructive (crashing RC cars), providing honest data on durability. He has a massive back catalog testing budget printers, helping popularize brands like Creality and Anycubic.",
-    economicImpact: "RCLifeOn unlocked a massive adjacent market for 3D printing. By showing RC enthusiasts that a printer is a necessary workshop tool, he drove significant hardware adoption in that demographic. He demonstrates that 3D printing is a force multiplier for other hobbies.",
-    futureOutlook: "Sörensen continues to explore the intersection of green tech and making, with recent projects focusing on solar energy and efficiency, reflecting a broader trend of sustainability in the maker movement.",
-    strengths: [
-      { title: "Adjacent Market", description: "Unlocked RC hobby demographic for 3D printing adoption" },
-      { title: "Real-World Testing", description: "Destructive testing provides honest durability data" },
-      { title: "Force Multiplier", description: "Shows 3D printing as enhancement for existing hobbies" }
-    ],
-    weaknesses: [
-      { title: "Niche Crossover", description: "Content may not appeal to non-RC enthusiasts" },
-      { title: "Budget Focus", description: "Heavy focus on budget printers may limit premium partnerships" }
-    ],
-    links: {
-      youtube: "https://www.youtube.com/@RcLifeOn"
-    },
-    ratings: { reach: 5, technical: 4, entertainment: 4, influence: 4, monetization: 3 }
-  },
-  {
     id: "emily-the-engineer",
     name: "Emily Yarid",
     channelName: "Emily the Engineer",
