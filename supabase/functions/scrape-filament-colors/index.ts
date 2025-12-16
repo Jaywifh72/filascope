@@ -6,7 +6,56 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Comprehensive color name to hex mapping
+// ============= NON-COLOR PATTERNS (EXCLUSION RULES) =============
+const NON_COLOR_PATTERNS = {
+  // Weight/Size variants (e.g., "1kg", "500g", "2.2lb")
+  weight: /\b(\d+(?:\.\d+)?)\s*(kg|g|lb|lbs|gram|grams|kilogram|kilograms|oz|ounce|ounces)\b/i,
+  // Diameter variants (e.g., "1.75mm", "2.85mm")
+  diameter: /\b(1\.75|2\.85|3\.0|3\.00|2\.4|1\.0)\s*mm\b/i,
+  // Pack/Bundle variants (e.g., "3-pack", "5 rolls", "10x")
+  pack: /\b(\d+)\s*[-]?\s*(pack|pcs|pc|pieces|piece|rolls|roll|spools|spool|x\s*\d+|set|bundle)\b/i,
+  // Refill/Eco variants
+  refill: /\b(refill|cardboard|cardboard\s*spool|master\s*spool|eco\s*spool|lite|masterspool|no\s*spool)\b/i,
+  // Spool type variants
+  spoolType: /\b(spool\s*only|empty\s*spool|replacement\s*spool)\b/i,
+  // Material variants (when product has multiple materials as options)
+  material: /^(pla|petg|abs|asa|tpu|pc|nylon|pa|pva|hips|pp|pei|peek|pekk|cf|gf|plus|pro|matte|silk|hyper|hs|high\s*speed)$/i,
+  // Temperature/Speed variants
+  tempSpeed: /\b(high\s*speed|fast|slow|hs|standard\s*speed|normal\s*speed)\b/i,
+  // Quantity descriptors
+  quantity: /^\d+$|^x\d+$/i,
+  // Dimensional variants
+  dimensions: /\b(\d+)\s*x\s*(\d+)/i,
+  // Generic non-color terms (when standalone)
+  generic: /^(default|default\s*title|standard|regular|classic|original|basic|pro|plus|new|old|v\d+|version\s*\d+|type\s*[a-z]|\d+\s*pcs?)$/i,
+};
+
+// ============= COLOR KEYWORDS (INCLUSION RULES) =============
+const COLOR_KEYWORDS = [
+  // Basic colors
+  'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'gray', 'grey',
+  // Metallic/Special
+  'gold', 'silver', 'copper', 'bronze', 'platinum', 'chrome', 'metallic', 'metal',
+  // Finishes that indicate color
+  'silk', 'matte', 'satin', 'gloss', 'glossy', 'shimmer', 'sparkle', 'glitter', 'glow', 'rainbow', 'marble', 'galaxy', 'cosmic',
+  // Nature-inspired
+  'forest', 'ocean', 'sky', 'sunset', 'midnight', 'coral', 'mint', 'lavender', 'sage', 'olive', 'ivory', 'cream',
+  // Descriptors that indicate color
+  'pastel', 'neon', 'transparent', 'translucent', 'clear', 'opaque', 'bright', 'dark', 'light', 'deep', 'vivid',
+  // Specific colors
+  'turquoise', 'teal', 'cyan', 'magenta', 'maroon', 'burgundy', 'navy', 'indigo', 'violet', 'crimson', 'scarlet',
+  'beige', 'tan', 'khaki', 'nude', 'flesh', 'skin', 'peach', 'salmon', 'coral',
+  'emerald', 'jade', 'lime', 'olive', 'chartreuse', 'aqua', 'azure',
+  'ruby', 'sapphire', 'amethyst', 'pearl', 'onyx', 'obsidian',
+  'champagne', 'rose', 'blush', 'fuchsia', 'flamingo', 'watermelon',
+  'lemon', 'mustard', 'honey', 'amber', 'caramel', 'chocolate', 'mocha', 'espresso', 'coffee',
+  'charcoal', 'graphite', 'smoke', 'ash', 'slate', 'steel', 'gunmetal', 'pewter',
+  'snow', 'ice', 'frost', 'arctic', 'polar', 'bone', 'eggshell', 'alabaster',
+  // Wood colors
+  'wood', 'bamboo', 'oak', 'walnut', 'maple', 'cherry', 'pine', 'birch', 'mahogany', 'teak',
+];
+
+// ============= COMPREHENSIVE COLOR HEX MAP =============
 const COLOR_HEX_MAP: Record<string, string> = {
   // Basic colors
   "black": "#1A1A1A",
@@ -219,6 +268,108 @@ const COLOR_FAMILY_MAP: Record<string, string> = {
   "glow in dark": "Glow", "glow in the dark": "Glow",
 };
 
+// ============= VARIANT CLASSIFICATION SYSTEM =============
+interface VariantClassification {
+  isColorVariant: boolean;
+  colorName: string | null;
+  confidence: 'high' | 'medium' | 'low';
+  excludeReason?: string;
+}
+
+function classifyVariant(variantName: string): VariantClassification {
+  const normalized = variantName.toLowerCase().trim();
+  const original = variantName.trim();
+  
+  // Step 1: Check for definite non-color patterns (EXCLUSIONS)
+  if (NON_COLOR_PATTERNS.weight.test(normalized)) {
+    return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'weight_variant' };
+  }
+  if (NON_COLOR_PATTERNS.diameter.test(normalized)) {
+    return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'diameter_variant' };
+  }
+  if (NON_COLOR_PATTERNS.pack.test(normalized)) {
+    return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'bundle_variant' };
+  }
+  if (NON_COLOR_PATTERNS.refill.test(normalized)) {
+    return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'refill_variant' };
+  }
+  if (NON_COLOR_PATTERNS.spoolType.test(normalized)) {
+    return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'spool_type_variant' };
+  }
+  if (NON_COLOR_PATTERNS.material.test(normalized)) {
+    return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'material_variant' };
+  }
+  if (NON_COLOR_PATTERNS.tempSpeed.test(normalized)) {
+    return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'speed_variant' };
+  }
+  if (NON_COLOR_PATTERNS.quantity.test(normalized)) {
+    return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'quantity_variant' };
+  }
+  if (NON_COLOR_PATTERNS.dimensions.test(normalized)) {
+    return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'dimension_variant' };
+  }
+  if (NON_COLOR_PATTERNS.generic.test(normalized)) {
+    return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'generic_term' };
+  }
+  
+  // Step 2: Check if it's a known color in our hex map (HIGH CONFIDENCE)
+  if (COLOR_HEX_MAP[normalized]) {
+    return { isColorVariant: true, colorName: original, confidence: 'high' };
+  }
+  
+  // Step 3: Check if it contains known color keywords (MEDIUM CONFIDENCE)
+  const hasColorKeyword = COLOR_KEYWORDS.some(kw => normalized.includes(kw));
+  if (hasColorKeyword) {
+    return { isColorVariant: true, colorName: original, confidence: 'medium' };
+  }
+  
+  // Step 4: Check for partial matches in COLOR_HEX_MAP
+  for (const [key] of Object.entries(COLOR_HEX_MAP)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return { isColorVariant: true, colorName: original, confidence: 'medium' };
+    }
+  }
+  
+  // Step 5: Exclude very short or numeric-only variants
+  if (/^\d+$/.test(normalized) || normalized.length < 2) {
+    return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'numeric_or_too_short' };
+  }
+  
+  // Step 6: Check for common non-color patterns that weren't caught above
+  const additionalExclusions = [
+    /^\d+\s*(mm|cm|m|inch|inches)$/i,
+    /^(small|medium|large|xl|xxl|s|m|l)$/i,
+    /^(left|right|top|bottom|front|back)$/i,
+    /^(a|b|c|d|e|f)$/i,
+    /^(option|variant|type|style)\s*\d*$/i,
+  ];
+  
+  for (const pattern of additionalExclusions) {
+    if (pattern.test(normalized)) {
+      return { isColorVariant: false, colorName: null, confidence: 'high', excludeReason: 'additional_exclusion' };
+    }
+  }
+  
+  // Step 7: If it passes all exclusions and has reasonable text, treat as potential color with LOW confidence
+  // This allows for brand-specific or unusual color names
+  return { isColorVariant: true, colorName: original, confidence: 'low' };
+}
+
+// ============= OPTION TYPE DETECTION =============
+const COLOR_OPTION_NAMES = ['color', 'colour', 'farbe', 'couleur', 'colore', 'kleur', 'colors', 'colours'];
+const SIZE_OPTION_NAMES = ['size', 'weight', 'quantity', 'pack', 'bundle', 'amount', 'count', 'units', 'kg', 'gram', 'length'];
+const TYPE_OPTION_NAMES = ['type', 'style', 'variant', 'option', 'material', 'filament', 'diameter', 'finish', 'texture'];
+
+function identifyOptionType(optionName: string): 'color' | 'size' | 'type' | 'unknown' {
+  const normalized = optionName.toLowerCase().trim();
+  
+  if (COLOR_OPTION_NAMES.some(n => normalized.includes(n))) return 'color';
+  if (SIZE_OPTION_NAMES.some(n => normalized.includes(n))) return 'size';
+  if (TYPE_OPTION_NAMES.some(n => normalized.includes(n))) return 'type';
+  
+  return 'unknown';
+}
+
 function extractColorInfo(colorName: string): { hex: string | null; family: string | null } {
   const normalized = colorName.toLowerCase().trim();
   
@@ -265,7 +416,24 @@ interface ColorVariant {
   price: number | null;
 }
 
-async function scrapeShopifyProduct(productUrl: string): Promise<{ colors: ColorVariant[]; productTitle: string } | null> {
+interface FilteredVariant {
+  name: string;
+  reason: string;
+}
+
+interface ScrapeResult {
+  colors: ColorVariant[];
+  filtered: FilteredVariant[];
+  productTitle: string;
+  optionAnalysis: {
+    option1?: { name: string; type: string };
+    option2?: { name: string; type: string };
+    option3?: { name: string; type: string };
+    colorOptionUsed: string | null;
+  };
+}
+
+async function scrapeShopifyProduct(productUrl: string): Promise<ScrapeResult | null> {
   // Extract handle from various Shopify URL formats
   const urlPatterns = [
     /\/products\/([^/?#]+)/,
@@ -282,7 +450,7 @@ async function scrapeShopifyProduct(productUrl: string): Promise<{ colors: Color
   }
   
   if (!productHandle) {
-    console.log(`Could not extract product handle from URL: ${productUrl}`);
+    console.log(`[ERROR] Could not extract product handle from URL: ${productUrl}`);
     return null;
   }
   
@@ -291,7 +459,7 @@ async function scrapeShopifyProduct(productUrl: string): Promise<{ colors: Color
   const baseUrl = `${urlObj.protocol}//${urlObj.hostname}`;
   const jsonUrl = `${baseUrl}/products/${productHandle}.json`;
   
-  console.log(`Fetching Shopify JSON: ${jsonUrl}`);
+  console.log(`[FETCH] Shopify JSON: ${jsonUrl}`);
   
   const response = await fetch(jsonUrl, {
     headers: {
@@ -301,7 +469,7 @@ async function scrapeShopifyProduct(productUrl: string): Promise<{ colors: Color
   });
   
   if (!response.ok) {
-    console.log(`Shopify JSON fetch failed: HTTP ${response.status}`);
+    console.log(`[ERROR] Shopify JSON fetch failed: HTTP ${response.status}`);
     return null;
   }
   
@@ -309,7 +477,7 @@ async function scrapeShopifyProduct(productUrl: string): Promise<{ colors: Color
   const product = productData?.product;
   
   if (!product) {
-    console.log("No product data in response");
+    console.log("[ERROR] No product data in response");
     return null;
   }
   
@@ -317,37 +485,57 @@ async function scrapeShopifyProduct(productUrl: string): Promise<{ colors: Color
   const images = product.images || [];
   const options = product.options || [];
   
-  // Find color option index
-  const colorOptionIndex = options.findIndex((opt: { name: string }) => 
-    opt.name.toLowerCase().includes("color") || opt.name.toLowerCase().includes("colour")
-  );
+  // ============= ANALYZE OPTIONS =============
+  const optionAnalysis: ScrapeResult['optionAnalysis'] = {
+    colorOptionUsed: null,
+  };
   
+  let colorOptionIndex = -1;
+  
+  for (let i = 0; i < options.length && i < 3; i++) {
+    const opt = options[i];
+    const optType = identifyOptionType(opt.name);
+    const key = `option${i + 1}` as 'option1' | 'option2' | 'option3';
+    optionAnalysis[key] = { name: opt.name, type: optType };
+    
+    console.log(`[OPTION] Option${i + 1}: "${opt.name}" -> Type: ${optType}`);
+    
+    if (optType === 'color' && colorOptionIndex === -1) {
+      colorOptionIndex = i;
+      optionAnalysis.colorOptionUsed = opt.name;
+    }
+  }
+  
+  // ============= EXTRACT AND CLASSIFY VARIANTS =============
   const colorVariants: ColorVariant[] = [];
+  const filteredVariants: FilteredVariant[] = [];
+  const seenColors = new Set<string>();
   
   if (colorOptionIndex !== -1) {
+    // Use dedicated color option
     const colorOptionKey = `option${colorOptionIndex + 1}`;
-    const seenColors = new Set<string>();
+    console.log(`[STRATEGY] Using dedicated color option: ${optionAnalysis.colorOptionUsed} (${colorOptionKey})`);
     
     for (const variant of variants) {
       const colorName = variant[colorOptionKey];
-      if (!colorName || seenColors.has(colorName.toLowerCase())) continue;
-      seenColors.add(colorName.toLowerCase());
+      if (!colorName) continue;
+      
+      const normalizedColor = colorName.toLowerCase().trim();
+      if (seenColors.has(normalizedColor)) continue;
+      
+      // Classify the variant
+      const classification = classifyVariant(colorName);
+      
+      if (!classification.isColorVariant) {
+        filteredVariants.push({ name: colorName, reason: classification.excludeReason || 'unknown' });
+        console.log(`[FILTERED] "${colorName}" -> Reason: ${classification.excludeReason}`);
+        continue;
+      }
+      
+      seenColors.add(normalizedColor);
       
       // Find image for this variant
-      let imageUrl: string | null = null;
-      if (variant.featured_image?.src) {
-        imageUrl = variant.featured_image.src.split("?")[0];
-      } else if (variant.image_id && images.length > 0) {
-        const img = images.find((i: { id: number }) => i.id === variant.image_id);
-        if (img?.src) {
-          imageUrl = img.src.split("?")[0];
-        }
-      }
-      
-      // Fall back to first image if no variant-specific image
-      if (!imageUrl && images.length > 0) {
-        imageUrl = images[0].src?.split("?")[0] || null;
-      }
+      let imageUrl = findVariantImage(variant, images);
       
       const { hex, family } = extractColorInfo(colorName);
       colorVariants.push({
@@ -357,37 +545,108 @@ async function scrapeShopifyProduct(productUrl: string): Promise<{ colors: Color
         imageUrl,
         price: variant.price ? parseFloat(variant.price) : null,
       });
+      
+      console.log(`[COLOR] "${colorName}" -> Confidence: ${classification.confidence}, Hex: ${hex || 'unknown'}`);
     }
   } else {
-    // No color option - extract from variant titles
-    const seenColors = new Set<string>();
-    for (const variant of variants) {
-      const title = variant.title || variant.option1 || "Default";
-      if (title.toLowerCase() === "default title" || seenColors.has(title.toLowerCase())) continue;
-      seenColors.add(title.toLowerCase());
+    // No color option found - analyze all variants
+    console.log(`[STRATEGY] No color option found, analyzing all variants`);
+    
+    // First, try to find the best option to use (one with most color-like values)
+    let bestOptionIndex = 0;
+    let bestColorScore = 0;
+    
+    for (let i = 0; i < options.length && i < 3; i++) {
+      const opt = options[i];
+      let colorScore = 0;
+      const uniqueValues = new Set<string>();
       
-      let imageUrl: string | null = null;
-      if (variant.featured_image?.src) {
-        imageUrl = variant.featured_image.src.split("?")[0];
-      } else if (images.length > 0) {
-        imageUrl = images[0].src?.split("?")[0] || null;
+      for (const variant of variants) {
+        const val = variant[`option${i + 1}`];
+        if (val && !uniqueValues.has(val.toLowerCase())) {
+          uniqueValues.add(val.toLowerCase());
+          const classification = classifyVariant(val);
+          if (classification.isColorVariant) {
+            colorScore += classification.confidence === 'high' ? 3 : classification.confidence === 'medium' ? 2 : 1;
+          }
+        }
       }
       
-      const { hex, family } = extractColorInfo(title);
+      console.log(`[ANALYSIS] Option${i + 1} "${opt.name}" color score: ${colorScore}`);
+      
+      if (colorScore > bestColorScore) {
+        bestColorScore = colorScore;
+        bestOptionIndex = i;
+      }
+    }
+    
+    const useOptionKey = `option${bestOptionIndex + 1}`;
+    console.log(`[STRATEGY] Using option${bestOptionIndex + 1} (best color score: ${bestColorScore})`);
+    
+    for (const variant of variants) {
+      const variantValue = variant[useOptionKey] || variant.title || "Default";
+      if (variantValue.toLowerCase() === "default title") continue;
+      
+      const normalizedValue = variantValue.toLowerCase().trim();
+      if (seenColors.has(normalizedValue)) continue;
+      
+      // Classify the variant
+      const classification = classifyVariant(variantValue);
+      
+      if (!classification.isColorVariant) {
+        filteredVariants.push({ name: variantValue, reason: classification.excludeReason || 'unknown' });
+        console.log(`[FILTERED] "${variantValue}" -> Reason: ${classification.excludeReason}`);
+        continue;
+      }
+      
+      seenColors.add(normalizedValue);
+      
+      let imageUrl = findVariantImage(variant, images);
+      
+      const { hex, family } = extractColorInfo(variantValue);
       colorVariants.push({
-        name: title,
+        name: variantValue,
         hex,
         family,
         imageUrl,
         price: variant.price ? parseFloat(variant.price) : null,
       });
+      
+      console.log(`[COLOR] "${variantValue}" -> Confidence: ${classification.confidence}, Hex: ${hex || 'unknown'}`);
     }
   }
   
+  console.log(`[SUMMARY] Found ${colorVariants.length} colors, filtered ${filteredVariants.length} non-colors`);
+  
   return {
     colors: colorVariants,
+    filtered: filteredVariants,
     productTitle: product.title || "",
+    optionAnalysis,
   };
+}
+
+function findVariantImage(variant: Record<string, unknown>, images: Array<{ id: number; src: string }>): string | null {
+  if (variant.featured_image && typeof variant.featured_image === 'object') {
+    const featuredImage = variant.featured_image as { src?: string };
+    if (featuredImage.src) {
+      return featuredImage.src.split("?")[0];
+    }
+  }
+  
+  if (variant.image_id && images.length > 0) {
+    const img = images.find((i) => i.id === variant.image_id);
+    if (img?.src) {
+      return img.src.split("?")[0];
+    }
+  }
+  
+  // Fall back to first image
+  if (images.length > 0) {
+    return images[0].src?.split("?")[0] || null;
+  }
+  
+  return null;
 }
 
 serve(async (req) => {
@@ -457,7 +716,10 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Scraping colors for: ${filament.product_title} from ${filament.product_url}`);
+    console.log(`\n========================================`);
+    console.log(`[START] Scraping colors for: ${filament.product_title}`);
+    console.log(`[URL] ${filament.product_url}`);
+    console.log(`========================================\n`);
 
     // Try Shopify scraping
     const result = await scrapeShopifyProduct(filament.product_url);
@@ -466,22 +728,28 @@ serve(async (req) => {
       // Update this filament with extracted color from title if possible
       const titleColor = filament.product_title.match(/-\s*([^-]+)$/)?.[1]?.trim();
       if (titleColor) {
-        const { hex, family } = extractColorInfo(titleColor);
-        if (hex || family) {
-          await supabase
-            .from("filaments")
-            .update({ color_hex: hex, color_family: family })
-            .eq("id", filamentId);
-          
-          return new Response(JSON.stringify({
-            success: true,
-            message: `Updated color from title: ${titleColor}`,
-            colorsFound: 1,
-            colorsUpdated: 1,
-            colors: [{ name: titleColor, hex, family }],
-          }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+        const classification = classifyVariant(titleColor);
+        if (classification.isColorVariant) {
+          const { hex, family } = extractColorInfo(titleColor);
+          if (hex || family) {
+            await supabase
+              .from("filaments")
+              .update({ color_hex: hex, color_family: family })
+              .eq("id", filamentId);
+            
+            return new Response(JSON.stringify({
+              success: true,
+              message: `Updated color from title: ${titleColor}`,
+              colorsFound: 1,
+              colorsUpdated: 1,
+              colorsCreated: 0,
+              colors: [{ name: titleColor, hex, family }],
+              filtered: result?.filtered || [],
+              optionAnalysis: result?.optionAnalysis || null,
+            }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
         }
       }
       
@@ -489,12 +757,17 @@ serve(async (req) => {
         success: false,
         message: "Could not find color variants from product page",
         colorsFound: 0,
+        filtered: result?.filtered || [],
+        optionAnalysis: result?.optionAnalysis || null,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log(`Found ${result.colors.length} colors: ${result.colors.map(c => c.name).join(", ")}`);
+    console.log(`\n[RESULT] Found ${result.colors.length} colors: ${result.colors.map(c => c.name).join(", ")}`);
+    if (result.filtered.length > 0) {
+      console.log(`[RESULT] Filtered ${result.filtered.length} non-colors: ${result.filtered.map(f => `${f.name} (${f.reason})`).join(", ")}`);
+    }
 
     // Get base product name
     const baseProductName = filament.product_title.replace(/\s*-\s*[^-]+$/, "").trim();
@@ -515,7 +788,7 @@ serve(async (req) => {
 
       if (!updateError) {
         colorsUpdated = 1;
-        console.log(`Updated ${filament.product_title} with color: ${color.name} (${color.hex})`);
+        console.log(`[DB] Updated ${filament.product_title} with color: ${color.name} (${color.hex})`);
       }
     } else {
       // Multiple colors - update/create variants
@@ -572,9 +845,9 @@ serve(async (req) => {
           
           if (!insertError) {
             colorsCreated++;
-            console.log(`Created: ${colorProductTitle} (${color.hex})`);
+            console.log(`[DB] Created: ${colorProductTitle} (${color.hex})`);
           } else {
-            console.error(`Failed to create ${colorProductTitle}:`, insertError.message);
+            console.error(`[DB ERROR] Failed to create ${colorProductTitle}:`, insertError.message);
           }
         }
       }
@@ -596,17 +869,19 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      message: `Found ${result.colors.length} colors, updated ${colorsUpdated}, created ${colorsCreated}`,
+      message: `Found ${result.colors.length} colors (filtered ${result.filtered.length} non-color variants), updated ${colorsUpdated}, created ${colorsCreated}`,
       colorsFound: result.colors.length,
       colorsUpdated,
       colorsCreated,
       colors: result.colors,
+      filtered: result.filtered,
+      optionAnalysis: result.optionAnalysis,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (error: unknown) {
-    console.error("Error:", error);
+    console.error("[ERROR]", error);
     const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
