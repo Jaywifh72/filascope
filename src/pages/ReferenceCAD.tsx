@@ -15,6 +15,7 @@ import Navbar from "@/components/Navbar";
 
 // Logo mapping for CAD software
 const cadLogos: Record<string, string> = {
+  // Table names
   "Fusion 360": "/images/cad/fusion360.png",
   "Blender": "/images/cad/blender.png",
   "SolidWorks": "/images/cad/solidworks.png",
@@ -35,6 +36,15 @@ const cadLogos: Record<string, string> = {
   "AutoCAD": "/images/cad/autocad.svg",
   "SelfCAD": "/images/cad/selfcad.png",
   "BlocksCAD": "/images/cad/blockscad.png",
+  // Accordion names (from cadData)
+  "Autodesk Fusion 360": "/images/cad/fusion360.png",
+  "Maxon ZBrush": "/images/cad/zbrush.png",
+  "Autodesk Meshmixer": "/images/cad/meshmixer.png",
+  "Trimble SketchUp": "/images/cad/sketchup.png",
+  "Maxon Cinema 4D": "/images/cad/cinema4d.png",
+  "Autodesk Maya": "/images/cad/maya.png",
+  "Autodesk 3ds Max": "/images/cad/3dsmax.svg",
+  "Autodesk AutoCAD": "/images/cad/autocad.svg",
 };
 
 const cadComparison = [
