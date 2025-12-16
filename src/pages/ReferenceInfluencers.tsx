@@ -439,29 +439,16 @@ const ReferenceInfluencers = () => {
                       </div>
                     </div>
 
-                    {/* Strengths & Weaknesses */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-semibold mb-3 text-green-600">Strengths</h4>
-                        <div className="space-y-2">
-                          {influencer.strengths.map((strength, idx) => (
-                            <div key={idx} className="bg-green-500/10 rounded-lg p-3 border border-green-500/20">
-                              <div className="font-medium text-sm">{strength.title}</div>
-                              <div className="text-xs text-muted-foreground">{strength.description}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-3 text-amber-600">Considerations</h4>
-                        <div className="space-y-2">
-                          {influencer.weaknesses.map((weakness, idx) => (
-                            <div key={idx} className="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
-                              <div className="font-medium text-sm">{weakness.title}</div>
-                              <div className="text-xs text-muted-foreground">{weakness.description}</div>
-                            </div>
-                          ))}
-                        </div>
+                    {/* Strengths */}
+                    <div>
+                      <h4 className="font-semibold mb-3 text-green-600">Strengths</h4>
+                      <div className="grid md:grid-cols-2 gap-2">
+                        {influencer.strengths.map((strength, idx) => (
+                          <div key={idx} className="bg-green-500/10 rounded-lg p-3 border border-green-500/20">
+                            <div className="font-medium text-sm">{strength.title}</div>
+                            <div className="text-xs text-muted-foreground">{strength.description}</div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
