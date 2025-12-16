@@ -483,21 +483,24 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     productCount: 50,
   },
   // ============================================================================
-  // AMAZON WAVE 2 - Discovery Brands
+  // FIRECRAWL BRANDS - Custom E-Commerce Platforms
   // ============================================================================
   GEEETECH: {
     vendor: "GEEETECH",
-    platform: "amazon",
-    baseUrl: "https://www.amazon.com",
+    platform: "firecrawl",
+    baseUrl: "https://www.geeetech.com/filament-c-83.html",
     apiEndpoint: "",
     currency: "USD",
     exchangeRate: 1.0,
-    productsPerPage: 50,
-    requestDelay: 2000,
-    timeout: 15000,
+    productsPerPage: 100,
+    requestDelay: 1500,
+    timeout: 20000,
     userAgent: DEFAULT_USER_AGENT,
-    productCount: 80,
+    productCount: 100,
   },
+  // ============================================================================
+  // AMAZON WAVE 2 - Discovery Brands
+  // ============================================================================
   TECBEARS: {
     vendor: "TECBEARS",
     platform: "amazon",
