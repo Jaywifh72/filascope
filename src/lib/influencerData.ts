@@ -366,7 +366,7 @@ export const influencerData: InfluencerData[] = [
       { title: "Smaller Reach", description: "Lower subscriber count compared to entertainment channels" }
     ],
     links: {
-      youtube: "https://www.youtube.com/@AuroraTech3D",
+      youtube: "https://www.youtube.com/@AuroraTech",
       website: "https://www.auroratech.com"
     },
     ratings: { reach: 2, technical: 5, entertainment: 2, influence: 4, monetization: 3 }
