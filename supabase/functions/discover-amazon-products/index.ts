@@ -42,6 +42,14 @@ interface DiscoveryResult {
   identifierUsed?: string;
 }
 
+interface ApiKeys {
+  serpApiKey: string;
+  scrapingDogKey: string | null;
+}
+
+// Track which API is being used
+let usingSerpApi = true;
+
 // Build search query for Amazon - text-based fallback
 function buildSearchQuery(filament: FilamentRecord, brandConfig?: BrandConfig): string {
   const parts = [filament.vendor];
@@ -150,8 +158,63 @@ function extractAsin(url: string): string | null {
   return asinMatch ? asinMatch[1] : null;
 }
 
+// Check if error is a quota/rate limit error
+function isQuotaError(error: unknown): boolean {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  return errorMsg.includes('429') || 
+         errorMsg.includes('run out of searches') || 
+         errorMsg.includes('quota') ||
+         errorMsg.includes('rate limit');
+}
+
+// ScrapingDog Amazon search - fallback API
+async function searchWithScrapingDog(query: string, scrapingDogKey: string): Promise<AmazonSearchResult[]> {
+  const params = new URLSearchParams({
+    api_key: scrapingDogKey,
+    domain: 'com',
+    query: query,
+  });
+  
+  console.log(`[SCRAPINGDOG] Searching Amazon for: ${query}`);
+  
+  const response = await fetch(`https://api.scrapingdog.com/amazon/search?${params}`);
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('ScrapingDog error:', errorText);
+    throw new Error(`ScrapingDog request failed: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  
+  // ScrapingDog returns nested array structure or direct array
+  let products: any[] = [];
+  if (Array.isArray(data)) {
+    products = Array.isArray(data[0]) ? data[0] : data;
+  } else if (data.results && Array.isArray(data.results)) {
+    products = data.results;
+  } else if (data.organic_results && Array.isArray(data.organic_results)) {
+    products = data.organic_results;
+  }
+  
+  if (!products || products.length === 0) {
+    console.log('[SCRAPINGDOG] No results found');
+    return [];
+  }
+  
+  console.log(`[SCRAPINGDOG] Found ${products.length} results`);
+  
+  return products.slice(0, 5).map((result: any) => ({
+    title: result.title || result.name || '',
+    link: result.url || result.link || result.product_url || '',
+    price: result.price ? parseFloat(String(result.price).replace(/[^0-9.]/g, '')) : undefined,
+    asin: result.asin || extractAsin(result.url || result.link || result.product_url || ''),
+    thumbnail: result.image || result.thumbnail,
+  }));
+}
+
 // Search Amazon via SerpApi - generic search
-async function searchAmazon(query: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
+async function searchAmazonSerpApi(query: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
   const params = new URLSearchParams({
     engine: 'amazon',
     amazon_domain: 'amazon.com',
@@ -159,20 +222,26 @@ async function searchAmazon(query: string, serpApiKey: string): Promise<AmazonSe
     api_key: serpApiKey,
   });
   
-  console.log(`[TEXT] Searching Amazon for: ${query}`);
+  console.log(`[SERPAPI] Searching Amazon for: ${query}`);
   
   const response = await fetch(`https://serpapi.com/search?${params}`);
   
   if (!response.ok) {
     const errorText = await response.text();
     console.error('SerpApi error:', errorText);
-    throw new Error(`SerpApi request failed: ${response.status}`);
+    throw new Error(`SerpApi request failed: ${response.status} - ${errorText}`);
   }
   
   const data = await response.json();
   
+  // Check for quota errors in response
+  if (data.error) {
+    console.error('SerpApi error in response:', data.error);
+    throw new Error(data.error);
+  }
+  
   if (!data.organic_results || !Array.isArray(data.organic_results)) {
-    console.log('No organic results found');
+    console.log('[SERPAPI] No organic results found');
     return [];
   }
   
@@ -184,118 +253,65 @@ async function searchAmazon(query: string, serpApiKey: string): Promise<AmazonSe
     asin: result.asin || extractAsin(result.link || ''),
     thumbnail: result.thumbnail,
   }));
+}
+
+// Unified search with automatic fallback
+async function searchAmazon(query: string, apiKeys: ApiKeys): Promise<AmazonSearchResult[]> {
+  // If we've already switched to ScrapingDog, use it directly
+  if (!usingSerpApi && apiKeys.scrapingDogKey) {
+    return await searchWithScrapingDog(query, apiKeys.scrapingDogKey);
+  }
+  
+  try {
+    const results = await searchAmazonSerpApi(query, apiKeys.serpApiKey);
+    return results;
+  } catch (error) {
+    if (isQuotaError(error) && apiKeys.scrapingDogKey) {
+      console.log(`[FALLBACK] SerpApi quota exceeded, switching to ScrapingDog`);
+      usingSerpApi = false;
+      return await searchWithScrapingDog(query, apiKeys.scrapingDogKey);
+    }
+    throw error;
+  }
 }
 
 // Search Amazon by barcode (UPC/EAN/GTIN) - PRIORITY 1
-async function searchAmazonByBarcode(barcode: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
-  const params = new URLSearchParams({
-    engine: 'amazon',
-    amazon_domain: 'amazon.com',
-    k: barcode, // Direct barcode search
-    api_key: serpApiKey,
-  });
-  
+async function searchAmazonByBarcode(barcode: string, apiKeys: ApiKeys): Promise<AmazonSearchResult[]> {
   console.log(`[BARCODE] Searching Amazon for barcode: ${barcode}`);
   
-  const response = await fetch(`https://serpapi.com/search?${params}`);
-  
-  if (!response.ok) {
-    console.error(`Barcode search failed: ${response.status}`);
+  try {
+    const results = await searchAmazon(barcode, apiKeys);
+    return results.slice(0, 3);
+  } catch (error) {
+    console.error(`Barcode search failed:`, error);
     return [];
   }
-  
-  const data = await response.json();
-  
-  if (!data.organic_results || !Array.isArray(data.organic_results)) {
-    console.log('No barcode results found');
-    return [];
-  }
-  
-  // Barcode search should return exact match, take first result
-  return data.organic_results.slice(0, 3).map((result: any) => ({
-    title: result.title || '',
-    link: result.link || '',
-    price: result.price?.raw ? parseFloat(result.price.raw.replace(/[^0-9.]/g, '')) : 
-           result.price?.extracted ? result.price.extracted : null,
-    asin: result.asin || extractAsin(result.link || ''),
-    thumbnail: result.thumbnail,
-  }));
 }
 
 // Search Amazon by MPN - PRIORITY 2
-async function searchAmazonByMPN(mpn: string, vendor: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
-  // Search with vendor + MPN for better accuracy
+async function searchAmazonByMPN(mpn: string, vendor: string, apiKeys: ApiKeys): Promise<AmazonSearchResult[]> {
   const query = `${vendor} ${mpn}`;
-  
-  const params = new URLSearchParams({
-    engine: 'amazon',
-    amazon_domain: 'amazon.com',
-    k: query,
-    api_key: serpApiKey,
-  });
-  
   console.log(`[MPN] Searching Amazon for: ${query}`);
   
-  const response = await fetch(`https://serpapi.com/search?${params}`);
-  
-  if (!response.ok) {
-    console.error(`MPN search failed: ${response.status}`);
+  try {
+    return await searchAmazon(query, apiKeys);
+  } catch (error) {
+    console.error(`MPN search failed:`, error);
     return [];
   }
-  
-  const data = await response.json();
-  
-  if (!data.organic_results || !Array.isArray(data.organic_results)) {
-    console.log('No MPN results found');
-    return [];
-  }
-  
-  return data.organic_results.slice(0, 5).map((result: any) => ({
-    title: result.title || '',
-    link: result.link || '',
-    price: result.price?.raw ? parseFloat(result.price.raw.replace(/[^0-9.]/g, '')) : 
-           result.price?.extracted ? result.price.extracted : null,
-    asin: result.asin || extractAsin(result.link || ''),
-    thumbnail: result.thumbnail,
-  }));
 }
 
 // Search Amazon by SKU - PRIORITY 3
-async function searchAmazonBySKU(sku: string, vendor: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
-  // Search with vendor + SKU
+async function searchAmazonBySKU(sku: string, vendor: string, apiKeys: ApiKeys): Promise<AmazonSearchResult[]> {
   const query = `${vendor} ${sku} filament`;
-  
-  const params = new URLSearchParams({
-    engine: 'amazon',
-    amazon_domain: 'amazon.com',
-    k: query,
-    api_key: serpApiKey,
-  });
-  
   console.log(`[SKU] Searching Amazon for: ${query}`);
   
-  const response = await fetch(`https://serpapi.com/search?${params}`);
-  
-  if (!response.ok) {
-    console.error(`SKU search failed: ${response.status}`);
+  try {
+    return await searchAmazon(query, apiKeys);
+  } catch (error) {
+    console.error(`SKU search failed:`, error);
     return [];
   }
-  
-  const data = await response.json();
-  
-  if (!data.organic_results || !Array.isArray(data.organic_results)) {
-    console.log('No SKU results found');
-    return [];
-  }
-  
-  return data.organic_results.slice(0, 5).map((result: any) => ({
-    title: result.title || '',
-    link: result.link || '',
-    price: result.price?.raw ? parseFloat(result.price.raw.replace(/[^0-9.]/g, '')) : 
-           result.price?.extracted ? result.price.extracted : null,
-    asin: result.asin || extractAsin(result.link || ''),
-    thumbnail: result.thumbnail,
-  }));
 }
 
 // Extract search query from Amazon URL - handles multiple formats
@@ -336,8 +352,8 @@ function extractSearchQueryFromUrl(url: string, brandName?: string): string | nu
   }
 }
 
-// Search Amazon store products via SerpApi using brand's configured search URL
-async function searchAmazonStore(brandName: string, storeUrl: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
+// Search Amazon store products using brand's configured search URL
+async function searchAmazonStore(brandName: string, storeUrl: string, apiKeys: ApiKeys): Promise<AmazonSearchResult[]> {
   console.log(`[STORE] Using configured Amazon URL for ${brandName}: ${storeUrl}`);
   
   // Extract the search query from the brand's Amazon URL
@@ -346,57 +362,32 @@ async function searchAmazonStore(brandName: string, storeUrl: string, serpApiKey
   // Use extracted query or fallback to brand name search
   const query = searchQuery || `${brandName} filament`;
   
-  const params = new URLSearchParams({
-    engine: 'amazon',
-    amazon_domain: 'amazon.com',
-    k: query,
-    api_key: serpApiKey,
-  });
-  
   console.log(`[STORE] Final search query: "${query}"`);
   
-  const response = await fetch(`https://serpapi.com/search?${params}`);
+  const results = await searchAmazon(query, apiKeys);
   
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('SerpApi store search error:', errorText);
-    throw new Error(`SerpApi request failed: ${response.status}`);
-  }
+  // Filter to only include products from this brand
+  const filteredResults: AmazonSearchResult[] = [];
   
-  const data = await response.json();
-  
-  // Collect all filament products from results
-  const results: AmazonSearchResult[] = [];
-  
-  if (data.organic_results && Array.isArray(data.organic_results)) {
-    for (const result of data.organic_results) {
-      // Filter to only include products from this brand
-      const title = (result.title || '').toLowerCase();
-      const brandLower = brandName.toLowerCase();
-      const brandNoSpace = brandLower.replace(/\s+/g, '');
-      
-      if (title.includes(brandLower) || title.includes(brandNoSpace)) {
-        results.push({
-          title: result.title || '',
-          link: result.link || '',
-          price: result.price?.raw ? parseFloat(result.price.raw.replace(/[^0-9.]/g, '')) : 
-                 result.price?.extracted ? result.price.extracted : null,
-          asin: result.asin || extractAsin(result.link || ''),
-          thumbnail: result.thumbnail,
-        });
-      }
+  for (const result of results) {
+    const title = (result.title || '').toLowerCase();
+    const brandLower = brandName.toLowerCase();
+    const brandNoSpace = brandLower.replace(/\s+/g, '');
+    
+    if (title.includes(brandLower) || title.includes(brandNoSpace)) {
+      filteredResults.push(result);
     }
   }
   
-  console.log(`[STORE] Found ${results.length} products matching brand "${brandName}"`);
+  console.log(`[STORE] Found ${filteredResults.length} products matching brand "${brandName}"`);
   
-  return results;
+  return filteredResults;
 }
 
 // Multi-strategy discovery - tries identifier-based searches in priority order
 async function discoverAmazonProduct(
   filament: FilamentRecord, 
-  serpApiKey: string,
+  apiKeys: ApiKeys,
   storeProducts: AmazonSearchResult[],
   brandConfig?: BrandConfig
 ): Promise<DiscoveryResult> {
@@ -405,7 +396,7 @@ async function discoverAmazonProduct(
   const barcode = filament.upc || filament.ean || filament.gtin;
   if (barcode) {
     console.log(`Trying barcode search for ${filament.product_title} with: ${barcode}`);
-    const results = await searchAmazonByBarcode(barcode, serpApiKey);
+    const results = await searchAmazonByBarcode(barcode, apiKeys);
     if (results.length > 0) {
       console.log(`✓ Barcode match found!`);
       return { results, method: 'barcode', identifierUsed: barcode };
@@ -416,7 +407,7 @@ async function discoverAmazonProduct(
   // PRIORITY 2: MPN search
   if (filament.mpn) {
     console.log(`Trying MPN search for ${filament.product_title} with: ${filament.mpn}`);
-    const results = await searchAmazonByMPN(filament.mpn, filament.vendor, serpApiKey);
+    const results = await searchAmazonByMPN(filament.mpn, filament.vendor, apiKeys);
     if (results.length > 0) {
       console.log(`✓ MPN match found!`);
       return { results, method: 'mpn', identifierUsed: filament.mpn };
@@ -427,7 +418,7 @@ async function discoverAmazonProduct(
   // PRIORITY 3: SKU search
   if (filament.variant_sku) {
     console.log(`Trying SKU search for ${filament.product_title} with: ${filament.variant_sku}`);
-    const results = await searchAmazonBySKU(filament.variant_sku, filament.vendor, serpApiKey);
+    const results = await searchAmazonBySKU(filament.variant_sku, filament.vendor, apiKeys);
     if (results.length > 0) {
       console.log(`✓ SKU match found!`);
       return { results, method: 'sku', identifierUsed: filament.variant_sku };
@@ -452,7 +443,7 @@ async function discoverAmazonProduct(
   // PRIORITY 5: Text-based search (fallback)
   console.log(`Falling back to text search for ${filament.product_title}`);
   const searchQuery = buildSearchQuery(filament, brandConfig);
-  const results = await searchAmazon(searchQuery, serpApiKey);
+  const results = await searchAmazon(searchQuery, apiKeys);
   return { results, method: 'text' };
 }
 
@@ -472,6 +463,9 @@ async function respectRateLimit(): Promise<void> {
 }
 
 Deno.serve(async (req) => {
+  // Reset API state for each request
+  usingSerpApi = true;
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -487,12 +481,27 @@ Deno.serve(async (req) => {
     }
 
     const serpApiKey = Deno.env.get('SERPAPI_KEY');
-    if (!serpApiKey) {
-      console.error('SERPAPI_KEY not configured');
+    const scrapingDogKey = Deno.env.get('SCRAPINGDOG_API_KEY');
+    
+    console.log(`API keys configured: SerpApi=${!!serpApiKey}, ScrapingDog=${!!scrapingDogKey}`);
+    
+    if (!serpApiKey && !scrapingDogKey) {
+      console.error('No API keys configured');
       return new Response(
-        JSON.stringify({ success: false, error: 'SerpApi key not configured' }),
+        JSON.stringify({ success: false, error: 'No search API key configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+    
+    const apiKeys: ApiKeys = {
+      serpApiKey: serpApiKey || '',
+      scrapingDogKey: scrapingDogKey || null,
+    };
+    
+    // If no SerpApi key, start with ScrapingDog
+    if (!serpApiKey && scrapingDogKey) {
+      usingSerpApi = false;
+      console.log('Starting with ScrapingDog (no SerpApi key)');
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -565,7 +574,7 @@ Deno.serve(async (req) => {
     if (brandConfig?.amazon_store_url) {
       try {
         await respectRateLimit();
-        storeProducts = await searchAmazonStore(vendor, brandConfig.amazon_store_url, serpApiKey);
+        storeProducts = await searchAmazonStore(vendor, brandConfig.amazon_store_url, apiKeys);
         console.log(`Found ${storeProducts.length} products from store search`);
       } catch (err) {
         console.error('Error fetching store products:', err);
@@ -579,7 +588,7 @@ Deno.serve(async (req) => {
         // Use multi-strategy discovery
         const discovery = await discoverAmazonProduct(
           filament as FilamentRecord, 
-          serpApiKey, 
+          apiKeys, 
           storeProducts, 
           brandConfig || undefined
         );
@@ -690,13 +699,15 @@ Deno.serve(async (req) => {
       })
       .ilike('brand_name', vendor);
 
-    console.log(`Discovery complete: ${discovered} found, ${highConfidence} high confidence, ${updated} updated`);
+    const apiUsed = usingSerpApi ? 'SerpApi' : 'ScrapingDog';
+    console.log(`Discovery complete: ${discovered} found, ${highConfidence} high confidence, ${updated} updated (using ${apiUsed})`);
     console.log(`Match methods used:`, methodStats);
 
     return new Response(
       JSON.stringify({
         success: true,
         vendor,
+        api_used: apiUsed,
         processed: filaments.length,
         discovered,
         high_confidence: highConfidence,
