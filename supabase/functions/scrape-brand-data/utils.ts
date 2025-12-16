@@ -178,15 +178,18 @@ export function extractDataFromTitle(title: string): ExtractedTitleData {
 
 // Patterns to remove from titles
 const TITLE_FLUFF_PATTERNS = [
-  // Diameter specifications
+  // Diameter specifications with tolerances
+  /\b1\.75\s*mm\s*[±\+\-]?\s*0?\.?0?3?\s*mm?\b/gi,
   /\b1\.75\s*mm\b/gi,
   /\b2\.85\s*mm\b/gi,
   /\b3\.0\s*mm\b/gi,
   /\bfilament\s*diameter[:\s]*[\d.]+\s*mm\b/gi,
   
-  // Weight specifications (metric and imperial)
-  /\b\d+(?:\.\d+)?\s*(?:kg|kilogram|kilograms)\b/gi,
+  // Weight specifications (metric and imperial) - EXPANDED
+  /\b\d+(?:\.\d+)?\s*(?:kg|kilogram|kilograms)\s*(?:spool|roll)?\b/gi,
+  /\b\d+(?:\.\d+)?\s*(?:kg|kilogram|kilograms)\/roll\b/gi,
   /\b\d+(?:\.\d+)?\s*(?:g|gram|grams)\b/gi,
+  /\(\d+(?:\.\d+)?\s*(?:lbs?|pounds?)\)/gi,  // (2.2lbs)
   /\b\d+(?:\.\d+)?\s*(?:lb|lbs|pound|pounds)\b/gi,
   /\b\d+(?:\.\d+)?\s*(?:oz|ounce|ounces)\b/gi,
   
@@ -201,6 +204,9 @@ const TITLE_FLUFF_PATTERNS = [
   /\bfilament\s*spool\b/gi,
   /\bfilament\s*collection\b/gi,
   /\bfilament\s*series\b/gi,
+  /\bfit\s*fdm\s*3d\s*printer\b/gi,
+  /\bprinting\s*with\s*fdm\s*3d\s*printer\b/gi,
+  /\bfor\s*fdm\s*3d\s*printer\b/gi,
   
   // Marketing fluff
   /\bmost\s*(?:basic|popular|common|best|top)\b/gi,
