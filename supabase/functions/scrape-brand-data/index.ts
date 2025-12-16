@@ -73,6 +73,7 @@ interface AutomatedBrandConfig {
   auto_create_products: boolean;
   scraping_enabled: boolean;
   default_currency: string;
+  amazon_store_url?: string | null;
 }
 
 function getScraper(config: BrandConfig): BaseScraper {
@@ -96,7 +97,7 @@ function getScraper(config: BrandConfig): BaseScraper {
 async function getBrandConfig(supabase: SupabaseClient, vendor: string): Promise<AutomatedBrandConfig | null> {
   const { data, error } = await supabase
     .from("automated_brands")
-    .select("id, brand_name, brand_slug, auto_create_products, scraping_enabled, default_currency")
+    .select("id, brand_name, brand_slug, auto_create_products, scraping_enabled, default_currency, amazon_store_url")
     .or(`brand_name.ilike.%${vendor}%,brand_slug.eq.${vendor.toLowerCase().replace(/\s+/g, '-')}`)
     .maybeSingle();
   
@@ -741,7 +742,17 @@ Deno.serve(async (req) => {
 
     for (const v of vendorsToScrape) {
       console.log(`\n=== Scraping ${v} ===`);
-      const config = BRAND_CONFIGS[v];
+      const staticConfig = BRAND_CONFIGS[v];
+      
+      // Get brand config from database including amazon_store_url
+      const dbBrandConfig = await getBrandConfig(supabase, v);
+      
+      // Merge static config with database config (amazon_store_url)
+      const config: BrandConfig = {
+        ...staticConfig,
+        amazonStoreUrl: dbBrandConfig?.amazon_store_url || undefined,
+      };
+      
       const scraper = getScraper(config);
       
       // Get brand_slug from database (accurate) or fallback to generated slug
@@ -759,7 +770,7 @@ Deno.serve(async (req) => {
           v,
           dryRun,
           force,
-          config
+          staticConfig
         );
 
         allResults[v] = { stats, results, syncLogId: syncLogId || undefined };

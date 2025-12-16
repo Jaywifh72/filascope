@@ -1,9 +1,19 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { extractPrice, extractAvailability, extractColorFromHtml, extractSpoolSpecs } from "../utils.ts";
+import { extractPrice, extractAvailability, extractColorFromHtml, extractSpoolSpecs, detectMaterial, extractColor, extractWeight, extractDiameter } from "../utils.ts";
+
+interface AmazonSearchResult {
+  title: string;
+  link: string;
+  price?: string;
+  asin?: string;
+  thumbnail?: string;
+}
 
 export class AmazonScraper extends BaseScraper {
   private firecrawlApiKey: string | undefined;
+  private serpApiKey: string | undefined;
+  private scrapingDogApiKey: string | undefined;
   
   // Global rate limiting for ALL Amazon scrapers (1.1s between requests)
   private static lastAmazonRequest: number = 0;
@@ -12,6 +22,8 @@ export class AmazonScraper extends BaseScraper {
   constructor(config: BrandConfig) {
     super(config);
     this.firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
+    this.serpApiKey = Deno.env.get("SERPAPI_KEY");
+    this.scrapingDogApiKey = Deno.env.get("SCRAPINGDOG_API_KEY");
   }
 
   private async respectGlobalRateLimit(): Promise<void> {
@@ -73,16 +85,336 @@ export class AmazonScraper extends BaseScraper {
     }
   }
 
+  // Main method to scrape all products - now supports Amazon store discovery
   async scrapeAllProducts(limit: number = 50): Promise<ScrapedProduct[]> {
-    // Amazon doesn't have a simple product listing API
-    // We need to rely on product URLs stored in the database
-    // For now, return empty and let the caller provide URLs
+    const vendor = this.config.vendor;
+    const amazonStoreUrl = this.config.amazonStoreUrl;
+    
+    // If we have an Amazon store URL, discover products from there
+    if (amazonStoreUrl) {
+      this.log(`Discovering products from Amazon store: ${amazonStoreUrl}`);
+      return this.scrapeAmazonStore(vendor, amazonStoreUrl, limit);
+    }
 
-    this.log(`Amazon scraper requires specific product URLs`);
-    this.log(`Use scrapeProduct() with individual Amazon URLs`);
+    // Fallback: search for brand products on Amazon
+    this.log(`No Amazon store URL - searching Amazon for "${vendor} filament"`);
+    return this.searchAmazonForBrand(vendor, limit);
+  }
 
-    // Could implement search-based scraping in the future
-    return [];
+  // Discover and scrape products from an Amazon store page
+  private async scrapeAmazonStore(vendor: string, storeUrl: string, limit: number): Promise<ScrapedProduct[]> {
+    const products: ScrapedProduct[] = [];
+    
+    try {
+      // Use SerpApi Amazon search with site restriction to find products from this brand
+      const searchResults = await this.searchAmazon(`${vendor} filament`, limit * 2);
+      
+      if (searchResults.length === 0) {
+        this.log(`No products found via search for ${vendor}`);
+        return [];
+      }
+
+      this.log(`Found ${searchResults.length} potential products for ${vendor}`);
+
+      // Filter and convert search results to ScrapedProducts
+      for (const result of searchResults) {
+        if (products.length >= limit) break;
+        
+        // Verify this is actually the right brand (case-insensitive)
+        const titleLower = result.title.toLowerCase();
+        const vendorLower = vendor.toLowerCase();
+        
+        if (!titleLower.includes(vendorLower)) {
+          this.log(`Skipping non-matching result: ${result.title}`);
+          continue;
+        }
+
+        // Filter for filament products
+        if (!this.isFilamentProduct(result.title)) {
+          this.log(`Skipping non-filament: ${result.title}`);
+          continue;
+        }
+
+        const product = this.convertSearchResultToProduct(result, vendor);
+        if (product) {
+          products.push(product);
+          this.log(`✓ Found: ${result.title}`);
+        }
+      }
+
+      this.log(`Successfully discovered ${products.length} ${vendor} filament products`);
+      return products;
+
+    } catch (error) {
+      this.logError(`Error scraping Amazon store for ${vendor}:`, error);
+      return [];
+    }
+  }
+
+  // Search Amazon for products using SerpApi with ScrapingDog fallback
+  private async searchAmazon(query: string, maxResults: number = 50): Promise<AmazonSearchResult[]> {
+    const results: AmazonSearchResult[] = [];
+    
+    // Try SerpApi first
+    if (this.serpApiKey) {
+      try {
+        const serpResults = await this.searchWithSerpApi(query, maxResults);
+        if (serpResults.length > 0) {
+          return serpResults;
+        }
+      } catch (error) {
+        this.log(`SerpApi failed, trying ScrapingDog fallback: ${error}`);
+      }
+    }
+
+    // Fallback to ScrapingDog
+    if (this.scrapingDogApiKey) {
+      try {
+        const scrapingDogResults = await this.searchWithScrapingDog(query, maxResults);
+        return scrapingDogResults;
+      } catch (error) {
+        this.logError(`ScrapingDog also failed:`, error);
+      }
+    }
+
+    this.logError("No API keys configured for Amazon search (need SERPAPI_KEY or SCRAPINGDOG_API_KEY)");
+    return results;
+  }
+
+  private async searchWithSerpApi(query: string, maxResults: number): Promise<AmazonSearchResult[]> {
+    const results: AmazonSearchResult[] = [];
+    let page = 1;
+    
+    while (results.length < maxResults && page <= 3) {
+      await this.respectGlobalRateLimit();
+      
+      const url = new URL("https://serpapi.com/search.json");
+      url.searchParams.set("engine", "amazon");
+      url.searchParams.set("amazon_domain", "amazon.com");
+      url.searchParams.set("k", query);
+      url.searchParams.set("page", page.toString());
+      url.searchParams.set("api_key", this.serpApiKey!);
+
+      this.log(`SerpApi search page ${page}: ${query}`);
+
+      const response = await fetch(url.toString());
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`SerpApi error ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      const organicResults = data.organic_results || [];
+      
+      if (organicResults.length === 0) break;
+
+      for (const item of organicResults) {
+        if (results.length >= maxResults) break;
+        
+        results.push({
+          title: item.title || "",
+          link: item.link || "",
+          price: item.price?.raw || item.price?.value?.toString() || null,
+          asin: item.asin || this.extractAsinFromUrl(item.link),
+          thumbnail: item.thumbnail || null,
+        });
+      }
+
+      page++;
+    }
+
+    return results;
+  }
+
+  private async searchWithScrapingDog(query: string, maxResults: number): Promise<AmazonSearchResult[]> {
+    await this.respectGlobalRateLimit();
+    
+    const url = new URL("https://api.scrapingdog.com/amazon/search");
+    url.searchParams.set("api_key", this.scrapingDogApiKey!);
+    url.searchParams.set("domain", "com");
+    url.searchParams.set("query", query);
+    url.searchParams.set("page", "1");
+    url.searchParams.set("country", "us");
+
+    this.log(`ScrapingDog search: ${query}`);
+
+    const response = await fetch(url.toString());
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`ScrapingDog error ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    const results: AmazonSearchResult[] = [];
+    
+    // ScrapingDog returns results in 'results' array
+    const items = data.results || data.organic_results || [];
+    
+    for (const item of items) {
+      if (results.length >= maxResults) break;
+      
+      results.push({
+        title: item.title || "",
+        link: item.link || item.url || "",
+        price: item.price || null,
+        asin: item.asin || this.extractAsinFromUrl(item.link || item.url || ""),
+        thumbnail: item.thumbnail || item.image || null,
+      });
+    }
+
+    return results;
+  }
+
+  // Search Amazon specifically for a brand's products
+  private async searchAmazonForBrand(vendor: string, limit: number): Promise<ScrapedProduct[]> {
+    const searchQueries = [
+      `${vendor} filament PLA`,
+      `${vendor} filament PETG`,
+      `${vendor} 3D printer filament`,
+    ];
+
+    const allResults: AmazonSearchResult[] = [];
+    const seenAsins = new Set<string>();
+
+    for (const query of searchQueries) {
+      const results = await this.searchAmazon(query, 20);
+      
+      for (const result of results) {
+        const asin = result.asin || this.extractAsinFromUrl(result.link);
+        if (asin && !seenAsins.has(asin)) {
+          seenAsins.add(asin);
+          allResults.push(result);
+        }
+      }
+
+      if (allResults.length >= limit) break;
+    }
+
+    // Convert to ScrapedProducts
+    const products: ScrapedProduct[] = [];
+    for (const result of allResults) {
+      if (products.length >= limit) break;
+      
+      // Verify brand match
+      if (!result.title.toLowerCase().includes(vendor.toLowerCase())) {
+        continue;
+      }
+
+      if (!this.isFilamentProduct(result.title)) {
+        continue;
+      }
+
+      const product = this.convertSearchResultToProduct(result, vendor);
+      if (product) {
+        products.push(product);
+      }
+    }
+
+    return products;
+  }
+
+  // Convert Amazon search result to ScrapedProduct
+  private convertSearchResultToProduct(result: AmazonSearchResult, vendor: string): ScrapedProduct | null {
+    const asin = result.asin || this.extractAsinFromUrl(result.link);
+    if (!asin) return null;
+
+    // Parse price from string like "$19.99" or "19.99"
+    let price: number | null = null;
+    if (result.price) {
+      const priceMatch = result.price.match(/[\d,.]+/);
+      if (priceMatch) {
+        price = parseFloat(priceMatch[0].replace(/,/g, ""));
+        if (isNaN(price) || price <= 0 || price > 500) {
+          price = null;
+        }
+      }
+    }
+
+    // Extract material, color, weight from title
+    const material = detectMaterial(result.title);
+    const colorInfo = extractColor(result.title);
+    const weight = extractWeight(result.title);
+    const diameter = extractDiameter(result.title);
+
+    // Build product URL
+    const productUrl = result.link.includes("amazon.com") 
+      ? result.link 
+      : `https://www.amazon.com/dp/${asin}`;
+
+    return {
+      productId: asin,
+      sku: asin,
+      title: result.title,
+      price: price,
+      compareAtPrice: null,
+      available: true, // Assume available if in search results
+      currency: "USD",
+      url: productUrl,
+      scrapedAt: new Date(),
+      source: `amazon-store-${vendor.toLowerCase().replace(/\s+/g, '-')}`,
+      imageUrl: result.thumbnail || null,
+      barcode: null,
+      description: null,
+      // Enhanced fields parsed from title
+      mpn: null,
+      tdsUrl: null,
+      colorHex: colorInfo?.hex || null,
+      colorName: colorInfo?.name || null,
+      nozzleTempMin: null,
+      nozzleTempMax: null,
+      bedTempMin: null,
+      bedTempMax: null,
+      spoolMaterial: null,
+      netWeightG: weight,
+      diameterMm: diameter || 1.75,
+      spoolOuterDiameterMm: null,
+      spoolWidthMm: null,
+    };
+  }
+
+  // Check if a product title indicates it's a filament product
+  private isFilamentProduct(title: string): boolean {
+    const titleLower = title.toLowerCase();
+    
+    // Must contain "filament" or material indicators
+    const hasFilamentKeyword = titleLower.includes("filament") || 
+                               titleLower.includes("pla") ||
+                               titleLower.includes("petg") ||
+                               titleLower.includes("abs") ||
+                               titleLower.includes("tpu") ||
+                               titleLower.includes("nylon");
+    
+    // Exclude non-filament products
+    const excludePatterns = [
+      "3d pen",
+      "cleaning",
+      "nozzle",
+      "extruder",
+      "hot end",
+      "hotend",
+      "bed",
+      "tape",
+      "adhesive",
+      "dryer",
+      "storage",
+      "holder",
+      "rack",
+      "spool holder",
+    ];
+    
+    const isExcluded = excludePatterns.some(pattern => titleLower.includes(pattern));
+    
+    return hasFilamentKeyword && !isExcluded;
+  }
+
+  private extractAsinFromUrl(url: string): string | null {
+    if (!url) return null;
+    const match = url.match(/\/dp\/([A-Z0-9]{10})/i) ||
+                  url.match(/\/product\/([A-Z0-9]{10})/i) ||
+                  url.match(/\/gp\/product\/([A-Z0-9]{10})/i);
+    return match ? match[1] : null;
   }
 
   private parseFirecrawlResponse(data: any, url: string): ScrapedProduct | null {

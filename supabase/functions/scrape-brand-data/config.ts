@@ -4,6 +4,7 @@ export interface BrandConfig {
   baseUrl: string;
   apiEndpoint?: string;
   collectionHandle?: string;
+  amazonStoreUrl?: string; // Amazon store URL for Amazon-only brands
   currency: string;
   exchangeRate: number; // To USD
   productsPerPage: number;
