@@ -123,10 +123,6 @@ export function PrinterSelectorDropdown({
     } else if (selectedBrandFilter) {
       // Show ALL printers for selected brand (no limit)
       filtered = filtered.filter((p) => p.brand?.brand === selectedBrandFilter);
-      console.log('[PrinterDebug] Brand filter:', selectedBrandFilter);
-      console.log('[PrinterDebug] Total allPrinters:', allPrinters?.length);
-      console.log('[PrinterDebug] Filtered count:', filtered.length);
-      console.log('[PrinterDebug] Filtered printers:', filtered.map(p => p.model_name));
       return filtered;
     } else {
       return [];
@@ -201,7 +197,7 @@ export function PrinterSelectorDropdown({
       </div>
 
       {/* Content */}
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea className="flex-1 min-h-0 max-h-[380px]">
         <div className="p-4 space-y-5">
           {/* Smart Detection */}
           {hasDetection && detection && !dismissedDetection && !currentPrinterId && !showGuidedWizard && (
