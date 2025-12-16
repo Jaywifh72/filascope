@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Layers, Building2, TrendingUp, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ProminentPrinterSelector } from "@/components/ProminentPrinterSelector";
 
 interface HeroSectionProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   filamentCount: number;
   brandCount: number;
+  compatibleCount: number;
 }
 
 interface StatBlockProps {
@@ -30,7 +32,7 @@ const StatBlock = ({ icon: Icon, number, label, delay }: StatBlockProps) => (
   </div>
 );
 
-const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount }: HeroSectionProps) => {
+const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, compatibleCount }: HeroSectionProps) => {
   const navigate = useNavigate();
   const [isFocused, setIsFocused] = useState(false);
 
@@ -91,7 +93,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount }: 
           {/* Search Bar */}
           <form 
             onSubmit={handleSearchSubmit}
-            className="w-full max-w-[700px] mb-10 animate-fade-in"
+            className="w-full max-w-[700px] mb-6 animate-fade-in"
             style={{ animationDelay: "0.5s" }}
           >
             <div 
@@ -124,6 +126,14 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount }: 
               </button>
             </div>
           </form>
+
+          {/* Prominent Printer Selector - NEW POSITION */}
+          <div 
+            className="w-full mb-8 animate-fade-in"
+            style={{ animationDelay: "0.55s" }}
+          >
+            <ProminentPrinterSelector compatibleCount={compatibleCount} />
+          </div>
           
           {/* CTA Button Row */}
           <div 

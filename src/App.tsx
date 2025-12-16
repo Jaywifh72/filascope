@@ -62,11 +62,7 @@ const ReferenceSpecialty = lazy(() => import("./pages/ReferenceSpecialty"));
 
 const queryClient = new QueryClient();
 
-// Navbar wrapper to consume the compatible count context
-function NavbarWithCount() {
-  const { count } = useCompatibleCount();
-  return <Navbar compatibleCount={count} />;
-}
+// Navbar no longer needs compatible count - printer selector moved to hero section
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -78,7 +74,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <NavbarWithCount />
+                <Navbar />
                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-muted-foreground">Loading...</div></div>}>
                   <Routes>
                   <Route path="/" element={<Finder />} />
