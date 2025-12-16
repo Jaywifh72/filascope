@@ -77,7 +77,7 @@ interface CompareContextType {
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
 
 const STORAGE_KEY = "filascope_compare_items";
-const MAX_ITEMS = 4;
+const MAX_ITEMS = 6;
 const EXPIRY_DAYS = 7;
 const AUTO_SAVE_INTERVAL = 5000; // 5 seconds
 

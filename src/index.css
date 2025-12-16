@@ -119,6 +119,18 @@ All colors MUST be HSL.
 }
 
 @layer components {
+  /* Card entry animation */
+  @keyframes card-enter {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .cyan-gradient {
     background: var(--gradient-cyan);
   }

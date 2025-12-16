@@ -8,7 +8,9 @@ import {
   Zap,
   Layers,
   Info,
-  DollarSign
+  DollarSign,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -52,12 +54,14 @@ interface Filament {
   glass_fiber_percentage?: number | null;
   wood_powder_percentage?: number | null;
   featured_image?: string | null;
+  variant_available?: boolean | null;
 }
 
 interface FilamentCardProps {
   filament: Filament;
   colorMatchPercent?: number | null;
   priceTrend?: number | null;
+  index?: number;
 }
 
 // Get the single most important standout feature
@@ -100,7 +104,8 @@ function getStandoutFeature(filament: Filament): { label: string; colorClass: st
   return null;
 }
 
-export function FilamentCard({ filament, colorMatchPercent }: FilamentCardProps) {
+export function FilamentCard({ filament, colorMatchPercent, index = 0 }: FilamentCardProps) {
+  const isOutOfStock = filament.variant_available === false;
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -198,19 +203,34 @@ export function FilamentCard({ filament, colorMatchPercent }: FilamentCardProps)
 
   return (
     <div
+      role="article"
+      aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
-        "group relative rounded-2xl transition-all duration-300 min-h-[320px]",
+        "group relative rounded-2xl transition-all duration-300 min-h-[380px]",
         "bg-white/[0.03] border border-white/[0.08]",
-        isHovered && "transform -translate-y-1 shadow-[0_12px_24px_rgba(0,0,0,0.3)] border-primary/30",
+        "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
+        isHovered && !isOutOfStock && "transform -translate-y-1 shadow-[0_12px_24px_rgba(0,0,0,0.3)] border-primary/30",
         isSelected && "border-2 border-primary bg-primary/5",
-        isPendingSelection && "border-2 border-primary/60 bg-primary/5"
+        isPendingSelection && "border-2 border-primary/60 bg-primary/5",
+        isOutOfStock && "opacity-70"
       )}
+      style={{
+        animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s both`
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
         setShowTooltip(false);
       }}
     >
+      {/* Out of Stock Overlay */}
+      {isOutOfStock && (
+        <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center z-[5] pointer-events-none">
+          <span className="text-sm font-semibold text-white/80 bg-black/60 px-4 py-2 rounded-lg">
+            Out of Stock
+          </span>
+        </div>
+      )}
       {/* ═══════════════════════════════════════════════════════════════
           SECTION 1: COMPARISON CHECKBOX (Absolute Top-Left)
           ═══════════════════════════════════════════════════════════════ */}
@@ -372,20 +392,38 @@ export function FilamentCard({ filament, colorMatchPercent }: FilamentCardProps)
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          SECTION 6: CTA BUTTON
+          SECTION 6: AVAILABILITY STATUS
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-6 pb-6">
+      <div className="px-6 py-3 border-b border-white/[0.05]">
+        {filament.variant_available === true ? (
+          <div className="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/30 rounded-md px-3 py-1.5">
+            <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-xs font-semibold text-emerald-400">In Stock</span>
+          </div>
+        ) : filament.variant_available === false ? (
+          <div className="inline-flex items-center gap-1.5 bg-red-500/15 border border-red-500/30 rounded-md px-3 py-1.5">
+            <XCircle className="w-3.5 h-3.5 text-red-400" />
+            <span className="text-xs font-semibold text-red-400">Out of Stock</span>
+          </div>
+        ) : null}
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          SECTION 7: CTA BUTTON
+          ═══════════════════════════════════════════════════════════════ */}
+      <div className="px-6 pt-5 pb-6 flex justify-center">
         <Button
           asChild
           className={cn(
-            "w-full h-11 font-semibold transition-all duration-200",
-            "bg-primary/10 border border-primary/30 text-primary",
-            "hover:bg-primary hover:text-background hover:border-primary"
+            "w-full h-12 font-semibold transition-all duration-200",
+            "bg-transparent border-2 border-primary/40 text-primary",
+            "hover:bg-primary/[0.12] hover:border-primary hover:translate-x-0.5",
+            "active:scale-[0.98]"
           )}
         >
-          <Link to={`/filament/${filament.id}`}>
+          <Link to={`/filament/${filament.id}`} aria-label={`View details for ${filament.product_title}`}>
             View Details
-            <ArrowRight className="w-4 h-4 ml-2" />
+            <ArrowRight className="w-[18px] h-[18px] ml-2" />
           </Link>
         </Button>
       </div>
