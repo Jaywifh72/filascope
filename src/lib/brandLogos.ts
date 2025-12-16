@@ -2,6 +2,7 @@
 // All images optimized to 128x128px WebP format for performance
 export const brandLogos: Record<string, string> = {
   // Filament brands
+  "3D Solutech": "/images/brands/3d-solutech.png",
   "Bambu Lab": "/images/brands/bambu-lab.webp",
   "Overture": "/images/brands/overture.png",
   "Overture 3D": "/images/brands/overture.png",
@@ -45,6 +46,14 @@ export const brandLogos: Record<string, string> = {
   "Paramount 3D": "/images/brands/paramount-3d.webp",
   "Proto-Pasta": "/images/brands/proto-pasta.webp",
   "proto-pasta": "/images/brands/proto-pasta.webp",
+  "GEEETECH": "/images/brands/geeetech.png",
+  "Geeetech": "/images/brands/geeetech.png",
+  "Jayo": "/images/brands/jayo.jpg",
+  "JAYO": "/images/brands/jayo.jpg",
+  "SainSmart": "/images/brands/sainsmart.png",
+  "Push Plastic": "/images/brands/push-plastic.png",
+  "Fusion Filaments": "/images/brands/fusion-filaments.png",
+  "Spectrum Filaments": "/images/brands/spectrum-filaments.svg",
   
   // Printer brands
   "AnkerMake": "/images/brands/ankermake.png",
