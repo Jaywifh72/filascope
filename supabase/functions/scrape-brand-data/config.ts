@@ -318,7 +318,7 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   },
   "Fusion Filaments": {
     vendor: "Fusion Filaments",
-    platform: "firecrawl",
+    platform: "firecrawl", // Odoo platform - use Firecrawl HTML scraping
     baseUrl: "https://www.fusionfilaments.com/shop",
     currency: "USD",
     exchangeRate: 1,
@@ -355,11 +355,11 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   },
   Inland: {
     vendor: "Inland",
-    platform: "firecrawl", // Mixed URLs: Microcenter.com store brand
-    baseUrl: "https://www.microcenter.com",
+    platform: "amazon", // Switched to Amazon - Microcenter site too complex to scrape
+    baseUrl: "https://www.amazon.com",
     currency: "USD",
     exchangeRate: 1,
-    productsPerPage: 20,
+    productsPerPage: 50,
     requestDelay: 2000,
     timeout: 20000,
     userAgent: DEFAULT_USER_AGENT,
@@ -384,14 +384,14 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   FormFutura: {
     vendor: "FormFutura",
     platform: "firecrawl",
-    baseUrl: "https://www.formfutura.com",
+    baseUrl: "https://www.formfutura.com/shop/product/3d-printing-filament",
     currency: "EUR",
     exchangeRate: 1.08,
     productsPerPage: 20,
     requestDelay: 2000,
     timeout: 20000,
     userAgent: DEFAULT_USER_AGENT,
-    productCount: 19,
+    productCount: 79,
   },
   MatterHackers: {
     vendor: "MatterHackers",
@@ -424,8 +424,8 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   },
   "TreeD Filaments": {
     vendor: "TreeD Filaments",
-    platform: "firecrawl",
-    baseUrl: "https://treedfilaments.com/shop",
+    platform: "firecrawl", // WooCommerce API disabled - use Firecrawl
+    baseUrl: "https://treedfilaments.com/shop/",
     currency: "EUR",
     exchangeRate: 1.08,
     productsPerPage: 20,
@@ -449,7 +449,7 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   "Spectrum Filaments": {
     vendor: "Spectrum Filaments",
     platform: "firecrawl",
-    baseUrl: "https://spectrumfilaments.com/en/shop/",
+    baseUrl: "https://shop.spectrumfilaments.com/en/",
     currency: "EUR",
     exchangeRate: 1.08,
     productsPerPage: 20,
@@ -595,7 +595,7 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   // ============================================================================
   Creality: {
     vendor: "Creality",
-    platform: "firecrawl",
+    platform: "firecrawl", // Custom Vue.js frontend blocks JSON API - use Firecrawl
     baseUrl: "https://store.creality.com/collections/filament",
     currency: "USD",
     exchangeRate: 1,
@@ -603,14 +603,14 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     requestDelay: 2000,
     timeout: 20000,
     userAgent: DEFAULT_USER_AGENT,
-    productCount: 25,
+    productCount: 19,
   },
   Anycubic: {
     vendor: "Anycubic",
     platform: "shopify",
     baseUrl: "https://store.anycubic.com",
     apiEndpoint: "https://store.anycubic.com/products.json",
-    collectionHandle: "filament",
+    collectionHandle: "all", // Changed from "filament" - filament collection doesn't exist
     currency: "USD",
     exchangeRate: 1,
     productsPerPage: 250,
@@ -800,13 +800,14 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   },
   AzureFilm: {
     vendor: "AzureFilm",
-    platform: "firecrawl",
-    baseUrl: "https://azurefilm.com/product-category/filaments/",
+    platform: "woocommerce", // Changed to WooCommerce - azurefilm.com is WooCommerce
+    baseUrl: "https://azurefilm.com",
+    apiEndpoint: "https://azurefilm.com/wp-json/wc/store/v1/products",
     currency: "EUR",
     exchangeRate: 1.08,
-    productsPerPage: 20,
-    requestDelay: 2000,
-    timeout: 20000,
+    productsPerPage: 100,
+    requestDelay: 1000,
+    timeout: 15000,
     userAgent: DEFAULT_USER_AGENT,
     productCount: 100,
   },

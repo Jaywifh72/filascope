@@ -122,11 +122,16 @@ export class ShopifyScraper extends BaseScraper {
 
     // Use collection endpoint if collectionHandle is specified, otherwise use all products
     const collectionHandle = (this.config as any).collectionHandle;
-    const baseEndpoint = collectionHandle 
-      ? `${this.config.baseUrl}/collections/${collectionHandle}/products.json`
-      : `${this.config.baseUrl}/products.json`;
     
-    this.log(`Using endpoint: ${baseEndpoint}`);
+    // For "all" collection, use products.json directly with filament filtering
+    const useAllProducts = collectionHandle === "all";
+    const baseEndpoint = useAllProducts
+      ? `${this.config.baseUrl}/products.json`
+      : collectionHandle 
+        ? `${this.config.baseUrl}/collections/${collectionHandle}/products.json`
+        : `${this.config.baseUrl}/products.json`;
+    
+    this.log(`Using endpoint: ${baseEndpoint}${useAllProducts ? ' (filtering for filaments)' : ''}`);
 
     while (products.length < limit) {
       const url = `${baseEndpoint}?limit=${perPage}&page=${page}`;
@@ -152,8 +157,9 @@ export class ShopifyScraper extends BaseScraper {
         this.log(`Found ${data.products.length} products on page ${page}`);
 
         for (const product of data.products) {
-          // Only filter if we're NOT using a collection (collection already filtered)
-          if (!collectionHandle && !this.isFilamentProduct(product)) {
+          // Filter for filament products when using "all" collection or no collection
+          const needsFiltering = useAllProducts || !collectionHandle;
+          if (needsFiltering && !this.isFilamentProduct(product)) {
             continue;
           }
 
@@ -272,14 +278,25 @@ export class ShopifyScraper extends BaseScraper {
   private isFilamentProduct(product: ShopifyProduct): boolean {
     const title = product.title.toLowerCase();
     const type = (product.product_type || "").toLowerCase();
+    const tags = (product.tags || []).map(t => t.toLowerCase()).join(' ');
+    const combined = `${title} ${type} ${tags}`;
 
-    // Include filament products
-    const filamentKeywords = ["pla", "petg", "abs", "asa", "tpu", "nylon", "pc ", "peek", "filament"];
-    const isFilament = filamentKeywords.some((kw) => title.includes(kw) || type.includes(kw));
+    // Include filament products - expanded keywords for better matching
+    const filamentKeywords = [
+      "pla", "petg", "abs", "asa", "tpu", "nylon", "pa ", "pc ", "peek", "pei",
+      "filament", "silk", "matte", "glow", "marble", "wood", "carbon", "cf-",
+      "high speed", "hyper", "1.75mm", "2.85mm", "1kg", "250g", "500g"
+    ];
+    const isFilament = filamentKeywords.some((kw) => combined.includes(kw));
 
-    // Exclude non-filament items
-    const excludeKeywords = ["nozzle", "bed", "sheet", "tool", "kit", "sample", "bundle pack"];
-    const isExcluded = excludeKeywords.some((kw) => title.includes(kw));
+    // Exclude non-filament items - more comprehensive exclusions
+    const excludeKeywords = [
+      "nozzle", "bed", "sheet", "tool", "kit", "sample", "bundle pack",
+      "printer", "resin", "lcd", "screen", "extruder", "hotend", "heater",
+      "stepper", "motor", "belt", "pulley", "bearing", "fan", "cover",
+      "enclosure", "dryer", "dry box", "accessory", "part", "spare"
+    ];
+    const isExcluded = excludeKeywords.some((kw) => combined.includes(kw));
 
     return isFilament && !isExcluded;
   }
