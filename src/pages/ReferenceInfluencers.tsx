@@ -429,14 +429,18 @@ const ReferenceInfluencers = () => {
                         <h4 className="font-semibold mb-2">Content Strategy</h4>
                         <p className="text-sm text-muted-foreground">{influencer.contentStrategy}</p>
                       </div>
-                      <div>
-                        <h4 className="font-semibold mb-2">Economic Impact</h4>
-                        <p className="text-sm text-muted-foreground">{influencer.economicImpact}</p>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-2">Future Outlook</h4>
-                        <p className="text-sm text-muted-foreground">{influencer.futureOutlook}</p>
-                      </div>
+                      {isAdmin && (
+                        <div>
+                          <h4 className="font-semibold mb-2">Economic Impact</h4>
+                          <p className="text-sm text-muted-foreground">{influencer.economicImpact}</p>
+                        </div>
+                      )}
+                      {isAdmin && (
+                        <div>
+                          <h4 className="font-semibold mb-2">Future Outlook</h4>
+                          <p className="text-sm text-muted-foreground">{influencer.futureOutlook}</p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Strengths */}
