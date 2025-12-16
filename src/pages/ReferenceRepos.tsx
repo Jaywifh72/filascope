@@ -18,6 +18,18 @@ import {
 } from "@/components/ui/select";
 import { repoData } from "@/lib/repoData";
 
+// Logo mapping for repositories
+const repoLogos: Record<string, string> = {
+  "MakerWorld": "/images/repos/makerworld.png",
+  "Printables": "/images/repos/printables.png",
+  "Thingiverse": "/images/repos/thingiverse.png",
+  "Cults3D": "/images/repos/cults3d.png",
+  "MyMiniFactory": "/images/repos/myminifactory.png",
+  "Thangs": "/images/repos/thangs.png",
+  "Creality Cloud": "/images/repos/crealitycloud.png",
+  "GrabCAD": "/images/repos/grabcad.png",
+};
+
 const repoComparison = [
   { name: "MakerWorld", owner: "Bambu Lab", model: "Loss-Leader", free: true, paid: false, quality: 4, community: 3, monetization: 5, search: 4, ux: 5, mobile: true, fileTypes: "3MF/STL", standout: "One-Click Print Profiles" },
   { name: "Printables", owner: "Prusa Research", model: "Hybrid", free: true, paid: true, quality: 5, community: 5, monetization: 4, search: 5, ux: 5, mobile: false, fileTypes: "STL/3MF/G-code", standout: "Prusameters & Clubs" },
@@ -291,7 +303,18 @@ const ReferenceRepos = () => {
                     key={index} 
                     className="border-b border-border/50 hover:bg-muted/20 transition-colors"
                   >
-                    <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">{repo.name}</td>
+                    <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {repoLogos[repo.name] && (
+                          <img 
+                            src={repoLogos[repo.name]} 
+                            alt={`${repo.name} logo`}
+                            className="w-5 h-5 rounded object-contain"
+                          />
+                        )}
+                        {repo.name}
+                      </div>
+                    </td>
                     <td className="py-2 px-3 text-muted-foreground text-xs">{repo.owner}</td>
                     <td className="py-2 px-3">
                       <Badge 
@@ -337,6 +360,13 @@ const ReferenceRepos = () => {
                   <span className="text-xs font-mono text-muted-foreground w-6">
                     {String(index + 1).padStart(2, '0')}
                   </span>
+                  {repoLogos[repo.name] && (
+                    <img 
+                      src={repoLogos[repo.name]} 
+                      alt={`${repo.name} logo`}
+                      className="w-8 h-8 rounded object-contain"
+                    />
+                  )}
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold text-foreground">{repo.name}</h3>
