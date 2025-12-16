@@ -19,6 +19,8 @@ export interface InfluencerData {
   niche: string;
   businessModel: string;
   keyAsset: string;
+  bio: string;
+  topVideo2025?: string;
   brandIdentity: string;
   contentStrategy: string;
   economicImpact: string;
@@ -31,13 +33,12 @@ export interface InfluencerData {
     patreon?: string;
     website?: string;
   };
-  // For matrix comparison
   ratings: {
-    reach: number; // 1-5 based on subscribers
-    technical: number; // 1-5 depth of technical content
-    entertainment: number; // 1-5 entertainment value
-    influence: number; // 1-5 industry influence
-    monetization: number; // 1-5 sophistication of revenue model
+    reach: number;
+    technical: number;
+    entertainment: number;
+    influence: number;
+    monetization: number;
   };
 }
 
@@ -53,6 +54,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Hardware Reviews, Event Coverage",
     businessModel: "AdSense, Sponsorships, Patreon, Merchandise",
     keyAsset: '"High Five" Community Segment',
+    bio: "The eternally enthusiastic dad of 3D printing who somehow makes watching plastic melt genuinely exciting. Known for his contagious energy and the ability to high-five through a camera screen.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Joel Telling functions as the industry's central ambassador. He has cultivated a brand persona that is intentionally accessible, family-friendly, and community-oriented. Unlike creators who position themselves as engineers or technical wizards, Telling adopts the role of the 'enthusiastic everyman.' This strategic choice allows him to serve as a proxy for the average consumer; if a machine is too complex for him to operate intuitively, it is likely too complex for the mass market.",
     contentStrategy: "Telling's content library is diverse, anchoring on hardware reviews but expanding into facility tours and event coverage. He provides unparalleled behind-the-scenes access to major industry players, having toured facilities for Prusa Research, E3D, and various filament manufacturers. A cornerstone of his engagement strategy is the 'High Five' segment, where he showcases prints mailed in by viewers or tagged on social media. This mechanism fosters a high degree of parasocial loyalty, transforming his channel from a broadcast into a community hub.",
     economicImpact: "Telling's influence on the supply chain is significant. He acts as a 'Macro' influencer. Manufacturers prioritize sending units to him not necessarily for a technical stress test, but for the visibility his 'unboxing' experiences provide. A positive reception from 3D Printing Nerd validates a product's user experience (UX). His business model has matured beyond simple ad revenue, maintaining a robust list of sponsors and utilizing Patreon for direct audience funding.",
@@ -83,6 +86,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Design for Additive Manufacturing (DfAM)",
     businessModel: "Digital File Sales, Courses, AdSense, Sponsorships",
     keyAsset: "Torture Test Files (Lattice Cube, Clearance Castle)",
+    bio: "Australia's gift to the 3D printing world—equal parts industrial designer, scam-buster, and torture test architect. If your printer survives his Clearance Castle, it can survive anything.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Angus Deveson is the quintessential 'Industrial Designer' of the YouTube 3D printing space. His content is intellectually rigorous, focusing on the principles of Design for Additive Manufacturing (DfAM). His motto, 'Empowering Creativity through Technology,' reflects a mission to teach viewers not just how to operate a machine, but how to design functional objects that leverage the unique geometric freedoms of 3D printing. He is a staunch advocate for open-source hardware and intellectual property rights.",
     contentStrategy: "Deveson's content strategy is 'Knowledge-First.' His 'CAD for Newbies' series is a foundational resource for the community. Unlike creators who rely on printing downloaded models, Deveson almost exclusively prints his own designs. He pioneered the concept of the 'Torture Test'—complex geometric shapes designed to test a printer's limits regarding overhangs, retraction, and dimensional accuracy. His 'Maker's Muse Lattice Cube' and 'Clearance Castle' have become industry standards.",
     economicImpact: "Maker's Muse has a diversified revenue model that relies heavily on intellectual property. Deveson sells his digital files on platforms like his own website and Thangs. His ability to explain why a print failed attracts a demographic of prosumers and engineers who are high-value targets for advertisers. He is also a critical voice regarding consumer protection, frequently calling out 'kickstarter scams' and vaporware.",
@@ -113,6 +118,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Artistic Design, Optical Illusions, Puzzles",
     businessModel: "Physical Product Sales, Digital Subscriptions, AdSense",
     keyAsset: "Ambiguous Cylinder Illusion ('Squircle')",
+    bio: "The wizard who turns math into magic. Devin's brain operates in a dimension where optical illusions and puzzles are just normal Tuesday projects. Warning: his videos may cause spontaneous filament purchases.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Devin Montes represents the intersection of art, design, and viral engineering. His content is visually arresting and often centers on optical illusions, puzzles, and interactive toys. His approach is experimental and playful; he is less concerned with industrial tolerances and more focused on the 'wow factor' of what 3D printing can achieve. He positions 3D printing as a medium for artistic expression and magical realism.",
     contentStrategy: "Montes leverages 'Viral Product Engineering.' His video on the 'Ambiguous Cylinder Illusion' went viral globally, transcending the maker community and reaching general audiences. This strategy of creating 'impossible objects' serves as a powerful funnel, drawing people into the hobby. He documents his iterative design process, often showing failed prototypes, creating an engaging narrative arc.",
     economicImpact: "Make Anything has one of the most developed direct-to-consumer (DTC) business models in the niche. Montes operates a shop selling physical versions of his puzzles and games (e.g., 'Tippi Tree'), as well as digital memberships. His 'Tippi Tree' game has achieved commercial viability independent of channel ad revenue. His influence drives the market for 'aesthetic' filaments (silks, dual-colors, rainbows).",
@@ -143,6 +150,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Technical Reviews, Safety, Open Source Advocacy",
     businessModel: "AdSense, Sponsorships (Selective), Patreon",
     keyAsset: "Filaween Series, Build Guides, Livestreams",
+    bio: "Germany's most meticulous safety inspector who happens to also review 3D printers. Will absolutely refuse to recommend your printer if it lacks thermal runaway protection. The conscience we all need.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Thomas Sanladerer is the 'Investigative Journalist' of the community. His channel, rebranded under Made with Layers, is known for its uncompromising technical depth and ethical rigor. Sanladerer does not just review printers; he audits them. He checks wiring safety, thermal runaway protection, and open-source license compliance. His brand is built on trust and technical literacy.",
     contentStrategy: "Sanladerer's content often fills the gap between a consumer review and a white paper. His 'Filaween' series was a pioneering effort to create a standardized database of filament properties. He is also a prolific live-streamer, often building printers from kits in real-time. His recent content has focused on the 'appliancification' of 3D printing, analyzing how machines from Bambu Lab and Prusa are changing user expectations.",
     economicImpact: "Sanladerer's influence is regulatory. He has famously refused to review or endorse printers that lack basic safety features (like thermal runaway protection), effectively forcing budget manufacturers to upgrade their safety standards. His stamp of approval is highly coveted by manufacturers targeting educational and professional sectors.",
@@ -173,6 +182,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Budget Printers, Ender 3 Ecosystem",
     businessModel: "Tool Sales, AdSense, Patreon, Affiliate Links",
     keyAsset: "CHEP Cura Profiles",
+    bio: "The Ender 3 whisperer who has saved more first prints than anyone can count. If you've ever Googled 'why is my print spaghetti,' chances are Chuck fixed it for you. Filament Friday is a religious holiday.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Chuck Hellebuyck is the 'Blue Collar' expert of 3D printing. He focuses almost exclusively on the budget sector, specifically the Creality Ender 3 ecosystem. He creates content for the 'everyman'—the hobbyist who bought a $200 printer and just wants it to work. His 'Filament Friday' series is an institution, offering quick, practical tips.",
     contentStrategy: "Hellebuyck's primary value proposition is utility. He develops and distributes custom 'CHEP Profiles' for the Cura slicer software. These profiles are tuned specifically for budget printers and are widely considered essential for getting quality prints. His videos are short, to the point, and highly searchable. Titles like 'Fix Ender 3 Layer Shift' ensure steady search-driven traffic.",
     economicImpact: "CHEP demonstrates the power of niche dominance. By aligning his brand with the highest-volume printer in history (the Ender 3), he guaranteed a massive audience base. He monetizes through selling branded tools (bed leveling aids, filament clips) and affiliate marketing. For many, a Creality printer is unusable without CHEP's guidance.",
@@ -203,6 +214,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Materials Science, Destructive Testing",
     businessModel: "Product Line (Threaded Inserts), AdSense, Sponsorships",
     keyAsset: "Destructive Testing Methodology, CNC Kitchen Threaded Inserts",
+    bio: "The mad scientist who gets paid to break things. Stefan's favorite sound is plastic snapping under hydraulic pressure. His charts have charts, and his threaded inserts are in every serious maker's toolkit.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Stefan Hermann of CNC Kitchen is the 'Materials Scientist' of the 3D printing world. Hermann applies rigorous engineering testing methods to additive manufacturing. While others talk about how a print looks, Hermann destroys prints to see how they perform. His channel is defined by charts, graphs, and the sound of plastic snapping under hydraulic pressure.",
     contentStrategy: "Hermann's content answers the question: 'Is it strong enough?' He tests layer adhesion, impact resistance, and thermal deformation of various filaments. His methodology is scientific; he uses a universal testing machine to generate empirical data. Video topics are highly specific and technically dense, such as 'The Truth About Annealing PLA' or 'Gyroid vs. Honeycomb Infill Strength.' These are evergreen resources referenced by universities and R&D departments.",
     economicImpact: "Hermann has successfully vertically integrated his influence. Recognizing a gap in the market, he launched his own line of 'CNC Kitchen' threaded inserts and installation tools. These products are sold globally and have become the standard for adding metal threads to plastic parts. His testing has forced filament manufacturers to improve mechanical properties and publish accurate Technical Data Sheets.",
@@ -233,6 +246,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Resin Printing, Cosplay, Miniatures",
     businessModel: "Affiliate Marketing, Patreon, YouTube Memberships",
     keyAsset: "Large-Format Resin Expertise, Pop-Culture Props",
+    bio: "The resin wizard who turns every Marvel premiere into a prop-building marathon. If it's been in a movie, Jessy's probably already printed and painted it. Warning: watching his videos may result in suddenly owning a resin printer.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Uncle Jessy is the 'Resin Evangelist' and pop-culture fabricator. While he covers FDM printing, his brand is synonymous with SLA/MSLA (resin) printing, cosplay props, and miniatures. His content is high-energy, entertaining, and visually spectacular, focusing on the 'cool factor' of turning digital files into physical collectibles.",
     contentStrategy: "Jessy's videos often feature large-scale projects, such as full-sized superhero helmets, movie props, and detailed statues. He was instrumental in popularizing large-format resin printers like the Peopoly Phenom and Elegoo Jupiter. He engages his community through frequent contests and challenges, often collaborating with 3D modelers to host 'print and paint' competitions.",
     economicImpact: "Uncle Jessy is a top-tier affiliate marketer. His video descriptions are densely packed with links to materials, printers, and tools. Because resin printing requires significant consumables, his 'lifetime value' per viewer is likely higher than average. He has a strong influence on the 'impulse buy' market; if he shows a cool prop from a new movie, his audience rushes to recreate it.",
@@ -263,6 +278,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Calibration, Firmware, Systematic Guides",
     businessModel: "AdSense, Sponsorships, Patreon",
     keyAsset: "Teaching Tech Calibration Website",
+    bio: "The professor of printer calibration whose GitHub website has probably been open in more browser tabs than any other maker resource. If your E-steps are perfect, thank Michael.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Michael Laws, an Australian industrial design teacher, runs Teaching Tech. True to his channel's name, Laws approaches content with an academic structure. He is the 'Professor' of the community, focusing on comprehensive guides, firmware compilation (Marlin/Klipper), and systematic calibration. His brand is built on empowerment; he wants viewers to understand how their machine works.",
     contentStrategy: "Laws created the 'Teaching Tech Calibration Guide,' a GitHub-hosted website that generates custom G-code for printer tuning. This tool is arguably the most widely used utility in the hobbyist 3D printing world. It guides users through PID tuning, E-steps calibration, and retraction tests. His content bridges hardware and software, covering advanced topics like installing Klipper firmware and designing in Onshape.",
     economicImpact: "Laws has reduced the support burden for manufacturers. Instead of contacting customer service, thousands of users simply follow his guides to fix print quality issues. This 'educational infrastructure' is invaluable to the industry. His influence is high in the 'upgrade' market; a video on a specific hotend or extruder upgrade can drive significant component sales.",
@@ -293,6 +310,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Reviews, Fail Analysis, Tutorials",
     businessModel: "Affiliate Marketing (MatterHackers), Patreon, AdSense",
     keyAsset: "Authentic 'Beginner' Perspective, Fail Content",
+    bio: "Malta's most lovable 'noob' who embraces the spaghetti monsters and clogged nozzles we all pretend don't happen. Spoiler: he's actually really good now, but we won't tell anyone.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Joe Casha runs 3D Maker Noob. His brand is built on humility and the 'Hero's Journey' of a beginner becoming an expert. By positioning himself as a 'Noob' (despite now being highly skilled), he creates a non-intimidating environment for newcomers. He validates the struggles of the average user, creating a high-trust relationship with his audience.",
     contentStrategy: "Casha's content is honest. He frequently showcases 'print fails'—the spaghetti monsters and clogged nozzles that every user experiences. This authenticity distinguishes him from channels that only show perfect results. He reviews a wide range of hardware, from budget FDM to mid-range resin printers. He is deeply embedded in the European maker community.",
     economicImpact: "Casha serves as a reality check for the industry. If a printer is marketed as 'easy to use' but Casha struggles with it, his audience knows the marketing is flawed. He drives sales through affiliate links, particularly for upgrades and accessories that fix the problems he identifies in his videos.",
@@ -322,6 +341,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Cyberpunk, Wearable Computing, Gridfinity",
     businessModel: "Patreon, High-Tier Sponsorships (PCBWay), Merch",
     keyAsset: "Gridfinity System",
+    bio: "The cyberpunk mad scientist who invented Gridfinity and made everyone's workshop 47% more organized overnight. Talks fast, builds faster, and probably has more LEDs in his workshop than your entire house.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Zack Freedman of Voidstar Lab is the 'Cyberpunk Mad Scientist.' His content is highly stylized, featuring wearable computing, custom cyberdecks, and a frantic, witty delivery. He is the creator of Gridfinity, an open-source workshop organization system that became a viral phenomenon in the 3D printing world.",
     contentStrategy: "Freedman's content is visually distinct, utilizing neon lighting and a futuristic workshop aesthetic. He reviews hardware through the lens of 'does this help me build cyborg gear?' His 'Gridfinity' project demonstrated his ability to set industry standards. Thousands of makers now print Gridfinity bins, driving massive filament consumption. He focuses on integration of electronics with 3D prints.",
     economicImpact: "Freedman proved that systems are more viral than objects. Gridfinity is a self-perpetuating ecosystem that keeps his name relevant in every workshop. He monetizes through a very active Patreon and sponsorships from electronics suppliers like PCBWay.",
@@ -352,6 +373,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Consumer Reports Style Reviews",
     businessModel: "Affiliate Marketing, AdSense",
     keyAsset: "Website Recommendation Lists & Price Trackers",
+    bio: "The sibling duo who approach 3D printer reviews like they're writing for Consumer Reports. Data-driven, hype-resistant, and refreshingly honest. Their spreadsheets have spreadsheets.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Aurora Tech, run by siblings Aurora and Helios, functions as the 'Consumer Reports' of 3D printing. Their content is starkly different from entertainment-focused creators; it is dry, data-dense, and highly critical. They maintain a comprehensive 'Recommendation List' and 'Price Tracker' on their website, which are trusted resources for unbiased purchasing advice.",
     contentStrategy: "Their reviews follow a standardized format: unboxing, assembly analysis, noise testing, and print quality assessment using difficult models. They are often the first to review new machines from Asian manufacturers. They are notably critical of hype, often debunking marketing claims. Their website captures the 'bottom of the funnel' viewer ready to buy.",
     economicImpact: "Despite a smaller subscriber count, their influence on sales is disproportionately high. Viewers watch entertainment channels for fun, but they watch Aurora Tech to decide which printer to buy. Their stamp of approval is a significant sales driver. They have highlighted the rise of CoreXY machines and the dominance of Bambu Lab.",
@@ -382,6 +405,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Live Support, Upgrades, Tutorials",
     businessModel: "Amazon Affiliates, Patreon, YouTube Memberships",
     keyAsset: "HotMakes Livestreams, Ender 3 Documentation",
+    bio: "The patient tech dad who answers your questions live when Creality's support can't. His HotMakes streams have saved more printers from the dumpster than any official manual ever could.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Jim of The Edge of Tech is the 'Support Technician' and educator. His channel grew by providing critical documentation for the Creality Ender series when official manuals were lacking. He is known for his 'HotMakes' live streams and his approachable, 'dad tech' demeanor. He focuses on helping users get the most out of their machines.",
     contentStrategy: "Jim excels at live engagement. His streams allow real-time Q&A, filling the customer support gap left by budget manufacturers. He covers a broad range of tech, including laser cutters and general gadgets, but 3D printing remains his core. He creates 'master guides' for installing upgrades like BLTouch sensors or mainboard swaps.",
     economicImpact: "Jim drives sales for the aftermarket parts industry. When he recommends a specific magnetic build plate or extruder upgrade, it becomes a standard purchase for his audience. He acts as a stabilizer for the community, helping to reduce churn by keeping frustrated users engaged.",
@@ -411,6 +436,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Modding, High-Flow Hotends, Klipper",
     businessModel: "AdSense, Affiliates (Selective), Patreon",
     keyAsset: "Brutally Honest Reviews, 'Monster' Builds",
+    bio: "The brutally honest engineer who sees a stock printer and immediately thinks 'I can make this faster.' Got his affiliate status revoked for being too honest. Wears it as a badge of honor.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "Nathan is the 'Brutally Honest Engineer.' His channel is known for no-nonsense reviews and deep technical dives into printer mechanics. He represents the cynical, advanced user who values performance over marketing. He gained notoriety for public disputes with major brands regarding anti-consumer practices.",
     contentStrategy: "Nathan focuses on 'Monster' builds—taking a standard printer and modifying it to print faster, hotter, and bigger. He tests high-flow hotends and Klipper firmware configurations. His content appeals to the 'modder' demographic who views a stock printer as merely a starting point. His integrity is his primary asset.",
     economicImpact: "Nathan keeps the industry honest. By calling out proprietary lock-ins and cloud dependencies, he champions the open-source ethos. He influences the 'power user' segment, which often sets trends for the broader market. When Bambu Lab revoked his affiliate status due to a critical review, it galvanized his community.",
@@ -440,6 +467,8 @@ export const influencerData: InfluencerData[] = [
     niche: "Practical Prints, Reviews, Guides",
     businessModel: "Shop Sales, Patreon, AdSense, Affiliates",
     keyAsset: "Practical Project Guides, Honest Reviews",
+    bio: "The practical maker who answers 'what can I actually DO with this printer?' His home is 90% 3D-printed organizational solutions at this point. Making the plastic hobby genuinely useful, one drawer divider at a time.",
+    topVideo2025: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     brandIdentity: "The Next Layer, hosted by Jonathan Levi, focuses on making 3D printing practical and accessible. The channel emphasizes real-world applications, showing viewers how to use 3D printing to solve everyday problems and improve their living spaces. Levi's approach is approachable and project-focused, bridging the gap between hobbyist curiosity and practical utility.",
     contentStrategy: "Levi creates content that answers 'what can I actually do with a 3D printer?' His videos cover printer reviews, practical project guides, and organizational solutions. The channel grew rapidly by focusing on searchable, useful content that helps viewers get tangible value from their printers. He also offers curated product recommendations through his website and shop.",
     economicImpact: "The Next Layer drives adoption among practical-minded consumers who want to use 3D printing as a tool rather than a hobby. His focus on real-world applications helps justify printer purchases for people who need to solve specific problems. He demonstrates the utility value proposition of 3D printing.",
