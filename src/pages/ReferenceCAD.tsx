@@ -23,7 +23,7 @@ const cadLogos: Record<string, string> = {
   "ZBrush": "/images/cad/zbrush.png",
   "Meshmixer": "/images/cad/meshmixer.png",
   "FreeCAD": "/images/cad/freecad.svg",
-  "Rhino 3D": "/images/cad/rhino3d.svg",
+  "Rhino 3D": "/images/cad/rhino3d.png",
   "OpenSCAD": "/images/cad/openscad.png",
   "Onshape": "/images/cad/onshape.png",
   "Shapr3D": "/images/cad/shapr3d.png",
@@ -45,7 +45,7 @@ const cadLogos: Record<string, string> = {
   "Autodesk Maya": "/images/cad/maya.png",
   "Autodesk 3ds Max": "/images/cad/3dsmax.svg",
   "Autodesk AutoCAD": "/images/cad/autocad.svg",
-  "Rhino 3D (Rhinoceros)": "/images/cad/rhino3d.svg",
+  "Rhino 3D (Rhinoceros)": "/images/cad/rhino3d.png",
 };
 
 // Dark logos that need brightness filter for dark backgrounds
