@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { extractPrice, extractAvailability, findTdsUrl, extractPrintSettings, extractColorFromHtml, extractSpoolSpecs, extractMpnFromHtml } from "../utils.ts";
+import { extractPrice, extractAvailability, findTdsUrl, extractPrintSettings, extractSpoolSpecs, extractMpnFromHtml, classifyVariant, extractColorInfo, COLOR_HEX_MAP } from "../utils.ts";
 
 /**
  * FirecrawlScraper - Generic HTML scraper using Firecrawl API
@@ -241,9 +241,11 @@ export class FirecrawlScraper extends BaseScraper {
     // Extract enhanced data
     const tdsUrl = findTdsUrl(html) || this.extractTdsFromMarkdown(markdown);
     const printSettings = extractPrintSettings(html) || extractPrintSettings(markdown);
-    const colorInfo = extractColorFromHtml(html, null, null, title);
     const spoolSpecs = extractSpoolSpecs(markdown, title);
     const mpn = extractMpnFromHtml(html);
+    
+    // Use intelligent color extraction
+    const colorInfo = this.extractColorFromText(title);
 
     return {
       productId,
@@ -600,5 +602,33 @@ export class FirecrawlScraper extends BaseScraper {
 
     // Fallback: hash the URL
     return url.split("/").pop() || url;
+  }
+
+  /**
+   * Intelligent color extraction from product text
+   */
+  private extractColorFromText(text: string): { name: string; hex: string } | null {
+    if (!text) return null;
+    
+    const words = text.split(/[\s\-_,]+/);
+    
+    for (const word of words) {
+      const classification = classifyVariant(word);
+      if (classification.isColorVariant && classification.colorName) {
+        const info = extractColorInfo(classification.colorName);
+        if (info) {
+          return { name: info.name, hex: info.hex };
+        }
+      }
+    }
+    
+    const textLower = text.toLowerCase();
+    for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
+      if (textLower.includes(colorName)) {
+        return { name: colorName.charAt(0).toUpperCase() + colorName.slice(1), hex };
+      }
+    }
+    
+    return null;
   }
 }

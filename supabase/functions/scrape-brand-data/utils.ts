@@ -158,47 +158,29 @@ export function detectMaterial(title: string): string | null {
   return null;
 }
 
-const COLOR_MAP: Record<string, { hex: string; family: string }> = {
-  'black': { hex: '#000000', family: 'Black' },
-  'white': { hex: '#FFFFFF', family: 'White' },
-  'red': { hex: '#FF0000', family: 'Red' },
-  'blue': { hex: '#0000FF', family: 'Blue' },
-  'green': { hex: '#00FF00', family: 'Green' },
-  'yellow': { hex: '#FFFF00', family: 'Yellow' },
-  'orange': { hex: '#FFA500', family: 'Orange' },
-  'purple': { hex: '#800080', family: 'Purple' },
-  'pink': { hex: '#FFC0CB', family: 'Pink' },
-  'gray': { hex: '#808080', family: 'Gray' },
-  'grey': { hex: '#808080', family: 'Gray' },
-  'silver': { hex: '#C0C0C0', family: 'Silver' },
-  'gold': { hex: '#FFD700', family: 'Gold' },
-  'bronze': { hex: '#CD7F32', family: 'Bronze' },
-  'brown': { hex: '#8B4513', family: 'Brown' },
-  'beige': { hex: '#F5F5DC', family: 'Beige' },
-  'natural': { hex: '#F5F5DC', family: 'Natural' },
-  'clear': { hex: '#FFFFFF', family: 'Clear' },
-  'transparent': { hex: '#FFFFFF', family: 'Clear' },
-  'translucent': { hex: '#FFFFFF', family: 'Clear' },
-  'cyan': { hex: '#00FFFF', family: 'Blue' },
-  'teal': { hex: '#008080', family: 'Blue' },
-  'navy': { hex: '#000080', family: 'Blue' },
-  'magenta': { hex: '#FF00FF', family: 'Purple' },
-  'violet': { hex: '#EE82EE', family: 'Purple' },
-  'lime': { hex: '#00FF00', family: 'Green' },
-  'olive': { hex: '#808000', family: 'Green' },
-  'maroon': { hex: '#800000', family: 'Red' },
-  'crimson': { hex: '#DC143C', family: 'Red' },
-};
+// Import the intelligent color classifier
+import { 
+  COLOR_HEX_MAP, 
+  COLOR_FAMILY_MAP, 
+  classifyVariant, 
+  extractColorInfo,
+  filterColorVariants,
+  type VariantClassification 
+} from "./colorClassifier.ts";
+
+// Re-export for use by scrapers
+export { classifyVariant, extractColorInfo, filterColorVariants, COLOR_HEX_MAP, COLOR_FAMILY_MAP };
+export type { VariantClassification };
 
 export function extractColor(title: string): { name: string; hex: string; family: string } | null {
   const lowerTitle = title.toLowerCase();
   
-  for (const [colorName, colorData] of Object.entries(COLOR_MAP)) {
+  for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
     if (lowerTitle.includes(colorName)) {
       return {
         name: colorName.charAt(0).toUpperCase() + colorName.slice(1),
-        hex: colorData.hex,
-        family: colorData.family,
+        hex,
+        family: COLOR_FAMILY_MAP[colorName] || 'Other',
       };
     }
   }
@@ -426,76 +408,44 @@ export function extractPrintSettings(text: string): {
   return null;
 }
 
-// Color hex extraction with lookup table
-const HEX_COLORS: Record<string, string> = {
-  'black': '#000000',
-  'white': '#FFFFFF',
-  'red': '#FF0000',
-  'blue': '#0000FF',
-  'green': '#00FF00',
-  'yellow': '#FFFF00',
-  'orange': '#FFA500',
-  'purple': '#800080',
-  'pink': '#FFC0CB',
-  'gray': '#808080',
-  'grey': '#808080',
-  'silver': '#C0C0C0',
-  'gold': '#FFD700',
-  'bronze': '#CD7F32',
-  'brown': '#8B4513',
-  'beige': '#F5F5DC',
-  'natural': '#F5F5DC',
-  'clear': '#FFFFFF',
-  'transparent': '#FFFFFF',
-  'cyan': '#00FFFF',
-  'teal': '#008080',
-  'navy': '#000080',
-  'magenta': '#FF00FF',
-  'violet': '#EE82EE',
-  'lime': '#00FF00',
-  'olive': '#808000',
-  'maroon': '#800000',
-  'crimson': '#DC143C',
-  'sky blue': '#87CEEB',
-  'royal blue': '#4169E1',
-  'forest green': '#228B22',
-  'burgundy': '#800020',
-  'champagne': '#F7E7CE',
-  'ivory': '#FFFFF0',
-  'cream': '#FFFDD0',
-  'coral': '#FF7F50',
-  'salmon': '#FA8072',
-  'peach': '#FFDAB9',
-  'mint': '#98FF98',
-  'lavender': '#E6E6FA',
-  'copper': '#B87333',
-  'rose gold': '#B76E79',
-};
-
+// Use comprehensive color hex map from colorClassifier
 export function extractColorFromHtml(
   html: string | null, 
   option1: string | null | undefined, 
   option2: string | null | undefined,
   title: string
 ): { name: string; hex: string } | null {
-  // Check options first (Shopify variant options often contain color)
-  const options = [option1, option2].filter(Boolean).join(' ').toLowerCase();
-  const combined = `${options} ${title}`.toLowerCase();
+  // Check options first - use intelligent classification
+  const options = [option1, option2].filter(Boolean);
   
-  // Try to find a hex color in the content
+  for (const opt of options) {
+    if (opt) {
+      const classification = classifyVariant(opt);
+      if (classification.isColorVariant && classification.colorName) {
+        const colorInfo = extractColorInfo(classification.colorName);
+        if (colorInfo) {
+          return { name: colorInfo.name, hex: colorInfo.hex };
+        }
+      }
+    }
+  }
+  
+  // Try to find a hex color in the HTML content
   const hexMatch = html?.match(/#([A-Fa-f0-9]{6})\b/);
   if (hexMatch) {
-    // Try to find associated color name
-    for (const [name, hex] of Object.entries(HEX_COLORS)) {
-      if (combined.includes(name)) {
+    // Try to find associated color name from title
+    const titleLower = title.toLowerCase();
+    for (const [name, hex] of Object.entries(COLOR_HEX_MAP)) {
+      if (titleLower.includes(name)) {
         return { name: name.charAt(0).toUpperCase() + name.slice(1), hex: `#${hexMatch[1]}` };
       }
     }
     return { name: 'Custom', hex: `#${hexMatch[1]}` };
   }
   
-  // Match from color name lookup
-  for (const [name, hex] of Object.entries(HEX_COLORS)) {
+  // Try to extract color from title using comprehensive map
+  const combined = `${options.join(' ')} ${title}`.toLowerCase();
+  for (const [name, hex] of Object.entries(COLOR_HEX_MAP)) {
     if (combined.includes(name)) {
       return { name: name.charAt(0).toUpperCase() + name.slice(1), hex };
     }
