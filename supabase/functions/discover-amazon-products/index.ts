@@ -173,6 +173,8 @@ async function searchWithScrapingDog(query: string, scrapingDogKey: string): Pro
     api_key: scrapingDogKey,
     domain: 'com',
     query: query,
+    page: '1',
+    country: 'us',
   });
   
   console.log(`[SCRAPINGDOG] Searching Amazon for: ${query}`);
