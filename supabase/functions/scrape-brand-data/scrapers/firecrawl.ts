@@ -65,6 +65,7 @@ export class FirecrawlScraper extends BaseScraper {
 
     const products: ScrapedProduct[] = [];
     const baseUrl = this.config.baseUrl;
+    const vendor = this.config.vendor.toLowerCase();
     
     this.log(`Discovering products via Firecrawl Map API from: ${baseUrl}`);
 
@@ -99,40 +100,9 @@ export class FirecrawlScraper extends BaseScraper {
 
       this.log(`Map discovered ${mapData.links.length} URLs`);
 
-      // Step 2: Filter for product URLs (exclude category pages, cart, checkout, etc.)
+      // Step 2: Filter for product URLs using brand-specific patterns
       const productUrls = mapData.links.filter((url: string) => {
-        const lowerUrl = url.toLowerCase();
-        
-        // Exclude non-product pages
-        if (lowerUrl.includes('/cart') || 
-            lowerUrl.includes('/checkout') ||
-            lowerUrl.includes('/account') ||
-            lowerUrl.includes('/login') ||
-            lowerUrl.includes('/contact') ||
-            lowerUrl.includes('/about') ||
-            lowerUrl.includes('/faq') ||
-            lowerUrl.includes('/page/') ||
-            lowerUrl.includes('?') ||
-            lowerUrl.includes('#') ||
-            lowerUrl.endsWith('/shop/') ||
-            lowerUrl.endsWith('/shop')) {
-          return false;
-        }
-        
-        // Include URLs that look like product pages
-        // IC3D pattern: /shop/category/product-name/
-        // Generic patterns: /product/, /products/, contains filament keywords
-        const isProductLike = 
-          (lowerUrl.includes('/shop/') && lowerUrl.split('/').filter(Boolean).length >= 4) ||
-          lowerUrl.includes('/product/') ||
-          lowerUrl.includes('/products/') ||
-          lowerUrl.includes('filament') ||
-          lowerUrl.includes('-pla') ||
-          lowerUrl.includes('-petg') ||
-          lowerUrl.includes('-abs') ||
-          lowerUrl.includes('-tpu');
-        
-        return isProductLike;
+        return this.isProductUrl(url, vendor);
       });
 
       this.log(`Filtered to ${productUrls.length} potential product URLs`);
@@ -178,6 +148,67 @@ export class FirecrawlScraper extends BaseScraper {
     }
   }
 
+  /**
+   * Brand-specific product URL detection
+   */
+  private isProductUrl(url: string, vendor: string): boolean {
+    const lowerUrl = url.toLowerCase();
+    
+    // Universal exclusions
+    const excludePatterns = [
+      '/cart', '/checkout', '/account', '/login', '/contact', '/about',
+      '/faq', '/page/', '/blog/', '/news/', '/category/', '/tag/',
+      '?', '#', '/wishlist', '/compare', '/search'
+    ];
+    
+    if (excludePatterns.some(p => lowerUrl.includes(p))) {
+      return false;
+    }
+
+    // Brand-specific product URL patterns
+    const brandPatterns: Record<string, RegExp[]> = {
+      'formfutura': [
+        /formfutura\.com\/shop\/product\/[^\/]+$/i,
+        /formfutura\.com\/[a-z-]+\/[a-z0-9-]+-\d+ml$/i, // Product with ml suffix
+      ],
+      'extrudr': [
+        /extrudr\.com\/en\/products\/[^\/]+/i,
+        /extrudr\.com\/en\/inlt\/[^\/]+/i,
+      ],
+      'spectrum filaments': [
+        /shop\.spectrumfilaments\.com\/[a-z-]+\/\d+-[a-z0-9-]+\.html$/i, // PrestaShop pattern
+      ],
+      'matterhackers': [
+        /matterhackers\.com\/store\/l\/[^\/]+\/ln\//i,
+      ],
+      'ic3d printers': [
+        /ic3dprinters\.com\/shop\/[^\/]+\/[^\/]+\/?$/i,
+      ],
+    };
+
+    // Check brand-specific patterns first
+    const patterns = brandPatterns[vendor];
+    if (patterns) {
+      for (const pattern of patterns) {
+        if (pattern.test(url)) {
+          return true;
+        }
+      }
+    }
+
+    // Generic product URL detection
+    const isProductLike = 
+      (lowerUrl.includes('/shop/') && lowerUrl.split('/').filter(Boolean).length >= 4) ||
+      lowerUrl.includes('/product/') ||
+      lowerUrl.includes('/products/') ||
+      (lowerUrl.includes('filament') && !lowerUrl.endsWith('/filament') && !lowerUrl.endsWith('/filament/')) ||
+      /-pla[-\.]/.test(lowerUrl) ||
+      /-petg[-\.]/.test(lowerUrl) ||
+      /-abs[-\.]/.test(lowerUrl) ||
+      /-tpu[-\.]/.test(lowerUrl);
+    
+    return isProductLike;
+  }
   private parseResponse(data: any, url: string): ScrapedProduct | null {
     const content = data.data || data;
     const html = content.html || "";
