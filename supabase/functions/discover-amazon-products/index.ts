@@ -20,6 +20,12 @@ interface FilamentRecord {
   material: string | null;
   variant_price: number | null;
   amazon_link_us: string | null;
+  // Identifier fields for enhanced matching
+  mpn: string | null;
+  variant_sku: string | null;
+  upc: string | null;
+  ean: string | null;
+  gtin: string | null;
 }
 
 interface BrandConfig {
@@ -28,7 +34,15 @@ interface BrandConfig {
   has_amazon_store: boolean;
 }
 
-// Build search query for Amazon - prioritizes store-based search if available
+type MatchMethod = 'barcode' | 'mpn' | 'sku' | 'store' | 'text';
+
+interface DiscoveryResult {
+  results: AmazonSearchResult[];
+  method: MatchMethod;
+  identifierUsed?: string;
+}
+
+// Build search query for Amazon - text-based fallback
 function buildSearchQuery(filament: FilamentRecord, brandConfig?: BrandConfig): string {
   const parts = [filament.vendor];
   
@@ -51,8 +65,12 @@ function buildSearchQuery(filament: FilamentRecord, brandConfig?: BrandConfig): 
   return parts.join(' ').substring(0, 100); // Limit query length
 }
 
-// Calculate match confidence (0-100)
-function calculateMatchConfidence(filament: FilamentRecord, amazonResult: AmazonSearchResult): number {
+// Calculate match confidence with method-based bonuses
+function calculateMatchConfidence(
+  filament: FilamentRecord, 
+  amazonResult: AmazonSearchResult,
+  matchMethod: MatchMethod = 'text'
+): number {
   let score = 0;
   const amazonTitle = amazonResult.title.toLowerCase();
   const vendor = filament.vendor.toLowerCase();
@@ -101,6 +119,26 @@ function calculateMatchConfidence(filament: FilamentRecord, amazonResult: Amazon
     }
   }
   
+  // Add method-based confidence bonuses
+  switch (matchMethod) {
+    case 'barcode':
+      score += 30; // UPC/EAN/GTIN is near-guaranteed match
+      break;
+    case 'mpn':
+      score += 20; // MPN is very reliable
+      break;
+    case 'sku':
+      score += 15; // SKU sometimes matches
+      break;
+    case 'store':
+      score += 10; // Store search has brand context
+      break;
+    case 'text':
+    default:
+      // No bonus for text search
+      break;
+  }
+  
   return Math.min(100, score);
 }
 
@@ -112,7 +150,7 @@ function extractAsin(url: string): string | null {
   return asinMatch ? asinMatch[1] : null;
 }
 
-// Search Amazon via SerpApi
+// Search Amazon via SerpApi - generic search
 async function searchAmazon(query: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
   const params = new URLSearchParams({
     engine: 'amazon',
@@ -121,7 +159,7 @@ async function searchAmazon(query: string, serpApiKey: string): Promise<AmazonSe
     api_key: serpApiKey,
   });
   
-  console.log(`Searching Amazon for: ${query}`);
+  console.log(`[TEXT] Searching Amazon for: ${query}`);
   
   const response = await fetch(`https://serpapi.com/search?${params}`);
   
@@ -148,12 +186,120 @@ async function searchAmazon(query: string, serpApiKey: string): Promise<AmazonSe
   }));
 }
 
+// Search Amazon by barcode (UPC/EAN/GTIN) - PRIORITY 1
+async function searchAmazonByBarcode(barcode: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
+  const params = new URLSearchParams({
+    engine: 'amazon',
+    amazon_domain: 'amazon.com',
+    k: barcode, // Direct barcode search
+    api_key: serpApiKey,
+  });
+  
+  console.log(`[BARCODE] Searching Amazon for barcode: ${barcode}`);
+  
+  const response = await fetch(`https://serpapi.com/search?${params}`);
+  
+  if (!response.ok) {
+    console.error(`Barcode search failed: ${response.status}`);
+    return [];
+  }
+  
+  const data = await response.json();
+  
+  if (!data.organic_results || !Array.isArray(data.organic_results)) {
+    console.log('No barcode results found');
+    return [];
+  }
+  
+  // Barcode search should return exact match, take first result
+  return data.organic_results.slice(0, 3).map((result: any) => ({
+    title: result.title || '',
+    link: result.link || '',
+    price: result.price?.raw ? parseFloat(result.price.raw.replace(/[^0-9.]/g, '')) : 
+           result.price?.extracted ? result.price.extracted : null,
+    asin: result.asin || extractAsin(result.link || ''),
+    thumbnail: result.thumbnail,
+  }));
+}
+
+// Search Amazon by MPN - PRIORITY 2
+async function searchAmazonByMPN(mpn: string, vendor: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
+  // Search with vendor + MPN for better accuracy
+  const query = `${vendor} ${mpn}`;
+  
+  const params = new URLSearchParams({
+    engine: 'amazon',
+    amazon_domain: 'amazon.com',
+    k: query,
+    api_key: serpApiKey,
+  });
+  
+  console.log(`[MPN] Searching Amazon for: ${query}`);
+  
+  const response = await fetch(`https://serpapi.com/search?${params}`);
+  
+  if (!response.ok) {
+    console.error(`MPN search failed: ${response.status}`);
+    return [];
+  }
+  
+  const data = await response.json();
+  
+  if (!data.organic_results || !Array.isArray(data.organic_results)) {
+    console.log('No MPN results found');
+    return [];
+  }
+  
+  return data.organic_results.slice(0, 5).map((result: any) => ({
+    title: result.title || '',
+    link: result.link || '',
+    price: result.price?.raw ? parseFloat(result.price.raw.replace(/[^0-9.]/g, '')) : 
+           result.price?.extracted ? result.price.extracted : null,
+    asin: result.asin || extractAsin(result.link || ''),
+    thumbnail: result.thumbnail,
+  }));
+}
+
+// Search Amazon by SKU - PRIORITY 3
+async function searchAmazonBySKU(sku: string, vendor: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
+  // Search with vendor + SKU
+  const query = `${vendor} ${sku} filament`;
+  
+  const params = new URLSearchParams({
+    engine: 'amazon',
+    amazon_domain: 'amazon.com',
+    k: query,
+    api_key: serpApiKey,
+  });
+  
+  console.log(`[SKU] Searching Amazon for: ${query}`);
+  
+  const response = await fetch(`https://serpapi.com/search?${params}`);
+  
+  if (!response.ok) {
+    console.error(`SKU search failed: ${response.status}`);
+    return [];
+  }
+  
+  const data = await response.json();
+  
+  if (!data.organic_results || !Array.isArray(data.organic_results)) {
+    console.log('No SKU results found');
+    return [];
+  }
+  
+  return data.organic_results.slice(0, 5).map((result: any) => ({
+    title: result.title || '',
+    link: result.link || '',
+    price: result.price?.raw ? parseFloat(result.price.raw.replace(/[^0-9.]/g, '')) : 
+           result.price?.extracted ? result.price.extracted : null,
+    asin: result.asin || extractAsin(result.link || ''),
+    thumbnail: result.thumbnail,
+  }));
+}
+
 // Search Amazon store products via SerpApi
 async function searchAmazonStore(brandName: string, storeUrl: string, serpApiKey: string): Promise<AmazonSearchResult[]> {
-  // Extract store name from URL for better search
-  const storeMatch = storeUrl.match(/\/stores\/([^\/]+)/);
-  const storeName = storeMatch ? storeMatch[1] : brandName;
-  
   // Search for brand filament products to find store products
   const params = new URLSearchParams({
     engine: 'amazon',
@@ -162,7 +308,7 @@ async function searchAmazonStore(brandName: string, storeUrl: string, serpApiKey
     api_key: serpApiKey,
   });
   
-  console.log(`Searching Amazon store products for: ${brandName}`);
+  console.log(`[STORE] Searching Amazon store products for: ${brandName}`);
   
   const response = await fetch(`https://serpapi.com/search?${params}`);
   
@@ -196,6 +342,69 @@ async function searchAmazonStore(brandName: string, storeUrl: string, serpApiKey
   }
   
   return results;
+}
+
+// Multi-strategy discovery - tries identifier-based searches in priority order
+async function discoverAmazonProduct(
+  filament: FilamentRecord, 
+  serpApiKey: string,
+  storeProducts: AmazonSearchResult[],
+  brandConfig?: BrandConfig
+): Promise<DiscoveryResult> {
+  
+  // PRIORITY 1: Barcode search (UPC/EAN/GTIN) - most accurate
+  const barcode = filament.upc || filament.ean || filament.gtin;
+  if (barcode) {
+    console.log(`Trying barcode search for ${filament.product_title} with: ${barcode}`);
+    const results = await searchAmazonByBarcode(barcode, serpApiKey);
+    if (results.length > 0) {
+      console.log(`✓ Barcode match found!`);
+      return { results, method: 'barcode', identifierUsed: barcode };
+    }
+    console.log(`✗ No barcode results`);
+  }
+  
+  // PRIORITY 2: MPN search
+  if (filament.mpn) {
+    console.log(`Trying MPN search for ${filament.product_title} with: ${filament.mpn}`);
+    const results = await searchAmazonByMPN(filament.mpn, filament.vendor, serpApiKey);
+    if (results.length > 0) {
+      console.log(`✓ MPN match found!`);
+      return { results, method: 'mpn', identifierUsed: filament.mpn };
+    }
+    console.log(`✗ No MPN results`);
+  }
+  
+  // PRIORITY 3: SKU search
+  if (filament.variant_sku) {
+    console.log(`Trying SKU search for ${filament.product_title} with: ${filament.variant_sku}`);
+    const results = await searchAmazonBySKU(filament.variant_sku, filament.vendor, serpApiKey);
+    if (results.length > 0) {
+      console.log(`✓ SKU match found!`);
+      return { results, method: 'sku', identifierUsed: filament.variant_sku };
+    }
+    console.log(`✗ No SKU results`);
+  }
+  
+  // PRIORITY 4: Store products matching (if available)
+  if (storeProducts.length > 0) {
+    // Score each store product against this filament
+    const scoredProducts = storeProducts.map(product => ({
+      product,
+      confidence: calculateMatchConfidence(filament, product, 'store')
+    })).sort((a, b) => b.confidence - a.confidence);
+    
+    if (scoredProducts.length > 0 && scoredProducts[0].confidence >= 70) {
+      console.log(`✓ Store product match found!`);
+      return { results: [scoredProducts[0].product], method: 'store' };
+    }
+  }
+  
+  // PRIORITY 5: Text-based search (fallback)
+  console.log(`Falling back to text search for ${filament.product_title}`);
+  const searchQuery = buildSearchQuery(filament, brandConfig);
+  const results = await searchAmazon(searchQuery, serpApiKey);
+  return { results, method: 'text' };
 }
 
 // Rate limiting
@@ -252,10 +461,10 @@ Deno.serve(async (req) => {
 
     console.log(`Brand config:`, brandConfig);
 
-    // Fetch filaments without Amazon links (or with low confidence)
+    // Fetch filaments without Amazon links (or with low confidence) - include identifier fields
     const { data: filaments, error: fetchError } = await supabase
       .from('filaments')
-      .select('id, product_title, vendor, material, variant_price, amazon_link_us')
+      .select('id, product_title, vendor, material, variant_price, amazon_link_us, mpn, variant_sku, upc, ean, gtin')
       .ilike('vendor', vendor)
       .or('amazon_link_us.is.null,amazon_match_confidence.lt.70')
       .limit(limit);
@@ -280,12 +489,27 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Found ${filaments.length} filaments to process`);
+    
+    // Log identifier coverage
+    const withBarcode = filaments.filter(f => f.upc || f.ean || f.gtin).length;
+    const withMpn = filaments.filter(f => f.mpn).length;
+    const withSku = filaments.filter(f => f.variant_sku).length;
+    console.log(`Identifier coverage: ${withBarcode} barcode, ${withMpn} MPN, ${withSku} SKU`);
 
     const results: any[] = [];
     let discovered = 0;
     let highConfidence = 0;
     let lowConfidence = 0;
     let updated = 0;
+    
+    // Track match method statistics
+    const methodStats = {
+      barcode: 0,
+      mpn: 0,
+      sku: 0,
+      store: 0,
+      text: 0,
+    };
 
     // If brand has Amazon store URL, first get all store products
     let storeProducts: AmazonSearchResult[] = [];
@@ -301,27 +525,17 @@ Deno.serve(async (req) => {
 
     for (const filament of filaments) {
       try {
-        let amazonResults: AmazonSearchResult[] = [];
+        await respectRateLimit();
         
-        // First try to match against store products if available
-        if (storeProducts.length > 0) {
-          // Score each store product against this filament
-          const scoredProducts = storeProducts.map(product => ({
-            product,
-            confidence: calculateMatchConfidence(filament, product)
-          })).sort((a, b) => b.confidence - a.confidence);
-          
-          if (scoredProducts.length > 0 && scoredProducts[0].confidence >= 70) {
-            amazonResults = [scoredProducts[0].product];
-          }
-        }
+        // Use multi-strategy discovery
+        const discovery = await discoverAmazonProduct(
+          filament as FilamentRecord, 
+          serpApiKey, 
+          storeProducts, 
+          brandConfig || undefined
+        );
         
-        // If no good match from store, do individual search
-        if (amazonResults.length === 0) {
-          await respectRateLimit();
-          const searchQuery = buildSearchQuery(filament, brandConfig || undefined);
-          amazonResults = await searchAmazon(searchQuery, serpApiKey);
-        }
+        const { results: amazonResults, method, identifierUsed } = discovery;
         
         if (amazonResults.length === 0) {
           results.push({
@@ -329,16 +543,17 @@ Deno.serve(async (req) => {
             title: filament.product_title,
             status: 'no_results',
             confidence: 0,
+            match_method: method,
           });
           continue;
         }
 
-        // Score all results and find best match
+        // Score all results and find best match (with method bonus)
         let bestMatch: AmazonSearchResult | null = null;
         let bestConfidence = 0;
 
         for (const amazonResult of amazonResults) {
-          const confidence = calculateMatchConfidence(filament, amazonResult);
+          const confidence = calculateMatchConfidence(filament as FilamentRecord, amazonResult, method);
           if (confidence > bestConfidence) {
             bestConfidence = confidence;
             bestMatch = amazonResult;
@@ -346,6 +561,7 @@ Deno.serve(async (req) => {
         }
 
         discovered++;
+        methodStats[method]++;
 
         if (bestMatch && bestConfidence >= 70) {
           highConfidence++;
@@ -377,6 +593,8 @@ Deno.serve(async (req) => {
             amazon_price: bestMatch.price,
             confidence: bestConfidence,
             status: 'matched',
+            match_method: method,
+            identifier_used: identifierUsed,
           });
         } else {
           lowConfidence++;
@@ -386,6 +604,8 @@ Deno.serve(async (req) => {
             amazon_title: bestMatch?.title,
             confidence: bestConfidence,
             status: 'low_confidence',
+            match_method: method,
+            identifier_used: identifierUsed,
           });
         }
 
@@ -422,6 +642,7 @@ Deno.serve(async (req) => {
       .ilike('brand_name', vendor);
 
     console.log(`Discovery complete: ${discovered} found, ${highConfidence} high confidence, ${updated} updated`);
+    console.log(`Match methods used:`, methodStats);
 
     return new Response(
       JSON.stringify({
@@ -432,6 +653,7 @@ Deno.serve(async (req) => {
         high_confidence: highConfidence,
         low_confidence: lowConfidence,
         updated,
+        method_stats: methodStats,
         results: results.slice(0, 20), // Limit response size
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
