@@ -55,17 +55,27 @@ export function useAdminHealth() {
   const fetchHealthData = async () => {
     setLoading(true);
     try {
-      // Fetch filament health
-      const { data: filaments } = await supabase
-        .from("filaments")
-        .select("id, featured_image, variant_price, nozzle_temp_min_c, nozzle_temp_max_c, tds_url");
+      // Fetch filament health using proper count queries to avoid 1000 row limit
+      const [
+        filamentTotal,
+        filamentWithImages,
+        filamentWithPrices,
+        filamentWithTemps,
+        filamentWithTds
+      ] = await Promise.all([
+        supabase.from("filaments").select("id", { count: "exact", head: true }),
+        supabase.from("filaments").select("id", { count: "exact", head: true }).not("featured_image", "is", null),
+        supabase.from("filaments").select("id", { count: "exact", head: true }).not("variant_price", "is", null),
+        supabase.from("filaments").select("id", { count: "exact", head: true }).not("nozzle_temp_min_c", "is", null).not("nozzle_temp_max_c", "is", null),
+        supabase.from("filaments").select("id", { count: "exact", head: true }).not("tds_url", "is", null)
+      ]);
       
       const filamentMetrics = {
-        total: filaments?.length || 0,
-        withImages: filaments?.filter(f => f.featured_image).length || 0,
-        withPrices: filaments?.filter(f => f.variant_price).length || 0,
-        withTemps: filaments?.filter(f => f.nozzle_temp_min_c && f.nozzle_temp_max_c).length || 0,
-        withTds: filaments?.filter(f => f.tds_url).length || 0,
+        total: filamentTotal.count || 0,
+        withImages: filamentWithImages.count || 0,
+        withPrices: filamentWithPrices.count || 0,
+        withTemps: filamentWithTemps.count || 0,
+        withTds: filamentWithTds.count || 0,
         score: 0
       };
       filamentMetrics.score = filamentMetrics.total > 0 
