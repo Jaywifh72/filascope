@@ -516,35 +516,5 @@ export const influencerData: InfluencerData[] = [
       youtube: "https://www.youtube.com/@ModBot"
     },
     ratings: { reach: 2, technical: 4, entertainment: 3, influence: 3, monetization: 3 }
-  },
-  {
-    id: "punished-props",
-    name: "Bill & Britt Doran",
-    channelName: "Punished Props Academy",
-    location: "USA (Seattle)",
-    subscribers: "~760,000",
-    totalViews: "High viewership on How-To playlists",
-    joinDate: "December 2011",
-    niche: "Prop Finishing, Painting, Cosplay",
-    businessModel: "Book Sales, Digital Blueprints, Tools, Twitch",
-    keyAsset: "Post-Processing Expertise, Finishing Guides",
-    brandIdentity: "Punished Props Academy, run by Bill and Britt Doran, is the 'Finishing School' of the community. While they utilize 3D printing heavily, their expertise lies in making prints look like real objects through sanding, painting, and weathering. They bridge the gap between digital fabrication and traditional prop making.",
-    contentStrategy: "The Dorans sell 'knowledge products.' They have published multiple books on foam smithing and 3D print finishing. Their videos serve as visual companions to these books. They teach techniques like filling layer lines, airbrushing, and molding/casting 3D prints. Their 'Academy' branding reflects their educational mission.",
-    economicImpact: "Punished Props drives the market for post-processing materials (fillers, primers, paints). They solve the 'it looks like plastic' problem that plagues 3D printing. As printers become appliances that 'just work,' the skill gap moves to finishing, ensuring their content remains essential.",
-    futureOutlook: "The Dorans continue to innovate by integrating electronics and lights into their props, showing how to take a 3D print from a raw part to a movie-quality asset. Their focus on the art of making ensures longevity beyond hardware cycles.",
-    strengths: [
-      { title: "Finishing Authority", description: "Solves the 'it looks like plastic' problem" },
-      { title: "Knowledge Products", description: "Books and blueprints create recurring revenue" },
-      { title: "Future-Proof", description: "As printers improve, finishing becomes the key skill gap" }
-    ],
-    weaknesses: [
-      { title: "Niche Focus", description: "Content less relevant for functional/engineering printing" },
-      { title: "Entry Point", description: "Assumes basic printing skills are already developed" }
-    ],
-    links: {
-      youtube: "https://www.youtube.com/@PunishedProps",
-      website: "https://www.punishedprops.com"
-    },
-    ratings: { reach: 4, technical: 4, entertainment: 4, influence: 4, monetization: 5 }
   }
 ];
