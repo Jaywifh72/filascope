@@ -1398,6 +1398,9 @@ export class AmazonScraper extends BaseScraper {
       // Skip discontinued and bundle products
       "discontinued",
       "bundle",
+      // Skip mystery boxes and multi-roll packs
+      "mystery",
+      "rolls",
     ];
     
     const isExcluded = excludePatterns.some(pattern => titleLower.includes(pattern));
