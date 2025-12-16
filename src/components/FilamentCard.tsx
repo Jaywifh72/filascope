@@ -76,7 +76,7 @@ function getStandoutFeature(filament: Filament): { label: string; colorClass: st
   if (filament.high_speed_capable) {
     return { 
       label: "High Speed", 
-      colorClass: "bg-primary/15 border-primary/30 text-primary",
+      colorClass: "bg-blue-500/15 border-blue-500/30 text-blue-400",
       icon: Zap 
     };
   }
@@ -90,7 +90,7 @@ function getStandoutFeature(filament: Filament): { label: string; colorClass: st
   if (filament.glass_fiber_percentage && filament.glass_fiber_percentage > 0) {
     return { 
       label: "Glass Fiber", 
-      colorClass: "bg-primary/15 border-primary/30 text-primary",
+      colorClass: "bg-blue-500/15 border-blue-500/30 text-blue-400",
       icon: Layers 
     };
   }
@@ -303,7 +303,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
           <span className={cn(
             "ml-8 mt-1 inline-block text-xs font-semibold px-2 py-0.5 rounded",
             colorMatchPercent >= 95 ? "bg-emerald-500/20 text-emerald-400" :
-            colorMatchPercent >= 85 ? "bg-primary/20 text-primary" :
+            colorMatchPercent >= 85 ? "bg-blue-500/20 text-blue-400" :
             "bg-amber-500/20 text-amber-400"
           )}>
             {colorMatchPercent}% match

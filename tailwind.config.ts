@@ -52,6 +52,22 @@ export default {
           DEFAULT: "hsl(var(--amazon))",
           foreground: "hsl(var(--amazon-foreground))",
         },
+        // Semantic colors for status indicators
+        success: {
+          DEFAULT: "hsl(142 76% 36%)", // #22C55E
+          light: "hsl(142 71% 45%)",   // #4ADE80
+        },
+        warning: {
+          DEFAULT: "hsl(27 96% 61%)",  // #FB923C
+          light: "hsl(32 95% 64%)",    // #FDBA74
+        },
+        error: {
+          DEFAULT: "hsl(0 84% 60%)",   // #EF4444
+          light: "hsl(0 91% 71%)",     // #F87171
+        },
+        info: {
+          DEFAULT: "hsl(217 91% 60%)", // #3B82F6
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
