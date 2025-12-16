@@ -363,6 +363,9 @@ const ReferenceInfluencers = () => {
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
                   <div className="space-y-6">
+                    {/* Bio */}
+                    <p className="text-muted-foreground italic text-lg">{influencer.bio}</p>
+
                     {/* Quick Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="bg-muted/30 rounded-lg p-3">
@@ -385,6 +388,14 @@ const ReferenceInfluencers = () => {
 
                     {/* Links */}
                     <div className="flex flex-wrap gap-2">
+                      {influencer.topVideo2025 && (
+                        <a href={influencer.topVideo2025} target="_blank" rel="noopener noreferrer">
+                          <Button variant="default" size="sm" className="bg-red-600 hover:bg-red-700">
+                            <Youtube className="h-4 w-4 mr-2" />
+                            Top 2025 Video
+                          </Button>
+                        </a>
+                      )}
                       {influencer.links.youtube && (
                         <a href={influencer.links.youtube} target="_blank" rel="noopener noreferrer">
                           <Button variant="outline" size="sm">
