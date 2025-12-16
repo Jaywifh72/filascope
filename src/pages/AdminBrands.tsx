@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Progress } from "@/components/ui/progress";
 import { 
   Building2, Search, Package, RefreshCw, CheckCircle2, XCircle, 
   Clock, TrendingUp, AlertCircle, Play, Activity,
@@ -119,6 +120,11 @@ const AdminBrands = () => {
   const [isScrapeAllRunning, setIsScrapeAllRunning] = useState(false);
   const [scrapeAllProgress, setScrapeAllProgress] = useState<BulkScrapeProgress | null>(null);
   const [bulkScrapeSummary, setBulkScrapeSummary] = useState<BulkScrapeSummary | null>(null);
+  
+  // Individual brand scraping progress state
+  const [scrapingBrandId, setScrapingBrandId] = useState<string | null>(null);
+  const [scrapeProgress, setScrapeProgress] = useState<number>(0);
+  const scrapeStartTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!authLoading && user && !isAdmin) {
@@ -141,6 +147,27 @@ const AdminBrands = () => {
     },
     enabled: isAdmin,
   });
+
+  // Progress animation effect for individual brand scraping
+  useEffect(() => {
+    if (!scrapingBrandId || !scrapeStartTimeRef.current) return;
+    
+    const brand = brands?.find(b => b.id === scrapingBrandId);
+    const estimatedDuration = (brand?.avg_scrape_duration_seconds || 30) * 1000;
+    
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - (scrapeStartTimeRef.current || Date.now());
+      // Animate to 90% over estimated time with easing, then slow asymptotic approach
+      const rawProgress = Math.min((elapsed / estimatedDuration) * 85, 95);
+      // Apply easing function for smoother feel
+      const easedProgress = rawProgress < 85 
+        ? rawProgress 
+        : 85 + (rawProgress - 85) * 0.3; // Slow down after 85%
+      setScrapeProgress(easedProgress);
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, [scrapingBrandId, brands]);
 
   // Fetch recent sync logs with enhanced details
   const { data: syncLogs, isLoading: logsLoading, refetch: refetchLogs } = useQuery({
@@ -196,6 +223,11 @@ const AdminBrands = () => {
   // Trigger single brand scrape
   const triggerScrape = useMutation({
     mutationFn: async (brand: AutomatedBrand) => {
+      // Start progress tracking
+      setScrapingBrandId(brand.id);
+      scrapeStartTimeRef.current = Date.now();
+      setScrapeProgress(0);
+      
       const { data, error } = await supabase.functions.invoke("scrape-brand-data", {
         body: { 
           vendor: brand.brand_name, 
@@ -210,12 +242,24 @@ const AdminBrands = () => {
       return data;
     },
     onSuccess: (data, brand) => {
+      // Complete progress
+      setScrapeProgress(100);
+      setTimeout(() => {
+        setScrapingBrandId(null);
+        setScrapeProgress(0);
+        scrapeStartTimeRef.current = null;
+      }, 800);
+      
       queryClient.invalidateQueries({ queryKey: ["admin-automated-brands"] });
       queryClient.invalidateQueries({ queryKey: ["admin-sync-logs"] });
       const stats = data?.totalStats || data?.stats || {};
       toast.success(`${brand.display_name}: ${stats.created || 0} created, ${stats.updated || 0} updated, ${stats.imagesAdded || 0} images`);
     },
     onError: (error, brand) => {
+      // Clear progress on error
+      setScrapingBrandId(null);
+      setScrapeProgress(0);
+      scrapeStartTimeRef.current = null;
       toast.error(`Failed to scrape ${brand.display_name}: ${error.message}`);
     },
   });
@@ -645,6 +689,30 @@ const AdminBrands = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
+                      {/* Scraping Progress Bar */}
+                      {scrapingBrandId === brand.id && (
+                        <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                              <RefreshCw className="w-3 h-3 animate-spin text-primary" />
+                              Scraping products...
+                            </span>
+                            <span className="text-xs font-medium text-primary tabular-nums">
+                              {Math.round(scrapeProgress)}%
+                            </span>
+                          </div>
+                          <Progress 
+                            value={scrapeProgress} 
+                            className="h-2"
+                          />
+                          {brand.avg_scrape_duration_seconds && (
+                            <p className="text-xs text-muted-foreground mt-1.5">
+                              Est. ~{Math.round(brand.avg_scrape_duration_seconds)}s
+                            </p>
+                          )}
+                        </div>
+                      )}
+
                       {/* Stats Row */}
                       <div className="grid grid-cols-5 gap-2 mb-3 text-center">
                         <div>
