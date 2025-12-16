@@ -152,15 +152,17 @@ export function PrinterSelectionModal({
           p.model_name.toLowerCase().includes(query) ||
           p.brand?.brand.toLowerCase().includes(query)
       );
+      // Limit search results to 30
+      return filtered.slice(0, 30);
     } else if (selectedBrandFilter) {
+      // Show ALL printers for selected brand (no limit)
       filtered = filtered.filter(
         (p) => p.brand?.brand === selectedBrandFilter
       );
+      return filtered;
     } else {
       return [];
     }
-
-    return filtered.slice(0, 20);
   }, [allPrinters, searchQuery, selectedBrandFilter]);
 
   // Sort brands: top brands first, then alphabetically
