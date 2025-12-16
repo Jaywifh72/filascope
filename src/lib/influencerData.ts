@@ -127,7 +127,7 @@ export const influencerData: InfluencerData[] = [
       { title: "Niche Content", description: "Artistic focus may not appeal to utility-focused makers" }
     ],
     links: {
-      youtube: "https://www.youtube.com/@MakeAnything",
+      youtube: "https://www.youtube.com/@make.anything",
       website: "https://www.makeanything.design"
     },
     ratings: { reach: 4, technical: 3, entertainment: 5, influence: 4, monetization: 5 }
