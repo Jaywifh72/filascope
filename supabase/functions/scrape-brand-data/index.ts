@@ -6,7 +6,7 @@ import { BigCommerceScraper } from "./scrapers/bigcommerce.ts";
 import { AmazonScraper } from "./scrapers/amazon.ts";
 import { FirecrawlScraper } from "./scrapers/firecrawl.ts";
 import type { BaseScraper, ScrapedProduct } from "./scrapers/base.ts";
-import { calculateHash, detectMaterial, extractColor, extractWeight, extractDiameter, parseBarcodeFields } from "./utils.ts";
+import { calculateHash, detectMaterial, extractColor, extractWeight, extractDiameter, parseBarcodeFields, intelligentTitleClean } from "./utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -117,8 +117,12 @@ async function createFilamentFromScrapedProduct(
   product: ScrapedProduct,
   staticConfig: BrandConfig
 ): Promise<boolean> {
-  const material = detectMaterial(product.title);
-  const colorInfo = extractColor(product.title);
+  // Clean the title intelligently before saving
+  const cleanedTitle = intelligentTitleClean(product.title, vendor);
+  console.log(`📝 Cleaning title: "${product.title.substring(0, 50)}..." → "${cleanedTitle}"`);
+  
+  const material = detectMaterial(product.title); // Use original title for material detection
+  const colorInfo = extractColor(product.title); // Use original title for color detection
   const weight = extractWeight(product.title);
   const diameter = extractDiameter(product.title);
   
@@ -128,7 +132,7 @@ async function createFilamentFromScrapedProduct(
   
   const filamentData = {
     product_id: product.productId,
-    product_title: product.title,
+    product_title: cleanedTitle, // Use cleaned title
     product_handle: handle,
     product_url: product.url,
     vendor: vendor,
