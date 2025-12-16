@@ -342,36 +342,6 @@ export const influencerData: InfluencerData[] = [
     ratings: { reach: 2, technical: 3, entertainment: 4, influence: 3, monetization: 3 }
   },
   {
-    id: "james-bruton",
-    name: "James Bruton",
-    channelName: "James Bruton",
-    location: "UK",
-    subscribers: "~1.39 Million",
-    totalViews: "~169 Million",
-    joinDate: "September 2006",
-    niche: "Robotics, Open Source Hardware, Functional Printing",
-    businessModel: "Patreon, Sponsorships (LulzBot, PCBWay), AdSense",
-    keyAsset: "Open-Source Robotics Projects",
-    brandIdentity: "James Bruton is a titan of the maker movement. While his scope includes robotics, coding, and electronics, 3D printing is the core manufacturing technology that enables his work. He represents the 'High-Level Engineer.' He builds functional, often human-scale robots, including 'dog' robots, self-balancing vehicles, and exoskeletons. He is a former toy designer, which informs his modular and robust design philosophy.",
-    contentStrategy: "Bruton's videos are essentially video logs of an R&D lab. He documents the iterative process of solving mechanical engineering problems. He uses 3D printing not for aesthetics, but for gears, structural brackets, and pulley systems. He creates custom 3D printers to solve specific problems. He is a staunch advocate for Open Source, releasing CAD files and code for his robot projects.",
-    economicImpact: "Bruton proves the functional viability of 3D printing. By building robots that walk, drive, and balance, he demonstrates that printed parts can withstand mechanical stress. This inspires engineers to adopt AM for prototyping and end-use parts. He has been a long-time ambassador for LulzBot printers, helping maintain their relevance in the open-source hardware space.",
-    futureOutlook: "Bruton continues to push the envelope of DIY robotics. His recent work involves integrating AI and machine learning into his 3D printed robots, merging software complexity with hardware fabrication.",
-    strengths: [
-      { title: "Engineering Authority", description: "Proves functional viability of 3D printed mechanical parts" },
-      { title: "Open Source Champion", description: "Releases CAD and code, effectively running open-source robotics R&D" },
-      { title: "Diverse Expertise", description: "Former toy designer brings robust, modular design philosophy" }
-    ],
-    weaknesses: [
-      { title: "Niche Complexity", description: "Robotics focus may not appeal to typical 3D printing hobbyists" },
-      { title: "Entry Barrier", description: "Complex projects require significant technical background" }
-    ],
-    links: {
-      youtube: "https://www.youtube.com/@jamesbruton",
-      patreon: "https://www.patreon.com/jamesbruton"
-    },
-    ratings: { reach: 5, technical: 5, entertainment: 4, influence: 5, monetization: 4 }
-  },
-  {
     id: "ivan-miranda",
     name: "Ivan Miranda",
     channelName: "Ivan Miranda",
