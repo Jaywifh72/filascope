@@ -6,6 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { influencerData, InfluencerData } from "@/lib/influencerData";
+import { useAuth } from "@/hooks/useAuth";
 
 type SortField = "name" | "subscribers" | "reach" | "technical" | "entertainment" | "influence" | "monetization";
 type SortDirection = "asc" | "desc";
@@ -22,6 +23,7 @@ const parseSubscribers = (subs: string): number => {
 };
 
 const ReferenceInfluencers = () => {
+  const { isAdmin } = useAuth();
   const [sortField, setSortField] = useState<SortField>("subscribers");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [nicheFilter, setNicheFilter] = useState<string>("all");
@@ -250,9 +252,11 @@ const ReferenceInfluencers = () => {
                     <SortHeader field="subscribers" label="Subscribers" />
                   </th>
                   <th className="text-left py-3 px-2">Location</th>
-                  <th className="text-center py-3 px-2">
-                    <SortHeader field="reach" label="Reach" />
-                  </th>
+                  {isAdmin && (
+                    <th className="text-center py-3 px-2">
+                      <SortHeader field="reach" label="Reach" />
+                    </th>
+                  )}
                   <th className="text-center py-3 px-2">
                     <SortHeader field="technical" label="Technical" />
                   </th>
@@ -262,9 +266,11 @@ const ReferenceInfluencers = () => {
                   <th className="text-center py-3 px-2">
                     <SortHeader field="influence" label="Influence" />
                   </th>
-                  <th className="text-center py-3 px-2">
-                    <SortHeader field="monetization" label="Monetization" />
-                  </th>
+                  {isAdmin && (
+                    <th className="text-center py-3 px-2">
+                      <SortHeader field="monetization" label="Monetization" />
+                    </th>
+                  )}
                   <th className="text-left py-3 px-2">Niche</th>
                 </tr>
               </thead>
@@ -289,11 +295,13 @@ const ReferenceInfluencers = () => {
                     </td>
                     <td className="py-3 px-2">{influencer.subscribers}</td>
                     <td className="py-3 px-2 text-muted-foreground">{influencer.location}</td>
-                    <td className="py-3 px-2">
-                      <div className="flex justify-center">
-                        <RatingDot rating={influencer.ratings.reach} />
-                      </div>
-                    </td>
+                    {isAdmin && (
+                      <td className="py-3 px-2">
+                        <div className="flex justify-center">
+                          <RatingDot rating={influencer.ratings.reach} />
+                        </div>
+                      </td>
+                    )}
                     <td className="py-3 px-2">
                       <div className="flex justify-center">
                         <RatingDot rating={influencer.ratings.technical} />
@@ -309,11 +317,13 @@ const ReferenceInfluencers = () => {
                         <RatingDot rating={influencer.ratings.influence} />
                       </div>
                     </td>
-                    <td className="py-3 px-2">
-                      <div className="flex justify-center">
-                        <RatingDot rating={influencer.ratings.monetization} />
-                      </div>
-                    </td>
+                    {isAdmin && (
+                      <td className="py-3 px-2">
+                        <div className="flex justify-center">
+                          <RatingDot rating={influencer.ratings.monetization} />
+                        </div>
+                      </td>
+                    )}
                     <td className="py-3 px-2">
                       <Badge variant="outline" className="text-xs whitespace-nowrap">
                         {influencer.niche.split(",")[0].trim()}
