@@ -223,21 +223,23 @@ const ReferenceInfluencers = () => {
             </span>
           </div>
 
-          {/* Rating Legend */}
-          <div className="flex flex-wrap gap-4 mb-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-muted-foreground">Excellent (4-5)</span>
+          {/* Rating Legend - Admin only */}
+          {isAdmin && (
+            <div className="flex flex-wrap gap-4 mb-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-muted-foreground">Excellent (4-5)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                <span className="text-muted-foreground">Average (3)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <span className="text-muted-foreground">Limited (1-2)</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-amber-500" />
-              <span className="text-muted-foreground">Average (3)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-red-500" />
-              <span className="text-muted-foreground">Limited (1-2)</span>
-            </div>
-          </div>
+          )}
 
           {/* Table */}
           <div className="overflow-x-auto">
@@ -253,23 +255,23 @@ const ReferenceInfluencers = () => {
                   </th>
                   <th className="text-left py-3 px-2">Location</th>
                   {isAdmin && (
-                    <th className="text-center py-3 px-2">
-                      <SortHeader field="reach" label="Reach" />
-                    </th>
-                  )}
-                  <th className="text-center py-3 px-2">
-                    <SortHeader field="technical" label="Technical" />
-                  </th>
-                  <th className="text-center py-3 px-2">
-                    <SortHeader field="entertainment" label="Entertainment" />
-                  </th>
-                  <th className="text-center py-3 px-2">
-                    <SortHeader field="influence" label="Influence" />
-                  </th>
-                  {isAdmin && (
-                    <th className="text-center py-3 px-2">
-                      <SortHeader field="monetization" label="Monetization" />
-                    </th>
+                    <>
+                      <th className="text-center py-3 px-2">
+                        <SortHeader field="reach" label="Reach" />
+                      </th>
+                      <th className="text-center py-3 px-2">
+                        <SortHeader field="technical" label="Technical" />
+                      </th>
+                      <th className="text-center py-3 px-2">
+                        <SortHeader field="entertainment" label="Entertainment" />
+                      </th>
+                      <th className="text-center py-3 px-2">
+                        <SortHeader field="influence" label="Influence" />
+                      </th>
+                      <th className="text-center py-3 px-2">
+                        <SortHeader field="monetization" label="Monetization" />
+                      </th>
+                    </>
                   )}
                   <th className="text-left py-3 px-2">Niche</th>
                 </tr>
@@ -296,33 +298,33 @@ const ReferenceInfluencers = () => {
                     <td className="py-3 px-2">{influencer.subscribers}</td>
                     <td className="py-3 px-2 text-muted-foreground">{influencer.location}</td>
                     {isAdmin && (
-                      <td className="py-3 px-2">
-                        <div className="flex justify-center">
-                          <RatingDot rating={influencer.ratings.reach} />
-                        </div>
-                      </td>
-                    )}
-                    <td className="py-3 px-2">
-                      <div className="flex justify-center">
-                        <RatingDot rating={influencer.ratings.technical} />
-                      </div>
-                    </td>
-                    <td className="py-3 px-2">
-                      <div className="flex justify-center">
-                        <RatingDot rating={influencer.ratings.entertainment} />
-                      </div>
-                    </td>
-                    <td className="py-3 px-2">
-                      <div className="flex justify-center">
-                        <RatingDot rating={influencer.ratings.influence} />
-                      </div>
-                    </td>
-                    {isAdmin && (
-                      <td className="py-3 px-2">
-                        <div className="flex justify-center">
-                          <RatingDot rating={influencer.ratings.monetization} />
-                        </div>
-                      </td>
+                      <>
+                        <td className="py-3 px-2">
+                          <div className="flex justify-center">
+                            <RatingDot rating={influencer.ratings.reach} />
+                          </div>
+                        </td>
+                        <td className="py-3 px-2">
+                          <div className="flex justify-center">
+                            <RatingDot rating={influencer.ratings.technical} />
+                          </div>
+                        </td>
+                        <td className="py-3 px-2">
+                          <div className="flex justify-center">
+                            <RatingDot rating={influencer.ratings.entertainment} />
+                          </div>
+                        </td>
+                        <td className="py-3 px-2">
+                          <div className="flex justify-center">
+                            <RatingDot rating={influencer.ratings.influence} />
+                          </div>
+                        </td>
+                        <td className="py-3 px-2">
+                          <div className="flex justify-center">
+                            <RatingDot rating={influencer.ratings.monetization} />
+                          </div>
+                        </td>
+                      </>
                     )}
                     <td className="py-3 px-2">
                       <Badge variant="outline" className="text-xs whitespace-nowrap">
