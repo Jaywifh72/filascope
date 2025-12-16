@@ -86,6 +86,46 @@ export class FirecrawlScraper extends BaseScraper {
         return tecbearsProducts.slice(0, limit);
       }
 
+      // TreeD Filaments - WooCommerce with custom structure
+      if (vendor === 'treed filaments' || baseUrl.includes('treedfilaments.com')) {
+        this.log(`Using TreeD Filaments extraction`);
+        const treedProducts = await this.extractTreeDFilamentsProducts(baseUrl);
+        this.log(`Successfully extracted ${treedProducts.length} TreeD Filaments products`);
+        return treedProducts.slice(0, limit);
+      }
+
+      // Fusion Filaments - Odoo platform
+      if (vendor === 'fusion filaments' || baseUrl.includes('fusionfilaments.com')) {
+        this.log(`Using Fusion Filaments extraction`);
+        const fusionProducts = await this.extractFusionFilamentsProducts(baseUrl);
+        this.log(`Successfully extracted ${fusionProducts.length} Fusion Filaments products`);
+        return fusionProducts.slice(0, limit);
+      }
+
+      // Extrudr - Custom Austrian platform
+      if (vendor === 'extrudr' || baseUrl.includes('extrudr.com')) {
+        this.log(`Using Extrudr extraction`);
+        const extrudrProducts = await this.extractExtrudrProducts(baseUrl);
+        this.log(`Successfully extracted ${extrudrProducts.length} Extrudr products`);
+        return extrudrProducts.slice(0, limit);
+      }
+
+      // Creality - Shopify with collection page
+      if (vendor === 'creality' || baseUrl.includes('store.creality.com')) {
+        this.log(`Using Creality extraction`);
+        const crealityProducts = await this.extractCrealityProducts(baseUrl);
+        this.log(`Successfully extracted ${crealityProducts.length} Creality products`);
+        return crealityProducts.slice(0, limit);
+      }
+
+      // Spectrum Filaments - IdoSell platform
+      if (vendor === 'spectrum filaments' || baseUrl.includes('spectrumfilaments.com')) {
+        this.log(`Using Spectrum Filaments extraction`);
+        const spectrumProducts = await this.extractSpectrumProducts(baseUrl);
+        this.log(`Successfully extracted ${spectrumProducts.length} Spectrum products`);
+        return spectrumProducts.slice(0, limit);
+      }
+
       let productUrls: string[] = [];
       
       // Step 1: Use Firecrawl Map API to discover all URLs on the shop
@@ -516,6 +556,757 @@ export class FirecrawlScraper extends BaseScraper {
     }
     
     this.log(`Total TECBEARS products extracted: ${products.length}`);
+    return products;
+  }
+
+  /**
+   * TreeD Filaments Extraction - WooCommerce with card-based layout
+   */
+  private async extractTreeDFilamentsProducts(baseUrl: string): Promise<ScrapedProduct[]> {
+    const products: ScrapedProduct[] = [];
+    const seenIds = new Set<string>();
+    
+    try {
+      this.log(`Scraping TreeD Filaments from: ${baseUrl}`);
+      
+      const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.firecrawlApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: baseUrl,
+          formats: ["markdown", "html"],
+          waitFor: 3000,
+        }),
+      });
+
+      if (!scrapeResponse.ok) {
+        this.logError(`Failed to scrape TreeD: ${scrapeResponse.status}`);
+        return [];
+      }
+
+      const data = await scrapeResponse.json();
+      const markdown = data.data?.markdown || data.markdown || "";
+      const html = data.data?.html || data.html || "";
+      
+      this.log(`Got content (${markdown.length} md, ${html.length} html chars)`);
+
+      // Parse markdown for product blocks
+      // Pattern: [![ProductName](imageUrl)... **ProductName** Polymer: X **€ XX.XX**](productUrl)
+      const productPattern = /\[!\[([^\]]+)\]\(([^)]+)\)[^\]]*\*\*([^*]+)\*\*[^*]*Polymer:\s*([A-Za-z0-9+\-\/]+)[^€]*\*\*€\s*([\d.,]+)\*\*\]\(([^)]+)\)/gi;
+      
+      let match;
+      while ((match = productPattern.exec(markdown)) !== null) {
+        const [, altText, imageUrl, productName, material, priceStr, productUrl] = match;
+        
+        // Extract SKU from URL
+        const skuMatch = productUrl.match(/\?sku=([A-Z0-9]+)/i);
+        const sku = skuMatch ? skuMatch[1] : null;
+        const productId = sku || productName.toLowerCase().replace(/\s+/g, '-');
+        
+        if (seenIds.has(productId)) continue;
+        seenIds.add(productId);
+        
+        const price = parseFloat(priceStr.replace(',', '.'));
+        const colorInfo = this.extractColorFromText(productName);
+        
+        const product: ScrapedProduct = {
+          productId,
+          sku,
+          title: productName.trim(),
+          price: price > 0 ? price * 1.08 : null, // Convert EUR to USD
+          compareAtPrice: null,
+          available: true,
+          currency: "EUR",
+          url: productUrl.startsWith('http') ? productUrl : `https://treedfilaments.com${productUrl}`,
+          scrapedAt: new Date(),
+          source: "firecrawl-treed",
+          imageUrl: imageUrl || null,
+          barcode: null,
+          description: `${material} filament`,
+          mpn: sku,
+          tdsUrl: null,
+          colorHex: colorInfo?.hex || null,
+          colorName: colorInfo?.name || null,
+          nozzleTempMin: null,
+          nozzleTempMax: null,
+          bedTempMin: null,
+          bedTempMax: null,
+          spoolMaterial: null,
+          netWeightG: 750, // TreeD standard spool
+          diameterMm: 1.75,
+          spoolOuterDiameterMm: null,
+          spoolWidthMm: null,
+        };
+        
+        products.push(product);
+        this.log(`✓ ${productName} - €${priceStr} (${material})`);
+      }
+
+      // Fallback: parse HTML for product links if markdown didn't work
+      if (products.length === 0) {
+        const htmlProductPattern = /<a[^>]*href=["']([^"']*\?sku=[^"']+)["'][^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["'][^>]*>[\s\S]*?(?:<h[23][^>]*>([^<]+)<\/h[23]>|class="[^"]*title[^"]*"[^>]*>([^<]+)<)/gi;
+        
+        while ((match = htmlProductPattern.exec(html)) !== null) {
+          const [, productUrl, imageUrl, title1, title2] = match;
+          const title = (title1 || title2 || '').trim();
+          if (!title) continue;
+          
+          const skuMatch = productUrl.match(/\?sku=([A-Z0-9]+)/i);
+          const productId = skuMatch ? skuMatch[1] : title.toLowerCase().replace(/\s+/g, '-');
+          
+          if (seenIds.has(productId)) continue;
+          seenIds.add(productId);
+          
+          const product: ScrapedProduct = {
+            productId,
+            sku: skuMatch?.[1] || null,
+            title,
+            price: null,
+            compareAtPrice: null,
+            available: true,
+            currency: "EUR",
+            url: productUrl.startsWith('http') ? productUrl : `https://treedfilaments.com${productUrl}`,
+            scrapedAt: new Date(),
+            source: "firecrawl-treed",
+            imageUrl,
+            barcode: null,
+            description: null,
+            mpn: skuMatch?.[1] || null,
+            tdsUrl: null,
+            colorHex: null,
+            colorName: null,
+            nozzleTempMin: null,
+            nozzleTempMax: null,
+            bedTempMin: null,
+            bedTempMax: null,
+            spoolMaterial: null,
+            netWeightG: 750,
+            diameterMm: 1.75,
+            spoolOuterDiameterMm: null,
+            spoolWidthMm: null,
+          };
+          
+          products.push(product);
+          this.log(`✓ ${title}`);
+        }
+      }
+      
+    } catch (error) {
+      this.logError(`Error extracting TreeD products:`, error);
+    }
+    
+    this.log(`Total TreeD Filaments products: ${products.length}`);
+    return products;
+  }
+
+  /**
+   * Fusion Filaments Extraction - Odoo platform with pagination
+   */
+  private async extractFusionFilamentsProducts(baseUrl: string): Promise<ScrapedProduct[]> {
+    const products: ScrapedProduct[] = [];
+    const seenIds = new Set<string>();
+    
+    // Pagination URLs
+    const pageUrls = [
+      baseUrl,
+      `${baseUrl}?page=2`,
+      `${baseUrl}?page=3`,
+    ];
+    
+    for (const pageUrl of pageUrls) {
+      try {
+        this.log(`Scraping Fusion Filaments page: ${pageUrl}`);
+        
+        const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.firecrawlApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: pageUrl,
+            formats: ["markdown"],
+            waitFor: 3000,
+          }),
+        });
+
+        if (!scrapeResponse.ok) {
+          this.logError(`Failed to scrape Fusion page: ${scrapeResponse.status}`);
+          continue;
+        }
+
+        const data = await scrapeResponse.json();
+        const markdown = data.data?.markdown || data.markdown || "";
+        
+        this.log(`Got markdown (${markdown.length} chars)`);
+
+        // Parse product entries
+        // Pattern: [![[SKU] Product Name](imageUrl)](productUrl)
+        // ###### [Product Name](productUrl)
+        // $ XX.XXUSD
+        const productBlockPattern = /\[!\[\[([^\]]+)\]\s*([^\]]+)\]\(([^)]+)\)\]\(([^)]+)\)[\s\S]*?#{6}\s*\[[^\]]+\]\([^)]+\)[\s\S]*?\$\s*([\d.]+)(?:[\d.]+)?USD/gi;
+        
+        let match;
+        while ((match = productBlockPattern.exec(markdown)) !== null) {
+          const [, sku, productName, imageUrl, productUrl, priceStr] = match;
+          
+          const productId = sku || productName.toLowerCase().replace(/\s+/g, '-');
+          if (seenIds.has(productId)) continue;
+          seenIds.add(productId);
+          
+          const price = parseFloat(priceStr);
+          const material = this.detectMaterial(productName);
+          const colorInfo = this.extractColorFromText(productName);
+          const weight = this.extractWeightFromTitle(productName);
+          
+          const product: ScrapedProduct = {
+            productId,
+            sku,
+            title: productName.trim(),
+            price: price > 0 && price < 500 ? price : null,
+            compareAtPrice: null,
+            available: true,
+            currency: "USD",
+            url: productUrl.startsWith('http') ? productUrl : `https://www.fusionfilaments.com${productUrl}`,
+            scrapedAt: new Date(),
+            source: "firecrawl-fusion",
+            imageUrl: imageUrl || null,
+            barcode: null,
+            description: material ? `${material} filament` : null,
+            mpn: sku,
+            tdsUrl: null,
+            colorHex: colorInfo?.hex || null,
+            colorName: colorInfo?.name || null,
+            nozzleTempMin: null,
+            nozzleTempMax: null,
+            bedTempMin: null,
+            bedTempMax: null,
+            spoolMaterial: null,
+            netWeightG: weight || 1000,
+            diameterMm: 1.75,
+            spoolOuterDiameterMm: null,
+            spoolWidthMm: null,
+          };
+          
+          products.push(product);
+          this.log(`✓ ${productName} - $${price}${material ? ` (${material})` : ''}`);
+        }
+
+        // Simpler fallback pattern for Odoo
+        if (products.length < 5) {
+          const simplePattern = /\[([^\]]+Filament[^\]]*)\]\((\/shop\/[^)]+)\)[\s\S]*?\$\s*([\d.]+)/gi;
+          while ((match = simplePattern.exec(markdown)) !== null) {
+            const [, productName, productPath, priceStr] = match;
+            const productId = productPath.split('/').pop() || productName.toLowerCase().replace(/\s+/g, '-');
+            
+            if (seenIds.has(productId)) continue;
+            seenIds.add(productId);
+            
+            const price = parseFloat(priceStr);
+            const colorInfo = this.extractColorFromText(productName);
+            
+            const product: ScrapedProduct = {
+              productId,
+              sku: null,
+              title: productName.trim(),
+              price: price > 0 && price < 500 ? price : null,
+              compareAtPrice: null,
+              available: true,
+              currency: "USD",
+              url: `https://www.fusionfilaments.com${productPath}`,
+              scrapedAt: new Date(),
+              source: "firecrawl-fusion",
+              imageUrl: null,
+              barcode: null,
+              description: null,
+              mpn: null,
+              tdsUrl: null,
+              colorHex: colorInfo?.hex || null,
+              colorName: colorInfo?.name || null,
+              nozzleTempMin: null,
+              nozzleTempMax: null,
+              bedTempMin: null,
+              bedTempMax: null,
+              spoolMaterial: null,
+              netWeightG: 1000,
+              diameterMm: 1.75,
+              spoolOuterDiameterMm: null,
+              spoolWidthMm: null,
+            };
+            
+            products.push(product);
+            this.log(`✓ ${productName} - $${price}`);
+          }
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (error) {
+        this.logError(`Error scraping Fusion page ${pageUrl}:`, error);
+      }
+    }
+    
+    this.log(`Total Fusion Filaments products: ${products.length}`);
+    return products;
+  }
+
+  /**
+   * Extrudr Extraction - Austrian custom platform
+   */
+  private async extractExtrudrProducts(baseUrl: string): Promise<ScrapedProduct[]> {
+    const products: ScrapedProduct[] = [];
+    const seenIds = new Set<string>();
+    
+    try {
+      this.log(`Scraping Extrudr from: ${baseUrl}`);
+      
+      const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.firecrawlApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: baseUrl,
+          formats: ["markdown", "html"],
+          waitFor: 3000,
+        }),
+      });
+
+      if (!scrapeResponse.ok) {
+        this.logError(`Failed to scrape Extrudr: ${scrapeResponse.status}`);
+        return [];
+      }
+
+      const data = await scrapeResponse.json();
+      const markdown = data.data?.markdown || data.markdown || "";
+      
+      this.log(`Got markdown (${markdown.length} chars)`);
+
+      // Parse material sections
+      // Pattern: ### PETG
+      //          1.75 mm | 1.1 kg
+      //          [image](productUrl)
+      //          XX,XX €
+      const materialSections = markdown.split(/(?=###\s+[A-Z]+)/);
+      
+      for (const section of materialSections) {
+        const materialMatch = section.match(/^###\s+([A-Z0-9+\-\/]+)/);
+        if (!materialMatch) continue;
+        
+        const material = materialMatch[1];
+        
+        // Find product entries in this section
+        // Pattern: [imageOrLink](url) followed by price XX,XX €
+        const productPattern = /\[(?:!\[[^\]]*\]\([^)]+\)|[^\]]+)\]\((https?:\/\/www\.extrudr\.com\/[^)]+)\)[\s\S]*?(\d+[,.]?\d*)\s*€/gi;
+        
+        let match;
+        while ((match = productPattern.exec(section)) !== null) {
+          const [, productUrl, priceStr] = match;
+          
+          // Extract product details from URL
+          const urlParts = productUrl.split('/');
+          const productSlug = urlParts[urlParts.length - 2] || urlParts[urlParts.length - 1];
+          const productId = `extrudr-${material}-${productSlug}`.toLowerCase();
+          
+          if (seenIds.has(productId)) continue;
+          seenIds.add(productId);
+          
+          const price = parseFloat(priceStr.replace(',', '.'));
+          const colorInfo = this.extractColorFromText(productSlug);
+          
+          // Extract specs from nearby text
+          const specsMatch = section.match(/(\d+\.?\d*)\s*mm\s*\|\s*(\d+\.?\d*)\s*kg/i);
+          const diameter = specsMatch ? parseFloat(specsMatch[1]) : 1.75;
+          const weightKg = specsMatch ? parseFloat(specsMatch[2]) : 1.0;
+          
+          const product: ScrapedProduct = {
+            productId,
+            sku: null,
+            title: `Extrudr ${material} ${colorInfo?.name || productSlug}`,
+            price: price > 0 ? price * 1.08 : null, // EUR to USD
+            compareAtPrice: null,
+            available: true,
+            currency: "EUR",
+            url: productUrl,
+            scrapedAt: new Date(),
+            source: "firecrawl-extrudr",
+            imageUrl: null,
+            barcode: null,
+            description: `${material} filament - ${diameter}mm`,
+            mpn: null,
+            tdsUrl: null,
+            colorHex: colorInfo?.hex || null,
+            colorName: colorInfo?.name || null,
+            nozzleTempMin: null,
+            nozzleTempMax: null,
+            bedTempMin: null,
+            bedTempMax: null,
+            spoolMaterial: null,
+            netWeightG: Math.round(weightKg * 1000),
+            diameterMm: diameter,
+            spoolOuterDiameterMm: null,
+            spoolWidthMm: null,
+          };
+          
+          products.push(product);
+          this.log(`✓ Extrudr ${material} - €${priceStr}`);
+        }
+      }
+
+      // Fallback: try to find any product links
+      if (products.length === 0) {
+        const fallbackPattern = /\[((?:PETG|PLA|ABS|ASA|TPU|Nylon|PA)[^\]]*)\]\((https?:\/\/www\.extrudr\.com\/[^)]+)\)/gi;
+        let match;
+        while ((match = fallbackPattern.exec(markdown)) !== null) {
+          const [, productName, productUrl] = match;
+          const productId = productUrl.split('/').filter(Boolean).pop() || productName.toLowerCase().replace(/\s+/g, '-');
+          
+          if (seenIds.has(productId)) continue;
+          seenIds.add(productId);
+          
+          const product: ScrapedProduct = {
+            productId,
+            sku: null,
+            title: `Extrudr ${productName}`,
+            price: null,
+            compareAtPrice: null,
+            available: true,
+            currency: "EUR",
+            url: productUrl,
+            scrapedAt: new Date(),
+            source: "firecrawl-extrudr",
+            imageUrl: null,
+            barcode: null,
+            description: null,
+            mpn: null,
+            tdsUrl: null,
+            colorHex: null,
+            colorName: null,
+            nozzleTempMin: null,
+            nozzleTempMax: null,
+            bedTempMin: null,
+            bedTempMax: null,
+            spoolMaterial: null,
+            netWeightG: 1100,
+            diameterMm: 1.75,
+            spoolOuterDiameterMm: null,
+            spoolWidthMm: null,
+          };
+          
+          products.push(product);
+          this.log(`✓ Extrudr ${productName}`);
+        }
+      }
+      
+    } catch (error) {
+      this.logError(`Error extracting Extrudr products:`, error);
+    }
+    
+    this.log(`Total Extrudr products: ${products.length}`);
+    return products;
+  }
+
+  /**
+   * Creality Extraction - Shopify collection page with markdown parsing
+   */
+  private async extractCrealityProducts(baseUrl: string): Promise<ScrapedProduct[]> {
+    const products: ScrapedProduct[] = [];
+    const seenIds = new Set<string>();
+    
+    // Pagination
+    const pageUrls = [
+      baseUrl,
+      `${baseUrl}?page=2`,
+    ];
+    
+    for (const pageUrl of pageUrls) {
+      try {
+        this.log(`Scraping Creality page: ${pageUrl}`);
+        
+        const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.firecrawlApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: pageUrl,
+            formats: ["markdown"],
+            waitFor: 3000,
+          }),
+        });
+
+        if (!scrapeResponse.ok) {
+          this.logError(`Failed to scrape Creality page: ${scrapeResponse.status}`);
+          continue;
+        }
+
+        const data = await scrapeResponse.json();
+        const markdown = data.data?.markdown || data.markdown || "";
+        
+        this.log(`Got markdown (${markdown.length} chars)`);
+
+        // Parse product blocks from Shopify collection markdown
+        // Pattern: [![Product Name](cdnImage)](productUrl)
+        //          [Product Name](productUrl)
+        //          ~~$XX.XX~~ $XX.XX or just $XX.XX
+        const productPattern = /\[!\[([^\]]+)\]\(([^)]+)\)\]\((https?:\/\/store\.creality\.com\/products\/[^)]+)\)[\s\S]*?\[([^\]]+)\]\([^)]+\)[\s\S]*?(?:~~\$([\d.]+)~~\s*)?\$([\d.]+)/gi;
+        
+        let match;
+        while ((match = productPattern.exec(markdown)) !== null) {
+          const [, altText, imageUrl, productUrl, productName, comparePrice, currentPrice] = match;
+          
+          // Skip non-filament products
+          const titleLower = productName.toLowerCase();
+          if (!titleLower.includes('pla') && !titleLower.includes('petg') && 
+              !titleLower.includes('abs') && !titleLower.includes('tpu') &&
+              !titleLower.includes('filament') && !titleLower.includes('hyper')) {
+            continue;
+          }
+          
+          const productId = productUrl.split('/products/')[1]?.split('?')[0] || productName.toLowerCase().replace(/\s+/g, '-');
+          
+          if (seenIds.has(productId)) continue;
+          seenIds.add(productId);
+          
+          const price = parseFloat(currentPrice);
+          const compareAtPrice = comparePrice ? parseFloat(comparePrice) : null;
+          const material = this.detectMaterial(productName);
+          const colorInfo = this.extractColorFromText(productName);
+          
+          const product: ScrapedProduct = {
+            productId,
+            sku: null,
+            title: productName.trim(),
+            price: price > 0 && price < 500 ? price : null,
+            compareAtPrice,
+            available: true,
+            currency: "USD",
+            url: productUrl,
+            scrapedAt: new Date(),
+            source: "firecrawl-creality",
+            imageUrl: imageUrl || null,
+            barcode: null,
+            description: material ? `${material} filament` : null,
+            mpn: null,
+            tdsUrl: null,
+            colorHex: colorInfo?.hex || null,
+            colorName: colorInfo?.name || null,
+            nozzleTempMin: null,
+            nozzleTempMax: null,
+            bedTempMin: null,
+            bedTempMax: null,
+            spoolMaterial: null,
+            netWeightG: 1000,
+            diameterMm: 1.75,
+            spoolOuterDiameterMm: null,
+            spoolWidthMm: null,
+          };
+          
+          products.push(product);
+          this.log(`✓ ${productName} - $${currentPrice}${comparePrice ? ` (was $${comparePrice})` : ''}`);
+        }
+
+        // Simpler fallback
+        if (products.length < 5) {
+          const simplePattern = /\[([^\]]*(?:PLA|PETG|Hyper|Filament)[^\]]*)\]\((https?:\/\/store\.creality\.com\/products\/[^)]+)\)/gi;
+          while ((match = simplePattern.exec(markdown)) !== null) {
+            const [, productName, productUrl] = match;
+            const productId = productUrl.split('/products/')[1]?.split('?')[0] || productName.toLowerCase().replace(/\s+/g, '-');
+            
+            if (seenIds.has(productId)) continue;
+            seenIds.add(productId);
+            
+            const product: ScrapedProduct = {
+              productId,
+              sku: null,
+              title: productName.trim(),
+              price: null,
+              compareAtPrice: null,
+              available: true,
+              currency: "USD",
+              url: productUrl,
+              scrapedAt: new Date(),
+              source: "firecrawl-creality",
+              imageUrl: null,
+              barcode: null,
+              description: null,
+              mpn: null,
+              tdsUrl: null,
+              colorHex: null,
+              colorName: null,
+              nozzleTempMin: null,
+              nozzleTempMax: null,
+              bedTempMin: null,
+              bedTempMax: null,
+              spoolMaterial: null,
+              netWeightG: 1000,
+              diameterMm: 1.75,
+              spoolOuterDiameterMm: null,
+              spoolWidthMm: null,
+            };
+            
+            products.push(product);
+            this.log(`✓ ${productName}`);
+          }
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (error) {
+        this.logError(`Error scraping Creality page ${pageUrl}:`, error);
+      }
+    }
+    
+    this.log(`Total Creality products: ${products.length}`);
+    return products;
+  }
+
+  /**
+   * Spectrum Filaments Extraction - IdoSell platform with Map API
+   */
+  private async extractSpectrumProducts(baseUrl: string): Promise<ScrapedProduct[]> {
+    const products: ScrapedProduct[] = [];
+    const seenIds = new Set<string>();
+    
+    try {
+      this.log(`Mapping Spectrum Filaments URLs from: ${baseUrl}`);
+      
+      // Use Map API to discover product URLs
+      const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.firecrawlApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: baseUrl,
+          search: "filament PLA PETG ABS",
+          limit: 300,
+          includeSubdomains: false,
+        }),
+      });
+
+      if (!mapResponse.ok) {
+        this.logError(`Failed to map Spectrum: ${mapResponse.status}`);
+        return [];
+      }
+
+      const mapData = await mapResponse.json();
+      const urls = mapData.links || [];
+      
+      this.log(`Discovered ${urls.length} URLs`);
+
+      // Filter for product URLs (IdoSell pattern: /eng_m_CATEGORY/PRODUCT-ID.html)
+      const productUrls = urls.filter((url: string) => {
+        return url.match(/shop\.spectrumfilaments\.com\/[a-z_]+\/[\w-]+-\d+\.html$/i) &&
+               (url.toLowerCase().includes('pla') || 
+                url.toLowerCase().includes('petg') || 
+                url.toLowerCase().includes('abs') ||
+                url.toLowerCase().includes('filament') ||
+                url.toLowerCase().includes('asa') ||
+                url.toLowerCase().includes('tpu'));
+      });
+
+      this.log(`Filtered to ${productUrls.length} product URLs`);
+
+      // Scrape each product (limited to avoid timeout)
+      const urlsToScrape = productUrls.slice(0, 50);
+      
+      for (const productUrl of urlsToScrape) {
+        try {
+          const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${this.firecrawlApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              url: productUrl,
+              formats: ["markdown"],
+              onlyMainContent: true,
+              waitFor: 2000,
+            }),
+          });
+
+          if (!scrapeResponse.ok) continue;
+
+          const data = await scrapeResponse.json();
+          const markdown = data.data?.markdown || data.markdown || "";
+          const metadata = data.data?.metadata || {};
+          
+          // Extract title
+          const title = metadata.title?.replace(/\s*[-|]\s*Spectrum.*$/i, '').trim() ||
+                       markdown.match(/^#\s+(.+)$/m)?.[1]?.trim();
+          
+          if (!title) continue;
+          
+          // Extract product ID from URL
+          const idMatch = productUrl.match(/-(\d+)\.html$/);
+          const productId = idMatch ? idMatch[1] : productUrl.split('/').pop()?.replace('.html', '') || '';
+          
+          if (seenIds.has(productId)) continue;
+          seenIds.add(productId);
+          
+          // Extract price
+          const priceMatch = markdown.match(/(?:€|EUR)\s*([\d.,]+)/i) || 
+                            markdown.match(/([\d.,]+)\s*(?:€|EUR)/i);
+          const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : null;
+          
+          // Extract image from OG or content
+          const imageUrl = metadata.ogImage?.[0]?.url || null;
+          
+          const material = this.detectMaterial(title);
+          const colorInfo = this.extractColorFromText(title);
+          
+          const product: ScrapedProduct = {
+            productId,
+            sku: productId,
+            title,
+            price: price ? price * 1.08 : null, // EUR to USD
+            compareAtPrice: null,
+            available: true,
+            currency: "EUR",
+            url: productUrl,
+            scrapedAt: new Date(),
+            source: "firecrawl-spectrum",
+            imageUrl,
+            barcode: null,
+            description: material ? `${material} filament` : null,
+            mpn: null,
+            tdsUrl: null,
+            colorHex: colorInfo?.hex || null,
+            colorName: colorInfo?.name || null,
+            nozzleTempMin: null,
+            nozzleTempMax: null,
+            bedTempMin: null,
+            bedTempMax: null,
+            spoolMaterial: null,
+            netWeightG: 1000,
+            diameterMm: 1.75,
+            spoolOuterDiameterMm: null,
+            spoolWidthMm: null,
+          };
+          
+          products.push(product);
+          this.log(`✓ ${title}${price ? ` - €${price}` : ''}`);
+          
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+        } catch (error) {
+          this.logError(`Error scraping ${productUrl}:`, error);
+        }
+      }
+      
+    } catch (error) {
+      this.logError(`Error extracting Spectrum products:`, error);
+    }
+    
+    this.log(`Total Spectrum products: ${products.length}`);
     return products;
   }
 
