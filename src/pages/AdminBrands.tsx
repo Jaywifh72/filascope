@@ -3,16 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Building2, Search, Package, RefreshCw, CheckCircle2, XCircle, 
-  Clock, TrendingUp, AlertCircle, Play, Settings, Activity,
-  Zap, Database
+  Clock, TrendingUp, AlertCircle, Play, Activity,
+  Zap, Database, ChevronDown, ChevronUp, Image, FileText, 
+  Palette, Thermometer, Barcode, Tag, PlayCircle
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -44,6 +46,24 @@ interface AutomatedBrand {
   logo_url: string | null;
 }
 
+interface SuccessDetails {
+  imagesAdded?: number;
+  tdsUrlsFound?: number;
+  tdsParsed?: number;
+  mpnsExtracted?: number;
+  barcodesAdded?: number;
+  colorHexCaptured?: number;
+  tempSpecsExtracted?: number;
+  priceHistoryLogged?: number;
+  availabilityChanges?: number;
+}
+
+interface ProductsProcessed {
+  created?: string[];
+  updated?: string[];
+  failed?: string[];
+}
+
 interface SyncLog {
   id: string;
   brand_slug: string;
@@ -57,8 +77,31 @@ interface SyncLog {
   products_updated: number | null;
   products_failed: number | null;
   price_changes: number | null;
-  error_details: any;
+  error_details: Record<string, unknown> | null;
+  success_details: SuccessDetails | null;
+  products_processed: ProductsProcessed | null;
   triggered_by: string | null;
+}
+
+interface BulkScrapeProgress {
+  current: number;
+  total: number;
+  currentBrand: string;
+  completed: string[];
+  failed: string[];
+}
+
+interface BulkScrapeSummary {
+  totalBrands: number;
+  totalProducts: number;
+  created: number;
+  updated: number;
+  errors: number;
+  imagesAdded: number;
+  tdsFound: number;
+  mpnsExtracted: number;
+  duration: number;
+  failedBrands: string[];
 }
 
 const AdminBrands = () => {
@@ -67,6 +110,10 @@ const AdminBrands = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
+  const [isScrapeAllRunning, setIsScrapeAllRunning] = useState(false);
+  const [scrapeAllProgress, setScrapeAllProgress] = useState<BulkScrapeProgress | null>(null);
+  const [bulkScrapeSummary, setBulkScrapeSummary] = useState<BulkScrapeSummary | null>(null);
 
   useEffect(() => {
     if (!authLoading && user && !isAdmin) {
@@ -90,7 +137,7 @@ const AdminBrands = () => {
     enabled: isAdmin,
   });
 
-  // Fetch recent sync logs
+  // Fetch recent sync logs with enhanced details
   const { data: syncLogs, isLoading: logsLoading, refetch: refetchLogs } = useQuery({
     queryKey: ["admin-sync-logs"],
     queryFn: async () => {
@@ -98,7 +145,7 @@ const AdminBrands = () => {
         .from("brand_sync_logs")
         .select("*")
         .order("started_at", { ascending: false })
-        .limit(50);
+        .limit(100);
       if (error) throw error;
       return data as SyncLog[];
     },
@@ -141,14 +188,17 @@ const AdminBrands = () => {
     },
   });
 
-  // Trigger scrape
+  // Trigger single brand scrape
   const triggerScrape = useMutation({
     mutationFn: async (brand: AutomatedBrand) => {
       const { data, error } = await supabase.functions.invoke("scrape-brand-data", {
         body: { 
           vendor: brand.brand_name, 
-          limit: 100, 
-          dryRun: false 
+          limit: 200, 
+          force: true,
+          dryRun: false,
+          parseTds: true,
+          tdsLimit: 20
         },
       });
       if (error) throw error;
@@ -157,14 +207,113 @@ const AdminBrands = () => {
     onSuccess: (data, brand) => {
       queryClient.invalidateQueries({ queryKey: ["admin-automated-brands"] });
       queryClient.invalidateQueries({ queryKey: ["admin-sync-logs"] });
-      const created = data?.stats?.created || 0;
-      const updated = data?.stats?.updated || 0;
-      toast.success(`${brand.display_name}: ${created} created, ${updated} updated`);
+      const stats = data?.totalStats || data?.stats || {};
+      toast.success(`${brand.display_name}: ${stats.created || 0} created, ${stats.updated || 0} updated, ${stats.imagesAdded || 0} images`);
     },
     onError: (error, brand) => {
       toast.error(`Failed to scrape ${brand.display_name}: ${error.message}`);
     },
   });
+
+  // Scrape all enabled brands
+  const scrapeAllBrands = async () => {
+    if (!brands) return;
+    
+    const enabledBrands = brands.filter(b => b.scraping_enabled);
+    if (enabledBrands.length === 0) {
+      toast.error("No enabled brands to scrape");
+      return;
+    }
+
+    setIsScrapeAllRunning(true);
+    setBulkScrapeSummary(null);
+    
+    const progress: BulkScrapeProgress = {
+      current: 0,
+      total: enabledBrands.length,
+      currentBrand: "",
+      completed: [],
+      failed: [],
+    };
+    setScrapeAllProgress(progress);
+
+    const summary: BulkScrapeSummary = {
+      totalBrands: enabledBrands.length,
+      totalProducts: 0,
+      created: 0,
+      updated: 0,
+      errors: 0,
+      imagesAdded: 0,
+      tdsFound: 0,
+      mpnsExtracted: 0,
+      duration: 0,
+      failedBrands: [],
+    };
+
+    const startTime = Date.now();
+
+    for (let i = 0; i < enabledBrands.length; i++) {
+      const brand = enabledBrands[i];
+      progress.current = i + 1;
+      progress.currentBrand = brand.display_name;
+      setScrapeAllProgress({ ...progress });
+
+      try {
+        const { data, error } = await supabase.functions.invoke("scrape-brand-data", {
+          body: { 
+            vendor: brand.brand_name, 
+            limit: 200, 
+            force: true,
+            dryRun: false,
+            parseTds: true,
+            tdsLimit: 20
+          },
+        });
+
+        if (error) throw error;
+
+        const stats = data?.totalStats || data?.stats || {};
+        summary.totalProducts += stats.processed || 0;
+        summary.created += stats.created || 0;
+        summary.updated += stats.updated || 0;
+        summary.errors += stats.errors || 0;
+        summary.imagesAdded += stats.imagesAdded || 0;
+        summary.tdsFound += stats.tdsFound || 0;
+        summary.mpnsExtracted += stats.mpnsExtracted || 0;
+        
+        progress.completed.push(brand.display_name);
+        console.log(`✅ Scraped ${brand.display_name}: ${stats.created || 0} created, ${stats.updated || 0} updated`);
+      } catch (err) {
+        progress.failed.push(brand.display_name);
+        summary.failedBrands.push(brand.display_name);
+        console.error(`❌ Failed to scrape ${brand.display_name}:`, err);
+      }
+
+      setScrapeAllProgress({ ...progress });
+    }
+
+    summary.duration = Math.round((Date.now() - startTime) / 1000);
+    setBulkScrapeSummary(summary);
+    setIsScrapeAllRunning(false);
+    setScrapeAllProgress(null);
+    
+    queryClient.invalidateQueries({ queryKey: ["admin-automated-brands"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-sync-logs"] });
+    
+    toast.success(`Bulk scrape complete: ${summary.created} created, ${summary.updated} updated in ${summary.duration}s`);
+  };
+
+  const toggleLogExpanded = (logId: string) => {
+    setExpandedLogs(prev => {
+      const next = new Set(prev);
+      if (next.has(logId)) {
+        next.delete(logId);
+      } else {
+        next.add(logId);
+      }
+      return next;
+    });
+  };
 
   // Calculate stats
   const stats = {
@@ -202,6 +351,13 @@ const AdminBrands = () => {
     }
   };
 
+  const hasEnrichmentData = (log: SyncLog) => {
+    const s = log.success_details;
+    if (!s) return false;
+    return (s.imagesAdded || 0) + (s.tdsUrlsFound || 0) + (s.mpnsExtracted || 0) + 
+           (s.barcodesAdded || 0) + (s.colorHexCaptured || 0) + (s.tempSpecsExtracted || 0) > 0;
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -224,16 +380,118 @@ const AdminBrands = () => {
               <p className="text-muted-foreground">Manage automated brand scraping and product discovery</p>
             </div>
           </div>
-          <Button 
-            onClick={() => { refetchBrands(); refetchLogs(); }} 
-            variant="outline" 
-            size="sm" 
-            disabled={brandsLoading}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${brandsLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={scrapeAllBrands}
+              disabled={isScrapeAllRunning || brandsLoading}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {isScrapeAllRunning ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Scraping {scrapeAllProgress?.current}/{scrapeAllProgress?.total}...
+                </>
+              ) : (
+                <>
+                  <PlayCircle className="w-4 h-4 mr-2" />
+                  Scrape All Enabled ({stats.enabledBrands})
+                </>
+              )}
+            </Button>
+            <Button 
+              onClick={() => { refetchBrands(); refetchLogs(); }} 
+              variant="outline" 
+              size="sm" 
+              disabled={brandsLoading}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${brandsLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
+
+        {/* Bulk Scrape Progress */}
+        {scrapeAllProgress && (
+          <Card className="mb-6 border-primary/50 bg-primary/5">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="w-5 h-5 text-primary animate-spin" />
+                  <span className="font-medium">Scraping: {scrapeAllProgress.currentBrand}</span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {scrapeAllProgress.current} of {scrapeAllProgress.total} brands
+                </span>
+              </div>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${(scrapeAllProgress.current / scrapeAllProgress.total) * 100}%` }}
+                />
+              </div>
+              {scrapeAllProgress.completed.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Completed: {scrapeAllProgress.completed.slice(-3).join(", ")}
+                  {scrapeAllProgress.completed.length > 3 && ` (+${scrapeAllProgress.completed.length - 3} more)`}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Bulk Scrape Summary */}
+        {bulkScrapeSummary && (
+          <Card className="mb-6 border-green-500/50 bg-green-500/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2 text-green-500">
+                <CheckCircle2 className="w-5 h-5" />
+                Bulk Scrape Complete
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{bulkScrapeSummary.totalBrands}</p>
+                  <p className="text-xs text-muted-foreground">Brands</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{bulkScrapeSummary.totalProducts}</p>
+                  <p className="text-xs text-muted-foreground">Products</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-green-500">{bulkScrapeSummary.created}</p>
+                  <p className="text-xs text-muted-foreground">Created</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-primary">{bulkScrapeSummary.updated}</p>
+                  <p className="text-xs text-muted-foreground">Updated</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-cyan-500">{bulkScrapeSummary.imagesAdded}</p>
+                  <p className="text-xs text-muted-foreground">Images</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-amber-500">{bulkScrapeSummary.tdsFound}</p>
+                  <p className="text-xs text-muted-foreground">TDS Found</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-purple-500">{bulkScrapeSummary.mpnsExtracted}</p>
+                  <p className="text-xs text-muted-foreground">MPNs</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{bulkScrapeSummary.duration}s</p>
+                  <p className="text-xs text-muted-foreground">Duration</p>
+                </div>
+              </div>
+              {bulkScrapeSummary.failedBrands.length > 0 && (
+                <div className="mt-4 p-2 bg-destructive/10 rounded text-sm">
+                  <span className="text-destructive font-medium">Failed:</span>{" "}
+                  <span className="text-muted-foreground">{bulkScrapeSummary.failedBrands.join(", ")}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
@@ -467,52 +725,160 @@ const AdminBrands = () => {
             ) : (
               <div className="space-y-2">
                 {syncLogs?.map((log) => (
-                  <Card key={log.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {getStatusIcon(log.status)}
-                        <div>
-                          <p className="font-medium text-foreground">{log.brand_slug}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(log.started_at).toLocaleString()} • {log.sync_type}
-                            {log.triggered_by && ` • ${log.triggered_by}`}
-                          </p>
+                  <Collapsible key={log.id} open={expandedLogs.has(log.id)}>
+                    <Card className="overflow-hidden">
+                      <CollapsibleTrigger 
+                        className="w-full p-4 text-left hover:bg-muted/30 transition-colors"
+                        onClick={() => toggleLogExpanded(log.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {getStatusIcon(log.status)}
+                            <div>
+                              <p className="font-medium text-foreground">{log.brand_slug}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(log.started_at).toLocaleString()} • {log.sync_type}
+                                {log.triggered_by && ` • ${log.triggered_by}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-6 text-sm">
+                              <div className="text-center">
+                                <p className="font-medium text-foreground">{log.products_discovered || 0}</p>
+                                <p className="text-xs text-muted-foreground">Discovered</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="font-medium text-green-500">{log.products_created || 0}</p>
+                                <p className="text-xs text-muted-foreground">Created</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="font-medium text-foreground">{log.products_updated || 0}</p>
+                                <p className="text-xs text-muted-foreground">Updated</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="font-medium text-foreground">{log.price_changes || 0}</p>
+                                <p className="text-xs text-muted-foreground">Prices</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="font-medium text-foreground">
+                                  {log.duration_seconds ? `${log.duration_seconds.toFixed(1)}s` : "-"}
+                                </p>
+                                <p className="text-xs text-muted-foreground">Duration</p>
+                              </div>
+                            </div>
+                            {(hasEnrichmentData(log) || log.error_details || log.products_processed) && (
+                              expandedLogs.has(log.id) ? (
+                                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                              )
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-6 text-sm">
-                        <div className="text-center">
-                          <p className="font-medium text-foreground">{log.products_discovered || 0}</p>
-                          <p className="text-xs text-muted-foreground">Discovered</p>
+                      </CollapsibleTrigger>
+
+                      <CollapsibleContent>
+                        <div className="px-4 pb-4 space-y-4">
+                          {/* Enrichment Stats */}
+                          {log.success_details && hasEnrichmentData(log) && (
+                            <div className="p-3 bg-muted/30 rounded-lg">
+                              <p className="text-sm font-medium text-foreground mb-2">Data Enrichment</p>
+                              <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                                {(log.success_details.imagesAdded || 0) > 0 && (
+                                  <div className="flex items-center gap-2">
+                                    <Image className="w-4 h-4 text-cyan-500" />
+                                    <span className="text-sm">{log.success_details.imagesAdded} images</span>
+                                  </div>
+                                )}
+                                {(log.success_details.tdsUrlsFound || 0) > 0 && (
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-amber-500" />
+                                    <span className="text-sm">{log.success_details.tdsUrlsFound} TDS</span>
+                                  </div>
+                                )}
+                                {(log.success_details.mpnsExtracted || 0) > 0 && (
+                                  <div className="flex items-center gap-2">
+                                    <Tag className="w-4 h-4 text-purple-500" />
+                                    <span className="text-sm">{log.success_details.mpnsExtracted} MPNs</span>
+                                  </div>
+                                )}
+                                {(log.success_details.barcodesAdded || 0) > 0 && (
+                                  <div className="flex items-center gap-2">
+                                    <Barcode className="w-4 h-4 text-blue-500" />
+                                    <span className="text-sm">{log.success_details.barcodesAdded} barcodes</span>
+                                  </div>
+                                )}
+                                {(log.success_details.colorHexCaptured || 0) > 0 && (
+                                  <div className="flex items-center gap-2">
+                                    <Palette className="w-4 h-4 text-pink-500" />
+                                    <span className="text-sm">{log.success_details.colorHexCaptured} colors</span>
+                                  </div>
+                                )}
+                                {(log.success_details.tempSpecsExtracted || 0) > 0 && (
+                                  <div className="flex items-center gap-2">
+                                    <Thermometer className="w-4 h-4 text-orange-500" />
+                                    <span className="text-sm">{log.success_details.tempSpecsExtracted} temps</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Products Processed Lists */}
+                          {log.products_processed && (
+                            <div className="space-y-2">
+                              {log.products_processed.created && log.products_processed.created.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-medium text-green-500 mb-1">
+                                    Created ({log.products_processed.created.length})
+                                  </p>
+                                  <p className="text-xs text-muted-foreground line-clamp-2">
+                                    {log.products_processed.created.slice(0, 10).join(", ")}
+                                    {log.products_processed.created.length > 10 && ` (+${log.products_processed.created.length - 10} more)`}
+                                  </p>
+                                </div>
+                              )}
+                              {log.products_processed.updated && log.products_processed.updated.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-medium text-primary mb-1">
+                                    Updated ({log.products_processed.updated.length})
+                                  </p>
+                                  <p className="text-xs text-muted-foreground line-clamp-2">
+                                    {log.products_processed.updated.slice(0, 10).join(", ")}
+                                    {log.products_processed.updated.length > 10 && ` (+${log.products_processed.updated.length - 10} more)`}
+                                  </p>
+                                </div>
+                              )}
+                              {log.products_processed.failed && log.products_processed.failed.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-medium text-destructive mb-1">
+                                    Failed ({log.products_processed.failed.length})
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {log.products_processed.failed.join(", ")}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Error Details */}
+                          {log.error_details && (
+                            <div className="p-2 bg-destructive/10 rounded text-xs text-destructive">
+                              <p className="font-medium mb-1">Error Details:</p>
+                              <pre className="whitespace-pre-wrap">
+                                {typeof log.error_details === 'object' 
+                                  ? JSON.stringify(log.error_details, null, 2) 
+                                  : log.error_details
+                                }
+                              </pre>
+                            </div>
+                          )}
                         </div>
-                        <div className="text-center">
-                          <p className="font-medium text-green-500">{log.products_created || 0}</p>
-                          <p className="text-xs text-muted-foreground">Created</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="font-medium text-foreground">{log.products_updated || 0}</p>
-                          <p className="text-xs text-muted-foreground">Updated</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="font-medium text-foreground">{log.price_changes || 0}</p>
-                          <p className="text-xs text-muted-foreground">Prices</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="font-medium text-foreground">
-                            {log.duration_seconds ? `${log.duration_seconds.toFixed(1)}s` : "-"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">Duration</p>
-                        </div>
-                      </div>
-                    </div>
-                    {log.error_details && (
-                      <div className="mt-2 p-2 bg-destructive/10 rounded text-xs text-destructive">
-                        {typeof log.error_details === 'object' 
-                          ? JSON.stringify(log.error_details) 
-                          : log.error_details
-                        }
-                      </div>
-                    )}
-                  </Card>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
                 ))}
                 {(!syncLogs || syncLogs.length === 0) && (
                   <div className="text-center py-8 text-muted-foreground">

@@ -34,6 +34,15 @@ interface ScrapeStats {
   priceHistoryLogged: number;
   tdsFound: number;
   tdsParsed: number;
+  // Enhanced tracking fields
+  imagesAdded: number;
+  mpnsExtracted: number;
+  barcodesAdded: number;
+  colorHexCaptured: number;
+  tempSpecsExtracted: number;
+  productsCreated: string[];
+  productsUpdated: string[];
+  productsFailed: string[];
   errorDetails: string[];
 }
 
@@ -185,6 +194,7 @@ async function completeBrandSyncLog(
   syncLogId: string,
   stats: ScrapeStats
 ): Promise<void> {
+  // First update via RPC for automated_brands stats
   const { error } = await supabase.rpc('complete_brand_scrape', {
     p_sync_log_id: syncLogId,
     p_success: stats.errors === 0,
@@ -198,6 +208,37 @@ async function completeBrandSyncLog(
 
   if (error) {
     console.error(`Failed to complete brand sync log ${syncLogId}:`, error);
+  }
+
+  // Save detailed success_details and products_processed to brand_sync_logs
+  const successDetails = {
+    imagesAdded: stats.imagesAdded,
+    tdsUrlsFound: stats.tdsFound,
+    tdsParsed: stats.tdsParsed,
+    mpnsExtracted: stats.mpnsExtracted,
+    barcodesAdded: stats.barcodesAdded,
+    colorHexCaptured: stats.colorHexCaptured,
+    tempSpecsExtracted: stats.tempSpecsExtracted,
+    priceHistoryLogged: stats.priceHistoryLogged,
+    availabilityChanges: stats.availabilityChanges,
+  };
+
+  const productsProcessed = {
+    created: stats.productsCreated.slice(0, 50), // Limit to 50 for DB size
+    updated: stats.productsUpdated.slice(0, 50),
+    failed: stats.productsFailed.slice(0, 20),
+  };
+
+  const { error: detailsError } = await supabase
+    .from('brand_sync_logs')
+    .update({
+      success_details: successDetails,
+      products_processed: productsProcessed,
+    })
+    .eq('id', syncLogId);
+
+  if (detailsError) {
+    console.error(`Failed to save detailed sync log for ${syncLogId}:`, detailsError);
   }
 }
 
@@ -220,6 +261,14 @@ async function processScrapedProducts(
     priceHistoryLogged: 0,
     tdsFound: 0,
     tdsParsed: 0,
+    imagesAdded: 0,
+    mpnsExtracted: 0,
+    barcodesAdded: 0,
+    colorHexCaptured: 0,
+    tempSpecsExtracted: 0,
+    productsCreated: [],
+    productsUpdated: [],
+    productsFailed: [],
     errorDetails: [],
   };
   const results: unknown[] = [];
@@ -262,6 +311,13 @@ async function processScrapedProducts(
           try {
             await createFilamentFromScrapedProduct(supabase, vendor, brandConfig, product, staticConfig);
             stats.created++;
+            stats.productsCreated.push(product.title);
+            // Track enrichment for newly created products
+            if (product.imageUrl) stats.imagesAdded++;
+            if (product.mpn) stats.mpnsExtracted++;
+            if (product.barcode) stats.barcodesAdded++;
+            if (product.colorHex) stats.colorHexCaptured++;
+            if (product.nozzleTempMin || product.bedTempMin) stats.tempSpecsExtracted++;
             results.push({
               productId: product.productId,
               title: product.title,
@@ -271,6 +327,7 @@ async function processScrapedProducts(
           } catch (createError) {
             console.error(`Failed to create filament ${product.title}:`, createError);
             stats.errors++;
+            stats.productsFailed.push(product.title);
             stats.errorDetails.push(`${product.productId}: Creation failed`);
             continue;
           }
@@ -364,26 +421,33 @@ async function processScrapedProducts(
       // Update image if scraped and not already set or overridden
       if (product.imageUrl && !overrides.includes("featured_image") && !filament.featured_image) {
         updates.featured_image = product.imageUrl;
+        stats.imagesAdded++;
         console.log(`📸 Adding image for ${product.title}: ${product.imageUrl.substring(0, 50)}...`);
       }
 
       // Update barcode fields if scraped and not overridden
       if (product.barcode) {
         const barcodeFields = parseBarcodeFields(product.barcode);
+        let barcodeAdded = false;
         if (barcodeFields.upc && !overrides.includes("upc")) {
           updates.upc = barcodeFields.upc;
+          barcodeAdded = true;
         }
         if (barcodeFields.ean && !overrides.includes("ean")) {
           updates.ean = barcodeFields.ean;
+          barcodeAdded = true;
         }
         if (barcodeFields.gtin && !overrides.includes("gtin")) {
           updates.gtin = barcodeFields.gtin;
+          barcodeAdded = true;
         }
+        if (barcodeAdded) stats.barcodesAdded++;
       }
 
       // Update enhanced fields if scraped and not overridden
       if (product.mpn && !overrides.includes("mpn") && !filament.mpn) {
         updates.mpn = product.mpn;
+        stats.mpnsExtracted++;
       }
       if (product.tdsUrl && !overrides.includes("tds_url") && !filament.tds_url) {
         updates.tds_url = product.tdsUrl;
@@ -392,14 +456,17 @@ async function processScrapedProducts(
       }
       if (product.colorHex && !overrides.includes("color_hex") && !filament.color_hex) {
         updates.color_hex = product.colorHex;
+        stats.colorHexCaptured++;
       }
       if (product.nozzleTempMin && !overrides.includes("nozzle_temp_min_c") && !filament.nozzle_temp_min_c) {
         updates.nozzle_temp_min_c = product.nozzleTempMin;
         updates.nozzle_temp_max_c = product.nozzleTempMax;
+        stats.tempSpecsExtracted++;
       }
       if (product.bedTempMin && !overrides.includes("bed_temp_min_c") && !filament.bed_temp_min_c) {
         updates.bed_temp_min_c = product.bedTempMin;
         updates.bed_temp_max_c = product.bedTempMax;
+        if (!product.nozzleTempMin) stats.tempSpecsExtracted++; // Only count once
       }
 
       // Update filament (trigger will log to price_history if price changed)
@@ -422,6 +489,7 @@ async function processScrapedProducts(
       }
 
       stats.updated++;
+      stats.productsUpdated.push(product.title);
       if (priceChanged && !overrides.includes("variant_price")) {
         stats.priceHistoryLogged++;
       }
@@ -440,6 +508,7 @@ async function processScrapedProducts(
     } catch (err) {
       console.error(`Error processing ${product.title}:`, err);
       stats.errors++;
+      stats.productsFailed.push(product.title);
       stats.errorDetails.push(`${product.productId}: ${err instanceof Error ? err.message : "Unknown error"}`);
       results.push({
         productId: product.productId,
@@ -647,6 +716,14 @@ Deno.serve(async (req) => {
       priceHistoryLogged: 0,
       tdsFound: 0,
       tdsParsed: 0,
+      imagesAdded: 0,
+      mpnsExtracted: 0,
+      barcodesAdded: 0,
+      colorHexCaptured: 0,
+      tempSpecsExtracted: 0,
+      productsCreated: [],
+      productsUpdated: [],
+      productsFailed: [],
       errorDetails: [],
     };
 
@@ -691,6 +768,14 @@ Deno.serve(async (req) => {
         totalStats.availabilityChanges += stats.availabilityChanges;
         totalStats.priceHistoryLogged += stats.priceHistoryLogged;
         totalStats.tdsFound += stats.tdsFound;
+        totalStats.imagesAdded += stats.imagesAdded;
+        totalStats.mpnsExtracted += stats.mpnsExtracted;
+        totalStats.barcodesAdded += stats.barcodesAdded;
+        totalStats.colorHexCaptured += stats.colorHexCaptured;
+        totalStats.tempSpecsExtracted += stats.tempSpecsExtracted;
+        totalStats.productsCreated.push(...stats.productsCreated);
+        totalStats.productsUpdated.push(...stats.productsUpdated);
+        totalStats.productsFailed.push(...stats.productsFailed);
         totalStats.errorDetails.push(...stats.errorDetails);
 
         // Parse TDS if requested
@@ -718,6 +803,14 @@ Deno.serve(async (req) => {
           priceHistoryLogged: 0,
           tdsFound: 0,
           tdsParsed: 0,
+          imagesAdded: 0,
+          mpnsExtracted: 0,
+          barcodesAdded: 0,
+          colorHexCaptured: 0,
+          tempSpecsExtracted: 0,
+          productsCreated: [],
+          productsUpdated: [],
+          productsFailed: [v],
           errorDetails: [errorMsg],
         };
         
