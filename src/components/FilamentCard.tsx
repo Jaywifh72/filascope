@@ -469,7 +469,7 @@ export function FilamentCard({
         
         {/* Best Price Badge */}
         {(priceHistory.isBestIn6Months || priceHistory.isBestIn30Days) && (
-          <Badge className="best-price-badge bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border-amber-500/40 text-amber-400 text-[10px] px-2 py-0.5 gap-1">
+          <Badge className="best-price-badge bg-amber-950/80 border-amber-600/50 text-amber-300 text-[10px] px-2 py-0.5 gap-1">
             <Sparkles className="w-3 h-3" />
             {priceHistory.isBestIn6Months ? "Best price in 6 months!" : "Best price in 30 days!"}
           </Badge>
