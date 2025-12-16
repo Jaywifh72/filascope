@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
 import { MaterialBadge } from "@/components/MaterialBadge";
-import { ExternalLink, ChevronDown, GitCompare, X, LayoutGrid, List, CheckCircle, XCircle, TreeDeciduous, Layers, Palette } from "lucide-react";
+import { ExternalLink, ChevronDown, GitCompare, X, CheckCircle, XCircle, TreeDeciduous, Layers, Palette } from "lucide-react";
 import FilamentCard from "@/components/FilamentCard";
 import { FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -28,13 +28,14 @@ import { useCompare } from "@/hooks/useCompare";
 import { useCompatibleCount } from "@/hooks/useCompatibleCount";
 import HeroSection from "@/components/HeroSection";
 import { FilamentFilters } from "@/components/FilamentFilters";
-// PrinterContextBar removed - now in Navbar
 import { HorizontalFilterBar } from "@/components/filters/HorizontalFilterBar";
 import { ActiveFilterTags, type ActiveFilter } from "@/components/filters/ActiveFilterTags";
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { MoreFiltersModal } from "@/components/filters/MoreFiltersModal";
-// EngagementSidebar removed - replaced by TrendingPanel in Navbar
+import { ViewToggle } from "@/components/ViewToggle";
+import { FilamentTableView } from "@/components/FilamentTableView";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -113,6 +114,7 @@ const hslToHex = (h: number, s: number, l: number): string => {
 const Finder = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>(["All"]);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string[]>>({});
@@ -139,6 +141,9 @@ const Finder = () => {
     const saved = localStorage.getItem("finderViewMode");
     return saved === "list" ? "list" : "grid";
   });
+  
+  // Force card view on mobile
+  const effectiveViewMode = isMobile ? "grid" : viewMode;
   
   // New filter states
   const [highSpeed, setHighSpeed] = useState(false);
@@ -1118,29 +1123,13 @@ const Finder = () => {
             {filteredAndSortedFilaments?.length || 0} filaments
           </p>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">🇺🇸 United States</span>
-            <div className="flex items-center border border-[#333] rounded-lg overflow-hidden">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 transition-colors ${
-                  viewMode === "grid" 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-[#1A1A1A] text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 transition-colors ${
-                  viewMode === "list" 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-[#1A1A1A] text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
+            <span className="text-xs text-muted-foreground hidden sm:inline">🇺🇸 United States</span>
+            {!isMobile && (
+              <ViewToggle 
+                viewMode={viewMode} 
+                onViewModeChange={setViewMode}
+              />
+            )}
           </div>
         </div>
 
@@ -1150,205 +1139,22 @@ const Finder = () => {
         ) : displayedFilaments.length > 0 ? (
           <>
           {
-          viewMode === "list" ? (
-            /* List View - Compact Table */
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-800 text-left">
-                    <th className="py-3 px-2 w-8"></th>
-                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Color</th>
-                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Brand</th>
-                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Product</th>
-                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Material</th>
-                    <th className="py-3 px-3 text-xs font-semibold text-orange-400 uppercase tracking-wide text-right">True Cost</th>
-                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">List Price</th>
-                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Stock</th>
-                    <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Score</th>
-                    <th className="py-3 px-3"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedFilaments.map((filament) => {
-                    // Calculate true per-kg price accounting for pack quantity
-                    const packQty = (filament as any).pack_quantity || 1;
-                    const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
-                    const pricePerKg = (filament.variant_price && weightKg) 
-                      ? filament.variant_price / (weightKg * packQty) 
-                      : null;
-                    const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
-                    const displayPricePerKg = isValidPrice ? pricePerKg : null;
-                    // Per-spool price = total price / pack quantity
-                    const pricePerSpool = filament.variant_price ? filament.variant_price / packQty : null;
-                    const overallScore = filament.value_score || 7.0;
-                    
-                    return (
-                      <tr 
-                        key={filament.id} 
-                        className="border-b border-gray-800 hover:bg-[#1A1A1A] transition-colors cursor-pointer"
-                        onClick={() => navigate(`/filaments/${filament.id}`)}
-                      >
-                        <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
-                          <Checkbox 
-                            checked={isInCompare(filament.id)}
-                            onCheckedChange={() => {
-                              if (isInCompare(filament.id)) {
-                                removeItem(filament.id);
-                              } else {
-                                addItem({
-                                  id: filament.id,
-                                  product_title: filament.product_title,
-                                  vendor: filament.vendor,
-                                  material: filament.material,
-                                  color_hex: filament.color_hex,
-                                  variant_price: filament.variant_price,
-                                  net_weight_g: filament.net_weight_g,
-                                  featured_image: filament.featured_image,
-                                });
-                              }
-                            }}
-                          />
-                        </td>
-                        <td className="py-3 px-3">
-                          {filament.color_hex ? (() => {
-                            const normalizedHex = filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`;
-                            const isHexSearchActive = hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/);
-                            const searchHex = isHexSearchActive ? (hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`) : null;
-                            const matchPercent = searchHex ? getColorMatchPercent(searchHex, normalizedHex) : null;
-                            
-                            return (
-                              <div className="flex flex-col items-center gap-0.5">
-                                <div className="relative">
-                                  <div 
-                                    className="w-6 h-6 rounded border border-border"
-                                    style={{ backgroundColor: normalizedHex }}
-                                    title={filament.color_family || 'Color'}
-                                  />
-                                  {matchPercent !== null && (
-                                    <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold ${
-                                      matchPercent >= 95 ? 'bg-green-500 text-white' : 
-                                      matchPercent >= 85 ? 'bg-cyan-500 text-white' : 
-                                      'bg-amber-500 text-white'
-                                    }`}>
-                                      {matchPercent}
-                                    </div>
-                                  )}
-                                </div>
-                                <span className="text-[8px] font-mono text-muted-foreground uppercase">
-                                  {normalizedHex.slice(0, 7)}
-                                </span>
-                              </div>
-                            );
-                          })() : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="text-sm font-medium text-foreground">{filament.vendor}</span>
-                        </td>
-                        <td className="py-3 px-3 max-w-[300px]">
-                          <span className="text-sm text-muted-foreground truncate block">{filament.product_title}</span>
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="flex items-center gap-2">
-                            {filament.material ? (
-                              <MaterialBadge material={filament.material} />
-                            ) : (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            )}
-                            {isWoodFilament(filament) && (
-                              <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-600 text-[10px] px-1.5 py-0 gap-1">
-                                <TreeDeciduous className="w-3 h-3" />
-                                {getWoodPercentage(filament) ? `${getWoodPercentage(filament)}%` : 'Wood'}
-                              </Badge>
-                            )}
-                            {isGlassFiberFilament(filament) && (
-                              <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/30 text-cyan-600 text-[10px] px-1.5 py-0 gap-1">
-                                <Layers className="w-3 h-3" />
-                                {getGlassFiberPercentage(filament) ? `${getGlassFiberPercentage(filament)}% GF` : 'GF'}
-                              </Badge>
-                            )}
-                            {isCarbonFiberFilament(filament) && (
-                              <Badge variant="outline" className="bg-gray-500/10 border-gray-500/30 text-gray-600 dark:text-gray-400 text-[10px] px-1.5 py-0 gap-1">
-                                <Layers className="w-3 h-3" />
-                                {getCarbonFiberPercentage(filament) ? `${getCarbonFiberPercentage(filament)}% CF` : 'CF'}
-                              </Badge>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          <span className="font-mono text-sm font-bold text-orange-400">
-                            {displayPricePerKg ? `$${displayPricePerKg.toFixed(2)} USD/kg` : "—"}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          <span className="font-mono text-sm text-muted-foreground">
-                            {pricePerSpool ? `$${pricePerSpool.toFixed(2)} USD` : "—"}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-center">
-                          {filament.variant_available !== false ? (
-                            <CheckCircle className="w-4 h-4 text-green-400 mx-auto" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-400 mx-auto" />
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          <span className={`font-mono text-sm font-semibold ${
-                            overallScore >= 8 ? "text-green-400" : 
-                            overallScore >= 6 ? "text-cyan-400" : "text-orange-400"
-                          }`}>
-                            {overallScore.toFixed(1)}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center gap-2">
-                            <LikeButton filamentId={filament.id} size="sm" />
-                            <div className="flex flex-col gap-1">
-                              <Button
-                                size="sm"
-                                variant="default"
-                                className="h-6 text-[10px] w-full justify-center"
-                                asChild
-                              >
-                                <Link to={`/filament/${filament.id}`}>View</Link>
-                              </Button>
-                              {filament.product_url && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-6 text-[10px] w-full justify-center border-primary/30 text-primary hover:bg-primary/10"
-                                  asChild
-                                >
-                                  <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
-                                    Store
-                                  </a>
-                                </Button>
-                              )}
-                              {filament.amazon_link_us && (
-                                <Button
-                                  size="sm"
-                                  variant="amazon"
-                                  className="h-6 text-[10px] w-full justify-center"
-                                  asChild
-                                >
-                                  <a href={getAffiliateUrl(filament.amazon_link_us, "Amazon") || filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
-                                    Amazon
-                                  </a>
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+          effectiveViewMode === "list" ? (
+            /* List View - Sortable Table */
+            <FilamentTableView
+              filaments={displayedFilaments as any}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              isInCompare={isInCompare}
+              addItem={addItem}
+              removeItem={removeItem}
+              getAffiliateUrl={getAffiliateUrl}
+              hexSearch={hexSearch}
+              getColorMatchPercent={getColorMatchPercent}
+            />
           ) : (
             /* Grid View - Redesigned Cards */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8" id="filament-grid">
               {displayedFilaments.map((filament, index) => {
                 // Calculate color match percentage for hex search
                 const isHexSearchActive = hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/);

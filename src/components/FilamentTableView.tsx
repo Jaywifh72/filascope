@@ -1,0 +1,402 @@
+import { Link, useNavigate } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { MaterialBadge } from "@/components/MaterialBadge";
+import { LikeButton } from "@/components/LikeButton";
+import { CheckCircle, XCircle, TreeDeciduous, Layers, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface Filament {
+  id: string;
+  product_title: string;
+  vendor: string | null;
+  material: string | null;
+  color_hex: string | null;
+  color_family: string | null;
+  variant_price: number | null;
+  net_weight_g: number | null;
+  featured_image: string | null;
+  variant_available: boolean | null;
+  value_score: number | null;
+  product_url: string | null;
+  amazon_link_us: string | null;
+  pack_quantity?: number;
+  wood_powder_percentage?: number | null;
+  glass_fiber_percentage?: number | null;
+  carbon_fiber_percentage?: number | null;
+}
+
+interface FilamentTableViewProps {
+  filaments: Filament[];
+  sortBy: string;
+  onSortChange: (sortBy: string) => void;
+  isInCompare: (id: string) => boolean;
+  addItem: (item: any) => void;
+  removeItem: (id: string) => void;
+  getAffiliateUrl: (url: string, vendor: string | null) => string | null;
+  hexSearch?: string;
+  getColorMatchPercent?: (searchHex: string, filamentHex: string) => number;
+}
+
+type SortColumn = "brand" | "truecost" | "price" | "score" | "material";
+type SortDirection = "asc" | "desc";
+
+interface SortConfig {
+  column: SortColumn | null;
+  direction: SortDirection;
+}
+
+// Helper functions for composite materials
+const isWoodFilament = (filament: Filament) => 
+  filament.wood_powder_percentage && filament.wood_powder_percentage > 0;
+
+const isGlassFiberFilament = (filament: Filament) => 
+  filament.glass_fiber_percentage && filament.glass_fiber_percentage > 0;
+
+const isCarbonFiberFilament = (filament: Filament) => 
+  filament.carbon_fiber_percentage && filament.carbon_fiber_percentage > 0;
+
+const getWoodPercentage = (filament: Filament) => filament.wood_powder_percentage;
+const getGlassFiberPercentage = (filament: Filament) => filament.glass_fiber_percentage;
+const getCarbonFiberPercentage = (filament: Filament) => filament.carbon_fiber_percentage;
+
+// Parse current sort string to get column and direction
+const parseSortBy = (sortBy: string): SortConfig => {
+  const parts = sortBy.split("-");
+  const direction = parts[parts.length - 1] as SortDirection;
+  const column = parts.slice(0, -1).join("-") as SortColumn;
+  
+  // Map sort values to columns
+  const columnMap: Record<string, SortColumn> = {
+    "name": "brand",
+    "truecost": "truecost",
+    "price": "price",
+    "score": "score",
+    "material": "material",
+  };
+  
+  return {
+    column: columnMap[column] || null,
+    direction: direction === "desc" ? "desc" : "asc"
+  };
+};
+
+// Convert sort config back to sortBy string
+const toSortByString = (column: SortColumn, direction: SortDirection): string => {
+  const columnMap: Record<SortColumn, string> = {
+    "brand": "name",
+    "truecost": "truecost",
+    "price": "price",
+    "score": "score",
+    "material": "material",
+  };
+  return `${columnMap[column]}-${direction}`;
+};
+
+interface SortableHeaderProps {
+  column: SortColumn;
+  label: string;
+  sortConfig: SortConfig;
+  onSort: (column: SortColumn) => void;
+  className?: string;
+  highlightColor?: string;
+}
+
+function SortableHeader({ column, label, sortConfig, onSort, className, highlightColor }: SortableHeaderProps) {
+  const isActive = sortConfig.column === column;
+  
+  return (
+    <th 
+      className={cn(
+        "py-3 px-3 text-xs font-semibold uppercase tracking-wide cursor-pointer select-none group transition-colors hover:bg-slate-800/50",
+        isActive ? "text-primary" : highlightColor || "text-muted-foreground",
+        className
+      )}
+      onClick={() => onSort(column)}
+      role="columnheader"
+      aria-sort={isActive ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
+    >
+      <div className="flex items-center gap-1">
+        <span>{label}</span>
+        <span className={cn(
+          "transition-opacity",
+          isActive ? "opacity-100" : "opacity-0 group-hover:opacity-50"
+        )}>
+          {isActive ? (
+            sortConfig.direction === "asc" ? (
+              <ChevronUp className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5" />
+            )
+          ) : (
+            <ChevronsUpDown className="w-3.5 h-3.5" />
+          )}
+        </span>
+      </div>
+    </th>
+  );
+}
+
+export function FilamentTableView({
+  filaments,
+  sortBy,
+  onSortChange,
+  isInCompare,
+  addItem,
+  removeItem,
+  getAffiliateUrl,
+  hexSearch,
+  getColorMatchPercent,
+}: FilamentTableViewProps) {
+  const navigate = useNavigate();
+  const sortConfig = parseSortBy(sortBy);
+  
+  const handleSort = (column: SortColumn) => {
+    if (sortConfig.column === column) {
+      // Toggle direction
+      const newDirection = sortConfig.direction === "asc" ? "desc" : "asc";
+      onSortChange(toSortByString(column, newDirection));
+    } else {
+      // Default to ascending for new column (except score which defaults to desc)
+      const defaultDirection = column === "score" ? "desc" : "asc";
+      onSortChange(toSortByString(column, defaultDirection));
+    }
+  };
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-border/50" role="region" aria-label="Filament comparison table">
+      <table className="w-full" id="filament-table">
+        <thead className="bg-slate-900/50">
+          <tr className="border-b border-border">
+            <th className="py-3 px-2 w-8" aria-label="Selection"></th>
+            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Color</th>
+            <SortableHeader 
+              column="brand" 
+              label="Brand" 
+              sortConfig={sortConfig} 
+              onSort={handleSort}
+            />
+            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Product</th>
+            <SortableHeader 
+              column="material" 
+              label="Material" 
+              sortConfig={sortConfig} 
+              onSort={handleSort}
+            />
+            <SortableHeader 
+              column="truecost" 
+              label="True Cost" 
+              sortConfig={sortConfig} 
+              onSort={handleSort}
+              className="text-right"
+              highlightColor="text-orange-400"
+            />
+            <SortableHeader 
+              column="price" 
+              label="List Price" 
+              sortConfig={sortConfig} 
+              onSort={handleSort}
+              className="text-right"
+            />
+            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Stock</th>
+            <SortableHeader 
+              column="score" 
+              label="Score" 
+              sortConfig={sortConfig} 
+              onSort={handleSort}
+              className="text-right"
+            />
+            <th className="py-3 px-3" aria-label="Actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {filaments.map((filament) => {
+            // Calculate true per-kg price accounting for pack quantity
+            const packQty = filament.pack_quantity || 1;
+            const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
+            const pricePerKg = (filament.variant_price && weightKg) 
+              ? filament.variant_price / (weightKg * packQty) 
+              : null;
+            const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
+            const displayPricePerKg = isValidPrice ? pricePerKg : null;
+            const pricePerSpool = filament.variant_price ? filament.variant_price / packQty : null;
+            const overallScore = filament.value_score || 7.0;
+            
+            // Color match calculation
+            const normalizedHex = filament.color_hex 
+              ? (filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`)
+              : null;
+            const isHexSearchActive = hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/);
+            const searchHex = isHexSearchActive ? (hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`) : null;
+            const matchPercent = searchHex && normalizedHex && getColorMatchPercent 
+              ? getColorMatchPercent(searchHex, normalizedHex) 
+              : null;
+            
+            return (
+              <tr 
+                key={filament.id} 
+                className={cn(
+                  "border-b border-border/50 transition-colors cursor-pointer",
+                  isInCompare(filament.id) 
+                    ? "bg-primary/5 hover:bg-primary/10" 
+                    : "hover:bg-slate-800/50"
+                )}
+                onClick={() => navigate(`/filaments/${filament.id}`)}
+              >
+                <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
+                  <Checkbox 
+                    checked={isInCompare(filament.id)}
+                    onCheckedChange={() => {
+                      if (isInCompare(filament.id)) {
+                        removeItem(filament.id);
+                      } else {
+                        addItem({
+                          id: filament.id,
+                          product_title: filament.product_title,
+                          vendor: filament.vendor,
+                          material: filament.material,
+                          color_hex: filament.color_hex,
+                          variant_price: filament.variant_price,
+                          net_weight_g: filament.net_weight_g,
+                          featured_image: filament.featured_image,
+                        });
+                      }
+                    }}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                </td>
+                <td className="py-3 px-3">
+                  {normalizedHex ? (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className="relative">
+                        <div 
+                          className="w-6 h-6 rounded border border-border"
+                          style={{ backgroundColor: normalizedHex }}
+                          title={filament.color_family || 'Color'}
+                        />
+                        {matchPercent !== null && (
+                          <div className={cn(
+                            "absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white",
+                            matchPercent >= 95 ? 'bg-emerald-500' : 
+                            matchPercent >= 85 ? 'bg-blue-500' : 
+                            'bg-amber-500'
+                          )}>
+                            {matchPercent}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[8px] font-mono text-muted-foreground uppercase">
+                        {normalizedHex.slice(0, 7)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="py-3 px-3">
+                  <span className="text-sm font-medium text-foreground">{filament.vendor}</span>
+                </td>
+                <td className="py-3 px-3 max-w-[300px]">
+                  <span className="text-sm text-muted-foreground truncate block">{filament.product_title}</span>
+                </td>
+                <td className="py-3 px-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {filament.material ? (
+                      <MaterialBadge material={filament.material} />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                    {isWoodFilament(filament) && (
+                      <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-600 text-[10px] px-1.5 py-0 gap-1">
+                        <TreeDeciduous className="w-3 h-3" />
+                        {getWoodPercentage(filament) ? `${getWoodPercentage(filament)}%` : 'Wood'}
+                      </Badge>
+                    )}
+                    {isGlassFiberFilament(filament) && (
+                      <Badge variant="outline" className="bg-blue-500/10 border-blue-500/30 text-blue-400 text-[10px] px-1.5 py-0 gap-1">
+                        <Layers className="w-3 h-3" />
+                        {getGlassFiberPercentage(filament) ? `${getGlassFiberPercentage(filament)}% GF` : 'GF'}
+                      </Badge>
+                    )}
+                    {isCarbonFiberFilament(filament) && (
+                      <Badge variant="outline" className="bg-slate-500/10 border-slate-500/30 text-slate-400 text-[10px] px-1.5 py-0 gap-1">
+                        <Layers className="w-3 h-3" />
+                        {getCarbonFiberPercentage(filament) ? `${getCarbonFiberPercentage(filament)}% CF` : 'CF'}
+                      </Badge>
+                    )}
+                  </div>
+                </td>
+                <td className="py-3 px-3 text-right">
+                  <span className="font-mono text-sm font-bold text-orange-400">
+                    {displayPricePerKg ? `$${displayPricePerKg.toFixed(2)}/kg` : "—"}
+                  </span>
+                </td>
+                <td className="py-3 px-3 text-right">
+                  <span className="font-mono text-sm text-muted-foreground">
+                    {pricePerSpool ? `$${pricePerSpool.toFixed(2)}` : "—"}
+                  </span>
+                </td>
+                <td className="py-3 px-3 text-center">
+                  {filament.variant_available !== false ? (
+                    <CheckCircle className="w-4 h-4 text-emerald-400 mx-auto" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-red-400 mx-auto" />
+                  )}
+                </td>
+                <td className="py-3 px-3 text-right">
+                  <span className={cn(
+                    "font-mono text-sm font-semibold",
+                    overallScore >= 8 ? "text-emerald-400" : 
+                    overallScore >= 6 ? "text-primary" : "text-orange-400"
+                  )}>
+                    {overallScore.toFixed(1)}
+                  </span>
+                </td>
+                <td className="py-3 px-3" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2">
+                    <LikeButton filamentId={filament.id} size="sm" />
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-6 text-[10px] w-full justify-center"
+                        asChild
+                      >
+                        <Link to={`/filament/${filament.id}`}>View</Link>
+                      </Button>
+                      {filament.product_url && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 text-[10px] w-full justify-center border-primary/30 text-primary hover:bg-primary/10"
+                          asChild
+                        >
+                          <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
+                            Store
+                          </a>
+                        </Button>
+                      )}
+                      {filament.amazon_link_us && (
+                        <Button
+                          size="sm"
+                          variant="amazon"
+                          className="h-6 text-[10px] w-full justify-center"
+                          asChild
+                        >
+                          <a href={getAffiliateUrl(filament.amazon_link_us, "Amazon") || filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
+                            Amazon
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
