@@ -13,6 +13,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cadData } from "@/lib/cadData";
 import Navbar from "@/components/Navbar";
 
+// Logo mapping for CAD software
+const cadLogos: Record<string, string> = {
+  "Fusion 360": "/images/cad/fusion360.png",
+  "Blender": "/images/cad/blender.png",
+  "SolidWorks": "/images/cad/solidworks.png",
+  "Tinkercad": "/images/cad/tinkercad.png",
+  "ZBrush": "/images/cad/zbrush.png",
+  "Meshmixer": "/images/cad/meshmixer.png",
+  "FreeCAD": "/images/cad/freecad.svg",
+  "Rhino 3D": "/images/cad/maya.png", // Using Autodesk icon as fallback
+  "OpenSCAD": "/images/cad/openscad.png",
+  "Onshape": "/images/cad/onshape.png",
+  "Shapr3D": "/images/cad/shapr3d.png",
+  "SketchUp": "/images/cad/sketchup.png",
+  "Plasticity": "/images/cad/plasticity.png",
+  "Maya": "/images/cad/maya.png",
+  "3ds Max": "/images/cad/maya.png",
+  "Cinema 4D": "/images/cad/cinema4d.png",
+  "Nomad Sculpt": "/images/cad/nomadsculpt.png",
+  "AutoCAD": "/images/cad/maya.png",
+  "SelfCAD": "/images/cad/selfcad.png",
+  "BlocksCAD": "/images/cad/blockscad.png",
+};
+
 const cadComparison = [
   { name: "Fusion 360", price: "Freemium", type: "Solid/Mesh", os: "Win/Mac", ease: 4, precision: 5, sculpt: 3, printReady: 5, parametric: 5, cloud: "Yes", perpetual: "No", standout: "Integrated CAD/CAM/CAE" },
   { name: "Blender", price: "Free", type: "Mesh", os: "Win/Mac/Lin", ease: 2, precision: 3, sculpt: 5, printReady: 4, parametric: 2, cloud: "No", perpetual: "Yes", standout: "Complete 3D Suite" },
@@ -379,7 +403,18 @@ const ReferenceCAD = () => {
                     key={index} 
                     className="border-b border-border/50 hover:bg-muted/20 transition-colors"
                   >
-                    <td className="py-2 px-3 font-medium text-foreground whitespace-nowrap">{software.name}</td>
+                    <td className="py-2 px-3 font-medium text-foreground whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {cadLogos[software.name] && (
+                          <img 
+                            src={cadLogos[software.name]} 
+                            alt={`${software.name} logo`}
+                            className="w-5 h-5 rounded object-contain"
+                          />
+                        )}
+                        {software.name}
+                      </div>
+                    </td>
                     <td className="py-2 px-3">
                       <Badge 
                         variant="outline" 
@@ -421,6 +456,13 @@ const ReferenceCAD = () => {
               <AccordionTrigger className="hover:no-underline py-4">
                 <div className="flex items-center gap-4 text-left">
                   <span className="text-2xl font-bold text-cyan-400 font-mono">{index + 1}.</span>
+                  {cadLogos[software.name] && (
+                    <img 
+                      src={cadLogos[software.name]} 
+                      alt={`${software.name} logo`}
+                      className="w-8 h-8 rounded object-contain"
+                    />
+                  )}
                   <div>
                     <h2 className="text-xl font-semibold text-foreground">{software.name}</h2>
                     <p className="text-sm text-muted-foreground line-clamp-1">{software.summary}</p>
