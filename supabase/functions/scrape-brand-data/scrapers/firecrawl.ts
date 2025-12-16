@@ -70,40 +70,48 @@ export class FirecrawlScraper extends BaseScraper {
     this.log(`Discovering products via Firecrawl Map API from: ${baseUrl}`);
 
     try {
-      // Step 1: Use Firecrawl Map API to discover all URLs on the shop
-      const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.firecrawlApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: baseUrl,
-          search: "filament PLA PETG ABS TPU nylon",
-          limit: 200,
-          includeSubdomains: false,
-        }),
-      });
-
-      if (!mapResponse.ok) {
-        const error = await mapResponse.text();
-        this.logError(`Firecrawl Map error: ${mapResponse.status} - ${error}`);
-        return [];
-      }
-
-      const mapData = await mapResponse.json();
+      let productUrls: string[] = [];
       
-      if (!mapData.success || !mapData.links) {
-        this.logError(`Firecrawl Map failed: ${mapData.error || 'No links returned'}`);
-        return [];
+      // For GEEETECH, use HTML extraction instead of Map API (Map API doesn't work well with their site)
+      if (vendor === 'geeetech') {
+        this.log(`Using HTML extraction for GEEETECH products`);
+        productUrls = await this.extractProductUrlsFromHtml(baseUrl);
+      } else {
+        // Step 1: Use Firecrawl Map API to discover all URLs on the shop
+        const mapResponse = await fetch("https://api.firecrawl.dev/v1/map", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.firecrawlApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: baseUrl,
+            search: "filament PLA PETG ABS TPU nylon",
+            limit: 200,
+            includeSubdomains: false,
+          }),
+        });
+
+        if (!mapResponse.ok) {
+          const error = await mapResponse.text();
+          this.logError(`Firecrawl Map error: ${mapResponse.status} - ${error}`);
+          return [];
+        }
+
+        const mapData = await mapResponse.json();
+        
+        if (!mapData.success || !mapData.links) {
+          this.logError(`Firecrawl Map failed: ${mapData.error || 'No links returned'}`);
+          return [];
+        }
+
+        this.log(`Map discovered ${mapData.links.length} URLs`);
+
+        // Filter for product URLs using brand-specific patterns
+        productUrls = mapData.links.filter((url: string) => {
+          return this.isProductUrl(url, vendor);
+        });
       }
-
-      this.log(`Map discovered ${mapData.links.length} URLs`);
-
-      // Step 2: Filter for product URLs using brand-specific patterns
-      const productUrls = mapData.links.filter((url: string) => {
-        return this.isProductUrl(url, vendor);
-      });
 
       this.log(`Filtered to ${productUrls.length} potential product URLs`);
 
@@ -125,7 +133,9 @@ export class FirecrawlScraper extends BaseScraper {
                 title.includes('tpu') ||
                 title.includes('nylon') ||
                 title.includes('cf-') ||
-                title.includes('carbon fiber')) {
+                title.includes('carbon fiber') ||
+                title.includes('asa') ||
+                title.includes('silk')) {
               products.push(product);
               this.log(`✓ Found filament: ${product.title} - $${product.price}`);
             } else {
@@ -144,6 +154,57 @@ export class FirecrawlScraper extends BaseScraper {
       return products;
     } catch (error) {
       this.logError(`Error in scrapeAllProducts:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Extract product URLs directly from category page HTML (for sites where Map API doesn't work)
+   */
+  private async extractProductUrlsFromHtml(categoryUrl: string): Promise<string[]> {
+    try {
+      // Scrape the category page to get HTML
+      const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.firecrawlApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: categoryUrl,
+          formats: ["html"],
+          waitFor: 3000,
+        }),
+      });
+
+      if (!scrapeResponse.ok) {
+        this.logError(`Failed to scrape category page: ${scrapeResponse.status}`);
+        return [];
+      }
+
+      const data = await scrapeResponse.json();
+      const html = data.data?.html || data.html || "";
+      
+      // Extract GEEETECH product URLs: pattern is /product-name-p-123.html
+      const productUrlPattern = /href=["'](https?:\/\/www\.geeetech\.com\/[a-z0-9-]+-p-\d+\.html)["']/gi;
+      const matches = html.matchAll(productUrlPattern);
+      
+      const urls = new Set<string>();
+      for (const match of matches) {
+        urls.add(match[1]);
+      }
+
+      // Also try relative URLs
+      const relativePattern = /href=["']\/([a-z0-9-]+-p-\d+\.html)["']/gi;
+      const relMatches = html.matchAll(relativePattern);
+      for (const match of relMatches) {
+        urls.add(`https://www.geeetech.com/${match[1]}`);
+      }
+
+      this.log(`Extracted ${urls.size} product URLs from HTML`);
+      return Array.from(urls);
+    } catch (error) {
+      this.logError(`Error extracting URLs from HTML:`, error);
       return [];
     }
   }
