@@ -428,5 +428,35 @@ export const influencerData: InfluencerData[] = [
       youtube: "https://www.youtube.com/@NathanBuildsRobots"
     },
     ratings: { reach: 1, technical: 5, entertainment: 3, influence: 4, monetization: 2 }
+  },
+  {
+    id: "the-next-layer",
+    name: "Jonathan Levi",
+    channelName: "The Next Layer",
+    location: "USA",
+    subscribers: "~200,000",
+    totalViews: "~30 Million",
+    joinDate: "~2022",
+    niche: "Practical Prints, Reviews, Guides",
+    businessModel: "Shop Sales, Patreon, AdSense, Affiliates",
+    keyAsset: "Practical Project Guides, Honest Reviews",
+    brandIdentity: "The Next Layer, hosted by Jonathan Levi, focuses on making 3D printing practical and accessible. The channel emphasizes real-world applications, showing viewers how to use 3D printing to solve everyday problems and improve their living spaces. Levi's approach is approachable and project-focused, bridging the gap between hobbyist curiosity and practical utility.",
+    contentStrategy: "Levi creates content that answers 'what can I actually do with a 3D printer?' His videos cover printer reviews, practical project guides, and organizational solutions. The channel grew rapidly by focusing on searchable, useful content that helps viewers get tangible value from their printers. He also offers curated product recommendations through his website and shop.",
+    economicImpact: "The Next Layer drives adoption among practical-minded consumers who want to use 3D printing as a tool rather than a hobby. His focus on real-world applications helps justify printer purchases for people who need to solve specific problems. He demonstrates the utility value proposition of 3D printing.",
+    futureOutlook: "The channel continues to expand its focus on practical applications and home improvement projects. With a growing shop and website presence, Levi is building a sustainable ecosystem around practical 3D printing solutions.",
+    strengths: [
+      { title: "Practical Focus", description: "Emphasizes real-world applications and problem-solving" },
+      { title: "Rapid Growth", description: "Built substantial audience quickly through useful content" },
+      { title: "Multi-Platform", description: "Website, shop, and Patreon create diversified revenue" }
+    ],
+    weaknesses: [
+      { title: "Technical Depth", description: "Practical focus may limit deep technical analysis" },
+      { title: "Newer Channel", description: "Less established history compared to veteran creators" }
+    ],
+    links: {
+      youtube: "https://www.youtube.com/@thenextlayer",
+      website: "https://thenextlayer.com"
+    },
+    ratings: { reach: 3, technical: 3, entertainment: 4, influence: 3, monetization: 4 }
   }
 ];
