@@ -45,6 +45,7 @@ const cadLogos: Record<string, string> = {
   "Autodesk Maya": "/images/cad/maya.png",
   "Autodesk 3ds Max": "/images/cad/3dsmax.svg",
   "Autodesk AutoCAD": "/images/cad/autocad.svg",
+  "Rhino 3D (Rhinoceros)": "/images/cad/rhino3d.svg",
 };
 
 // Dark logos that need brightness filter for dark backgrounds
