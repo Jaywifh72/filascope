@@ -184,6 +184,9 @@ export class FirecrawlScraper extends BaseScraper {
       'ic3d printers': [
         /ic3dprinters\.com\/shop\/[^\/]+\/[^\/]+\/?$/i,
       ],
+      'geeetech': [
+        /geeetech\.com\/[a-z0-9-]+-p-\d+\.html$/i,  // Pattern: /product-name-p-123.html
+      ],
     };
 
     // Check brand-specific patterns first
@@ -454,6 +457,10 @@ export class FirecrawlScraper extends BaseScraper {
   private extractHtmlPrice(html: string): number | null {
     // Platform-specific patterns first
     const platformPatterns = [
+      // GEEETECH custom store patterns (check first)
+      /class=["'][^"']*products-list-item-price-special[^"']*["'][^>]*>\s*\$?([\d.,]+)/gi,
+      /class=["'][^"']*special-price[^"']*["'][^>]*>\s*\$?([\d.,]+)/gi,
+      
       // Microcenter patterns
       /id=["']pricing["'][^>]*>.*?[\$€£]\s*([\d.,]+)/gis,
       /class=["'][^"']*productPrice[^"']*["'][^>]*>\s*[\$€£]?\s*([\d.,]+)/gi,
