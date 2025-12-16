@@ -855,155 +855,239 @@ export class FirecrawlScraper extends BaseScraper {
 
   /**
    * Extrudr Extraction - Austrian custom platform
+   * Scrapes individual material pages with comprehensive data extraction
    */
   private async extractExtrudrProducts(baseUrl: string): Promise<ScrapedProduct[]> {
     const products: ScrapedProduct[] = [];
     const seenIds = new Set<string>();
     
-    try {
-      this.log(`Scraping Extrudr from: ${baseUrl}`);
-      
-      const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.firecrawlApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: baseUrl,
-          formats: ["markdown", "html"],
-          waitFor: 3000,
-        }),
-      });
+    // Hardcoded material slugs - verified from extrudr.com/en/inlt/products/
+    const EXTRUDR_MATERIALS = [
+      // PLA line
+      'pla-basic', 'pla-nx2-matt',
+      // PETG line
+      'petg', 'pctg',
+      // DuraPro Engineering materials
+      'durapro-abs', 'durapro-abs-cf', 'durapro-asa', 'durapro-asa-cf', 
+      'durapro-asa-gf', 'durapro-pa12', 'durapro-pc-pbt',
+      // Bio/Natural materials
+      'biofusion', 'greentec', 'greentec-pro', 'greentec-pro-carbon', 'wood', 'pearl', 'flax',
+      // TPU Flexible line
+      'flex-semisoft', 'flex-medium', 'flex-hard', 'flex-hard-cf',
+      // Special materials
+      'xpetg', 'pla-matt'
+    ];
 
-      if (!scrapeResponse.ok) {
-        this.logError(`Failed to scrape Extrudr: ${scrapeResponse.status}`);
-        return [];
-      }
-
-      const data = await scrapeResponse.json();
-      const markdown = data.data?.markdown || data.markdown || "";
+    // EUR to USD conversion rate
+    const EUR_TO_USD = 1.08;
+    
+    this.log(`Starting Extrudr scrape with ${EXTRUDR_MATERIALS.length} material pages`);
+    
+    for (let i = 0; i < EXTRUDR_MATERIALS.length; i++) {
+      const slug = EXTRUDR_MATERIALS[i];
+      const productUrl = `https://www.extrudr.com/en/inlt/products/${slug}/`;
       
-      this.log(`Got markdown (${markdown.length} chars)`);
+      try {
+        this.log(`[${i + 1}/${EXTRUDR_MATERIALS.length}] Scraping Extrudr material: ${slug}`);
+        
+        const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.firecrawlApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: productUrl,
+            formats: ["markdown"],
+            waitFor: 3000,
+          }),
+        });
 
-      // Parse material sections
-      // Pattern: ### PETG
-      //          1.75 mm | 1.1 kg
-      //          [image](productUrl)
-      //          XX,XX €
-      const materialSections = markdown.split(/(?=###\s+[A-Z]+)/);
-      
-      for (const section of materialSections) {
-        const materialMatch = section.match(/^###\s+([A-Z0-9+\-\/]+)/);
-        if (!materialMatch) continue;
+        if (!scrapeResponse.ok) {
+          this.logError(`Failed to scrape Extrudr ${slug}: ${scrapeResponse.status}`);
+          continue;
+        }
+
+        const data = await scrapeResponse.json();
+        const markdown = data.data?.markdown || data.markdown || "";
         
-        const material = materialMatch[1];
+        if (!markdown || markdown.length < 100) {
+          this.log(`Skipping ${slug} - no content`);
+          continue;
+        }
         
-        // Find product entries in this section
-        // Pattern: [imageOrLink](url) followed by price XX,XX €
-        const productPattern = /\[(?:!\[[^\]]*\]\([^)]+\)|[^\]]+)\]\((https?:\/\/www\.extrudr\.com\/[^)]+)\)[\s\S]*?(\d+[,.]?\d*)\s*€/gi;
+        // Extract material name from heading
+        const nameMatch = markdown.match(/^#\s+(.+)$/m);
+        const materialName = nameMatch?.[1]?.trim() || slug.toUpperCase().replace(/-/g, ' ');
         
-        let match;
-        while ((match = productPattern.exec(section)) !== null) {
-          const [, productUrl, priceStr] = match;
-          
-          // Extract product details from URL
-          const urlParts = productUrl.split('/');
-          const productSlug = urlParts[urlParts.length - 2] || urlParts[urlParts.length - 1];
-          const productId = `extrudr-${material}-${productSlug}`.toLowerCase();
+        // Extract SKU/EAN barcode
+        const skuMatch = markdown.match(/SKU:\s*\*\*(\d+)\*\*/i) || markdown.match(/EAN:\s*(\d{13})/i);
+        const sku = skuMatch?.[1] || null;
+        
+        // Extract temperatures
+        const bedTempMatch = markdown.match(/Print\s*Bed\s*Temperature[:\s]*(\d+)\s*[-–]?\s*(\d+)?\s*°?C/i);
+        const nozzleTempMatch = markdown.match(/Printing\s*Temperature[:\s]*(\d+)\s*[-–]?\s*(\d+)?\s*°?C/i);
+        
+        const bedTempMin = bedTempMatch ? parseInt(bedTempMatch[1]) : null;
+        const bedTempMax = bedTempMatch?.[2] ? parseInt(bedTempMatch[2]) : bedTempMin;
+        const nozzleTempMin = nozzleTempMatch ? parseInt(nozzleTempMatch[1]) : null;
+        const nozzleTempMax = nozzleTempMatch?.[2] ? parseInt(nozzleTempMatch[2]) : nozzleTempMin;
+        
+        // Extract image URL
+        const imageMatch = markdown.match(/!\[[^\]]*\]\((https:\/\/(?:s3\.extrudr\.com|www\.extrudr\.com\/_next\/image)[^)]+)\)/);
+        let imageUrl = imageMatch?.[1] || null;
+        // Clean Next.js image wrapper if present
+        if (imageUrl?.includes('/_next/image')) {
+          const urlParam = imageUrl.match(/url=([^&]+)/);
+          if (urlParam) {
+            imageUrl = decodeURIComponent(urlParam[1]);
+          }
+        }
+        
+        // Extract colors from the color section
+        const colorSectionMatch = markdown.match(/###\s*color[\s\S]*?(?=###|$)/i);
+        const colors: string[] = [];
+        
+        if (colorSectionMatch) {
+          // Look for color names in the section - typically listed as bullet points or links
+          const colorLines = colorSectionMatch[0].match(/(?:^|\n)\s*[-*]?\s*\[?([a-z][a-z\s]{2,20})\]?/gim);
+          if (colorLines) {
+            for (const line of colorLines) {
+              const colorName = line.replace(/^[\s\-*\[\]]+/, '').trim().toLowerCase();
+              // Filter out non-color words
+              if (colorName && colorName.length > 1 && colorName.length < 25 && 
+                  !colorName.includes('http') && !colorName.includes('extrudr') &&
+                  !colorName.includes('filament') && !colorName.includes('diameter')) {
+                colors.push(colorName);
+              }
+            }
+          }
+        }
+        
+        // If no colors found, try alternative patterns
+        if (colors.length === 0) {
+          const altColorMatch = markdown.match(/colors?[:\s]+([^\n]+)/i);
+          if (altColorMatch) {
+            const colorList = altColorMatch[1].split(/[,|\/]/).map((c: string) => c.trim().toLowerCase()).filter((c: string) => c.length > 1 && c.length < 20);
+            colors.push(...colorList);
+          }
+        }
+        
+        // Fallback to common colors if still none found
+        if (colors.length === 0) {
+          colors.push('natural'); // Default color
+        }
+        
+        // Extract weight options
+        const weightMatches = markdown.match(/(\d+(?:\.\d+)?)\s*kg/gi);
+        const weightsSet = new Set<number>();
+        if (weightMatches) {
+          for (const w of weightMatches) {
+            weightsSet.add(parseFloat(w) * 1000);
+          }
+        }
+        const weights: number[] = weightsSet.size > 0 ? Array.from(weightsSet) : [1100]; // Default 1.1kg
+        const defaultWeight = weights[0] || 1100;
+        
+        // Extract diameter options
+        const diameterMatches = markdown.match(/(\d+(?:\.\d+)?)\s*mm(?:\s*(?:diameter|filament))?/gi);
+        const diameterSet = new Set<number>();
+        if (diameterMatches) {
+          for (const d of diameterMatches) {
+            const val = parseFloat(d);
+            if (val >= 1.5 && val <= 3) diameterSet.add(val);
+          }
+        }
+        const diameters: number[] = diameterSet.size > 0 ? Array.from(diameterSet) : [1.75];
+        const defaultDiameter = diameters.includes(1.75) ? 1.75 : diameters[0] || 1.75;
+        
+        // Extract prices - look for both regular and sale prices
+        const priceMatches = markdown.match(/(\d+[,.]?\d*)\s*€/g);
+        let price: number | null = null;
+        let compareAtPrice: number | null = null;
+        
+        if (priceMatches && priceMatches.length > 0) {
+          const prices = priceMatches.map((p: string) => parseFloat(p.replace(',', '.').replace('€', '').trim())).filter((p: number) => p > 0 && p < 500);
+          if (prices.length >= 2) {
+            // Assume first is original, second is sale
+            compareAtPrice = Math.max(...prices) * EUR_TO_USD;
+            price = Math.min(...prices) * EUR_TO_USD;
+          } else if (prices.length === 1) {
+            price = prices[0] * EUR_TO_USD;
+          }
+        }
+        
+        // Detect material type from slug/name
+        let detectedMaterial = slug.toUpperCase().replace(/-/g, ' ');
+        if (slug.includes('pla')) detectedMaterial = 'PLA';
+        else if (slug.includes('petg') || slug.includes('pctg')) detectedMaterial = 'PETG';
+        else if (slug.includes('abs')) detectedMaterial = 'ABS';
+        else if (slug.includes('asa')) detectedMaterial = 'ASA';
+        else if (slug.includes('pa12') || slug.includes('nylon')) detectedMaterial = 'Nylon';
+        else if (slug.includes('flex') || slug.includes('tpu')) detectedMaterial = 'TPU';
+        else if (slug.includes('pc-pbt')) detectedMaterial = 'PC';
+        else if (slug.includes('wood')) detectedMaterial = 'Wood';
+        else if (slug.includes('greentec')) detectedMaterial = 'GreenTEC';
+        else if (slug.includes('biofusion')) detectedMaterial = 'BioFusion';
+        else if (slug.includes('pearl')) detectedMaterial = 'Pearl';
+        else if (slug.includes('flax')) detectedMaterial = 'Flax';
+        
+        // Check for carbon fiber
+        const isCF = slug.includes('-cf') || slug.includes('carbon');
+        const isGF = slug.includes('-gf') || slug.includes('glass');
+        
+        this.log(`  Found: ${materialName}, ${colors.length} colors, temps: ${nozzleTempMin}-${nozzleTempMax}°C nozzle, €${price ? (price / EUR_TO_USD).toFixed(2) : 'N/A'}`);
+        
+        // Create a product for each color variant
+        for (const colorName of colors) {
+          const cleanColor = colorName.replace(/[^a-z0-9\s]/gi, '').trim();
+          const productId = `extrudr-${slug}-${cleanColor.replace(/\s+/g, '-')}`.toLowerCase();
           
           if (seenIds.has(productId)) continue;
           seenIds.add(productId);
           
-          const price = parseFloat(priceStr.replace(',', '.'));
-          const colorInfo = this.extractColorFromText(productSlug);
-          
-          // Extract specs from nearby text
-          const specsMatch = section.match(/(\d+\.?\d*)\s*mm\s*\|\s*(\d+\.?\d*)\s*kg/i);
-          const diameter = specsMatch ? parseFloat(specsMatch[1]) : 1.75;
-          const weightKg = specsMatch ? parseFloat(specsMatch[2]) : 1.0;
+          // Get color hex from our color map
+          const colorInfo = this.extractColorFromText(cleanColor);
           
           const product: ScrapedProduct = {
             productId,
-            sku: null,
-            title: `Extrudr ${material} ${colorInfo?.name || productSlug}`,
-            price: price > 0 ? price * 1.08 : null, // EUR to USD
-            compareAtPrice: null,
+            sku,
+            title: `Extrudr ${materialName} ${cleanColor.charAt(0).toUpperCase() + cleanColor.slice(1)}`,
+            price: price ? Math.round(price * 100) / 100 : null,
+            compareAtPrice: compareAtPrice ? Math.round(compareAtPrice * 100) / 100 : null,
             available: true,
-            currency: "EUR",
+            currency: "USD", // Converted from EUR
             url: productUrl,
             scrapedAt: new Date(),
             source: "firecrawl-extrudr",
-            imageUrl: null,
-            barcode: null,
-            description: `${material} filament - ${diameter}mm`,
-            mpn: null,
-            tdsUrl: null,
+            imageUrl,
+            barcode: sku && sku.length >= 12 ? sku : null,
+            description: `${materialName} filament by Extrudr - ${defaultDiameter}mm diameter, ${defaultWeight}g${isCF ? ' - Carbon Fiber reinforced' : ''}${isGF ? ' - Glass Fiber reinforced' : ''}`,
+            mpn: sku,
+            tdsUrl: `https://www.extrudr.com/en/downloads/?search=${encodeURIComponent(materialName)}`,
             colorHex: colorInfo?.hex || null,
-            colorName: colorInfo?.name || null,
-            nozzleTempMin: null,
-            nozzleTempMax: null,
-            bedTempMin: null,
-            bedTempMax: null,
-            spoolMaterial: null,
-            netWeightG: Math.round(weightKg * 1000),
-            diameterMm: diameter,
-            spoolOuterDiameterMm: null,
-            spoolWidthMm: null,
+            colorName: cleanColor,
+            nozzleTempMin,
+            nozzleTempMax,
+            bedTempMin,
+            bedTempMax,
+            spoolMaterial: 'cardboard', // Extrudr uses eco-friendly cardboard spools
+            netWeightG: defaultWeight,
+            diameterMm: defaultDiameter,
+            spoolOuterDiameterMm: 200, // Standard Extrudr spool
+            spoolWidthMm: 55,
           };
           
           products.push(product);
-          this.log(`✓ Extrudr ${material} - €${priceStr}`);
+          this.log(`    ✓ ${cleanColor} variant added`);
         }
+        
+        // Rate limiting between material pages
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+      } catch (error) {
+        this.logError(`Error extracting Extrudr ${slug}:`, error);
       }
-
-      // Fallback: try to find any product links
-      if (products.length === 0) {
-        const fallbackPattern = /\[((?:PETG|PLA|ABS|ASA|TPU|Nylon|PA)[^\]]*)\]\((https?:\/\/www\.extrudr\.com\/[^)]+)\)/gi;
-        let match;
-        while ((match = fallbackPattern.exec(markdown)) !== null) {
-          const [, productName, productUrl] = match;
-          const productId = productUrl.split('/').filter(Boolean).pop() || productName.toLowerCase().replace(/\s+/g, '-');
-          
-          if (seenIds.has(productId)) continue;
-          seenIds.add(productId);
-          
-          const product: ScrapedProduct = {
-            productId,
-            sku: null,
-            title: `Extrudr ${productName}`,
-            price: null,
-            compareAtPrice: null,
-            available: true,
-            currency: "EUR",
-            url: productUrl,
-            scrapedAt: new Date(),
-            source: "firecrawl-extrudr",
-            imageUrl: null,
-            barcode: null,
-            description: null,
-            mpn: null,
-            tdsUrl: null,
-            colorHex: null,
-            colorName: null,
-            nozzleTempMin: null,
-            nozzleTempMax: null,
-            bedTempMin: null,
-            bedTempMax: null,
-            spoolMaterial: null,
-            netWeightG: 1100,
-            diameterMm: 1.75,
-            spoolOuterDiameterMm: null,
-            spoolWidthMm: null,
-          };
-          
-          products.push(product);
-          this.log(`✓ Extrudr ${productName}`);
-        }
-      }
-      
-    } catch (error) {
-      this.logError(`Error extracting Extrudr products:`, error);
     }
     
     this.log(`Total Extrudr products: ${products.length}`);
