@@ -34,6 +34,11 @@ interface AutomatedBrand {
   products_updated: number;
   products_with_prices: number;
   products_with_urls: number;
+  products_with_images: number;
+  products_with_tds: number;
+  products_with_mpn: number;
+  products_with_codes: number;
+  products_with_color_hex: number;
   total_scrapes: number;
   successful_scrapes: number;
   failed_scrapes: number;
@@ -641,7 +646,7 @@ const AdminBrands = () => {
                     </CardHeader>
                     <CardContent>
                       {/* Stats Row */}
-                      <div className="grid grid-cols-5 gap-2 mb-4 text-center">
+                      <div className="grid grid-cols-5 gap-2 mb-3 text-center">
                         <div>
                           <p className="text-lg font-semibold text-foreground">{brand.product_count || 0}</p>
                           <p className="text-xs text-muted-foreground">Products</p>
@@ -666,6 +671,35 @@ const AdminBrands = () => {
                             }
                           </p>
                           <p className="text-xs text-muted-foreground">Success</p>
+                        </div>
+                      </div>
+
+                      {/* Enrichment Stats Row */}
+                      <div className="flex items-center justify-between gap-2 py-2 px-3 bg-muted/30 rounded-lg mb-3">
+                        <div className="flex items-center gap-1.5">
+                          <Image className="w-3.5 h-3.5 text-cyan-500" />
+                          <span className="text-sm font-medium text-foreground">{brand.products_with_images || 0}</span>
+                          <span className="text-xs text-muted-foreground">images</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-amber-500" />
+                          <span className="text-sm font-medium text-foreground">{brand.products_with_tds || 0}</span>
+                          <span className="text-xs text-muted-foreground">TDS</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Barcode className="w-3.5 h-3.5 text-purple-500" />
+                          <span className="text-sm font-medium text-foreground">{brand.products_with_codes || 0}</span>
+                          <span className="text-xs text-muted-foreground">codes</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5 text-emerald-500" />
+                          <span className="text-sm font-medium text-foreground">{brand.products_with_mpn || 0}</span>
+                          <span className="text-xs text-muted-foreground">MPN</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Palette className="w-3.5 h-3.5 text-pink-500" />
+                          <span className="text-sm font-medium text-foreground">{brand.products_with_color_hex || 0}</span>
+                          <span className="text-xs text-muted-foreground">colors</span>
                         </div>
                       </div>
 

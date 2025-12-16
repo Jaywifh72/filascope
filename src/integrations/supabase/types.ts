@@ -279,7 +279,12 @@ export type Database = {
           products_created: number | null
           products_updated: number | null
           products_url: string | null
+          products_with_codes: number | null
+          products_with_color_hex: number | null
+          products_with_images: number | null
+          products_with_mpn: number | null
           products_with_prices: number | null
+          products_with_tds: number | null
           products_with_urls: number | null
           rate_limit_ms: number | null
           requires_auth: boolean | null
@@ -342,7 +347,12 @@ export type Database = {
           products_created?: number | null
           products_updated?: number | null
           products_url?: string | null
+          products_with_codes?: number | null
+          products_with_color_hex?: number | null
+          products_with_images?: number | null
+          products_with_mpn?: number | null
           products_with_prices?: number | null
+          products_with_tds?: number | null
           products_with_urls?: number | null
           rate_limit_ms?: number | null
           requires_auth?: boolean | null
@@ -405,7 +415,12 @@ export type Database = {
           products_created?: number | null
           products_updated?: number | null
           products_url?: string | null
+          products_with_codes?: number | null
+          products_with_color_hex?: number | null
+          products_with_images?: number | null
+          products_with_mpn?: number | null
           products_with_prices?: number | null
+          products_with_tds?: number | null
           products_with_urls?: number | null
           rate_limit_ms?: number | null
           requires_auth?: boolean | null
@@ -4286,6 +4301,10 @@ export type Database = {
         Returns: undefined
       }
       start_brand_scrape: { Args: { p_brand_slug: string }; Returns: boolean }
+      update_brand_enrichment_counts: {
+        Args: { p_brand_slug: string }
+        Returns: undefined
+      }
       update_brand_product_counts: {
         Args: { p_brand_slug?: string }
         Returns: undefined

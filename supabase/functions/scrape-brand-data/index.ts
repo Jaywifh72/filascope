@@ -192,7 +192,8 @@ async function createBrandSyncLog(
 async function completeBrandSyncLog(
   supabase: SupabaseClient,
   syncLogId: string,
-  stats: ScrapeStats
+  stats: ScrapeStats,
+  brandSlug: string
 ): Promise<void> {
   // First update via RPC for automated_brands stats
   const { error } = await supabase.rpc('complete_brand_scrape', {
@@ -208,6 +209,17 @@ async function completeBrandSyncLog(
 
   if (error) {
     console.error(`Failed to complete brand sync log ${syncLogId}:`, error);
+  }
+
+  // Update enrichment counts for this brand
+  const { error: enrichError } = await supabase.rpc('update_brand_enrichment_counts', {
+    p_brand_slug: brandSlug
+  });
+
+  if (enrichError) {
+    console.error(`Failed to update enrichment counts for ${brandSlug}:`, enrichError);
+  } else {
+    console.log(`📊 Updated enrichment counts for ${brandSlug}`);
   }
 
   // Save detailed success_details and products_processed to brand_sync_logs
@@ -754,7 +766,7 @@ Deno.serve(async (req) => {
 
         // Complete the sync log for this vendor (updates brand_sync_logs AND automated_brands)
         if (syncLogId) {
-          await completeBrandSyncLog(supabase, syncLogId, stats);
+          await completeBrandSyncLog(supabase, syncLogId, stats, brandSlug);
           console.log(`✅ Completed sync log for ${v}: ${stats.created} created, ${stats.updated} updated`);
         }
 
@@ -822,7 +834,7 @@ Deno.serve(async (req) => {
         
         // Complete sync log with error status
         if (syncLogId) {
-          await completeBrandSyncLog(supabase, syncLogId, errorStats);
+          await completeBrandSyncLog(supabase, syncLogId, errorStats, brandSlug);
         }
         
         totalStats.errors++;
