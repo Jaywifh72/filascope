@@ -4245,6 +4245,13 @@ export type Database = {
     }
     Functions: {
       cleanup_old_price_history: { Args: never; Returns: number }
+      cleanup_stuck_scrapes: {
+        Args: never
+        Returns: {
+          brands_reset: number
+          logs_fixed: number
+        }[]
+      }
       complete_brand_scrape: {
         Args: {
           p_error_message?: string
