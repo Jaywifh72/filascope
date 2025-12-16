@@ -9,6 +9,9 @@ import filascopeLogo from "@/assets/filascope-logo.png";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { PrinterSelectorHeader } from "@/components/PrinterSelectorHeader";
+import { TrendingTriggerButton } from "@/components/TrendingTriggerButton";
+import { TrendingPanel } from "@/components/TrendingPanel";
+import { useTrendingPanel } from "@/hooks/useTrendingPanel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +31,9 @@ const Navbar = ({ compatibleCount = 0 }: NavbarProps) => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  
+  // Trending panel state
+  const trendingPanel = useTrendingPanel();
 
   // Show printer selector only on Finder page (/)
   const showPrinterSelector = location.pathname === "/" || location.pathname === "/materials";
@@ -188,6 +194,11 @@ const Navbar = ({ compatibleCount = 0 }: NavbarProps) => {
 
           {/* User Actions */}
           <div className="flex items-center gap-3 shrink-0">
+            <TrendingTriggerButton
+              onClick={trendingPanel.openPanel}
+              newTrendCount={trendingPanel.newTrendCount}
+              isOpen={trendingPanel.isOpen}
+            />
             <WishlistButton />
             <CurrencySelector />
             {user ? (
@@ -275,6 +286,19 @@ const Navbar = ({ compatibleCount = 0 }: NavbarProps) => {
           </div>
         )}
       </nav>
+      
+      {/* Trending Panel */}
+      <TrendingPanel
+        isOpen={trendingPanel.isOpen}
+        onClose={trendingPanel.closePanel}
+        selectedTab={trendingPanel.selectedTab}
+        onTabChange={trendingPanel.setSelectedTab}
+        activeTrends={trendingPanel.activeTrends}
+        predictions={trendingPanel.predictions}
+        isLoading={trendingPanel.isLoading}
+        error={trendingPanel.error}
+        viewedTrendIds={trendingPanel.viewedTrendIds}
+      />
     </>
   );
 };
