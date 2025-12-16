@@ -2,6 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===========================================
+   SEMANTIC COLOR SYSTEM
+   ===========================================
+   
+   PRIMARY (Cyan):
+   - Primary buttons, links, selected states
+   - Brand elements, rating highlights
+   - NEVER for status badges
+   
+   SUCCESS (Green):
+   - In stock, compatible, verified, safe
+   - Easy difficulty, budget-friendly, brass safe
+   
+   WARNING (Orange):
+   - Limited stock, caution, needs attention
+   - Advanced difficulty, trending items
+   
+   ERROR (Red):
+   - Out of stock, incompatible, errors
+   - Destructive actions
+   
+   INFO (Blue):
+   - Informational features (High Speed, Glass Fiber)
+   - Universal compatibility, color match info
+   
+   NEUTRAL (Gray/Slate):
+   - Limited data, disabled states
+   - Secondary information, carbon fiber
+   
+   PURPLE:
+   - Material types (PLA, PETG, ABS, etc.)
+   
+   PINK:
+   - Premium/special materials
+=========================================== */
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
