@@ -328,164 +328,151 @@ export class FirecrawlScraper extends BaseScraper {
 
   /**
    * 3DFilamentProfiles.com Extraction for TECBEARS
-   * Extracts product data from the filament database site
+   * Parses Markdown table format to extract product data directly
    */
   private async extract3DFilamentProfilesProducts(categoryUrl: string): Promise<ScrapedProduct[]> {
     const products: ScrapedProduct[] = [];
     const seenIds = new Set<string>();
     
-    try {
-      this.log(`Scraping 3dfilamentprofiles.com: ${categoryUrl}`);
-      
-      // Scrape the category page
-      const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.firecrawlApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: categoryUrl,
-          formats: ["html", "markdown"],
-          waitFor: 3000,
-        }),
-      });
-
-      if (!scrapeResponse.ok) {
-        this.logError(`Failed to scrape ${categoryUrl}: ${scrapeResponse.status}`);
-        return [];
-      }
-
-      const data = await scrapeResponse.json();
-      const html = data.data?.html || data.html || "";
-      const markdown = data.data?.markdown || data.markdown || "";
-      
-      if (!html && !markdown) {
-        this.log(`No content returned for ${categoryUrl}`);
-        return [];
-      }
-
-      this.log(`Got HTML (${html.length} chars) and Markdown (${markdown.length} chars)`);
-
-      // Try to extract product links from HTML
-      // Look for patterns like: <a href="..." class="product-title"> or product card links
-      const productLinkPatterns = [
-        /<a[^>]*href="([^"]*\/filaments\/[^"]+)"[^>]*class="[^"]*product[^"]*"[^>]*>([^<]+)</gi,
-        /<a[^>]*class="[^"]*product[^"]*"[^>]*href="([^"]*\/filaments\/[^"]+)"[^>]*>([^<]+)</gi,
-        /href="(https?:\/\/3dfilamentprofiles\.com\/filaments\/[^"]+)"[^>]*>([^<]+)</gi,
-        /<a[^>]*href="([^"]*)"[^>]*>([^<]*(?:PLA|PETG|ABS|TPU|ASA|Nylon)[^<]*)</gi,
-      ];
-
-      const foundProducts: { url: string; title: string }[] = [];
-      
-      for (const pattern of productLinkPatterns) {
-        let match;
-        while ((match = pattern.exec(html)) !== null) {
-          const [, url, title] = match;
-          if (url && title && !url.includes('/tecbears') && url !== categoryUrl) {
-            // Make URL absolute if needed
-            const absoluteUrl = url.startsWith('http') ? url : `https://3dfilamentprofiles.com${url}`;
-            foundProducts.push({ url: absoluteUrl, title: title.trim() });
-          }
-        }
-      }
-
-      // Also try parsing from markdown for product listings
-      const markdownProductPattern = /\[([^\]]+)\]\((\/filaments\/[^)]+)\)/gi;
-      let mdMatch;
-      while ((mdMatch = markdownProductPattern.exec(markdown)) !== null) {
-        const [, title, path] = mdMatch;
-        if (title && path && !path.includes('/tecbears')) {
-          const absoluteUrl = `https://3dfilamentprofiles.com${path}`;
-          foundProducts.push({ url: absoluteUrl, title: title.trim() });
-        }
-      }
-
-      this.log(`Found ${foundProducts.length} potential product links`);
-
-      // Deduplicate by URL
-      const uniqueProducts = new Map<string, { url: string; title: string }>();
-      for (const p of foundProducts) {
-        if (!uniqueProducts.has(p.url)) {
-          uniqueProducts.set(p.url, p);
-        }
-      }
-
-      this.log(`${uniqueProducts.size} unique product URLs to scrape`);
-
-      // Scrape each product page for details
-      for (const [url, { title }] of uniqueProducts) {
-        // Generate ID from URL
-        const urlParts = url.split('/');
-        const productSlug = urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
-        const productId = productSlug || `tecbears-${seenIds.size + 1}`;
+    // Pages to scrape (3 pages of TECBEARS products)
+    const pageUrls = [
+      categoryUrl,
+      `${categoryUrl}?page=2`,
+      `${categoryUrl}?page=3`,
+    ];
+    
+    for (const pageUrl of pageUrls) {
+      try {
+        this.log(`Scraping page: ${pageUrl}`);
         
-        if (seenIds.has(productId)) continue;
-        seenIds.add(productId);
+        const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.firecrawlApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: pageUrl,
+            formats: ["markdown"],
+            waitFor: 3000,
+          }),
+        });
 
-        try {
-          this.log(`Scraping product: ${url}`);
-          
-          const productResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${this.firecrawlApiKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              url,
-              formats: ["html", "markdown"],
-              waitFor: 2000,
-            }),
-          });
+        if (!scrapeResponse.ok) {
+          this.logError(`Failed to scrape ${pageUrl}: ${scrapeResponse.status}`);
+          continue;
+        }
 
-          if (!productResponse.ok) {
-            this.logError(`Failed to scrape product ${url}: ${productResponse.status}`);
+        const data = await scrapeResponse.json();
+        const markdown = data.data?.markdown || data.markdown || "";
+        
+        if (!markdown) {
+          this.log(`No markdown content for ${pageUrl}`);
+          continue;
+        }
+
+        this.log(`Got Markdown (${markdown.length} chars) from ${pageUrl}`);
+
+        // Parse table rows from markdown
+        // Format: | Brand | Material | Type | Color | RGB Hex | TD | Price | Deal | Edit |
+        // Each cell contains markdown links like [text](url)
+        
+        // Split into lines and find table rows
+        const lines = markdown.split('\n');
+        let inTable = false;
+        
+        for (const line of lines) {
+          // Skip header rows and separator rows
+          if (line.includes('Brand') && line.includes('Material') && line.includes('Color')) {
+            inTable = true;
             continue;
           }
-
-          const productData = await productResponse.json();
-          const productHtml = productData.data?.html || productData.html || "";
-          const productMarkdown = productData.data?.markdown || productData.markdown || "";
-
-          // Extract price
-          let price: number | null = null;
-          const pricePatterns = [
-            /\$(\d+(?:\.\d{2})?)/,
-            /price[^>]*>[\s$]*(\d+(?:\.\d{2})?)/i,
-            /(\d+(?:\.\d{2})?)\s*USD/i,
-          ];
+          if (line.match(/^\|[\s-:]+\|/)) continue;
+          if (!line.startsWith('|') || !line.includes('TecBears')) continue;
           
-          for (const pricePattern of pricePatterns) {
-            const priceMatch = productHtml.match(pricePattern) || productMarkdown.match(pricePattern);
-            if (priceMatch) {
-              price = parseFloat(priceMatch[1]);
-              if (price > 0 && price < 500) break;
-              price = null;
+          inTable = true;
+          
+          // Parse the table row cells
+          const cells = line.split('|').map((c: string) => c.trim()).filter((c: string) => c);
+          
+          if (cells.length < 7) continue;
+          
+          // Extract data from cells
+          // Cell 0: Brand (TecBears)
+          // Cell 1: Material (e.g., [ABS](url))
+          // Cell 2: Type (e.g., [Basic](url))
+          // Cell 3: Color (e.g., [Black](url))
+          // Cell 4: RGB Hex (e.g., #1A1A1A or empty)
+          // Cell 5: TD (technical data indicator)
+          // Cell 6: Price (e.g., [$18.99](amazon-url) or empty)
+          
+          // Extract material
+          const materialMatch = cells[1]?.match(/\[([^\]]+)\]/);
+          const material = materialMatch ? materialMatch[1].trim() : null;
+          
+          // Extract type
+          const typeMatch = cells[2]?.match(/\[([^\]]+)\]/);
+          const type = typeMatch ? typeMatch[1].trim() : null;
+          
+          // Extract color and detail URL
+          const colorMatch = cells[3]?.match(/\[([^\]]+)\]\(([^)]+)\)/);
+          const colorName = colorMatch ? colorMatch[1].trim() : null;
+          const detailUrl = colorMatch ? colorMatch[2] : null;
+          
+          // Extract product ID from detail URL
+          let productId: string | null = null;
+          if (detailUrl) {
+            const idMatch = detailUrl.match(/\/filament\/details\/(\d+)/);
+            if (idMatch) {
+              productId = idMatch[1];
             }
           }
-
-          // Extract product title from page
-          let productTitle = title;
-          const titleMatch = productHtml.match(/<h1[^>]*>([^<]+)</i) || 
-                            productHtml.match(/<title>([^<]+)</i);
-          if (titleMatch) {
-            productTitle = titleMatch[1].replace(/\s*[-|].*$/, '').trim();
+          
+          if (!productId) {
+            // Generate ID from material+type+color
+            productId = `tecbears-${(material || 'unknown')}-${(type || 'basic')}-${(colorName || 'unknown')}`.toLowerCase().replace(/\s+/g, '-');
           }
-
-          // Extract image
-          let imageUrl: string | null = null;
-          const imgMatch = productHtml.match(/<img[^>]*src="([^"]*(?:product|filament)[^"]*)"[^>]*>/i) ||
-                          productHtml.match(/<img[^>]*class="[^"]*product[^"]*"[^>]*src="([^"]*)"[^>]*>/i);
-          if (imgMatch) {
-            imageUrl = imgMatch[1].startsWith('http') ? imgMatch[1] : `https://3dfilamentprofiles.com${imgMatch[1]}`;
+          
+          if (seenIds.has(productId)) continue;
+          seenIds.add(productId);
+          
+          // Extract hex color
+          let colorHex: string | null = null;
+          const hexMatch = cells[4]?.match(/#([0-9A-Fa-f]{6})/);
+          if (hexMatch) {
+            colorHex = `#${hexMatch[1].toUpperCase()}`;
           }
-
-          // Detect material from title
-          const material = this.detectMaterial(productTitle);
-          const weight = this.extractWeightFromTitle(productTitle);
-          const diameter = this.extractDiameterFromTitle(productTitle);
-
+          
+          // Extract price and Amazon URL
+          let price: number | null = null;
+          let amazonUrl: string | null = null;
+          const priceCell = cells[6] || '';
+          const priceMatch = priceCell.match(/\[\$?([\d.]+)\]\(([^)]+)\)/);
+          if (priceMatch) {
+            price = parseFloat(priceMatch[1]);
+            amazonUrl = priceMatch[2];
+            if (price <= 0 || price > 500) price = null;
+          } else {
+            // Try plain price without link
+            const plainPriceMatch = priceCell.match(/\$?([\d.]+)/);
+            if (plainPriceMatch) {
+              price = parseFloat(plainPriceMatch[1]);
+              if (price <= 0 || price > 500) price = null;
+            }
+          }
+          
+          // Build product title
+          const titleParts = ['TecBears'];
+          if (material) titleParts.push(material);
+          if (type && type.toLowerCase() !== 'basic') titleParts.push(type);
+          if (colorName) titleParts.push(colorName);
+          const productTitle = titleParts.join(' ');
+          
+          // Build full product URL
+          const productUrl = detailUrl 
+            ? (detailUrl.startsWith('http') ? detailUrl : `https://3dfilamentprofiles.com${detailUrl}`)
+            : amazonUrl || `https://3dfilamentprofiles.com/filaments/tecbears`;
+          
           // Create product entry
           const product: ScrapedProduct = {
             productId,
@@ -495,44 +482,37 @@ export class FirecrawlScraper extends BaseScraper {
             compareAtPrice: null,
             available: true,
             currency: "USD",
-            url: url,
+            url: amazonUrl || productUrl, // Prefer Amazon URL for purchase
             scrapedAt: new Date(),
             source: "3dfilamentprofiles",
-            imageUrl,
+            imageUrl: null, // No images in table
             barcode: null,
-            description: null,
+            description: material ? `${material} filament${type ? ` - ${type}` : ''}` : null,
             mpn: null,
             tdsUrl: null,
-            colorHex: null,
-            colorName: null,
+            colorHex,
+            colorName,
             nozzleTempMin: null,
             nozzleTempMax: null,
             bedTempMin: null,
             bedTempMax: null,
             spoolMaterial: null,
-            netWeightG: weight || 1000,
-            diameterMm: diameter || 1.75,
+            netWeightG: 1000, // Default 1kg
+            diameterMm: 1.75, // Default 1.75mm
             spoolOuterDiameterMm: null,
             spoolWidthMm: null,
           };
-
-          if (material) {
-            product.description = `${material} filament`;
-          }
           
           products.push(product);
-          this.log(`✓ Extracted: ${productTitle}${price ? ` - $${price}` : ''}${material ? ` (${material})` : ''}`);
-
-          // Rate limiting
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-        } catch (error) {
-          this.logError(`Error scraping product ${url}:`, error);
+          this.log(`✓ ${productTitle}${price ? ` - $${price}` : ''}${colorHex ? ` (${colorHex})` : ''}`);
         }
+        
+        // Rate limiting between pages
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (error) {
+        this.logError(`Error scraping page ${pageUrl}:`, error);
       }
-      
-    } catch (error) {
-      this.logError(`Error in extract3DFilamentProfilesProducts:`, error);
     }
     
     this.log(`Total TECBEARS products extracted: ${products.length}`);
