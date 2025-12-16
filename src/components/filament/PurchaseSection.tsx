@@ -63,14 +63,16 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
     });
   }
   
-  // Amazon retailers
+  // Amazon retailers - now with scraped prices
+  const amazonPrice = (filament as any).amazon_price_usd;
+  
   if (filament.amazon_link_us) {
     retailers.push({
       id: 'amazon_us',
       name: 'Amazon',
       region: 'US',
       url: getAmazonUrl(filament.amazon_link_us, "us") || filament.amazon_link_us,
-      price: null,
+      price: amazonPrice || null,
       currency: 'USD',
       isPrimary: false,
       available: true,
