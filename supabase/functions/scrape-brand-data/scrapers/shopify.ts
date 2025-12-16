@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { findTdsUrl, extractPrintSettings, extractSpoolSpecs, classifyVariant, extractColorInfo, COLOR_HEX_MAP } from "../utils.ts";
+import { findTdsUrl, extractPrintSettings, extractSpoolSpecs, classifyVariant, extractColorInfo, COLOR_HEX_MAP, intelligentTitleClean } from "../utils.ts";
 
 interface ShopifyProduct {
   id: number;
@@ -86,10 +86,13 @@ export class ShopifyScraper extends BaseScraper {
       // Extract MPN from metafields or SKU pattern
       const mpn = this.extractMpn(product, variant);
 
+      // Clean the title intelligently
+      const cleanedTitle = intelligentTitleClean(product.title, product.vendor);
+
       return {
         productId: String(product.id),
         sku: variant.sku || null,
-        title: product.title,
+        title: cleanedTitle,
         price: price ? this.convertToUSD(price) : null,
         compareAtPrice: compareAtPrice ? this.convertToUSD(compareAtPrice) : null,
         available: variant.available,

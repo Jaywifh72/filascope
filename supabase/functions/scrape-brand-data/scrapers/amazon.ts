@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { extractPrice, extractAvailability, extractColorFromHtml, extractSpoolSpecs, detectMaterial, extractColor, extractWeight, extractDiameter, COLOR_HEX_MAP } from "../utils.ts";
+import { extractPrice, extractAvailability, extractColorFromHtml, extractSpoolSpecs, detectMaterial, extractColor, extractWeight, extractDiameter, COLOR_HEX_MAP, intelligentTitleClean } from "../utils.ts";
 
 interface AmazonSearchResult {
   title: string;
@@ -1088,10 +1088,14 @@ export class AmazonScraper extends BaseScraper {
       }
     }
     
+    // Clean the title intelligently
+    const cleanedTitle = intelligentTitleClean(details.title, vendor);
+    this.log(`📝 Title cleaned: "${details.title.substring(0, 50)}..." → "${cleanedTitle}"`);
+    
     return {
       productId: details.asin,
       sku: details.asin,
-      title: details.title,
+      title: cleanedTitle,
       price: details.currentPrice,
       compareAtPrice: details.listPrice,
       available: details.available,

@@ -1,6 +1,6 @@
 import { BaseScraper, type ScrapedProduct } from "./base.ts";
 import type { BrandConfig } from "../config.ts";
-import { extractPrice, extractAvailability, findTdsUrl, extractPrintSettings, extractSpoolSpecs, extractMpnFromHtml, classifyVariant, extractColorInfo, COLOR_HEX_MAP } from "../utils.ts";
+import { extractPrice, extractAvailability, findTdsUrl, extractPrintSettings, extractSpoolSpecs, extractMpnFromHtml, classifyVariant, extractColorInfo, COLOR_HEX_MAP, intelligentTitleClean } from "../utils.ts";
 
 /**
  * FirecrawlScraper - Generic HTML scraper using Firecrawl API

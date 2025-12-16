@@ -111,6 +111,271 @@ export function cleanProductTitle(title: string): string {
     .trim();
 }
 
+// ============================================================================
+// INTELLIGENT TITLE CLEANING - Extract meaningful product names from bloated titles
+// ============================================================================
+
+// Patterns to remove from titles
+const TITLE_FLUFF_PATTERNS = [
+  // Diameter specifications
+  /\b1\.75\s*mm\b/gi,
+  /\b2\.85\s*mm\b/gi,
+  /\b3\.0\s*mm\b/gi,
+  /\bfilament\s*diameter[:\s]*[\d.]+\s*mm\b/gi,
+  
+  // Weight specifications (metric and imperial)
+  /\b\d+(?:\.\d+)?\s*(?:kg|kilogram|kilograms)\b/gi,
+  /\b\d+(?:\.\d+)?\s*(?:g|gram|grams)\b/gi,
+  /\b\d+(?:\.\d+)?\s*(?:lb|lbs|pound|pounds)\b/gi,
+  /\b\d+(?:\.\d+)?\s*(?:oz|ounce|ounces)\b/gi,
+  
+  // Generic product descriptors
+  /\b3d\s*print(?:ing|er)?\s*(?:filament|material|supplies?|consumable)s?\b/gi,
+  /\bfilament\s*(?:for\s*)?3d\s*print(?:ing|er)?\b/gi,
+  /\bprinter\s*filament\b/gi,
+  /\bprinting\s*material\b/gi,
+  /\bfdm\s*filament\b/gi,
+  /\bfilament\s*spool\b/gi,
+  
+  // Marketing fluff
+  /\bmost\s*(?:basic|popular|common|best|top)\b/gi,
+  /\bhigh\s*quality\b/gi,
+  /\bpremium\s*quality\b/gi,
+  /\btop\s*quality\b/gi,
+  /\bbest\s*(?:selling|seller|quality|value)\b/gi,
+  /\bnew\s*(?:arrival|version|release|design)\b/gi,
+  /\bhot\s*sale\b/gi,
+  /\bfree\s*shipping\b/gi,
+  /\bfast\s*(?:delivery|shipping)\b/gi,
+  /\bquick(?:ly)?\b/gi,
+  /\bgradually\b/gi,
+  /\brandom(?:ly)?\b/gi,
+  /\bvacuum\s*sealed\b/gi,
+  /\bsealed\s*(?:bag|package|packaging)\b/gi,
+  /\beasy\s*to\s*(?:use|print)\b/gi,
+  /\bsmooth\s*(?:printing|surface)\b/gi,
+  /\bno\s*(?:clogging|jamming|bubbles?|warping)\b/gi,
+  /\blow\s*(?:shrinkage|warping|odor)\b/gi,
+  /\b(?:strong|excellent|good|great|super|amazing|perfect)\s*(?:adhesion|layer|quality|strength|finish)\b/gi,
+  /\bfor\s*(?:most|all)\s*(?:fdm\s*)?(?:3d\s*)?printers?\b/gi,
+  /\bcompatible\s*with\s*(?:most|all)\s*(?:fdm\s*)?(?:3d\s*)?printers?\b/gi,
+  /\buniversal\s*(?:fit|compatibility)\b/gi,
+  /\bwide\s*compatibility\b/gi,
+  /\baccurate\s*diameter\b/gi,
+  /\bdimensional\s*accuracy\b/gi,
+  /\bconsistent\s*(?:diameter|quality|extrusion)\b/gi,
+  /\btangle\s*free\b/gi,
+  /\bno\s*tangle\b/gi,
+  /\bbubble\s*free\b/gi,
+  /\bno\s*bubble\b/gi,
+  /\bwarp\s*free\b/gi,
+  /\bno\s*warp(?:ing)?\b/gi,
+  
+  // Brand suffix patterns (e.g., "by BRANDNAME", "from BRAND")
+  /\bby\s+[A-Z][A-Za-z0-9]+(?:\s*3D)?\s*$/i,
+  /\bfrom\s+[A-Z][A-Za-z0-9]+(?:\s*3D)?\s*$/i,
+  /\b-\s*[A-Z][A-Za-z0-9]+(?:\s*3D)?\s*$/i,
+  
+  // Pack/quantity descriptors
+  /\b\d+\s*(?:pack|pcs|pieces?|rolls?|spools?)\b/gi,
+  /\bsingle\s*(?:pack|roll|spool)\b/gi,
+  /\bmulti(?:ple)?\s*(?:pack|color|colour)s?\b/gi,
+  
+  // Temperature specs in title
+  /\b(?:nozzle|hotend|extruder)\s*(?:temp(?:erature)?)?[:\s]*\d+\s*[-–]\s*\d+\s*[°]?c?\b/gi,
+  /\b(?:bed|platform|plate)\s*(?:temp(?:erature)?)?[:\s]*\d+\s*[-–]\s*\d+\s*[°]?c?\b/gi,
+  
+  // Parenthetical additions often contain fluff
+  /\([^)]*(?:diameter|weight|kg|lb|mm|pack|pcs|spool)[^)]*\)/gi,
+];
+
+// Common color terms to preserve
+const PRESERVE_COLOR_TERMS = [
+  'rainbow', 'multicolor', 'multi-color', 'gradient', 'dual', 'tri',
+  'silk', 'matte', 'glossy', 'metallic', 'marble', 'galaxy', 'sparkle', 'glitter',
+  'glow', 'luminous', 'fluorescent', 'neon', 'pastel', 'transparent', 'translucent', 'clear',
+  'wood', 'carbon', 'metal', 'copper', 'bronze', 'gold', 'silver', 'chrome',
+  'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'black', 'white', 'gray', 'grey',
+  'cyan', 'magenta', 'teal', 'navy', 'olive', 'maroon', 'beige', 'tan', 'brown', 'ivory', 'cream'
+];
+
+// Material types to preserve
+const PRESERVE_MATERIALS = [
+  'PLA', 'PLA+', 'PLA-CF', 'PLA-GF', 'PLA Pro',
+  'PETG', 'PETG-CF', 'PETG-GF',
+  'ABS', 'ABS+', 'ABS-CF', 'ABS-GF',
+  'ASA', 'ASA-CF', 'ASA-GF',
+  'TPU', 'TPE', 'Flex',
+  'PA', 'PA6', 'PA12', 'PA-CF', 'PA-GF', 'Nylon',
+  'PC', 'PC-CF', 'PC-ABS', 'Polycarbonate',
+  'PEEK', 'PEKK', 'PEI', 'ULTEM',
+  'PVA', 'HIPS', 'PP', 'POM',
+  'Wood', 'Carbon Fiber', 'Glass Fiber'
+];
+
+// Product line/series identifiers to preserve
+const PRESERVE_SERIES = [
+  'Pro', 'Plus', 'Ultra', 'Max', 'Mini', 'Lite', 'Basic', 'Premium', 'Elite', 'Advanced',
+  'Eco', 'Bio', 'Recycled', 'High Speed', 'High Flow', 'Engineering', 'Industrial',
+  'Tough', 'Strong', 'Flexible', 'Rigid', 'Impact', 'Heat Resistant',
+  'HS', 'HF', 'CF', 'GF', 'HT', 'FR' // Common suffixes
+];
+
+/**
+ * Intelligently clean a product title to extract the meaningful product name
+ * Removes bloat like diameter, weight, marketing fluff, and generic descriptions
+ */
+export function intelligentTitleClean(title: string, brandName?: string): string {
+  if (!title) return '';
+  
+  let cleaned = title;
+  
+  // Step 1: Normalize whitespace and quotes
+  cleaned = cleaned
+    .replace(/\s+/g, ' ')
+    .replace(/[""]/g, '"')
+    .replace(/['']/g, "'")
+    .trim();
+  
+  // Step 2: Remove brand name from start or end (case insensitive)
+  if (brandName) {
+    const brandPattern = new RegExp(`^${escapeRegex(brandName)}\\s*[-–:]?\\s*`, 'i');
+    cleaned = cleaned.replace(brandPattern, '');
+    
+    const brandEndPattern = new RegExp(`\\s*[-–]?\\s*(?:by\\s+)?${escapeRegex(brandName)}\\s*(?:3D)?\\s*$`, 'i');
+    cleaned = cleaned.replace(brandEndPattern, '');
+  }
+  
+  // Step 3: Apply all fluff patterns
+  for (const pattern of TITLE_FLUFF_PATTERNS) {
+    cleaned = cleaned.replace(pattern, ' ');
+  }
+  
+  // Step 4: Remove standalone commas and clean up punctuation
+  cleaned = cleaned
+    .replace(/,\s*,/g, ',')
+    .replace(/\s*,\s*$/g, '')
+    .replace(/^\s*,\s*/g, '')
+    .replace(/\s*-\s*$/g, '')
+    .replace(/^\s*-\s*/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  // Step 5: If the result is too short or empty, try to extract core components
+  if (cleaned.length < 3) {
+    cleaned = extractCoreProductName(title, brandName);
+  }
+  
+  // Step 6: Capitalize properly (title case, but preserve material acronyms)
+  cleaned = smartTitleCase(cleaned);
+  
+  // Step 7: Final cleanup
+  cleaned = cleaned
+    .replace(/\s+/g, ' ')
+    .replace(/^\s*[-–,]\s*/, '')
+    .replace(/\s*[-–,]\s*$/, '')
+    .trim();
+  
+  // Step 8: If still too long (>60 chars), truncate intelligently
+  if (cleaned.length > 60) {
+    cleaned = truncateIntelligently(cleaned, 60);
+  }
+  
+  return cleaned || title.substring(0, 50); // Fallback to truncated original
+}
+
+/**
+ * Extract core product name by identifying material + finish + color
+ */
+function extractCoreProductName(title: string, brandName?: string): string {
+  const upperTitle = title.toUpperCase();
+  const parts: string[] = [];
+  
+  // Find material
+  for (const material of PRESERVE_MATERIALS) {
+    const materialPattern = new RegExp(`\\b${escapeRegex(material)}\\b`, 'i');
+    if (materialPattern.test(title)) {
+      parts.push(material);
+      break;
+    }
+  }
+  
+  // Find finish/style (silk, matte, etc.)
+  const finishTerms = ['silk', 'matte', 'glossy', 'metallic', 'marble', 'galaxy', 'sparkle', 'glitter', 'glow', 'wood', 'carbon'];
+  for (const finish of finishTerms) {
+    if (upperTitle.includes(finish.toUpperCase())) {
+      parts.push(finish.charAt(0).toUpperCase() + finish.slice(1));
+      break;
+    }
+  }
+  
+  // Find color
+  const colorTerms = ['rainbow', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'black', 'white', 'gray', 'grey', 
+                      'cyan', 'magenta', 'teal', 'gold', 'silver', 'bronze', 'copper', 'multicolor', 'gradient'];
+  for (const color of colorTerms) {
+    if (upperTitle.includes(color.toUpperCase())) {
+      parts.push(color.charAt(0).toUpperCase() + color.slice(1));
+      break;
+    }
+  }
+  
+  return parts.join(' ') || '';
+}
+
+/**
+ * Smart title case that preserves material acronyms
+ */
+function smartTitleCase(text: string): string {
+  const acronyms = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'TPE', 'PA', 'PC', 'PEEK', 'PEKK', 'PEI', 'PVA', 'HIPS', 'PP', 'POM', 'CF', 'GF', 'HT', 'HS', 'HF', 'FR', '3D'];
+  const lowercase = ['by', 'for', 'with', 'and', 'or', 'the', 'a', 'an', 'in', 'on', 'to', 'of'];
+  
+  return text.split(' ').map((word, index) => {
+    const upper = word.toUpperCase();
+    
+    // Preserve acronyms
+    if (acronyms.includes(upper)) {
+      return upper;
+    }
+    
+    // Handle compound materials like PLA-CF
+    if (upper.includes('-')) {
+      return upper.split('-').map(part => acronyms.includes(part) ? part : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-');
+    }
+    
+    // Keep lowercase words lowercase (except first word)
+    if (index > 0 && lowercase.includes(word.toLowerCase())) {
+      return word.toLowerCase();
+    }
+    
+    // Standard title case
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }).join(' ');
+}
+
+/**
+ * Truncate intelligently at word boundaries, preserving meaning
+ */
+function truncateIntelligently(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  
+  // Try to truncate at a word boundary
+  const truncated = text.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  
+  if (lastSpace > maxLength * 0.7) {
+    return truncated.substring(0, lastSpace).trim();
+  }
+  
+  return truncated.trim();
+}
+
+/**
+ * Escape special regex characters in a string
+ */
+function escapeRegex(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function extractSku(text: string): string | null {
   const patterns = [
     /sku[:\s]+([A-Z0-9-]+)/i,
