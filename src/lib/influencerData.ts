@@ -342,35 +342,6 @@ export const influencerData: InfluencerData[] = [
     ratings: { reach: 4, technical: 4, entertainment: 5, influence: 4, monetization: 4 }
   },
   {
-    id: "emily-the-engineer",
-    name: "Emily Yarid",
-    channelName: "Emily the Engineer",
-    location: "USA",
-    subscribers: "~616,000 - ~702,000",
-    totalViews: "~147 Million",
-    joinDate: "~2020 (Rapid Growth Era)",
-    niche: "Pop Culture Builds, Women in STEM",
-    businessModel: "Merch ('Not a Drill'), Brand Deals, File Sales",
-    keyAsset: "Iron Man Suits, Short-Form Viral Content",
-    brandIdentity: "Emily Yarid represents the 'Next Generation' of makers. She gained prominence through TikTok and YouTube Shorts, leveraging vertical video to reach a younger, more diverse audience. Her content centers on pop-culture builds (Marvel, Star Wars) and approachable engineering, delivered with a chaotic, meme-heavy editing style that resonates with Gen Z.",
-    contentStrategy: "Yarid's narrative focuses on the journey of a young engineer figuring things out. Her video 'I Built an Iron Man Suit in my Apartment' went viral, showcasing that advanced fabrication doesn't require a professional shop. She uses humor and fast pacing to make engineering concepts digestible. She collaborates with other high-profile creators like Frankly Built.",
-    economicImpact: "Yarid is a powerful figure for 'Women in STEM.' Her success challenges the male-dominated stereotype of the industry. Manufacturers are keen to partner with her to reach female and younger demographics. Her endorsement carries significant weight with first-time buyers.",
-    futureOutlook: "Yarid is expanding into more complex animatronics and larger builds. Her rapid growth suggests she will soon cross the 1 million subscriber mark, becoming a dominant face of the industry for the general public.",
-    strengths: [
-      { title: "Demographic Reach", description: "Reaches female and younger demographics underrepresented in 3D printing" },
-      { title: "Viral Strategy", description: "Short-form mastery drives rapid audience growth" },
-      { title: "STEM Representation", description: "Challenges male-dominated industry stereotype" }
-    ],
-    weaknesses: [
-      { title: "Technical Depth", description: "Entertainment focus may limit deep technical content" },
-      { title: "Pop Culture Dependency", description: "Content tied to trending media properties" }
-    ],
-    links: {
-      youtube: "https://www.youtube.com/@EmilyTheEngineer"
-    },
-    ratings: { reach: 4, technical: 3, entertainment: 5, influence: 4, monetization: 4 }
-  },
-  {
     id: "zack-freedman",
     name: "Zack Freedman",
     channelName: "Zack Freedman",
