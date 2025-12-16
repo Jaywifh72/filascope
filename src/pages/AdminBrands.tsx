@@ -16,7 +16,7 @@ import {
   Clock, TrendingUp, AlertCircle, Play, Activity,
   Zap, Database, ChevronDown, ChevronUp, Image, FileText, 
   Palette, Thermometer, Barcode, Tag, PlayCircle, ShoppingCart,
-  Link, DollarSign
+  Link, DollarSign, Pencil, ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -141,6 +141,9 @@ const AdminBrands = () => {
   const [amazonDiscoveryProgress, setAmazonDiscoveryProgress] = useState<number>(0);
   const amazonDiscoveryStartTimeRef = useRef<number | null>(null);
   const amazonScrapeStartTimeRef = useRef<number | null>(null);
+  
+  // Amazon store URL editing state
+  const [editingAmazonUrl, setEditingAmazonUrl] = useState<{id: string, url: string} | null>(null);
 
   useEffect(() => {
     if (!authLoading && user && !isAdmin) {
@@ -346,6 +349,28 @@ const AdminBrands = () => {
       setAmazonScrapeProgress(0);
       amazonScrapeStartTimeRef.current = null;
       toast.error(`Failed to scrape Amazon prices for ${brand.display_name}: ${error.message}`);
+    },
+  });
+
+  // Update Amazon store URL
+  const updateAmazonStoreUrl = useMutation({
+    mutationFn: async ({ id, url }: { id: string; url: string }) => {
+      const { error } = await supabase
+        .from("automated_brands")
+        .update({ 
+          amazon_store_url: url || null,
+          has_amazon_store: !!url 
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-automated-brands"] });
+      toast.success("Amazon store URL updated");
+      setEditingAmazonUrl(null);
+    },
+    onError: (error) => {
+      toast.error("Failed to update URL: " + error.message);
     },
   });
 
@@ -972,6 +997,74 @@ const AdminBrands = () => {
                             </div>
                           </>
                         )}
+                      </div>
+
+                      {/* Amazon Store URL Section */}
+                      <div className="flex items-center gap-2 py-2 px-3 bg-orange-500/5 rounded-lg mb-3 border border-orange-500/20">
+                        <ShoppingCart className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          {editingAmazonUrl?.id === brand.id ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={editingAmazonUrl.url}
+                                onChange={(e) => setEditingAmazonUrl({ id: brand.id, url: e.target.value })}
+                                placeholder="https://www.amazon.com/s?k=brand+filament"
+                                className="h-8 text-xs bg-background"
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 px-2"
+                                onClick={() => updateAmazonStoreUrl.mutate({ 
+                                  id: brand.id, 
+                                  url: editingAmazonUrl.url 
+                                })}
+                                disabled={updateAmazonStoreUrl.isPending}
+                              >
+                                {updateAmazonStoreUrl.isPending ? (
+                                  <RefreshCw className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 px-2"
+                                onClick={() => setEditingAmazonUrl(null)}
+                              >
+                                <XCircle className="w-3 h-3 text-red-500" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground truncate flex-1">
+                                {brand.amazon_store_url || "No Amazon URL set"}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 px-2"
+                                onClick={() => setEditingAmazonUrl({ 
+                                  id: brand.id, 
+                                  url: brand.amazon_store_url || "" 
+                                })}
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </Button>
+                              {brand.amazon_store_url && (
+                                <a
+                                  href={brand.amazon_store_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-orange-400 hover:text-orange-300"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Controls Row */}
