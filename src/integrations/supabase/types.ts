@@ -282,6 +282,7 @@ export type Database = {
           products_created: number | null
           products_updated: number | null
           products_url: string | null
+          products_with_amazon_links: number | null
           products_with_amazon_prices: number | null
           products_with_codes: number | null
           products_with_color_hex: number | null
@@ -354,6 +355,7 @@ export type Database = {
           products_created?: number | null
           products_updated?: number | null
           products_url?: string | null
+          products_with_amazon_links?: number | null
           products_with_amazon_prices?: number | null
           products_with_codes?: number | null
           products_with_color_hex?: number | null
@@ -426,6 +428,7 @@ export type Database = {
           products_created?: number | null
           products_updated?: number | null
           products_url?: string | null
+          products_with_amazon_links?: number | null
           products_with_amazon_prices?: number | null
           products_with_codes?: number | null
           products_with_color_hex?: number | null
@@ -1188,6 +1191,7 @@ export type Database = {
           amazon_link_de: string | null
           amazon_link_uk: string | null
           amazon_link_us: string | null
+          amazon_match_confidence: number | null
           amazon_price_usd: number | null
           amazon_prices_last_updated_at: string | null
           auto_created: boolean | null
@@ -1275,6 +1279,7 @@ export type Database = {
           amazon_link_de?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
+          amazon_match_confidence?: number | null
           amazon_price_usd?: number | null
           amazon_prices_last_updated_at?: string | null
           auto_created?: boolean | null
@@ -1362,6 +1367,7 @@ export type Database = {
           amazon_link_de?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
+          amazon_match_confidence?: number | null
           amazon_price_usd?: number | null
           amazon_prices_last_updated_at?: string | null
           auto_created?: boolean | null

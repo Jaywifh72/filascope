@@ -146,3 +146,6 @@ verify_jwt = false
 
 [functions.scrape-amazon-prices]
 verify_jwt = true
+
+[functions.discover-amazon-products]
+verify_jwt = true
