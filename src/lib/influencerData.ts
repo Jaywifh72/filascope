@@ -283,36 +283,6 @@ export const influencerData: InfluencerData[] = [
     ratings: { reach: 4, technical: 5, entertainment: 3, influence: 5, monetization: 3 }
   },
   {
-    id: "frankly-built",
-    name: "Frank",
-    channelName: "Frankly Built",
-    location: "USA",
-    subscribers: "~1.19 Million",
-    totalViews: "~247 Million",
-    joinDate: "~2018/2019",
-    niche: "Cosplay, Iron Man Suits, Pop Culture Fabrication",
-    businessModel: "Merch, Patreon, Brand Deals (Creality, Bambu), File Sales",
-    keyAsset: "Iron Man Suit Builds, Short-Form Content Strategy",
-    brandIdentity: "Frank of Frankly Built is the 'Superhero Fabricator.' He exploded onto the scene by documenting his journey to build a hyper-realistic, motorized Iron Man suit. His content sits at the intersection of maker tech and fandom culture. Unlike older channels that focus on the machine, Frank focuses on the dream of becoming a superhero.",
-    contentStrategy: "Frank utilizes a modern 'multimedia' strategy. He leverages high-energy YouTube Shorts and TikToks to drive traffic to long-form build logs. His tutorials on 'how to scale armor to your body' or 'how to motorize a helmet faceplate' are definitive in the cosplay community. He has a talent for storytelling, sharing the emotional highs and lows of the build process.",
-    economicImpact: "Frankly Built demonstrates the mainstream potential of 3D printing. He attracts viewers who have no interest in G-code but want an Iron Man suit. This widens the 'top of the funnel' for the industry. Manufacturers like Creality and Bambu Lab partner with him to show that their machines are capable of producing 'Hollywood quality' props at home.",
-    futureOutlook: "Frank is leading the charge in 'entertainment engineering.' His channel proves that high production value and narrative storytelling are the keys to breaking the 1 million subscriber ceiling. He is moving toward even more complex, fully body suits and animatronics.",
-    strengths: [
-      { title: "Mainstream Appeal", description: "Attracts viewers with no prior 3D printing interest" },
-      { title: "Short-Form Mastery", description: "Shorts/TikTok strategy drives rapid subscriber growth" },
-      { title: "Narrative Storytelling", description: "Emotional build journey creates high engagement" }
-    ],
-    weaknesses: [
-      { title: "Technical Depth", description: "Less focus on machine calibration and technical details" },
-      { title: "Pop Culture Dependency", description: "Content tied to film/media release cycles" }
-    ],
-    links: {
-      youtube: "https://www.youtube.com/@FranklyBuilt",
-      patreon: "https://www.patreon.com/franklybuilt"
-    },
-    ratings: { reach: 5, technical: 3, entertainment: 5, influence: 4, monetization: 4 }
-  },
-  {
     id: "3d-maker-noob",
     name: "Joe Casha",
     channelName: "3D Maker Noob",
