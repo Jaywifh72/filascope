@@ -187,7 +187,7 @@ export const influencerData: InfluencerData[] = [
       { title: "Appliance Threat", description: "Modern 'appliance' printers reduce need for tuning content" }
     ],
     links: {
-      youtube: "https://www.youtube.com/@CHEP3D",
+      youtube: "https://www.youtube.com/channel/UCsdc_0ZTXikARFEn2dRDJhg",
       website: "https://www.chepclub.com"
     },
     ratings: { reach: 3, technical: 4, entertainment: 3, influence: 4, monetization: 4 }
