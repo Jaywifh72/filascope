@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Scissors, DollarSign, Monitor, FileCode, Wifi, Clock, Check, X, Star, Zap, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { ExternalLink, DollarSign, Monitor, FileCode, Wifi, Clock, Check, X, Star, Zap, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -11,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { slicerData } from "@/lib/slicerData";
+import SlicerHeroSection from "@/components/reference/SlicerHeroSection";
 
 // Logo mapping for slicers
 const slicerLogos: Record<string, string> = {
@@ -179,43 +179,27 @@ const ReferenceSlicers = () => {
         : String(bVal).localeCompare(String(aVal));
     });
   }, [sortKey, sortDir, priceFilter, focusFilter]);
+
+  const scrollToComparison = () => {
+    const element = document.getElementById('comparison-table');
+    if (element) {
+      const offset = 80;
+      const top = element.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Button variant="ghost" size="sm" asChild className="mb-4">
-            <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Link>
-          </Button>
-          
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
-              <Scissors className="w-8 h-8 text-emerald-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground font-mono">3D Slicer Software</h1>
-              <p className="text-muted-foreground">Complete reference guide to FDM & Resin slicing software</p>
-            </div>
-          </div>
-          
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
-              {slicerData.length} Slicers
-            </Badge>
-            <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/30">
-              FDM & Resin
-            </Badge>
-            <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30">
-              Free & Premium
-            </Badge>
-          </div>
-        </div>
+      {/* Hero Section */}
+      <SlicerHeroSection 
+        slicerCount={slicerComparison.length}
+        onScrollToComparison={scrollToComparison}
+      />
 
+      <div className="container mx-auto px-4 py-8">
         {/* Comparative Features Table */}
-        <div className="mb-8 border border-border rounded-lg bg-card p-6">
+        <div id="comparison-table" className="mb-8 border border-border rounded-lg bg-card p-6">
           <div className="flex items-center gap-3 mb-4">
             <BarChart3 className="w-6 h-6 text-emerald-400" />
             <h2 className="text-xl font-bold font-mono text-foreground">Comparative Features Matrix</h2>
