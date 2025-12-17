@@ -130,9 +130,9 @@ const Navbar = () => {
             {/* Resources Dropdown - Consolidates Accessories, Reference, and Wizard */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button 
-                  className={`flex items-center gap-1.5 px-4 py-3 text-sm font-semibold transition-colors duration-200 rounded-md hover:text-primary hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                    isResourcesActive ? 'text-primary border-b-2 border-primary' : 'text-white/90'
+              <button 
+                  className={`flex items-center gap-1.5 px-4 py-3 text-sm font-semibold transition-all duration-200 rounded-md hover:text-primary hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary border-b-2 ${
+                    isResourcesActive ? 'text-primary border-primary font-bold' : 'text-white/90 border-transparent'
                   }`}
                 >
                   Resources
@@ -190,15 +190,6 @@ const Navbar = () => {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            {isAdmin && (
-              <NavLink 
-                to="/admin/dashboard"
-                className="text-amber-400 hover:text-amber-300"
-                activeClassName="text-amber-400 border-b-2 border-amber-400"
-              >
-                Admin
-              </NavLink>
-            )}
           </nav>
 
           {/* User Actions */}
