@@ -1,6 +1,9 @@
-import { ArrowRight, Check, X, Star } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ArrowRight, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { SlicerTierInfo, PriceType } from '@/lib/slicerTierData';
 import { cn } from '@/lib/utils';
+import { ExpandableScoreCell } from './ExpandableScoreCell';
+import { getSlicerSubscores, getScoreColor } from '@/lib/slicerScoreUtils';
 
 interface SlicerSimplifiedTableProps {
   slicers: SlicerTierInfo[];
@@ -14,46 +17,113 @@ const priceTypeConfig: Record<PriceType, string> = {
   paid: 'bg-pink-500/15 border-pink-500/30 text-pink-400',
 };
 
+type SortDirection = 'asc' | 'desc' | null;
+
 export function SlicerSimplifiedTable({ slicers, logos, onViewDetails }: SlicerSimplifiedTableProps) {
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const toggleExpanded = (name: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) {
+        next.delete(name);
+      } else {
+        next.add(name);
+      }
+      return next;
+    });
+  };
+
+  const toggleSort = () => {
+    setSortDirection(prev => {
+      if (prev === 'desc') return 'asc';
+      if (prev === 'asc') return null;
+      return 'desc';
+    });
+  };
+
+  const sortedSlicers = useMemo(() => {
+    if (!sortDirection) return slicers;
+    return [...slicers].sort((a, b) => {
+      const diff = a.overallScore - b.overallScore;
+      return sortDirection === 'desc' ? -diff : diff;
+    });
+  }, [slicers, sortDirection]);
+
+  const getSortAriaLabel = () => {
+    if (!sortDirection) return 'Overall Score. Sortable column. Press Enter to sort descending.';
+    return `Overall Score. Sortable column. Currently sorted ${sortDirection === 'desc' ? 'descending' : 'ascending'}. Press Enter to ${sortDirection === 'desc' ? 'sort ascending' : 'clear sort'}.`;
+  };
+
   return (
     <div className="w-full overflow-x-auto rounded-xl border border-border">
-      <table className="w-full border-collapse">
+      <table className="w-full border-collapse" role="table">
         <thead>
-          <tr>
-            <th className="px-4 py-3 bg-muted/50 border-b border-border text-left text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
+          <tr role="row">
+            <th role="columnheader" className="px-4 py-3 bg-muted/50 border-b border-border text-left text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
               Name
             </th>
-            <th className="px-4 py-3 bg-muted/50 border-b border-border text-left text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
+            <th 
+              role="columnheader"
+              aria-sort={sortDirection === 'desc' ? 'descending' : sortDirection === 'asc' ? 'ascending' : 'none'}
+              aria-label={getSortAriaLabel()}
+              className="px-4 py-3 bg-muted/50 border-b border-border text-center text-[13px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:bg-muted/70 transition-colors select-none"
+              onClick={toggleSort}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleSort();
+                }
+              }}
+              tabIndex={0}
+            >
+              <div className="flex items-center justify-center gap-1">
+                <span>Score</span>
+                <div className="flex flex-col -space-y-1">
+                  <ChevronUp 
+                    size={12} 
+                    className={cn(
+                      'transition-colors',
+                      sortDirection === 'asc' ? 'text-primary' : 'text-muted-foreground/40'
+                    )} 
+                  />
+                  <ChevronDown 
+                    size={12} 
+                    className={cn(
+                      'transition-colors',
+                      sortDirection === 'desc' ? 'text-primary' : 'text-muted-foreground/40'
+                    )} 
+                  />
+                </div>
+              </div>
+            </th>
+            <th role="columnheader" className="px-4 py-3 bg-muted/50 border-b border-border text-left text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
               Price
             </th>
-            <th className="px-4 py-3 bg-muted/50 border-b border-border text-left text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
+            <th role="columnheader" className="px-4 py-3 bg-muted/50 border-b border-border text-left text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
               Platform
             </th>
-            <th className="px-4 py-3 bg-muted/50 border-b border-border text-center text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
+            <th role="columnheader" className="px-4 py-3 bg-muted/50 border-b border-border text-center text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
               Multi-Material
             </th>
-            <th className="px-4 py-3 bg-muted/50 border-b border-border text-center text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
-              Score
-            </th>
-            <th className="px-4 py-3 bg-muted/50 border-b border-border text-center text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
+            <th role="columnheader" className="px-4 py-3 bg-muted/50 border-b border-border text-center text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
               Details
             </th>
           </tr>
         </thead>
         <tbody>
-          {slicers.map((slicer) => {
-            const scoreColor = slicer.overallScore >= 9.0 
-              ? 'text-green-500' 
-              : slicer.overallScore >= 7.0 
-                ? 'text-primary' 
-                : 'text-yellow-500';
+          {sortedSlicers.map((slicer) => {
+            const subscores = getSlicerSubscores(slicer.name);
+            const isExpanded = expandedRows.has(slicer.name);
 
             return (
               <tr 
                 key={slicer.name}
+                role="row"
                 className="hover:bg-muted/30 transition-colors"
               >
-                <td className="px-4 py-3 border-b border-border/50">
+                <td role="cell" className="px-4 py-3 border-b border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-muted/30 rounded p-1 flex items-center justify-center flex-shrink-0">
                       {logos[slicer.name] ? (
@@ -69,7 +139,16 @@ export function SlicerSimplifiedTable({ slicers, logos, onViewDetails }: SlicerS
                     <span className="text-sm font-medium text-foreground">{slicer.name}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 border-b border-border/50">
+                <td role="cell" className="px-4 py-3 border-b border-border/50 text-center relative">
+                  <ExpandableScoreCell
+                    slicerName={slicer.name}
+                    overallScore={slicer.overallScore}
+                    subscores={subscores}
+                    isExpanded={isExpanded}
+                    onToggle={() => toggleExpanded(slicer.name)}
+                  />
+                </td>
+                <td role="cell" className="px-4 py-3 border-b border-border/50">
                   <span className={cn(
                     'inline-flex px-2 py-1 rounded text-xs font-semibold border',
                     priceTypeConfig[slicer.priceType]
@@ -79,23 +158,17 @@ export function SlicerSimplifiedTable({ slicers, logos, onViewDetails }: SlicerS
                       : slicer.priceType.charAt(0).toUpperCase() + slicer.priceType.slice(1)}
                   </span>
                 </td>
-                <td className="px-4 py-3 border-b border-border/50 text-sm text-muted-foreground">
+                <td role="cell" className="px-4 py-3 border-b border-border/50 text-sm text-muted-foreground">
                   {slicer.platforms.join(', ')}
                 </td>
-                <td className="px-4 py-3 border-b border-border/50 text-center">
+                <td role="cell" className="px-4 py-3 border-b border-border/50 text-center">
                   {slicer.multiMaterial ? (
                     <Check size={18} className="text-green-500 mx-auto" />
                   ) : (
                     <X size={18} className="text-muted-foreground/50 mx-auto" />
                   )}
                 </td>
-                <td className="px-4 py-3 border-b border-border/50 text-center">
-                  <span className={cn('inline-flex items-center gap-1 text-sm font-semibold', scoreColor)}>
-                    {slicer.overallScore}/10
-                    <Star size={12} fill="currentColor" />
-                  </span>
-                </td>
-                <td className="px-4 py-3 border-b border-border/50 text-center">
+                <td role="cell" className="px-4 py-3 border-b border-border/50 text-center">
                   <button
                     onClick={() => onViewDetails(slicer.name)}
                     className="w-8 h-8 inline-flex items-center justify-center rounded-md text-primary hover:bg-primary/10 transition-colors"
