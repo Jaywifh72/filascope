@@ -26,7 +26,8 @@ const PrinterCompare = () => {
 
   useEffect(() => {
     const fetchPrinters = async () => {
-      const ids = searchParams.get("ids")?.split(",") || [];
+      // Support both "ids" and "printers" query params for backwards compatibility
+      const ids = searchParams.get("ids")?.split(",") || searchParams.get("printers")?.split(",") || [];
       
       if (ids.length === 0) {
         setLoading(false);
