@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, forwardRef, KeyboardEvent, Ref } from 'react';
 import { X, ArrowLeft, ArrowRight, Check, AlertCircle } from 'lucide-react';
 import { quizQuestions, QuizAnswers, QuizOption } from '@/lib/printerQuizData';
 import { Button } from '@/components/ui/button';
@@ -382,13 +382,13 @@ interface QuizOptionButtonProps {
   option: QuizOption;
   isSelected: boolean;
   onClick: () => void;
-  onKeyDown: (e: React.KeyboardEvent) => void;
+  onKeyDown: (e: KeyboardEvent<HTMLButtonElement>) => void;
   isMultiple: boolean;
   index: number;
-  ref?: React.Ref<HTMLButtonElement>;
+  ref?: Ref<HTMLButtonElement>;
 }
 
-const QuizOptionButton = React.forwardRef<HTMLButtonElement, Omit<QuizOptionButtonProps, 'ref'>>(
+const QuizOptionButton = forwardRef<HTMLButtonElement, Omit<QuizOptionButtonProps, 'ref'>>(
   ({ option, isSelected, onClick, onKeyDown, isMultiple, index }, ref) => {
     return (
       <button
@@ -436,7 +436,5 @@ const QuizOptionButton = React.forwardRef<HTMLButtonElement, Omit<QuizOptionButt
 );
 
 QuizOptionButton.displayName = 'QuizOptionButton';
-
-import React from 'react';
 
 export default PrinterQuiz;
