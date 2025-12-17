@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Check, X, DollarSign, Monitor, FileType, Wifi, Box, Users, Lightbulb, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { ArrowLeft, ExternalLink, Check, X, DollarSign, Monitor, FileType, Wifi, Users, Lightbulb, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -12,6 +12,17 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cadData } from "@/lib/cadData";
 import CADHeroSection from "@/components/reference/CADHeroSection";
+import { 
+  PriceBadge, 
+  ScoreDisplay, 
+  SkillIcon, 
+  SoftwareBadges,
+  mapPriceType,
+  calculateOverallScore,
+  mapSkillLevel,
+  type PriceType,
+  type SkillLevel
+} from "@/components/reference/CADBadges";
 
 // Logo mapping for CAD software
 const cadLogos: Record<string, string> = {
@@ -59,7 +70,8 @@ const darkLogos = [
 
 const needsBrightness = (name: string) => darkLogos.includes(name);
 
-const cadComparison = [
+// CAD comparison data with raw ratings
+const cadComparisonRaw = [
   { name: "Fusion 360", price: "Freemium", type: "Solid/Mesh", os: "Win/Mac", ease: 4, precision: 5, sculpt: 3, printReady: 5, parametric: 5, cloud: "Yes", perpetual: "No", standout: "Integrated CAD/CAM/CAE" },
   { name: "Blender", price: "Free", type: "Mesh", os: "Win/Mac/Lin", ease: 2, precision: 3, sculpt: 5, printReady: 4, parametric: 2, cloud: "No", perpetual: "Yes", standout: "Complete 3D Suite" },
   { name: "SolidWorks", price: "Paid", type: "Solid", os: "Win", ease: 3, precision: 5, sculpt: 1, printReady: 5, parametric: 5, cloud: "Partial", perpetual: "Yes", standout: "Engineering Standard" },
@@ -82,11 +94,25 @@ const cadComparison = [
   { name: "BlocksCAD", price: "Freemium", type: "CSG", os: "Browser", ease: 5, precision: 3, sculpt: 1, printReady: 4, parametric: 4, cloud: "Yes", perpetual: "N/A", standout: "Visual Code Blocks" },
 ];
 
-type CADSortKey = "name" | "price" | "type" | "ease" | "precision" | "sculpt" | "printReady" | "parametric" | "perpetual";
+// Enhanced CAD data with computed scores and mapped types
+const cadComparison = cadComparisonRaw.map(item => ({
+  ...item,
+  priceType: mapPriceType(item.price) as PriceType,
+  overallScore: calculateOverallScore({
+    ease: item.ease,
+    precision: item.precision,
+    sculpt: item.sculpt,
+    printReady: item.printReady,
+    parametric: item.parametric
+  }),
+  skillLevel: mapSkillLevel(item.ease) as SkillLevel
+}));
+
+type CADSortKey = "name" | "price" | "type" | "overallScore" | "skillLevel";
 type SortDir = "asc" | "desc";
 
 const priceOrder = { "Free": 0, "Freemium": 1, "One-Time": 2, "Perpetual": 3, "Subscription": 4, "Paid": 5 };
-const perpetualOrder = { "Yes": 0, "No": 1, "N/A": 2 };
+const skillOrder = { "beginner": 0, "intermediate": 1, "advanced": 2 };
 
 const recommendationMatrix = [
   {
@@ -135,29 +161,6 @@ const recommendationMatrix = [
     rationale: "Shapr3D for parts (Pro required for quality); Nomad for art."
   }
 ];
-
-const RatingDots = ({ rating }: { rating: number }) => {
-  return (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div
-          key={i}
-          className={`w-2 h-2 rounded-full ${
-            i <= rating
-              ? rating >= 4 ? "bg-emerald-400" : rating >= 3 ? "bg-amber-400" : "bg-red-400"
-              : "bg-muted"
-          }`}
-        />
-      ))}
-    </div>
-  );
-};
-
-const PerpetualBadge = ({ value }: { value: string }) => {
-  if (value === "Yes") return <Check className="w-4 h-4 text-emerald-400" />;
-  if (value === "No") return <X className="w-4 h-4 text-muted-foreground" />;
-  return <span className="text-xs text-muted-foreground">N/A</span>;
-};
 
 const CADSortHeader = ({ 
   label, 
@@ -236,15 +239,21 @@ const ReferenceCAD = () => {
     if (!sortKey) return filtered;
     
     return filtered.sort((a, b) => {
-      let aVal: number | string = a[sortKey as keyof typeof a];
-      let bVal: number | string = b[sortKey as keyof typeof b];
+      let aVal: number | string;
+      let bVal: number | string;
       
       if (sortKey === "price") {
         aVal = priceOrder[a.price as keyof typeof priceOrder] ?? 99;
         bVal = priceOrder[b.price as keyof typeof priceOrder] ?? 99;
-      } else if (sortKey === "perpetual") {
-        aVal = perpetualOrder[a.perpetual as keyof typeof perpetualOrder] ?? 99;
-        bVal = perpetualOrder[b.perpetual as keyof typeof perpetualOrder] ?? 99;
+      } else if (sortKey === "skillLevel") {
+        aVal = skillOrder[a.skillLevel];
+        bVal = skillOrder[b.skillLevel];
+      } else if (sortKey === "overallScore") {
+        aVal = a.overallScore;
+        bVal = b.overallScore;
+      } else {
+        aVal = a[sortKey as keyof typeof a] as string;
+        bVal = b[sortKey as keyof typeof b] as string;
       }
       
       if (typeof aVal === "number" && typeof bVal === "number") {
@@ -391,21 +400,21 @@ const ReferenceCAD = () => {
 
           <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
             <p className="text-muted-foreground text-sm">
-              Side-by-side comparison of CAD software capabilities, ratings (1-5), and standout features.
+              Side-by-side comparison of CAD software capabilities with overall scores and skill levels.
             </p>
             <div className="flex items-center gap-4 text-xs">
-              <span className="text-muted-foreground">Rating:</span>
+              <span className="text-muted-foreground">Score:</span>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span className="text-muted-foreground">4-5 (Excellent)</span>
+                <span className="text-muted-foreground">9.0+ (Excellent)</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-amber-400" />
-                <span className="text-muted-foreground">3 (Average)</span>
+                <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                <span className="text-muted-foreground">7.0-8.9 (Good)</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-red-400" />
-                <span className="text-muted-foreground">1-2 (Limited)</span>
+                <div className="w-2 h-2 rounded-full bg-yellow-400" />
+                <span className="text-muted-foreground">5.0-6.9 (Fair)</span>
               </div>
             </div>
           </div>
@@ -414,16 +423,11 @@ const ReferenceCAD = () => {
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   <CADSortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <CADSortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                  <th className="text-left py-2 px-3 font-semibold text-foreground">Price</th>
                   <CADSortHeader label="Type" sortKey="type" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <th className="text-left py-2 px-3 font-semibold text-foreground">OS</th>
-                  <CADSortHeader label="Ease" sortKey="ease" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <CADSortHeader label="Precision" sortKey="precision" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <CADSortHeader label="Sculpt" sortKey="sculpt" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <CADSortHeader label="Print-Ready" sortKey="printReady" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <CADSortHeader label="Parametric" sortKey="parametric" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <th className="text-center py-2 px-3 font-semibold text-foreground">Cloud</th>
-                  <CADSortHeader label="Perpetual" sortKey="perpetual" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                  <th className="text-left py-2 px-3 font-semibold text-foreground">Platform</th>
+                  <CADSortHeader label="Score" sortKey="overallScore" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                  <CADSortHeader label="Level" sortKey="skillLevel" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
                   <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
                 </tr>
               </thead>
@@ -433,7 +437,7 @@ const ReferenceCAD = () => {
                     key={index} 
                     className="border-b border-border/50 hover:bg-muted/20 transition-colors"
                   >
-                    <td className="py-2 px-3 font-medium text-foreground whitespace-nowrap">
+                    <td className="py-2.5 px-3 font-medium text-foreground whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         {cadLogos[software.name] && (
                           <img 
@@ -445,30 +449,20 @@ const ReferenceCAD = () => {
                         {software.name}
                       </div>
                     </td>
-                    <td className="py-2 px-3">
-                      <Badge 
-                        variant="outline" 
-                        className={
-                          software.price === "Free" 
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
-                            : software.price === "Freemium" || software.price === "One-Time" || software.price === "Perpetual"
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                            : "bg-red-500/10 text-red-400 border-red-500/30"
-                        }
-                      >
-                        {software.price}
-                      </Badge>
+                    <td className="py-2.5 px-3">
+                      <PriceBadge type={software.priceType} />
                     </td>
-                    <td className="py-2 px-3 text-muted-foreground text-xs">{software.type}</td>
-                    <td className="py-2 px-3 text-muted-foreground text-xs">{software.os}</td>
-                    <td className="py-2 px-3"><RatingDots rating={software.ease} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={software.precision} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={software.sculpt} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={software.printReady} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={software.parametric} /></td>
-                    <td className="py-2 px-3 text-center text-muted-foreground text-xs">{software.cloud}</td>
-                    <td className="py-2 px-3 text-center"><PerpetualBadge value={software.perpetual} /></td>
-                    <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{software.standout}</td>
+                    <td className="py-2.5 px-3 text-muted-foreground text-xs">{software.type}</td>
+                    <td className="py-2.5 px-3 text-muted-foreground text-xs">{software.os}</td>
+                    <td className="py-2.5 px-3 text-center">
+                      <ScoreDisplay score={software.overallScore} size="sm" />
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex justify-center">
+                        <SkillIcon level={software.skillLevel} />
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3 text-cyan-400 text-xs whitespace-nowrap">{software.standout}</td>
                   </tr>
                 ))}
               </tbody>
@@ -484,7 +478,7 @@ const ReferenceCAD = () => {
               className="border border-border rounded-lg bg-card px-4"
             >
               <AccordionTrigger className="hover:no-underline py-4">
-                <div className="flex items-center gap-4 text-left">
+                <div className="flex items-center gap-4 text-left flex-1">
                   <span className="text-2xl font-bold text-cyan-400 font-mono">{index + 1}.</span>
                   {cadLogos[software.name] && (
                     <img 
@@ -493,8 +487,28 @@ const ReferenceCAD = () => {
                       className={`w-8 h-8 rounded object-contain ${needsBrightness(software.name) ? 'brightness-150 invert' : ''}`}
                     />
                   )}
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">{software.name}</h2>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h2 className="text-xl font-semibold text-foreground">{software.name}</h2>
+                      {/* Find matching software data for badges */}
+                      {(() => {
+                        const matchedSoftware = cadComparison.find(s => 
+                          software.name.toLowerCase().includes(s.name.toLowerCase()) ||
+                          s.name.toLowerCase().includes(software.name.split(' ')[0].toLowerCase())
+                        );
+                        if (matchedSoftware) {
+                          return (
+                            <SoftwareBadges
+                              priceType={matchedSoftware.priceType}
+                              overallScore={matchedSoftware.overallScore}
+                              skillLevel={matchedSoftware.skillLevel}
+                              compact
+                            />
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
                     <p className="text-sm text-muted-foreground line-clamp-1">{software.summary}</p>
                   </div>
                 </div>
