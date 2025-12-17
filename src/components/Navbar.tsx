@@ -114,7 +114,7 @@ const Navbar = () => {
 
           {/* Navigation Links - Improved contrast, spacing, and consolidated items */}
           <nav className="hidden lg:flex items-center gap-6 flex-1 justify-center">
-            <NavLink to="/materials">
+            <NavLink to="/" end>
               Materials
             </NavLink>
             <NavLink to="/printers">
