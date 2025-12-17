@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ArrowRight, Check, X, ChevronUp, ChevronDown, HelpCircle } from 'lucide-react';
+import { ArrowRight, Check, X, ChevronUp, ChevronDown, ChevronsUpDown, HelpCircle } from 'lucide-react';
 import { SlicerTierInfo, PriceType } from '@/lib/slicerTierData';
 import { cn } from '@/lib/utils';
 import { ExpandableScoreCell } from './ExpandableScoreCell';
@@ -24,13 +24,130 @@ const priceTypeConfig: Record<PriceType, string> = {
   paid: 'bg-pink-500/15 border-pink-500/30 text-pink-400',
 };
 
+type SortColumn = 'name' | 'overall' | 'price' | 'platform' | 'multiMaterial' | null;
 type SortDirection = 'asc' | 'desc' | null;
+
+interface SortState {
+  column: SortColumn;
+  direction: SortDirection;
+}
 
 const COLUMN_COUNT = 6;
 
+// Tooltip content for each column
+const COLUMN_TOOLTIPS: Record<string, string> = {
+  name: "The name of the slicing software. Click to sort alphabetically.",
+  overall: "Weighted average: Ease of Use (30%), Feature Set (25%), Performance (20%), Support Quality (15%), UI Polish (10%). Click to sort by score.",
+  price: "Free = No cost, Freemium = Free with paid upgrades, Paid = Purchase required. Click to sort by price tier.",
+  platform: "Operating systems supported: Windows, Mac, Linux, and Web. Click to sort by platform count.",
+  multiMaterial: "Indicates whether the slicer supports multi-material printing (multiple filaments/colors in one print). Click to sort.",
+  details: "Click arrow to view full details page for this slicer."
+};
+
+// Sort icon component
+const SortIcon = ({ column, sortState }: { column: SortColumn; sortState: SortState }) => {
+  const isActive = sortState.column === column;
+  
+  if (!isActive) {
+    return <ChevronsUpDown size={14} className="text-muted-foreground/40" />;
+  }
+  
+  return (
+    <div className="flex flex-col -space-y-1">
+      <ChevronUp 
+        size={12} 
+        className={cn(
+          'transition-colors',
+          sortState.direction === 'asc' ? 'text-primary' : 'text-muted-foreground/40'
+        )} 
+      />
+      <ChevronDown 
+        size={12} 
+        className={cn(
+          'transition-colors',
+          sortState.direction === 'desc' ? 'text-primary' : 'text-muted-foreground/40'
+        )} 
+      />
+    </div>
+  );
+};
+
+// Sortable header component
+interface SortableHeaderProps {
+  label: string;
+  column: SortColumn;
+  tooltip: string;
+  sortState: SortState;
+  onSort: (column: SortColumn) => void;
+  center?: boolean;
+}
+
+const SortableHeader = ({ label, column, tooltip, sortState, onSort, center = false }: SortableHeaderProps) => {
+  const isActive = sortState.column === column;
+  
+  const getAriaSort = () => {
+    if (!isActive || !sortState.direction) return 'none';
+    return sortState.direction === 'desc' ? 'descending' : 'ascending';
+  };
+  
+  const getAriaLabel = () => {
+    if (!isActive || !sortState.direction) {
+      return `${label}. Sortable column. Press Enter to sort descending.`;
+    }
+    return `${label}. Sortable column. Currently sorted ${sortState.direction === 'desc' ? 'descending' : 'ascending'}. Press Enter to ${sortState.direction === 'desc' ? 'sort ascending' : 'clear sort'}.`;
+  };
+
+  return (
+    <th 
+      role="columnheader"
+      aria-sort={getAriaSort()}
+      aria-label={getAriaLabel()}
+      className={cn(
+        'px-4 py-3 bg-background border-b-2 border-primary/20',
+        'text-[13px] font-semibold uppercase tracking-wide',
+        'cursor-pointer hover:bg-muted/50 transition-colors select-none',
+        center ? 'text-center' : 'text-left',
+        isActive ? 'text-primary' : 'text-muted-foreground'
+      )}
+      onClick={() => onSort(column)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSort(column);
+        }
+      }}
+      tabIndex={0}
+    >
+      <div className={cn('flex items-center gap-1.5', center && 'justify-center')}>
+        <span>{label}</span>
+        <SortIcon column={column} sortState={sortState} />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button 
+                onClick={(e) => e.stopPropagation()}
+                className="text-muted-foreground hover:text-primary ml-0.5"
+                aria-label={`${label} info`}
+              >
+                <HelpCircle size={14} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="text-xs">{tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    </th>
+  );
+};
+
 export function SlicerSimplifiedTable({ slicers, logos, onViewDetails }: SlicerSimplifiedTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [sortState, setSortState] = useState<SortState>({ 
+    column: 'overall', 
+    direction: 'desc' 
+  });
 
   const toggleExpanded = (name: string) => {
     setExpandedRows(prev => {
@@ -44,15 +161,19 @@ export function SlicerSimplifiedTable({ slicers, logos, onViewDetails }: SlicerS
     });
   };
 
-  const toggleSort = () => {
-    setSortDirection(prev => {
-      if (prev === 'desc') return 'asc';
-      if (prev === 'asc') return null;
-      return 'desc';
+  const handleSort = (column: SortColumn) => {
+    setSortState(prev => {
+      // If clicking same column, toggle direction
+      if (prev.column === column) {
+        if (prev.direction === 'desc') return { column, direction: 'asc' };
+        if (prev.direction === 'asc') return { column: null, direction: null };
+      }
+      // New column, start with descending
+      return { column, direction: 'desc' };
     });
   };
 
-  // Calculate overall scores and sort
+  // Calculate overall scores
   const slicersWithScores = useMemo(() => {
     return slicers.map(slicer => {
       const subscores = getSlicerSubscores(slicer.name);
@@ -65,91 +186,103 @@ export function SlicerSimplifiedTable({ slicers, logos, onViewDetails }: SlicerS
     });
   }, [slicers]);
 
+  // Sort slicers based on current sort state
   const sortedSlicers = useMemo(() => {
-    if (!sortDirection) return slicersWithScores;
+    if (!sortState.column || !sortState.direction) return slicersWithScores;
+    
     return [...slicersWithScores].sort((a, b) => {
-      const diff = a.calculatedScore - b.calculatedScore;
-      return sortDirection === 'desc' ? -diff : diff;
+      let comparison = 0;
+      
+      switch (sortState.column) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'overall':
+          comparison = a.calculatedScore - b.calculatedScore;
+          break;
+        case 'price':
+          const priceOrder: Record<PriceType, number> = { free: 0, freemium: 1, paid: 2 };
+          comparison = priceOrder[a.priceType] - priceOrder[b.priceType];
+          break;
+        case 'platform':
+          comparison = a.platforms.length - b.platforms.length;
+          break;
+        case 'multiMaterial':
+          comparison = (a.multiMaterial ? 1 : 0) - (b.multiMaterial ? 1 : 0);
+          break;
+        default:
+          return 0;
+      }
+      
+      return sortState.direction === 'asc' ? comparison : -comparison;
     });
-  }, [slicersWithScores, sortDirection]);
-
-  const getSortAriaLabel = () => {
-    if (!sortDirection) return 'Overall Score. Sortable column. Press Enter to sort descending.';
-    return `Overall Score. Sortable column. Currently sorted ${sortDirection === 'desc' ? 'descending' : 'ascending'}. Press Enter to ${sortDirection === 'desc' ? 'sort ascending' : 'clear sort'}.`;
-  };
+  }, [slicersWithScores, sortState]);
 
   return (
     <div className="w-full overflow-x-auto rounded-xl border border-border">
       <table className="w-full border-collapse" role="table">
-        <thead>
-          <tr role="row">
-            <th role="columnheader" className="px-4 py-3 bg-muted/50 border-b border-border text-left text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
-              Name
-            </th>
+        <thead className="sticky top-0 z-10">
+          <tr role="row" className="bg-background shadow-sm">
+            <SortableHeader
+              label="Name"
+              column="name"
+              tooltip={COLUMN_TOOLTIPS.name}
+              sortState={sortState}
+              onSort={handleSort}
+            />
+            <SortableHeader
+              label="Overall Score"
+              column="overall"
+              tooltip={COLUMN_TOOLTIPS.overall}
+              sortState={sortState}
+              onSort={handleSort}
+              center
+            />
+            <SortableHeader
+              label="Price"
+              column="price"
+              tooltip={COLUMN_TOOLTIPS.price}
+              sortState={sortState}
+              onSort={handleSort}
+            />
+            <SortableHeader
+              label="Platform"
+              column="platform"
+              tooltip={COLUMN_TOOLTIPS.platform}
+              sortState={sortState}
+              onSort={handleSort}
+            />
+            <SortableHeader
+              label="Multi-Material"
+              column="multiMaterial"
+              tooltip={COLUMN_TOOLTIPS.multiMaterial}
+              sortState={sortState}
+              onSort={handleSort}
+              center
+            />
+            {/* Details column - not sortable */}
             <th 
-              role="columnheader"
-              aria-sort={sortDirection === 'desc' ? 'descending' : sortDirection === 'asc' ? 'ascending' : 'none'}
-              aria-label={getSortAriaLabel()}
-              className="px-4 py-3 bg-muted/50 border-b border-border text-center text-[13px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer hover:bg-muted/70 hover:text-primary transition-colors select-none"
-              onClick={toggleSort}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  toggleSort();
-                }
-              }}
-              tabIndex={0}
+              role="columnheader" 
+              className="px-4 py-3 bg-background border-b-2 border-primary/20 text-center text-[13px] font-semibold text-muted-foreground uppercase tracking-wide"
             >
               <div className="flex items-center justify-center gap-1.5">
-                <span>Overall Score</span>
-                <div className="flex flex-col -space-y-1">
-                  <ChevronUp 
-                    size={12} 
-                    className={cn(
-                      'transition-colors',
-                      sortDirection === 'asc' ? 'text-primary' : 'text-muted-foreground/40'
-                    )} 
-                  />
-                  <ChevronDown 
-                    size={12} 
-                    className={cn(
-                      'transition-colors',
-                      sortDirection === 'desc' ? 'text-primary' : 'text-muted-foreground/40'
-                    )} 
-                  />
-                </div>
+                <span>Details</span>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button 
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-muted-foreground hover:text-primary ml-1"
-                        aria-label="Score calculation info"
+                        className="text-muted-foreground hover:text-primary ml-0.5"
+                        aria-label="Details info"
                       >
                         <HelpCircle size={14} />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-xs">
-                      <p className="text-xs">
-                        Weighted average: Ease of Use (30%), Feature Set (25%), 
-                        Performance (20%), Support Quality (15%), UI Polish (10%)
-                      </p>
+                      <p className="text-xs">{COLUMN_TOOLTIPS.details}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
-            </th>
-            <th role="columnheader" className="px-4 py-3 bg-muted/50 border-b border-border text-left text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
-              Price
-            </th>
-            <th role="columnheader" className="px-4 py-3 bg-muted/50 border-b border-border text-left text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
-              Platform
-            </th>
-            <th role="columnheader" className="px-4 py-3 bg-muted/50 border-b border-border text-center text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
-              Multi-Material
-            </th>
-            <th role="columnheader" className="px-4 py-3 bg-muted/50 border-b border-border text-center text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
-              Details
             </th>
           </tr>
         </thead>
