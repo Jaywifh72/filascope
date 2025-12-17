@@ -4,18 +4,20 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
+import { useStickyElement } from "@/hooks/useStickyElement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { GitCompare, X, RefreshCw, Printer as PrinterIcon, ImageIcon, Heart, ExternalLink } from "lucide-react";
+import { RefreshCw, Printer as PrinterIcon, ImageIcon, Heart, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCurrency } from "@/hooks/useCurrency";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
+import PrintersFilterBar from "@/components/PrintersFilterBar";
+import PrintersAdvancedFiltersModal, { type AdvancedFilters } from "@/components/PrintersAdvancedFiltersModal";
 
 // Brand wiki/documentation URLs
 const BRAND_WIKI_URLS: Record<string, string> = {
@@ -44,29 +46,112 @@ type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   series: { series_name: string } | null;
 };
 
+// Helper functions for category filtering
+const isFDM = (p: Printer) => {
+  const tech = (p.printer_technology || "").toLowerCase();
+  return tech.includes("fdm") || tech.includes("fff") || (!tech.includes("resin") && !tech.includes("sla") && !tech.includes("msla") && !tech.includes("dlp"));
+};
+
+const isResin = (p: Printer) => {
+  const tech = (p.printer_technology || "").toLowerCase();
+  return tech.includes("resin") || tech.includes("sla") || tech.includes("msla") || tech.includes("dlp");
+};
+
+const isCoreXY = (p: Printer) => {
+  const motion = (p.motion_system_notes || "").toLowerCase();
+  const style = (p.machine_style || "").toLowerCase();
+  return motion.includes("corexy") || style.includes("corexy");
+};
+
+const getPrice = (p: Printer) => p.current_price_usd_store || p.current_price_usd_amazon || p.msrp_usd || Infinity;
+
+const defaultAdvancedFilters: AdvancedFilters = {
+  brands: [],
+  motionSystem: "any",
+  minSpeed: 0,
+  maxSpeed: 1000,
+  features: [],
+};
+
 export default function Printers() {
   const navigate = useNavigate(); 
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
   const { formatPrice } = useCurrency();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState("all");
-  const [sortBy, setSortBy] = useState("name-asc");
+  const { isSticky, elementHeight, sentinelRef, elementRef } = useStickyElement();
   
-  const [hasEnclosure, setHasEnclosure] = useState(false);
-  const [multiMaterial, setMultiMaterial] = useState(false);
-  const [selectedSize, setSelectedSize] = useState("all");
-  const [selectedSpeed, setSelectedSpeed] = useState("all");
+  // Search and quick filters
+  const [searchTerm, setSearchTerm] = useState("");
   const [activeQuickFilters, setActiveQuickFilters] = useState<string[]>([]);
+  
+  // Filter bar state
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("name-asc");
+  const [priceRangeFilter, setPriceRangeFilter] = useState("all");
+  const [buildVolumeFilter, setBuildVolumeFilter] = useState("all");
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(defaultAdvancedFilters);
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
 
-  // Toggle quick filter
+  // Toggle quick filter with sync to category tabs
   const handleQuickFilterToggle = (filterId: string) => {
-    setActiveQuickFilters(prev => 
-      prev.includes(filterId) 
+    setActiveQuickFilters(prev => {
+      const newFilters = prev.includes(filterId) 
         ? prev.filter(id => id !== filterId)
-        : [...prev, filterId]
-    );
+        : [...prev, filterId];
+      
+      // Sync with category tabs
+      if (filterId === 'resin' && newFilters.includes('resin')) {
+        setActiveCategory('resin');
+      } else if (filterId === 'budget' && newFilters.includes('budget')) {
+        setActiveCategory('budget');
+        setPriceRangeFilter('0-500');
+      } else if (filterId === 'multicolor' && newFilters.includes('multicolor')) {
+        setActiveCategory('multicolor');
+      }
+      
+      return newFilters;
+    });
   };
+
+  // Handle category change with sync to quick filters
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
+    
+    // Sync with quick filters
+    if (category === 'resin' && !activeQuickFilters.includes('resin')) {
+      setActiveQuickFilters(prev => [...prev.filter(f => f !== 'budget' && f !== 'multicolor'), 'resin']);
+    } else if (category === 'budget') {
+      setActiveQuickFilters(prev => [...prev.filter(f => f !== 'resin' && f !== 'multicolor'), 'budget']);
+      setPriceRangeFilter('0-500');
+    } else if (category === 'multicolor') {
+      setActiveQuickFilters(prev => [...prev.filter(f => f !== 'resin' && f !== 'budget'), 'multicolor']);
+    } else if (category === 'all' || category === 'fdm' || category === 'corexy') {
+      // Clear category-specific quick filters
+      setActiveQuickFilters(prev => prev.filter(f => !['resin', 'budget', 'multicolor'].includes(f)));
+      if (category === 'all') setPriceRangeFilter('all');
+    }
+  };
+
+  // Clear all filters
+  const handleClearAllFilters = () => {
+    setActiveCategory('all');
+    setSortBy('name-asc');
+    setPriceRangeFilter('all');
+    setBuildVolumeFilter('all');
+    setAdvancedFilters(defaultAdvancedFilters);
+    setActiveQuickFilters([]);
+  };
+
+  const hasActiveFilters = 
+    activeCategory !== 'all' ||
+    priceRangeFilter !== 'all' ||
+    buildVolumeFilter !== 'all' ||
+    advancedFilters.brands.length > 0 ||
+    advancedFilters.motionSystem !== 'any' ||
+    advancedFilters.minSpeed > 0 ||
+    advancedFilters.maxSpeed < 1000 ||
+    advancedFilters.features.length > 0 ||
+    activeQuickFilters.length > 0;
   
   // Printer compare context
   const { addPrinter, removePrinter, isSelected, isMaxReached } = usePrinterCompare();
@@ -91,7 +176,7 @@ export default function Printers() {
 
   // Fetch printers
   const { data: printers, isLoading } = useQuery({
-    queryKey: ["printers-list", searchTerm, selectedBrand, hasEnclosure, multiMaterial],
+    queryKey: ["printers-list", searchTerm],
     queryFn: async () => {
       let query = supabase
         .from("printers")
@@ -105,14 +190,6 @@ export default function Printers() {
         query = query.or(`model_name.ilike.%${searchTerm}%,variant_or_bundle_name.ilike.%${searchTerm}%`);
       }
 
-      if (hasEnclosure) {
-        query = query.eq("has_enclosure", true);
-      }
-
-      if (multiMaterial) {
-        query = query.eq("multi_material_supported", true);
-      }
-
       const { data, error } = await query.order("model_name");
       
       if (error) throw error;
@@ -120,109 +197,163 @@ export default function Printers() {
     },
   });
 
+  // Calculate category counts
+  const categoryCounts = useMemo(() => {
+    if (!printers) return { all: 0, fdm: 0, resin: 0, corexy: 0, budget: 0, multicolor: 0 };
+    
+    return {
+      all: printers.length,
+      fdm: printers.filter(p => isFDM(p)).length,
+      resin: printers.filter(p => isResin(p)).length,
+      corexy: printers.filter(p => isCoreXY(p)).length,
+      budget: printers.filter(p => getPrice(p) <= 500).length,
+      multicolor: printers.filter(p => p.multi_material_supported).length,
+    };
+  }, [printers]);
 
-  // Filter and sort by brand and other criteria on client side
+  // Filter and sort printers
   const filteredPrinters = useMemo(() => {
     if (!printers) return [];
 
     const filtered = printers.filter(printer => {
-      if (selectedBrand !== "all" && printer.brand?.brand !== selectedBrand) {
-        return false;
-      }
+      const price = getPrice(printer);
+      const maxDimension = Math.max(
+        printer.build_volume_x_mm || 0,
+        printer.build_volume_y_mm || 0,
+        printer.build_volume_z_mm || 0
+      );
+      const printerSpeed = printer.max_print_speed_mms || 0;
 
-      // Size filter based on build volume (in liters)
-      if (selectedSize !== "all") {
-        const volume = (printer.build_volume_x_mm || 0) * 
-                      (printer.build_volume_y_mm || 0) * 
-                      (printer.build_volume_z_mm || 0) / 1000000000; // Convert to liters
-        
-        switch (selectedSize) {
-          case "small":
-            if (volume >= 0.02) return false; // Less than 20L (mini printers)
+      // Category filter
+      if (activeCategory !== 'all') {
+        switch (activeCategory) {
+          case 'fdm':
+            if (!isFDM(printer)) return false;
             break;
-          case "medium":
-            if (volume < 0.02 || volume >= 0.04) return false; // 20-40L
+          case 'resin':
+            if (!isResin(printer)) return false;
             break;
-          case "large":
-            if (volume < 0.04 || volume >= 0.07) return false; // 40-70L
+          case 'corexy':
+            if (!isCoreXY(printer)) return false;
             break;
-          case "xlarge":
-            if (volume < 0.07) return false; // 70L+
+          case 'budget':
+            if (price > 500) return false;
+            break;
+          case 'multicolor':
+            if (!printer.multi_material_supported) return false;
             break;
         }
       }
 
-      // Speed filter based on max print speed
-      if (selectedSpeed !== "all") {
-        const minSpeed = parseInt(selectedSpeed);
-        const printerSpeed = printer.max_print_speed_mms || 0;
-        if (printerSpeed < minSpeed) return false;
+      // Price range filter
+      if (priceRangeFilter !== 'all') {
+        switch (priceRangeFilter) {
+          case '0-500':
+            if (price > 500) return false;
+            break;
+          case '500-1000':
+            if (price < 500 || price > 1000) return false;
+            break;
+          case '1000-2000':
+            if (price < 1000 || price > 2000) return false;
+            break;
+          case '2000-3000':
+            if (price < 2000 || price > 3000) return false;
+            break;
+          case '3000+':
+            if (price < 3000) return false;
+            break;
+        }
       }
 
-      // Quick filters (OR logic - show if ANY quick filter matches)
-      if (activeQuickFilters.length > 0) {
-        const price = printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd || Infinity;
-        const maxBuildDimension = Math.max(
-          printer.build_volume_x_mm || 0,
-          printer.build_volume_y_mm || 0,
-          printer.build_volume_z_mm || 0
-        );
-        const printerSpeed = printer.max_print_speed_mms || 0;
-        const printerTech = (printer.printer_technology || "").toLowerCase();
+      // Build volume filter
+      if (buildVolumeFilter !== 'all') {
+        switch (buildVolumeFilter) {
+          case 'small':
+            if (maxDimension >= 200) return false;
+            break;
+          case 'medium':
+            if (maxDimension < 200 || maxDimension >= 300) return false;
+            break;
+          case 'large':
+            if (maxDimension < 300) return false;
+            break;
+        }
+      }
 
-        const matchesAny = activeQuickFilters.some(filterId => {
-          switch (filterId) {
-            case 'budget':
-              return price <= 500;
-            case 'beginner':
-              // Beginner = enclosed + auto bed leveling
-              return printer.has_enclosure && printer.auto_bed_leveling;
-            case 'multicolor':
-              return printer.multi_material_supported;
-            case 'large':
-              return maxBuildDimension >= 300;
-            case 'resin':
-              return printerTech.includes('resin') || printerTech.includes('sla') || printerTech.includes('msla') || printerTech.includes('dlp');
-            case 'speed':
-              return printerSpeed >= 300;
-            default:
-              return false;
+      // Advanced filters
+      if (advancedFilters.brands.length > 0) {
+        if (!printer.brand?.brand || !advancedFilters.brands.includes(printer.brand.brand)) return false;
+      }
+
+      if (advancedFilters.motionSystem !== 'any') {
+        const motion = (printer.motion_system_notes || '').toLowerCase();
+        const style = (printer.machine_style || '').toLowerCase();
+        const matchesMotion = motion.includes(advancedFilters.motionSystem) || style.includes(advancedFilters.motionSystem);
+        if (!matchesMotion) return false;
+      }
+
+      if (advancedFilters.minSpeed > 0 || advancedFilters.maxSpeed < 1000) {
+        if (printerSpeed < advancedFilters.minSpeed || printerSpeed > advancedFilters.maxSpeed) return false;
+      }
+
+      if (advancedFilters.features.length > 0) {
+        const hasAllFeatures = advancedFilters.features.every(feature => {
+          switch (feature) {
+            case 'auto_bed_leveling': return printer.auto_bed_leveling;
+            case 'heated_bed': return printer.bed_heated;
+            case 'enclosed': return printer.has_enclosure;
+            case 'camera': return printer.ai_spaghetti_detection || printer.remote_monitoring_supported;
+            case 'wifi': return printer.has_wifi;
+            case 'filament_sensor': return printer.filament_runout_detection;
+            case 'dual_extruder': return (printer.extruder_count || 1) > 1;
+            default: return true;
           }
         });
+        if (!hasAllFeatures) return false;
+      }
 
+      // Quick filters (OR logic)
+      if (activeQuickFilters.length > 0) {
+        const matchesAny = activeQuickFilters.some(filterId => {
+          switch (filterId) {
+            case 'budget': return price <= 500;
+            case 'beginner': return printer.has_enclosure && printer.auto_bed_leveling;
+            case 'multicolor': return printer.multi_material_supported;
+            case 'large': return maxDimension >= 300;
+            case 'resin': return isResin(printer);
+            case 'speed': return printerSpeed >= 300;
+            default: return false;
+          }
+        });
         if (!matchesAny) return false;
       }
 
       return true;
     });
 
-    // Sort the filtered results
+    // Sort
     return filtered.sort((a, b) => {
-      const getPrice = (p: Printer) => p.current_price_usd_store || p.current_price_usd_amazon || p.msrp_usd || Infinity;
+      const getPrinterPrice = (p: Printer) => getPrice(p);
       const getVolume = (p: Printer) => (p.build_volume_x_mm || 0) * (p.build_volume_y_mm || 0) * (p.build_volume_z_mm || 0);
       
       switch (sortBy) {
-        case "name-asc":
-          return a.model_name.localeCompare(b.model_name);
-        case "name-desc":
-          return b.model_name.localeCompare(a.model_name);
-        case "price-asc":
-          return getPrice(a) - getPrice(b);
-        case "price-desc":
-          return getPrice(b) - getPrice(a);
-        case "speed-desc":
-          return (b.max_print_speed_mms || 0) - (a.max_print_speed_mms || 0);
-        case "speed-asc":
-          return (a.max_print_speed_mms || 0) - (b.max_print_speed_mms || 0);
-        case "volume-desc":
-          return getVolume(b) - getVolume(a);
-        case "volume-asc":
-          return getVolume(a) - getVolume(b);
-        default:
-          return 0;
+        case "name-asc": return a.model_name.localeCompare(b.model_name);
+        case "name-desc": return b.model_name.localeCompare(a.model_name);
+        case "price-asc": return getPrinterPrice(a) - getPrinterPrice(b);
+        case "price-desc": return getPrinterPrice(b) - getPrinterPrice(a);
+        case "speed-desc": return (b.max_print_speed_mms || 0) - (a.max_print_speed_mms || 0);
+        case "volume-desc": return getVolume(b) - getVolume(a);
+        default: return 0;
       }
     });
-  }, [printers, selectedBrand, selectedSize, selectedSpeed, sortBy, activeQuickFilters]);
+  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy]);
+
+  const advancedFilterCount = 
+    advancedFilters.brands.length +
+    (advancedFilters.motionSystem !== 'any' ? 1 : 0) +
+    (advancedFilters.minSpeed > 0 || advancedFilters.maxSpeed < 1000 ? 1 : 0) +
+    advancedFilters.features.length;
 
   const toggleCompareSelection = (printer: Printer) => {
     const scrapedData = printer.scraped_data as Record<string, unknown> | null;
@@ -328,97 +459,39 @@ export default function Printers() {
         onQuickFilterToggle={handleQuickFilterToggle}
       />
 
-        {/* Filters Section */}
-        <section className="space-y-6 mt-8">
-          {/* Filter Row */}
-          <div className="flex flex-wrap items-center gap-4">
-            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select brand" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Brands</SelectItem>
-                {brands?.map(brand => (
-                  <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Sentinel for sticky detection */}
+        <div ref={sentinelRef} />
 
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox 
-                checked={hasEnclosure} 
-                onCheckedChange={(checked) => setHasEnclosure(checked as boolean)} 
-              />
-              <span className="text-sm">Has Enclosure</span>
-            </label>
+        {/* Filter Bar */}
+        <PrintersFilterBar
+          ref={elementRef}
+          isSticky={isSticky}
+          activeCategory={activeCategory}
+          onCategoryChange={handleCategoryChange}
+          categoryCounts={categoryCounts}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          priceRange={priceRangeFilter}
+          onPriceChange={setPriceRangeFilter}
+          buildVolume={buildVolumeFilter}
+          onBuildVolumeChange={setBuildVolumeFilter}
+          onMoreFiltersClick={() => setMoreFiltersOpen(true)}
+          advancedFilterCount={advancedFilterCount}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={handleClearAllFilters}
+        />
 
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox 
-                checked={multiMaterial} 
-                onCheckedChange={(checked) => setMultiMaterial(checked as boolean)} 
-              />
-              <span className="text-sm">Multi-Material Support</span>
-            </label>
+        {/* Spacer when sticky */}
+        {isSticky && <div style={{ height: elementHeight }} />}
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Size:</span>
-              <Select value={selectedSize} onValueChange={setSelectedSize}>
-                <SelectTrigger className="w-[140px] h-8">
-                  <SelectValue placeholder="All Sizes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sizes</SelectItem>
-                  <SelectItem value="small">Small (&lt;20L)</SelectItem>
-                  <SelectItem value="medium">Medium (20-40L)</SelectItem>
-                  <SelectItem value="large">Large (40-70L)</SelectItem>
-                  <SelectItem value="xlarge">Extra Large (70L+)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Speed:</span>
-              <Select value={selectedSpeed} onValueChange={setSelectedSpeed}>
-                <SelectTrigger className="w-[120px] h-8">
-                  <SelectValue placeholder="Any Speed" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Any Speed</SelectItem>
-                  <SelectItem value="200">200+ mm/s</SelectItem>
-                  <SelectItem value="300">300+ mm/s</SelectItem>
-                  <SelectItem value="500">500+ mm/s</SelectItem>
-                  <SelectItem value="700">700+ mm/s</SelectItem>
-                  <SelectItem value="1000">1000+ mm/s</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        {/* Results Section */}
+        <section className="space-y-6 mt-4">
+          {/* Results Count */}
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-2xl font-bold">
+              {filteredPrinters?.length || 0} <span className="text-muted-foreground font-normal">printers</span>
+            </h2>
           </div>
-
-            {/* Results Count & Sort */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">
-                {filteredPrinters?.length || 0} <span className="text-muted-foreground font-normal">printers</span>
-              </h2>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Sort by:</span>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[160px] h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-                    <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-                    <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                    <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                    <SelectItem value="speed-desc">Speed: Fastest</SelectItem>
-                    <SelectItem value="speed-asc">Speed: Slowest</SelectItem>
-                    <SelectItem value="volume-desc">Build Volume: Largest</SelectItem>
-                    <SelectItem value="volume-asc">Build Volume: Smallest</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
 
             {/* Printer Grid */}
             {isLoading ? (
@@ -682,6 +755,15 @@ export default function Printers() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Advanced Filters Modal */}
+        <PrintersAdvancedFiltersModal
+          open={moreFiltersOpen}
+          onOpenChange={setMoreFiltersOpen}
+          filters={advancedFilters}
+          onApply={setAdvancedFilters}
+          availableBrands={brands || []}
+        />
       </div>
     </div>
   );
