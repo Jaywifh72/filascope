@@ -1,16 +1,28 @@
 import React from 'react';
-import { RatingLevel, getRatingColor } from '@/lib/platformData';
+import { RatingLevel, getRatingConfig } from '@/lib/platformData';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface RatingValueProps {
   rating: RatingLevel;
   size?: 'small' | 'medium' | 'large';
   showLabel?: boolean;
+  showTooltip?: boolean;
+  tooltipContent?: string;
 }
 
-const capitalizeFirst = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
-
-const RatingValue: React.FC<RatingValueProps> = ({ rating, size = 'medium', showLabel = true }) => {
-  const color = getRatingColor(rating);
+const RatingValue: React.FC<RatingValueProps> = ({ 
+  rating, 
+  size = 'medium', 
+  showLabel = true,
+  showTooltip = false,
+  tooltipContent
+}) => {
+  const config = getRatingConfig(rating);
   
   const sizeClasses = {
     small: 'text-xs px-1.5 py-0.5',
@@ -18,17 +30,37 @@ const RatingValue: React.FC<RatingValueProps> = ({ rating, size = 'medium', show
     large: 'text-base px-3 py-1.5'
   };
   
-  return (
+  const badge = (
     <span
-      className={`inline-flex items-center font-semibold rounded-md ${sizeClasses[size]}`}
+      className={`inline-flex items-center font-semibold rounded-md transition-transform hover:scale-105 ${sizeClasses[size]}`}
       style={{ 
-        color: color,
-        backgroundColor: `${color}15`
+        color: config.color,
+        backgroundColor: config.backgroundColor
       }}
+      role="text"
+      aria-label={`Rating: ${config.label}. ${tooltipContent || config.description}`}
     >
-      {showLabel ? capitalizeFirst(rating) : null}
+      {showLabel ? config.label : null}
     </span>
   );
+  
+  if (showTooltip) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {badge}
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <p className="font-semibold text-foreground">{config.label}</p>
+            <p className="text-muted-foreground text-xs">{tooltipContent || config.description}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  
+  return badge;
 };
 
 export default RatingValue;

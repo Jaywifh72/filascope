@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trophy, Printer, Archive, Check, Zap, ExternalLink, Star } from 'lucide-react';
-import { getStaffPicks, PlatformData } from '@/lib/platformData';
+import { getStaffPicks, PlatformData, metricTooltips } from '@/lib/platformData';
 import RatingValue from './shared/RatingValue';
 import FeatureTag from './shared/FeatureTag';
 import TierHeader from './shared/TierHeader';
@@ -65,7 +65,12 @@ const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform }) => {
         {(['quality', 'community', 'search', 'ux'] as const).map(key => (
           <div key={key} className="text-center">
             <p className="text-xs text-muted-foreground mb-1 capitalize">{key}</p>
-            <RatingValue rating={platform.ratings[key]} size="medium" />
+            <RatingValue 
+              rating={platform.ratings[key]} 
+              size="medium" 
+              showTooltip 
+              tooltipContent={metricTooltips[key]} 
+            />
           </div>
         ))}
       </div>
@@ -163,11 +168,11 @@ const SecondaryCard: React.FC<SecondaryCardProps> = ({ platform }) => {
       <div className="flex items-center gap-4 mb-4 text-sm">
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">Quality:</span>
-          <RatingValue rating={platform.ratings.quality} size="small" />
+          <RatingValue rating={platform.ratings.quality} size="small" showTooltip tooltipContent={metricTooltips.quality} />
         </div>
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">Community:</span>
-          <RatingValue rating={platform.ratings.community} size="small" />
+          <RatingValue rating={platform.ratings.community} size="small" showTooltip tooltipContent={metricTooltips.community} />
         </div>
       </div>
 
