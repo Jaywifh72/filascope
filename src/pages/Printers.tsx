@@ -1,23 +1,23 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
 import { useStickyElement } from "@/hooks/useStickyElement";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, Printer as PrinterIcon, ImageIcon, Heart, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
-import { getBrandLogo } from "@/lib/brandLogos";
-import { useCurrency } from "@/hooks/useCurrency";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersFilterBar from "@/components/PrintersFilterBar";
 import PrintersAdvancedFiltersModal, { type AdvancedFilters } from "@/components/PrintersAdvancedFiltersModal";
+import LargeFeaturedPrinterCard from "@/components/printers/LargeFeaturedPrinterCard";
+import MediumStandardPrinterCard from "@/components/printers/MediumStandardPrinterCard";
+import SmallDeemphasizedPrinterCard from "@/components/printers/SmallDeemphasizedPrinterCard";
+import { getCardSize } from "@/lib/printerCardUtils";
 
 // Brand wiki/documentation URLs
 const BRAND_WIKI_URLS: Record<string, string> = {
@@ -77,7 +77,6 @@ export default function Printers() {
   const navigate = useNavigate(); 
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
-  const { formatPrice } = useCurrency();
   const { isSticky, elementHeight, sentinelRef, elementRef } = useStickyElement();
   
   // Search and quick filters
@@ -503,204 +502,61 @@ export default function Printers() {
                 <p className="text-muted-foreground">No printers found matching your criteria</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredPrinters.map((printer) => {
-                  // Extract product image from scraped_data
-                  const scrapedData = printer.scraped_data as Record<string, unknown> | null;
-                  const images = scrapedData?.images as Record<string, unknown> | null;
-                  const productImages = images?.product_images as string[] | null;
-                  const productImage = productImages?.[0];
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8" style={{ gridAutoFlow: 'dense' }}>
+                {filteredPrinters.map((printer, index) => {
+                  const cardInfo = getCardSize(printer, index);
+                  const printerIsSelected = isSelected(printer.id);
+
+                  const handleToggleCompare = () => toggleCompareSelection(printer);
+                  const handleEditImage = (e: React.MouseEvent) => openImageEditDialog(printer, e);
+                  const handleRescrape = (e: React.MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    rescrapeMutation.mutate(printer.id);
+                  };
+
+                  if (cardInfo.size === 'large') {
+                    return (
+                      <LargeFeaturedPrinterCard
+                        key={printer.id}
+                        printer={printer}
+                        cardInfo={cardInfo}
+                        isSelected={printerIsSelected}
+                        isMaxReached={isMaxReached}
+                        onToggleCompare={handleToggleCompare}
+                        isAdmin={isAdmin}
+                        onEditImage={handleEditImage}
+                        onRescrape={handleRescrape}
+                        isRescraping={rescrapeMutation.isPending}
+                      />
+                    );
+                  }
+
+                  if (cardInfo.size === 'small') {
+                    return (
+                      <SmallDeemphasizedPrinterCard
+                        key={printer.id}
+                        printer={printer}
+                        cardInfo={cardInfo}
+                        isSelected={printerIsSelected}
+                        isMaxReached={isMaxReached}
+                        onToggleCompare={handleToggleCompare}
+                      />
+                    );
+                  }
 
                   return (
-                    <article 
-                      key={printer.id} 
-                      className="group relative"
-                      role="article"
-                      aria-label={`${printer.brand?.brand} ${printer.model_name}`}
-                    >
-                      <Link to={`/printers/${printer.id}`}>
-                        <div 
-                          className="
-                            relative
-                            bg-[hsl(0_0%_10%)] 
-                            border border-white/10 
-                            rounded-xl 
-                            p-5 
-                            transition-all duration-300 ease-out
-                            hover:border-cyan-400 
-                            hover:-translate-y-1 
-                            hover:shadow-[0_8px_30px_rgba(0,212,212,0.15)]
-                            cursor-pointer
-                            h-full
-                            flex flex-col
-                          "
-                        >
-                          {/* Action Icons - Top Right */}
-                          <div className="absolute top-3 right-3 flex gap-1.5 z-10">
-                            <button 
-                              className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
-                              aria-label="Add to favorites"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                // Future: implement favorite toggle
-                              }}
-                            >
-                              <Heart className="h-4 w-4 text-white/70 hover:text-red-400 transition-colors" />
-                            </button>
-                            
-                            <div 
-                              className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                            >
-                              <Checkbox
-                                className="h-4 w-4 border-white/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
-                                checked={isSelected(printer.id)}
-                                onCheckedChange={() => toggleCompareSelection(printer)}
-                                disabled={isMaxReached && !isSelected(printer.id)}
-                                aria-label="Add to comparison"
-                              />
-                            </div>
-                            
-                            {printer.official_product_url && (
-                              <a
-                                href={printer.official_product_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
-                                onClick={(e) => e.stopPropagation()}
-                                aria-label="View on manufacturer website"
-                              >
-                                <ExternalLink className="h-4 w-4 text-white/70 hover:text-cyan-400 transition-colors" />
-                              </a>
-                            )}
-                            
-                            {isAdmin && (
-                              <>
-                                <button 
-                                  className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
-                                  onClick={(e) => openImageEditDialog(printer, e)}
-                                  aria-label="Edit printer image"
-                                >
-                                  <ImageIcon className="h-4 w-4 text-white/70" />
-                                </button>
-                                {printer.official_product_url && (
-                                  <button 
-                                    className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      rescrapeMutation.mutate(printer.id);
-                                    }}
-                                    disabled={rescrapeMutation.isPending}
-                                    aria-label="Re-scrape printer data"
-                                  >
-                                    <RefreshCw className={`h-4 w-4 text-white/70 ${rescrapeMutation.isPending ? 'animate-spin' : ''}`} />
-                                  </button>
-                                )}
-                              </>
-                            )}
-                          </div>
-
-                          {/* Printer Image */}
-                          <div className="relative aspect-square mb-4">
-                            {productImage ? (
-                              <img 
-                                src={productImage} 
-                                alt={`${printer.brand?.brand} ${printer.model_name}`}
-                                className="w-full h-full object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                }}
-                              />
-                            ) : null}
-                            <div className={`w-full h-full flex items-center justify-center ${productImage ? 'hidden' : ''}`}>
-                              <PrinterIcon className="h-16 w-16 text-white/20" />
-                            </div>
-                          </div>
-
-                          {/* Printer Name - Most Prominent */}
-                          <h3 className="text-2xl font-bold text-white mb-1 line-clamp-2">
-                            {printer.brand?.brand} {printer.model_name}
-                          </h3>
-                          {printer.variant_or_bundle_name && (
-                            <p className="text-sm text-gray-400 mb-2">{printer.variant_or_bundle_name}</p>
-                          )}
-
-                          {/* Build Volume + Speed - Single Line */}
-                          <p className="text-sm text-[#9CA3AF] mb-3">
-                            {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
-                              <span>{printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm</span>
-                            )}
-                            {printer.build_volume_x_mm && printer.max_print_speed_mms && <span> • </span>}
-                            {printer.max_print_speed_mms && <span>{printer.max_print_speed_mms}mm/s</span>}
-                          </p>
-
-                          {/* Price Section */}
-                          <div className="mb-4">
-                            {printer.current_price_usd_store ? (
-                              <>
-                                <span className="text-xl font-bold text-[#F59E0B]">
-                                  {formatPrice(printer.current_price_usd_store)}
-                                </span>
-                                {printer.msrp_usd && printer.current_price_usd_store < printer.msrp_usd && (
-                                  <div className="text-sm text-gray-500">
-                                    <span className="line-through">{formatPrice(printer.msrp_usd)}</span>
-                                    <span className="ml-2 text-green-500">
-                                      ({Math.round((1 - printer.current_price_usd_store / printer.msrp_usd) * 100)}% off)
-                                    </span>
-                                  </div>
-                                )}
-                              </>
-                            ) : printer.current_price_usd_amazon ? (
-                              <span className="text-xl font-bold text-[#F59E0B]">
-                                {formatPrice(printer.current_price_usd_amazon)}
-                              </span>
-                            ) : printer.msrp_usd ? (
-                              <span className="text-xl font-bold text-[#F59E0B]">
-                                {formatPrice(printer.msrp_usd)}
-                              </span>
-                            ) : (
-                              <span className="text-lg text-gray-500">Price TBD</span>
-                            )}
-                          </div>
-
-                          {/* Feature Tags - Hidden by Default, Show on Hover */}
-                          <div className="flex flex-wrap gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 mb-3 mt-auto">
-                            {printer.has_enclosure && (
-                              <span className="text-xs text-cyan-400 bg-cyan-400/10 border border-cyan-400/30 px-2 py-1 rounded-md">
-                                Enclosure
-                              </span>
-                            )}
-                            {printer.multi_material_supported && (
-                              <span className="text-xs text-cyan-400 bg-cyan-400/10 border border-cyan-400/30 px-2 py-1 rounded-md">
-                                Multi-Mat
-                              </span>
-                            )}
-                            {printer.auto_bed_leveling && (
-                              <span className="text-xs text-cyan-400 bg-cyan-400/10 border border-cyan-400/30 px-2 py-1 rounded-md">
-                                ABL
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Brand Logo - Bottom Right, Subtle */}
-                          {getBrandLogo(printer.brand?.brand || null) && (
-                            <div className="absolute bottom-5 right-5">
-                              <img 
-                                src={getBrandLogo(printer.brand?.brand || null)!} 
-                                alt={`${printer.brand?.brand} logo`}
-                                className="h-auto max-w-[40px] object-contain opacity-50"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </Link>
-                    </article>
+                    <MediumStandardPrinterCard
+                      key={printer.id}
+                      printer={printer}
+                      isSelected={printerIsSelected}
+                      isMaxReached={isMaxReached}
+                      onToggleCompare={handleToggleCompare}
+                      isAdmin={isAdmin}
+                      onEditImage={handleEditImage}
+                      onRescrape={handleRescrape}
+                      isRescraping={rescrapeMutation.isPending}
+                    />
                   );
                 })}
               </div>
