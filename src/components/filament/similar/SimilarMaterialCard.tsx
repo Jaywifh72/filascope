@@ -60,19 +60,19 @@ interface SimilarMaterialCardProps {
 }
 
 const MATERIAL_COLORS: Record<string, string> = {
-  PLA: "bg-green-500/20 text-green-400 border-green-500/30",
-  PETG: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  ABS: "bg-gray-500/20 text-gray-400 border-gray-500/30",
-  ASA: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  TPU: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-  NYLON: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-  PC: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+  PLA: "bg-violet-500/20 text-violet-400 border-violet-500/30",
+  PETG: "bg-violet-500/20 text-violet-400 border-violet-500/30",
+  ABS: "bg-violet-500/20 text-violet-400 border-violet-500/30",
+  ASA: "bg-violet-500/20 text-violet-400 border-violet-500/30",
+  TPU: "bg-violet-500/20 text-violet-400 border-violet-500/30",
+  NYLON: "bg-violet-500/20 text-violet-400 border-violet-500/30",
+  PC: "bg-violet-500/20 text-violet-400 border-violet-500/30",
 };
 
 function getMaterialColor(material: string | null): string {
-  if (!material) return "bg-muted text-muted-foreground border-border";
+  if (!material) return "bg-violet-500/20 text-violet-400 border-violet-500/30";
   const base = material.split(/[\s-]/)[0].toUpperCase();
-  return MATERIAL_COLORS[base] || "bg-muted text-muted-foreground border-border";
+  return MATERIAL_COLORS[base] || "bg-violet-500/20 text-violet-400 border-violet-500/30";
 }
 
 function getScoreColor(score: number | null): string {
