@@ -28,6 +28,7 @@ import { SocialProofBadges } from "@/components/printer/SocialProofBadges";
 import { ValueProposition } from "@/components/printer/ValueProposition";
 import { KeySpecsBar, generateKeySpecs } from "@/components/printer/KeySpecsBar";
 import { FeatureHighlightCards } from "@/components/printer/FeatureHighlightCards";
+import AdvantageCardsSection from "@/components/printer/AdvantageCardsSection";
 import { PriceSection } from "@/components/printer/PriceSection";
 import { CTAButtons } from "@/components/printer/CTAButtons";
 import { PriceInsightsWidget } from "@/components/printer/PriceInsightsWidget";
@@ -572,6 +573,9 @@ const PrinterDetail = () => {
 
         {/* Feature Highlight Cards - Decision Matrix */}
         <FeatureHighlightCards printer={printer} />
+
+        {/* Advantage Callout Cards - Feature Benefits */}
+        <AdvantageCardsSection printer={printer} />
 
         {/* Ratings */}
         {(printer.rating_community_overall || printer.rating_ease_of_use || printer.rating_print_quality) && (
