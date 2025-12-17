@@ -1,12 +1,12 @@
 import { Check, ArrowRight, Plus, Star } from 'lucide-react';
 import { SlicerTierInfo, PriceType } from '@/lib/slicerTierData';
+import { useSlicerComparison, slicerTierInfoToSelectedSlicer } from '@/contexts/SlicerComparisonContext';
 import { cn } from '@/lib/utils';
 
 interface SlicerPopularCardProps {
   slicer: SlicerTierInfo;
   logo?: string;
   onLearnMore: () => void;
-  onAddToCompare: () => void;
 }
 
 const priceTypeConfig: Record<PriceType, string> = {
@@ -15,12 +15,24 @@ const priceTypeConfig: Record<PriceType, string> = {
   paid: 'text-pink-400',
 };
 
-export function SlicerPopularCard({ slicer, logo, onLearnMore, onAddToCompare }: SlicerPopularCardProps) {
+export function SlicerPopularCard({ slicer, logo, onLearnMore }: SlicerPopularCardProps) {
+  const { addSlicer, removeSlicer, isInComparison } = useSlicerComparison();
+  const inComparison = isInComparison(slicer.name.toLowerCase().replace(/\s+/g, '-'));
+
   const scoreColor = slicer.overallScore >= 9.0 
     ? 'text-green-500' 
     : slicer.overallScore >= 7.0 
       ? 'text-primary' 
       : 'text-yellow-500';
+
+  const handleCompareClick = () => {
+    const selectedSlicer = slicerTierInfoToSelectedSlicer(slicer, logo);
+    if (inComparison) {
+      removeSlicer(selectedSlicer.id);
+    } else {
+      addSlicer(selectedSlicer);
+    }
+  };
 
   return (
     <div className="w-full h-[280px] bg-card/50 border border-border rounded-xl p-5 grid grid-cols-[80px_1fr] gap-5 transition-all duration-200 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-md max-lg:h-auto max-lg:min-h-[260px] max-md:grid-cols-1 max-md:text-center">
@@ -76,11 +88,16 @@ export function SlicerPopularCard({ slicer, logo, onLearnMore, onAddToCompare }:
           </button>
           
           <button
-            onClick={onAddToCompare}
-            className="h-9 w-9 bg-transparent border border-primary/30 hover:border-primary/50 hover:bg-primary/10 rounded-lg text-primary inline-flex items-center justify-center transition-all"
-            title="Add to Compare"
+            onClick={handleCompareClick}
+            className={cn(
+              "h-9 w-9 rounded-lg inline-flex items-center justify-center transition-all",
+              inComparison
+                ? "bg-green-500/15 border border-green-500/30 text-green-500"
+                : "bg-transparent border border-primary/30 hover:border-primary/50 hover:bg-primary/10 text-primary"
+            )}
+            title={inComparison ? "Remove from Compare" : "Add to Compare"}
           >
-            <Plus size={16} />
+            {inComparison ? <Check size={16} /> : <Plus size={16} />}
           </button>
         </div>
       </div>
