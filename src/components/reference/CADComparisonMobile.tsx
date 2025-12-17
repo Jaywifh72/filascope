@@ -30,12 +30,15 @@ const darkLogos = ["Fusion 360", "AutoCAD", "3ds Max", "Maya", "Meshmixer"];
 const needsBrightness = (name: string) => darkLogos.includes(name);
 
 const CADComparisonMobile = () => {
-  const { selectedSoftware, canCompare, openComparison } = useCADComparison();
+  const { selectedSoftware, canCompare, openComparison, announcement } = useCADComparison();
   
   const isVisible = selectedSoftware.length > 0;
 
   return (
     <div
+      role="region"
+      aria-label={`Comparison selection - ${selectedSoftware.length} item${selectedSoftware.length !== 1 ? 's' : ''} selected`}
+      aria-live="polite"
       className={cn(
         "fixed bottom-0 left-0 right-0 z-50 lg:hidden",
         "h-[70px] px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]",
@@ -46,6 +49,11 @@ const CADComparisonMobile = () => {
         isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
       )}
     >
+      {/* Screen reader announcements */}
+      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
+
       {/* Icon */}
       <div className="w-11 h-11 flex-shrink-0 rounded-lg bg-cyan-400/15 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
         <BarChart3 size={20} />
@@ -90,13 +98,13 @@ const CADComparisonMobile = () => {
       <button
         onClick={canCompare ? openComparison : undefined}
         disabled={!canCompare}
+        aria-label={canCompare ? `Compare ${selectedSoftware.length} items` : 'Need at least 2 items to compare'}
         className={cn(
           "h-11 px-5 flex-shrink-0 rounded-lg font-bold text-sm flex items-center gap-1.5 transition-all",
           canCompare 
             ? "bg-cyan-400 text-background active:scale-[0.98]" 
             : "bg-muted text-muted-foreground cursor-not-allowed"
         )}
-        aria-label={canCompare ? `Compare ${selectedSoftware.length} items` : 'Need at least 2 items'}
       >
         Compare
         <ChevronRight size={16} />
