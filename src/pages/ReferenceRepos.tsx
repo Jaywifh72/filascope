@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, FolderGit2, Check, X, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Filter, HelpCircle } from "lucide-react";
+import { ArrowLeft, FolderGit2, Check, X, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Filter, HelpCircle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -24,6 +24,7 @@ import {
 import { repoData } from "@/lib/repoData";
 import { RatingLevel, metricTooltips } from "@/lib/platformData";
 import { FilterProvider } from "@/contexts/PlatformFilterContext";
+import { getStandoutByName } from "@/lib/standoutFeatures";
 import ReposHeroSection from "@/components/reference/ReposHeroSection";
 import StaffPicksSection from "@/components/reference/repos/StaffPicksSection";
 import SpecializedSection from "@/components/reference/repos/SpecializedSection";
@@ -32,6 +33,7 @@ import RatingScaleLegend from "@/components/reference/repos/shared/RatingScaleLe
 import ExpandedPlatformCard from "@/components/reference/repos/ExpandedPlatformCard";
 import PlatformFilterBar from "@/components/reference/repos/PlatformFilterBar";
 import NoResultsEmpty from "@/components/reference/repos/NoResultsEmpty";
+import StandoutBadge from "@/components/reference/repos/shared/StandoutBadge";
 // Helper to convert numeric ratings (1-5) to semantic labels
 const mapNumberToSemantic = (num: number): RatingLevel => {
   if (num >= 5) return 'excellent';
@@ -349,7 +351,12 @@ const ReferenceRepos = () => {
                     <thead>
                       <tr className="border-b border-border bg-muted/30">
                         <SortHeader label="Platform" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                        <SortHeader label="Owner" sortKey="owner" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                        <th className="text-left py-2 px-3 font-semibold text-amber-400 bg-amber-500/5">
+                          <div className="flex items-center gap-1.5">
+                            <Zap size={14} />
+                            <span>Standout Feature</span>
+                          </div>
+                        </th>
                         <SortHeader label="Model" sortKey="model" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                         <th className="text-center py-2 px-3 font-semibold text-foreground">Free</th>
                         <th className="text-center py-2 px-3 font-semibold text-foreground">Paid</th>
@@ -360,7 +367,6 @@ const ReferenceRepos = () => {
                         <SortHeader label="UX" sortKey="ux" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.ux} />
                         <th className="text-center py-2 px-3 font-semibold text-foreground">Mobile</th>
                         <th className="text-left py-2 px-3 font-semibold text-foreground">File Types</th>
-                        <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -381,7 +387,16 @@ const ReferenceRepos = () => {
                               {repo.name}
                             </div>
                           </td>
-                          <td className="py-2 px-3 text-muted-foreground text-xs">{repo.owner}</td>
+                          <td className="py-2 px-3 bg-amber-500/3">
+                            {(() => {
+                              const standout = getStandoutByName(repo.name);
+                              return standout ? (
+                                <StandoutBadge standout={standout} variant="compact" />
+                              ) : (
+                                <span className="text-amber-400 text-xs">{repo.standout}</span>
+                              );
+                            })()}
+                          </td>
                           <td className="py-2 px-3">
                             <Badge 
                               variant="outline" 
@@ -405,7 +420,6 @@ const ReferenceRepos = () => {
                           <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.ux)} size="small" showTooltip tooltipContent={metricTooltips.ux} /></td>
                           <td className="py-2 px-3 text-center"><BoolBadge value={repo.mobile} /></td>
                           <td className="py-2 px-3 text-muted-foreground text-xs">{repo.fileTypes}</td>
-                          <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{repo.standout}</td>
                         </tr>
                       ))}
                     </tbody>

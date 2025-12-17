@@ -2,8 +2,10 @@ import React from 'react';
 import { DollarSign, Award, Search, Smartphone, Wrench, Zap, ExternalLink, Star } from 'lucide-react';
 import { getSpecializedPlatforms, PlatformData, metricTooltips } from '@/lib/platformData';
 import { useFilters } from '@/contexts/PlatformFilterContext';
+import { getStandoutForPlatform } from '@/lib/standoutFeatures';
 import RatingValue from './shared/RatingValue';
 import TierHeader from './shared/TierHeader';
+import StandoutBadge from './shared/StandoutBadge';
 
 const getBadgeIcon = (iconName: string, size: number = 14) => {
   switch (iconName) {
@@ -52,6 +54,14 @@ const SpecializedCard: React.FC<SpecializedCardProps> = ({ platform }) => {
         </div>
       </div>
 
+      {/* Standout Feature - Moved up for prominence */}
+      {(() => {
+        const standout = getStandoutForPlatform(platform.id);
+        return standout ? (
+          <StandoutBadge standout={standout} variant="compact" className="mb-3" />
+        ) : null;
+      })()}
+
       {/* Model Type */}
       <span 
         className="inline-block px-2 py-0.5 text-xs font-semibold rounded mb-3"
@@ -67,12 +77,6 @@ const SpecializedCard: React.FC<SpecializedCardProps> = ({ platform }) => {
       <div className="flex items-center gap-2 mb-3 text-sm">
         <span className="text-muted-foreground">Quality:</span>
         <RatingValue rating={platform.ratings.quality} size="small" showTooltip tooltipContent={metricTooltips.quality} />
-      </div>
-
-      {/* Standout */}
-      <div className="flex items-center gap-1.5 text-sm text-primary mb-2">
-        <Zap size={12} />
-        <span className="truncate">{platform.standoutFeature}</span>
       </div>
 
       {/* Best For */}
