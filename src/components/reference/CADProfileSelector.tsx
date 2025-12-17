@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SoftwareBadges } from './CADBadges';
+import { CADQuiz } from './CADQuiz';
 
 // ============= Types =============
 
@@ -470,6 +471,7 @@ const CADProfileSelector: React.FC<CADProfileSelectorProps> = ({ onScrollToCompa
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [isSecondaryExpanded, setIsSecondaryExpanded] = useState(false);
+  const [showQuiz, setShowQuiz] = useState(false);
   
   const recommendationsRef = useRef<HTMLDivElement>(null);
   
@@ -588,15 +590,19 @@ const CADProfileSelector: React.FC<CADProfileSelectorProps> = ({ onScrollToCompa
               "text-sm font-medium text-cyan-400",
               "transition-all duration-200"
             )}
-            onClick={() => {
-              // Could open a quiz modal or redirect
-              alert('Quiz feature coming soon! For now, select the profile that best matches your needs.');
-            }}
+            onClick={() => setShowQuiz(true)}
           >
             <HelpCircle className="w-4 h-4" />
             <span>Not sure? Take our 90-second quiz</span>
           </button>
         </div>
+        
+        {/* Quiz Modal */}
+        <CADQuiz
+          open={showQuiz}
+          onClose={() => setShowQuiz(false)}
+          onLearnMore={onLearnMore}
+        />
       </section>
     );
   }
