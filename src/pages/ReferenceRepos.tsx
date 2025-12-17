@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ExternalLink, FolderGit2, Building2, Target, DollarSign, Server, Users, Check, X, Star, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Download, Smartphone, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { repoData } from "@/lib/repoData";
+import ReposHeroSection from "@/components/reference/ReposHeroSection";
 
 // Logo mapping for repositories
 const repoLogos: Record<string, string> = {
@@ -176,6 +177,13 @@ const ReferenceRepos = () => {
 
   const hasActiveFilters = modelFilter !== "All" || formatFilter !== "All";
 
+  const scrollToComparison = useCallback(() => {
+    const element = document.getElementById('comparison-matrix');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -211,8 +219,14 @@ const ReferenceRepos = () => {
           </div>
         </div>
 
+        {/* Hero Section */}
+        <ReposHeroSection 
+          platformCount={repoData.length} 
+          onScrollToComparison={scrollToComparison} 
+        />
+
         {/* Comparative Features Table */}
-        <div className="mb-8 border border-border rounded-lg bg-card p-6">
+        <div id="comparison-matrix" className="mb-8 border border-border rounded-lg bg-card p-6 scroll-mt-4">
           <div className="flex items-center gap-3 mb-4">
             <BarChart3 className="w-6 h-6 text-purple-400" />
             <h2 className="text-xl font-bold font-mono text-foreground">Comparative Features Matrix</h2>
@@ -353,7 +367,9 @@ const ReferenceRepos = () => {
             <AccordionItem 
               key={repo.id} 
               value={repo.id}
-              className="border border-border/50 rounded-lg bg-card/50 backdrop-blur-sm px-4 data-[state=open]:border-purple-500/30"
+              id={`platform-${repo.id}`}
+              className="border border-border/50 rounded-lg bg-card/50 backdrop-blur-sm px-4 data-[state=open]:border-purple-500/30 scroll-mt-4"
+              data-platform-name={repo.name}
             >
               <AccordionTrigger className="hover:no-underline py-4">
                 <div className="flex items-center gap-4 text-left">
