@@ -23,12 +23,15 @@ import {
 } from "@/components/ui/tooltip";
 import { repoData } from "@/lib/repoData";
 import { RatingLevel, metricTooltips } from "@/lib/platformData";
+import { FilterProvider } from "@/contexts/PlatformFilterContext";
 import ReposHeroSection from "@/components/reference/ReposHeroSection";
 import StaffPicksSection from "@/components/reference/repos/StaffPicksSection";
 import SpecializedSection from "@/components/reference/repos/SpecializedSection";
 import RatingValue from "@/components/reference/repos/shared/RatingValue";
 import RatingScaleLegend from "@/components/reference/repos/shared/RatingScaleLegend";
 import ExpandedPlatformCard from "@/components/reference/repos/ExpandedPlatformCard";
+import PlatformFilterBar from "@/components/reference/repos/PlatformFilterBar";
+import NoResultsEmpty from "@/components/reference/repos/NoResultsEmpty";
 // Helper to convert numeric ratings (1-5) to semantic labels
 const mapNumberToSemantic = (num: number): RatingLevel => {
   if (num >= 5) return 'excellent';
@@ -204,51 +207,58 @@ const ReferenceRepos = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Button variant="ghost" size="sm" asChild className="mb-4">
-            <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Link>
-          </Button>
-          
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 rounded-lg bg-purple-500/20 border border-purple-500/30">
-              <FolderGit2 className="w-8 h-8 text-purple-400" />
+    <FilterProvider>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <Button variant="ghost" size="sm" asChild className="mb-4">
+              <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Home
+              </Link>
+            </Button>
+            
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 rounded-lg bg-purple-500/20 border border-purple-500/30">
+                <FolderGit2 className="w-8 h-8 text-purple-400" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-foreground font-mono">3D Model Repositories</h1>
+                <p className="text-muted-foreground">Complete reference guide to 3D print file platforms & marketplaces</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground font-mono">3D Model Repositories</h1>
-              <p className="text-muted-foreground">Complete reference guide to 3D print file platforms & marketplaces</p>
+            
+            <div className="flex gap-2 flex-wrap">
+              <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30">
+                {repoData.length} Platforms
+              </Badge>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                Free & Premium
+              </Badge>
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/30">
+                Marketplaces & Archives
+              </Badge>
             </div>
           </div>
-          
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30">
-              {repoData.length} Platforms
-            </Badge>
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
-              Free & Premium
-            </Badge>
-            <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/30">
-              Marketplaces & Archives
-            </Badge>
-          </div>
-        </div>
 
-        {/* Hero Section */}
-        <ReposHeroSection 
-          platformCount={repoData.length} 
-          onScrollToComparison={scrollToComparison} 
-        />
+          {/* Hero Section */}
+          <ReposHeroSection 
+            platformCount={repoData.length} 
+            onScrollToComparison={scrollToComparison} 
+          />
 
-        {/* Tier 1: Staff Picks */}
-        <StaffPicksSection />
+          {/* Platform Filter Bar */}
+          <PlatformFilterBar />
 
-        {/* Tier 2: Specialized Options */}
-        <SpecializedSection />
+          {/* Tier 1: Staff Picks */}
+          <StaffPicksSection />
+
+          {/* Tier 2: Specialized Options */}
+          <SpecializedSection />
+
+          {/* Empty State */}
+          <NoResultsEmpty />
 
         {/* Tier 3: Collapsible Comparative Features Table */}
         <Collapsible
@@ -418,8 +428,9 @@ const ReferenceRepos = () => {
             />
           ))}
         </div>
+        </div>
       </div>
-    </div>
+    </FilterProvider>
   );
 };
 

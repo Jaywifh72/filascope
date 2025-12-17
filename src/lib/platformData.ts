@@ -72,6 +72,12 @@ export const getRatingConfig = (rating: RatingLevel): RatingConfig => {
   return ratingConfigs[rating];
 };
 
+// Filter types
+export type PriceFilter = 'free' | 'freemium' | 'premium';
+export type BestForFilter = 'beginners' | 'sellers' | 'engineers' | 'hobbyists';
+export type PrinterFilter = 'bambu' | 'creality' | 'universal';
+export type FileTypeFilter = 'stl-obj' | '3mf' | 'cad-step';
+
 export interface PlatformData {
   id: string;
   name: string;
@@ -107,6 +113,12 @@ export interface PlatformData {
   whyPicked?: string[];
   websiteUrl: string;
   targetId: string;
+  
+  // Filter-specific data
+  priceFilter: PriceFilter;
+  bestForFilters: BestForFilter[];
+  printerOptimization: PrinterFilter;
+  fileTypeFilters: FileTypeFilter[];
 }
 
 export const platforms: PlatformData[] = [
@@ -144,7 +156,13 @@ export const platforms: PlatformData[] = [
       'Strong creator reward program'
     ],
     websiteUrl: 'https://www.printables.com',
-    targetId: 'platform-printables'
+    targetId: 'platform-printables',
+    
+    // Filter data
+    priceFilter: 'freemium',
+    bestForFilters: ['hobbyists', 'beginners'],
+    printerOptimization: 'universal',
+    fileTypeFilters: ['stl-obj', '3mf']
   },
   {
     id: 'makerworld',
@@ -180,7 +198,13 @@ export const platforms: PlatformData[] = [
       'Pushing industry toward 3MF standard'
     ],
     websiteUrl: 'https://makerworld.com',
-    targetId: 'platform-makerworld'
+    targetId: 'platform-makerworld',
+    
+    // Filter data
+    priceFilter: 'free',
+    bestForFilters: ['hobbyists', 'beginners'],
+    printerOptimization: 'bambu',
+    fileTypeFilters: ['stl-obj', '3mf']
   },
   {
     id: 'thingiverse',
@@ -215,7 +239,13 @@ export const platforms: PlatformData[] = [
       'Wide variety of categories and designs'
     ],
     websiteUrl: 'https://www.thingiverse.com',
-    targetId: 'platform-thingiverse'
+    targetId: 'platform-thingiverse',
+    
+    // Filter data
+    priceFilter: 'free',
+    bestForFilters: ['hobbyists', 'beginners'],
+    printerOptimization: 'universal',
+    fileTypeFilters: ['stl-obj']
   },
   {
     id: 'cults3d',
@@ -245,7 +275,13 @@ export const platforms: PlatformData[] = [
     standoutFeature: '80/20 Commission Split',
     bestFor: 'Designers who want to sell models with the best commission rates',
     websiteUrl: 'https://cults3d.com',
-    targetId: 'platform-cults3d'
+    targetId: 'platform-cults3d',
+    
+    // Filter data
+    priceFilter: 'freemium',
+    bestForFilters: ['sellers', 'hobbyists'],
+    printerOptimization: 'universal',
+    fileTypeFilters: ['stl-obj', '3mf']
   },
   {
     id: 'myminifactory',
@@ -275,7 +311,13 @@ export const platforms: PlatformData[] = [
     standoutFeature: 'Guaranteed Printable',
     bestFor: 'Users willing to pay for guaranteed-printable, curated quality',
     websiteUrl: 'https://www.myminifactory.com',
-    targetId: 'platform-myminifactory'
+    targetId: 'platform-myminifactory',
+    
+    // Filter data
+    priceFilter: 'premium',
+    bestForFilters: ['sellers', 'hobbyists'],
+    printerOptimization: 'universal',
+    fileTypeFilters: ['stl-obj']
   },
   {
     id: 'thangs',
@@ -305,7 +347,13 @@ export const platforms: PlatformData[] = [
     standoutFeature: 'Geometric AI Search',
     bestFor: "Users who know what shape they want but not what it's called",
     websiteUrl: 'https://thangs.com',
-    targetId: 'platform-thangs'
+    targetId: 'platform-thangs',
+    
+    // Filter data
+    priceFilter: 'freemium',
+    bestForFilters: ['hobbyists', 'engineers'],
+    printerOptimization: 'universal',
+    fileTypeFilters: ['stl-obj', '3mf', 'cad-step']
   },
   {
     id: 'creality-cloud',
@@ -335,7 +383,13 @@ export const platforms: PlatformData[] = [
     standoutFeature: 'Phone-to-Print',
     bestFor: 'Creality printer owners who want mobile-first workflow',
     websiteUrl: 'https://www.crealitycloud.com',
-    targetId: 'platform-creality'
+    targetId: 'platform-creality',
+    
+    // Filter data
+    priceFilter: 'freemium',
+    bestForFilters: ['hobbyists', 'beginners'],
+    printerOptimization: 'creality',
+    fileTypeFilters: ['stl-obj']
   },
   {
     id: 'grabcad',
@@ -365,7 +419,13 @@ export const platforms: PlatformData[] = [
     standoutFeature: 'Engineering CAD Files',
     bestFor: 'Engineers needing professional CAD formats (STEP/IGES)',
     websiteUrl: 'https://grabcad.com',
-    targetId: 'platform-grabcad'
+    targetId: 'platform-grabcad',
+    
+    // Filter data
+    priceFilter: 'free',
+    bestForFilters: ['engineers'],
+    printerOptimization: 'universal',
+    fileTypeFilters: ['cad-step', 'stl-obj']
   }
 ];
 

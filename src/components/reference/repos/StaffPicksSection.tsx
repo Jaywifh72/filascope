@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trophy, Printer, Archive, Check, Zap, ExternalLink, Star } from 'lucide-react';
 import { getStaffPicks, PlatformData, metricTooltips } from '@/lib/platformData';
+import { useFilters } from '@/contexts/PlatformFilterContext';
 import RatingValue from './shared/RatingValue';
 import FeatureTag from './shared/FeatureTag';
 import TierHeader from './shared/TierHeader';
@@ -199,7 +200,17 @@ const SecondaryCard: React.FC<SecondaryCardProps> = ({ platform }) => {
 };
 
 const StaffPicksSection: React.FC = () => {
-  const staffPicks = getStaffPicks();
+  const { filteredPlatforms, hasActiveFilters } = useFilters();
+  const allStaffPicks = getStaffPicks();
+  
+  // Filter staff picks based on active filters
+  const staffPicks = allStaffPicks.filter(pick => 
+    filteredPlatforms.some(fp => fp.id === pick.id)
+  );
+
+  // Hide entire section if no matches
+  if (staffPicks.length === 0 && hasActiveFilters) return null;
+
   const featured = staffPicks[0];
   const secondary = staffPicks.slice(1);
 
@@ -210,16 +221,18 @@ const StaffPicksSection: React.FC = () => {
         icon="🏆"
         title="Staff Picks"
         subtitle="Our top recommendations based on 100+ hours of research"
-        count="3 of 8 platforms"
+        count={`${staffPicks.length} of ${allStaffPicks.length} platforms`}
       />
 
       <div className="space-y-6">
-        <FeaturedCard platform={featured} />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {secondary.map(platform => (
-            <SecondaryCard key={platform.id} platform={platform} />
-          ))}
-        </div>
+        {featured && <FeaturedCard platform={featured} />}
+        {secondary.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {secondary.map(platform => (
+              <SecondaryCard key={platform.id} platform={platform} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
