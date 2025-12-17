@@ -33,6 +33,7 @@ import { PriceSection } from "@/components/printer/PriceSection";
 import { CTAButtons } from "@/components/printer/CTAButtons";
 import { PriceInsightsWidget } from "@/components/printer/PriceInsightsWidget";
 import { PriceHistoryModal } from "@/components/printer/PriceHistoryModal";
+import { SimilarPrintersSection } from "@/components/printer/SimilarPrintersSection";
 import { generatePrinterBenefits, generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
 import {
   ArrowLeft,
@@ -665,6 +666,29 @@ const PrinterDetail = () => {
           <FirmwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
           <SoftwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
         </div>
+
+        {/* Similar Printers Comparison Section */}
+        <SimilarPrintersSection
+          currentPrinter={{
+            id: printer.id,
+            brand: brand,
+            model: printer.model_name,
+            price: printer.current_price_usd_store,
+            rating: printer.rating_community_overall,
+            reviewCount: printer.review_count_aggregated,
+            imageUrl: displayImages[0] || null,
+            buildVolume: null,
+            maxSpeed: printer.max_print_speed_mms,
+            maxNozzleTemp: printer.max_nozzle_temp_c,
+            hasEnclosure: printer.has_enclosure || false,
+            multiMaterialSupported: printer.multi_material_supported || false,
+            multiMaterialMaxSpools: printer.multi_material_max_spools,
+            priceTier: printer.price_tier,
+            buildVolumeX: printer.build_volume_x_mm,
+            buildVolumeY: printer.build_volume_y_mm,
+            buildVolumeZ: printer.build_volume_z_mm,
+          }}
+        />
 
         {/* Image Lightbox Modal */}
         <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
