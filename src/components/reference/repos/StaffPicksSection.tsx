@@ -2,9 +2,11 @@ import React from 'react';
 import { Trophy, Printer, Archive, Check, Zap, ExternalLink, Star } from 'lucide-react';
 import { getStaffPicks, PlatformData, metricTooltips } from '@/lib/platformData';
 import { useFilters } from '@/contexts/PlatformFilterContext';
+import { getStandoutForPlatform } from '@/lib/standoutFeatures';
 import RatingValue from './shared/RatingValue';
 import FeatureTag from './shared/FeatureTag';
 import TierHeader from './shared/TierHeader';
+import StandoutBadge from './shared/StandoutBadge';
 
 const getBadgeIcon = (iconName: string, size: number = 14) => {
   switch (iconName) {
@@ -61,6 +63,14 @@ const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform }) => {
         </span>
       </div>
 
+      {/* Standout Feature - Prominently positioned */}
+      {(() => {
+        const standout = getStandoutForPlatform(platform.id);
+        return standout ? (
+          <StandoutBadge standout={standout} variant="standard" className="mb-6" />
+        ) : null;
+      })()}
+
       {/* Ratings */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {(['quality', 'community', 'search', 'ux'] as const).map(key => (
@@ -102,16 +112,9 @@ const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform }) => {
       </div>
 
       {/* Best For */}
-      <div className="mb-4">
+      <div className="mb-6">
         <p className="text-xs text-muted-foreground mb-1">Best For</p>
         <p className="text-sm text-foreground">{platform.bestFor}</p>
-      </div>
-
-      {/* Standout */}
-      <div className="flex items-center gap-2 text-sm text-primary mb-6">
-        <Zap size={16} />
-        <span className="font-medium">Standout:</span>
-        <span>{platform.standoutFeature}</span>
       </div>
 
       {/* Actions */}
@@ -165,6 +168,14 @@ const SecondaryCard: React.FC<SecondaryCardProps> = ({ platform }) => {
         </div>
       </div>
 
+      {/* Standout Feature - Compact */}
+      {(() => {
+        const standout = getStandoutForPlatform(platform.id);
+        return standout ? (
+          <StandoutBadge standout={standout} variant="compact" className="mb-4" />
+        ) : null;
+      })()}
+
       {/* Quick Ratings */}
       <div className="flex items-center gap-4 mb-4 text-sm">
         <div className="flex items-center gap-2">
@@ -175,12 +186,6 @@ const SecondaryCard: React.FC<SecondaryCardProps> = ({ platform }) => {
           <span className="text-muted-foreground">Community:</span>
           <RatingValue rating={platform.ratings.community} size="small" showTooltip tooltipContent={metricTooltips.community} />
         </div>
-      </div>
-
-      {/* Standout */}
-      <div className="flex items-center gap-2 text-sm text-primary mb-3">
-        <Zap size={14} />
-        <span>{platform.standoutFeature}</span>
       </div>
 
       {/* Best For */}

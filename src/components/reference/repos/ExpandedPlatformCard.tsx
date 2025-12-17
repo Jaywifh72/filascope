@@ -23,7 +23,9 @@ import {
 } from '@/components/ui/collapsible';
 import { RepoData } from '@/lib/repoData';
 import { RatingLevel, metricTooltips } from '@/lib/platformData';
+import { getStandoutForPlatform } from '@/lib/standoutFeatures';
 import RatingValue from './shared/RatingValue';
+import StandoutBadge from './shared/StandoutBadge';
 
 interface ExpandedPlatformCardProps {
   repo: RepoData;
@@ -118,6 +120,14 @@ const ExpandedPlatformCard: React.FC<ExpandedPlatformCardProps> = ({
       >
         <div className="px-4 md:px-5 pb-5 space-y-5 border-t border-border/30 pt-5">
           
+          {/* Standout Feature - FIRST and most prominent */}
+          {(() => {
+            const standout = getStandoutForPlatform(repo.id);
+            return standout ? (
+              <StandoutBadge standout={standout} variant="expanded" />
+            ) : null;
+          })()}
+
           {/* The Bottom Line */}
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
             <div className="text-xs font-bold text-primary uppercase tracking-wider mb-2">
@@ -303,12 +313,6 @@ const ExpandedPlatformCard: React.FC<ExpandedPlatformCardProps> = ({
                   Download App
                 </a>
               </Button>
-            )}
-            {comparisonData?.standout && (
-              <div className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm font-medium text-amber-400">
-                <Zap className="w-4 h-4" />
-                {comparisonData.standout}
-              </div>
             )}
           </div>
         </div>
