@@ -441,13 +441,32 @@ const profileRecommendations: Record<string, ProfileRecommendation[]> = {
   ]
 };
 
+// ============= ID Mapping =============
+
+const softwareIdToCadDataId: Record<string, string> = {
+  tinkercad: 'tinkercad',
+  fusion360: 'fusion-360',
+  blender: 'blender',
+  freecad: 'freecad',
+  openscad: 'openscad',
+  zbrush: 'zbrush',
+  nomad: 'nomad-sculpt',
+  solidworks: 'solidworks',
+  rhino: 'rhino-3d',
+  sketchup: 'sketchup',
+  plasticity: 'plasticity',
+  onshape: 'onshape',
+  shapr3d: 'shapr3d'
+};
+
 // ============= Component =============
 
 interface CADProfileSelectorProps {
   onScrollToComparison?: () => void;
+  onLearnMore?: (cadDataId: string) => void;
 }
 
-const CADProfileSelector: React.FC<CADProfileSelectorProps> = ({ onScrollToComparison }) => {
+const CADProfileSelector: React.FC<CADProfileSelectorProps> = ({ onScrollToComparison, onLearnMore }) => {
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [isSecondaryExpanded, setIsSecondaryExpanded] = useState(false);
@@ -646,6 +665,7 @@ const CADProfileSelector: React.FC<CADProfileSelectorProps> = ({ onScrollToCompa
         <TopPickCard
           software={softwareData[topPick.softwareId]}
           recommendation={topPick}
+          onLearnMore={onLearnMore}
         />
       )}
       
@@ -656,6 +676,7 @@ const CADProfileSelector: React.FC<CADProfileSelectorProps> = ({ onScrollToCompa
             key={rec.softwareId}
             software={softwareData[rec.softwareId]}
             recommendation={rec}
+            onLearnMore={onLearnMore}
           />
         ))}
       </div>
@@ -749,7 +770,14 @@ const ProfileCard: React.FC<{
 const TopPickCard: React.FC<{
   software: SoftwareInfo;
   recommendation: ProfileRecommendation;
-}> = ({ software, recommendation }) => {
+  onLearnMore?: (cadDataId: string) => void;
+}> = ({ software, recommendation, onLearnMore }) => {
+  const handleLearnMore = () => {
+    const cadDataId = softwareIdToCadDataId[recommendation.softwareId];
+    if (cadDataId && onLearnMore) {
+      onLearnMore(cadDataId);
+    }
+  };
   return (
     <div className="relative w-full p-6 mb-6 bg-muted/20 border-2 border-cyan-500/30 rounded-xl overflow-hidden">
       {/* Top gradient bar */}
@@ -818,7 +846,10 @@ const TopPickCard: React.FC<{
       
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3 mt-6">
-        <button className="flex-1 h-12 px-6 bg-cyan-500 hover:bg-cyan-400 rounded-lg text-sm font-semibold text-background inline-flex items-center justify-center gap-2 transition-colors">
+        <button 
+          onClick={handleLearnMore}
+          className="flex-1 h-12 px-6 bg-cyan-500 hover:bg-cyan-400 rounded-lg text-sm font-semibold text-background inline-flex items-center justify-center gap-2 transition-colors"
+        >
           <span>Learn More</span>
           <ArrowRight className="w-4 h-4" />
         </button>
@@ -836,8 +867,16 @@ const TopPickCard: React.FC<{
 const AlternativeCard: React.FC<{
   software: SoftwareInfo;
   recommendation: ProfileRecommendation;
-}> = ({ software, recommendation }) => {
+  onLearnMore?: (cadDataId: string) => void;
+}> = ({ software, recommendation, onLearnMore }) => {
   const badgeText = recommendation.rank === 2 ? '#2 Great Alternative' : '#3 Also Consider';
+  
+  const handleLearnMore = () => {
+    const cadDataId = softwareIdToCadDataId[recommendation.softwareId];
+    if (cadDataId && onLearnMore) {
+      onLearnMore(cadDataId);
+    }
+  };
   
   return (
     <div className="p-5 bg-muted/10 border border-border/50 hover:border-border rounded-xl transition-colors">
@@ -877,7 +916,10 @@ const AlternativeCard: React.FC<{
       </ul>
       
       {/* Action */}
-      <button className="w-full h-10 bg-transparent hover:bg-muted/30 border border-border/50 hover:border-border rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1.5 transition-colors">
+      <button 
+        onClick={handleLearnMore}
+        className="w-full h-10 bg-transparent hover:bg-muted/30 border border-border/50 hover:border-border rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1.5 transition-colors"
+      >
         <span>Learn More</span>
         <ArrowRight className="w-3.5 h-3.5" />
       </button>
