@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { ExternalLink, DollarSign, Monitor, FileCode, Wifi, Clock, Check, X, Star, Zap, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +11,15 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { slicerData } from "@/lib/slicerData";
 import { getSlicersByTier, getSlicerTierInfo, SlicerTierInfo } from "@/lib/slicerTierData";
+import { 
+  SlicerFilterState, 
+  INITIAL_FILTER_STATE,
+  getAllSlicers,
+  filterSlicers,
+  calculateFilterCounts,
+  getActiveFiltersArray,
+  getActiveFilterCount 
+} from "@/lib/slicerFilterUtils";
 import SlicerHeroSection from "@/components/reference/SlicerHeroSection";
 import { SlicerTopPickCard } from "@/components/reference/SlicerTopPickCard";
 import { SlicerPopularCard } from "@/components/reference/SlicerPopularCard";
@@ -20,6 +29,9 @@ import { SlicerComparisonProvider } from "@/contexts/SlicerComparisonContext";
 import { ComparisonBuilderSidebar } from "@/components/reference/ComparisonBuilderSidebar";
 import { ComparisonBuilderMobile } from "@/components/reference/ComparisonBuilderMobile";
 import { SlicerComparisonModal } from "@/components/reference/SlicerComparisonModal";
+import { SlicerFilterPanel } from "@/components/reference/SlicerFilterPanel";
+import { MobileFilterPanel } from "@/components/reference/MobileFilterPanel";
+import { ActiveFilterBadges } from "@/components/reference/ActiveFilterBadges";
 
 // Logo mapping for slicers
 const slicerLogos: Record<string, string> = {
@@ -136,11 +148,57 @@ const ReferenceSlicers = () => {
   const [priceFilter, setPriceFilter] = useState<string>("all");
   const [focusFilter, setFocusFilter] = useState<string>("all");
   const [showDetailedTable, setShowDetailedTable] = useState(false);
+  
+  // New filter state
+  const [filters, setFilters] = useState<SlicerFilterState>(INITIAL_FILTER_STATE);
 
-  // Get slicers by tier
-  const topPickSlicers = getSlicersByTier('top-pick');
-  const popularSlicers = getSlicersByTier('popular');
-  const otherSlicers = getSlicersByTier('other');
+  // Get all slicers for filtering
+  const allSlicers = useMemo(() => getAllSlicers(), []);
+
+  // Get slicers by tier (unfiltered for base data)
+  const topPickSlicersBase = useMemo(() => getSlicersByTier('top-pick'), []);
+  const popularSlicersBase = useMemo(() => getSlicersByTier('popular'), []);
+  const otherSlicersBase = useMemo(() => getSlicersByTier('other'), []);
+
+  // Apply filters to each tier
+  const filteredSlicers = useMemo(() => filterSlicers(allSlicers, filters), [allSlicers, filters]);
+  const topPickSlicers = useMemo(() => filterSlicers(topPickSlicersBase, filters), [topPickSlicersBase, filters]);
+  const popularSlicers = useMemo(() => filterSlicers(popularSlicersBase, filters), [popularSlicersBase, filters]);
+  const otherSlicers = useMemo(() => filterSlicers(otherSlicersBase, filters), [otherSlicersBase, filters]);
+
+  // Calculate filter counts
+  const filterCounts = useMemo(() => calculateFilterCounts(allSlicers, filters), [allSlicers, filters]);
+  
+  // Get active filters for badges
+  const activeFilters = useMemo(() => getActiveFiltersArray(filters), [filters]);
+
+  // Filter handlers
+  const handleFilterChange = useCallback((categoryId: string, value: string, checked: boolean) => {
+    setFilters(prev => {
+      const categoryKey = categoryId as keyof SlicerFilterState;
+      const currentValues = prev[categoryKey];
+      
+      const newValues = checked
+        ? [...currentValues, value]
+        : currentValues.filter(v => v !== value);
+      
+      return {
+        ...prev,
+        [categoryKey]: newValues,
+      };
+    });
+  }, []);
+
+  const handleClearAllFilters = useCallback(() => {
+    setFilters(INITIAL_FILTER_STATE);
+  }, []);
+
+  const handleRemoveFilter = useCallback((categoryId: string, optionValue: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [categoryId]: prev[categoryId as keyof SlicerFilterState].filter(v => v !== optionValue),
+    }));
+  }, []);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -228,10 +286,37 @@ const ReferenceSlicers = () => {
           onScrollToComparison={scrollToComparison}
         />
 
-        {/* Main Content with Sidebar Layout */}
-        <div className="max-w-[1400px] mx-auto px-10 grid grid-cols-[1fr_280px] gap-10 items-start max-lg:grid-cols-1 max-lg:px-5">
+        {/* Main Content with 3-Column Layout */}
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-8 lg:gap-10 items-start">
+          
+          {/* Left Sidebar: Filter Panel (Desktop) */}
+          <SlicerFilterPanel
+            filters={filters}
+            counts={filterCounts}
+            totalCount={allSlicers.length}
+            filteredCount={filteredSlicers.length}
+            onFilterChange={handleFilterChange}
+            onClearAll={handleClearAllFilters}
+          />
+
           {/* Main Content */}
           <main>
+            {/* Mobile Filter Panel */}
+            <MobileFilterPanel
+              filters={filters}
+              counts={filterCounts}
+              totalCount={allSlicers.length}
+              filteredCount={filteredSlicers.length}
+              onFilterChange={handleFilterChange}
+              onClearAll={handleClearAllFilters}
+            />
+
+            {/* Active Filter Badges */}
+            <ActiveFilterBadges
+              activeFilters={activeFilters}
+              onRemove={handleRemoveFilter}
+            />
+
             {/* TIER 1: Top Picks */}
             <section className="py-[60px] max-md:py-10">
               <h2 className="text-xl font-bold text-foreground max-md:text-lg mb-2">Our Top Picks</h2>
@@ -239,17 +324,23 @@ const ReferenceSlicers = () => {
                 Staff-curated recommendations based on use case and performance
               </p>
               
-              <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible">
-                {topPickSlicers.map((slicer) => (
-                  <SlicerTopPickCard
-                    key={slicer.name}
-                    slicer={slicer}
-                    logo={slicerLogos[slicer.name]}
-                    onLearnMore={() => handleLearnMore(slicer.name)}
-                    onAddToCompare={() => handleAddToCompare(slicer.name)}
-                  />
-                ))}
-              </div>
+              {topPickSlicers.length > 0 ? (
+                <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible">
+                  {topPickSlicers.map((slicer) => (
+                    <SlicerTopPickCard
+                      key={slicer.name}
+                      slicer={slicer}
+                      logo={slicerLogos[slicer.name]}
+                      onLearnMore={() => handleLearnMore(slicer.name)}
+                      onAddToCompare={() => handleAddToCompare(slicer.name)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  No top picks match your filters
+                </div>
+              )}
             </section>
 
             {/* TIER 2: Popular Choices */}
@@ -258,23 +349,29 @@ const ReferenceSlicers = () => {
               subtitle="Widely-used slicers with strong community support"
               defaultExpanded={true}
             >
-              <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
-                {popularSlicers.map((slicer) => (
-                  <SlicerPopularCard
-                    key={slicer.name}
-                    slicer={slicer}
-                    logo={slicerLogos[slicer.name]}
-                    onLearnMore={() => handleLearnMore(slicer.name)}
-                  />
-                ))}
-              </div>
+              {popularSlicers.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
+                  {popularSlicers.map((slicer) => (
+                    <SlicerPopularCard
+                      key={slicer.name}
+                      slicer={slicer}
+                      logo={slicerLogos[slicer.name]}
+                      onLearnMore={() => handleLearnMore(slicer.name)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  No popular choices match your filters
+                </div>
+              )}
             </CollapsibleSection>
 
             {/* TIER 3: Full Comparison Table */}
             <CollapsibleSection
               id="comparison-table"
               title="Full Comparison Table"
-              subtitle={`View all ${slicerComparison.length} slicers with detailed specifications`}
+              subtitle={`View all ${filteredSlicers.length} slicers with detailed specifications`}
               defaultExpanded={false}
             >
               {/* View Toggle */}
@@ -439,11 +536,17 @@ const ReferenceSlicers = () => {
                 </div>
               ) : (
                 /* Simplified Table */
-                <SlicerSimplifiedTable
-                  slicers={otherSlicers}
-                  logos={slicerLogos}
-                  onViewDetails={handleLearnMore}
-                />
+                otherSlicers.length > 0 ? (
+                  <SlicerSimplifiedTable
+                    slicers={otherSlicers}
+                    logos={slicerLogos}
+                    onViewDetails={handleLearnMore}
+                  />
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No slicers match your filters
+                  </div>
+                )
               )}
             </CollapsibleSection>
 
@@ -579,8 +682,8 @@ const ReferenceSlicers = () => {
             </div>
           </main>
 
-          {/* Desktop Sidebar */}
-          <aside className="max-lg:hidden">
+          {/* Right Sidebar: Comparison Builder (Desktop) */}
+          <aside className="hidden lg:block">
             <div className="sticky top-5">
               <ComparisonBuilderSidebar />
             </div>
