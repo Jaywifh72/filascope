@@ -46,14 +46,14 @@ export function SlicerTopPickCard({ slicer, logo, onLearnMore, onAddToCompare }:
   return (
     <div
       className={cn(
-        'w-[300px] h-[420px] flex-shrink-0 rounded-xl p-6',
+        'w-[320px] min-h-[480px] flex-shrink-0 rounded-xl p-6',
         'flex flex-col items-center text-center gap-3',
         'transition-all duration-200 scroll-snap-align-start',
         'hover:-translate-y-1 hover:shadow-lg hover:border-primary/50',
         isStaffPick
           ? 'bg-primary/[0.08] border-2 border-primary'
           : 'bg-card/50 border border-border',
-        'max-lg:w-full max-lg:h-auto max-lg:min-h-[400px]'
+        'max-lg:w-full max-lg:min-h-[440px]'
       )}
     >
       {/* Badge */}
