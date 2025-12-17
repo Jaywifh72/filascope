@@ -323,6 +323,46 @@ const generateConsiderations = (printer: Printer, answers: QuizAnswers): string[
   return considerations.slice(0, 3); // Max 3 considerations
 };
 
+// Diversify brands to avoid all top 3 being same brand
+const diversifyBrands = (
+  scored: Array<{ printer: Printer; score: number }>
+): Array<{ printer: Printer; score: number }> => {
+  if (scored.length < 3) return scored;
+  
+  const top3 = scored.slice(0, 3);
+  const brands = new Set(top3.map(s => s.printer.brand?.brand));
+  
+  // If all 3 are same brand, replace #3 with best from different brand
+  if (brands.size === 1 && top3[0].printer.brand?.brand) {
+    const mainBrand = top3[0].printer.brand.brand;
+    const alternative = scored.find(s => s.printer.brand?.brand !== mainBrand);
+    
+    if (alternative) {
+      return [top3[0], top3[1], alternative];
+    }
+  }
+  
+  return scored;
+};
+
+// Ensure minimum quality threshold for recommendations
+const ensureMinimumQuality = (topPrinters: ScoredPrinter[], maxScore: number): ScoredPrinter[] => {
+  const threshold = maxScore * 0.3; // 30% of max score as minimum
+  
+  return topPrinters.map(printer => {
+    if (printer.score < threshold) {
+      return {
+        ...printer,
+        considerations: [
+          'Note: This is our best match, but may not perfectly fit all your requirements',
+          ...printer.considerations
+        ].slice(0, 4)
+      };
+    }
+    return printer;
+  });
+};
+
 // Main recommendation function
 export const calculateRecommendations = (
   printers: Printer[],
@@ -331,10 +371,34 @@ export const calculateRecommendations = (
   const budgetAnswer = answers.budget?.[0] ?? 'flexible';
   
   // Filter by budget first
-  const budgetFiltered = printers.filter(p => fitsBudget(p, budgetAnswer));
+  let budgetFiltered = printers.filter(p => fitsBudget(p, budgetAnswer));
+  
+  // If very few results, relax budget constraint
+  if (budgetFiltered.length < 3 && budgetAnswer !== 'flexible') {
+    // Add some printers slightly outside budget as alternatives
+    const nearBudget = printers.filter(p => {
+      const price = getPrinterPrice(p);
+      if (!price) return false;
+      
+      switch (budgetAnswer) {
+        case 'under-500': return price < 700;
+        case '500-1000': return price >= 400 && price < 1200;
+        case '1000-2000': return price >= 800 && price < 2500;
+        case 'over-2000': return price >= 1500;
+        default: return true;
+      }
+    });
+    
+    // Merge, preferring budget-matched printers
+    const budgetSet = new Set(budgetFiltered.map(p => p.id));
+    budgetFiltered = [
+      ...budgetFiltered,
+      ...nearBudget.filter(p => !budgetSet.has(p.id))
+    ];
+  }
   
   // Score all printers
-  const scored = budgetFiltered.map(printer => {
+  let scored = budgetFiltered.map(printer => {
     const score = scorePrinter(printer, answers);
     return { printer, score };
   });
@@ -342,11 +406,14 @@ export const calculateRecommendations = (
   // Sort by score descending
   scored.sort((a, b) => b.score - a.score);
   
+  // Apply brand diversification
+  scored = diversifyBrands(scored);
+  
   // Get max score for percentage calculation
   const maxScore = Math.max(...scored.map(s => s.score), 1);
   
   // Get top 3 with full details
-  const topPrinters: ScoredPrinter[] = scored.slice(0, 3).map((s, index) => {
+  let topPrinters: ScoredPrinter[] = scored.slice(0, 3).map((s, index) => {
     // Calculate match percentage (top scorer gets ~95%, others scaled)
     const basePercentage = (s.score / maxScore) * 100;
     const matchPercentage = Math.min(98, Math.max(70, basePercentage - (index * 5)));
@@ -359,6 +426,9 @@ export const calculateRecommendations = (
       considerations: generateConsiderations(s.printer, answers)
     };
   });
+  
+  // Apply minimum quality check
+  topPrinters = ensureMinimumQuality(topPrinters, maxScore);
   
   return {
     topPrinters,
