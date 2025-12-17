@@ -115,6 +115,28 @@ export default function Printers() {
     }
   };
 
+  const handleQuizRetake = () => {
+    setQuizResults(null);
+    setIsQuizOpen(true);
+  };
+
+  const handleAddToCompareFromQuiz = (printerId: string) => {
+    const printer = printers?.find(p => p.id === printerId);
+    if (printer && !isMaxReached && !isSelected(printerId)) {
+      const scrapedData = printer.scraped_data as Record<string, unknown> | null;
+      const images = scrapedData?.images as Record<string, unknown> | null;
+      const productImages = images?.product_images as string[] | null;
+      const productImage = productImages?.[0] || null;
+
+      addPrinter({
+        id: printer.id,
+        name: `${printer.brand?.brand || ""} ${printer.model_name}`.trim(),
+        imageUrl: productImage,
+        brand: printer.brand?.brand || null,
+      });
+    }
+  };
+
   // Toggle quick filter with sync to category tabs
   const handleQuickFilterToggle = (filterId: string) => {
     setActiveQuickFilters(prev => {
@@ -521,10 +543,8 @@ export default function Printers() {
         <PrinterQuizResults
           results={quizResults}
           onClose={() => setQuizResults(null)}
-          onRetake={() => {
-            setQuizResults(null);
-            setIsQuizOpen(true);
-          }}
+          onRetake={handleQuizRetake}
+          onAddToCompare={handleAddToCompareFromQuiz}
         />
       )}
 
