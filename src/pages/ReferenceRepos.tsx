@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, FolderGit2, Building2, Target, DollarSign, Server, Users, Check, X, Star, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Download, Smartphone, Filter } from "lucide-react";
+import { ArrowLeft, ExternalLink, FolderGit2, Target, DollarSign, Server, Users, Check, X, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Download, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -16,8 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { repoData } from "@/lib/repoData";
 import ReposHeroSection from "@/components/reference/ReposHeroSection";
+import StaffPicksSection from "@/components/reference/repos/StaffPicksSection";
+import SpecializedSection from "@/components/reference/repos/SpecializedSection";
 
 // Logo mapping for repositories
 const repoLogos: Record<string, string> = {
@@ -109,6 +116,7 @@ const ReferenceRepos = () => {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [modelFilter, setModelFilter] = useState<string>("All");
   const [formatFilter, setFormatFilter] = useState<string>("All");
+  const [isTableExpanded, setIsTableExpanded] = useState(false);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -225,141 +233,174 @@ const ReferenceRepos = () => {
           onScrollToComparison={scrollToComparison} 
         />
 
-        {/* Comparative Features Table */}
-        <div id="comparison-matrix" className="mb-8 border border-border rounded-lg bg-card p-6 scroll-mt-4">
-          <div className="flex items-center gap-3 mb-4">
-            <BarChart3 className="w-6 h-6 text-purple-400" />
-            <h2 className="text-xl font-bold font-mono text-foreground">Comparative Features Matrix</h2>
-          </div>
-          <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
-            <p className="text-muted-foreground text-sm">
-              Side-by-side comparison of repository capabilities, ratings (1-5), and standout features.
-            </p>
-            <div className="flex items-center gap-4 text-xs">
-              <span className="text-muted-foreground">Rating:</span>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span className="text-muted-foreground">4-5 (Excellent)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-amber-400" />
-                <span className="text-muted-foreground">3 (Average)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-red-400" />
-                <span className="text-muted-foreground">1-2 (Limited)</span>
-              </div>
-            </div>
-          </div>
+        {/* Tier 1: Staff Picks */}
+        <StaffPicksSection />
 
-          {/* Filter Controls */}
-          <div className="flex items-center gap-3 mb-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Filters:</span>
-            </div>
-            <Select value={modelFilter} onValueChange={setModelFilter}>
-              <SelectTrigger className="w-[160px] h-8 text-xs bg-background border-border">
-                <SelectValue placeholder="Business Model" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border z-50">
-                {businessModels.map((model) => (
-                  <SelectItem key={model} value={model} className="text-xs">
-                    {model === "All" ? "All Models" : model}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={formatFilter} onValueChange={setFormatFilter}>
-              <SelectTrigger className="w-[140px] h-8 text-xs bg-background border-border">
-                <SelectValue placeholder="File Format" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border z-50">
-                {fileFormats.map((format) => (
-                  <SelectItem key={format} value={format} className="text-xs">
-                    {format === "All" ? "All Formats" : format}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs text-muted-foreground hover:text-foreground">
-                Clear filters
-              </Button>
-            )}
-            <span className="text-xs text-muted-foreground ml-auto">
-              Showing {filteredAndSortedRepos.length} of {repoComparison.length} platforms
-            </span>
-          </div>
+        {/* Tier 2: Specialized Options */}
+        <SpecializedSection />
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <SortHeader label="Platform" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <SortHeader label="Owner" sortKey="owner" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <SortHeader label="Model" sortKey="model" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <th className="text-center py-2 px-3 font-semibold text-foreground">Free</th>
-                  <th className="text-center py-2 px-3 font-semibold text-foreground">Paid</th>
-                  <SortHeader label="Quality" sortKey="quality" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <SortHeader label="Community" sortKey="community" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <SortHeader label="Monetize" sortKey="monetization" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <SortHeader label="Search" sortKey="search" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <SortHeader label="UX" sortKey="ux" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <th className="text-center py-2 px-3 font-semibold text-foreground">Mobile</th>
-                  <th className="text-left py-2 px-3 font-semibold text-foreground">File Types</th>
-                  <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAndSortedRepos.map((repo, index) => (
-                  <tr 
-                    key={index} 
-                    className="border-b border-border/50 hover:bg-muted/20 transition-colors"
-                  >
-                    <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {repoLogos[repo.name] && (
-                          <img 
-                            src={repoLogos[repo.name]} 
-                            alt={`${repo.name} logo`}
-                            className="w-5 h-5 rounded object-contain"
-                          />
-                        )}
-                        {repo.name}
-                      </div>
-                    </td>
-                    <td className="py-2 px-3 text-muted-foreground text-xs">{repo.owner}</td>
-                    <td className="py-2 px-3">
-                      <Badge 
-                        variant="outline" 
-                        className={
-                          repo.model === "Loss-Leader" || repo.model === "Ad-Supported" || repo.model === "Lead Gen"
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
-                            : repo.model === "Hybrid" || repo.model === "Search + Sub"
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                            : "bg-purple-500/10 text-purple-400 border-purple-500/30"
-                        }
-                      >
-                        {repo.model}
-                      </Badge>
-                    </td>
-                    <td className="py-2 px-3 text-center"><BoolBadge value={repo.free} /></td>
-                    <td className="py-2 px-3 text-center"><BoolBadge value={repo.paid} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={repo.quality} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={repo.community} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={repo.monetization} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={repo.search} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={repo.ux} /></td>
-                    <td className="py-2 px-3 text-center"><BoolBadge value={repo.mobile} /></td>
-                    <td className="py-2 px-3 text-muted-foreground text-xs">{repo.fileTypes}</td>
-                    <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{repo.standout}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Tier 3: Collapsible Comparative Features Table */}
+        <Collapsible
+          open={isTableExpanded}
+          onOpenChange={setIsTableExpanded}
+          className="mb-8"
+        >
+          <div id="comparison-matrix" className="border border-border rounded-lg bg-card scroll-mt-4">
+            <CollapsibleTrigger asChild>
+              <button className="w-full p-6 flex items-center justify-between hover:bg-muted/20 transition-colors rounded-lg">
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="w-6 h-6 text-purple-400" />
+                  <div className="text-left">
+                    <h2 className="text-xl font-bold font-mono text-foreground">Full Comparison Matrix</h2>
+                    <p className="text-sm text-muted-foreground">
+                      All 8 platforms with detailed metrics and ratings
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span className="text-sm font-medium">
+                    {isTableExpanded ? 'Collapse' : 'Expand'}
+                  </span>
+                  {isTableExpanded ? (
+                    <ChevronUp className="w-5 h-5" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5" />
+                  )}
+                </div>
+              </button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent>
+              <div className="px-6 pb-6 border-t border-border/50">
+                <div className="flex items-center justify-between flex-wrap gap-4 py-4">
+                  <div className="flex items-center gap-4 text-xs">
+                    <span className="text-muted-foreground">Rating:</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                      <span className="text-muted-foreground">4-5 (Excellent)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-amber-400" />
+                      <span className="text-muted-foreground">3 (Average)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-red-400" />
+                      <span className="text-muted-foreground">1-2 (Limited)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filter Controls */}
+                <div className="flex items-center gap-3 mb-4 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Filters:</span>
+                  </div>
+                  <Select value={modelFilter} onValueChange={setModelFilter}>
+                    <SelectTrigger className="w-[160px] h-8 text-xs bg-background border-border">
+                      <SelectValue placeholder="Business Model" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border z-50">
+                      {businessModels.map((model) => (
+                        <SelectItem key={model} value={model} className="text-xs">
+                          {model === "All" ? "All Models" : model}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={formatFilter} onValueChange={setFormatFilter}>
+                    <SelectTrigger className="w-[140px] h-8 text-xs bg-background border-border">
+                      <SelectValue placeholder="File Format" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border z-50">
+                      {fileFormats.map((format) => (
+                        <SelectItem key={format} value={format} className="text-xs">
+                          {format === "All" ? "All Formats" : format}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs text-muted-foreground hover:text-foreground">
+                      Clear filters
+                    </Button>
+                  )}
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    Showing {filteredAndSortedRepos.length} of {repoComparison.length} platforms
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/30">
+                        <SortHeader label="Platform" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                        <SortHeader label="Owner" sortKey="owner" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                        <SortHeader label="Model" sortKey="model" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                        <th className="text-center py-2 px-3 font-semibold text-foreground">Free</th>
+                        <th className="text-center py-2 px-3 font-semibold text-foreground">Paid</th>
+                        <SortHeader label="Quality" sortKey="quality" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                        <SortHeader label="Community" sortKey="community" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                        <SortHeader label="Monetize" sortKey="monetization" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                        <SortHeader label="Search" sortKey="search" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                        <SortHeader label="UX" sortKey="ux" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                        <th className="text-center py-2 px-3 font-semibold text-foreground">Mobile</th>
+                        <th className="text-left py-2 px-3 font-semibold text-foreground">File Types</th>
+                        <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredAndSortedRepos.map((repo, index) => (
+                        <tr 
+                          key={index} 
+                          className="border-b border-border/50 hover:bg-muted/20 transition-colors"
+                        >
+                          <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              {repoLogos[repo.name] && (
+                                <img 
+                                  src={repoLogos[repo.name]} 
+                                  alt={`${repo.name} logo`}
+                                  className="w-5 h-5 rounded object-contain"
+                                />
+                              )}
+                              {repo.name}
+                            </div>
+                          </td>
+                          <td className="py-2 px-3 text-muted-foreground text-xs">{repo.owner}</td>
+                          <td className="py-2 px-3">
+                            <Badge 
+                              variant="outline" 
+                              className={
+                                repo.model === "Loss-Leader" || repo.model === "Ad-Supported" || repo.model === "Lead Gen"
+                                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
+                                  : repo.model === "Hybrid" || repo.model === "Search + Sub"
+                                  ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                  : "bg-purple-500/10 text-purple-400 border-purple-500/30"
+                              }
+                            >
+                              {repo.model}
+                            </Badge>
+                          </td>
+                          <td className="py-2 px-3 text-center"><BoolBadge value={repo.free} /></td>
+                          <td className="py-2 px-3 text-center"><BoolBadge value={repo.paid} /></td>
+                          <td className="py-2 px-3"><RatingDots rating={repo.quality} /></td>
+                          <td className="py-2 px-3"><RatingDots rating={repo.community} /></td>
+                          <td className="py-2 px-3"><RatingDots rating={repo.monetization} /></td>
+                          <td className="py-2 px-3"><RatingDots rating={repo.search} /></td>
+                          <td className="py-2 px-3"><RatingDots rating={repo.ux} /></td>
+                          <td className="py-2 px-3 text-center"><BoolBadge value={repo.mobile} /></td>
+                          <td className="py-2 px-3 text-muted-foreground text-xs">{repo.fileTypes}</td>
+                          <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{repo.standout}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </CollapsibleContent>
           </div>
-        </div>
+        </Collapsible>
 
         {/* Repository List */}
         <Accordion type="single" collapsible className="space-y-3">
