@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { Heart, ExternalLink, Printer as PrinterIcon, Bell } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCurrency } from "@/hooks/useCurrency";
 import { getPrinterImage, getPrinterBadges, type CardSizeResult } from "@/lib/printerCardUtils";
 import PrinterBadge from "./PrinterBadge";
+import ComparisonCheckbox from "./ComparisonCheckbox";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -66,8 +66,18 @@ export default function SmallDeemphasizedPrinterCard({
             </div>
           )}
 
-          {/* Action Icons - Top Right */}
-          <div className="absolute top-3 right-3 flex gap-1.5 z-10">
+          {/* Comparison Checkbox - Top Right, Standalone */}
+          <div className="absolute top-3 right-3 z-10">
+            <ComparisonCheckbox
+              checked={isSelected}
+              disabled={isMaxReached}
+              onChange={onToggleCompare}
+              printerName={`${printer.brand?.brand || ''} ${printer.model_name}`}
+            />
+          </div>
+
+          {/* Action Icons - Below Checkbox */}
+          <div className="absolute top-12 right-3 flex flex-col gap-1.5 z-10">
             <button 
               className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
               aria-label="Add to favorites"
@@ -78,22 +88,6 @@ export default function SmallDeemphasizedPrinterCard({
             >
               <Heart className="h-3.5 w-3.5 text-white/50 hover:text-red-400 transition-colors" />
             </button>
-            
-            <div 
-              className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              <Checkbox
-                className="h-3.5 w-3.5 border-white/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                checked={isSelected}
-                onCheckedChange={onToggleCompare}
-                disabled={isMaxReached && !isSelected}
-                aria-label="Add to comparison"
-              />
-            </div>
             
             {printer.official_product_url && (
               <a

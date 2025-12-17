@@ -30,9 +30,9 @@ export function PrinterCompareBar() {
     }, 150);
   };
 
-  // Show max 4 thumbnails, with "+X more" indicator if needed
-  const visiblePrinters = selectedPrinters.slice(0, 4);
-  const overflowCount = selectedPrinters.length - 4;
+  // Show max 5 thumbnails, with "+X more" indicator if needed
+  const visiblePrinters = selectedPrinters.slice(0, 5);
+  const overflowCount = selectedPrinters.length - 5;
 
   return (
     <div
@@ -56,7 +56,7 @@ export function PrinterCompareBar() {
             <span className="text-sm md:text-base font-semibold text-white">
               {count} printer{count !== 1 ? "s" : ""} selected
             </span>
-            {count >= 4 && (
+            {count >= 5 && (
               <span className="block text-xs text-muted-foreground">Maximum reached</span>
             )}
           </div>
