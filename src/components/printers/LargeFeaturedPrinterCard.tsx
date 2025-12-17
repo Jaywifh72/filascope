@@ -175,7 +175,7 @@ export default function LargeFeaturedPrinterCard({
               </div>
 
               {/* Brand */}
-              <div className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
+              <div className="text-[13px] font-bold text-primary uppercase tracking-[0.05em] mb-1">
                 {printer.brand?.brand}
               </div>
 
@@ -217,7 +217,7 @@ export default function LargeFeaturedPrinterCard({
             <div className="flex-1 flex flex-col bg-primary/5 rounded-xl p-4 lg:p-5 border border-primary/10">
               {/* Why We Recommend */}
               <div className="mb-4">
-                <h4 className="text-[11px] font-bold text-primary uppercase tracking-widest mb-2">
+                <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
                   Why We Recommend
                 </h4>
                 <p className="text-sm lg:text-base text-muted-foreground leading-relaxed">
@@ -227,7 +227,7 @@ export default function LargeFeaturedPrinterCard({
 
               {/* Key Features */}
               <div className="mb-4 flex-1">
-                <h4 className="text-[11px] font-bold text-primary uppercase tracking-widest mb-2">
+                <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
                   Key Features
                 </h4>
                 <ul className="space-y-1.5">
@@ -243,12 +243,12 @@ export default function LargeFeaturedPrinterCard({
               {/* Best For Tags */}
               {recommendation.bestFor.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-[11px] font-bold text-primary uppercase tracking-widest mb-2">
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
                     Best For
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {recommendation.bestFor.map((use, idx) => (
-                      <span key={idx} className="text-xs bg-muted px-2.5 py-1 rounded-md text-muted-foreground">
+                      <span key={idx} className="text-[13px] bg-muted px-2.5 py-1 rounded-md text-muted-foreground">
                         {use}
                       </span>
                     ))}

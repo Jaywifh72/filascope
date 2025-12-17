@@ -133,7 +133,7 @@ export default function SmallDeemphasizedPrinterCard({
           </h3>
 
           {/* Build Volume + Speed - Single Line */}
-          <p className="text-xs text-muted-foreground/70 mb-2">
+          <p className="text-[13px] text-muted-foreground mb-2">
             {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
               <span>{printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm</span>
             )}
@@ -154,14 +154,14 @@ export default function SmallDeemphasizedPrinterCard({
 
           {/* Status Message & CTA */}
           <div className="mt-auto">
-            <div className="text-xs text-destructive/80 mb-2 text-center py-1.5 bg-destructive/10 rounded-md">
+            <div className="text-[13px] text-destructive mb-2 text-center py-1.5 bg-destructive/10 rounded-md">
               {printer.discontinued ? 'This model has been discontinued' : 'Currently unavailable'}
             </div>
             
             <Button 
               variant="outline" 
               size="sm"
-              className="w-full text-xs border-muted-foreground/30 text-muted-foreground hover:bg-muted"
+              className="w-full text-[13px] border-muted-foreground/30 text-muted-foreground hover:bg-muted"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
