@@ -20,6 +20,8 @@ import {
   type SkillLevel
 } from "@/components/reference/CADBadges";
 import { useCADComparison, SelectedCADSoftware } from "@/contexts/CADComparisonContext";
+import { useCADFilters } from "@/contexts/CADFilterContext";
+import CADEmptyState from "@/components/reference/CADEmptyState";
 
 // Sort types
 type SortColumn = 'name' | 'price' | 'type' | 'platform' | 'score' | 'level' | null;
@@ -980,73 +982,114 @@ const FullComparisonTable = ({
 
 // Main Component
 const CADThreeTierComparison = ({ onViewDetails }: CADThreeTierComparisonProps) => {
-  const totalSoftware = cadComparison.length;
-
-  // Get software data for each tier
-  const staffPickSoftware = staffPicks.map(pick => ({
+  const { getFilteredData, hasActiveFilters, clearFilters, totalCount } = useCADFilters();
+  
+  // Get all staff pick software and filter them
+  const staffPickSoftwareAll = staffPicks.map(pick => ({
     software: cadComparison.find(s => s.name === pick.name)!,
     pickData: pick
   }));
+  const filteredStaffPickSoftware = useMemo(() => {
+    const allSoftware = staffPickSoftwareAll.map(item => item.software);
+    const filtered = getFilteredData(allSoftware);
+    return staffPickSoftwareAll.filter(item => 
+      filtered.some(f => f.name === item.software.name)
+    );
+  }, [getFilteredData, staffPickSoftwareAll]);
 
-  const popularSoftware = popularChoices.map(choice => ({
+  // Get all popular software and filter them
+  const popularSoftwareAll = popularChoices.map(choice => ({
     software: cadComparison.find(s => s.name === choice.name)!,
     choiceData: choice
   }));
+  const filteredPopularSoftware = useMemo(() => {
+    const allSoftware = popularSoftwareAll.map(item => item.software);
+    const filtered = getFilteredData(allSoftware);
+    return popularSoftwareAll.filter(item => 
+      filtered.some(f => f.name === item.software.name)
+    );
+  }, [getFilteredData, popularSoftwareAll]);
 
-  // Remaining software (not in Staff Picks or Popular)
-  const remainingSoftware = cadComparison.filter(
+  // Remaining software (not in Staff Picks or Popular) and filter them
+  const remainingSoftwareAll = cadComparison.filter(
     s => !staffPickNames.includes(s.name) && !popularNames.includes(s.name)
   );
+  const filteredRemainingSoftware = useMemo(() => {
+    return getFilteredData(remainingSoftwareAll);
+  }, [getFilteredData, remainingSoftwareAll]);
+
+  // Check if everything is empty
+  const allEmpty = filteredStaffPickSoftware.length === 0 && 
+                   filteredPopularSoftware.length === 0 && 
+                   filteredRemainingSoftware.length === 0;
+
+  // If filters are active and no results, show empty state
+  if (hasActiveFilters && allEmpty) {
+    return (
+      <div id="cad-comparison-section" className="mb-12">
+        <CADEmptyState onClear={clearFilters} />
+      </div>
+    );
+  }
 
   return (
     <div id="cad-comparison-section" className="mb-12">
       {/* Tier 1: Staff Picks */}
-      <section className="mb-16">
-        <SectionHeader
-          icon="🏆"
-          title="Staff Picks"
-          count={staffPicks.length}
-          total={totalSoftware}
-        />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {staffPickSoftware.map(({ software, pickData }) => (
-            <StaffPickCard
-              key={software.name}
-              software={software}
-              pickData={pickData}
-              onViewDetails={onViewDetails}
-            />
-          ))}
-        </div>
-      </section>
+      {filteredStaffPickSoftware.length > 0 && (
+        <section className="mb-16">
+          <SectionHeader
+            icon="🏆"
+            title="Staff Picks"
+            count={filteredStaffPickSoftware.length}
+            total={staffPicks.length}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredStaffPickSoftware.map(({ software, pickData }) => (
+              <StaffPickCard
+                key={software.name}
+                software={software}
+                pickData={pickData}
+                onViewDetails={onViewDetails}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Tier 2: Popular Choices */}
-      <section className="mb-16">
-        <SectionHeader
-          icon="⭐"
-          title="Popular Choices"
-          count={popularChoices.length}
-          total={totalSoftware}
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {popularSoftware.map(({ software, choiceData }) => (
-            <PopularCard
-              key={software.name}
-              software={software}
-              choiceData={choiceData}
-              onViewDetails={onViewDetails}
-            />
-          ))}
-        </div>
-      </section>
+      {filteredPopularSoftware.length > 0 && (
+        <section className="mb-16">
+          <SectionHeader
+            icon="⭐"
+            title="Popular Choices"
+            count={filteredPopularSoftware.length}
+            total={popularChoices.length}
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {filteredPopularSoftware.map(({ software, choiceData }) => (
+              <PopularCard
+                key={software.name}
+                software={software}
+                choiceData={choiceData}
+                onViewDetails={onViewDetails}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Tier 3: Full Comparison Table */}
-      <FullComparisonTable
-        software={remainingSoftware}
-        onViewDetails={onViewDetails}
-      />
+      {filteredRemainingSoftware.length > 0 && (
+        <FullComparisonTable
+          software={filteredRemainingSoftware}
+          onViewDetails={onViewDetails}
+        />
+      )}
     </div>
   );
 };
 
 export default CADThreeTierComparison;
+
+// Export cadComparison for use in the filter provider
+export { cadComparison };

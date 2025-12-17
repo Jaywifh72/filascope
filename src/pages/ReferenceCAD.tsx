@@ -12,11 +12,13 @@ import {
 import { cadData } from "@/lib/cadData";
 import CADHeroSection from "@/components/reference/CADHeroSection";
 import CADProfileSelector from "@/components/reference/CADProfileSelector";
-import CADThreeTierComparison from "@/components/reference/CADThreeTierComparison";
+import CADThreeTierComparison, { cadComparison } from "@/components/reference/CADThreeTierComparison";
 import CADComparisonSidebar from "@/components/reference/CADComparisonSidebar";
 import CADComparisonMobile from "@/components/reference/CADComparisonMobile";
 import CADComparisonModal from "@/components/reference/CADComparisonModal";
+import CADFilterBar from "@/components/reference/CADFilterBar";
 import { CADComparisonProvider } from "@/contexts/CADComparisonContext";
+import { CADFilterProvider } from "@/contexts/CADFilterContext";
 import { 
   SoftwareBadges,
   mapPriceType,
@@ -72,44 +74,6 @@ const darkLogos = [
 
 const needsBrightness = (name: string) => darkLogos.includes(name);
 
-// CAD comparison data with raw ratings
-const cadComparisonRaw = [
-  { name: "Fusion 360", price: "Freemium", type: "Solid/Mesh", os: "Win/Mac", ease: 4, precision: 5, sculpt: 3, printReady: 5, parametric: 5, cloud: "Yes", perpetual: "No", standout: "Integrated CAD/CAM/CAE" },
-  { name: "Blender", price: "Free", type: "Mesh", os: "Win/Mac/Lin", ease: 2, precision: 3, sculpt: 5, printReady: 4, parametric: 2, cloud: "No", perpetual: "Yes", standout: "Complete 3D Suite" },
-  { name: "SolidWorks", price: "Paid", type: "Solid", os: "Win", ease: 3, precision: 5, sculpt: 1, printReady: 5, parametric: 5, cloud: "Partial", perpetual: "Yes", standout: "Engineering Standard" },
-  { name: "Tinkercad", price: "Free", type: "CSG", os: "Browser", ease: 5, precision: 2, sculpt: 1, printReady: 5, parametric: 1, cloud: "Yes", perpetual: "N/A", standout: "Zero Learning Curve" },
-  { name: "ZBrush", price: "Subscription", type: "Sculpt", os: "Win/Mac", ease: 2, precision: 2, sculpt: 5, printReady: 4, parametric: 1, cloud: "No", perpetual: "No", standout: "Ultra High-Poly" },
-  { name: "Meshmixer", price: "Free", type: "Mesh", os: "Win/Mac", ease: 3, precision: 2, sculpt: 3, printReady: 5, parametric: 1, cloud: "No", perpetual: "Yes", standout: "Tree Supports" },
-  { name: "FreeCAD", price: "Free", type: "Solid", os: "Win/Mac/Lin", ease: 2, precision: 5, sculpt: 1, printReady: 4, parametric: 5, cloud: "No", perpetual: "Yes", standout: "Open Source CAD" },
-  { name: "Rhino 3D", price: "Perpetual", type: "NURBS", os: "Win/Mac", ease: 3, precision: 5, sculpt: 2, printReady: 5, parametric: 3, cloud: "No", perpetual: "Yes", standout: "ShrinkWrap (v8)" },
-  { name: "OpenSCAD", price: "Free", type: "CSG", os: "Win/Mac/Lin", ease: 1, precision: 5, sculpt: 1, printReady: 5, parametric: 5, cloud: "No", perpetual: "Yes", standout: "Code-Based Design" },
-  { name: "Onshape", price: "Freemium", type: "Solid", os: "Browser", ease: 4, precision: 5, sculpt: 1, printReady: 4, parametric: 5, cloud: "Yes", perpetual: "No", standout: "Real-Time Collab" },
-  { name: "Shapr3D", price: "Freemium", type: "Solid", os: "iPad/Win/Mac", ease: 5, precision: 4, sculpt: 1, printReady: 4, parametric: 3, cloud: "Yes", perpetual: "No", standout: "Touch-First CAD" },
-  { name: "SketchUp", price: "Freemium", type: "Surface", os: "Win/Mac", ease: 5, precision: 2, sculpt: 1, printReady: 2, parametric: 1, cloud: "Partial", perpetual: "No", standout: "Push/Pull Interface" },
-  { name: "Plasticity", price: "Perpetual", type: "Solid", os: "Win/Mac/Lin", ease: 4, precision: 5, sculpt: 2, printReady: 5, parametric: 1, cloud: "No", perpetual: "Yes", standout: "Artist-Friendly CAD" },
-  { name: "Maya", price: "Subscription", type: "Mesh", os: "Win/Mac/Lin", ease: 2, precision: 3, sculpt: 4, printReady: 3, parametric: 2, cloud: "Partial", perpetual: "No", standout: "Animation Pipeline" },
-  { name: "3ds Max", price: "Subscription", type: "Mesh", os: "Win", ease: 2, precision: 3, sculpt: 3, printReady: 4, parametric: 3, cloud: "Partial", perpetual: "No", standout: "Modifier Stack" },
-  { name: "Cinema 4D", price: "Subscription", type: "Mesh", os: "Win/Mac", ease: 3, precision: 3, sculpt: 3, printReady: 4, parametric: 2, cloud: "No", perpetual: "No", standout: "Volume Meshing" },
-  { name: "Nomad Sculpt", price: "One-Time", type: "Sculpt", os: "iPad/Android", ease: 4, precision: 2, sculpt: 4, printReady: 4, parametric: 1, cloud: "No", perpetual: "Yes", standout: "Mobile Sculpting" },
-  { name: "AutoCAD", price: "Subscription", type: "Solid", os: "Win/Mac", ease: 2, precision: 5, sculpt: 1, printReady: 3, parametric: 4, cloud: "Partial", perpetual: "No", standout: "2D to 3D Drafting" },
-  { name: "SelfCAD", price: "Freemium", type: "Hybrid", os: "Browser", ease: 4, precision: 3, sculpt: 3, printReady: 5, parametric: 2, cloud: "Yes", perpetual: "No", standout: "Built-in Slicer" },
-  { name: "BlocksCAD", price: "Freemium", type: "CSG", os: "Browser", ease: 5, precision: 3, sculpt: 1, printReady: 4, parametric: 4, cloud: "Yes", perpetual: "N/A", standout: "Visual Code Blocks" },
-];
-
-// Enhanced CAD data with computed scores and mapped types
-const cadComparison = cadComparisonRaw.map(item => ({
-  ...item,
-  priceType: mapPriceType(item.price) as PriceType,
-  overallScore: calculateOverallScore({
-    ease: item.ease,
-    precision: item.precision,
-    sculpt: item.sculpt,
-    printReady: item.printReady,
-    parametric: item.parametric
-  }),
-  skillLevel: mapSkillLevel(item.ease) as SkillLevel
-}));
-
 const ReferenceCAD = () => {
   const [expandedAccordion, setExpandedAccordion] = useState<string[]>([]);
 
@@ -142,31 +106,35 @@ const ReferenceCAD = () => {
   };
 
   return (
-    <CADComparisonProvider>
-      <div className="min-h-screen bg-background">
-        {/* Hero Section */}
-        <CADHeroSection 
-          softwareCount={cadComparison.length} 
-          onScrollToComparison={handleScrollToComparison}
-        />
-
-        <div className="container mx-auto px-4 py-8 lg:pr-[300px]">
-          <div className="mb-6">
-            <Button variant="ghost" size="sm" asChild className="mb-4">
-              <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-                <ArrowLeft className="w-4 h-4" />
-                Back to Home
-              </Link>
-            </Button>
-          </div>
-
-          {/* Interactive Profile Selector */}
-          <CADProfileSelector onScrollToComparison={handleScrollToComparison} onLearnMore={handleLearnMore} />
-
-          {/* 3-Tier Comparison System */}
-          <CADThreeTierComparison 
-            onViewDetails={handleLearnMore}
+    <CADFilterProvider softwareData={cadComparison}>
+      <CADComparisonProvider>
+        <div className="min-h-screen bg-background">
+          {/* Hero Section */}
+          <CADHeroSection 
+            softwareCount={cadComparison.length} 
+            onScrollToComparison={handleScrollToComparison}
           />
+
+          <div className="container mx-auto px-4 py-8 lg:pr-[300px]">
+            <div className="mb-6">
+              <Button variant="ghost" size="sm" asChild className="mb-4">
+                <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Home
+                </Link>
+              </Button>
+            </div>
+
+            {/* Interactive Profile Selector */}
+            <CADProfileSelector onScrollToComparison={handleScrollToComparison} onLearnMore={handleLearnMore} />
+
+            {/* Filter Bar */}
+            <CADFilterBar />
+
+            {/* 3-Tier Comparison System */}
+            <CADThreeTierComparison 
+              onViewDetails={handleLearnMore}
+            />
 
           <Accordion type="multiple" className="space-y-4" value={expandedAccordion} onValueChange={setExpandedAccordion}>
           {cadData.map((software, index) => (
@@ -384,7 +352,8 @@ const ReferenceCAD = () => {
         <CADComparisonMobile />
         <CADComparisonModal onViewDetails={handleLearnMore} />
       </div>
-    </CADComparisonProvider>
+      </CADComparisonProvider>
+    </CADFilterProvider>
   );
 };
 
