@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Check, X, DollarSign, Monitor, FileType, Wifi, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, ArrowRight } from "lucide-react";
+import { ArrowLeft, ExternalLink, Check, X, DollarSign, Monitor, FileType, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -9,14 +9,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cadData } from "@/lib/cadData";
 import CADHeroSection from "@/components/reference/CADHeroSection";
 import CADProfileSelector from "@/components/reference/CADProfileSelector";
+import CADThreeTierComparison from "@/components/reference/CADThreeTierComparison";
 import { 
-  PriceBadge, 
-  ScoreDisplay, 
-  SkillIcon, 
   SoftwareBadges,
   mapPriceType,
   calculateOverallScore,
@@ -109,116 +106,8 @@ const cadComparison = cadComparisonRaw.map(item => ({
   skillLevel: mapSkillLevel(item.ease) as SkillLevel
 }));
 
-type CADSortKey = "name" | "price" | "type" | "overallScore" | "skillLevel";
-type SortDir = "asc" | "desc";
-
-const priceOrder = { "free": 0, "freemium": 1, "paid": 2 };
-const skillOrder = { "beginner": 0, "intermediate": 1, "advanced": 2 };
-
-const CADSortHeader = ({ 
-  label, 
-  sortKey, 
-  currentSort, 
-  currentDir, 
-  onSort,
-  center = false 
-}: { 
-  label: string; 
-  sortKey: CADSortKey; 
-  currentSort: CADSortKey | null; 
-  currentDir: SortDir;
-  onSort: (key: CADSortKey) => void;
-  center?: boolean;
-}) => {
-  const isActive = currentSort === sortKey;
-  return (
-    <th 
-      className={`py-2 px-3 font-semibold text-foreground cursor-pointer hover:bg-muted/50 transition-colors select-none ${center ? "text-center" : "text-left"}`}
-      onClick={() => onSort(sortKey)}
-    >
-      <div className={`flex items-center gap-1 ${center ? "justify-center" : ""}`}>
-        <span>{label}</span>
-        {isActive ? (
-          currentDir === "asc" ? <ChevronUp className="w-3 h-3 text-cyan-400" /> : <ChevronDown className="w-3 h-3 text-cyan-400" />
-        ) : (
-          <ChevronsUpDown className="w-3 h-3 text-muted-foreground/50" />
-        )}
-      </div>
-    </th>
-  );
-};
-
 const ReferenceCAD = () => {
-  const [sortKey, setSortKey] = useState<CADSortKey | null>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [priceFilter, setPriceFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [expandedAccordion, setExpandedAccordion] = useState<string[]>([]);
-
-  const handleSort = (key: CADSortKey) => {
-    if (sortKey === key) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc");
-    } else {
-      setSortKey(key);
-      setSortDir("desc");
-    }
-  };
-
-  const clearFilters = () => {
-    setPriceFilter("all");
-    setTypeFilter("all");
-  };
-
-  const hasFilters = priceFilter !== "all" || typeFilter !== "all";
-
-  // Extract unique types for filter
-  const types = useMemo(() => {
-    const typeSet = new Set<string>();
-    cadComparison.forEach(s => typeSet.add(s.type));
-    return Array.from(typeSet).sort();
-  }, []);
-
-  const filteredAndSortedCAD = useMemo(() => {
-    let filtered = [...cadComparison];
-
-    // Apply filters
-    if (priceFilter !== "all") {
-      filtered = filtered.filter(s => s.priceType === priceFilter);
-    }
-    if (typeFilter !== "all") {
-      filtered = filtered.filter(s => s.type === typeFilter);
-    }
-
-    // Apply sorting
-    if (!sortKey) return filtered;
-    
-    return filtered.sort((a, b) => {
-      let aVal: number | string;
-      let bVal: number | string;
-      
-      if (sortKey === "price") {
-        aVal = priceOrder[a.priceType as keyof typeof priceOrder] ?? 99;
-        bVal = priceOrder[b.priceType as keyof typeof priceOrder] ?? 99;
-      } else if (sortKey === "skillLevel") {
-        aVal = skillOrder[a.skillLevel];
-        bVal = skillOrder[b.skillLevel];
-      } else if (sortKey === "overallScore") {
-        aVal = a.overallScore;
-        bVal = b.overallScore;
-      } else {
-        aVal = a[sortKey as keyof typeof a] as string;
-        bVal = b[sortKey as keyof typeof b] as string;
-      }
-      
-      if (typeof aVal === "number" && typeof bVal === "number") {
-        return sortDir === "asc" ? aVal - bVal : bVal - aVal;
-      }
-      
-      return sortDir === "asc" 
-        ? String(aVal).localeCompare(String(bVal))
-        : String(bVal).localeCompare(String(aVal));
-    });
-  }, [sortKey, sortDir, priceFilter, typeFilter]);
 
   const handleScrollToComparison = () => {
     const section = document.getElementById('cad-comparison-section');
@@ -269,128 +158,10 @@ const ReferenceCAD = () => {
         {/* Interactive Profile Selector */}
         <CADProfileSelector onScrollToComparison={handleScrollToComparison} onLearnMore={handleLearnMore} />
 
-        {/* Comparative Features Matrix */}
-        <div className="mb-8 border border-border rounded-lg bg-card p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <BarChart3 className="w-6 h-6 text-cyan-400" />
-            <h2 className="text-xl font-bold font-mono text-foreground">Comparative Features Matrix</h2>
-          </div>
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Price:</span>
-              <Select value={priceFilter} onValueChange={setPriceFilter}>
-                <SelectTrigger className="w-36 bg-background">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover">
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="free">Free</SelectItem>
-                  <SelectItem value="freemium">Freemium</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Type:</span>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-32 bg-background">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover">
-                  <SelectItem value="all">All</SelectItem>
-                  {types.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
-                <X className="h-4 w-4 mr-1" />
-                Clear filters
-              </Button>
-            )}
-            <span className="text-sm text-muted-foreground ml-auto">
-              Showing {filteredAndSortedCAD.length} of {cadComparison.length} software
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
-            <p className="text-muted-foreground text-sm">
-              Side-by-side comparison of CAD software capabilities with overall scores and skill levels.
-            </p>
-            <div className="flex items-center gap-4 text-xs flex-wrap">
-              <span className="text-muted-foreground">Score:</span>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span className="text-muted-foreground">9.0+ (Excellent)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-cyan-400" />
-                <span className="text-muted-foreground">7.0-8.9 (Good)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-yellow-400" />
-                <span className="text-muted-foreground">5.0-6.9 (Fair)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-orange-400" />
-                <span className="text-muted-foreground">&lt;5.0 (Poor)</span>
-              </div>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <CADSortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <CADSortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <CADSortHeader label="Type" sortKey="type" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <th className="text-left py-2 px-3 font-semibold text-foreground">Platform</th>
-                  <CADSortHeader label="Score" sortKey="overallScore" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <CADSortHeader label="Level" sortKey="skillLevel" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAndSortedCAD.map((software, index) => (
-                  <tr 
-                    key={index} 
-                    className="border-b border-border/50 hover:bg-muted/20 transition-colors"
-                  >
-                    <td className="py-2.5 px-3 font-medium text-foreground whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {cadLogos[software.name] && (
-                          <img 
-                            src={cadLogos[software.name]} 
-                            alt={`${software.name} logo`}
-                            className={`w-5 h-5 rounded object-contain ${needsBrightness(software.name) ? 'brightness-150 invert' : ''}`}
-                          />
-                        )}
-                        {software.name}
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <PriceBadge type={software.priceType} />
-                    </td>
-                    <td className="py-2.5 px-3 text-muted-foreground text-xs">{software.type}</td>
-                    <td className="py-2.5 px-3 text-muted-foreground text-xs">{software.os}</td>
-                    <td className="py-2.5 px-3 text-center">
-                      <ScoreDisplay score={software.overallScore} size="sm" />
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <div className="flex justify-center">
-                        <SkillIcon level={software.skillLevel} />
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-3 text-cyan-400 text-xs whitespace-nowrap">{software.standout}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/* 3-Tier Comparison System */}
+        <CADThreeTierComparison 
+          onViewDetails={handleLearnMore}
+        />
 
         <Accordion type="multiple" className="space-y-4" value={expandedAccordion} onValueChange={setExpandedAccordion}>
           {cadData.map((software, index) => (
