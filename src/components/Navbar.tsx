@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogIn, LogOut, Shield, Archive, Database, Settings, BookOpen, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles } from "lucide-react";
+import { LogIn, LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/filascope-logo.png";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -11,6 +11,7 @@ import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { TrendingTriggerButton } from "@/components/TrendingTriggerButton";
 import { TrendingPanel } from "@/components/TrendingPanel";
 import { useTrendingPanel } from "@/hooks/useTrendingPanel";
+import { NavLink } from "@/components/ui/nav-link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,12 +23,18 @@ import {
 const Navbar = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   
   // Trending panel state
   const trendingPanel = useTrendingPanel();
+  
+  // Check if Resources dropdown should be active
+  const isResourcesActive = ['/accessories', '/reference', '/wizard'].some(path => 
+    location.pathname.startsWith(path)
+  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -105,73 +112,94 @@ const Navbar = () => {
             />
           </Link>
 
-          {/* Navigation Links */}
-          <div className="hidden lg:flex items-center gap-1 flex-1">
-            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
-              <Link to="/printers">PRINTERS</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
-              <Link to="/accessories">ACCESSORIES</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
-              <Link to="/brands">BRANDS</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-primary font-mono text-xs">
-              <Link to="/compare">COMPARE</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild className="text-cyan-400 hover:text-cyan-300 font-mono text-xs">
-              <Link to="/materials/compare">MATERIALS</Link>
-            </Button>
+          {/* Navigation Links - Improved contrast, spacing, and consolidated items */}
+          <nav className="hidden lg:flex items-center gap-6 flex-1 justify-center">
+            <NavLink to="/materials">
+              Materials
+            </NavLink>
+            <NavLink to="/printers">
+              Printers
+            </NavLink>
+            <NavLink to="/brands">
+              Brands
+            </NavLink>
+            <NavLink to="/compare">
+              Compare
+            </NavLink>
+            
+            {/* Resources Dropdown - Consolidates Accessories, Reference, and Wizard */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-emerald-400 hover:text-emerald-300 font-mono text-xs gap-1">
-                  <BookOpen className="w-3 h-3" />
-                  REFERENCE
-                  <ChevronDown className="w-3 h-3" />
-                </Button>
+                <button 
+                  className={`flex items-center gap-1.5 px-4 py-3 text-sm font-semibold transition-colors duration-200 rounded-md hover:text-primary hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    isResourcesActive ? 'text-primary border-b-2 border-primary' : 'text-white/90'
+                  }`}
+                >
+                  Resources
+                  <ChevronDown className="w-4 h-4" />
+                </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="bg-[#1A1A1A] border-[#333] min-w-[180px]">
-                <DropdownMenuItem asChild>
-                  <Link to="/reference/slicers" className="flex items-center font-mono text-xs">
-                    <Scissors className="w-3 h-3 mr-2" />
-                    SLICERS
+              <DropdownMenuContent 
+                align="start" 
+                className="bg-card/95 backdrop-blur-xl border-border min-w-[220px] p-2"
+              >
+                <DropdownMenuItem asChild className="rounded-lg">
+                  <Link to="/accessories" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                    <Puzzle className="w-4 h-4 text-muted-foreground" />
+                    Accessories
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/reference/cad" className="flex items-center font-mono text-xs">
-                    <Box className="w-3 h-3 mr-2" />
-                    3D MODELING / CAD
+                <DropdownMenuSeparator className="my-2" />
+                <DropdownMenuItem asChild className="rounded-lg">
+                  <Link to="/reference/slicers" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                    <Scissors className="w-4 h-4 text-muted-foreground" />
+                    Slicers
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/reference/repos" className="flex items-center font-mono text-xs">
-                    <FolderGit2 className="w-3 h-3 mr-2" />
-                    3D PRINT REPOS
+                <DropdownMenuItem asChild className="rounded-lg">
+                  <Link to="/reference/cad" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                    <Box className="w-4 h-4 text-muted-foreground" />
+                    3D Modeling / CAD
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/reference/influencers" className="flex items-center font-mono text-xs">
-                    <Youtube className="w-3 h-3 mr-2" />
-                    YOUTUBE INFLUENCERS
+                <DropdownMenuItem asChild className="rounded-lg">
+                  <Link to="/reference/repos" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                    <FolderGit2 className="w-4 h-4 text-muted-foreground" />
+                    3D Print Repos
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/reference/specialty" className="flex items-center font-mono text-xs">
-                    <Sparkles className="w-3 h-3 mr-2" />
-                    SPECIALTY
+                <DropdownMenuItem asChild className="rounded-lg">
+                  <Link to="/reference/influencers" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                    <Youtube className="w-4 h-4 text-muted-foreground" />
+                    YouTube Influencers
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="rounded-lg">
+                  <Link to="/reference/specialty" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                    <Sparkles className="w-4 h-4 text-muted-foreground" />
+                    Specialty Tools
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="my-2" />
+                <DropdownMenuItem asChild className="rounded-lg">
+                  <Link to="/wizard" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                    <Wand2 className="w-4 h-4 text-muted-foreground" />
+                    Material Wizard
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="ghost" size="sm" asChild className="text-purple-400 hover:text-purple-300 font-mono text-xs">
-              <Link to="/wizard">WIZARD</Link>
-            </Button>
+            
             {isAdmin && (
-              <Button variant="ghost" size="sm" asChild className="text-amber-400 hover:text-amber-300 font-mono text-xs">
-                <Link to="/admin/dashboard">ADMIN</Link>
-              </Button>
+              <NavLink 
+                to="/admin/dashboard"
+                className="text-amber-400 hover:text-amber-300"
+                activeClassName="text-amber-400 border-b-2 border-amber-400"
+              >
+                Admin
+              </NavLink>
             )}
-          </div>
+          </nav>
 
           {/* User Actions */}
           <div className="flex items-center gap-3 shrink-0">
