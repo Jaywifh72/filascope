@@ -24,6 +24,12 @@ import { AccessoryCompatibilityBadge } from "@/components/AccessoryCompatibility
 import { FirmwareSection } from "@/components/FirmwareSection";
 import { SoftwareSection } from "@/components/SoftwareSection";
 import BuildVolumeVisualization from "@/components/printer/BuildVolumeVisualization";
+import { SocialProofBadges } from "@/components/printer/SocialProofBadges";
+import { ValueProposition } from "@/components/printer/ValueProposition";
+import { KeySpecsBar, generateKeySpecs } from "@/components/printer/KeySpecsBar";
+import { PriceSection } from "@/components/printer/PriceSection";
+import { CTAButtons } from "@/components/printer/CTAButtons";
+import { generatePrinterBenefits, generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
 import {
   ArrowLeft,
   Box,
@@ -356,7 +362,7 @@ const PrinterDetail = () => {
           </Link>
         </div>
 
-        {/* Hero Section */}
+        {/* Hero Section - 30%/70% Layout */}
         <div className="relative bg-[#0A0A0A] rounded-2xl py-10 md:py-14 px-6 md:px-10">
           {/* Admin: Update Image & Refresh Prices Buttons */}
           {isAdmin && (
@@ -426,8 +432,8 @@ const PrinterDetail = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-10 lg:gap-16 items-start">
-            {/* Left: Printer Image */}
+          <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-10 lg:gap-16 items-start">
+            {/* Left Column: Product Image Gallery (30%) */}
             <div className="w-full">
               {(() => {
                 const displayImages = productImages.filter(img => validImages.has(img));
@@ -435,7 +441,7 @@ const PrinterDetail = () => {
                 
                 if (isLoadingImages) {
                   return (
-                    <div className="h-[400px] bg-muted/20 rounded-lg animate-pulse flex items-center justify-center">
+                    <div className="h-[250px] bg-muted/20 rounded-lg animate-pulse flex items-center justify-center">
                       <span className="text-muted-foreground">Loading images...</span>
                     </div>
                   );
@@ -443,17 +449,17 @@ const PrinterDetail = () => {
                 
                 if (displayImages.length === 0) {
                   return (
-                    <div className="h-[400px] bg-muted/10 rounded-lg flex items-center justify-center">
-                      <Box className="h-24 w-24 text-muted-foreground/30" />
+                    <div className="h-[250px] bg-muted/10 rounded-lg flex items-center justify-center border border-border/20">
+                      <Box className="h-20 w-20 text-muted-foreground/30" />
                     </div>
                   );
                 }
                 
                 return (
                   <div className="space-y-3">
-                    {/* Main Image - No container, floating with cyan glow */}
+                    {/* Main Image */}
                     <div 
-                      className="cursor-pointer transition-transform duration-400 ease-out hover:scale-[1.02]"
+                      className="h-[250px] bg-white/[0.02] border border-white/[0.08] rounded-xl p-5 flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
                       onClick={() => openLightbox(0)}
                       role="button"
                       aria-label={`View ${printer.model_name} product image in fullscreen`}
@@ -461,25 +467,29 @@ const PrinterDetail = () => {
                       <img 
                         src={displayImages[0]} 
                         alt={`${printer.model_name} product image`}
-                        className="w-full max-w-[450px] h-auto object-contain mx-auto drop-shadow-[0_20px_60px_rgba(0,212,212,0.15)]"
+                        className="max-w-full max-h-full object-contain"
                       />
                     </div>
                     
-                    {/* Thumbnail Images */}
+                    {/* Thumbnail Grid */}
                     {displayImages.length > 1 && (
-                      <div className="grid grid-cols-4 gap-2 max-w-[450px] mx-auto">
-                        {displayImages.slice(1, 5).map((img: string, idx: number) => (
+                      <div className="grid grid-cols-4 gap-2">
+                        {displayImages.slice(0, 4).map((img: string, idx: number) => (
                           <div 
                             key={idx} 
-                            className="cursor-pointer overflow-hidden rounded-lg border border-white/10 bg-black/30 hover:border-primary transition-all duration-300"
-                            onClick={() => openLightbox(idx + 1)}
+                            className={`h-[60px] bg-white/[0.02] border rounded-md p-1.5 flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105 ${
+                              idx === 0 
+                                ? 'border-primary bg-primary/[0.08]' 
+                                : 'border-white/[0.08] hover:border-primary/50'
+                            }`}
+                            onClick={() => openLightbox(idx)}
                             role="button"
-                            aria-label={`View ${printer.model_name} image ${idx + 2}`}
+                            aria-label={`View ${printer.model_name} image ${idx + 1}`}
                           >
                             <img 
                               src={img} 
-                              alt={`${printer.model_name} image ${idx + 2}`}
-                              className="w-full h-20 object-cover"
+                              alt={`${printer.model_name} view ${idx + 1}`}
+                              className="max-w-full max-h-full object-contain"
                               loading="lazy"
                             />
                           </div>
@@ -491,127 +501,61 @@ const PrinterDetail = () => {
               })()}
             </div>
 
-            {/* Right: Info + Key Specs + Price Tracker */}
+            {/* Right Column: Product Info (70%) */}
             <div className="space-y-6">
-              {/* Breadcrumbs & Name */}
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" className="text-sm px-3 py-1">{brand}</Badge>
-                  {series && <Badge variant="outline" className="text-sm px-3 py-1">{series}</Badge>}
-                  {printer.discontinued && <Badge variant="destructive" className="text-sm px-3 py-1">Discontinued</Badge>}
-                </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
-                  {printer.model_name}
-                </h1>
-                {printer.variant_or_bundle_name && (
-                  <p className="text-lg text-muted-foreground">{printer.variant_or_bundle_name}</p>
-                )}
-                
-                {/* Price */}
-                <div className="flex flex-wrap items-center gap-4 pt-2">
-                  {printer.msrp_usd && (
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-primary">{formatPrice(printer.msrp_usd)}</span>
-                      <span className="text-sm text-muted-foreground">MSRP</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* CTA Buttons */}
-                {(printer.official_product_url || printer.official_store_url || printer.amazon_url_us) && (
-                  <div className="flex flex-wrap gap-3 pt-2">
-                    {printer.official_product_url && isDiscontinuedUrl(printer.official_product_url) ? (
-                      <Badge variant="outline" className="text-orange-600 border-orange-300 bg-orange-50 dark:bg-orange-950/30 py-2 px-4">
-                        <Ban className="h-4 w-4 mr-2" />
-                        Discontinued
-                      </Badge>
-                    ) : printer.official_product_url && (
-                      <a href={getAffiliateUrl(printer.official_product_url, printerBrand) || printer.official_product_url} target="_blank" rel="noopener noreferrer">
-                        <Button size="lg" className="gap-2">
-                          <ExternalLink className="h-4 w-4" />
-                          View Product
-                        </Button>
-                      </a>
-                    )}
-                    {printer.official_store_url && !isDiscontinuedUrl(printer.official_store_url) && (
-                      <a href={getAffiliateUrl(printer.official_store_url, printerBrand) || printer.official_store_url} target="_blank" rel="noopener noreferrer">
-                        <Button size="lg" variant="outline" className="gap-2">
-                          <ExternalLink className="h-4 w-4" />
-                          Official Store
-                          {printer.current_price_usd_store && (
-                            <span className="font-bold text-primary">
-                              ${printer.current_price_usd_store}
-                              {printer.msrp_usd && printer.current_price_usd_store < printer.msrp_usd && (
-                                <sup className="ml-1 text-xs text-green-500 font-semibold">
-                                  {Math.round((1 - printer.current_price_usd_store / printer.msrp_usd) * 100)}% off
-                                </sup>
-                              )}
-                            </span>
-                          )}
-                        </Button>
-                      </a>
-                    )}
-                    {printer.amazon_url_us && !isDiscontinuedUrl(printer.amazon_url_us) && (
-                      <a href={getAmazonUrl(printer.amazon_url_us, "us") || printer.amazon_url_us} target="_blank" rel="noopener noreferrer">
-                        <Button size="lg" variant="outline" className="gap-2">
-                          <ExternalLink className="h-4 w-4" />
-                          Amazon US
-                        </Button>
-                      </a>
-                    )}
-                  </div>
-                )}
+              {/* Brand Name */}
+              <div className="text-[13px] font-bold uppercase tracking-[0.05em] text-primary">
+                {brand}
               </div>
 
-              {/* Key Specs Card - Hero Element */}
-              <div className="bg-[#1A1A1A] border border-[hsl(180_100%_41%/0.3)] rounded-xl p-4 md:p-6 shadow-[0_4px_20px_hsl(180_100%_41%/0.1)] mt-4">
-                <h3 className="text-xs uppercase tracking-[0.1em] text-[hsl(180_100%_41%/0.8)] font-medium mb-5">
-                  KEY SPECS
-                </h3>
-                <dl className="space-y-4">
-                  {printer.build_volume_x_mm && (
-                    <div className="flex items-center justify-between">
-                      <dt className="flex items-center gap-3">
-                        <Box className="h-5 w-5 text-[hsl(180_100%_41%)] flex-shrink-0" />
-                        <span className="text-sm font-medium text-[#9CA3AF]">Build Volume</span>
-                      </dt>
-                      <dd className="text-base font-bold text-white">
-                        {printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm
-                      </dd>
-                    </div>
-                  )}
-                  {printer.max_print_speed_mms && (
-                    <div className="flex items-center justify-between">
-                      <dt className="flex items-center gap-3">
-                        <Zap className="h-5 w-5 text-[hsl(180_100%_41%)] flex-shrink-0" />
-                        <span className="text-sm font-medium text-[#9CA3AF]">Max Speed</span>
-                      </dt>
-                      <dd className="text-base font-bold text-white">{printer.max_print_speed_mms} mm/s</dd>
-                    </div>
-                  )}
-                  {printer.max_nozzle_temp_c && (
-                    <div className="flex items-center justify-between">
-                      <dt className="flex items-center gap-3">
-                        <Thermometer className="h-5 w-5 text-[hsl(180_100%_41%)] flex-shrink-0" />
-                        <span className="text-sm font-medium text-[#9CA3AF]">Max Nozzle</span>
-                      </dt>
-                      <dd className="text-base font-bold text-white">{printer.max_nozzle_temp_c}°C</dd>
-                    </div>
-                  )}
-                  {printer.bed_max_temp_c && (
-                    <div className="flex items-center justify-between">
-                      <dt className="flex items-center gap-3">
-                        <Flame className="h-5 w-5 text-[hsl(180_100%_41%)] flex-shrink-0" />
-                        <span className="text-sm font-medium text-[#9CA3AF]">Max Bed</span>
-                      </dt>
-                      <dd className="text-base font-bold text-white">{printer.bed_max_temp_c}°C</dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
+              {/* Product Model */}
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight -mt-4">
+                {printer.model_name}
+              </h1>
+
+              {/* Product Description */}
+              <p className="text-base font-medium text-muted-foreground -mt-3">
+                {generatePrinterDescription({
+                  ...printer,
+                  brand: brand || undefined
+                })}
+              </p>
+
+              {/* Social Proof Badges */}
+              <SocialProofBadges
+                isStaffPick={false}
+                rating={printer.rating_community_overall}
+                reviewCount={printer.review_count_aggregated}
+              />
+
+              {/* Price Section */}
+              <PriceSection
+                price={printer.current_price_usd_store}
+                msrp={printer.msrp_usd}
+              />
+
+              {/* Value Proposition */}
+              <ValueProposition benefits={generatePrinterBenefits(printer)} />
+
+              {/* CTA Buttons */}
+              <CTAButtons
+                printer={{
+                  id: printer.id,
+                  name: printer.model_name,
+                  imageUrl: displayImages[0] || null,
+                  brand: brand,
+                }}
+                officialStoreUrl={printer.official_store_url}
+                storePrice={printer.current_price_usd_store}
+                getAffiliateUrl={getAffiliateUrl}
+                brand={brand}
+              />
             </div>
           </div>
         </div>
+
+        {/* Key Specifications Bar - Full Width Below Hero */}
+        <KeySpecsBar specs={generateKeySpecs(printer)} />
 
         {/* Price Tracker - Full Width Below Hero */}
         <div className="w-full">
