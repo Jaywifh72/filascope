@@ -157,16 +157,21 @@ export default function MediumStandardPrinterCard({
             </div>
           </div>
 
+          {/* Brand Name - Cyan, uppercase */}
+          <p className="text-[13px] font-bold text-primary uppercase tracking-[0.05em] leading-tight mb-1">
+            {printer.brand?.brand}
+          </p>
+
           {/* Printer Name - Most Prominent */}
-          <h3 className="text-2xl font-bold text-foreground mb-1 line-clamp-2">
-            {printer.brand?.brand} {printer.model_name}
+          <h3 className="text-2xl font-bold text-foreground mb-1 leading-snug line-clamp-2">
+            {printer.model_name}
           </h3>
           {printer.variant_or_bundle_name && (
             <p className="text-sm text-muted-foreground mb-2">{printer.variant_or_bundle_name}</p>
           )}
 
           {/* Build Volume + Speed - Single Line */}
-          <p className="text-sm text-muted-foreground mb-3">
+          <p className="text-[14px] text-muted-foreground mb-3 leading-relaxed">
             {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
               <span>{printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm</span>
             )}
@@ -178,7 +183,7 @@ export default function MediumStandardPrinterCard({
           <div className="mb-4 mt-auto">
             {printer.current_price_usd_store ? (
               <>
-                <span className="text-xl font-bold text-amber-500">
+                <span className="text-2xl font-bold text-amber-500">
                   {formatPrice(printer.current_price_usd_store)}
                 </span>
                 {printer.msrp_usd && printer.current_price_usd_store < printer.msrp_usd && (
@@ -191,11 +196,11 @@ export default function MediumStandardPrinterCard({
                 )}
               </>
             ) : printer.current_price_usd_amazon ? (
-              <span className="text-xl font-bold text-amber-500">
+              <span className="text-2xl font-bold text-amber-500">
                 {formatPrice(printer.current_price_usd_amazon)}
               </span>
             ) : printer.msrp_usd ? (
-              <span className="text-xl font-bold text-amber-500">
+              <span className="text-2xl font-bold text-amber-500">
                 {formatPrice(printer.msrp_usd)}
               </span>
             ) : (
