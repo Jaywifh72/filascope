@@ -34,6 +34,7 @@ import ExpandedPlatformCard from "@/components/reference/repos/ExpandedPlatformC
 import PlatformFilterBar from "@/components/reference/repos/PlatformFilterBar";
 import NoResultsEmpty from "@/components/reference/repos/NoResultsEmpty";
 import StandoutBadge from "@/components/reference/repos/shared/StandoutBadge";
+import MobileComparisonView from "@/components/reference/repos/mobile/MobileComparisonView";
 // Helper to convert numeric ratings (1-5) to semantic labels
 const mapNumberToSemantic = (num: number): RatingLevel => {
   if (num >= 5) return 'excellent';
@@ -201,6 +202,35 @@ const ReferenceRepos = () => {
 
   const hasActiveFilters = modelFilter !== "All" || formatFilter !== "All";
 
+  // Prepare mobile platforms data
+  const mobilePlatforms = useMemo(() => {
+    return repoData.map((repo, index) => {
+      const comparison = repoComparison.find(r => r.name === repo.name);
+      return {
+        id: repo.id,
+        name: repo.name,
+        owner: repo.owner,
+        logo: repoLogos[repo.name] || '',
+        overallScore: comparison ? parseFloat(((comparison.quality + comparison.community + comparison.monetization + comparison.search + comparison.ux) / 5 * 2).toFixed(1)) : 0,
+        modelType: comparison?.model || 'Unknown',
+        ratings: {
+          quality: mapNumberToSemantic(comparison?.quality || 0),
+          community: mapNumberToSemantic(comparison?.community || 0),
+          search: mapNumberToSemantic(comparison?.search || 0),
+          ux: mapNumberToSemantic(comparison?.ux || 0),
+          monetization: mapNumberToSemantic(comparison?.monetization || 0),
+        },
+        features: {
+          free: comparison?.free || false,
+          mobile: comparison?.mobile || false,
+        },
+        fileTypes: comparison?.fileTypes?.split('/') || [],
+        bestFor: repo.bestFor?.join('. ') || '',
+        websiteUrl: repo.links?.website || '#',
+      };
+    });
+  }, []);
+
   const scrollToComparison = useCallback(() => {
     const element = document.getElementById('comparison-matrix');
     if (element) {
@@ -250,19 +280,28 @@ const ReferenceRepos = () => {
             onScrollToComparison={scrollToComparison} 
           />
 
-          {/* Platform Filter Bar */}
-          <PlatformFilterBar />
+          {/* Platform Filter Bar - Desktop Only */}
+          <div className="hidden md:block">
+            <PlatformFilterBar />
+          </div>
 
-          {/* Tier 1: Staff Picks */}
-          <StaffPicksSection />
+          {/* Desktop View - Hidden on Mobile */}
+          <div className="hidden md:block">
+            {/* Tier 1: Staff Picks */}
+            <StaffPicksSection />
 
-          {/* Tier 2: Specialized Options */}
-          <SpecializedSection />
+            {/* Tier 2: Specialized Options */}
+            <SpecializedSection />
 
-          {/* Empty State */}
-          <NoResultsEmpty />
+            {/* Empty State */}
+            <NoResultsEmpty />
+          </div>
 
-        {/* Tier 3: Collapsible Comparative Features Table */}
+          {/* Mobile View - Shown only on Mobile */}
+          <MobileComparisonView platforms={mobilePlatforms} />
+
+        {/* Tier 3: Collapsible Comparative Features Table - Desktop Only */}
+        <div className="hidden md:block">
         <Collapsible
           open={isTableExpanded}
           onOpenChange={setIsTableExpanded}
@@ -429,9 +468,10 @@ const ReferenceRepos = () => {
             </CollapsibleContent>
           </div>
         </Collapsible>
+        </div>
 
-        {/* Repository List - Progressive Disclosure Cards */}
-        <div className="space-y-3">
+        {/* Repository List - Progressive Disclosure Cards - Desktop Only */}
+        <div className="hidden md:block space-y-3">
           {repoData.map((repo, index) => (
             <ExpandedPlatformCard
               key={repo.id}
