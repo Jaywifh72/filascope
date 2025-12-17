@@ -40,7 +40,7 @@ const PrinterCompare = () => {
           brand:printer_brands(brand),
           series:printer_series(series_name)
         `)
-        .in("printer_id", ids);
+        .in("id", ids);
 
       if (error) {
         console.error("Error fetching printers:", error);
