@@ -38,6 +38,7 @@ import { MoreFiltersModal } from "@/components/filters/MoreFiltersModal";
 import { ViewToggle } from "@/components/ViewToggle";
 import { FilamentTableView } from "@/components/FilamentTableView";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { extractColorFromText } from "@/lib/colorIntelligence";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -472,7 +473,10 @@ const Finder = () => {
     queryFn: async () => {
       let query = supabase.from("filaments").select("*");
 
-      if (searchTerm) {
+      // Check if search term is a color name - if so, skip text search (will filter by color later)
+      const isColorSearch = searchTerm ? extractColorFromText(searchTerm) : null;
+      
+      if (searchTerm && !isColorSearch) {
         query = query.or(`product_title.ilike.%${searchTerm}%,vendor.ilike.%${searchTerm}%`);
       }
 
@@ -889,13 +893,23 @@ const Finder = () => {
       if (!matchesFamily) return false;
     }
     
-    // Apply HEX color search filter
+    // Apply HEX color search filter (from explicit hex input)
     if (hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/)) {
       const searchHex = hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`;
       const filamentHex = f.color_hex;
       if (!filamentHex) return false;
       const distance = colorDistance(searchHex, filamentHex);
       if (distance > colorTolerance) return false;
+    }
+    
+    // Apply intelligent color name search (e.g., "orange" finds filaments with orange-like hex colors)
+    const colorFromSearch = searchTerm ? extractColorFromText(searchTerm) : null;
+    if (colorFromSearch && !hexSearch) {
+      const filamentHex = f.color_hex;
+      if (!filamentHex) return false;
+      const distance = colorDistance(colorFromSearch.hex, filamentHex);
+      // Use a more generous tolerance for color name searches (50 delta)
+      if (distance > 60) return false;
     }
     
     return true;
@@ -945,6 +959,7 @@ const Finder = () => {
 
   // Check if any filters are active
   const hasActiveFilters = useMemo(() => {
+    const hasColorSearch = searchTerm ? extractColorFromText(searchTerm) !== null : false;
     return (
       !selectedMaterials.includes("All") ||
       selectedBrands.length > 0 ||
@@ -954,9 +969,10 @@ const Finder = () => {
       woodFilled || glow || brassOnly || foodContact || amsOnly ||
       selectedColorFamilies.length > 0 ||
       hexSearch !== "" ||
-      plasticSpool || cardboardSpool || singleSpool || multiPack
+      plasticSpool || cardboardSpool || singleSpool || multiPack ||
+      hasColorSearch
     );
-  }, [selectedMaterials, selectedBrands, priceRange, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, brassOnly, foodContact, amsOnly, selectedColorFamilies, hexSearch, plasticSpool, cardboardSpool, singleSpool, multiPack]);
+  }, [selectedMaterials, selectedBrands, priceRange, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, brassOnly, foodContact, amsOnly, selectedColorFamilies, hexSearch, plasticSpool, cardboardSpool, singleSpool, multiPack, searchTerm]);
 
   // Clear all filters function
   const handleClearAllFilters = () => {
@@ -1057,63 +1073,77 @@ const Finder = () => {
       />
 
       {/* Active Filter Tags */}
-      <ActiveFilterTags
-        filters={[
-          ...(!selectedMaterials.includes("All") ? selectedMaterials.map(m => ({ id: m, label: m, type: 'material' as const })) : []),
-          ...selectedBrands.map(b => ({ id: b, label: b, type: 'brand' as const })),
-          ...(priceRange[0] > 0 || priceRange[1] < MAX_PRICE_LIMIT ? [{ id: 'price', label: `$${priceRange[0]}-$${priceRange[1]}/kg`, type: 'price' as const }] : []),
-          ...(highSpeed ? [{ id: 'highSpeed', label: 'High Speed', type: 'property' as const }] : []),
-          ...(matte ? [{ id: 'matte', label: 'Matte Finish', type: 'property' as const }] : []),
-          ...(carbonFiber ? [{ id: 'carbonFiber', label: 'Carbon Fiber', type: 'property' as const }] : []),
-          ...(glassFiber ? [{ id: 'glassFiber', label: 'Glass Fiber', type: 'property' as const }] : []),
-          ...(woodFilled ? [{ id: 'woodFilled', label: 'Wood Filled', type: 'property' as const }] : []),
-          ...(glow ? [{ id: 'glow', label: 'Glow', type: 'property' as const }] : []),
-          ...(brassOnly ? [{ id: 'brassOnly', label: 'Brass Safe', type: 'property' as const }] : []),
-          ...(foodContact ? [{ id: 'foodContact', label: 'Food Safe', type: 'property' as const }] : []),
-          ...(amsOnly ? [{ id: 'amsOnly', label: 'AMS Compatible', type: 'property' as const }] : []),
-          ...selectedColorFamilies.map(c => ({ id: c, label: c, type: 'color' as const })),
-        ]}
-        onRemove={(id, type) => {
-          if (type === 'material') {
-            const newMaterials = selectedMaterials.filter(m => m !== id);
-            setSelectedMaterials(newMaterials.length === 0 ? ["All"] : newMaterials);
-          } else if (type === 'brand') {
-            setSelectedBrands(selectedBrands.filter(b => b !== id));
-          } else if (type === 'price') {
-            setPriceRange([0, MAX_PRICE_LIMIT]);
-          } else if (type === 'color') {
-            setSelectedColorFamilies(selectedColorFamilies.filter(c => c !== id));
-          } else if (type === 'property') {
-            switch (id) {
-              case 'highSpeed': setHighSpeed(false); break;
-              case 'matte': setMatte(false); break;
-              case 'carbonFiber': setCarbonFiber(false); break;
-              case 'glassFiber': setGlassFiber(false); break;
-              case 'woodFilled': setWoodFilled(false); break;
-              case 'glow': setGlow(false); break;
-              case 'brassOnly': setBrassOnly(false); break;
-              case 'foodContact': setFoodContact(false); break;
-              case 'amsOnly': setAmsOnly(false); break;
-            }
-          }
-        }}
-        onClearAll={() => {
-          setSelectedMaterials(["All"]);
-          setSelectedBrands([]);
-          setPriceRange([0, MAX_PRICE_LIMIT]);
-          setHighSpeed(false);
-          setMatte(false);
-          setCarbonFiber(false);
-          setGlassFiber(false);
-          setWoodFilled(false);
-          setGlow(false);
-          setBrassOnly(false);
-          setFoodContact(false);
-          setAmsOnly(false);
-          setSelectedColorFamilies([]);
-          setHexSearch("");
-        }}
-      />
+      {(() => {
+        const detectedColor = searchTerm ? extractColorFromText(searchTerm) : null;
+        return (
+          <ActiveFilterTags
+            filters={[
+              // Show detected color search from searchTerm
+              ...(detectedColor && !hexSearch ? [{ 
+                id: 'colorSearch', 
+                label: `Color: ${detectedColor.colorName.charAt(0).toUpperCase() + detectedColor.colorName.slice(1)}`, 
+                type: 'color' as const 
+              }] : []),
+              ...(!selectedMaterials.includes("All") ? selectedMaterials.map(m => ({ id: m, label: m, type: 'material' as const })) : []),
+              ...selectedBrands.map(b => ({ id: b, label: b, type: 'brand' as const })),
+              ...(priceRange[0] > 0 || priceRange[1] < MAX_PRICE_LIMIT ? [{ id: 'price', label: `$${priceRange[0]}-$${priceRange[1]}/kg`, type: 'price' as const }] : []),
+              ...(highSpeed ? [{ id: 'highSpeed', label: 'High Speed', type: 'property' as const }] : []),
+              ...(matte ? [{ id: 'matte', label: 'Matte Finish', type: 'property' as const }] : []),
+              ...(carbonFiber ? [{ id: 'carbonFiber', label: 'Carbon Fiber', type: 'property' as const }] : []),
+              ...(glassFiber ? [{ id: 'glassFiber', label: 'Glass Fiber', type: 'property' as const }] : []),
+              ...(woodFilled ? [{ id: 'woodFilled', label: 'Wood Filled', type: 'property' as const }] : []),
+              ...(glow ? [{ id: 'glow', label: 'Glow', type: 'property' as const }] : []),
+              ...(brassOnly ? [{ id: 'brassOnly', label: 'Brass Safe', type: 'property' as const }] : []),
+              ...(foodContact ? [{ id: 'foodContact', label: 'Food Safe', type: 'property' as const }] : []),
+              ...(amsOnly ? [{ id: 'amsOnly', label: 'AMS Compatible', type: 'property' as const }] : []),
+              ...selectedColorFamilies.map(c => ({ id: c, label: c, type: 'color' as const })),
+            ]}
+            onRemove={(id, type) => {
+              if (id === 'colorSearch') {
+                setSearchTerm("");
+              } else if (type === 'material') {
+                const newMaterials = selectedMaterials.filter(m => m !== id);
+                setSelectedMaterials(newMaterials.length === 0 ? ["All"] : newMaterials);
+              } else if (type === 'brand') {
+                setSelectedBrands(selectedBrands.filter(b => b !== id));
+              } else if (type === 'price') {
+                setPriceRange([0, MAX_PRICE_LIMIT]);
+              } else if (type === 'color') {
+                setSelectedColorFamilies(selectedColorFamilies.filter(c => c !== id));
+              } else if (type === 'property') {
+                switch (id) {
+                  case 'highSpeed': setHighSpeed(false); break;
+                  case 'matte': setMatte(false); break;
+                  case 'carbonFiber': setCarbonFiber(false); break;
+                  case 'glassFiber': setGlassFiber(false); break;
+                  case 'woodFilled': setWoodFilled(false); break;
+                  case 'glow': setGlow(false); break;
+                  case 'brassOnly': setBrassOnly(false); break;
+                  case 'foodContact': setFoodContact(false); break;
+                  case 'amsOnly': setAmsOnly(false); break;
+                }
+              }
+            }}
+            onClearAll={() => {
+              setSelectedMaterials(["All"]);
+              setSelectedBrands([]);
+              setPriceRange([0, MAX_PRICE_LIMIT]);
+              setHighSpeed(false);
+              setMatte(false);
+              setCarbonFiber(false);
+              setGlassFiber(false);
+              setWoodFilled(false);
+              setGlow(false);
+              setBrassOnly(false);
+              setFoodContact(false);
+              setAmsOnly(false);
+              setSelectedColorFamilies([]);
+              setHexSearch("");
+              setSearchTerm("");
+            }}
+          />
+        );
+      })()}
 
       {/* Printer Selector Sheet */}
       <Sheet open={printerSelectorOpen} onOpenChange={setPrinterSelectorOpen}>
