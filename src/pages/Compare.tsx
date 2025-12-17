@@ -9,19 +9,13 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, RefreshCcw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertTriangle, RefreshCcw, BookOpen } from "lucide-react";
 import { GitCompare, ArrowLeft, Trophy, Share2, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import MaterialReference from "@/components/MaterialReference";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { ExportMenu } from "@/components/compare/ExportMenu";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   RadarChart,
@@ -44,12 +38,21 @@ type Filament = Tables<"filaments">;
 type CompareMode = "higher" | "lower" | "none";
 
 const Compare = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [filaments, setFilaments] = useState<Filament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [diffMode, setDiffMode] = useState(false);
+  
+  // Tab state - default to reference, but switch to comparison if filament IDs are in URL
+  const activeTab = searchParams.get("tab") || (searchParams.get("ids") ? "comparison" : "reference");
+  
+  const handleTabChange = (value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", value);
+    setSearchParams(newParams);
+  };
 
   const fetchFilaments = async () => {
     const ids = searchParams.get("ids")?.split(",") || [];
@@ -118,81 +121,56 @@ const Compare = () => {
     navigate(lastParams ? `/?${lastParams}` : '/');
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen p-8">
-        <div className="max-w-7xl mx-auto">
-          <Skeleton className="h-6 w-48 mb-6" />
-          <Skeleton className="h-10 w-64 mb-2" />
-          <Skeleton className="h-5 w-96 mb-8" />
-          <div className="grid gap-4 grid-cols-4 mb-8">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-32 rounded-lg" />
-            ))}
-          </div>
-          <Skeleton className="h-64 rounded-lg mb-6" />
-          <Skeleton className="h-64 rounded-lg" />
-        </div>
+  // Render comparison loading state
+  const renderComparisonLoading = () => (
+    <div className="py-8">
+      <Skeleton className="h-10 w-64 mb-2" />
+      <Skeleton className="h-5 w-96 mb-8" />
+      <div className="grid gap-4 grid-cols-4 mb-8">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-32 rounded-lg" />
+        ))}
       </div>
-    );
-  }
+      <Skeleton className="h-64 rounded-lg mb-6" />
+      <Skeleton className="h-64 rounded-lg" />
+    </div>
+  );
 
-  // Error state with no cached data
-  if (error && filaments.length === 0) {
-    return (
-      <div className="min-h-screen p-8">
-        <div className="max-w-7xl mx-auto">
-          <Button variant="ghost" onClick={handleBack} className="mb-6">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Materials
-          </Button>
-          
-          <Card className="bg-destructive/10 border-destructive/30">
-            <CardContent className="py-12 text-center">
-              <AlertTriangle className="w-10 h-10 text-destructive mx-auto mb-4" />
-              <p className="text-destructive font-medium text-lg mb-2">{error}</p>
-              <p className="text-muted-foreground text-sm mb-6">Check your connection and try again</p>
-              <Button onClick={fetchFilaments} className="gap-2">
-                <RefreshCcw className="w-4 h-4" />
-                Try Again
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  // Render comparison error state
+  const renderComparisonError = () => (
+    <Card className="bg-destructive/10 border-destructive/30">
+      <CardContent className="py-12 text-center">
+        <AlertTriangle className="w-10 h-10 text-destructive mx-auto mb-4" />
+        <p className="text-destructive font-medium text-lg mb-2">{error}</p>
+        <p className="text-muted-foreground text-sm mb-6">Check your connection and try again</p>
+        <Button onClick={fetchFilaments} className="gap-2">
+          <RefreshCcw className="w-4 h-4" />
+          Try Again
+        </Button>
+      </CardContent>
+    </Card>
+  );
 
-  if (filaments.length === 0) {
-    return (
-      <div className="min-h-screen p-8">
-        <div className="max-w-7xl mx-auto">
-          <Button variant="ghost" onClick={handleBack} className="mb-6">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Materials
+  // Render empty comparison state
+  const renderComparisonEmpty = () => (
+    <Card className="bg-card border-border">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-3">
+          <GitCompare className="w-6 h-6 text-primary" />
+          Select Filaments to Compare
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-center py-12 text-muted-foreground">
+          <p>No filaments selected for comparison</p>
+          <p className="text-sm mt-2">Select filaments from the Materials page to compare their properties</p>
+          <Button onClick={handleBack} className="mt-4">
+            Browse Materials
           </Button>
-          
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <GitCompare className="w-6 h-6 text-primary" />
-                Select Filaments to Compare
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <p>No filaments selected for comparison</p>
-                <p className="text-sm mt-2">Select filaments from the Materials page to compare their properties</p>
-                <Button onClick={handleBack} className="mt-4">
-                  Browse Materials
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
-      </div>
-    );
-  }
+      </CardContent>
+    </Card>
+  );
 
   const getPricePerKg = (price: number | null, weight: number | null): number | null => {
     if (!price || !weight) return null;
@@ -391,57 +369,76 @@ const Compare = () => {
   const emptySlots = maxSlots - filaments.length;
 
   return (
-    <div className="min-h-screen p-8 compare-page-enter">
-      <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb */}
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink onClick={handleBack} className="cursor-pointer hover:text-primary">
-                Materials
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Comparison</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
-        {/* Header with actions */}
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <Button variant="ghost" onClick={handleBack} className="mb-4 -ml-4">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <Button variant="ghost" size="sm" asChild>
+            <a href="/">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Materials
-            </Button>
-            <h1 className="text-4xl font-bold mb-2">Compare Filaments</h1>
-            <p className="text-muted-foreground">Side-by-side comparison of {filaments.length} filaments</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {emptySlots > 0 && (
-              <Button variant="outline" onClick={handleAddMore} className="gap-2">
-                <Plus className="w-4 h-4" />
-                Add More ({emptySlots} slots)
-              </Button>
-            )}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
-              <Switch 
-                id="diff-mode" 
-                checked={diffMode} 
-                onCheckedChange={setDiffMode}
-              />
-              <Label htmlFor="diff-mode" className="text-sm cursor-pointer">
-                Differences only
-              </Label>
-            </div>
-            <ExportMenu filaments={filaments} />
-            <Button variant="outline" onClick={handleShare} className="gap-2">
-              <Share2 className="w-4 h-4" />
-              Share
-            </Button>
-          </div>
+            </a>
+          </Button>
         </div>
+
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Compare</h1>
+          <p className="text-muted-foreground">
+            Explore material reference information or compare filaments side-by-side.
+          </p>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="reference" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Material Reference
+            </TabsTrigger>
+            <TabsTrigger value="comparison" className="flex items-center gap-2">
+              <GitCompare className="w-4 h-4" />
+              Filament Comparison
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="reference">
+            <MaterialReference />
+          </TabsContent>
+
+          <TabsContent value="comparison">
+            {loading ? renderComparisonLoading() : 
+             error && filaments.length === 0 ? renderComparisonError() :
+             filaments.length === 0 ? renderComparisonEmpty() : (
+              <>
+                {/* Comparison header actions */}
+                <div className="flex items-start justify-between mb-8">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">Compare Filaments</h2>
+                    <p className="text-muted-foreground">Side-by-side comparison of {filaments.length} filaments</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {emptySlots > 0 && (
+                      <Button variant="outline" onClick={handleAddMore} className="gap-2">
+                        <Plus className="w-4 h-4" />
+                        Add More ({emptySlots} slots)
+                      </Button>
+                    )}
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
+                      <Switch 
+                        id="diff-mode" 
+                        checked={diffMode} 
+                        onCheckedChange={setDiffMode}
+                      />
+                      <Label htmlFor="diff-mode" className="text-sm cursor-pointer">
+                        Differences only
+                      </Label>
+                    </div>
+                    <ExportMenu filaments={filaments} />
+                    <Button variant="outline" onClick={handleShare} className="gap-2">
+                      <Share2 className="w-4 h-4" />
+                      Share
+                    </Button>
+                  </div>
+                </div>
 
         {/* Sticky Filament Headers */}
         <div className="sticky top-0 z-20 bg-background pb-4 -mx-8 px-8 pt-2 border-b border-border/50">
@@ -972,6 +969,10 @@ const Compare = () => {
             </div>
           </CardContent>
         </Card>
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
