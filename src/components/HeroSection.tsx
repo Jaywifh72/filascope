@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Layers, Building2, TrendingUp, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,25 +12,95 @@ interface HeroSectionProps {
   compatibleCount: number;
 }
 
+// Count-up animation hook
+const useCountUp = (end: number, duration: number = 2000) => {
+  const [count, setCount] = useState(0);
+  
+  useEffect(() => {
+    let startTime: number;
+    let animationFrame: number;
+    
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      
+      // Ease-out curve for satisfying slowdown at end
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(easeOut * end));
+      
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+    
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [end, duration]);
+  
+  return count;
+};
+
 interface StatBlockProps {
   icon: React.ElementType;
-  number: string;
+  targetNumber: number | null;
+  displayText?: string;
+  suffix?: string;
   label: string;
   delay: string;
+  colorVariant: 'cyan' | 'purple' | 'green';
 }
 
-const StatBlock = ({ icon: Icon, number, label, delay }: StatBlockProps) => (
-  <div 
-    className="group flex flex-col items-center gap-3 bg-white/5 border border-primary/20 rounded-xl px-8 py-6 min-w-[180px] w-full sm:w-auto transition-all duration-200 hover:-translate-y-1 hover:border-primary/60 hover:shadow-[0_8px_24px_rgba(0,217,217,0.15)] animate-fade-in"
-    style={{ animationDelay: delay }}
-    role="group"
-    aria-label={`${number} ${label}`}
-  >
-    <Icon className="w-8 h-8 text-primary" />
-    <span className="text-4xl font-bold text-white leading-tight">{number}</span>
-    <span className="text-sm font-medium text-slate-400 uppercase tracking-widest">{label}</span>
-  </div>
-);
+const colorConfig = {
+  cyan: {
+    bg: 'bg-primary/15',
+    text: 'text-primary',
+    glow: 'bg-primary',
+    hoverBorder: 'hover:border-primary/50',
+    hoverShadow: 'hover:shadow-[0_16px_48px_rgba(0,217,217,0.25)]',
+  },
+  purple: {
+    bg: 'bg-violet-500/15',
+    text: 'text-violet-400',
+    glow: 'bg-violet-500',
+    hoverBorder: 'hover:border-violet-400/50',
+    hoverShadow: 'hover:shadow-[0_16px_48px_rgba(167,139,250,0.25)]',
+  },
+  green: {
+    bg: 'bg-emerald-500/15',
+    text: 'text-emerald-400',
+    glow: 'bg-emerald-500',
+    hoverBorder: 'hover:border-emerald-400/50',
+    hoverShadow: 'hover:shadow-[0_16px_48px_rgba(34,197,94,0.25)]',
+  },
+};
+
+const StatBlock = ({ icon: Icon, targetNumber, displayText, suffix = '', label, delay, colorVariant }: StatBlockProps) => {
+  const count = useCountUp(targetNumber ?? 0, 2000);
+  const colors = colorConfig[colorVariant];
+  
+  return (
+    <div 
+      className={`group flex flex-col items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-10 py-8 min-w-[200px] w-full sm:w-auto transition-all duration-300 hover:-translate-y-2 hover:bg-white/8 ${colors.hoverBorder} ${colors.hoverShadow} animate-fade-in`}
+      style={{ animationDelay: delay }}
+      role="group"
+      aria-label={`${targetNumber ? count.toLocaleString() : displayText} ${label}`}
+    >
+      {/* Icon with colored glow */}
+      <div className={`relative p-3 rounded-full ${colors.bg}`}>
+        <Icon className={`w-12 h-12 ${colors.text} group-hover:scale-110 transition-transform duration-300`} />
+        <div className={`absolute inset-0 rounded-full blur-xl opacity-30 ${colors.glow}`} />
+      </div>
+      
+      {/* Number with count-up animation */}
+      <span className="text-5xl font-extrabold text-white leading-tight group-hover:text-primary transition-colors duration-300 drop-shadow-[0_2px_4px_rgba(255,255,255,0.1)]">
+        {targetNumber !== null ? count.toLocaleString() : displayText}{suffix}
+      </span>
+      
+      {/* Label */}
+      <span className="text-xs font-semibold text-slate-400 uppercase tracking-[0.2em]">{label}</span>
+    </div>
+  );
+};
 
 const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, compatibleCount }: HeroSectionProps) => {
   const navigate = useNavigate();
@@ -72,21 +142,26 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
           <div className="flex flex-col sm:flex-row justify-center items-stretch gap-4 sm:gap-6 lg:gap-12 mb-12 w-full sm:w-auto">
             <StatBlock 
               icon={Layers} 
-              number={filamentCount.toLocaleString()} 
+              targetNumber={filamentCount}
               label="Filaments" 
               delay="0.2s"
+              colorVariant="cyan"
             />
             <StatBlock 
               icon={Building2} 
-              number={`${brandCount}+`} 
+              targetNumber={brandCount}
+              suffix="+"
               label="Brands" 
               delay="0.3s"
+              colorVariant="purple"
             />
             <StatBlock 
               icon={TrendingUp} 
-              number="Real-Time" 
+              targetNumber={null}
+              displayText="Real-Time"
               label="Pricing" 
               delay="0.4s"
+              colorVariant="green"
             />
           </div>
           
