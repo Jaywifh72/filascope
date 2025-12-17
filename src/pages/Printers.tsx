@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
-import { useStickyElement } from "@/hooks/useStickyElement";
+
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -77,7 +77,7 @@ export default function Printers() {
   const navigate = useNavigate(); 
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
-  const { isSticky, elementHeight, sentinelRef, elementRef } = useStickyElement();
+  
   
   // Search and quick filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -458,13 +458,8 @@ export default function Printers() {
         onQuickFilterToggle={handleQuickFilterToggle}
       />
 
-        {/* Sentinel for sticky detection */}
-        <div ref={sentinelRef} />
-
         {/* Filter Bar */}
         <PrintersFilterBar
-          ref={elementRef}
-          isSticky={isSticky}
           activeCategory={activeCategory}
           onCategoryChange={handleCategoryChange}
           categoryCounts={categoryCounts}
@@ -480,8 +475,6 @@ export default function Printers() {
           onClearFilters={handleClearAllFilters}
         />
 
-        {/* Spacer when sticky */}
-        {isSticky && <div style={{ height: elementHeight }} />}
 
         {/* Results Section */}
         <section className="space-y-6 mt-4">
