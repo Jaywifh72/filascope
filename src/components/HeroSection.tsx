@@ -137,37 +137,29 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
           
           {/* CTA Button Row */}
           <div 
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto animate-fade-in"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 w-full sm:w-auto animate-fade-in"
             style={{ animationDelay: "0.6s" }}
           >
-            {/* Primary Button */}
+            {/* Primary Button - Dominant */}
             <Button 
               size="lg"
               onClick={() => navigate("/compare")}
-              className="w-full sm:w-auto h-12 px-8 bg-primary text-slate-900 hover:brightness-110 hover:-translate-y-0.5 transition-all duration-200 font-semibold rounded-xl shadow-[0_4px_12px_rgba(0,217,217,0.25)]"
+              className="w-full sm:w-[220px] h-14 px-10 bg-gradient-to-r from-primary to-[hsl(180_70%_40%)] text-slate-900 hover:from-[hsl(180_100%_47%)] hover:to-[hsl(180_70%_45%)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 font-bold text-lg rounded-xl shadow-[0_8px_24px_rgba(0,217,217,0.3)]"
             >
               Compare Filaments
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             
-            {/* Secondary Button */}
+            {/* Secondary Button - Subordinate */}
             <Button 
               size="lg"
               variant="outline"
               onClick={() => navigate("/wizard")}
-              className="w-full sm:w-auto h-12 px-8 bg-transparent border-2 border-primary text-primary hover:bg-primary/10 hover:-translate-y-0.5 transition-all duration-200 font-semibold rounded-xl"
+              className="w-full sm:w-[180px] h-[52px] px-6 bg-transparent border border-primary/60 text-primary hover:bg-primary/10 hover:border-primary hover:-translate-y-0.5 transition-all duration-200 font-semibold text-base rounded-xl"
             >
               <Sparkles className="mr-2 h-4 w-4" />
               Material Wizard
             </Button>
-            
-            {/* Tertiary Link */}
-            <button 
-              onClick={() => navigate("/printers")}
-              className="h-12 px-6 text-slate-400 hover:text-white underline underline-offset-4 font-medium transition-colors duration-200"
-            >
-              Browse by Printer
-            </button>
           </div>
         </div>
       </div>
