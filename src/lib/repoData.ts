@@ -21,6 +21,9 @@ export interface RepoData {
   community: string;
   strengths: RepoStrength[];
   weaknesses: RepoWeakness[];
+  bottomLine: string;
+  bestFor: string[];
+  notIdealFor: string[];
   links: {
     website?: string;
     app?: string;
@@ -49,6 +52,17 @@ export const repoData: RepoData[] = [
       { title: "IP Licensing Conflict", description: "The push for exclusivity and restrictive licenses alienates the open-source community" },
       { title: "Search Spam", description: "The reward incentives encourage flooding results with minor variations and low-quality \"farmed\" content" }
     ],
+    bottomLine: "MakerWorld is the fastest path from download to print—if you own a Bambu printer. One-click slicing, automatic settings, and generous creator rewards make it compelling, but you're locked into their ecosystem.",
+    bestFor: [
+      "Bambu Lab printer owners who want zero-friction workflow",
+      "Hobbyists looking for generous creator reward programs",
+      "Users who prioritize one-click printing over flexibility"
+    ],
+    notIdealFor: [
+      "Multi-brand printer owners (features are Bambu-optimized)",
+      "Designers prioritizing open-source community values",
+      "Users who want maximum control over slicing settings"
+    ],
     links: {
       website: "https://makerworld.com"
     }
@@ -73,6 +87,17 @@ export const repoData: RepoData[] = [
       { title: "Growth Velocity", description: "User acquisition is slower compared to the viral, hardware-bundled growth of MakerWorld" },
       { title: "Revenue Scale", description: "While creator-friendly, total revenue generated for designers is generally lower than on dedicated marketplaces" },
       { title: "Hardware Neutrality", description: "While a strength for users, it lacks the deep \"one-click\" hardware integration that drives engagement on proprietary platforms" }
+    ],
+    bottomLine: "The gold standard for quality-focused makers. Brand-agnostic, ad-free, and community-driven with the best search and UI in the industry. Prusameters reward quality over quantity.",
+    bestFor: [
+      "Quality-focused makers who want vetted designs",
+      "Open-source advocates and RepRap community members",
+      "Creators seeking fair monetization with Clubs subscriptions"
+    ],
+    notIdealFor: [
+      "Users wanting one-click, hardware-integrated printing",
+      "Those seeking the absolute largest model library",
+      "Designers prioritizing pure marketplace sales over community"
     ],
     links: {
       website: "https://www.printables.com"
@@ -99,6 +124,17 @@ export const repoData: RepoData[] = [
       { title: "Technical Instability", description: "Frequent downtime, broken features (Customizer, Analytics), and slow performance" },
       { title: "Creator Exodus", description: "The lack of monetization capability drives top talent to competing platforms" }
     ],
+    bottomLine: "The largest 3D model archive (6.7M+ models) with unmatched SEO reach, but plagued by ads, technical issues, and no creator monetization. Best for finding older, obscure designs.",
+    bestFor: [
+      "Hobbyists looking for the widest free selection",
+      "Users searching for older or obscure designs",
+      "Those who prioritize free access over user experience"
+    ],
+    notIdealFor: [
+      "Anyone who values clean, ad-free interfaces",
+      "Creators wanting to monetize their work",
+      "Users expecting reliable technical performance"
+    ],
     links: {
       website: "https://www.thingiverse.com"
     }
@@ -123,6 +159,17 @@ export const repoData: RepoData[] = [
       { title: "Trust Deficit", description: "Past doxxing and payment scandals continue to alienate a segment of the community" },
       { title: "IP Infringement", description: "Persistent issues with users selling stolen/remixed content without permission" },
       { title: "Ad Clutter", description: "The interface for free users is heavily populated with ads" }
+    ],
+    bottomLine: "The independent marketplace with the best creator commission (80/20 split). Strong for artistic prints and sculptures, but past trust issues and IP concerns persist.",
+    bestFor: [
+      "Designers who want to sell with best commission rates",
+      "Artists creating sculptures, cosplay, and jewelry",
+      "Users willing to pay for high-quality artistic prints"
+    ],
+    notIdealFor: [
+      "Users prioritizing free content only",
+      "Those concerned about platform trust/history",
+      "Makers seeking functional or engineering parts"
     ],
     links: {
       website: "https://cults3d.com"
@@ -149,6 +196,17 @@ export const repoData: RepoData[] = [
       { title: "Niche Focus", description: "Less relevant for users seeking functional, engineering, or mechanical parts" },
       { title: "Platform Fees", description: "Transaction fees on top of subscriptions can reduce margins for smaller creators" }
     ],
+    bottomLine: "The premium curator for tabletop gaming and miniatures. Every model is 'Guaranteed Printable,' but subscription fees and niche focus limit broader appeal.",
+    bestFor: [
+      "Tabletop gamers and miniature collectors",
+      "Users who value guaranteed-printable quality",
+      "Professional designers using Tribes/FronTiers monetization"
+    ],
+    notIdealFor: [
+      "Hobbyists seeking free or budget content",
+      "Users wanting functional/mechanical parts",
+      "Small creators unable to afford subscription fees"
+    ],
     links: {
       website: "https://www.myminifactory.com"
     }
@@ -173,6 +231,17 @@ export const repoData: RepoData[] = [
       { title: "Identity Crisis", description: "Balances awkwardly between being a search engine (directing traffic away) and a repository (keeping traffic)" },
       { title: "Download Caps", description: "Bundle subscriptions have download limits (e.g., 15/week), frustrating power users" },
       { title: "User Retention", description: "Often used as a pass-through to find models hosted elsewhere, limiting deep engagement" }
+    ],
+    bottomLine: "The geometric search engine that finds models by shape, not just keywords. Aggregates content across platforms with excellent CAD format support, but identity crisis limits engagement.",
+    bestFor: [
+      "Users who know what shape they want but not its name",
+      "Engineers needing native CAD format support (30+ formats)",
+      "Those wanting one subscription for multiple creators"
+    ],
+    notIdealFor: [
+      "Users wanting deep community engagement",
+      "Power users frustrated by download caps",
+      "Those seeking a dedicated repository vs. search engine"
     ],
     links: {
       website: "https://thangs.com"
@@ -199,6 +268,17 @@ export const repoData: RepoData[] = [
       { title: "Quality Control", description: "The library is often flooded with untested or stolen content due to lax moderation" },
       { title: "Bloated UI", description: "The app is cluttered with social features, gamification, and ads, distracting from utility" }
     ],
+    bottomLine: "The only viable phone-to-print solution with massive Ender user reach. Mobile-first approach is convenient, but pay-to-win model and quality issues frustrate users.",
+    bestFor: [
+      "Creality printer owners wanting mobile workflow",
+      "Users without access to a desktop computer",
+      "Those wanting encrypted IP protection for prints"
+    ],
+    notIdealFor: [
+      "Users expecting quality free-tier experience",
+      "Anyone frustrated by ads and bloated UI",
+      "Makers seeking curated, tested content"
+    ],
     links: {
       website: "https://www.crealitycloud.com",
       app: "https://www.crealitycloud.com/download"
@@ -224,6 +304,17 @@ export const repoData: RepoData[] = [
       { title: "Industrial Bias", description: "Not useful for hobbyists seeking consumer-oriented models or artistic prints" },
       { title: "Stratasys Lock-in", description: "GrabCAD Print is optimized for Stratasys hardware, limiting utility for other printer owners" },
       { title: "Limited Monetization", description: "No creator monetization tools; serves primarily as a free resource" }
+    ],
+    bottomLine: "The engineer's vault for professional CAD files (STEP, IGES, Parasolid). Essential for industrial users but irrelevant for hobbyist makers seeking decorative prints.",
+    bestFor: [
+      "Professional engineers and industrial designers",
+      "Students learning CAD software",
+      "Users needing native CAD formats for manufacturing"
+    ],
+    notIdealFor: [
+      "Hobbyists seeking consumer-oriented models",
+      "Makers wanting artistic or decorative prints",
+      "Creators looking to monetize their designs"
     ],
     links: {
       website: "https://grabcad.com"
