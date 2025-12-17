@@ -153,6 +153,7 @@ const ReferenceCAD = () => {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [priceFilter, setPriceFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [expandedAccordion, setExpandedAccordion] = useState<string[]>([]);
 
   const handleSort = (key: CADSortKey) => {
     if (sortKey === key) {
@@ -229,6 +230,24 @@ const ReferenceCAD = () => {
     }
   };
 
+  const handleLearnMore = (cadDataId: string) => {
+    // Expand the specific accordion item
+    setExpandedAccordion(prev => 
+      prev.includes(cadDataId) ? prev : [...prev, cadDataId]
+    );
+    
+    // Scroll to the accordion item after a brief delay
+    setTimeout(() => {
+      const accordionItem = document.getElementById(`accordion-${cadDataId}`);
+      if (accordionItem) {
+        const headerOffset = 80;
+        const elementPosition = accordionItem.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -248,7 +267,7 @@ const ReferenceCAD = () => {
         </div>
 
         {/* Interactive Profile Selector */}
-        <CADProfileSelector onScrollToComparison={handleScrollToComparison} />
+        <CADProfileSelector onScrollToComparison={handleScrollToComparison} onLearnMore={handleLearnMore} />
 
         {/* Comparative Features Matrix */}
         <div className="mb-8 border border-border rounded-lg bg-card p-6">
@@ -373,11 +392,12 @@ const ReferenceCAD = () => {
           </div>
         </div>
 
-        <Accordion type="multiple" className="space-y-4">
+        <Accordion type="multiple" className="space-y-4" value={expandedAccordion} onValueChange={setExpandedAccordion}>
           {cadData.map((software, index) => (
             <AccordionItem 
               key={software.id} 
               value={software.id}
+              id={`accordion-${software.id}`}
               className="border border-border rounded-lg bg-card px-4"
             >
               <AccordionTrigger className="hover:no-underline py-4">
