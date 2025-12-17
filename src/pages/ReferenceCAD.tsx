@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cadData } from "@/lib/cadData";
+import CADHeroSection from "@/components/reference/CADHeroSection";
 
 // Logo mapping for CAD software
 const cadLogos: Record<string, string> = {
@@ -255,8 +256,25 @@ const ReferenceCAD = () => {
         : String(bVal).localeCompare(String(aVal));
     });
   }, [sortKey, sortDir, priceFilter, typeFilter]);
+
+  const handleScrollToComparison = () => {
+    const section = document.getElementById('cad-comparison-section');
+    if (section) {
+      const headerOffset = 80;
+      const elementPosition = section.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <CADHeroSection 
+        softwareCount={cadComparison.length} 
+        onScrollToComparison={handleScrollToComparison}
+      />
+
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild className="mb-4">
@@ -265,18 +283,10 @@ const ReferenceCAD = () => {
               Back to Home
             </Link>
           </Button>
-          
-          <div className="flex items-center gap-3 mb-2">
-            <Box className="w-8 h-8 text-cyan-400" />
-            <h1 className="text-3xl font-bold font-mono text-foreground">3D Modeling / CAD Software Reference</h1>
-          </div>
-          <p className="text-muted-foreground">
-            Comprehensive guide to CAD and 3D modeling software for additive manufacturing
-          </p>
         </div>
 
         {/* Recommendation Matrix */}
-        <div className="mb-8 border border-border rounded-lg bg-card p-6">
+        <div id="cad-comparison-section" className="mb-8 border border-border rounded-lg bg-card p-6">
           <div className="flex items-center gap-3 mb-4">
             <Users className="w-6 h-6 text-amber-400" />
             <h2 className="text-xl font-bold font-mono text-foreground">Recommendation Matrix</h2>
