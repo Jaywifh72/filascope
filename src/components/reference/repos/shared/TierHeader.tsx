@@ -1,19 +1,20 @@
 import React from 'react';
 
 interface TierHeaderProps {
+  id?: string;
   icon: string;
   title: string;
   subtitle: string;
   count: string;
 }
 
-const TierHeader: React.FC<TierHeaderProps> = ({ icon, title, subtitle, count }) => {
+const TierHeader: React.FC<TierHeaderProps> = ({ id, icon, title, subtitle, count }) => {
   return (
-    <div className="flex flex-wrap items-center gap-4 mb-6">
+    <div className="flex flex-wrap items-center gap-4 mb-6 pb-4 border-b border-border/30">
       <div className="flex items-center gap-3">
         <span className="text-2xl">{icon}</span>
         <div>
-          <h2 className="text-xl font-bold text-foreground">{title}</h2>
+          <h2 id={id} className="text-xl font-bold text-foreground">{title}</h2>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
       </div>

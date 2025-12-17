@@ -199,8 +199,9 @@ const StaffPicksSection: React.FC = () => {
   const secondary = staffPicks.slice(1);
 
   return (
-    <section className="mb-12">
+    <section className="mb-12" role="region" aria-labelledby="staff-picks-title">
       <TierHeader 
+        id="staff-picks-title"
         icon="🏆"
         title="Staff Picks"
         subtitle="Our top recommendations based on 100+ hours of research"

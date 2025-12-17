@@ -107,15 +107,16 @@ const SpecializedSection: React.FC = () => {
   const specialized = getSpecializedPlatforms();
 
   return (
-    <section className="mb-12">
+    <section className="mb-12" role="region" aria-labelledby="specialized-title">
       <TierHeader 
+        id="specialized-title"
         icon="⚡"
         title="Specialized Options"
         subtitle="Platforms optimized for specific use cases"
         count="5 of 8 platforms"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {specialized.map(platform => (
           <SpecializedCard key={platform.id} platform={platform} />
         ))}
