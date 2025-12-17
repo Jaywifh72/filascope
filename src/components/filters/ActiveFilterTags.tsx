@@ -71,8 +71,8 @@ export function ActiveFilterTags({ filters, onRemove, onClearAll }: ActiveFilter
   };
 
   return (
-    <div className="bg-muted/30 border-b border-border">
-      <div className="max-w-[1800px] mx-auto px-4 lg:px-6 h-12 flex items-center gap-3">
+    <div className="bg-muted/30 border-b border-border relative z-10">
+      <div className="max-w-[1800px] mx-auto px-4 lg:px-6 min-h-12 py-2 flex items-center gap-3">
         <span className="text-sm text-muted-foreground shrink-0">Active Filters:</span>
         <div 
           className={cn(
