@@ -92,6 +92,21 @@ export const CADQuiz: React.FC<CADQuizProps> = ({ open, onClose, onLearnMore }) 
     
     if (question.type === 'single') {
       setAnswers(prev => ({ ...prev, [question.id]: optionId }));
+      // Auto-advance after 300ms delay for single-select questions
+      setTimeout(() => {
+        if (currentIndex < totalQuestions - 1) {
+          setCurrentIndex(prev => prev + 1);
+        } else {
+          // Last question - trigger results calculation
+          setStage('calculating');
+          setTimeout(() => {
+            const quizResults = getTopCADRecommendations({ ...answers, [question.id]: optionId });
+            setResults(quizResults);
+            setStage('results');
+            localStorage.removeItem(STORAGE_KEY);
+          }, 2000);
+        }
+      }, 300);
     } else {
       // Multi-select
       setAnswers(prev => {
@@ -106,7 +121,7 @@ export const CADQuiz: React.FC<CADQuizProps> = ({ open, onClose, onLearnMore }) 
         return prev;
       });
     }
-  }, [currentQuestion]);
+  }, [currentQuestion, currentIndex, totalQuestions, answers]);
 
   const isOptionSelected = (optionId: string): boolean => {
     const answer = answers[currentQuestion.id];
