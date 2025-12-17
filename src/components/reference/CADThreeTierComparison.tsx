@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Check, ArrowRight, Plus, ChevronDown, ChevronUp, ChevronsUpDown, Trophy, Star, Gem, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -679,17 +679,54 @@ const FullComparisonTable = ({
     column: null,
     direction: null
   });
+  const [sortAnnouncement, setSortAnnouncement] = useState('');
+  const [isHeaderSticky, setIsHeaderSticky] = useState(false);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Track scroll position for sticky header shadow
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+    
+    const handleScroll = () => {
+      setIsHeaderSticky(container.scrollTop > 0);
+    };
+    
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Handle sort click - cycles: null → desc → asc → null
   const handleSort = (columnKey: SortColumn) => {
     setSortState(prev => {
+      let newState: SortState;
       if (prev.column !== columnKey) {
-        return { column: columnKey, direction: 'desc' };
+        newState = { column: columnKey, direction: 'desc' };
+      } else if (prev.direction === 'desc') {
+        newState = { column: columnKey, direction: 'asc' };
+      } else {
+        newState = { column: null, direction: null };
       }
-      if (prev.direction === 'desc') {
-        return { column: columnKey, direction: 'asc' };
+      
+      // Update screen reader announcement
+      const columnLabels: Record<string, string> = {
+        name: 'Software',
+        price: 'Price',
+        type: 'Type',
+        platform: 'Platform',
+        score: 'Score',
+        level: 'Level'
+      };
+      
+      if (newState.column && newState.direction) {
+        setSortAnnouncement(
+          `Table sorted by ${columnLabels[newState.column]}, ${newState.direction === 'asc' ? 'ascending' : 'descending'}`
+        );
+      } else {
+        setSortAnnouncement('Table sort cleared');
       }
-      return { column: null, direction: null };
+      
+      return newState;
     });
   };
 
@@ -748,8 +785,16 @@ const FullComparisonTable = ({
     return [...software].sort((a, b) => sortFn(a, b, sortState.direction));
   }, [software, sortState]);
 
+  // Helper to check if a column is currently sorted
+  const isSortedColumn = (columnKey: string) => sortState.column === columnKey;
+
   return (
     <section className="mb-16">
+      {/* Screen reader sort announcement */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {sortAnnouncement}
+      </div>
+
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
@@ -787,9 +832,20 @@ const FullComparisonTable = ({
           isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="p-5 bg-card/20 border border-t-0 border-border rounded-b-xl overflow-x-auto scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-white/20 hover:scrollbar-thumb-white/30">
-          <table className="w-full border-collapse min-w-[700px]">
-            <thead className="sticky top-0 z-10">
+        <div 
+          ref={tableContainerRef}
+          className={cn(
+            "p-5 bg-card/20 border border-t-0 border-border rounded-b-xl",
+            "overflow-x-auto overflow-y-auto max-h-[600px]",
+            "scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-white/20 hover:scrollbar-thumb-white/30",
+            "[-webkit-overflow-scrolling:touch]"
+          )}
+        >
+          <table className="w-full border-collapse min-w-[700px]" role="table" aria-label="CAD Software Comparison">
+            <thead className={cn(
+              "sticky top-0 z-10 transition-shadow duration-200",
+              isHeaderSticky && "shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+            )}>
               <tr>
                 <SortableHeader
                   columnKey="name"
@@ -846,7 +902,10 @@ const FullComparisonTable = ({
                   key={sw.name}
                   className="border-b border-border/30 hover:bg-white/[0.02] transition-colors"
                 >
-                  <td className="py-4 px-4">
+                  <td className={cn(
+                    "py-4 px-4 transition-colors",
+                    isSortedColumn('name') && "bg-cyan-400/[0.03]"
+                  )}>
                     <div className="flex items-center gap-3 min-w-[200px]">
                       <div className="w-9 h-9 rounded-md bg-white/[0.03] p-1.5 flex-shrink-0 flex items-center justify-center">
                         {cadLogos[sw.name] && (
@@ -863,19 +922,34 @@ const FullComparisonTable = ({
                       <span className="font-semibold text-foreground">{sw.name}</span>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className={cn(
+                    "py-4 px-4 transition-colors",
+                    isSortedColumn('price') && "bg-cyan-400/[0.03]"
+                  )}>
                     <PriceBadge type={sw.priceType} />
                   </td>
-                  <td className="py-4 px-4 text-sm text-muted-foreground">
+                  <td className={cn(
+                    "py-4 px-4 text-sm text-muted-foreground transition-colors",
+                    isSortedColumn('type') && "bg-cyan-400/[0.03]"
+                  )}>
                     {sw.type}
                   </td>
-                  <td className="py-4 px-4 text-sm text-muted-foreground">
+                  <td className={cn(
+                    "py-4 px-4 text-sm text-muted-foreground transition-colors",
+                    isSortedColumn('platform') && "bg-cyan-400/[0.03]"
+                  )}>
                     {sw.os}
                   </td>
-                  <td className="py-4 px-4 text-center">
+                  <td className={cn(
+                    "py-4 px-4 text-center transition-colors",
+                    isSortedColumn('score') && "bg-cyan-400/[0.03]"
+                  )}>
                     <ScoreDisplay score={sw.overallScore} size="sm" />
                   </td>
-                  <td className="py-4 px-4">
+                  <td className={cn(
+                    "py-4 px-4 transition-colors",
+                    isSortedColumn('level') && "bg-cyan-400/[0.03]"
+                  )}>
                     <div className="flex justify-center">
                       <SkillIcon level={sw.skillLevel} />
                     </div>
