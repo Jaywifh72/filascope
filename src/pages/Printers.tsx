@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ArrowDown, ArrowUp, Check, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersFilterBar from "@/components/PrintersFilterBar";
@@ -17,7 +18,11 @@ import PrintersAdvancedFiltersModal, { type AdvancedFilters } from "@/components
 import LargeFeaturedPrinterCard from "@/components/printers/LargeFeaturedPrinterCard";
 import MediumStandardPrinterCard from "@/components/printers/MediumStandardPrinterCard";
 import SmallDeemphasizedPrinterCard from "@/components/printers/SmallDeemphasizedPrinterCard";
+import { PrinterCardSkeletonGrid } from "@/components/printers/PrinterCardSkeleton";
+import { PrintersEmptyState } from "@/components/printers/PrintersEmptyState";
 import { getCardSize } from "@/lib/printerCardUtils";
+
+const PRINTERS_PER_PAGE = 24;
 
 // Brand wiki/documentation URLs
 const BRAND_WIKI_URLS: Record<string, string> = {
@@ -78,7 +83,6 @@ export default function Printers() {
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
   
-  
   // Search and quick filters
   const [searchTerm, setSearchTerm] = useState("");
   const [activeQuickFilters, setActiveQuickFilters] = useState<string[]>([]);
@@ -90,6 +94,10 @@ export default function Printers() {
   const [buildVolumeFilter, setBuildVolumeFilter] = useState("all");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(defaultAdvancedFilters);
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  
+  // Progressive disclosure state
+  const [displayedCount, setDisplayedCount] = useState(PRINTERS_PER_PAGE);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Toggle quick filter with sync to category tabs
   const handleQuickFilterToggle = (filterId: string) => {
@@ -139,7 +147,14 @@ export default function Printers() {
     setBuildVolumeFilter('all');
     setAdvancedFilters(defaultAdvancedFilters);
     setActiveQuickFilters([]);
+    setSearchTerm('');
+    setDisplayedCount(PRINTERS_PER_PAGE);
   };
+  
+  // Reset displayed count when filters change
+  useEffect(() => {
+    setDisplayedCount(PRINTERS_PER_PAGE);
+  }, [activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, searchTerm, activeQuickFilters]);
 
   const hasActiveFilters = 
     activeCategory !== 'all' ||
@@ -354,6 +369,24 @@ export default function Printers() {
     (advancedFilters.minSpeed > 0 || advancedFilters.maxSpeed < 1000 ? 1 : 0) +
     advancedFilters.features.length;
 
+  // Progressive disclosure computed values
+  const displayedPrinters = filteredPrinters.slice(0, displayedCount);
+  const hasMore = displayedCount < filteredPrinters.length;
+  const remaining = filteredPrinters.length - displayedCount;
+
+  // Load more function
+  const loadMore = async () => {
+    setIsLoadingMore(true);
+    await new Promise(resolve => setTimeout(resolve, 300)); // Smooth UX
+    setDisplayedCount(prev => Math.min(prev + PRINTERS_PER_PAGE, filteredPrinters.length));
+    setIsLoadingMore(false);
+  };
+
+  // Scroll to top helper
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const toggleCompareSelection = (printer: Printer) => {
     const scrapedData = printer.scraped_data as Record<string, unknown> | null;
     const images = scrapedData?.images as Record<string, unknown> | null;
@@ -485,18 +518,21 @@ export default function Printers() {
             </h2>
           </div>
 
-            {/* Printer Grid */}
-            {isLoading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Loading printers...</p>
-              </div>
-            ) : filteredPrinters.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No printers found matching your criteria</p>
-              </div>
-            ) : (
+          {/* Printer Grid */}
+          {isLoading ? (
+            <PrinterCardSkeletonGrid count={PRINTERS_PER_PAGE} />
+          ) : filteredPrinters.length === 0 ? (
+            <PrintersEmptyState
+              searchQuery={searchTerm}
+              activeFiltersCount={advancedFilterCount + (activeCategory !== 'all' ? 1 : 0) + (priceRangeFilter !== 'all' ? 1 : 0) + (buildVolumeFilter !== 'all' ? 1 : 0) + activeQuickFilters.length}
+              onResetFilters={handleClearAllFilters}
+              onSearchBrand={(brand) => setSearchTerm(brand)}
+              totalPrinters={printers?.length || 0}
+            />
+          ) : (
+            <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8" style={{ gridAutoFlow: 'dense' }}>
-                {filteredPrinters.map((printer, index) => {
+                {displayedPrinters.map((printer, index) => {
                   const cardInfo = getCardSize(printer, index);
                   const printerIsSelected = isSelected(printer.id);
 
@@ -553,7 +589,48 @@ export default function Printers() {
                   );
                 })}
               </div>
-            )}
+
+              {/* Load More / End State */}
+              {hasMore ? (
+                <div className="flex flex-col items-center gap-4 py-12">
+                  <Button
+                    onClick={loadMore}
+                    disabled={isLoadingMore}
+                    variant="outline"
+                    className="h-14 px-10 bg-primary/10 border-2 border-primary/40 hover:bg-primary/20 hover:border-primary text-primary font-semibold"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        Load {Math.min(remaining, PRINTERS_PER_PAGE)} More Printers
+                        <ArrowDown className="ml-2 h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    Showing {displayedCount} of {filteredPrinters.length} printers
+                  </p>
+                </div>
+              ) : filteredPrinters.length > PRINTERS_PER_PAGE && (
+                <div className="flex flex-col items-center gap-4 py-12">
+                  <div className="w-12 h-12 rounded-full bg-green-500/15 border-2 border-green-500/30 flex items-center justify-center">
+                    <Check className="h-6 w-6 text-green-500" />
+                  </div>
+                  <p className="text-base font-semibold">
+                    You've viewed all {filteredPrinters.length} printers
+                  </p>
+                  <Button variant="ghost" onClick={scrollToTop} className="text-muted-foreground hover:text-primary">
+                    <ArrowUp className="mr-2 h-4 w-4" />
+                    Back to Top
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </section>
 
         {/* Image Edit Dialog */}
