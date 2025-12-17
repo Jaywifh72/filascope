@@ -206,7 +206,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
       role="article"
       aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
-        "group relative rounded-2xl transition-all duration-300 min-h-[380px]",
+        "group relative rounded-2xl transition-all duration-300 min-h-[340px]",
         "bg-white/[0.03] border border-white/[0.08]",
         "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
         isHovered && !isOutOfStock && "transform -translate-y-1 shadow-[0_12px_24px_rgba(0,0,0,0.3)] border-primary/30",
@@ -231,8 +231,19 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
           </span>
         </div>
       )}
+
+      {/* Stock Status Indicator - Hover Only (top-right corner) */}
+      {isHovered && !isOutOfStock && filament.variant_available === true && (
+        <div className="absolute top-4 right-4 z-10 animate-fadeIn">
+          <div className="inline-flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/40 rounded-md px-2 py-1">
+            <CheckCircle className="w-3 h-3 text-emerald-400" />
+            <span className="text-[10px] font-semibold text-emerald-400">In Stock</span>
+          </div>
+        </div>
+      )}
+
       {/* ═══════════════════════════════════════════════════════════════
-          SECTION 1: COMPARISON CHECKBOX (Absolute Top-Left)
+          CHECKBOX (Top-Left - Not counted in 5 elements)
           ═══════════════════════════════════════════════════════════════ */}
       <div 
         className="absolute top-4 left-4 z-10"
@@ -267,9 +278,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          SECTION 2: HEADER (Brand + Product Name)
+          ELEMENT 1: Brand + Product Name
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-6 pt-6 pb-4 border-b border-white/[0.05]">
+      <div className="px-6 pt-6 pb-3 border-b border-white/[0.05]" data-card-element="1">
         {/* Brand */}
         <div className="flex items-center gap-2 mb-2 pl-8">
           {brandLogo && !imageError ? (
@@ -312,9 +323,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          SECTION 3: RATING BADGE
+          ELEMENT 2: Rating
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-6 py-4 flex items-center gap-3">
+      <div className="px-6 py-3 flex items-center gap-3" data-card-element="2">
         {/* Rating Badge */}
         <div className="inline-flex items-center gap-1.5 bg-primary/[0.12] border border-primary/30 rounded-lg px-3 py-1.5">
           <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
@@ -322,13 +333,13 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
           <span className="text-sm font-medium text-slate-400">/10</span>
         </div>
         
-        {/* Limited Data Badge (conditional) */}
+        {/* Limited Data Badge (inline with rating) */}
         {hasLimitedData && (
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="inline-flex items-center gap-1 bg-slate-500/15 border border-slate-500/30 rounded-md px-2 py-1 cursor-help">
                 <Info className="w-3 h-3 text-slate-400" />
-                <span className="text-[11px] font-medium text-slate-400">Limited Data</span>
+                <span className="text-[10px] font-medium text-slate-400">Limited Data</span>
               </div>
             </TooltipTrigger>
             <TooltipContent side="top" className="text-xs max-w-[200px]">
@@ -339,23 +350,23 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          SECTION 4: PRICE
+          ELEMENT 3: Price
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-6 py-4 border-b border-white/[0.05]">
+      <div className="px-6 py-3" data-card-element="3">
         {isValidPrice && pricePerKg ? (
-          <div>
+          <div className="flex items-center gap-3">
             <div className="flex items-baseline gap-1">
-              <span className="text-[32px] font-bold text-white leading-none">
+              <span className="text-[28px] font-bold text-white leading-none">
                 ${pricePerKg.toFixed(2)}
               </span>
               <span className="text-sm font-medium text-slate-400">/kg</span>
             </div>
             
-            {/* Budget-Friendly Badge */}
+            {/* Budget-Friendly Badge (inline with price) */}
             {isBudgetFriendly && (
-              <div className="inline-flex items-center gap-1 mt-2 bg-emerald-500/15 border border-emerald-500/30 rounded-md px-2.5 py-1">
-                <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-xs font-medium text-emerald-400">Budget-friendly</span>
+              <div className="inline-flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 rounded-md px-2 py-1">
+                <DollarSign className="w-3 h-3 text-emerald-400" />
+                <span className="text-[10px] font-medium text-emerald-400">Budget</span>
               </div>
             )}
           </div>
@@ -365,9 +376,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          SECTION 5: KEY SPECS (Max 2 Badges)
+          ELEMENT 4: Material + ONE Standout Feature (max 2 badges)
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-6 py-4 flex flex-wrap gap-2">
+      <div className="px-6 py-3 flex flex-wrap gap-2 border-b border-white/[0.05]" data-card-element="4">
         {/* Material Badge (always show) */}
         {filament.material && (
           <div className={cn(
@@ -379,12 +390,15 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
           </div>
         )}
         
-        {/* ONE Standout Feature Badge */}
+        {/* ONE Standout Feature Badge - ONLY ONE */}
         {standoutFeature && (
-          <div className={cn(
-            "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 border",
-            standoutFeature.colorClass
-          )}>
+          <div 
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 border",
+              standoutFeature.colorClass
+            )}
+            data-feature-badge={standoutFeature.label.toLowerCase().replace(/\s+/g, '-')}
+          >
             <standoutFeature.icon className="w-3.5 h-3.5" />
             <span className="text-[13px] font-medium">{standoutFeature.label}</span>
           </div>
@@ -392,30 +406,13 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          SECTION 6: AVAILABILITY STATUS
+          ELEMENT 5: CTA Button
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-6 py-3 border-b border-white/[0.05]">
-        {filament.variant_available === true ? (
-          <div className="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/30 rounded-md px-3 py-1.5">
-            <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-xs font-semibold text-emerald-400">In Stock</span>
-          </div>
-        ) : filament.variant_available === false ? (
-          <div className="inline-flex items-center gap-1.5 bg-red-500/15 border border-red-500/30 rounded-md px-3 py-1.5">
-            <XCircle className="w-3.5 h-3.5 text-red-400" />
-            <span className="text-xs font-semibold text-red-400">Out of Stock</span>
-          </div>
-        ) : null}
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════════════
-          SECTION 7: CTA BUTTON
-          ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-6 pt-5 pb-6 flex justify-center">
+      <div className="px-6 py-4 flex justify-center" data-card-element="5">
         <Button
           asChild
           className={cn(
-            "w-full h-12 font-semibold transition-all duration-200",
+            "w-full h-11 font-semibold transition-all duration-200",
             "bg-transparent border-2 border-primary/40 text-primary",
             "hover:bg-primary/[0.12] hover:border-primary hover:translate-x-0.5",
             "active:scale-[0.98]"
