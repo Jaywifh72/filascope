@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCurrency } from "@/hooks/useCurrency";
-import { getPrinterImage, type CardSizeResult } from "@/lib/printerCardUtils";
+import { getPrinterImage, getPrinterBadges, type CardSizeResult } from "@/lib/printerCardUtils";
+import PrinterBadge from "./PrinterBadge";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -29,6 +30,8 @@ export default function SmallDeemphasizedPrinterCard({
 }: SmallDeemphasizedPrinterCardProps) {
   const { formatPrice } = useCurrency();
   const productImage = getPrinterImage(printer);
+  // Only show discontinued badge for small cards
+  const badges = getPrinterBadges(printer, 1);
 
   return (
     <article 
@@ -52,11 +55,14 @@ export default function SmallDeemphasizedPrinterCard({
             max-h-[360px]
           "
         >
-          {/* Status Badge */}
-          {cardInfo.badge && (
-            <div className={`absolute top-3 left-3 z-10 px-2 py-1 rounded-md border text-[10px] font-bold uppercase tracking-wide ${cardInfo.badge.colorClass}`}>
-              <span className="mr-1">{cardInfo.badge.icon}</span>
-              {cardInfo.badge.label}
+          {/* Status Badge - Using PrinterBadge */}
+          {badges.length > 0 && (
+            <div className="absolute top-3 left-3 z-10">
+              <PrinterBadge 
+                type={badges[0].type}
+                size="sm"
+                compact
+              />
             </div>
           )}
 

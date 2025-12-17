@@ -4,7 +4,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCurrency } from "@/hooks/useCurrency";
-import { getPrinterImage } from "@/lib/printerCardUtils";
+import { getPrinterImage, getPrinterBadges } from "@/lib/printerCardUtils";
+import PrinterBadge from "./PrinterBadge";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -34,6 +35,7 @@ export default function MediumStandardPrinterCard({
 }: MediumStandardPrinterCardProps) {
   const { formatPrice } = useCurrency();
   const productImage = getPrinterImage(printer);
+  const badges = getPrinterBadges(printer, 3);
 
   return (
     <article 
@@ -58,6 +60,20 @@ export default function MediumStandardPrinterCard({
             flex flex-col
           "
         >
+          {/* Semantic Badges - Top Left */}
+          {badges.length > 0 && (
+            <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
+              {badges.map((badge, idx) => (
+                <PrinterBadge 
+                  key={`${badge.type}-${idx}`}
+                  type={badge.type}
+                  size="sm"
+                  compact
+                />
+              ))}
+            </div>
+          )}
+
           {/* Action Icons - Top Right */}
           <div className="absolute top-3 right-3 flex gap-1.5 z-10">
             <button 
@@ -124,7 +140,7 @@ export default function MediumStandardPrinterCard({
           </div>
 
           {/* Printer Image */}
-          <div className="relative aspect-square mb-4">
+          <div className="relative aspect-square mb-4 mt-8">
             {productImage ? (
               <img 
                 src={productImage} 
@@ -159,7 +175,7 @@ export default function MediumStandardPrinterCard({
           </p>
 
           {/* Price Section */}
-          <div className="mb-4">
+          <div className="mb-4 mt-auto">
             {printer.current_price_usd_store ? (
               <>
                 <span className="text-xl font-bold text-amber-500">
@@ -184,25 +200,6 @@ export default function MediumStandardPrinterCard({
               </span>
             ) : (
               <span className="text-lg text-muted-foreground">Price TBD</span>
-            )}
-          </div>
-
-          {/* Feature Tags - Hidden by Default, Show on Hover */}
-          <div className="flex flex-wrap gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 mb-3 mt-auto">
-            {printer.has_enclosure && (
-              <span className="text-xs text-primary bg-primary/10 border border-primary/30 px-2 py-1 rounded-md">
-                Enclosure
-              </span>
-            )}
-            {printer.multi_material_supported && (
-              <span className="text-xs text-primary bg-primary/10 border border-primary/30 px-2 py-1 rounded-md">
-                Multi-Mat
-              </span>
-            )}
-            {printer.auto_bed_leveling && (
-              <span className="text-xs text-primary bg-primary/10 border border-primary/30 px-2 py-1 rounded-md">
-                ABL
-              </span>
             )}
           </div>
 

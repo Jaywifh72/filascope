@@ -1,5 +1,19 @@
 import type { Database } from "@/integrations/supabase/types";
 
+export type BadgeType = 
+  | 'beginner' 
+  | 'advanced' 
+  | 'multiColor' 
+  | 'largeFormat' 
+  | 'resin' 
+  | 'highSpeed' 
+  | 'enclosed' 
+  | 'corexy' 
+  | 'discontinued'
+  | 'staffPick'
+  | 'bestSeller'
+  | 'newRelease';
+
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
   series: { series_name: string } | null;
@@ -13,9 +27,139 @@ export interface CardSizeResult {
   isFeatured?: boolean;
 }
 
+export interface PrinterBadgeInfo {
+  type: BadgeType;
+  priority: number;
+}
+
 // Get the price of a printer from available sources
 export const getPrinterPrice = (printer: Printer): number => {
   return printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd || Infinity;
+};
+
+// Check if printer is resin-based
+const isResinPrinter = (printer: Printer): boolean => {
+  const tech = printer.printer_technology?.toLowerCase() || '';
+  return tech.includes('resin') || tech.includes('sla') || tech.includes('msla') || tech.includes('dlp');
+};
+
+// Check if printer is CoreXY
+const isCoreXYPrinter = (printer: Printer): boolean => {
+  const motion = printer.motion_system_notes?.toLowerCase() || '';
+  const style = printer.machine_style?.toLowerCase() || '';
+  return motion.includes('corexy') || style.includes('corexy');
+};
+
+// Check if printer is large format (300mm+ in any dimension)
+const isLargeFormat = (printer: Printer): boolean => {
+  const x = printer.build_volume_x_mm || 0;
+  const y = printer.build_volume_y_mm || 0;
+  const z = printer.build_volume_z_mm || 0;
+  return x >= 300 || y >= 300 || z >= 300;
+};
+
+// Check if printer is beginner-friendly
+const isBeginnerFriendly = (printer: Printer): boolean => {
+  const hasAutoLevel = printer.auto_bed_leveling;
+  const hasEnclosure = printer.has_enclosure;
+  const goodRating = (printer.rating_community_overall || 0) >= 4.0;
+  // At least 2 of these 3 features = beginner friendly
+  const score = (hasAutoLevel ? 1 : 0) + (hasEnclosure ? 1 : 0) + (goodRating ? 1 : 0);
+  return score >= 2;
+};
+
+// Get PRIMARY category badge (only 1)
+export const getPrimaryCategoryBadge = (printer: Printer): BadgeType | null => {
+  // Priority order for category determination
+  
+  // 1. Discontinued (highest priority - always show this)
+  if (printer.discontinued) {
+    return 'discontinued';
+  }
+  
+  // 2. Resin/SLA printers
+  if (isResinPrinter(printer)) {
+    return 'resin';
+  }
+  
+  // 3. Beginner Friendly (auto-level + enclosure + good rating)
+  if (isBeginnerFriendly(printer)) {
+    return 'beginner';
+  }
+  
+  // 4. Multi-Color capable
+  if (printer.multi_material_supported) {
+    return 'multiColor';
+  }
+  
+  // 5. Large Format (300mm+)
+  if (isLargeFormat(printer)) {
+    return 'largeFormat';
+  }
+  
+  // 6. CoreXY motion system
+  if (isCoreXYPrinter(printer)) {
+    return 'corexy';
+  }
+  
+  // 7. No primary badge for standard printers
+  return null;
+};
+
+// Get SECONDARY feature badges (max 2)
+export const getSecondaryBadges = (printer: Printer, primaryBadge: BadgeType | null): BadgeType[] => {
+  const badges: BadgeType[] = [];
+  
+  // Skip if discontinued - no secondary badges needed
+  if (printer.discontinued) {
+    return badges;
+  }
+  
+  // High-Speed (300mm/s+)
+  if ((printer.max_print_speed_mms || 0) >= 300) {
+    badges.push('highSpeed');
+  }
+  
+  // Enclosed (if not already shown as beginner reason)
+  if (printer.has_enclosure && primaryBadge !== 'beginner') {
+    badges.push('enclosed');
+  }
+  
+  // Multi-color as secondary if not primary
+  if (printer.multi_material_supported && primaryBadge !== 'multiColor') {
+    badges.push('multiColor');
+  }
+  
+  // CoreXY as secondary if not primary
+  if (isCoreXYPrinter(printer) && primaryBadge !== 'corexy') {
+    badges.push('corexy');
+  }
+  
+  // Large format as secondary if not primary
+  if (isLargeFormat(printer) && primaryBadge !== 'largeFormat') {
+    badges.push('largeFormat');
+  }
+  
+  return badges.slice(0, 2); // Max 2 secondary badges
+};
+
+// Get ALL badges for a printer
+export const getPrinterBadges = (printer: Printer, maxBadges: number = 3): PrinterBadgeInfo[] => {
+  const badges: PrinterBadgeInfo[] = [];
+  
+  // 1. Primary category badge
+  const primary = getPrimaryCategoryBadge(printer);
+  if (primary) {
+    badges.push({ type: primary, priority: 1 });
+  }
+  
+  // 2. Secondary badges
+  const secondary = getSecondaryBadges(printer, primary);
+  secondary.forEach((type, idx) => {
+    badges.push({ type, priority: 2 + idx });
+  });
+  
+  return badges.slice(0, maxBadges);
 };
 
 // Determine what size card to use for a printer
