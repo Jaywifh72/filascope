@@ -75,6 +75,10 @@ interface HorizontalFilterBarProps {
   // Sort
   sortBy: string;
   onSortChange: (sort: string) => void;
+  
+  // Sticky state
+  isSticky?: boolean;
+  filterBarRef?: React.RefObject<HTMLDivElement>;
 }
 
 type DropdownType = 'material' | 'brand' | 'price' | null;
@@ -93,6 +97,8 @@ export function HorizontalFilterBar({
   moreFiltersCount,
   sortBy,
   onSortChange,
+  isSticky = false,
+  filterBarRef,
 }: HorizontalFilterBarProps) {
   const [openDropdown, setOpenDropdown] = useState<DropdownType>(null);
   const [brandSearch, setBrandSearch] = useState("");
@@ -261,7 +267,21 @@ export function HorizontalFilterBar({
   };
 
   return (
-    <div className="bg-card/50 border-b border-border relative" ref={dropdownRef}>
+    <div 
+      ref={(node) => {
+        // Handle both refs
+        (dropdownRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        if (filterBarRef && 'current' in filterBarRef) {
+          (filterBarRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        }
+      }}
+      className={cn(
+        "relative transition-all duration-300",
+        isSticky 
+          ? "fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-primary/20 shadow-lg shadow-black/20"
+          : "bg-card/50 border-b border-border"
+      )}
+    >
       <div className="max-w-[1800px] mx-auto px-4 lg:px-6 h-14 flex items-center justify-between gap-4">
         {/* Left side - Filter dropdowns */}
         <div className="flex items-center gap-2">
