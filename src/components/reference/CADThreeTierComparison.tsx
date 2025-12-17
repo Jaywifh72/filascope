@@ -1,7 +1,13 @@
-import { useState } from "react";
-import { Check, ArrowRight, Plus, ChevronDown, Trophy, Star, Gem } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Check, ArrowRight, Plus, ChevronDown, ChevronUp, ChevronsUpDown, Trophy, Star, Gem, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   PriceBadge,
   ScoreDisplay,
@@ -14,6 +20,25 @@ import {
   type SkillLevel
 } from "@/components/reference/CADBadges";
 import { useCADComparison, SelectedCADSoftware } from "@/contexts/CADComparisonContext";
+
+// Sort types
+type SortColumn = 'name' | 'price' | 'type' | 'platform' | 'score' | 'level' | null;
+type SortDirection = 'asc' | 'desc' | null;
+
+interface SortState {
+  column: SortColumn;
+  direction: SortDirection;
+}
+
+// Column tooltip definitions
+const COLUMN_TOOLTIPS: Record<string, string> = {
+  name: "Software name. Click to sort alphabetically.",
+  price: "Pricing model: Free, Freemium, Subscription, Perpetual, or One-Time purchase. Click to sort by affordability.",
+  type: "Primary modeling approach: Solid, Mesh, Sculpt, NURBS, CSG, Surface, or Hybrid.",
+  platform: "Supported platforms: Windows, Mac, Linux, iPad, Android, or Browser-based.",
+  score: "FilaScope rating (0-10): Weighted average of ease, precision, sculpting, print-readiness, and parametric capabilities.",
+  level: "Recommended skill level: Beginner (easy to learn), Intermediate, or Advanced (professional expertise).",
+};
 
 // Logo mapping for CAD software
 const cadLogos: Record<string, string> = {
@@ -557,6 +582,90 @@ const PopularCard = ({
   </div>
 );
 
+// Sort Icon Component
+const SortIcon = ({ 
+  columnKey, 
+  sortState 
+}: { 
+  columnKey: SortColumn; 
+  sortState: SortState;
+}) => {
+  const isActive = sortState.column === columnKey;
+  
+  if (!isActive) {
+    return <ChevronsUpDown size={14} className="text-muted-foreground/50" />;
+  }
+  
+  return sortState.direction === 'asc' 
+    ? <ChevronUp size={14} className="text-cyan-400" />
+    : <ChevronDown size={14} className="text-cyan-400" />;
+};
+
+// Sortable Header Component
+const SortableHeader = ({
+  columnKey,
+  label,
+  tooltip,
+  sortState,
+  onSort,
+  align = 'left',
+}: {
+  columnKey: SortColumn;
+  label: string;
+  tooltip: string;
+  sortState: SortState;
+  onSort: (key: SortColumn) => void;
+  align?: 'left' | 'center' | 'right';
+}) => {
+  const isActive = sortState.column === columnKey;
+  const alignClass = align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start';
+  
+  return (
+    <th 
+      className={cn(
+        "py-3.5 px-4 text-xs font-bold uppercase tracking-wide whitespace-nowrap",
+        "bg-background/95 backdrop-blur-sm",
+        isActive ? "text-cyan-400 border-b-2 border-cyan-400" : "text-muted-foreground border-b border-border",
+        "cursor-pointer select-none transition-colors hover:text-foreground hover:bg-white/[0.02]"
+      )}
+      onClick={() => onSort(columnKey)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSort(columnKey);
+        }
+      }}
+      tabIndex={0}
+      role="columnheader"
+      aria-sort={isActive ? (sortState.direction === 'asc' ? 'ascending' : 'descending') : 'none'}
+    >
+      <div className={cn("flex items-center gap-1.5", alignClass)}>
+        <span>{label}</span>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="text-muted-foreground/50 hover:text-cyan-400 transition-colors"
+                aria-label={`Info about ${label}`}
+              >
+                <HelpCircle size={12} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent 
+              side="top" 
+              className="max-w-[260px] text-xs font-medium bg-popover border border-border shadow-lg"
+            >
+              {tooltip}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <SortIcon columnKey={columnKey} sortState={sortState} />
+      </div>
+    </th>
+  );
+};
+
 // Full Comparison Table Component
 const FullComparisonTable = ({
   software,
@@ -566,6 +675,78 @@ const FullComparisonTable = ({
   onViewDetails: (id: string) => void;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [sortState, setSortState] = useState<SortState>({
+    column: null,
+    direction: null
+  });
+
+  // Handle sort click - cycles: null → desc → asc → null
+  const handleSort = (columnKey: SortColumn) => {
+    setSortState(prev => {
+      if (prev.column !== columnKey) {
+        return { column: columnKey, direction: 'desc' };
+      }
+      if (prev.direction === 'desc') {
+        return { column: columnKey, direction: 'asc' };
+      }
+      return { column: null, direction: null };
+    });
+  };
+
+  // Sort functions for each column
+  const sortFunctions: Record<string, (a: typeof software[0], b: typeof software[0], dir: SortDirection) => number> = {
+    name: (a, b, dir) => {
+      const cmp = a.name.localeCompare(b.name);
+      return dir === 'asc' ? cmp : -cmp;
+    },
+    price: (a, b, dir) => {
+      const priceOrder: Record<string, number> = { 
+        free: 0, 
+        freemium: 1, 
+        'one-time': 2,
+        perpetual: 3, 
+        subscription: 4, 
+        paid: 5 
+      };
+      const aOrder = priceOrder[a.priceType.toLowerCase()] ?? 99;
+      const bOrder = priceOrder[b.priceType.toLowerCase()] ?? 99;
+      const cmp = aOrder - bOrder;
+      return dir === 'asc' ? cmp : -cmp;
+    },
+    type: (a, b, dir) => {
+      const cmp = a.type.localeCompare(b.type);
+      return dir === 'asc' ? cmp : -cmp;
+    },
+    platform: (a, b, dir) => {
+      const cmp = a.os.localeCompare(b.os);
+      return dir === 'asc' ? cmp : -cmp;
+    },
+    score: (a, b, dir) => {
+      const cmp = a.overallScore - b.overallScore;
+      return dir === 'asc' ? cmp : -cmp;
+    },
+    level: (a, b, dir) => {
+      const levelOrder: Record<string, number> = { 
+        beginner: 0, 
+        intermediate: 1, 
+        advanced: 2 
+      };
+      const aOrder = levelOrder[a.skillLevel.toLowerCase()] ?? 1;
+      const bOrder = levelOrder[b.skillLevel.toLowerCase()] ?? 1;
+      const cmp = aOrder - bOrder;
+      return dir === 'asc' ? cmp : -cmp;
+    }
+  };
+
+  // Sorted software array
+  const sortedSoftware = useMemo(() => {
+    if (!sortState.column || !sortState.direction) return software;
+    
+    const sortFn = sortFunctions[sortState.column];
+    if (!sortFn) return software;
+    
+    return [...software].sort((a, b) => sortFn(a, b, sortState.direction));
+  }, [software, sortState]);
 
   return (
     <section className="mb-16">
@@ -606,35 +787,61 @@ const FullComparisonTable = ({
           isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="p-5 bg-card/20 border border-t-0 border-border rounded-b-xl overflow-x-auto">
-          <table className="w-full border-collapse min-w-[600px]">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="py-3.5 px-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                  Software
-                </th>
-                <th className="py-3.5 px-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                  Price
-                </th>
-                <th className="py-3.5 px-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                  Type
-                </th>
-                <th className="py-3.5 px-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                  Platform
-                </th>
-                <th className="py-3.5 px-4 text-center text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                  Score
-                </th>
-                <th className="py-3.5 px-4 text-center text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                  Level
-                </th>
-                <th className="py-3.5 px-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-wide">
+        <div className="p-5 bg-card/20 border border-t-0 border-border rounded-b-xl overflow-x-auto scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-white/20 hover:scrollbar-thumb-white/30">
+          <table className="w-full border-collapse min-w-[700px]">
+            <thead className="sticky top-0 z-10">
+              <tr>
+                <SortableHeader
+                  columnKey="name"
+                  label="Software"
+                  tooltip={COLUMN_TOOLTIPS.name}
+                  sortState={sortState}
+                  onSort={handleSort}
+                />
+                <SortableHeader
+                  columnKey="price"
+                  label="Price"
+                  tooltip={COLUMN_TOOLTIPS.price}
+                  sortState={sortState}
+                  onSort={handleSort}
+                />
+                <SortableHeader
+                  columnKey="type"
+                  label="Type"
+                  tooltip={COLUMN_TOOLTIPS.type}
+                  sortState={sortState}
+                  onSort={handleSort}
+                />
+                <SortableHeader
+                  columnKey="platform"
+                  label="Platform"
+                  tooltip={COLUMN_TOOLTIPS.platform}
+                  sortState={sortState}
+                  onSort={handleSort}
+                />
+                <SortableHeader
+                  columnKey="score"
+                  label="Score"
+                  tooltip={COLUMN_TOOLTIPS.score}
+                  sortState={sortState}
+                  onSort={handleSort}
+                  align="center"
+                />
+                <SortableHeader
+                  columnKey="level"
+                  label="Level"
+                  tooltip={COLUMN_TOOLTIPS.level}
+                  sortState={sortState}
+                  onSort={handleSort}
+                  align="center"
+                />
+                <th className="py-3.5 px-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-wide bg-background/95 backdrop-blur-sm border-b border-border">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody>
-              {software.map((sw) => (
+              {sortedSoftware.map((sw) => (
                 <tr 
                   key={sw.name}
                   className="border-b border-border/30 hover:bg-white/[0.02] transition-colors"
