@@ -169,6 +169,22 @@ All colors MUST be HSL.
 }
 
 @layer components {
+  /* Line draw-in animation for separator */
+  @keyframes line-draw-in {
+    0% {
+      width: 0%;
+      opacity: 0;
+    }
+    100% {
+      width: 80%;
+      opacity: 1;
+    }
+  }
+
+  .animate-line-draw-in {
+    animation: line-draw-in 0.8s ease-out forwards;
+  }
+
   /* Card entry animation */
 @keyframes card-enter {
   from {
