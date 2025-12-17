@@ -276,7 +276,7 @@ export function HorizontalFilterBar({
         }
       }}
       className={cn(
-        "relative transition-all duration-300",
+        "relative transition-all duration-300 z-30",
         isSticky 
           ? "fixed top-16 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-primary/20 shadow-lg shadow-black/20"
           : "bg-card/50 border-b border-border"
