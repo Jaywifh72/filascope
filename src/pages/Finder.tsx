@@ -27,6 +27,8 @@ import { isAMSCompatible } from "@/lib/amsCompatibility";
 import { useCompare } from "@/hooks/useCompare";
 import { useCompatibleCount } from "@/hooks/useCompatibleCount";
 import HeroSection from "@/components/HeroSection";
+import SectionSeparator from "@/components/SectionSeparator";
+import ResultsHeader from "@/components/ResultsHeader";
 import { FilamentFilters } from "@/components/FilamentFilters";
 import { HorizontalFilterBar } from "@/components/filters/HorizontalFilterBar";
 import { ActiveFilterTags, type ActiveFilter } from "@/components/filters/ActiveFilterTags";
@@ -940,6 +942,43 @@ const Finder = () => {
   const totalCount = filteredAndSortedFilaments?.length || 0;
   const hasMore = displayCount < totalCount;
 
+  // Check if any filters are active
+  const hasActiveFilters = useMemo(() => {
+    return (
+      !selectedMaterials.includes("All") ||
+      selectedBrands.length > 0 ||
+      priceRange[0] > 0 ||
+      priceRange[1] < MAX_PRICE_LIMIT ||
+      highSpeed || matte || carbonFiber || glassFiber ||
+      woodFilled || glow || brassOnly || foodContact || amsOnly ||
+      selectedColorFamilies.length > 0 ||
+      hexSearch !== "" ||
+      plasticSpool || cardboardSpool || singleSpool || multiPack
+    );
+  }, [selectedMaterials, selectedBrands, priceRange, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, brassOnly, foodContact, amsOnly, selectedColorFamilies, hexSearch, plasticSpool, cardboardSpool, singleSpool, multiPack]);
+
+  // Clear all filters function
+  const handleClearAllFilters = () => {
+    setSelectedMaterials(["All"]);
+    setSelectedBrands([]);
+    setPriceRange([0, MAX_PRICE_LIMIT]);
+    setHighSpeed(false);
+    setMatte(false);
+    setCarbonFiber(false);
+    setGlassFiber(false);
+    setWoodFilled(false);
+    setGlow(false);
+    setBrassOnly(false);
+    setFoodContact(false);
+    setAmsOnly(false);
+    setSelectedColorFamilies([]);
+    setHexSearch("");
+    setPlasticSpool(false);
+    setCardboardSpool(false);
+    setSingleSpool(false);
+    setMultiPack(false);
+  };
+
   // Update navbar compatible count
   useEffect(() => {
     setCompatibleCount(totalCount);
@@ -956,7 +995,16 @@ const Finder = () => {
         compatibleCount={totalCount}
       />
 
-      {/* Printer Context Bar removed - now in Navbar header */}
+      {/* Visual Section Separator */}
+      <SectionSeparator />
+
+      {/* Results Header with Context */}
+      <ResultsHeader
+        count={totalCount}
+        selectedPrinter={selectedPrinter}
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={handleClearAllFilters}
+      />
 
       {/* Horizontal Filter Bar */}
       <HorizontalFilterBar
