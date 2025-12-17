@@ -4,17 +4,18 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { GitCompare, X, RefreshCw, Printer as PrinterIcon, ImageIcon, Search, Heart, ExternalLink } from "lucide-react";
+import { GitCompare, X, RefreshCw, Printer as PrinterIcon, ImageIcon, Heart, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCurrency } from "@/hooks/useCurrency";
+import PrintersHeroSection from "@/components/PrintersHeroSection";
 
 // Brand wiki/documentation URLs
 const BRAND_WIKI_URLS: Record<string, string> = {
@@ -56,6 +57,16 @@ export default function Printers() {
   const [multiMaterial, setMultiMaterial] = useState(false);
   const [selectedSize, setSelectedSize] = useState("all");
   const [selectedSpeed, setSelectedSpeed] = useState("all");
+  const [activeQuickFilters, setActiveQuickFilters] = useState<string[]>([]);
+
+  // Toggle quick filter
+  const handleQuickFilterToggle = (filterId: string) => {
+    setActiveQuickFilters(prev => 
+      prev.includes(filterId) 
+        ? prev.filter(id => id !== filterId)
+        : [...prev, filterId]
+    );
+  };
   
   // Printer compare context
   const { addPrinter, removePrinter, isSelected, isMaxReached } = usePrinterCompare();
@@ -148,6 +159,40 @@ export default function Printers() {
         if (printerSpeed < minSpeed) return false;
       }
 
+      // Quick filters (OR logic - show if ANY quick filter matches)
+      if (activeQuickFilters.length > 0) {
+        const price = printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd || Infinity;
+        const maxBuildDimension = Math.max(
+          printer.build_volume_x_mm || 0,
+          printer.build_volume_y_mm || 0,
+          printer.build_volume_z_mm || 0
+        );
+        const printerSpeed = printer.max_print_speed_mms || 0;
+        const printerTech = (printer.printer_technology || "").toLowerCase();
+
+        const matchesAny = activeQuickFilters.some(filterId => {
+          switch (filterId) {
+            case 'budget':
+              return price <= 500;
+            case 'beginner':
+              // Beginner = enclosed + auto bed leveling
+              return printer.has_enclosure && printer.auto_bed_leveling;
+            case 'multicolor':
+              return printer.multi_material_supported;
+            case 'large':
+              return maxBuildDimension >= 300;
+            case 'resin':
+              return printerTech.includes('resin') || printerTech.includes('sla') || printerTech.includes('msla') || printerTech.includes('dlp');
+            case 'speed':
+              return printerSpeed >= 300;
+            default:
+              return false;
+          }
+        });
+
+        if (!matchesAny) return false;
+      }
+
       return true;
     });
 
@@ -177,7 +222,7 @@ export default function Printers() {
           return 0;
       }
     });
-  }, [printers, selectedBrand, selectedSize, selectedSpeed, sortBy]);
+  }, [printers, selectedBrand, selectedSize, selectedSpeed, sortBy, activeQuickFilters]);
 
   const toggleCompareSelection = (printer: Printer) => {
     const scrapedData = printer.scraped_data as Record<string, unknown> | null;
@@ -273,27 +318,15 @@ export default function Printers() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-[1800px] mx-auto p-6 space-y-8">
-        {/* Hero Section with Search */}
-        <section className="text-center space-y-6 py-8">
-          <div className="space-y-3">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Printers</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Browse and compare 3D printers from all major brands
-            </p>
-          </div>
-
-          {/* Hero Search Bar */}
-          <div className="w-full max-w-[600px] mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search 105 printers by name, brand, or feature..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-[56px] text-lg pl-12 pr-6 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.4)] focus:border-[#00D4D4] focus:shadow-[0_0_12px_rgba(0,212,212,0.3)] focus:outline-none transition-all duration-200"
-            />
-          </div>
-        </section>
+      {/* Hero Section */}
+      <PrintersHeroSection
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        printerCount={filteredPrinters?.length || 0}
+        brandCount={brands?.length || 0}
+        activeQuickFilters={activeQuickFilters}
+        onQuickFilterToggle={handleQuickFilterToggle}
+      />
 
         {/* Filters Section */}
         <section className="space-y-6 mt-8">
