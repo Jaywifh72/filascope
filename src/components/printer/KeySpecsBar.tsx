@@ -17,18 +17,18 @@ export function KeySpecsBar({ specs }: KeySpecsBarProps) {
   return (
     <div className="w-full bg-primary/8 border-y-2 border-primary/20 py-5 px-6 md:px-10">
       <div className="max-w-[1400px] mx-auto">
-        <div className="flex flex-wrap justify-between items-center gap-4 md:gap-6">
+        <div className="flex flex-wrap justify-center md:justify-between items-center gap-3 md:gap-4">
           {specs.map((spec, index) => (
-            <div key={index} className="flex items-center gap-2">
+            <div key={index} className="flex items-center gap-2 min-w-0">
               <spec.icon className="h-5 w-5 text-primary flex-shrink-0" />
-              <span className="text-sm font-semibold text-foreground whitespace-nowrap">
+              <span className="text-xs md:text-sm font-semibold text-foreground">
                 {spec.label && (
                   <span className="text-muted-foreground font-medium">{spec.label}: </span>
                 )}
-                {spec.value}
+                <span className="break-all">{spec.value}</span>
               </span>
               {index < specs.length - 1 && (
-                <span className="hidden md:inline text-muted-foreground/30 ml-4">|</span>
+                <span className="hidden lg:inline text-muted-foreground/30 ml-2">|</span>
               )}
             </div>
           ))}
