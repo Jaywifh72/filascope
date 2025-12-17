@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCurrency } from "@/hooks/useCurrency";
-import { getPrinterImage, getPrinterFeatures, type CardSizeResult } from "@/lib/printerCardUtils";
+import { getPrinterImage, getPrinterFeatures, getPrinterBadges, type CardSizeResult } from "@/lib/printerCardUtils";
 import { generateRecommendation } from "@/lib/printerRecommendations";
+import PrinterBadge from "./PrinterBadge";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -40,6 +41,7 @@ export default function LargeFeaturedPrinterCard({
   const productImage = getPrinterImage(printer);
   const features = getPrinterFeatures(printer);
   const recommendation = generateRecommendation(printer);
+  const secondaryBadges = getPrinterBadges(printer, 2);
 
   const price = printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd;
 
@@ -65,13 +67,25 @@ export default function LargeFeaturedPrinterCard({
           min-h-[400px] lg:min-h-[520px]
           flex flex-col
         ">
-          {/* Featured Badge */}
-          {cardInfo.badge && (
-            <div className={`absolute top-4 left-4 z-10 px-3 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wide ${cardInfo.badge.colorClass}`}>
-              <span className="mr-1.5">{cardInfo.badge.icon}</span>
-              {cardInfo.badge.label}
-            </div>
-          )}
+          {/* Featured Badge + Secondary Badges */}
+          <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
+            {/* Primary Featured Badge */}
+            {cardInfo.badge && (
+              <div className={`px-3 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wide ${cardInfo.badge.colorClass}`}>
+                <span className="mr-1.5">{cardInfo.badge.icon}</span>
+                {cardInfo.badge.label}
+              </div>
+            )}
+            {/* Secondary Semantic Badges */}
+            {secondaryBadges.slice(0, 2).map((badge, idx) => (
+              <PrinterBadge 
+                key={`${badge.type}-${idx}`}
+                type={badge.type}
+                size="sm"
+                compact
+              />
+            ))}
+          </div>
 
           {/* Action Icons - Top Right */}
           <div className="absolute top-4 right-4 flex gap-1.5 z-10">
