@@ -10,6 +10,7 @@ interface PrintersHeroSectionProps {
   brandCount: number;
   activeQuickFilters: string[];
   onQuickFilterToggle: (filterId: string) => void;
+  onOpenQuiz?: () => void;
 }
 
 // Count-up animation hook
@@ -152,7 +153,8 @@ const PrintersHeroSection = ({
   printerCount, 
   brandCount,
   activeQuickFilters,
-  onQuickFilterToggle
+  onQuickFilterToggle,
+  onOpenQuiz
 }: PrintersHeroSectionProps) => {
   const navigate = useNavigate();
   const [isFocused, setIsFocused] = useState(false);
@@ -289,7 +291,7 @@ const PrintersHeroSection = ({
             <p className="text-muted-foreground">Not sure what you need?</p>
             <Button 
               variant="outline"
-              onClick={() => navigate("/wizard")}
+              onClick={onOpenQuiz}
               className="h-[52px] px-7 bg-transparent border-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary/60 hover:-translate-y-0.5 transition-all duration-200 font-semibold text-base rounded-xl group"
             >
               <Sparkles className="mr-2 h-5 w-5" />
