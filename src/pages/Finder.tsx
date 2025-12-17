@@ -38,6 +38,7 @@ import { MoreFiltersModal } from "@/components/filters/MoreFiltersModal";
 import { ViewToggle } from "@/components/ViewToggle";
 import { FilamentTableView } from "@/components/FilamentTableView";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useStickyElement } from "@/hooks/useStickyElement";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -147,6 +148,9 @@ const Finder = () => {
   // Force card view on mobile
   const effectiveViewMode = isMobile ? "grid" : viewMode;
   
+  // Sticky filter bar
+  const { isSticky, elementHeight, sentinelRef, elementRef } = useStickyElement();
+
   // New filter states
   const [highSpeed, setHighSpeed] = useState(false);
   const [matte, setMatte] = useState(false);
@@ -1006,6 +1010,9 @@ const Finder = () => {
         onClearFilters={handleClearAllFilters}
       />
 
+      {/* Sentinel for sticky detection */}
+      <div ref={sentinelRef} className="h-0" />
+
       {/* Horizontal Filter Bar */}
       <HorizontalFilterBar
         materialCategories={[
@@ -1053,7 +1060,12 @@ const Finder = () => {
         }
         sortBy={sortBy}
         onSortChange={setSortBy}
+        isSticky={isSticky}
+        filterBarRef={elementRef}
       />
+
+      {/* Spacer to prevent content jump when sticky */}
+      {isSticky && <div style={{ height: elementHeight }} />}
 
       {/* Active Filter Tags */}
       <ActiveFilterTags
