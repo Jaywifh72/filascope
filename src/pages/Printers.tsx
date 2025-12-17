@@ -21,6 +21,10 @@ import SmallDeemphasizedPrinterCard from "@/components/printers/SmallDeemphasize
 import { PrinterCardSkeletonGrid } from "@/components/printers/PrinterCardSkeleton";
 import { PrintersEmptyState } from "@/components/printers/PrintersEmptyState";
 import { getCardSize } from "@/lib/printerCardUtils";
+import PrinterQuiz from "@/components/printers/PrinterQuiz";
+import PrinterQuizResults from "@/components/printers/PrinterQuizResults";
+import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService";
+import { QuizAnswers } from "@/lib/printerQuizData";
 
 const PRINTERS_PER_PAGE = 24;
 
@@ -98,6 +102,18 @@ export default function Printers() {
   // Progressive disclosure state
   const [displayedCount, setDisplayedCount] = useState(PRINTERS_PER_PAGE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  // Quiz state
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [quizResults, setQuizResults] = useState<QuizResults | null>(null);
+
+  const handleQuizComplete = (answers: QuizAnswers) => {
+    if (printers) {
+      const results = calculateRecommendations(printers, answers);
+      setQuizResults(results);
+      setIsQuizOpen(false);
+    }
+  };
 
   // Toggle quick filter with sync to category tabs
   const handleQuickFilterToggle = (filterId: string) => {
@@ -489,7 +505,28 @@ export default function Printers() {
         brandCount={brands?.length || 0}
         activeQuickFilters={activeQuickFilters}
         onQuickFilterToggle={handleQuickFilterToggle}
+        onOpenQuiz={() => setIsQuizOpen(true)}
       />
+
+      {/* Quiz Modal */}
+      {isQuizOpen && (
+        <PrinterQuiz
+          onClose={() => setIsQuizOpen(false)}
+          onComplete={handleQuizComplete}
+        />
+      )}
+
+      {/* Quiz Results Modal */}
+      {quizResults && (
+        <PrinterQuizResults
+          results={quizResults}
+          onClose={() => setQuizResults(null)}
+          onRetake={() => {
+            setQuizResults(null);
+            setIsQuizOpen(true);
+          }}
+        />
+      )}
 
         {/* Filter Bar */}
         <PrintersFilterBar
