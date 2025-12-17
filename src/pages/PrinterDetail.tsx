@@ -30,6 +30,8 @@ import { KeySpecsBar, generateKeySpecs } from "@/components/printer/KeySpecsBar"
 import { FeatureHighlightCards } from "@/components/printer/FeatureHighlightCards";
 import { PriceSection } from "@/components/printer/PriceSection";
 import { CTAButtons } from "@/components/printer/CTAButtons";
+import { PriceInsightsWidget } from "@/components/printer/PriceInsightsWidget";
+import { PriceHistoryModal } from "@/components/printer/PriceHistoryModal";
 import { generatePrinterBenefits, generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
 import {
   ArrowLeft,
@@ -87,6 +89,7 @@ const PrinterDetail = () => {
   const [newImageUrl, setNewImageUrl] = useState("");
   const [imagePreviewError, setImagePreviewError] = useState(false);
   const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
+  const [showPriceHistoryModal, setShowPriceHistoryModal] = useState(false);
   const { data: printer, isLoading } = useQuery({
     queryKey: ["printer-detail", id],
     queryFn: async () => {
@@ -535,6 +538,15 @@ const PrinterDetail = () => {
                 msrp={printer.msrp_usd}
               />
 
+              {/* Price Insights Widget - Inline */}
+              <PriceInsightsWidget
+                printerId={printer.id}
+                currentPrice={printer.current_price_usd_store}
+                currentAmazonPrice={printer.current_price_usd_amazon}
+                msrp={printer.msrp_usd}
+                onViewFullHistory={() => setShowPriceHistoryModal(true)}
+              />
+
               {/* Value Proposition */}
               <ValueProposition benefits={generatePrinterBenefits(printer)} />
 
@@ -560,16 +572,6 @@ const PrinterDetail = () => {
 
         {/* Feature Highlight Cards - Decision Matrix */}
         <FeatureHighlightCards printer={printer} />
-
-        {/* Price Tracker - Full Width Below Hero */}
-        <div className="w-full">
-          <PrinterPriceChart
-            printerId={printer.id}
-            currentStorePrice={printer.current_price_usd_store}
-            currentAmazonPrice={printer.current_price_usd_amazon}
-            msrp={printer.msrp_usd}
-          />
-        </div>
 
         {/* Ratings */}
         {(printer.rating_community_overall || printer.rating_ease_of_use || printer.rating_print_quality) && (
@@ -1309,6 +1311,14 @@ const PrinterDetail = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Price History Modal */}
+        <PriceHistoryModal
+          isOpen={showPriceHistoryModal}
+          onClose={() => setShowPriceHistoryModal(false)}
+          printerName={printer.model_name}
+          printerId={printer.id}
+        />
       </div>
     </div>
   );
