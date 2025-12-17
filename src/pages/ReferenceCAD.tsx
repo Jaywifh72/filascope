@@ -111,7 +111,7 @@ const cadComparison = cadComparisonRaw.map(item => ({
 type CADSortKey = "name" | "price" | "type" | "overallScore" | "skillLevel";
 type SortDir = "asc" | "desc";
 
-const priceOrder = { "Free": 0, "Freemium": 1, "One-Time": 2, "Perpetual": 3, "Subscription": 4, "Paid": 5 };
+const priceOrder = { "free": 0, "freemium": 1, "paid": 2 };
 const skillOrder = { "beginner": 0, "intermediate": 1, "advanced": 2 };
 
 const recommendationMatrix = [
@@ -229,7 +229,7 @@ const ReferenceCAD = () => {
 
     // Apply filters
     if (priceFilter !== "all") {
-      filtered = filtered.filter(s => s.price === priceFilter);
+      filtered = filtered.filter(s => s.priceType === priceFilter);
     }
     if (typeFilter !== "all") {
       filtered = filtered.filter(s => s.type === typeFilter);
@@ -243,8 +243,8 @@ const ReferenceCAD = () => {
       let bVal: number | string;
       
       if (sortKey === "price") {
-        aVal = priceOrder[a.price as keyof typeof priceOrder] ?? 99;
-        bVal = priceOrder[b.price as keyof typeof priceOrder] ?? 99;
+        aVal = priceOrder[a.priceType as keyof typeof priceOrder] ?? 99;
+        bVal = priceOrder[b.priceType as keyof typeof priceOrder] ?? 99;
       } else if (sortKey === "skillLevel") {
         aVal = skillOrder[a.skillLevel];
         bVal = skillOrder[b.skillLevel];
@@ -364,12 +364,9 @@ const ReferenceCAD = () => {
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
                   <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="Free">Free</SelectItem>
-                  <SelectItem value="Freemium">Freemium</SelectItem>
-                  <SelectItem value="One-Time">One-Time</SelectItem>
-                  <SelectItem value="Perpetual">Perpetual</SelectItem>
-                  <SelectItem value="Subscription">Subscription</SelectItem>
-                  <SelectItem value="Paid">Paid</SelectItem>
+                  <SelectItem value="free">Free</SelectItem>
+                  <SelectItem value="freemium">Freemium</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -402,7 +399,7 @@ const ReferenceCAD = () => {
             <p className="text-muted-foreground text-sm">
               Side-by-side comparison of CAD software capabilities with overall scores and skill levels.
             </p>
-            <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-4 text-xs flex-wrap">
               <span className="text-muted-foreground">Score:</span>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-emerald-400" />
@@ -416,6 +413,10 @@ const ReferenceCAD = () => {
                 <div className="w-2 h-2 rounded-full bg-yellow-400" />
                 <span className="text-muted-foreground">5.0-6.9 (Fair)</span>
               </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-orange-400" />
+                <span className="text-muted-foreground">&lt;5.0 (Poor)</span>
+              </div>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -423,7 +424,7 @@ const ReferenceCAD = () => {
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   <CADSortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <th className="text-left py-2 px-3 font-semibold text-foreground">Price</th>
+                  <CADSortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                   <CADSortHeader label="Type" sortKey="type" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                   <th className="text-left py-2 px-3 font-semibold text-foreground">Platform</th>
                   <CADSortHeader label="Score" sortKey="overallScore" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />

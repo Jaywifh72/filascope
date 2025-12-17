@@ -154,9 +154,13 @@ export function SkillIcon({ level, showTooltip = true, className }: SkillIconPro
             "text-xs font-medium text-popover-foreground text-center leading-relaxed",
             "animate-in fade-in-0 zoom-in-95 duration-200"
           )}
+          style={{ borderColor: `${config.color}30` }}
         >
           {config.tooltip}
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-b-border" />
+          <div 
+            className="absolute bottom-full left-1/2 -translate-x-1/2 border-[6px] border-transparent"
+            style={{ borderBottomColor: config.color }}
+          />
         </div>
       )}
     </div>
