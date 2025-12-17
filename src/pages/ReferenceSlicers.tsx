@@ -214,6 +214,11 @@ const ReferenceSlicers = () => {
     }
   };
 
+  const handleAddToCompare = (slicerName: string) => {
+    // This is handled by the SlicerTopPickCard component via context
+    // The onAddToCompare prop triggers the card's internal comparison logic
+  };
+
   return (
     <SlicerComparisonProvider>
       <div className="min-h-screen bg-background">
@@ -241,6 +246,7 @@ const ReferenceSlicers = () => {
                     slicer={slicer}
                     logo={slicerLogos[slicer.name]}
                     onLearnMore={() => handleLearnMore(slicer.name)}
+                    onAddToCompare={() => handleAddToCompare(slicer.name)}
                   />
                 ))}
               </div>
