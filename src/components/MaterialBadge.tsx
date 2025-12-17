@@ -66,7 +66,7 @@ export const MaterialBadge = ({
     <Badge 
       variant={variant} 
       className={cn(
-        "bg-primary/15 border-primary/40 text-foreground font-semibold cursor-default",
+        "bg-violet-500/15 border-violet-500/40 text-violet-400 font-semibold cursor-default",
         size === "sm" ? "text-xs px-2.5 py-1" : "text-sm px-3 py-1.5",
         showTooltip && "cursor-help hover:bg-primary/25 transition-colors",
         className
@@ -135,7 +135,7 @@ export const MaterialBadge = ({
               {info.useCases.slice(0, 4).map((useCase, i) => (
                 <span 
                   key={i} 
-                  className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary"
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-400"
                 >
                   {useCase}
                 </span>

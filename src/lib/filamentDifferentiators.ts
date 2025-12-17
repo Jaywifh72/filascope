@@ -419,7 +419,7 @@ export function getStandoutBadges(
     badges.push({
       icon: '⚡',
       label: 'High-Speed',
-      color: 'cyan',
+      color: 'blue',
       tooltip: 'Optimized for high-speed printing',
     });
   }

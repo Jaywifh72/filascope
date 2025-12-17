@@ -15,10 +15,10 @@ interface StandoutBadgesProps {
 const BADGE_STYLES: Record<string, string> = {
   amber: "border-amber-500/50 bg-amber-500/10 text-amber-400",
   green: "border-green-500/50 bg-green-500/10 text-green-400",
-  cyan: "border-cyan-500/50 bg-cyan-500/10 text-cyan-400",
   purple: "border-purple-500/50 bg-purple-500/10 text-purple-400",
   blue: "border-blue-500/50 bg-blue-500/10 text-blue-400",
   red: "border-red-500/50 bg-red-500/10 text-red-400",
+  gray: "border-slate-500/50 bg-slate-500/10 text-slate-400",
 };
 
 export function StandoutBadges({ badges, maxBadges = 2 }: StandoutBadgesProps) {
@@ -34,7 +34,7 @@ export function StandoutBadges({ badges, maxBadges = 2 }: StandoutBadgesProps) {
             <TooltipTrigger asChild>
               <Badge
                 variant="outline"
-                className={`cursor-help text-[10px] font-medium ${BADGE_STYLES[badge.color] || BADGE_STYLES.cyan}`}
+                className={`cursor-help text-[10px] font-medium ${BADGE_STYLES[badge.color] || BADGE_STYLES.blue}`}
               >
                 {badge.icon} {badge.label}
               </Badge>
