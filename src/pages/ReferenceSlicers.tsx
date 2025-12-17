@@ -10,7 +10,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { slicerData } from "@/lib/slicerData";
+import { getSlicersByTier, getSlicerTierInfo, SlicerTierInfo } from "@/lib/slicerTierData";
 import SlicerHeroSection from "@/components/reference/SlicerHeroSection";
+import { SlicerTopPickCard } from "@/components/reference/SlicerTopPickCard";
+import { SlicerPopularCard } from "@/components/reference/SlicerPopularCard";
+import { CollapsibleSection } from "@/components/reference/CollapsibleSection";
+import { SlicerSimplifiedTable } from "@/components/reference/SlicerSimplifiedTable";
+import { useToast } from "@/hooks/use-toast";
 
 // Logo mapping for slicers
 const slicerLogos: Record<string, string> = {
@@ -122,10 +128,17 @@ const SortHeader = ({
 };
 
 const ReferenceSlicers = () => {
+  const { toast } = useToast();
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [priceFilter, setPriceFilter] = useState<string>("all");
   const [focusFilter, setFocusFilter] = useState<string>("all");
+  const [showDetailedTable, setShowDetailedTable] = useState(false);
+
+  // Get slicers by tier
+  const topPickSlicers = getSlicersByTier('top-pick');
+  const popularSlicers = getSlicersByTier('popular');
+  const otherSlicers = getSlicersByTier('other');
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -189,6 +202,23 @@ const ReferenceSlicers = () => {
     }
   };
 
+  const handleLearnMore = (slicerName: string) => {
+    // Scroll to the accordion item for this slicer
+    const element = document.getElementById(`slicer-${slicerName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`);
+    if (element) {
+      const offset = 80;
+      const top = element.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  };
+
+  const handleAddToCompare = (slicerName: string) => {
+    toast({
+      title: "Coming Soon",
+      description: `Compare feature for ${slicerName} will be available soon!`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -197,149 +227,231 @@ const ReferenceSlicers = () => {
         onScrollToComparison={scrollToComparison}
       />
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Comparative Features Table */}
-        <div id="comparison-table" className="mb-8 border border-border rounded-lg bg-card p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <BarChart3 className="w-6 h-6 text-emerald-400" />
-            <h2 className="text-xl font-bold font-mono text-foreground">Comparative Features Matrix</h2>
-          </div>
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Price:</span>
-              <Select value={priceFilter} onValueChange={setPriceFilter}>
-                <SelectTrigger className="w-32 bg-background">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover">
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="Free">Free</SelectItem>
-                  <SelectItem value="Freemium">Freemium</SelectItem>
-                  <SelectItem value="Paid">Paid</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Focus:</span>
-              <Select value={focusFilter} onValueChange={setFocusFilter}>
-                <SelectTrigger className="w-32 bg-background">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover">
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="FDM">FDM</SelectItem>
-                  <SelectItem value="SLA">SLA</SelectItem>
-                  <SelectItem value="Both">Both</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
-                <X className="h-4 w-4 mr-1" />
-                Clear filters
-              </Button>
-            )}
-            <span className="text-sm text-muted-foreground ml-auto">
-              Showing {filteredAndSortedSlicers.length} of {slicerComparison.length} slicers
-            </span>
-          </div>
+      {/* TIER 1: Top Picks */}
+      <section className="max-w-[1400px] mx-auto px-10 py-[60px] max-md:px-5 max-md:py-10">
+        <h2 className="text-xl font-bold text-foreground max-md:text-lg mb-2">Our Top Picks</h2>
+        <p className="text-[15px] font-medium text-muted-foreground mb-8">
+          Staff-curated recommendations based on use case and performance
+        </p>
+        
+        <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible">
+          {topPickSlicers.map((slicer) => (
+            <SlicerTopPickCard
+              key={slicer.name}
+              slicer={slicer}
+              logo={slicerLogos[slicer.name]}
+              onLearnMore={() => handleLearnMore(slicer.name)}
+              onAddToCompare={() => handleAddToCompare(slicer.name)}
+            />
+          ))}
+        </div>
+      </section>
 
-          <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
-            <p className="text-muted-foreground text-sm">
-              Side-by-side comparison of slicer capabilities, ratings (1-5), and standout features.
-            </p>
-            <div className="flex items-center gap-4 text-xs">
-              <span className="text-muted-foreground">Rating:</span>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span className="text-muted-foreground">4-5 (Excellent)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-amber-400" />
-                <span className="text-muted-foreground">3 (Average)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-red-400" />
-                <span className="text-muted-foreground">1-2 (Limited)</span>
-              </div>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <SortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <SortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <SortHeader label="Focus" sortKey="focus" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                  <th className="text-left py-2 px-3 font-semibold text-foreground">OS</th>
-                  <SortHeader label="Ease" sortKey="ease" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <SortHeader label="Control" sortKey="control" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <SortHeader label="Supports" sortKey="support" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <SortHeader label="Speed" sortKey="speed" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <SortHeader label="UI" sortKey="ui" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <th className="text-left py-2 px-3 font-semibold text-foreground">Connect</th>
-                  <SortHeader label="STEP" sortKey="step" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <SortHeader label="Multi-Mat" sortKey="multiMat" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                  <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAndSortedSlicers.map((slicer, index) => (
-                  <tr 
-                    key={index} 
-                    className="border-b border-border/50 hover:bg-muted/20 transition-colors"
-                  >
-                    <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {slicerLogos[slicer.name] && (
-                          <img 
-                            src={slicerLogos[slicer.name]} 
-                            alt={`${slicer.name} logo`}
-                            className="w-5 h-5 rounded object-contain"
-                          />
-                        )}
-                        {slicer.name}
-                      </div>
-                    </td>
-                    <td className="py-2 px-3">
-                      <Badge 
-                        variant="outline" 
-                        className={
-                          slicer.price === "Free" 
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
-                            : slicer.price === "Freemium"
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                            : "bg-red-500/10 text-red-400 border-red-500/30"
-                        }
-                      >
-                        {slicer.price}
-                      </Badge>
-                    </td>
-                    <td className="py-2 px-3 text-muted-foreground">{slicer.focus}</td>
-                    <td className="py-2 px-3 text-muted-foreground text-xs">{slicer.os}</td>
-                    <td className="py-2 px-3"><RatingDots rating={slicer.ease} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={slicer.control} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={slicer.support} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={slicer.speed} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={slicer.ui} /></td>
-                    <td className="py-2 px-3 text-muted-foreground text-xs">{slicer.connectivity}</td>
-                    <td className="py-2 px-3 text-center"><StepBadge value={slicer.step} /></td>
-                    <td className="py-2 px-3"><RatingDots rating={slicer.multiMat} /></td>
-                    <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{slicer.standout}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {/* TIER 2: Popular Choices */}
+      <CollapsibleSection
+        title="Popular Choices"
+        subtitle="Widely-used slicers with strong community support"
+        defaultExpanded={true}
+      >
+        <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
+          {popularSlicers.map((slicer) => (
+            <SlicerPopularCard
+              key={slicer.name}
+              slicer={slicer}
+              logo={slicerLogos[slicer.name]}
+              onLearnMore={() => handleLearnMore(slicer.name)}
+              onAddToCompare={() => handleAddToCompare(slicer.name)}
+            />
+          ))}
+        </div>
+      </CollapsibleSection>
+
+      {/* TIER 3: Full Comparison Table */}
+      <CollapsibleSection
+        id="comparison-table"
+        title="Full Comparison Table"
+        subtitle={`View all ${slicerComparison.length} slicers with detailed specifications`}
+        defaultExpanded={false}
+      >
+        {/* View Toggle */}
+        <div className="flex gap-3 mb-6">
+          <button
+            onClick={() => setShowDetailedTable(false)}
+            className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all border ${
+              !showDetailedTable 
+                ? 'bg-primary/15 border-primary/50 text-primary' 
+                : 'bg-muted/50 border-border text-muted-foreground hover:border-primary/30'
+            }`}
+          >
+            Simplified View
+          </button>
+          <button
+            onClick={() => setShowDetailedTable(true)}
+            className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all border ${
+              showDetailedTable 
+                ? 'bg-primary/15 border-primary/50 text-primary' 
+                : 'bg-muted/50 border-border text-muted-foreground hover:border-primary/30'
+            }`}
+          >
+            Detailed View
+          </button>
         </div>
 
-        {/* Slicer List */}
+        {showDetailedTable ? (
+          /* Detailed Table (Original) */
+          <div className="border border-border rounded-lg bg-card p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <BarChart3 className="w-6 h-6 text-emerald-400" />
+              <h3 className="text-lg font-bold font-mono text-foreground">Comparative Features Matrix</h3>
+            </div>
+            {/* Filters */}
+            <div className="flex flex-wrap gap-4 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Price:</span>
+                <Select value={priceFilter} onValueChange={setPriceFilter}>
+                  <SelectTrigger className="w-32 bg-background">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="Free">Free</SelectItem>
+                    <SelectItem value="Freemium">Freemium</SelectItem>
+                    <SelectItem value="Paid">Paid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Focus:</span>
+                <Select value={focusFilter} onValueChange={setFocusFilter}>
+                  <SelectTrigger className="w-32 bg-background">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="FDM">FDM</SelectItem>
+                    <SelectItem value="SLA">SLA</SelectItem>
+                    <SelectItem value="Both">Both</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {hasFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+                  <X className="h-4 w-4 mr-1" />
+                  Clear filters
+                </Button>
+              )}
+              <span className="text-sm text-muted-foreground ml-auto">
+                Showing {filteredAndSortedSlicers.length} of {slicerComparison.length} slicers
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+              <p className="text-muted-foreground text-sm">
+                Side-by-side comparison of slicer capabilities, ratings (1-5), and standout features.
+              </p>
+              <div className="flex items-center gap-4 text-xs">
+                <span className="text-muted-foreground">Rating:</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="text-muted-foreground">4-5 (Excellent)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="text-muted-foreground">3 (Average)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-red-400" />
+                  <span className="text-muted-foreground">1-2 (Limited)</span>
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <SortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                    <SortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                    <SortHeader label="Focus" sortKey="focus" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                    <th className="text-left py-2 px-3 font-semibold text-foreground">OS</th>
+                    <SortHeader label="Ease" sortKey="ease" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                    <SortHeader label="Control" sortKey="control" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                    <SortHeader label="Supports" sortKey="support" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                    <SortHeader label="Speed" sortKey="speed" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                    <SortHeader label="UI" sortKey="ui" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                    <th className="text-left py-2 px-3 font-semibold text-foreground">Connect</th>
+                    <SortHeader label="STEP" sortKey="step" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                    <SortHeader label="Multi-Mat" sortKey="multiMat" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                    <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAndSortedSlicers.map((slicer, index) => (
+                    <tr 
+                      key={index} 
+                      className="border-b border-border/50 hover:bg-muted/20 transition-colors"
+                    >
+                      <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          {slicerLogos[slicer.name] && (
+                            <img 
+                              src={slicerLogos[slicer.name]} 
+                              alt={`${slicer.name} logo`}
+                              className="w-5 h-5 rounded object-contain"
+                            />
+                          )}
+                          {slicer.name}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3">
+                        <Badge 
+                          variant="outline" 
+                          className={
+                            slicer.price === "Free" 
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
+                              : slicer.price === "Freemium"
+                              ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                              : "bg-red-500/10 text-red-400 border-red-500/30"
+                          }
+                        >
+                          {slicer.price}
+                        </Badge>
+                      </td>
+                      <td className="py-2 px-3 text-muted-foreground">{slicer.focus}</td>
+                      <td className="py-2 px-3 text-muted-foreground text-xs">{slicer.os}</td>
+                      <td className="py-2 px-3"><RatingDots rating={slicer.ease} /></td>
+                      <td className="py-2 px-3"><RatingDots rating={slicer.control} /></td>
+                      <td className="py-2 px-3"><RatingDots rating={slicer.support} /></td>
+                      <td className="py-2 px-3"><RatingDots rating={slicer.speed} /></td>
+                      <td className="py-2 px-3"><RatingDots rating={slicer.ui} /></td>
+                      <td className="py-2 px-3 text-muted-foreground text-xs">{slicer.connectivity}</td>
+                      <td className="py-2 px-3 text-center"><StepBadge value={slicer.step} /></td>
+                      <td className="py-2 px-3"><RatingDots rating={slicer.multiMat} /></td>
+                      <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{slicer.standout}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          /* Simplified Table */
+          <SlicerSimplifiedTable
+            slicers={otherSlicers}
+            logos={slicerLogos}
+            onViewDetails={handleLearnMore}
+          />
+        )}
+      </CollapsibleSection>
+
+      {/* Slicer Profiles Accordion */}
+      <div className="container mx-auto px-4 py-8">
+        <h2 className="text-xl font-bold text-foreground mb-6">Detailed Slicer Profiles</h2>
         <Accordion type="single" collapsible className="space-y-3">
           {slicerData.map((slicer, index) => (
             <AccordionItem 
               key={slicer.id} 
               value={slicer.id}
+              id={`slicer-${slicer.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
               className="border border-border/50 rounded-lg bg-card/50 backdrop-blur-sm px-4 data-[state=open]:border-emerald-500/30"
             >
               <AccordionTrigger className="hover:no-underline py-4">
