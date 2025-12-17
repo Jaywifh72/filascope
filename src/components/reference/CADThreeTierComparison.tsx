@@ -13,6 +13,7 @@ import {
   type PriceType,
   type SkillLevel
 } from "@/components/reference/CADBadges";
+import { useCADComparison, SelectedCADSoftware } from "@/contexts/CADComparisonContext";
 
 // Logo mapping for CAD software
 const cadLogos: Record<string, string> = {
@@ -232,8 +233,117 @@ const popularNames = popularChoices.map(c => c.name);
 
 interface CADThreeTierComparisonProps {
   onViewDetails: (cadDataId: string) => void;
-  onAddToCompare?: (software: any) => void;
 }
+
+// Helper to convert cadComparison item to SelectedCADSoftware
+const toSelectedCADSoftware = (sw: typeof cadComparison[0]): SelectedCADSoftware => ({
+  id: sw.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+  name: sw.name,
+  logo: cadLogos[sw.name],
+  priceType: sw.priceType,
+  overallScore: sw.overallScore,
+  skillLevel: sw.skillLevel,
+  type: sw.type,
+  os: sw.os,
+  ease: sw.ease,
+  precision: sw.precision,
+  sculpt: sw.sculpt,
+  printReady: sw.printReady,
+  parametric: sw.parametric,
+  cloud: sw.cloud,
+  perpetual: sw.perpetual,
+  standout: sw.standout,
+});
+
+// Add to Compare Button Component
+const AddToCompareButton = ({ 
+  software, 
+  variant = 'default' 
+}: { 
+  software: typeof cadComparison[0]; 
+  variant?: 'default' | 'compact' | 'icon-only';
+}) => {
+  const { addSoftware, removeSoftware, isInComparison, canAddMore } = useCADComparison();
+  const softwareId = software.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const isSelected = isInComparison(softwareId);
+  const isDisabled = !isSelected && !canAddMore;
+
+  const handleClick = () => {
+    if (isDisabled) return;
+    if (isSelected) {
+      removeSoftware(softwareId);
+    } else {
+      addSoftware(toSelectedCADSoftware(software));
+    }
+  };
+
+  if (variant === 'icon-only') {
+    return (
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleClick}
+        disabled={isDisabled}
+        className={cn(
+          "h-10 w-10 transition-all",
+          isSelected 
+            ? "bg-cyan-400/15 border-cyan-400 text-cyan-400 hover:bg-destructive/15 hover:border-destructive hover:text-destructive" 
+            : isDisabled
+              ? "border-border/40 text-muted-foreground opacity-50 cursor-not-allowed"
+              : "border-border/40 text-muted-foreground hover:text-cyan-400 hover:border-cyan-400/30 hover:bg-cyan-400/10"
+        )}
+        aria-label={isSelected ? `Remove ${software.name} from comparison` : `Add ${software.name} to comparison`}
+        title={isDisabled ? 'Remove an item to add more (max 4)' : undefined}
+      >
+        {isSelected ? <Check size={16} /> : <Plus size={16} />}
+      </Button>
+    );
+  }
+
+  if (variant === 'compact') {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleClick}
+        disabled={isDisabled}
+        className={cn(
+          "h-8 px-3 text-xs transition-all",
+          isSelected 
+            ? "bg-cyan-400/15 border-cyan-400 text-cyan-400 hover:bg-destructive/15 hover:border-destructive hover:text-destructive" 
+            : isDisabled
+              ? "border-border/40 text-muted-foreground opacity-50 cursor-not-allowed"
+              : "border-border/40 text-muted-foreground hover:text-cyan-400 hover:border-cyan-400/30"
+        )}
+        title={isDisabled ? 'Remove an item to add more (max 4)' : undefined}
+      >
+        {isSelected ? <Check size={12} className="mr-1" /> : <Plus size={12} className="mr-1" />}
+        {isSelected ? 'Added' : 'Compare'}
+      </Button>
+    );
+  }
+
+  // Default variant
+  return (
+    <Button
+      variant="outline"
+      onClick={handleClick}
+      disabled={isDisabled}
+      className={cn(
+        "flex-1 h-12 transition-all",
+        isSelected 
+          ? "bg-cyan-400/15 border-cyan-400 text-cyan-400 hover:bg-destructive/15 hover:border-destructive hover:text-destructive" 
+          : isDisabled
+            ? "border-border/40 text-muted-foreground opacity-50 cursor-not-allowed"
+            : "border-cyan-400/30 text-cyan-400 hover:bg-cyan-400/10 hover:border-cyan-400"
+      )}
+      title={isDisabled ? 'Remove an item to add more (max 4)' : undefined}
+    >
+      {isSelected ? <Check size={16} className="mr-2" /> : <Plus size={16} className="mr-2" />}
+      {isSelected ? 'Added' : 'Compare'}
+    </Button>
+  );
+};
 
 // Section Header Component
 const SectionHeader = ({ 
@@ -263,12 +373,10 @@ const StaffPickCard = ({
   software,
   pickData,
   onViewDetails,
-  onAddToCompare
 }: {
   software: typeof cadComparison[0];
   pickData: typeof staffPicks[0];
   onViewDetails: (id: string) => void;
-  onAddToCompare?: (software: any) => void;
 }) => {
   const BadgeIcon = pickData.badge.icon;
   const colorClasses = {
@@ -368,14 +476,7 @@ const StaffPickCard = ({
           View Details
           <ArrowRight size={16} className="ml-2" />
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => onAddToCompare?.(software)}
-          className="flex-1 h-12 border-cyan-400/30 text-cyan-400 hover:bg-cyan-400/10 hover:border-cyan-400"
-        >
-          <Plus size={16} className="mr-2" />
-          Compare
-        </Button>
+        <AddToCompareButton software={software} variant="default" />
       </div>
     </div>
   );
@@ -386,12 +487,10 @@ const PopularCard = ({
   software,
   choiceData,
   onViewDetails,
-  onAddToCompare
 }: {
   software: typeof cadComparison[0];
   choiceData: typeof popularChoices[0];
   onViewDetails: (id: string) => void;
-  onAddToCompare?: (software: any) => void;
 }) => (
   <div className={cn(
     "min-h-[280px] p-5 rounded-xl bg-card/30 border border-border",
@@ -453,15 +552,7 @@ const PopularCard = ({
         View Details
         <ArrowRight size={14} className="ml-1.5" />
       </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => onAddToCompare?.(software)}
-        className="h-10 w-10 border-border/40 text-muted-foreground hover:text-cyan-400 hover:border-cyan-400/30 hover:bg-cyan-400/10"
-        aria-label="Add to compare"
-      >
-        <Plus size={16} />
-      </Button>
+      <AddToCompareButton software={software} variant="icon-only" />
     </div>
   </div>
 );
@@ -470,11 +561,9 @@ const PopularCard = ({
 const FullComparisonTable = ({
   software,
   onViewDetails,
-  onAddToCompare
 }: {
   software: typeof cadComparison;
   onViewDetails: (id: string) => void;
-  onAddToCompare?: (software: any) => void;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -595,14 +684,7 @@ const FullComparisonTable = ({
                         Details
                         <ArrowRight size={12} className="ml-1" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onAddToCompare?.(sw)}
-                        className="h-8 w-8 border-border/40 text-muted-foreground hover:text-cyan-400 hover:border-cyan-400/30"
-                      >
-                        <Plus size={12} />
-                      </Button>
+                      <AddToCompareButton software={sw} variant="compact" />
                     </div>
                   </td>
                 </tr>
@@ -616,7 +698,7 @@ const FullComparisonTable = ({
 };
 
 // Main Component
-const CADThreeTierComparison = ({ onViewDetails, onAddToCompare }: CADThreeTierComparisonProps) => {
+const CADThreeTierComparison = ({ onViewDetails }: CADThreeTierComparisonProps) => {
   const totalSoftware = cadComparison.length;
 
   // Get software data for each tier
@@ -652,7 +734,6 @@ const CADThreeTierComparison = ({ onViewDetails, onAddToCompare }: CADThreeTierC
               software={software}
               pickData={pickData}
               onViewDetails={onViewDetails}
-              onAddToCompare={onAddToCompare}
             />
           ))}
         </div>
@@ -673,7 +754,6 @@ const CADThreeTierComparison = ({ onViewDetails, onAddToCompare }: CADThreeTierC
               software={software}
               choiceData={choiceData}
               onViewDetails={onViewDetails}
-              onAddToCompare={onAddToCompare}
             />
           ))}
         </div>
@@ -683,7 +763,6 @@ const CADThreeTierComparison = ({ onViewDetails, onAddToCompare }: CADThreeTierC
       <FullComparisonTable
         software={remainingSoftware}
         onViewDetails={onViewDetails}
-        onAddToCompare={onAddToCompare}
       />
     </div>
   );

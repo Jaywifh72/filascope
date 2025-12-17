@@ -13,6 +13,10 @@ import { cadData } from "@/lib/cadData";
 import CADHeroSection from "@/components/reference/CADHeroSection";
 import CADProfileSelector from "@/components/reference/CADProfileSelector";
 import CADThreeTierComparison from "@/components/reference/CADThreeTierComparison";
+import CADComparisonSidebar from "@/components/reference/CADComparisonSidebar";
+import CADComparisonMobile from "@/components/reference/CADComparisonMobile";
+import CADComparisonModal from "@/components/reference/CADComparisonModal";
+import { CADComparisonProvider } from "@/contexts/CADComparisonContext";
 import { 
   SoftwareBadges,
   mapPriceType,
@@ -138,32 +142,33 @@ const ReferenceCAD = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <CADHeroSection 
-        softwareCount={cadComparison.length} 
-        onScrollToComparison={handleScrollToComparison}
-      />
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <Button variant="ghost" size="sm" asChild className="mb-4">
-            <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Link>
-          </Button>
-        </div>
-
-        {/* Interactive Profile Selector */}
-        <CADProfileSelector onScrollToComparison={handleScrollToComparison} onLearnMore={handleLearnMore} />
-
-        {/* 3-Tier Comparison System */}
-        <CADThreeTierComparison 
-          onViewDetails={handleLearnMore}
+    <CADComparisonProvider>
+      <div className="min-h-screen bg-background">
+        {/* Hero Section */}
+        <CADHeroSection 
+          softwareCount={cadComparison.length} 
+          onScrollToComparison={handleScrollToComparison}
         />
 
-        <Accordion type="multiple" className="space-y-4" value={expandedAccordion} onValueChange={setExpandedAccordion}>
+        <div className="container mx-auto px-4 py-8 lg:pr-[300px]">
+          <div className="mb-6">
+            <Button variant="ghost" size="sm" asChild className="mb-4">
+              <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Home
+              </Link>
+            </Button>
+          </div>
+
+          {/* Interactive Profile Selector */}
+          <CADProfileSelector onScrollToComparison={handleScrollToComparison} onLearnMore={handleLearnMore} />
+
+          {/* 3-Tier Comparison System */}
+          <CADThreeTierComparison 
+            onViewDetails={handleLearnMore}
+          />
+
+          <Accordion type="multiple" className="space-y-4" value={expandedAccordion} onValueChange={setExpandedAccordion}>
           {cadData.map((software, index) => (
             <AccordionItem 
               key={software.id} 
@@ -369,8 +374,17 @@ const ReferenceCAD = () => {
             </AccordionItem>
           ))}
         </Accordion>
+        </div>
+
+        {/* Mobile footer spacer */}
+        <div className="h-20 lg:hidden" />
+
+        {/* Comparison Components */}
+        <CADComparisonSidebar />
+        <CADComparisonMobile />
+        <CADComparisonModal onViewDetails={handleLearnMore} />
       </div>
-    </div>
+    </CADComparisonProvider>
   );
 };
 
