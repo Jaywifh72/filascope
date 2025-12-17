@@ -1,6 +1,7 @@
 import React from 'react';
 import { DollarSign, Award, Search, Smartphone, Wrench, Zap, ExternalLink, Star } from 'lucide-react';
 import { getSpecializedPlatforms, PlatformData, metricTooltips } from '@/lib/platformData';
+import { useFilters } from '@/contexts/PlatformFilterContext';
 import RatingValue from './shared/RatingValue';
 import TierHeader from './shared/TierHeader';
 
@@ -104,7 +105,16 @@ const SpecializedCard: React.FC<SpecializedCardProps> = ({ platform }) => {
 };
 
 const SpecializedSection: React.FC = () => {
-  const specialized = getSpecializedPlatforms();
+  const { filteredPlatforms, hasActiveFilters } = useFilters();
+  const allSpecialized = getSpecializedPlatforms();
+  
+  // Filter specialized platforms based on active filters
+  const specialized = allSpecialized.filter(sp => 
+    filteredPlatforms.some(fp => fp.id === sp.id)
+  );
+
+  // Hide entire section if no matches
+  if (specialized.length === 0 && hasActiveFilters) return null;
 
   return (
     <section className="mb-12" role="region" aria-labelledby="specialized-title">
@@ -113,7 +123,7 @@ const SpecializedSection: React.FC = () => {
         icon="⚡"
         title="Specialized Options"
         subtitle="Platforms optimized for specific use cases"
-        count="5 of 8 platforms"
+        count={`${specialized.length} of ${allSpecialized.length} platforms`}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
