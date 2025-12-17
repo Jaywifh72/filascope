@@ -1,6 +1,6 @@
 import React from 'react';
 import { DollarSign, Award, Search, Smartphone, Wrench, Zap, ExternalLink, Star } from 'lucide-react';
-import { getSpecializedPlatforms, PlatformData } from '@/lib/platformData';
+import { getSpecializedPlatforms, PlatformData, metricTooltips } from '@/lib/platformData';
 import RatingValue from './shared/RatingValue';
 import TierHeader from './shared/TierHeader';
 
@@ -65,7 +65,7 @@ const SpecializedCard: React.FC<SpecializedCardProps> = ({ platform }) => {
       {/* Key Rating */}
       <div className="flex items-center gap-2 mb-3 text-sm">
         <span className="text-muted-foreground">Quality:</span>
-        <RatingValue rating={platform.ratings.quality} size="small" />
+        <RatingValue rating={platform.ratings.quality} size="small" showTooltip tooltipContent={metricTooltips.quality} />
       </div>
 
       {/* Standout */}

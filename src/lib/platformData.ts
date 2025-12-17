@@ -1,5 +1,77 @@
 export type RatingLevel = 'excellent' | 'great' | 'good' | 'average' | 'limited' | 'none';
 
+export interface RatingConfig {
+  level: RatingLevel;
+  label: string;
+  color: string;
+  backgroundColor: string;
+  description: string;
+  numericValue: number;
+}
+
+export const ratingConfigs: Record<RatingLevel, RatingConfig> = {
+  excellent: {
+    level: 'excellent',
+    label: 'Excellent',
+    color: '#22C55E',
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    description: 'Best-in-class, industry leading',
+    numericValue: 5
+  },
+  great: {
+    level: 'great',
+    label: 'Great',
+    color: '#00D9D9',
+    backgroundColor: 'rgba(0, 217, 217, 0.15)',
+    description: 'Above average, highly recommended',
+    numericValue: 4
+  },
+  good: {
+    level: 'good',
+    label: 'Good',
+    color: '#F59E0B',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    description: 'Adequate, meets expectations',
+    numericValue: 3
+  },
+  average: {
+    level: 'average',
+    label: 'Average',
+    color: '#FB923C',
+    backgroundColor: 'rgba(251, 146, 60, 0.15)',
+    description: 'Below average, has limitations',
+    numericValue: 2
+  },
+  limited: {
+    level: 'limited',
+    label: 'Limited',
+    color: '#EF4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    description: 'Significant gaps, use with caution',
+    numericValue: 1
+  },
+  none: {
+    level: 'none',
+    label: 'None',
+    color: '#64748B',
+    backgroundColor: 'rgba(100, 116, 139, 0.15)',
+    description: 'Feature not available',
+    numericValue: 0
+  }
+};
+
+export const metricTooltips: Record<string, string> = {
+  quality: "Model quality standards, file integrity, and design excellence",
+  community: "Active user base, engagement, forums, and support availability",
+  search: "Search accuracy, filters, sorting options, and discovery features",
+  ux: "User interface design, navigation ease, and overall experience",
+  monetize: "Options for designers to sell models and earn revenue"
+};
+
+export const getRatingConfig = (rating: RatingLevel): RatingConfig => {
+  return ratingConfigs[rating];
+};
+
 export interface PlatformData {
   id: string;
   name: string;

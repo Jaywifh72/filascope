@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, FolderGit2, Target, DollarSign, Server, Users, Check, X, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Download, Filter } from "lucide-react";
+import { ArrowLeft, ExternalLink, FolderGit2, Target, DollarSign, Server, Users, Check, X, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Download, Filter, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -21,12 +21,19 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { repoData } from "@/lib/repoData";
-import { RatingLevel } from "@/lib/platformData";
+import { RatingLevel, metricTooltips } from "@/lib/platformData";
 import ReposHeroSection from "@/components/reference/ReposHeroSection";
 import StaffPicksSection from "@/components/reference/repos/StaffPicksSection";
 import SpecializedSection from "@/components/reference/repos/SpecializedSection";
 import RatingValue from "@/components/reference/repos/shared/RatingValue";
+import RatingScaleLegend from "@/components/reference/repos/shared/RatingScaleLegend";
 
 // Helper to convert numeric ratings (1-5) to semantic labels
 const mapNumberToSemantic = (num: number): RatingLevel => {
@@ -80,7 +87,8 @@ const SortHeader = ({
   currentSort, 
   currentDir, 
   onSort,
-  center = false 
+  center = false,
+  tooltip
 }: { 
   label: string; 
   sortKey: SortKey; 
@@ -88,6 +96,7 @@ const SortHeader = ({
   currentDir: SortDir;
   onSort: (key: SortKey) => void;
   center?: boolean;
+  tooltip?: string;
 }) => {
   const isActive = currentSort === sortKey;
   return (
@@ -97,6 +106,18 @@ const SortHeader = ({
     >
       <div className={`flex items-center gap-1 ${center ? "justify-center" : ""}`}>
         <span>{label}</span>
+        {tooltip && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <HelpCircle className="w-3 h-3 text-muted-foreground/60 hover:text-primary cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p className="text-xs">{tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
         {isActive ? (
           currentDir === "asc" ? <ChevronUp className="w-3 h-3 text-purple-400" /> : <ChevronDown className="w-3 h-3 text-purple-400" />
         ) : (
@@ -314,6 +335,11 @@ const ReferenceRepos = () => {
                   </span>
                 </div>
 
+                {/* Rating Scale Legend */}
+                <div className="mb-4">
+                  <RatingScaleLegend />
+                </div>
+
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-sm">
                     <thead>
@@ -323,11 +349,11 @@ const ReferenceRepos = () => {
                         <SortHeader label="Model" sortKey="model" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                         <th className="text-center py-2 px-3 font-semibold text-foreground">Free</th>
                         <th className="text-center py-2 px-3 font-semibold text-foreground">Paid</th>
-                        <SortHeader label="Quality" sortKey="quality" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                        <SortHeader label="Community" sortKey="community" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                        <SortHeader label="Monetize" sortKey="monetization" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                        <SortHeader label="Search" sortKey="search" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                        <SortHeader label="UX" sortKey="ux" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                        <SortHeader label="Quality" sortKey="quality" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.quality} />
+                        <SortHeader label="Community" sortKey="community" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.community} />
+                        <SortHeader label="Monetize" sortKey="monetization" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.monetize} />
+                        <SortHeader label="Search" sortKey="search" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.search} />
+                        <SortHeader label="UX" sortKey="ux" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.ux} />
                         <th className="text-center py-2 px-3 font-semibold text-foreground">Mobile</th>
                         <th className="text-left py-2 px-3 font-semibold text-foreground">File Types</th>
                         <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
@@ -368,11 +394,11 @@ const ReferenceRepos = () => {
                           </td>
                           <td className="py-2 px-3 text-center"><BoolBadge value={repo.free} /></td>
                           <td className="py-2 px-3 text-center"><BoolBadge value={repo.paid} /></td>
-                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.quality)} size="small" /></td>
-                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.community)} size="small" /></td>
-                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.monetization)} size="small" /></td>
-                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.search)} size="small" /></td>
-                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.ux)} size="small" /></td>
+                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.quality)} size="small" showTooltip tooltipContent={metricTooltips.quality} /></td>
+                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.community)} size="small" showTooltip tooltipContent={metricTooltips.community} /></td>
+                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.monetization)} size="small" showTooltip tooltipContent={metricTooltips.monetize} /></td>
+                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.search)} size="small" showTooltip tooltipContent={metricTooltips.search} /></td>
+                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.ux)} size="small" showTooltip tooltipContent={metricTooltips.ux} /></td>
                           <td className="py-2 px-3 text-center"><BoolBadge value={repo.mobile} /></td>
                           <td className="py-2 px-3 text-muted-foreground text-xs">{repo.fileTypes}</td>
                           <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{repo.standout}</td>
