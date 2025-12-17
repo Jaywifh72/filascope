@@ -27,6 +27,7 @@ import BuildVolumeVisualization from "@/components/printer/BuildVolumeVisualizat
 import { SocialProofBadges } from "@/components/printer/SocialProofBadges";
 import { ValueProposition } from "@/components/printer/ValueProposition";
 import { KeySpecsBar, generateKeySpecs } from "@/components/printer/KeySpecsBar";
+import { FeatureHighlightCards } from "@/components/printer/FeatureHighlightCards";
 import { PriceSection } from "@/components/printer/PriceSection";
 import { CTAButtons } from "@/components/printer/CTAButtons";
 import { generatePrinterBenefits, generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
@@ -557,6 +558,9 @@ const PrinterDetail = () => {
         {/* Key Specifications Bar - Full Width Below Hero */}
         <KeySpecsBar specs={generateKeySpecs(printer)} />
 
+        {/* Feature Highlight Cards - Decision Matrix */}
+        <FeatureHighlightCards printer={printer} />
+
         {/* Price Tracker - Full Width Below Hero */}
         <div className="w-full">
           <PrinterPriceChart
@@ -565,46 +569,6 @@ const PrinterDetail = () => {
             currentAmazonPrice={printer.current_price_usd_amazon}
             msrp={printer.msrp_usd}
           />
-        </div>
-
-        {/* Feature Highlights */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {printer.has_enclosure && (
-            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
-              <Package className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-sm font-medium">Enclosure</div>
-            </Card>
-          )}
-          {printer.auto_bed_leveling && (
-            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
-              <Activity className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-sm font-medium">Auto Leveling</div>
-            </Card>
-          )}
-          {printer.multi_material_supported && (
-            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
-              <Blend className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-sm font-medium">Multi-Material</div>
-            </Card>
-          )}
-          {printer.has_wifi && (
-            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
-              <Wifi className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-sm font-medium">WiFi</div>
-            </Card>
-          )}
-          {printer.input_shaping_supported && (
-            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
-              <Wind className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-sm font-medium">Input Shaping</div>
-            </Card>
-          )}
-          {printer.abrasive_materials_supported && (
-            <Card className="p-4 text-center hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-card to-card/50">
-              <Layers className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <div className="text-sm font-medium">Abrasive Safe</div>
-            </Card>
-          )}
         </div>
 
         {/* Ratings */}
