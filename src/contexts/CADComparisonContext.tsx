@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { PriceType, SkillLevel } from '@/components/reference/CADBadges';
 
@@ -34,6 +34,8 @@ interface CADComparisonContextType {
   maxSoftware: number;
   canAddMore: boolean;
   canCompare: boolean;
+  announcement: string;
+  previousFocusRef: React.RefObject<HTMLElement>;
 }
 
 const CADComparisonContext = createContext<CADComparisonContextType | null>(null);
@@ -41,6 +43,8 @@ const CADComparisonContext = createContext<CADComparisonContextType | null>(null
 export const CADComparisonProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [selectedSoftware, setSelectedSoftware] = useState<SelectedCADSoftware[]>([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
+  const previousFocusRef = useRef<HTMLElement>(null);
   const maxSoftware = 4;
   const minSoftware = 2;
 
@@ -57,6 +61,8 @@ export const CADComparisonProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       
       toast.success(`Added ${software.name} to comparison`);
+      const newCount = prev.length + 1;
+      setAnnouncement(`${software.name} added to comparison. ${newCount} item${newCount !== 1 ? 's' : ''} selected.`);
       return [...prev, software];
     });
   }, [maxSoftware]);
@@ -66,6 +72,8 @@ export const CADComparisonProvider: React.FC<{ children: React.ReactNode }> = ({
       const software = prev.find(s => s.id === id);
       if (software) {
         toast.info(`Removed ${software.name} from comparison`);
+        const newCount = prev.length - 1;
+        setAnnouncement(`${software.name} removed from comparison. ${newCount} item${newCount !== 1 ? 's' : ''} remaining.`);
       }
       return prev.filter(s => s.id !== id);
     });
@@ -74,6 +82,7 @@ export const CADComparisonProvider: React.FC<{ children: React.ReactNode }> = ({
   const clearAll = useCallback(() => {
     setSelectedSoftware([]);
     toast.info('Cleared all items from comparison');
+    setAnnouncement('Comparison cleared.');
   }, []);
 
   const isInComparison = useCallback((id: string) => {
@@ -82,6 +91,8 @@ export const CADComparisonProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const openComparison = useCallback(() => {
     if (selectedSoftware.length >= minSoftware) {
+      // Store current focus before opening modal
+      previousFocusRef.current = document.activeElement as HTMLElement;
       setIsComparisonOpen(true);
     } else {
       toast.error(`Select at least ${minSoftware} items to compare`);
@@ -90,6 +101,10 @@ export const CADComparisonProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const closeComparison = useCallback(() => {
     setIsComparisonOpen(false);
+    // Return focus to the element that opened the modal
+    setTimeout(() => {
+      previousFocusRef.current?.focus();
+    }, 0);
   }, []);
 
   const canAddMore = selectedSoftware.length < maxSoftware;
@@ -109,6 +124,8 @@ export const CADComparisonProvider: React.FC<{ children: React.ReactNode }> = ({
         maxSoftware,
         canAddMore,
         canCompare,
+        announcement,
+        previousFocusRef,
       }}
     >
       {children}

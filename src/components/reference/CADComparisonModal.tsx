@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { X, BarChart3, ArrowRight, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -162,14 +162,44 @@ const nameToCadDataId: Record<string, string> = {
 
 const CADComparisonModal = ({ onViewDetails }: CADComparisonModalProps) => {
   const { selectedSoftware, isComparisonOpen, closeComparison } = useCADComparison();
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  // Handle escape key and body scroll
+  // Handle body scroll and focus trap
   useEffect(() => {
-    if (isComparisonOpen) {
-      document.body.style.overflow = 'hidden';
-    }
+    if (!isComparisonOpen) return;
+    
+    document.body.style.overflow = 'hidden';
+    
+    // Focus trap implementation
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      
+      const modal = modalRef.current;
+      if (!modal) return;
+      
+      const focusableElements = modal.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      
+      if (focusableElements.length === 0) return;
+      
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    
     return () => {
       document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isComparisonOpen]);
 
@@ -183,7 +213,11 @@ const CADComparisonModal = ({ onViewDetails }: CADComparisonModalProps) => {
 
   return (
     <Dialog open={isComparisonOpen} onOpenChange={(open) => !open && closeComparison()}>
-      <DialogContent className="max-w-[95vw] md:max-w-[1000px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+      <DialogContent 
+        ref={modalRef}
+        className="max-w-[95vw] md:max-w-[1000px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0"
+        aria-describedby={undefined}
+      >
         <DialogHeader className="p-5 md:p-6 border-b border-border flex-shrink-0">
           <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-3">
             <BarChart3 size={24} className="text-cyan-400" />
