@@ -22,9 +22,20 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { repoData } from "@/lib/repoData";
+import { RatingLevel } from "@/lib/platformData";
 import ReposHeroSection from "@/components/reference/ReposHeroSection";
 import StaffPicksSection from "@/components/reference/repos/StaffPicksSection";
 import SpecializedSection from "@/components/reference/repos/SpecializedSection";
+import RatingValue from "@/components/reference/repos/shared/RatingValue";
+
+// Helper to convert numeric ratings (1-5) to semantic labels
+const mapNumberToSemantic = (num: number): RatingLevel => {
+  if (num >= 5) return 'excellent';
+  if (num >= 4) return 'great';
+  if (num >= 3) return 'good';
+  if (num >= 2) return 'average';
+  return 'limited';
+};
 
 // Logo mapping for repositories
 const repoLogos: Record<string, string> = {
@@ -57,22 +68,7 @@ type SortDir = "asc" | "desc";
 
 const modelOrder = { "Loss-Leader": 0, "Hybrid": 1, "Ad-Supported": 2, "Marketplace": 3, "Premium": 4, "Search + Sub": 5, "Mobile Sub": 6, "Lead Gen": 7 };
 
-const RatingDots = ({ rating }: { rating: number }) => {
-  return (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div
-          key={i}
-          className={`w-2 h-2 rounded-full ${
-            i <= rating
-              ? rating >= 4 ? "bg-emerald-400" : rating >= 3 ? "bg-amber-400" : "bg-red-400"
-              : "bg-muted"
-          }`}
-        />
-      ))}
-    </div>
-  );
-};
+// RatingDots removed - now using semantic RatingValue component
 
 const BoolBadge = ({ value }: { value: boolean }) => {
   return value ? <Check className="w-4 h-4 text-emerald-400" /> : <X className="w-4 h-4 text-muted-foreground" />;
@@ -245,50 +241,38 @@ const ReferenceRepos = () => {
           onOpenChange={setIsTableExpanded}
           className="mb-8"
         >
-          <div id="comparison-matrix" className="border border-border rounded-lg bg-card scroll-mt-4">
+          <div 
+            id="comparison-matrix" 
+            className="border border-border rounded-lg bg-card scroll-mt-4"
+            role="region"
+            aria-labelledby="comparison-matrix-title"
+          >
             <CollapsibleTrigger asChild>
-              <button className="w-full p-6 flex items-center justify-between hover:bg-muted/20 transition-colors rounded-lg">
+              <button 
+                className="w-full p-6 flex items-center justify-between hover:bg-muted/20 transition-all duration-200 rounded-lg"
+                aria-expanded={isTableExpanded}
+                aria-controls="comparison-table-content"
+              >
                 <div className="flex items-center gap-3">
                   <BarChart3 className="w-6 h-6 text-purple-400" />
                   <div className="text-left">
-                    <h2 className="text-xl font-bold font-mono text-foreground">Full Comparison Matrix</h2>
+                    <h2 id="comparison-matrix-title" className="text-xl font-bold font-mono text-foreground">Full Comparison Matrix</h2>
                     <p className="text-sm text-muted-foreground">
                       All 8 platforms with detailed metrics and ratings
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-primary">
                   <span className="text-sm font-medium">
                     {isTableExpanded ? 'Collapse' : 'Expand'}
                   </span>
-                  {isTableExpanded ? (
-                    <ChevronUp className="w-5 h-5" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5" />
-                  )}
+                  <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isTableExpanded ? 'rotate-180' : ''}`} />
                 </div>
               </button>
             </CollapsibleTrigger>
 
-            <CollapsibleContent>
+            <CollapsibleContent id="comparison-table-content" className="animate-accordion-down">
               <div className="px-6 pb-6 border-t border-border/50">
-                <div className="flex items-center justify-between flex-wrap gap-4 py-4">
-                  <div className="flex items-center gap-4 text-xs">
-                    <span className="text-muted-foreground">Rating:</span>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                      <span className="text-muted-foreground">4-5 (Excellent)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-amber-400" />
-                      <span className="text-muted-foreground">3 (Average)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-red-400" />
-                      <span className="text-muted-foreground">1-2 (Limited)</span>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Filter Controls */}
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
@@ -384,11 +368,11 @@ const ReferenceRepos = () => {
                           </td>
                           <td className="py-2 px-3 text-center"><BoolBadge value={repo.free} /></td>
                           <td className="py-2 px-3 text-center"><BoolBadge value={repo.paid} /></td>
-                          <td className="py-2 px-3"><RatingDots rating={repo.quality} /></td>
-                          <td className="py-2 px-3"><RatingDots rating={repo.community} /></td>
-                          <td className="py-2 px-3"><RatingDots rating={repo.monetization} /></td>
-                          <td className="py-2 px-3"><RatingDots rating={repo.search} /></td>
-                          <td className="py-2 px-3"><RatingDots rating={repo.ux} /></td>
+                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.quality)} size="small" /></td>
+                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.community)} size="small" /></td>
+                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.monetization)} size="small" /></td>
+                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.search)} size="small" /></td>
+                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.ux)} size="small" /></td>
                           <td className="py-2 px-3 text-center"><BoolBadge value={repo.mobile} /></td>
                           <td className="py-2 px-3 text-muted-foreground text-xs">{repo.fileTypes}</td>
                           <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{repo.standout}</td>
