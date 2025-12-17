@@ -1,13 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, FolderGit2, Target, DollarSign, Server, Users, Check, X, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Download, Filter, HelpCircle } from "lucide-react";
+import { ArrowLeft, FolderGit2, Check, X, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Filter, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -34,7 +28,7 @@ import StaffPicksSection from "@/components/reference/repos/StaffPicksSection";
 import SpecializedSection from "@/components/reference/repos/SpecializedSection";
 import RatingValue from "@/components/reference/repos/shared/RatingValue";
 import RatingScaleLegend from "@/components/reference/repos/shared/RatingScaleLegend";
-
+import ExpandedPlatformCard from "@/components/reference/repos/ExpandedPlatformCard";
 // Helper to convert numeric ratings (1-5) to semantic labels
 const mapNumberToSemantic = (num: number): RatingLevel => {
   if (num >= 5) return 'excellent';
@@ -412,140 +406,18 @@ const ReferenceRepos = () => {
           </div>
         </Collapsible>
 
-        {/* Repository List */}
-        <Accordion type="single" collapsible className="space-y-3">
+        {/* Repository List - Progressive Disclosure Cards */}
+        <div className="space-y-3">
           {repoData.map((repo, index) => (
-            <AccordionItem 
-              key={repo.id} 
-              value={repo.id}
-              id={`platform-${repo.id}`}
-              className="border border-border/50 rounded-lg bg-card/50 backdrop-blur-sm px-4 data-[state=open]:border-purple-500/30 scroll-mt-4"
-              data-platform-name={repo.name}
-            >
-              <AccordionTrigger className="hover:no-underline py-4">
-                <div className="flex items-center gap-4 text-left">
-                  <span className="text-xs font-mono text-muted-foreground w-6">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  {repoLogos[repo.name] && (
-                    <img 
-                      src={repoLogos[repo.name]} 
-                      alt={`${repo.name} logo`}
-                      className="w-8 h-8 rounded object-contain"
-                    />
-                  )}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold text-foreground">{repo.name}</h3>
-                      <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground border-border">
-                        {repo.owner}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-purple-400">{repo.status}</p>
-                  </div>
-                </div>
-              </AccordionTrigger>
-              
-              <AccordionContent className="pb-6">
-                <div className="space-y-6 pt-2">
-                  {/* Summary */}
-                  <div>
-                    <h4 className="text-sm font-semibold text-purple-400 uppercase tracking-wide mb-2">Summary</h4>
-                    <p className="text-muted-foreground leading-relaxed">{repo.summary}</p>
-                  </div>
-
-                  {/* Strategic Positioning */}
-                  <div>
-                    <h4 className="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-2 flex items-center gap-2">
-                      <Target className="w-4 h-4" />
-                      Strategic Positioning
-                    </h4>
-                    <p className="text-muted-foreground leading-relaxed">{repo.strategicPositioning}</p>
-                  </div>
-
-                  {/* Business Model */}
-                  <div>
-                    <h4 className="text-sm font-semibold text-emerald-400 uppercase tracking-wide mb-2 flex items-center gap-2">
-                      <DollarSign className="w-4 h-4" />
-                      Business Model & Monetization
-                    </h4>
-                    <p className="text-muted-foreground leading-relaxed">{repo.businessModel}</p>
-                  </div>
-
-                  {/* Technical Architecture */}
-                  <div>
-                    <h4 className="text-sm font-semibold text-cyan-400 uppercase tracking-wide mb-2 flex items-center gap-2">
-                      <Server className="w-4 h-4" />
-                      Technical Architecture
-                    </h4>
-                    <p className="text-muted-foreground leading-relaxed">{repo.technicalArchitecture}</p>
-                  </div>
-
-                  {/* Community */}
-                  <div>
-                    <h4 className="text-sm font-semibold text-amber-400 uppercase tracking-wide mb-2 flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      Community & Culture
-                    </h4>
-                    <p className="text-muted-foreground leading-relaxed">{repo.community}</p>
-                  </div>
-
-                  {/* Strengths & Weaknesses */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <h4 className="text-sm font-semibold text-emerald-400 uppercase tracking-wide mb-3">Strengths</h4>
-                      <div className="space-y-2">
-                        {repo.strengths.map((strength, idx) => (
-                          <div key={idx} className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                            <h5 className="font-medium text-emerald-400 mb-1 flex items-center gap-2">
-                              <Check className="w-4 h-4" />
-                              {strength.title}
-                            </h5>
-                            <p className="text-sm text-muted-foreground">{strength.description}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-red-400 uppercase tracking-wide mb-3">Weaknesses</h4>
-                      <div className="space-y-2">
-                        {repo.weaknesses.map((weakness, idx) => (
-                          <div key={idx} className="p-3 rounded-lg bg-red-500/5 border border-red-500/20">
-                            <h5 className="font-medium text-red-400 mb-1 flex items-center gap-2">
-                              <X className="w-4 h-4" />
-                              {weakness.title}
-                            </h5>
-                            <p className="text-sm text-muted-foreground">{weakness.description}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Links */}
-                  <div className="flex gap-3 pt-2">
-                    {repo.links.website && (
-                      <Button variant="outline" size="sm" asChild className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10">
-                        <a href={repo.links.website} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Visit Website
-                        </a>
-                      </Button>
-                    )}
-                    {repo.links.app && (
-                      <Button variant="outline" size="sm" asChild className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
-                        <a href={repo.links.app} target="_blank" rel="noopener noreferrer">
-                          <Download className="w-4 h-4 mr-2" />
-                          Download App
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+            <ExpandedPlatformCard
+              key={repo.id}
+              repo={repo}
+              rank={index + 1}
+              logo={repoLogos[repo.name]}
+              comparisonData={repoComparison.find(r => r.name === repo.name)}
+            />
           ))}
-        </Accordion>
+        </div>
       </div>
     </div>
   );
