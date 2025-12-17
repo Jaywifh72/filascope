@@ -33,16 +33,24 @@ const SlicerHeroSection = ({ slicerCount, onScrollToComparison }: SlicerHeroSect
         }}
       />
       
-      <div className="relative z-10 max-w-[900px] w-full flex flex-col items-center gap-0">
+      {/* Radial gradient spotlight */}
+      <div 
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.08) 0%, transparent 70%)"
+        }}
+      />
+      
+      <div className="relative z-10 max-w-[900px] w-full flex flex-col items-center gap-0 animate-fade-in">
         {/* Main Headline */}
         <h1 className="flex items-center justify-center gap-3 flex-wrap text-[42px] font-bold text-foreground tracking-tight leading-tight mb-4 md:text-[32px]">
-          <Target className="w-10 h-10 text-primary shrink-0 md:w-8 md:h-8" />
+          <Target className="w-10 h-10 text-primary shrink-0 md:w-8 md:h-8 drop-shadow-[0_0_12px_hsl(var(--primary)/0.5)]" />
           <span>Find Your Perfect 3D Slicer Software</span>
         </h1>
 
         {/* Subheadline */}
         <p className="text-lg font-medium text-muted-foreground leading-relaxed mb-2 md:text-base">
-          Compare {slicerCount} slicers across 15 key features
+          Compare <span className="text-primary font-semibold">{slicerCount}</span> slicers across <span className="text-primary font-semibold">15</span> key features
         </p>
 
         {/* Trust Signals */}
@@ -51,14 +59,14 @@ const SlicerHeroSection = ({ slicerCount, onScrollToComparison }: SlicerHeroSect
           <span className="text-muted-foreground/50">•</span>
           <span className="inline-flex items-center gap-1.5">💬 Real user reviews</span>
           <span className="text-muted-foreground/50">•</span>
-          <span className="inline-flex items-center gap-1.5">🔄 Updated 2024</span>
+          <span className="inline-flex items-center gap-1.5">🔄 Updated {new Date().getFullYear()}</span>
         </div>
 
         {/* CTA Buttons */}
         <div className="flex justify-center gap-4 flex-wrap mb-8 md:flex-col md:w-full md:max-w-[400px] md:gap-3">
           <Button 
             onClick={handleQuizClick}
-            className="h-14 px-8 text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/40 transition-all duration-200 md:w-full"
+            className="h-14 px-8 text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/40 transition-all duration-200 md:w-full w-[260px]"
           >
             <Compass className="w-5 h-5 mr-2" />
             Take 60-Second Quiz
@@ -67,7 +75,7 @@ const SlicerHeroSection = ({ slicerCount, onScrollToComparison }: SlicerHeroSect
           <Button 
             variant="outline"
             onClick={onScrollToComparison}
-            className="h-14 px-7 text-base font-semibold border-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary hover:-translate-y-0.5 transition-all duration-200 md:w-full"
+            className="h-14 px-7 text-base font-semibold border-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary hover:-translate-y-0.5 transition-all duration-200 md:w-full w-[240px]"
           >
             View Full Comparison
             <ChevronDown className="w-5 h-5 ml-2" />
