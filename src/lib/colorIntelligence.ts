@@ -376,7 +376,7 @@ export function getColorFamily(hex: string): string {
   return "unknown";
 }
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
@@ -385,4 +385,127 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
         b: parseInt(result[3], 16),
       }
     : null;
+}
+
+/**
+ * Default hex values for each color family
+ */
+export const COLOR_FAMILY_DEFAULTS: Record<string, string> = {
+  white: "#FFFFFF",
+  black: "#1A1A1A",
+  red: "#FF0000",
+  orange: "#FF8C00",
+  yellow: "#FFD700",
+  green: "#228B22",
+  blue: "#0066CC",
+  purple: "#8B008B",
+  pink: "#FF69B4",
+  brown: "#8B4513",
+  gray: "#808080",
+  grey: "#808080",
+  gold: "#FFD700",
+  silver: "#C0C0C0",
+  copper: "#B87333",
+  bronze: "#CD7F32",
+  beige: "#F5F5DC",
+  clear: "#FFFFFF",
+  natural: "#F5F5DC",
+  transparent: "#FFFFFF",
+  teal: "#008080",
+  cyan: "#00FFFF",
+  navy: "#000080",
+  maroon: "#800000",
+  olive: "#808000",
+};
+
+/**
+ * Get the default hex code for a color family
+ */
+export function getHexForFamily(colorFamily: string): string | null {
+  if (!colorFamily) return null;
+  const normalized = colorFamily.toLowerCase().trim();
+  return COLOR_FAMILY_DEFAULTS[normalized] || null;
+}
+
+/**
+ * Check if a hex code is valid for a given color family
+ * Returns true if the hex appears to match the expected family
+ */
+export function isHexValidForFamily(hex: string, colorFamily: string): boolean {
+  if (!hex || !colorFamily) return false;
+  
+  const rgb = hexToRgb(hex);
+  if (!rgb) return false;
+  
+  const { r, g, b } = rgb;
+  const normalizedFamily = colorFamily.toLowerCase().trim();
+  
+  // Check for obvious mismatches
+  const brightness = (r + g + b) / 3;
+  
+  // White should be bright
+  if (normalizedFamily === "white" && brightness < 200) return false;
+  
+  // Black should be dark
+  if (normalizedFamily === "black" && brightness > 80) return false;
+  
+  // Check saturation for colored families
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const saturation = max === 0 ? 0 : (max - min) / max;
+  
+  // Colored families should have some saturation (unless very light/dark)
+  const coloredFamilies = ["red", "orange", "yellow", "green", "blue", "purple", "pink", "cyan", "teal"];
+  if (coloredFamilies.includes(normalizedFamily) && saturation < 0.1 && brightness > 50 && brightness < 200) {
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * Validate and potentially fix a color hex based on the color family
+ * Returns the original hex if valid, or a corrected hex if mismatched
+ */
+export function validateColorHex(hex: string | null, colorFamily: string | null): string | null {
+  // If no family, return the hex as-is
+  if (!colorFamily) return hex;
+  
+  // If no hex but we have a family, derive it
+  if (!hex) {
+    return getHexForFamily(colorFamily);
+  }
+  
+  // Validate the hex against the family
+  if (!isHexValidForFamily(hex, colorFamily)) {
+    // The hex doesn't match the family - return the default for that family
+    return getHexForFamily(colorFamily) || hex;
+  }
+  
+  return hex;
+}
+
+/**
+ * Extract color information from a product title
+ * Returns hex and family if a color is detected
+ */
+export function extractColorFromProductTitle(title: string): { hex: string; family: string } | null {
+  if (!title) return null;
+  
+  const normalized = title.toLowerCase();
+  
+  // Check for color names in the title (prioritize longer matches)
+  const sortedColors = Object.entries(COLOR_NAME_MAP)
+    .sort((a, b) => b[0].length - a[0].length);
+  
+  for (const [colorName, hex] of sortedColors) {
+    // Use word boundary matching to avoid partial matches
+    const regex = new RegExp(`\\b${colorName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    if (regex.test(normalized)) {
+      const family = getColorFamily(hex);
+      return { hex, family };
+    }
+  }
+  
+  return null;
 }
