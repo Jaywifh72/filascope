@@ -86,7 +86,7 @@ const FilamentDetail = () => {
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const heroSentinelRef = useRef<HTMLDivElement>(null);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
-  const { formatPrice, currencyInfo } = useCurrency();
+  const { formatPrice, formatRegionalPrice, currencyInfo } = useCurrency();
   const { incrementStat } = useAchievements();
   const { trackStoreClick } = useConversionTracking();
   const { getRegionalUrl, regionShortName, currentRegion } = useRegionalStore();
@@ -1292,18 +1292,25 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
   const packQuantity = (filament as any).pack_quantity || 1;
   const isMultiPack = packQuantity > 1;
   
-  // variant_price is the TOTAL price for the listing (may be multi-pack)
+  // variant_price is the TOTAL price for the listing in USD (may be multi-pack)
   // Calculate true per-kg price: total_price / (pack_quantity * weight_per_spool_kg)
   const totalWeightKg = filament.net_weight_g 
     ? (filament.net_weight_g / 1000) * packQuantity 
     : packQuantity; // Assume 1kg per spool if weight unknown
   
-  // Calculate raw USD values first, then format with currency conversion
-  const rawPricePerKg = filament.variant_price 
-    ? (filament.variant_price / totalWeightKg) 
-    : null;
+  // Use actual scraped regional price if available, otherwise fall back to USD conversion
+  // regionalPriceData.regionalPrice is already in the user's local currency (e.g., CAD $25.99)
+  const hasActualRegionalPrice = regionalPriceData.isActualRegionalPrice && regionalPriceData.regionalPrice !== null;
+  
+  // Calculate raw price values based on whether we have actual regional data
+  const rawPricePerKg = hasActualRegionalPrice
+    ? (regionalPriceData.regionalPrice! / totalWeightKg)
+    : filament.variant_price 
+      ? (filament.variant_price / totalWeightKg) 
+      : null;
   
   // Validate price for suspicious patterns (MOQ/bundle miscalculations)
+  // Use USD price for validation since thresholds are USD-based
   const priceValidation = validateFilamentPrice(
     filament.variant_price,
     filament.net_weight_g,
@@ -1314,22 +1321,33 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
   );
   
   // Per-spool price = total price / pack quantity
-  const rawPricePerSpool = filament.variant_price 
-    ? (filament.variant_price / packQuantity)
+  const rawPricePerSpool = hasActualRegionalPrice
+    ? (regionalPriceData.regionalPrice! / packQuantity)
+    : filament.variant_price 
+      ? (filament.variant_price / packQuantity)
+      : null;
+  
+  // Format prices - use formatRegionalPrice for actual scraped prices (no conversion),
+  // or formatPrice for USD values that need conversion
+  const pricePerKg = rawPricePerKg !== null
+    ? hasActualRegionalPrice
+      ? formatRegionalPrice(rawPricePerKg, false)
+      : formatPrice(rawPricePerKg, false)
     : null;
   
-  // Format prices with selected currency
-  const pricePerKg = rawPricePerKg 
-    ? formatPrice(rawPricePerKg, false)
-    : null;
-  
-  const pricePerSpool = rawPricePerSpool 
-    ? formatPrice(rawPricePerSpool)
+  const pricePerSpool = rawPricePerSpool !== null
+    ? hasActualRegionalPrice
+      ? formatRegionalPrice(rawPricePerSpool)
+      : formatPrice(rawPricePerSpool)
     : null;
   
   // Total pack price is just the variant_price for multi-packs
-  const totalPackPrice = isMultiPack && filament.variant_price 
-    ? formatPrice(filament.variant_price) 
+  const totalPackPrice = isMultiPack 
+    ? hasActualRegionalPrice && regionalPriceData.regionalPrice
+      ? formatRegionalPrice(regionalPriceData.regionalPrice) 
+      : filament.variant_price
+        ? formatPrice(filament.variant_price)
+        : null
     : null;
 
   // Helper functions for QuickSummaryCard
