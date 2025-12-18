@@ -24,6 +24,7 @@ interface FilamentHeroPurchaseCardProps {
   vendor: string | null;
   pricePerKg: number | null;
   pricePerSpool: number | null;
+  weightGrams: number | null;
   affiliateUrl: string | null;
   productUrl: string | null;
   retailerName?: string;
@@ -39,6 +40,7 @@ export function FilamentHeroPurchaseCard({
   vendor,
   pricePerKg,
   pricePerSpool,
+  weightGrams,
   affiliateUrl,
   productUrl,
   retailerName,
@@ -55,6 +57,7 @@ export function FilamentHeroPurchaseCard({
   const { 
     currentPrice, 
     compareAtPrice,
+    weightGrams: liveWeightGrams,
     isLoading: priceLoading, 
     isLivePrice,
     currency: priceCurrency
@@ -81,9 +84,22 @@ export function FilamentHeroPurchaseCard({
 
   // Use live price if available, otherwise fall back to stored price
   const displayPrice = isLivePrice && currentPrice !== null ? currentPrice : pricePerSpool;
-  const displayPricePerKg = isLivePrice && currentPrice !== null && pricePerSpool && pricePerKg
-    ? (currentPrice / pricePerSpool) * pricePerKg
-    : pricePerKg;
+  
+  // Calculate price per kg using live weight when available
+  const liveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : null;
+  const fallbackWeightKg = weightGrams ? weightGrams / 1000 : null;
+  
+  let displayPricePerKg: number | null = null;
+  if (isLivePrice && currentPrice !== null && liveWeightKg) {
+    // Use live price and live weight for accurate price/kg
+    displayPricePerKg = currentPrice / liveWeightKg;
+  } else if (displayPrice && fallbackWeightKg) {
+    // Fall back to using display price with database weight
+    displayPricePerKg = displayPrice / fallbackWeightKg;
+  } else {
+    // Last resort: use the passed pricePerKg prop
+    displayPricePerKg = pricePerKg;
+  }
 
   // Format the price - live prices are already in the correct regional currency
   const formattedPricePerKg = displayPricePerKg 

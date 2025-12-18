@@ -5,6 +5,7 @@ import { useCurrency } from './useCurrency';
 interface CurrentPriceResult {
   currentPrice: number | null;
   compareAtPrice: number | null;
+  weightGrams: number | null;
   currency: string;
   isLoading: boolean;
   isLivePrice: boolean;
@@ -16,6 +17,7 @@ interface CurrentPriceResult {
 const priceCache = new Map<string, {
   price: number | null;
   compareAtPrice: number | null;
+  weightGrams: number | null;
   currency: string;
   fetchedAt: string;
   expiresAt: number;
@@ -31,6 +33,7 @@ export function useCurrentPrice(
   const [state, setState] = useState<CurrentPriceResult>({
     currentPrice: fallbackPrice,
     compareAtPrice: null,
+    weightGrams: null,
     currency: currency,
     isLoading: false,
     isLivePrice: false,
@@ -45,6 +48,7 @@ export function useCurrentPrice(
       setState(prev => ({
         ...prev,
         currentPrice: fallbackPrice,
+        weightGrams: null,
         isLoading: false,
         isLivePrice: false,
       }));
@@ -64,6 +68,7 @@ export function useCurrentPrice(
       setState({
         currentPrice: cached.price,
         compareAtPrice: cached.compareAtPrice,
+        weightGrams: cached.weightGrams,
         currency: cached.currency,
         isLoading: false,
         isLivePrice: true,
@@ -99,6 +104,7 @@ export function useCurrentPrice(
           priceCache.set(cacheKey, {
             price: data.price,
             compareAtPrice: data.compareAtPrice,
+            weightGrams: data.weightGrams,
             currency: data.currency,
             fetchedAt: data.fetchedAt,
             expiresAt: Date.now() + CACHE_TTL_MS,
@@ -107,6 +113,7 @@ export function useCurrentPrice(
           setState({
             currentPrice: data.price,
             compareAtPrice: data.compareAtPrice,
+            weightGrams: data.weightGrams,
             currency: data.currency,
             isLoading: false,
             isLivePrice: true,

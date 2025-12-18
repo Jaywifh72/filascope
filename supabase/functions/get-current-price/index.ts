@@ -11,6 +11,7 @@ interface ShopifyVariant {
   price: string;
   available: boolean;
   compare_at_price: string | null;
+  grams?: number;
 }
 
 interface ShopifyProduct {
@@ -25,11 +26,30 @@ interface PriceResponse {
   success: boolean;
   price: number | null;
   compareAtPrice: number | null;
+  weightGrams: number | null;
+  variantTitle: string | null;
   currency: string;
   available: boolean;
   source: 'shopify' | 'html' | 'cached';
   fetchedAt: string;
   error?: string;
+}
+
+// Parse weight from variant title (e.g., "1.75mm - 1KG AMS Compatible")
+function parseWeightFromTitle(title: string): number | null {
+  if (!title) return null;
+  
+  // Match patterns like "1KG", "1 KG", "1.5kg", "500g", "2.2lb"
+  const kgMatch = title.match(/(\d+(?:\.\d+)?)\s*kg/i);
+  if (kgMatch) return Math.round(parseFloat(kgMatch[1]) * 1000);
+  
+  const gMatch = title.match(/(\d+(?:\.\d+)?)\s*g(?:ram)?s?(?!\w)/i);
+  if (gMatch) return Math.round(parseFloat(gMatch[1]));
+  
+  const lbMatch = title.match(/(\d+(?:\.\d+)?)\s*lb/i);
+  if (lbMatch) return Math.round(parseFloat(lbMatch[1]) * 453.592);
+  
+  return null;
 }
 
 // Detect platform from URL
@@ -117,6 +137,8 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
         success: false,
         price: null,
         compareAtPrice: null,
+        weightGrams: null,
+        variantTitle: null,
         currency: preferredCurrency,
         available: false,
         source: 'shopify',
@@ -132,6 +154,8 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
         success: false,
         price: null,
         compareAtPrice: null,
+        weightGrams: null,
+        variantTitle: null,
         currency: preferredCurrency,
         available: false,
         source: 'shopify',
@@ -147,15 +171,20 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
     const price = parseFloat(variant.price);
     const compareAtPrice = variant.compare_at_price ? parseFloat(variant.compare_at_price) : null;
     
+    // Extract weight from Shopify grams field or parse from title
+    const weightGrams = variant.grams || parseWeightFromTitle(variant.title);
+    
     // Detect currency from URL since Shopify JSON doesn't include it
     const detectedCurrency = detectCurrencyFromUrl(productUrl);
     
-    console.log(`Shopify price fetched: ${price} ${detectedCurrency} (available: ${variant.available})`);
+    console.log(`Shopify price fetched: ${price} ${detectedCurrency} (weight: ${weightGrams}g, available: ${variant.available})`);
     
     return {
       success: true,
       price,
       compareAtPrice,
+      weightGrams,
+      variantTitle: variant.title,
       currency: detectedCurrency,
       available: variant.available,
       source: 'shopify',
@@ -167,6 +196,8 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
       success: false,
       price: null,
       compareAtPrice: null,
+      weightGrams: null,
+      variantTitle: null,
       currency: preferredCurrency,
       available: false,
       source: 'shopify',
@@ -205,6 +236,8 @@ serve(async (req) => {
         success: false,
         price: null,
         compareAtPrice: null,
+        weightGrams: null,
+        variantTitle: null,
         currency,
         available: false,
         source: 'shopify',
@@ -225,6 +258,8 @@ serve(async (req) => {
         error: error instanceof Error ? error.message : 'Unknown error',
         price: null,
         compareAtPrice: null,
+        weightGrams: null,
+        variantTitle: null,
         currency: 'USD',
         available: false,
         source: 'shopify',
