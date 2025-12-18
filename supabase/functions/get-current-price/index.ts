@@ -27,6 +27,7 @@ interface PriceResponse {
   price: number | null;
   compareAtPrice: number | null;
   weightGrams: number | null;
+  diameterMm: number | null;
   variantTitle: string | null;
   currency: string;
   available: boolean;
@@ -48,6 +49,26 @@ function parseWeightFromTitle(title: string): number | null {
   
   const lbMatch = title.match(/(\d+(?:\.\d+)?)\s*lb/i);
   if (lbMatch) return Math.round(parseFloat(lbMatch[1]) * 453.592);
+  
+  return null;
+}
+
+// Parse diameter from URL or title (e.g., "1.75mm", "2.85", "1-75", "2-85")
+function parseDiameter(url: string, title: string): number | null {
+  // Check URL first - often has patterns like "2-85" or "1-75"
+  const urlDashMatch = url.match(/[_-](1[.-]75|2[.-]85|3[.-]00?)/i);
+  if (urlDashMatch) {
+    const normalized = urlDashMatch[1].replace('-', '.').replace(',', '.');
+    return parseFloat(normalized);
+  }
+  
+  // Check title for explicit mm patterns
+  const titleMmMatch = title?.match(/(1\.75|2\.85|3\.00?)\s*mm/i);
+  if (titleMmMatch) return parseFloat(titleMmMatch[1]);
+  
+  // Check for diameter in title without mm suffix
+  const titleDiamMatch = title?.match(/\b(1\.75|2\.85|3\.00?)\b/);
+  if (titleDiamMatch) return parseFloat(titleDiamMatch[1]);
   
   return null;
 }
@@ -138,6 +159,7 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
         price: null,
         compareAtPrice: null,
         weightGrams: null,
+        diameterMm: null,
         variantTitle: null,
         currency: preferredCurrency,
         available: false,
@@ -155,6 +177,7 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
         price: null,
         compareAtPrice: null,
         weightGrams: null,
+        diameterMm: null,
         variantTitle: null,
         currency: preferredCurrency,
         available: false,
@@ -174,16 +197,20 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
     // Extract weight from title first (more reliable), fall back to grams field
     const weightGrams = parseWeightFromTitle(variant.title) || variant.grams || null;
     
+    // Extract diameter from URL or title
+    const diameterMm = parseDiameter(productUrl, variant.title);
+    
     // Detect currency from URL since Shopify JSON doesn't include it
     const detectedCurrency = detectCurrencyFromUrl(productUrl);
     
-    console.log(`Shopify price fetched: ${price} ${detectedCurrency} (weight: ${weightGrams}g, available: ${variant.available})`);
+    console.log(`Shopify price fetched: ${price} ${detectedCurrency} (weight: ${weightGrams}g, diameter: ${diameterMm}mm, available: ${variant.available})`);
     
     return {
       success: true,
       price,
       compareAtPrice,
       weightGrams,
+      diameterMm,
       variantTitle: variant.title,
       currency: detectedCurrency,
       available: variant.available,
@@ -197,6 +224,7 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
       price: null,
       compareAtPrice: null,
       weightGrams: null,
+      diameterMm: null,
       variantTitle: null,
       currency: preferredCurrency,
       available: false,
@@ -237,6 +265,7 @@ serve(async (req) => {
         price: null,
         compareAtPrice: null,
         weightGrams: null,
+        diameterMm: null,
         variantTitle: null,
         currency,
         available: false,
@@ -259,6 +288,7 @@ serve(async (req) => {
         price: null,
         compareAtPrice: null,
         weightGrams: null,
+        diameterMm: null,
         variantTitle: null,
         currency: 'USD',
         available: false,
