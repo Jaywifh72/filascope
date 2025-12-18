@@ -39,6 +39,7 @@ import { useAchievements } from "@/hooks/useAchievements";
 import { SimilarMaterialsModule } from "@/components/filament/similar/SimilarMaterialsModule";
 import { PerformanceAtAGlance } from "@/components/filament/performance/PerformanceAtAGlance";
 import { validateFilamentPrice } from "@/lib/priceValidation";
+import { SpoolSizeSelector } from "@/components/filament/SpoolSizeSelector";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -62,6 +63,8 @@ const FilamentDetail = () => {
   const [compatibleBuildPlates, setCompatibleBuildPlates] = useState<AccessoryWithCompatibility[]>([]);
   const [compatibleAms, setCompatibleAms] = useState<AccessoryWithCompatibility[]>([]);
   const [colorVariants, setColorVariants] = useState<Filament[]>([]);
+  const [selectedWeight, setSelectedWeight] = useState<number | null>(null);
+  const [availableWeights, setAvailableWeights] = useState<{ weight: number; pricePerKg: number | null; count: number }[]>([]);
   const [editImageOpen, setEditImageOpen] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [savingImage, setSavingImage] = useState(false);
@@ -607,15 +610,25 @@ const FilamentDetail = () => {
   };
 
   // Fetch color variants - other filaments of the same base product from the same vendor
+  // Also calculates available spool weights for the SpoolSizeSelector
   useEffect(() => {
     const fetchColorVariants = async () => {
       if (!filament || !filament.vendor) {
         setColorVariants([]);
+        setAvailableWeights([]);
         return;
       }
 
       try {
         const baseName = getBaseProductName(filament.product_title);
+        const isPrusament = filament.vendor.toLowerCase().includes('prusa');
+        
+        // For Prusament, get the product line for grouping
+        let productLineKey: string | null = null;
+        if (isPrusament) {
+          const lineInfo = extractPrusamentProductLine(filament.product_title);
+          productLineKey = lineInfo?.productLine || null;
+        }
         
         // Fetch all filaments from the same vendor
         const { data, error } = await supabase
@@ -626,18 +639,46 @@ const FilamentDetail = () => {
 
         if (error) throw error;
 
-        // Filter to those with the same base product name AND that have actual colors (not product variants)
+        // Filter to same product line/base name
         const variants = (data || []).filter(f => {
-          const fBaseName = getBaseProductName(f.product_title);
-          if (fBaseName !== baseName) return false;
-          
-          // Include current filament
-          if (f.id === filament.id) return true;
-          
-          // Only include if it has an actual color (not a product variant)
-          const color = getColorFromTitle(f.product_title, baseName);
-          return color !== null;
+          if (isPrusament && productLineKey) {
+            // For Prusament, match by product line
+            const fLineInfo = extractPrusamentProductLine(f.product_title);
+            return fLineInfo?.productLine === productLineKey;
+          } else {
+            // Standard matching by base name
+            const fBaseName = getBaseProductName(f.product_title);
+            if (fBaseName !== baseName) return false;
+            if (f.id === filament.id) return true;
+            const color = getColorFromTitle(f.product_title, baseName);
+            return color !== null;
+          }
         });
+
+        // Calculate available weights with price/kg and color counts
+        const weightMap = new Map<number, { priceSum: number; priceCount: number; colorCount: number }>();
+        variants.forEach(v => {
+          if (v.net_weight_g) {
+            const existing = weightMap.get(v.net_weight_g) || { priceSum: 0, priceCount: 0, colorCount: 0 };
+            existing.colorCount++;
+            if (v.variant_price && v.net_weight_g) {
+              const pricePerKg = v.variant_price / (v.net_weight_g / 1000);
+              existing.priceSum += pricePerKg;
+              existing.priceCount++;
+            }
+            weightMap.set(v.net_weight_g, existing);
+          }
+        });
+
+        const weights = Array.from(weightMap.entries())
+          .map(([weight, data]) => ({
+            weight,
+            pricePerKg: data.priceCount > 0 ? data.priceSum / data.priceCount : null,
+            count: data.colorCount,
+          }))
+          .sort((a, b) => a.weight - b.weight);
+
+        setAvailableWeights(weights);
 
         // Deduplicate by color name, prioritizing non-NFC/Refill variants
         const deduplicatedVariants = deduplicateColorVariants(variants, baseName);
@@ -652,9 +693,12 @@ const FilamentDetail = () => {
         });
 
         setColorVariants(deduplicatedVariants);
+        // Reset weight selection when filament changes
+        setSelectedWeight(null);
       } catch (error) {
         console.error("Error fetching color variants:", error);
         setColorVariants([]);
+        setAvailableWeights([]);
       }
     };
 
@@ -1402,12 +1446,34 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   </div>
                 </div>
 
+                {/* Spool Size Selector - above color variants */}
+                {availableWeights.length > 1 && (
+                  <SpoolSizeSelector
+                    weights={availableWeights}
+                    selectedWeight={selectedWeight}
+                    onSelectWeight={setSelectedWeight}
+                    className="pt-2"
+                  />
+                )}
+
                 {/* Color Variants Section */}
                 {colorVariants.length > 1 && (
                   <div className="space-y-4 pt-2">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Available Colors ({colorVariants.length})</h3>
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                      Available Colors ({selectedWeight 
+                        ? colorVariants.filter(v => v.net_weight_g === selectedWeight).length 
+                        : colorVariants.length
+                      })
+                      {selectedWeight && (
+                        <span className="ml-2 text-xs font-normal text-primary">
+                          in {selectedWeight >= 1000 ? `${selectedWeight / 1000}kg` : `${selectedWeight}g`}
+                        </span>
+                      )}
+                    </h3>
                     <div className="flex flex-wrap gap-2.5">
-                      {colorVariants.map((variant) => {
+                      {colorVariants
+                        .filter(variant => !selectedWeight || variant.net_weight_g === selectedWeight)
+                        .map((variant) => {
                         const baseName = getBaseProductName(filament.product_title);
                         const variantColor = getColorFromTitle(variant.product_title, baseName) || variant.color_family || 'View';
                         const isCurrentVariant = variant.id === filament.id;
@@ -1454,6 +1520,11 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                               <TooltipContent>
                                 <div className="text-center">
                                   <div className="font-medium">{variantColor}</div>
+                                  {variant.net_weight_g && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {variant.net_weight_g >= 1000 ? `${variant.net_weight_g / 1000}kg` : `${variant.net_weight_g}g`}
+                                    </div>
+                                  )}
                                   {variant.color_hex ? (
                                     <div className="text-xs font-mono text-muted-foreground">{variant.color_hex.toUpperCase()}</div>
                                   ) : (
