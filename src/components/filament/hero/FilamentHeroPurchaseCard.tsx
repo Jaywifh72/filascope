@@ -17,7 +17,6 @@ import { cn } from '@/lib/utils';
 import { PriceUrgencyBadge } from '../urgency/PriceUrgencyBadge';
 import { StockUrgencyIndicator } from '../urgency/StockUrgencyIndicator';
 import { ShippingCountdown } from '../urgency/ShippingCountdown';
-import { ActivityStatsBanner } from '../urgency/ActivityStatsBanner';
 
 interface FilamentHeroPurchaseCardProps {
   filamentId: string;
@@ -123,15 +122,6 @@ export function FilamentHeroPurchaseCard({
   const stockStatus = !inStock ? 'out_of_stock' : 
     (stockQuantity !== null && stockQuantity !== undefined && stockQuantity <= 10) ? 'low_stock' : 'in_stock';
 
-  // Sample social proof data - in production this would come from props or API
-  const socialProofData = {
-    viewingNow: Math.floor(Math.random() * 15) + 3,
-    purchasedToday: Math.floor(Math.random() * 20) + 5,
-    purchasedThisWeek: Math.floor(Math.random() * 100) + 30,
-    isBestseller: Math.random() > 0.7,
-    bestsellerRank: Math.floor(Math.random() * 10) + 1,
-    bestsellerCategory: 'PLA Filaments'
-  };
 
   return (
     <div className={cn(
@@ -262,11 +252,6 @@ export function FilamentHeroPurchaseCard({
           <ChevronRight className="w-4 h-4" />
         </button>
       )}
-
-      {/* Activity Stats - Social Proof */}
-      <div className="pt-4 mt-4 border-t border-border/30">
-        <ActivityStatsBanner socialProof={socialProofData} compact />
-      </div>
 
       {/* Trust Signals */}
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/30">

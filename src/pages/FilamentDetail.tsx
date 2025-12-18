@@ -39,14 +39,15 @@ import { useAchievements } from "@/hooks/useAchievements";
 import { SimilarMaterialsModule } from "@/components/filament/similar/SimilarMaterialsModule";
 import { PerformanceAtAGlance } from "@/components/filament/performance/PerformanceAtAGlance";
 import { validateFilamentPrice } from "@/lib/priceValidation";
-import { SpoolSizeSelector } from "@/components/filament/SpoolSizeSelector";
 import { StickyBuyBar } from "@/components/filament/StickyBuyBar";
 import { FilamentHeroGallery } from "@/components/filament/hero/FilamentHeroGallery";
 import { FilamentHeroPurchaseCard } from "@/components/filament/hero/FilamentHeroPurchaseCard";
 import { FilamentHeroQuickFeatures } from "@/components/filament/hero/FilamentHeroQuickFeatures";
+import { HeroColorQuantitySelector } from "@/components/filament/hero/HeroColorQuantitySelector";
+import { SimplifiedCompatibility } from "@/components/filament/hero/SimplifiedCompatibility";
 import { RetailersModal, type Retailer } from "@/components/filament/hero/RetailersModal";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
-import { CollapsibleContentContainer } from "@/components/filament";
+import { TechnicalDetailsAccordion } from "@/components/filament/TechnicalDetailsAccordion";
 import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
 import { useRegionalStore } from "@/hooks/useRegionalStore";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
@@ -88,6 +89,7 @@ const FilamentDetail = () => {
   const [stickyBarVisible, setStickyBarVisible] = useState(false);
   const [retailersModalOpen, setRetailersModalOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const heroSentinelRef = useRef<HTMLDivElement>(null);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
   const { formatPrice, formatRegionalPrice, currencyInfo } = useCurrency();
@@ -1528,6 +1530,31 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   </div>
                 </div>
 
+                {/* Color/Size/Quantity Selectors - IN HERO for conversion */}
+                {(colorVariants.length > 1 || availableWeights.length > 1) && (
+                  <HeroColorQuantitySelector
+                    colorVariants={colorVariants.map(v => ({
+                      id: v.id,
+                      color_hex: v.color_hex,
+                      color_family: v.color_family,
+                      product_title: v.product_title,
+                      net_weight_g: v.net_weight_g,
+                    }))}
+                    availableWeights={availableWeights}
+                    selectedWeight={selectedWeight}
+                    currentVariantId={displayFilament.id}
+                    quantity={quantity}
+                    onSelectWeight={setSelectedWeight}
+                    onSelectColor={(variant) => {
+                      const fullVariant = colorVariants.find(v => v.id === variant.id);
+                      if (fullVariant) handleColorVariantSelect(fullVariant);
+                    }}
+                    onQuantityChange={setQuantity}
+                    getColorFromTitle={getColorFromTitle}
+                    getBaseProductName={getBaseProductName}
+                  />
+                )}
+
                 {/* Purchase Card - THE CONVERSION ENGINE */}
                 <FilamentHeroPurchaseCard
                   filamentId={displayFilament.id}
@@ -1612,153 +1639,22 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
           />
         )}
 
-        <Card className="bg-card/50 border-border shadow-lg mb-8">
-          <CardContent className="p-6 lg:p-8 space-y-6">
-            {/* Spool Size Selector */}
-            {availableWeights.length > 1 && (
-              <SpoolSizeSelector
-                weights={availableWeights}
-                selectedWeight={selectedWeight}
-                onSelectWeight={setSelectedWeight}
-              />
-            )}
+        {/* Technical Details Accordion - Consolidated */}
+        <TechnicalDetailsAccordion filament={filament} className="mb-8" />
 
-            {/* Color Variants Section */}
-            {colorVariants.length > 1 && (
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Available Colors ({selectedWeight 
-                    ? colorVariants.filter(v => v.net_weight_g === selectedWeight).length 
-                    : colorVariants.length
-                  })
-                  {selectedWeight && (
-                    <span className="ml-2 text-xs font-normal text-primary">
-                      in {selectedWeight >= 1000 ? `${selectedWeight / 1000}kg` : `${selectedWeight}g`}
-                    </span>
-                  )}
-                </h3>
-                <div className="flex flex-wrap gap-2.5">
-                  {colorVariants
-                    .filter(variant => !selectedWeight || variant.net_weight_g === selectedWeight)
-                    .map((variant) => {
-                    const baseName = getBaseProductName(filament.product_title);
-                    const variantColor = getColorFromTitle(variant.product_title, baseName) || variant.color_family || 'View';
-                    // Check if this is the currently displayed variant (either selected or the base filament)
-                    const isCurrentVariant = displayFilament ? variant.id === displayFilament.id : variant.id === filament.id;
-                    
-                    return (
-                      <TooltipProvider key={variant.id}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            {isCurrentVariant ? (
-                              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background cursor-default">
-                                {variant.color_hex ? (
-                                  <div 
-                                    className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 shadow-inner"
-                                    style={{ 
-                                      backgroundColor: normalizeColorHex(variant.color_hex),
-                                      boxShadow: normalizeColorHex(variant.color_hex).toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="w-4 h-4 rounded-full bg-primary-foreground/30 border-2 border-primary-foreground/30" />
-                                )}
-                                {variantColor}
-                              </div>
-                            ) : (
-                              <button 
-                                onClick={() => handleColorVariantSelect(variant)}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-primary/20 hover:text-primary transition-colors cursor-pointer"
-                              >
-                                {variant.color_hex ? (
-                                  <div 
-                                    className="w-4 h-4 rounded-full border border-border shadow-sm"
-                                    style={{ 
-                                      backgroundColor: normalizeColorHex(variant.color_hex),
-                                      boxShadow: normalizeColorHex(variant.color_hex).toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="w-4 h-4 rounded-full bg-gradient-to-br from-muted-foreground/30 to-muted-foreground/10 border border-border" />
-                                )}
-                                {variantColor}
-                              </button>
-                            )}
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="text-center">
-                              <div className="font-medium">{variantColor}</div>
-                              {variant.net_weight_g && (
-                                <div className="text-xs text-muted-foreground">
-                                  {variant.net_weight_g >= 1000 ? `${variant.net_weight_g / 1000}kg` : `${variant.net_weight_g}g`}
-                                </div>
-                              )}
-                              {variant.color_hex ? (
-                                <div className="text-xs font-mono text-muted-foreground">{variant.color_hex.toUpperCase()}</div>
-                              ) : (
-                                <div className="text-xs text-muted-foreground">No hex code</div>
-                              )}
-                              {variant.product_url && (
-                                <div className="text-xs text-primary mt-1">Click to select</div>
-                              )}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Material Value Proposition */}
-            <MaterialValueProposition
-              material={filament.material}
-              productTitle={filament.product_title}
-              filamentId={filament.id}
-              vendor={filament.vendor}
-              filament={filament}
-              printer={selectedPrinter}
-              hotend={compatibleHotends.length > 0 ? compatibleHotends[0] : null}
-            />
-
-            {/* Score Cards */}
-            <ScoreCardsSection filament={filament} />
-
-            {/* Common Mistakes Panel */}
-            {filament.material && (
-              <CommonMistakesPanel 
-                material={filament.material} 
-                compact 
-                maxItems={3}
-              />
-            )}
-
-            {/* Helpful Videos Section */}
-            {filament.material && getVideosByMaterial(filament.material).length > 0 && (
-              <div className="pt-4 border-t border-border">
-                <h3 className="text-base font-semibold flex items-center gap-2 mb-4">
-                  <PlayCircle className="w-4 h-4 text-primary" />
-                  Helpful Videos for {filament.material}
-                </h3>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {getVideosByMaterial(filament.material).slice(0, 3).map(video => (
-                    <VideoThumbnail
-                      key={video.id}
-                      videoId={video.id}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Collapsible Content Sections */}
-        <CollapsibleContentContainer 
-          filament={filament} 
-          className="my-8"
-        />
+        {/* Simplified Printer Compatibility */}
+        {selectedPrinter && compatibility && (
+          <SimplifiedCompatibility
+            printer={selectedPrinter}
+            compatibility={{
+              overallRating: compatibility.is_supported ? (compatibility.ease_rating === 'Easy' ? 'green' : 'orange') : 'red',
+              summary: compatibility.is_supported ? 'Compatible' : 'Limited compatibility',
+              limitations: compatibility.limitations,
+              recommendations: compatibility.recommendations,
+            }}
+            className="mb-8"
+          />
+        )}
 
         {/* Printer Compatibility Section - Featured & Dynamic */}
         {selectedPrinter && compatibility ? (
