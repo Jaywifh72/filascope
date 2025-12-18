@@ -1,8 +1,14 @@
-import { getStandardTools } from "@/lib/specialtyData";
+import { getStandardTools, SpecialtyTool } from "@/lib/specialtyData";
 import CompactToolCard from "./CompactToolCard";
 
-export default function MoreToolsSection() {
-  const standardTools = getStandardTools();
+interface MoreToolsSectionProps {
+  tools?: SpecialtyTool[];
+}
+
+export default function MoreToolsSection({ tools }: MoreToolsSectionProps) {
+  const standardTools = tools ?? getStandardTools();
+
+  if (standardTools.length === 0) return null;
 
   return (
     <section className="mb-12" aria-labelledby="more-tools-heading">

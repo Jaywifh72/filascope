@@ -1,8 +1,14 @@
-import { getFeaturedTools } from "@/lib/specialtyData";
+import { getFeaturedTools, SpecialtyTool } from "@/lib/specialtyData";
 import FeaturedToolCard from "./FeaturedToolCard";
 
-export default function EditorPicksSection() {
-  const featuredTools = getFeaturedTools();
+interface EditorPicksSectionProps {
+  tools?: SpecialtyTool[];
+}
+
+export default function EditorPicksSection({ tools }: EditorPicksSectionProps) {
+  const featuredTools = tools ?? getFeaturedTools();
+
+  if (featuredTools.length === 0) return null;
 
   return (
     <section className="mb-12" aria-labelledby="editor-picks-heading">

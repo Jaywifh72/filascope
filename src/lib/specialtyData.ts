@@ -9,6 +9,10 @@ export interface SpecialtyTool {
   // Tier designation for 2-tier card system
   tier: 'featured' | 'standard';
   
+  // Skill level and use case for filtering
+  skillLevel: ('beginner' | 'intermediate' | 'advanced')[];
+  useCase: ('print-quality' | 'productivity' | 'creative' | 'management')[];
+  
   // Standout feature for card display
   standoutFeature: {
     title: string;
@@ -61,6 +65,8 @@ export const specialtyTools: SpecialtyTool[] = [
     pricingModel: 'freemium',
     website: 'https://meshy.ai',
     tier: 'featured',
+    skillLevel: ['beginner', 'intermediate'],
+    useCase: ['creative'],
     standoutFeature: {
       title: 'Text-to-3D AI Generation',
       description: 'Create print-ready 3D models from text descriptions or images using cutting-edge AI in under a minute'
@@ -121,6 +127,8 @@ Furthermore, free users are limited to the queue, meaning during peak times, the
     pricingModel: 'one-time',
     website: 'https://hueforge.com',
     tier: 'featured',
+    skillLevel: ['beginner', 'intermediate'],
+    useCase: ['creative'],
     standoutFeature: {
       title: 'Photo-to-3D Lithophanes',
       description: 'Transform any image into stunning multi-color lithophane art using filament layering and transmission distance science'
@@ -180,6 +188,8 @@ This has spawned a secondary economy. The "HueForge" tag has become a dominant c
     pricingModel: 'freemium',
     website: 'https://simplyprint.io',
     tier: 'standard',
+    skillLevel: ['intermediate', 'advanced'],
+    useCase: ['management', 'productivity'],
     standoutFeature: {
       title: 'Multi-Printer Fleet Management',
       description: 'Manage multiple printers from one dashboard with queue management, analytics, and cloud slicing'
@@ -239,6 +249,8 @@ A critical specialty of SimplyPrint is its hardware agnosticism. In a typical pr
     pricingModel: 'free',
     website: 'https://ellis3dp.com/Print-Tuning-Guide/',
     tier: 'featured',
+    skillLevel: ['intermediate', 'advanced'],
+    useCase: ['print-quality'],
     standoutFeature: {
       title: 'Interactive Calibration Patterns',
       description: 'Generate custom G-code test patterns for Pressure Advance and Max Volumetric Flow tuning with scientific methodology'
@@ -294,6 +306,8 @@ The site's influence is so profound that its methodologies (like the "Pattern Me
     pricingModel: 'freemium',
     website: 'https://www.onshape.com',
     tier: 'standard',
+    skillLevel: ['intermediate', 'advanced'],
+    useCase: ['creative', 'productivity'],
     standoutFeature: {
       title: 'Cloud-Native Parametric CAD',
       description: 'Professional-grade CAD that runs entirely in your browser with real-time collaboration and version control'
@@ -351,6 +365,8 @@ For the 3D printing community, Onshape offers several strategic advantages. Firs
     pricingModel: 'freemium',
     website: 'https://thangs.com',
     tier: 'standard',
+    skillLevel: ['beginner', 'intermediate'],
+    useCase: ['productivity'],
     standoutFeature: {
       title: 'Geometric AI Model Search',
       description: 'Search for 3D models by shape using AI, not just keywords, across 30+ sources and millions of models'
@@ -408,6 +424,8 @@ This solves a significant pain point. How many times has a user searched for a "
     pricingModel: 'freemium',
     website: 'https://octoeverywhere.com',
     tier: 'featured',
+    skillLevel: ['beginner', 'intermediate', 'advanced'],
+    useCase: ['productivity', 'management'],
     standoutFeature: {
       title: 'Universal Remote Monitoring',
       description: 'Monitor, control, and get AI failure detection for OctoPrint, Klipper, or Bambu printers from anywhere'
@@ -465,6 +483,8 @@ Beyond basic remote access, OctoEverywhere has invested heavily in AI-powered fa
     pricingModel: 'free',
     website: 'https://makerworld.com',
     tier: 'standard',
+    skillLevel: ['beginner', 'intermediate'],
+    useCase: ['productivity'],
     standoutFeature: {
       title: 'Bambu-Optimized Print Profiles',
       description: 'One-click 3MF files with pre-configured settings for Bambu printers, plus AI-powered model generation'
@@ -520,6 +540,8 @@ MakerLab, the AI-powered companion, allows users to generate 3D models from text
     pricingModel: 'free',
     website: 'https://lithophanemaker.com',
     tier: 'standard',
+    skillLevel: ['beginner'],
+    useCase: ['creative'],
     standoutFeature: {
       title: 'One-Click Complex Lithophanes',
       description: 'Turn photos into printable lithophanes with various shapes including globes, night lights, and curved panels'
@@ -575,6 +597,8 @@ The site's brilliance is its simplicity. Upload an image, select a shape (flat, 
     pricingModel: 'free',
     website: 'https://formware.co/onlinemeshrepair',
     tier: 'standard',
+    skillLevel: ['intermediate', 'advanced'],
+    useCase: ['print-quality'],
     standoutFeature: {
       title: 'Browser-Based Mesh Repair',
       description: 'Fix broken STL files directly in your browser—repair holes, fix normals, and merge shells without installing software'
