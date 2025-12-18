@@ -115,7 +115,9 @@ export function FilamentHeroPurchaseCard({
 
   // Show original currency if converted (live price is in store currency, user selected different)
   const showOriginalCurrency = isLivePrice && priceCurrency && priceCurrency !== currency;
-  const originalPricePerKg = displayPricePerKg ? `$${displayPricePerKg.toFixed(2)} ${priceCurrency}` : null;
+  const currencySymbols: Record<string, string> = { 'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' };
+  const originalSymbol = currencySymbols[priceCurrency] || '$';
+  const originalPricePerKg = displayPricePerKg ? `${originalSymbol}${displayPricePerKg.toFixed(2)} ${priceCurrency}` : null;
 
   // Determine stock status for indicator
   const stockStatus = !inStock ? 'out_of_stock' : 
