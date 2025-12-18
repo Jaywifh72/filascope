@@ -149,3 +149,9 @@ verify_jwt = true
 
 [functions.discover-amazon-products]
 verify_jwt = true
+
+[functions.scrape-regional-prices]
+verify_jwt = true
+
+[functions.validate-filament-urls]
+verify_jwt = true

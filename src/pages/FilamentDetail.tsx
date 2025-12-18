@@ -49,6 +49,7 @@ import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { QuickSummaryCard, CollapsibleContentContainer, SocialProofToast, ActivityStatsBanner } from "@/components/filament";
 import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
 import { useRegionalStore } from "@/hooks/useRegionalStore";
+import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -88,7 +89,10 @@ const FilamentDetail = () => {
   const { formatPrice, currencyInfo } = useCurrency();
   const { incrementStat } = useAchievements();
   const { trackStoreClick } = useConversionTracking();
-  const { getRegionalUrl, regionShortName } = useRegionalStore();
+  const { getRegionalUrl, regionShortName, currentRegion } = useRegionalStore();
+  
+  // Get regional price and URL from database (prioritizes actual regional prices over converted)
+  const regionalPriceData = useRegionalPrice(filament as FilamentWithRegionalPrices | null);
 
   const compatibility = selectedPrinter && filament 
     ? checkPrinterFilamentCompatibility(selectedPrinter, filament)
@@ -100,15 +104,16 @@ const FilamentDetail = () => {
     
     const result: Retailer[] = [];
     
-    // Primary retailer (brand store) - transformed to regional URL
-    if (filament.product_url) {
-      const regionalUrl = getRegionalUrl(filament.product_url, filament.vendor);
+    // Primary retailer (brand store) - use regional URL from database if available, otherwise transform
+    const bestRegionalUrl = regionalPriceData.regionalUrl || getRegionalUrl(filament.product_url, filament.vendor);
+    
+    if (bestRegionalUrl) {
       result.push({
         id: 'store',
         name: `${filament.vendor || 'Store'} (${regionShortName})`,
-        price: filament.variant_price,
-        inStock: !isDiscontinuedUrl(regionalUrl),
-        url: getAffiliateUrl(regionalUrl, filament.vendor),
+        price: regionalPriceData.regionalPrice, // Use actual regional price if available
+        inStock: !isDiscontinuedUrl(bestRegionalUrl),
+        url: getAffiliateUrl(bestRegionalUrl, filament.vendor),
         shippingEstimate: 'Ships within 24hrs',
       });
     }
@@ -142,7 +147,7 @@ const FilamentDetail = () => {
     }
     
     return result;
-  }, [filament, getAffiliateUrl, getAmazonUrl, getRegionalUrl, regionShortName]);
+  }, [filament, getAffiliateUrl, getAmazonUrl, getRegionalUrl, regionShortName, regionalPriceData]);
 
   // Track modal open
   const handleViewRetailers = () => {

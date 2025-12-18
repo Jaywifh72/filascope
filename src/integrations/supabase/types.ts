@@ -1241,14 +1241,25 @@ export type Database = {
           nozzle_temp_min_c: number | null
           nozzle_temp_sweetspot_c: number | null
           pack_quantity: number | null
+          price_aud: number | null
+          price_cad: number | null
+          price_eur: number | null
+          price_gbp: number | null
+          price_jpy: number | null
           print_speed_max_mms: number | null
           printability_index: number | null
           product_handle: string | null
           product_id: string | null
           product_title: string
           product_url: string | null
+          product_url_au: string | null
+          product_url_ca: string | null
+          product_url_eu: string | null
+          product_url_jp: string | null
+          product_url_uk: string | null
           published_at: string | null
           recommended_nozzle_type: string | null
+          regional_prices_updated_at: string | null
           scrape_frequency_hours: number | null
           shore_hardness_d: number | null
           spool_ams_fit: boolean | null
@@ -1264,6 +1275,8 @@ export type Database = {
           transmission_distance: number | null
           upc: string | null
           updated_at: string | null
+          url_validated_at: string | null
+          url_validation_status: string | null
           use_case_tags: string[] | null
           user_override_fields: string[] | null
           value_score: number | null
@@ -1329,14 +1342,25 @@ export type Database = {
           nozzle_temp_min_c?: number | null
           nozzle_temp_sweetspot_c?: number | null
           pack_quantity?: number | null
+          price_aud?: number | null
+          price_cad?: number | null
+          price_eur?: number | null
+          price_gbp?: number | null
+          price_jpy?: number | null
           print_speed_max_mms?: number | null
           printability_index?: number | null
           product_handle?: string | null
           product_id?: string | null
           product_title: string
           product_url?: string | null
+          product_url_au?: string | null
+          product_url_ca?: string | null
+          product_url_eu?: string | null
+          product_url_jp?: string | null
+          product_url_uk?: string | null
           published_at?: string | null
           recommended_nozzle_type?: string | null
+          regional_prices_updated_at?: string | null
           scrape_frequency_hours?: number | null
           shore_hardness_d?: number | null
           spool_ams_fit?: boolean | null
@@ -1352,6 +1376,8 @@ export type Database = {
           transmission_distance?: number | null
           upc?: string | null
           updated_at?: string | null
+          url_validated_at?: string | null
+          url_validation_status?: string | null
           use_case_tags?: string[] | null
           user_override_fields?: string[] | null
           value_score?: number | null
@@ -1417,14 +1443,25 @@ export type Database = {
           nozzle_temp_min_c?: number | null
           nozzle_temp_sweetspot_c?: number | null
           pack_quantity?: number | null
+          price_aud?: number | null
+          price_cad?: number | null
+          price_eur?: number | null
+          price_gbp?: number | null
+          price_jpy?: number | null
           print_speed_max_mms?: number | null
           printability_index?: number | null
           product_handle?: string | null
           product_id?: string | null
           product_title?: string
           product_url?: string | null
+          product_url_au?: string | null
+          product_url_ca?: string | null
+          product_url_eu?: string | null
+          product_url_jp?: string | null
+          product_url_uk?: string | null
           published_at?: string | null
           recommended_nozzle_type?: string | null
+          regional_prices_updated_at?: string | null
           scrape_frequency_hours?: number | null
           shore_hardness_d?: number | null
           spool_ams_fit?: boolean | null
@@ -1440,6 +1477,8 @@ export type Database = {
           transmission_distance?: number | null
           upc?: string | null
           updated_at?: string | null
+          url_validated_at?: string | null
+          url_validation_status?: string | null
           use_case_tags?: string[] | null
           user_override_fields?: string[] | null
           value_score?: number | null
