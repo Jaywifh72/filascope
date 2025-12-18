@@ -78,6 +78,152 @@ const BRAND_SCRAPE_CONFIG: Record<string, {
   'Elegoo': { useFirecrawl: true, waitFor: 2000 },
 };
 
+// Firecrawl geo-location mapping for regional scraping
+const REGION_TO_FIRECRAWL_LOCATION: Record<string, { country: string; languages: string[] }> = {
+  'US': { country: 'US', languages: ['en'] },
+  'CA': { country: 'CA', languages: ['en'] },
+  'UK': { country: 'GB', languages: ['en'] },
+  'EU': { country: 'DE', languages: ['en', 'de'] },
+  'AU': { country: 'AU', languages: ['en'] },
+  'JP': { country: 'JP', languages: ['ja', 'en'] },
+};
+
+// Currency markers to verify correct regional content
+const CURRENCY_MARKERS: Record<string, { expected: string[]; wrong: string[] }> = {
+  'USD': { 
+    expected: ['USD', 'US$', '$ USD'],
+    wrong: ['CAD', 'C$', 'CA$', 'GBP', '£', 'EUR', '€', 'AUD', 'A$', 'AU$'] 
+  },
+  'CAD': { 
+    expected: ['CAD', 'C$', 'CA$', '$ CAD', 'CDN$'],
+    wrong: ['USD', 'US$', 'GBP', '£', 'EUR', '€', 'AUD', 'A$', 'AU$'] 
+  },
+  'GBP': { 
+    expected: ['GBP', '£'],
+    wrong: ['USD', 'US$', 'CAD', 'C$', 'EUR', '€', 'AUD', 'A$'] 
+  },
+  'EUR': { 
+    expected: ['EUR', '€'],
+    wrong: ['USD', 'US$', 'CAD', 'C$', 'GBP', '£', 'AUD', 'A$'] 
+  },
+  'AUD': { 
+    expected: ['AUD', 'A$', 'AU$', '$ AUD'],
+    wrong: ['USD', 'US$', 'CAD', 'C$', 'GBP', '£', 'EUR', '€'] 
+  },
+  'JPY': { 
+    expected: ['JPY', '¥', '円', '￥'],
+    wrong: ['USD', 'US$', 'CAD', 'C$', 'GBP', '£', 'EUR', '€', 'AUD', 'A$'] 
+  },
+};
+
+// Verify currency in page content matches expected regional currency
+// This is a targeted check - we look specifically at price-related elements, not the whole page
+function verifyCurrencyInContent(html: string, markdown: string, expectedCurrency: string): { valid: boolean; reason: string } {
+  const markers = CURRENCY_MARKERS[expectedCurrency];
+  
+  if (!markers) {
+    console.log(`[CURRENCY] No markers defined for ${expectedCurrency}, skipping validation`);
+    return { valid: true, reason: 'No markers defined' };
+  }
+  
+  // Strategy 1: Check meta tags for currency (most reliable)
+  const metaCurrencyMatch = html.match(/<meta[^>]*property="product:price:currency"[^>]*content="([^"]+)"/i) ||
+                           html.match(/<meta[^>]*content="([^"]+)"[^>]*property="product:price:currency"/i);
+  
+  if (metaCurrencyMatch) {
+    const metaCurrency = metaCurrencyMatch[1].toUpperCase();
+    console.log(`[CURRENCY] Found meta currency: ${metaCurrency}`);
+    
+    if (metaCurrency === expectedCurrency) {
+      console.log(`[CURRENCY] ✓ Meta currency matches expected ${expectedCurrency}`);
+      return { valid: true, reason: 'Meta currency matches' };
+    } else {
+      // Only reject if it's a clearly wrong currency
+      if (markers.wrong.includes(metaCurrency)) {
+        console.log(`[CURRENCY] ❌ Meta currency ${metaCurrency} doesn't match expected ${expectedCurrency}`);
+        return { valid: false, reason: `Meta currency is ${metaCurrency}, expected ${expectedCurrency}` };
+      }
+    }
+  }
+  
+  // Strategy 2: Check JSON-LD for currency
+  const jsonLdMatch = html.match(/"priceCurrency"\s*:\s*"([^"]+)"/i);
+  if (jsonLdMatch) {
+    const jsonLdCurrency = jsonLdMatch[1].toUpperCase();
+    console.log(`[CURRENCY] Found JSON-LD currency: ${jsonLdCurrency}`);
+    
+    if (jsonLdCurrency === expectedCurrency) {
+      console.log(`[CURRENCY] ✓ JSON-LD currency matches expected ${expectedCurrency}`);
+      return { valid: true, reason: 'JSON-LD currency matches' };
+    } else {
+      console.log(`[CURRENCY] ❌ JSON-LD currency ${jsonLdCurrency} doesn't match expected ${expectedCurrency}`);
+      return { valid: false, reason: `JSON-LD currency is ${jsonLdCurrency}, expected ${expectedCurrency}` };
+    }
+  }
+  
+  // Strategy 3: Check for explicit currency markers near primary price
+  // Look in the first 20KB of content (main product area)
+  const mainContent = (html.slice(0, 20000) + ' ' + markdown.slice(0, 5000)).toUpperCase();
+  
+  // Check for expected currency code in price context
+  const expectedPattern = new RegExp(`(\\d{1,3}[.,]\\d{2})\\s*${expectedCurrency}|${expectedCurrency}\\s*(\\d{1,3}[.,]\\d{2})`, 'i');
+  if (expectedPattern.test(mainContent)) {
+    console.log(`[CURRENCY] ✓ Found price with ${expectedCurrency} marker`);
+    return { valid: true, reason: `Found ${expectedCurrency} with price` };
+  }
+  
+  // Check for specific CAD markers (C$, CA$)
+  if (expectedCurrency === 'CAD' && (mainContent.includes('C$') || mainContent.includes('CA$') || mainContent.includes('CDN$'))) {
+    console.log(`[CURRENCY] ✓ Found CAD-specific marker (C$/CA$/CDN$)`);
+    return { valid: true, reason: 'Found CAD-specific marker' };
+  }
+  
+  // Check for specific AUD markers
+  if (expectedCurrency === 'AUD' && (mainContent.includes('A$') || mainContent.includes('AU$'))) {
+    console.log(`[CURRENCY] ✓ Found AUD-specific marker (A$/AU$)`);
+    return { valid: true, reason: 'Found AUD-specific marker' };
+  }
+  
+  // If no definitive marker found, allow it but log warning
+  // We don't want to be too aggressive and reject valid prices
+  console.log(`[CURRENCY] ⚠️ No definitive currency marker found, allowing scrape to proceed`);
+  return { valid: true, reason: 'No definitive marker, allowing' };
+}
+
+// Verify URL wasn't redirected to a different region
+function verifyNoRedirect(requestedUrl: string, finalUrl: string | undefined): { valid: boolean; reason: string } {
+  if (!finalUrl) {
+    return { valid: true, reason: 'No final URL reported' };
+  }
+  
+  try {
+    const requestedHost = new URL(requestedUrl).hostname.toLowerCase();
+    const finalHost = new URL(finalUrl).hostname.toLowerCase();
+    
+    // Extract subdomain (first part before the domain)
+    const requestedParts = requestedHost.split('.');
+    const finalParts = finalHost.split('.');
+    
+    // Check if the subdomain changed (e.g., ca.store.bambulab.com -> us.store.bambulab.com)
+    if (requestedParts[0] !== finalParts[0]) {
+      console.log(`[REDIRECT] ❌ Subdomain changed: ${requestedParts[0]} → ${finalParts[0]}`);
+      return { valid: false, reason: `Redirected from ${requestedHost} to ${finalHost}` };
+    }
+    
+    // Also check if entire hostname changed
+    if (requestedHost !== finalHost) {
+      console.log(`[REDIRECT] ❌ Host changed: ${requestedHost} → ${finalHost}`);
+      return { valid: false, reason: `Redirected from ${requestedHost} to ${finalHost}` };
+    }
+    
+    console.log(`[REDIRECT] ✓ No redirect detected`);
+    return { valid: true, reason: 'Same host' };
+  } catch (e) {
+    console.log(`[REDIRECT] Error parsing URLs: ${e}`);
+    return { valid: true, reason: 'Could not parse URLs' };
+  }
+}
+
 // ============================================================
 // BAMBU LAB SPECIFIC CONFIGURATION
 // ============================================================
@@ -426,14 +572,15 @@ function getAlternateUrls(url: string): string[] {
   return alternates;
 }
 
-// Scrape with Firecrawl for JS-rendered pages
+// Scrape with Firecrawl for JS-rendered pages with geo-location support
 async function scrapeWithFirecrawl(
   url: string, 
   expectedCurrency: string, 
   waitFor: number = 2000,
   vendor: string,
   productTitle: string,
-  currentStoredPrice: number | null
+  currentStoredPrice: number | null,
+  region: string // NEW: region for geo-location
 ): Promise<{ price: number; currency: string; available: boolean; source: string; validated: boolean } | null> {
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
   
@@ -442,12 +589,29 @@ async function scrapeWithFirecrawl(
     return null;
   }
 
+  // Get geo-location for this region
+  const location = REGION_TO_FIRECRAWL_LOCATION[region];
+  
   try {
     console.log(`\n[FIRECRAWL] Scraping: ${url}`);
-    console.log(`[FIRECRAWL] Expected currency: ${expectedCurrency}, Wait: ${waitFor}ms`);
+    console.log(`[FIRECRAWL] Region: ${region}, Expected currency: ${expectedCurrency}, Wait: ${waitFor}ms`);
+    console.log(`[FIRECRAWL] Geo-location: ${location ? `${location.country} (${location.languages.join(', ')})` : 'none'}`);
     console.log(`[FIRECRAWL] Vendor: ${vendor}, Product: ${productTitle}`);
     if (currentStoredPrice) {
       console.log(`[FIRECRAWL] Current stored price: ${currentStoredPrice}`);
+    }
+    
+    const requestBody: any = {
+      url,
+      formats: ['markdown', 'html'],
+      onlyMainContent: false,
+      waitFor,
+    };
+    
+    // Add geo-location if available
+    if (location) {
+      requestBody.location = location;
+      console.log(`[FIRECRAWL] Using location: ${JSON.stringify(location)}`);
     }
     
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
@@ -456,12 +620,7 @@ async function scrapeWithFirecrawl(
         'Authorization': `Bearer ${firecrawlKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        url,
-        formats: ['markdown', 'html'],
-        onlyMainContent: false,
-        waitFor,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -479,6 +638,26 @@ async function scrapeWithFirecrawl(
 
     const html = data.data?.html || '';
     const markdown = data.data?.markdown || '';
+    const sourceUrl = data.data?.metadata?.sourceURL;
+    
+    console.log(`[FIRECRAWL] Response - HTML: ${html.length} chars, Markdown: ${markdown.length} chars`);
+    console.log(`[FIRECRAWL] Source URL: ${sourceUrl || 'not reported'}`);
+
+    // VALIDATION 1: Check for redirects
+    const redirectCheck = verifyNoRedirect(url, sourceUrl);
+    if (!redirectCheck.valid) {
+      console.log(`[FIRECRAWL] ❌ REJECTED: ${redirectCheck.reason}`);
+      console.log(`[FIRECRAWL] Page was redirected to different region - cannot trust price`);
+      return null;
+    }
+
+    // VALIDATION 2: Verify currency in content
+    const currencyCheck = verifyCurrencyInContent(html, markdown, expectedCurrency);
+    if (!currencyCheck.valid) {
+      console.log(`[FIRECRAWL] ❌ REJECTED: ${currencyCheck.reason}`);
+      console.log(`[FIRECRAWL] Page content shows wrong currency - cannot trust price`);
+      return null;
+    }
     
     console.log(`[FIRECRAWL] Response - HTML: ${html.length} chars, Markdown: ${markdown.length} chars`);
 
@@ -893,7 +1072,8 @@ async function scrapeRegionalPricesForFilament(
             scrapeConfig.waitFor,
             filament.vendor,
             filament.product_title,
-            currentPrices[region]
+            currentPrices[region],
+            region // NEW: pass region for geo-location
           );
         }
         
