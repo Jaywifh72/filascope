@@ -16,6 +16,13 @@ export interface FilamentUsageInput {
   supportDensity?: number;
 }
 
+export interface MaterialRecommendedSettings {
+  nozzleTemp: [number, number];
+  bedTemp: [number, number];
+  printSpeed: [number, number];
+  coolingFan: [number, number];
+}
+
 export interface FilamentUsageOutput {
   totalGrams: number;
   totalMeters: number;
