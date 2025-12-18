@@ -7,6 +7,7 @@ import { AmazonScraper } from "./scrapers/amazon.ts";
 import { FirecrawlScraper } from "./scrapers/firecrawl.ts";
 import type { BaseScraper, ScrapedProduct } from "./scrapers/base.ts";
 import { calculateHash, detectMaterial, extractColor, extractWeight, extractDiameter, parseBarcodeFields, intelligentTitleClean, extractDataFromTitle } from "./utils.ts";
+import { validateScrapedProduct, sanitizeScrapedProduct, type ValidationResult } from "./validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +22,7 @@ interface ScrapeRequest {
   dryRun?: boolean;
   parseTds?: boolean; // Auto-parse TDS after scraping for filaments missing specs
   tdsLimit?: number;  // Limit TDS parsing to prevent timeouts
+  useBatchRpc?: boolean; // Use atomic batch RPC for database writes
 }
 
 interface ScrapeStats {
@@ -34,6 +36,8 @@ interface ScrapeStats {
   priceHistoryLogged: number;
   tdsFound: number;
   tdsParsed: number;
+  validationErrors: number; // NEW: Track validation failures
+  lockSkipped: number; // NEW: Track skipped due to lock
   // Enhanced tracking fields
   imagesAdded: number;
   mpnsExtracted: number;
@@ -44,6 +48,35 @@ interface ScrapeStats {
   productsUpdated: string[];
   productsFailed: string[];
   errorDetails: string[];
+}
+
+// Acquire scrape lock with timeout-based auto-release
+async function acquireScrapeLock(supabase: SupabaseClient, brandSlug: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('start_brand_scrape', {
+    p_brand_slug: brandSlug
+  });
+  
+  if (error) {
+    console.error(`❌ Failed to acquire lock for ${brandSlug}:`, error.message);
+    return false;
+  }
+  
+  return data === true;
+}
+
+// Release scrape lock (called in finally block)
+async function releaseScrapeLock(supabase: SupabaseClient, brandSlug: string): Promise<void> {
+  try {
+    await supabase
+      .from('automated_brands')
+      .update({ 
+        scraping_active: false,
+        scrape_timeout_at: null 
+      })
+      .eq('brand_slug', brandSlug);
+  } catch (err) {
+    console.error(`⚠️ Failed to release lock for ${brandSlug}:`, err);
+  }
 }
 
 // Convert vendor name to brand_slug format - lookup from database for accuracy
@@ -285,6 +318,8 @@ async function processScrapedProducts(
     priceHistoryLogged: 0,
     tdsFound: 0,
     tdsParsed: 0,
+    validationErrors: 0,
+    lockSkipped: 0,
     imagesAdded: 0,
     mpnsExtracted: 0,
     barcodesAdded: 0,
@@ -752,6 +787,8 @@ Deno.serve(async (req) => {
       priceHistoryLogged: 0,
       tdsFound: 0,
       tdsParsed: 0,
+      validationErrors: 0,
+      lockSkipped: 0,
       imagesAdded: 0,
       mpnsExtracted: 0,
       barcodesAdded: 0,
@@ -770,6 +807,20 @@ Deno.serve(async (req) => {
       // Get brand config from database including amazon_store_url
       const dbBrandConfig = await getBrandConfig(supabase, v);
       
+      // Get brand_slug from database (accurate) or fallback to generated slug
+      const brandSlug = await getBrandSlugFromDB(supabase, v) || toBrandSlugFallback(v);
+      
+      // PILLAR 1: CONCURRENCY LOCKING - Check and acquire lock
+      const lockAcquired = await acquireScrapeLock(supabase, brandSlug);
+      if (!lockAcquired) {
+        console.log(`⏳ Skipping ${v} - already being scraped by another process`);
+        totalStats.lockSkipped++;
+        totalStats.errorDetails.push(`${v}: Skipped - lock already held`);
+        continue;
+      }
+      
+      console.log(`🔒 Lock acquired for ${brandSlug}`);
+      
       // Merge static config with database config (amazon_store_url)
       const config: BrandConfig = {
         ...staticConfig,
@@ -778,23 +829,48 @@ Deno.serve(async (req) => {
       
       const scraper = getScraper(config);
       
-      // Get brand_slug from database (accurate) or fallback to generated slug
-      const brandSlug = await getBrandSlugFromDB(supabase, v) || toBrandSlugFallback(v);
       console.log(`📝 Creating sync log for brand_slug: ${brandSlug}`);
       const syncLogId = await createBrandSyncLog(supabase, brandSlug);
 
       try {
         const products = await scraper.scrapeAllProducts(limit);
         console.log(`📦 Scraped ${products.length} products from ${v}`);
+        
+        // PILLAR 3: VALIDATE scraped products before processing
+        let validProducts = products;
+        let validationErrors = 0;
+        
+        if (products.length > 0) {
+          validProducts = [];
+          for (const product of products) {
+            // Sanitize first to fix common issues
+            const sanitized = sanitizeScrapedProduct(product as unknown as Record<string, unknown>);
+            const validation = validateScrapedProduct(sanitized);
+            
+            if (validation.valid) {
+              validProducts.push(product); // Use original product (typed correctly)
+            } else {
+              validationErrors++;
+              console.warn(`⚠️ Validation failed for "${product.title?.substring(0, 40)}...": ${validation.errors?.join(', ')}`);
+            }
+          }
+          
+          if (validationErrors > 0) {
+            console.log(`🔍 Validation: ${validProducts.length} passed, ${validationErrors} failed`);
+          }
+        }
 
         const { stats, results } = await processScrapedProducts(
           supabase,
-          products,
+          validProducts,
           v,
           dryRun,
           force,
           staticConfig
         );
+        
+        // Track validation errors in stats
+        stats.validationErrors = validationErrors;
 
         allResults[v] = { stats, results, syncLogId: syncLogId || undefined };
 
@@ -810,6 +886,7 @@ Deno.serve(async (req) => {
         totalStats.updated += stats.updated;
         totalStats.unchanged += stats.unchanged;
         totalStats.errors += stats.errors;
+        totalStats.validationErrors += stats.validationErrors;
         totalStats.priceChanges += stats.priceChanges;
         totalStats.availabilityChanges += stats.availabilityChanges;
         totalStats.priceHistoryLogged += stats.priceHistoryLogged;
@@ -849,6 +926,8 @@ Deno.serve(async (req) => {
           priceHistoryLogged: 0,
           tdsFound: 0,
           tdsParsed: 0,
+          validationErrors: 0,
+          lockSkipped: 0,
           imagesAdded: 0,
           mpnsExtracted: 0,
           barcodesAdded: 0,
@@ -873,6 +952,10 @@ Deno.serve(async (req) => {
         
         totalStats.errors++;
         totalStats.errorDetails.push(`${v}: ${errorMsg}`);
+      } finally {
+        // PILLAR 1: Always release lock when done (success or failure)
+        await releaseScrapeLock(supabase, brandSlug);
+        console.log(`🔓 Lock released for ${brandSlug}`);
       }
     }
 

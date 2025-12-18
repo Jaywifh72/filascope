@@ -296,6 +296,7 @@ export type Database = {
           requires_currency_conversion: boolean | null
           scrape_frequency_hours: number | null
           scrape_schedule: string | null
+          scrape_timeout_at: string | null
           scraping_active: boolean | null
           scraping_enabled: boolean | null
           successful_scrapes: number | null
@@ -369,6 +370,7 @@ export type Database = {
           requires_currency_conversion?: boolean | null
           scrape_frequency_hours?: number | null
           scrape_schedule?: string | null
+          scrape_timeout_at?: string | null
           scraping_active?: boolean | null
           scraping_enabled?: boolean | null
           successful_scrapes?: number | null
@@ -442,6 +444,7 @@ export type Database = {
           requires_currency_conversion?: boolean | null
           scrape_frequency_hours?: number | null
           scrape_schedule?: string | null
+          scrape_timeout_at?: string | null
           scraping_active?: boolean | null
           scraping_enabled?: boolean | null
           successful_scrapes?: number | null
@@ -4244,6 +4247,10 @@ export type Database = {
       }
     }
     Functions: {
+      batch_upsert_filaments: {
+        Args: { p_brand_id?: string; p_products: Json; p_vendor: string }
+        Returns: Json
+      }
       cleanup_old_price_history: { Args: never; Returns: number }
       cleanup_stuck_scrapes: {
         Args: never
