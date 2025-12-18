@@ -13,6 +13,8 @@ import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { normalizeColorHex } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
+import { useRegionalStore } from "@/hooks/useRegionalStore";
 
 // Platform color mapping
 const PLATFORM_COLORS: Record<string, string> = {
@@ -77,15 +79,15 @@ const getPrusamentProductLine = (material: string | null, title: string): string
 };
 
 // Brand-specific category URL patterns for grouped products
+// Note: This returns a base URL that will be transformed by getRegionalUrl in the component
 const getCategoryUrl = (brand: string, material: string | null, baseName: string): string | null => {
   if (!material) return null;
   
   const materialLower = material.toLowerCase();
   const brandLower = brand.toLowerCase();
   
-  // Prusament category URLs
+  // Prusament category URLs (global store, no regional variants)
   if (brandLower === 'prusament') {
-    // Map materials to Prusa category slugs
     const prusaCategoryMap: Record<string, string> = {
       'asa': 'prusament-asa',
       'petg': 'prusament-petg',
@@ -101,12 +103,12 @@ const getCategoryUrl = (brand: string, material: string | null, baseName: string
     }
   }
   
-  // Polymaker category URLs
+  // Polymaker category URLs - use US as base, will be transformed by getRegionalUrl
   if (brandLower === 'polymaker') {
     return `https://us.polymaker.com/collections/${materialLower}`;
   }
   
-  // Bambu Lab category URLs
+  // Bambu Lab category URLs - use US as base, will be transformed by getRegionalUrl
   if (brandLower === 'bambu lab') {
     return `https://us.store.bambulab.com/collections/filament`;
   }
@@ -307,6 +309,8 @@ const BrandDetail = () => {
   const [isScrapingColors, setIsScrapingColors] = useState(false);
   const { isAdmin } = useAuth();
   const { toast } = useToast();
+  const { formatPrice } = useCurrency();
+  const { getRegionalUrl } = useRegionalStore();
 
   const brandInfo = getBrandInfo(decodedBrand);
   const brandLogo = getBrandLogo(decodedBrand);
@@ -909,8 +913,8 @@ const BrandDetail = () => {
                       {product.priceRange.min && (
                         <div className="text-lg font-bold text-primary">
                           {product.priceRange.min === product.priceRange.max 
-                            ? `$${getPricePerKg(product.priceRange.min)} USD/kg`
-                            : `$${getPricePerKg(product.priceRange.min)} - $${getPricePerKg(product.priceRange.max)} USD/kg`
+                            ? `${formatPrice(product.priceRange.min)}/kg`
+                            : `${formatPrice(product.priceRange.min)} - ${formatPrice(product.priceRange.max)}/kg`
                           }
                         </div>
                       )}
@@ -966,7 +970,7 @@ const BrandDetail = () => {
                               className="w-full mt-2 text-xs"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(product.categoryUrl!, '_blank');
+                                window.open(getRegionalUrl(product.categoryUrl, decodedBrand), '_blank');
                               }}
                             >
                               <ExternalLink className="w-3 h-3 mr-1" />
