@@ -27,6 +27,7 @@ interface FilamentHeroPurchaseCardProps {
   stockQuantity?: number | null;
   onViewRetailers?: () => void;
   retailerCount?: number;
+  hasActualRegionalPrice?: boolean;
 }
 
 export function FilamentHeroPurchaseCard({
@@ -39,9 +40,10 @@ export function FilamentHeroPurchaseCard({
   inStock = true,
   stockQuantity,
   onViewRetailers,
-  retailerCount = 1
+  retailerCount = 1,
+  hasActualRegionalPrice = false
 }: FilamentHeroPurchaseCardProps) {
-  const { formatPrice } = useCurrency();
+  const { formatPrice, formatRegionalPrice } = useCurrency();
   const { trackStoreClick } = useConversionTracking();
 
   // Determine the primary retailer name
@@ -63,9 +65,13 @@ export function FilamentHeroPurchaseCard({
     window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
   };
 
-  // Format the price per kg for display
-  const formattedPricePerKg = pricePerKg ? formatPrice(pricePerKg) : null;
-  const formattedPricePerSpool = pricePerSpool ? formatPrice(pricePerSpool) : null;
+  // Format the price - use formatRegionalPrice if we have an actual regional price (already in user's currency)
+  const formattedPricePerKg = pricePerKg 
+    ? (hasActualRegionalPrice ? formatRegionalPrice(pricePerKg, false) : formatPrice(pricePerKg, false))
+    : null;
+  const formattedPricePerSpool = pricePerSpool 
+    ? (hasActualRegionalPrice ? formatRegionalPrice(pricePerSpool, false) : formatPrice(pricePerSpool, false))
+    : null;
 
   // Determine stock status for indicator
   const stockStatus = !inStock ? 'out_of_stock' : 

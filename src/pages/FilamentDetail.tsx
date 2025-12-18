@@ -1582,6 +1582,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   inStock={!isDiscontinuedUrl(getRegionalUrl(filament.product_url, filament.vendor))}
                   retailerCount={retailers.length}
                   onViewRetailers={handleViewRetailers}
+                  hasActualRegionalPrice={hasActualRegionalPrice}
                 />
 
                 {/* Suspicious price warning */}
