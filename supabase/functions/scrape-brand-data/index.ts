@@ -161,8 +161,9 @@ async function createFilamentFromScrapedProduct(
   const material = detectMaterial(product.title);
   const colorInfo = extractColor(product.title);
   
-  // Step 4: Use extracted weight if available, otherwise try to extract from title
-  const weight = extractedData.netWeightG || extractWeight(product.title);
+  // Step 4: Use extracted weight from title (MOQ-aware) with priority over scraper weight
+  // Title extraction handles MOQ patterns correctly, scraper might get confused by MOQ totals
+  const weight = extractedData.netWeightG || product.netWeightG || extractWeight(product.title);
   const diameter = extractDiameter(product.title);
   
   // Extract handle from URL
@@ -179,7 +180,7 @@ async function createFilamentFromScrapedProduct(
     material: material,
     color_family: colorInfo?.family || product.colorName || null,
     color_hex: product.colorHex || colorInfo?.hex || null,
-    net_weight_g: product.netWeightG || weight,
+    net_weight_g: weight, // Use title-extracted weight (MOQ-aware) as priority
     diameter_nominal_mm: product.diameterMm || diameter || 1.75,
     variant_price: product.price,
     variant_compare_at_price: product.compareAtPrice,

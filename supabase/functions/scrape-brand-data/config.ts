@@ -112,15 +112,17 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   Sunlu: {
     vendor: "Sunlu",
     platform: "shopify",
-    baseUrl: "https://www.sunlu.com",
-    apiEndpoint: "https://www.sunlu.com/products.json",
+    // Note: store.sunlu.com is the correct storefront, not www.sunlu.com
+    baseUrl: "https://store.sunlu.com",
+    apiEndpoint: "https://store.sunlu.com/products.json",
+    collectionHandle: "3d-printer-filament",
     currency: "USD",
     exchangeRate: 1,
     productsPerPage: 250,
     requestDelay: 500,
     timeout: 10000,
     userAgent: DEFAULT_USER_AGENT,
-    productCount: 84,
+    productCount: 55,
   },
   Polymaker: {
     vendor: "Polymaker",
