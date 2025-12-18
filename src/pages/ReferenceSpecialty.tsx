@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { specialtyTools, categoryLabels, pricingLabels, SpecialtyTool } from "@/lib/specialtyData";
 import { numericToRating, specialtyMetricTooltips } from "@/lib/platformData";
 import RatingValue from "@/components/reference/repos/shared/RatingValue";
 import RatingScaleLegend from "@/components/reference/repos/shared/RatingScaleLegend";
+import SpecialtyToolsHeroSection from "@/components/reference/SpecialtyToolsHeroSection";
 import {
   Table,
   TableBody,
@@ -116,6 +117,11 @@ export default function ReferenceSpecialty() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [pricingFilter, setPricingFilter] = useState<string>('all');
+  const comparisonRef = useRef<HTMLDivElement>(null);
+
+  const scrollToComparison = () => {
+    comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -189,16 +195,15 @@ export default function ReferenceSpecialty() {
   const categories = Object.entries(categoryLabels);
   const pricingModels = Object.entries(pricingLabels);
 
+  // Helper to generate tool ID for navigation
+  const getToolAnchorId = (toolId: string) => `tool-${toolId.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <SpecialtyToolsHeroSection onScrollToComparison={scrollToComparison} />
       
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Specialty Tools & Sites</h1>
-          <p className="text-muted-foreground">
-            Essential utilities, platforms, and resources for advanced 3D printing workflows.
-          </p>
-        </div>
+      <main className="container mx-auto px-4 py-8" ref={comparisonRef}>
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-4 mb-6">
@@ -318,7 +323,7 @@ export default function ReferenceSpecialty() {
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
               {filteredAndSortedTools.map((tool) => (
-                <AccordionItem key={tool.id} value={tool.id}>
+                <AccordionItem key={tool.id} value={tool.id} id={getToolAnchorId(tool.id)}>
                   <AccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
