@@ -176,15 +176,15 @@ export function FilamentHeroPurchaseCard({
       {/* Trust Signals */}
       <div className="flex items-center justify-between pt-5 mt-5 border-t border-border/30">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Shield className="w-3.5 h-3.5" />
+          <Shield className="w-3.5 h-3.5 text-emerald-400" />
           <span>Price verified</span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Truck className="w-3.5 h-3.5" />
+          <Truck className="w-3.5 h-3.5 text-emerald-400" />
           <span>Free $35+</span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <RotateCcw className="w-3.5 h-3.5" />
+          <RotateCcw className="w-3.5 h-3.5 text-emerald-400" />
           <span>Easy returns</span>
         </div>
       </div>
