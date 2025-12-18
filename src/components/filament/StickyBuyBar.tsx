@@ -22,6 +22,7 @@ interface StickyBuyBarProps {
   isVisible: boolean;
   stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
   stockQuantity?: number | null;
+  hasActualRegionalPrice?: boolean;
 }
 
 export function StickyBuyBar({ 
@@ -30,11 +31,17 @@ export function StickyBuyBar({
   pricePerKg, 
   isVisible,
   stockStatus = 'in_stock',
-  stockQuantity
+  stockQuantity,
+  hasActualRegionalPrice = false
 }: StickyBuyBarProps) {
   const { trackStoreClick } = useConversionTracking();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, formatRegionalPrice } = useCurrency();
   const hasTrackedImpression = useRef(false);
+  
+  // Use the appropriate formatter based on whether we have an actual regional price
+  const formattedPrice = pricePerKg 
+    ? (hasActualRegionalPrice ? formatRegionalPrice(pricePerKg, false) : formatPrice(pricePerKg, false))
+    : null;
 
   // Track impression when bar becomes visible
   useEffect(() => {
@@ -139,9 +146,9 @@ export function StickyBuyBar({
               currentPrice={pricePerKg}
               size="small"
             />
-            {pricePerKg && (
+            {formattedPrice && (
               <div className="text-2xl font-bold text-white tracking-tight">
-                {formatPrice(pricePerKg, false)}
+                {formattedPrice}
                 <span className="text-sm font-medium text-slate-400 ml-1">/kg</span>
               </div>
             )}
@@ -205,9 +212,9 @@ export function StickyBuyBar({
             </div>
             
             <div className="text-right flex-shrink-0">
-              {pricePerKg && (
+              {formattedPrice && (
                 <div className="text-xl font-bold text-white">
-                  {formatPrice(pricePerKg, false)}
+                  {formattedPrice}
                   <span className="text-xs font-medium text-slate-400 ml-0.5">/kg</span>
                 </div>
               )}

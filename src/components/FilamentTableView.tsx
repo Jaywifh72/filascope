@@ -6,6 +6,7 @@ import { MaterialBadge } from "@/components/MaterialBadge";
 import { LikeButton } from "@/components/LikeButton";
 import { CheckCircle, XCircle, TreeDeciduous, Layers, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface Filament {
   id: string;
@@ -151,6 +152,7 @@ export function FilamentTableView({
 }: FilamentTableViewProps) {
   const navigate = useNavigate();
   const sortConfig = parseSortBy(sortBy);
+  const { formatPrice } = useCurrency();
   
   const handleSort = (column: SortColumn) => {
     if (sortConfig.column === column) {
@@ -329,12 +331,12 @@ export function FilamentTableView({
                 </td>
                 <td className="py-3 px-3 text-right">
                   <span className="font-mono text-sm font-bold text-orange-400">
-                    {displayPricePerKg ? `$${displayPricePerKg.toFixed(2)}/kg` : "—"}
+                    {displayPricePerKg ? `${formatPrice(displayPricePerKg, false)}/kg` : "—"}
                   </span>
                 </td>
                 <td className="py-3 px-3 text-right">
                   <span className="font-mono text-sm text-muted-foreground">
-                    {pricePerSpool ? `$${pricePerSpool.toFixed(2)}` : "—"}
+                    {pricePerSpool ? formatPrice(pricePerSpool, false) : "—"}
                   </span>
                 </td>
                 <td className="py-3 px-3 text-center">

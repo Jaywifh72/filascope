@@ -3327,6 +3327,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
           affiliateUrl={getAffiliateUrl(getRegionalUrl(filament.product_url, filament.vendor), filament.vendor)}
           pricePerKg={rawPricePerKg}
           isVisible={stickyBarVisible}
+          hasActualRegionalPrice={hasActualRegionalPrice}
         />
       )}
 

@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCompare } from "@/hooks/useCompare";
+import { useCurrency } from "@/hooks/useCurrency";
 
 // Material badge colors - using purple as specified
 const MATERIAL_COLORS: Record<string, string> = {
@@ -109,6 +110,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const { formatPrice } = useCurrency();
   
   const { 
     addItem, 
@@ -357,7 +359,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
           <div className="flex items-center gap-3">
             <div className="flex items-baseline gap-1">
               <span className="text-[28px] font-bold text-white leading-none">
-                ${pricePerKg.toFixed(2)}
+                {formatPrice(pricePerKg, false)}
               </span>
               <span className="text-sm font-medium text-slate-400">/kg</span>
             </div>
