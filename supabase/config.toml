@@ -151,7 +151,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.scrape-regional-prices]
-verify_jwt = true
+verify_jwt = false
 
 [functions.validate-filament-urls]
-verify_jwt = true
+verify_jwt = false
