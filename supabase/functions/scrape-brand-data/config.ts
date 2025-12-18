@@ -504,16 +504,16 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   // ============================================================================
   TECBEARS: {
     vendor: "TECBEARS",
-    platform: "firecrawl",
-    baseUrl: "https://3dfilamentprofiles.com/filaments/tecbears",
-    apiEndpoint: "",
+    platform: "amazon",
+    baseUrl: "https://www.amazon.com",
+    amazonStoreUrl: "https://www.amazon.com/stores/TECBEARS/page/A86FC7C4-D19A-4F4D-B7B9-E7FBF9E0F7FA",
     currency: "USD",
     exchangeRate: 1.0,
     productsPerPage: 50,
     requestDelay: 2000,
     timeout: 30000,
     userAgent: DEFAULT_USER_AGENT,
-    productCount: 40,
+    productCount: 100,
   },
   TTYT3D: {
     vendor: "TTYT3D",
