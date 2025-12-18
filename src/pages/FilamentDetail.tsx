@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,6 +44,8 @@ import { StickyBuyBar } from "@/components/filament/StickyBuyBar";
 import { FilamentHeroGallery } from "@/components/filament/hero/FilamentHeroGallery";
 import { FilamentHeroPurchaseCard } from "@/components/filament/hero/FilamentHeroPurchaseCard";
 import { FilamentHeroQuickFeatures } from "@/components/filament/hero/FilamentHeroQuickFeatures";
+import { RetailersModal, type Retailer } from "@/components/filament/hero/RetailersModal";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -76,14 +78,97 @@ const FilamentDetail = () => {
   const [newProductUrl, setNewProductUrl] = useState("");
   const [savingUrl, setSavingUrl] = useState(false);
   const [stickyBarVisible, setStickyBarVisible] = useState(false);
+  const [retailersModalOpen, setRetailersModalOpen] = useState(false);
   const heroSentinelRef = useRef<HTMLDivElement>(null);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
   const { formatPrice, currencyInfo } = useCurrency();
   const { incrementStat } = useAchievements();
+  const { trackStoreClick } = useConversionTracking();
 
   const compatibility = selectedPrinter && filament 
     ? checkPrinterFilamentCompatibility(selectedPrinter, filament)
     : null;
+
+  // Build retailers array for modal
+  const retailers: Retailer[] = useMemo(() => {
+    if (!filament) return [];
+    
+    const result: Retailer[] = [];
+    
+    // Primary retailer (brand store)
+    if (filament.product_url) {
+      result.push({
+        id: 'store',
+        name: filament.vendor || 'Store',
+        price: filament.variant_price,
+        inStock: !isDiscontinuedUrl(filament.product_url),
+        url: getAffiliateUrl(filament.product_url, filament.vendor),
+        shippingEstimate: 'Ships within 24hrs',
+      });
+    }
+    
+    // Amazon US
+    if (filament.amazon_link_us) {
+      result.push({
+        id: 'amazon_us',
+        name: 'Amazon US',
+        price: filament.amazon_price_usd,
+        inStock: true,
+        url: getAmazonUrl(filament.amazon_link_us),
+        shippingEstimate: 'Prime eligible',
+      });
+    }
+    
+    // Amazon UK
+    if (filament.amazon_link_uk) {
+      result.push({
+        id: 'amazon_uk',
+        name: 'Amazon UK',
+        price: null, // We don't have UK price in USD
+        inStock: true,
+        url: getAmazonUrl(filament.amazon_link_uk),
+        shippingEstimate: 'Prime eligible',
+      });
+    }
+    
+    // Amazon DE
+    if (filament.amazon_link_de) {
+      result.push({
+        id: 'amazon_de',
+        name: 'Amazon DE',
+        price: null, // We don't have DE price in USD
+        inStock: true,
+        url: getAmazonUrl(filament.amazon_link_de),
+        shippingEstimate: 'Prime eligible',
+      });
+    }
+    
+    return result;
+  }, [filament, getAffiliateUrl, getAmazonUrl]);
+
+  // Track modal open
+  const handleViewRetailers = () => {
+    if (filament) {
+      trackStoreClick({
+        moduleName: 'view_all_retailers_modal',
+        entityId: filament.id,
+        entityType: 'filament',
+      });
+    }
+    setRetailersModalOpen(true);
+  };
+
+  // Track retailer click in modal
+  const handleRetailerClick = (retailer: Retailer) => {
+    if (filament) {
+      trackStoreClick({
+        moduleName: 'retailer_modal_click',
+        entityId: retailer.id,
+        entityType: 'filament',
+        metadata: { retailerName: retailer.name, price: retailer.price },
+      });
+    }
+  };
 
   // Debug logging
   useEffect(() => {
@@ -1409,7 +1494,8 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   affiliateUrl={getAffiliateUrl(filament.product_url, filament.vendor)}
                   retailerName={filament.vendor || undefined}
                   inStock={!isDiscontinuedUrl(filament.product_url)}
-                  retailerCount={1 + (filament.amazon_link_us ? 1 : 0) + (filament.amazon_link_uk ? 1 : 0) + (filament.amazon_link_de ? 1 : 0)}
+                  retailerCount={retailers.length}
+                  onViewRetailers={handleViewRetailers}
                 />
 
                 {/* Suspicious price warning */}
@@ -1447,6 +1533,15 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
             />
           </CardContent>
         </Card>
+
+        {/* Retailers Modal */}
+        <RetailersModal
+          open={retailersModalOpen}
+          onOpenChange={setRetailersModalOpen}
+          productName={filament.product_title}
+          retailers={retailers}
+          onRetailerClick={handleRetailerClick}
+        />
 
         {/* Sentinel for sticky buy bar trigger */}
         <div ref={heroSentinelRef} className="h-0" aria-hidden="true" />
