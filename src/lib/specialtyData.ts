@@ -15,8 +15,14 @@ export interface SpecialtyTool {
     description: string;
   };
   
-  // Best for context
-  bestFor: string;
+  // Quick summary for decision-making (50 words max)
+  bottomLine: string;
+  
+  // Best for context (array of user types/scenarios)
+  bestFor: string[];
+  
+  // Not ideal for scenarios
+  notIdealFor: string[];
   
   // Key ratings to display on cards (top 2)
   keyRatings: ('easeOfUse' | 'featureDepth' | 'valueForMoney' | 'communitySupport' | 'printFocus')[];
@@ -59,7 +65,19 @@ export const specialtyTools: SpecialtyTool[] = [
       title: 'Text-to-3D AI Generation',
       description: 'Create print-ready 3D models from text descriptions or images using cutting-edge AI in under a minute'
     },
-    bestFor: 'Makers who want custom models but lack CAD skills, and creators needing rapid prototyping',
+    bottomLine: "Skip the CAD learning curve entirely. Describe what you want in plain English, and Meshy generates a print-ready 3D model in under a minute. Perfect for custom figurines, props, and artistic pieces when you have a vision but lack modeling skills.",
+    bestFor: [
+      'Makers who want custom models but lack CAD skills',
+      'Prop makers and cosplayers needing unique pieces',
+      'Rapid prototyping of organic shapes',
+      'Creating custom figurines and decorations'
+    ],
+    notIdealFor: [
+      'Precise mechanical parts with tight tolerances',
+      'Engineering components requiring exact dimensions',
+      'Users needing full creative control over geometry',
+      'Those who prefer deterministic design processes'
+    ],
     keyRatings: ['easeOfUse', 'featureDepth'],
     ratings: {
       easeOfUse: 5,
@@ -107,7 +125,19 @@ Furthermore, free users are limited to the queue, meaning during peak times, the
       title: 'Photo-to-3D Lithophanes',
       description: 'Transform any image into stunning multi-color lithophane art using filament layering and transmission distance science'
     },
-    bestFor: 'Creative makers wanting unique artistic prints, personalized gifts, and photo reproductions',
+    bottomLine: "Turn any photograph into a stunning 3D printed artwork using clever filament layering. One-time $24.99 purchase unlocks the ability to create gallery-worthy lithophanes, custom portraits, and photo reproductions that look professionally made.",
+    bestFor: [
+      'Creative makers wanting unique artistic prints',
+      'Gift-givers creating custom portraits and pet photos',
+      'Multi-color printer owners (AMS, MMU)',
+      'Users who want impressive results without CAD skills'
+    ],
+    notIdealFor: [
+      'Those seeking functional/mechanical prints',
+      'Single-color printer owners (very limited options)',
+      'Users who dislike artistic/decorative prints',
+      'Budget-conscious makers (filament usage is high)'
+    ],
     keyRatings: ['featureDepth', 'valueForMoney'],
     ratings: {
       easeOfUse: 4,
@@ -154,7 +184,19 @@ This has spawned a secondary economy. The "HueForge" tag has become a dominant c
       title: 'Multi-Printer Fleet Management',
       description: 'Manage multiple printers from one dashboard with queue management, analytics, and cloud slicing'
     },
-    bestFor: 'Print farms, makerspaces, and makers with multiple machines needing centralized control',
+    bottomLine: "The control center for running multiple 3D printers. If you have 2+ printers and want unified queue management, automatic job assignment, and filament tracking from one dashboard, SimplyPrint turns chaos into a streamlined operation.",
+    bestFor: [
+      'Print farms and commercial operations',
+      'Makerspaces and educational institutions',
+      'Makers with 2+ printers wanting centralized control',
+      'Teams needing user permissions and audit trails'
+    ],
+    notIdealFor: [
+      'Single printer hobbyists (overkill)',
+      'Users who prefer local-only control',
+      'Those without reliable internet connectivity',
+      'Makers who rarely queue multiple jobs'
+    ],
     keyRatings: ['featureDepth', 'printFocus'],
     ratings: {
       easeOfUse: 4,
@@ -201,7 +243,19 @@ A critical specialty of SimplyPrint is its hardware agnosticism. In a typical pr
       title: 'Interactive Calibration Patterns',
       description: 'Generate custom G-code test patterns for Pressure Advance and Max Volumetric Flow tuning with scientific methodology'
     },
-    bestFor: 'Speed-focused printers, Klipper/Voron users, and print quality perfectionists',
+    bottomLine: "The definitive calibration guide for high-speed 3D printing. If you own a Klipper-based printer and want to eliminate corner bulging, dial in perfect flow, and print faster without sacrificing quality—this is where you start. Completely free.",
+    bestFor: [
+      'Speed-focused printers (Voron, Ratrig, etc.)',
+      'Klipper firmware users',
+      'Print quality perfectionists',
+      'Anyone with corner bulging or flow issues'
+    ],
+    notIdealFor: [
+      'Complete beginners on stock machines',
+      'Users who prefer not to tweak settings',
+      'Marlin-only users (limited support)',
+      'Those looking for visual/video guides'
+    ],
     keyRatings: ['featureDepth', 'valueForMoney'],
     ratings: {
       easeOfUse: 3,
@@ -244,7 +298,19 @@ The site's influence is so profound that its methodologies (like the "Pattern Me
       title: 'Cloud-Native Parametric CAD',
       description: 'Professional-grade CAD that runs entirely in your browser with real-time collaboration and version control'
     },
-    bestFor: 'Designers who need real CAD without expensive software, teams needing collaboration',
+    bottomLine: "Full professional CAD in your browser—no installation, works on any device. Free tier gives you SolidWorks-level parametric modeling with Git-like version control. The catch: free designs must be public.",
+    bestFor: [
+      'Designers who need real CAD without expensive software',
+      'Teams needing real-time collaboration',
+      'Students and educators (free for education)',
+      'Users who want to work from any device'
+    ],
+    notIdealFor: [
+      'Those needing private designs on free tier',
+      'Users without reliable internet',
+      'Hobbyists who prefer simpler tools',
+      'Offline-first workflows'
+    ],
     keyRatings: ['featureDepth', 'valueForMoney'],
     ratings: {
       easeOfUse: 3,
@@ -289,7 +355,19 @@ For the 3D printing community, Onshape offers several strategic advantages. Firs
       title: 'Geometric AI Model Search',
       description: 'Search for 3D models by shape using AI, not just keywords, across 30+ sources and millions of models'
     },
-    bestFor: 'Finding specific models when you know what it looks like but not its name',
+    bottomLine: "Google for 3D models. Upload any STL and find similar shapes across 30+ repositories using AI—no more guessing keywords. When you know what something looks like but not what it's called, Thangs finds it.",
+    bestFor: [
+      'Finding specific models by shape, not keywords',
+      'Searching across multiple repositories at once',
+      'Discovering alternatives to models you already have',
+      'Researchers and designers seeking similar parts'
+    ],
+    notIdealFor: [
+      'Users who prefer single-repository browsing',
+      'Those who want curated collections over search',
+      'Makers who rarely search for models',
+      'Offline workflows'
+    ],
     keyRatings: ['easeOfUse', 'featureDepth'],
     ratings: {
       easeOfUse: 5,
@@ -334,7 +412,19 @@ This solves a significant pain point. How many times has a user searched for a "
       title: 'Universal Remote Monitoring',
       description: 'Monitor, control, and get AI failure detection for OctoPrint, Klipper, or Bambu printers from anywhere'
     },
-    bestFor: 'Anyone who wants to monitor prints remotely with peace of mind and AI-powered failure detection',
+    bottomLine: "Monitor and control your printer from anywhere without the security headaches of port forwarding. AI failure detection catches spaghetti and layer shifts automatically, pausing prints before they waste hours of filament.",
+    bestFor: [
+      'Anyone who wants to monitor prints remotely',
+      'Users worried about print failures when away',
+      'OctoPrint, Klipper, and Bambu Lab owners',
+      'Those who want AI failure detection without setup'
+    ],
+    notIdealFor: [
+      'Users who only print while at home',
+      'Those with existing secure remote setups',
+      'Makers without webcams on their printers',
+      'Privacy-conscious users avoiding cloud services'
+    ],
     keyRatings: ['valueForMoney', 'printFocus'],
     ratings: {
       easeOfUse: 4,
@@ -379,7 +469,19 @@ Beyond basic remote access, OctoEverywhere has invested heavily in AI-powered fa
       title: 'Bambu-Optimized Print Profiles',
       description: 'One-click 3MF files with pre-configured settings for Bambu printers, plus AI-powered model generation'
     },
-    bestFor: 'Bambu Lab printer owners wanting seamless downloads and optimized print settings',
+    bottomLine: "The Apple Store of 3D printing for Bambu owners. Download a 3MF file and it's ready to print with optimal settings already configured—no slicer tweaking required. Includes free AI model generation via MakerLab.",
+    bestFor: [
+      'Bambu Lab printer owners',
+      'Users who want zero-friction downloads',
+      'Those wanting AI model generation (MakerLab)',
+      'Makers who value curated, tested content'
+    ],
+    notIdealFor: [
+      'Non-Bambu printer owners (limited benefit)',
+      'Users who prefer cross-platform repositories',
+      'Those avoiding ecosystem lock-in',
+      'Makers who want maximum model variety'
+    ],
     keyRatings: ['easeOfUse', 'printFocus'],
     ratings: {
       easeOfUse: 5,
@@ -422,7 +524,19 @@ MakerLab, the AI-powered companion, allows users to generate 3D models from text
       title: 'One-Click Complex Lithophanes',
       description: 'Turn photos into printable lithophanes with various shapes including globes, night lights, and curved panels'
     },
-    bestFor: 'Simple lithophane creation for gifts and decorative items without learning complex software',
+    bottomLine: "Upload a photo, pick a shape, download an STL. The simplest possible path to creating backlit photo art—no software to install, no account required, completely free. Perfect for quick gifts.",
+    bestFor: [
+      'Quick lithophane creation without learning curves',
+      'Gift-makers wanting personalized photo items',
+      'Users who want globe, lamp, or curved lithophanes',
+      'Beginners to 3D printing decoration'
+    ],
+    notIdealFor: [
+      'Those wanting multi-color lithophanes (use HueForge)',
+      'Users needing advanced customization',
+      'High-resolution detailed artwork',
+      'Commercial lithophane production'
+    ],
     keyRatings: ['easeOfUse', 'valueForMoney'],
     ratings: {
       easeOfUse: 5,
@@ -465,7 +579,19 @@ The site's brilliance is its simplicity. Upload an image, select a shape (flat, 
       title: 'Browser-Based Mesh Repair',
       description: 'Fix broken STL files directly in your browser—repair holes, fix normals, and merge shells without installing software'
     },
-    bestFor: 'Quick mesh fixes when downloaded models have errors blocking slicing',
+    bottomLine: "The emergency room for broken STL files. When a downloaded model won't slice due to mesh errors, upload it here and get a fixed version in seconds. No installation, no account, no cost.",
+    bestFor: [
+      'Quick fixes when models fail to slice',
+      'Repairing non-manifold geometry errors',
+      'Users who download models from various sources',
+      'Those without mesh editing software installed'
+    ],
+    notIdealFor: [
+      'Complex mesh editing or sculpting',
+      'Users with Meshmixer or Blender skills',
+      'Large files (browser memory limits)',
+      'Batch processing multiple files'
+    ],
     keyRatings: ['easeOfUse', 'valueForMoney'],
     ratings: {
       easeOfUse: 5,
