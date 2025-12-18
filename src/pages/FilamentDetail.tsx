@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,6 +40,7 @@ import { SimilarMaterialsModule } from "@/components/filament/similar/SimilarMat
 import { PerformanceAtAGlance } from "@/components/filament/performance/PerformanceAtAGlance";
 import { validateFilamentPrice } from "@/lib/priceValidation";
 import { SpoolSizeSelector } from "@/components/filament/SpoolSizeSelector";
+import { StickyBuyBar } from "@/components/filament/StickyBuyBar";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -71,6 +72,8 @@ const FilamentDetail = () => {
   const [editUrlOpen, setEditUrlOpen] = useState(false);
   const [newProductUrl, setNewProductUrl] = useState("");
   const [savingUrl, setSavingUrl] = useState(false);
+  const [stickyBarVisible, setStickyBarVisible] = useState(false);
+  const heroSentinelRef = useRef<HTMLDivElement>(null);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
   const { formatPrice, currencyInfo } = useCurrency();
   const { incrementStat } = useAchievements();
@@ -102,6 +105,26 @@ const FilamentDetail = () => {
       incrementStat('materials_explored');
     }
   }, [filament?.id]);
+
+  // Sticky buy bar scroll detection
+  useEffect(() => {
+    const sentinel = heroSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Show sticky bar when sentinel scrolls out of view (hero no longer visible)
+        setStickyBarVisible(!entry.isIntersecting);
+      },
+      {
+        threshold: 0,
+        rootMargin: '-100px 0px 0px 0px', // Trigger slightly before hero fully disappears
+      }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   // Fetch compatible hotends when printer is selected
   useEffect(() => {
@@ -1599,7 +1622,8 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
           </CardContent>
         </Card>
 
-        {/* Similar Materials Comparison Module */}
+        {/* Sentinel for sticky buy bar trigger */}
+        <div ref={heroSentinelRef} className="h-0" aria-hidden="true" />
         {filament && id && (
           <SimilarMaterialsModule
             filamentId={id}
@@ -3093,6 +3117,19 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Sticky Buy Bar - appears when scrolling past hero */}
+      {filament && (
+        <StickyBuyBar
+          filament={filament}
+          affiliateUrl={getAffiliateUrl(filament.product_url, filament.vendor)}
+          pricePerKg={rawPricePerKg}
+          isVisible={stickyBarVisible}
+        />
+      )}
+
+      {/* Spacer for sticky bar */}
+      <div className="h-20 md:h-16" />
     </div>
   );
 };

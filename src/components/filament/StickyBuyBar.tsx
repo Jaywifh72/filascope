@@ -1,0 +1,217 @@
+import { useEffect, useRef } from "react";
+import { ShoppingCart, ExternalLink, Star, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { useCurrency } from "@/hooks/useCurrency";
+import { cn } from "@/lib/utils";
+
+interface StickyBuyBarProps {
+  filament: {
+    id: string;
+    product_title: string;
+    vendor: string | null;
+    featured_image: string | null;
+    variant_price: number | null;
+    net_weight_g: number | null;
+  };
+  affiliateUrl: string | null;
+  pricePerKg: number | null;
+  isVisible: boolean;
+}
+
+export function StickyBuyBar({ filament, affiliateUrl, pricePerKg, isVisible }: StickyBuyBarProps) {
+  const { trackStoreClick } = useConversionTracking();
+  const { formatPrice } = useCurrency();
+  const hasTrackedImpression = useRef(false);
+
+  // Track impression when bar becomes visible
+  useEffect(() => {
+    if (isVisible && !hasTrackedImpression.current) {
+      trackStoreClick({
+        moduleName: 'sticky_buy_bar_impression',
+        entityId: filament.id,
+        entityType: 'filament',
+      });
+      hasTrackedImpression.current = true;
+    }
+  }, [isVisible, filament.id, trackStoreClick]);
+
+  const handleBuyClick = () => {
+    trackStoreClick({
+      moduleName: 'sticky_buy_bar',
+      entityId: filament.id,
+      entityType: 'filament',
+    });
+
+    if (affiliateUrl) {
+      window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  // Get product name without brand prefix
+  const getDisplayName = () => {
+    const title = filament.product_title;
+    if (filament.vendor && title.toLowerCase().startsWith(filament.vendor.toLowerCase())) {
+      return title.slice(filament.vendor.length).trim();
+    }
+    return title;
+  };
+
+  // Format weight display
+  const weightDisplay = filament.net_weight_g 
+    ? filament.net_weight_g >= 1000 
+      ? `${(filament.net_weight_g / 1000).toFixed(1)}kg`
+      : `${filament.net_weight_g}g`
+    : null;
+
+  if (!affiliateUrl) return null;
+
+  return (
+    <div
+      className={cn(
+        "fixed bottom-0 left-0 right-0 z-50",
+        "bg-slate-900/98 backdrop-blur-xl",
+        "border-t border-primary/30",
+        "shadow-[0_-4px_20px_rgba(0,0,0,0.3),0_-1px_0_rgba(0,212,212,0.1)]",
+        "transform transition-all duration-300 ease-out",
+        "pb-[env(safe-area-inset-bottom)]",
+        isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
+      )}
+      role="complementary"
+      aria-label="Quick purchase bar"
+      aria-hidden={!isVisible}
+    >
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-3">
+        {/* Desktop Layout */}
+        <div className="hidden md:flex items-center justify-between gap-6">
+          {/* Product Info Section */}
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            {/* Product Image */}
+            {filament.featured_image && (
+              <div className="w-12 h-12 flex-shrink-0 rounded-lg bg-white/5 border border-white/10 overflow-hidden">
+                <img
+                  src={filament.featured_image}
+                  alt={filament.product_title}
+                  className="w-full h-full object-contain p-1"
+                  loading="lazy"
+                />
+              </div>
+            )}
+            
+            {/* Product Name & Meta */}
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <div className="flex items-center gap-2 text-[15px] font-semibold text-white truncate">
+                <span className="text-primary font-bold">{filament.vendor}</span>
+                <span className="truncate">{getDisplayName()}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="flex items-center gap-1 text-emerald-400 font-medium">
+                  <Check className="w-3.5 h-3.5" />
+                  In Stock
+                </span>
+                {weightDisplay && (
+                  <>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-slate-400">{weightDisplay}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Price Section */}
+          <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+            {pricePerKg && (
+              <div className="text-2xl font-bold text-white tracking-tight">
+                {formatPrice(pricePerKg, false)}
+                <span className="text-sm font-medium text-slate-400 ml-1">/kg</span>
+              </div>
+            )}
+            {filament.variant_price && (
+              <div className="text-sm text-slate-400">
+                {formatPrice(filament.variant_price)} total
+              </div>
+            )}
+          </div>
+
+          {/* CTA Button */}
+          <Button
+            onClick={handleBuyClick}
+            className={cn(
+              "min-w-[200px] h-[52px] px-7",
+              "bg-gradient-to-r from-primary to-primary/80",
+              "hover:from-primary/90 hover:to-primary/70",
+              "text-primary-foreground font-bold text-base tracking-wide",
+              "shadow-[0_4px_15px_rgba(0,212,212,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]",
+              "hover:shadow-[0_6px_25px_rgba(0,212,212,0.4),inset_0_1px_0_rgba(255,255,255,0.3)]",
+              "hover:-translate-y-0.5 active:translate-y-0",
+              "transition-all duration-200",
+              "rounded-xl"
+            )}
+            aria-label={`Buy ${filament.product_title} from ${filament.vendor}`}
+          >
+            <ShoppingCart className="w-[18px] h-[18px] mr-2.5" />
+            <span>BUY NOW</span>
+            <span className="ml-3 pl-3 border-l border-primary-foreground/20 flex items-center gap-1.5 text-sm font-semibold opacity-80">
+              <ExternalLink className="w-3.5 h-3.5" />
+              {filament.vendor || 'Store'}
+            </span>
+          </Button>
+        </div>
+
+        {/* Mobile Layout */}
+        <div className="md:hidden flex flex-col gap-3">
+          {/* Top row: Product info + Price */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+              <div className="text-sm font-semibold text-white truncate">
+                <span className="text-primary">{filament.vendor}</span>
+                {' '}
+                <span>{getDisplayName()}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="flex items-center gap-1 text-emerald-400 font-medium">
+                  <Check className="w-3 h-3" />
+                  In Stock
+                </span>
+                {weightDisplay && (
+                  <>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-slate-400">{weightDisplay}</span>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            {pricePerKg && (
+              <div className="text-right flex-shrink-0">
+                <div className="text-xl font-bold text-white">
+                  {formatPrice(pricePerKg, false)}
+                  <span className="text-xs font-medium text-slate-400 ml-0.5">/kg</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Full-width button */}
+          <Button
+            onClick={handleBuyClick}
+            className={cn(
+              "w-full h-14",
+              "bg-gradient-to-r from-primary to-primary/80",
+              "hover:from-primary/90 hover:to-primary/70",
+              "text-primary-foreground font-bold text-[17px] tracking-wide",
+              "shadow-[0_4px_15px_rgba(0,212,212,0.3)]",
+              "rounded-xl",
+              "transition-all duration-200"
+            )}
+            aria-label={`Buy ${filament.product_title}`}
+          >
+            <ShoppingCart className="w-5 h-5 mr-2.5" />
+            BUY NOW
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
