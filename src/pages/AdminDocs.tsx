@@ -27,6 +27,14 @@ const docs: DocItem[] = [
     date: "December 18, 2025"
   },
   {
+    title: "Engineering Review",
+    description: "DB schema analysis, API boundaries, state management, background jobs, authorization model, production risks, and prioritized fixes",
+    path: "/docs/filascope-engineering-review.md",
+    icon: Code,
+    category: "architecture",
+    date: "December 18, 2025"
+  },
+  {
     title: "Observability & Data Correctness Guide",
     description: "Instrumentation plan, test strategies, invariants, debug playbook, and dashboard/alert configuration",
     path: "/docs/filascope-observability-guide.md",
