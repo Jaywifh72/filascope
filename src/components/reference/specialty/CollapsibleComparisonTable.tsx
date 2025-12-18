@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Table as TableIcon, X } from "lucide-react";
+import { ChevronDown, Table as TableIcon, X, Zap } from "lucide-react";
 import { specialtyTools, categoryLabels, pricingLabels, SpecialtyTool } from "@/lib/specialtyData";
 import { numericToRating, specialtyMetricTooltips } from "@/lib/platformData";
 import RatingValue from "@/components/reference/repos/shared/RatingValue";
@@ -267,6 +267,12 @@ export default function CollapsibleComparisonTable() {
                 <TableRow>
                   <SortHeader label="Tool" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   <TableHead>Category</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1.5 text-warning">
+                      <Zap className="h-4 w-4" />
+                      <span>Standout Feature</span>
+                    </div>
+                  </TableHead>
                   <TableHead>Pricing</TableHead>
                   <MetricHeader label="Ease of Use" field="easeOfUse" metricKey="easeOfUse" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   <MetricHeader label="Features" field="featureDepth" metricKey="featureDepth" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
@@ -285,6 +291,23 @@ export default function CollapsibleComparisonTable() {
                         {getCategoryIcon(tool.category)}
                         {categoryLabels[tool.category]}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="min-w-[180px] max-w-[240px]">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-warning/10 border border-warning/30 cursor-help max-w-full">
+                              <Zap className="h-3 w-3 text-warning flex-shrink-0" />
+                              <span className="text-[11px] font-semibold text-warning truncate">
+                                {tool.standoutFeature.title}
+                              </span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="text-xs">{tool.standoutFeature.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{pricingLabels[tool.pricingModel]}</Badge>
