@@ -5,15 +5,15 @@ import {
   Shield, 
   Truck, 
   RotateCcw, 
-  Check, 
-  Clock, 
-  TrendingDown,
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useConversionTracking } from '@/hooks/useConversionTracking';
 import { cn } from '@/lib/utils';
+import { PriceUrgencyBadge } from '../urgency/PriceUrgencyBadge';
+import { StockUrgencyIndicator } from '../urgency/StockUrgencyIndicator';
+import { ShippingCountdown } from '../urgency/ShippingCountdown';
 
 interface FilamentHeroPurchaseCardProps {
   filamentId: string;
@@ -23,6 +23,7 @@ interface FilamentHeroPurchaseCardProps {
   affiliateUrl: string | null;
   retailerName?: string;
   inStock?: boolean;
+  stockQuantity?: number | null;
   onViewRetailers?: () => void;
   retailerCount?: number;
 }
@@ -35,10 +36,11 @@ export function FilamentHeroPurchaseCard({
   affiliateUrl,
   retailerName,
   inStock = true,
+  stockQuantity,
   onViewRetailers,
   retailerCount = 1
 }: FilamentHeroPurchaseCardProps) {
-  const { formatPrice, convertPrice } = useCurrency();
+  const { formatPrice } = useCurrency();
   const { trackStoreClick } = useConversionTracking();
 
   // Determine the primary retailer name
@@ -63,6 +65,10 @@ export function FilamentHeroPurchaseCard({
   // Format the price per kg for display
   const formattedPricePerKg = pricePerKg ? formatPrice(pricePerKg) : null;
   const formattedPricePerSpool = pricePerSpool ? formatPrice(pricePerSpool) : null;
+
+  // Determine stock status for indicator
+  const stockStatus = !inStock ? 'out_of_stock' : 
+    (stockQuantity !== null && stockQuantity !== undefined && stockQuantity <= 10) ? 'low_stock' : 'in_stock';
 
   return (
     <div className={cn(
@@ -89,46 +95,35 @@ export function FilamentHeroPurchaseCard({
           )}
         </div>
 
-        {/* Deal Badge - show if we have a price */}
+        {/* Price Urgency Badge */}
         {(pricePerKg || pricePerSpool) && (
-          <div className={cn(
-            "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
-            "bg-gradient-to-r from-emerald-500/15 to-emerald-500/5",
-            "border border-emerald-500/30"
-          )}>
-            <TrendingDown className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm font-bold text-emerald-400">
-              Great value for quality filament
-            </span>
-          </div>
+          <PriceUrgencyBadge
+            filamentId={filamentId}
+            currentPrice={pricePerKg || pricePerSpool}
+            size="medium"
+          />
         )}
       </div>
 
-      {/* Stock Status */}
-      <div className="flex items-center gap-2 mb-5">
-        <div className={cn(
-          "flex items-center gap-1.5 text-sm font-semibold",
-          inStock ? "text-emerald-400" : "text-destructive"
-        )}>
-          {inStock ? (
-            <>
-              <Check className="w-4 h-4" />
-              <span>In Stock</span>
-            </>
-          ) : (
-            <span>Out of Stock</span>
-          )}
-        </div>
-        {inStock && (
-          <>
-            <span className="text-muted-foreground">•</span>
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Ships within 24hrs</span>
-            </div>
-          </>
-        )}
+      {/* Stock Status with Urgency */}
+      <div className="mb-4">
+        <StockUrgencyIndicator
+          stockStatus={stockStatus}
+          stockQuantity={stockQuantity}
+          showQuantity={true}
+        />
       </div>
+
+      {/* Shipping Countdown */}
+      {inStock && (
+        <div className="mb-5">
+          <ShippingCountdown
+            sameDayCutoffHour={14}
+            freeShippingThreshold={35}
+            currentCartValue={pricePerSpool || 0}
+          />
+        </div>
+      )}
 
       {/* Primary CTA - BUY NOW */}
       <Button
