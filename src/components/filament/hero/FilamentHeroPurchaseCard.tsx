@@ -82,15 +82,6 @@ export function FilamentHeroPurchaseCard({
     window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
   };
 
-  // Format price in the store's native currency
-  const formatPriceInCurrency = (price: number, currencyCode: string): string => {
-    const symbols: Record<string, string> = { 
-      'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' 
-    };
-    const symbol = symbols[currencyCode] || '$';
-    return `${symbol}${price.toFixed(2)}`;
-  };
-
   // Use live price if available, otherwise fall back to stored price
   const displayPrice = isLivePrice && currentPrice !== null ? currentPrice : pricePerSpool;
   
@@ -110,15 +101,15 @@ export function FilamentHeroPurchaseCard({
     displayPricePerKg = pricePerKg;
   }
 
-  // Format the price - live prices shown in store's native currency
+  // Format the price - convert live prices (USD) to user's currency
   const formattedPricePerKg = displayPricePerKg 
     ? (isLivePrice 
-        ? formatPriceInCurrency(displayPricePerKg, priceCurrency) 
+        ? formatPrice(displayPricePerKg, false) 
         : hasActualRegionalPrice ? formatRegionalPrice(displayPricePerKg, false) : formatPrice(displayPricePerKg, false))
     : null;
   const formattedPricePerSpool = displayPrice 
     ? (isLivePrice 
-        ? formatPriceInCurrency(displayPrice, priceCurrency) 
+        ? formatPrice(displayPrice, false) 
         : hasActualRegionalPrice ? formatRegionalPrice(displayPrice, false) : formatPrice(displayPrice, false))
     : null;
 
