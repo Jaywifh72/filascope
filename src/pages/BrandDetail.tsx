@@ -36,6 +36,46 @@ interface GroupedProduct {
   categoryUrl: string | null;
 }
 
+// Extract Prusament product line for grouping
+const getPrusamentProductLine = (material: string | null, title: string): string => {
+  const titleLower = title.toLowerCase();
+  const isRefill = titleLower.includes('refill');
+  
+  // Handle Refills first
+  if (isRefill) {
+    if (material === 'PLA' || titleLower.includes(' pla ')) return 'Prusament PLA Refill';
+    if (material === 'PETG' || titleLower.includes(' petg ')) return 'Prusament PETG Refill';
+    return `Prusament ${material || 'Filament'} Refill`;
+  }
+  
+  // Map materials to product line names
+  const materialLineMap: Record<string, string> = {
+    'PLA': 'Prusament PLA',
+    'PETG': 'Prusament PETG',
+    'ASA': 'Prusament ASA',
+    'ABS': 'Prusament ABS',
+    'PC Blend': 'Prusament PC Blend',
+    'PVB': 'Prusament PVB',
+    'TPU 95A': 'Prusament TPU',
+    'TPU': 'Prusament TPU',
+    'PA11 Carbon Fiber': 'Prusament PA (Nylon)',
+    'PA11-CF': 'Prusament PA (Nylon)',
+    'Nylon-CF': 'Prusament PA (Nylon)',
+    'rPLA': 'Prusament rPLA',
+  };
+  
+  // Check for wood fill in title
+  if (titleLower.includes('wood')) {
+    return 'Prusament Woodfill';
+  }
+  
+  if (material && materialLineMap[material]) {
+    return materialLineMap[material];
+  }
+  
+  return `Prusament ${material || 'Filament'}`;
+};
+
 // Brand-specific category URL patterns for grouped products
 const getCategoryUrl = (brand: string, material: string | null, baseName: string): string | null => {
   if (!material) return null;
@@ -395,7 +435,7 @@ const BrandDetail = () => {
     return result;
   };
 
-  // Group filaments by base product name
+  // Group filaments by base product name (or product line for Prusament)
   const groupedProducts = useMemo(() => {
     if (!filaments) return [];
 
@@ -404,25 +444,35 @@ const BrandDetail = () => {
       ? filaments.filter((f) => f.material === selectedMaterial)
       : filaments;
 
-    const groups = new Map<string, GroupedProduct>();
+    const groups = new Map<string, GroupedProduct & { availableWeights: Set<number> }>();
+    const isPrusament = decodedBrand.toLowerCase() === 'prusament';
 
     filteredFilaments.forEach((filament) => {
-      const baseName = getBaseProductName(filament.product_title, filament.material);
+      // Use product line for Prusament, base name for others
+      const groupKey = isPrusament 
+        ? getPrusamentProductLine(filament.material, filament.product_title)
+        : getBaseProductName(filament.product_title, filament.material);
       
-      if (!groups.has(baseName)) {
-        groups.set(baseName, {
-          baseName,
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, {
+          baseName: groupKey,
           material: filament.material,
           variants: [],
           representativeImage: null,
           priceRange: { min: null, max: null },
           productUrl: filament.product_url,
-          categoryUrl: getCategoryUrl(decodedBrand, filament.material, baseName),
+          categoryUrl: getCategoryUrl(decodedBrand, filament.material, groupKey),
+          availableWeights: new Set<number>(),
         });
       }
 
-      const group = groups.get(baseName)!;
+      const group = groups.get(groupKey)!;
       group.variants.push(filament);
+
+      // Track available weights
+      if (filament.net_weight_g) {
+        group.availableWeights.add(filament.net_weight_g);
+      }
 
       // Use first available image as representative (supports both http URLs and local paths)
       if (!group.representativeImage && filament.featured_image) {
@@ -451,8 +501,34 @@ const BrandDetail = () => {
       variants: deduplicateVariantsByColor(group.variants),
     }));
 
+    // Sort: Prusament uses defined order, others alphabetical
+    if (isPrusament) {
+      const prusamentOrder = [
+        'Prusament PLA',
+        'Prusament PETG',
+        'Prusament PC Blend',
+        'Prusament PVB',
+        'Prusament ASA',
+        'Prusament ABS',
+        'Prusament PA (Nylon)',
+        'Prusament TPU',
+        'Prusament Woodfill',
+        'Prusament PLA Refill',
+        'Prusament PETG Refill',
+        'Prusament rPLA',
+      ];
+      return result.sort((a, b) => {
+        const aIndex = prusamentOrder.indexOf(a.baseName);
+        const bIndex = prusamentOrder.indexOf(b.baseName);
+        if (aIndex === -1 && bIndex === -1) return a.baseName.localeCompare(b.baseName);
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
+      });
+    }
+
     return result.sort((a, b) => a.baseName.localeCompare(b.baseName));
-  }, [filaments, selectedMaterial]);
+  }, [filaments, selectedMaterial, decodedBrand]);
 
   const getPricePerKg = (price: number | null) => {
     if (!price) return null;
@@ -813,6 +889,21 @@ const BrandDetail = () => {
                         )}
                         <Badge variant="outline">{product.variants.length} color{product.variants.length !== 1 ? 's' : ''}</Badge>
                       </div>
+
+                      {/* Available Weights */}
+                      {(product as any).availableWeights && (product as any).availableWeights.size > 1 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          <span className="text-xs text-muted-foreground">Sizes:</span>
+                          {Array.from((product as any).availableWeights as Set<number>)
+                            .sort((a, b) => a - b)
+                            .map((weight: number) => (
+                              <Badge key={weight} variant="secondary" className="text-xs px-1.5 py-0.5">
+                                {weight >= 1000 ? `${weight / 1000}kg` : `${weight}g`}
+                              </Badge>
+                            ))
+                          }
+                        </div>
+                      )}
 
                       {/* Price Range */}
                       {product.priceRange.min && (
