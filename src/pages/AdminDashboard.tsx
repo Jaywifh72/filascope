@@ -11,7 +11,7 @@ import { RecentActivityLog } from "@/components/admin/RecentActivityLog";
 import { 
   Database, Users, Package, Upload, TrendingUp, Shield, ExternalLink, 
   BarChart3, ShoppingCart, ClipboardCheck, Wrench, RefreshCw, Building2,
-  Link2, Copy, Calendar, DollarSign, PieChart, Star, FlaskConical
+  Link2, Copy, Calendar, DollarSign, PieChart, Star, FlaskConical, FileText
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -86,6 +86,7 @@ const AdminDashboard = () => {
     { to: "/admin/amazon-links", icon: ShoppingCart, title: "Amazon Links", desc: "Find Amazon product links", color: "text-orange-500" },
     { to: "/admin/users", icon: Users, title: "User Management", desc: "Manage accounts & roles", color: "text-primary" },
     { to: "/admin/enrichment", icon: TrendingUp, title: "Data Enrichment", desc: "Add missing weight data", color: "text-green-500" },
+    { to: "/admin/docs", icon: FileText, title: "Documentation", desc: "Architecture & technical docs", color: "text-blue-500" },
   ];
 
   return (
