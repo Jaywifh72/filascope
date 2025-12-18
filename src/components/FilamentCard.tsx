@@ -58,11 +58,22 @@ interface Filament {
   variant_available?: boolean | null;
 }
 
+// Variant indicator data for grouped products
+interface VariantIndicators {
+  colors: string[];       // Array of color hex values
+  weights: number[];      // Array of weights in grams
+  variantCount: number;   // Total number of variants
+  priceRange?: { min: number | null; max: number | null };
+}
+
 interface FilamentCardProps {
   filament: Filament;
   colorMatchPercent?: number | null;
   priceTrend?: number | null;
   index?: number;
+  // For grouped product display
+  displayTitle?: string;           // Override title for grouped products
+  variantIndicators?: VariantIndicators;  // Show color swatches and weight options
 }
 
 // Get the single most important standout feature
@@ -105,7 +116,7 @@ function getStandoutFeature(filament: Filament): { label: string; colorClass: st
   return null;
 }
 
-export function FilamentCard({ filament, colorMatchPercent, index = 0 }: FilamentCardProps) {
+export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTitle, variantIndicators }: FilamentCardProps) {
   const isOutOfStock = filament.variant_available === false;
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -136,6 +147,13 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
     : null;
   const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
 
+  // For grouped products, show price range if available
+  const hasMultipleVariants = variantIndicators && variantIndicators.variantCount > 1;
+  const hasPriceRange = hasMultipleVariants && 
+    variantIndicators.priceRange?.min !== null && 
+    variantIndicators.priceRange?.max !== null &&
+    variantIndicators.priceRange.min !== variantIndicators.priceRange.max;
+
   // Score
   const overallScore = filament.value_score || 7.0;
   
@@ -151,8 +169,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
   // Budget-friendly threshold
   const isBudgetFriendly = pricePerKg && pricePerKg < 20;
 
-  // Display title without brand name
+  // Display title - use override for grouped products or strip vendor from product title
   const getDisplayTitle = () => {
+    if (displayTitle) return displayTitle;
     const title = filament.product_title || "";
     const vendor = filament.vendor || "";
     if (vendor && title.toLowerCase().startsWith(vendor.toLowerCase())) {
@@ -298,18 +317,42 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0 }: Filamen
           </span>
         </div>
         
-        {/* Product Name + Color Swatch */}
+        {/* Product Name + Color Swatches */}
         <div className="flex items-start gap-2 pl-8">
           <h3 className="text-lg font-semibold text-white leading-tight line-clamp-2 flex-1">
             {getDisplayTitle()}
           </h3>
-          {filament.color_hex && (
+          
+          {/* Multiple color swatches for grouped products */}
+          {hasMultipleVariants && variantIndicators.colors.length > 0 ? (
+            <div className="flex items-center gap-0.5 flex-shrink-0 mt-1">
+              {variantIndicators.colors.slice(0, 6).map((hex, i) => (
+                <div 
+                  key={i}
+                  className="w-3 h-3 rounded-full border border-white/20"
+                  style={{ backgroundColor: hex }}
+                />
+              ))}
+              {variantIndicators.colors.length > 6 && (
+                <span className="text-[10px] text-slate-400 ml-1">+{variantIndicators.colors.length - 6}</span>
+              )}
+            </div>
+          ) : filament.color_hex ? (
             <div 
               className="w-4 h-4 rounded-full border-2 border-white/20 flex-shrink-0 mt-1"
               style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
             />
-          )}
+          ) : null}
         </div>
+        
+        {/* Weight options indicator for grouped products */}
+        {hasMultipleVariants && variantIndicators.weights.length > 1 && (
+          <div className="pl-8 mt-1">
+            <span className="text-[10px] text-slate-400">
+              {variantIndicators.weights.map(w => w >= 1000 ? `${(w/1000).toFixed(1)}kg` : `${w}g`).join(' • ')}
+            </span>
+          </div>
+        )}
         
         {/* Color Match Indicator */}
         {colorMatchPercent !== null && colorMatchPercent !== undefined && (

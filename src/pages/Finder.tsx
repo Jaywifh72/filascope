@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Slider } from "@/components/ui/slider";
 import { MaterialBadge } from "@/components/MaterialBadge";
 import { ExternalLink, ChevronDown, GitCompare, X, CheckCircle, XCircle, TreeDeciduous, Layers, Palette } from "lucide-react";
-import FilamentCard from "@/components/FilamentCard";
+import { FilamentCard } from "@/components/FilamentCard";
 import { FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -39,6 +39,7 @@ import { ViewToggle } from "@/components/ViewToggle";
 import { FilamentTableView } from "@/components/FilamentTableView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { extractColorFromText } from "@/lib/colorIntelligence";
+import { groupFilamentsByProduct, type GroupedFilament } from "@/lib/productNameUtils";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -952,9 +953,15 @@ const Finder = () => {
     }
   });
 
-  // Pagination: slice the filtered results
-  const displayedFilaments = filteredAndSortedFilaments?.slice(0, displayCount) || [];
-  const totalCount = filteredAndSortedFilaments?.length || 0;
+  // Group filaments by product before pagination
+  const groupedFilaments = useMemo(() => {
+    if (!filteredAndSortedFilaments) return [];
+    return groupFilamentsByProduct(filteredAndSortedFilaments);
+  }, [filteredAndSortedFilaments]);
+
+  // Pagination: slice the grouped results
+  const displayedGroups = groupedFilaments.slice(0, displayCount);
+  const totalCount = groupedFilaments.length;
   const hasMore = displayCount < totalCount;
 
   // Check if any filters are active
@@ -1216,13 +1223,13 @@ const Finder = () => {
         {/* Filaments Display */}
         {isLoading ? (
           <FilamentCardSkeletonGrid count={12} />
-        ) : displayedFilaments.length > 0 ? (
+        ) : displayedGroups.length > 0 ? (
           <>
           {
           effectiveViewMode === "list" ? (
-            /* List View - Sortable Table */
+            /* List View - Sortable Table (uses representative filaments from groups) */
             <FilamentTableView
-              filaments={displayedFilaments as any}
+              filaments={displayedGroups.map(g => g.representativeFilament) as any}
               sortBy={sortBy}
               onSortChange={setSortBy}
               isInCompare={isInCompare}
@@ -1233,9 +1240,10 @@ const Finder = () => {
               getColorMatchPercent={getColorMatchPercent}
             />
           ) : (
-            /* Grid View - Redesigned Cards */
+            /* Grid View - Redesigned Cards with Grouped Products */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8" id="filament-grid">
-              {displayedFilaments.map((filament, index) => {
+              {displayedGroups.map((group, index) => {
+                const filament = group.representativeFilament;
                 // Calculate color match percentage for hex search
                 const isHexSearchActive = hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/);
                 const searchHex = isHexSearchActive ? (hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`) : null;
@@ -1252,6 +1260,13 @@ const Finder = () => {
                     filament={filament}
                     colorMatchPercent={colorMatchPercent}
                     index={index}
+                    displayTitle={group.baseName}
+                    variantIndicators={group.variants.length > 1 ? {
+                      colors: Array.from(group.colors),
+                      weights: Array.from(group.weights).sort((a, b) => a - b),
+                      variantCount: group.variants.length,
+                      priceRange: group.priceRange,
+                    } : undefined}
                   />
                 );
               })}
@@ -1262,7 +1277,7 @@ const Finder = () => {
           {hasMore && (
             <div className="flex flex-col items-center gap-3 mt-10 mb-8">
               <p className="text-sm text-muted-foreground">
-                Showing {displayedFilaments.length} of {totalCount} filaments
+                Showing {displayedGroups.length} of {totalCount} products
               </p>
               <Button 
                 onClick={() => setDisplayCount(prev => prev + ITEMS_PER_PAGE)}
