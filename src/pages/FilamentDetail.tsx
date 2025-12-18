@@ -75,6 +75,10 @@ const FilamentDetail = () => {
   const [colorVariants, setColorVariants] = useState<Filament[]>([]);
   const [selectedWeight, setSelectedWeight] = useState<number | null>(null);
   const [availableWeights, setAvailableWeights] = useState<{ weight: number; pricePerKg: number | null; count: number }[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<Filament | null>(null);
+  
+  // The filament to display - either the selected color variant or the base filament from URL
+  const displayFilament = selectedVariant || filament;
   const [editImageOpen, setEditImageOpen] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [savingImage, setSavingImage] = useState(false);
@@ -92,37 +96,39 @@ const FilamentDetail = () => {
   const { getRegionalUrl, regionShortName, currentRegion } = useRegionalStore();
   
   // Get regional price and URL from database (prioritizes actual regional prices over converted)
-  const regionalPriceData = useRegionalPrice(filament as FilamentWithRegionalPrices | null);
+  // Uses displayFilament to get correct prices when a color variant is selected
+  const regionalPriceData = useRegionalPrice(displayFilament as FilamentWithRegionalPrices | null);
 
-  const compatibility = selectedPrinter && filament 
-    ? checkPrinterFilamentCompatibility(selectedPrinter, filament)
+  const compatibility = selectedPrinter && displayFilament 
+    ? checkPrinterFilamentCompatibility(selectedPrinter, displayFilament)
     : null;
 
   // Build retailers array for modal - uses regional store URLs based on user's currency setting
+  // Uses displayFilament to show correct retailer URLs for selected color variant
   const retailers: Retailer[] = useMemo(() => {
-    if (!filament) return [];
+    if (!displayFilament) return [];
     
     const result: Retailer[] = [];
     
     // Primary retailer (brand store) - use regional URL from database if available, otherwise transform
-    const bestRegionalUrl = regionalPriceData.regionalUrl || getRegionalUrl(filament.product_url, filament.vendor);
+    const bestRegionalUrl = regionalPriceData.regionalUrl || getRegionalUrl(displayFilament.product_url, displayFilament.vendor);
     
     if (bestRegionalUrl) {
       result.push({
         id: 'store',
-        name: `${filament.vendor || 'Store'} (${regionShortName})`,
+        name: `${displayFilament.vendor || 'Store'} (${regionShortName})`,
         price: regionalPriceData.regionalPrice, // Use actual regional price if available
         inStock: !isDiscontinuedUrl(bestRegionalUrl),
-        url: getAffiliateUrl(bestRegionalUrl, filament.vendor),
+        url: getAffiliateUrl(bestRegionalUrl, displayFilament.vendor),
         shippingEstimate: 'Ships within 24hrs',
       });
     }
     
     // Amazon - show region-appropriate Amazon first based on user's currency
     const amazonLinks = [
-      { id: 'amazon_us', name: 'Amazon US', link: filament.amazon_link_us, price: filament.amazon_price_usd, region: 'US' },
-      { id: 'amazon_uk', name: 'Amazon UK', link: filament.amazon_link_uk, price: null, region: 'UK' },
-      { id: 'amazon_de', name: 'Amazon DE', link: filament.amazon_link_de, price: null, region: 'EU' },
+      { id: 'amazon_us', name: 'Amazon US', link: displayFilament.amazon_link_us, price: displayFilament.amazon_price_usd, region: 'US' },
+      { id: 'amazon_uk', name: 'Amazon UK', link: displayFilament.amazon_link_uk, price: null, region: 'UK' },
+      { id: 'amazon_de', name: 'Amazon DE', link: displayFilament.amazon_link_de, price: null, region: 'EU' },
     ].filter(a => a.link);
     
     // Sort Amazon links: user's region first, then others
@@ -147,7 +153,19 @@ const FilamentDetail = () => {
     }
     
     return result;
-  }, [filament, getAffiliateUrl, getAmazonUrl, getRegionalUrl, regionShortName, regionalPriceData]);
+  }, [displayFilament, getAffiliateUrl, getAmazonUrl, getRegionalUrl, regionShortName, regionalPriceData]);
+  
+  // Reset selected variant when base filament changes (new page load)
+  useEffect(() => {
+    setSelectedVariant(null);
+  }, [id]);
+  
+  // Handle color variant selection - updates display without navigation
+  const handleColorVariantSelect = (variant: Filament) => {
+    setSelectedVariant(variant);
+    // Optionally update URL without navigation for bookmarking
+    window.history.replaceState({}, '', `/filament/${variant.id}`);
+  };
 
   // Track modal open
   const handleViewRetailers = () => {
@@ -1287,15 +1305,18 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
   }
 
   if (!filament) return null;
+  
+  // Use displayFilament for all rendering (supports color variant selection)
+  if (!displayFilament) return null;
 
   // Get pack quantity (default to 1 for single spools)
-  const packQuantity = (filament as any).pack_quantity || 1;
+  const packQuantity = (displayFilament as any).pack_quantity || 1;
   const isMultiPack = packQuantity > 1;
   
   // variant_price is the TOTAL price for the listing in USD (may be multi-pack)
   // Calculate true per-kg price: total_price / (pack_quantity * weight_per_spool_kg)
-  const totalWeightKg = filament.net_weight_g 
-    ? (filament.net_weight_g / 1000) * packQuantity 
+  const totalWeightKg = displayFilament.net_weight_g 
+    ? (displayFilament.net_weight_g / 1000) * packQuantity 
     : packQuantity; // Assume 1kg per spool if weight unknown
   
   // Use actual scraped regional price if available, otherwise fall back to USD conversion
@@ -1305,26 +1326,26 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
   // Calculate raw price values based on whether we have actual regional data
   const rawPricePerKg = hasActualRegionalPrice
     ? (regionalPriceData.regionalPrice! / totalWeightKg)
-    : filament.variant_price 
-      ? (filament.variant_price / totalWeightKg) 
+    : displayFilament.variant_price 
+      ? (displayFilament.variant_price / totalWeightKg) 
       : null;
   
   // Validate price for suspicious patterns (MOQ/bundle miscalculations)
   // Use USD price for validation since thresholds are USD-based
   const priceValidation = validateFilamentPrice(
-    filament.variant_price,
-    filament.net_weight_g,
+    displayFilament.variant_price,
+    displayFilament.net_weight_g,
     packQuantity,
-    filament.material,
-    filament.product_title,
-    filament.product_url
+    displayFilament.material,
+    displayFilament.product_title,
+    displayFilament.product_url
   );
   
   // Per-spool price = total price / pack quantity
   const rawPricePerSpool = hasActualRegionalPrice
     ? (regionalPriceData.regionalPrice! / packQuantity)
-    : filament.variant_price 
-      ? (filament.variant_price / packQuantity)
+    : displayFilament.variant_price 
+      ? (displayFilament.variant_price / packQuantity)
       : null;
   
   // Format prices - use formatRegionalPrice for actual scraped prices (no conversion),
@@ -1345,10 +1366,11 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
   const totalPackPrice = isMultiPack 
     ? hasActualRegionalPrice && regionalPriceData.regionalPrice
       ? formatRegionalPrice(regionalPriceData.regionalPrice) 
-      : filament.variant_price
-        ? formatPrice(filament.variant_price)
+      : displayFilament.variant_price
+        ? formatPrice(displayFilament.variant_price)
         : null
     : null;
+
 
   // Helper functions for QuickSummaryCard
   const getRecommendationSummary = (f: Filament): string => {
@@ -1430,9 +1452,9 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
               {/* Left Column - Image Gallery */}
               <div className="relative">
                 <FilamentHeroGallery
-                  images={[filament.featured_image]}
-                  productTitle={filament.product_title}
-                  colorHex={filament.color_hex}
+                  images={[displayFilament.featured_image]}
+                  productTitle={displayFilament.product_title}
+                  colorHex={displayFilament.color_hex}
                 />
                 {isAdmin && (
                   <div className="absolute bottom-4 right-4 flex gap-2 z-10">
@@ -1538,29 +1560,29 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
 
                   {/* Quick Badges */}
                   <div className="flex gap-2 flex-wrap mt-4">
-                    {filament.diameter_nominal_mm && (
+                    {displayFilament.diameter_nominal_mm && (
                       <Badge variant="outline" className="text-xs px-2.5 py-1">
-                        {filament.diameter_nominal_mm}mm
+                        {displayFilament.diameter_nominal_mm}mm
                       </Badge>
                     )}
-                    {filament.color_family && (
+                    {displayFilament.color_family && (
                       <Badge variant="outline" className="text-xs px-2.5 py-1 flex items-center gap-1.5">
-                        {filament.color_hex && (
-                          <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: normalizeColorHex(filament.color_hex) }} />
+                        {displayFilament.color_hex && (
+                          <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: normalizeColorHex(displayFilament.color_hex) }} />
                         )}
-                        {filament.color_family}
+                        {displayFilament.color_family}
                       </Badge>
                     )}
-                    {filament.net_weight_g && filament.net_weight_g > 0 && (
+                    {displayFilament.net_weight_g && displayFilament.net_weight_g > 0 && (
                       <Badge variant="outline" className="text-xs px-2.5 py-1">
                         <Package className="w-3 h-3 mr-1" />
-                        {filament.net_weight_g}g
+                        {displayFilament.net_weight_g}g
                       </Badge>
                     )}
-                    {filament.finish_type && (
-                      <Badge variant="secondary" className="text-xs px-2.5 py-1">{filament.finish_type}</Badge>
+                    {displayFilament.finish_type && (
+                      <Badge variant="secondary" className="text-xs px-2.5 py-1">{displayFilament.finish_type}</Badge>
                     )}
-                    {filament.is_nozzle_abrasive && (
+                    {displayFilament.is_nozzle_abrasive && (
                       <Badge variant="destructive" className="text-xs px-2.5 py-1">⚠️ Abrasive</Badge>
                     )}
                     {isMultiPack && (
@@ -1573,15 +1595,15 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
 
                 {/* Purchase Card - THE CONVERSION ENGINE */}
                 <FilamentHeroPurchaseCard
-                  filamentId={filament.id}
-                  vendor={filament.vendor}
+                  filamentId={displayFilament.id}
+                  vendor={displayFilament.vendor}
                   pricePerKg={rawPricePerKg}
                   pricePerSpool={rawPricePerSpool}
-                  weightGrams={filament.net_weight_g}
-                  affiliateUrl={getAffiliateUrl(getRegionalUrl(filament.product_url, filament.vendor), filament.vendor)}
-                  productUrl={getRegionalUrl(filament.product_url, filament.vendor)}
-                  retailerName={filament.vendor || undefined}
-                  inStock={!isDiscontinuedUrl(getRegionalUrl(filament.product_url, filament.vendor))}
+                  weightGrams={displayFilament.net_weight_g}
+                  affiliateUrl={getAffiliateUrl(getRegionalUrl(displayFilament.product_url, displayFilament.vendor), displayFilament.vendor)}
+                  productUrl={getRegionalUrl(displayFilament.product_url, displayFilament.vendor)}
+                  retailerName={displayFilament.vendor || undefined}
+                  inStock={!isDiscontinuedUrl(getRegionalUrl(displayFilament.product_url, displayFilament.vendor))}
                   retailerCount={retailers.length}
                   onViewRetailers={handleViewRetailers}
                   hasActualRegionalPrice={hasActualRegionalPrice}
@@ -1614,11 +1636,11 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
 
             {/* Quick Features Bar */}
             <FilamentHeroQuickFeatures
-              material={filament.material}
-              easeOfPrintingScore={filament.ease_of_printing_score}
-              strengthIndex={filament.strength_index}
-              highSpeedCapable={filament.high_speed_capable}
-              isAbrasive={filament.is_nozzle_abrasive}
+              material={displayFilament.material}
+              easeOfPrintingScore={displayFilament.ease_of_printing_score}
+              strengthIndex={displayFilament.strength_index}
+              highSpeedCapable={displayFilament.high_speed_capable}
+              isAbrasive={displayFilament.is_nozzle_abrasive}
             />
           </CardContent>
         </Card>
@@ -1627,7 +1649,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
         <RetailersModal
           open={retailersModalOpen}
           onOpenChange={setRetailersModalOpen}
-          productName={filament.product_title}
+          productName={displayFilament.product_title}
           retailers={retailers}
           onRetailerClick={handleRetailerClick}
         />
@@ -1686,7 +1708,8 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                     .map((variant) => {
                     const baseName = getBaseProductName(filament.product_title);
                     const variantColor = getColorFromTitle(variant.product_title, baseName) || variant.color_family || 'View';
-                    const isCurrentVariant = variant.id === filament.id;
+                    // Check if this is the currently displayed variant (either selected or the base filament)
+                    const isCurrentVariant = displayFilament ? variant.id === displayFilament.id : variant.id === filament.id;
                     
                     return (
                       <TooltipProvider key={variant.id}>
@@ -1708,9 +1731,9 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                                 {variantColor}
                               </div>
                             ) : (
-                              <Link 
-                                to={`/filament/${variant.id}`}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-primary/20 hover:text-primary transition-colors"
+                              <button 
+                                onClick={() => handleColorVariantSelect(variant)}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-primary/20 hover:text-primary transition-colors cursor-pointer"
                               >
                                 {variant.color_hex ? (
                                   <div 
@@ -1724,7 +1747,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                                   <div className="w-4 h-4 rounded-full bg-gradient-to-br from-muted-foreground/30 to-muted-foreground/10 border border-border" />
                                 )}
                                 {variantColor}
-                              </Link>
+                              </button>
                             )}
                           </TooltipTrigger>
                           <TooltipContent>
@@ -1741,7 +1764,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                                 <div className="text-xs text-muted-foreground">No hex code</div>
                               )}
                               {variant.product_url && (
-                                <div className="text-xs text-primary mt-1">Click to view</div>
+                                <div className="text-xs text-primary mt-1">Click to select</div>
                               )}
                             </div>
                           </TooltipContent>
@@ -3323,10 +3346,10 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
       )}
 
       {/* Sticky Buy Bar - appears when scrolling past hero */}
-      {filament && (
+      {displayFilament && (
         <StickyBuyBar
-          filament={filament}
-          affiliateUrl={getAffiliateUrl(getRegionalUrl(filament.product_url, filament.vendor), filament.vendor)}
+          filament={displayFilament}
+          affiliateUrl={getAffiliateUrl(getRegionalUrl(displayFilament.product_url, displayFilament.vendor), displayFilament.vendor)}
           pricePerKg={rawPricePerKg}
           isVisible={stickyBarVisible}
           hasActualRegionalPrice={hasActualRegionalPrice}
