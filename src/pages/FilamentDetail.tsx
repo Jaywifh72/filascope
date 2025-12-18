@@ -38,6 +38,7 @@ import { getVideosByMaterial } from "@/lib/videoTutorials";
 import { useAchievements } from "@/hooks/useAchievements";
 import { SimilarMaterialsModule } from "@/components/filament/similar/SimilarMaterialsModule";
 import { PerformanceAtAGlance } from "@/components/filament/performance/PerformanceAtAGlance";
+import { validateFilamentPrice } from "@/lib/priceValidation";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -1001,6 +1002,16 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
     ? (filament.variant_price / totalWeightKg) 
     : null;
   
+  // Validate price for suspicious patterns (MOQ/bundle miscalculations)
+  const priceValidation = validateFilamentPrice(
+    filament.variant_price,
+    filament.net_weight_g,
+    packQuantity,
+    filament.material,
+    filament.product_title,
+    filament.product_url
+  );
+  
   // Per-spool price = total price / pack quantity
   const rawPricePerSpool = filament.variant_price 
     ? (filament.variant_price / packQuantity)
@@ -1144,19 +1155,44 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                       </Link>
                     </div>
                     {pricePerKg && (
-                      <div className="text-right bg-primary/10 px-6 py-5 rounded-2xl border border-primary/20 shadow-sm">
-                        <div className="text-3xl lg:text-4xl font-bold text-primary tracking-tight font-mono">
-                          {pricePerKg}
-                        </div>
-                        <div className="text-sm text-muted-foreground font-medium mt-1">per kg</div>
-                        {pricePerSpool && (
-                          <div className="text-sm text-muted-foreground mt-2">
-                            {pricePerSpool} per spool
+                      <div className="text-right">
+                        <div className="bg-primary/10 px-6 py-5 rounded-2xl border border-primary/20 shadow-sm">
+                          <div className="text-3xl lg:text-4xl font-bold text-primary tracking-tight font-mono">
+                            {pricePerKg}
                           </div>
-                        )}
-                        {isMultiPack && totalPackPrice && (
-                          <div className="text-sm text-primary/80 mt-2 font-semibold">
-                            📦 {packQuantity}-pack: {totalPackPrice}
+                          <div className="text-sm text-muted-foreground font-medium mt-1">per kg</div>
+                          {pricePerSpool && (
+                            <div className="text-sm text-muted-foreground mt-2">
+                              {pricePerSpool} per spool
+                            </div>
+                          )}
+                          {isMultiPack && totalPackPrice && (
+                            <div className="text-sm text-primary/80 mt-2 font-semibold">
+                              📦 {packQuantity}-pack: {totalPackPrice}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Suspicious price warning */}
+                        {priceValidation.isSuspicious && (
+                          <div className="mt-3 bg-warning/10 border border-warning/30 rounded-xl p-3 text-left">
+                            <div className="flex items-center gap-2 text-warning">
+                              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                              <span className="text-sm font-semibold">Price may be incorrect</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                              {priceValidation.detectedPattern === 'moq' 
+                                ? 'This appears to be an MOQ (minimum order) listing where weight was miscalculated.'
+                                : priceValidation.detectedPattern === 'bundle' || priceValidation.detectedPattern === 'pack'
+                                  ? 'This appears to be a bundle/pack listing.'
+                                  : `Price/kg ($${priceValidation.rawPricePerKg.toFixed(2)}) is below realistic market rates.`
+                              }
+                            </p>
+                            {priceValidation.estimatedTruePricePerKg && (
+                              <p className="text-xs text-warning font-medium mt-1">
+                                Estimated true cost: ~{formatPrice(priceValidation.estimatedTruePricePerKg, false)}/kg
+                              </p>
+                            )}
                           </div>
                         )}
                       </div>

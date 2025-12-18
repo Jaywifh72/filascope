@@ -135,9 +135,48 @@ export function extractDataFromTitle(title: string): ExtractedTitleData {
   let packQuantity: number | null = null;
   
   // Pattern 1: [MOQ: XKG] format (Sunlu style)
+  // IMPORTANT: MOQ is minimum ORDER quantity, not per-spool weight!
+  // e.g., "[MOQ: 6KG]" means you must buy 6kg total, typically 6x 1kg spools
   const moqMatch = title.match(/\[MOQ:\s*(\d+(?:\.\d+)?)\s*KG\]/i);
   if (moqMatch) {
-    netWeightG = Math.round(parseFloat(moqMatch[1]) * 1000);
+    const moqKg = parseFloat(moqMatch[1]);
+    
+    // Look for actual per-spool weight in the title
+    // Common patterns: "1KG Roll", "1KG Spool", "Filament 1KG", "1 KG each"
+    const perSpoolPatterns = [
+      /(?:Roll|Spool|each)\s*(\d+(?:\.\d+)?)\s*KG/i,
+      /(\d+(?:\.\d+)?)\s*KG\s*(?:Roll|Spool|each)/i,
+      /Filament\s*(\d+(?:\.\d+)?)\s*KG/i,
+      /(\d+(?:\.\d+)?)\s*KG\s*(?:3D\s*)?(?:Printer\s*)?Filament/i,
+    ];
+    
+    let perSpoolKg: number | null = null;
+    for (const pattern of perSpoolPatterns) {
+      const spoolMatch = title.match(pattern);
+      if (spoolMatch) {
+        const matchedKg = parseFloat(spoolMatch[1]);
+        // Per-spool weight should be less than MOQ total
+        if (matchedKg < moqKg) {
+          perSpoolKg = matchedKg;
+          break;
+        }
+      }
+    }
+    
+    // Default to 1kg per spool if not explicitly found
+    if (!perSpoolKg) {
+      perSpoolKg = 1;
+    }
+    
+    // Set net_weight_g to per-spool weight (NOT MOQ total)
+    netWeightG = Math.round(perSpoolKg * 1000);
+    
+    // pack_quantity stays at 1 because the PRICE is typically per spool
+    // (MOQ just means "you must buy at least X")
+    // If the price is for the full MOQ, packQuantity would be moqKg/perSpoolKg
+    // But most stores price per spool even with MOQ requirements
+    packQuantity = 1;
+    
     cleanedTitle = cleanedTitle.replace(/\[MOQ:\s*\d+(?:\.\d+)?\s*KG\]/gi, '');
   }
   
@@ -148,9 +187,29 @@ export function extractDataFromTitle(title: string): ExtractedTitleData {
   }
   
   // Pattern 3: Leading weight like "3KG PLA" or "10KG SILK"
+  // Be careful: this could be a large spool OR a pack
   const leadingWeightMatch = title.match(/^(\d+(?:\.\d+)?)\s*KG\s+/i);
   if (leadingWeightMatch && !netWeightG) {
-    netWeightG = Math.round(parseFloat(leadingWeightMatch[1]) * 1000);
+    const leadingKg = parseFloat(leadingWeightMatch[1]);
+    // If it's a round number > 1, it might be a multi-pack
+    // Check for pack indicators
+    const hasPackIndicator = /pack|bundle|set|pcs|pieces/i.test(title);
+    if (leadingKg > 1 && !hasPackIndicator) {
+      // Could be a large spool (2kg, 3kg) or could be misleading
+      // Only set if it's a common large spool size
+      if (leadingKg === 2 || leadingKg === 3 || leadingKg === 5) {
+        netWeightG = Math.round(leadingKg * 1000);
+      } else {
+        // Unusual size, assume 1kg spools
+        netWeightG = 1000;
+        packQuantity = Math.round(leadingKg);
+      }
+    } else if (hasPackIndicator) {
+      netWeightG = 1000; // Assume 1kg spools
+      packQuantity = Math.round(leadingKg);
+    } else {
+      netWeightG = Math.round(leadingKg * 1000);
+    }
   }
   
   // Pattern 4: Weight in brackets like (1KG) or [2KG]
@@ -161,8 +220,12 @@ export function extractDataFromTitle(title: string): ExtractedTitleData {
   
   // Pattern 5: Pack quantity like "6 Pack" or "Pack of 4"
   const packMatch = title.match(/(?:(\d+)\s*Pack|Pack\s*(?:of\s*)?(\d+))/i);
-  if (packMatch) {
+  if (packMatch && !packQuantity) {
     packQuantity = parseInt(packMatch[1] || packMatch[2]);
+    // If we have a pack quantity but no weight, assume 1kg spools
+    if (!netWeightG) {
+      netWeightG = 1000;
+    }
   }
   
   // Remove common bracket patterns that have been processed
