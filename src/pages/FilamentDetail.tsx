@@ -429,6 +429,33 @@ const FilamentDetail = () => {
     
     if (cleanTitle === baseName) return null;
     
+    // Prusament-specific handling: extract just the color part from product line
+    if (cleanTitle.toLowerCase().includes('prusament')) {
+      const prusamentPatterns = [
+        { pattern: /^Prusament\s+Premium\s+PLA\s+Galaxy\s+(.+)$/i, line: 'Galaxy' },
+        { pattern: /^Prusament\s+Premium\s+PLA\s+Mystic\s+(.+)$/i, line: 'Mystic' },
+        { pattern: /^Prusament\s+Premium\s+PLA\s+Pearl\s+(.+)$/i, line: 'Pearl' },
+        { pattern: /^Prusament\s+PLA\s+Galaxy\s+(.+)$/i, line: 'Galaxy' },
+        { pattern: /^Prusament\s+PLA\s+Blend\s+(.+)$/i, line: 'Blend' },
+        { pattern: /^Prusament\s+PLA\s+Recycled\s*(.*)$/i, line: 'Recycled' },
+        { pattern: /^Prusament\s+rPLA\s+(.+)$/i, line: 'rPLA' },
+        { pattern: /^Prusament\s+PLA\s+(.+)$/i, line: 'Basic' },
+      ];
+      
+      for (const { pattern, line } of prusamentPatterns) {
+        const match = cleanTitle.match(pattern);
+        if (match) {
+          let colorPart = match[1]?.trim() || '';
+          // Strip "Prusa" prefix and redundant line name from color
+          colorPart = colorPart.replace(/^Prusa\s+/i, '').trim();
+          if (line === 'Galaxy') {
+            colorPart = colorPart.replace(/^Galaxy\s+/i, '').trim();
+          }
+          return colorPart || null;
+        }
+      }
+    }
+    
     // Pattern 0: Paramount 3D style - extract color from parentheses
     // e.g., "ABS (Autobot Blue) 1.75mm 1kg Filament" -> "Autobot Blue"
     // Use cleanTitle (NFC already removed) to avoid matching "(NFC)" as a color
@@ -467,6 +494,44 @@ const FilamentDetail = () => {
     return null;
   };
 
+  // Extract Prusament product line from title
+  // Returns { productLine: string, colorPart: string }
+  const extractPrusamentProductLine = (title: string): { productLine: string; colorPart: string } | null => {
+    const cleanTitle = title
+      .replace(/\s*\(NFC\)\s*/gi, '')
+      .replace(/\s+Refill\s*$/gi, '')
+      .replace(/\s+\d+(?:\.\d+)?(?:kg|g)\s*$/gi, '')
+      .trim();
+    
+    // Prusament PLA product line patterns (order matters - most specific first)
+    const productLinePatterns = [
+      { pattern: /^Prusament\s+Premium\s+PLA\s+Galaxy\s+(.+)$/i, line: 'Premium Galaxy' },
+      { pattern: /^Prusament\s+Premium\s+PLA\s+Mystic\s+(.+)$/i, line: 'Premium Mystic' },
+      { pattern: /^Prusament\s+Premium\s+PLA\s+Pearl\s+(.+)$/i, line: 'Premium Pearl' },
+      { pattern: /^Prusament\s+PLA\s+Galaxy\s+(.+)$/i, line: 'Galaxy' },
+      { pattern: /^Prusament\s+PLA\s+Blend\s+(.+)$/i, line: 'Blend' },
+      { pattern: /^Prusament\s+PLA\s+Recycled\s*(.*)$/i, line: 'Recycled' },
+      { pattern: /^Prusament\s+rPLA\s+(.+)$/i, line: 'rPLA' },
+      { pattern: /^Prusament\s+PLA\s+(.+)$/i, line: 'Basic' }, // Catch-all for basic colors
+    ];
+    
+    for (const { pattern, line } of productLinePatterns) {
+      const match = cleanTitle.match(pattern);
+      if (match) {
+        let colorPart = match[1]?.trim() || '';
+        // Strip "Prusa" prefix from color (e.g., "Prusa Galaxy Black" -> "Black" within Galaxy line)
+        colorPart = colorPart.replace(/^Prusa\s+/i, '').trim();
+        // For Galaxy line, also strip "Galaxy" if it appears in color (redundant)
+        if (line === 'Galaxy' || line === 'Premium Galaxy') {
+          colorPart = colorPart.replace(/^Galaxy\s+/i, '').trim();
+        }
+        return { productLine: line, colorPart };
+      }
+    }
+    
+    return null;
+  };
+
   // Normalize color name by stripping brand prefixes for deduplication
   const normalizeColorName = (colorName: string, vendor: string): string => {
     let normalized = colorName.toLowerCase().trim();
@@ -493,10 +558,12 @@ const FilamentDetail = () => {
 
   // Deduplicate color variants by extracted color name
   // Prioritizes non-NFC/non-Refill variants over suffixed ones
+  // Uses product line + color for Prusament products
   const deduplicateColorVariants = (variants: any[], baseName: string): any[] => {
     const seenColors = new Set<string>();
     const result: any[] = [];
     const vendor = variants[0]?.vendor || '';
+    const isPrusament = vendor.toLowerCase().includes('prusa');
     
     // Sort to prioritize variants without suffixes (NFC, Refill) first
     // Also prioritize shorter names (base product without brand prefix in color)
@@ -512,11 +579,23 @@ const FilamentDetail = () => {
     });
     
     for (const variant of sorted) {
-      const colorName = getColorFromTitle(variant.product_title, baseName);
-      // Normalize color name to handle "Prusa Galaxy Black" vs "Galaxy Black"
-      const colorKey = colorName 
-        ? normalizeColorName(colorName, vendor) 
-        : (variant.color_hex?.toLowerCase() || variant.id);
+      let colorKey: string;
+      
+      if (isPrusament) {
+        // Use product line + color for Prusament
+        const lineInfo = extractPrusamentProductLine(variant.product_title);
+        if (lineInfo) {
+          colorKey = `${lineInfo.productLine.toLowerCase()}-${lineInfo.colorPart.toLowerCase()}`;
+        } else {
+          colorKey = variant.color_hex?.toLowerCase() || variant.id;
+        }
+      } else {
+        // Standard deduplication for other vendors
+        const colorName = getColorFromTitle(variant.product_title, baseName);
+        colorKey = colorName 
+          ? normalizeColorName(colorName, vendor) 
+          : (variant.color_hex?.toLowerCase() || variant.id);
+      }
       
       if (!seenColors.has(colorKey)) {
         seenColors.add(colorKey);
