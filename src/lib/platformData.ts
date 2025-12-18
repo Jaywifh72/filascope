@@ -68,8 +68,24 @@ export const metricTooltips: Record<string, string> = {
   monetize: "Options for designers to sell models and earn revenue"
 };
 
+export const specialtyMetricTooltips: Record<string, string> = {
+  easeOfUse: 'How quickly can a new user get started? Considers learning curve, documentation quality, and interface intuitiveness.',
+  featureDepth: 'Breadth and depth of functionality. More features and advanced capabilities earn higher ratings.',
+  valueForMoney: 'Quality relative to price. Free tools with great features score highest; expensive tools need exceptional value.',
+  communitySupport: 'Active user base, available support, tutorials, and ongoing development/updates.',
+  printFocus: 'How directly the tool serves 3D printing workflows. Pure printing tools score higher than general-purpose software.'
+};
+
 export const getRatingConfig = (rating: RatingLevel): RatingConfig => {
   return ratingConfigs[rating];
+};
+
+export const numericToRating = (value: number): RatingLevel => {
+  if (value >= 5) return 'excellent';
+  if (value >= 4) return 'great';
+  if (value >= 3) return 'good';
+  if (value >= 2) return 'average';
+  return 'limited';
 };
 
 // Filter types

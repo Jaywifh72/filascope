@@ -1,5 +1,8 @@
 import { useState, useMemo } from "react";
 import { specialtyTools, categoryLabels, pricingLabels, SpecialtyTool } from "@/lib/specialtyData";
+import { numericToRating, specialtyMetricTooltips } from "@/lib/platformData";
+import RatingValue from "@/components/reference/repos/shared/RatingValue";
+import RatingScaleLegend from "@/components/reference/repos/shared/RatingScaleLegend";
 import {
   Table,
   TableBody,
@@ -21,10 +24,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronUp, ChevronDown, ExternalLink, X, Sparkles, Palette, Server, Ruler, Box, Database, Wifi, Wrench } from "lucide-react";
+import { ChevronUp, ChevronDown, ExternalLink, X, Sparkles, Palette, Server, Ruler, Box, Database, Wifi, Wrench, Info } from "lucide-react";
 
 type SortField = 'name' | 'easeOfUse' | 'featureDepth' | 'valueForMoney' | 'communitySupport' | 'printFocus';
 type SortDirection = 'asc' | 'desc';
@@ -43,20 +52,38 @@ const getCategoryIcon = (category: SpecialtyTool['category']) => {
   }
 };
 
-const RatingDot = ({ rating }: { rating: number }) => {
-  const getColor = (r: number) => {
-    if (r >= 4) return 'bg-green-500';
-    if (r >= 3) return 'bg-amber-500';
-    return 'bg-red-500';
-  };
-  
-  return (
+interface MetricHeaderProps {
+  label: string;
+  field: SortField;
+  metricKey: string;
+  currentSort: SortField;
+  currentDirection: SortDirection;
+  onSort: (field: SortField) => void;
+}
+
+const MetricHeader = ({ label, field, metricKey, currentSort, currentDirection, onSort }: MetricHeaderProps) => (
+  <TableHead 
+    className="cursor-pointer hover:bg-muted/50 transition-colors"
+    onClick={() => onSort(field)}
+  >
     <div className="flex items-center gap-1">
-      <div className={`w-3 h-3 rounded-full ${getColor(rating)}`} />
-      <span className="text-sm text-muted-foreground">{rating}/5</span>
+      <span>{label}</span>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="h-3 w-3 text-muted-foreground hover:text-primary transition-colors" />
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <p className="text-xs">{specialtyMetricTooltips[metricKey]}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      {currentSort === field && (
+        currentDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+      )}
     </div>
-  );
-};
+  </TableHead>
+);
 
 const SortHeader = ({ 
   label, 
@@ -211,21 +238,9 @@ export default function ReferenceSpecialty() {
           </span>
         </div>
 
-        {/* Legend */}
-        <div className="flex flex-wrap items-center gap-6 mb-6 p-4 bg-muted/30 rounded-lg">
-          <span className="text-sm font-medium">Rating Legend:</span>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500" />
-            <span className="text-sm text-muted-foreground">Excellent (4-5)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-amber-500" />
-            <span className="text-sm text-muted-foreground">Average (3)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span className="text-sm text-muted-foreground">Limited (1-2)</span>
-          </div>
+        {/* Rating Scale Legend */}
+        <div className="mb-6">
+          <RatingScaleLegend />
         </div>
 
         {/* Comparison Matrix */}
@@ -241,11 +256,11 @@ export default function ReferenceSpecialty() {
                     <SortHeader label="Tool" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                     <TableHead>Category</TableHead>
                     <TableHead>Pricing</TableHead>
-                    <SortHeader label="Ease of Use" field="easeOfUse" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
-                    <SortHeader label="Features" field="featureDepth" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
-                    <SortHeader label="Value" field="valueForMoney" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
-                    <SortHeader label="Community" field="communitySupport" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
-                    <SortHeader label="Print Focus" field="printFocus" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <MetricHeader label="Ease of Use" field="easeOfUse" metricKey="easeOfUse" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <MetricHeader label="Features" field="featureDepth" metricKey="featureDepth" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <MetricHeader label="Value" field="valueForMoney" metricKey="valueForMoney" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <MetricHeader label="Community" field="communitySupport" metricKey="communitySupport" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <MetricHeader label="Print Focus" field="printFocus" metricKey="printFocus" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                     <TableHead>Link</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -262,11 +277,21 @@ export default function ReferenceSpecialty() {
                       <TableCell>
                         <Badge variant="outline">{pricingLabels[tool.pricingModel]}</Badge>
                       </TableCell>
-                      <TableCell><RatingDot rating={tool.ratings.easeOfUse} /></TableCell>
-                      <TableCell><RatingDot rating={tool.ratings.featureDepth} /></TableCell>
-                      <TableCell><RatingDot rating={tool.ratings.valueForMoney} /></TableCell>
-                      <TableCell><RatingDot rating={tool.ratings.communitySupport} /></TableCell>
-                      <TableCell><RatingDot rating={tool.ratings.printFocus} /></TableCell>
+                      <TableCell>
+                        <RatingValue rating={numericToRating(tool.ratings.easeOfUse)} size="small" />
+                      </TableCell>
+                      <TableCell>
+                        <RatingValue rating={numericToRating(tool.ratings.featureDepth)} size="small" />
+                      </TableCell>
+                      <TableCell>
+                        <RatingValue rating={numericToRating(tool.ratings.valueForMoney)} size="small" />
+                      </TableCell>
+                      <TableCell>
+                        <RatingValue rating={numericToRating(tool.ratings.communitySupport)} size="small" />
+                      </TableCell>
+                      <TableCell>
+                        <RatingValue rating={numericToRating(tool.ratings.printFocus)} size="small" />
+                      </TableCell>
                       <TableCell>
                         <a 
                           href={tool.website} 
@@ -323,6 +348,30 @@ export default function ReferenceSpecialty() {
                         <Badge variant="outline" className="w-fit">
                           {pricingLabels[tool.pricingModel]}
                         </Badge>
+                      </div>
+
+                      {/* Ratings Summary */}
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 p-4 bg-muted/20 rounded-lg">
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-xs text-muted-foreground font-medium">Ease of Use</span>
+                          <RatingValue rating={numericToRating(tool.ratings.easeOfUse)} size="small" showTooltip tooltipContent={specialtyMetricTooltips.easeOfUse} />
+                        </div>
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-xs text-muted-foreground font-medium">Features</span>
+                          <RatingValue rating={numericToRating(tool.ratings.featureDepth)} size="small" showTooltip tooltipContent={specialtyMetricTooltips.featureDepth} />
+                        </div>
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-xs text-muted-foreground font-medium">Value</span>
+                          <RatingValue rating={numericToRating(tool.ratings.valueForMoney)} size="small" showTooltip tooltipContent={specialtyMetricTooltips.valueForMoney} />
+                        </div>
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-xs text-muted-foreground font-medium">Community</span>
+                          <RatingValue rating={numericToRating(tool.ratings.communitySupport)} size="small" showTooltip tooltipContent={specialtyMetricTooltips.communitySupport} />
+                        </div>
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-xs text-muted-foreground font-medium">Print Focus</span>
+                          <RatingValue rating={numericToRating(tool.ratings.printFocus)} size="small" showTooltip tooltipContent={specialtyMetricTooltips.printFocus} />
+                        </div>
                       </div>
 
                       {/* Overview */}
