@@ -1578,6 +1578,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   pricePerKg={rawPricePerKg}
                   pricePerSpool={rawPricePerSpool}
                   affiliateUrl={getAffiliateUrl(getRegionalUrl(filament.product_url, filament.vendor), filament.vendor)}
+                  productUrl={getRegionalUrl(filament.product_url, filament.vendor)}
                   retailerName={filament.vendor || undefined}
                   inStock={!isDiscontinuedUrl(getRegionalUrl(filament.product_url, filament.vendor))}
                   retailerCount={retailers.length}

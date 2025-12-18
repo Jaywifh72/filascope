@@ -5,11 +5,14 @@ import {
   Shield, 
   Truck, 
   RotateCcw, 
-  ChevronRight
+  ChevronRight,
+  RefreshCw,
+  CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useConversionTracking } from '@/hooks/useConversionTracking';
+import { useCurrentPrice } from '@/hooks/useCurrentPrice';
 import { cn } from '@/lib/utils';
 import { PriceUrgencyBadge } from '../urgency/PriceUrgencyBadge';
 import { StockUrgencyIndicator } from '../urgency/StockUrgencyIndicator';
@@ -22,6 +25,7 @@ interface FilamentHeroPurchaseCardProps {
   pricePerKg: number | null;
   pricePerSpool: number | null;
   affiliateUrl: string | null;
+  productUrl: string | null;
   retailerName?: string;
   inStock?: boolean;
   stockQuantity?: number | null;
@@ -36,6 +40,7 @@ export function FilamentHeroPurchaseCard({
   pricePerKg,
   pricePerSpool,
   affiliateUrl,
+  productUrl,
   retailerName,
   inStock = true,
   stockQuantity,
@@ -45,6 +50,15 @@ export function FilamentHeroPurchaseCard({
 }: FilamentHeroPurchaseCardProps) {
   const { formatPrice, formatRegionalPrice } = useCurrency();
   const { trackStoreClick } = useConversionTracking();
+  
+  // Fetch live price from the store
+  const { 
+    currentPrice, 
+    compareAtPrice,
+    isLoading: priceLoading, 
+    isLivePrice,
+    currency: priceCurrency
+  } = useCurrentPrice(productUrl, pricePerSpool);
 
   // Determine the primary retailer name
   const displayRetailer = retailerName || vendor || 'Store';
@@ -65,12 +79,18 @@ export function FilamentHeroPurchaseCard({
     window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
   };
 
-  // Format the price - use formatRegionalPrice if we have an actual regional price (already in user's currency)
-  const formattedPricePerKg = pricePerKg 
-    ? (hasActualRegionalPrice ? formatRegionalPrice(pricePerKg, false) : formatPrice(pricePerKg, false))
+  // Use live price if available, otherwise fall back to stored price
+  const displayPrice = isLivePrice && currentPrice !== null ? currentPrice : pricePerSpool;
+  const displayPricePerKg = isLivePrice && currentPrice !== null && pricePerSpool && pricePerKg
+    ? (currentPrice / pricePerSpool) * pricePerKg
+    : pricePerKg;
+
+  // Format the price - live prices are already in the correct regional currency
+  const formattedPricePerKg = displayPricePerKg 
+    ? (isLivePrice || hasActualRegionalPrice ? formatRegionalPrice(displayPricePerKg, false) : formatPrice(displayPricePerKg, false))
     : null;
-  const formattedPricePerSpool = pricePerSpool 
-    ? (hasActualRegionalPrice ? formatRegionalPrice(pricePerSpool, false) : formatPrice(pricePerSpool, false))
+  const formattedPricePerSpool = displayPrice 
+    ? (isLivePrice || hasActualRegionalPrice ? formatRegionalPrice(displayPrice, false) : formatPrice(displayPrice, false))
     : null;
 
   // Determine stock status for indicator
@@ -96,7 +116,12 @@ export function FilamentHeroPurchaseCard({
       {/* Price Section */}
       <div className="space-y-3 mb-4">
         <div className="flex items-baseline gap-3">
-          {formattedPricePerKg ? (
+          {priceLoading ? (
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-5 h-5 text-primary animate-spin" />
+              <span className="text-lg text-muted-foreground">Checking price...</span>
+            </div>
+          ) : formattedPricePerKg ? (
             <>
               <span className="text-[42px] font-extrabold text-white tracking-tight leading-none">
                 {formattedPricePerKg}
@@ -112,11 +137,31 @@ export function FilamentHeroPurchaseCard({
           )}
         </div>
 
+        {/* Live price indicator */}
+        {isLivePrice && !priceLoading && (
+          <div className="flex items-center gap-1.5 text-xs text-emerald-400">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span className="font-medium">Live price verified</span>
+          </div>
+        )}
+
+        {/* Compare at price (sale indicator) */}
+        {isLivePrice && compareAtPrice && compareAtPrice > (currentPrice || 0) && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground line-through">
+              {formatRegionalPrice(compareAtPrice, false)}
+            </span>
+            <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+              {Math.round((1 - (currentPrice || 0) / compareAtPrice) * 100)}% OFF
+            </span>
+          </div>
+        )}
+
         {/* Price Urgency Badge */}
-        {(pricePerKg || pricePerSpool) && (
+        {(displayPricePerKg || displayPrice) && (
           <PriceUrgencyBadge
             filamentId={filamentId}
-            currentPrice={pricePerKg || pricePerSpool}
+            currentPrice={displayPricePerKg || displayPrice}
             size="medium"
           />
         )}

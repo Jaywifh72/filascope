@@ -155,3 +155,6 @@ verify_jwt = false
 
 [functions.validate-filament-urls]
 verify_jwt = false
+
+[functions.get-current-price]
+verify_jwt = false
