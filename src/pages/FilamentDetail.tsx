@@ -46,6 +46,7 @@ import { FilamentHeroPurchaseCard } from "@/components/filament/hero/FilamentHer
 import { FilamentHeroQuickFeatures } from "@/components/filament/hero/FilamentHeroQuickFeatures";
 import { RetailersModal, type Retailer } from "@/components/filament/hero/RetailersModal";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { QuickSummaryCard, CollapsibleContentContainer } from "@/components/filament";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -1329,6 +1330,71 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
     ? formatPrice(filament.variant_price) 
     : null;
 
+  // Helper functions for QuickSummaryCard
+  const getRecommendationSummary = (f: Filament): string => {
+    const mat = f.material?.toUpperCase() || '';
+    if (mat.includes('PLA')) {
+      return `${f.vendor || 'This'} ${f.material} is a great choice for beginners and everyday printing. It offers easy printability with minimal warping and good surface quality.`;
+    }
+    if (mat.includes('PETG')) {
+      return `${f.vendor || 'This'} ${f.material} provides excellent durability and chemical resistance, making it ideal for functional parts that need to withstand stress.`;
+    }
+    if (mat.includes('ABS') || mat.includes('ASA')) {
+      return `${f.vendor || 'This'} ${f.material} offers superior heat resistance and impact strength, best suited for experienced users with enclosed printers.`;
+    }
+    if (mat.includes('TPU') || mat.includes('TPE')) {
+      return `${f.vendor || 'This'} ${f.material} is a flexible filament perfect for rubber-like parts. Requires slower print speeds and direct drive extruders.`;
+    }
+    return `${f.vendor || 'This'} ${f.material || 'filament'} offers reliable performance for a variety of 3D printing applications.`;
+  };
+
+  const getPerfectFor = (f: Filament): string[] => {
+    const mat = f.material?.toUpperCase() || '';
+    if (mat.includes('PLA')) {
+      return ['Decorative prints', 'Prototyping', 'Beginners', 'Low-stress parts'];
+    }
+    if (mat.includes('PETG')) {
+      return ['Functional parts', 'Outdoor use', 'Food containers (single use)', 'Mechanical components'];
+    }
+    if (mat.includes('ABS') || mat.includes('ASA')) {
+      return ['Heat-resistant parts', 'Automotive components', 'Enclosures', 'Outdoor applications'];
+    }
+    if (mat.includes('TPU') || mat.includes('TPE')) {
+      return ['Phone cases', 'Gaskets & seals', 'Wearables', 'Vibration dampeners'];
+    }
+    return ['General purpose printing', 'Hobby projects', 'Prototypes'];
+  };
+
+  const getNotIdealFor = (f: Filament): string[] => {
+    const mat = f.material?.toUpperCase() || '';
+    if (mat.includes('PLA')) {
+      return ['High-heat applications', 'Outdoor UV exposure', 'Mechanical stress parts'];
+    }
+    if (mat.includes('PETG')) {
+      return ['High-temp applications', 'Sharp detail miniatures', 'Bridging-heavy designs'];
+    }
+    if (mat.includes('ABS') || mat.includes('ASA')) {
+      return ['Open-frame printers', 'Beginners', 'Large flat parts without enclosure'];
+    }
+    if (mat.includes('TPU') || mat.includes('TPE')) {
+      return ['Bowden extruders', 'High-speed printing', 'Fine detail work'];
+    }
+    return ['Specialized engineering applications', 'Extreme environments'];
+  };
+
+  const getStandoutFeature = (f: Filament): { title: string; description: string } | undefined => {
+    if (f.high_speed_capable) {
+      return { title: 'High-Speed Ready', description: 'Optimized for fast printing without sacrificing quality.' };
+    }
+    if (f.ease_of_printing_score && f.ease_of_printing_score >= 9) {
+      return { title: 'Exceptionally Easy to Print', description: 'One of the easiest filaments to work with, great for any skill level.' };
+    }
+    if (f.strength_index && f.strength_index >= 8) {
+      return { title: 'Superior Strength', description: 'Excellent mechanical properties for demanding applications.' };
+    }
+    return undefined;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
@@ -1546,7 +1612,26 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
         {/* Sentinel for sticky buy bar trigger */}
         <div ref={heroSentinelRef} className="h-0" aria-hidden="true" />
 
-        {/* Secondary Content Card - Spool Sizes, Color Variants, etc. */}
+        {/* Quick Summary Card - Key decision-making info */}
+        <QuickSummaryCard
+          quickFacts={[
+            { label: 'Material', value: filament.material || 'Unknown' },
+            { label: 'Weight', value: filament.net_weight_g ? `${filament.net_weight_g}g` : 'N/A' },
+            { label: 'Diameter', value: filament.diameter_nominal_mm ? `${filament.diameter_nominal_mm}mm` : '1.75mm' },
+            ...(filament.nozzle_temp_min_c && filament.nozzle_temp_max_c ? [{ label: 'Nozzle Temp', value: `${filament.nozzle_temp_min_c}-${filament.nozzle_temp_max_c}°C` }] : []),
+            ...(filament.bed_temp_min_c && filament.bed_temp_max_c ? [{ label: 'Bed Temp', value: `${filament.bed_temp_min_c}-${filament.bed_temp_max_c}°C` }] : []),
+            ...(filament.ease_of_printing_score ? [{ label: 'Ease Score', value: `${filament.ease_of_printing_score}/10` }] : []),
+          ].slice(0, 6)}
+          recommendation={{
+            summary: getRecommendationSummary(filament),
+            confidence: filament.ease_of_printing_score && filament.ease_of_printing_score >= 8 ? 'high' : 
+                       filament.ease_of_printing_score && filament.ease_of_printing_score >= 6 ? 'medium' : 'low'
+          }}
+          perfectFor={getPerfectFor(filament)}
+          notIdealFor={getNotIdealFor(filament)}
+          standoutFeature={getStandoutFeature(filament)}
+        />
+
         <Card className="bg-card/50 border-border shadow-lg mb-8">
           <CardContent className="p-6 lg:p-8 space-y-6">
             {/* Spool Size Selector */}
@@ -1705,6 +1790,13 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
             }}
           />
         )}
+
+        {/* Collapsible Content Sections */}
+        <CollapsibleContentContainer 
+          filament={filament} 
+          className="my-8"
+        />
+
         {/* Printer Compatibility Section - Featured & Dynamic */}
         {selectedPrinter && compatibility ? (
           <Card className="bg-gradient-to-br from-primary/10 via-card to-primary/5 border-primary/30 shadow-xl mb-8 animate-fade-in">
