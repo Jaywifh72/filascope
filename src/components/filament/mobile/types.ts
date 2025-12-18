@@ -70,6 +70,34 @@ export interface QuickFact {
   icon?: React.ReactNode;
 }
 
+// Mobile bottom action bar props
+export interface MobileBottomActionBarData {
+  price: number;
+  originalPrice?: number;
+  inStock: boolean;
+  retailerCount: number;
+  isFavorited: boolean;
+}
+
+// Mobile collapsible section
+export interface MobileSectionData {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  badge?: string | number;
+  highlight?: boolean;
+  content: React.ReactNode;
+}
+
+// Mobile color variant
+export interface MobileColorVariantData {
+  id: string;
+  color: string;
+  colorHex: string;
+  inStock: boolean;
+  isCurrentProduct?: boolean;
+}
+
 // Default mobile config
 export const DEFAULT_MOBILE_CONFIG: MobileConfig = {
   minTouchTarget: 48,
