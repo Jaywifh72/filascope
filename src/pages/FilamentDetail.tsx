@@ -46,7 +46,7 @@ import { FilamentHeroPurchaseCard } from "@/components/filament/hero/FilamentHer
 import { FilamentHeroQuickFeatures } from "@/components/filament/hero/FilamentHeroQuickFeatures";
 import { RetailersModal, type Retailer } from "@/components/filament/hero/RetailersModal";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
-import { QuickSummaryCard, CollapsibleContentContainer } from "@/components/filament";
+import { QuickSummaryCard, CollapsibleContentContainer, SocialProofToast, ActivityStatsBanner } from "@/components/filament";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -3282,6 +3282,17 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
           isVisible={stickyBarVisible}
         />
       )}
+
+      {/* Social Proof Toast - shows recent purchases */}
+      <SocialProofToast
+        purchases={[
+          { name: 'Alex', location: 'California', timeAgo: '2 min ago' },
+          { name: 'Sarah', location: 'Texas', timeAgo: '5 min ago' },
+          { name: 'Mike', location: 'New York', timeAgo: '12 min ago' },
+        ]}
+        interval={45000}
+        maxToasts={3}
+      />
 
       {/* Spacer for sticky bar */}
       <div className="h-20 md:h-16" />
