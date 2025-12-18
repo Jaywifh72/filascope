@@ -171,8 +171,8 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
     const price = parseFloat(variant.price);
     const compareAtPrice = variant.compare_at_price ? parseFloat(variant.compare_at_price) : null;
     
-    // Extract weight from Shopify grams field or parse from title
-    const weightGrams = variant.grams || parseWeightFromTitle(variant.title);
+    // Extract weight from title first (more reliable), fall back to grams field
+    const weightGrams = parseWeightFromTitle(variant.title) || variant.grams || null;
     
     // Detect currency from URL since Shopify JSON doesn't include it
     const detectedCurrency = detectCurrencyFromUrl(productUrl);
