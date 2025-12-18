@@ -467,6 +467,36 @@ const FilamentDetail = () => {
     return null;
   };
 
+  // Deduplicate color variants by extracted color name
+  // Prioritizes non-NFC/non-Refill variants over suffixed ones
+  const deduplicateColorVariants = (variants: any[], baseName: string): any[] => {
+    const seenColors = new Set<string>();
+    const result: any[] = [];
+    
+    // Sort to prioritize variants without suffixes (NFC, Refill) first
+    const sorted = [...variants].sort((a, b) => {
+      const aTitle = a.product_title.toLowerCase();
+      const bTitle = b.product_title.toLowerCase();
+      const aHasSuffix = aTitle.includes('(nfc)') || aTitle.includes('refill');
+      const bHasSuffix = bTitle.includes('(nfc)') || bTitle.includes('refill');
+      if (aHasSuffix && !bHasSuffix) return 1;
+      if (!aHasSuffix && bHasSuffix) return -1;
+      return 0;
+    });
+    
+    for (const variant of sorted) {
+      const colorName = getColorFromTitle(variant.product_title, baseName);
+      const colorKey = colorName?.toLowerCase().trim() || variant.color_hex?.toLowerCase() || variant.id;
+      
+      if (!seenColors.has(colorKey)) {
+        seenColors.add(colorKey);
+        result.push(variant);
+      }
+    }
+    
+    return result;
+  };
+
   // Fetch color variants - other filaments of the same base product from the same vendor
   useEffect(() => {
     const fetchColorVariants = async () => {
@@ -500,8 +530,11 @@ const FilamentDetail = () => {
           return color !== null;
         });
 
+        // Deduplicate by color name, prioritizing non-NFC/Refill variants
+        const deduplicatedVariants = deduplicateColorVariants(variants, baseName);
+
         // Sort: current filament first, then alphabetically by color
-        variants.sort((a, b) => {
+        deduplicatedVariants.sort((a, b) => {
           if (a.id === filament.id) return -1;
           if (b.id === filament.id) return 1;
           const colorA = getColorFromTitle(a.product_title, baseName) || '';
@@ -509,7 +542,7 @@ const FilamentDetail = () => {
           return colorA.localeCompare(colorB);
         });
 
-        setColorVariants(variants);
+        setColorVariants(deduplicatedVariants);
       } catch (error) {
         console.error("Error fetching color variants:", error);
         setColorVariants([]);
