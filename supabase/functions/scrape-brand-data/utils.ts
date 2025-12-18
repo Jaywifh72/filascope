@@ -143,20 +143,27 @@ export function extractDataFromTitle(title: string): ExtractedTitleData {
     
     // Look for actual per-spool weight in the title
     // Common patterns: "1KG Roll", "1KG Spool", "Filament 1KG", "1 KG each"
+    // NOTE: Sunlu uses "...Filament 1KG" with weight at END of title
     const perSpoolPatterns = [
       /(?:Roll|Spool|each)\s*(\d+(?:\.\d+)?)\s*KG/i,
       /(\d+(?:\.\d+)?)\s*KG\s*(?:Roll|Spool|each)/i,
       /Filament\s*(\d+(?:\.\d+)?)\s*KG/i,
       /(\d+(?:\.\d+)?)\s*KG\s*(?:3D\s*)?(?:Printer\s*)?Filament/i,
+      // NEW: Weight at end of title (Sunlu format): "...Filament 1KG" or "...1KG/Roll"
+      /(?:Filament|Roll)\s*(\d+(?:\.\d+)?)\s*KG$/i,
+      /(\d+(?:\.\d+)?)\s*KG(?:\/Roll)?$/i,
+      // Also match "0.9KG/1KG" patterns (Sunlu ABS) - take the second value
+      /(\d+(?:\.\d+)?)\s*KG\/(\d+(?:\.\d+)?)\s*KG/i,
     ];
     
     let perSpoolKg: number | null = null;
     for (const pattern of perSpoolPatterns) {
       const spoolMatch = title.match(pattern);
       if (spoolMatch) {
-        const matchedKg = parseFloat(spoolMatch[1]);
-        // Per-spool weight should be less than MOQ total
-        if (matchedKg < moqKg) {
+        // Handle "0.9KG/1KG" pattern - take the second (larger) value
+        const matchedKg = spoolMatch[2] ? parseFloat(spoolMatch[2]) : parseFloat(spoolMatch[1]);
+        // Per-spool weight should be less than or equal to MOQ total (allow 1kg when MOQ is 3kg)
+        if (matchedKg <= moqKg) {
           perSpoolKg = matchedKg;
           break;
         }
