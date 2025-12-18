@@ -467,13 +467,39 @@ const FilamentDetail = () => {
     return null;
   };
 
+  // Normalize color name by stripping brand prefixes for deduplication
+  const normalizeColorName = (colorName: string, vendor: string): string => {
+    let normalized = colorName.toLowerCase().trim();
+    
+    // Strip common brand prefixes from color names
+    const brandPrefixes = [
+      'prusa', 'prusament', 'bambu', 'bambulab', 'creality', 'anycubic',
+      'polymaker', 'esun', 'hatchbox', 'overture', 'sunlu', 'elegoo'
+    ];
+    
+    // Also strip the vendor name as a prefix
+    const vendorLower = vendor?.toLowerCase() || '';
+    const allPrefixes = [...brandPrefixes, vendorLower].filter(Boolean);
+    
+    for (const prefix of allPrefixes) {
+      if (normalized.startsWith(prefix + ' ')) {
+        normalized = normalized.slice(prefix.length).trim();
+        break;
+      }
+    }
+    
+    return normalized;
+  };
+
   // Deduplicate color variants by extracted color name
   // Prioritizes non-NFC/non-Refill variants over suffixed ones
   const deduplicateColorVariants = (variants: any[], baseName: string): any[] => {
     const seenColors = new Set<string>();
     const result: any[] = [];
+    const vendor = variants[0]?.vendor || '';
     
     // Sort to prioritize variants without suffixes (NFC, Refill) first
+    // Also prioritize shorter names (base product without brand prefix in color)
     const sorted = [...variants].sort((a, b) => {
       const aTitle = a.product_title.toLowerCase();
       const bTitle = b.product_title.toLowerCase();
@@ -481,12 +507,16 @@ const FilamentDetail = () => {
       const bHasSuffix = bTitle.includes('(nfc)') || bTitle.includes('refill');
       if (aHasSuffix && !bHasSuffix) return 1;
       if (!aHasSuffix && bHasSuffix) return -1;
-      return 0;
+      // Prefer shorter titles (less likely to have brand prefix in color)
+      return aTitle.length - bTitle.length;
     });
     
     for (const variant of sorted) {
       const colorName = getColorFromTitle(variant.product_title, baseName);
-      const colorKey = colorName?.toLowerCase().trim() || variant.color_hex?.toLowerCase() || variant.id;
+      // Normalize color name to handle "Prusa Galaxy Black" vs "Galaxy Black"
+      const colorKey = colorName 
+        ? normalizeColorName(colorName, vendor) 
+        : (variant.color_hex?.toLowerCase() || variant.id);
       
       if (!seenColors.has(colorKey)) {
         seenColors.add(colorKey);
