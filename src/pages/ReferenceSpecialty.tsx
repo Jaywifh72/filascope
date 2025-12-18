@@ -8,7 +8,7 @@ import MoreToolsSection from "@/components/reference/specialty/MoreToolsSection"
 import NoResultsState from "@/components/reference/specialty/NoResultsState";
 import CollapsibleComparisonTable from "@/components/reference/specialty/CollapsibleComparisonTable";
 import ToolProfileCard from "@/components/reference/specialty/ToolProfileCard";
-
+import ToolFinderQuiz from "@/components/reference/specialty/ToolFinderQuiz";
 function FilteredToolsSections() {
   const { filteredTools, hasActiveFilters } = useSpecialtyFilters();
   
@@ -55,6 +55,9 @@ function ReferenceSpecialtyContent() {
       <SpecialtyToolsHeroSection onScrollToComparison={scrollToComparison} />
       
       <main className="container mx-auto px-4 py-8" ref={comparisonRef}>
+        {/* Tool Finder Quiz */}
+        <ToolFinderQuiz />
+        
         {/* Filter Bar */}
         <SpecialtyFilterBar />
         
