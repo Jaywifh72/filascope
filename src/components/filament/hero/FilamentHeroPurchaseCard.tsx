@@ -50,7 +50,7 @@ export function FilamentHeroPurchaseCard({
   retailerCount = 1,
   hasActualRegionalPrice = false
 }: FilamentHeroPurchaseCardProps) {
-  const { formatPrice, formatRegionalPrice } = useCurrency();
+  const { formatPrice, formatRegionalPrice, currency } = useCurrency();
   const { trackStoreClick } = useConversionTracking();
   
   // Fetch live price from the store
@@ -113,6 +113,10 @@ export function FilamentHeroPurchaseCard({
         : hasActualRegionalPrice ? formatRegionalPrice(displayPrice, false) : formatPrice(displayPrice, false))
     : null;
 
+  // Show original currency if converted (live price is in store currency, user selected different)
+  const showOriginalCurrency = isLivePrice && priceCurrency && priceCurrency !== currency;
+  const originalPricePerKg = displayPricePerKg ? `$${displayPricePerKg.toFixed(2)} ${priceCurrency}` : null;
+
   // Determine stock status for indicator
   const stockStatus = !inStock ? 'out_of_stock' : 
     (stockQuantity !== null && stockQuantity !== undefined && stockQuantity <= 10) ? 'low_stock' : 'in_stock';
@@ -143,10 +147,17 @@ export function FilamentHeroPurchaseCard({
             </div>
           ) : formattedPricePerKg ? (
             <>
-              <span className="text-[42px] font-extrabold text-white tracking-tight leading-none">
-                {formattedPricePerKg}
-              </span>
-              <span className="text-lg text-muted-foreground font-medium">/kg</span>
+              <div className="flex items-baseline gap-3">
+                <span className="text-[42px] font-extrabold text-white tracking-tight leading-none">
+                  {formattedPricePerKg}
+                </span>
+                <span className="text-lg text-muted-foreground font-medium">/kg</span>
+              </div>
+              {showOriginalCurrency && originalPricePerKg && (
+                <span className="text-sm text-muted-foreground">
+                  ({originalPricePerKg})
+                </span>
+              )}
             </>
           ) : formattedPricePerSpool ? (
             <span className="text-[42px] font-extrabold text-white tracking-tight leading-none">
