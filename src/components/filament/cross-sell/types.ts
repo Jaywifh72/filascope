@@ -52,21 +52,30 @@ export interface FrequentlyBoughtData {
   bundleDiscount: number;
 }
 
+// Color variant for quick-add
+export interface ColorVariant {
+  id: string;
+  color: string;
+  colorHex: string;
+  image: string;
+  price: number;
+  inStock: boolean;
+  isCurrentProduct: boolean;
+}
+
+// Accessory with category and relevance
+export interface AccessoryProduct extends CrossSellProduct {
+  category: 'storage' | 'tools' | 'upgrades' | 'maintenance';
+  relevanceReason?: string;
+}
+
 // Complete cross-sell data structure
 export interface CrossSellData {
   frequentlyBoughtTogether: FrequentlyBoughtData;
   quantityDiscounts: QuantityTier[];
   bundles: Bundle[];
-  accessories: CrossSellProduct[];
-  colorVariants: Array<{
-    id: string;
-    color: string;
-    colorHex: string;
-    image: string;
-    price: number;
-    inStock: boolean;
-    isCurrentProduct: boolean;
-  }>;
+  accessories: AccessoryProduct[];
+  colorVariants: ColorVariant[];
 }
 
 // Cart state for cross-sells
