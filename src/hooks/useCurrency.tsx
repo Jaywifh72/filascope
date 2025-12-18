@@ -33,6 +33,7 @@ interface CurrencyContextType {
   currencyInfo: CurrencyInfo;
   formatPrice: (priceInUSD: number | null | undefined, showCurrency?: boolean) => string;
   convertPrice: (priceInUSD: number | null | undefined) => number | null;
+  formatRegionalPrice: (priceInLocalCurrency: number | null | undefined, showCurrency?: boolean) => string;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -186,8 +187,24 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     return `${currencyInfo.symbol}${formatted}`;
   };
 
+  // Format a price that's ALREADY in the user's selected currency (no conversion needed)
+  // Use this for actual scraped regional prices from the database
+  const formatRegionalPrice = (priceInLocalCurrency: number | null | undefined, showCurrency = true): string => {
+    if (priceInLocalCurrency == null) return 'N/A';
+    
+    // Currencies that don't use decimals
+    const noDecimalCurrencies: CurrencyCode[] = ['JPY', 'KRW'];
+    const decimals = noDecimalCurrencies.includes(currency) ? 0 : 2;
+    const formatted = priceInLocalCurrency.toFixed(decimals);
+    
+    if (showCurrency) {
+      return `${currencyInfo.symbol}${formatted} ${currency}`;
+    }
+    return `${currencyInfo.symbol}${formatted}`;
+  };
+
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, currencyInfo, formatPrice, convertPrice }}>
+    <CurrencyContext.Provider value={{ currency, setCurrency, currencyInfo, formatPrice, convertPrice, formatRegionalPrice }}>
       {children}
     </CurrencyContext.Provider>
   );
