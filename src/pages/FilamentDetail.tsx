@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette, Ban, Search, PlayCircle, Star } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette, Ban, Search, PlayCircle } from "lucide-react";
 import { ScoreCardsSection } from "@/components/filament/ScoreCardsSection";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -46,7 +46,7 @@ import { FilamentHeroPurchaseCard } from "@/components/filament/hero/FilamentHer
 import { FilamentHeroQuickFeatures } from "@/components/filament/hero/FilamentHeroQuickFeatures";
 import { RetailersModal, type Retailer } from "@/components/filament/hero/RetailersModal";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
-import { QuickSummaryCard, CollapsibleContentContainer, SocialProofToast, ActivityStatsBanner } from "@/components/filament";
+import { CollapsibleContentContainer } from "@/components/filament";
 import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
 import { useRegionalStore } from "@/hooks/useRegionalStore";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
@@ -1372,71 +1372,6 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
     : null;
 
 
-  // Helper functions for QuickSummaryCard
-  const getRecommendationSummary = (f: Filament): string => {
-    const mat = f.material?.toUpperCase() || '';
-    if (mat.includes('PLA')) {
-      return `${f.vendor || 'This'} ${f.material} is a great choice for beginners and everyday printing. It offers easy printability with minimal warping and good surface quality.`;
-    }
-    if (mat.includes('PETG')) {
-      return `${f.vendor || 'This'} ${f.material} provides excellent durability and chemical resistance, making it ideal for functional parts that need to withstand stress.`;
-    }
-    if (mat.includes('ABS') || mat.includes('ASA')) {
-      return `${f.vendor || 'This'} ${f.material} offers superior heat resistance and impact strength, best suited for experienced users with enclosed printers.`;
-    }
-    if (mat.includes('TPU') || mat.includes('TPE')) {
-      return `${f.vendor || 'This'} ${f.material} is a flexible filament perfect for rubber-like parts. Requires slower print speeds and direct drive extruders.`;
-    }
-    return `${f.vendor || 'This'} ${f.material || 'filament'} offers reliable performance for a variety of 3D printing applications.`;
-  };
-
-  const getPerfectFor = (f: Filament): string[] => {
-    const mat = f.material?.toUpperCase() || '';
-    if (mat.includes('PLA')) {
-      return ['Decorative prints', 'Prototyping', 'Beginners', 'Low-stress parts'];
-    }
-    if (mat.includes('PETG')) {
-      return ['Functional parts', 'Outdoor use', 'Food containers (single use)', 'Mechanical components'];
-    }
-    if (mat.includes('ABS') || mat.includes('ASA')) {
-      return ['Heat-resistant parts', 'Automotive components', 'Enclosures', 'Outdoor applications'];
-    }
-    if (mat.includes('TPU') || mat.includes('TPE')) {
-      return ['Phone cases', 'Gaskets & seals', 'Wearables', 'Vibration dampeners'];
-    }
-    return ['General purpose printing', 'Hobby projects', 'Prototypes'];
-  };
-
-  const getNotIdealFor = (f: Filament): string[] => {
-    const mat = f.material?.toUpperCase() || '';
-    if (mat.includes('PLA')) {
-      return ['High-heat applications', 'Outdoor UV exposure', 'Mechanical stress parts'];
-    }
-    if (mat.includes('PETG')) {
-      return ['High-temp applications', 'Sharp detail miniatures', 'Bridging-heavy designs'];
-    }
-    if (mat.includes('ABS') || mat.includes('ASA')) {
-      return ['Open-frame printers', 'Beginners', 'Large flat parts without enclosure'];
-    }
-    if (mat.includes('TPU') || mat.includes('TPE')) {
-      return ['Bowden extruders', 'High-speed printing', 'Fine detail work'];
-    }
-    return ['Specialized engineering applications', 'Extreme environments'];
-  };
-
-  const getStandoutFeature = (f: Filament): { title: string; description: string } | undefined => {
-    if (f.high_speed_capable) {
-      return { title: 'High-Speed Ready', description: 'Optimized for fast printing without sacrificing quality.' };
-    }
-    if (f.ease_of_printing_score && f.ease_of_printing_score >= 9) {
-      return { title: 'Exceptionally Easy to Print', description: 'One of the easiest filaments to work with, great for any skill level.' };
-    }
-    if (f.strength_index && f.strength_index >= 8) {
-      return { title: 'Superior Strength', description: 'Excellent mechanical properties for demanding applications.' };
-    }
-    return undefined;
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
@@ -1537,23 +1472,23 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                     )}
                   </div>
 
-                  {/* Rating & Meta Row */}
+                  {/* Material & Specs Row */}
                   <div className="flex items-center gap-3 mt-3 flex-wrap">
-                    {/* Rating - placeholder for now */}
-                    <div className="flex items-center gap-1.5">
-                      <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                      <span className="font-bold text-amber-500">4.8</span>
-                      <span className="text-sm text-muted-foreground">(234 reviews)</span>
-                    </div>
                     {filament.material && (
+                      <MaterialBadge 
+                        material={filament.material} 
+                        variant="default" 
+                        size="sm"
+                        className="text-xs"
+                      />
+                    )}
+                    {filament.high_speed_capable && (
                       <>
                         <span className="text-muted-foreground">•</span>
-                        <MaterialBadge 
-                          material={filament.material} 
-                          variant="default" 
-                          size="sm"
-                          className="text-xs"
-                        />
+                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                          <Zap className="w-3 h-3 mr-1" />
+                          High-Speed Ready
+                        </Badge>
                       </>
                     )}
                   </div>
@@ -1657,25 +1592,25 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
         {/* Sentinel for sticky buy bar trigger */}
         <div ref={heroSentinelRef} className="h-0" aria-hidden="true" />
 
-        {/* Quick Summary Card - Key decision-making info */}
-        <QuickSummaryCard
-          quickFacts={[
-            { label: 'Material', value: filament.material || 'Unknown' },
-            { label: 'Weight', value: filament.net_weight_g ? `${filament.net_weight_g}g` : 'N/A' },
-            { label: 'Diameter', value: filament.diameter_nominal_mm ? `${filament.diameter_nominal_mm}mm` : '1.75mm' },
-            ...(filament.nozzle_temp_min_c && filament.nozzle_temp_max_c ? [{ label: 'Nozzle Temp', value: `${filament.nozzle_temp_min_c}-${filament.nozzle_temp_max_c}°C` }] : []),
-            ...(filament.bed_temp_min_c && filament.bed_temp_max_c ? [{ label: 'Bed Temp', value: `${filament.bed_temp_min_c}-${filament.bed_temp_max_c}°C` }] : []),
-            ...(filament.ease_of_printing_score ? [{ label: 'Ease Score', value: `${filament.ease_of_printing_score}/10` }] : []),
-          ].slice(0, 6)}
-          recommendation={{
-            summary: getRecommendationSummary(filament),
-            confidence: filament.ease_of_printing_score && filament.ease_of_printing_score >= 8 ? 'high' : 
-                       filament.ease_of_printing_score && filament.ease_of_printing_score >= 6 ? 'medium' : 'low'
-          }}
-          perfectFor={getPerfectFor(filament)}
-          notIdealFor={getNotIdealFor(filament)}
-          standoutFeature={getStandoutFeature(filament)}
-        />
+        {/* Similar Materials - Positioned early for social validation */}
+        {filament && id && (
+          <SimilarMaterialsModule
+            filamentId={id}
+            material={filament.material}
+            vendor={filament.vendor}
+            currentPricePerKg={
+              filament.variant_price && filament.net_weight_g
+                ? filament.variant_price / (filament.net_weight_g / 1000)
+                : null
+            }
+            currentScores={{
+              ease_of_printing_score: filament.ease_of_printing_score,
+              value_score: filament.value_score,
+              strength_index: filament.strength_index,
+              printability_index: filament.printability_index,
+            }}
+          />
+        )}
 
         <Card className="bg-card/50 border-border shadow-lg mb-8">
           <CardContent className="p-6 lg:p-8 space-y-6">
@@ -1818,24 +1753,6 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
             )}
           </CardContent>
         </Card>
-        {filament && id && (
-          <SimilarMaterialsModule
-            filamentId={id}
-            material={filament.material}
-            vendor={filament.vendor}
-            currentPricePerKg={
-              filament.variant_price && filament.net_weight_g
-                ? filament.variant_price / (filament.net_weight_g / 1000)
-                : null
-            }
-            currentScores={{
-              ease_of_printing_score: filament.ease_of_printing_score,
-              value_score: filament.value_score,
-              strength_index: filament.strength_index,
-              printability_index: filament.printability_index,
-            }}
-          />
-        )}
 
         {/* Collapsible Content Sections */}
         <CollapsibleContentContainer 
@@ -3356,16 +3273,6 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
         />
       )}
 
-      {/* Social Proof Toast - shows recent purchases */}
-      <SocialProofToast
-        purchases={[
-          { name: 'Alex', location: 'California', timeAgo: '2 min ago' },
-          { name: 'Sarah', location: 'Texas', timeAgo: '5 min ago' },
-          { name: 'Mike', location: 'New York', timeAgo: '12 min ago' },
-        ]}
-        interval={45000}
-        maxToasts={3}
-      />
 
       {/* Spacer for sticky bar */}
       <div className="h-20 md:h-16" />
