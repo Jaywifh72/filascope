@@ -846,8 +846,9 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     platform: "shopify",
     baseUrl: "https://filaments.ca",
     apiEndpoint: "https://filaments.ca/products.json",
-    currency: "CAD",
-    exchangeRate: 0.70,
+    // Shopify multi-currency returns USD to US-based requests (where edge function runs)
+    currency: "USD",
+    exchangeRate: 1.0,
     productsPerPage: 250,
     requestDelay: 500,
     timeout: 10000,
