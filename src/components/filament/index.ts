@@ -6,3 +6,4 @@ export * from './urgency';
 export * from './social-proof';
 export * from './cross-sell';
 export * from './mobile';
+export * from './calculator';
