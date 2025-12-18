@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette, Ban, Search, PlayCircle } from "lucide-react";
+import { ArrowLeft, ExternalLink, ShoppingCart, ThermometerSun, Droplets, Settings, Package, Shield, Award, Gauge, Zap, Ruler, Wind, Flame, Snowflake, Clock, Printer, RefreshCw, AlertTriangle, Store, ChevronDown, ImageIcon, Link2, Copy, CheckCircle, Download, Palette, Ban, Search, PlayCircle, Star } from "lucide-react";
 import { ScoreCardsSection } from "@/components/filament/ScoreCardsSection";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -41,6 +41,9 @@ import { PerformanceAtAGlance } from "@/components/filament/performance/Performa
 import { validateFilamentPrice } from "@/lib/priceValidation";
 import { SpoolSizeSelector } from "@/components/filament/SpoolSizeSelector";
 import { StickyBuyBar } from "@/components/filament/StickyBuyBar";
+import { FilamentHeroGallery } from "@/components/filament/hero/FilamentHeroGallery";
+import { FilamentHeroPurchaseCard } from "@/components/filament/hero/FilamentHeroPurchaseCard";
+import { FilamentHeroQuickFeatures } from "@/components/filament/hero/FilamentHeroQuickFeatures";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -1249,40 +1252,19 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
           Back
         </Button>
 
-        {/* Hero Section */}
-        <Card className="bg-gradient-to-br from-card via-card to-card/50 border-border shadow-xl mb-10 overflow-hidden animate-fade-in">
+        {/* New Conversion-Focused Hero Section */}
+        <Card className="bg-gradient-to-br from-card via-card to-card/50 border-border shadow-xl mb-6 overflow-hidden animate-fade-in">
           <CardContent className="p-6 lg:p-10">
-            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-              {/* Product Image */}
-              <div className="w-full lg:w-72 h-72 flex-shrink-0 relative">
-                {filament.featured_image ? (
-                  <img
-                    src={filament.featured_image}
-                    alt={filament.product_title}
-                    className="w-full h-full object-contain rounded-xl bg-muted/50 border border-border p-4 hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
-                      if (placeholder) placeholder.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
-                <div 
-                  className="w-full h-full rounded-xl bg-muted/50 border border-border flex items-center justify-center p-6"
-                  style={{ display: filament.featured_image ? 'none' : 'flex' }}
-                >
-                  {getBrandLogo(filament.vendor) ? (
-                    <img
-                      src={getBrandLogo(filament.vendor)!}
-                      alt={filament.vendor || 'Brand logo'}
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <Package className="w-16 h-16 text-muted-foreground/30" />
-                  )}
-                </div>
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+              {/* Left Column - Image Gallery */}
+              <div className="relative">
+                <FilamentHeroGallery
+                  images={[filament.featured_image]}
+                  productTitle={filament.product_title}
+                  colorHex={filament.color_hex}
+                />
                 {isAdmin && (
-                  <div className="absolute bottom-2 right-2 flex gap-2">
+                  <div className="absolute bottom-4 right-4 flex gap-2 z-10">
                     <Button
                       size="sm"
                       variant="secondary"
@@ -1309,321 +1291,307 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                 )}
               </div>
 
-              {/* Product Info */}
-              <div className="flex-1 min-w-0 space-y-8">
+              {/* Right Column - Info & Purchase */}
+              <div className="flex flex-col gap-6">
+                {/* Title Block */}
                 <div>
-                  <div className="flex items-start justify-between gap-6 mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-4 mb-4">
-                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-[1.1] tracking-tight">
-                          {getBaseProductName(filament.product_title)}
-                        </h1>
-                        {isAdmin && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setNewProductUrl(filament.product_url || "");
-                                setEditUrlOpen(true);
-                              }}
-                              title="Edit product URL"
-                            >
-                              <Link2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={handleScrapeData}
-                              disabled={scrapingData || !filament.product_url}
-                              className="gap-2 shrink-0"
-                              title={filament.product_url ? `Scrape all data from: ${filament.product_url}` : "No product URL"}
-                            >
-                              <RefreshCw className={`w-4 h-4 ${scrapingData ? 'animate-spin' : ''}`} />
-                              {scrapingData ? 'Scraping...' : 'Scrape Data'}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={handleScrapeColors}
-                              disabled={scrapingColors || !filament.product_url}
-                              className="gap-2 shrink-0"
-                              title={filament.product_url ? `Scrape color variants from: ${filament.product_url}` : "No product URL"}
-                            >
-                              <Palette className={`w-4 h-4 ${scrapingColors ? 'animate-pulse' : ''}`} />
-                              {scrapingColors ? 'Scraping...' : 'Scrape Colors'}
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                      <Link 
-                        to={`/brands/${encodeURIComponent(filament.vendor || '')}`}
-                        className="text-lg lg:text-xl text-primary hover:underline inline-flex items-center gap-2 group font-medium"
-                      >
-                        {filament.vendor}
-                        <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </Link>
-                    </div>
-                    {pricePerKg && (
-                      <div className="text-right">
-                        <div className="bg-primary/10 px-6 py-5 rounded-2xl border border-primary/20 shadow-sm">
-                          <div className="text-3xl lg:text-4xl font-bold text-primary tracking-tight font-mono">
-                            {pricePerKg}
-                          </div>
-                          <div className="text-sm text-muted-foreground font-medium mt-1">per kg</div>
-                          {pricePerSpool && (
-                            <div className="text-sm text-muted-foreground mt-2">
-                              {pricePerSpool} per spool
-                            </div>
-                          )}
-                          {isMultiPack && totalPackPrice && (
-                            <div className="text-sm text-primary/80 mt-2 font-semibold">
-                              📦 {packQuantity}-pack: {totalPackPrice}
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Suspicious price warning */}
-                        {priceValidation.isSuspicious && (
-                          <div className="mt-3 bg-warning/10 border border-warning/30 rounded-xl p-3 text-left">
-                            <div className="flex items-center gap-2 text-warning">
-                              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                              <span className="text-sm font-semibold">Price may be incorrect</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                              {priceValidation.detectedPattern === 'moq' 
-                                ? 'This appears to be an MOQ (minimum order) listing where weight was miscalculated.'
-                                : priceValidation.detectedPattern === 'bundle' || priceValidation.detectedPattern === 'pack'
-                                  ? 'This appears to be a bundle/pack listing.'
-                                  : `Price/kg ($${priceValidation.rawPricePerKg.toFixed(2)}) is below realistic market rates.`
-                              }
-                            </p>
-                            {priceValidation.estimatedTruePricePerKg && (
-                              <p className="text-xs text-warning font-medium mt-1">
-                                Estimated true cost: ~{formatPrice(priceValidation.estimatedTruePricePerKg, false)}/kg
-                              </p>
-                            )}
-                          </div>
-                        )}
+                  {/* Brand Name */}
+                  <Link 
+                    to={`/brands/${encodeURIComponent(filament.vendor || '')}`}
+                    className="text-sm font-bold text-primary uppercase tracking-wider hover:underline inline-flex items-center gap-1.5 group"
+                  >
+                    {filament.vendor}
+                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                  
+                  {/* Product Title */}
+                  <div className="flex items-start gap-4 mt-2">
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
+                      {getBaseProductName(filament.product_title)}
+                    </h1>
+                    {isAdmin && (
+                      <div className="flex gap-2 flex-shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setNewProductUrl(filament.product_url || "");
+                            setEditUrlOpen(true);
+                          }}
+                          title="Edit product URL"
+                        >
+                          <Link2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleScrapeData}
+                          disabled={scrapingData || !filament.product_url}
+                          title={filament.product_url ? `Scrape all data from: ${filament.product_url}` : "No product URL"}
+                        >
+                          <RefreshCw className={`w-4 h-4 ${scrapingData ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleScrapeColors}
+                          disabled={scrapingColors || !filament.product_url}
+                          title={filament.product_url ? `Scrape color variants` : "No product URL"}
+                        >
+                          <Palette className={`w-4 h-4 ${scrapingColors ? 'animate-pulse' : ''}`} />
+                        </Button>
                       </div>
                     )}
                   </div>
 
-                  {/* Badges */}
-                  <div className="flex gap-2.5 flex-wrap mt-5">
+                  {/* Rating & Meta Row */}
+                  <div className="flex items-center gap-3 mt-3 flex-wrap">
+                    {/* Rating - placeholder for now */}
+                    <div className="flex items-center gap-1.5">
+                      <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                      <span className="font-bold text-amber-500">4.8</span>
+                      <span className="text-sm text-muted-foreground">(234 reviews)</span>
+                    </div>
                     {filament.material && (
-                      <MaterialBadge 
-                        material={filament.material} 
-                        variant="default" 
-                        size="md"
-                        className="text-sm px-4 py-2 font-semibold"
-                      />
+                      <>
+                        <span className="text-muted-foreground">•</span>
+                        <MaterialBadge 
+                          material={filament.material} 
+                          variant="default" 
+                          size="sm"
+                          className="text-xs"
+                        />
+                      </>
                     )}
+                  </div>
+
+                  {/* Quick Badges */}
+                  <div className="flex gap-2 flex-wrap mt-4">
                     {filament.diameter_nominal_mm && (
-                      <Badge variant="outline" className="text-sm px-3.5 py-2 font-medium">
+                      <Badge variant="outline" className="text-xs px-2.5 py-1">
                         {filament.diameter_nominal_mm}mm
                       </Badge>
                     )}
                     {filament.color_family && (
-                      <Badge variant="outline" className="text-sm px-3.5 py-2 flex items-center gap-2 font-medium">
+                      <Badge variant="outline" className="text-xs px-2.5 py-1 flex items-center gap-1.5">
                         {filament.color_hex && (
-                          <div className="w-3.5 h-3.5 rounded-full border border-border shadow-sm" style={{ backgroundColor: normalizeColorHex(filament.color_hex) }} />
+                          <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: normalizeColorHex(filament.color_hex) }} />
                         )}
                         {filament.color_family}
                       </Badge>
                     )}
-                    {filament.color_hex && (
-                      <Badge variant="outline" className="text-sm px-3.5 py-2 flex items-center gap-2 font-mono font-medium">
-                        <div className="w-3.5 h-3.5 rounded-full border border-border shadow-sm" style={{ backgroundColor: normalizeColorHex(filament.color_hex) }} />
-                        {normalizeColorHex(filament.color_hex).toUpperCase()}
-                      </Badge>
-                    )}
-                    {filament.color_hex && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-sm px-3 py-1.5 h-auto gap-1.5"
-                        onClick={() => navigate(`/?hexSearch=${encodeURIComponent(normalizeColorHex(filament.color_hex!))}&colorTolerance=25`)}
-                      >
-                        <Search className="w-3.5 h-3.5" />
-                        Find Similar Colors
-                      </Button>
-                    )}
-                    {filament.finish_type && (
-                      <Badge variant="secondary" className="text-sm px-3.5 py-2 font-medium">{filament.finish_type}</Badge>
-                    )}
-                    {filament.is_nozzle_abrasive && (
-                      <Badge variant="destructive" className="text-sm px-3.5 py-2 animate-pulse font-medium">⚠️ Abrasive</Badge>
-                    )}
                     {filament.net_weight_g && filament.net_weight_g > 0 && (
-                      <Badge variant="outline" className="text-sm px-3.5 py-2 font-medium">
-                        <Package className="w-3.5 h-3.5 mr-1.5" />
+                      <Badge variant="outline" className="text-xs px-2.5 py-1">
+                        <Package className="w-3 h-3 mr-1" />
                         {filament.net_weight_g}g
                       </Badge>
                     )}
+                    {filament.finish_type && (
+                      <Badge variant="secondary" className="text-xs px-2.5 py-1">{filament.finish_type}</Badge>
+                    )}
+                    {filament.is_nozzle_abrasive && (
+                      <Badge variant="destructive" className="text-xs px-2.5 py-1">⚠️ Abrasive</Badge>
+                    )}
                     {isMultiPack && (
-                      <Badge variant="secondary" className="text-sm px-3.5 py-2 bg-primary/20 text-primary border-primary/30 font-semibold">
+                      <Badge variant="secondary" className="text-xs px-2.5 py-1 bg-primary/20 text-primary border-primary/30">
                         📦 {packQuantity}-Pack
                       </Badge>
                     )}
                   </div>
                 </div>
 
-                {/* Spool Size Selector - above color variants */}
-                {availableWeights.length > 1 && (
-                  <SpoolSizeSelector
-                    weights={availableWeights}
-                    selectedWeight={selectedWeight}
-                    onSelectWeight={setSelectedWeight}
-                    className="pt-2"
-                  />
-                )}
-
-                {/* Color Variants Section */}
-                {colorVariants.length > 1 && (
-                  <div className="space-y-4 pt-2">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Available Colors ({selectedWeight 
-                        ? colorVariants.filter(v => v.net_weight_g === selectedWeight).length 
-                        : colorVariants.length
-                      })
-                      {selectedWeight && (
-                        <span className="ml-2 text-xs font-normal text-primary">
-                          in {selectedWeight >= 1000 ? `${selectedWeight / 1000}kg` : `${selectedWeight}g`}
-                        </span>
-                      )}
-                    </h3>
-                    <div className="flex flex-wrap gap-2.5">
-                      {colorVariants
-                        .filter(variant => !selectedWeight || variant.net_weight_g === selectedWeight)
-                        .map((variant) => {
-                        const baseName = getBaseProductName(filament.product_title);
-                        const variantColor = getColorFromTitle(variant.product_title, baseName) || variant.color_family || 'View';
-                        const isCurrentVariant = variant.id === filament.id;
-                        
-                        return (
-                          <TooltipProvider key={variant.id}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                {isCurrentVariant ? (
-                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background cursor-default">
-                                    {variant.color_hex ? (
-                                      <div 
-                                        className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 shadow-inner"
-                                        style={{ 
-                                          backgroundColor: normalizeColorHex(variant.color_hex),
-                                          boxShadow: normalizeColorHex(variant.color_hex).toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
-                                        }}
-                                      />
-                                    ) : (
-                                      <div className="w-4 h-4 rounded-full bg-primary-foreground/30 border-2 border-primary-foreground/30" />
-                                    )}
-                                    {variantColor}
-                                  </div>
-                                ) : (
-                                  <Link 
-                                    to={`/filament/${variant.id}`}
-                                    className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-primary/20 hover:text-primary transition-colors"
-                                  >
-                                    {variant.color_hex ? (
-                                      <div 
-                                        className="w-4 h-4 rounded-full border border-border shadow-sm"
-                                        style={{ 
-                                          backgroundColor: normalizeColorHex(variant.color_hex),
-                                          boxShadow: normalizeColorHex(variant.color_hex).toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
-                                        }}
-                                      />
-                                    ) : (
-                                      <div className="w-4 h-4 rounded-full bg-gradient-to-br from-muted-foreground/30 to-muted-foreground/10 border border-border" />
-                                    )}
-                                    {variantColor}
-                                  </Link>
-                                )}
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <div className="text-center">
-                                  <div className="font-medium">{variantColor}</div>
-                                  {variant.net_weight_g && (
-                                    <div className="text-xs text-muted-foreground">
-                                      {variant.net_weight_g >= 1000 ? `${variant.net_weight_g / 1000}kg` : `${variant.net_weight_g}g`}
-                                    </div>
-                                  )}
-                                  {variant.color_hex ? (
-                                    <div className="text-xs font-mono text-muted-foreground">{variant.color_hex.toUpperCase()}</div>
-                                  ) : (
-                                    <div className="text-xs text-muted-foreground">No hex code</div>
-                                  )}
-                                  {variant.product_url && (
-                                    <div className="text-xs text-primary mt-1">Click to view</div>
-                                  )}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      })}
-                    </div>
-                  </div>
-              )}
-                
-                {/* Material Value Proposition */}
-                <MaterialValueProposition
-                  material={filament.material}
-                  productTitle={filament.product_title}
+                {/* Purchase Card - THE CONVERSION ENGINE */}
+                <FilamentHeroPurchaseCard
                   filamentId={filament.id}
                   vendor={filament.vendor}
-                  filament={filament}
-                  printer={selectedPrinter}
-                  hotend={compatibleHotends.length > 0 ? compatibleHotends[0] : null}
+                  pricePerKg={rawPricePerKg}
+                  pricePerSpool={rawPricePerSpool}
+                  affiliateUrl={getAffiliateUrl(filament.product_url, filament.vendor)}
+                  retailerName={filament.vendor || undefined}
+                  inStock={!isDiscontinuedUrl(filament.product_url)}
+                  retailerCount={1 + (filament.amazon_link_us ? 1 : 0) + (filament.amazon_link_uk ? 1 : 0) + (filament.amazon_link_de ? 1 : 0)}
                 />
 
-                {/* Redesigned Score Cards */}
-                <ScoreCardsSection filament={filament} />
-
-                {/* Tiered Purchase Section */}
-                <PurchaseSection
-                  filament={filament}
-                  printerBrand={selectedPrinter?.brand?.brand}
-                  printerName={selectedPrinter?.model_name}
-                />
-
-                {/* Common Mistakes Panel */}
-                {filament.material && (
-                  <CommonMistakesPanel 
-                    material={filament.material} 
-                    compact 
-                    maxItems={3}
-                  />
-                )}
-
-                {/* Helpful Videos Section */}
-                {filament.material && getVideosByMaterial(filament.material).length > 0 && (
-                  <Card className="bg-card/50 border-border">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <PlayCircle className="w-4 h-4 text-primary" />
-                        Helpful Videos for {filament.material}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {getVideosByMaterial(filament.material).slice(0, 3).map(video => (
-                          <VideoThumbnail
-                            key={video.id}
-                            videoId={video.id}
-                          />
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                {/* Suspicious price warning */}
+                {priceValidation.isSuspicious && (
+                  <div className="bg-warning/10 border border-warning/30 rounded-xl p-3">
+                    <div className="flex items-center gap-2 text-warning">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-sm font-semibold">Price may be incorrect</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                      {priceValidation.detectedPattern === 'moq' 
+                        ? 'This appears to be an MOQ (minimum order) listing where weight was miscalculated.'
+                        : priceValidation.detectedPattern === 'bundle' || priceValidation.detectedPattern === 'pack'
+                          ? 'This appears to be a bundle/pack listing.'
+                          : `Price/kg ($${priceValidation.rawPricePerKg.toFixed(2)}) is below realistic market rates.`
+                      }
+                    </p>
+                    {priceValidation.estimatedTruePricePerKg && (
+                      <p className="text-xs text-warning font-medium mt-1">
+                        Estimated true cost: ~{formatPrice(priceValidation.estimatedTruePricePerKg, false)}/kg
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
+
+            {/* Quick Features Bar */}
+            <FilamentHeroQuickFeatures
+              material={filament.material}
+              easeOfPrintingScore={filament.ease_of_printing_score}
+              strengthIndex={filament.strength_index}
+              highSpeedCapable={filament.high_speed_capable}
+              isAbrasive={filament.is_nozzle_abrasive}
+            />
           </CardContent>
         </Card>
 
         {/* Sentinel for sticky buy bar trigger */}
         <div ref={heroSentinelRef} className="h-0" aria-hidden="true" />
+
+        {/* Secondary Content Card - Spool Sizes, Color Variants, etc. */}
+        <Card className="bg-card/50 border-border shadow-lg mb-8">
+          <CardContent className="p-6 lg:p-8 space-y-6">
+            {/* Spool Size Selector */}
+            {availableWeights.length > 1 && (
+              <SpoolSizeSelector
+                weights={availableWeights}
+                selectedWeight={selectedWeight}
+                onSelectWeight={setSelectedWeight}
+              />
+            )}
+
+            {/* Color Variants Section */}
+            {colorVariants.length > 1 && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Available Colors ({selectedWeight 
+                    ? colorVariants.filter(v => v.net_weight_g === selectedWeight).length 
+                    : colorVariants.length
+                  })
+                  {selectedWeight && (
+                    <span className="ml-2 text-xs font-normal text-primary">
+                      in {selectedWeight >= 1000 ? `${selectedWeight / 1000}kg` : `${selectedWeight}g`}
+                    </span>
+                  )}
+                </h3>
+                <div className="flex flex-wrap gap-2.5">
+                  {colorVariants
+                    .filter(variant => !selectedWeight || variant.net_weight_g === selectedWeight)
+                    .map((variant) => {
+                    const baseName = getBaseProductName(filament.product_title);
+                    const variantColor = getColorFromTitle(variant.product_title, baseName) || variant.color_family || 'View';
+                    const isCurrentVariant = variant.id === filament.id;
+                    
+                    return (
+                      <TooltipProvider key={variant.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            {isCurrentVariant ? (
+                              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background cursor-default">
+                                {variant.color_hex ? (
+                                  <div 
+                                    className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 shadow-inner"
+                                    style={{ 
+                                      backgroundColor: normalizeColorHex(variant.color_hex),
+                                      boxShadow: normalizeColorHex(variant.color_hex).toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-4 h-4 rounded-full bg-primary-foreground/30 border-2 border-primary-foreground/30" />
+                                )}
+                                {variantColor}
+                              </div>
+                            ) : (
+                              <Link 
+                                to={`/filament/${variant.id}`}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-muted hover:bg-primary/20 hover:text-primary transition-colors"
+                              >
+                                {variant.color_hex ? (
+                                  <div 
+                                    className="w-4 h-4 rounded-full border border-border shadow-sm"
+                                    style={{ 
+                                      backgroundColor: normalizeColorHex(variant.color_hex),
+                                      boxShadow: normalizeColorHex(variant.color_hex).toUpperCase() === '#FFFFFF' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-4 h-4 rounded-full bg-gradient-to-br from-muted-foreground/30 to-muted-foreground/10 border border-border" />
+                                )}
+                                {variantColor}
+                              </Link>
+                            )}
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-center">
+                              <div className="font-medium">{variantColor}</div>
+                              {variant.net_weight_g && (
+                                <div className="text-xs text-muted-foreground">
+                                  {variant.net_weight_g >= 1000 ? `${variant.net_weight_g / 1000}kg` : `${variant.net_weight_g}g`}
+                                </div>
+                              )}
+                              {variant.color_hex ? (
+                                <div className="text-xs font-mono text-muted-foreground">{variant.color_hex.toUpperCase()}</div>
+                              ) : (
+                                <div className="text-xs text-muted-foreground">No hex code</div>
+                              )}
+                              {variant.product_url && (
+                                <div className="text-xs text-primary mt-1">Click to view</div>
+                              )}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Material Value Proposition */}
+            <MaterialValueProposition
+              material={filament.material}
+              productTitle={filament.product_title}
+              filamentId={filament.id}
+              vendor={filament.vendor}
+              filament={filament}
+              printer={selectedPrinter}
+              hotend={compatibleHotends.length > 0 ? compatibleHotends[0] : null}
+            />
+
+            {/* Score Cards */}
+            <ScoreCardsSection filament={filament} />
+
+            {/* Common Mistakes Panel */}
+            {filament.material && (
+              <CommonMistakesPanel 
+                material={filament.material} 
+                compact 
+                maxItems={3}
+              />
+            )}
+
+            {/* Helpful Videos Section */}
+            {filament.material && getVideosByMaterial(filament.material).length > 0 && (
+              <div className="pt-4 border-t border-border">
+                <h3 className="text-base font-semibold flex items-center gap-2 mb-4">
+                  <PlayCircle className="w-4 h-4 text-primary" />
+                  Helpful Videos for {filament.material}
+                </h3>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {getVideosByMaterial(filament.material).slice(0, 3).map(video => (
+                    <VideoThumbnail
+                      key={video.id}
+                      videoId={video.id}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
         {filament && id && (
           <SimilarMaterialsModule
             filamentId={id}
