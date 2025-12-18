@@ -221,9 +221,18 @@ const getBaseProductName = (title: string, material?: string | null): string => 
 const getColorFromTitle = (title: string, baseName: string): string | null => {
   if (title === baseName) return null;
   
+  // Clean title of packaging suffixes before extracting color
+  const cleanTitle = title
+    .replace(/\s*\(NFC\)\s*/gi, '')
+    .replace(/\s+Refill\s*$/gi, '')
+    .trim();
+  
+  if (cleanTitle === baseName) return null;
+  
   // Pattern 0: Paramount 3D style - extract color from parentheses
   // e.g., "ABS (Autobot Blue) 1.75mm 1kg Filament" -> "Autobot Blue"
-  const parenMatch = title.match(/\(([^)]+)\)/);
+  // Use cleanTitle (NFC already removed) to avoid matching "(NFC)" as a color
+  const parenMatch = cleanTitle.match(/\(([^)]+)\)/);
   if (parenMatch) {
     return parenMatch[1].trim();
   }
