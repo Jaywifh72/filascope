@@ -80,18 +80,17 @@ function transformToRegionalUrl(originalUrl: string, vendor: string, region: str
     const baseDomainParts = config.baseDomain.split('.');
     
     if (config.pattern === 'subdomain') {
-      // Replace subdomain
       const newSubdomain = regionConfig.subdomain || 'www';
       
       if (hostParts.length > baseDomainParts.length) {
-        // Has subdomain, replace it
         hostParts[0] = newSubdomain;
       } else {
-        // No subdomain, add it
         hostParts.unshift(newSubdomain);
       }
       
       url.hostname = hostParts.join('.');
+      // Clean up query params that might cause issues
+      url.search = '';
       return url.toString();
     }
   } catch (e) {
@@ -101,11 +100,42 @@ function transformToRegionalUrl(originalUrl: string, vendor: string, region: str
   return null;
 }
 
-// Try Shopify JSON API first (fastest and most reliable)
-async function tryShopifyJson(url: string): Promise<{ price: number; currency: string; available: boolean; validatedUrl: string } | null> {
+// Generate alternate URL patterns for Bambu Lab and similar stores
+function getAlternateUrls(url: string): string[] {
+  const alternates: string[] = [url];
+  
   try {
-    // Convert product URL to JSON endpoint
-    const jsonUrl = url.replace(/\?.*$/, '') + '.json';
+    const parsed = new URL(url);
+    const pathParts = parsed.pathname.split('/');
+    const handle = pathParts[pathParts.length - 1];
+    
+    // Try adding -filament suffix if not present
+    if (!handle.includes('-filament') && !handle.includes('filament')) {
+      pathParts[pathParts.length - 1] = handle + '-filament';
+      parsed.pathname = pathParts.join('/');
+      alternates.push(parsed.toString());
+    }
+    
+    // Try removing -filament suffix if present
+    if (handle.includes('-filament')) {
+      pathParts[pathParts.length - 1] = handle.replace('-filament', '');
+      parsed.pathname = pathParts.join('/');
+      alternates.push(parsed.toString());
+    }
+  } catch (e) {
+    // Ignore URL parsing errors
+  }
+  
+  return alternates;
+}
+
+// Try Shopify JSON API
+async function tryShopifyJson(url: string, expectedCurrency: string): Promise<{ price: number; currency: string; available: boolean } | null> {
+  try {
+    const cleanUrl = url.replace(/\?.*$/, '');
+    const jsonUrl = cleanUrl + '.json';
+    
+    console.log(`Trying Shopify JSON: ${jsonUrl}`);
     
     const response = await fetch(jsonUrl, {
       headers: {
@@ -114,71 +144,131 @@ async function tryShopifyJson(url: string): Promise<{ price: number; currency: s
       },
     });
     
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.log(`Shopify JSON returned ${response.status}`);
+      return null;
+    }
     
     const data = await response.json();
     const product = data.product;
     
-    if (!product || !product.variants || product.variants.length === 0) return null;
+    if (!product || !product.variants || product.variants.length === 0) {
+      console.log('No product variants in JSON');
+      return null;
+    }
     
-    // Find first available variant, or first variant if none available
     const variant = product.variants.find((v: any) => v.available) || product.variants[0];
     const price = parseFloat(variant.price);
     
-    if (isNaN(price) || price <= 0) return null;
+    if (isNaN(price) || price <= 0) {
+      console.log('Invalid price in JSON:', variant.price);
+      return null;
+    }
     
-    // Detect currency from URL region
-    let currency = 'USD';
-    if (url.includes('ca.store') || url.includes('/ca/')) currency = 'CAD';
-    else if (url.includes('uk.store') || url.includes('/uk/')) currency = 'GBP';
-    else if (url.includes('eu.store') || url.includes('/eu/')) currency = 'EUR';
-    else if (url.includes('au.store') || url.includes('/au/')) currency = 'AUD';
-    else if (url.includes('jp.store') || url.includes('/jp/')) currency = 'JPY';
+    console.log(`Shopify JSON success: ${price} ${expectedCurrency}`);
     
     return {
       price,
-      currency,
+      currency: expectedCurrency,
       available: variant.available || false,
-      validatedUrl: url,
     };
   } catch (e) {
-    console.error('Shopify JSON failed for:', url, e);
+    console.error('Shopify JSON error:', e);
     return null;
   }
 }
 
-// Validate URL by checking HTTP status
-async function validateUrl(url: string): Promise<{ 
-  valid: boolean; 
-  status: 'valid' | 'invalid' | 'redirect' | 'not_found';
-  finalUrl?: string;
-}> {
+// Scrape price from HTML page as fallback
+async function scrapeFromHtml(url: string, expectedCurrency: string): Promise<{ price: number; currency: string; available: boolean } | null> {
   try {
+    console.log(`Scraping HTML: ${url}`);
+    
     const response = await fetch(url, {
-      method: 'HEAD',
-      redirect: 'manual',
       headers: {
+        'Accept': 'text/html',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
+      redirect: 'follow',
     });
     
-    if (response.status === 200) {
-      return { valid: true, status: 'valid', finalUrl: url };
-    } else if (response.status === 301 || response.status === 302) {
-      const redirectUrl = response.headers.get('location');
-      // Check if redirect is to a valid product page or homepage
-      if (redirectUrl && !redirectUrl.endsWith('/') && redirectUrl.includes('/products/')) {
-        return { valid: true, status: 'redirect', finalUrl: redirectUrl };
-      }
-      return { valid: false, status: 'redirect', finalUrl: redirectUrl || undefined };
-    } else if (response.status === 404) {
-      return { valid: false, status: 'not_found' };
+    if (!response.ok) {
+      console.log(`HTML fetch returned ${response.status}`);
+      return null;
     }
     
-    return { valid: false, status: 'invalid' };
+    const html = await response.text();
+    
+    // Check if we got redirected to wrong region
+    const finalUrl = response.url;
+    if (!finalUrl.includes(new URL(url).hostname.split('.')[0])) {
+      console.log(`Redirected to different region: ${finalUrl}`);
+      return null;
+    }
+    
+    // Try to find price in JSON-LD
+    const jsonLdMatch = html.match(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+    if (jsonLdMatch) {
+      for (const match of jsonLdMatch) {
+        try {
+          const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
+          const jsonData = JSON.parse(jsonContent);
+          
+          // Check for Product schema
+          if (jsonData['@type'] === 'Product' && jsonData.offers) {
+            const offers = Array.isArray(jsonData.offers) ? jsonData.offers[0] : jsonData.offers;
+            if (offers.price) {
+              const price = parseFloat(offers.price);
+              if (!isNaN(price) && price > 0) {
+                console.log(`JSON-LD price found: ${price}`);
+                return {
+                  price,
+                  currency: offers.priceCurrency || expectedCurrency,
+                  available: offers.availability?.includes('InStock') ?? true,
+                };
+              }
+            }
+          }
+        } catch (e) {
+          // Continue to next JSON-LD block
+        }
+      }
+    }
+    
+    // Try to find price in meta tags
+    const ogPriceMatch = html.match(/<meta[^>]*property="product:price:amount"[^>]*content="([^"]+)"/i);
+    if (ogPriceMatch) {
+      const price = parseFloat(ogPriceMatch[1]);
+      if (!isNaN(price) && price > 0) {
+        console.log(`OG meta price found: ${price}`);
+        return { price, currency: expectedCurrency, available: true };
+      }
+    }
+    
+    // Try common price patterns in HTML
+    const pricePatterns = [
+      /data-product-price="(\d+)"/, // Shopify stores often use cents
+      /"price":\s*"?(\d+\.?\d*)"?/, // JSON in HTML
+      /class="[^"]*price[^"]*"[^>]*>[\s\S]*?[$€£¥C]?\s*(\d+\.?\d+)/i,
+    ];
+    
+    for (const pattern of pricePatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        let price = parseFloat(match[1]);
+        // If it looks like cents (very high number), convert
+        if (price > 10000) price = price / 100;
+        if (!isNaN(price) && price > 0 && price < 10000) {
+          console.log(`HTML pattern price found: ${price}`);
+          return { price, currency: expectedCurrency, available: true };
+        }
+      }
+    }
+    
+    console.log('No price found in HTML');
+    return null;
   } catch (e) {
-    console.error('URL validation failed:', url, e);
-    return { valid: false, status: 'invalid' };
+    console.error('HTML scrape error:', e);
+    return null;
   }
 }
 
@@ -187,17 +277,28 @@ async function scrapeRegionalPricesForFilament(
   filament: { id: string; product_url: string; vendor: string },
   regions: string[]
 ): Promise<{
-  prices: Record<string, { price: number; currency: string; url: string }>;
-  validatedUrls: Record<string, string>;
+  prices: Record<string, { price: number; currency: string }>;
+  urls: Record<string, string>;
   errors: string[];
 }> {
-  const prices: Record<string, { price: number; currency: string; url: string }> = {};
-  const validatedUrls: Record<string, string> = {};
+  const prices: Record<string, { price: number; currency: string }> = {};
+  const urls: Record<string, string> = {};
   const errors: string[] = [];
+  
+  const config = BRAND_REGIONAL_STORES[filament.vendor];
+  if (!config) {
+    errors.push(`No regional config for vendor: ${filament.vendor}`);
+    return { prices, urls, errors };
+  }
   
   for (const region of regions) {
     try {
-      // Transform URL to regional variant
+      const regionConfig = config.regions[region];
+      if (!regionConfig) {
+        console.log(`Region ${region} not supported for ${filament.vendor}`);
+        continue;
+      }
+      
       const regionalUrl = transformToRegionalUrl(filament.product_url, filament.vendor, region);
       
       if (!regionalUrl) {
@@ -205,42 +306,40 @@ async function scrapeRegionalPricesForFilament(
         continue;
       }
       
-      console.log(`Scraping ${region}: ${regionalUrl}`);
+      console.log(`\nScraping ${region}: ${regionalUrl}`);
       
-      // First validate the URL
-      const validation = await validateUrl(regionalUrl);
+      // Always store the transformed regional URL (not the final redirect)
+      urls[region] = regionalUrl;
       
-      if (!validation.valid) {
-        errors.push(`${region}: URL invalid (${validation.status})`);
-        continue;
+      // Try Shopify JSON first
+      let result = await tryShopifyJson(regionalUrl, regionConfig.currency);
+      
+      // Fallback to HTML scraping
+      if (!result) {
+        result = await scrapeFromHtml(regionalUrl, regionConfig.currency);
       }
-      
-      const urlToScrape = validation.finalUrl || regionalUrl;
-      validatedUrls[region] = urlToScrape;
-      
-      // Try Shopify JSON API
-      const result = await tryShopifyJson(urlToScrape);
       
       if (result) {
         prices[region] = {
           price: result.price,
           currency: result.currency,
-          url: result.validatedUrl,
         };
-        console.log(`Got ${region} price: ${result.price} ${result.currency}`);
+        console.log(`SUCCESS ${region}: ${result.price} ${result.currency}`);
       } else {
         errors.push(`${region}: Could not extract price`);
       }
       
-      // Rate limit between regions
+      // Rate limit
       await new Promise(resolve => setTimeout(resolve, 500));
       
     } catch (e) {
-      errors.push(`${region}: ${e instanceof Error ? e.message : 'Unknown error'}`);
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      errors.push(`${region}: ${msg}`);
+      console.error(`Error for ${region}:`, e);
     }
   }
   
-  return { prices, validatedUrls, errors };
+  return { prices, urls, errors };
 }
 
 Deno.serve(async (req) => {
@@ -253,14 +352,14 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { filamentId, filamentIds, brand, regions = ['US', 'CA', 'UK', 'EU', 'AU'], limit = 10, forceUpdate = false } = await req.json();
+    const { filamentId, filamentIds, brand, regions = ['US', 'CA', 'UK', 'EU', 'AU'], limit = 5, forceUpdate = false } = await req.json();
 
     console.log('Request params:', { filamentId, filamentIds, brand, regions, limit, forceUpdate });
 
     // Build query
     let query = supabase
       .from('filaments')
-      .select('id, product_url, vendor, variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy, regional_prices_updated_at');
+      .select('id, product_url, vendor, product_title, variant_price');
 
     if (filamentId) {
       query = query.eq('id', filamentId);
@@ -300,6 +399,7 @@ Deno.serve(async (req) => {
 
     const results: {
       id: string;
+      title: string;
       vendor: string;
       prices: Record<string, number>;
       urls: Record<string, string>;
@@ -309,9 +409,11 @@ Deno.serve(async (req) => {
     for (const filament of filaments) {
       if (!filament.product_url || !filament.vendor) continue;
 
-      console.log(`\nProcessing: ${filament.vendor} - ${filament.id}`);
+      console.log(`\n========================================`);
+      console.log(`Processing: ${filament.product_title} (${filament.vendor})`);
+      console.log(`Base URL: ${filament.product_url}`);
 
-      const { prices, validatedUrls, errors } = await scrapeRegionalPricesForFilament(
+      const { prices, urls, errors } = await scrapeRegionalPricesForFilament(
         { id: filament.id, product_url: filament.product_url, vendor: filament.vendor },
         regions
       );
@@ -319,6 +421,8 @@ Deno.serve(async (req) => {
       // Prepare update data
       const updateData: Record<string, any> = {
         regional_prices_updated_at: new Date().toISOString(),
+        url_validated_at: new Date().toISOString(),
+        url_validation_status: Object.keys(prices).length > 0 ? 'valid' : 'invalid',
       };
 
       // Map prices to database columns
@@ -338,29 +442,27 @@ Deno.serve(async (req) => {
         JP: 'product_url_jp',
       };
 
+      // Store prices
       for (const [region, data] of Object.entries(prices)) {
         const priceCol = priceColumnMap[region];
         if (priceCol) {
           updateData[priceCol] = data.price;
         }
+        // Update US price in variant_price
+        if (region === 'US') {
+          updateData.variant_price = data.price;
+        }
       }
 
-      for (const [region, url] of Object.entries(validatedUrls)) {
+      // Store regional URLs
+      for (const [region, url] of Object.entries(urls)) {
         const urlCol = urlColumnMap[region];
         if (urlCol) {
           updateData[urlCol] = url;
         }
       }
 
-      // Update US price if we got it
-      if (prices.US) {
-        updateData.variant_price = prices.US.price;
-      }
-
-      // Update URL validation status
-      const hasValidUrls = Object.keys(validatedUrls).length > 0;
-      updateData.url_validation_status = hasValidUrls ? 'valid' : 'invalid';
-      updateData.url_validated_at = new Date().toISOString();
+      console.log('Updating DB with:', JSON.stringify(updateData, null, 2));
 
       // Update database
       const { error: updateError } = await supabase
@@ -371,13 +473,16 @@ Deno.serve(async (req) => {
       if (updateError) {
         console.error('Update error:', updateError);
         errors.push(`Database update failed: ${updateError.message}`);
+      } else {
+        console.log('Database updated successfully');
       }
 
       results.push({
         id: filament.id,
+        title: filament.product_title || 'Unknown',
         vendor: filament.vendor,
         prices: Object.fromEntries(Object.entries(prices).map(([k, v]) => [k, v.price])),
-        urls: validatedUrls,
+        urls,
         errors,
       });
 
