@@ -2,6 +2,7 @@ import { Plus, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SmartComparisonSuggestion } from "@/lib/smartComparisonService";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface MultiCompareCardsProps {
   suggestions: SmartComparisonSuggestion[];
@@ -10,20 +11,16 @@ interface MultiCompareCardsProps {
   addedIds: Set<string>;
 }
 
-function getPricePerKg(price: number | null, suggestion: SmartComparisonSuggestion): string {
-  if (!price) return "—";
-  // Assume 1kg if we don't have weight data from suggestion
-  return `$${price.toFixed(2)}`;
-}
-
 function MiniCompareCard({
   suggestion,
   onAdd,
-  isAdded
+  isAdded,
+  formatPrice
 }: {
   suggestion: SmartComparisonSuggestion;
   onAdd: () => void;
   isAdded: boolean;
+  formatPrice: (price: number | null | undefined, showCurrency?: boolean) => string;
 }) {
   return (
     <div className="flex flex-col p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 transition-colors min-w-[140px]">
@@ -47,7 +44,7 @@ function MiniCompareCard({
       
       {/* Price */}
       <div className="text-sm font-mono text-primary mb-2">
-        {getPricePerKg(suggestion.price, suggestion)}
+        {suggestion.price ? formatPrice(suggestion.price, false) : "—"}
       </div>
       
       {/* Relevance reason badge */}
@@ -85,6 +82,8 @@ export function MultiCompareCards({
   onAddAllToCompare,
   addedIds
 }: MultiCompareCardsProps) {
+  const { formatPrice } = useCurrency();
+  
   if (suggestions.length === 0) return null;
 
   const allAdded = suggestions.every(s => addedIds.has(s.id));
@@ -127,6 +126,7 @@ export function MultiCompareCards({
             suggestion={suggestion}
             onAdd={() => onAddToCompare(suggestion)}
             isAdded={addedIds.has(suggestion.id)}
+            formatPrice={formatPrice}
           />
         ))}
       </div>

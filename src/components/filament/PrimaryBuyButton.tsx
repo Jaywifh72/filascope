@@ -12,6 +12,7 @@ interface PrimaryBuyButtonProps {
   hasBestPrice?: boolean;
   hasBundle?: boolean;
   hasFastShipping?: boolean;
+  hasActualRegionalPrice?: boolean;
   onClick?: () => void;
 }
 
@@ -24,9 +25,14 @@ export function PrimaryBuyButton({
   hasBestPrice = false,
   hasBundle = false,
   hasFastShipping = false,
+  hasActualRegionalPrice = false,
   onClick,
 }: PrimaryBuyButtonProps) {
-  const { formatPrice } = useCurrency();
+  const { formatPrice, formatRegionalPrice } = useCurrency();
+  
+  // Use the appropriate formatter based on whether we have an actual regional price
+  const formatPriceValue = (value: number) => 
+    hasActualRegionalPrice ? formatRegionalPrice(value) : formatPrice(value);
   
   // Calculate discounted price if quantity > 1
   const discountedPrice = price !== null 
@@ -86,12 +92,12 @@ export function PrimaryBuyButton({
         {total !== null && (
           <span className="flex flex-col items-end">
             <span className="font-bold tabular-nums">
-              {formatPrice(total)}
+              {formatPriceValue(total)}
             </span>
             {quantity > 1 && (
               <span className="text-xs opacity-80 tabular-nums">
-                {quantity} × {formatPrice(discountedPrice || 0)}
-                {hasDiscount && <span className="ml-1 line-through opacity-60">{formatPrice(price || 0)}</span>}
+                {quantity} × {formatPriceValue(discountedPrice || 0)}
+                {hasDiscount && <span className="ml-1 line-through opacity-60">{formatPriceValue(price || 0)}</span>}
               </span>
             )}
           </span>
