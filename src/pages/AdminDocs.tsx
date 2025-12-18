@@ -25,6 +25,14 @@ const docs: DocItem[] = [
     icon: Database,
     category: "architecture",
     date: "December 18, 2025"
+  },
+  {
+    title: "Observability & Data Correctness Guide",
+    description: "Instrumentation plan, test strategies, invariants, debug playbook, and dashboard/alert configuration",
+    path: "/docs/filascope-observability-guide.md",
+    icon: Shield,
+    category: "guides",
+    date: "December 18, 2025"
   }
 ];
 
