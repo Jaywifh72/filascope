@@ -82,6 +82,15 @@ export function FilamentHeroPurchaseCard({
     window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
   };
 
+  // Format price in the store's native currency
+  const formatPriceInCurrency = (price: number, currencyCode: string): string => {
+    const symbols: Record<string, string> = { 
+      'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' 
+    };
+    const symbol = symbols[currencyCode] || '$';
+    return `${symbol}${price.toFixed(2)}`;
+  };
+
   // Use live price if available, otherwise fall back to stored price
   const displayPrice = isLivePrice && currentPrice !== null ? currentPrice : pricePerSpool;
   
@@ -101,12 +110,16 @@ export function FilamentHeroPurchaseCard({
     displayPricePerKg = pricePerKg;
   }
 
-  // Format the price - live prices are already in the correct regional currency
+  // Format the price - live prices shown in store's native currency
   const formattedPricePerKg = displayPricePerKg 
-    ? (isLivePrice || hasActualRegionalPrice ? formatRegionalPrice(displayPricePerKg, false) : formatPrice(displayPricePerKg, false))
+    ? (isLivePrice 
+        ? formatPriceInCurrency(displayPricePerKg, priceCurrency) 
+        : hasActualRegionalPrice ? formatRegionalPrice(displayPricePerKg, false) : formatPrice(displayPricePerKg, false))
     : null;
   const formattedPricePerSpool = displayPrice 
-    ? (isLivePrice || hasActualRegionalPrice ? formatRegionalPrice(displayPrice, false) : formatPrice(displayPrice, false))
+    ? (isLivePrice 
+        ? formatPriceInCurrency(displayPrice, priceCurrency) 
+        : hasActualRegionalPrice ? formatRegionalPrice(displayPrice, false) : formatPrice(displayPrice, false))
     : null;
 
   // Determine stock status for indicator
