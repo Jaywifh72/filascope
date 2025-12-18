@@ -32,6 +32,9 @@ interface ShopifyVariant {
   option1?: string | null;
   option2?: string | null;
   option3?: string | null;
+  // Currency fields from Shopify Multi-Currency API
+  price_currency?: string;
+  compare_at_price_currency?: string;
 }
 
 interface ShopifyMetafield {
@@ -75,6 +78,11 @@ export class ShopifyScraper extends BaseScraper {
       const compareAtPrice = this.parsePrice(variant.compare_at_price);
       const bodyHtml = product.body_html || "";
 
+      // Check if API already returns USD - only convert if it's a different currency
+      const apiCurrency = variant.price_currency || this.config.currency;
+      const needsConversion = apiCurrency !== 'USD';
+      this.log(`💱 Price currency from API: ${apiCurrency}, needs conversion: ${needsConversion}`);
+
       // Extract enhanced data from body_html
       const tdsUrl = findTdsUrl(bodyHtml);
       const printSettings = extractPrintSettings(bodyHtml);
@@ -94,8 +102,8 @@ export class ShopifyScraper extends BaseScraper {
         productId: String(product.id),
         sku: variant.sku || null,
         title: cleanedTitle,
-        price: price ? this.convertToUSD(price) : null,
-        compareAtPrice: compareAtPrice ? this.convertToUSD(compareAtPrice) : null,
+        price: price ? (needsConversion ? this.convertToUSD(price) : price) : null,
+        compareAtPrice: compareAtPrice ? (needsConversion ? this.convertToUSD(compareAtPrice) : compareAtPrice) : null,
         available: variant.available,
         currency: "USD",
         url,
@@ -182,6 +190,14 @@ export class ShopifyScraper extends BaseScraper {
           const compareAtPrice = this.parsePrice(variant.compare_at_price);
           const bodyHtml = product.body_html || "";
 
+          // Check if API already returns USD - only convert if it's a different currency
+          const apiCurrency = variant.price_currency || this.config.currency;
+          const needsConversion = apiCurrency !== 'USD';
+          
+          if (products.length === 0) {
+            this.log(`💱 API currency: ${apiCurrency}, config currency: ${this.config.currency}, needs conversion: ${needsConversion}`);
+          }
+
           // Extract enhanced data
           const tdsUrl = findTdsUrl(bodyHtml);
           const printSettings = extractPrintSettings(bodyHtml);
@@ -195,8 +211,8 @@ export class ShopifyScraper extends BaseScraper {
             productId: String(product.id),
             sku: variant.sku || null,
             title: product.title,
-            price: price ? this.convertToUSD(price) : null,
-            compareAtPrice: compareAtPrice ? this.convertToUSD(compareAtPrice) : null,
+            price: price ? (needsConversion ? this.convertToUSD(price) : price) : null,
+            compareAtPrice: compareAtPrice ? (needsConversion ? this.convertToUSD(compareAtPrice) : compareAtPrice) : null,
             available: variant.available,
             currency: "USD",
             url: `${this.config.baseUrl}/products/${product.handle}`,
