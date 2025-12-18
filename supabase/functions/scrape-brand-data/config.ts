@@ -847,7 +847,7 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
     baseUrl: "https://filaments.ca",
     apiEndpoint: "https://filaments.ca/products.json",
     currency: "CAD",
-    exchangeRate: 0.74,
+    exchangeRate: 0.70,
     productsPerPage: 250,
     requestDelay: 500,
     timeout: 10000,
