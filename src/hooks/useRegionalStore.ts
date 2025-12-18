@@ -120,6 +120,17 @@ export function getRegionShortName(region: RegionCode): string {
 }
 
 /**
+ * Maps region codes to their corresponding filament URL fields
+ */
+const REGION_URL_FIELDS: Partial<Record<RegionCode, string>> = {
+  CA: 'product_url_ca',
+  UK: 'product_url_uk',
+  EU: 'product_url_eu',
+  AU: 'product_url_au',
+  JP: 'product_url_jp',
+};
+
+/**
  * Hook to transform product URLs to regional variants based on user's currency setting
  * 
  * @returns Object with getRegionalUrl function and current region info
@@ -132,13 +143,29 @@ export function useRegionalStore() {
     return CURRENCY_TO_REGION[currency] || 'US';
   }, [currency]);
   
-  // Transform a product URL to the regional variant
+  // Transform a product URL to the regional variant, with optional pre-stored regional URLs
   const getRegionalUrl = useCallback((
     productUrl: string | null | undefined,
-    vendor: string | null | undefined
+    vendor: string | null | undefined,
+    storedRegionalUrls?: Partial<Record<string, string | null>> // e.g., { product_url_ca: "...", product_url_uk: "..." }
   ): string => {
     if (!productUrl) return '';
     
+    // If we're looking for US, just return the original URL
+    if (currentRegion === 'US') {
+      return productUrl;
+    }
+    
+    // Check if there's a pre-stored regional URL for this region
+    const regionalUrlField = REGION_URL_FIELDS[currentRegion];
+    if (regionalUrlField && storedRegionalUrls) {
+      const storedUrl = storedRegionalUrls[regionalUrlField];
+      if (storedUrl) {
+        return storedUrl;
+      }
+    }
+    
+    // Fall back to URL transformation
     const config = getBrandConfig(vendor);
     if (!config) {
       // No config for this brand, return original URL
