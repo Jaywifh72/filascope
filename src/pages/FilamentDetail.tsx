@@ -48,6 +48,7 @@ import { RetailersModal, type Retailer } from "@/components/filament/hero/Retail
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { QuickSummaryCard, CollapsibleContentContainer, SocialProofToast, ActivityStatsBanner } from "@/components/filament";
 import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
+import { useRegionalStore } from "@/hooks/useRegionalStore";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -87,67 +88,61 @@ const FilamentDetail = () => {
   const { formatPrice, currencyInfo } = useCurrency();
   const { incrementStat } = useAchievements();
   const { trackStoreClick } = useConversionTracking();
+  const { getRegionalUrl, regionShortName } = useRegionalStore();
 
   const compatibility = selectedPrinter && filament 
     ? checkPrinterFilamentCompatibility(selectedPrinter, filament)
     : null;
 
-  // Build retailers array for modal
+  // Build retailers array for modal - uses regional store URLs based on user's currency setting
   const retailers: Retailer[] = useMemo(() => {
     if (!filament) return [];
     
     const result: Retailer[] = [];
     
-    // Primary retailer (brand store)
+    // Primary retailer (brand store) - transformed to regional URL
     if (filament.product_url) {
+      const regionalUrl = getRegionalUrl(filament.product_url, filament.vendor);
       result.push({
         id: 'store',
-        name: filament.vendor || 'Store',
+        name: `${filament.vendor || 'Store'} (${regionShortName})`,
         price: filament.variant_price,
-        inStock: !isDiscontinuedUrl(filament.product_url),
-        url: getAffiliateUrl(filament.product_url, filament.vendor),
+        inStock: !isDiscontinuedUrl(regionalUrl),
+        url: getAffiliateUrl(regionalUrl, filament.vendor),
         shippingEstimate: 'Ships within 24hrs',
       });
     }
     
-    // Amazon US
-    if (filament.amazon_link_us) {
-      result.push({
-        id: 'amazon_us',
-        name: 'Amazon US',
-        price: filament.amazon_price_usd,
-        inStock: true,
-        url: getAmazonUrl(filament.amazon_link_us),
-        shippingEstimate: 'Prime eligible',
-      });
-    }
+    // Amazon - show region-appropriate Amazon first based on user's currency
+    const amazonLinks = [
+      { id: 'amazon_us', name: 'Amazon US', link: filament.amazon_link_us, price: filament.amazon_price_usd, region: 'US' },
+      { id: 'amazon_uk', name: 'Amazon UK', link: filament.amazon_link_uk, price: null, region: 'UK' },
+      { id: 'amazon_de', name: 'Amazon DE', link: filament.amazon_link_de, price: null, region: 'EU' },
+    ].filter(a => a.link);
     
-    // Amazon UK
-    if (filament.amazon_link_uk) {
-      result.push({
-        id: 'amazon_uk',
-        name: 'Amazon UK',
-        price: null, // We don't have UK price in USD
-        inStock: true,
-        url: getAmazonUrl(filament.amazon_link_uk),
-        shippingEstimate: 'Prime eligible',
-      });
-    }
+    // Sort Amazon links: user's region first, then others
+    const sortedAmazon = amazonLinks.sort((a, b) => {
+      if (a.region === regionShortName) return -1;
+      if (b.region === regionShortName) return 1;
+      // For EU, prefer DE Amazon
+      if (regionShortName === 'EU' && a.region === 'EU') return -1;
+      if (regionShortName === 'EU' && b.region === 'EU') return 1;
+      return 0;
+    });
     
-    // Amazon DE
-    if (filament.amazon_link_de) {
+    for (const amazon of sortedAmazon) {
       result.push({
-        id: 'amazon_de',
-        name: 'Amazon DE',
-        price: null, // We don't have DE price in USD
+        id: amazon.id,
+        name: amazon.name,
+        price: amazon.price,
         inStock: true,
-        url: getAmazonUrl(filament.amazon_link_de),
+        url: getAmazonUrl(amazon.link!),
         shippingEstimate: 'Prime eligible',
       });
     }
     
     return result;
-  }, [filament, getAffiliateUrl, getAmazonUrl]);
+  }, [filament, getAffiliateUrl, getAmazonUrl, getRegionalUrl, regionShortName]);
 
   // Track modal open
   const handleViewRetailers = () => {
@@ -1559,9 +1554,9 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   vendor={filament.vendor}
                   pricePerKg={rawPricePerKg}
                   pricePerSpool={rawPricePerSpool}
-                  affiliateUrl={getAffiliateUrl(filament.product_url, filament.vendor)}
+                  affiliateUrl={getAffiliateUrl(getRegionalUrl(filament.product_url, filament.vendor), filament.vendor)}
                   retailerName={filament.vendor || undefined}
-                  inStock={!isDiscontinuedUrl(filament.product_url)}
+                  inStock={!isDiscontinuedUrl(getRegionalUrl(filament.product_url, filament.vendor))}
                   retailerCount={retailers.length}
                   onViewRetailers={handleViewRetailers}
                 />
@@ -3305,7 +3300,7 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
       {filament && (
         <StickyBuyBar
           filament={filament}
-          affiliateUrl={getAffiliateUrl(filament.product_url, filament.vendor)}
+          affiliateUrl={getAffiliateUrl(getRegionalUrl(filament.product_url, filament.vendor), filament.vendor)}
           pricePerKg={rawPricePerKg}
           isVisible={stickyBarVisible}
         />
