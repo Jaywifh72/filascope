@@ -1,9 +1,12 @@
 import { useEffect, useRef } from "react";
-import { ShoppingCart, ExternalLink, Star, Check } from "lucide-react";
+import { ShoppingCart, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
+import { PriceUrgencyBadge } from "./urgency/PriceUrgencyBadge";
+import { StockUrgencyIndicator } from "./urgency/StockUrgencyIndicator";
+import { ShippingCountdown } from "./urgency/ShippingCountdown";
 
 interface StickyBuyBarProps {
   filament: {
@@ -17,9 +20,18 @@ interface StickyBuyBarProps {
   affiliateUrl: string | null;
   pricePerKg: number | null;
   isVisible: boolean;
+  stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
+  stockQuantity?: number | null;
 }
 
-export function StickyBuyBar({ filament, affiliateUrl, pricePerKg, isVisible }: StickyBuyBarProps) {
+export function StickyBuyBar({ 
+  filament, 
+  affiliateUrl, 
+  pricePerKg, 
+  isVisible,
+  stockStatus = 'in_stock',
+  stockQuantity
+}: StickyBuyBarProps) {
   const { trackStoreClick } = useConversionTracking();
   const { formatPrice } = useCurrency();
   const hasTrackedImpression = useRef(false);
@@ -104,11 +116,12 @@ export function StickyBuyBar({ filament, affiliateUrl, pricePerKg, isVisible }: 
                 <span className="text-primary font-bold">{filament.vendor}</span>
                 <span className="truncate">{getDisplayName()}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="flex items-center gap-1 text-emerald-400 font-medium">
-                  <Check className="w-3.5 h-3.5" />
-                  In Stock
-                </span>
+              <div className="flex items-center gap-3 text-sm">
+                <StockUrgencyIndicator
+                  stockStatus={stockStatus}
+                  stockQuantity={stockQuantity}
+                  compact={true}
+                />
                 {weightDisplay && (
                   <>
                     <span className="text-slate-500">•</span>
@@ -119,44 +132,51 @@ export function StickyBuyBar({ filament, affiliateUrl, pricePerKg, isVisible }: 
             </div>
           </div>
 
-          {/* Price Section */}
-          <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+          {/* Price Section with Urgency */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <PriceUrgencyBadge
+              filamentId={filament.id}
+              currentPrice={pricePerKg}
+              size="small"
+            />
             {pricePerKg && (
               <div className="text-2xl font-bold text-white tracking-tight">
                 {formatPrice(pricePerKg, false)}
                 <span className="text-sm font-medium text-slate-400 ml-1">/kg</span>
               </div>
             )}
-            {filament.variant_price && (
-              <div className="text-sm text-slate-400">
-                {formatPrice(filament.variant_price)} total
-              </div>
-            )}
           </div>
 
-          {/* CTA Button */}
-          <Button
-            onClick={handleBuyClick}
-            className={cn(
-              "min-w-[200px] h-[52px] px-7",
-              "bg-gradient-to-r from-primary to-primary/80",
-              "hover:from-primary/90 hover:to-primary/70",
-              "text-primary-foreground font-bold text-base tracking-wide",
-              "shadow-[0_4px_15px_rgba(0,212,212,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]",
-              "hover:shadow-[0_6px_25px_rgba(0,212,212,0.4),inset_0_1px_0_rgba(255,255,255,0.3)]",
-              "hover:-translate-y-0.5 active:translate-y-0",
-              "transition-all duration-200",
-              "rounded-xl"
-            )}
-            aria-label={`Buy ${filament.product_title} from ${filament.vendor}`}
-          >
-            <ShoppingCart className="w-[18px] h-[18px] mr-2.5" />
-            <span>BUY NOW</span>
-            <span className="ml-3 pl-3 border-l border-primary-foreground/20 flex items-center gap-1.5 text-sm font-semibold opacity-80">
-              <ExternalLink className="w-3.5 h-3.5" />
-              {filament.vendor || 'Store'}
-            </span>
-          </Button>
+          {/* Shipping + CTA */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <ShippingCountdown compact />
+            
+            {/* CTA Button */}
+            <Button
+              onClick={handleBuyClick}
+              disabled={stockStatus === 'out_of_stock'}
+              className={cn(
+                "min-w-[200px] h-[52px] px-7",
+                "bg-gradient-to-r from-primary to-primary/80",
+                "hover:from-primary/90 hover:to-primary/70",
+                "text-primary-foreground font-bold text-base tracking-wide",
+                "shadow-[0_4px_15px_rgba(0,212,212,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]",
+                "hover:shadow-[0_6px_25px_rgba(0,212,212,0.4),inset_0_1px_0_rgba(255,255,255,0.3)]",
+                "hover:-translate-y-0.5 active:translate-y-0",
+                "transition-all duration-200",
+                "rounded-xl",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+              aria-label={`Buy ${filament.product_title} from ${filament.vendor}`}
+            >
+              <ShoppingCart className="w-[18px] h-[18px] mr-2.5" />
+              <span>BUY NOW</span>
+              <span className="ml-3 pl-3 border-l border-primary-foreground/20 flex items-center gap-1.5 text-sm font-semibold opacity-80">
+                <ExternalLink className="w-3.5 h-3.5" />
+                {filament.vendor || 'Store'}
+              </span>
+            </Button>
+          </div>
         </div>
 
         {/* Mobile Layout */}
@@ -170,10 +190,11 @@ export function StickyBuyBar({ filament, affiliateUrl, pricePerKg, isVisible }: 
                 <span>{getDisplayName()}</span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <span className="flex items-center gap-1 text-emerald-400 font-medium">
-                  <Check className="w-3 h-3" />
-                  In Stock
-                </span>
+                <StockUrgencyIndicator
+                  stockStatus={stockStatus}
+                  stockQuantity={stockQuantity}
+                  compact={true}
+                />
                 {weightDisplay && (
                   <>
                     <span className="text-slate-500">•</span>
@@ -183,19 +204,26 @@ export function StickyBuyBar({ filament, affiliateUrl, pricePerKg, isVisible }: 
               </div>
             </div>
             
-            {pricePerKg && (
-              <div className="text-right flex-shrink-0">
+            <div className="text-right flex-shrink-0">
+              {pricePerKg && (
                 <div className="text-xl font-bold text-white">
                   {formatPrice(pricePerKg, false)}
                   <span className="text-xs font-medium text-slate-400 ml-0.5">/kg</span>
                 </div>
-              </div>
-            )}
+              )}
+              <PriceUrgencyBadge
+                filamentId={filament.id}
+                currentPrice={pricePerKg}
+                size="small"
+                className="mt-1"
+              />
+            </div>
           </div>
 
           {/* Full-width button */}
           <Button
             onClick={handleBuyClick}
+            disabled={stockStatus === 'out_of_stock'}
             className={cn(
               "w-full h-14",
               "bg-gradient-to-r from-primary to-primary/80",
@@ -203,7 +231,8 @@ export function StickyBuyBar({ filament, affiliateUrl, pricePerKg, isVisible }: 
               "text-primary-foreground font-bold text-[17px] tracking-wide",
               "shadow-[0_4px_15px_rgba(0,212,212,0.3)]",
               "rounded-xl",
-              "transition-all duration-200"
+              "transition-all duration-200",
+              "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
             aria-label={`Buy ${filament.product_title}`}
           >
