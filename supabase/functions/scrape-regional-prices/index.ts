@@ -66,6 +66,18 @@ const BRAND_REGIONAL_STORES: Record<string, {
   },
 };
 
+// Brand-specific scrape configuration
+const BRAND_SCRAPE_CONFIG: Record<string, {
+  useFirecrawl: boolean;
+  waitFor: number;
+}> = {
+  'Bambu Lab': { useFirecrawl: true, waitFor: 3000 },
+  'Polymaker': { useFirecrawl: true, waitFor: 2000 },
+  'Creality': { useFirecrawl: true, waitFor: 2000 },
+  'Anycubic': { useFirecrawl: true, waitFor: 2000 },
+  'Elegoo': { useFirecrawl: true, waitFor: 2000 },
+};
+
 // Transform URL to regional variant
 function transformToRegionalUrl(originalUrl: string, vendor: string, region: string): string | null {
   const config = BRAND_REGIONAL_STORES[vendor];
@@ -127,6 +139,275 @@ function getAlternateUrls(url: string): string[] {
   }
   
   return alternates;
+}
+
+// Scrape with Firecrawl for JS-rendered pages
+async function scrapeWithFirecrawl(url: string, expectedCurrency: string, waitFor: number = 2000): Promise<{ price: number; currency: string; available: boolean } | null> {
+  const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+  
+  if (!firecrawlKey) {
+    console.log('FIRECRAWL_API_KEY not configured');
+    return null;
+  }
+
+  try {
+    console.log(`Firecrawl scraping: ${url} (wait: ${waitFor}ms)`);
+    
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown', 'html'],
+        onlyMainContent: false,
+        waitFor,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Firecrawl error ${response.status}:`, errorText);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (!data.success) {
+      console.log('Firecrawl scrape failed:', data.error);
+      return null;
+    }
+
+    const html = data.data?.html || '';
+    const markdown = data.data?.markdown || '';
+    
+    console.log(`Firecrawl returned HTML length: ${html.length}, Markdown length: ${markdown.length}`);
+
+    // Try to extract price from the response
+    const price = extractPriceFromContent(html, markdown, expectedCurrency);
+    
+    if (price) {
+      console.log(`Firecrawl price found: ${price} ${expectedCurrency}`);
+      
+      // Check availability
+      const available = !html.toLowerCase().includes('out of stock') && 
+                       !html.toLowerCase().includes('sold out') &&
+                       !markdown.toLowerCase().includes('out of stock');
+      
+      return { price, currency: expectedCurrency, available };
+    }
+
+    console.log('Firecrawl: No price found in content');
+    return null;
+  } catch (e) {
+    console.error('Firecrawl error:', e);
+    return null;
+  }
+}
+
+// Extract price from HTML and Markdown content
+function extractPriceFromContent(html: string, markdown: string, expectedCurrency: string): number | null {
+  // Try JSON-LD first (most reliable)
+  const jsonLdPrice = extractFromJsonLd(html);
+  if (jsonLdPrice && isValidPrice(jsonLdPrice, expectedCurrency)) {
+    console.log(`JSON-LD price: ${jsonLdPrice}`);
+    return jsonLdPrice;
+  }
+
+  // Try meta tags (second most reliable)
+  const metaPrice = extractFromMetaTags(html);
+  if (metaPrice && isValidPrice(metaPrice, expectedCurrency)) {
+    console.log(`Meta tag price: ${metaPrice}`);
+    return metaPrice;
+  }
+
+  // Try Shopify-specific patterns
+  const shopifyPrice = extractShopifyPrice(html);
+  if (shopifyPrice && isValidPrice(shopifyPrice, expectedCurrency)) {
+    console.log(`Shopify price: ${shopifyPrice}`);
+    return shopifyPrice;
+  }
+
+  // Currency-specific patterns with stricter matching
+  const currencyPatterns: Record<string, { patterns: RegExp[]; minExpected: number }> = {
+    'USD': { 
+      patterns: [
+        /data-product-price[^>]*>\s*\$\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+        /class="[^"]*current[^"]*price[^"]*"[^>]*>\s*\$\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+        /class="[^"]*product[^"]*price[^"]*"[^>]*>\s*\$\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+      ],
+      minExpected: 8 // Filaments usually cost at least $8
+    },
+    'CAD': { 
+      patterns: [
+        /data-product-price[^>]*>\s*(?:C\$|CA\$|\$)\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+        /class="[^"]*current[^"]*price[^"]*"[^>]*>\s*(?:C\$|CA\$|\$)\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+        /class="[^"]*product[^"]*price[^"]*"[^>]*>\s*(?:C\$|CA\$|\$)\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+      ],
+      minExpected: 10 // CAD prices are higher
+    },
+    'GBP': { 
+      patterns: [
+        /data-product-price[^>]*>\s*£\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+        /class="[^"]*current[^"]*price[^"]*"[^>]*>\s*£\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+        /class="[^"]*product[^"]*price[^"]*"[^>]*>\s*£\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+      ],
+      minExpected: 8
+    },
+    'EUR': { 
+      patterns: [
+        /data-product-price[^>]*>\s*€\s*(\d{1,3}(?:[\s,]\d{3})*[.,]?\d{0,2})/gi,
+        /class="[^"]*current[^"]*price[^"]*"[^>]*>\s*€\s*(\d{1,3}(?:[\s,]\d{3})*[.,]?\d{0,2})/gi,
+        /class="[^"]*product[^"]*price[^"]*"[^>]*>\s*€\s*(\d{1,3}(?:[\s,]\d{3})*[.,]?\d{0,2})/gi,
+      ],
+      minExpected: 8
+    },
+    'AUD': { 
+      patterns: [
+        /data-product-price[^>]*>\s*(?:A\$|AU\$|\$)\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+        /class="[^"]*current[^"]*price[^"]*"[^>]*>\s*(?:A\$|AU\$|\$)\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+      ],
+      minExpected: 10
+    },
+    'JPY': { 
+      patterns: [
+        /data-product-price[^>]*>\s*¥\s*(\d{1,6}(?:,\d{3})*)/gi,
+        /class="[^"]*current[^"]*price[^"]*"[^>]*>\s*¥\s*(\d{1,6}(?:,\d{3})*)/gi,
+      ],
+      minExpected: 1000
+    },
+  };
+
+  const config = currencyPatterns[expectedCurrency] || currencyPatterns['USD'];
+  const candidates: number[] = [];
+  
+  for (const pattern of config.patterns) {
+    const matches = html.matchAll(pattern);
+    for (const match of matches) {
+      const priceStr = match[1].replace(/[,\s]/g, '').replace(',', '.');
+      const price = parseFloat(priceStr);
+      // Use stricter minimum price validation
+      if (price >= config.minExpected && isValidPrice(price, expectedCurrency)) {
+        candidates.push(price);
+      }
+    }
+  }
+
+  // If we have candidates, return most common one
+  if (candidates.length > 0) {
+    const priceCounts = new Map<number, number>();
+    for (const p of candidates) {
+      priceCounts.set(p, (priceCounts.get(p) || 0) + 1);
+    }
+    const sorted = Array.from(priceCounts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+    console.log(`Pattern price (most common): ${sorted[0][0]}`);
+    return sorted[0][0];
+  }
+
+  // Last resort: look for price in the markdown content with context
+  const priceInContextPatterns = [
+    /(?:price|cost|buy|add to cart)[^$€£¥]*(?:\$|€|£|¥|C\$|CA\$|A\$)\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/gi,
+    /(\d{1,3}(?:,\d{3})*\.?\d{0,2})\s*(?:CAD|USD|GBP|EUR|AUD)/gi,
+  ];
+
+  for (const pattern of priceInContextPatterns) {
+    const matches = markdown.matchAll(pattern);
+    for (const match of matches) {
+      const priceStr = match[1].replace(/,/g, '');
+      const price = parseFloat(priceStr);
+      if (price >= config.minExpected && isValidPrice(price, expectedCurrency)) {
+        console.log(`Markdown context price: ${price}`);
+        return price;
+      }
+    }
+  }
+
+  return null;
+}
+
+function extractFromJsonLd(html: string): number | null {
+  const jsonLdMatch = html.match(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+  if (!jsonLdMatch) return null;
+
+  for (const match of jsonLdMatch) {
+    try {
+      const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
+      const jsonData = JSON.parse(jsonContent);
+      
+      // Handle array of schemas
+      const schemas = Array.isArray(jsonData) ? jsonData : [jsonData];
+      
+      for (const schema of schemas) {
+        if (schema['@type'] === 'Product' && schema.offers) {
+          const offers = Array.isArray(schema.offers) ? schema.offers[0] : schema.offers;
+          if (offers.price) {
+            const price = parseFloat(String(offers.price).replace(/[^0-9.]/g, ''));
+            if (!isNaN(price) && price > 0) {
+              return price;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Continue to next JSON-LD block
+    }
+  }
+  return null;
+}
+
+function extractFromMetaTags(html: string): number | null {
+  const ogPriceMatch = html.match(/<meta[^>]*property="product:price:amount"[^>]*content="([^"]+)"/i) ||
+                       html.match(/<meta[^>]*content="([^"]+)"[^>]*property="product:price:amount"/i);
+  if (ogPriceMatch) {
+    const price = parseFloat(ogPriceMatch[1].replace(/[^0-9.]/g, ''));
+    if (!isNaN(price) && price > 0) {
+      return price;
+    }
+  }
+  return null;
+}
+
+function extractShopifyPrice(html: string): number | null {
+  // Shopify stores often have price in data attributes or JSON
+  const patterns = [
+    /data-product-price="(\d+)"/i, // Often in cents
+    /"price":\s*(\d+)/i, // JSON price in cents
+    /data-price="(\d+\.?\d*)"/i,
+    /"current_price":\s*(\d+)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match) {
+      let price = parseFloat(match[1]);
+      // Shopify often stores prices in cents
+      if (price > 10000) price = price / 100;
+      if (price > 0 && price < 10000) {
+        return price;
+      }
+    }
+  }
+  return null;
+}
+
+function isValidPrice(price: number, currency: string): boolean {
+  if (isNaN(price) || price <= 0) return false;
+  
+  // Currency-specific validation ranges
+  const ranges: Record<string, [number, number]> = {
+    'USD': [1, 500],
+    'CAD': [1, 700],
+    'GBP': [1, 400],
+    'EUR': [1, 500],
+    'AUD': [1, 800],
+    'JPY': [100, 100000],
+  };
+  
+  const [min, max] = ranges[currency] || [1, 10000];
+  return price >= min && price <= max;
 }
 
 // Try Shopify JSON API
@@ -205,63 +486,12 @@ async function scrapeFromHtml(url: string, expectedCurrency: string): Promise<{ 
       return null;
     }
     
-    // Try to find price in JSON-LD
-    const jsonLdMatch = html.match(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
-    if (jsonLdMatch) {
-      for (const match of jsonLdMatch) {
-        try {
-          const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
-          const jsonData = JSON.parse(jsonContent);
-          
-          // Check for Product schema
-          if (jsonData['@type'] === 'Product' && jsonData.offers) {
-            const offers = Array.isArray(jsonData.offers) ? jsonData.offers[0] : jsonData.offers;
-            if (offers.price) {
-              const price = parseFloat(offers.price);
-              if (!isNaN(price) && price > 0) {
-                console.log(`JSON-LD price found: ${price}`);
-                return {
-                  price,
-                  currency: offers.priceCurrency || expectedCurrency,
-                  available: offers.availability?.includes('InStock') ?? true,
-                };
-              }
-            }
-          }
-        } catch (e) {
-          // Continue to next JSON-LD block
-        }
-      }
-    }
+    const price = extractPriceFromContent(html, '', expectedCurrency);
     
-    // Try to find price in meta tags
-    const ogPriceMatch = html.match(/<meta[^>]*property="product:price:amount"[^>]*content="([^"]+)"/i);
-    if (ogPriceMatch) {
-      const price = parseFloat(ogPriceMatch[1]);
-      if (!isNaN(price) && price > 0) {
-        console.log(`OG meta price found: ${price}`);
-        return { price, currency: expectedCurrency, available: true };
-      }
-    }
-    
-    // Try common price patterns in HTML
-    const pricePatterns = [
-      /data-product-price="(\d+)"/, // Shopify stores often use cents
-      /"price":\s*"?(\d+\.?\d*)"?/, // JSON in HTML
-      /class="[^"]*price[^"]*"[^>]*>[\s\S]*?[$€£¥C]?\s*(\d+\.?\d+)/i,
-    ];
-    
-    for (const pattern of pricePatterns) {
-      const match = html.match(pattern);
-      if (match) {
-        let price = parseFloat(match[1]);
-        // If it looks like cents (very high number), convert
-        if (price > 10000) price = price / 100;
-        if (!isNaN(price) && price > 0 && price < 10000) {
-          console.log(`HTML pattern price found: ${price}`);
-          return { price, currency: expectedCurrency, available: true };
-        }
-      }
+    if (price) {
+      const available = !html.toLowerCase().includes('out of stock') && 
+                       !html.toLowerCase().includes('sold out');
+      return { price, currency: expectedCurrency, available };
     }
     
     console.log('No price found in HTML');
@@ -285,16 +515,18 @@ async function scrapeRegionalPricesForFilament(
   const urls: Record<string, string> = {};
   const errors: string[] = [];
   
-  const config = BRAND_REGIONAL_STORES[filament.vendor];
-  if (!config) {
+  const regionConfig = BRAND_REGIONAL_STORES[filament.vendor];
+  if (!regionConfig) {
     errors.push(`No regional config for vendor: ${filament.vendor}`);
     return { prices, urls, errors };
   }
+
+  const scrapeConfig = BRAND_SCRAPE_CONFIG[filament.vendor] || { useFirecrawl: false, waitFor: 0 };
   
   for (const region of regions) {
     try {
-      const regionConfig = config.regions[region];
-      if (!regionConfig) {
+      const regionData = regionConfig.regions[region];
+      if (!regionData) {
         console.log(`Region ${region} not supported for ${filament.vendor}`);
         continue;
       }
@@ -311,12 +543,33 @@ async function scrapeRegionalPricesForFilament(
       // Always store the transformed regional URL (not the final redirect)
       urls[region] = regionalUrl;
       
-      // Try Shopify JSON first
-      let result = await tryShopifyJson(regionalUrl, regionConfig.currency);
+      // Get alternate URLs to try
+      const urlsToTry = getAlternateUrls(regionalUrl);
+      let result: { price: number; currency: string; available: boolean } | null = null;
       
-      // Fallback to HTML scraping
-      if (!result) {
-        result = await scrapeFromHtml(regionalUrl, regionConfig.currency);
+      for (const urlToTry of urlsToTry) {
+        console.log(`Trying URL: ${urlToTry}`);
+        
+        // Try Firecrawl first for JS-rendered brands
+        if (scrapeConfig.useFirecrawl && !result) {
+          result = await scrapeWithFirecrawl(urlToTry, regionData.currency, scrapeConfig.waitFor);
+        }
+        
+        // Fallback to Shopify JSON
+        if (!result) {
+          result = await tryShopifyJson(urlToTry, regionData.currency);
+        }
+        
+        // Fallback to HTML scraping
+        if (!result) {
+          result = await scrapeFromHtml(urlToTry, regionData.currency);
+        }
+        
+        if (result) {
+          // Update URL to the one that worked
+          urls[region] = urlToTry;
+          break;
+        }
       }
       
       if (result) {
@@ -504,11 +757,13 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
-  } catch (error) {
-    console.error('Error:', error);
+  } catch (e) {
+    console.error('Edge function error:', e);
     return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ 
+        success: false, 
+        error: e instanceof Error ? e.message : 'Unknown error' 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
