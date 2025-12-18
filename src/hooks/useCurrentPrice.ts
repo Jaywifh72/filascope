@@ -27,7 +27,8 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 export function useCurrentPrice(
   productUrl: string | null | undefined,
-  fallbackPrice: number | null
+  fallbackPrice: number | null,
+  fallbackUrl?: string | null // Original US URL to try if regional URL fails
 ): CurrentPriceResult {
   const { currency } = useCurrency();
   const [state, setState] = useState<CurrentPriceResult>({
@@ -79,13 +80,27 @@ export function useCurrentPrice(
       return;
     }
 
+    const fetchPriceFromUrl = async (url: string): Promise<{ data: any; error: any }> => {
+      return await supabase.functions.invoke('get-current-price', {
+        body: { productUrl: url, currency },
+      });
+    };
+
     const fetchCurrentPrice = async () => {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
       try {
-        const { data, error } = await supabase.functions.invoke('get-current-price', {
-          body: { productUrl, currency },
-        });
+        // First try the regional URL
+        let { data, error } = await fetchPriceFromUrl(productUrl);
+
+        // If we got a 404 error and have a fallback URL, try the fallback
+        const is404Error = data?.error?.includes('404') || data?.error?.includes('HTTP 404');
+        if (is404Error && fallbackUrl && fallbackUrl !== productUrl) {
+          console.log(`Regional URL returned 404, trying fallback URL: ${fallbackUrl}`);
+          const fallbackResult = await fetchPriceFromUrl(fallbackUrl);
+          data = fallbackResult.data;
+          error = fallbackResult.error;
+        }
 
         if (error) {
           console.error('Error fetching current price:', error);
@@ -145,7 +160,7 @@ export function useCurrentPrice(
     };
 
     fetchCurrentPrice();
-  }, [productUrl, currency, fallbackPrice]);
+  }, [productUrl, currency, fallbackPrice, fallbackUrl]);
 
   return state;
 }

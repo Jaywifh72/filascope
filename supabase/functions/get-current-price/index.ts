@@ -127,7 +127,28 @@ function detectCurrencyFromUrl(url: string): string {
   return 'USD';
 }
 
-// Fetch price from Shopify JSON API
+// Extract the original US URL from a regional URL
+function extractOriginalUrl(regionalUrl: string): string | null {
+  try {
+    const url = new URL(regionalUrl);
+    const hostParts = url.hostname.split('.');
+    
+    // Check for regional subdomains like ca.store.bambulab.com, uk.store.bambulab.com, etc.
+    const regionalSubdomains = ['ca', 'uk', 'eu', 'au', 'jp', 'de', 'fr'];
+    if (regionalSubdomains.includes(hostParts[0].toLowerCase())) {
+      // Replace regional subdomain with 'us' or remove it
+      hostParts[0] = 'us';
+      url.hostname = hostParts.join('.');
+      return url.toString();
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Fetch price from Shopify JSON API with fallback support
 async function fetchShopifyPrice(productUrl: string, preferredCurrency: string): Promise<PriceResponse> {
   const jsonUrl = getShopifyJsonUrl(productUrl);
   console.log(`Fetching Shopify JSON from: ${jsonUrl}`);
@@ -150,7 +171,22 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
       headers['Accept-Language'] = 'en-AU';
     }
     
-    const response = await fetch(jsonUrl, { headers });
+    let response = await fetch(jsonUrl, { headers });
+    
+    // If we get a 404, try the fallback US URL
+    if (response.status === 404) {
+      const fallbackUrl = extractOriginalUrl(productUrl);
+      if (fallbackUrl) {
+        console.log(`Regional URL returned 404, trying fallback: ${fallbackUrl}`);
+        const fallbackJsonUrl = getShopifyJsonUrl(fallbackUrl);
+        response = await fetch(fallbackJsonUrl, { headers });
+        
+        // If fallback works, log it but note the currency may be USD
+        if (response.ok) {
+          console.log(`Fallback URL succeeded, note: price may be in USD`);
+        }
+      }
+    }
     
     if (!response.ok) {
       console.error(`Shopify fetch failed: ${response.status} ${response.statusText}`);
