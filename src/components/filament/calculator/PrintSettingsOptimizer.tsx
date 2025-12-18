@@ -11,13 +11,13 @@ interface PrintSettingsOptimizerProps {
     name: string;
     recommendedSettings: MaterialRecommendedSettings;
   };
-  printers: PrinterProfile[];
+  printers?: PrinterProfile[];
   onCopySettings?: (settings: PrintSettingsOutput) => void;
 }
 
 export const PrintSettingsOptimizer: React.FC<PrintSettingsOptimizerProps> = ({
   material,
-  printers,
+  printers = [],
   onCopySettings
 }) => {
   const [selectedPrinterId, setSelectedPrinterId] = useState<string>('');
