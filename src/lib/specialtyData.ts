@@ -6,6 +6,21 @@ export interface SpecialtyTool {
   pricingModel: 'free' | 'freemium' | 'one-time' | 'subscription';
   website: string;
   
+  // Tier designation for 2-tier card system
+  tier: 'featured' | 'standard';
+  
+  // Standout feature for card display
+  standoutFeature: {
+    title: string;
+    description: string;
+  };
+  
+  // Best for context
+  bestFor: string;
+  
+  // Key ratings to display on cards (top 2)
+  keyRatings: ('easeOfUse' | 'featureDepth' | 'valueForMoney' | 'communitySupport' | 'printFocus')[];
+  
   // Matrix ratings (1-5)
   ratings: {
     easeOfUse: number;
@@ -39,6 +54,13 @@ export const specialtyTools: SpecialtyTool[] = [
     category: 'ai-generation',
     pricingModel: 'freemium',
     website: 'https://meshy.ai',
+    tier: 'featured',
+    standoutFeature: {
+      title: 'Text-to-3D AI Generation',
+      description: 'Create print-ready 3D models from text descriptions or images using cutting-edge AI in under a minute'
+    },
+    bestFor: 'Makers who want custom models but lack CAD skills, and creators needing rapid prototyping',
+    keyRatings: ['easeOfUse', 'featureDepth'],
     ratings: {
       easeOfUse: 5,
       featureDepth: 4,
@@ -80,6 +102,13 @@ Furthermore, free users are limited to the queue, meaning during peak times, the
     category: 'filament-art',
     pricingModel: 'one-time',
     website: 'https://hueforge.com',
+    tier: 'featured',
+    standoutFeature: {
+      title: 'Photo-to-3D Lithophanes',
+      description: 'Transform any image into stunning multi-color lithophane art using filament layering and transmission distance science'
+    },
+    bestFor: 'Creative makers wanting unique artistic prints, personalized gifts, and photo reproductions',
+    keyRatings: ['featureDepth', 'valueForMoney'],
     ratings: {
       easeOfUse: 4,
       featureDepth: 5,
@@ -120,6 +149,13 @@ This has spawned a secondary economy. The "HueForge" tag has become a dominant c
     category: 'farm-management',
     pricingModel: 'freemium',
     website: 'https://simplyprint.io',
+    tier: 'standard',
+    standoutFeature: {
+      title: 'Multi-Printer Fleet Management',
+      description: 'Manage multiple printers from one dashboard with queue management, analytics, and cloud slicing'
+    },
+    bestFor: 'Print farms, makerspaces, and makers with multiple machines needing centralized control',
+    keyRatings: ['featureDepth', 'printFocus'],
     ratings: {
       easeOfUse: 4,
       featureDepth: 5,
@@ -160,6 +196,13 @@ A critical specialty of SimplyPrint is its hardware agnosticism. In a typical pr
     category: 'calibration',
     pricingModel: 'free',
     website: 'https://ellis3dp.com/Print-Tuning-Guide/',
+    tier: 'featured',
+    standoutFeature: {
+      title: 'Interactive Calibration Patterns',
+      description: 'Generate custom G-code test patterns for Pressure Advance and Max Volumetric Flow tuning with scientific methodology'
+    },
+    bestFor: 'Speed-focused printers, Klipper/Voron users, and print quality perfectionists',
+    keyRatings: ['featureDepth', 'valueForMoney'],
     ratings: {
       easeOfUse: 3,
       featureDepth: 5,
@@ -196,6 +239,13 @@ The site's influence is so profound that its methodologies (like the "Pattern Me
     category: 'cad',
     pricingModel: 'freemium',
     website: 'https://www.onshape.com',
+    tier: 'standard',
+    standoutFeature: {
+      title: 'Cloud-Native Parametric CAD',
+      description: 'Professional-grade CAD that runs entirely in your browser with real-time collaboration and version control'
+    },
+    bestFor: 'Designers who need real CAD without expensive software, teams needing collaboration',
+    keyRatings: ['featureDepth', 'valueForMoney'],
     ratings: {
       easeOfUse: 3,
       featureDepth: 5,
@@ -204,33 +254,43 @@ The site's influence is so profound that its methodologies (like the "Pattern Me
       printFocus: 3
     },
     pricing: [
-      { tier: 'Free', price: '$0', features: ['Full CAD functionality', 'Version control', 'Multi-part assemblies', 'Public documents only'] },
-      { tier: 'Standard', price: '$1,500/year', features: ['Private documents', 'Priority support', 'Commercial use'] },
-      { tier: 'Professional', price: '$2,500/year', features: ['Advanced simulation', 'Release management', 'Enterprise features'] }
+      { tier: 'Free', price: '$0', features: ['Full CAD features', 'Public documents only', '5 active documents'] },
+      { tier: 'Standard', price: '$1,500/yr', features: ['Private documents', 'Unlimited storage', 'Priority support'] },
+      { tier: 'Professional', price: '$2,500/yr', features: ['Advanced simulation', 'Release management', 'API access'] }
     ],
-    overview: `Onshape has disrupted the computer-aided design (CAD) market by moving the entire engineering workflow to the browser. In an industry dominated by heavy, desktop-bound legacy software like SolidWorks, Onshape's cloud-native architecture eliminates the concept of "files" and "installations." For the 3D printing community, Onshape is the "Specialty Site" of choice for engineering-grade design because it offers a robust Free Tier that includes powerful parametric tools, provided the user creates public, open-source models.`,
-    keyFeatures: [
-      'Browser-based professional CAD',
-      'Git-like version control for designs',
-      'Real-time collaboration',
-      'Multi-part assemblies',
-      'Works on Linux, Chromebooks, tablets',
-      'Parametric modeling'
-    ],
-    technicalDetails: `Onshape's specialty lies in its database-driven architecture. Traditional CAD suffers from file management issues—users confuse version_1.stl with version_final.stl. Onshape utilizes a version control system similar to Git for software development. Users can "branch" a design to test a new tolerance for a 3D printed hinge, and if it works, "merge" it back into the main design. If it fails, they simply discard the branch. This non-destructive workflow is ideal for the iterative nature of 3D printing prototyping.
+    overview: `Onshape represents a radical rethinking of the CAD industry's business model. For decades, professional parametric modeling was synonymous with expensive, annually-licensed software installed on powerful workstations (SolidWorks, Inventor, Fusion 360). Onshape, founded by former SolidWorks executives, delivered a full-fledged parametric CAD kernel that runs entirely in a web browser.
 
-Furthermore, because it runs in a browser, it is accessible on Linux, Chromebooks, and tablets—devices that historically could not run professional CAD. This makes it the standard tool for educational robotics teams and open-source hardware developers.`,
-    economicModel: `The cost of Onshape's free tier is privacy. All documents must be public—anyone in the Onshape community can view, copy, and export your data. This "copyleft" approach has created a massive library of engineering data. However, for users wishing to design patentable products, the upgrade to the "Standard" plan ($1,500/year) is a steep cliff, driving a clear wedge between the hobbyist/open-source maker and the commercial engineer.`,
-    competitivePosition: `Onshape competes with Fusion 360 (which also has a free tier but with desktop software), FreeCAD (fully free but steeper learning curve), and SolidWorks (industry standard but expensive). Onshape's browser-based approach and version control are unique differentiators.`,
-    futureOutlook: `As more engineering moves to the cloud and remote collaboration becomes standard, Onshape's architecture positions it well. The platform may expand into integrated manufacturing workflows, directly connecting CAD designs to print farms or CNC machines.`
+For the 3D printing community, Onshape offers several strategic advantages. First, platform independence: a user can design on a Mac, a Chromebook, or even a tablet. Second, native version control: every edit is saved automatically, and the entire history can be branched and merged like software code. Third, real-time collaboration: multiple users can edit the same part simultaneously.`,
+    keyFeatures: [
+      'Browser-based parametric modeling',
+      'Real-time multi-user collaboration',
+      'Git-like version control for designs',
+      'Native simulation and rendering',
+      'Direct STL/STEP export for printing'
+    ],
+    technicalDetails: `Onshape's technical architecture is built on a streaming model where the geometry kernel runs on cloud servers and only the visual representation is sent to the browser. This means a low-powered laptop can manipulate complex assemblies that would choke a local installation of SolidWorks.
+
+**Free Tier Limitations:** The primary catch of the free tier is that all documents must be public. This makes it unsuitable for proprietary commercial work, but perfect for the open-source ethos of the maker community. For educators, this is a non-issue, and for hobbyists designing personal projects, public visibility is often acceptable.
+
+**FeatureScript:** Advanced users can extend Onshape's capabilities with FeatureScript, a proprietary scripting language for creating custom features and tools.`,
+    economicModel: `The free tier acts as a powerful lead-generation funnel. Students who learn Onshape in educational settings become advocates for adopting the platform in their future professional roles. The paid tiers are priced competitively against SolidWorks (~$4,000/year) and Fusion 360 (~$500/year), targeting the professional market.`,
+    competitivePosition: `Onshape competes directly with Fusion 360 (Autodesk) and SolidWorks (Dassault). Its browser-first approach is both a strength (accessibility) and weakness (requires internet). For 3D printing hobbyists, Fusion 360's free tier is often preferred due to better offline support and direct slicer integration.`,
+    futureOutlook: `As 5G and improved internet infrastructure spread, Onshape's cloud-native approach becomes more viable. The platform may integrate AI-assisted design features and deeper CAM (computer-aided manufacturing) capabilities.`
   },
   {
     id: 'thangs',
     name: 'Thangs',
-    tagline: 'The Geometric Search Engine',
+    tagline: 'The Search Engine for Physical Objects',
     category: 'repository',
     pricingModel: 'freemium',
     website: 'https://thangs.com',
+    tier: 'standard',
+    standoutFeature: {
+      title: 'Geometric AI Model Search',
+      description: 'Search for 3D models by shape using AI, not just keywords, across 30+ sources and millions of models'
+    },
+    bestFor: 'Finding specific models when you know what it looks like but not its name',
+    keyRatings: ['easeOfUse', 'featureDepth'],
     ratings: {
       easeOfUse: 5,
       featureDepth: 4,
@@ -239,37 +299,43 @@ Furthermore, because it runs in a browser, it is accessible on Linux, Chromebook
       printFocus: 5
     },
     pricing: [
-      { tier: 'Free', price: '$0', features: ['Geometric search', 'Model downloads', 'Basic Sync'] },
-      { tier: 'Thangs Bundle', price: '$14.99/mo', features: ['Access to premium models', 'Hundreds of creators', 'Netflix-style access'] },
-      { tier: 'Creator', price: 'Revenue share', features: ['50% of subscription revenue', 'Based on download volume', 'Premium model hosting'] }
+      { tier: 'Free', price: '$0', features: ['Unlimited downloads', 'Geometric search', 'Basic hosting'] },
+      { tier: 'Pro', price: '$9.99/mo', features: ['Private models', 'Advanced analytics', 'Priority support'] },
+      { tier: 'Teams', price: 'Custom', features: ['Team collaboration', 'Enterprise features', 'API access'] }
     ],
-    overview: `Traditional 3D model repositories like Thingiverse rely on textual metadata. If a user uploads a model of a specific gear but names it "Project_Gear_Final," a search for "involute gear" might fail to find it. Thangs helps 3D printer users by implementing a geometric search engine. Using deep learning algorithms, Thangs analyzes the topological shape of 3D models. Users can upload a generic STL file of a bracket, and Thangs will search its index of millions of models to find parts that are geometrically similar, regardless of their filename.
+    overview: `Thangs enters the repository market with a technological differentiator: Geometric Deep Learning. While Thingiverse and Printables rely on text-based tags and titles for search, Thangs trains neural networks to understand the actual 3D shape of objects. Users can upload an STL file and ask "find models similar to this," and the AI returns geometrically related results regardless of how they were named or tagged.
 
-This "visual search" capability is a massive utility for reverse engineering. It allows users to find the original source of a remix or locate compatible parts based on shape alone.`,
+This solves a significant pain point. How many times has a user searched for a "phone stand" only to wade through hundreds of irrelevant results because designers use inconsistent naming conventions? Thangs' geometric search bypasses this linguistic ambiguity.`,
     keyFeatures: [
-      'Geometric deep learning search',
-      'Visual/shape-based model discovery',
-      'Thangs Sync for local file backup',
-      'Version control for local files',
-      'Thangs Bundle subscription model',
-      'Creator revenue sharing (50%)'
+      'AI-powered geometric search',
+      'Multi-source aggregation (30+ repositories)',
+      'Shape similarity matching',
+      'Desktop sync application',
+      'Direct slicer integration'
     ],
-    technicalDetails: `Thangs attempts to solve the "digital hoarding" problem common to 3D printing enthusiasts who have thousands of STLs scattered across local hard drives. Thangs Sync is a client utility that automatically backs up and version-controls local 3D files to the cloud. It provides a history of changes, allowing users to revert to previous versions of a model if an edit makes it unprintable.
+    technicalDetails: `Thangs' core technology involves converting 3D meshes into high-dimensional vector embeddings using machine learning. When a user uploads a model, the system calculates its geometric "fingerprint" and compares it against millions of pre-indexed models. This allows for discovery that text search cannot achieve.
 
-The geometric search uses neural networks trained on 3D topology to create "embeddings"—mathematical representations of shape. When you search, your query (whether text or an uploaded model) is converted to an embedding and matched against the database.`,
-    economicModel: `Thangs has aggressively innovated in monetization with its Thangs Bundle. Recognizing "subscription fatigue" where users cannot afford to support 20 different designers on Patreon, Thangs offers a flat subscription ($14.99/month) that grants access to premium models from hundreds of creators.
+**Multi-Source Aggregation:** Thangs indexes models from Thingiverse, MyMiniFactory, Cults3D, and dozens of other sources. This positions it as a "Google for 3D models"—a single entry point to the fragmented ecosystem.
 
-The platform employs a revenue-sharing model where 50% of the subscription revenue is distributed to the designers based on download volume. This aligns incentives: designers are paid to create high-quality, printable models that people actually want to use, rather than just generating engagement. For the end-user, it provides a "Netflix-style" access to high-quality files, moving the value proposition away from individual file purchases.`,
-    competitivePosition: `Thangs competes with Thingiverse (legacy, declining), Printables (Prusa-backed, strong community), MyMiniFactory (premium focus), and Cults3D (European market). The geometric search is a unique differentiator that no competitor has replicated at scale.`,
-    futureOutlook: `As AI-generated 3D models flood the market, Thangs' geometric search becomes more valuable for finding quality, human-designed models. The platform may expand into AI-assisted model recommendations and automated remix detection.`
+**Desktop App:** The Thangs desktop application can monitor local folders and automatically sync models to the cloud, providing backup and organization features.`,
+    economicModel: `Thangs monetizes through its Pro tier for creators wanting private hosting and analytics, while the free tier is generous enough to attract users. The company likely monetizes aggregate data about search trends and user behavior, valuable for understanding the 3D printing market.`,
+    competitivePosition: `Thangs competes with established repositories on discoverability rather than library size. Its geometric search is a genuine technological moat. However, adoption requires users to change their search habits, which is a significant behavioral challenge.`,
+    futureOutlook: `As AI continues to advance, Thangs could expand into automated model categorization, printability analysis, and even text-to-search ("find me a vase with a spiral pattern"). The geometric understanding could also power tools for detecting intellectual property violations.`
   },
   {
     id: 'octoeverywhere',
     name: 'OctoEverywhere',
-    tagline: 'Secure Remote Tunneling & AI Failure Detection',
+    tagline: 'Universal Remote Access for Any Printer',
     category: 'remote-control',
     pricingModel: 'freemium',
     website: 'https://octoeverywhere.com',
+    tier: 'featured',
+    standoutFeature: {
+      title: 'Universal Remote Monitoring',
+      description: 'Monitor, control, and get AI failure detection for OctoPrint, Klipper, or Bambu printers from anywhere'
+    },
+    bestFor: 'Anyone who wants to monitor prints remotely with peace of mind and AI-powered failure detection',
+    keyRatings: ['valueForMoney', 'printFocus'],
     ratings: {
       easeOfUse: 4,
       featureDepth: 4,
@@ -278,38 +344,43 @@ The platform employs a revenue-sharing model where 50% of the subscription reven
       printFocus: 5
     },
     pricing: [
-      { tier: 'Free', price: '$0', features: ['3 printers', 'Unlimited AI detection', '20-second webcam streams'] },
-      { tier: 'Elite', price: '$11.99/mo', features: ['10 printers', 'Unlimited webcam streaming', '5GB file transfers'] }
+      { tier: 'Free', price: '$0', features: ['Remote access', 'Basic monitoring', 'Community support'] },
+      { tier: 'Supporter', price: '$4/mo', features: ['Priority access', 'AI failure detection', 'Advanced features'] },
+      { tier: 'Pro', price: '$8/mo', features: ['Multiple printers', 'Full AI suite', 'API access'] }
     ],
-    overview: `As 3D printers have become network-connected appliances, they have also become security vulnerabilities. Early remote management solutions often required users to "port forward" their routers, exposing their local networks to the open internet—a practice that led to hackers taking control of printers. OctoEverywhere is a specialty utility that solves this by providing secure, encrypted tunneling. It connects a local printer instance (running OctoPrint or Klipper) to the cloud via a secure socket, allowing remote control from anywhere in the world without compromising network security.`,
+    overview: `OctoEverywhere solves one of 3D printing's most annoying problems: secure remote access. While OctoPrint provides excellent local printer control, exposing it to the internet safely requires technical knowledge of port forwarding, dynamic DNS, and SSL certificates. OctoEverywhere provides a zero-configuration tunnel that securely connects your printer to a cloud relay.
+
+Beyond basic remote access, OctoEverywhere has invested heavily in AI-powered failure detection. The "Gadget" system monitors webcam feeds and uses computer vision to detect common failure modes like spaghetti (failed adhesion), layer shifts, and blob formations.`,
     keyFeatures: [
-      'Secure encrypted tunneling (no port forwarding)',
-      'Gadget AI spaghetti detection',
-      'Layer shift detection',
-      'Adhesion loss detection',
-      'Automatic print pausing on failure',
-      'Multi-platform notifications (SMS, Discord, Email)'
+      'Secure remote access without port forwarding',
+      'AI-powered print failure detection (Gadget)',
+      'Works with OctoPrint, Klipper, and Bambu Lab',
+      'Mobile apps for iOS and Android',
+      'Smart notifications and alerts'
     ],
-    technicalDetails: `The "killer app" within OctoEverywhere is its Gadget AI system. This computer vision utility monitors the printer's webcam feed in real-time to detect failures.
+    technicalDetails: `OctoEverywhere creates an encrypted tunnel between your local OctoPrint/Klipper instance and their cloud servers. When you access your printer remotely, traffic is securely relayed without exposing your home network. This is similar to services like ngrok or Cloudflare Tunnel but optimized specifically for 3D printing workflows.
 
-**Spaghetti Detection:** Identifying when the print has detached from the bed and is extruding plastic into thin air.
+**AI Failure Detection:** The Gadget AI analyzes webcam frames in real-time, comparing them against trained models of failure modes. When detected, it can automatically pause the print and send notifications. This prevents the nightmare scenario of returning home to a failed print that wasted hours of time and filament.
 
-**Layer Shift Detection:** Noticing if the print head has lost its position, causing the geometry to be offset.
-
-**Adhesion Loss:** Detecting warping corners before the print fails completely.
-
-Upon detecting a failure, the system can automatically pause the printer and trigger notifications via SMS, Discord, or Email. This utility saves users money (by stopping wasted filament) and increases safety (by preventing the heater block from being encased in a "blob of death").`,
-    economicModel: `OctoEverywhere offers a robust free tier, making safety accessible to all. The free tier includes unlimited AI failure detection but limits webcam streaming to 20 seconds at a time to save bandwidth. The Elite tier unlocks unlimited streaming and larger file transfers, targeting power users who monitor prints remotely throughout the day.`,
-    competitivePosition: `OctoEverywhere competes with Obico (formerly The Spaghetti Detective), ngrok (generic tunneling), and manufacturer clouds. Its strength is the combination of secure tunneling AND AI detection in one package, with a generous free tier.`,
-    futureOutlook: `As AI vision models improve, OctoEverywhere could expand into quality prediction (detecting issues before they become failures) and material usage optimization. Integration with newer printer platforms beyond OctoPrint/Klipper is likely.`
+**Bambu Integration:** Recently expanded beyond OctoPrint to support Bambu Lab printers, broadening its market significantly.`,
+    economicModel: `The freemium model provides basic remote access free, with AI features and priority access behind the paid tiers. Pricing is aggressive compared to alternatives, making it accessible to hobbyists while providing enough value to justify subscription for serious users.`,
+    competitivePosition: `Competes with Obico (formerly The Spaghetti Detective) and native cloud solutions from printer manufacturers. Its strength is broad compatibility across multiple printer ecosystems and competitive pricing.`,
+    futureOutlook: `As more printers ship with built-in cloud connectivity, OctoEverywhere's value proposition may shift toward AI features and multi-printer management rather than basic remote access.`
   },
   {
     id: 'makerworld',
     name: 'MakerWorld / MakerLab',
-    tagline: 'The Parametric Ecosystem',
+    tagline: 'The Integrated Bambu Ecosystem',
     category: 'repository',
     pricingModel: 'free',
     website: 'https://makerworld.com',
+    tier: 'standard',
+    standoutFeature: {
+      title: 'Bambu-Optimized Print Profiles',
+      description: 'One-click 3MF files with pre-configured settings for Bambu printers, plus AI-powered model generation'
+    },
+    bestFor: 'Bambu Lab printer owners wanting seamless downloads and optimized print settings',
+    keyRatings: ['easeOfUse', 'printFocus'],
     ratings: {
       easeOfUse: 5,
       featureDepth: 4,
@@ -318,35 +389,41 @@ Upon detecting a failure, the system can automatically pause the printer and tri
       printFocus: 5
     },
     pricing: [
-      { tier: 'Free', price: '$0', features: ['Full access', 'MakerLab tools', 'Direct printer integration', 'Optimized for Bambu Lab'] }
+      { tier: 'Free', price: '$0', features: ['Unlimited downloads', 'Print profiles', 'Community features', 'MakerLab AI (credits)'] }
     ],
-    overview: `MakerWorld, launched by hardware giant Bambu Lab, represents the trend of vertical integration. While it serves as a repository, its "Specialty" status comes from MakerLab—a suite of browser-based parametric generators integrated directly into the printing workflow. Unlike standalone tools that generate an STL which must then be downloaded, sliced, and transferred, MakerLab tools can send sliced code directly to Bambu printers, creating a seamless "app-like" experience.`,
+    overview: `MakerWorld represents Bambu Lab's strategic move to create a vertically integrated ecosystem. Rather than relying on third-party repositories like Thingiverse, Bambu built its own platform optimized for its hardware. The key differentiator is native 3MF support with embedded print profiles—users can download a model and send it directly to their Bambu printer with optimal settings already configured.
+
+MakerLab, the AI-powered companion, allows users to generate 3D models from text prompts directly within the ecosystem. This creates a complete loop: ideate → generate → print without leaving the Bambu world.`,
     keyFeatures: [
-      'AI Scanner (photogrammetry to 3D)',
-      'Parametric Model Maker (boxes, gears, organizers)',
-      'Make My Sign (multi-color signage)',
-      'Direct integration with Bambu printers',
-      'One-click print from browser',
-      'AMS color mapping automation'
+      'Native 3MF files with embedded print profiles',
+      'Direct-to-printer integration',
+      'MakerLab AI model generation',
+      'Creator rewards program',
+      'Curated collections and challenges'
     ],
-    technicalDetails: `MakerLab includes specialized tools that abstract complex modeling tasks:
+    technicalDetails: `MakerWorld's technical advantage is the 3MF file format. Unlike STL (which only contains geometry), 3MF can embed print settings, materials, colors, and even support structures. When a Bambu user downloads a 3MF from MakerWorld, they're getting not just the shape but the exact settings the creator used.
 
-**AI Scanner:** A photogrammetry tool that converts video of an object into a printable 3D model using cloud processing. This competes directly with apps like Polycam but is optimized specifically for the constraints of FDM printing.
+**MakerLab Integration:** The AI model generation is powered by partnerships with AI providers, allowing text-to-3D generation. Credits are provided free to Bambu owners, making it accessible for experimentation.
 
-**Parametric Model Maker:** A tool for generating functional parts like boxes, gears, and organizers. Users input dimensions (e.g., "Length: 100mm", "Compartments: 4"), and the script generates the geometry in real-time. This replaces the need for OpenSCAD scripting for the average user.
-
-**Make My Sign:** A dedicated utility for multi-color signage. It automatically handles the layer swaps or multi-material mapping required to print text in a different color than the background, utilizing Bambu's AMS (Automatic Material System).`,
-    economicModel: `MakerWorld is free because it's a strategic asset for Bambu Lab. By creating the best repository experience for Bambu printers, they increase the value proposition of their hardware. The seamless workflow creates switching costs—users who invest in MakerWorld's ecosystem are less likely to switch to competing printer brands.`,
-    competitivePosition: `MakerWorld competes with Printables, Thangs, and Thingiverse as a repository, but its MakerLab tools are unique. The tight hardware integration is both a strength (seamless UX for Bambu users) and weakness (less useful for other printer brands).`,
-    futureOutlook: `As Bambu Lab expands its printer lineup, MakerWorld will likely add more specialized tools. The AI Scanner could evolve into full 3D scanning workflows, and parametric tools could expand to cover more use cases like cable management, enclosures, and functional parts.`
+**Creator Economy:** MakerWorld includes a points system that rewards popular designs, with points convertible to Bambu store credit. This incentivizes quality content creation.`,
+    economicModel: `MakerWorld is free to use, funded by Bambu Lab as a strategic asset to increase hardware sales. By making the Bambu ecosystem more valuable, it reduces the appeal of competitor printers. The creator rewards program also generates goodwill and quality content.`,
+    competitivePosition: `MakerWorld's "walled garden" approach is both strength and weakness. For Bambu owners, it's incredibly convenient. For non-Bambu users, it's largely irrelevant. This contrasts with platform-agnostic repositories like Printables or Thangs.`,
+    futureOutlook: `As Bambu's market share grows, MakerWorld may become one of the largest repositories by user activity. The integration with MakerLab positions it at the forefront of AI-assisted design workflows.`
   },
   {
     id: 'lithophanemaker',
     name: 'LithophaneMaker.com',
-    tagline: 'The Geometry of Light',
+    tagline: 'One-Click Image to Printable Art',
     category: 'mesh-tools',
     pricingModel: 'free',
     website: 'https://lithophanemaker.com',
+    tier: 'standard',
+    standoutFeature: {
+      title: 'One-Click Complex Lithophanes',
+      description: 'Turn photos into printable lithophanes with various shapes including globes, night lights, and curved panels'
+    },
+    bestFor: 'Simple lithophane creation for gifts and decorative items without learning complex software',
+    keyRatings: ['easeOfUse', 'valueForMoney'],
     ratings: {
       easeOfUse: 5,
       featureDepth: 4,
@@ -355,34 +432,41 @@ Upon detecting a failure, the system can automatically pause the printer and tri
       printFocus: 5
     },
     pricing: [
-      { tier: 'Free', price: '$0', features: ['All geometry generators', 'Client-side processing', 'Privacy-focused'] },
-      { tier: 'Kits', price: 'Varies', features: ['Physical components', 'Night light hardware', 'Matching brackets'] }
+      { tier: 'Free', price: '$0', features: ['All lithophane shapes', 'Basic customization', 'Immediate STL download'] }
     ],
-    overview: `LithophaneMaker.com is a prime example of a "single-purpose" specialty site that executes its niche better than generalist tools. While standard slicers can create flat lithophanes, LithophaneMaker specializes in complex, mathematically generated forms that are difficult to model manually, such as globes, curved night light shields, and ceiling fan pulls.
+    overview: `LithophaneMaker.com is a specialized web utility that converts 2D images into 3D lithophane models. A lithophane is a thin panel where the image appears when backlit—thicker areas are darker, thinner areas are brighter. It's a classic photographic technique dating back to the 1820s, now revived through 3D printing.
 
-The utility of the site lies in its "Interface Generation." When a user wants to make a lithophane night light, the site doesn't just generate the image panel; it generates the specific mounting bracket and clips required to attach that panel to standard, off-the-shelf night light hardware. This integration of the aesthetic (the image) with the mechanical (the clip) saves users hours of trial-and-error in CAD.`,
+The site's brilliance is its simplicity. Upload an image, select a shape (flat, curved, globe, lamp shade), adjust a few parameters, and download an STL ready for printing. No software installation, no learning curve, no cost.`,
     keyFeatures: [
-      'Globe lithophanes',
-      'Curved night light shields',
-      'Ceiling fan pulls',
-      'Integrated mounting brackets',
-      'Client-side image processing',
-      'Privacy-focused (no server storage)'
+      'Multiple lithophane shapes (flat, curved, globe, lamp)',
+      'Image-to-STL conversion in browser',
+      'Adjustable thickness and resolution',
+      'Night light and lamp shade templates',
+      'Completely free with no account required'
     ],
-    technicalDetails: `The site uses JavaScript-based image processing to convert photos into height-mapped 3D geometry. Unlike cloud services, the processing happens in your browser—images are not uploaded to a server. This is particularly important for personal family photos.
+    technicalDetails: `The site uses JavaScript-based image processing to analyze each pixel's brightness and map it to a corresponding thickness value. The resulting geometry is a height field that can be exported as STL.
 
-The mathematical generation of curved surfaces (spherical, cylindrical, conical) is handled through parametric equations that map 2D image coordinates to 3D surface positions while maintaining the correct grayscale-to-thickness relationship for the backlit effect.`,
-    economicModel: `In an era of data harvesting, LithophaneMaker stands out for its privacy-centric approach. The tool processes images largely client-side (in the browser), meaning personal family photos used for lithophanes are not stored permanently on a server. The economic model relies on the sale of physical kits (cords, bulbs) that match the generated STL files, creating a sustainable loop where the free software drives sales of the necessary hardware components.`,
-    competitivePosition: `LithophaneMaker competes with slicer-integrated lithophane modes (Cura, PrusaSlicer) and general-purpose tools like ItsLitho. Its strength is the focus on complex geometries (globes, night lights) with matching physical hardware kits.`,
-    futureOutlook: `The site may expand to include more lighting fixture types and potentially integrate with HueForge-style transmission distance data for multi-color lithophanes. LED integration guides and smart home connectivity could also be future additions.`
+**Shape Options:** Beyond flat panels, the site offers curved panels (for wrapping around cylinders), spherical "moon lamp" globes, and specialized night light housings with integrated bases.
+
+**Quality Settings:** Users can adjust the number of pixels converted, trading off file size against detail. For large prints, higher resolution is essential; for small items, lower resolution prints faster.`,
+    economicModel: `The site is entirely free, supported by donations and affiliate links to printing supplies. It represents the best of maker community generosity—a useful tool created and maintained for public benefit.`,
+    competitivePosition: `LithophaneMaker competes with similar generators (ItsLitho, 3DP Rocks) and with HueForge for image-based printing. Its advantage is zero friction—no accounts, no software, no cost.`,
+    futureOutlook: `The site may expand into more shapes (hexagonal tiles, multi-panel displays) and potentially integrate with AI image enhancement to improve source photo quality before conversion.`
   },
   {
     id: 'formware',
     name: 'Formware Online',
-    tagline: 'The Digital Repair Shop',
+    tagline: 'Browser-Based Mesh Surgery',
     category: 'mesh-tools',
     pricingModel: 'free',
-    website: 'https://formware.co/onlinetool',
+    website: 'https://formware.co/onlinemeshrepair',
+    tier: 'standard',
+    standoutFeature: {
+      title: 'Browser-Based Mesh Repair',
+      description: 'Fix broken STL files directly in your browser—repair holes, fix normals, and merge shells without installing software'
+    },
+    bestFor: 'Quick mesh fixes when downloaded models have errors blocking slicing',
+    keyRatings: ['easeOfUse', 'valueForMoney'],
     ratings: {
       easeOfUse: 5,
       featureDepth: 3,
@@ -391,29 +475,40 @@ The mathematical generation of curved surfaces (spherical, cylindrical, conical)
       printFocus: 5
     },
     pricing: [
-      { tier: 'Free Online', price: '$0', features: ['50MB file limit', '4-minute timeout', 'Basic mesh repair'] },
-      { tier: 'Formware Desktop', price: 'Paid', features: ['No file limits', 'Advanced repair', 'Full slicing suite'] }
+      { tier: 'Free', price: '$0', features: ['Basic mesh repair', 'Hole filling', 'Normal correction', 'STL export'] },
+      { tier: 'Desktop', price: '$149', features: ['Full feature set', 'Advanced repair', 'Batch processing', 'Support removal'] }
     ],
-    overview: `A pervasive problem in 3D printing is "non-manifold" geometry. Files generated by 3D scanners, game rips, or inexperienced CAD users often contain holes, inverted normals (where the software thinks the "inside" is the "outside"), or self-intersecting shells. If fed into a slicer, these files cause print failures. Formware Online provides a critical, free browser-based service to sanitize these files.`,
+    overview: `Formware's Online Mesh Repair tool is the emergency room for broken 3D files. When a downloaded STL refuses to slice due to non-manifold edges, inverted normals, or holes in the mesh, this browser-based utility can often fix it in seconds.
+
+The tool is a stripped-down version of Formware's desktop application, offered free as a lead-generation tool. For occasional use, the online version is sufficient; for regular mesh work, the desktop version offers more power.`,
     keyFeatures: [
-      'Automatic hole stitching',
-      'Normal repair (inside/outside)',
-      'Self-intersection fixing',
-      'Browser-based processing',
+      'Non-manifold edge repair',
+      'Hole detection and filling',
+      'Normal vector correction',
+      'Shell merging and separation',
       'No installation required'
     ],
-    technicalDetails: `Formware utilizes industrial-grade mesh repair algorithms (likely derivatives of Netfabb or similar logic) to automatically stitch holes and fix normals. It is a "black box" utility: users upload a broken file, and the server returns a fixed one.
+    technicalDetails: `The mesh repair algorithms identify topological errors that prevent proper slicing:
 
-**File Size Cap:** 50MB. This makes it unsuitable for high-resolution 3D scans or extremely complex art pieces.
+**Non-Manifold Edges:** Edges shared by more than two faces, which confuse slicer algorithms about which side is "inside" vs "outside."
 
-**Time Out:** 4 minutes. If the repair calculation exceeds this window, the process is terminated to preserve server resources.
+**Inverted Normals:** When face normals point inward instead of outward, causing slicers to misinterpret solid vs void.
 
-Despite these limits, for the vast majority of "broken" STLs found on the internet, Formware acts as the essential "Digital Repair Shop," bridging the gap between a corrupt file and a successful print.`,
-    economicModel: `The free online tool is designed to upsell Formware's paid desktop slicing software. By demonstrating the quality of their mesh repair algorithms for free, they build trust with potential customers who may need more advanced features.`,
-    competitivePosition: `Formware competes with Microsoft 3D Builder (free, Windows only), Meshmixer (discontinued but still used), Blender (powerful but complex), and Netfabb (expensive, professional). Formware's browser-based approach with no installation is a key differentiator for quick fixes.`,
-    futureOutlook: `As AI-generated 3D models become more common (and often have mesh issues), tools like Formware become more essential. The platform may integrate AI-powered repair that understands semantic geometry (e.g., knowing that a hole in a statue's arm is an error, not a feature).`
+**Holes:** Missing faces that create gaps in what should be a watertight shell.
+
+The online tool applies heuristic algorithms to automatically detect and fix these issues.`,
+    economicModel: `The free online tool serves as marketing for Formware's paid desktop software and SLA printing solutions. Users who encounter mesh issues frequently are converted to paying customers.`,
+    competitivePosition: `Competes with Meshmixer (discontinued), Microsoft 3D Builder (Windows only), and slicer-built-in repair tools. Its advantage is zero friction—works on any device with a browser.`,
+    futureOutlook: `As 3D model quality improves (better AI generation, better scan processing), the need for manual mesh repair may decrease. However, there will always be edge cases requiring surgical intervention.`
   }
 ];
+
+// Helper functions for tier filtering
+export const getFeaturedTools = (): SpecialtyTool[] => 
+  specialtyTools.filter(t => t.tier === 'featured');
+
+export const getStandardTools = (): SpecialtyTool[] => 
+  specialtyTools.filter(t => t.tier === 'standard');
 
 export const categoryLabels: Record<SpecialtyTool['category'], string> = {
   'ai-generation': 'AI Generation',
@@ -431,4 +526,24 @@ export const pricingLabels: Record<SpecialtyTool['pricingModel'], string> = {
   'freemium': 'Freemium',
   'one-time': 'One-Time',
   'subscription': 'Subscription'
+};
+
+// Category colors for visual styling
+export const categoryColors: Record<SpecialtyTool['category'], string> = {
+  'ai-generation': 'hsl(var(--chart-1))',
+  'filament-art': 'hsl(var(--chart-2))',
+  'farm-management': 'hsl(var(--chart-3))',
+  'calibration': 'hsl(var(--primary))',
+  'cad': 'hsl(var(--chart-4))',
+  'repository': 'hsl(var(--chart-5))',
+  'remote-control': 'hsl(var(--warning))',
+  'mesh-tools': 'hsl(var(--muted-foreground))'
+};
+
+// Pricing colors
+export const pricingColors: Record<SpecialtyTool['pricingModel'], string> = {
+  'free': 'hsl(142 76% 36%)',
+  'freemium': 'hsl(var(--warning))',
+  'one-time': 'hsl(var(--chart-4))',
+  'subscription': 'hsl(var(--chart-1))'
 };
