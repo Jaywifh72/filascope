@@ -47,6 +47,7 @@ import { FilamentHeroQuickFeatures } from "@/components/filament/hero/FilamentHe
 import { RetailersModal, type Retailer } from "@/components/filament/hero/RetailersModal";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { QuickSummaryCard, CollapsibleContentContainer, SocialProofToast, ActivityStatsBanner } from "@/components/filament";
+import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
@@ -80,6 +81,7 @@ const FilamentDetail = () => {
   const [savingUrl, setSavingUrl] = useState(false);
   const [stickyBarVisible, setStickyBarVisible] = useState(false);
   const [retailersModalOpen, setRetailersModalOpen] = useState(false);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const heroSentinelRef = useRef<HTMLDivElement>(null);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
   const { formatPrice, currencyInfo } = useCurrency();
@@ -3272,6 +3274,32 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Smart Print Calculator */}
+      {filament && (
+        <>
+          <FloatingCalculatorButton
+            onClick={() => setIsCalculatorOpen(true)}
+            pulseOnMount={true}
+          />
+          <CalculatorTabs
+            filament={{
+              id: filament.id,
+              name: filament.product_title || 'Filament',
+              material: filament.material || 'PLA',
+              price: filament.variant_price || 0,
+              density: filament.density_g_cm3,
+              spoolWeight: filament.net_weight_g || 1000,
+              nozzleTempMin: filament.nozzle_temp_min_c,
+              nozzleTempMax: filament.nozzle_temp_max_c,
+              bedTempMin: filament.bed_temp_min_c,
+              bedTempMax: filament.bed_temp_max_c,
+            }}
+            isOpen={isCalculatorOpen}
+            onClose={() => setIsCalculatorOpen(false)}
+          />
+        </>
+      )}
 
       {/* Sticky Buy Bar - appears when scrolling past hero */}
       {filament && (
