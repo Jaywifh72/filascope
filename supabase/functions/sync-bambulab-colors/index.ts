@@ -6,20 +6,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Bambu Lab ABS Color variants with official hex codes from their product page
-const BAMBU_ABS_COLORS: Record<string, { hex: string; colorFamily: string }> = {
-  "Olive": { hex: "#789D4A", colorFamily: "Green" },
-  "Tangerine Yellow": { hex: "#FFC72C", colorFamily: "Yellow" },
-  "Azure": { hex: "#489FDF", colorFamily: "Blue" },
-  "Navy Blue": { hex: "#0C2340", colorFamily: "Blue" },
-  "White": { hex: "#FFFFFF", colorFamily: "White" },
-  "Silver": { hex: "#87909A", colorFamily: "Gray" },
-  "Red": { hex: "#D32941", colorFamily: "Red" },
-  "Orange": { hex: "#FF6A13", colorFamily: "Orange" },
-  "Bambu Green": { hex: "#00AE42", colorFamily: "Green" },
-  "Blue": { hex: "#0A2CA5", colorFamily: "Blue" },
-  "Purple": { hex: "#AF1685", colorFamily: "Purple" },
-  "Black": { hex: "#000000", colorFamily: "Black" },
+// Bambu Lab ABS Color variants with official hex codes and image URLs from their product page
+// Image URLs follow pattern: https://store.bblcdn.com/s5/default/{unique_id}.png
+const BAMBU_ABS_COLORS: Record<string, { hex: string; colorFamily: string; imageUrl: string | null }> = {
+  "Olive": { hex: "#789D4A", colorFamily: "Green", imageUrl: null },
+  "Tangerine Yellow": { hex: "#FFC72C", colorFamily: "Yellow", imageUrl: null },
+  "Azure": { hex: "#489FDF", colorFamily: "Blue", imageUrl: null },
+  "Navy Blue": { hex: "#0C2340", colorFamily: "Blue", imageUrl: null },
+  "White": { hex: "#FFFFFF", colorFamily: "White", imageUrl: null },
+  "Silver": { hex: "#87909A", colorFamily: "Gray", imageUrl: null },
+  "Red": { hex: "#D32941", colorFamily: "Red", imageUrl: null },
+  "Orange": { hex: "#FF6A13", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s5/default/af10bba0ddcb4d129125f0b1b3f04e59.png" },
+  "Bambu Green": { hex: "#00AE42", colorFamily: "Green", imageUrl: null },
+  "Blue": { hex: "#0A2CA5", colorFamily: "Blue", imageUrl: null },
+  "Purple": { hex: "#AF1685", colorFamily: "Purple", imageUrl: null },
+  "Black": { hex: "#000000", colorFamily: "Black", imageUrl: null },
 };
 
 // Base product data extracted from Bambu Lab's ABS product page
@@ -43,9 +44,13 @@ const BAMBU_ABS_BASE_DATA = {
   net_weight_g: 1000,
 };
 
-// Image URLs for each color - these would need to be scraped or manually mapped
-// For now, using the generic ABS spool image
+// Default fallback image when specific color image is not available
 const DEFAULT_ABS_IMAGE = "https://store.bblcdn.com/s7/default/614be9028953458392685cdf4af319f3/High_temp_spol_ABS.png";
+
+// Helper to get image URL for a color, falling back to default if not specified
+const getImageUrl = (colorData: { imageUrl: string | null }): string => {
+  return colorData.imageUrl || DEFAULT_ABS_IMAGE;
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -145,18 +150,26 @@ serve(async (req) => {
       );
 
       if (existing) {
-        // Check if we need to update
+        // Check if we need to update (including image if a specific one is available)
+        const targetImageUrl = getImageUrl(colorData);
         const needsUpdate = 
           existing.color_hex !== colorData.hex || 
-          existing.color_family !== colorData.colorFamily;
+          existing.color_family !== colorData.colorFamily ||
+          (colorData.imageUrl && existing.featured_image !== colorData.imageUrl);
 
         if (needsUpdate && !dryRun) {
+          const updateData: Record<string, unknown> = {
+            color_hex: colorData.hex,
+            color_family: colorData.colorFamily,
+          };
+          // Only update featured_image if we have a specific image URL for this color
+          if (colorData.imageUrl) {
+            updateData.featured_image = colorData.imageUrl;
+          }
+          
           const { error: updateError } = await supabase
             .from("filaments")
-            .update({
-              color_hex: colorData.hex,
-              color_family: colorData.colorFamily,
-            })
+            .update(updateData)
             .eq("id", existing.id);
 
           if (updateError) {
@@ -211,7 +224,7 @@ serve(async (req) => {
             drying_time_hours: BAMBU_ABS_BASE_DATA.drying_time_hours,
             diameter_nominal_mm: BAMBU_ABS_BASE_DATA.diameter_nominal_mm,
             net_weight_g: BAMBU_ABS_BASE_DATA.net_weight_g,
-            featured_image: DEFAULT_ABS_IMAGE,
+            featured_image: getImageUrl(colorData),
             auto_created: true,
             variant_available: true,
           };
