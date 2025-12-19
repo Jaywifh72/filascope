@@ -2662,6 +2662,138 @@ function checkJobTimeout(ctx: LogContext, jobId: string): boolean {
 }
 
 // ============================================================================
+// JOB HEARTBEAT CONFIGURATION - Sends heartbeat updates to prevent stuck job detection
+// ============================================================================
+const HEARTBEAT_INTERVAL_MS = 30 * 1000; // 30 seconds between heartbeats
+let lastHeartbeatTime = 0;
+
+async function sendHeartbeat(
+  supabaseClient: any, 
+  jobId: string, 
+  ctx: LogContext,
+  force: boolean = false
+): Promise<void> {
+  const now = Date.now();
+  if (!force && (now - lastHeartbeatTime) < HEARTBEAT_INTERVAL_MS) {
+    return; // Skip if not enough time has passed
+  }
+  
+  try {
+    await supabaseClient.from('scrape_jobs').update({
+      updated_at: new Date().toISOString(),
+    }).eq('id', jobId);
+    
+    lastHeartbeatTime = now;
+    logDebug(ctx, 'HEARTBEAT', `Job ${jobId} heartbeat sent (elapsed: ${Math.round((now - ctx.startTime) / 1000)}s)`);
+  } catch (err) {
+    logWarn(ctx, 'HEARTBEAT', `Failed to send heartbeat for job ${jobId}`, err);
+  }
+}
+
+// ============================================================================
+// VALIDATION REPORT - Compare scraped colors vs expected fallback colors
+// ============================================================================
+interface ProductValidationReport {
+  productSlug: string;
+  productName: string;
+  expectedColors: number;
+  actualColors: number;
+  missingColors: string[];
+  extraColors: string[];
+  coveragePercent: number;
+}
+
+interface ValidationSummary {
+  totalExpected: number;
+  totalActual: number;
+  overallCoveragePercent: number;
+  productsWithFullCoverage: number;
+  productsWithPartialCoverage: number;
+  productsWithNoCoverage: number;
+  productReports: ProductValidationReport[];
+}
+
+function generateProductValidationReport(
+  productSlug: string,
+  productName: string,
+  scrapedColors: ColorVariant[],
+  ctx?: LogContext
+): ProductValidationReport {
+  const fallbackColors = PRODUCT_COLOR_FALLBACKS[productSlug] || [];
+  
+  const scrapedNames = new Set(scrapedColors.map(c => c.colorName.toLowerCase().trim()));
+  const fallbackNames = new Set(fallbackColors.map(c => c.colorName.toLowerCase().trim()));
+  
+  const missingColors = fallbackColors
+    .filter(c => !scrapedNames.has(c.colorName.toLowerCase().trim()))
+    .map(c => c.colorName);
+  
+  const extraColors = scrapedColors
+    .filter(c => !fallbackNames.has(c.colorName.toLowerCase().trim()))
+    .map(c => c.colorName);
+  
+  const expectedCount = fallbackColors.length;
+  const actualCount = scrapedColors.length;
+  const coveragePercent = expectedCount > 0 ? Math.round((actualCount / expectedCount) * 100) : 100;
+  
+  return {
+    productSlug,
+    productName,
+    expectedColors: expectedCount,
+    actualColors: actualCount,
+    missingColors,
+    extraColors,
+    coveragePercent,
+  };
+}
+
+function generateValidationSummary(productReports: ProductValidationReport[]): ValidationSummary {
+  const totalExpected = productReports.reduce((sum, r) => sum + r.expectedColors, 0);
+  const totalActual = productReports.reduce((sum, r) => sum + r.actualColors, 0);
+  
+  const productsWithFullCoverage = productReports.filter(r => r.coveragePercent >= 100).length;
+  const productsWithPartialCoverage = productReports.filter(r => r.coveragePercent > 0 && r.coveragePercent < 100).length;
+  const productsWithNoCoverage = productReports.filter(r => r.coveragePercent === 0).length;
+  
+  return {
+    totalExpected,
+    totalActual,
+    overallCoveragePercent: totalExpected > 0 ? Math.round((totalActual / totalExpected) * 100) : 100,
+    productsWithFullCoverage,
+    productsWithPartialCoverage,
+    productsWithNoCoverage,
+    productReports,
+  };
+}
+
+function logValidationSummary(summary: ValidationSummary, ctx: LogContext): void {
+  console.log(`\n[${ctx.requestId}] ${'='.repeat(60)}`);
+  console.log(`[${ctx.requestId}] 📊 VALIDATION REPORT - Color Coverage Summary`);
+  console.log(`[${ctx.requestId}] ${'='.repeat(60)}`);
+  
+  // Log individual product reports
+  for (const report of summary.productReports) {
+    const status = report.coveragePercent >= 100 ? '✅' : report.coveragePercent >= 80 ? '⚠️' : '❌';
+    const missingStr = report.missingColors.length > 0 
+      ? ` - Missing: [${report.missingColors.slice(0, 5).join(', ')}${report.missingColors.length > 5 ? '...' : ''}]` 
+      : '';
+    const extraStr = report.extraColors.length > 0 
+      ? ` - Extra: [${report.extraColors.slice(0, 3).join(', ')}${report.extraColors.length > 3 ? '...' : ''}]` 
+      : '';
+    
+    console.log(`[${ctx.requestId}] ${status} ${report.productName}: ${report.actualColors}/${report.expectedColors} colors (${report.coveragePercent}%)${missingStr}${extraStr}`);
+  }
+  
+  // Log overall summary
+  console.log(`[${ctx.requestId}] ${'─'.repeat(60)}`);
+  console.log(`[${ctx.requestId}] 📈 OVERALL: ${summary.totalActual}/${summary.totalExpected} colors (${summary.overallCoveragePercent}%)`);
+  console.log(`[${ctx.requestId}]    ✅ Full coverage: ${summary.productsWithFullCoverage} products`);
+  console.log(`[${ctx.requestId}]    ⚠️ Partial coverage: ${summary.productsWithPartialCoverage} products`);
+  console.log(`[${ctx.requestId}]    ❌ No coverage: ${summary.productsWithNoCoverage} products`);
+  console.log(`[${ctx.requestId}] ${'='.repeat(60)}\n`);
+}
+
+// ============================================================================
 // BACKGROUND SCRAPE FUNCTION
 // ============================================================================
 async function runBackgroundScrape(
@@ -2687,11 +2819,18 @@ async function runBackgroundScrape(
     errors: [] as CategorizedError[],
     productDetails: [] as any[],
     timing: {} as TimingMetrics,
+    validation: undefined as ValidationSummary | undefined,
   };
   
   // Progress update throttling - only update every N products or on significant events
   const PROGRESS_UPDATE_INTERVAL = 3; // Update every 3 products
   let lastProgressUpdate = 0;
+  
+  // Track validation reports per product
+  const productValidationReports: ProductValidationReport[] = [];
+  
+  // Reset heartbeat timer at start
+  lastHeartbeatTime = 0;
 
   try {
     // Get Bambu Lab brand ID
@@ -2783,6 +2922,9 @@ async function runBackgroundScrape(
         ctx.productName = productName;
         productsProcessed++;
 
+        // Send heartbeat before processing each product
+        await sendHeartbeat(supabaseClient, jobId, ctx);
+
         // Update job progress
         await supabaseClient.from('scrape_jobs').update({
           progress: {
@@ -2831,6 +2973,15 @@ async function runBackgroundScrape(
 
         results.productsScraped++;
         results.colorsDiscovered += colorVariants.length;
+        
+        // Generate validation report for this product
+        const validationReport = generateProductValidationReport(
+          productConfig.slug,
+          productName,
+          colorVariants,
+          ctx
+        );
+        productValidationReports.push(validationReport);
 
         // Scrape regional prices
         const regionalPrices: Record<string, { price: number | null; compareAtPrice: number | null; url: string }> = {};
@@ -2858,6 +3009,9 @@ async function runBackgroundScrape(
             }).eq('id', jobId);
             lastProgressUpdate = productsProcessed;
           }
+
+          // Send heartbeat during region scraping
+          await sendHeartbeat(supabaseClient, jobId, ctx);
 
           // Rate limit delay using config
           if (i > 0) {
@@ -2956,6 +3110,14 @@ async function runBackgroundScrape(
       delayMs: timing.delayMs,
       totalMs,
     };
+
+    // Generate and log validation summary
+    const validationSummary = generateValidationSummary(productValidationReports);
+    results.validation = validationSummary;
+    logValidationSummary(validationSummary, ctx);
+
+    // Send final heartbeat before completion
+    await sendHeartbeat(supabaseClient, jobId, ctx, true);
 
     // Mark job as completed with formatted errors for display
     const formattedErrors = results.errors.map(formatError);
