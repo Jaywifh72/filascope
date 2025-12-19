@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BambuScrapeProgress } from "./BambuScrapeProgress";
+import { BambuScrapeProgressDisplay } from "./BambuScrapeProgress";
 import { 
   CheckCircle2, 
   XCircle, 
@@ -17,6 +17,7 @@ import {
 
 interface BambuScrapeQueueProgressProps {
   queueState: QueueState;
+  currentJob: ScrapeJob | null;
   overallProgress: number;
   totalMaterials: number;
   completedCount: number;
@@ -24,7 +25,6 @@ interface BambuScrapeQueueProgressProps {
   isQueueComplete: boolean;
   onCancel: () => void;
   onReset: () => void;
-  onJobComplete?: (job: ScrapeJob) => void;
 }
 
 function MaterialStatusIcon({ status }: { status: 'pending' | 'running' | 'completed' | 'failed' }) {
@@ -53,6 +53,7 @@ function getMaterialStatus(
 
 export function BambuScrapeQueueProgress({
   queueState,
+  currentJob,
   overallProgress,
   totalMaterials,
   completedCount,
@@ -60,7 +61,6 @@ export function BambuScrapeQueueProgress({
   isQueueComplete,
   onCancel,
   onReset,
-  onJobComplete,
 }: BambuScrapeQueueProgressProps) {
   const allMaterials = [
     ...queueState.completed,
@@ -155,16 +155,13 @@ export function BambuScrapeQueueProgress({
           </div>
         )}
 
-        {/* Current job progress */}
-        {queueState.currentJobId && (
+        {/* Current job progress - uses controlled display component */}
+        {currentJob && (
           <div className="pt-2 border-t">
             <p className="text-sm font-medium mb-2">
               Current: {queueState.current}
             </p>
-            <BambuScrapeProgress 
-              jobId={queueState.currentJobId} 
-              onComplete={onJobComplete}
-            />
+            <BambuScrapeProgressDisplay job={currentJob} />
           </div>
         )}
       </CardContent>

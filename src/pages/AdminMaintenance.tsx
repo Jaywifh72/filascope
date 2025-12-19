@@ -39,6 +39,7 @@ const AdminMaintenance = () => {
     overallProgress,
     totalMaterials,
     completedCount,
+    currentJob,
     startQueue,
     cancelQueue,
     resetQueue,
@@ -191,6 +192,7 @@ const AdminMaintenance = () => {
             <div className="pt-4 border-t">
               <BambuScrapeQueueProgress
                 queueState={queueState}
+                currentJob={currentJob}
                 overallProgress={overallProgress}
                 totalMaterials={totalMaterials}
                 completedCount={completedCount}
