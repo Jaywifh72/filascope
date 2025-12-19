@@ -10,6 +10,7 @@ import { BambuLabRegionalDashboard } from "@/components/admin/BambuLabRegionalDa
 import { BambuScrapeProgress, BambuScrapeJobRow } from "@/components/admin/BambuScrapeProgress";
 import { BambuScrapeQueueProgress } from "@/components/admin/BambuScrapeQueueProgress";
 import { ScrapeAnalyticsWidget } from "@/components/admin/ScrapeAnalyticsWidget";
+import { AIScrapeLogsCard } from "@/components/admin/AIScrapeLogsCard";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 
@@ -115,6 +116,9 @@ const AdminMaintenance = () => {
 
       {/* Scrape Analytics Widget */}
       <ScrapeAnalyticsWidget />
+
+      {/* AI Scrape Logs */}
+      <AIScrapeLogsCard />
 
       {/* Bambu Lab Scraper Card */}
       <Card>

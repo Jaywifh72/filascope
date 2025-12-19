@@ -7,6 +7,137 @@ const corsHeaders = {
 };
 
 // ============================================================================
+// AI SUMMARY GENERATION
+// ============================================================================
+interface AISummary {
+  generatedAt: string;
+  model: string;
+  summary: {
+    headline: string;
+    whatWentRight: string[];
+    whatWentWrong: string[];
+    userImpact: string;
+    actionsNeeded: string[];
+    healthScore: number;
+  };
+}
+
+async function generateAISummary(
+  jobResults: any,
+  jobStatus: 'completed' | 'failed',
+  jobError: string | null,
+  materials: string[],
+  dryRun: boolean,
+  ctx: any
+): Promise<AISummary | null> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  
+  if (!LOVABLE_API_KEY) {
+    console.log(`[${ctx.requestId}] LOVABLE_API_KEY not configured, skipping AI summary`);
+    return null;
+  }
+
+  try {
+    const prompt = `You are analyzing a web scraping job for a 3D printing filament database (Bambu Lab products).
+
+Job Status: ${jobStatus}
+Materials Processed: ${materials.join(', ')}
+Dry Run: ${dryRun}
+${jobError ? `Error: ${jobError}` : ''}
+
+Job Results:
+- Products Scraped: ${jobResults.productsScraped || 0}
+- Colors Discovered: ${jobResults.colorsDiscovered || 0}
+- Filaments Created: ${jobResults.filamentsCreated || 0}
+- Filaments Updated: ${jobResults.filamentsUpdated || 0}
+- Errors: ${jobResults.errors?.length || 0}
+- Duration: ${jobResults.timing?.totalMs ? `${(jobResults.timing.totalMs / 1000).toFixed(1)}s` : 'unknown'}
+${jobResults.validation ? `- Coverage: ${jobResults.validation.overallCoveragePercent}%` : ''}
+
+${jobResults.errors?.length > 0 ? `Error Details:\n${jobResults.errors.slice(0, 5).join('\n')}` : ''}
+
+Provide a JSON response with:
+- headline: One concise sentence summarizing the scrape outcome
+- whatWentRight: Array of 2-4 positive outcomes (empty if none)
+- whatWentWrong: Array of issues found (empty if none)
+- userImpact: One sentence explaining how this affects users of the filament database
+- actionsNeeded: Array of recommended follow-up actions (empty if none needed)
+- healthScore: 0-100 score (100 = perfect, 0 = complete failure)`;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: 'You are a technical analyst summarizing scraping job results. Respond only with valid JSON.' },
+          { role: 'user', content: prompt }
+        ],
+        tools: [
+          {
+            type: 'function',
+            function: {
+              name: 'generate_summary',
+              description: 'Generate a structured summary of the scrape job',
+              parameters: {
+                type: 'object',
+                properties: {
+                  headline: { type: 'string', description: 'One sentence summary' },
+                  whatWentRight: { type: 'array', items: { type: 'string' }, description: 'List of successes' },
+                  whatWentWrong: { type: 'array', items: { type: 'string' }, description: 'List of issues' },
+                  userImpact: { type: 'string', description: 'Impact on end users' },
+                  actionsNeeded: { type: 'array', items: { type: 'string' }, description: 'Recommended actions' },
+                  healthScore: { type: 'number', description: 'Score from 0-100' }
+                },
+                required: ['headline', 'whatWentRight', 'whatWentWrong', 'userImpact', 'actionsNeeded', 'healthScore'],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: 'function', function: { name: 'generate_summary' } }
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`[${ctx.requestId}] AI API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    
+    if (!toolCall?.function?.arguments) {
+      console.error(`[${ctx.requestId}] No tool call in AI response`);
+      return null;
+    }
+
+    const summary = JSON.parse(toolCall.function.arguments);
+    
+    console.log(`[${ctx.requestId}] AI summary generated: ${summary.headline}`);
+    
+    return {
+      generatedAt: new Date().toISOString(),
+      model: 'google/gemini-2.5-flash',
+      summary: {
+        headline: summary.headline,
+        whatWentRight: summary.whatWentRight || [],
+        whatWentWrong: summary.whatWentWrong || [],
+        userImpact: summary.userImpact || '',
+        actionsNeeded: summary.actionsNeeded || [],
+        healthScore: typeof summary.healthScore === 'number' ? summary.healthScore : 50,
+      },
+    };
+  } catch (error) {
+    console.error(`[${ctx.requestId}] Failed to generate AI summary:`, error);
+    return null;
+  }
+}
+
+// ============================================================================
 // DEBUG LOGGING UTILITIES
 // ============================================================================
 interface LogContext {
@@ -3119,8 +3250,18 @@ async function runBackgroundScrape(
     // Send final heartbeat before completion
     await sendHeartbeat(supabaseClient, jobId, ctx, true);
 
-    // Mark job as completed with formatted errors for display
+    // Generate AI summary for the completed job
     const formattedErrors = results.errors.map(formatError);
+    const aiSummary = await generateAISummary(
+      { ...results, errors: formattedErrors },
+      'completed',
+      null,
+      selectedMaterials,
+      dryRun || false,
+      ctx
+    );
+
+    // Mark job as completed with formatted errors and AI summary
     await supabaseClient.from('scrape_jobs').update({
       status: 'completed',
       completed_at: new Date().toISOString(),
@@ -3136,19 +3277,31 @@ async function runBackgroundScrape(
         filamentsUpdated: results.filamentsUpdated,
         errors: formattedErrors,
       },
+      ai_summary: aiSummary,
     }).eq('id', jobId);
 
-    logSuccess(ctx, 'BACKGROUND', `Job ${jobId} completed successfully`);
+    logSuccess(ctx, 'BACKGROUND', `Job ${jobId} completed successfully${aiSummary ? ' with AI summary' : ''}`);
 
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
     logError(ctx, 'BACKGROUND', `Job ${jobId} failed`, error);
+    
+    // Generate AI summary for the failed job
+    const aiSummary = await generateAISummary(
+      results,
+      'failed',
+      errMsg,
+      selectedMaterials,
+      dryRun || false,
+      ctx
+    );
     
     await supabaseClient.from('scrape_jobs').update({
       status: 'failed',
       completed_at: new Date().toISOString(),
       error: errMsg,
       results,
+      ai_summary: aiSummary,
     }).eq('id', jobId);
   }
 }

@@ -3182,6 +3182,7 @@ export type Database = {
       }
       scrape_jobs: {
         Row: {
+          ai_summary: Json | null
           completed_at: string | null
           created_at: string | null
           dry_run: boolean | null
@@ -3198,6 +3199,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          ai_summary?: Json | null
           completed_at?: string | null
           created_at?: string | null
           dry_run?: boolean | null
@@ -3214,6 +3216,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          ai_summary?: Json | null
           completed_at?: string | null
           created_at?: string | null
           dry_run?: boolean | null
