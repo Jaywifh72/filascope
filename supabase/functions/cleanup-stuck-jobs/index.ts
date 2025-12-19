@@ -23,6 +23,167 @@ interface CleanupResult {
   errors: string[];
 }
 
+// ============================================================================
+// AI SUMMARY GENERATION FOR STUCK JOBS
+// ============================================================================
+interface AISummary {
+  generatedAt: string;
+  model: string;
+  summary: {
+    headline: string;
+    whatWentRight: string[];
+    whatWentWrong: string[];
+    userImpact: string;
+    actionsNeeded: string[];
+    healthScore: number;
+    lovablePrompt: string | null;
+  };
+}
+
+async function generateCleanupAISummary(
+  job: {
+    id: string;
+    job_type: string;
+    materials: string[] | null;
+    progress: any;
+    updated_at: string;
+    created_at: string;
+  },
+  ageMinutes: number
+): Promise<AISummary | null> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  
+  if (!LOVABLE_API_KEY) {
+    console.log(`[CLEANUP] LOVABLE_API_KEY not configured, skipping AI summary for job ${job.id}`);
+    return null;
+  }
+
+  try {
+    const progress = job.progress || {};
+    const prompt = `You are a Senior Web Scraping & Backend Engineering Expert analyzing a STUCK/TIMED-OUT scraping job for a 3D printing filament database (Bambu Lab products).
+
+Job Status: FAILED (Stuck - no heartbeat for ${ageMinutes} minutes)
+Job ID: ${job.id}
+Job Type: ${job.job_type}
+Materials: ${job.materials?.join(', ') || 'Not specified'}
+Created At: ${job.created_at}
+Last Update: ${job.updated_at}
+
+Progress at time of failure:
+- Current Material: ${progress.currentMaterial || 'Unknown'}
+- Current Product: ${progress.currentProduct || 'Unknown'}
+- Current Region: ${progress.currentRegion || 'Unknown'}
+- Current Stage: ${progress.currentStage || 'Unknown'}
+- Products Processed: ${progress.productsProcessed || 0}/${progress.totalProducts || '?'}
+- Colors Discovered: ${progress.colorsDiscovered || 0}
+- Filaments Created: ${progress.filamentsCreated || 0}
+- Filaments Updated: ${progress.filamentsUpdated || 0}
+- Elapsed Time: ${progress.elapsedMs ? `${Math.round(progress.elapsedMs / 1000)}s` : 'unknown'}
+
+This job was stuck during "${progress.currentStage || 'unknown stage'}" while processing "${progress.currentProduct || 'unknown product'}".
+
+IMPORTANT: The edge function file is located at: supabase/functions/scrape-bambu-pla/index.ts
+The cleanup function is at: supabase/functions/cleanup-stuck-jobs/index.ts
+
+Possible causes of stuck jobs:
+1. Firecrawl API hanging (no response timeout)
+2. Database connection issues
+3. Memory/CPU limits exceeded
+4. Network timeouts during regional price scraping
+5. Infinite loops in parsing logic
+
+Analyze this stuck job and provide:
+1. A concise summary of what likely happened
+2. What went right (progress made before sticking)
+3. What went wrong (the likely cause of the hang)
+4. User impact assessment
+5. Generate a detailed "lovablePrompt" for fixing the underlying issue. This prompt should:
+   - Start with "As a Senior Web Scraping & Backend Expert, I need to fix a job timeout issue in the Bambu Lab scraper."
+   - Reference the specific edge function file path
+   - Explain the stuck job context (what stage, what product)
+   - Provide specific recommendations to prevent future hangs (timeout handling, heartbeats, error recovery)`;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: 'You are a Senior Web Scraping & Backend Engineering Expert. When jobs timeout or get stuck, you analyze the failure and provide detailed, actionable prompts to fix the underlying issues. Your prompts should be expert-level, specific, and include code references.' },
+          { role: 'user', content: prompt }
+        ],
+        tools: [
+          {
+            type: 'function',
+            function: {
+              name: 'generate_summary',
+              description: 'Generate a structured summary of the stuck job with fix prompt',
+              parameters: {
+                type: 'object',
+                properties: {
+                  headline: { type: 'string', description: 'One sentence summary of why the job got stuck' },
+                  whatWentRight: { type: 'array', items: { type: 'string' }, description: 'Progress made before getting stuck' },
+                  whatWentWrong: { type: 'array', items: { type: 'string' }, description: 'Likely causes of the hang' },
+                  userImpact: { type: 'string', description: 'Impact on data freshness and users' },
+                  actionsNeeded: { type: 'array', items: { type: 'string' }, description: 'Recommended fixes' },
+                  healthScore: { type: 'number', description: 'Score from 0-100 (stuck jobs typically 20-40)' },
+                  lovablePrompt: { 
+                    type: 'string', 
+                    description: 'Detailed markdown-formatted prompt for Lovable to fix the timeout issue. Include file paths, context about the stuck stage, and specific code fixes. Start with "As a Senior Web Scraping & Backend Expert..."'
+                  }
+                },
+                required: ['headline', 'whatWentRight', 'whatWentWrong', 'userImpact', 'actionsNeeded', 'healthScore', 'lovablePrompt'],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: 'function', function: { name: 'generate_summary' } }
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`[CLEANUP] AI API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    
+    if (!toolCall?.function?.arguments) {
+      console.error(`[CLEANUP] No tool call in AI response`);
+      return null;
+    }
+
+    const summary = JSON.parse(toolCall.function.arguments);
+    
+    console.log(`[CLEANUP] AI summary generated for stuck job ${job.id}: ${summary.headline}`);
+    if (summary.lovablePrompt) {
+      console.log(`[CLEANUP] Lovable fix prompt generated (${summary.lovablePrompt.length} chars)`);
+    }
+    
+    return {
+      generatedAt: new Date().toISOString(),
+      model: 'google/gemini-2.5-flash',
+      summary: {
+        headline: summary.headline,
+        whatWentRight: summary.whatWentRight || [],
+        whatWentWrong: summary.whatWentWrong || [],
+        userImpact: summary.userImpact || '',
+        actionsNeeded: summary.actionsNeeded || [],
+        healthScore: typeof summary.healthScore === 'number' ? summary.healthScore : 30,
+        lovablePrompt: summary.lovablePrompt || null,
+      },
+    };
+  } catch (error) {
+    console.error(`[CLEANUP] Failed to generate AI summary for job ${job.id}:`, error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -82,14 +243,25 @@ serve(async (req) => {
           console.log(`   - Last heartbeat: ${ageMinutes} minutes ago`);
           console.log(`   - Progress: ${JSON.stringify(job.progress || {})}`);
 
-          // Mark job as failed with descriptive error
+          // Generate AI summary for the stuck job
+          console.log(`🤖 [CLEANUP] Generating AI summary for stuck job ${job.id}...`);
+          const aiSummary = await generateCleanupAISummary(job, ageMinutes);
+
+          // Mark job as failed with descriptive error and AI summary
+          const updateData: Record<string, any> = {
+            status: 'failed',
+            completed_at: new Date().toISOString(),
+            error: `Auto-cancelled: No heartbeat for ${ageMinutes} minutes (last update: ${job.updated_at}). Job may have been interrupted or timed out.`,
+          };
+
+          if (aiSummary) {
+            updateData.ai_summary = aiSummary;
+            console.log(`✅ [CLEANUP] AI summary added for job ${job.id}`);
+          }
+
           const { error: updateError } = await supabase
             .from('scrape_jobs')
-            .update({
-              status: 'failed',
-              completed_at: new Date().toISOString(),
-              error: `Auto-cancelled: No heartbeat for ${ageMinutes} minutes (last update: ${job.updated_at}). Job may have been interrupted or timed out.`,
-            })
+            .update(updateData)
             .eq('id', job.id);
 
           if (updateError) {
@@ -104,7 +276,7 @@ serve(async (req) => {
               createdAt: job.created_at,
               ageMinutes,
             });
-            console.log(`✅ [CLEANUP] Successfully marked job ${job.id} as failed`);
+            console.log(`✅ [CLEANUP] Successfully marked job ${job.id} as failed with AI summary`);
           }
         } catch (jobError) {
           const errMsg = jobError instanceof Error ? jobError.message : String(jobError);

@@ -2294,14 +2294,24 @@ async function scrapeWithFirecrawl(
       
       if (ctx) logDebug(ctx, 'FIRECRAWL', 'Request body', requestBody);
 
-      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${firecrawlKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+      // FIX: Add 25s timeout to prevent indefinite hangs
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+      let response: Response;
+      try {
+        response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${firecrawlKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       const durationMs = Date.now() - startTime;
 
@@ -2377,15 +2387,19 @@ async function scrapeWithFirecrawl(
       };
     } catch (error: unknown) {
       const durationMs = Date.now() - startTime;
-      const errMsg = error instanceof Error ? error.message : String(error);
+      const isAbortError = error instanceof Error && error.name === 'AbortError';
+      const errMsg = isAbortError 
+        ? 'Firecrawl request timed out after 25 seconds' 
+        : (error instanceof Error ? error.message : String(error));
       
       if (ctx) logError(ctx, 'FIRECRAWL', `Exception after ${durationMs}ms: ${errMsg}`, { 
-        error, 
+        error,
+        isTimeout: isAbortError,
         attempt: attempt + 1 
       });
       
-      // Retry on network errors
-      if (attempt < FIRECRAWL_MAX_RETRIES) {
+      // Retry on network errors (but NOT on timeout - abort errors shouldn't retry)
+      if (!isAbortError && attempt < FIRECRAWL_MAX_RETRIES) {
         continue;
       }
       
@@ -3127,12 +3141,32 @@ async function runBackgroundScrape(
         }).eq('id', jobId);
 
         // Scrape product page for colors
-        const { colors, invalidFilteredColors, tdsUrl, success, firecrawlMs } = await scrapeProductPage(
-          productConfig.slug, 
-          'CA', 
-          productConfig.material,
-          { ...ctx, region: 'CA' }
-        );
+        // FIX: Add heartbeat interval during scrapeProductPage to prevent stuck job detection
+        const productScrapeHeartbeat = setInterval(async () => {
+          await sendHeartbeat(supabaseClient, jobId, ctx, true);
+        }, 15000); // Every 15 seconds
+
+        let colors: ColorVariant[] = [];
+        let invalidFilteredColors: string[] = [];
+        let tdsUrl: string | null = null;
+        let success = false;
+        let firecrawlMs: number | undefined;
+
+        try {
+          const result = await scrapeProductPage(
+            productConfig.slug, 
+            'CA', 
+            productConfig.material,
+            { ...ctx, region: 'CA' }
+          );
+          colors = result.colors;
+          invalidFilteredColors = result.invalidFilteredColors;
+          tdsUrl = result.tdsUrl;
+          success = result.success;
+          firecrawlMs = result.firecrawlMs;
+        } finally {
+          clearInterval(productScrapeHeartbeat);
+        }
         
         // Track filtered invalid colors
         if (invalidFilteredColors.length > 0) {
