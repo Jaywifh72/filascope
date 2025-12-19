@@ -3056,17 +3056,20 @@ async function runBackgroundScrape(
         // Send heartbeat before processing each product
         await sendHeartbeat(supabaseClient, jobId, ctx);
 
-        // Update job progress
+        // Update job progress with enhanced tracking
+        const elapsedMs = Date.now() - ctx.startTime;
         await supabaseClient.from('scrape_jobs').update({
           progress: {
             currentMaterial: materialCategory,
             currentProduct: productName,
             currentRegion: null,
+            currentStage: 'fetching_colors',
             productsProcessed,
             totalProducts,
             colorsDiscovered: results.colorsDiscovered,
             filamentsCreated: results.filamentsCreated,
             filamentsUpdated: results.filamentsUpdated,
+            elapsedMs,
             errors: results.errors,
           },
         }).eq('id', jobId);
@@ -3122,24 +3125,26 @@ async function runBackgroundScrape(
           const region = regions[i];
           ctx.region = region;
           
-          // Throttled progress update - only update every PROGRESS_UPDATE_INTERVAL products
-          const shouldUpdateProgress = (productsProcessed - lastProgressUpdate) >= PROGRESS_UPDATE_INTERVAL;
-          if (shouldUpdateProgress) {
-            await supabaseClient.from('scrape_jobs').update({
-              progress: {
-                currentMaterial: materialCategory,
-                currentProduct: productName,
-                currentRegion: region,
-                productsProcessed,
-                totalProducts,
-                colorsDiscovered: results.colorsDiscovered,
-                filamentsCreated: results.filamentsCreated,
-                filamentsUpdated: results.filamentsUpdated,
-                errors: results.errors.map(formatError),
-              },
-            }).eq('id', jobId);
-            lastProgressUpdate = productsProcessed;
-          }
+          // Always update progress for each region (removed throttling for better UX)
+          const elapsedMs = Date.now() - ctx.startTime;
+          const regionsCompleted = regions.slice(0, i);
+          await supabaseClient.from('scrape_jobs').update({
+            progress: {
+              currentMaterial: materialCategory,
+              currentProduct: productName,
+              currentRegion: region,
+              currentStage: 'scraping_prices',
+              productsProcessed,
+              totalProducts,
+              colorsDiscovered: results.colorsDiscovered,
+              filamentsCreated: results.filamentsCreated,
+              filamentsUpdated: results.filamentsUpdated,
+              regionsCompleted,
+              regionsTotal: regions.length,
+              elapsedMs,
+              errors: results.errors.map(formatError),
+            },
+          }).eq('id', jobId);
 
           // Send heartbeat during region scraping
           await sendHeartbeat(supabaseClient, jobId, ctx);
@@ -3205,20 +3210,24 @@ async function runBackgroundScrape(
         }
 
         // Always update progress after each product (important for UI feedback)
+        const elapsedMsAfterProduct = Date.now() - ctx.startTime;
         await supabaseClient.from('scrape_jobs').update({
           progress: {
             currentMaterial: materialCategory,
             currentProduct: productName,
             currentRegion: null,
+            currentStage: 'saving_db',
             productsProcessed,
             totalProducts,
             colorsDiscovered: results.colorsDiscovered,
             filamentsCreated: results.filamentsCreated,
             filamentsUpdated: results.filamentsUpdated,
+            regionsCompleted: Object.keys(BAMBU_REGIONAL_STORES),
+            regionsTotal: Object.keys(BAMBU_REGIONAL_STORES).length,
+            elapsedMs: elapsedMsAfterProduct,
             errors: results.errors.map(formatError),
           },
         }).eq('id', jobId);
-        lastProgressUpdate = productsProcessed;
 
         // Inter-product delay using config
         const productDelay = RATE_LIMIT_CONFIG.background.betweenProducts;
