@@ -183,13 +183,14 @@ const AdminMaintenance = () => {
     success: boolean;
     dryRun: boolean;
     materialsProcessed?: string[];
-    material: string;
-    existingCount: number;
-    colorsProcessed: number;
-    created: number;
-    updated: number;
-    skipped: number;
-    results: Array<{ color: string; action: string; title: string; filamentId?: string }>;
+    productsProcessed?: number;
+    colorsDiscovered?: number;
+    filamentsCreated?: number;
+    filamentsUpdated?: number;
+    filamentsSkipped?: number;
+    errors?: string[];
+    byMaterial?: Record<string, { products?: number; created?: number; updated?: number; skipped?: number; colors?: number }>;
+    duration?: string;
   } | null>(null);
   
   const BAMBU_MATERIAL_OPTIONS = [
@@ -367,22 +368,23 @@ const AdminMaintenance = () => {
         throw error;
       }
 
+      const results = data.results || {};
       setBambuColorsResult({
-        ...data.results,
         success: data.success,
         dryRun: bambuColorsDryRun,
-        materialsProcessed: data.results?.materialsProcessed || bambuMaterials,
-        material: bambuMaterials.join(', '),
-        existingCount: 0,
-        colorsProcessed: data.results?.colorsDiscovered || 0,
-        created: data.results?.filamentsCreated || 0,
-        updated: data.results?.filamentsUpdated || 0,
-        skipped: 0,
-        results: [],
+        materialsProcessed: results.materialsProcessed || bambuMaterials,
+        productsProcessed: results.productsProcessed || 0,
+        colorsDiscovered: results.colorsDiscovered || 0,
+        filamentsCreated: results.filamentsCreated || 0,
+        filamentsUpdated: results.filamentsUpdated || 0,
+        filamentsSkipped: results.filamentsSkipped || 0,
+        errors: results.errors || [],
+        byMaterial: results.byMaterial || {},
+        duration: results.duration,
       });
       toast({
         title: bambuColorsDryRun ? "Dry Run Complete" : "Scrape Complete",
-        description: data.message || `${data.results?.filamentsCreated || 0} created, ${data.results?.filamentsUpdated || 0} updated`,
+        description: data.message || `${results.filamentsCreated || 0} created, ${results.filamentsUpdated || 0} updated`,
       });
     } catch (error) {
       console.error('Bambu Lab scraper error:', error);
@@ -2840,55 +2842,74 @@ const AdminMaintenance = () => {
                 </Alert>
               )}
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <div className="text-2xl font-bold">{bambuColorsResult.colorsProcessed}</div>
-                  <div className="text-sm text-muted-foreground">Colors Processed</div>
+              {/* Summary Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <div className="text-xl font-bold">{bambuColorsResult.productsProcessed || 0}</div>
+                  <div className="text-xs text-muted-foreground">Products</div>
                 </div>
-                <div className="bg-green-500/10 rounded-lg p-4">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    <div className="text-2xl font-bold">{bambuColorsResult.created}</div>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <div className="text-xl font-bold">{bambuColorsResult.colorsDiscovered || 0}</div>
+                  <div className="text-xs text-muted-foreground">Colors Found</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-3">
+                  <div className="flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <div className="text-xl font-bold">{bambuColorsResult.filamentsCreated || 0}</div>
                   </div>
-                  <div className="text-sm text-muted-foreground">Created</div>
+                  <div className="text-xs text-muted-foreground">Created</div>
                 </div>
-                <div className="bg-blue-500/10 rounded-lg p-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-blue-500" />
-                    <div className="text-2xl font-bold">{bambuColorsResult.updated}</div>
+                <div className="bg-blue-500/10 rounded-lg p-3">
+                  <div className="flex items-center gap-1">
+                    <Sparkles className="w-4 h-4 text-blue-500" />
+                    <div className="text-xl font-bold">{bambuColorsResult.filamentsUpdated || 0}</div>
                   </div>
-                  <div className="text-sm text-muted-foreground">Updated</div>
+                  <div className="text-xs text-muted-foreground">Updated</div>
                 </div>
-                <div className="bg-muted/30 rounded-lg p-4">
-                  <div className="text-2xl font-bold">{bambuColorsResult.skipped}</div>
-                  <div className="text-sm text-muted-foreground">Skipped</div>
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <div className="text-xl font-bold">{bambuColorsResult.filamentsSkipped || 0}</div>
+                  <div className="text-xs text-muted-foreground">Skipped</div>
                 </div>
               </div>
 
-              {bambuColorsResult.results && bambuColorsResult.results.length > 0 && (
+              {/* Duration */}
+              {bambuColorsResult.duration && (
+                <div className="text-xs text-muted-foreground">
+                  Completed in {bambuColorsResult.duration}
+                </div>
+              )}
+
+              {/* Material Breakdown */}
+              {bambuColorsResult.byMaterial && Object.keys(bambuColorsResult.byMaterial).length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-sm">Color Details:</h3>
-                  <div className="max-h-64 overflow-y-auto space-y-2">
-                    {bambuColorsResult.results.map((result, idx) => (
-                      <div key={idx} className="bg-muted/50 rounded-lg p-3 text-sm">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex items-center gap-3">
-                            <div 
-                              className="w-6 h-6 rounded-full border border-border"
-                              style={{ backgroundColor: result.color === "White" ? "#FFFFFF" : undefined }}
-                            />
-                            <div>
-                              <div className="font-medium">{result.title}</div>
-                              <div className="text-xs text-muted-foreground">{result.color}</div>
-                            </div>
-                          </div>
-                          <Badge variant={
-                            result.action === "created" ? "default" :
-                            result.action === "updated" ? "secondary" : "outline"
-                          }>
-                            {result.action}
-                          </Badge>
+                  <h3 className="font-semibold text-sm">By Material:</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {Object.entries(bambuColorsResult.byMaterial).map(([material, stats]: [string, any]) => (
+                      <div key={material} className="bg-muted/30 rounded-lg p-3 text-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">{material}</span>
+                          <Badge variant="outline">{stats.products || 0} products</Badge>
                         </div>
+                        <div className="flex gap-3 text-xs text-muted-foreground">
+                          <span className="text-green-600">+{stats.created || 0}</span>
+                          <span className="text-blue-600">↻{stats.updated || 0}</span>
+                          <span>⊘{stats.skipped || 0}</span>
+                          <span>{stats.colors || 0} colors</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Errors */}
+              {bambuColorsResult.errors && bambuColorsResult.errors.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm text-destructive">Errors ({bambuColorsResult.errors.length}):</h3>
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {bambuColorsResult.errors.map((err: string, idx: number) => (
+                      <div key={idx} className="text-xs text-destructive bg-destructive/10 rounded p-2">
+                        {err}
                       </div>
                     ))}
                   </div>
