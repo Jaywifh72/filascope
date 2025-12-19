@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Loader2, AlertTriangle, Palette, Archive } from "lucide-react";
+import { Loader2, Palette, Archive, Layers } from "lucide-react";
 import { BambuLabRegionalDashboard } from "@/components/admin/BambuLabRegionalDashboard";
 import { BambuScrapeProgress, BambuScrapeJobRow } from "@/components/admin/BambuScrapeProgress";
+import { BambuScrapeQueueProgress } from "@/components/admin/BambuScrapeQueueProgress";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
+import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 
 const AdminMaintenance = () => {
   const [bambuColorsDryRun, setBambuColorsDryRun] = useState(true);
@@ -30,6 +31,19 @@ const AdminMaintenance = () => {
   const { toast } = useToast();
   const { startJob, isStarting } = useStartBambuScrapeJob();
   const { jobs: recentJobs } = useRecentScrapeJobs(5);
+  
+  const {
+    queueState,
+    isQueueRunning,
+    isQueueComplete,
+    overallProgress,
+    totalMaterials,
+    completedCount,
+    startQueue,
+    cancelQueue,
+    resetQueue,
+    ALL_MATERIALS,
+  } = useBambuScrapeQueue(bambuColorsDryRun);
 
   const handleStartScrape = async () => {
     const jobId = await startJob(bambuMaterials, bambuColorsDryRun);
@@ -49,12 +63,32 @@ const AdminMaintenance = () => {
   };
 
   const handleJobComplete = (job: ScrapeJob) => {
+    // Only show toast for single job mode, not queue mode
+    if (!isQueueRunning && !isQueueComplete) {
+      toast({
+        title: job.status === 'completed' ? "Scrape Complete" : "Scrape Failed",
+        description: job.status === 'completed' 
+          ? `${job.results?.filamentsCreated || 0} created, ${job.results?.filamentsUpdated || 0} updated`
+          : job.error || "Unknown error",
+        variant: job.status === 'completed' ? "default" : "destructive",
+      });
+    }
+  };
+
+  const handleStartAllMaterials = () => {
+    setActiveJobId(null); // Clear single job mode
+    startQueue(ALL_MATERIALS);
     toast({
-      title: job.status === 'completed' ? "Scrape Complete" : "Scrape Failed",
-      description: job.status === 'completed' 
-        ? `${job.results?.filamentsCreated || 0} created, ${job.results?.filamentsUpdated || 0} updated`
-        : job.error || "Unknown error",
-      variant: job.status === 'completed' ? "default" : "destructive",
+      title: "Queue Started",
+      description: `Scraping all ${ALL_MATERIALS.length} materials sequentially`,
+    });
+  };
+
+  const handleCancelQueue = () => {
+    cancelQueue();
+    toast({
+      title: "Queue Cancelled",
+      description: "Remaining materials will not be processed",
     });
   };
 
@@ -122,33 +156,61 @@ const AdminMaintenance = () => {
             </Label>
           </div>
 
-          <Button 
-            onClick={handleStartScrape} 
-            disabled={isStarting || bambuMaterials.length === 0}
-            className="w-full sm:w-auto"
-          >
-            {isStarting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Starting...
-              </>
-            ) : (
-              <>
-                <Palette className="w-4 h-4 mr-2" />
-                {bambuColorsDryRun ? "Preview Scrape" : `Scrape ${bambuMaterials.length} Material(s)`}
-              </>
-            )}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={handleStartScrape} 
+              disabled={isStarting || isQueueRunning || bambuMaterials.length === 0}
+              className="w-full sm:w-auto"
+            >
+              {isStarting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Starting...
+                </>
+              ) : (
+                <>
+                  <Palette className="w-4 h-4 mr-2" />
+                  {bambuColorsDryRun ? "Preview Scrape" : `Scrape ${bambuMaterials.length} Material(s)`}
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              onClick={handleStartAllMaterials} 
+              disabled={isStarting || isQueueRunning}
+              variant="secondary"
+              className="w-full sm:w-auto"
+            >
+              <Layers className="w-4 h-4 mr-2" />
+              {bambuColorsDryRun ? "Preview All (8)" : "Scrape All Materials (8)"}
+            </Button>
+          </div>
 
-          {/* Active Job Progress */}
-          {activeJobId && (
+          {/* Queue Progress */}
+          {(isQueueRunning || isQueueComplete) && (
+            <div className="pt-4 border-t">
+              <BambuScrapeQueueProgress
+                queueState={queueState}
+                overallProgress={overallProgress}
+                totalMaterials={totalMaterials}
+                completedCount={completedCount}
+                isQueueRunning={isQueueRunning}
+                isQueueComplete={isQueueComplete}
+                onCancel={handleCancelQueue}
+                onReset={resetQueue}
+              />
+            </div>
+          )}
+
+          {/* Active Single Job Progress */}
+          {activeJobId && !isQueueRunning && !isQueueComplete && (
             <div className="pt-4 border-t">
               <BambuScrapeProgress jobId={activeJobId} onComplete={handleJobComplete} />
             </div>
           )}
 
           {/* Recent Jobs */}
-          {recentJobs.length > 0 && !activeJobId && (
+          {recentJobs.length > 0 && !activeJobId && !isQueueRunning && !isQueueComplete && (
             <div className="pt-4 border-t space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Recent Jobs</h4>
               {recentJobs.slice(0, 3).map((job) => (
