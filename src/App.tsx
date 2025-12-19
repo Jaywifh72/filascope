@@ -28,6 +28,7 @@ const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminEnrichment = lazy(() => import("./pages/AdminEnrichment"));
 const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
 const AdminMaintenance = lazy(() => import("./pages/AdminMaintenance"));
+const AdminMaintenanceArchive = lazy(() => import("./pages/AdminMaintenanceArchive"));
 const AdminPrinters = lazy(() => import("./pages/AdminPrinters"));
 const AdminDataQuality = lazy(() => import("./pages/AdminDataQuality"));
 const AdminFilaments = lazy(() => import("./pages/AdminFilaments"));
@@ -105,6 +106,7 @@ const App = () => (
                   <Route path="/admin/enrichment" element={<AdminEnrichment />} />
                   <Route path="/admin/affiliates" element={<AdminAffiliates />} />
                   <Route path="/admin/maintenance" element={<AdminMaintenance />} />
+                  <Route path="/admin/maintenance/archive" element={<AdminMaintenanceArchive />} />
                   <Route path="/admin/printers" element={<AdminPrinters />} />
                   <Route path="/admin/data-quality" element={<AdminDataQuality />} />
                   <Route path="/admin/filaments" element={<AdminFilaments />} />
