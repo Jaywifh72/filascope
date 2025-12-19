@@ -158,3 +158,6 @@ verify_jwt = false
 
 [functions.get-current-price]
 verify_jwt = false
+
+[functions.sync-bambulab-colors]
+verify_jwt = true
