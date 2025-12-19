@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useBambuScrapeJob, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -23,11 +24,20 @@ interface BambuScrapeProgressProps {
 
 export function BambuScrapeProgress({ jobId, onComplete }: BambuScrapeProgressProps) {
   const { job, isLoading, error, isComplete, isRunning, progressPercent } = useBambuScrapeJob(jobId);
+  const hasNotifiedRef = useRef(false);
 
-  // Call onComplete when job finishes
-  if (isComplete && job && onComplete) {
-    onComplete(job);
-  }
+  // Reset notification flag when jobId changes (new job started)
+  useEffect(() => {
+    hasNotifiedRef.current = false;
+  }, [jobId]);
+
+  // Call onComplete when job finishes - must be in useEffect to avoid calling during render
+  useEffect(() => {
+    if (isComplete && job && onComplete && !hasNotifiedRef.current) {
+      hasNotifiedRef.current = true;
+      onComplete(job);
+    }
+  }, [isComplete, job, onComplete]);
 
   if (!jobId) return null;
 
