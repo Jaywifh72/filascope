@@ -9,6 +9,7 @@ import { Loader2, Palette, Archive, Layers } from "lucide-react";
 import { BambuLabRegionalDashboard } from "@/components/admin/BambuLabRegionalDashboard";
 import { BambuScrapeProgress, BambuScrapeJobRow } from "@/components/admin/BambuScrapeProgress";
 import { BambuScrapeQueueProgress } from "@/components/admin/BambuScrapeQueueProgress";
+import { ScrapeAnalyticsWidget } from "@/components/admin/ScrapeAnalyticsWidget";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 
@@ -111,6 +112,9 @@ const AdminMaintenance = () => {
           </Button>
         </Link>
       </div>
+
+      {/* Scrape Analytics Widget */}
+      <ScrapeAnalyticsWidget />
 
       {/* Bambu Lab Scraper Card */}
       <Card>
