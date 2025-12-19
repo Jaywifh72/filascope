@@ -1878,12 +1878,13 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
   }
 
   // Pattern 3: Look for Bambu Lab CDN image URLs with color names
-  // Enhanced with CamelCase splitting and UUID stripping for better color extraction
+  // PHASE 3 FIX: Enhanced to capture full image URL and associate with color variant
   // Examples: "SunflowerYellow.jpg" -> "Sunflower Yellow"
   //           "light_gray_25c0c41d-107b-4d05-96d1-3de1efb728d9.jpg" -> "Light Gray"
-  const imagePattern = /store\.bblcdn\.com[^"'\s]+\/([A-Za-z0-9_-]+)\.(?:png|jpg|jpeg)/gi;
+  const imagePattern = /(https?:\/\/[^"'\s]*store\.bblcdn\.com[^"'\s]+\/([A-Za-z0-9_-]+)\.(?:png|jpg|jpeg))/gi;
   while ((match = imagePattern.exec(html)) !== null) {
-    let filename = match[1]; // e.g., "PLA-Matte_Ivory-White" or "SunflowerYellow"
+    const fullImageUrl = match[1]; // Full image URL for later use
+    let filename = match[2]; // e.g., "PLA-Matte_Ivory-White" or "SunflowerYellow"
     let colorName = '';
     
     // Step 1: Strip UUID patterns from filename first
@@ -1940,12 +1941,11 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
     }
     
     if (colorName && colorName.length > 1) {
-      const fullMatch = match[0];
-      const imageUrl = fullMatch.startsWith('http') ? fullMatch : `https://${fullMatch}`;
-      if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 parsing: "${match[1]}" -> cleaned: "${filename}" -> color: "${colorName}"`);
-      if (addColorIfValid(colorName, 'CDN-image', imageUrl)) {
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 parsing: "${match[2]}" -> cleaned: "${filename}" -> color: "${colorName}"`);
+      // PHASE 3: Pass the full image URL when adding the color
+      if (addColorIfValid(colorName, 'CDN-image', fullImageUrl)) {
         patternStats.p3++;
-        if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 (CDN image): Found "${cleanColorName(colorName)}" from image`);
+        if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 (CDN image): Found "${cleanColorName(colorName)}" with image: ${fullImageUrl.substring(0, 60)}...`);
       }
     }
   }
@@ -1959,21 +1959,23 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
     }
   }
 
-  // Pattern 5: Look for Shopify variant data
-  const variantDataPattern = /"title":"([^"]+)"[^}]*"id":(\d+)/gi;
+  // Pattern 5: Look for Shopify variant data with associated image URLs
+  // PHASE 3 FIX: Enhanced to extract variant images
+  const variantDataPattern = /"title":"([^"]+)"[^}]*"id":(\d+)(?:[^}]*"featured_image":\s*\{[^}]*"src":"([^"]+)")?/gi;
   while ((match = variantDataPattern.exec(html)) !== null) {
     const variantTitle = match[1].trim();
     const variantId = match[2];
-    if (addColorIfValid(variantTitle, 'shopify-variant', undefined, variantId)) {
+    const variantImage = match[3] || undefined;
+    if (addColorIfValid(variantTitle, 'shopify-variant', variantImage, variantId)) {
       patternStats.p5++;
-      if (ctx) logDebug(ctx, 'COLORS', `Pattern 5 (Shopify variant): Found "${cleanColorName(variantTitle)}" (id: ${variantId})`);
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 5 (Shopify variant): Found "${cleanColorName(variantTitle)}" (id: ${variantId})${variantImage ? ' with image' : ''}`);
     }
   }
 
   if (ctx) {
     logInfo(ctx, 'COLORS', `Extraction complete: ${variants.length} valid colors, ${patternStats.blocked} blocked`, patternStats);
     if (variants.length > 0) {
-      logDebug(ctx, 'COLORS', `Color list: ${variants.map(v => `${v.colorName}${v.colorHex ? ` (${v.colorHex})` : ''}`).join(', ')}`);
+      logDebug(ctx, 'COLORS', `Color list: ${variants.map(v => `${v.colorName}${v.colorHex ? ` (${v.colorHex})` : ''}${v.imageUrl ? ' [img]' : ''}`).join(', ')}`);
     }
   }
 
@@ -2212,6 +2214,101 @@ async function scrapeWithFirecrawl(
   return { html: '', markdown: '', success: false, error: 'Max retries exceeded' };
 }
 
+// ============================================================================
+// PHASE 3: PRODUCT AVAILABILITY DETECTION
+// Detects if a product or specific color variant is out of stock vs unavailable
+// ============================================================================
+interface ProductAvailability {
+  isAvailable: boolean;
+  stockStatus: 'in_stock' | 'out_of_stock' | 'preorder' | 'unavailable';
+  outOfStockColors: string[];
+}
+
+function detectProductAvailability(html: string, markdown: string, ctx?: LogContext): ProductAvailability {
+  const result: ProductAvailability = {
+    isAvailable: true,
+    stockStatus: 'in_stock',
+    outOfStockColors: [],
+  };
+
+  // Check for product-level availability indicators
+  const unavailablePatterns = [
+    /unavailable\s*in\s*your\s*region/i,
+    /not\s*available\s*in\s*your\s*country/i,
+    /product\s*not\s*found/i,
+    /404\s*not\s*found/i,
+    /page\s*not\s*found/i,
+    /this\s*product\s*is\s*unavailable/i,
+  ];
+
+  for (const pattern of unavailablePatterns) {
+    if (pattern.test(html) || pattern.test(markdown)) {
+      result.isAvailable = false;
+      result.stockStatus = 'unavailable';
+      if (ctx) logWarn(ctx, 'AVAILABILITY', `Product marked as unavailable (matched pattern)`);
+      return result;
+    }
+  }
+
+  // Check for out of stock at product level
+  const outOfStockPatterns = [
+    /sold\s*out/i,
+    /out\s*of\s*stock/i,
+    /currently\s*unavailable/i,
+    /temporarily\s*out\s*of\s*stock/i,
+  ];
+
+  for (const pattern of outOfStockPatterns) {
+    if (pattern.test(html) || pattern.test(markdown)) {
+      result.stockStatus = 'out_of_stock';
+      if (ctx) logWarn(ctx, 'AVAILABILITY', `Product may be out of stock (matched pattern)`);
+      break;
+    }
+  }
+
+  // Check for preorder
+  const preorderPatterns = [
+    /pre[-\s]?order/i,
+    /coming\s*soon/i,
+    /available\s*soon/i,
+  ];
+
+  for (const pattern of preorderPatterns) {
+    if (pattern.test(html) || pattern.test(markdown)) {
+      result.stockStatus = 'preorder';
+      if (ctx) logInfo(ctx, 'AVAILABILITY', `Product is available for preorder`);
+      break;
+    }
+  }
+
+  // Try to detect out-of-stock color variants
+  // Look for patterns like "Black - Sold Out" or disabled color buttons
+  const variantOosPattern = /(?:class=["'][^"']*(?:disabled|sold-out|unavailable)[^"']*["'][^>]*>([A-Za-z\s]+)<)|(?:([A-Za-z\s]+)\s*[-–—]\s*(?:sold\s*out|out\s*of\s*stock))/gi;
+  let match;
+  while ((match = variantOosPattern.exec(html)) !== null) {
+    const colorName = (match[1] || match[2] || '').trim();
+    if (colorName && colorName.length > 1 && colorName.length < 30) {
+      result.outOfStockColors.push(colorName);
+      if (ctx) logDebug(ctx, 'AVAILABILITY', `Detected out-of-stock color: ${colorName}`);
+    }
+  }
+
+  // Also check markdown for "Sold Out" patterns
+  const mdOosPattern = /\*\*([A-Za-z\s]+)\*\*\s*[-–—]?\s*(?:Sold\s*Out|Out\s*of\s*Stock)/gi;
+  while ((match = mdOosPattern.exec(markdown)) !== null) {
+    const colorName = match[1].trim();
+    if (colorName && !result.outOfStockColors.includes(colorName)) {
+      result.outOfStockColors.push(colorName);
+    }
+  }
+
+  if (ctx && result.outOfStockColors.length > 0) {
+    logInfo(ctx, 'AVAILABILITY', `Found ${result.outOfStockColors.length} out-of-stock colors: ${result.outOfStockColors.join(', ')}`);
+  }
+
+  return result;
+}
+
 async function scrapeProductPage(
   productSlug: string, 
   region: string = 'CA', 
@@ -2223,6 +2320,7 @@ async function scrapeProductPage(
   price: number | null;
   tdsUrl: string | null;
   success: boolean;
+  availability?: ProductAvailability;
   firecrawlMs?: number;
 }> {
   const store = BAMBU_REGIONAL_STORES[region];
@@ -2345,17 +2443,23 @@ async function scrapeProductPage(
     logDebug(ctx, 'PRODUCT_SCRAPE', 'No TDS URL found in page with any pattern');
   }
 
+  // PHASE 3: Detect product availability
+  if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', 'Detecting product availability...');
+  const availability = detectProductAvailability(html, markdown, ctx);
+
   if (ctx) {
     logSuccess(ctx, 'PRODUCT_SCRAPE', `Page scrape complete`, { 
       colors: colors.length, 
       invalidFiltered: invalidFilteredColors.length,
       price, 
       hasTds: !!tdsUrl,
+      availability: availability.stockStatus,
+      outOfStockColors: availability.outOfStockColors.length,
       firecrawlMs: durationMs 
     });
   }
 
-  return { colors, invalidFilteredColors, price, tdsUrl, success: true, firecrawlMs: durationMs };
+  return { colors, invalidFilteredColors, price, tdsUrl, success: true, availability, firecrawlMs: durationMs };
 }
 
 async function scrapeRegionalPrice(
