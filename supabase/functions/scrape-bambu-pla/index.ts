@@ -814,12 +814,15 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
 
   // ============================================================================
   // PLA SILK MULTI-COLOR - Multi-color silk gradient variants
+  // Updated with actual gradient names from Bambu Lab's website
   // ============================================================================
   "pla-silk-multi-color": [
-    { colorName: "Rainbow", colorHex: "#FF0000", colorFamily: "Rainbow", imageUrl: null, variantId: null },
-    { colorName: "Galaxy", colorHex: "#2E2D88", colorFamily: "Purple", imageUrl: null, variantId: null },
-    { colorName: "Sunset", colorHex: "#FF6B35", colorFamily: "Orange", imageUrl: null, variantId: null },
-    { colorName: "Aurora", colorHex: "#78D5D7", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Aurora Purple", colorHex: "#9966CC", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Dawn Radiance", colorHex: "#FFB366", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Sunset Glow", colorHex: "#FF6B35", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Ocean Twilight", colorHex: "#2E5A88", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Forest Whisper", colorHex: "#4A7C59", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Rose Dream", colorHex: "#E8A0BF", colorFamily: "Pink", imageUrl: null, variantId: null },
   ],
 
   // ============================================================================
@@ -1646,6 +1649,29 @@ const NON_COLOR_BLOCKLIST = [
   /^\s*\d+\s*(g|kg|mm|cm|m)\s*$/i,
   /^\s*1\.75\s*mm?\s*$/i,
   /^\s*2\.85\s*mm?\s*$/i,
+  
+  // ============================================================================
+  // MARKETING PHRASES - Common phrases extracted from multi-color product pages
+  // ============================================================================
+  /captivating/i,
+  /silk[-\s]*like/i,
+  /\bappearance\b/i,
+  /dynamic\s*effects?/i,
+  /with\s*dynamic/i,
+  /transformations?/i,
+  /gradients?\s*that/i,
+  /vibrant\s*and/i,
+  /lustrous/i,
+  /iridescent/i,
+  /multi[-\s]*tonal/i,
+  /color\s*shift/i,
+  /shimmering/i,
+  /eye[-\s]*catching/i,
+  /stunning/i,
+  /gorgeous/i,
+  /beautiful\s*prints?/i,
+  /premium\s*quality/i,
+  /high[-\s]*quality/i,
 ];
 
 /**
@@ -2068,16 +2094,41 @@ async function scrapeProductPage(
     return { colors: [], invalidFilteredColors: [], price: null, tdsUrl: null, success: false, firecrawlMs: durationMs };
   }
 
-  // Extract colors - first try dynamic extraction
+  // Extract colors - PREFER fallbacks for specialty products that have known color sets
+  // This prevents garbage extraction for multi-color and specialty products
   if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', 'Extracting color variants...');
-  let { variants: colors, invalidFiltered: invalidFilteredColors } = extractColorVariantsFromHtml(html, markdown, ctx);
   
-  // If no colors found, check for hardcoded fallbacks
-  if (colors.length === 0 && PRODUCT_COLOR_FALLBACKS[productSlug]) {
+  let colors: ColorVariant[] = [];
+  let invalidFilteredColors: string[] = [];
+  
+  // Products that should ALWAYS use fallbacks (their dynamic extraction is unreliable)
+  const PREFER_FALLBACK_PRODUCTS = [
+    'pla-silk-multi-color',  // Multi-color products have marketing text that gets extracted as colors
+    'pla-basic-gradient',    // Gradient products have complex names
+  ];
+  
+  const shouldPreferFallback = PREFER_FALLBACK_PRODUCTS.includes(productSlug) && PRODUCT_COLOR_FALLBACKS[productSlug];
+  
+  if (shouldPreferFallback) {
+    // For specialty products, use fallbacks directly
     colors = PRODUCT_COLOR_FALLBACKS[productSlug];
     if (ctx) {
-      logInfo(ctx, 'PRODUCT_SCRAPE', `Using FALLBACK colors for ${productSlug}: ${colors.length} colors`);
+      logInfo(ctx, 'PRODUCT_SCRAPE', `PREFER FALLBACK for specialty product ${productSlug}: ${colors.length} colors`);
       logDebug(ctx, 'PRODUCT_SCRAPE', `Fallback colors: ${colors.map(c => c.colorName).join(', ')}`);
+    }
+  } else {
+    // For regular products, try dynamic extraction first
+    const extraction = extractColorVariantsFromHtml(html, markdown, ctx);
+    colors = extraction.variants;
+    invalidFilteredColors = extraction.invalidFiltered;
+    
+    // If no colors found, fall back to hardcoded colors
+    if (colors.length === 0 && PRODUCT_COLOR_FALLBACKS[productSlug]) {
+      colors = PRODUCT_COLOR_FALLBACKS[productSlug];
+      if (ctx) {
+        logInfo(ctx, 'PRODUCT_SCRAPE', `Using FALLBACK colors for ${productSlug}: ${colors.length} colors`);
+        logDebug(ctx, 'PRODUCT_SCRAPE', `Fallback colors: ${colors.map(c => c.colorName).join(', ')}`);
+      }
     }
   }
   
@@ -2194,7 +2245,20 @@ async function upsertFilament(
   ctx?: LogContext
 ): Promise<{ created: boolean; updated: boolean; error?: string; durationMs?: number }> {
   const startTime = Date.now();
-  const productTitle = `Bambu Lab ${productType} ${colorVariant.colorName}`;
+  
+  // FIX: Strip product type prefix from color name to avoid duplication
+  // e.g., "PLA Silk" + "Silk Red" should become "Bambu Lab PLA Silk Red" not "Bambu Lab PLA Silk Silk Red"
+  let displayColor = colorVariant.colorName;
+  const productTypeWords = productType.split(' '); // e.g., ["PLA", "Silk"]
+  for (const word of productTypeWords) {
+    // Check if color name starts with a word from the product type (case insensitive)
+    const regex = new RegExp(`^${word}\\s+`, 'i');
+    if (regex.test(displayColor)) {
+      displayColor = displayColor.replace(regex, '');
+    }
+  }
+  
+  const productTitle = `Bambu Lab ${productType} ${displayColor}`;
   const productId = `bambu-${productConfig.slug}-${colorVariant.colorName.toLowerCase().replace(/\s+/g, '-')}`;
   
   if (ctx) {
