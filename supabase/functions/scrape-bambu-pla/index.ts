@@ -502,11 +502,11 @@ const BAMBU_PET_PRODUCTS: Record<string, ProductConfig> = {
 };
 
 // ============================================================================
-// PC (POLYCARBONATE) PRODUCT DEFINITIONS
+// PC (POLYCARBONATE) PRODUCT DEFINITIONS - Slugs verified from Excel file (ca.store.bambulab.com)
 // ============================================================================
 const BAMBU_PC_PRODUCTS: Record<string, ProductConfig> = {
   "PC": {
-    slug: "pc-filament",
+    slug: "pc-filament",  // Verified: https://ca.store.bambulab.com/products/pc-filament
     material: "PC",
     tdsUrl: "https://store.bblcdn.com/a52afdccddfd448583d119587122c8c5.pdf",
     nozzleTempMin: 260, nozzleTempMax: 280,
@@ -514,9 +514,9 @@ const BAMBU_PC_PRODUCTS: Record<string, ProductConfig> = {
     dryingTempC: 80, dryingTimeHours: 8,
   },
   "PC FR": {
-    slug: "pc-fr",
+    slug: "pc-fr",  // Verified: https://ca.store.bambulab.com/products/pc-fr
     material: "PC-FR",
-    tdsUrl: null,
+    tdsUrl: "https://store.bblcdn.com/s1/default/4adf3c9827a0475d8777e9b8cfd11fbe.pdf",
     nozzleTempMin: 260, nozzleTempMax: 280,
     bedTempMin: 90, bedTempMax: 110,
     dryingTempC: 80, dryingTimeHours: 8,
@@ -1023,6 +1023,26 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // Verified from: https://ca.store.bambulab.com/products/support-for-pa-pet
   "support-for-pa-pet": [
     { colorName: "Natural", colorHex: "#FFFFF0", colorFamily: "Clear", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PC (POLYCARBONATE) COLOR FALLBACKS
+  // ============================================================================
+  
+  // PC Filament - 3 colors (Transparent, Black, White)
+  // Verified from: https://ca.store.bambulab.com/products/pc-filament
+  "pc-filament": [
+    { colorName: "Transparent", colorHex: "#E8E8E8", colorFamily: "Clear", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+  ],
+  
+  // PC FR - 3 colors (White, Gray, Black)
+  // Verified from: https://ca.store.bambulab.com/products/pc-fr (Hex code table shows exact values)
+  "pc-fr": [
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#A8A8AA", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
 };
 
