@@ -2032,7 +2032,9 @@ async function scrapeWithFirecrawl(
         url,
         formats: ['html', 'markdown'],
         onlyMainContent: false,
-        waitFor: 6000,  // Increased from 3000ms for better variant/color loading on JS-heavy pages
+        waitFor: 10000,  // Increased to 10s for full variant/color loading on JS-heavy pages
+        // Wait for color swatch elements to be rendered before returning HTML
+        waitForSelector: '.product-variants-color, [data-option-name="Color"], .variant-option-values, .swatch-container, [class*="color-swatch"], [class*="variant-color"]',
         location: location || { country: 'CA', languages: ['en'] },
       };
       
@@ -2459,6 +2461,20 @@ declare const EdgeRuntime: {
 };
 
 // ============================================================================
+// JOB TIMEOUT CONFIGURATION (30 minutes max)
+// ============================================================================
+const JOB_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+function checkJobTimeout(ctx: LogContext, jobId: string): boolean {
+  const elapsed = Date.now() - ctx.startTime;
+  if (elapsed > JOB_TIMEOUT_MS) {
+    logError(ctx, 'TIMEOUT', `Job ${jobId} exceeded ${JOB_TIMEOUT_MS / 60000} minute timeout after ${Math.round(elapsed / 60000)} minutes`);
+    return true;
+  }
+  return false;
+}
+
+// ============================================================================
 // BACKGROUND SCRAPE FUNCTION
 // ============================================================================
 async function runBackgroundScrape(
@@ -2471,7 +2487,7 @@ async function runBackgroundScrape(
   ctx: LogContext,
   timing: { firecrawlMs: number; dbMs: number; delayMs: number }
 ): Promise<void> {
-  logInfo(ctx, 'BACKGROUND', `Starting background scrape for job: ${jobId}`);
+  logInfo(ctx, 'BACKGROUND', `Starting background scrape for job: ${jobId} (timeout: ${JOB_TIMEOUT_MS / 60000} minutes)`);
   
   const results = {
     requestId: ctx.requestId,
@@ -2547,6 +2563,36 @@ async function runBackgroundScrape(
 
       // Process each product
       for (const [productName, productConfig] of productsToScrape) {
+        // Check for job timeout at the start of each product
+        if (checkJobTimeout(ctx, jobId)) {
+          const timeoutError = createError('data_quality', `Job timed out after ${JOB_TIMEOUT_MS / 60000} minutes`, {
+            product: productName,
+            details: `Processed ${productsProcessed}/${totalProducts} products before timeout`
+          });
+          results.errors.push(timeoutError);
+          
+          // Mark job as failed due to timeout
+          await supabaseClient.from('scrape_jobs').update({
+            status: 'failed',
+            completed_at: new Date().toISOString(),
+            error: `Job exceeded ${JOB_TIMEOUT_MS / 60000} minute timeout`,
+            results: { ...results, errors: results.errors.map(formatError) },
+            progress: {
+              currentMaterial: materialCategory,
+              currentProduct: productName,
+              currentRegion: null,
+              productsProcessed,
+              totalProducts,
+              colorsDiscovered: results.colorsDiscovered,
+              filamentsCreated: results.filamentsCreated,
+              filamentsUpdated: results.filamentsUpdated,
+              errors: results.errors.map(formatError),
+            },
+          }).eq('id', jobId);
+          
+          return; // Exit the function entirely
+        }
+
         ctx.productName = productName;
         productsProcessed++;
 
