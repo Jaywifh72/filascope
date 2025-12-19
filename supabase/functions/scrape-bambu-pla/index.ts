@@ -2001,13 +2001,21 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
     return true;
   };
 
-  // Pattern 1: Look for color swatches with data attributes
-  const swatchPattern = /data-(?:color|variant|option)=["']([^"']+)["']/gi;
+  // Pattern 1: Look for color swatches with data attributes (ENHANCED for Shopify)
+  // Added more patterns for Shopify variant buttons and color options
+  const swatchPatterns = [
+    /data-(?:color|variant|option)=["']([^"']+)["']/gi,
+    /data-option-value=["']([^"']+)["']/gi,  // Shopify option values
+    /data-variant-title=["']([^"']+)["']/gi,  // Shopify variant titles
+    /aria-label=["'](?:Select\s+)?(?:color\s*:?\s*)?([^"']+)["']/gi,  // Accessible labels
+  ];
   let match;
-  while ((match = swatchPattern.exec(html)) !== null) {
-    if (addColorIfValid(match[1], 'data-attr')) {
-      patternStats.p1++;
-      if (ctx) logDebug(ctx, 'COLORS', `Pattern 1 (data-attr): Found "${cleanColorName(match[1])}"`);
+  for (const swatchPattern of swatchPatterns) {
+    while ((match = swatchPattern.exec(html)) !== null) {
+      if (addColorIfValid(match[1], 'data-attr')) {
+        patternStats.p1++;
+        if (ctx) logDebug(ctx, 'COLORS', `Pattern 1 (data-attr): Found "${cleanColorName(match[1])}"`);
+      }
     }
   }
 
@@ -2119,9 +2127,37 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
     }
   }
 
+  // Pattern 6: Look for Shopify product JSON data (common in Bambu Lab pages)
+  const shopifyJsonPattern = /"options":\s*\[\s*"([^"]+)"\s*\]/gi;
+  while ((match = shopifyJsonPattern.exec(html)) !== null) {
+    const optionValue = match[1].trim();
+    if (addColorIfValid(optionValue, 'shopify-json')) {
+      patternStats.p5++;  // Reuse p5 counter for all Shopify patterns
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 6 (Shopify JSON options): Found "${cleanColorName(optionValue)}"`);
+    }
+  }
+
+  // Pattern 7: Look for option values in Shopify variant selector HTML
+  const optionSelectorPattern = /<option[^>]*value=["']([^"']+)["'][^>]*>([^<]+)<\/option>/gi;
+  while ((match = optionSelectorPattern.exec(html)) !== null) {
+    // Try both the value and the text content
+    const optionValue = match[1].trim();
+    const optionText = match[2].trim();
+    if (addColorIfValid(optionValue, 'option-selector')) {
+      patternStats.p5++;
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 7 (option selector value): Found "${cleanColorName(optionValue)}"`);
+    }
+    if (optionText !== optionValue && addColorIfValid(optionText, 'option-selector-text')) {
+      patternStats.p5++;
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 7 (option selector text): Found "${cleanColorName(optionText)}"`);
+    }
+  }
+
   if (ctx) {
     logInfo(ctx, 'COLORS', `Extraction complete: ${variants.length} valid colors, ${patternStats.blocked} blocked`, patternStats);
-    if (variants.length > 0) {
+    if (variants.length === 0) {
+      logWarn(ctx, 'COLORS', 'ZERO colors extracted from dynamic content - will need fallback');
+    } else if (variants.length > 0) {
       logDebug(ctx, 'COLORS', `Color list: ${variants.map(v => `${v.colorName}${v.colorHex ? ` (${v.colorHex})` : ''}${v.imageUrl ? ' [img]' : ''}`).join(', ')}`);
     }
   }
@@ -2246,13 +2282,13 @@ async function scrapeWithFirecrawl(
     }
 
     try {
+      // FIX: Removed waitForSelector as Firecrawl v2 API doesn't support it
+      // Use longer waitFor instead to allow JS to render dynamic content
       const requestBody = {
         url,
         formats: ['html', 'markdown'],
         onlyMainContent: false,
-        waitFor: 10000,  // Increased to 10s for full variant/color loading on JS-heavy pages
-        // Wait for color swatch elements to be rendered before returning HTML
-        waitForSelector: '.product-variants-color, [data-option-name="Color"], .variant-option-values, .swatch-container, [class*="color-swatch"], [class*="variant-color"]',
+        waitFor: 15000,  // Increased to 15s for full variant/color loading on JS-heavy Shopify pages
         location: location || { country: 'CA', languages: ['en'] },
       };
       
@@ -3106,14 +3142,33 @@ async function runBackgroundScrape(
         if (firecrawlMs) timing.firecrawlMs += firecrawlMs;
         
         // Use mutable array for colors
-        const colorVariants = [...colors];
+        let colorVariants = [...colors];
         
+        // FIX: Improved fallback logic - use PRODUCT_COLOR_FALLBACKS BEFORE defaulting to Black/White
         if (!success || colorVariants.length === 0) {
-          const defaultColors = productConfig.material === 'Support' || productConfig.material === 'PVA'
-            ? ['White']
-            : ['Black', 'White'];
-          for (const colorName of defaultColors) {
-            colorVariants.push(extractColorInfo(colorName));
+          // First, try to use product-specific fallback colors
+          if (PRODUCT_COLOR_FALLBACKS[productConfig.slug]) {
+            colorVariants = [...PRODUCT_COLOR_FALLBACKS[productConfig.slug]];
+            logInfo(ctx, 'FALLBACK', `Using PRODUCT_COLOR_FALLBACKS for ${productName}: ${colorVariants.length} colors`, {
+              product: productConfig.slug,
+              colors: colorVariants.slice(0, 5).map(c => c.colorName)
+            });
+          } else {
+            // Only use Black/White as LAST RESORT if no fallback exists
+            const defaultColors = productConfig.material === 'Support' || productConfig.material === 'PVA'
+              ? ['White']
+              : ['Black', 'White'];
+            for (const colorName of defaultColors) {
+              colorVariants.push(extractColorInfo(colorName));
+            }
+            logWarn(ctx, 'FALLBACK', `No PRODUCT_COLOR_FALLBACKS for ${productName}, using defaults: ${defaultColors.join(', ')}`);
+          }
+        } else if (colorVariants.length < 3 && PRODUCT_COLOR_FALLBACKS[productConfig.slug]) {
+          // FIX: If we found very few colors dynamically but have a fallback with more, use the fallback
+          const fallbackColors = PRODUCT_COLOR_FALLBACKS[productConfig.slug];
+          if (fallbackColors.length > colorVariants.length * 2) {
+            logWarn(ctx, 'COVERAGE', `Dynamic extraction found only ${colorVariants.length} colors, but fallback has ${fallbackColors.length}. Using fallback for better coverage.`);
+            colorVariants = [...fallbackColors];
           }
         }
 
