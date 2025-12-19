@@ -3498,6 +3498,7 @@ async function processSingleProduct(
   singleProduct: SingleProductRequest,
   dryRun: boolean | undefined,
   passedJobId: string | undefined,
+  progressContext: Record<string, any>,
   ctx: LogContext
 ): Promise<Response> {
   const { material, slug, name } = singleProduct;
@@ -3569,6 +3570,7 @@ async function processSingleProduct(
       await supabase.from('scrape_jobs').update({
         updated_at: new Date().toISOString(),
         progress: {
+          ...progressContext, // Preserve orchestrator's progress data
           currentProduct: productName,
           currentMaterial: material,
           currentStage: 'fetching_colors',
@@ -3611,9 +3613,11 @@ async function processSingleProduct(
       await supabase.from('scrape_jobs').update({
         updated_at: new Date().toISOString(),
         progress: {
+          ...progressContext, // Preserve orchestrator's progress data
           currentProduct: productName,
           currentMaterial: material,
           currentStage: 'scraping_prices',
+          colorsDiscovered: (progressContext.colorsDiscovered || 0) + colorVariants.length,
         },
       }).eq('id', passedJobId);
     }
@@ -3648,9 +3652,11 @@ async function processSingleProduct(
         await supabase.from('scrape_jobs').update({
           updated_at: new Date().toISOString(),
           progress: {
+            ...progressContext, // Preserve orchestrator's progress data
             currentProduct: productName,
             currentMaterial: material,
             currentStage: 'saving_db',
+            colorsDiscovered: (progressContext.colorsDiscovered || 0) + colorVariants.length,
           },
         }).eq('id', passedJobId);
       }
@@ -3739,11 +3745,12 @@ serve(async (req) => {
       background = false, // New: run in background mode
       singleProduct, // NEW: Single product mode for chunked processing
       jobId: passedJobId, // NEW: Job ID for progress updates in chunked mode
+      progressContext = {}, // NEW: Progress context from orchestrator
     } = await req.json().catch(() => ({}));
 
     // SINGLE PRODUCT MODE: Process just one product quickly (for chunked orchestration)
     if (singleProduct && typeof singleProduct === 'object') {
-      return await processSingleProduct(singleProduct, dryRun, passedJobId, ctx);
+      return await processSingleProduct(singleProduct, dryRun, passedJobId, progressContext, ctx);
     }
 
     // Default to PLA only if no materials specified
