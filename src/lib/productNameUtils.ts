@@ -83,8 +83,9 @@ export const getBaseProductName = (title: string, material?: string | null): str
   // BAMBU LAB PATTERN: "Bambu Lab [Material] [ProductType] [Color]"
   // ProductType examples: Basic, Matte, Silk, Silk Multi-color, Marble, Galaxy, etc.
   // This pattern extracts the base product name without the color suffix
+  // Note: e?PLA matches both "PLA" and "ePLA" variants (e.g., ePLA-HS)
   const bambuLabMatch = normalizedTitle.match(
-    /^(Bambu Lab (?:PLA|PETG|TPU|ABS|ASA|PA|PC|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?(?:\s+(?:Basic|Matte|Silk|Translucent|Tough|Wood|Marble|Metal|Galaxy|Glow|Sparkle|Aero|Impact|HF|HS|Lite))?(?:\s+(?:Multi-color|Gradient))?)\s+.+$/i
+    /^(Bambu Lab (?:e?PLA|PETG|TPU|ABS|ASA|PA|PC|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?(?:\s+(?:Basic|Matte|Silk|Translucent|Tough|Wood|Marble|Metal|Galaxy|Glow|Sparkle|Aero|Impact|HF|HS|Lite))?(?:\s+(?:Multi-color|Gradient))?)\s+.+$/i
   );
   if (bambuLabMatch) {
     return bambuLabMatch[1].trim();
@@ -92,7 +93,7 @@ export const getBaseProductName = (title: string, material?: string | null): str
   
   // Handle Bambu Lab products that are just "Bambu Lab [Material] [Color]" (no product type)
   const bambuLabSimpleMatch = normalizedTitle.match(
-    /^(Bambu Lab (?:PLA|PETG|TPU|ABS|ASA|PA|PC|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?)\s+.+$/i
+    /^(Bambu Lab (?:e?PLA|PETG|TPU|ABS|ASA|PA|PC|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?)\s+.+$/i
   );
   if (bambuLabSimpleMatch) {
     // Only match if what follows is a color, not a product type
