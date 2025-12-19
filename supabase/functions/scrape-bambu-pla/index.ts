@@ -224,6 +224,38 @@ const RATE_LIMIT_CONFIG = {
 };
 
 // ============================================================================
+// ERROR CATEGORIZATION - Structured error tracking
+// ============================================================================
+type ErrorCategory = 'firecrawl' | 'price_extraction' | 'database' | 'data_quality';
+
+interface CategorizedError {
+  category: ErrorCategory;
+  message: string;
+  product?: string;
+  region?: string;
+  details?: string;
+}
+
+function createError(
+  category: ErrorCategory,
+  message: string,
+  options?: { product?: string; region?: string; details?: string }
+): CategorizedError {
+  return {
+    category,
+    message,
+    ...options,
+  };
+}
+
+function formatError(err: CategorizedError): string {
+  const parts = [`[${err.category.toUpperCase()}]`, err.message];
+  if (err.product) parts.push(`(${err.product})`);
+  if (err.region) parts.push(`[${err.region}]`);
+  return parts.join(' ');
+}
+
+// ============================================================================
 // PLA PRODUCT DEFINITIONS - All Bambu Lab PLA types
 // Uses ProductConfig interface for type consistency
 // ============================================================================
@@ -1323,13 +1355,41 @@ function extractFromMetaTags(html: string): number | null {
   return null;
 }
 
+// Extract compare-at price (original price before discount)
+function extractCompareAtPrice(html: string, markdown: string, ctx?: LogContext): number | null {
+  // Look for strikethrough/original price patterns
+  const comparePatterns = [
+    // Pattern 1: Strikethrough text with price
+    /<s[^>]*>(?:\$|€|£|C\$|CA\$|A\$|¥)\s*(\d{1,3}(?:[.,]\d{2})?)<\/s>/gi,
+    // Pattern 2: Compare-at-price class
+    /class="[^"]*compare[-_]?at[-_]?price[^"]*"[^>]*>(?:\$|€|£|C\$|CA\$|A\$|¥)\s*(\d{1,3}(?:[.,]\d{2})?)/gi,
+    // Pattern 3: Was/Original price text
+    /(?:was|original|reg(?:ular)?)\s*(?:price)?[:\s]*(?:\$|€|£|C\$|CA\$|A\$|¥)\s*(\d{1,3}(?:[.,]\d{2})?)/gi,
+    // Pattern 4: JSON-LD compare price
+    /"compareAtPrice":\s*"?(\d+(?:\.\d{2})?)"?/i,
+  ];
+
+  for (const pattern of comparePatterns) {
+    const match = pattern.exec(html);
+    if (match && match[1]) {
+      const price = parseFloat(match[1].replace(',', '.'));
+      if (!isNaN(price) && price > 0) {
+        if (ctx) logDebug(ctx, 'PRICE', `Found compare-at price: ${price}`);
+        return price;
+      }
+    }
+  }
+  
+  return null;
+}
+
 function extractBambuLabPrice(
   html: string, 
   markdown: string, 
   region: string, 
   material: string = 'PLA',
   ctx?: LogContext
-): { price: number; source: string } | null {
+): { price: number; compareAtPrice: number | null; source: string } | null {
   const store = BAMBU_REGIONAL_STORES[region];
   if (!store) {
     if (ctx) logWarn(ctx, 'PRICE', `Unknown region: ${region}`);
@@ -1344,6 +1404,9 @@ function extractBambuLabPrice(
     logDebug(ctx, 'PRICE', `HTML size: ${html.length} chars, Markdown size: ${markdown.length} chars`);
   }
 
+  // Extract compare-at price once (for discount detection)
+  const compareAtPrice = extractCompareAtPrice(html, markdown, ctx);
+
   // Strategy 1: bbl-title-1 class (Bambu Lab's main price element)
   if (ctx) logDebug(ctx, 'PRICE', 'Trying Strategy 1: bbl-title-1 class');
   const bblTitleMatch = html.match(/class="[^"]*bbl-title-1[^"]*"[^>]*>([^<]*(?:\$|€|£|¥|C\$|CA\$|A\$)[^<]*)<\/[^>]+>/i);
@@ -1357,7 +1420,7 @@ function extractBambuLabPrice(
       const price = extractNumericPrice(priceText, ctx);
       if (price && price >= minExpected && price <= maxExpected) {
         if (ctx) logSuccess(ctx, 'PRICE', `Strategy 1 SUCCESS: ${price} ${store.currency} (bbl-title-1)`);
-        return { price, source: 'bbl-title-1' };
+        return { price, compareAtPrice, source: 'bbl-title-1' };
       } else if (price && ctx) {
         logWarn(ctx, 'PRICE', `Strategy 1 REJECTED: ${price} outside range [${minExpected}-${maxExpected}]`);
       }
@@ -1392,7 +1455,7 @@ function extractBambuLabPrice(
       
       if (!containsDiscountKeywords(context, ctx) && price >= minExpected && price <= maxExpected) {
         if (ctx) logSuccess(ctx, 'PRICE', `Strategy 2 SUCCESS: ${price} ${store.currency} (from-pattern)`);
-        return { price, source: 'from-pattern' };
+        return { price, compareAtPrice, source: 'from-pattern' };
       } else if (ctx && (price < minExpected || price > maxExpected)) {
         logDebug(ctx, 'PRICE', `Strategy 2 REJECTED: ${price} outside range [${minExpected}-${maxExpected}]`);
       }
@@ -1406,7 +1469,7 @@ function extractBambuLabPrice(
     if (ctx) logDebug(ctx, 'PRICE', `Strategy 3 found JSON-LD price: ${jsonLdPrice}`);
     if (jsonLdPrice >= minExpected && jsonLdPrice <= maxExpected) {
       if (ctx) logSuccess(ctx, 'PRICE', `Strategy 3 SUCCESS: ${jsonLdPrice} ${store.currency} (json-ld)`);
-      return { price: jsonLdPrice, source: 'json-ld' };
+      return { price: jsonLdPrice, compareAtPrice, source: 'json-ld' };
     } else if (ctx) {
       logWarn(ctx, 'PRICE', `Strategy 3 REJECTED: ${jsonLdPrice} outside range [${minExpected}-${maxExpected}]`);
     }
@@ -1421,7 +1484,7 @@ function extractBambuLabPrice(
     if (ctx) logDebug(ctx, 'PRICE', `Strategy 4 found meta price: ${metaPrice}`);
     if (metaPrice >= minExpected && metaPrice <= maxExpected) {
       if (ctx) logSuccess(ctx, 'PRICE', `Strategy 4 SUCCESS: ${metaPrice} ${store.currency} (meta-tag)`);
-      return { price: metaPrice, source: 'meta-tag' };
+      return { price: metaPrice, compareAtPrice, source: 'meta-tag' };
     } else if (ctx) {
       logWarn(ctx, 'PRICE', `Strategy 4 REJECTED: ${metaPrice} outside range [${minExpected}-${maxExpected}]`);
     }
@@ -1437,7 +1500,7 @@ function extractBambuLabPrice(
     if (ctx) logDebug(ctx, 'PRICE', `Strategy 5 found markdown price: ${price}`);
     if (price >= minExpected && price <= maxExpected) {
       if (ctx) logSuccess(ctx, 'PRICE', `Strategy 5 SUCCESS: ${price} ${store.currency} (markdown-from)`);
-      return { price, source: 'markdown-from' };
+      return { price, compareAtPrice, source: 'markdown-from' };
     } else if (ctx) {
       logWarn(ctx, 'PRICE', `Strategy 5 REJECTED: ${price} outside range [${minExpected}-${maxExpected}]`);
     }
@@ -1471,7 +1534,7 @@ function extractBambuLabPrice(
       
       if (!containsDiscountKeywords(context, ctx) && price >= minExpected && price <= maxExpected) {
         if (ctx) logSuccess(ctx, 'PRICE', `Strategy 6 SUCCESS: ${price} ${store.currency} (direct-currency-code)`);
-        return { price, source: 'direct-currency-code' };
+        return { price, compareAtPrice, source: 'direct-currency-code' };
       }
     }
   }
@@ -1829,14 +1892,15 @@ function extractColorInfo(colorName: string): ColorVariant {
 // ============================================================================
 // FIRECRAWL SCRAPING WITH RETRY LOGIC
 // ============================================================================
-const FIRECRAWL_MAX_RETRIES = 2;
+const FIRECRAWL_MAX_RETRIES = 3;
 const FIRECRAWL_BASE_DELAY_MS = 1000;
+const FIRECRAWL_429_MULTIPLIER = 3; // Extended backoff for rate limits
 
 async function scrapeWithFirecrawl(
   url: string, 
   region: string,
   ctx?: LogContext
-): Promise<{ html: string; markdown: string; success: boolean; error?: string; durationMs?: number }> {
+): Promise<{ html: string; markdown: string; success: boolean; error?: string; errorCategory?: ErrorCategory; durationMs?: number }> {
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
   
   if (!firecrawlKey) {
@@ -1885,23 +1949,39 @@ async function scrapeWithFirecrawl(
 
       if (!response.ok) {
         const errText = await response.text();
-        const isRetryable = response.status >= 500 || response.status === 429;
+        const isRateLimit = response.status === 429;
+        const isServerError = response.status >= 500;
+        const isRetryable = isServerError || isRateLimit;
         
         if (ctx) {
           logError(ctx, 'FIRECRAWL', `HTTP ${response.status} error after ${durationMs}ms`, { 
             status: response.status, 
             response: errText.substring(0, 500),
             retryable: isRetryable,
+            isRateLimit,
             attempt: attempt + 1,
           });
         }
         
         // Only retry on server errors (5xx) or rate limits (429)
         if (isRetryable && attempt < FIRECRAWL_MAX_RETRIES) {
+          // Extended backoff for rate limits (429)
+          if (isRateLimit) {
+            const rateLimitBackoff = FIRECRAWL_BASE_DELAY_MS * Math.pow(FIRECRAWL_429_MULTIPLIER, attempt);
+            if (ctx) logWarn(ctx, 'FIRECRAWL', `Rate limited (429) - extended backoff: ${rateLimitBackoff}ms`);
+            await new Promise(resolve => setTimeout(resolve, rateLimitBackoff));
+          }
           continue; // Retry
         }
         
-        return { html: '', markdown: '', success: false, error: `HTTP ${response.status}`, durationMs };
+        return { 
+          html: '', 
+          markdown: '', 
+          success: false, 
+          error: `HTTP ${response.status}`, 
+          errorCategory: 'firecrawl',
+          durationMs 
+        };
       }
 
       const data = await response.json();
@@ -2018,25 +2098,27 @@ async function scrapeProductPage(
     logWarn(ctx, 'PRODUCT_SCRAPE', 'No valid price extracted');
   }
 
-  // FIX 2: Extract TDS URL with multi-pattern matching
+  // FIX 2: Extract TDS URL with multi-pattern matching using RegExp.exec()
   let tdsUrl: string | null = null;
   
   // TDS URL extraction patterns (ordered by specificity)
+  // NOTE: Using RegExp (not literals with gi) so we can properly use exec() for capture groups
   const TDS_URL_PATTERNS = [
     // Pattern 1: Standard Technical_Data_Sheet naming
-    /href=["']([^"']*Technical_Data_Sheet[^"']*\.pdf)["']/gi,
+    new RegExp(/href=["']([^"']*Technical_Data_Sheet[^"']*\.pdf)["']/i),
     // Pattern 2: TDS abbreviation
-    /href=["']([^"']*(?:\/|_)tds[^"']*\.pdf)["']/gi,
+    new RegExp(/href=["']([^"']*(?:\/|_)tds[^"']*\.pdf)["']/i),
     // Pattern 3: bblcdn.com hosted PDFs (common Bambu pattern)
-    /href=["'](https?:\/\/(?:store\.)?bblcdn\.com\/[^"']+\.pdf)["']/gi,
+    new RegExp(/href=["'](https?:\/\/(?:store\.)?bblcdn\.com\/[^"']+\.pdf)["']/i),
     // Pattern 4: Shopify CDN hosted PDFs
-    /href=["'](https?:\/\/cdn\.shopify\.com\/[^"']+\.pdf)["']/gi,
+    new RegExp(/href=["'](https?:\/\/cdn\.shopify\.com\/[^"']+\.pdf)["']/i),
     // Pattern 5: Any PDF with technical/datasheet keywords in the URL path
-    /href=["']([^"']*(?:technical|datasheet|data[-_]sheet|specs?)[^"']*\.pdf)["']/gi,
+    new RegExp(/href=["']([^"']*(?:technical|datasheet|data[-_]sheet|specs?)[^"']*\.pdf)["']/i),
   ];
   
   for (const pattern of TDS_URL_PATTERNS) {
-    const tdsMatch = html.match(pattern);
+    // Use exec() instead of match() for proper capture group extraction
+    const tdsMatch = pattern.exec(html);
     if (tdsMatch && tdsMatch[1]) {
       tdsUrl = tdsMatch[1];
       if (!tdsUrl.startsWith('http')) {
@@ -2071,6 +2153,7 @@ async function scrapeRegionalPrice(
   ctx?: LogContext
 ): Promise<{
   price: number | null;
+  compareAtPrice: number | null;
   url: string;
   firecrawlMs?: number;
 }> {
@@ -2083,14 +2166,19 @@ async function scrapeRegionalPrice(
   
   if (!success) {
     if (ctx) logWarn(ctx, 'REGIONAL', `Failed to scrape ${region} price for ${productSlug}`);
-    return { price: null, url, firecrawlMs: durationMs };
+    return { price: null, compareAtPrice: null, url, firecrawlMs: durationMs };
   }
 
   const priceResult = extractBambuLabPrice(html, markdown, region, material, ctx);
   if (priceResult?.price && ctx) {
-    logSuccess(ctx, 'REGIONAL', `${region}: ${priceResult.price} ${store.currency}`);
+    logSuccess(ctx, 'REGIONAL', `${region}: ${priceResult.price} ${store.currency}${priceResult.compareAtPrice ? ` (was ${priceResult.compareAtPrice})` : ''}`);
   }
-  return { price: priceResult?.price || null, url, firecrawlMs: durationMs };
+  return { 
+    price: priceResult?.price || null, 
+    compareAtPrice: priceResult?.compareAtPrice || null,
+    url, 
+    firecrawlMs: durationMs 
+  };
 }
 
 // ============================================================================
@@ -2102,7 +2190,7 @@ async function upsertFilament(
   colorVariant: ColorVariant,
   productConfig: ProductConfig,
   brandId: string | null,
-  prices: Record<string, { price: number | null; url: string }>,
+  prices: Record<string, { price: number | null; compareAtPrice: number | null; url: string }>,
   ctx?: LogContext
 ): Promise<{ created: boolean; updated: boolean; error?: string; durationMs?: number }> {
   const startTime = Date.now();
@@ -2156,14 +2244,19 @@ async function upsertFilament(
     sync_status: 'synced',
   };
 
-  // Add regional prices and URLs
+  // Add regional prices, compare-at prices, and URLs
   const pricesSummary: string[] = [];
-  for (const [region, { price, url }] of Object.entries(prices)) {
+  for (const [region, { price, compareAtPrice, url }] of Object.entries(prices)) {
     const store = BAMBU_REGIONAL_STORES[region];
     if (store && price) {
       filamentData[store.priceField] = price;
       filamentData[store.urlField] = url;
       pricesSummary.push(`${region}:${price}`);
+      
+      // Save compare-at price for US region only (variant_compare_at_price column)
+      if (region === 'US' && compareAtPrice) {
+        filamentData['variant_compare_at_price'] = compareAtPrice;
+      }
     }
   }
   
@@ -2243,10 +2336,14 @@ async function runBackgroundScrape(
     colorsDiscovered: 0,
     filamentsCreated: 0,
     filamentsUpdated: 0,
-    errors: [] as string[],
+    errors: [] as CategorizedError[],
     productDetails: [] as any[],
     timing: {} as TimingMetrics,
   };
+  
+  // Progress update throttling - only update every N products or on significant events
+  const PROGRESS_UPDATE_INTERVAL = 3; // Update every 3 products
+  let lastProgressUpdate = 0;
 
   try {
     // Get Bambu Lab brand ID
@@ -2276,7 +2373,7 @@ async function runBackgroundScrape(
       const materialProducts = ALL_BAMBU_PRODUCTS[materialCategory];
       
       if (!materialProducts) {
-        results.errors.push(`Unknown material category: ${materialCategory}`);
+        results.errors.push(createError('data_quality', `Unknown material category: ${materialCategory}`));
         continue;
       }
 
@@ -2365,25 +2462,30 @@ async function runBackgroundScrape(
           const region = regions[i];
           ctx.region = region;
           
-          // Update progress with current region
-          await supabaseClient.from('scrape_jobs').update({
-            progress: {
-              currentMaterial: materialCategory,
-              currentProduct: productName,
-              currentRegion: region,
-              productsProcessed,
-              totalProducts,
-              colorsDiscovered: results.colorsDiscovered,
-              filamentsCreated: results.filamentsCreated,
-              filamentsUpdated: results.filamentsUpdated,
-              errors: results.errors,
-            },
-          }).eq('id', jobId);
+          // Throttled progress update - only update every PROGRESS_UPDATE_INTERVAL products
+          const shouldUpdateProgress = (productsProcessed - lastProgressUpdate) >= PROGRESS_UPDATE_INTERVAL;
+          if (shouldUpdateProgress) {
+            await supabaseClient.from('scrape_jobs').update({
+              progress: {
+                currentMaterial: materialCategory,
+                currentProduct: productName,
+                currentRegion: region,
+                productsProcessed,
+                totalProducts,
+                colorsDiscovered: results.colorsDiscovered,
+                filamentsCreated: results.filamentsCreated,
+                filamentsUpdated: results.filamentsUpdated,
+                errors: results.errors.map(formatError),
+              },
+            }).eq('id', jobId);
+            lastProgressUpdate = productsProcessed;
+          }
 
-          // Rate limit delay (reduced from 2s to 1s for background)
+          // Rate limit delay using config
           if (i > 0) {
+            const delay = RATE_LIMIT_CONFIG.background.betweenRegions;
             const delayStart = Date.now();
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, delay));
             timing.delayMs += Date.now() - delayStart;
           }
           
@@ -2433,13 +2535,13 @@ async function runBackgroundScrape(
             if (result.created) results.filamentsCreated++;
             if (result.updated) results.filamentsUpdated++;
             if (result.error) {
-              results.errors.push(`${productName} ${colorVariant.colorName}: ${result.error}`);
+              results.errors.push(createError('database', result.error, { product: `${productName} ${colorVariant.colorName}` }));
             }
           }
           ctx.colorName = undefined;
         }
 
-        // Update progress after each product
+        // Always update progress after each product (important for UI feedback)
         await supabaseClient.from('scrape_jobs').update({
           progress: {
             currentMaterial: materialCategory,
@@ -2450,13 +2552,15 @@ async function runBackgroundScrape(
             colorsDiscovered: results.colorsDiscovered,
             filamentsCreated: results.filamentsCreated,
             filamentsUpdated: results.filamentsUpdated,
-            errors: results.errors,
+            errors: results.errors.map(formatError),
           },
         }).eq('id', jobId);
+        lastProgressUpdate = productsProcessed;
 
-        // Reduced inter-product delay for background (1.5s instead of 3s)
+        // Inter-product delay using config
+        const productDelay = RATE_LIMIT_CONFIG.background.betweenProducts;
         const delayStart = Date.now();
-        await new Promise(r => setTimeout(r, 1500));
+        await new Promise(r => setTimeout(r, productDelay));
         timing.delayMs += Date.now() - delayStart;
       }
       
@@ -2475,11 +2579,12 @@ async function runBackgroundScrape(
       totalMs,
     };
 
-    // Mark job as completed
+    // Mark job as completed with formatted errors for display
+    const formattedErrors = results.errors.map(formatError);
     await supabaseClient.from('scrape_jobs').update({
       status: 'completed',
       completed_at: new Date().toISOString(),
-      results,
+      results: { ...results, errors: formattedErrors },
       progress: {
         currentMaterial: null,
         currentProduct: null,
@@ -2489,7 +2594,7 @@ async function runBackgroundScrape(
         colorsDiscovered: results.colorsDiscovered,
         filamentsCreated: results.filamentsCreated,
         filamentsUpdated: results.filamentsUpdated,
-        errors: results.errors,
+        errors: formattedErrors,
       },
     }).eq('id', jobId);
 
