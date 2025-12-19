@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe, Upload, Link as LinkIcon, Sparkles, Package, Printer, FileText, Palette } from "lucide-react";
+import { BambuLabRegionalDashboard } from "@/components/admin/BambuLabRegionalDashboard";
 
 interface PrinterImageResult {
   printerId: string;
@@ -2919,6 +2920,9 @@ const AdminMaintenance = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Bambu Lab Regional Data Dashboard */}
+      <BambuLabRegionalDashboard />
     </div>
   );
 };
