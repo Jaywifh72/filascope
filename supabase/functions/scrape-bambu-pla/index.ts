@@ -545,11 +545,41 @@ const COLOR_HEX_MAP: Record<string, string> = {
   'green': '#00FF00', 'yellow': '#FFFF00', 'orange': '#FFA500', 'purple': '#800080',
   'pink': '#FFC0CB', 'brown': '#8B4513', 'gray': '#808080', 'grey': '#808080',
   // Bambu specific
-  'bambu green': '#00AE42', 'jade white': '#00E5B6', 'charcoal': '#36454F',
+  'bambu green': '#00AE42', 'charcoal': '#36454F',
   'silver': '#C0C0C0', 'gold': '#FFD700', 'bronze': '#CD7F32', 'copper': '#B87333',
   'champagne': '#F7E7CE', 'rose gold': '#B76E79',
+  
+  // Bambu Lab Matte compound colors (CRITICAL - these appear in CDN image filenames)
+  'ivory white': '#FFFFF0', 'ivory-white': '#FFFFF0',
+  'jade white': '#E8F5E9', 'jade-white': '#E8F5E9',
+  'grass green': '#7CFC00', 'grass-green': '#7CFC00',
+  'ice blue': '#B0E0E6', 'ice-blue': '#B0E0E6',
+  'marine blue': '#00008B', 'marine-blue': '#00008B',
+  'sakura pink': '#FFB7C5', 'sakura-pink': '#FFB7C5',
+  'lemon yellow': '#FFF44F', 'lemon-yellow': '#FFF44F',
+  'mandarin orange': '#FF8243', 'mandarin-orange': '#FF8243',
+  'lilac purple': '#C8A2C8', 'lilac-purple': '#C8A2C8',
+  'scarlet red': '#FF2400', 'scarlet-red': '#FF2400',
+  'dark red': '#8B0000', 'dark-red': '#8B0000',
+  'dark green': '#006400', 'dark-green': '#006400',
+  'dark blue': '#00008B', 'dark-blue': '#00008B',
+  'dark brown': '#654321', 'dark-brown': '#654321',
+  'latte brown': '#967969', 'latte-brown': '#967969',
+  'desert tan': '#EDC9AF', 'desert-tan': '#EDC9AF',
+  'ash grey': '#B2BEB5', 'ash-grey': '#B2BEB5', 'ash gray': '#B2BEB5',
+  'wine red': '#722F37', 'wine-red': '#722F37',
+  'army green': '#4B5320', 'army-green': '#4B5320',
+  'light blue': '#ADD8E6', 'light-blue': '#ADD8E6',
+  'light green': '#90EE90', 'light-green': '#90EE90',
+  'light pink': '#FFB6C1', 'light-pink': '#FFB6C1',
+  'sky blue': '#87CEEB', 'sky-blue': '#87CEEB',
+  'mango yellow': '#FFBE00', 'mango-yellow': '#FFBE00',
+  'matcha green': '#C4D79B', 'matcha-green': '#C4D79B',
+  'burnt titanium': '#878681', 'burnt-titanium': '#878681',
+  'scarlet orange': '#FF5349', 'scarlet-orange': '#FF5349',
+  
   // Blues
-  'navy blue': '#000080', 'navy': '#000080', 'azure': '#007FFF', 'sky blue': '#87CEEB',
+  'navy blue': '#000080', 'navy': '#000080', 'azure': '#007FFF',
   'cobalt': '#0047AB', 'sapphire': '#0F52BA', 'midnight': '#191970',
   'teal': '#008080', 'cyan': '#00FFFF', 'aqua': '#00FFFF', 'turquoise': '#40E0D0',
   // Greens
@@ -569,6 +599,7 @@ const COLOR_HEX_MAP: Record<string, string> = {
   'tan': '#D2B48C', 'beige': '#F5F5DC', 'khaki': '#C3B091', 'chocolate': '#7B3F00',
   'coffee': '#6F4E37', 'mocha': '#967969', 'espresso': '#4E312D', 'caramel': '#FFD59A',
   'wood': '#BA8C63', 'walnut': '#5D432C', 'oak': '#806517', 'bamboo': '#E3D26F',
+  'ivory': '#FFFFF0',
   // Special effects
   'transparent': '#FFFFFF', 'translucent': '#FFFFFF', 'clear': '#FFFFFF',
   'glow': '#39FF14', 'glow in dark': '#39FF14',
@@ -802,6 +833,38 @@ function extractBambuLabPrice(
     logDebug(ctx, 'PRICE', 'Strategy 5: No markdown price pattern found');
   }
 
+  // Strategy 6: Direct "$XX.XX USD" or "€XX.XX EUR" pattern in markdown (Bambu Lab specific)
+  // This catches the clear price display like "$19.99 USD" near the product title
+  if (ctx) logDebug(ctx, 'PRICE', 'Trying Strategy 6: Direct currency+amount+code pattern');
+  const directPricePatterns = [
+    /(?<!\w)(\$)(\d{1,3}(?:\.\d{2})?)\s*USD(?!\s*(?:per|\/|each))/gi,  // $19.99 USD (not per roll)
+    /(?<!\w)(€)(\d{1,3}(?:[.,]\d{2})?)\s*EUR(?!\s*(?:per|\/|each))/gi,  // €18.99 EUR
+    /(?<!\w)(£)(\d{1,3}(?:\.\d{2})?)\s*GBP(?!\s*(?:per|\/|each))/gi,  // £16.99 GBP
+    /(?<!\w)(C\$|CA\$)(\d{1,3}(?:\.\d{2})?)\s*CAD(?!\s*(?:per|\/|each))/gi,  // C$24.99 CAD
+    /(?<!\w)(A\$)(\d{1,3}(?:\.\d{2})?)\s*AUD(?!\s*(?:per|\/|each))/gi,  // A$29.99 AUD
+    /(?<!\w)(¥)(\d{1,5})\s*JPY(?!\s*(?:per|\/|each))/gi,  // ¥2999 JPY
+  ];
+  
+  for (const pattern of directPricePatterns) {
+    const matches = [...markdown.matchAll(pattern)];
+    for (const priceMatch of matches) {
+      const priceStr = priceMatch[2].replace(',', '.');
+      const price = parseFloat(priceStr);
+      
+      if (ctx) logDebug(ctx, 'PRICE', `Strategy 6 candidate: "${priceMatch[0]}" -> ${price}`);
+      
+      // Check context around this match - reject if near discount keywords
+      const matchIndex = markdown.indexOf(priceMatch[0]);
+      const context = markdown.substring(Math.max(0, matchIndex - 100), Math.min(markdown.length, matchIndex + 100));
+      
+      if (!containsDiscountKeywords(context, ctx) && price >= minExpected && price <= maxExpected) {
+        if (ctx) logSuccess(ctx, 'PRICE', `Strategy 6 SUCCESS: ${price} ${store.currency} (direct-currency-code)`);
+        return { price, source: 'direct-currency-code' };
+      }
+    }
+  }
+  if (ctx) logDebug(ctx, 'PRICE', 'Strategy 6: No direct currency+code pattern matched');
+
   if (ctx) {
     logWarn(ctx, 'PRICE', `ALL STRATEGIES FAILED for ${material} in ${region}`, {
       htmlHasCurrency: html.includes('$') || html.includes('€') || html.includes('£'),
@@ -1009,17 +1072,59 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
   }
 
   // Pattern 3: Look for Bambu Lab CDN image URLs with color names
-  const imagePattern = /store\.bblcdn\.com[^"'\s]+\/([A-Za-z_-]+)\.(?:png|jpg|jpeg)/gi;
+  // Enhanced to extract FULL compound color names like "Ivory-White" from "PLA-Matte_Ivory-White.png"
+  const imagePattern = /store\.bblcdn\.com[^"'\s]+\/([A-Za-z0-9_-]+)\.(?:png|jpg|jpeg)/gi;
   while ((match = imagePattern.exec(html)) !== null) {
-    const imageName = match[1].replace(/_/g, ' ').replace(/-/g, ' ');
-    const parts = imageName.split(' ');
-    const lastPart = parts[parts.length - 1];
-    if (lastPart) {
+    const filename = match[1]; // e.g., "PLA-Matte_Ivory-White" or "Matte-Lemon-Yellow"
+    let colorName = '';
+    
+    // Strategy 1: If filename contains underscore, take everything after last underscore
+    // e.g., "PLA-Matte_Ivory-White" -> "Ivory-White" -> "Ivory White"
+    if (filename.includes('_')) {
+      const parts = filename.split('_');
+      colorName = parts[parts.length - 1].replace(/-/g, ' ');
+    } 
+    // Strategy 2: For filenames like "Matte-Lemon-Yellow", extract color after the product type
+    else if (filename.toLowerCase().includes('matte-') || filename.toLowerCase().includes('basic-') || 
+             filename.toLowerCase().includes('silk-') || filename.toLowerCase().includes('sparkle-')) {
+      // Match pattern: ProductType-Color-Name (e.g., Matte-Lemon-Yellow)
+      const productTypeMatch = filename.match(/^(?:PLA-?)?(?:Matte|Basic|Silk|Sparkle|Metal|Galaxy|Glow|Marble|Tough|Wood)-(.+)$/i);
+      if (productTypeMatch) {
+        colorName = productTypeMatch[1].replace(/-/g, ' ');
+      } else {
+        // Fallback: take everything after first dash that starts with a capital
+        const colorMatch = filename.match(/-([A-Z][a-z]+-?[A-Z]?[a-z]*(?:-[A-Z][a-z]+)*)$/);
+        if (colorMatch) {
+          colorName = colorMatch[1].replace(/-/g, ' ');
+        }
+      }
+    }
+    // Strategy 3: Simple case - just the color name with dashes
+    else {
+      colorName = filename.replace(/-/g, ' ').replace(/_/g, ' ');
+      // Try to extract just the color part (last 1-3 words that look like colors)
+      const words = colorName.split(' ');
+      if (words.length > 2) {
+        // Take last 2-3 words if they look like a compound color
+        const lastTwo = words.slice(-2).join(' ').toLowerCase();
+        const lastThree = words.slice(-3).join(' ').toLowerCase();
+        if (COLOR_HEX_MAP[lastThree]) {
+          colorName = words.slice(-3).join(' ');
+        } else if (COLOR_HEX_MAP[lastTwo]) {
+          colorName = words.slice(-2).join(' ');
+        } else {
+          colorName = words[words.length - 1]; // Fallback to last word
+        }
+      }
+    }
+    
+    if (colorName && colorName.length > 1) {
       const fullMatch = match[0];
       const imageUrl = fullMatch.startsWith('http') ? fullMatch : `https://${fullMatch}`;
-      if (addColorIfValid(lastPart, 'CDN-image', imageUrl)) {
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 parsing: "${filename}" -> extracted color: "${colorName}"`);
+      if (addColorIfValid(colorName, 'CDN-image', imageUrl)) {
         patternStats.p3++;
-        if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 (CDN image): Found "${cleanColorName(lastPart)}" from image`);
+        if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 (CDN image): Found "${cleanColorName(colorName)}" from image`);
       }
     }
   }
