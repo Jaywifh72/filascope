@@ -167,3 +167,6 @@ verify_jwt = true
 
 [functions.scrape-bambu-pla]
 verify_jwt = true
+
+[functions.cleanup-stuck-jobs]
+verify_jwt = false
