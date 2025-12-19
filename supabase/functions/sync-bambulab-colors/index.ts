@@ -158,27 +158,57 @@ function detectRedirect(sourceUrl: string | undefined, expectedRegion: string): 
   return !isCorrectRegion;
 }
 
-// Extract price from HTML content using multiple strategies
-function extractPriceFromHtml(html: string, region: string): number | null {
-  const store = BAMBU_REGIONAL_STORES[region];
-  if (!store) return null;
+// Expected price ranges for Bambu Lab ABS
+const BAMBU_LAB_PRICE_RANGES: Record<string, [number, number]> = {
+  USD: [18, 40],
+  CAD: [22, 50],
+  GBP: [16, 35],
+  EUR: [18, 40],
+  AUD: [25, 55],
+  JPY: [2500, 6000],
+};
 
-  // Strategy 1: JSON-LD structured data
+// Keywords that indicate discount/bulk pricing (EXCLUDE these)
+const DISCOUNT_EXCLUSION_KEYWORDS = [
+  'as low as', 'low as', 'per roll', 'per spool', 'bulk', 'discount',
+  '% off', 'save ', 'savings', 'bundle', 'pack of', 'multi-pack',
+  'subscribe', 'subscription', 'qty', 'quantity'
+];
+
+// Check if text contains discount-related keywords
+function containsDiscountKeywords(text: string): boolean {
+  const lowerText = text.toLowerCase();
+  return DISCOUNT_EXCLUSION_KEYWORDS.some(keyword => lowerText.includes(keyword));
+}
+
+// Extract numeric price from a text string
+function extractNumericPrice(text: string, currency: string): number | null {
+  // Remove currency symbols and clean the string
+  const cleaned = text.replace(/[C$A$£€¥,\s]/g, '').replace(/CA|AU|US|JP/gi, '');
+  const match = cleaned.match(/(\d+\.?\d*)/);
+  if (match) {
+    const price = parseFloat(match[1]);
+    if (!isNaN(price) && price > 0) {
+      return price;
+    }
+  }
+  return null;
+}
+
+// Extract price from JSON-LD
+function extractFromJsonLd(html: string): number | null {
   const jsonLdMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
   if (jsonLdMatch) {
     for (const match of jsonLdMatch) {
       try {
         const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
         const jsonData = JSON.parse(jsonContent);
-        
-        // Check for Product type
         if (jsonData['@type'] === 'Product' && jsonData.offers) {
           const offers = Array.isArray(jsonData.offers) ? jsonData.offers : [jsonData.offers];
           for (const offer of offers) {
-            if (offer.price && offer.priceCurrency?.toUpperCase() === store.currency) {
+            if (offer.price) {
               const price = parseFloat(offer.price);
               if (!isNaN(price) && price > 0) {
-                console.log(`[${region}] Extracted price from JSON-LD: ${price} ${store.currency}`);
                 return price;
               }
             }
@@ -189,42 +219,117 @@ function extractPriceFromHtml(html: string, region: string): number | null {
       }
     }
   }
+  return null;
+}
 
-  // Strategy 2: Meta tags
+// Extract price from meta tags
+function extractFromMetaTags(html: string): number | null {
   const metaPriceMatch = html.match(/<meta[^>]*property=["']product:price:amount["'][^>]*content=["']([^"']+)["']/i) ||
                          html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']product:price:amount["']/i);
   if (metaPriceMatch) {
     const price = parseFloat(metaPriceMatch[1]);
     if (!isNaN(price) && price > 0) {
-      console.log(`[${region}] Extracted price from meta tag: ${price}`);
       return price;
     }
   }
+  return null;
+}
 
-  // Strategy 3: Shopify-specific price patterns
-  const shopifyPricePatterns = [
-    /data-product-price=["']?(\d+\.?\d*)["']?/i,
-    /data-price=["']?(\d+\.?\d*)["']?/i,
-    /"price"\s*:\s*["']?(\d+\.?\d*)["']?/i,
-    /class=["'][^"']*price[^"']*["'][^>]*>[\s\S]*?([£€$¥]?\s*[\d,]+\.?\d*)/i,
-  ];
+// BAMBU LAB SPECIFIC PRICE EXTRACTOR - with validation and discount filtering
+function extractBambuLabPrice(html: string, markdown: string, region: string): { price: number; source: string } | null {
+  const store = BAMBU_REGIONAL_STORES[region];
+  if (!store) return null;
 
-  for (const pattern of shopifyPricePatterns) {
-    const match = html.match(pattern);
-    if (match) {
-      // Clean the price string
-      const priceStr = match[1].replace(/[^0-9.]/g, '');
-      const price = parseFloat(priceStr);
-      if (!isNaN(price) && price > 0 && price < 100000) { // Sanity check
-        // For Shopify, prices might be in cents
-        const normalizedPrice = price > 1000 && store.currency !== 'JPY' ? price / 100 : price;
-        console.log(`[${region}] Extracted price from Shopify pattern: ${normalizedPrice}`);
-        return normalizedPrice;
+  const [minExpected, maxExpected] = BAMBU_LAB_PRICE_RANGES[store.currency] || [15, 80];
+  console.log(`[${region}] Expected price range: ${minExpected}-${maxExpected} ${store.currency}`);
+
+  // Strategy 1: Look for bbl-title-1 class (Bambu Lab's main price element)
+  const bblTitleMatch = html.match(/class="[^"]*bbl-title-1[^"]*"[^>]*>([^<]*(?:\$|€|£|¥|C\$|CA\$|A\$)[^<]*)<\/[^>]+>/i);
+  if (bblTitleMatch) {
+    const priceText = bblTitleMatch[1];
+    console.log(`[${region}] Found bbl-title-1 price text: "${priceText}"`);
+    
+    // Check for discount keywords in surrounding context
+    const matchIndex = html.indexOf(bblTitleMatch[0]);
+    const context = html.substring(Math.max(0, matchIndex - 200), Math.min(html.length, matchIndex + 200));
+    
+    if (!containsDiscountKeywords(context)) {
+      const price = extractNumericPrice(priceText, store.currency);
+      if (price && price >= minExpected && price <= maxExpected) {
+        console.log(`[${region}] ✓ bbl-title-1 price VALID: ${price} ${store.currency}`);
+        return { price, source: 'bbl-title-1' };
+      } else if (price) {
+        console.log(`[${region}] REJECTED bbl-title-1 price ${price}: outside range ${minExpected}-${maxExpected}`);
       }
     }
   }
 
-  console.warn(`[${region}] Could not extract price from HTML`);
+  // Strategy 2: Look for "From $XX.XX" pattern (Bambu's standard format)
+  const fromPricePatterns = [
+    /From\s+(?:\$|€|£|C\$|CA\$|A\$|¥)\s*(\d{1,3}(?:[.,]\d{2})?)/gi,
+    /Starting\s+(?:at\s+)?(?:\$|€|£|C\$|CA\$|A\$|¥)\s*(\d{1,3}(?:[.,]\d{2})?)/gi,
+  ];
+  
+  for (const pattern of fromPricePatterns) {
+    const matches = [...html.matchAll(pattern)];
+    for (const match of matches) {
+      const fullMatch = match[0];
+      const priceStr = match[1].replace(',', '.');
+      const price = parseFloat(priceStr);
+      
+      // Check context for discount keywords
+      const matchIndex = html.indexOf(fullMatch);
+      const context = html.substring(Math.max(0, matchIndex - 200), Math.min(html.length, matchIndex + 200));
+      
+      if (containsDiscountKeywords(context)) {
+        console.log(`[${region}] REJECTED "From" price ${price}: discount keywords in context`);
+        continue;
+      }
+      
+      if (price >= minExpected && price <= maxExpected) {
+        console.log(`[${region}] ✓ "From" price VALID: ${price} ${store.currency}`);
+        return { price, source: 'from-pattern' };
+      } else {
+        console.log(`[${region}] REJECTED "From" price ${price}: outside range ${minExpected}-${maxExpected}`);
+      }
+    }
+  }
+
+  // Strategy 3: JSON-LD structured data
+  const jsonLdPrice = extractFromJsonLd(html);
+  if (jsonLdPrice) {
+    console.log(`[${region}] Found JSON-LD price: ${jsonLdPrice}`);
+    if (jsonLdPrice >= minExpected && jsonLdPrice <= maxExpected) {
+      console.log(`[${region}] ✓ JSON-LD price VALID: ${jsonLdPrice} ${store.currency}`);
+      return { price: jsonLdPrice, source: 'json-ld' };
+    } else {
+      console.log(`[${region}] REJECTED JSON-LD price ${jsonLdPrice}: outside range ${minExpected}-${maxExpected}`);
+    }
+  }
+
+  // Strategy 4: Meta tags
+  const metaPrice = extractFromMetaTags(html);
+  if (metaPrice) {
+    console.log(`[${region}] Found meta tag price: ${metaPrice}`);
+    if (metaPrice >= minExpected && metaPrice <= maxExpected) {
+      console.log(`[${region}] ✓ Meta tag price VALID: ${metaPrice} ${store.currency}`);
+      return { price: metaPrice, source: 'meta-tag' };
+    } else {
+      console.log(`[${region}] REJECTED meta price ${metaPrice}: outside range ${minExpected}-${maxExpected}`);
+    }
+  }
+
+  // Strategy 5: Markdown "From" patterns (cleaner than HTML)
+  const mdFromMatch = markdown.match(/From\s+(?:\$|€|£|C\$|CA\$|A\$|¥)?\s*(\d{1,3}(?:[.,]\d{2})?)/i);
+  if (mdFromMatch) {
+    const price = parseFloat(mdFromMatch[1].replace(',', '.'));
+    if (price >= minExpected && price <= maxExpected) {
+      console.log(`[${region}] ✓ Markdown "From" price VALID: ${price} ${store.currency}`);
+      return { price, source: 'markdown-from' };
+    }
+  }
+
+  console.warn(`[${region}] Could not extract valid price from any strategy`);
   return null;
 }
 
@@ -264,7 +369,7 @@ async function fetchRegionalPriceWithFirecrawl(
       },
       body: JSON.stringify({
         url,
-        formats: ['html'],
+        formats: ['html', 'markdown'], // Request both for better extraction
         onlyMainContent: false,
         waitFor: 3000,
         location, // Geo-located proxy!
@@ -293,6 +398,7 @@ async function fetchRegionalPriceWithFirecrawl(
     }
 
     const html = data.data?.html || data.html || '';
+    const markdown = data.data?.markdown || data.markdown || '';
     const sourceUrl = data.data?.metadata?.sourceURL || data.metadata?.sourceURL;
 
     // Check for redirect to different regional store
@@ -315,12 +421,12 @@ async function fetchRegionalPriceWithFirecrawl(
       };
     }
 
-    // Extract price
-    const price = extractPriceFromHtml(html, region);
+    // Extract price using Bambu Lab-specific extractor with validation
+    const priceResult = extractBambuLabPrice(html, markdown, region);
     
-    if (price !== null) {
-      console.log(`[${region}] Successfully scraped price: ${price} ${store.currency}`);
-      return { price, source: 'firecrawl' };
+    if (priceResult) {
+      console.log(`[${region}] Successfully scraped price: ${priceResult.price} ${store.currency} (via ${priceResult.source})`);
+      return { price: priceResult.price, source: 'firecrawl' };
     }
 
     console.warn(`[${region}] Could not extract price, using fallback`);
