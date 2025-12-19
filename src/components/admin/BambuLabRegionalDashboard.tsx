@@ -13,6 +13,7 @@ import {
   useBambuSyncHistory,
   type RegionalCoverage 
 } from "@/hooks/useBambuRegionalStats";
+import { BambuDataQualitySection } from "./BambuDataQualitySection";
 import { 
   RefreshCw, 
   ChevronDown, 
@@ -387,6 +388,9 @@ export function BambuLabRegionalDashboard() {
                 <RegionOverviewCard key={region.region} region={region} />
               ))}
             </div>
+
+            {/* Data Quality Diagnostics */}
+            <BambuDataQualitySection />
 
             <MissingDataSection regionId="overview" />
             <SyncHistorySection />
