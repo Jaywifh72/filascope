@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe, Upload, Link as LinkIcon, Sparkles, Package, Printer, FileText } from "lucide-react";
+import { Loader2, Database, Image, CheckCircle, XCircle, AlertTriangle, Download, Globe, Upload, Link as LinkIcon, Sparkles, Package, Printer, FileText, Palette } from "lucide-react";
 
 interface PrinterImageResult {
   printerId: string;
@@ -174,6 +174,22 @@ const AdminMaintenance = () => {
     failed: number;
     results: Array<{ id: string; name: string; status: string; tds_url?: string; specs_extracted?: number; error?: string }>;
   } | null>(null);
+  
+  // Bambu Lab color sync state
+  const [isSyncingBambuColors, setIsSyncingBambuColors] = useState(false);
+  const [bambuColorsDryRun, setBambuColorsDryRun] = useState(true);
+  const [bambuColorsResult, setBambuColorsResult] = useState<{
+    success: boolean;
+    dryRun: boolean;
+    material: string;
+    existingCount: number;
+    colorsProcessed: number;
+    created: number;
+    updated: number;
+    skipped: number;
+    results: Array<{ color: string; action: string; title: string; filamentId?: string }>;
+  } | null>(null);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -319,6 +335,39 @@ const AdminMaintenance = () => {
       });
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  const runBambuLabColorSync = async () => {
+    setIsSyncingBambuColors(true);
+    setBambuColorsResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-bambulab-colors', {
+        body: { 
+          dryRun: bambuColorsDryRun,
+          material: 'ABS'
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setBambuColorsResult(data);
+      toast({
+        title: bambuColorsDryRun ? "Dry Run Complete" : "Sync Complete",
+        description: `${data.created} created, ${data.updated} updated, ${data.skipped} skipped`,
+      });
+    } catch (error) {
+      console.error('Bambu Lab color sync error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to sync Bambu Lab colors",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncingBambuColors(false);
     }
   };
 
@@ -2678,6 +2727,117 @@ const AdminMaintenance = () => {
                             result.status === "not_found" ? "outline" : "destructive"
                           }>
                             {result.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Bambu Lab Color Sync Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Palette className="w-5 h-5" />
+            <CardTitle>Bambu Lab Color Sync</CardTitle>
+          </div>
+          <CardDescription>
+            Sync all Bambu Lab ABS color variants with correct hex codes, images, and store URLs
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="bambu-dry-run"
+              checked={bambuColorsDryRun}
+              onCheckedChange={(checked) => setBambuColorsDryRun(checked === true)}
+            />
+            <Label htmlFor="bambu-dry-run" className="text-sm font-normal">
+              Dry run (preview changes without saving)
+            </Label>
+          </div>
+
+          <Button 
+            onClick={runBambuLabColorSync} 
+            disabled={isSyncingBambuColors}
+            className="w-full sm:w-auto"
+          >
+            {isSyncingBambuColors ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Syncing Colors...
+              </>
+            ) : (
+              <>
+                <Palette className="w-4 h-4 mr-2" />
+                {bambuColorsDryRun ? "Preview Sync" : "Sync Colors"}
+              </>
+            )}
+          </Button>
+
+          {bambuColorsResult && (
+            <div className="space-y-4 pt-4 border-t">
+              {bambuColorsResult.dryRun && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    This was a dry run. Uncheck "Dry run" and run again to apply changes.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{bambuColorsResult.colorsProcessed}</div>
+                  <div className="text-sm text-muted-foreground">Colors Processed</div>
+                </div>
+                <div className="bg-green-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <div className="text-2xl font-bold">{bambuColorsResult.created}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Created</div>
+                </div>
+                <div className="bg-blue-500/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-blue-500" />
+                    <div className="text-2xl font-bold">{bambuColorsResult.updated}</div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Updated</div>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <div className="text-2xl font-bold">{bambuColorsResult.skipped}</div>
+                  <div className="text-sm text-muted-foreground">Skipped</div>
+                </div>
+              </div>
+
+              {bambuColorsResult.results && bambuColorsResult.results.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Color Details:</h3>
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {bambuColorsResult.results.map((result, idx) => (
+                      <div key={idx} className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-6 h-6 rounded-full border border-border"
+                              style={{ backgroundColor: result.color === "White" ? "#FFFFFF" : undefined }}
+                            />
+                            <div>
+                              <div className="font-medium">{result.title}</div>
+                              <div className="text-xs text-muted-foreground">{result.color}</div>
+                            </div>
+                          </div>
+                          <Badge variant={
+                            result.action === "created" ? "default" :
+                            result.action === "updated" ? "secondary" : "outline"
+                          }>
+                            {result.action}
                           </Badge>
                         </div>
                       </div>
