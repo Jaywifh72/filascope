@@ -823,23 +823,175 @@ interface ColorVariant {
   variantId: string | null;
 }
 
-function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogContext): ColorVariant[] {
+// ============================================================================
+// MATERIAL ISSUE TRACKING
+// ============================================================================
+interface MaterialIssues {
+  missingPrices: string[];
+  missingColors: string[];
+  missingImages: string[];
+  invalidColorNames: string[];
+}
+
+function logMaterialIssues(material: string, issues: MaterialIssues, ctx?: LogContext): void {
+  const hasIssues = issues.missingPrices.length > 0 || 
+                    issues.missingColors.length > 0 || 
+                    issues.missingImages.length > 0 ||
+                    issues.invalidColorNames.length > 0;
+  
+  console.log(`\n=== ${material} ISSUES SUMMARY ===`);
+  
+  if (issues.missingPrices.length > 0) {
+    console.log(`❌ Missing Prices (${issues.missingPrices.length}): ${issues.missingPrices.slice(0, 10).join(', ')}${issues.missingPrices.length > 10 ? '...' : ''}`);
+  }
+  if (issues.missingColors.length > 0) {
+    console.log(`❌ Missing Color Hex (${issues.missingColors.length}): ${issues.missingColors.slice(0, 10).join(', ')}${issues.missingColors.length > 10 ? '...' : ''}`);
+  }
+  if (issues.missingImages.length > 0) {
+    console.log(`⚠️ Missing Images (${issues.missingImages.length}): ${issues.missingImages.slice(0, 10).join(', ')}${issues.missingImages.length > 10 ? '...' : ''}`);
+  }
+  if (issues.invalidColorNames.length > 0) {
+    console.log(`🚫 Filtered Invalid Colors (${issues.invalidColorNames.length}): ${issues.invalidColorNames.slice(0, 10).join(', ')}${issues.invalidColorNames.length > 10 ? '...' : ''}`);
+  }
+  
+  if (!hasIssues) {
+    console.log(`✅ No critical issues`);
+  }
+  console.log(`=================================\n`);
+}
+
+// ============================================================================
+// NON-COLOR BLOCKLIST - UI elements that should NEVER be treated as colors
+// ============================================================================
+const NON_COLOR_BLOCKLIST = [
+  // UI elements from Bambu Lab website
+  /hex\s*code/i,
+  /display/i,
+  /suggest\s*one/i,
+  /can'?t\s*find/i,
+  /automatic\s*material/i,
+  /printing/i,
+  /^\s*ams\s*$/i,
+  /material\s*system/i,
+  /select\s*color/i,
+  /choose\s*color/i,
+  /color\s*options?/i,
+  /variant\s*options?/i,
+  /add\s*to\s*cart/i,
+  /buy\s*now/i,
+  /out\s*of\s*stock/i,
+  /in\s*stock/i,
+  /available/i,
+  /unavailable/i,
+  /notify\s*me/i,
+  /sold\s*out/i,
+  /coming\s*soon/i,
+  /quantity/i,
+  /^\s*qty\s*$/i,
+  /review/i,
+  /rating/i,
+  /description/i,
+  /specification/i,
+  /details/i,
+  /features/i,
+  // Navigation/UI
+  /home/i,
+  /back/i,
+  /next/i,
+  /previous/i,
+  /^\s*see\s*all\s*$/i,
+  /view\s*more/i,
+  /show\s*more/i,
+  /less/i,
+  /more/i,
+  /close/i,
+  /open/i,
+  // Form field artifacts
+  /^\s*[\d\(\)\-\+]+\s*$/,  // Just numbers/parens/dashes
+  /^\s*[\\\/\-\?\!\.\,\*\#\@]+\s*$/,  // Just punctuation
+  /^\s*$/,  // Empty or whitespace only
+  // Size/weight/dimension
+  /^\s*\d+\s*(g|kg|mm|cm|m)\s*$/i,
+  /^\s*1\.75\s*mm?\s*$/i,
+  /^\s*2\.85\s*mm?\s*$/i,
+];
+
+/**
+ * Check if a string matches any blocklist pattern
+ */
+function isBlockedColorName(text: string): boolean {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return true;
+  if (trimmed.length > 50) return true; // Colors shouldn't be this long
+  
+  return NON_COLOR_BLOCKLIST.some(pattern => pattern.test(trimmed));
+}
+
+/**
+ * Clean Bambu-specific color codes like "Red (33200)" -> "Red"
+ */
+function cleanColorName(rawColor: string): string {
+  let cleaned = rawColor.trim();
+  
+  // Remove Bambu color codes like (33200), (65500), etc.
+  cleaned = cleaned.replace(/\s*\(\d+\)\s*$/g, '');
+  
+  // Remove leading/trailing punctuation
+  cleaned = cleaned.replace(/^[\-\.\,\:\;]+|[\-\.\,\:\;]+$/g, '');
+  
+  return cleaned.trim();
+}
+
+function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogContext): { variants: ColorVariant[]; invalidFiltered: string[] } {
   const variants: ColorVariant[] = [];
   const seenColors = new Set<string>();
-  const patternStats = { p1: 0, p2: 0, p3: 0, p4: 0, p5: 0 };
+  const invalidFiltered: string[] = [];
+  const patternStats = { p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, blocked: 0 };
 
   if (ctx) logDebug(ctx, 'COLORS', `Starting color extraction from HTML (${html.length} chars) and Markdown (${markdown.length} chars)`);
+
+  const addColorIfValid = (rawColorName: string, source: string, imageUrl?: string, variantId?: string) => {
+    // First clean the color name
+    const colorName = cleanColorName(rawColorName);
+    
+    // Check blocklist
+    if (isBlockedColorName(colorName)) {
+      invalidFiltered.push(rawColorName);
+      patternStats.blocked++;
+      if (ctx) logDebug(ctx, 'COLORS', `BLOCKED (${source}): "${rawColorName}" -> cleaned: "${colorName}"`);
+      return false;
+    }
+    
+    const normalizedKey = colorName.toLowerCase();
+    if (seenColors.has(normalizedKey)) {
+      return false; // Already seen
+    }
+    
+    // Validate it looks like a color
+    if (!isColorName(colorName)) {
+      invalidFiltered.push(rawColorName);
+      patternStats.blocked++;
+      if (ctx) logDebug(ctx, 'COLORS', `NOT A COLOR (${source}): "${rawColorName}"`);
+      return false;
+    }
+    
+    seenColors.add(normalizedKey);
+    const colorInfo = extractColorInfo(colorName);
+    variants.push({
+      ...colorInfo,
+      imageUrl: imageUrl || null,
+      variantId: variantId || null,
+    });
+    return true;
+  };
 
   // Pattern 1: Look for color swatches with data attributes
   const swatchPattern = /data-(?:color|variant|option)=["']([^"']+)["']/gi;
   let match;
   while ((match = swatchPattern.exec(html)) !== null) {
-    const colorName = match[1].trim();
-    if (colorName && !seenColors.has(colorName.toLowerCase())) {
-      seenColors.add(colorName.toLowerCase());
-      variants.push(extractColorInfo(colorName));
+    if (addColorIfValid(match[1], 'data-attr')) {
       patternStats.p1++;
-      if (ctx) logDebug(ctx, 'COLORS', `Pattern 1 (data-attr): Found "${colorName}"`);
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 1 (data-attr): Found "${cleanColorName(match[1])}"`);
     }
   }
 
@@ -849,12 +1001,9 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
     const colorLine = match[1];
     const colors = colorLine.split(/[,|]/);
     for (const color of colors) {
-      const colorName = color.trim();
-      if (colorName && !seenColors.has(colorName.toLowerCase()) && colorName.length < 50) {
-        seenColors.add(colorName.toLowerCase());
-        variants.push(extractColorInfo(colorName));
+      if (addColorIfValid(color, 'markdown')) {
         patternStats.p2++;
-        if (ctx) logDebug(ctx, 'COLORS', `Pattern 2 (markdown): Found "${colorName}"`);
+        if (ctx) logDebug(ctx, 'COLORS', `Pattern 2 (markdown): Found "${cleanColorName(color)}"`);
       }
     }
   }
@@ -863,31 +1012,24 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
   const imagePattern = /store\.bblcdn\.com[^"'\s]+\/([A-Za-z_-]+)\.(?:png|jpg|jpeg)/gi;
   while ((match = imagePattern.exec(html)) !== null) {
     const imageName = match[1].replace(/_/g, ' ').replace(/-/g, ' ');
-    // Extract color from image name (e.g., "PLA_Basic_White" -> "White")
     const parts = imageName.split(' ');
     const lastPart = parts[parts.length - 1];
-    if (lastPart && !seenColors.has(lastPart.toLowerCase()) && isColorName(lastPart)) {
-      seenColors.add(lastPart.toLowerCase());
+    if (lastPart) {
       const fullMatch = match[0];
       const imageUrl = fullMatch.startsWith('http') ? fullMatch : `https://${fullMatch}`;
-      variants.push({
-        ...extractColorInfo(lastPart),
-        imageUrl,
-      });
-      patternStats.p3++;
-      if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 (CDN image): Found "${lastPart}" from image`);
+      if (addColorIfValid(lastPart, 'CDN-image', imageUrl)) {
+        patternStats.p3++;
+        if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 (CDN image): Found "${cleanColorName(lastPart)}" from image`);
+      }
     }
   }
 
   // Pattern 4: Look for variant option values in script tags
   const scriptPattern = /"option\d*":\s*"([^"]+)"/gi;
   while ((match = scriptPattern.exec(html)) !== null) {
-    const optionValue = match[1].trim();
-    if (optionValue && !seenColors.has(optionValue.toLowerCase()) && isColorName(optionValue)) {
-      seenColors.add(optionValue.toLowerCase());
-      variants.push(extractColorInfo(optionValue));
+    if (addColorIfValid(match[1], 'script-option')) {
       patternStats.p4++;
-      if (ctx) logDebug(ctx, 'COLORS', `Pattern 4 (script option): Found "${optionValue}"`);
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 4 (script option): Found "${cleanColorName(match[1])}"`);
     }
   }
 
@@ -896,29 +1038,36 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
   while ((match = variantDataPattern.exec(html)) !== null) {
     const variantTitle = match[1].trim();
     const variantId = match[2];
-    if (variantTitle && !seenColors.has(variantTitle.toLowerCase()) && isColorName(variantTitle)) {
-      seenColors.add(variantTitle.toLowerCase());
-      variants.push({
-        ...extractColorInfo(variantTitle),
-        variantId,
-      });
+    if (addColorIfValid(variantTitle, 'shopify-variant', undefined, variantId)) {
       patternStats.p5++;
-      if (ctx) logDebug(ctx, 'COLORS', `Pattern 5 (Shopify variant): Found "${variantTitle}" (id: ${variantId})`);
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 5 (Shopify variant): Found "${cleanColorName(variantTitle)}" (id: ${variantId})`);
     }
   }
 
   if (ctx) {
-    logInfo(ctx, 'COLORS', `Extraction complete: ${variants.length} unique colors found`, patternStats);
+    logInfo(ctx, 'COLORS', `Extraction complete: ${variants.length} valid colors, ${patternStats.blocked} blocked`, patternStats);
     if (variants.length > 0) {
       logDebug(ctx, 'COLORS', `Color list: ${variants.map(v => `${v.colorName}${v.colorHex ? ` (${v.colorHex})` : ''}`).join(', ')}`);
     }
   }
 
-  return variants;
+  return { variants, invalidFiltered };
 }
 
 function isColorName(text: string): boolean {
-  const normalized = text.toLowerCase().trim();
+  const normalized = cleanColorName(text).toLowerCase().trim();
+  
+  // Reject empty or too short
+  if (normalized.length < 2) return false;
+  
+  // Reject if blocked (double-check)
+  if (isBlockedColorName(text)) return false;
+  
+  // Reject if contains non-color indicators
+  if (/[\?\\\!\(\)\[\]\{\}\<\>]/.test(normalized)) return false;
+  
+  // Reject if it's just numbers
+  if (/^\d+$/.test(normalized)) return false;
   
   // Check if it's in our color map
   if (COLOR_HEX_MAP[normalized]) return true;
@@ -929,14 +1078,18 @@ function isColorName(text: string): boolean {
     'gray', 'grey', 'gold', 'silver', 'bronze', 'copper', 'silk', 'matte', 'metallic',
     'navy', 'olive', 'teal', 'mint', 'coral', 'salmon', 'burgundy', 'maroon', 'crimson',
     'jade', 'emerald', 'sapphire', 'ruby', 'amber', 'ivory', 'cream', 'charcoal',
-    'glow', 'galaxy', 'marble', 'rainbow', 'translucent', 'transparent',
+    'glow', 'galaxy', 'marble', 'rainbow', 'translucent', 'transparent', 'clear',
+    'nature', 'natural', 'wood', 'walnut', 'oak', 'bamboo', 'beige', 'tan',
+    'violet', 'lavender', 'lilac', 'plum', 'orchid', 'mauve', 'indigo',
+    'aqua', 'cyan', 'turquoise', 'azure', 'cobalt', 'midnight',
   ];
   
   return colorKeywords.some(kw => normalized.includes(kw));
 }
 
 function extractColorInfo(colorName: string): ColorVariant {
-  const normalized = colorName.toLowerCase().trim();
+  const cleaned = cleanColorName(colorName);
+  const normalized = cleaned.toLowerCase().trim();
   
   // Direct match
   let hex = COLOR_HEX_MAP[normalized] || null;
@@ -954,7 +1107,7 @@ function extractColorInfo(colorName: string): ColorVariant {
   }
   
   return {
-    colorName: colorName.trim(),
+    colorName: cleaned,
     colorHex: hex,
     colorFamily: family,
     imageUrl: null,
@@ -1055,6 +1208,7 @@ async function scrapeProductPage(
   ctx?: LogContext
 ): Promise<{
   colors: ColorVariant[];
+  invalidFilteredColors: string[];
   price: number | null;
   tdsUrl: string | null;
   success: boolean;
@@ -1073,13 +1227,18 @@ async function scrapeProductPage(
   
   if (!success) {
     if (ctx) logError(ctx, 'PRODUCT_SCRAPE', `Failed to scrape ${productSlug}`, { error, url });
-    return { colors: [], price: null, tdsUrl: null, success: false, firecrawlMs: durationMs };
+    return { colors: [], invalidFilteredColors: [], price: null, tdsUrl: null, success: false, firecrawlMs: durationMs };
   }
 
   // Extract colors
   if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', 'Extracting color variants...');
-  const colors = extractColorVariantsFromHtml(html, markdown, ctx);
-  if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', `Found ${colors.length} color variants for ${productSlug}`);
+  const { variants: colors, invalidFiltered: invalidFilteredColors } = extractColorVariantsFromHtml(html, markdown, ctx);
+  if (ctx) {
+    logInfo(ctx, 'PRODUCT_SCRAPE', `Found ${colors.length} valid color variants for ${productSlug}`);
+    if (invalidFilteredColors.length > 0) {
+      logInfo(ctx, 'PRODUCT_SCRAPE', `Filtered ${invalidFilteredColors.length} invalid colors: ${invalidFilteredColors.slice(0, 5).join(', ')}${invalidFilteredColors.length > 5 ? '...' : ''}`);
+    }
+  }
 
   // Extract price with material-specific range
   if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', 'Extracting price...');
@@ -1107,13 +1266,14 @@ async function scrapeProductPage(
   if (ctx) {
     logSuccess(ctx, 'PRODUCT_SCRAPE', `Page scrape complete`, { 
       colors: colors.length, 
+      invalidFiltered: invalidFilteredColors.length,
       price, 
       hasTds: !!tdsUrl,
       firecrawlMs: durationMs 
     });
   }
 
-  return { colors, price, tdsUrl, success: true, firecrawlMs: durationMs };
+  return { colors, invalidFilteredColors, price, tdsUrl, success: true, firecrawlMs: durationMs };
 }
 
 async function scrapeRegionalPrice(
@@ -1334,6 +1494,14 @@ async function runBackgroundScrape(
 
       logSeparator(ctx, `MATERIAL: ${materialCategory}`);
 
+      // Track issues for this material
+      const materialIssues: MaterialIssues = {
+        missingPrices: [],
+        missingColors: [],
+        missingImages: [],
+        invalidColorNames: [],
+      };
+
       // Determine which products to scrape for this material
       let productsToScrape = Object.entries(materialProducts);
       
@@ -1368,21 +1536,29 @@ async function runBackgroundScrape(
         }).eq('id', jobId);
 
         // Scrape product page for colors
-        const { colors, tdsUrl, success, firecrawlMs } = await scrapeProductPage(
+        const { colors, invalidFilteredColors, tdsUrl, success, firecrawlMs } = await scrapeProductPage(
           productConfig.slug, 
           'CA', 
           productConfig.material,
           { ...ctx, region: 'CA' }
         );
         
+        // Track filtered invalid colors
+        if (invalidFilteredColors.length > 0) {
+          materialIssues.invalidColorNames.push(...invalidFilteredColors);
+        }
+        
         if (firecrawlMs) timing.firecrawlMs += firecrawlMs;
         
-        if (!success || colors.length === 0) {
+        // Use mutable array for colors
+        const colorVariants = [...colors];
+        
+        if (!success || colorVariants.length === 0) {
           const defaultColors = productConfig.material === 'Support' || productConfig.material === 'PVA'
             ? ['White']
             : ['Black', 'White'];
           for (const colorName of defaultColors) {
-            colors.push(extractColorInfo(colorName));
+            colorVariants.push(extractColorInfo(colorName));
           }
         }
 
@@ -1391,7 +1567,7 @@ async function runBackgroundScrape(
         }
 
         results.productsScraped++;
-        results.colorsDiscovered += colors.length;
+        results.colorsDiscovered += colorVariants.length;
 
         // Scrape regional prices
         const regionalPrices: Record<string, { price: number | null; url: string }> = {};
@@ -1432,14 +1608,28 @@ async function runBackgroundScrape(
           
           if (regionFirecrawlMs) timing.firecrawlMs += regionFirecrawlMs;
           regionalPrices[region] = { price, url };
+          
+          // Track missing prices
+          if (!price) {
+            materialIssues.missingPrices.push(`${productName} (${region})`);
+          }
         }
         
         ctx.region = undefined;
 
         // Upsert filaments (if not dry run)
         if (!dryRun) {
-          for (const colorVariant of colors) {
+          for (const colorVariant of colorVariants) {
             ctx.colorName = colorVariant.colorName;
+            
+            // Track missing color hex
+            if (!colorVariant.colorHex) {
+              materialIssues.missingColors.push(`${productName} - ${colorVariant.colorName}`);
+            }
+            // Track missing images
+            if (!colorVariant.imageUrl) {
+              materialIssues.missingImages.push(`${productName} - ${colorVariant.colorName}`);
+            }
             
             const result = await upsertFilament(
               supabaseClient,
@@ -1481,6 +1671,9 @@ async function runBackgroundScrape(
         await new Promise(r => setTimeout(r, 1500));
         timing.delayMs += Date.now() - delayStart;
       }
+      
+      // Log material issues summary
+      logMaterialIssues(materialCategory, materialIssues, ctx);
       
       ctx.productName = undefined;
     }
@@ -1708,6 +1901,14 @@ serve(async (req) => {
       logInfo(ctx, 'MATERIAL', `Processing material category: ${materialCategory}`);
       logInfo(ctx, 'MATERIAL', `Available products: ${Object.keys(materialProducts).length}`);
 
+      // Track issues for this material
+      const materialIssues: MaterialIssues = {
+        missingPrices: [],
+        missingColors: [],
+        missingImages: [],
+        invalidColorNames: [],
+      };
+
       // Determine which products to scrape for this material
       let productsToScrape = Object.entries(materialProducts);
       
@@ -1743,24 +1944,32 @@ serve(async (req) => {
         // Step 1: Scrape product page from Canadian store to get colors
         logInfo(ctx, 'PRODUCT', 'Step 1: Scraping CA store for colors and base price');
         const productScrapeStart = Date.now();
-        const { colors, price: caPrice, tdsUrl, success, firecrawlMs } = await scrapeProductPage(
+        const { colors, invalidFilteredColors, price: caPrice, tdsUrl, success, firecrawlMs } = await scrapeProductPage(
           productConfig.slug, 
           'CA', 
           productConfig.material,
           { ...ctx, region: 'CA' }
         );
         
+        // Track filtered invalid colors
+        if (invalidFilteredColors.length > 0) {
+          materialIssues.invalidColorNames.push(...invalidFilteredColors);
+        }
+        
         if (firecrawlMs) timing.firecrawlMs += firecrawlMs;
         logTiming(ctx, 'PRODUCT', 'CA product page scrape', Date.now() - productScrapeStart);
         
-        if (!success || colors.length === 0) {
+        // Use mutable array for colors
+        const colorVariants = [...colors];
+        
+        if (!success || colorVariants.length === 0) {
           logWarn(ctx, 'PRODUCT', `No colors found for ${productName}, using defaults`);
           const defaultColors = productConfig.material === 'Support' || productConfig.material === 'PVA'
             ? ['White']
             : ['Black', 'White'];
           logInfo(ctx, 'PRODUCT', `Default colors: ${defaultColors.join(', ')}`);
           for (const colorName of defaultColors) {
-            colors.push(extractColorInfo(colorName));
+            colorVariants.push(extractColorInfo(colorName));
           }
         }
 
@@ -1771,9 +1980,9 @@ serve(async (req) => {
         }
 
         results.productsScraped++;
-        results.colorsDiscovered += colors.length;
+        results.colorsDiscovered += colorVariants.length;
         
-        logInfo(ctx, 'PRODUCT', `Colors discovered: ${colors.length}`, colors.map(c => ({
+        logInfo(ctx, 'PRODUCT', `Colors discovered: ${colorVariants.length}`, colorVariants.map(c => ({
           name: c.colorName,
           hex: c.colorHex,
           family: c.colorFamily,
@@ -1783,8 +1992,8 @@ serve(async (req) => {
           productName,
           material: productConfig.material,
           slug: productConfig.slug,
-          colorsFound: colors.length,
-          colors: colors.map(c => c.colorName),
+          colorsFound: colorVariants.length,
+          colors: colorVariants.map(c => c.colorName),
           prices: {} as Record<string, number | null>,
           timing: {
             colorScrapeMs: Date.now() - productScrapeStart,
@@ -1836,14 +2045,23 @@ serve(async (req) => {
 
         // Step 3: Upsert each color variant
         if (!dryRun) {
-          logInfo(ctx, 'PRODUCT', `Step 3: Upserting ${colors.length} color variants to database`);
+          logInfo(ctx, 'PRODUCT', `Step 3: Upserting ${colorVariants.length} color variants to database`);
           const dbStart = Date.now();
           
-          for (let i = 0; i < colors.length; i++) {
-            const colorVariant = colors[i];
+          for (let i = 0; i < colorVariants.length; i++) {
+            const colorVariant = colorVariants[i];
             ctx.colorName = colorVariant.colorName;
             
-            logDebug(ctx, 'DB', `[${i+1}/${colors.length}] Processing: ${colorVariant.colorName}`);
+            // Track missing color hex
+            if (!colorVariant.colorHex) {
+              materialIssues.missingColors.push(`${productName} - ${colorVariant.colorName}`);
+            }
+            // Track missing images
+            if (!colorVariant.imageUrl) {
+              materialIssues.missingImages.push(`${productName} - ${colorVariant.colorName}`);
+            }
+            
+            logDebug(ctx, 'DB', `[${i+1}/${colorVariants.length}] Processing: ${colorVariant.colorName}`);
             
             const result = await upsertFilament(
               supabase,
@@ -1876,7 +2094,7 @@ serve(async (req) => {
         
         // Log product completion
         logSuccess(ctx, 'PRODUCT', `Completed: ${productName}`, {
-          colors: colors.length,
+          colors: colorVariants.length,
           prices: Object.values(productResult.prices).filter(Boolean).length,
           created: results.filamentsCreated,
           updated: results.filamentsUpdated,
@@ -1888,6 +2106,9 @@ serve(async (req) => {
         await new Promise(r => setTimeout(r, 3000));
         timing.delayMs += Date.now() - interProductDelayStart;
       }
+      
+      // Log material issues summary
+      logMaterialIssues(materialCategory, materialIssues, ctx);
       
       ctx.productName = undefined;
     }
