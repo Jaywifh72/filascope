@@ -138,6 +138,9 @@ const PRICE_RANGES_BY_MATERIAL: Record<string, Record<string, [number, number]>>
   "PA-GF": {
     US: [30, 65], CA: [40, 82], UK: [28, 55], EU: [30, 65], AU: [45, 88], JP: [4500, 9000]
   },
+  "PET-CF": {
+    US: [30, 60], CA: [38, 75], UK: [28, 55], EU: [32, 60], AU: [45, 85], JP: [4500, 8500]
+  },
   PC: {
     US: [28, 60], CA: [36, 78], UK: [25, 52], EU: [28, 60], AU: [40, 82], JP: [4000, 8500]
   },
@@ -447,40 +450,54 @@ const BAMBU_ASA_PRODUCTS: Record<string, ProductConfig> = {
 };
 
 // ============================================================================
-// PA (NYLON) PRODUCT DEFINITIONS
+// PA (NYLON) PRODUCT DEFINITIONS - Slugs verified from Excel file (ca.store.bambulab.com)
 // ============================================================================
 const BAMBU_PA_PRODUCTS: Record<string, ProductConfig> = {
   "PA6-CF": {
-    slug: "pa6-cf",
+    slug: "pa6-cf",  // Verified: https://ca.store.bambulab.com/products/pa6-cf
     material: "PA-CF",
-    tdsUrl: null,
+    tdsUrl: "https://store.bblcdn.com/b2abc59ac250492b979a52f1ce3e61b3.pdf",
     nozzleTempMin: 270, nozzleTempMax: 290,
     bedTempMin: 80, bedTempMax: 90,
     dryingTempC: 80, dryingTimeHours: 12,
   },
   "PAHT-CF": {
-    slug: "paht-cf",
+    slug: "paht-cf",  // Verified: https://ca.store.bambulab.com/products/paht-cf
     material: "PA-CF",
-    tdsUrl: null,
+    tdsUrl: "https://store.bblcdn.com/7166b20bc68f4c87b32c972b856eeb4b.pdf",
     nozzleTempMin: 280, nozzleTempMax: 300,
     bedTempMin: 80, bedTempMax: 90,
     dryingTempC: 80, dryingTimeHours: 12,
   },
   "PA6-GF": {
-    slug: "pa6-gf",
+    slug: "pa6-gf",  // Verified: https://ca.store.bambulab.com/products/pa6-gf
     material: "PA-GF",
-    tdsUrl: null,
+    tdsUrl: "https://store.bblcdn.com/s5/default/f0317db8b3f44d0486553c1e214cff9d.pdf",
     nozzleTempMin: 270, nozzleTempMax: 290,
     bedTempMin: 80, bedTempMax: 90,
     dryingTempC: 80, dryingTimeHours: 12,
   },
   "PPA-CF": {
-    slug: "ppa-cf",
+    slug: "ppa-cf",  // Verified: https://ca.store.bambulab.com/products/ppa-cf
     material: "PA-CF",
-    tdsUrl: null,
-    nozzleTempMin: 290, nozzleTempMax: 320,
-    bedTempMin: 90, bedTempMax: 110,
-    dryingTempC: 80, dryingTimeHours: 12,
+    tdsUrl: "https://store.bblcdn.com/05b0e4ca5ee14a4cb378cfa48df24f91.pdf",
+    nozzleTempMin: 280, nozzleTempMax: 310,
+    bedTempMin: 100, bedTempMax: 120,
+    dryingTempC: 100, dryingTimeHours: 12,
+  },
+};
+
+// ============================================================================
+// PET PRODUCT DEFINITIONS - Slugs verified from Excel file (ca.store.bambulab.com)
+// ============================================================================
+const BAMBU_PET_PRODUCTS: Record<string, ProductConfig> = {
+  "PET-CF": {
+    slug: "pet-cf",  // Verified: https://ca.store.bambulab.com/products/pet-cf
+    material: "PET-CF",
+    tdsUrl: "https://store.bblcdn.com/9690d6226f024acab2ba0dd52dabb654.pdf",
+    nozzleTempMin: 260, nozzleTempMax: 290,
+    bedTempMin: 80, bedTempMax: 100,
+    dryingTempC: 80, dryingTimeHours: 8,
   },
 };
 
@@ -567,6 +584,7 @@ const ALL_BAMBU_PRODUCTS: Record<string, Record<string, ProductConfig>> = {
   ABS: BAMBU_ABS_PRODUCTS,
   ASA: BAMBU_ASA_PRODUCTS,
   PA: BAMBU_PA_PRODUCTS,
+  PET: BAMBU_PET_PRODUCTS,
   PC: BAMBU_PC_PRODUCTS,
   Support: BAMBU_SUPPORT_PRODUCTS,
 };
@@ -926,6 +944,51 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   "petg-cf": [
     { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
     { colorName: "Gray", colorHex: "#4A4A4A", colorFamily: "Gray", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PA (NYLON) PRODUCT COLOR FALLBACKS
+  // ============================================================================
+  
+  // PAHT-CF - High Temperature PA Carbon Fiber (1 color - Black only)
+  // Verified from: https://ca.store.bambulab.com/products/paht-cf
+  "paht-cf": [
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+  
+  // PA6-CF - PA6 Carbon Fiber (1 color - Black only)
+  // Verified from: https://ca.store.bambulab.com/products/pa6-cf
+  "pa6-cf": [
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+  
+  // PPA-CF - PPA Carbon Fiber (1 color - Black only)
+  // Verified from: https://ca.store.bambulab.com/products/ppa-cf
+  "ppa-cf": [
+    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+  
+  // PA6-GF - PA6 Glass Fiber (8 colors from hex code table on product page)
+  // Verified from: https://ca.store.bambulab.com/products/pa6-gf
+  "pa6-gf": [
+    { colorName: "White", colorHex: "#EAEAE4", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Yellow", colorHex: "#FFCE00", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Lime", colorHex: "#C5ED48", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#75AED8", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Orange", colorHex: "#FF4800", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Brown", colorHex: "#5B492F", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#353533", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PET PRODUCT COLOR FALLBACKS
+  // ============================================================================
+  
+  // PET-CF - PET Carbon Fiber (1 color - Black only)
+  // Verified from: https://ca.store.bambulab.com/products/pet-cf
+  "pet-cf": [
+    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
 };
 
