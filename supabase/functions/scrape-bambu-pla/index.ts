@@ -147,6 +147,9 @@ const PRICE_RANGES_BY_MATERIAL: Record<string, Record<string, [number, number]>>
   "PC-FR": {
     US: [38, 75], CA: [48, 95], UK: [34, 65], EU: [38, 75], AU: [55, 100], JP: [5500, 10500]
   },
+  "PPS-CF": {
+    US: [85, 140], CA: [100, 170], UK: [75, 125], EU: [85, 140], AU: [120, 195], JP: [12000, 19500]
+  },
   PVA: {
     US: [50, 100], CA: [65, 130], UK: [45, 88], EU: [50, 100], AU: [72, 138], JP: [7000, 14000]
   },
@@ -524,6 +527,21 @@ const BAMBU_PC_PRODUCTS: Record<string, ProductConfig> = {
 };
 
 // ============================================================================
+// PPS (POLYPHENYLENE SULFIDE) PRODUCT DEFINITIONS - Slugs verified from Excel file (ca.store.bambulab.com)
+// ============================================================================
+const BAMBU_PPS_PRODUCTS: Record<string, ProductConfig> = {
+  "PPS-CF": {
+    slug: "pps-cf",  // Verified: https://ca.store.bambulab.com/products/pps-cf
+    material: "PPS-CF",
+    tdsUrl: "https://store.bblcdn.com/26f4f40359484040a8660c9150a90fc0.pdf",
+    nozzleTempMin: 310, nozzleTempMax: 340,
+    bedTempMin: 100, bedTempMax: 120,
+    dryingTempC: 120, dryingTimeHours: 10,  // Mid-range of 100-140°C and 8-12h
+    netWeightG: 750,  // PPS-CF uses 750g spools (different from standard 1kg)
+  },
+};
+
+// ============================================================================
 // SUPPORT MATERIAL PRODUCT DEFINITIONS - Slugs verified from Excel file (ca.store.bambulab.com)
 // ============================================================================
 const BAMBU_SUPPORT_PRODUCTS: Record<string, ProductConfig> = {
@@ -586,6 +604,7 @@ const ALL_BAMBU_PRODUCTS: Record<string, Record<string, ProductConfig>> = {
   PA: BAMBU_PA_PRODUCTS,
   PET: BAMBU_PET_PRODUCTS,
   PC: BAMBU_PC_PRODUCTS,
+  PPS: BAMBU_PPS_PRODUCTS,
   Support: BAMBU_SUPPORT_PRODUCTS,
 };
 
@@ -1043,6 +1062,16 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
     { colorName: "Gray", colorHex: "#A8A8AA", colorFamily: "Gray", imageUrl: null, variantId: null },
     { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PPS (POLYPHENYLENE SULFIDE) COLOR FALLBACKS
+  // ============================================================================
+  
+  // PPS-CF - 1 color (Black only - carbon fiber composite)
+  // Verified from: https://ca.store.bambulab.com/products/pps-cf
+  "pps-cf": [
+    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
 };
 
