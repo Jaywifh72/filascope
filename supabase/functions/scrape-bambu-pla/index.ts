@@ -126,8 +126,16 @@ const PRICE_RANGES_BY_MATERIAL: Record<string, Record<string, [number, number]>>
   ABS: {
     US: [18, 40], CA: [22, 50], UK: [16, 35], EU: [18, 40], AU: [25, 55], JP: [2500, 5500]
   },
+  // FIX 1: Add specific ABS-GF price range (glass fiber reinforced - premium material)
+  "ABS-GF": {
+    US: [35, 70], CA: [45, 88], UK: [30, 60], EU: [35, 70], AU: [50, 95], JP: [5000, 9800]
+  },
   ASA: {
     US: [25, 50], CA: [32, 62], UK: [22, 42], EU: [25, 50], AU: [35, 68], JP: [3500, 7000]
+  },
+  // FIX 1: Add specific ASA-Aero price range (lightweight foaming ASA - specialty material)
+  "ASA-Aero": {
+    US: [30, 60], CA: [38, 75], UK: [26, 52], EU: [30, 60], AU: [42, 82], JP: [4200, 8400]
   },
   "ASA-CF": {
     US: [30, 55], CA: [38, 70], UK: [26, 48], EU: [30, 55], AU: [42, 75], JP: [4200, 7700]
@@ -157,6 +165,33 @@ const PRICE_RANGES_BY_MATERIAL: Record<string, Record<string, [number, number]>>
     US: [25, 90], CA: [32, 115], UK: [22, 78], EU: [25, 90], AU: [36, 122], JP: [3500, 12500]
   },
 };
+
+// ============================================================================
+// FIX 4: SMART PRICE RANGE FALLBACK FOR ENGINEERING MATERIALS
+// ============================================================================
+const ENGINEERING_MATERIALS = ['PA-CF', 'PA-GF', 'PET-CF', 'PC', 'PC-FR', 'PPS-CF', 'ABS-GF', 'ASA-CF', 'PETG-CF'];
+const SPECIALTY_MATERIALS = ['TPU', 'PVA', 'Support'];
+
+function getMaterialPriceRange(material: string, region: string): [number, number] {
+  // Direct lookup first
+  if (PRICE_RANGES_BY_MATERIAL[material]?.[region]) {
+    return PRICE_RANGES_BY_MATERIAL[material][region];
+  }
+  
+  // Smart fallback based on material category
+  if (ENGINEERING_MATERIALS.some(m => material.includes(m) || m.includes(material))) {
+    // Fallback to PA-CF range (mid-range engineering material)
+    return PRICE_RANGES_BY_MATERIAL['PA-CF']?.[region] || PRICE_RANGES_BY_MATERIAL['PA-CF']['US'];
+  }
+  
+  if (SPECIALTY_MATERIALS.some(m => material.includes(m) || m.includes(material))) {
+    // Fallback to Support range
+    return PRICE_RANGES_BY_MATERIAL['Support']?.[region] || PRICE_RANGES_BY_MATERIAL['Support']['US'];
+  }
+  
+  // Default fallback to PLA for basic materials
+  return PRICE_RANGES_BY_MATERIAL['PLA']?.[region] || PRICE_RANGES_BY_MATERIAL['PLA']['US'];
+}
 
 const REGION_TO_FIRECRAWL_LOCATION: Record<string, { country: string; languages: string[] }> = {
   US: { country: "US", languages: ["en"] },
@@ -1262,9 +1297,8 @@ function extractBambuLabPrice(
     return null;
   }
 
-  // Get material-specific price range, fallback to PLA range
-  const materialRanges = PRICE_RANGES_BY_MATERIAL[material] || PRICE_RANGES_BY_MATERIAL['PLA'];
-  const [minExpected, maxExpected] = materialRanges[region] || materialRanges['US'];
+  // FIX 4: Use smart price range lookup with fallback for engineering materials
+  const [minExpected, maxExpected] = getMaterialPriceRange(material, region);
   
   if (ctx) {
     logInfo(ctx, 'PRICE', `Expected ${material} price range: ${minExpected}-${maxExpected} ${store.currency}`);
@@ -1945,17 +1979,37 @@ async function scrapeProductPage(
     logWarn(ctx, 'PRODUCT_SCRAPE', 'No valid price extracted');
   }
 
-  // Extract TDS URL
+  // FIX 2: Extract TDS URL with multi-pattern matching
   let tdsUrl: string | null = null;
-  const tdsMatch = html.match(/href=["']([^"']*Technical_Data_Sheet[^"']*\.pdf)["']/i);
-  if (tdsMatch) {
-    tdsUrl = tdsMatch[1];
-    if (!tdsUrl.startsWith('http')) {
-      tdsUrl = `https://store.bblcdn.com${tdsUrl}`;
+  
+  // TDS URL extraction patterns (ordered by specificity)
+  const TDS_URL_PATTERNS = [
+    // Pattern 1: Standard Technical_Data_Sheet naming
+    /href=["']([^"']*Technical_Data_Sheet[^"']*\.pdf)["']/gi,
+    // Pattern 2: TDS abbreviation
+    /href=["']([^"']*(?:\/|_)tds[^"']*\.pdf)["']/gi,
+    // Pattern 3: bblcdn.com hosted PDFs (common Bambu pattern)
+    /href=["'](https?:\/\/(?:store\.)?bblcdn\.com\/[^"']+\.pdf)["']/gi,
+    // Pattern 4: Shopify CDN hosted PDFs
+    /href=["'](https?:\/\/cdn\.shopify\.com\/[^"']+\.pdf)["']/gi,
+    // Pattern 5: Any PDF with technical/datasheet keywords in the URL path
+    /href=["']([^"']*(?:technical|datasheet|data[-_]sheet|specs?)[^"']*\.pdf)["']/gi,
+  ];
+  
+  for (const pattern of TDS_URL_PATTERNS) {
+    const tdsMatch = html.match(pattern);
+    if (tdsMatch && tdsMatch[1]) {
+      tdsUrl = tdsMatch[1];
+      if (!tdsUrl.startsWith('http')) {
+        tdsUrl = `https://store.bblcdn.com${tdsUrl}`;
+      }
+      if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', `TDS URL found via pattern: ${tdsUrl}`);
+      break;
     }
-    if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', `TDS URL found: ${tdsUrl}`);
-  } else if (ctx) {
-    logDebug(ctx, 'PRODUCT_SCRAPE', 'No TDS URL found in page');
+  }
+  
+  if (!tdsUrl && ctx) {
+    logDebug(ctx, 'PRODUCT_SCRAPE', 'No TDS URL found in page with any pattern');
   }
 
   if (ctx) {
