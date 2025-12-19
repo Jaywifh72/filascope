@@ -74,7 +74,7 @@ export function useBambuRegionalStats() {
           id, product_title, material, variant_available,
           variant_price, price_cad, price_gbp, price_eur, price_aud, price_jpy,
           product_url, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp,
-          regional_prices_updated_at, updated_at
+          last_scraped_at, updated_at
         `)
         .ilike('vendor', 'bambu lab');
 
@@ -92,7 +92,7 @@ export function useBambuRegionalStats() {
       let neverSyncedCount = 0;
 
       filaments?.forEach(f => {
-        const lastUpdate = f.regional_prices_updated_at ? new Date(f.regional_prices_updated_at) : null;
+        const lastUpdate = f.last_scraped_at ? new Date(f.last_scraped_at) : null;
         if (!lastUpdate) {
           neverSyncedCount++;
         } else if (lastUpdate >= oneDayAgo) {
@@ -135,9 +135,9 @@ export function useBambuRegionalStats() {
             else unknown++;
           }
 
-          if (f.regional_prices_updated_at) {
-            if (!lastUpdated || new Date(f.regional_prices_updated_at) > new Date(lastUpdated)) {
-              lastUpdated = f.regional_prices_updated_at;
+          if (f.last_scraped_at) {
+            if (!lastUpdated || new Date(f.last_scraped_at) > new Date(lastUpdated)) {
+              lastUpdated = f.last_scraped_at;
             }
           }
         });
@@ -158,12 +158,12 @@ export function useBambuRegionalStats() {
         };
       });
 
-      // Find the most recent regional update across all filaments
+      // Find the most recent scrape update across all filaments
       const lastRegionalUpdate = filaments?.reduce((latest, f) => {
-        if (!f.regional_prices_updated_at) return latest;
-        if (!latest) return f.regional_prices_updated_at;
-        return new Date(f.regional_prices_updated_at) > new Date(latest) 
-          ? f.regional_prices_updated_at 
+        if (!f.last_scraped_at) return latest;
+        if (!latest) return f.last_scraped_at;
+        return new Date(f.last_scraped_at) > new Date(latest) 
+          ? f.last_scraped_at 
           : latest;
       }, null as string | null) || null;
 
@@ -198,7 +198,7 @@ export function useBambuMaterialBreakdown(region: string) {
         .select(`
           id, material, variant_available,
           variant_price, price_cad, price_gbp, price_eur, price_aud, price_jpy,
-          regional_prices_updated_at
+          last_scraped_at
         `)
         .ilike('vendor', 'bambu lab');
 
@@ -235,9 +235,9 @@ export function useBambuMaterialBreakdown(region: string) {
           entry.inStock++;
         }
         
-        if (f.regional_prices_updated_at) {
-          if (!entry.lastUpdated || new Date(f.regional_prices_updated_at) > new Date(entry.lastUpdated)) {
-            entry.lastUpdated = f.regional_prices_updated_at;
+        if (f.last_scraped_at) {
+          if (!entry.lastUpdated || new Date(f.last_scraped_at) > new Date(entry.lastUpdated)) {
+            entry.lastUpdated = f.last_scraped_at;
           }
         }
       });
