@@ -68,7 +68,6 @@ const FilamentDetail = () => {
   const [stickyBarVisible, setStickyBarVisible] = useState(false);
   const [retailersModalOpen, setRetailersModalOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
   const heroSentinelRef = useRef<HTMLDivElement>(null);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
   const { formatPrice, formatRegionalPrice, currencyInfo } = useCurrency();
@@ -1317,13 +1316,11 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                     availableWeights={availableWeights}
                     selectedWeight={selectedWeight}
                     currentVariantId={displayFilament.id}
-                    quantity={quantity}
                     onSelectWeight={setSelectedWeight}
                     onSelectColor={(variant) => {
                       const fullVariant = colorVariants.find(v => v.id === variant.id);
                       if (fullVariant) handleColorVariantSelect(fullVariant);
                     }}
-                    onQuantityChange={setQuantity}
                     getColorFromTitle={getColorFromTitle}
                     getBaseProductName={getBaseProductName}
                 />
