@@ -7,20 +7,30 @@ const corsHeaders = {
 };
 
 // Regional store configuration for Bambu Lab
-// Prices are hardcoded because Bambu Lab's website uses geo-detection that blocks server-side fetching
 const BAMBU_REGIONAL_STORES: Record<string, { 
   subdomain: string; 
   currency: string; 
+  currencySymbol: string;
   priceField: string;
   urlField: string;
-  price: number; // Hardcoded price in native currency
+  fallbackPrice: number; // Fallback if Firecrawl scraping fails
 }> = {
-  US: { subdomain: "us", currency: "USD", priceField: "variant_price", urlField: "product_url", price: 19.99 },
-  CA: { subdomain: "ca", currency: "CAD", priceField: "price_cad", urlField: "product_url_ca", price: 25.99 },
-  UK: { subdomain: "uk", currency: "GBP", priceField: "price_gbp", urlField: "product_url_uk", price: 17.99 },
-  EU: { subdomain: "eu", currency: "EUR", priceField: "price_eur", urlField: "product_url_eu", price: 21.99 },
-  AU: { subdomain: "au", currency: "AUD", priceField: "price_aud", urlField: "product_url_au", price: 29.99 },
-  JP: { subdomain: "jp", currency: "JPY", priceField: "price_jpy", urlField: "product_url_jp", price: 2980 },
+  US: { subdomain: "us", currency: "USD", currencySymbol: "$", priceField: "variant_price", urlField: "product_url", fallbackPrice: 19.99 },
+  CA: { subdomain: "ca", currency: "CAD", currencySymbol: "C$", priceField: "price_cad", urlField: "product_url_ca", fallbackPrice: 25.99 },
+  UK: { subdomain: "uk", currency: "GBP", currencySymbol: "£", priceField: "price_gbp", urlField: "product_url_uk", fallbackPrice: 17.99 },
+  EU: { subdomain: "eu", currency: "EUR", currencySymbol: "€", priceField: "price_eur", urlField: "product_url_eu", fallbackPrice: 21.99 },
+  AU: { subdomain: "au", currency: "AUD", currencySymbol: "A$", priceField: "price_aud", urlField: "product_url_au", fallbackPrice: 29.99 },
+  JP: { subdomain: "jp", currency: "JPY", currencySymbol: "¥", priceField: "price_jpy", urlField: "product_url_jp", fallbackPrice: 2980 },
+};
+
+// Firecrawl geo-location mapping for each region
+const REGION_TO_FIRECRAWL_LOCATION: Record<string, { country: string; languages: string[] }> = {
+  US: { country: "US", languages: ["en"] },
+  CA: { country: "CA", languages: ["en"] },
+  UK: { country: "GB", languages: ["en"] },
+  EU: { country: "DE", languages: ["en", "de"] },
+  AU: { country: "AU", languages: ["en"] },
+  JP: { country: "JP", languages: ["ja", "en"] },
 };
 
 // Bambu Lab ABS Color variants with official hex codes, image URLs, and Shopify variant IDs
@@ -66,13 +76,303 @@ const getRegionalProductUrl = (region: string, variantId: string): string => {
   return `https://${store.subdomain}.store.bambulab.com/products/abs-filament?variant=${variantId}`;
 };
 
-// Get hardcoded regional prices (Bambu Lab's website blocks server-side price fetching)
-function getRegionalPrices(): Record<string, number> {
+// Get fallback prices (used if Firecrawl scraping fails)
+function getFallbackPrices(): Record<string, number> {
   const prices: Record<string, number> = {};
   for (const [region, config] of Object.entries(BAMBU_REGIONAL_STORES)) {
-    prices[region] = config.price;
+    prices[region] = config.fallbackPrice;
   }
   return prices;
+}
+
+// Validate that the scraped price matches the expected currency for the region
+function validateCurrency(html: string, region: string): boolean {
+  const store = BAMBU_REGIONAL_STORES[region];
+  if (!store) return false;
+
+  // Check for currency in meta tags
+  const metaCurrencyMatch = html.match(/<meta[^>]*property=["']product:price:currency["'][^>]*content=["']([^"']+)["']/i) ||
+                            html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']product:price:currency["']/i);
+  if (metaCurrencyMatch) {
+    const foundCurrency = metaCurrencyMatch[1].toUpperCase();
+    if (foundCurrency === store.currency) {
+      console.log(`[${region}] Currency validated via meta tag: ${foundCurrency}`);
+      return true;
+    } else {
+      console.warn(`[${region}] Currency mismatch! Expected ${store.currency}, found ${foundCurrency}`);
+      return false;
+    }
+  }
+
+  // Check for currency in JSON-LD
+  const jsonLdMatch = html.match(/"priceCurrency"\s*:\s*"([^"]+)"/i);
+  if (jsonLdMatch) {
+    const foundCurrency = jsonLdMatch[1].toUpperCase();
+    if (foundCurrency === store.currency) {
+      console.log(`[${region}] Currency validated via JSON-LD: ${foundCurrency}`);
+      return true;
+    } else {
+      console.warn(`[${region}] Currency mismatch! Expected ${store.currency}, found ${foundCurrency}`);
+      return false;
+    }
+  }
+
+  // Check for regional currency markers in the HTML
+  const currencyPatterns: Record<string, RegExp[]> = {
+    CAD: [/CA\s*\$/i, /CAD/i, /\$\s*\d+.*CAD/i],
+    GBP: [/£/],
+    EUR: [/€/, /EUR/i],
+    AUD: [/AU\s*\$/i, /AUD/i, /\$\s*\d+.*AUD/i],
+    JPY: [/¥/, /JPY/i, /円/],
+    USD: [/\$\s*\d+/, /USD/i], // More generic, so check last
+  };
+
+  const patterns = currencyPatterns[store.currency];
+  if (patterns) {
+    for (const pattern of patterns) {
+      if (pattern.test(html)) {
+        console.log(`[${region}] Currency validated via pattern: ${store.currency}`);
+        return true;
+      }
+    }
+  }
+
+  console.warn(`[${region}] Could not validate currency`);
+  return false;
+}
+
+// Check if the response was redirected to a different regional store
+function detectRedirect(sourceUrl: string | undefined, expectedRegion: string): boolean {
+  if (!sourceUrl) return false;
+  
+  const store = BAMBU_REGIONAL_STORES[expectedRegion];
+  if (!store) return false;
+  
+  const expectedDomain = `${store.subdomain}.store.bambulab.com`;
+  const isCorrectRegion = sourceUrl.includes(expectedDomain);
+  
+  if (!isCorrectRegion) {
+    console.warn(`[${expectedRegion}] Redirect detected! Expected ${expectedDomain}, got ${sourceUrl}`);
+  }
+  
+  return !isCorrectRegion;
+}
+
+// Extract price from HTML content using multiple strategies
+function extractPriceFromHtml(html: string, region: string): number | null {
+  const store = BAMBU_REGIONAL_STORES[region];
+  if (!store) return null;
+
+  // Strategy 1: JSON-LD structured data
+  const jsonLdMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  if (jsonLdMatch) {
+    for (const match of jsonLdMatch) {
+      try {
+        const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
+        const jsonData = JSON.parse(jsonContent);
+        
+        // Check for Product type
+        if (jsonData['@type'] === 'Product' && jsonData.offers) {
+          const offers = Array.isArray(jsonData.offers) ? jsonData.offers : [jsonData.offers];
+          for (const offer of offers) {
+            if (offer.price && offer.priceCurrency?.toUpperCase() === store.currency) {
+              const price = parseFloat(offer.price);
+              if (!isNaN(price) && price > 0) {
+                console.log(`[${region}] Extracted price from JSON-LD: ${price} ${store.currency}`);
+                return price;
+              }
+            }
+          }
+        }
+      } catch {
+        // Invalid JSON, continue
+      }
+    }
+  }
+
+  // Strategy 2: Meta tags
+  const metaPriceMatch = html.match(/<meta[^>]*property=["']product:price:amount["'][^>]*content=["']([^"']+)["']/i) ||
+                         html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']product:price:amount["']/i);
+  if (metaPriceMatch) {
+    const price = parseFloat(metaPriceMatch[1]);
+    if (!isNaN(price) && price > 0) {
+      console.log(`[${region}] Extracted price from meta tag: ${price}`);
+      return price;
+    }
+  }
+
+  // Strategy 3: Shopify-specific price patterns
+  const shopifyPricePatterns = [
+    /data-product-price=["']?(\d+\.?\d*)["']?/i,
+    /data-price=["']?(\d+\.?\d*)["']?/i,
+    /"price"\s*:\s*["']?(\d+\.?\d*)["']?/i,
+    /class=["'][^"']*price[^"']*["'][^>]*>[\s\S]*?([£€$¥]?\s*[\d,]+\.?\d*)/i,
+  ];
+
+  for (const pattern of shopifyPricePatterns) {
+    const match = html.match(pattern);
+    if (match) {
+      // Clean the price string
+      const priceStr = match[1].replace(/[^0-9.]/g, '');
+      const price = parseFloat(priceStr);
+      if (!isNaN(price) && price > 0 && price < 100000) { // Sanity check
+        // For Shopify, prices might be in cents
+        const normalizedPrice = price > 1000 && store.currency !== 'JPY' ? price / 100 : price;
+        console.log(`[${region}] Extracted price from Shopify pattern: ${normalizedPrice}`);
+        return normalizedPrice;
+      }
+    }
+  }
+
+  console.warn(`[${region}] Could not extract price from HTML`);
+  return null;
+}
+
+// Fetch regional price using Firecrawl with geo-located proxy
+async function fetchRegionalPriceWithFirecrawl(
+  region: string, 
+  variantId: string
+): Promise<{ price: number | null; source: 'firecrawl' | 'fallback'; error?: string }> {
+  const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+  
+  if (!firecrawlKey) {
+    console.log(`[${region}] No Firecrawl API key, using fallback price`);
+    return { 
+      price: BAMBU_REGIONAL_STORES[region]?.fallbackPrice || null, 
+      source: 'fallback',
+      error: 'No Firecrawl API key configured'
+    };
+  }
+
+  const store = BAMBU_REGIONAL_STORES[region];
+  const location = REGION_TO_FIRECRAWL_LOCATION[region];
+  
+  if (!store || !location) {
+    console.warn(`[${region}] Unknown region, using fallback`);
+    return { price: store?.fallbackPrice || null, source: 'fallback', error: 'Unknown region' };
+  }
+
+  const url = getRegionalProductUrl(region, variantId);
+  console.log(`[${region}] Scraping ${url} with geo-location: ${location.country}`);
+
+  try {
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['html'],
+        onlyMainContent: false,
+        waitFor: 3000,
+        location, // Geo-located proxy!
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[${region}] Firecrawl API error: ${response.status} - ${errorText}`);
+      return { 
+        price: store.fallbackPrice, 
+        source: 'fallback',
+        error: `Firecrawl API error: ${response.status}`
+      };
+    }
+
+    const data = await response.json();
+    
+    if (!data.success) {
+      console.error(`[${region}] Firecrawl scrape failed:`, data.error);
+      return { 
+        price: store.fallbackPrice, 
+        source: 'fallback',
+        error: data.error || 'Firecrawl scrape failed'
+      };
+    }
+
+    const html = data.data?.html || data.html || '';
+    const sourceUrl = data.data?.metadata?.sourceURL || data.metadata?.sourceURL;
+
+    // Check for redirect to different regional store
+    if (detectRedirect(sourceUrl, region)) {
+      console.warn(`[${region}] Detected redirect, using fallback price`);
+      return { 
+        price: store.fallbackPrice, 
+        source: 'fallback',
+        error: `Redirected from ${store.subdomain}.store to different region`
+      };
+    }
+
+    // Validate currency
+    if (!validateCurrency(html, region)) {
+      console.warn(`[${region}] Currency validation failed, using fallback price`);
+      return { 
+        price: store.fallbackPrice, 
+        source: 'fallback',
+        error: `Currency validation failed (expected ${store.currency})`
+      };
+    }
+
+    // Extract price
+    const price = extractPriceFromHtml(html, region);
+    
+    if (price !== null) {
+      console.log(`[${region}] Successfully scraped price: ${price} ${store.currency}`);
+      return { price, source: 'firecrawl' };
+    }
+
+    console.warn(`[${region}] Could not extract price, using fallback`);
+    return { 
+      price: store.fallbackPrice, 
+      source: 'fallback',
+      error: 'Price extraction failed'
+    };
+
+  } catch (error) {
+    console.error(`[${region}] Firecrawl error:`, error);
+    return { 
+      price: store.fallbackPrice, 
+      source: 'fallback',
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+
+// Fetch all regional prices with Firecrawl geo-located scraping
+async function fetchAllRegionalPrices(variantId: string): Promise<{
+  prices: Record<string, number>;
+  sources: Record<string, 'firecrawl' | 'fallback'>;
+  errors: Record<string, string>;
+}> {
+  const prices: Record<string, number> = {};
+  const sources: Record<string, 'firecrawl' | 'fallback'> = {};
+  const errors: Record<string, string> = {};
+
+  // Fetch all regions in parallel (with slight stagger to avoid rate limits)
+  const regions = Object.keys(BAMBU_REGIONAL_STORES);
+  
+  for (let i = 0; i < regions.length; i++) {
+    const region = regions[i];
+    
+    // Small delay between requests to avoid rate limiting
+    if (i > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    const result = await fetchRegionalPriceWithFirecrawl(region, variantId);
+    
+    if (result.price !== null) {
+      prices[region] = result.price;
+    }
+    sources[region] = result.source;
+    if (result.error) {
+      errors[region] = result.error;
+    }
+  }
+
+  return { prices, sources, errors };
 }
 
 serve(async (req) => {
@@ -140,16 +440,27 @@ serve(async (req) => {
 
     console.log(`Found ${existingFilaments?.length || 0} existing Bambu Lab ${targetMaterial} filaments`);
 
-    // Get hardcoded regional prices (Bambu Lab blocks server-side price fetching via geo-detection)
-    const regionalPrices = getRegionalPrices();
-    console.log("Using hardcoded regional prices:", regionalPrices);
+    // Fetch regional prices using Firecrawl geo-located scraping
+    // Uses the first variant ID since all colors have the same price
+    const firstVariantId = Object.values(BAMBU_ABS_COLORS)[0].variantId;
+    console.log("Fetching regional prices with Firecrawl geo-located proxies...");
+    
+    const { prices: regionalPrices, sources: priceSources, errors: priceErrors } = 
+      await fetchAllRegionalPrices(firstVariantId);
+    
+    console.log("Regional prices fetched:", regionalPrices);
+    console.log("Price sources:", priceSources);
+    if (Object.keys(priceErrors).length > 0) {
+      console.log("Price fetch errors:", priceErrors);
+    }
 
     const results: Array<{
       color: string;
       action: "created" | "updated" | "skipped";
       filamentId?: string;
       title: string;
-      prices?: Record<string, number | null>;
+      prices?: Record<string, number>;
+      priceSources?: Record<string, string>;
     }> = [];
 
     let created = 0;
@@ -315,6 +626,8 @@ serve(async (req) => {
       updated,
       skipped,
       regionalPrices,
+      priceSources, // Shows which prices came from Firecrawl vs fallback
+      priceErrors: Object.keys(priceErrors).length > 0 ? priceErrors : undefined,
       results,
     };
 
