@@ -18,13 +18,15 @@ const AdminMaintenance = () => {
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   
   const BAMBU_MATERIAL_OPTIONS = [
-    { id: 'PLA', label: 'PLA', count: 16 },
-    { id: 'PETG', label: 'PETG', count: 4 },
+    { id: 'PLA', label: 'PLA', count: 17 },
+    { id: 'PETG', label: 'PETG', count: 3 },
     { id: 'TPU', label: 'TPU', count: 3 },
-    { id: 'ABS', label: 'ABS', count: 1 },
-    { id: 'ASA', label: 'ASA', count: 1 },
+    { id: 'ABS', label: 'ABS', count: 2 },
+    { id: 'ASA', label: 'ASA', count: 3 },
     { id: 'PA', label: 'PA (Nylon)', count: 4 },
+    { id: 'PET', label: 'PET', count: 1 },
     { id: 'PC', label: 'PC', count: 2 },
+    { id: 'PPS', label: 'PPS', count: 1 },
     { id: 'Support', label: 'Support', count: 5 },
   ];
   
@@ -118,7 +120,7 @@ const AdminMaintenance = () => {
             <CardTitle>Bambu Lab Filament Scraper</CardTitle>
           </div>
           <CardDescription>
-            Scrape Bambu Lab filaments across all materials (PLA, PETG, TPU, ABS, ASA, PA, PC, Support) with regional pricing for US, CA, UK, EU, AU, JP
+            Scrape Bambu Lab filaments across all materials (PLA, PETG, TPU, ABS, ASA, PA, PET, PC, PPS, Support) with regional pricing for US, CA, UK, EU, AU, JP
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -183,7 +185,7 @@ const AdminMaintenance = () => {
               className="w-full sm:w-auto"
             >
               <Layers className="w-4 h-4 mr-2" />
-              {bambuColorsDryRun ? "Preview All (8)" : "Scrape All Materials (8)"}
+              {bambuColorsDryRun ? "Preview All (10)" : "Scrape All Materials (10)"}
             </Button>
           </div>
 
