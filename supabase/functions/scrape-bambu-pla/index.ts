@@ -163,6 +163,8 @@ interface LogContext {
   productName?: string;
   colorName?: string;
   operation?: string;
+  jobId?: string; // For database logging
+  supabase?: any; // Supabase client for logging
 }
 
 interface TimingMetrics {
@@ -181,6 +183,55 @@ const LOG_LEVELS = {
   TIMING: '⏱️',
 } as const;
 
+// Log buffer for batch database inserts
+let logBuffer: Array<{
+  job_id: string;
+  level: string;
+  stage: string | null;
+  message: string;
+  metadata: any;
+}> = [];
+let lastLogFlush = Date.now();
+const LOG_FLUSH_INTERVAL_MS = 5000; // Flush every 5 seconds
+const LOG_BUFFER_MAX_SIZE = 20; // Or when buffer hits 20 entries
+
+async function flushLogBuffer(supabase: any): Promise<void> {
+  if (logBuffer.length === 0 || !supabase) return;
+  
+  const logsToInsert = [...logBuffer];
+  logBuffer = [];
+  lastLogFlush = Date.now();
+  
+  try {
+    await supabase.from('scrape_job_logs').insert(logsToInsert);
+  } catch (e) {
+    console.error('Failed to flush log buffer to database:', e);
+  }
+}
+
+async function logToDb(
+  ctx: LogContext, 
+  level: 'info' | 'warn' | 'error' | 'debug',
+  stage: string | null,
+  message: string,
+  metadata?: any
+): Promise<void> {
+  if (!ctx.jobId || !ctx.supabase) return;
+  
+  logBuffer.push({
+    job_id: ctx.jobId,
+    level,
+    stage,
+    message,
+    metadata: metadata || {},
+  });
+  
+  // Flush if buffer is full or enough time has passed
+  if (logBuffer.length >= LOG_BUFFER_MAX_SIZE || Date.now() - lastLogFlush > LOG_FLUSH_INTERVAL_MS) {
+    await flushLogBuffer(ctx.supabase);
+  }
+}
+
 function generateRequestId(): string {
   return crypto.randomUUID().substring(0, 8).toUpperCase();
 }
@@ -198,14 +249,20 @@ function log(level: keyof typeof LOG_LEVELS, ctx: LogContext, category: string, 
 
 function logDebug(ctx: LogContext, category: string, message: string, data?: any): void {
   log('DEBUG', ctx, category, message, data);
+  // Log debug to DB only if it's a significant event
+  if (category === 'FIRECRAWL' || category === 'DB' || category === 'PARSE') {
+    logToDb(ctx, 'debug', category.toLowerCase(), message, data);
+  }
 }
 
 function logInfo(ctx: LogContext, category: string, message: string, data?: any): void {
   log('INFO', ctx, category, message, data);
+  logToDb(ctx, 'info', category.toLowerCase(), message, data);
 }
 
 function logWarn(ctx: LogContext, category: string, message: string, data?: any): void {
   log('WARN', ctx, category, message, data);
+  logToDb(ctx, 'warn', category.toLowerCase(), message, data);
 }
 
 function logError(ctx: LogContext, category: string, message: string, error?: unknown): void {
@@ -213,10 +270,18 @@ function logError(ctx: LogContext, category: string, message: string, error?: un
     ? { message: error.message, stack: error.stack?.split('\n').slice(0, 5).join('\n') }
     : error;
   log('ERROR', ctx, category, message, errorDetails);
+  // Always log errors to database with full context
+  logToDb(ctx, 'error', category.toLowerCase(), message, {
+    error: errorDetails,
+    product: ctx.productName,
+    region: ctx.region,
+    color: ctx.colorName,
+  });
 }
 
 function logSuccess(ctx: LogContext, category: string, message: string, data?: any): void {
   log('SUCCESS', ctx, category, message, data);
+  logToDb(ctx, 'info', category.toLowerCase(), `✅ ${message}`, data);
 }
 
 function logTiming(ctx: LogContext, category: string, message: string, durationMs: number): void {

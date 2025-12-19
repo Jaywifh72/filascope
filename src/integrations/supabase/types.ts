@@ -3180,6 +3180,47 @@ export type Database = {
         }
         Relationships: []
       }
+      scrape_job_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          job_id: string | null
+          level: string
+          message: string
+          metadata: Json | null
+          stage: string | null
+          timestamp: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          job_id?: string | null
+          level: string
+          message: string
+          metadata?: Json | null
+          stage?: string | null
+          timestamp?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          job_id?: string | null
+          level?: string
+          message?: string
+          metadata?: Json | null
+          stage?: string | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_job_logs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "scrape_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scrape_jobs: {
         Row: {
           ai_summary: Json | null
@@ -4345,6 +4386,7 @@ export type Database = {
         Returns: Json
       }
       cleanup_old_price_history: { Args: never; Returns: number }
+      cleanup_old_scrape_logs: { Args: never; Returns: number }
       cleanup_stuck_scrapes: {
         Args: never
         Returns: {
