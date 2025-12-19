@@ -60,7 +60,7 @@ export function useBambuScrapeJob(jobId: string | null) {
     }
   }, [jobId]);
 
-  // Set up realtime subscription for job updates
+  // Set up realtime subscription for job updates with polling fallback
   useEffect(() => {
     if (!jobId) {
       setJob(null);
@@ -69,6 +69,9 @@ export function useBambuScrapeJob(jobId: string | null) {
 
     // Initial fetch
     fetchJob();
+
+    let pollingInterval: NodeJS.Timeout | null = null;
+    let realtimeWorking = false;
 
     // Subscribe to realtime updates
     const channel = supabase
@@ -82,13 +85,33 @@ export function useBambuScrapeJob(jobId: string | null) {
           filter: `id=eq.${jobId}`,
         },
         (payload) => {
+          realtimeWorking = true;
           setJob(payload.new as unknown as ScrapeJob);
+          // Clear polling if realtime is working
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+          }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`[Realtime] Subscription status for job ${jobId}:`, status);
+      });
+
+    // Fallback polling every 3 seconds if realtime doesn't deliver updates
+    // This ensures progress is shown even if realtime has issues
+    pollingInterval = setInterval(() => {
+      // Only poll if job is still running and realtime hasn't been working
+      if (!realtimeWorking) {
+        fetchJob();
+      }
+    }, 3000);
 
     return () => {
       supabase.removeChannel(channel);
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
     };
   }, [jobId, fetchJob]);
 
