@@ -94,6 +94,56 @@ const PRODUCT_CONFIGS: Record<string, Array<{ slug: string; name: string; materi
   ],
 };
 
+// ============================================================================
+// DATABASE LOGGING UTILITIES
+// ============================================================================
+async function logToDb(
+  supabase: any,
+  jobId: string,
+  level: 'info' | 'warn' | 'error' | 'debug',
+  stage: string,
+  message: string,
+  metadata?: any
+): Promise<void> {
+  try {
+    await supabase.from('scrape_job_logs').insert({
+      job_id: jobId,
+      level,
+      stage,
+      message,
+      metadata: metadata || {},
+    });
+  } catch (e) {
+    console.error('[ORCHESTRATOR] Failed to log to DB:', e);
+  }
+}
+
+// ============================================================================
+// FETCH JOB LOGS FOR AI CONTEXT
+// ============================================================================
+async function fetchJobLogs(supabase: any, jobId: string, limit: number = 50): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('scrape_job_logs')
+      .select('timestamp, level, stage, message, metadata')
+      .eq('job_id', jobId)
+      .order('timestamp', { ascending: false })
+      .limit(limit);
+    
+    if (error || !data) return [];
+    
+    return data.map((log: any) => {
+      const meta = log.metadata && Object.keys(log.metadata).length > 0 
+        ? ` | ${JSON.stringify(log.metadata)}` 
+        : '';
+      return `[${log.level.toUpperCase()}][${log.stage || 'general'}] ${log.message}${meta}`;
+    }).reverse(); // Return in chronological order
+  } catch (e) {
+    console.error('[ORCHESTRATOR] Failed to fetch logs:', e);
+    return [];
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -165,6 +215,12 @@ serve(async (req) => {
       }
 
       console.log(`[ORCHESTRATOR] Created job ${job.id} with ${productQueue.length} products`);
+      
+      // Log job start to database
+      await logToDb(supabase, job.id, 'info', 'init', 
+        `Orchestrated scrape started for ${materials.join(', ')} with ${productQueue.length} products`,
+        { materials, dryRun, totalProducts: productQueue.length }
+      );
 
       // Store chunk state for processing
       const chunkState: ChunkState = {
@@ -246,12 +302,21 @@ async function processNextChunk(supabase: any, state: ChunkState): Promise<void>
     // Check if we're done
     if (currentIndex >= productQueue.length) {
       console.log(`[ORCHESTRATOR] Job ${jobId} completed - all products processed`);
+      await logToDb(supabase, jobId, 'info', 'complete', 
+        `All ${productQueue.length} products processed successfully`
+      );
       await completeJob(supabase, state);
       return;
     }
 
     const product = productQueue[currentIndex];
     console.log(`[ORCHESTRATOR] Processing product ${currentIndex + 1}/${productQueue.length}: ${product.name}`);
+    
+    // Log product processing start
+    await logToDb(supabase, jobId, 'info', 'product_start',
+      `Processing product ${currentIndex + 1}/${productQueue.length}: ${product.name}`,
+      { product: product.name, material: product.material, slug: product.slug }
+    );
 
     // Update job progress
     await supabase.from('scrape_jobs').update({
@@ -288,6 +353,7 @@ async function processNextChunk(supabase: any, state: ChunkState): Promise<void>
     });
 
     const result = await response.json();
+    const productDuration = Date.now() - startTime;
     
     // Update cumulative results
     if (result.success && result.results) {
@@ -298,12 +364,31 @@ async function processNextChunk(supabase: any, state: ChunkState): Promise<void>
       if (result.results.errors?.length) {
         state.results.errors.push(...result.results.errors.slice(0, 5));
       }
+      
+      // Log success
+      await logToDb(supabase, jobId, 'info', 'product_complete',
+        `Completed ${product.name} in ${productDuration}ms`,
+        { 
+          product: product.name,
+          colors: result.results.colorsDiscovered || 0,
+          created: result.results.filamentsCreated || 0,
+          updated: result.results.filamentsUpdated || 0,
+          durationMs: productDuration
+        }
+      );
     } else if (!result.success) {
-      state.results.errors.push(`${product.name}: ${result.error || 'Unknown error'}`);
+      const errorMsg = `${product.name}: ${result.error || 'Unknown error'}`;
+      state.results.errors.push(errorMsg);
+      
+      // Log error
+      await logToDb(supabase, jobId, 'error', 'product_error',
+        `Failed processing ${product.name}: ${result.error || 'Unknown error'}`,
+        { product: product.name, error: result.error, durationMs: productDuration }
+      );
     }
 
-    state.results.timing.totalMs += Date.now() - startTime;
-    console.log(`[ORCHESTRATOR] Completed ${product.name} in ${Date.now() - startTime}ms`);
+    state.results.timing.totalMs += productDuration;
+    console.log(`[ORCHESTRATOR] Completed ${product.name} in ${productDuration}ms`);
 
     // Move to next product
     state.currentIndex++;
@@ -347,8 +432,15 @@ async function processNextChunk(supabase: any, state: ChunkState): Promise<void>
     }
 
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
     console.error(`[ORCHESTRATOR] Error processing chunk:`, error);
-    state.results.errors.push(`Chunk error: ${error instanceof Error ? error.message : String(error)}`);
+    state.results.errors.push(`Chunk error: ${errorMsg}`);
+    
+    // Log chunk error
+    await logToDb(supabase, jobId, 'error', 'chunk_error',
+      `Error processing chunk at index ${currentIndex}: ${errorMsg}`,
+      { error: errorMsg, currentIndex, product: productQueue[currentIndex]?.name }
+    );
     
     // Try to continue with next product
     state.currentIndex++;
@@ -382,15 +474,27 @@ async function completeJob(supabase: any, state: ChunkState): Promise<void> {
   console.log(`[ORCHESTRATOR] Completing job ${jobId}`);
   console.log(`[ORCHESTRATOR] Results:`, JSON.stringify(results, null, 2));
 
+  // Fetch logs for AI context
+  const logs = await fetchJobLogs(supabase, jobId, 50);
+  
+  // Log final stats
+  await logToDb(supabase, jobId, 'info', 'finalize',
+    `Job completing with ${results.productsScraped} products, ${results.errors.length} errors`,
+    { results }
+  );
+
   // Generate AI summary if available
   let aiSummary = null;
   try {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (LOVABLE_API_KEY) {
-      aiSummary = await generateAISummary(results, materials, dryRun, LOVABLE_API_KEY);
+      aiSummary = await generateAISummary(results, materials, dryRun, LOVABLE_API_KEY, logs);
     }
   } catch (e) {
     console.error('[ORCHESTRATOR] Failed to generate AI summary:', e);
+    await logToDb(supabase, jobId, 'error', 'ai_summary',
+      `Failed to generate AI summary: ${e instanceof Error ? e.message : String(e)}`
+    );
   }
 
   const hasErrors = results.errors.length > 0;
@@ -424,15 +528,25 @@ async function completeJob(supabase: any, state: ChunkState): Promise<void> {
 }
 
 /**
- * Generate AI summary for completed job
+ * Generate AI summary for completed job with log context
  */
 async function generateAISummary(
   results: ChunkState['results'],
   materials: string[],
   dryRun: boolean,
-  apiKey: string
+  apiKey: string,
+  logs: string[]
 ): Promise<any> {
-  const prompt = `You are a Senior Web Scraping Expert analyzing a chunked scraping job for Bambu Lab filaments.
+  const hasErrors = results.errors.length > 0;
+  const healthScore = results.productsScraped === 0 ? 10 
+    : results.errors.length === 0 ? 95 
+    : Math.max(30, 90 - results.errors.length * 5);
+  
+  const logContext = logs.length > 0 
+    ? `\n\nDebug Logs (last ${logs.length} entries):\n${logs.slice(-30).join('\n')}`
+    : '';
+
+  const prompt = `You are a Senior Web Scraping & Backend Expert analyzing a chunked scraping job for Bambu Lab filaments.
 
 Materials: ${materials.join(', ')}
 Dry Run: ${dryRun}
@@ -445,9 +559,21 @@ Results:
 - Errors: ${results.errors.length}
 - Total Time: ${(results.timing.totalMs / 1000).toFixed(1)}s
 
-${results.errors.length > 0 ? `Errors:\n${results.errors.slice(0, 10).join('\n')}` : 'No errors'}
+${results.errors.length > 0 ? `Errors:\n${results.errors.slice(0, 15).join('\n')}` : 'No errors'}
+${logContext}
 
-Provide a brief analysis with a health score (0-100) and any recommendations.`;
+IMPORTANT: The edge functions are located at:
+- supabase/functions/scrape-bambu-pla/index.ts (main scraper)
+- supabase/functions/scrape-bambu-orchestrator/index.ts (chunked orchestrator)
+
+Provide a brief analysis with:
+1. A concise headline summarizing the job outcome
+2. What went right (be specific about successes)
+3. What went wrong (analyze errors and log patterns)
+4. User impact assessment
+5. Actions needed to fix issues
+6. Health score (0-100)
+7. ${hasErrors ? 'A detailed lovablePrompt for fixing the issues - include specific file paths, error analysis, and code recommendations. Start with "As a Senior Web Scraping & Backend Expert..."' : 'null for lovablePrompt since no errors'}`;
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -458,7 +584,7 @@ Provide a brief analysis with a health score (0-100) and any recommendations.`;
     body: JSON.stringify({
       model: 'google/gemini-2.5-flash',
       messages: [
-        { role: 'system', content: 'You are a Senior Web Scraping Expert.' },
+        { role: 'system', content: 'You are a Senior Web Scraping & Backend Expert. Analyze scrape job results and provide actionable insights. When errors exist, generate detailed fix prompts for Lovable.' },
         { role: 'user', content: prompt }
       ],
       tools: [
@@ -466,16 +592,24 @@ Provide a brief analysis with a health score (0-100) and any recommendations.`;
           type: 'function',
           function: {
             name: 'generate_summary',
+            description: 'Generate structured summary with optional fix prompt',
             parameters: {
               type: 'object',
               properties: {
-                headline: { type: 'string' },
-                whatWentRight: { type: 'array', items: { type: 'string' } },
-                whatWentWrong: { type: 'array', items: { type: 'string' } },
-                healthScore: { type: 'number' },
-                recommendations: { type: 'array', items: { type: 'string' } },
+                headline: { type: 'string', description: 'One sentence summary' },
+                whatWentRight: { type: 'array', items: { type: 'string' }, description: 'List of successes' },
+                whatWentWrong: { type: 'array', items: { type: 'string' }, description: 'List of issues found' },
+                userImpact: { type: 'string', description: 'Impact on end users' },
+                actionsNeeded: { type: 'array', items: { type: 'string' }, description: 'Recommended actions' },
+                healthScore: { type: 'number', description: 'Score from 0-100' },
+                lovablePrompt: { 
+                  type: 'string',
+                  nullable: true,
+                  description: 'If errors exist, provide detailed markdown prompt for Lovable to fix issues. Include file paths and specific code fixes. Return null if no errors.'
+                },
               },
-              required: ['headline', 'healthScore'],
+              required: ['headline', 'whatWentRight', 'whatWentWrong', 'userImpact', 'actionsNeeded', 'healthScore', 'lovablePrompt'],
+              additionalProperties: false
             }
           }
         }
@@ -494,6 +628,14 @@ Provide a brief analysis with a health score (0-100) and any recommendations.`;
   return {
     generatedAt: new Date().toISOString(),
     model: 'google/gemini-2.5-flash',
-    summary,
+    summary: {
+      headline: summary.headline || 'Scrape completed',
+      whatWentRight: summary.whatWentRight || [],
+      whatWentWrong: summary.whatWentWrong || [],
+      userImpact: summary.userImpact || '',
+      actionsNeeded: summary.actionsNeeded || [],
+      healthScore: typeof summary.healthScore === 'number' ? summary.healthScore : healthScore,
+      lovablePrompt: summary.lovablePrompt || null,
+    },
   };
 }

@@ -24,6 +24,32 @@ interface CleanupResult {
 }
 
 // ============================================================================
+// FETCH JOB LOGS FOR AI CONTEXT
+// ============================================================================
+async function fetchJobLogs(supabase: any, jobId: string, limit: number = 50): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('scrape_job_logs')
+      .select('timestamp, level, stage, message, metadata')
+      .eq('job_id', jobId)
+      .order('timestamp', { ascending: false })
+      .limit(limit);
+    
+    if (error || !data) return [];
+    
+    return data.map((log: any) => {
+      const meta = log.metadata && Object.keys(log.metadata).length > 0 
+        ? ` | ${JSON.stringify(log.metadata)}` 
+        : '';
+      return `[${log.level.toUpperCase()}][${log.stage || 'general'}] ${log.message}${meta}`;
+    }).reverse(); // Return in chronological order
+  } catch (e) {
+    console.error('[CLEANUP] Failed to fetch logs:', e);
+    return [];
+  }
+}
+
+// ============================================================================
 // AI SUMMARY GENERATION FOR STUCK JOBS
 // ============================================================================
 interface AISummary {
@@ -41,6 +67,7 @@ interface AISummary {
 }
 
 async function generateCleanupAISummary(
+  supabase: any,
   job: {
     id: string;
     job_type: string;
@@ -59,6 +86,12 @@ async function generateCleanupAISummary(
   }
 
   try {
+    // Fetch debug logs for this job
+    const logs = await fetchJobLogs(supabase, job.id, 50);
+    const logContext = logs.length > 0 
+      ? `\n\nDebug Logs (last ${logs.length} entries from database):\n${logs.join('\n')}`
+      : '\n\nNo debug logs available in database for this job.';
+
     const progress = job.progress || {};
     const prompt = `You are a Senior Web Scraping & Backend Engineering Expert analyzing a STUCK/TIMED-OUT scraping job for a 3D printing filament database (Bambu Lab products).
 
@@ -79,11 +112,15 @@ Progress at time of failure:
 - Filaments Created: ${progress.filamentsCreated || 0}
 - Filaments Updated: ${progress.filamentsUpdated || 0}
 - Elapsed Time: ${progress.elapsedMs ? `${Math.round(progress.elapsedMs / 1000)}s` : 'unknown'}
+${progress.errors?.length > 0 ? `- Recent Errors: ${progress.errors.slice(-5).join(', ')}` : ''}
+${logContext}
 
-This job was stuck during "${progress.currentStage || 'unknown stage'}" while processing "${progress.currentProduct || 'unknown product'}".
+This job was stuck during "${progress.currentStage || 'unknown stage'}" while processing "${progress.currentProduct || 'unknown product'}"${progress.currentRegion ? ` in region ${progress.currentRegion}` : ''}.
 
-IMPORTANT: The edge function file is located at: supabase/functions/scrape-bambu-pla/index.ts
-The cleanup function is at: supabase/functions/cleanup-stuck-jobs/index.ts
+IMPORTANT: The edge function files are located at:
+- supabase/functions/scrape-bambu-pla/index.ts (main scraper)
+- supabase/functions/scrape-bambu-orchestrator/index.ts (chunked orchestrator)
+- supabase/functions/cleanup-stuck-jobs/index.ts (this cleanup function)
 
 Possible causes of stuck jobs:
 1. Firecrawl API hanging (no response timeout)
@@ -91,17 +128,21 @@ Possible causes of stuck jobs:
 3. Memory/CPU limits exceeded
 4. Network timeouts during regional price scraping
 5. Infinite loops in parsing logic
+6. Edge function timeout exceeded (max 60s per invocation)
+7. Rate limiting from external APIs
 
-Analyze this stuck job and provide:
-1. A concise summary of what likely happened
+Analyze this stuck job and the debug logs to provide:
+1. A concise headline summarizing what likely caused the hang
 2. What went right (progress made before sticking)
-3. What went wrong (the likely cause of the hang)
+3. What went wrong (analyze the logs for clues about the failure)
 4. User impact assessment
-5. Generate a detailed "lovablePrompt" for fixing the underlying issue. This prompt should:
+5. Generate a detailed "lovablePrompt" for fixing the underlying issue. This prompt MUST:
    - Start with "As a Senior Web Scraping & Backend Expert, I need to fix a job timeout issue in the Bambu Lab scraper."
-   - Reference the specific edge function file path
-   - Explain the stuck job context (what stage, what product)
-   - Provide specific recommendations to prevent future hangs (timeout handling, heartbeats, error recovery)`;
+   - Reference the specific edge function file paths
+   - Explain the stuck job context (what stage, what product, what region)
+   - Analyze patterns in the debug logs
+   - Provide specific code recommendations to prevent future hangs
+   - Include timeout handling, heartbeats, error recovery strategies`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -112,7 +153,7 @@ Analyze this stuck job and provide:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a Senior Web Scraping & Backend Engineering Expert. When jobs timeout or get stuck, you analyze the failure and provide detailed, actionable prompts to fix the underlying issues. Your prompts should be expert-level, specific, and include code references.' },
+          { role: 'system', content: 'You are a Senior Web Scraping & Backend Engineering Expert. When jobs timeout or get stuck, you analyze the failure and debug logs to provide detailed, actionable prompts to fix the underlying issues. Your prompts should be expert-level, specific, and include code references.' },
           { role: 'user', content: prompt }
         ],
         tools: [
@@ -126,13 +167,13 @@ Analyze this stuck job and provide:
                 properties: {
                   headline: { type: 'string', description: 'One sentence summary of why the job got stuck' },
                   whatWentRight: { type: 'array', items: { type: 'string' }, description: 'Progress made before getting stuck' },
-                  whatWentWrong: { type: 'array', items: { type: 'string' }, description: 'Likely causes of the hang' },
+                  whatWentWrong: { type: 'array', items: { type: 'string' }, description: 'Likely causes of the hang based on logs' },
                   userImpact: { type: 'string', description: 'Impact on data freshness and users' },
                   actionsNeeded: { type: 'array', items: { type: 'string' }, description: 'Recommended fixes' },
                   healthScore: { type: 'number', description: 'Score from 0-100 (stuck jobs typically 20-40)' },
                   lovablePrompt: { 
                     type: 'string', 
-                    description: 'Detailed markdown-formatted prompt for Lovable to fix the timeout issue. Include file paths, context about the stuck stage, and specific code fixes. Start with "As a Senior Web Scraping & Backend Expert..."'
+                    description: 'REQUIRED: Detailed markdown-formatted prompt for Lovable to fix the timeout issue. Include file paths, context about the stuck stage, log analysis, and specific code fixes. Start with "As a Senior Web Scraping & Backend Expert..."'
                   }
                 },
                 required: ['headline', 'whatWentRight', 'whatWentWrong', 'userImpact', 'actionsNeeded', 'healthScore', 'lovablePrompt'],
@@ -243,9 +284,9 @@ serve(async (req) => {
           console.log(`   - Last heartbeat: ${ageMinutes} minutes ago`);
           console.log(`   - Progress: ${JSON.stringify(job.progress || {})}`);
 
-          // Generate AI summary for the stuck job
+          // Generate AI summary for the stuck job (now includes log fetching)
           console.log(`🤖 [CLEANUP] Generating AI summary for stuck job ${job.id}...`);
-          const aiSummary = await generateCleanupAISummary(job, ageMinutes);
+          const aiSummary = await generateCleanupAISummary(supabase, job, ageMinutes);
 
           // Mark job as failed with descriptive error and AI summary
           const updateData: Record<string, any> = {
