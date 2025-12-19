@@ -8,21 +8,19 @@ const corsHeaders = {
 
 // Bambu Lab ABS Color variants with official hex codes, image URLs, and Shopify variant IDs
 // Image URLs and variant IDs extracted from: https://us.store.bambulab.com/products/abs-filament
-const BAMBU_ABS_COLORS: Record<string, { hex: string; colorFamily: string; imageUrl: string | null; variantId: string }> = {
-  // Confirmed image URLs (7 colors)
+const BAMBU_ABS_COLORS: Record<string, { hex: string; colorFamily: string; imageUrl: string; variantId: string }> = {
   "Silver": { hex: "#87909A", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/69834a7536c540e489913a0f8e707e5e/ABSsilver.png", variantId: "40102" },
   "Black": { hex: "#000000", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s7/default/cfdefec225e6430c82cbe2f8766b6f70/ABS_Black.png", variantId: "40099" },
   "White": { hex: "#FFFFFF", colorFamily: "White", imageUrl: "https://store.bblcdn.com/s7/default/1ad485ff4a72413b90e944ffde4fa861/ABS_White.png", variantId: "40100" },
   "Bambu Green": { hex: "#00AE42", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/910be80e4fcf43ddbd66c40773ecce0f/ABSbambugreen.png", variantId: "40103" },
-  "Orange": { hex: "#FF6A13", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s5/default/af10bba0ddcb4d129125f0b1b3f04e59.png", variantId: "40104" },
+  "Orange": { hex: "#FF6A13", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s7/default/25d7b833bf694c70b9ef3cd649f3cf36/ABSorange.png", variantId: "40104" },
   "Red": { hex: "#D32941", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s7/default/95bd38c6dc604bdab7b3d2fc7b67e0ee/ABS_Red.png", variantId: "40105" },
   "Blue": { hex: "#0A2CA5", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/3b2f526b80734e429d9a424e07f3c36b/ABS_Blue.png", variantId: "40106" },
-  // Need discovery (5 colors) - run discover-bambulab-images to find these
-  "Olive": { hex: "#789D4A", colorFamily: "Green", imageUrl: null, variantId: "40107" },
-  "Tangerine Yellow": { hex: "#FFC72C", colorFamily: "Yellow", imageUrl: null, variantId: "40108" },
-  "Azure": { hex: "#489FDF", colorFamily: "Blue", imageUrl: null, variantId: "40109" },
-  "Navy Blue": { hex: "#0C2340", colorFamily: "Blue", imageUrl: null, variantId: "40110" },
-  "Purple": { hex: "#AF1685", colorFamily: "Purple", imageUrl: null, variantId: "40111" },
+  "Olive": { hex: "#789D4A", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/e45f66c840c7454b860b0ffb17787dda/80cf6768c03d129dfa6a01ac67a5b402.jpg", variantId: "40107" },
+  "Tangerine Yellow": { hex: "#FFC72C", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/599d443346194649beee96e12f32d074/7376d19b161f2a93a4051e47289d0505.jpg", variantId: "40108" },
+  "Azure": { hex: "#489FDF", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/1de0e532e21642e1a4a857c6e01fa1d3/0be9a584b30358020d8706f2aa8ec9c2.jpg", variantId: "40109" },
+  "Navy Blue": { hex: "#0C2340", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/a840092ea2804025a123e115128c1299/000878ce6144c05ffac949f66b05a18b.jpg", variantId: "40110" },
+  "Purple": { hex: "#AF1685", colorFamily: "Purple", imageUrl: "https://store.bblcdn.com/s7/default/a840092ea2804025a123e115128c1299/000878ce6144c05ffac949f66b05a18b.jpg", variantId: "40111" },
 };
 
 // Base product data extracted from Bambu Lab's ABS product page
@@ -30,6 +28,7 @@ const BAMBU_ABS_BASE_DATA = {
   vendor: "Bambu Lab",
   material: "ABS",
   base_product_url: "https://us.store.bambulab.com/products/abs-filament",
+  variant_price: 19.99,
   nozzle_temp_min_c: 240,
   nozzle_temp_max_c: 270,
   bed_temp_min_c: 80,
@@ -46,17 +45,9 @@ const BAMBU_ABS_BASE_DATA = {
   net_weight_g: 1000,
 };
 
-// Default fallback image when specific color image is not available
-const DEFAULT_ABS_IMAGE = "https://store.bblcdn.com/s7/default/614be9028953458392685cdf4af319f3/High_temp_spol_ABS.png";
-
 // Helper to get the full product URL with variant parameter
 const getProductUrl = (variantId: string): string => {
   return `${BAMBU_ABS_BASE_DATA.base_product_url}?variant=${variantId}`;
-};
-
-// Helper to get image URL for a color, falling back to default if not specified
-const getImageUrl = (colorData: { imageUrl: string | null }): string => {
-  return colorData.imageUrl || DEFAULT_ABS_IMAGE;
 };
 
 serve(async (req) => {
@@ -115,7 +106,7 @@ serve(async (req) => {
     // Get existing Bambu Lab filaments
     const { data: existingFilaments, error: fetchError } = await supabase
       .from("filaments")
-      .select("id, product_title, color_hex, color_family, featured_image, product_url")
+      .select("id, product_title, color_hex, color_family, featured_image, product_url, variant_price")
       .eq("vendor", "Bambu Lab")
       .ilike("product_title", `%${targetMaterial}%`);
 
@@ -157,24 +148,23 @@ serve(async (req) => {
       );
 
       if (existing) {
-        // Check if we need to update (including image and product_url if a specific one is available)
+        // Check if we need to update (image, product_url, price, etc.)
         const targetProductUrl = getProductUrl(colorData.variantId);
         const needsUpdate = 
           existing.color_hex !== colorData.hex || 
           existing.color_family !== colorData.colorFamily ||
-          (colorData.imageUrl && existing.featured_image !== colorData.imageUrl) ||
-          existing.product_url !== targetProductUrl;
+          existing.featured_image !== colorData.imageUrl ||
+          existing.product_url !== targetProductUrl ||
+          existing.variant_price !== BAMBU_ABS_BASE_DATA.variant_price;
 
         if (needsUpdate && !dryRun) {
           const updateData: Record<string, unknown> = {
             color_hex: colorData.hex,
             color_family: colorData.colorFamily,
             product_url: targetProductUrl,
+            featured_image: colorData.imageUrl,
+            variant_price: BAMBU_ABS_BASE_DATA.variant_price,
           };
-          // Only update featured_image if we have a specific image URL for this color
-          if (colorData.imageUrl) {
-            updateData.featured_image = colorData.imageUrl;
-          }
           
           const { error: updateError } = await supabase
             .from("filaments")
@@ -191,7 +181,7 @@ serve(async (req) => {
               filamentId: existing.id,
               title: productTitle,
             });
-            console.log(`Updated ${productTitle} with hex: ${colorData.hex}`);
+            console.log(`Updated ${productTitle} with hex: ${colorData.hex}, price: $${BAMBU_ABS_BASE_DATA.variant_price}`);
           }
         } else if (needsUpdate && dryRun) {
           results.push({
@@ -233,7 +223,8 @@ serve(async (req) => {
             drying_time_hours: BAMBU_ABS_BASE_DATA.drying_time_hours,
             diameter_nominal_mm: BAMBU_ABS_BASE_DATA.diameter_nominal_mm,
             net_weight_g: BAMBU_ABS_BASE_DATA.net_weight_g,
-            featured_image: getImageUrl(colorData),
+            featured_image: colorData.imageUrl,
+            variant_price: BAMBU_ABS_BASE_DATA.variant_price,
             auto_created: true,
             variant_available: true,
           };
