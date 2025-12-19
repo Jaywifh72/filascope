@@ -65,7 +65,7 @@ export function StockUrgencyIndicator({
       status: 'high',
       icon: <Check className="w-4 h-4" />,
       text: 'In Stock',
-      subtext: 'Ships within 24hrs',
+      subtext: 'Ready to ship',
       pulse: false
     };
   };

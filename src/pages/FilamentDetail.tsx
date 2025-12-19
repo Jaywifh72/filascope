@@ -1335,7 +1335,6 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   affiliateUrl={getAffiliateUrl(getRegionalUrl(displayFilament.product_url, displayFilament.vendor), displayFilament.vendor)}
                   productUrl={getRegionalUrl(displayFilament.product_url, displayFilament.vendor)}
                   retailerName={displayFilament.vendor || undefined}
-                  inStock={!isDiscontinuedUrl(getRegionalUrl(displayFilament.product_url, displayFilament.vendor))}
                   retailerCount={retailers.length}
                   onViewRetailers={handleViewRetailers}
                   hasActualRegionalPrice={hasActualRegionalPrice}

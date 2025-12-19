@@ -28,8 +28,9 @@ interface FilamentHeroPurchaseCardProps {
   affiliateUrl: string | null;
   productUrl: string | null;
   retailerName?: string;
-  inStock?: boolean;
+  stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock' | 'unknown';
   stockQuantity?: number | null;
+  hasInventoryData?: boolean;
   onViewRetailers?: () => void;
   retailerCount?: number;
   hasActualRegionalPrice?: boolean;
@@ -44,8 +45,9 @@ export function FilamentHeroPurchaseCard({
   affiliateUrl,
   productUrl,
   retailerName,
-  inStock = true,
+  stockStatus = 'unknown',
   stockQuantity,
+  hasInventoryData = false,
   onViewRetailers,
   retailerCount = 1,
   hasActualRegionalPrice = false
@@ -119,10 +121,6 @@ export function FilamentHeroPurchaseCard({
   const originalSymbol = currencySymbols[priceCurrency] || '$';
   const originalPricePerKg = displayPricePerKg ? `${originalSymbol}${displayPricePerKg.toFixed(2)} ${priceCurrency}` : null;
 
-  // Determine stock status for indicator
-  const stockStatus = !inStock ? 'out_of_stock' : 
-    (stockQuantity !== null && stockQuantity !== undefined && stockQuantity <= 10) ? 'low_stock' : 'in_stock';
-
   // Get vendor-specific shipping rules
   const shippingRule = getShippingRule(vendor || 'default');
 
@@ -194,17 +192,19 @@ export function FilamentHeroPurchaseCard({
         )}
       </div>
 
-      {/* Stock Status with Urgency */}
-      <div className="mb-4">
-        <StockUrgencyIndicator
-          stockStatus={stockStatus}
-          stockQuantity={stockQuantity}
-          showQuantity={true}
-        />
-      </div>
+      {/* Stock Status with Urgency - only show when we have real data */}
+      {hasInventoryData && (
+        <div className="mb-4">
+          <StockUrgencyIndicator
+            stockStatus={stockStatus}
+            stockQuantity={stockQuantity}
+            showQuantity={true}
+          />
+        </div>
+      )}
 
       {/* Free Shipping Progress */}
-      {inStock && shippingRule.flatRate > 0 && (
+      {stockStatus !== 'out_of_stock' && shippingRule.flatRate > 0 && (
         <div className="mb-5">
           <ShippingCountdown
             freeShippingThreshold={shippingRule.freeThreshold}
@@ -216,7 +216,7 @@ export function FilamentHeroPurchaseCard({
       {/* Primary CTA - BUY NOW */}
       <Button
         onClick={handleBuyClick}
-        disabled={!affiliateUrl || !inStock}
+        disabled={!affiliateUrl || stockStatus === 'out_of_stock'}
         className={cn(
           "w-full h-16 text-xl font-extrabold tracking-wide",
           "bg-gradient-to-r from-primary to-primary/80",
