@@ -19,6 +19,7 @@ interface AISummary {
     userImpact: string;
     actionsNeeded: string[];
     healthScore: number;
+    lovablePrompt: string | null;
   };
 }
 
@@ -38,7 +39,7 @@ async function generateAISummary(
   }
 
   try {
-    const prompt = `You are analyzing a web scraping job for a 3D printing filament database (Bambu Lab products).
+    const prompt = `You are a Senior Web Scraping & Backend Engineering Expert analyzing a scraping job for a 3D printing filament database (Bambu Lab products).
 
 Job Status: ${jobStatus}
 Materials Processed: ${materials.join(', ')}
@@ -54,15 +55,21 @@ Job Results:
 - Duration: ${jobResults.timing?.totalMs ? `${(jobResults.timing.totalMs / 1000).toFixed(1)}s` : 'unknown'}
 ${jobResults.validation ? `- Coverage: ${jobResults.validation.overallCoveragePercent}%` : ''}
 
-${jobResults.errors?.length > 0 ? `Error Details:\n${jobResults.errors.slice(0, 5).join('\n')}` : ''}
+${jobResults.errors?.length > 0 ? `Error Details:\n${jobResults.errors.slice(0, 10).join('\n')}` : ''}
 
-Provide a JSON response with:
-- headline: One concise sentence summarizing the scrape outcome
-- whatWentRight: Array of 2-4 positive outcomes (empty if none)
-- whatWentWrong: Array of issues found (empty if none)
-- userImpact: One sentence explaining how this affects users of the filament database
-- actionsNeeded: Array of recommended follow-up actions (empty if none needed)
-- healthScore: 0-100 score (100 = perfect, 0 = complete failure)`;
+IMPORTANT: The edge function file is located at: supabase/functions/scrape-bambu-pla/index.ts
+
+Analyze this job and provide:
+1. A concise summary of what happened
+2. What went right and wrong
+3. User impact assessment
+4. If there are issues (healthScore < 90 OR errors exist), generate a detailed "lovablePrompt" that can be copied and pasted into Lovable to fix the problems. This prompt should:
+   - Start with "As a Senior Web Scraping & Backend Expert, I need to fix issues in the Bambu Lab scraper."
+   - Reference the specific edge function file path
+   - List specific errors with their root causes
+   - Provide step-by-step fix recommendations with code hints where helpful
+   - Be formatted in markdown for readability
+   - If no issues exist (healthScore >= 90 AND no errors), set lovablePrompt to null`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -73,7 +80,7 @@ Provide a JSON response with:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a technical analyst summarizing scraping job results. Respond only with valid JSON.' },
+          { role: 'system', content: 'You are a Senior Web Scraping & Backend Engineering Expert. When issues occur, you provide detailed, actionable prompts that can be pasted into Lovable (an AI-powered web development tool) to fix problems. Your prompts should be expert-level, specific, and include code references.' },
           { role: 'user', content: prompt }
         ],
         tools: [
@@ -81,7 +88,7 @@ Provide a JSON response with:
             type: 'function',
             function: {
               name: 'generate_summary',
-              description: 'Generate a structured summary of the scrape job',
+              description: 'Generate a structured summary of the scrape job with optional fix prompt',
               parameters: {
                 type: 'object',
                 properties: {
@@ -90,9 +97,14 @@ Provide a JSON response with:
                   whatWentWrong: { type: 'array', items: { type: 'string' }, description: 'List of issues' },
                   userImpact: { type: 'string', description: 'Impact on end users' },
                   actionsNeeded: { type: 'array', items: { type: 'string' }, description: 'Recommended actions' },
-                  healthScore: { type: 'number', description: 'Score from 0-100' }
+                  healthScore: { type: 'number', description: 'Score from 0-100' },
+                  lovablePrompt: { 
+                    type: 'string', 
+                    nullable: true,
+                    description: 'If issues exist (healthScore < 90 OR errors found), provide a detailed markdown-formatted prompt for Lovable to fix the issues. Include file paths, error analysis, and specific code fixes. Start with "As a Senior Web Scraping & Backend Expert...". Return null if no issues need fixing.'
+                  }
                 },
-                required: ['headline', 'whatWentRight', 'whatWentWrong', 'userImpact', 'actionsNeeded', 'healthScore'],
+                required: ['headline', 'whatWentRight', 'whatWentWrong', 'userImpact', 'actionsNeeded', 'healthScore', 'lovablePrompt'],
                 additionalProperties: false
               }
             }
@@ -118,6 +130,9 @@ Provide a JSON response with:
     const summary = JSON.parse(toolCall.function.arguments);
     
     console.log(`[${ctx.requestId}] AI summary generated: ${summary.headline}`);
+    if (summary.lovablePrompt) {
+      console.log(`[${ctx.requestId}] Lovable fix prompt generated (${summary.lovablePrompt.length} chars)`);
+    }
     
     return {
       generatedAt: new Date().toISOString(),
@@ -129,6 +144,7 @@ Provide a JSON response with:
         userImpact: summary.userImpact || '',
         actionsNeeded: summary.actionsNeeded || [],
         healthScore: typeof summary.healthScore === 'number' ? summary.healthScore : 50,
+        lovablePrompt: summary.lovablePrompt || null,
       },
     };
   } catch (error) {

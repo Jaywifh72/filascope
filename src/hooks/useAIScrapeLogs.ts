@@ -11,6 +11,7 @@ export interface AISummary {
     userImpact: string;
     actionsNeeded: string[];
     healthScore: number;
+    lovablePrompt: string | null;
   };
 }
 
