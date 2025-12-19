@@ -524,11 +524,11 @@ const BAMBU_PC_PRODUCTS: Record<string, ProductConfig> = {
 };
 
 // ============================================================================
-// SUPPORT MATERIAL PRODUCT DEFINITIONS
+// SUPPORT MATERIAL PRODUCT DEFINITIONS - Slugs verified from Excel file (ca.store.bambulab.com)
 // ============================================================================
 const BAMBU_SUPPORT_PRODUCTS: Record<string, ProductConfig> = {
   "PVA": {
-    slug: "pva",
+    slug: "pva",  // Verified: https://ca.store.bambulab.com/products/pva
     material: "PVA",
     tdsUrl: "https://store.bblcdn.com/s7/default/868930e5a44944258586caa250cc8143/Bambu_PVA_Technical_Data_Sheet.pdf",
     nozzleTempMin: 220, nozzleTempMax: 250,
@@ -536,17 +536,17 @@ const BAMBU_SUPPORT_PRODUCTS: Record<string, ProductConfig> = {
     dryingTempC: 80, dryingTimeHours: 12,
     netWeightG: 500,
   },
-  "Support for PLA": {
-    slug: "support-for-pla-new",
+  "Support for PLA (New Version)": {
+    slug: "support-for-pla-new",  // Verified: https://ca.store.bambulab.com/products/support-for-pla-new
     material: "Support",
-    tdsUrl: null,
+    tdsUrl: "https://store.bblcdn.com/s2/default/200ef29f5cd04b20ba6c2c86f0cc3ec0/Bambus_Support_for_PLA_Technical_Data_Sheet.pdf",
     nozzleTempMin: 220, nozzleTempMax: 230,
     bedTempMin: 35, bedTempMax: 45,
-    dryingTempC: 75, dryingTimeHours: 8,
+    dryingTempC: 55, dryingTimeHours: 8,
     netWeightG: 500,
   },
   "Support for PLA/PETG": {
-    slug: "support-for-pla-petg",
+    slug: "support-for-pla-petg",  // Verified: https://ca.store.bambulab.com/products/support-for-pla-petg
     material: "Support",
     tdsUrl: "https://store.bblcdn.com/d09d55778d42495db121e28a3b04a4c5.pdf",
     nozzleTempMin: 190, nozzleTempMax: 220,
@@ -555,7 +555,7 @@ const BAMBU_SUPPORT_PRODUCTS: Record<string, ProductConfig> = {
     netWeightG: 500,
   },
   "Support for ABS": {
-    slug: "support-for-abs",
+    slug: "support-for-abs",  // Verified: https://ca.store.bambulab.com/products/support-for-abs
     material: "Support",
     tdsUrl: "https://store.bblcdn.com/4ea7b59ca78c485f828115735ed35050.pdf",
     nozzleTempMin: 240, nozzleTempMax: 270,
@@ -564,7 +564,7 @@ const BAMBU_SUPPORT_PRODUCTS: Record<string, ProductConfig> = {
     netWeightG: 500,
   },
   "Support for PA/PET": {
-    slug: "support-for-pa-pet",
+    slug: "support-for-pa-pet",  // Verified: https://ca.store.bambulab.com/products/support-for-pa-pet
     material: "Support",
     tdsUrl: "https://store.bblcdn.com/7e83189be1eb4a3dab8ce9b9a7b2065a.pdf",
     nozzleTempMin: 280, nozzleTempMax: 300,
@@ -989,6 +989,40 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // Verified from: https://ca.store.bambulab.com/products/pet-cf
   "pet-cf": [
     { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // SUPPORT MATERIAL COLOR FALLBACKS
+  // ============================================================================
+  
+  // PVA - Water-soluble support material (1 color - Clear)
+  // Verified from: https://ca.store.bambulab.com/products/pva (Hex code table shows Clear #F0F1A8)
+  "pva": [
+    { colorName: "Clear", colorHex: "#F0F1A8", colorFamily: "Clear", imageUrl: null, variantId: null },
+  ],
+  
+  // Support for PLA (New Version) - 1 color (Natural/Clear)
+  // Verified from: https://ca.store.bambulab.com/products/support-for-pla-new
+  "support-for-pla-new": [
+    { colorName: "Natural", colorHex: "#F5F5DC", colorFamily: "Clear", imageUrl: null, variantId: null },
+  ],
+  
+  // Support for PLA/PETG - 1 color (Natural)
+  // Verified from: https://ca.store.bambulab.com/products/support-for-pla-petg
+  "support-for-pla-petg": [
+    { colorName: "Natural", colorHex: "#FFFFF0", colorFamily: "Clear", imageUrl: null, variantId: null },
+  ],
+  
+  // Support for ABS - 1 color (Natural)
+  // Verified from: https://ca.store.bambulab.com/products/support-for-abs
+  "support-for-abs": [
+    { colorName: "Natural", colorHex: "#FFFFF0", colorFamily: "Clear", imageUrl: null, variantId: null },
+  ],
+  
+  // Support for PA/PET - 1 color (Natural)
+  // Verified from: https://ca.store.bambulab.com/products/support-for-pa-pet
+  "support-for-pa-pet": [
+    { colorName: "Natural", colorHex: "#FFFFF0", colorFamily: "Clear", imageUrl: null, variantId: null },
   ],
 };
 
