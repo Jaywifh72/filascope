@@ -172,8 +172,11 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
   dryingTempC: number;
   dryingTimeHours: number;
 }> = {
+  // ============================================================================
+  // PLA Products - Slugs verified from Excel file (ca.store.bambulab.com)
+  // ============================================================================
   "PLA Basic": {
-    slug: "pla-basic-filament",
+    slug: "pla-basic-filament",  // Correct: https://ca.store.bambulab.com/products/pla-basic-filament
     material: "PLA",
     tdsUrl: "https://store.bblcdn.com/s7/default/23b4cf2b83d5470bb96d19970b5f3ae8/Bambu_PLA_Basic_Technical_Data_Sheet.pdf",
     nozzleTempMin: 190, nozzleTempMax: 220,
@@ -181,23 +184,31 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Matte": {
-    slug: "pla-matte-filament",
+    slug: "pla-matte",  // FIXED from pla-matte-filament
     material: "PLA",
-    tdsUrl: "https://store.bblcdn.com/s7/default/Bambu_PLA_Matte_Technical_Data_Sheet.pdf",
+    tdsUrl: "https://store.bblcdn.com/s7/default/5b061f2feeac4ba88f355a33248bbda7/Bambu_PLA_Matte_Technical_Data_Sheet.pdf",
     nozzleTempMin: 190, nozzleTempMax: 230,
     bedTempMin: 35, bedTempMax: 55,
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Silk": {
-    slug: "pla-silk-filament",
+    slug: "pla-silk-upgrade",  // FIXED from pla-silk-filament
     material: "PLA",
     tdsUrl: "https://store.bblcdn.com/s7/default/Bambu_PLA_Silk_Technical_Data_Sheet.pdf",
     nozzleTempMin: 200, nozzleTempMax: 230,
     bedTempMin: 35, bedTempMax: 55,
     dryingTempC: 55, dryingTimeHours: 8,
   },
+  "PLA Silk Multi-color": {
+    slug: "pla-silk-multi-color",  // NEW - added from Excel
+    material: "PLA",
+    tdsUrl: null,
+    nozzleTempMin: 200, nozzleTempMax: 230,
+    bedTempMin: 35, bedTempMax: 55,
+    dryingTempC: 55, dryingTimeHours: 8,
+  },
   "PLA Sparkle": {
-    slug: "pla-sparkle-filament",
+    slug: "pla-sparkle",  // FIXED from pla-sparkle-filament
     material: "PLA",
     tdsUrl: null,
     nozzleTempMin: 200, nozzleTempMax: 230,
@@ -205,7 +216,7 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Metal": {
-    slug: "pla-metal-filament",
+    slug: "pla-metal",  // FIXED from pla-metal-filament
     material: "PLA",
     tdsUrl: null,
     nozzleTempMin: 200, nozzleTempMax: 230,
@@ -213,7 +224,7 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Marble": {
-    slug: "pla-marble-filament",
+    slug: "pla-marble",  // FIXED from pla-marble-filament
     material: "PLA",
     tdsUrl: null,
     nozzleTempMin: 190, nozzleTempMax: 220,
@@ -221,7 +232,7 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Galaxy": {
-    slug: "pla-galaxy-filament",
+    slug: "pla-galaxy",  // FIXED from pla-galaxy-filament
     material: "PLA",
     tdsUrl: null,
     nozzleTempMin: 200, nozzleTempMax: 230,
@@ -229,7 +240,7 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Glow": {
-    slug: "pla-glow-filament",
+    slug: "pla-glow",  // FIXED from pla-glow-filament
     material: "PLA",
     tdsUrl: null,
     nozzleTempMin: 200, nozzleTempMax: 230,
@@ -237,7 +248,7 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Wood": {
-    slug: "pla-wood-filament",
+    slug: "pla-wood",  // FIXED from pla-wood-filament
     material: "PLA",
     tdsUrl: null,
     nozzleTempMin: 200, nozzleTempMax: 230,
@@ -245,7 +256,7 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Tough": {
-    slug: "pla-tough-upgrade",
+    slug: "pla-tough-upgrade",  // Correct
     material: "PLA",
     tdsUrl: "https://store.bblcdn.com/s7/default/80a85371db2e40bda97069d283fed76c/BambuPLA_Tough_TechnicalData_Sheet_(2).pdf",
     nozzleTempMin: 200, nozzleTempMax: 230,
@@ -253,7 +264,7 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA-CF": {
-    slug: "pla-cf-filament",
+    slug: "pla-cf",  // FIXED from pla-cf-filament
     material: "PLA-CF",
     tdsUrl: null,
     nozzleTempMin: 220, nozzleTempMax: 250,
@@ -261,7 +272,7 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "ePLA-HS": {
-    slug: "epla-hs-filament",
+    slug: "epla-hs-filament",  // Correct
     material: "PLA",
     tdsUrl: null,
     nozzleTempMin: 190, nozzleTempMax: 230,
@@ -269,7 +280,7 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Aero": {
-    slug: "pla-aero-filament",
+    slug: "pla-aero",  // FIXED from pla-aero-filament
     material: "PLA",
     tdsUrl: null,
     nozzleTempMin: 200, nozzleTempMax: 230,
@@ -277,7 +288,7 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Impact": {
-    slug: "pla-impact-filament",
+    slug: "pla-impact-filament",  // Correct
     material: "PLA",
     tdsUrl: null,
     nozzleTempMin: 200, nozzleTempMax: 230,
@@ -285,15 +296,15 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Translucent": {
-    slug: "pla-translucent-filament",
+    slug: "pla-translucent",  // FIXED from pla-translucent-filament
     material: "PLA",
-    tdsUrl: null,
+    tdsUrl: "https://store.bblcdn.com/s7/default/729a8bf233e9474db25c8d5be1e64a00/Bambu_PLA_Translucent_Technical_Data_Sheet.pdf",
     nozzleTempMin: 190, nozzleTempMax: 220,
     bedTempMin: 35, bedTempMax: 55,
     dryingTempC: 55, dryingTimeHours: 8,
   },
-  "PLA Gradient": {
-    slug: "pla-gradient-filament",
+  "PLA Basic Gradient": {
+    slug: "pla-basic-gradient",  // FIXED from pla-gradient-filament
     material: "PLA",
     tdsUrl: null,
     nozzleTempMin: 190, nozzleTempMax: 220,
@@ -558,7 +569,177 @@ interface ColorVariant {
 }
 
 const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
-  // PLA Tough+ - colors from official hex code table PDF
+  // ============================================================================
+  // PLA BASIC GRADIENT - 8 dual-color gradient variants (from hex code table)
+  // ============================================================================
+  "pla-basic-gradient": [
+    { colorName: "Arctic Whisper", colorHex: "#9CDBD9", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Solar Breeze", colorHex: "#E94B3C", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Ocean to Meadow", colorHex: "#307FE2", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Cotton Candy Cloud", colorHex: "#E7C1D5", colorFamily: "Pink", imageUrl: null, variantId: null },
+    { colorName: "Blueberry Bubblegum", colorHex: "#6FCAEF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Mint Lime", colorHex: "#B6FF43", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Pink Citrus", colorHex: "#F78F77", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Dusk Glare", colorHex: "#ED9558", colorFamily: "Orange", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA TRANSLUCENT - 10 translucent colors (from hex code table)
+  // ============================================================================
+  "pla-translucent": [
+    { colorName: "Teal", colorHex: "#008080", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#0000FF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Orange", colorHex: "#FFA500", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Purple", colorHex: "#800080", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#FF0000", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Jade Green", colorHex: "#00A86B", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Mellow Yellow", colorHex: "#F8DE7E", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Pink", colorHex: "#FFC0CB", colorFamily: "Pink", imageUrl: null, variantId: null },
+    { colorName: "Light Blue", colorHex: "#ADD8E6", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Lavender", colorHex: "#E6E6FA", colorFamily: "Purple", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA MATTE - 20+ matte finish colors (from hex code table on product page)
+  // ============================================================================
+  "pla-matte": [
+    { colorName: "Ivory White", colorHex: "#FFFFF0", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Jade White", colorHex: "#E8F5E9", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Lemon Yellow", colorHex: "#FFF44F", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Mandarin Orange", colorHex: "#FF8243", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Sakura Pink", colorHex: "#FFB7C5", colorFamily: "Pink", imageUrl: null, variantId: null },
+    { colorName: "Lilac Purple", colorHex: "#C8A2C8", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Scarlet Red", colorHex: "#FF2400", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Dark Red", colorHex: "#8B0000", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Grass Green", colorHex: "#7CFC00", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Dark Green", colorHex: "#006400", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Ice Blue", colorHex: "#B0E0E6", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Marine Blue", colorHex: "#00008B", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Dark Blue", colorHex: "#00008B", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Desert Tan", colorHex: "#EDC9AF", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Latte Brown", colorHex: "#967969", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Dark Brown", colorHex: "#654321", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Ash Grey", colorHex: "#B2BEB5", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Charcoal", colorHex: "#36454F", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Army Green", colorHex: "#4B5320", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Light Green", colorHex: "#90EE90", colorFamily: "Green", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA SILK - Silk-finish colors with metallic sheen
+  // ============================================================================
+  "pla-silk-upgrade": [
+    { colorName: "Silk Red", colorHex: "#CC0000", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Silk Blue", colorHex: "#4169E1", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Silk Green", colorHex: "#228B22", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Silk Gold", colorHex: "#FFD700", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Silk Silver", colorHex: "#C0C0C0", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Silk Pink", colorHex: "#FF69B4", colorFamily: "Pink", imageUrl: null, variantId: null },
+    { colorName: "Silk Purple", colorHex: "#9370DB", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Silk Orange", colorHex: "#FF8C00", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Silk White", colorHex: "#F8F8FF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Silk Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Silk Champagne", colorHex: "#F7E7CE", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Silk Rose Gold", colorHex: "#B76E79", colorFamily: "Pink", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA SILK MULTI-COLOR - Multi-color silk gradient variants
+  // ============================================================================
+  "pla-silk-multi-color": [
+    { colorName: "Rainbow", colorHex: "#FF0000", colorFamily: "Rainbow", imageUrl: null, variantId: null },
+    { colorName: "Galaxy", colorHex: "#2E2D88", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Sunset", colorHex: "#FF6B35", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Aurora", colorHex: "#78D5D7", colorFamily: "Blue", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA SPARKLE - Glitter/sparkle effect colors
+  // ============================================================================
+  "pla-sparkle": [
+    { colorName: "Gold", colorHex: "#FFD700", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Silver", colorHex: "#C0C0C0", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Bronze", colorHex: "#CD7F32", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#FF0000", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#0000FF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Purple", colorHex: "#800080", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Green", colorHex: "#00FF00", colorFamily: "Green", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA METAL - Metallic finish colors
+  // ============================================================================
+  "pla-metal": [
+    { colorName: "Metal Gold", colorHex: "#D4AF37", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Metal Silver", colorHex: "#AAA9AD", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Metal Bronze", colorHex: "#CD7F32", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Metal Copper", colorHex: "#B87333", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Metal Titanium", colorHex: "#878681", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Metal Iron", colorHex: "#48494B", colorFamily: "Gray", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA MARBLE - Marble pattern variants
+  // ============================================================================
+  "pla-marble": [
+    { colorName: "White Marble", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Black Marble", colorHex: "#2C2C2C", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Gray Marble", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Green Marble", colorHex: "#2E8B57", colorFamily: "Green", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA GALAXY - Galaxy/cosmic effect colors
+  // ============================================================================
+  "pla-galaxy": [
+    { colorName: "Nebula", colorHex: "#5D3FD3", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Cosmic Black", colorHex: "#1E0F3C", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Stardust Blue", colorHex: "#0047AB", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Galaxy Purple", colorHex: "#663399", colorFamily: "Purple", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA GLOW - Glow-in-the-dark colors
+  // ============================================================================
+  "pla-glow": [
+    { colorName: "Glow Green", colorHex: "#39FF14", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Glow Blue", colorHex: "#00FFFF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Glow Yellow", colorHex: "#FFFF00", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Glow Orange", colorHex: "#FF6600", colorFamily: "Orange", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA WOOD - Wood-textured PLA
+  // ============================================================================
+  "pla-wood": [
+    { colorName: "Oak", colorHex: "#806517", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Walnut", colorHex: "#5D432C", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Bamboo", colorHex: "#E3D26F", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Cherry", colorHex: "#DE3163", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Mahogany", colorHex: "#C04000", colorFamily: "Brown", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA-CF - Carbon Fiber reinforced PLA
+  // ============================================================================
+  "pla-cf": [
+    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#4A4A4A", colorFamily: "Gray", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA AERO - Lightweight foaming PLA
+  // ============================================================================
+  "pla-aero": [
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA TOUGH - Engineering-grade PLA
+  // ============================================================================
   "pla-tough-upgrade": [
     { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
     { colorName: "Gray", colorHex: "#AFB1AE", colorFamily: "Gray", imageUrl: null, variantId: null },
@@ -567,6 +748,11 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "Yellow", colorHex: "#F4D53F", colorFamily: "Yellow", imageUrl: null, variantId: null },
     { colorName: "Cyan", colorHex: "#009BD8", colorFamily: "Blue", imageUrl: null, variantId: null },
   ],
+
+  // ============================================================================
+  // NON-PLA MATERIALS - Keep existing fallbacks
+  // ============================================================================
+  
   // ASA - colors from hex code table on product page
   "asa-filament": [
     { colorName: "White", colorHex: "#FFFAF2", colorFamily: "White", imageUrl: null, variantId: null },
@@ -576,6 +762,7 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "Blue", colorHex: "#2140B4", colorFamily: "Blue", imageUrl: null, variantId: null },
     { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
+  
   // ABS-GF - colors from hex code table on product page
   "abs-gf": [
     { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
