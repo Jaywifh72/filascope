@@ -140,6 +140,13 @@ const PRICE_RANGES_BY_MATERIAL: Record<string, Record<string, [number, number]>>
   "ASA-CF": {
     US: [30, 55], CA: [38, 70], UK: [26, 48], EU: [30, 55], AU: [42, 75], JP: [4200, 7700]
   },
+  // FIX: Add specific PAHT-CF and PPA-CF price ranges (premium PA materials)
+  "PAHT-CF": {
+    US: [45, 90], CA: [55, 115], UK: [38, 78], EU: [45, 90], AU: [62, 125], JP: [6500, 13000]
+  },
+  "PPA-CF": {
+    US: [55, 100], CA: [68, 130], UK: [48, 88], EU: [55, 100], AU: [78, 140], JP: [8000, 14500]
+  },
   "PA-CF": {
     US: [35, 75], CA: [45, 95], UK: [30, 65], EU: [35, 75], AU: [50, 100], JP: [5000, 10500]
   },
@@ -203,19 +210,24 @@ const REGION_TO_FIRECRAWL_LOCATION: Record<string, { country: string; languages:
 };
 
 // ============================================================================
-// PLA PRODUCT DEFINITIONS - All Bambu Lab PLA types
+// RATE LIMIT CONFIGURATION - Configurable delays for safe scraping
 // ============================================================================
-const BAMBU_PLA_PRODUCTS: Record<string, {
-  slug: string;
-  material: string;
-  tdsUrl: string | null;
-  nozzleTempMin: number;
-  nozzleTempMax: number;
-  bedTempMin: number;
-  bedTempMax: number;
-  dryingTempC: number;
-  dryingTimeHours: number;
-}> = {
+const RATE_LIMIT_CONFIG = {
+  synchronous: {
+    betweenRegions: 2000,
+    betweenProducts: 3000,
+  },
+  background: {
+    betweenRegions: 1500,
+    betweenProducts: 2500,
+  },
+};
+
+// ============================================================================
+// PLA PRODUCT DEFINITIONS - All Bambu Lab PLA types
+// Uses ProductConfig interface for type consistency
+// ============================================================================
+const BAMBU_PLA_PRODUCTS: Record<string, ProductConfig> = {
   // ============================================================================
   // PLA Products - Slugs verified from Excel file (ca.store.bambulab.com)
   // ============================================================================
@@ -484,6 +496,7 @@ const BAMBU_ASA_PRODUCTS: Record<string, ProductConfig> = {
     nozzleTempMin: 250, nozzleTempMax: 280,
     bedTempMin: 80, bedTempMax: 100,
     dryingTempC: 80, dryingTimeHours: 8,
+    netWeightG: 500,  // ASA-CF uses 500g spools
   },
 };
 
@@ -498,6 +511,7 @@ const BAMBU_PA_PRODUCTS: Record<string, ProductConfig> = {
     nozzleTempMin: 270, nozzleTempMax: 290,
     bedTempMin: 80, bedTempMax: 90,
     dryingTempC: 80, dryingTimeHours: 12,
+    netWeightG: 500,  // PA-CF uses 500g spools
   },
   "PAHT-CF": {
     slug: "paht-cf",  // Verified: https://ca.store.bambulab.com/products/paht-cf
@@ -506,6 +520,7 @@ const BAMBU_PA_PRODUCTS: Record<string, ProductConfig> = {
     nozzleTempMin: 280, nozzleTempMax: 300,
     bedTempMin: 80, bedTempMax: 90,
     dryingTempC: 80, dryingTimeHours: 12,
+    netWeightG: 500,  // PAHT-CF uses 500g spools
   },
   "PA6-GF": {
     slug: "pa6-gf",  // Verified: https://ca.store.bambulab.com/products/pa6-gf
@@ -522,6 +537,7 @@ const BAMBU_PA_PRODUCTS: Record<string, ProductConfig> = {
     nozzleTempMin: 280, nozzleTempMax: 310,
     bedTempMin: 100, bedTempMax: 120,
     dryingTempC: 100, dryingTimeHours: 12,
+    netWeightG: 500,  // PPA-CF uses 500g spools
   },
 };
 
@@ -536,6 +552,7 @@ const BAMBU_PET_PRODUCTS: Record<string, ProductConfig> = {
     nozzleTempMin: 260, nozzleTempMax: 290,
     bedTempMin: 80, bedTempMax: 100,
     dryingTempC: 80, dryingTimeHours: 8,
+    netWeightG: 750,  // PET-CF uses 750g spools
   },
 };
 
@@ -631,7 +648,7 @@ const BAMBU_SUPPORT_PRODUCTS: Record<string, ProductConfig> = {
 // UNIFIED PRODUCT MAP BY MATERIAL CATEGORY
 // ============================================================================
 const ALL_BAMBU_PRODUCTS: Record<string, Record<string, ProductConfig>> = {
-  PLA: BAMBU_PLA_PRODUCTS as unknown as Record<string, ProductConfig>,
+  PLA: BAMBU_PLA_PRODUCTS,  // FIX: Removed 'as unknown as' cast since PLA now uses ProductConfig
   PETG: BAMBU_PETG_PRODUCTS,
   TPU: BAMBU_TPU_PRODUCTS,
   ABS: BAMBU_ABS_PRODUCTS,
@@ -850,6 +867,27 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // PLA AERO - Lightweight foaming PLA
   // ============================================================================
   "pla-aero": [
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // ePLA-HS - High Speed PLA (FIX: Added missing color fallbacks)
+  // ============================================================================
+  "epla-hs-filament": [
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#FF0000", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#0000FF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Green", colorHex: "#00FF00", colorFamily: "Green", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PLA IMPACT - Impact-resistant PLA (FIX: Added missing color fallbacks)
+  // ============================================================================
+  "pla-impact-filament": [
     { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
     { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
     { colorName: "Gray", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
@@ -1496,11 +1534,11 @@ function logMaterialIssues(material: string, issues: MaterialIssues, ctx?: LogCo
 const NON_COLOR_BLOCKLIST = [
   // UI elements from Bambu Lab website
   /hex\s*code/i,
-  /display/i,
+  /\bdisplay\b/i,  // FIX: Added word boundary to prevent false positives
   /suggest\s*one/i,
   /can'?t\s*find/i,
   /automatic\s*material/i,
-  /printing/i,
+  /\bprinting\b/i,  // FIX: Added word boundary
   /^\s*ams\s*$/i,
   /material\s*system/i,
   /select\s*color/i,
@@ -1511,31 +1549,31 @@ const NON_COLOR_BLOCKLIST = [
   /buy\s*now/i,
   /out\s*of\s*stock/i,
   /in\s*stock/i,
-  /available/i,
-  /unavailable/i,
+  /\bavailable\b/i,  // FIX: Added word boundary to prevent blocking colors like "Available Blue"
+  /\bunavailable\b/i,  // FIX: Added word boundary
   /notify\s*me/i,
   /sold\s*out/i,
   /coming\s*soon/i,
-  /quantity/i,
+  /\bquantity\b/i,  // FIX: Added word boundary
   /^\s*qty\s*$/i,
-  /review/i,
-  /rating/i,
-  /description/i,
-  /specification/i,
-  /details/i,
-  /features/i,
+  /\breview\b/i,  // FIX: Added word boundary
+  /\brating\b/i,  // FIX: Added word boundary
+  /\bdescription\b/i,  // FIX: Added word boundary
+  /\bspecification\b/i,  // FIX: Added word boundary
+  /\bdetails\b/i,  // FIX: Added word boundary to prevent blocking "Details Red" type colors
+  /\bfeatures\b/i,  // FIX: Added word boundary
   // Navigation/UI
-  /home/i,
-  /back/i,
-  /next/i,
-  /previous/i,
+  /\bhome\b/i,  // FIX: Added word boundary
+  /^\s*back\s*$/i,  // FIX: Made more specific to only match standalone "back"
+  /^\s*next\s*$/i,  // FIX: Made more specific
+  /^\s*previous\s*$/i,  // FIX: Made more specific
   /^\s*see\s*all\s*$/i,
   /view\s*more/i,
   /show\s*more/i,
-  /less/i,
-  /more/i,
-  /close/i,
-  /open/i,
+  /^\s*less\s*$/i,  // FIX: Made more specific
+  /^\s*more\s*$/i,  // FIX: Made more specific
+  /^\s*close\s*$/i,  // FIX: Made more specific
+  /^\s*open\s*$/i,  // FIX: Made more specific
   // Form field artifacts
   /^\s*[\d\(\)\-\+]+\s*$/,  // Just numbers/parens/dashes
   /^\s*[\\\/\-\?\!\.\,\*\#\@]+\s*$/,  // Just punctuation
