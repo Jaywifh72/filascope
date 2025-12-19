@@ -395,6 +395,15 @@ const BAMBU_ABS_PRODUCTS: Record<string, ProductConfig> = {
     bedTempMin: 80, bedTempMax: 100,
     dryingTempC: 80, dryingTimeHours: 8,
   },
+  // ABS-GF (Glass Fiber reinforced ABS)
+  "ABS-GF": {
+    slug: "abs-gf",
+    material: "ABS-GF",
+    tdsUrl: "https://store.bblcdn.com/69f0758087c943f8a0a87bffa6dc901b.pdf",
+    nozzleTempMin: 240, nozzleTempMax: 270,
+    bedTempMin: 80, bedTempMax: 100,
+    dryingTempC: 80, dryingTimeHours: 8,
+  },
 };
 
 // ============================================================================
@@ -565,6 +574,17 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: null, variantId: null },
     { colorName: "Green", colorHex: "#00A6A0", colorFamily: "Green", imageUrl: null, variantId: null },
     { colorName: "Blue", colorHex: "#2140B4", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+  // ABS-GF - colors from hex code table on product page
+  "abs-gf": [
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#C6C6C6", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Yellow", colorHex: "#FFE133", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Orange", colorHex: "#F48438", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#E83100", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Green", colorHex: "#61BF36", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#0C3B95", colorFamily: "Blue", imageUrl: null, variantId: null },
     { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
 };
