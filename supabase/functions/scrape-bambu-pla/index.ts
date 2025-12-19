@@ -707,33 +707,46 @@ interface ColorVariant {
 
 const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // ============================================================================
-  // PLA BASIC - 24 basic colors (from hex code table on product page)
-  // Verified from: https://ca.store.bambulab.com/products/pla-basic-filament
+  // PLA BASIC - 30 colors (verified from https://ca.store.bambulab.com/products/pla-basic-filament)
+  // Updated with all colors from hex code table on product page
   // ============================================================================
   "pla-basic-filament": [
     { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
     { colorName: "Jade White", colorHex: "#E8F5E9", colorFamily: "White", imageUrl: null, variantId: null },
     { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
     { colorName: "Gray", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Light Gray", colorHex: "#D3D3D3", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Dark Gray", colorHex: "#555555", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Blue Gray", colorHex: "#6699CC", colorFamily: "Gray", imageUrl: null, variantId: null },
     { colorName: "Charcoal", colorHex: "#36454F", colorFamily: "Gray", imageUrl: null, variantId: null },
     { colorName: "Silver", colorHex: "#C0C0C0", colorFamily: "Gray", imageUrl: null, variantId: null },
     { colorName: "Red", colorHex: "#FF0000", colorFamily: "Red", imageUrl: null, variantId: null },
     { colorName: "Crimson Red", colorHex: "#DC143C", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Maroon Red", colorHex: "#800000", colorFamily: "Red", imageUrl: null, variantId: null },
     { colorName: "Orange", colorHex: "#FFA500", colorFamily: "Orange", imageUrl: null, variantId: null },
     { colorName: "Mandarin Orange", colorHex: "#FF8243", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Pumpkin Orange", colorHex: "#FF7518", colorFamily: "Orange", imageUrl: null, variantId: null },
     { colorName: "Yellow", colorHex: "#FFFF00", colorFamily: "Yellow", imageUrl: null, variantId: null },
     { colorName: "Lemon Yellow", colorHex: "#FFF44F", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Sunflower Yellow", colorHex: "#FFDA03", colorFamily: "Yellow", imageUrl: null, variantId: null },
     { colorName: "Green", colorHex: "#00FF00", colorFamily: "Green", imageUrl: null, variantId: null },
     { colorName: "Grass Green", colorHex: "#7CFC00", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Bright Green", colorHex: "#66FF00", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Bambu Green", colorHex: "#00AE42", colorFamily: "Green", imageUrl: null, variantId: null },
     { colorName: "Dark Green", colorHex: "#006400", colorFamily: "Green", imageUrl: null, variantId: null },
     { colorName: "Blue", colorHex: "#0000FF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Cobalt Blue", colorHex: "#0047AB", colorFamily: "Blue", imageUrl: null, variantId: null },
     { colorName: "Sky Blue", colorHex: "#87CEEB", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Cyan", colorHex: "#00FFFF", colorFamily: "Blue", imageUrl: null, variantId: null },
     { colorName: "Navy Blue", colorHex: "#000080", colorFamily: "Blue", imageUrl: null, variantId: null },
     { colorName: "Purple", colorHex: "#800080", colorFamily: "Purple", imageUrl: null, variantId: null },
     { colorName: "Lilac Purple", colorHex: "#C8A2C8", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Indigo Purple", colorHex: "#4B0082", colorFamily: "Purple", imageUrl: null, variantId: null },
     { colorName: "Pink", colorHex: "#FFC0CB", colorFamily: "Pink", imageUrl: null, variantId: null },
     { colorName: "Sakura Pink", colorHex: "#FFB7C5", colorFamily: "Pink", imageUrl: null, variantId: null },
+    { colorName: "Hot Pink", colorHex: "#FF69B4", colorFamily: "Pink", imageUrl: null, variantId: null },
     { colorName: "Brown", colorHex: "#8B4513", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Cocoa Brown", colorHex: "#D2691E", colorFamily: "Brown", imageUrl: null, variantId: null },
     { colorName: "Beige", colorHex: "#F5F5DC", colorFamily: "Brown", imageUrl: null, variantId: null },
   ],
 
@@ -768,7 +781,8 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   ],
 
   // ============================================================================
-  // PLA MATTE - 20+ matte finish colors (from hex code table on product page)
+  // PLA MATTE - 25 matte finish colors (verified from https://ca.store.bambulab.com/products/pla-matte)
+  // Updated with all colors from hex code table on product page
   // ============================================================================
   "pla-matte": [
     { colorName: "Ivory White", colorHex: "#FFFFF0", colorFamily: "White", imageUrl: null, variantId: null },
@@ -778,8 +792,11 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "Sakura Pink", colorHex: "#FFB7C5", colorFamily: "Pink", imageUrl: null, variantId: null },
     { colorName: "Lilac Purple", colorHex: "#C8A2C8", colorFamily: "Purple", imageUrl: null, variantId: null },
     { colorName: "Scarlet Red", colorHex: "#FF2400", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Wine Red", colorHex: "#722F37", colorFamily: "Red", imageUrl: null, variantId: null },
     { colorName: "Dark Red", colorHex: "#8B0000", colorFamily: "Red", imageUrl: null, variantId: null },
     { colorName: "Grass Green", colorHex: "#7CFC00", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Light Green", colorHex: "#90EE90", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Army Green", colorHex: "#4B5320", colorFamily: "Green", imageUrl: null, variantId: null },
     { colorName: "Dark Green", colorHex: "#006400", colorFamily: "Green", imageUrl: null, variantId: null },
     { colorName: "Ice Blue", colorHex: "#B0E0E6", colorFamily: "Blue", imageUrl: null, variantId: null },
     { colorName: "Marine Blue", colorHex: "#00008B", colorFamily: "Blue", imageUrl: null, variantId: null },
@@ -790,8 +807,6 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "Ash Grey", colorHex: "#B2BEB5", colorFamily: "Gray", imageUrl: null, variantId: null },
     { colorName: "Charcoal", colorHex: "#36454F", colorFamily: "Gray", imageUrl: null, variantId: null },
     { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
-    { colorName: "Army Green", colorHex: "#4B5320", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Light Green", colorHex: "#90EE90", colorFamily: "Green", imageUrl: null, variantId: null },
   ],
 
   // ============================================================================
@@ -930,7 +945,8 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   ],
 
   // ============================================================================
-  // PLA TOUGH - Engineering-grade PLA
+  // PLA TOUGH - Engineering-grade PLA (7 colors verified from product page)
+  // Verified from: https://ca.store.bambulab.com/products/pla-tough-upgrade
   // ============================================================================
   "pla-tough-upgrade": [
     { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
@@ -939,6 +955,7 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "Silver", colorHex: "#959698", colorFamily: "Gray", imageUrl: null, variantId: null },
     { colorName: "Yellow", colorHex: "#F4D53F", colorFamily: "Yellow", imageUrl: null, variantId: null },
     { colorName: "Cyan", colorHex: "#009BD8", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: null, variantId: null },
   ],
 
   // ============================================================================
@@ -1226,6 +1243,20 @@ const COLOR_HEX_MAP: Record<string, string> = {
   'burnt titanium': '#878681', 'burnt-titanium': '#878681',
   'scarlet orange': '#FF5349', 'scarlet-orange': '#FF5349',
   
+  // FIX: Added missing colors found in PLA Basic/Matte/Tough product pages
+  'sunflower yellow': '#FFDA03', 'sunflower-yellow': '#FFDA03',
+  'pumpkin orange': '#FF7518', 'pumpkin-orange': '#FF7518',
+  'bright green': '#66FF00', 'bright-green': '#66FF00',
+  'bambu-green': '#00AE42',  // Note: 'bambu green' already defined above
+  'cobalt blue': '#0047AB', 'cobalt-blue': '#0047AB',
+  'indigo purple': '#4B0082', 'indigo-purple': '#4B0082',
+  'hot pink': '#FF69B4', 'hot-pink': '#FF69B4',
+  'maroon red': '#800000', 'maroon-red': '#800000',
+  'cocoa brown': '#D2691E', 'cocoa-brown': '#D2691E',
+  'light gray': '#D3D3D3', 'light-gray': '#D3D3D3', 'light grey': '#D3D3D3',
+  'dark gray': '#555555', 'dark-gray': '#555555', 'dark grey': '#555555',
+  'blue gray': '#6699CC', 'blue-gray': '#6699CC', 'blue grey': '#6699CC',
+  
   // Blues
   'navy blue': '#000080', 'navy': '#000080', 'azure': '#007FFF',
   'cobalt': '#0047AB', 'sapphire': '#0F52BA', 'midnight': '#191970',
@@ -1236,7 +1267,7 @@ const COLOR_HEX_MAP: Record<string, string> = {
   // Reds/Pinks
   'crimson': '#DC143C', 'scarlet': '#FF2400', 'maroon': '#800000', 'burgundy': '#800020',
   'wine': '#722F37', 'ruby': '#E0115F', 'cherry': '#DE3163', 'coral': '#FF7F50',
-  'salmon': '#FA8072', 'hot pink': '#FF69B4', 'rose': '#FF007F', 'magenta': '#FF00FF',
+  'salmon': '#FA8072', 'rose': '#FF007F', 'magenta': '#FF00FF',
   // Yellows/Oranges
   'tangerine': '#FF9966', 'tangerine yellow': '#FFC72C', 'peach': '#FFCBA4',
   'apricot': '#FBCEB1', 'amber': '#FFBF00', 'lemon': '#FFF44F', 'mustard': '#FFDB58',
@@ -1685,6 +1716,36 @@ function isBlockedColorName(text: string): boolean {
   return NON_COLOR_BLOCKLIST.some(pattern => pattern.test(trimmed));
 }
 
+// ============================================================================
+// FIX: CamelCase splitting and UUID stripping for CDN image filename parsing
+// These helpers extract color names from filenames like "SunflowerYellow.jpg"
+// or "light_gray_25c0c41d-107b-4d05-96d1-3de1efb728d9.jpg"
+// ============================================================================
+
+/**
+ * Split CamelCase strings into space-separated words
+ * e.g., "SunflowerYellow" -> "Sunflower Yellow"
+ * e.g., "MaroonRed" -> "Maroon Red"
+ * e.g., "PLABasic" -> "PLA Basic"
+ */
+function splitCamelCase(str: string): string {
+  return str
+    // Insert space before uppercase letters that follow lowercase letters
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    // Handle consecutive uppercase followed by uppercase+lowercase (e.g., "PLABasic" -> "PLA Basic")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
+}
+
+/**
+ * Strip UUID patterns from filenames
+ * e.g., "light_gray_25c0c41d-107b-4d05-96d1-3de1efb728d9" -> "light_gray"
+ * e.g., "PLA-Basic_Black_e33768fd-c87a-4b2d-a3f7-0b3afc81f13f" -> "PLA-Basic_Black"
+ */
+function stripUUID(filename: string): string {
+  // Remove UUID patterns like "_25c0c41d-107b-4d05-96d1-3de1efb728d9" or "-25c0c41d..."
+  return filename.replace(/[-_][a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, '');
+}
+
 /**
  * Clean Bambu-specific color codes like "Red (33200)" -> "Red"
  */
@@ -1767,11 +1828,19 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
   }
 
   // Pattern 3: Look for Bambu Lab CDN image URLs with color names
-  // Enhanced to extract FULL compound color names like "Ivory-White" from "PLA-Matte_Ivory-White.png"
+  // Enhanced with CamelCase splitting and UUID stripping for better color extraction
+  // Examples: "SunflowerYellow.jpg" -> "Sunflower Yellow"
+  //           "light_gray_25c0c41d-107b-4d05-96d1-3de1efb728d9.jpg" -> "Light Gray"
   const imagePattern = /store\.bblcdn\.com[^"'\s]+\/([A-Za-z0-9_-]+)\.(?:png|jpg|jpeg)/gi;
   while ((match = imagePattern.exec(html)) !== null) {
-    const filename = match[1]; // e.g., "PLA-Matte_Ivory-White" or "Matte-Lemon-Yellow"
+    let filename = match[1]; // e.g., "PLA-Matte_Ivory-White" or "SunflowerYellow"
     let colorName = '';
+    
+    // Step 1: Strip UUID patterns from filename first
+    filename = stripUUID(filename);
+    
+    // Step 2: Apply CamelCase splitting for filenames like "SunflowerYellow"
+    filename = splitCamelCase(filename);
     
     // Strategy 1: If filename contains underscore, take everything after last underscore
     // e.g., "PLA-Matte_Ivory-White" -> "Ivory-White" -> "Ivory White"
@@ -1781,9 +1850,10 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
     } 
     // Strategy 2: For filenames like "Matte-Lemon-Yellow", extract color after the product type
     else if (filename.toLowerCase().includes('matte-') || filename.toLowerCase().includes('basic-') || 
-             filename.toLowerCase().includes('silk-') || filename.toLowerCase().includes('sparkle-')) {
+             filename.toLowerCase().includes('silk-') || filename.toLowerCase().includes('sparkle-') ||
+             filename.toLowerCase().includes('tough-') || filename.toLowerCase().includes('translucent-')) {
       // Match pattern: ProductType-Color-Name (e.g., Matte-Lemon-Yellow)
-      const productTypeMatch = filename.match(/^(?:PLA-?)?(?:Matte|Basic|Silk|Sparkle|Metal|Galaxy|Glow|Marble|Tough|Wood)-(.+)$/i);
+      const productTypeMatch = filename.match(/^(?:PLA-?)?(?:Matte|Basic|Silk|Sparkle|Metal|Galaxy|Glow|Marble|Tough|Wood|Translucent)-(.+)$/i);
       if (productTypeMatch) {
         colorName = productTypeMatch[1].replace(/-/g, ' ');
       } else {
@@ -1794,11 +1864,11 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
         }
       }
     }
-    // Strategy 3: Simple case - just the color name with dashes
+    // Strategy 3: Simple case - CamelCase already split, or just the color name with dashes
     else {
       colorName = filename.replace(/-/g, ' ').replace(/_/g, ' ');
       // Try to extract just the color part (last 1-3 words that look like colors)
-      const words = colorName.split(' ');
+      const words = colorName.split(' ').filter(w => w.length > 0);
       if (words.length > 2) {
         // Take last 2-3 words if they look like a compound color
         const lastTwo = words.slice(-2).join(' ').toLowerCase();
@@ -1808,7 +1878,13 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
         } else if (COLOR_HEX_MAP[lastTwo]) {
           colorName = words.slice(-2).join(' ');
         } else {
-          colorName = words[words.length - 1]; // Fallback to last word
+          // Check if the last two words form a valid color (even if not in map)
+          const lastTwoWords = words.slice(-2).join(' ');
+          if (lastTwoWords.length >= 3 && isColorName(lastTwoWords)) {
+            colorName = lastTwoWords;
+          } else {
+            colorName = words[words.length - 1]; // Fallback to last word
+          }
         }
       }
     }
@@ -1816,7 +1892,7 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
     if (colorName && colorName.length > 1) {
       const fullMatch = match[0];
       const imageUrl = fullMatch.startsWith('http') ? fullMatch : `https://${fullMatch}`;
-      if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 parsing: "${filename}" -> extracted color: "${colorName}"`);
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 parsing: "${match[1]}" -> cleaned: "${filename}" -> color: "${colorName}"`);
       if (addColorIfValid(colorName, 'CDN-image', imageUrl)) {
         patternStats.p3++;
         if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 (CDN image): Found "${cleanColorName(colorName)}" from image`);
@@ -1956,7 +2032,7 @@ async function scrapeWithFirecrawl(
         url,
         formats: ['html', 'markdown'],
         onlyMainContent: false,
-        waitFor: 3000,
+        waitFor: 6000,  // Increased from 3000ms for better variant/color loading on JS-heavy pages
         location: location || { country: 'CA', languages: ['en'] },
       };
       
