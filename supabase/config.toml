@@ -161,3 +161,6 @@ verify_jwt = false
 
 [functions.sync-bambulab-colors]
 verify_jwt = true
+
+[functions.discover-bambulab-images]
+verify_jwt = true
