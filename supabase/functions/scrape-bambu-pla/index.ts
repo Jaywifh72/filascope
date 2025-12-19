@@ -15,14 +15,58 @@ const BAMBU_REGIONAL_STORES: Record<string, {
   currencySymbol: string;
   priceField: string;
   urlField: string;
-  priceRange: [number, number];
 }> = {
-  US: { subdomain: "us", currency: "USD", currencySymbol: "$", priceField: "variant_price", urlField: "product_url", priceRange: [15, 35] },
-  CA: { subdomain: "ca", currency: "CAD", currencySymbol: "C$", priceField: "price_cad", urlField: "product_url_ca", priceRange: [20, 45] },
-  UK: { subdomain: "uk", currency: "GBP", currencySymbol: "£", priceField: "price_gbp", urlField: "product_url_uk", priceRange: [14, 30] },
-  EU: { subdomain: "eu", currency: "EUR", currencySymbol: "€", priceField: "price_eur", urlField: "product_url_eu", priceRange: [16, 35] },
-  AU: { subdomain: "au", currency: "AUD", currencySymbol: "A$", priceField: "price_aud", urlField: "product_url_au", priceRange: [22, 50] },
-  JP: { subdomain: "jp", currency: "JPY", currencySymbol: "¥", priceField: "price_jpy", urlField: "product_url_jp", priceRange: [2000, 5000] },
+  US: { subdomain: "us", currency: "USD", currencySymbol: "$", priceField: "variant_price", urlField: "product_url" },
+  CA: { subdomain: "ca", currency: "CAD", currencySymbol: "C$", priceField: "price_cad", urlField: "product_url_ca" },
+  UK: { subdomain: "uk", currency: "GBP", currencySymbol: "£", priceField: "price_gbp", urlField: "product_url_uk" },
+  EU: { subdomain: "eu", currency: "EUR", currencySymbol: "€", priceField: "price_eur", urlField: "product_url_eu" },
+  AU: { subdomain: "au", currency: "AUD", currencySymbol: "A$", priceField: "price_aud", urlField: "product_url_au" },
+  JP: { subdomain: "jp", currency: "JPY", currencySymbol: "¥", priceField: "price_jpy", urlField: "product_url_jp" },
+};
+
+// ============================================================================
+// MATERIAL-SPECIFIC PRICE RANGES (by region)
+// ============================================================================
+const PRICE_RANGES_BY_MATERIAL: Record<string, Record<string, [number, number]>> = {
+  PLA: {
+    US: [15, 40], CA: [20, 50], UK: [14, 35], EU: [16, 40], AU: [22, 55], JP: [2000, 5500]
+  },
+  "PLA-CF": {
+    US: [25, 55], CA: [32, 70], UK: [22, 48], EU: [25, 55], AU: [35, 75], JP: [3500, 7500]
+  },
+  PETG: {
+    US: [18, 45], CA: [24, 55], UK: [16, 38], EU: [18, 45], AU: [26, 60], JP: [2500, 6000]
+  },
+  "PETG-CF": {
+    US: [28, 60], CA: [36, 78], UK: [25, 52], EU: [28, 60], AU: [40, 82], JP: [4000, 8500]
+  },
+  TPU: {
+    US: [28, 55], CA: [35, 70], UK: [25, 48], EU: [28, 55], AU: [40, 75], JP: [3500, 7500]
+  },
+  ABS: {
+    US: [18, 40], CA: [22, 50], UK: [16, 35], EU: [18, 40], AU: [25, 55], JP: [2500, 5500]
+  },
+  ASA: {
+    US: [25, 50], CA: [32, 62], UK: [22, 42], EU: [25, 50], AU: [35, 68], JP: [3500, 7000]
+  },
+  "PA-CF": {
+    US: [35, 75], CA: [45, 95], UK: [30, 65], EU: [35, 75], AU: [50, 100], JP: [5000, 10500]
+  },
+  "PA-GF": {
+    US: [30, 65], CA: [40, 82], UK: [28, 55], EU: [30, 65], AU: [45, 88], JP: [4500, 9000]
+  },
+  PC: {
+    US: [28, 60], CA: [36, 78], UK: [25, 52], EU: [28, 60], AU: [40, 82], JP: [4000, 8500]
+  },
+  "PC-FR": {
+    US: [38, 75], CA: [48, 95], UK: [34, 65], EU: [38, 75], AU: [55, 100], JP: [5500, 10500]
+  },
+  PVA: {
+    US: [50, 100], CA: [65, 130], UK: [45, 88], EU: [50, 100], AU: [72, 138], JP: [7000, 14000]
+  },
+  Support: {
+    US: [25, 90], CA: [32, 115], UK: [22, 78], EU: [25, 90], AU: [36, 122], JP: [3500, 12500]
+  },
 };
 
 const REGION_TO_FIRECRAWL_LOCATION: Record<string, { country: string; languages: string[] }> = {
@@ -179,6 +223,240 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
 };
 
 // ============================================================================
+// PETG PRODUCT DEFINITIONS
+// ============================================================================
+interface ProductConfig {
+  slug: string;
+  material: string;
+  tdsUrl: string | null;
+  nozzleTempMin: number;
+  nozzleTempMax: number;
+  bedTempMin: number;
+  bedTempMax: number;
+  dryingTempC: number;
+  dryingTimeHours: number;
+  netWeightG?: number;
+}
+
+const BAMBU_PETG_PRODUCTS: Record<string, ProductConfig> = {
+  "PETG Basic": {
+    slug: "petg-basic-filament",
+    material: "PETG",
+    tdsUrl: null,
+    nozzleTempMin: 220, nozzleTempMax: 260,
+    bedTempMin: 70, bedTempMax: 90,
+    dryingTempC: 65, dryingTimeHours: 8,
+  },
+  "PETG HF": {
+    slug: "petg-hf",
+    material: "PETG",
+    tdsUrl: null,
+    nozzleTempMin: 220, nozzleTempMax: 260,
+    bedTempMin: 70, bedTempMax: 90,
+    dryingTempC: 65, dryingTimeHours: 8,
+  },
+  "PETG-CF": {
+    slug: "petg-cf",
+    material: "PETG-CF",
+    tdsUrl: null,
+    nozzleTempMin: 240, nozzleTempMax: 280,
+    bedTempMin: 70, bedTempMax: 90,
+    dryingTempC: 65, dryingTimeHours: 8,
+  },
+  "PETG Translucent": {
+    slug: "petg-translucent",
+    material: "PETG",
+    tdsUrl: null,
+    nozzleTempMin: 220, nozzleTempMax: 260,
+    bedTempMin: 70, bedTempMax: 90,
+    dryingTempC: 65, dryingTimeHours: 8,
+  },
+};
+
+// ============================================================================
+// TPU PRODUCT DEFINITIONS
+// ============================================================================
+const BAMBU_TPU_PRODUCTS: Record<string, ProductConfig> = {
+  "TPU 95A HF": {
+    slug: "tpu-95a-hf",
+    material: "TPU",
+    tdsUrl: null,
+    nozzleTempMin: 220, nozzleTempMax: 250,
+    bedTempMin: 35, bedTempMax: 50,
+    dryingTempC: 70, dryingTimeHours: 8,
+  },
+  "TPU 85A / TPU 90A": {
+    slug: "tpu-85a-tpu-90a",
+    material: "TPU",
+    tdsUrl: null,
+    nozzleTempMin: 220, nozzleTempMax: 250,
+    bedTempMin: 35, bedTempMax: 50,
+    dryingTempC: 70, dryingTimeHours: 8,
+  },
+  "TPU for AMS": {
+    slug: "tpu-for-ams",
+    material: "TPU",
+    tdsUrl: null,
+    nozzleTempMin: 220, nozzleTempMax: 250,
+    bedTempMin: 35, bedTempMax: 50,
+    dryingTempC: 70, dryingTimeHours: 8,
+  },
+};
+
+// ============================================================================
+// ABS PRODUCT DEFINITIONS
+// ============================================================================
+const BAMBU_ABS_PRODUCTS: Record<string, ProductConfig> = {
+  "ABS": {
+    slug: "abs-filament",
+    material: "ABS",
+    tdsUrl: "https://store.bblcdn.com/s7/default/Bambu_ABS_Technical_Data_Sheet.pdf",
+    nozzleTempMin: 240, nozzleTempMax: 270,
+    bedTempMin: 80, bedTempMax: 100,
+    dryingTempC: 80, dryingTimeHours: 8,
+  },
+};
+
+// ============================================================================
+// ASA PRODUCT DEFINITIONS
+// ============================================================================
+const BAMBU_ASA_PRODUCTS: Record<string, ProductConfig> = {
+  "ASA": {
+    slug: "asa-filament",
+    material: "ASA",
+    tdsUrl: null,
+    nozzleTempMin: 240, nozzleTempMax: 270,
+    bedTempMin: 80, bedTempMax: 100,
+    dryingTempC: 80, dryingTimeHours: 8,
+  },
+};
+
+// ============================================================================
+// PA (NYLON) PRODUCT DEFINITIONS
+// ============================================================================
+const BAMBU_PA_PRODUCTS: Record<string, ProductConfig> = {
+  "PA6-CF": {
+    slug: "pa6-cf",
+    material: "PA-CF",
+    tdsUrl: null,
+    nozzleTempMin: 270, nozzleTempMax: 290,
+    bedTempMin: 80, bedTempMax: 90,
+    dryingTempC: 80, dryingTimeHours: 12,
+  },
+  "PAHT-CF": {
+    slug: "paht-cf",
+    material: "PA-CF",
+    tdsUrl: null,
+    nozzleTempMin: 280, nozzleTempMax: 300,
+    bedTempMin: 80, bedTempMax: 90,
+    dryingTempC: 80, dryingTimeHours: 12,
+  },
+  "PA6-GF": {
+    slug: "pa6-gf",
+    material: "PA-GF",
+    tdsUrl: null,
+    nozzleTempMin: 270, nozzleTempMax: 290,
+    bedTempMin: 80, bedTempMax: 90,
+    dryingTempC: 80, dryingTimeHours: 12,
+  },
+  "PPA-CF": {
+    slug: "ppa-cf",
+    material: "PA-CF",
+    tdsUrl: null,
+    nozzleTempMin: 290, nozzleTempMax: 320,
+    bedTempMin: 90, bedTempMax: 110,
+    dryingTempC: 80, dryingTimeHours: 12,
+  },
+};
+
+// ============================================================================
+// PC (POLYCARBONATE) PRODUCT DEFINITIONS
+// ============================================================================
+const BAMBU_PC_PRODUCTS: Record<string, ProductConfig> = {
+  "PC": {
+    slug: "pc-filament",
+    material: "PC",
+    tdsUrl: "https://store.bblcdn.com/a52afdccddfd448583d119587122c8c5.pdf",
+    nozzleTempMin: 260, nozzleTempMax: 280,
+    bedTempMin: 90, bedTempMax: 110,
+    dryingTempC: 80, dryingTimeHours: 8,
+  },
+  "PC FR": {
+    slug: "pc-fr",
+    material: "PC-FR",
+    tdsUrl: null,
+    nozzleTempMin: 260, nozzleTempMax: 280,
+    bedTempMin: 90, bedTempMax: 110,
+    dryingTempC: 80, dryingTimeHours: 8,
+  },
+};
+
+// ============================================================================
+// SUPPORT MATERIAL PRODUCT DEFINITIONS
+// ============================================================================
+const BAMBU_SUPPORT_PRODUCTS: Record<string, ProductConfig> = {
+  "PVA": {
+    slug: "pva",
+    material: "PVA",
+    tdsUrl: "https://store.bblcdn.com/s7/default/868930e5a44944258586caa250cc8143/Bambu_PVA_Technical_Data_Sheet.pdf",
+    nozzleTempMin: 220, nozzleTempMax: 250,
+    bedTempMin: 35, bedTempMax: 45,
+    dryingTempC: 80, dryingTimeHours: 12,
+    netWeightG: 500,
+  },
+  "Support for PLA": {
+    slug: "support-for-pla-new",
+    material: "Support",
+    tdsUrl: null,
+    nozzleTempMin: 220, nozzleTempMax: 230,
+    bedTempMin: 35, bedTempMax: 45,
+    dryingTempC: 75, dryingTimeHours: 8,
+    netWeightG: 500,
+  },
+  "Support for PLA/PETG": {
+    slug: "support-for-pla-petg",
+    material: "Support",
+    tdsUrl: "https://store.bblcdn.com/d09d55778d42495db121e28a3b04a4c5.pdf",
+    nozzleTempMin: 190, nozzleTempMax: 220,
+    bedTempMin: 35, bedTempMax: 60,
+    dryingTempC: 75, dryingTimeHours: 8,
+    netWeightG: 500,
+  },
+  "Support for ABS": {
+    slug: "support-for-abs",
+    material: "Support",
+    tdsUrl: "https://store.bblcdn.com/4ea7b59ca78c485f828115735ed35050.pdf",
+    nozzleTempMin: 240, nozzleTempMax: 270,
+    bedTempMin: 80, bedTempMax: 100,
+    dryingTempC: 80, dryingTimeHours: 4,
+    netWeightG: 500,
+  },
+  "Support for PA/PET": {
+    slug: "support-for-pa-pet",
+    material: "Support",
+    tdsUrl: "https://store.bblcdn.com/7e83189be1eb4a3dab8ce9b9a7b2065a.pdf",
+    nozzleTempMin: 280, nozzleTempMax: 300,
+    bedTempMin: 80, bedTempMax: 110,
+    dryingTempC: 80, dryingTimeHours: 12,
+    netWeightG: 500,
+  },
+};
+
+// ============================================================================
+// UNIFIED PRODUCT MAP BY MATERIAL CATEGORY
+// ============================================================================
+const ALL_BAMBU_PRODUCTS: Record<string, Record<string, ProductConfig>> = {
+  PLA: BAMBU_PLA_PRODUCTS as unknown as Record<string, ProductConfig>,
+  PETG: BAMBU_PETG_PRODUCTS,
+  TPU: BAMBU_TPU_PRODUCTS,
+  ABS: BAMBU_ABS_PRODUCTS,
+  ASA: BAMBU_ASA_PRODUCTS,
+  PA: BAMBU_PA_PRODUCTS,
+  PC: BAMBU_PC_PRODUCTS,
+  Support: BAMBU_SUPPORT_PRODUCTS,
+};
+
+// ============================================================================
 // COLOR HEX MAP - Comprehensive color to hex mapping
 // ============================================================================
 const COLOR_HEX_MAP: Record<string, string> = {
@@ -312,12 +590,14 @@ function extractFromMetaTags(html: string): number | null {
   return null;
 }
 
-function extractBambuLabPrice(html: string, markdown: string, region: string): { price: number; source: string } | null {
+function extractBambuLabPrice(html: string, markdown: string, region: string, material: string = 'PLA'): { price: number; source: string } | null {
   const store = BAMBU_REGIONAL_STORES[region];
   if (!store) return null;
 
-  const [minExpected, maxExpected] = store.priceRange;
-  console.log(`[${region}] Expected PLA price range: ${minExpected}-${maxExpected} ${store.currency}`);
+  // Get material-specific price range, fallback to PLA range
+  const materialRanges = PRICE_RANGES_BY_MATERIAL[material] || PRICE_RANGES_BY_MATERIAL['PLA'];
+  const [minExpected, maxExpected] = materialRanges[region] || materialRanges['US'];
+  console.log(`[${region}] Expected ${material} price range: ${minExpected}-${maxExpected} ${store.currency}`);
 
   // Strategy 1: bbl-title-1 class (Bambu Lab's main price element)
   const bblTitleMatch = html.match(/class="[^"]*bbl-title-1[^"]*"[^>]*>([^<]*(?:\$|€|£|¥|C\$|CA\$|A\$)[^<]*)<\/[^>]+>/i);
@@ -382,7 +662,7 @@ function extractBambuLabPrice(html: string, markdown: string, region: string): {
     }
   }
 
-  console.warn(`[${region}] Could not extract valid price`);
+  console.warn(`[${region}] Could not extract valid price for ${material}`);
   return null;
 }
 
@@ -573,7 +853,7 @@ async function scrapeWithFirecrawl(
   }
 }
 
-async function scrapeProductPage(productSlug: string, region: string = 'CA'): Promise<{
+async function scrapeProductPage(productSlug: string, region: string = 'CA', material: string = 'PLA'): Promise<{
   colors: ColorVariant[];
   price: number | null;
   tdsUrl: string | null;
@@ -595,8 +875,8 @@ async function scrapeProductPage(productSlug: string, region: string = 'CA'): Pr
   const colors = extractColorVariantsFromHtml(html, markdown);
   console.log(`[SCRAPE] Found ${colors.length} color variants for ${productSlug}`);
 
-  // Extract price
-  const priceResult = extractBambuLabPrice(html, markdown, region);
+  // Extract price with material-specific range
+  const priceResult = extractBambuLabPrice(html, markdown, region, material);
   const price = priceResult?.price || null;
 
   // Extract TDS URL
@@ -612,7 +892,7 @@ async function scrapeProductPage(productSlug: string, region: string = 'CA'): Pr
   return { colors, price, tdsUrl, success: true };
 }
 
-async function scrapeRegionalPrice(productSlug: string, region: string): Promise<{
+async function scrapeRegionalPrice(productSlug: string, region: string, material: string = 'PLA'): Promise<{
   price: number | null;
   url: string;
 }> {
@@ -625,7 +905,7 @@ async function scrapeRegionalPrice(productSlug: string, region: string): Promise
     return { price: null, url };
   }
 
-  const priceResult = extractBambuLabPrice(html, markdown, region);
+  const priceResult = extractBambuLabPrice(html, markdown, region, material);
   return { price: priceResult?.price || null, url };
 }
 
@@ -636,7 +916,7 @@ async function upsertFilament(
   supabase: any,
   productType: string,
   colorVariant: ColorVariant,
-  productConfig: typeof BAMBU_PLA_PRODUCTS[string],
+  productConfig: ProductConfig,
   brandId: string | null,
   prices: Record<string, { price: number | null; url: string }>,
 ): Promise<{ created: boolean; updated: boolean; error?: string }> {
@@ -675,7 +955,7 @@ async function upsertFilament(
     drying_temp_c: productConfig.dryingTempC,
     drying_time_hours: productConfig.dryingTimeHours,
     diameter_nominal_mm: 1.75,
-    net_weight_g: 1000,
+    net_weight_g: productConfig.netWeightG || 1000, // Support 0.5kg spools
     auto_created: true,
     auto_updated: true,
     last_scraped_at: new Date().toISOString(),
@@ -731,15 +1011,22 @@ serve(async (req) => {
 
   try {
     const { 
-      products, // Optional: specific product types to scrape e.g., ["PLA Basic", "PLA Matte"]
-      limit,    // Optional: limit number of products
-      dryRun,   // Optional: don't save to DB, just scrape and report
+      materials, // Optional: which material categories to scrape e.g., ["PLA", "PETG", "TPU"]
+      products,  // Optional: specific product types to scrape e.g., ["PLA Basic", "PLA Matte"]
+      limit,     // Optional: limit number of products per material
+      dryRun,    // Optional: don't save to DB, just scrape and report
     } = await req.json().catch(() => ({}));
 
+    // Default to PLA only if no materials specified
+    const selectedMaterials: string[] = materials && Array.isArray(materials) && materials.length > 0 
+      ? materials 
+      : ['PLA'];
+
     console.log(`\n========================================`);
-    console.log(`BAMBU LAB PLA SCRAPER`);
+    console.log(`BAMBU LAB UNIFIED SCRAPER`);
     console.log(`========================================`);
-    console.log(`Products: ${products ? products.join(', ') : 'ALL'}`);
+    console.log(`Materials: ${selectedMaterials.join(', ')}`);
+    console.log(`Products: ${products ? products.join(', ') : 'ALL in selected materials'}`);
     console.log(`Limit: ${limit || 'NONE'}`);
     console.log(`Dry Run: ${dryRun || false}`);
 
@@ -758,22 +1045,8 @@ serve(async (req) => {
     const brandId = brandData?.id || null;
     console.log(`Brand ID: ${brandId || 'NOT FOUND'}`);
 
-    // Determine which products to scrape
-    let productsToScrape = Object.entries(BAMBU_PLA_PRODUCTS);
-    
-    if (products && Array.isArray(products)) {
-      productsToScrape = productsToScrape.filter(([name]) => 
-        products.some((p: string) => name.toLowerCase().includes(p.toLowerCase()))
-      );
-    }
-    
-    if (limit && limit > 0) {
-      productsToScrape = productsToScrape.slice(0, limit);
-    }
-
-    console.log(`\nProducts to scrape: ${productsToScrape.map(([name]) => name).join(', ')}`);
-
     const results = {
+      materialsProcessed: selectedMaterials,
       productsScraped: 0,
       colorsDiscovered: 0,
       filamentsCreated: 0,
@@ -782,87 +1055,129 @@ serve(async (req) => {
       productDetails: [] as any[],
     };
 
-    // Process each PLA product type
-    for (const [productName, productConfig] of productsToScrape) {
+    // Process each selected material category
+    for (const materialCategory of selectedMaterials) {
+      const materialProducts = ALL_BAMBU_PRODUCTS[materialCategory];
+      
+      if (!materialProducts) {
+        console.warn(`[WARN] Unknown material category: ${materialCategory}`);
+        results.errors.push(`Unknown material category: ${materialCategory}`);
+        continue;
+      }
+
       console.log(`\n========================================`);
-      console.log(`Processing: ${productName}`);
+      console.log(`MATERIAL: ${materialCategory}`);
       console.log(`========================================`);
 
-      // Step 1: Scrape product page from Canadian store to get colors
-      const { colors, price: caPrice, tdsUrl, success } = await scrapeProductPage(productConfig.slug, 'CA');
+      // Determine which products to scrape for this material
+      let productsToScrape = Object.entries(materialProducts);
       
-      if (!success || colors.length === 0) {
-        console.log(`[${productName}] No colors found, trying with default colors`);
-        // Use basic colors as fallback
-        const defaultColors = ['Black', 'White', 'Red', 'Blue', 'Green', 'Yellow', 'Orange'];
-        for (const colorName of defaultColors) {
-          colors.push(extractColorInfo(colorName));
-        }
+      if (products && Array.isArray(products)) {
+        productsToScrape = productsToScrape.filter(([name]) => 
+          products.some((p: string) => name.toLowerCase().includes(p.toLowerCase()))
+        );
+      }
+      
+      if (limit && limit > 0) {
+        productsToScrape = productsToScrape.slice(0, limit);
       }
 
-      // Update TDS URL if found
-      if (tdsUrl && !productConfig.tdsUrl) {
-        (productConfig as any).tdsUrl = tdsUrl;
-      }
+      console.log(`Products to scrape: ${productsToScrape.map(([name]) => name).join(', ')}`);
 
-      results.productsScraped++;
-      results.colorsDiscovered += colors.length;
+      // Process each product type in this material category
+      for (const [productName, productConfig] of productsToScrape) {
+        console.log(`\n========================================`);
+        console.log(`Processing: ${productName} (${productConfig.material})`);
+        console.log(`========================================`);
 
-      const productResult = {
-        productName,
-        slug: productConfig.slug,
-        colorsFound: colors.length,
-        colors: colors.map(c => c.colorName),
-        prices: {} as Record<string, number | null>,
-      };
-
-      // Step 2: Scrape regional prices (for the base product)
-      console.log(`\n[${productName}] Scraping regional prices...`);
-      
-      const regionalPrices: Record<string, { price: number | null; url: string }> = {};
-      
-      for (const region of Object.keys(BAMBU_REGIONAL_STORES)) {
-        // Add delay between regional scrapes
-        if (Object.keys(regionalPrices).length > 0) {
-          await new Promise(r => setTimeout(r, 2000));
-        }
+        // Step 1: Scrape product page from Canadian store to get colors
+        const { colors, price: caPrice, tdsUrl, success } = await scrapeProductPage(
+          productConfig.slug, 
+          'CA', 
+          productConfig.material
+        );
         
-        const { price, url } = await scrapeRegionalPrice(productConfig.slug, region);
-        regionalPrices[region] = { price, url };
-        productResult.prices[region] = price;
-        
-        if (price) {
-          console.log(`[${productName}] ${region}: ${price}`);
+        if (!success || colors.length === 0) {
+          console.log(`[${productName}] No colors found, trying with default colors`);
+          // Use material-appropriate default colors
+          const defaultColors = productConfig.material === 'Support' || productConfig.material === 'PVA'
+            ? ['White'] // Support materials usually only have one color
+            : ['Black', 'White'];
+          for (const colorName of defaultColors) {
+            colors.push(extractColorInfo(colorName));
+          }
         }
-      }
 
-      // Step 3: Upsert each color variant
-      if (!dryRun) {
-        for (const colorVariant of colors) {
-          const result = await upsertFilament(
-            supabase,
-            productName,
-            colorVariant,
-            productConfig,
-            brandId,
-            regionalPrices,
+        // Update TDS URL if found
+        if (tdsUrl && !productConfig.tdsUrl) {
+          (productConfig as any).tdsUrl = tdsUrl;
+        }
+
+        results.productsScraped++;
+        results.colorsDiscovered += colors.length;
+
+        const productResult = {
+          productName,
+          material: productConfig.material,
+          slug: productConfig.slug,
+          colorsFound: colors.length,
+          colors: colors.map(c => c.colorName),
+          prices: {} as Record<string, number | null>,
+        };
+
+        // Step 2: Scrape regional prices (for the base product)
+        console.log(`\n[${productName}] Scraping regional prices...`);
+        
+        const regionalPrices: Record<string, { price: number | null; url: string }> = {};
+        
+        for (const region of Object.keys(BAMBU_REGIONAL_STORES)) {
+          // Add delay between regional scrapes
+          if (Object.keys(regionalPrices).length > 0) {
+            await new Promise(r => setTimeout(r, 2000));
+          }
+          
+          const { price, url } = await scrapeRegionalPrice(
+            productConfig.slug, 
+            region, 
+            productConfig.material
           );
-
-          if (result.created) results.filamentsCreated++;
-          if (result.updated) results.filamentsUpdated++;
-          if (result.error) results.errors.push(`${productName} ${colorVariant.colorName}: ${result.error}`);
+          regionalPrices[region] = { price, url };
+          productResult.prices[region] = price;
+          
+          if (price) {
+            console.log(`[${productName}] ${region}: ${price}`);
+          }
         }
+
+        // Step 3: Upsert each color variant
+        if (!dryRun) {
+          for (const colorVariant of colors) {
+            const result = await upsertFilament(
+              supabase,
+              productName,
+              colorVariant,
+              productConfig,
+              brandId,
+              regionalPrices,
+            );
+
+            if (result.created) results.filamentsCreated++;
+            if (result.updated) results.filamentsUpdated++;
+            if (result.error) results.errors.push(`${productName} ${colorVariant.colorName}: ${result.error}`);
+          }
+        }
+
+        results.productDetails.push(productResult);
+
+        // Delay between products to respect rate limits
+        await new Promise(r => setTimeout(r, 3000));
       }
-
-      results.productDetails.push(productResult);
-
-      // Delay between products to respect rate limits
-      await new Promise(r => setTimeout(r, 3000));
     }
 
     console.log(`\n========================================`);
     console.log(`SCRAPE COMPLETE`);
     console.log(`========================================`);
+    console.log(`Materials: ${selectedMaterials.join(', ')}`);
     console.log(`Products scraped: ${results.productsScraped}`);
     console.log(`Colors discovered: ${results.colorsDiscovered}`);
     console.log(`Filaments created: ${results.filamentsCreated}`);
@@ -871,7 +1186,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      message: `Scraped ${results.productsScraped} PLA products, found ${results.colorsDiscovered} color variants`,
+      message: `Scraped ${results.productsScraped} products across ${selectedMaterials.length} material(s), found ${results.colorsDiscovered} color variants`,
       results,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
