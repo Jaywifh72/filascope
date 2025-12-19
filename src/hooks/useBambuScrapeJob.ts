@@ -98,14 +98,14 @@ export function useBambuScrapeJob(jobId: string | null) {
         console.log(`[Realtime] Subscription status for job ${jobId}:`, status);
       });
 
-    // Fallback polling every 3 seconds if realtime doesn't deliver updates
+    // Faster fallback polling (1.5s) if realtime doesn't deliver updates
     // This ensures progress is shown even if realtime has issues
     pollingInterval = setInterval(() => {
       // Only poll if job is still running and realtime hasn't been working
       if (!realtimeWorking) {
         fetchJob();
       }
-    }, 3000);
+    }, 1500);
 
     return () => {
       supabase.removeChannel(channel);

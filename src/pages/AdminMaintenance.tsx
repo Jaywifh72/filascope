@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,8 +11,10 @@ import { BambuScrapeProgress, BambuScrapeJobRow } from "@/components/admin/Bambu
 import { BambuScrapeQueueProgress } from "@/components/admin/BambuScrapeQueueProgress";
 import { ScrapeAnalyticsWidget } from "@/components/admin/ScrapeAnalyticsWidget";
 import { AIScrapeLogsCard } from "@/components/admin/AIScrapeLogsCard";
+import { ScrapeProgressBanner } from "@/components/admin/ScrapeProgressBanner";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
+import { useActiveScrapeJob } from "@/hooks/useActiveScrapeJob";
 
 const AdminMaintenance = () => {
   const [bambuColorsDryRun, setBambuColorsDryRun] = useState(true);
@@ -35,6 +37,14 @@ const AdminMaintenance = () => {
   const { toast } = useToast();
   const { startJob, isStarting } = useStartBambuScrapeJob();
   const { jobs: recentJobs } = useRecentScrapeJobs(5);
+  const { activeJob, hasActiveJob } = useActiveScrapeJob();
+  
+  // Sync activeJobId with auto-detected job
+  useEffect(() => {
+    if (activeJob && !activeJobId) {
+      setActiveJobId(activeJob.id);
+    }
+  }, [activeJob, activeJobId]);
   
   const {
     queueState,
@@ -98,7 +108,11 @@ const AdminMaintenance = () => {
   };
 
   return (
-    <div className="container mx-auto p-8 space-y-8">
+    <>
+      {/* Sticky Progress Banner - always visible when job running */}
+      <ScrapeProgressBanner />
+      
+      <div className="container mx-auto p-8 space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Scraping</h1>
@@ -232,10 +246,10 @@ const AdminMaintenance = () => {
           )}
         </CardContent>
       </Card>
-
       {/* Bambu Lab Regional Dashboard */}
       <BambuLabRegionalDashboard />
     </div>
+    </>
   );
 };
 
