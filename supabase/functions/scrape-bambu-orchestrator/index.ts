@@ -349,6 +349,15 @@ async function processNextChunk(supabase: any, state: ChunkState): Promise<void>
         },
         dryRun,
         jobId, // Pass job ID so scraper can update progress
+        // Pass current progress context so scraper merges instead of overwrites
+        progressContext: {
+          productsProcessed: currentIndex,
+          totalProducts: productQueue.length,
+          colorsDiscovered: state.results.colorsDiscovered,
+          filamentsCreated: state.results.filamentsCreated,
+          filamentsUpdated: state.results.filamentsUpdated,
+          errors: state.results.errors.slice(-10),
+        },
       }),
     });
 
