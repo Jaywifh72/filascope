@@ -70,7 +70,34 @@ const BAMBU_ABS_BASE_DATA = {
   net_weight_g: 1000,
 };
 
-// Helper to get the product URL for a specific region
+// Extract variant ID from a product URL
+function extractVariantId(url: string): string | null {
+  const match = url.match(/variant=(\d+)/);
+  return match ? match[1] : null;
+}
+
+// Extract product slug from a URL (e.g., "abs-filament" from ".../products/abs-filament?variant=40102")
+function extractProductSlug(url: string): string | null {
+  const match = url.match(/\/products\/([^?]+)/);
+  return match ? match[1] : null;
+}
+
+// Build regional product URL from base URL
+function buildRegionalUrl(baseUrl: string, region: string): string {
+  const store = BAMBU_REGIONAL_STORES[region] || BAMBU_REGIONAL_STORES.US;
+  const productSlug = extractProductSlug(baseUrl);
+  const variantId = extractVariantId(baseUrl);
+  
+  if (!productSlug) return baseUrl;
+  
+  let url = `https://${store.subdomain}.store.bambulab.com/products/${productSlug}`;
+  if (variantId) {
+    url += `?variant=${variantId}`;
+  }
+  return url;
+}
+
+// Helper to get the product URL for a specific region (for ABS with variant IDs)
 const getRegionalProductUrl = (region: string, variantId: string): string => {
   const store = BAMBU_REGIONAL_STORES[region] || BAMBU_REGIONAL_STORES.US;
   return `https://${store.subdomain}.store.bambulab.com/products/abs-filament?variant=${variantId}`;
@@ -333,10 +360,19 @@ function extractBambuLabPrice(html: string, markdown: string, region: string): {
   return null;
 }
 
-// Fetch regional price using Firecrawl with geo-located proxy
+// Fetch regional price using Firecrawl with geo-located proxy (using variant ID)
 async function fetchRegionalPriceWithFirecrawl(
   region: string, 
   variantId: string
+): Promise<{ price: number | null; source: 'firecrawl' | 'fallback'; error?: string }> {
+  const url = getRegionalProductUrl(region, variantId);
+  return fetchRegionalPriceFromUrl(region, url);
+}
+
+// Fetch regional price using Firecrawl with geo-located proxy (using full URL)
+async function fetchRegionalPriceFromUrl(
+  region: string, 
+  url: string
 ): Promise<{ price: number | null; source: 'firecrawl' | 'fallback'; error?: string }> {
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
   
@@ -357,7 +393,6 @@ async function fetchRegionalPriceWithFirecrawl(
     return { price: store?.fallbackPrice || null, source: 'fallback', error: 'Unknown region' };
   }
 
-  const url = getRegionalProductUrl(region, variantId);
   console.log(`[${region}] Scraping ${url} with geo-location: ${location.country}`);
 
   try {
@@ -481,6 +516,46 @@ async function fetchAllRegionalPrices(variantId: string): Promise<{
   return { prices, sources, errors };
 }
 
+// Fetch all regional prices for a given base product URL
+async function fetchAllRegionalPricesForProduct(baseUrl: string): Promise<{
+  prices: Record<string, number>;
+  urls: Record<string, string>;
+  sources: Record<string, 'firecrawl' | 'fallback'>;
+  errors: Record<string, string>;
+}> {
+  const prices: Record<string, number> = {};
+  const urls: Record<string, string> = {};
+  const sources: Record<string, 'firecrawl' | 'fallback'> = {};
+  const errors: Record<string, string> = {};
+
+  const regions = Object.keys(BAMBU_REGIONAL_STORES);
+  
+  for (let i = 0; i < regions.length; i++) {
+    const region = regions[i];
+    
+    // Small delay between requests to avoid rate limiting
+    if (i > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    // Build regional URL from base URL
+    const regionalUrl = buildRegionalUrl(baseUrl, region);
+    urls[region] = regionalUrl;
+    
+    const result = await fetchRegionalPriceFromUrl(region, regionalUrl);
+    
+    if (result.price !== null) {
+      prices[region] = result.price;
+    }
+    sources[region] = result.source;
+    if (result.error) {
+      errors[region] = result.error;
+    }
+  }
+
+  return { prices, urls, sources, errors };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -521,7 +596,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body for options
-    let options: { dryRun?: boolean; material?: string } = {};
+    let options: { dryRun?: boolean; material?: string; syncAll?: boolean } = {};
     try {
       options = await req.json();
     } catch {
@@ -529,8 +604,141 @@ serve(async (req) => {
     }
     
     const dryRun = options.dryRun ?? false;
-    const targetMaterial = options.material ?? "ABS";
+    const syncAll = options.syncAll ?? false;
+    const targetMaterial = options.material ?? (syncAll ? null : "ABS");
 
+    // Mode 1: Sync ALL Bambu Lab products with regional pricing
+    if (syncAll || targetMaterial === null) {
+      console.log(`Starting Bambu Lab sync for ALL products (dryRun: ${dryRun})`);
+      
+      // Get ALL Bambu Lab filaments with product URLs
+      const { data: allFilaments, error: fetchError } = await supabase
+        .from("filaments")
+        .select("id, product_title, material, product_url, variant_price, price_cad, price_gbp, price_eur, price_aud, price_jpy, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp")
+        .eq("vendor", "Bambu Lab")
+        .not("product_url", "is", null);
+
+      if (fetchError) {
+        throw new Error(`Failed to fetch filaments: ${fetchError.message}`);
+      }
+
+      console.log(`Found ${allFilaments?.length || 0} Bambu Lab filaments with product URLs`);
+
+      // Group by base product URL (without variant) to avoid duplicate scraping
+      const productGroups: Map<string, typeof allFilaments> = new Map();
+      for (const filament of allFilaments || []) {
+        const baseUrl = filament.product_url?.split('?')[0] || filament.product_url;
+        if (baseUrl) {
+          if (!productGroups.has(baseUrl)) {
+            productGroups.set(baseUrl, []);
+          }
+          productGroups.get(baseUrl)!.push(filament);
+        }
+      }
+
+      console.log(`Found ${productGroups.size} unique products to sync`);
+
+      const results: Array<{
+        productUrl: string;
+        filamentCount: number;
+        action: "updated" | "skipped" | "error";
+        prices?: Record<string, number>;
+        priceSources?: Record<string, string>;
+        error?: string;
+      }> = [];
+
+      let updated = 0;
+      let skipped = 0;
+      let errors = 0;
+
+      // Process each unique product
+      for (const [baseUrl, filaments] of productGroups) {
+        console.log(`\nProcessing ${baseUrl} (${filaments.length} variants)...`);
+        
+        try {
+          // Fetch regional prices for this product
+          const { prices: regionalPrices, urls: regionalUrls, sources: priceSources, errors: priceErrors } = 
+            await fetchAllRegionalPricesForProduct(baseUrl);
+          
+          console.log(`  Prices: US=$${regionalPrices.US}, CA=$${regionalPrices.CA}, UK=£${regionalPrices.UK}, EU=€${regionalPrices.EU}, AU=$${regionalPrices.AU}, JP=¥${regionalPrices.JP}`);
+          
+          if (Object.keys(priceErrors).length > 0) {
+            console.log(`  Errors:`, priceErrors);
+          }
+
+          // Update all variants of this product
+          for (const filament of filaments) {
+            if (!dryRun) {
+              const { error: updateError } = await supabase
+                .from("filaments")
+                .update({
+                  variant_price: regionalPrices.US || filament.variant_price,
+                  price_cad: regionalPrices.CA || filament.price_cad,
+                  price_gbp: regionalPrices.UK || filament.price_gbp,
+                  price_eur: regionalPrices.EU || filament.price_eur,
+                  price_aud: regionalPrices.AU || filament.price_aud,
+                  price_jpy: regionalPrices.JP || filament.price_jpy,
+                  product_url_ca: regionalUrls.CA,
+                  product_url_uk: regionalUrls.UK,
+                  product_url_eu: regionalUrls.EU,
+                  product_url_au: regionalUrls.AU,
+                  product_url_jp: regionalUrls.JP,
+                  regional_prices_updated_at: new Date().toISOString(),
+                })
+                .eq("id", filament.id);
+
+              if (updateError) {
+                console.error(`  Failed to update ${filament.product_title}:`, updateError.message);
+              } else {
+                console.log(`  Updated ${filament.product_title}`);
+              }
+            }
+          }
+
+          updated += filaments.length;
+          results.push({
+            productUrl: baseUrl,
+            filamentCount: filaments.length,
+            action: "updated",
+            prices: regionalPrices,
+            priceSources,
+          });
+
+          // Small delay between products to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+        } catch (error) {
+          console.error(`  Error processing ${baseUrl}:`, error);
+          errors += filaments.length;
+          results.push({
+            productUrl: baseUrl,
+            filamentCount: filaments.length,
+            action: "error",
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+
+      const summary = {
+        success: true,
+        dryRun,
+        mode: "syncAll",
+        totalFilaments: allFilaments?.length || 0,
+        uniqueProducts: productGroups.size,
+        updated,
+        skipped,
+        errors,
+        results,
+      };
+
+      console.log(`\nSync complete: ${updated} updated, ${skipped} skipped, ${errors} errors`);
+
+      return new Response(JSON.stringify(summary), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Mode 2: Original ABS-specific sync (for backward compatibility)
     console.log(`Starting Bambu Lab color sync for ${targetMaterial} (dryRun: ${dryRun})`);
 
     // Get existing Bambu Lab filaments
