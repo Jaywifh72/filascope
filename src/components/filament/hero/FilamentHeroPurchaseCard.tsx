@@ -14,6 +14,7 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useConversionTracking } from '@/hooks/useConversionTracking';
 import { useCurrentPrice } from '@/hooks/useCurrentPrice';
 import { cn } from '@/lib/utils';
+import { getShippingRule } from '@/lib/pricingRules';
 import { PriceUrgencyBadge } from '../urgency/PriceUrgencyBadge';
 import { StockUrgencyIndicator } from '../urgency/StockUrgencyIndicator';
 import { ShippingCountdown } from '../urgency/ShippingCountdown';
@@ -122,6 +123,9 @@ export function FilamentHeroPurchaseCard({
   const stockStatus = !inStock ? 'out_of_stock' : 
     (stockQuantity !== null && stockQuantity !== undefined && stockQuantity <= 10) ? 'low_stock' : 'in_stock';
 
+  // Get vendor-specific shipping rules
+  const shippingRule = getShippingRule(vendor || 'default');
+
 
   return (
     <div className={cn(
@@ -199,13 +203,12 @@ export function FilamentHeroPurchaseCard({
         />
       </div>
 
-      {/* Shipping Countdown */}
-      {inStock && (
+      {/* Free Shipping Progress */}
+      {inStock && shippingRule.flatRate > 0 && (
         <div className="mb-5">
           <ShippingCountdown
-            sameDayCutoffHour={14}
-            freeShippingThreshold={35}
-            currentCartValue={pricePerSpool || 0}
+            freeShippingThreshold={shippingRule.freeThreshold}
+            currentCartValue={displayPrice || pricePerSpool || 0}
           />
         </div>
       )}
@@ -261,7 +264,11 @@ export function FilamentHeroPurchaseCard({
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Truck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Free $35+</span>
+          <span>
+            {shippingRule.flatRate === 0 
+              ? 'Free shipping' 
+              : `Free $${shippingRule.freeThreshold}+`}
+          </span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <RotateCcw className="w-3.5 h-3.5 text-emerald-400" />
