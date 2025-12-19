@@ -129,6 +129,9 @@ const PRICE_RANGES_BY_MATERIAL: Record<string, Record<string, [number, number]>>
   ASA: {
     US: [25, 50], CA: [32, 62], UK: [22, 42], EU: [25, 50], AU: [35, 68], JP: [3500, 7000]
   },
+  "ASA-CF": {
+    US: [30, 55], CA: [38, 70], UK: [26, 48], EU: [30, 55], AU: [42, 75], JP: [4200, 7700]
+  },
   "PA-CF": {
     US: [35, 75], CA: [45, 95], UK: [30, 65], EU: [35, 75], AU: [50, 100], JP: [5000, 10500]
   },
@@ -391,20 +394,20 @@ const BAMBU_TPU_PRODUCTS: Record<string, ProductConfig> = {
 };
 
 // ============================================================================
-// ABS PRODUCT DEFINITIONS
+// ABS PRODUCT DEFINITIONS - Slugs verified from Excel file (ca.store.bambulab.com)
 // ============================================================================
 const BAMBU_ABS_PRODUCTS: Record<string, ProductConfig> = {
   "ABS": {
-    slug: "abs-filament",
+    slug: "abs-filament",  // Verified: https://ca.store.bambulab.com/products/abs-filament
     material: "ABS",
-    tdsUrl: "https://store.bblcdn.com/s7/default/Bambu_ABS_Technical_Data_Sheet.pdf",
+    tdsUrl: "https://store.bblcdn.com/s7/default/23b4cf2b83d5470bb96d19970b5f3ae8/Bambu_ABS_Technical_Data_Sheet_V3.pdf",
     nozzleTempMin: 240, nozzleTempMax: 270,
     bedTempMin: 80, bedTempMax: 100,
     dryingTempC: 80, dryingTimeHours: 8,
   },
   // ABS-GF (Glass Fiber reinforced ABS)
   "ABS-GF": {
-    slug: "abs-gf",
+    slug: "abs-gf",  // Verified: https://ca.store.bambulab.com/products/abs-gf
     material: "ABS-GF",
     tdsUrl: "https://store.bblcdn.com/69f0758087c943f8a0a87bffa6dc901b.pdf",
     nozzleTempMin: 240, nozzleTempMax: 270,
@@ -414,14 +417,30 @@ const BAMBU_ABS_PRODUCTS: Record<string, ProductConfig> = {
 };
 
 // ============================================================================
-// ASA PRODUCT DEFINITIONS
+// ASA PRODUCT DEFINITIONS - Slugs verified from Excel file (ca.store.bambulab.com)
 // ============================================================================
 const BAMBU_ASA_PRODUCTS: Record<string, ProductConfig> = {
   "ASA": {
-    slug: "asa-filament",
+    slug: "asa-filament",  // Verified: https://ca.store.bambulab.com/products/asa-filament
     material: "ASA",
     tdsUrl: "https://store.bblcdn.com/ad7b08230c164e72856cffbe06bb7dc9.pdf",
     nozzleTempMin: 240, nozzleTempMax: 270,
+    bedTempMin: 80, bedTempMax: 100,
+    dryingTempC: 80, dryingTimeHours: 8,
+  },
+  "ASA Aero": {
+    slug: "asa-aero",  // Verified: https://ca.store.bambulab.com/products/asa-aero
+    material: "ASA",
+    tdsUrl: "https://store.bblcdn.com/s1/default/02b005fdf02d450084e3128f7cf0c36f/Bambu_ASA_Aero_Technical_Data_Sheet.pdf",
+    nozzleTempMin: 240, nozzleTempMax: 280,
+    bedTempMin: 80, bedTempMax: 90,
+    dryingTempC: 80, dryingTimeHours: 8,
+  },
+  "ASA-CF": {
+    slug: "asa-cf",  // Verified: https://ca.store.bambulab.com/products/asa-cf
+    material: "ASA-CF",
+    tdsUrl: "https://store.bblcdn.com/s7/default/44b0a48ab1d84e819647c980eb179ae9/Bambus_ASA-CF_Technical_Data_Sheet.pdf",
+    nozzleTempMin: 250, nozzleTempMax: 280,
     bedTempMin: 80, bedTempMax: 100,
     dryingTempC: 80, dryingTimeHours: 8,
   },
@@ -777,17 +796,24 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   ],
 
   // ============================================================================
-  // NON-PLA MATERIALS - Keep existing fallbacks
+  // ABS PRODUCT COLOR FALLBACKS
   // ============================================================================
   
-  // ASA - colors from hex code table on product page
-  "asa-filament": [
-    { colorName: "White", colorHex: "#FFFAF2", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Gray", colorHex: "#8A949E", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Green", colorHex: "#00A6A0", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Blue", colorHex: "#2140B4", colorFamily: "Blue", imageUrl: null, variantId: null },
+  // ABS - 12 colors from hex code table on product page
+  // Verified from: https://ca.store.bambulab.com/products/abs-filament
+  "abs-filament": [
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
     { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Silver", colorHex: "#87909A", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#D32941", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Orange", colorHex: "#FF6A13", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Olive", colorHex: "#789D4A", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Bambu Green", colorHex: "#00AE42", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Azure", colorHex: "#489FDF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#0A2CA5", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Navy Blue", colorHex: "#0C2340", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Purple", colorHex: "#AF1685", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Tangerine Yellow", colorHex: "#FFC72C", colorFamily: "Yellow", imageUrl: null, variantId: null },
   ],
   
   // ABS-GF - colors from hex code table on product page
@@ -800,6 +826,32 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "Green", colorHex: "#61BF36", colorFamily: "Green", imageUrl: null, variantId: null },
     { colorName: "Blue", colorHex: "#0C3B95", colorFamily: "Blue", imageUrl: null, variantId: null },
     { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // ASA PRODUCT COLOR FALLBACKS
+  // ============================================================================
+  
+  // ASA - colors from hex code table on product page
+  "asa-filament": [
+    { colorName: "White", colorHex: "#FFFAF2", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#8A949E", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Green", colorHex: "#00A6A0", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#2140B4", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+  
+  // ASA Aero - Lightweight foaming ASA (1 color)
+  // Verified from: https://ca.store.bambulab.com/products/asa-aero
+  "asa-aero": [
+    { colorName: "White", colorHex: "#F5F1DD", colorFamily: "White", imageUrl: null, variantId: null },
+  ],
+  
+  // ASA-CF - Carbon Fiber reinforced ASA (1 color)
+  // Verified from: https://ca.store.bambulab.com/products/asa-cf
+  "asa-cf": [
+    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
 
   // ============================================================================
