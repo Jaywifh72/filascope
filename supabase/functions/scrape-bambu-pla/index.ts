@@ -364,31 +364,31 @@ const BAMBU_PETG_PRODUCTS: Record<string, ProductConfig> = {
 };
 
 // ============================================================================
-// TPU PRODUCT DEFINITIONS
+// TPU PRODUCT DEFINITIONS - Slugs verified from Excel file (ca.store.bambulab.com)
 // ============================================================================
 const BAMBU_TPU_PRODUCTS: Record<string, ProductConfig> = {
   "TPU 95A HF": {
-    slug: "tpu-95a-hf",
+    slug: "tpu-95a-hf",  // Verified: https://ca.store.bambulab.com/products/tpu-95a-hf
     material: "TPU",
-    tdsUrl: null,
-    nozzleTempMin: 220, nozzleTempMax: 250,
-    bedTempMin: 35, bedTempMax: 50,
+    tdsUrl: "https://store.bblcdn.com/58df32731eab4c90a7dac9b12e13ba88.pdf",
+    nozzleTempMin: 220, nozzleTempMax: 240,
+    bedTempMin: 30, bedTempMax: 35,
     dryingTempC: 70, dryingTimeHours: 8,
   },
   "TPU 85A / TPU 90A": {
-    slug: "tpu-85a-tpu-90a",
+    slug: "tpu-85a-tpu-90a",  // Verified: https://ca.store.bambulab.com/products/tpu-85a-tpu-90a
     material: "TPU",
-    tdsUrl: null,
-    nozzleTempMin: 220, nozzleTempMax: 250,
-    bedTempMin: 35, bedTempMax: 50,
+    tdsUrl: "https://cdn.shopify.com/s/files/1/0645/5876/0155/files/Bambu_TPU_90A_Technical_Data_Sheet_582bf8f6-1f0a-474c-aeda-9e72af3689dc.pdf?v=1741314674",
+    nozzleTempMin: 200, nozzleTempMax: 250,
+    bedTempMin: 30, bedTempMax: 35,
     dryingTempC: 70, dryingTimeHours: 8,
   },
   "TPU for AMS": {
-    slug: "tpu-for-ams",
+    slug: "tpu-for-ams",  // Verified: https://ca.store.bambulab.com/products/tpu-for-ams
     material: "TPU",
-    tdsUrl: null,
-    nozzleTempMin: 220, nozzleTempMax: 250,
-    bedTempMin: 35, bedTempMax: 50,
+    tdsUrl: "https://store.bblcdn.com/s5/default/0a98353dce6d486ca848b21d2b19a207.pdf",
+    nozzleTempMin: 220, nozzleTempMax: 240,
+    bedTempMin: 30, bedTempMax: 35,
     dryingTempC: 70, dryingTimeHours: 8,
   },
 };
@@ -852,6 +852,44 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // Verified from: https://ca.store.bambulab.com/products/asa-cf
   "asa-cf": [
     { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // TPU PRODUCT COLOR FALLBACKS
+  // ============================================================================
+  
+  // TPU 95A HF - High Flow TPU (6 colors from hex code table)
+  // Verified from: https://ca.store.bambulab.com/products/tpu-95a-hf
+  "tpu-95a-hf": [
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Yellow", colorHex: "#F3E600", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#0072CE", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#C8102E", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#898D8D", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#101820", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+  
+  // TPU 85A / TPU 90A - Soft TPU (6 colors from hex code table)
+  // Verified from: https://ca.store.bambulab.com/products/tpu-85a-tpu-90a
+  "tpu-85a-tpu-90a": [
+    { colorName: "Light Cyan", colorHex: "#C3E2D6", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Neon Orange", colorHex: "#F68B1B", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Frozen", colorHex: "#40B6E4", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Blaze", colorHex: "#D21B3C", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+  
+  // TPU for AMS - AMS-compatible TPU (7 colors from hex code table)
+  // Verified from: https://ca.store.bambulab.com/products/tpu-for-ams
+  "tpu-for-ams": [
+    { colorName: "Red", colorHex: "#ED0000", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Yellow", colorHex: "#F9EF41", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#5898DD", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Neon Green", colorHex: "#90FF1A", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#939393", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
 
   // ============================================================================
