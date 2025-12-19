@@ -245,9 +245,9 @@ const BAMBU_PLA_PRODUCTS: Record<string, {
     dryingTempC: 55, dryingTimeHours: 8,
   },
   "PLA Tough": {
-    slug: "pla-tough-filament",
+    slug: "pla-tough-upgrade",
     material: "PLA",
-    tdsUrl: null,
+    tdsUrl: "https://store.bblcdn.com/s7/default/80a85371db2e40bda97069d283fed76c/BambuPLA_Tough_TechnicalData_Sheet_(2).pdf",
     nozzleTempMin: 200, nozzleTempMax: 230,
     bedTempMin: 35, bedTempMax: 55,
     dryingTempC: 55, dryingTimeHours: 8,
@@ -534,6 +534,30 @@ const ALL_BAMBU_PRODUCTS: Record<string, Record<string, ProductConfig>> = {
   PA: BAMBU_PA_PRODUCTS,
   PC: BAMBU_PC_PRODUCTS,
   Support: BAMBU_SUPPORT_PRODUCTS,
+};
+
+// ============================================================================
+// PRODUCT COLOR FALLBACKS - For products where dynamic extraction fails
+// Used when color swatches are JavaScript-loaded and not captured by Firecrawl
+// ============================================================================
+interface ColorVariant {
+  colorName: string;
+  colorHex: string | null;
+  colorFamily: string | null;
+  imageUrl: string | null;
+  variantId: string | null;
+}
+
+const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
+  // PLA Tough+ - colors from official hex code table PDF
+  "pla-tough-upgrade": [
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#AFB1AE", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Silver", colorHex: "#959698", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Yellow", colorHex: "#F4D53F", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Cyan", colorHex: "#009BD8", colorFamily: "Blue", imageUrl: null, variantId: null },
+  ],
 };
 
 // ============================================================================
@@ -1335,9 +1359,19 @@ async function scrapeProductPage(
     return { colors: [], invalidFilteredColors: [], price: null, tdsUrl: null, success: false, firecrawlMs: durationMs };
   }
 
-  // Extract colors
+  // Extract colors - first try dynamic extraction
   if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', 'Extracting color variants...');
-  const { variants: colors, invalidFiltered: invalidFilteredColors } = extractColorVariantsFromHtml(html, markdown, ctx);
+  let { variants: colors, invalidFiltered: invalidFilteredColors } = extractColorVariantsFromHtml(html, markdown, ctx);
+  
+  // If no colors found, check for hardcoded fallbacks
+  if (colors.length === 0 && PRODUCT_COLOR_FALLBACKS[productSlug]) {
+    colors = PRODUCT_COLOR_FALLBACKS[productSlug];
+    if (ctx) {
+      logInfo(ctx, 'PRODUCT_SCRAPE', `Using FALLBACK colors for ${productSlug}: ${colors.length} colors`);
+      logDebug(ctx, 'PRODUCT_SCRAPE', `Fallback colors: ${colors.map(c => c.colorName).join(', ')}`);
+    }
+  }
+  
   if (ctx) {
     logInfo(ctx, 'PRODUCT_SCRAPE', `Found ${colors.length} valid color variants for ${productSlug}`);
     if (invalidFilteredColors.length > 0) {
