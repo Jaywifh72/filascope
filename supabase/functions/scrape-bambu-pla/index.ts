@@ -566,6 +566,37 @@ interface ColorVariant {
 
 const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // ============================================================================
+  // PLA BASIC - 24 basic colors (from hex code table on product page)
+  // Verified from: https://ca.store.bambulab.com/products/pla-basic-filament
+  // ============================================================================
+  "pla-basic-filament": [
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Jade White", colorHex: "#E8F5E9", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Charcoal", colorHex: "#36454F", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Silver", colorHex: "#C0C0C0", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#FF0000", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Crimson Red", colorHex: "#DC143C", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Orange", colorHex: "#FFA500", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Mandarin Orange", colorHex: "#FF8243", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Yellow", colorHex: "#FFFF00", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Lemon Yellow", colorHex: "#FFF44F", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Green", colorHex: "#00FF00", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Grass Green", colorHex: "#7CFC00", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Dark Green", colorHex: "#006400", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#0000FF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Sky Blue", colorHex: "#87CEEB", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Navy Blue", colorHex: "#000080", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Purple", colorHex: "#800080", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Lilac Purple", colorHex: "#C8A2C8", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Pink", colorHex: "#FFC0CB", colorFamily: "Pink", imageUrl: null, variantId: null },
+    { colorName: "Sakura Pink", colorHex: "#FFB7C5", colorFamily: "Pink", imageUrl: null, variantId: null },
+    { colorName: "Brown", colorHex: "#8B4513", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Beige", colorHex: "#F5F5DC", colorFamily: "Brown", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
   // PLA BASIC GRADIENT - 8 dual-color gradient variants (from hex code table)
   // ============================================================================
   "pla-basic-gradient": [
@@ -775,16 +806,18 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // PETG PRODUCT COLOR FALLBACKS
   // ============================================================================
   
-  // PETG HF - High Flow PETG (common colors based on Bambu Lab lineup)
+  // PETG HF - High Flow PETG (verified colors from Bambu Lab product page)
+  // Verified from: https://ca.store.bambulab.com/products/petg-hf
   "petg-hf": [
-    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
-    { colorName: "Gray", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Red", colorHex: "#FF0000", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Blue", colorHex: "#0000FF", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Green", colorHex: "#00FF00", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Yellow", colorHex: "#FFFF00", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Orange", colorHex: "#FFA500", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Ivory White", colorHex: "#FFFFF0", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#8A949E", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Charcoal", colorHex: "#36454F", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#2140B4", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Green", colorHex: "#00A6A0", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Yellow", colorHex: "#FFE133", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Orange", colorHex: "#F48438", colorFamily: "Orange", imageUrl: null, variantId: null },
   ],
   
   // PETG Translucent - 8 colors from hex code table on product page
@@ -1147,14 +1180,8 @@ function extractBambuLabPrice(
 
 // ============================================================================
 // COLOR VARIANT EXTRACTION
+// Note: ColorVariant interface is defined at line 559, no duplicate needed
 // ============================================================================
-interface ColorVariant {
-  colorName: string;
-  colorHex: string | null;
-  colorFamily: string | null;
-  imageUrl: string | null;
-  variantId: string | null;
-}
 
 // ============================================================================
 // MATERIAL ISSUE TRACKING
@@ -1491,14 +1518,16 @@ function extractColorInfo(colorName: string): ColorVariant {
 }
 
 // ============================================================================
-// FIRECRAWL SCRAPING
+// FIRECRAWL SCRAPING WITH RETRY LOGIC
 // ============================================================================
+const FIRECRAWL_MAX_RETRIES = 2;
+const FIRECRAWL_BASE_DELAY_MS = 1000;
+
 async function scrapeWithFirecrawl(
   url: string, 
   region: string,
   ctx?: LogContext
 ): Promise<{ html: string; markdown: string; success: boolean; error?: string; durationMs?: number }> {
-  const startTime = Date.now();
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
   
   if (!firecrawlKey) {
@@ -1507,73 +1536,118 @@ async function scrapeWithFirecrawl(
   }
 
   const location = REGION_TO_FIRECRAWL_LOCATION[region];
-  if (ctx) {
-    logInfo(ctx, 'FIRECRAWL', `Request: ${url}`);
-    logDebug(ctx, 'FIRECRAWL', `Geo-location: ${JSON.stringify(location || { country: 'CA', languages: ['en'] })}`);
-  }
-
-  try {
-    const requestBody = {
-      url,
-      formats: ['html', 'markdown'],
-      onlyMainContent: false,
-      waitFor: 3000,
-      location: location || { country: 'CA', languages: ['en'] },
-    };
+  
+  // Retry loop with exponential backoff
+  for (let attempt = 0; attempt <= FIRECRAWL_MAX_RETRIES; attempt++) {
+    const startTime = Date.now();
     
-    if (ctx) logDebug(ctx, 'FIRECRAWL', 'Request body', requestBody);
-
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${firecrawlKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    const durationMs = Date.now() - startTime;
-
-    if (!response.ok) {
-      const errText = await response.text();
-      if (ctx) {
-        logError(ctx, 'FIRECRAWL', `HTTP ${response.status} error after ${durationMs}ms`, { 
-          status: response.status, 
-          response: errText.substring(0, 500) 
-        });
-      }
-      return { html: '', markdown: '', success: false, error: `HTTP ${response.status}`, durationMs };
+    if (attempt > 0) {
+      const backoffDelay = FIRECRAWL_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+      if (ctx) logInfo(ctx, 'FIRECRAWL', `Retry attempt ${attempt}/${FIRECRAWL_MAX_RETRIES} after ${backoffDelay}ms delay`);
+      await new Promise(resolve => setTimeout(resolve, backoffDelay));
     }
 
-    const data = await response.json();
-    
-    if (!data.success || !data.data) {
-      if (ctx) logError(ctx, 'FIRECRAWL', 'Unsuccessful response from Firecrawl', { success: data.success, hasData: !!data.data });
-      return { html: '', markdown: '', success: false, error: 'Unsuccessful response', durationMs };
-    }
-
-    const htmlSize = data.data.html?.length || 0;
-    const mdSize = data.data.markdown?.length || 0;
-    
     if (ctx) {
-      logSuccess(ctx, 'FIRECRAWL', `Response received in ${durationMs}ms`, { htmlSize, mdSize });
-      if (htmlSize < 1000) {
-        logWarn(ctx, 'FIRECRAWL', `Suspiciously small HTML response (${htmlSize} chars)`);
-      }
+      logInfo(ctx, 'FIRECRAWL', `Request${attempt > 0 ? ` (attempt ${attempt + 1})` : ''}: ${url}`);
+      logDebug(ctx, 'FIRECRAWL', `Geo-location: ${JSON.stringify(location || { country: 'CA', languages: ['en'] })}`);
     }
 
-    return {
-      html: data.data.html || '',
-      markdown: data.data.markdown || '',
-      success: true,
-      durationMs,
-    };
-  } catch (error: unknown) {
-    const durationMs = Date.now() - startTime;
-    const errMsg = error instanceof Error ? error.message : String(error);
-    if (ctx) logError(ctx, 'FIRECRAWL', `Exception after ${durationMs}ms: ${errMsg}`, error);
-    return { html: '', markdown: '', success: false, error: errMsg, durationMs };
+    try {
+      const requestBody = {
+        url,
+        formats: ['html', 'markdown'],
+        onlyMainContent: false,
+        waitFor: 3000,
+        location: location || { country: 'CA', languages: ['en'] },
+      };
+      
+      if (ctx) logDebug(ctx, 'FIRECRAWL', 'Request body', requestBody);
+
+      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const durationMs = Date.now() - startTime;
+
+      if (!response.ok) {
+        const errText = await response.text();
+        const isRetryable = response.status >= 500 || response.status === 429;
+        
+        if (ctx) {
+          logError(ctx, 'FIRECRAWL', `HTTP ${response.status} error after ${durationMs}ms`, { 
+            status: response.status, 
+            response: errText.substring(0, 500),
+            retryable: isRetryable,
+            attempt: attempt + 1,
+          });
+        }
+        
+        // Only retry on server errors (5xx) or rate limits (429)
+        if (isRetryable && attempt < FIRECRAWL_MAX_RETRIES) {
+          continue; // Retry
+        }
+        
+        return { html: '', markdown: '', success: false, error: `HTTP ${response.status}`, durationMs };
+      }
+
+      const data = await response.json();
+      
+      if (!data.success || !data.data) {
+        if (ctx) logError(ctx, 'FIRECRAWL', 'Unsuccessful response from Firecrawl', { 
+          success: data.success, 
+          hasData: !!data.data,
+          attempt: attempt + 1,
+        });
+        
+        // Retry unsuccessful responses
+        if (attempt < FIRECRAWL_MAX_RETRIES) {
+          continue;
+        }
+        
+        return { html: '', markdown: '', success: false, error: 'Unsuccessful response', durationMs };
+      }
+
+      const htmlSize = data.data.html?.length || 0;
+      const mdSize = data.data.markdown?.length || 0;
+      
+      if (ctx) {
+        logSuccess(ctx, 'FIRECRAWL', `Response received in ${durationMs}ms${attempt > 0 ? ` (after ${attempt} retries)` : ''}`, { htmlSize, mdSize });
+        if (htmlSize < 1000) {
+          logWarn(ctx, 'FIRECRAWL', `Suspiciously small HTML response (${htmlSize} chars)`);
+        }
+      }
+
+      return {
+        html: data.data.html || '',
+        markdown: data.data.markdown || '',
+        success: true,
+        durationMs,
+      };
+    } catch (error: unknown) {
+      const durationMs = Date.now() - startTime;
+      const errMsg = error instanceof Error ? error.message : String(error);
+      
+      if (ctx) logError(ctx, 'FIRECRAWL', `Exception after ${durationMs}ms: ${errMsg}`, { 
+        error, 
+        attempt: attempt + 1 
+      });
+      
+      // Retry on network errors
+      if (attempt < FIRECRAWL_MAX_RETRIES) {
+        continue;
+      }
+      
+      return { html: '', markdown: '', success: false, error: errMsg, durationMs };
+    }
   }
+  
+  // Should never reach here, but TypeScript needs a return
+  return { html: '', markdown: '', success: false, error: 'Max retries exceeded' };
 }
 
 async function scrapeProductPage(
