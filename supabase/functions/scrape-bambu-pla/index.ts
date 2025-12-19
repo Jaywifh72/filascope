@@ -2455,7 +2455,7 @@ async function runBackgroundScrape(
         results.colorsDiscovered += colorVariants.length;
 
         // Scrape regional prices
-        const regionalPrices: Record<string, { price: number | null; url: string }> = {};
+        const regionalPrices: Record<string, { price: number | null; compareAtPrice: number | null; url: string }> = {};
         const regions = Object.keys(BAMBU_REGIONAL_STORES);
         
         for (let i = 0; i < regions.length; i++) {
@@ -2489,7 +2489,7 @@ async function runBackgroundScrape(
             timing.delayMs += Date.now() - delayStart;
           }
           
-          const { price, url, firecrawlMs: regionFirecrawlMs } = await scrapeRegionalPrice(
+          const { price, compareAtPrice, url, firecrawlMs: regionFirecrawlMs } = await scrapeRegionalPrice(
             productConfig.slug, 
             region, 
             productConfig.material,
@@ -2497,7 +2497,7 @@ async function runBackgroundScrape(
           );
           
           if (regionFirecrawlMs) timing.firecrawlMs += regionFirecrawlMs;
-          regionalPrices[region] = { price, url };
+          regionalPrices[region] = { price, compareAtPrice, url };
           
           // Track missing prices
           if (!price) {
@@ -2898,7 +2898,7 @@ serve(async (req) => {
         // Step 2: Scrape regional prices
         logInfo(ctx, 'PRODUCT', 'Step 2: Scraping regional prices');
         const regionalStart = Date.now();
-        const regionalPrices: Record<string, { price: number | null; url: string }> = {};
+        const regionalPrices: Record<string, { price: number | null; compareAtPrice: number | null; url: string }> = {};
         const regions = Object.keys(BAMBU_REGIONAL_STORES);
         
         for (let i = 0; i < regions.length; i++) {
@@ -2915,7 +2915,7 @@ serve(async (req) => {
           }
           
           logInfo(ctx, 'REGIONAL', `[${i+1}/${regions.length}] Scraping ${region}...`);
-          const { price, url, firecrawlMs: regionFirecrawlMs } = await scrapeRegionalPrice(
+          const { price, compareAtPrice, url, firecrawlMs: regionFirecrawlMs } = await scrapeRegionalPrice(
             productConfig.slug, 
             region, 
             productConfig.material,
@@ -2924,7 +2924,7 @@ serve(async (req) => {
           
           if (regionFirecrawlMs) timing.firecrawlMs += regionFirecrawlMs;
           
-          regionalPrices[region] = { price, url };
+          regionalPrices[region] = { price, compareAtPrice, url };
           productResult.prices[region] = price;
         }
         
