@@ -1266,6 +1266,268 @@ async function upsertFilament(
 }
 
 // ============================================================================
+// EDGE RUNTIME DECLARATION FOR BACKGROUND TASKS
+// ============================================================================
+declare const EdgeRuntime: {
+  waitUntil(promise: Promise<any>): void;
+};
+
+// ============================================================================
+// BACKGROUND SCRAPE FUNCTION
+// ============================================================================
+async function runBackgroundScrape(
+  supabaseClient: any,
+  jobId: string,
+  selectedMaterials: string[],
+  products: string[] | undefined,
+  limit: number | undefined,
+  dryRun: boolean | undefined,
+  ctx: LogContext,
+  timing: { firecrawlMs: number; dbMs: number; delayMs: number }
+): Promise<void> {
+  logInfo(ctx, 'BACKGROUND', `Starting background scrape for job: ${jobId}`);
+  
+  const results = {
+    requestId: ctx.requestId,
+    startedAt: new Date(ctx.startTime).toISOString(),
+    materialsProcessed: selectedMaterials,
+    productsScraped: 0,
+    colorsDiscovered: 0,
+    filamentsCreated: 0,
+    filamentsUpdated: 0,
+    errors: [] as string[],
+    productDetails: [] as any[],
+    timing: {} as TimingMetrics,
+  };
+
+  try {
+    // Get Bambu Lab brand ID
+    const { data: brandData } = await supabaseClient
+      .from('automated_brands')
+      .select('id')
+      .eq('brand_slug', 'bambu-lab')
+      .single();
+    
+    const brandId = brandData?.id || null;
+    
+    // Calculate total products for progress tracking
+    let totalProducts = 0;
+    for (const materialCategory of selectedMaterials) {
+      const materialProducts = ALL_BAMBU_PRODUCTS[materialCategory];
+      if (materialProducts) {
+        let count = Object.keys(materialProducts).length;
+        if (limit && limit > 0) count = Math.min(count, limit);
+        totalProducts += count;
+      }
+    }
+
+    let productsProcessed = 0;
+
+    // Process each selected material category
+    for (const materialCategory of selectedMaterials) {
+      const materialProducts = ALL_BAMBU_PRODUCTS[materialCategory];
+      
+      if (!materialProducts) {
+        results.errors.push(`Unknown material category: ${materialCategory}`);
+        continue;
+      }
+
+      logSeparator(ctx, `MATERIAL: ${materialCategory}`);
+
+      // Determine which products to scrape for this material
+      let productsToScrape = Object.entries(materialProducts);
+      
+      if (products && Array.isArray(products)) {
+        productsToScrape = productsToScrape.filter(([name]) => 
+          products.some((p: string) => name.toLowerCase().includes(p.toLowerCase()))
+        );
+      }
+      
+      if (limit && limit > 0) {
+        productsToScrape = productsToScrape.slice(0, limit);
+      }
+
+      // Process each product
+      for (const [productName, productConfig] of productsToScrape) {
+        ctx.productName = productName;
+        productsProcessed++;
+
+        // Update job progress
+        await supabaseClient.from('scrape_jobs').update({
+          progress: {
+            currentMaterial: materialCategory,
+            currentProduct: productName,
+            currentRegion: null,
+            productsProcessed,
+            totalProducts,
+            colorsDiscovered: results.colorsDiscovered,
+            filamentsCreated: results.filamentsCreated,
+            filamentsUpdated: results.filamentsUpdated,
+            errors: results.errors,
+          },
+        }).eq('id', jobId);
+
+        // Scrape product page for colors
+        const { colors, tdsUrl, success, firecrawlMs } = await scrapeProductPage(
+          productConfig.slug, 
+          'CA', 
+          productConfig.material,
+          { ...ctx, region: 'CA' }
+        );
+        
+        if (firecrawlMs) timing.firecrawlMs += firecrawlMs;
+        
+        if (!success || colors.length === 0) {
+          const defaultColors = productConfig.material === 'Support' || productConfig.material === 'PVA'
+            ? ['White']
+            : ['Black', 'White'];
+          for (const colorName of defaultColors) {
+            colors.push(extractColorInfo(colorName));
+          }
+        }
+
+        if (tdsUrl && !productConfig.tdsUrl) {
+          (productConfig as any).tdsUrl = tdsUrl;
+        }
+
+        results.productsScraped++;
+        results.colorsDiscovered += colors.length;
+
+        // Scrape regional prices
+        const regionalPrices: Record<string, { price: number | null; url: string }> = {};
+        const regions = Object.keys(BAMBU_REGIONAL_STORES);
+        
+        for (let i = 0; i < regions.length; i++) {
+          const region = regions[i];
+          ctx.region = region;
+          
+          // Update progress with current region
+          await supabaseClient.from('scrape_jobs').update({
+            progress: {
+              currentMaterial: materialCategory,
+              currentProduct: productName,
+              currentRegion: region,
+              productsProcessed,
+              totalProducts,
+              colorsDiscovered: results.colorsDiscovered,
+              filamentsCreated: results.filamentsCreated,
+              filamentsUpdated: results.filamentsUpdated,
+              errors: results.errors,
+            },
+          }).eq('id', jobId);
+
+          // Rate limit delay (reduced from 2s to 1s for background)
+          if (i > 0) {
+            const delayStart = Date.now();
+            await new Promise(r => setTimeout(r, 1000));
+            timing.delayMs += Date.now() - delayStart;
+          }
+          
+          const { price, url, firecrawlMs: regionFirecrawlMs } = await scrapeRegionalPrice(
+            productConfig.slug, 
+            region, 
+            productConfig.material,
+            ctx
+          );
+          
+          if (regionFirecrawlMs) timing.firecrawlMs += regionFirecrawlMs;
+          regionalPrices[region] = { price, url };
+        }
+        
+        ctx.region = undefined;
+
+        // Upsert filaments (if not dry run)
+        if (!dryRun) {
+          for (const colorVariant of colors) {
+            ctx.colorName = colorVariant.colorName;
+            
+            const result = await upsertFilament(
+              supabaseClient,
+              productName,
+              colorVariant,
+              productConfig,
+              brandId,
+              regionalPrices,
+              ctx
+            );
+
+            if (result.durationMs) timing.dbMs += result.durationMs;
+            if (result.created) results.filamentsCreated++;
+            if (result.updated) results.filamentsUpdated++;
+            if (result.error) {
+              results.errors.push(`${productName} ${colorVariant.colorName}: ${result.error}`);
+            }
+          }
+          ctx.colorName = undefined;
+        }
+
+        // Update progress after each product
+        await supabaseClient.from('scrape_jobs').update({
+          progress: {
+            currentMaterial: materialCategory,
+            currentProduct: productName,
+            currentRegion: null,
+            productsProcessed,
+            totalProducts,
+            colorsDiscovered: results.colorsDiscovered,
+            filamentsCreated: results.filamentsCreated,
+            filamentsUpdated: results.filamentsUpdated,
+            errors: results.errors,
+          },
+        }).eq('id', jobId);
+
+        // Reduced inter-product delay for background (1.5s instead of 3s)
+        const delayStart = Date.now();
+        await new Promise(r => setTimeout(r, 1500));
+        timing.delayMs += Date.now() - delayStart;
+      }
+      
+      ctx.productName = undefined;
+    }
+
+    // Calculate final timing
+    const totalMs = Date.now() - ctx.startTime;
+    results.timing = {
+      firecrawlMs: timing.firecrawlMs,
+      dbMs: timing.dbMs,
+      delayMs: timing.delayMs,
+      totalMs,
+    };
+
+    // Mark job as completed
+    await supabaseClient.from('scrape_jobs').update({
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+      results,
+      progress: {
+        currentMaterial: null,
+        currentProduct: null,
+        currentRegion: null,
+        productsProcessed: results.productsScraped,
+        totalProducts,
+        colorsDiscovered: results.colorsDiscovered,
+        filamentsCreated: results.filamentsCreated,
+        filamentsUpdated: results.filamentsUpdated,
+        errors: results.errors,
+      },
+    }).eq('id', jobId);
+
+    logSuccess(ctx, 'BACKGROUND', `Job ${jobId} completed successfully`);
+
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    logError(ctx, 'BACKGROUND', `Job ${jobId} failed`, error);
+    
+    await supabaseClient.from('scrape_jobs').update({
+      status: 'failed',
+      completed_at: new Date().toISOString(),
+      error: errMsg,
+      results,
+    }).eq('id', jobId);
+  }
+}
+
+// ============================================================================
 // MAIN HANDLER
 // ============================================================================
 serve(async (req) => {
@@ -1293,6 +1555,7 @@ serve(async (req) => {
       limit,     // Optional: limit number of products per material
       dryRun,    // Optional: don't save to DB, just scrape and report
       debug = true, // Optional: enable verbose debug logging (default: true)
+      background = false, // New: run in background mode
     } = await req.json().catch(() => ({}));
 
     // Default to PLA only if no materials specified
@@ -1309,32 +1572,96 @@ serve(async (req) => {
       products: products || 'ALL', 
       limit: limit || 'NONE', 
       dryRun: dryRun || false,
+      background,
       debug 
     });
-    
-    // Environment check
+
+    // Environment check first (needed for both modes)
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
-    
-    logInfo(ctx, 'INIT', 'Environment check:', {
-      SUPABASE_URL: !!supabaseUrl,
-      SUPABASE_SERVICE_ROLE_KEY: !!supabaseKey,
-      FIRECRAWL_API_KEY: !!firecrawlKey,
-    });
 
     if (!supabaseUrl || !supabaseKey) {
-      logError(ctx, 'INIT', 'Missing Supabase credentials');
       throw new Error('Missing Supabase credentials');
     }
-
     if (!firecrawlKey) {
-      logError(ctx, 'INIT', 'Missing Firecrawl API key');
       throw new Error('Missing Firecrawl API key');
     }
 
-    // Initialize Supabase
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // BACKGROUND MODE: Create job and return immediately
+    if (background) {
+      logInfo(ctx, 'INIT', 'Background mode enabled - creating job record');
+      
+      // Count total products across selected materials
+      let totalProducts = 0;
+      for (const materialCategory of selectedMaterials) {
+        const materialProducts = ALL_BAMBU_PRODUCTS[materialCategory];
+        if (materialProducts) {
+          totalProducts += Object.keys(materialProducts).length;
+        }
+      }
+
+      // Create job record
+      const { data: jobData, error: jobError } = await supabase
+        .from('scrape_jobs')
+        .insert({
+          job_type: 'bambu_filaments',
+          status: 'running',
+          materials: selectedMaterials,
+          products: products || [],
+          request_id: ctx.requestId,
+          dry_run: dryRun || false,
+          started_at: new Date().toISOString(),
+          progress: {
+            currentMaterial: null,
+            currentProduct: null,
+            currentRegion: null,
+            productsProcessed: 0,
+            totalProducts,
+            colorsDiscovered: 0,
+            filamentsCreated: 0,
+            filamentsUpdated: 0,
+            errors: [],
+          },
+        })
+        .select('id')
+        .single();
+
+      if (jobError) {
+        logError(ctx, 'INIT', 'Failed to create job record', jobError);
+        throw new Error(`Failed to create job: ${jobError.message}`);
+      }
+
+      const jobId = jobData.id;
+      logInfo(ctx, 'INIT', `Created job: ${jobId}`);
+
+      // Start background processing
+      EdgeRuntime.waitUntil(runBackgroundScrape(
+        supabase, 
+        jobId, 
+        selectedMaterials, 
+        products, 
+        limit, 
+        dryRun, 
+        ctx, 
+        timing
+      ));
+
+      // Return immediately with job ID
+      return new Response(JSON.stringify({
+        success: true,
+        background: true,
+        jobId,
+        message: `Background scrape started for ${selectedMaterials.join(', ')}`,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // SYNCHRONOUS MODE: Original behavior
+    logInfo(ctx, 'INIT', 'Synchronous mode - processing inline');
     logInfo(ctx, 'INIT', 'Supabase client initialized');
 
     // Get Bambu Lab brand ID

@@ -1,35 +1,20 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Loader2, CheckCircle, AlertTriangle, Sparkles, Palette, Archive } from "lucide-react";
+import { Loader2, AlertTriangle, Palette, Archive } from "lucide-react";
 import { BambuLabRegionalDashboard } from "@/components/admin/BambuLabRegionalDashboard";
+import { BambuScrapeProgress, BambuScrapeJobRow } from "@/components/admin/BambuScrapeProgress";
+import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 
 const AdminMaintenance = () => {
-  // Bambu Lab color sync state
-  const [isSyncingBambuColors, setIsSyncingBambuColors] = useState(false);
   const [bambuColorsDryRun, setBambuColorsDryRun] = useState(true);
   const [bambuMaterials, setBambuMaterials] = useState<string[]>(['PLA']);
-  const [bambuColorsResult, setBambuColorsResult] = useState<{
-    success: boolean;
-    dryRun: boolean;
-    materialsProcessed?: string[];
-    productsProcessed?: number;
-    colorsDiscovered?: number;
-    filamentsCreated?: number;
-    filamentsUpdated?: number;
-    filamentsSkipped?: number;
-    errors?: string[];
-    byMaterial?: Record<string, { products?: number; created?: number; updated?: number; skipped?: number; colors?: number }>;
-    duration?: string;
-  } | null>(null);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
   
   const BAMBU_MATERIAL_OPTIONS = [
     { id: 'PLA', label: 'PLA', count: 16 },
@@ -43,52 +28,34 @@ const AdminMaintenance = () => {
   ];
   
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { startJob, isStarting } = useStartBambuScrapeJob();
+  const { jobs: recentJobs } = useRecentScrapeJobs(5);
 
-  const runBambuLabColorSync = async () => {
-    setIsSyncingBambuColors(true);
-    setBambuColorsResult(null);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('scrape-bambu-pla', {
-        body: { 
-          dryRun: bambuColorsDryRun,
-          materials: bambuMaterials,
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      const results = data.results || {};
-      setBambuColorsResult({
-        success: data.success,
-        dryRun: bambuColorsDryRun,
-        materialsProcessed: results.materialsProcessed || bambuMaterials,
-        productsProcessed: results.productsProcessed || 0,
-        colorsDiscovered: results.colorsDiscovered || 0,
-        filamentsCreated: results.filamentsCreated || 0,
-        filamentsUpdated: results.filamentsUpdated || 0,
-        filamentsSkipped: results.filamentsSkipped || 0,
-        errors: results.errors || [],
-        byMaterial: results.byMaterial || {},
-        duration: results.duration,
-      });
+  const handleStartScrape = async () => {
+    const jobId = await startJob(bambuMaterials, bambuColorsDryRun);
+    if (jobId) {
+      setActiveJobId(jobId);
       toast({
-        title: bambuColorsDryRun ? "Dry Run Complete" : "Scrape Complete",
-        description: data.message || `${results.filamentsCreated || 0} created, ${results.filamentsUpdated || 0} updated`,
+        title: "Scrape Started",
+        description: `Background job started for ${bambuMaterials.join(', ')}`,
       });
-    } catch (error) {
-      console.error('Bambu Lab scraper error:', error);
+    } else {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to run Bambu Lab scraper",
+        description: "Failed to start scrape job",
         variant: "destructive",
       });
-    } finally {
-      setIsSyncingBambuColors(false);
     }
+  };
+
+  const handleJobComplete = (job: ScrapeJob) => {
+    toast({
+      title: job.status === 'completed' ? "Scrape Complete" : "Scrape Failed",
+      description: job.status === 'completed' 
+        ? `${job.results?.filamentsCreated || 0} created, ${job.results?.filamentsUpdated || 0} updated`
+        : job.error || "Unknown error",
+      variant: job.status === 'completed' ? "default" : "destructive",
+    });
   };
 
   return (
@@ -156,14 +123,14 @@ const AdminMaintenance = () => {
           </div>
 
           <Button 
-            onClick={runBambuLabColorSync} 
-            disabled={isSyncingBambuColors || bambuMaterials.length === 0}
+            onClick={handleStartScrape} 
+            disabled={isStarting || bambuMaterials.length === 0}
             className="w-full sm:w-auto"
           >
-            {isSyncingBambuColors ? (
+            {isStarting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Scraping {bambuMaterials.join(', ')}...
+                Starting...
               </>
             ) : (
               <>
@@ -173,94 +140,20 @@ const AdminMaintenance = () => {
             )}
           </Button>
 
-          {bambuColorsResult && (
-            <div className="space-y-4 pt-4 border-t">
-              {bambuColorsResult.dryRun && (
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    This was a dry run. Uncheck "Dry run" and run again to apply changes.
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              {/* Summary Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <div className="text-xl font-bold">{bambuColorsResult.productsProcessed || 0}</div>
-                  <div className="text-xs text-muted-foreground">Products</div>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <div className="text-xl font-bold">{bambuColorsResult.colorsDiscovered || 0}</div>
-                  <div className="text-xs text-muted-foreground">Colors Found</div>
-                </div>
-                <div className="bg-green-500/10 rounded-lg p-3">
-                  <div className="flex items-center gap-1">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <div className="text-xl font-bold">{bambuColorsResult.filamentsCreated || 0}</div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">Created</div>
-                </div>
-                <div className="bg-blue-500/10 rounded-lg p-3">
-                  <div className="flex items-center gap-1">
-                    <Sparkles className="w-4 h-4 text-blue-500" />
-                    <div className="text-xl font-bold">{bambuColorsResult.filamentsUpdated || 0}</div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">Updated</div>
-                </div>
-                <div className="bg-muted/30 rounded-lg p-3">
-                  <div className="text-xl font-bold">{bambuColorsResult.filamentsSkipped || 0}</div>
-                  <div className="text-xs text-muted-foreground">Skipped</div>
-                </div>
-              </div>
+          {/* Active Job Progress */}
+          {activeJobId && (
+            <div className="pt-4 border-t">
+              <BambuScrapeProgress jobId={activeJobId} onComplete={handleJobComplete} />
+            </div>
+          )}
 
-              {/* Duration */}
-              {bambuColorsResult.duration && (
-                <div className="text-xs text-muted-foreground">
-                  Completed in {bambuColorsResult.duration}
-                </div>
-              )}
-
-              {/* Material Breakdown */}
-              {bambuColorsResult.byMaterial && Object.keys(bambuColorsResult.byMaterial).length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-sm">By Material:</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {Object.entries(bambuColorsResult.byMaterial).map(([material, stats]: [string, any]) => (
-                      <div key={material} className="bg-muted/30 rounded-lg p-3 text-sm">
-                        <div className="flex items-center justify-between">
-                          <Badge variant="outline">{material}</Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {stats.products || 0} products, {stats.colors || 0} colors
-                          </span>
-                        </div>
-                        <div className="flex gap-4 mt-2 text-xs">
-                          <span className="text-green-600">+{stats.created || 0}</span>
-                          <span className="text-blue-600">↻{stats.updated || 0}</span>
-                          <span className="text-muted-foreground">○{stats.skipped || 0}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Errors */}
-              {bambuColorsResult.errors && bambuColorsResult.errors.length > 0 && (
-                <Alert variant="destructive">
-                  <AlertDescription>
-                    <div className="font-semibold mb-2">Errors ({bambuColorsResult.errors.length}):</div>
-                    <ul className="list-disc list-inside space-y-1 max-h-32 overflow-y-auto">
-                      {bambuColorsResult.errors.slice(0, 5).map((error, i) => (
-                        <li key={i} className="text-sm">{error}</li>
-                      ))}
-                      {bambuColorsResult.errors.length > 5 && (
-                        <li className="text-sm">... and {bambuColorsResult.errors.length - 5} more</li>
-                      )}
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              )}
+          {/* Recent Jobs */}
+          {recentJobs.length > 0 && !activeJobId && (
+            <div className="pt-4 border-t space-y-2">
+              <h4 className="text-sm font-medium text-muted-foreground">Recent Jobs</h4>
+              {recentJobs.slice(0, 3).map((job) => (
+                <BambuScrapeJobRow key={job.id} job={job} />
+              ))}
             </div>
           )}
         </CardContent>

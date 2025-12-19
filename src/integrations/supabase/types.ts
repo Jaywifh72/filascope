@@ -3180,6 +3180,57 @@ export type Database = {
         }
         Relationships: []
       }
+      scrape_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          dry_run: boolean | null
+          error: string | null
+          id: string
+          job_type: string
+          materials: string[]
+          products: string[] | null
+          progress: Json | null
+          request_id: string | null
+          results: Json | null
+          started_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          dry_run?: boolean | null
+          error?: string | null
+          id?: string
+          job_type: string
+          materials?: string[]
+          products?: string[] | null
+          progress?: Json | null
+          request_id?: string | null
+          results?: Json | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          dry_run?: boolean | null
+          error?: string | null
+          id?: string
+          job_type?: string
+          materials?: string[]
+          products?: string[] | null
+          progress?: Json | null
+          request_id?: string | null
+          results?: Json | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       shared_settings: {
         Row: {
           created_at: string | null
