@@ -10,16 +10,60 @@ export interface QueueState {
   results: Record<string, ScrapeJob>;
 }
 
+interface PersistedQueueState {
+  pending: string[];
+  current: string | null;
+  currentJobId: string | null;
+  completed: string[];
+  failed: string[];
+  dryRun: boolean;
+}
+
 const ALL_MATERIALS = ['PLA', 'PETG', 'TPU', 'ABS', 'ASA', 'PA', 'PC', 'Support'];
+const STORAGE_KEY = 'bambuScrapeQueue';
+
+function saveQueueToStorage(state: PersistedQueueState | null) {
+  if (state) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } else {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
+function loadQueueFromStorage(): PersistedQueueState | null {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.error('Failed to load queue from storage:', e);
+  }
+  return null;
+}
 
 export function useBambuScrapeQueue(dryRun: boolean) {
-  const [queueState, setQueueState] = useState<QueueState>({
-    pending: [],
-    current: null,
-    currentJobId: null,
-    completed: [],
-    failed: [],
-    results: {},
+  const [queueState, setQueueState] = useState<QueueState>(() => {
+    // Initialize from localStorage if available
+    const saved = loadQueueFromStorage();
+    if (saved && saved.currentJobId) {
+      return {
+        pending: saved.pending,
+        current: saved.current,
+        currentJobId: saved.currentJobId,
+        completed: saved.completed,
+        failed: saved.failed,
+        results: {},
+      };
+    }
+    return {
+      pending: [],
+      current: null,
+      currentJobId: null,
+      completed: [],
+      failed: [],
+      results: {},
+    };
   });
   
   const isStartingNextRef = useRef(false);
@@ -32,11 +76,27 @@ export function useBambuScrapeQueue(dryRun: boolean) {
   const completedCount = queueState.completed.length + queueState.failed.length;
   const overallProgress = totalMaterials > 0 ? (completedCount / totalMaterials) * 100 : 0;
 
+  // Persist queue state to localStorage whenever it changes
+  useEffect(() => {
+    if (queueState.currentJobId || queueState.pending.length > 0) {
+      saveQueueToStorage({
+        pending: queueState.pending,
+        current: queueState.current,
+        currentJobId: queueState.currentJobId,
+        completed: queueState.completed,
+        failed: queueState.failed,
+        dryRun,
+      });
+    }
+  }, [queueState.pending, queueState.current, queueState.currentJobId, queueState.completed, queueState.failed, dryRun]);
+
   const startNextMaterial = useCallback(async () => {
     if (isStartingNextRef.current) return;
     
     setQueueState(prev => {
       if (prev.pending.length === 0) {
+        // Queue complete - clear storage
+        saveQueueToStorage(null);
         return { ...prev, current: null, currentJobId: null };
       }
       
@@ -122,6 +182,7 @@ export function useBambuScrapeQueue(dryRun: boolean) {
   }, [startJob, dryRun]);
 
   const cancelQueue = useCallback(() => {
+    saveQueueToStorage(null);
     setQueueState({
       pending: [],
       current: null,
@@ -133,6 +194,7 @@ export function useBambuScrapeQueue(dryRun: boolean) {
   }, [queueState.completed, queueState.failed, queueState.results]);
 
   const resetQueue = useCallback(() => {
+    saveQueueToStorage(null);
     setQueueState({
       pending: [],
       current: null,
