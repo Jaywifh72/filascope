@@ -7,18 +7,20 @@ const corsHeaders = {
 };
 
 // Regional store configuration for Bambu Lab
+// Prices are hardcoded because Bambu Lab's website uses geo-detection that blocks server-side fetching
 const BAMBU_REGIONAL_STORES: Record<string, { 
   subdomain: string; 
   currency: string; 
   priceField: string;
   urlField: string;
+  price: number; // Hardcoded price in native currency
 }> = {
-  US: { subdomain: "us", currency: "USD", priceField: "variant_price", urlField: "product_url" },
-  CA: { subdomain: "ca", currency: "CAD", priceField: "price_cad", urlField: "product_url_ca" },
-  UK: { subdomain: "uk", currency: "GBP", priceField: "price_gbp", urlField: "product_url_uk" },
-  EU: { subdomain: "eu", currency: "EUR", priceField: "price_eur", urlField: "product_url_eu" },
-  AU: { subdomain: "au", currency: "AUD", priceField: "price_aud", urlField: "product_url_au" },
-  JP: { subdomain: "jp", currency: "JPY", priceField: "price_jpy", urlField: "product_url_jp" },
+  US: { subdomain: "us", currency: "USD", priceField: "variant_price", urlField: "product_url", price: 19.99 },
+  CA: { subdomain: "ca", currency: "CAD", priceField: "price_cad", urlField: "product_url_ca", price: 25.99 },
+  UK: { subdomain: "uk", currency: "GBP", priceField: "price_gbp", urlField: "product_url_uk", price: 17.99 },
+  EU: { subdomain: "eu", currency: "EUR", priceField: "price_eur", urlField: "product_url_eu", price: 21.99 },
+  AU: { subdomain: "au", currency: "AUD", priceField: "price_aud", urlField: "product_url_au", price: 29.99 },
+  JP: { subdomain: "jp", currency: "JPY", priceField: "price_jpy", urlField: "product_url_jp", price: 2980 },
 };
 
 // Bambu Lab ABS Color variants with official hex codes, image URLs, and Shopify variant IDs
@@ -64,54 +66,13 @@ const getRegionalProductUrl = (region: string, variantId: string): string => {
   return `https://${store.subdomain}.store.bambulab.com/products/abs-filament?variant=${variantId}`;
 };
 
-// Fetch price from a regional Bambu Lab store
-async function fetchRegionalPrice(region: string, variantId: string): Promise<number | null> {
-  const store = BAMBU_REGIONAL_STORES[region];
-  if (!store) return null;
-
-  const url = `https://${store.subdomain}.store.bambulab.com/products/abs-filament.json`;
-  
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; FilamentBot/1.0)",
-        "Accept": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      console.log(`Failed to fetch ${region} store: ${response.status}`);
-      return null;
-    }
-
-    const data = await response.json();
-    const product = data.product;
-    
-    if (!product || !product.variants) {
-      console.log(`No product data for ${region} store`);
-      return null;
-    }
-
-    // Find the variant by ID
-    const variant = product.variants.find((v: { id: number }) => String(v.id) === variantId);
-    if (variant && variant.price) {
-      const price = parseFloat(variant.price);
-      console.log(`${region} store price for variant ${variantId}: ${price} ${store.currency}`);
-      return price;
-    }
-
-    // If variant not found by ID, try to get any price as fallback
-    if (product.variants.length > 0 && product.variants[0].price) {
-      const price = parseFloat(product.variants[0].price);
-      console.log(`${region} store fallback price: ${price} ${store.currency}`);
-      return price;
-    }
-
-    return null;
-  } catch (error) {
-    console.error(`Error fetching ${region} store:`, error);
-    return null;
+// Get hardcoded regional prices (Bambu Lab's website blocks server-side price fetching)
+function getRegionalPrices(): Record<string, number> {
+  const prices: Record<string, number> = {};
+  for (const [region, config] of Object.entries(BAMBU_REGIONAL_STORES)) {
+    prices[region] = config.price;
   }
+  return prices;
 }
 
 serve(async (req) => {
@@ -179,18 +140,9 @@ serve(async (req) => {
 
     console.log(`Found ${existingFilaments?.length || 0} existing Bambu Lab ${targetMaterial} filaments`);
 
-    // Fetch regional prices once (they're the same for all color variants)
-    console.log("Fetching regional prices...");
-    const regionalPrices: Record<string, number | null> = {};
-    const firstVariantId = Object.values(BAMBU_ABS_COLORS)[0].variantId;
-    
-    for (const region of Object.keys(BAMBU_REGIONAL_STORES)) {
-      regionalPrices[region] = await fetchRegionalPrice(region, firstVariantId);
-      // Small delay between requests to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-
-    console.log("Regional prices fetched:", regionalPrices);
+    // Get hardcoded regional prices (Bambu Lab blocks server-side price fetching via geo-detection)
+    const regionalPrices = getRegionalPrices();
+    console.log("Using hardcoded regional prices:", regionalPrices);
 
     const results: Array<{
       color: string;
