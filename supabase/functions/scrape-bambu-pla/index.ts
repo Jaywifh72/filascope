@@ -1257,6 +1257,46 @@ const COLOR_HEX_MAP: Record<string, string> = {
   'dark gray': '#555555', 'dark-gray': '#555555', 'dark grey': '#555555',
   'blue gray': '#6699CC', 'blue-gray': '#6699CC', 'blue grey': '#6699CC',
   
+  // ============================================================================
+  // PLA Basic Gradient creative colors (specialty dual-color products)
+  // ============================================================================
+  'arctic whisper': '#9CDBD9', 'arctic-whisper': '#9CDBD9',
+  'solar breeze': '#E94B3C', 'solar-breeze': '#E94B3C',
+  'ocean to meadow': '#307FE2', 'ocean-to-meadow': '#307FE2',
+  'cotton candy cloud': '#E7C1D5', 'cotton-candy-cloud': '#E7C1D5',
+  'blueberry bubblegum': '#6FCAEF', 'blueberry-bubblegum': '#6FCAEF',
+  'mint lime': '#B6FF43', 'mint-lime': '#B6FF43',
+  'pink citrus': '#F78F77', 'pink-citrus': '#F78F77',
+  'dusk glare': '#ED9558', 'dusk-glare': '#ED9558',
+  
+  // ============================================================================
+  // PLA Silk Multi-Color creative colors (silk gradient variants)
+  // ============================================================================
+  'aurora purple': '#9966CC', 'aurora-purple': '#9966CC',
+  'dawn radiance': '#FFB366', 'dawn-radiance': '#FFB366',
+  'sunset glow': '#FF6B35', 'sunset-glow': '#FF6B35',
+  'ocean twilight': '#2E5A88', 'ocean-twilight': '#2E5A88',
+  'forest whisper': '#4A7C59', 'forest-whisper': '#4A7C59',
+  'rose dream': '#E8A0BF', 'rose-dream': '#E8A0BF',
+  
+  // ============================================================================
+  // Additional Bambu Lab colors from product pages (PLA Translucent, Galaxy, etc.)
+  // ============================================================================
+  'mellow yellow': '#F8DE7E', 'mellow-yellow': '#F8DE7E',
+  'jade green': '#00A86B', 'jade-green': '#00A86B',
+  'stardust blue': '#0047AB', 'stardust-blue': '#0047AB',
+  'galaxy purple': '#663399', 'galaxy-purple': '#663399',
+  'cosmic black': '#1E0F3C', 'cosmic-black': '#1E0F3C',
+  'glow green': '#39FF14', 'glow-green': '#39FF14',
+  'glow blue': '#00FFFF', 'glow-blue': '#00FFFF',
+  'glow yellow': '#FFFF00', 'glow-yellow': '#FFFF00',
+  'glow orange': '#FF6600', 'glow-orange': '#FF6600',
+  'white marble': '#FFFFFF', 'white-marble': '#FFFFFF',
+  'black marble': '#2C2C2C', 'black-marble': '#2C2C2C',
+  'gray marble': '#808080', 'gray-marble': '#808080', 'grey marble': '#808080',
+  'green marble': '#2E8B57', 'green-marble': '#2E8B57',
+  'silk rose gold': '#B76E79', 'silk-rose-gold': '#B76E79',
+  
   // Blues
   'navy blue': '#000080', 'navy': '#000080', 'azure': '#007FFF',
   'cobalt': '#0047AB', 'sapphire': '#0F52BA', 'midnight': '#191970',
@@ -1301,27 +1341,36 @@ const COLOR_FAMILY_MAP: Record<string, string> = {
   'salmon': 'Orange', 'amber': 'Orange', 'silk orange': 'Orange', 'tangerine yellow': 'Yellow',
   'yellow': 'Yellow', 'gold': 'Yellow', 'lemon': 'Yellow', 'mustard': 'Yellow',
   'silk gold': 'Yellow', 'metal gold': 'Yellow', 'champagne': 'Yellow',
+  'mellow yellow': 'Yellow', 'sunflower yellow': 'Yellow',
   'green': 'Green', 'olive': 'Green', 'forest green': 'Green', 'emerald': 'Green',
   'jade': 'Green', 'mint': 'Green', 'sage': 'Green', 'moss': 'Green', 'lime': 'Green',
-  'bambu green': 'Green', 'silk green': 'Green', 'jade white': 'Green',
+  'bambu green': 'Green', 'silk green': 'Green', 'jade white': 'Green', 'jade green': 'Green',
+  'forest whisper': 'Green', 'mint lime': 'Green', 'ocean to meadow': 'Green',
   'blue': 'Blue', 'navy': 'Blue', 'navy blue': 'Blue', 'azure': 'Blue', 'sky blue': 'Blue',
   'cobalt': 'Blue', 'sapphire': 'Blue', 'midnight': 'Blue', 'teal': 'Blue', 'cyan': 'Blue',
-  'aqua': 'Blue', 'turquoise': 'Blue', 'silk blue': 'Blue',
+  'aqua': 'Blue', 'turquoise': 'Blue', 'silk blue': 'Blue', 'stardust blue': 'Blue',
+  'arctic whisper': 'Blue', 'blueberry bubblegum': 'Blue', 'ocean twilight': 'Blue',
   'purple': 'Purple', 'violet': 'Purple', 'lavender': 'Purple', 'lilac': 'Purple',
   'plum': 'Purple', 'orchid': 'Purple', 'mauve': 'Purple', 'grape': 'Purple', 'indigo': 'Purple',
   'silk purple': 'Purple', 'galaxy': 'Purple', 'cosmic': 'Purple', 'nebula': 'Purple',
+  'aurora purple': 'Purple', 'galaxy purple': 'Purple',
   'pink': 'Pink', 'hot pink': 'Pink', 'rose': 'Pink', 'magenta': 'Pink',
-  'silk pink': 'Pink', 'rose gold': 'Pink',
+  'silk pink': 'Pink', 'rose gold': 'Pink', 'cotton candy cloud': 'Pink', 'rose dream': 'Pink',
   'brown': 'Brown', 'tan': 'Brown', 'beige': 'Brown', 'khaki': 'Brown', 'chocolate': 'Brown',
   'coffee': 'Brown', 'mocha': 'Brown', 'espresso': 'Brown', 'caramel': 'Brown',
   'wood': 'Brown', 'walnut': 'Brown', 'oak': 'Brown', 'bamboo': 'Brown',
   'gray': 'Gray', 'grey': 'Gray', 'charcoal': 'Gray', 'silver': 'Gray',
   'silk silver': 'Gray', 'metal silver': 'Gray', 'metal titanium': 'Gray',
-  'black': 'Black', 'silk black': 'Black', 'metal iron': 'Black',
+  'black': 'Black', 'silk black': 'Black', 'metal iron': 'Black', 'cosmic black': 'Black',
   'white': 'White', 'silk white': 'White', 'transparent': 'Clear', 'translucent': 'Clear',
   'clear': 'Clear', 'glow': 'Glow', 'glow in dark': 'Glow',
+  'glow green': 'Glow', 'glow blue': 'Glow', 'glow yellow': 'Glow', 'glow orange': 'Glow',
   'rainbow': 'Rainbow', 'marble': 'Special', 'granite': 'Gray', 'stone': 'Gray',
+  'white marble': 'White', 'black marble': 'Black', 'gray marble': 'Gray', 'green marble': 'Green',
   'bronze': 'Bronze', 'metal bronze': 'Bronze', 'copper': 'Copper', 'metal copper': 'Copper',
+  // Gradient/creative colors - map to dominant color
+  'solar breeze': 'Red', 'pink citrus': 'Orange', 'dusk glare': 'Orange',
+  'dawn radiance': 'Orange', 'sunset glow': 'Orange',
 };
 
 // ============================================================================
@@ -1786,8 +1835,9 @@ function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogC
       return false; // Already seen
     }
     
-    // Validate it looks like a color
-    if (!isColorName(colorName)) {
+    // Validate it looks like a color (skip validation for trusted sources like fallbacks)
+    // For trusted sources, we've already verified the color is valid
+    if (source !== 'fallback' && !isColorName(colorName)) {
       invalidFiltered.push(rawColorName);
       patternStats.blocked++;
       if (ctx) logDebug(ctx, 'COLORS', `NOT A COLOR (${source}): "${rawColorName}"`);
@@ -1948,8 +1998,9 @@ function isColorName(text: string): boolean {
   // Check if it's in our color map
   if (COLOR_HEX_MAP[normalized]) return true;
   
-  // Check for common color keywords
+  // Check for common color keywords (EXPANDED for Bambu Lab specialty products)
   const colorKeywords = [
+    // Basic colors
     'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown',
     'gray', 'grey', 'gold', 'silver', 'bronze', 'copper', 'silk', 'matte', 'metallic',
     'navy', 'olive', 'teal', 'mint', 'coral', 'salmon', 'burgundy', 'maroon', 'crimson',
@@ -1958,6 +2009,24 @@ function isColorName(text: string): boolean {
     'nature', 'natural', 'wood', 'walnut', 'oak', 'bamboo', 'beige', 'tan',
     'violet', 'lavender', 'lilac', 'plum', 'orchid', 'mauve', 'indigo',
     'aqua', 'cyan', 'turquoise', 'azure', 'cobalt', 'midnight',
+    
+    // Creative/Descriptive (Bambu Lab specialty gradient & silk products)
+    'arctic', 'ocean', 'whisper', 'meadow', 'radiance', 'cloud', 'twilight',
+    'dream', 'aurora', 'solar', 'breeze', 'cotton', 'candy', 'blueberry',
+    'bubblegum', 'dusk', 'glare', 'citrus', 'forest', 'sunset', 'dawn',
+    'stardust', 'cosmic', 'nebula', 'sparkle', 'shimmer', 'glitter',
+    
+    // Temperature/Texture descriptors
+    'ice', 'frozen', 'warm', 'hot', 'cool', 'bright', 'pale', 'deep', 'soft',
+    
+    // Nature-inspired
+    'sky', 'sea', 'earth', 'sun', 'moon', 'star', 'spring', 'autumn', 'winter',
+    'summer', 'mellow', 'peachy', 'rose',
+    
+    // Food-inspired (common in filament colors)
+    'latte', 'mocha', 'cocoa', 'chocolate', 'caramel', 'butter', 'cream',
+    'lemon', 'lime', 'mango', 'peach', 'cherry', 'berry', 'mint',
+    'pumpkin', 'mandarin', 'sunflower', 'matcha',
   ];
   
   return colorKeywords.some(kw => normalized.includes(kw));
@@ -2199,6 +2268,20 @@ async function scrapeProductPage(
     const extraction = extractColorVariantsFromHtml(html, markdown, ctx);
     colors = extraction.variants;
     invalidFilteredColors = extraction.invalidFiltered;
+    
+    // FIX 4: Add fallback validation logging - warn when dynamic extraction finds significantly fewer colors
+    if (colors.length > 0 && PRODUCT_COLOR_FALLBACKS[productSlug] && ctx) {
+      const fallbackCount = PRODUCT_COLOR_FALLBACKS[productSlug].length;
+      const extractedCount = colors.length;
+      const difference = fallbackCount - extractedCount;
+      
+      if (difference > 3) {
+        logWarn(ctx, 'PRODUCT_SCRAPE', 
+          `Dynamic extraction found ${extractedCount} colors, but fallback has ${fallbackCount} (missing ${difference})`,
+          { product: productSlug, extracted: colors.map(c => c.colorName).slice(0, 5) }
+        );
+      }
+    }
     
     // If no colors found, fall back to hardcoded colors
     if (colors.length === 0 && PRODUCT_COLOR_FALLBACKS[productSlug]) {
