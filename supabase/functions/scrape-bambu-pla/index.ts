@@ -2250,9 +2250,14 @@ async function upsertFilament(
   // e.g., "PLA Silk" + "Silk Red" should become "Bambu Lab PLA Silk Red" not "Bambu Lab PLA Silk Silk Red"
   let displayColor = colorVariant.colorName;
   const productTypeWords = productType.split(' '); // e.g., ["PLA", "Silk"]
+  
+  // Helper to escape special regex characters in product type words
+  const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  
   for (const word of productTypeWords) {
     // Check if color name starts with a word from the product type (case insensitive)
-    const regex = new RegExp(`^${word}\\s+`, 'i');
+    // Use escapeRegExp to safely handle special characters like "+" in "PLA+"
+    const regex = new RegExp(`^${escapeRegExp(word)}\\s+`, 'i');
     if (regex.test(displayColor)) {
       displayColor = displayColor.replace(regex, '');
     }
