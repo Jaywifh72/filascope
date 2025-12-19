@@ -329,37 +329,33 @@ interface ProductConfig {
   netWeightG?: number;
 }
 
+// ============================================================================
+// PETG PRODUCT DEFINITIONS - Slugs verified from Excel file (ca.store.bambulab.com)
+// ============================================================================
 const BAMBU_PETG_PRODUCTS: Record<string, ProductConfig> = {
-  "PETG Basic": {
-    slug: "petg-basic-filament",
-    material: "PETG",
-    tdsUrl: null,
-    nozzleTempMin: 220, nozzleTempMax: 260,
-    bedTempMin: 70, bedTempMax: 90,
-    dryingTempC: 65, dryingTimeHours: 8,
-  },
+  // Note: "PETG Basic" removed - not in official product lineup per Excel file
   "PETG HF": {
-    slug: "petg-hf",
+    slug: "petg-hf",  // Verified: https://ca.store.bambulab.com/products/petg-hf
     material: "PETG",
-    tdsUrl: null,
+    tdsUrl: null,  // Will be extracted from page
     nozzleTempMin: 220, nozzleTempMax: 260,
     bedTempMin: 70, bedTempMax: 90,
     dryingTempC: 65, dryingTimeHours: 8,
   },
   "PETG-CF": {
-    slug: "petg-cf",
+    slug: "petg-cf",  // Verified: https://ca.store.bambulab.com/products/petg-cf
     material: "PETG-CF",
-    tdsUrl: null,
+    tdsUrl: "https://store.bblcdn.com/626e4f424bf345ae965ad0ddfcaf2459.pdf",
     nozzleTempMin: 240, nozzleTempMax: 280,
     bedTempMin: 70, bedTempMax: 90,
     dryingTempC: 65, dryingTimeHours: 8,
   },
   "PETG Translucent": {
-    slug: "petg-translucent",
+    slug: "petg-translucent",  // Verified: https://ca.store.bambulab.com/products/petg-translucent
     material: "PETG",
-    tdsUrl: null,
-    nozzleTempMin: 220, nozzleTempMax: 260,
-    bedTempMin: 70, bedTempMax: 90,
+    tdsUrl: "https://store.bblcdn.com/s1/default/338c9cd853fd44d9b6ed354a49048e72/Bambu_PETG_Translucent_Technical_Data_Sheet.pdf",
+    nozzleTempMin: 230, nozzleTempMax: 260,
+    bedTempMin: 65, bedTempMax: 75,
     dryingTempC: 65, dryingTimeHours: 8,
   },
 };
@@ -773,6 +769,40 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "Green", colorHex: "#61BF36", colorFamily: "Green", imageUrl: null, variantId: null },
     { colorName: "Blue", colorHex: "#0C3B95", colorFamily: "Blue", imageUrl: null, variantId: null },
     { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+  ],
+
+  // ============================================================================
+  // PETG PRODUCT COLOR FALLBACKS
+  // ============================================================================
+  
+  // PETG HF - High Flow PETG (common colors based on Bambu Lab lineup)
+  "petg-hf": [
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#FF0000", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#0000FF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Green", colorHex: "#00FF00", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Yellow", colorHex: "#FFFF00", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Orange", colorHex: "#FFA500", colorFamily: "Orange", imageUrl: null, variantId: null },
+  ],
+  
+  // PETG Translucent - 8 colors from hex code table on product page
+  "petg-translucent": [
+    { colorName: "Translucent Gray", colorHex: "#8E8E8E", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Translucent Light Blue", colorHex: "#61B0FF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Translucent Olive", colorHex: "#748C45", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Translucent Brown", colorHex: "#C9A381", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Translucent Teal", colorHex: "#77EDD7", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Translucent Orange", colorHex: "#FF911A", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Translucent Purple", colorHex: "#D6ABFF", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Translucent Pink", colorHex: "#F9C1BD", colorFamily: "Pink", imageUrl: null, variantId: null },
+  ],
+  
+  // PETG-CF - Carbon Fiber reinforced PETG (limited colors)
+  "petg-cf": [
+    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#4A4A4A", colorFamily: "Gray", imageUrl: null, variantId: null },
   ],
 };
 
