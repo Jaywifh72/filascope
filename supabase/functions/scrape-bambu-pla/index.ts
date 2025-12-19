@@ -361,12 +361,12 @@ const REGION_TO_FIRECRAWL_LOCATION: Record<string, { country: string; languages:
 // ============================================================================
 const RATE_LIMIT_CONFIG = {
   synchronous: {
-    betweenRegions: 2000,
-    betweenProducts: 3000,
+    betweenRegions: 1200,
+    betweenProducts: 2000,
   },
   background: {
-    betweenRegions: 1500,
-    betweenProducts: 2500,
+    betweenRegions: 800,   // Optimized from 1500ms
+    betweenProducts: 1500, // Optimized from 2500ms
   },
 };
 
@@ -2288,7 +2288,7 @@ async function scrapeWithFirecrawl(
         url,
         formats: ['html', 'markdown'],
         onlyMainContent: false,
-        waitFor: 15000,  // Increased to 15s for full variant/color loading on JS-heavy Shopify pages
+        waitFor: 8000,  // Optimized from 15s - Shopify pages typically load variants within 5-8s
         location: location || { country: 'CA', languages: ['en'] },
       };
       
