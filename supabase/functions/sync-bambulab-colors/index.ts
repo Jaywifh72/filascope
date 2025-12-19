@@ -7,20 +7,22 @@ const corsHeaders = {
 };
 
 // Bambu Lab ABS Color variants with official hex codes and image URLs from their product page
-// Image URLs follow pattern: https://store.bblcdn.com/s5/default/{unique_id}.png
+// Image URLs extracted from: https://us.store.bambulab.com/products/abs-filament
 const BAMBU_ABS_COLORS: Record<string, { hex: string; colorFamily: string; imageUrl: string | null }> = {
+  // Confirmed image URLs (7 colors)
+  "Silver": { hex: "#87909A", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/69834a7536c540e489913a0f8e707e5e/ABSsilver.png" },
+  "Black": { hex: "#000000", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s7/default/cfdefec225e6430c82cbe2f8766b6f70/ABS_Black.png" },
+  "White": { hex: "#FFFFFF", colorFamily: "White", imageUrl: "https://store.bblcdn.com/s7/default/1ad485ff4a72413b90e944ffde4fa861/ABS_White.png" },
+  "Bambu Green": { hex: "#00AE42", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/910be80e4fcf43ddbd66c40773ecce0f/ABSbambugreen.png" },
+  "Orange": { hex: "#FF6A13", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s5/default/af10bba0ddcb4d129125f0b1b3f04e59.png" },
+  "Red": { hex: "#D32941", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s7/default/95bd38c6dc604bdab7b3d2fc7b67e0ee/ABS_Red.png" },
+  "Blue": { hex: "#0A2CA5", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/3b2f526b80734e429d9a424e07f3c36b/ABS_Blue.png" },
+  // Need discovery (5 colors) - run discover-bambulab-images to find these
   "Olive": { hex: "#789D4A", colorFamily: "Green", imageUrl: null },
   "Tangerine Yellow": { hex: "#FFC72C", colorFamily: "Yellow", imageUrl: null },
   "Azure": { hex: "#489FDF", colorFamily: "Blue", imageUrl: null },
   "Navy Blue": { hex: "#0C2340", colorFamily: "Blue", imageUrl: null },
-  "White": { hex: "#FFFFFF", colorFamily: "White", imageUrl: null },
-  "Silver": { hex: "#87909A", colorFamily: "Gray", imageUrl: null },
-  "Red": { hex: "#D32941", colorFamily: "Red", imageUrl: null },
-  "Orange": { hex: "#FF6A13", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s5/default/af10bba0ddcb4d129125f0b1b3f04e59.png" },
-  "Bambu Green": { hex: "#00AE42", colorFamily: "Green", imageUrl: null },
-  "Blue": { hex: "#0A2CA5", colorFamily: "Blue", imageUrl: null },
   "Purple": { hex: "#AF1685", colorFamily: "Purple", imageUrl: null },
-  "Black": { hex: "#000000", colorFamily: "Black", imageUrl: null },
 };
 
 // Base product data extracted from Bambu Lab's ABS product page
