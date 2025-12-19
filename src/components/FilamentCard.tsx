@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCompare } from "@/hooks/useCompare";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
 
 // Material badge colors - using purple as specified
 const MATERIAL_COLORS: Record<string, string> = {
@@ -56,6 +57,18 @@ interface Filament {
   wood_powder_percentage?: number | null;
   featured_image?: string | null;
   variant_available?: boolean | null;
+  // Regional pricing fields
+  product_url?: string | null;
+  product_url_ca?: string | null;
+  product_url_uk?: string | null;
+  product_url_eu?: string | null;
+  product_url_au?: string | null;
+  product_url_jp?: string | null;
+  price_cad?: number | null;
+  price_gbp?: number | null;
+  price_eur?: number | null;
+  price_aud?: number | null;
+  price_jpy?: number | null;
 }
 
 // Variant indicator data for grouped products
@@ -121,7 +134,10 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const { formatPrice } = useCurrency();
+  const { formatPrice, formatRegionalPrice } = useCurrency();
+  
+  // Use regional price for proper currency handling
+  const { regionalPrice, isActualRegionalPrice } = useRegionalPrice(filament as FilamentWithRegionalPrices);
   
   const { 
     addItem, 
@@ -139,11 +155,11 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const isPendingSelection = isPending(filament.id);
   const isCompareDisabled = isFull && !isSelected;
 
-  // Calculate price per kg
+  // Calculate price per kg using regional price (which already handles currency conversion)
   const packQty = filament.pack_quantity || 1;
   const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
-  const pricePerKg = (filament.variant_price && weightKg)
-    ? filament.variant_price / (weightKg * packQty)
+  const pricePerKg = (regionalPrice && weightKg)
+    ? regionalPrice / (weightKg * packQty)
     : null;
   const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
 
@@ -402,7 +418,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           <div className="flex items-center gap-3">
             <div className="flex items-baseline gap-1">
               <span className="text-[28px] font-bold text-white leading-none">
-                {formatPrice(pricePerKg, false)}
+                {isActualRegionalPrice ? formatRegionalPrice(pricePerKg, false) : formatPrice(pricePerKg, false)}
               </span>
               <span className="text-sm font-medium text-slate-400">/kg</span>
             </div>
