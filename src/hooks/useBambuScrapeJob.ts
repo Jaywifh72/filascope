@@ -135,7 +135,7 @@ export function useBambuScrapeJob(jobId: string | null) {
   };
 }
 
-// Hook to start a new scrape job
+// Hook to start a new scrape job using chunked orchestrator (prevents timeouts)
 export function useStartBambuScrapeJob() {
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -145,11 +145,12 @@ export function useStartBambuScrapeJob() {
     setError(null);
 
     try {
-      const { data, error: invokeError } = await supabase.functions.invoke('scrape-bambu-pla', {
+      // Use the new orchestrator which processes products in chunks
+      const { data, error: invokeError } = await supabase.functions.invoke('scrape-bambu-orchestrator', {
         body: {
+          mode: 'start',
           materials,
           dryRun,
-          background: true, // New flag to trigger background mode
         },
       });
 

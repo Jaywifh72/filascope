@@ -3421,6 +3421,229 @@ async function runBackgroundScrape(
 }
 
 // ============================================================================
+// SINGLE PRODUCT MODE - For chunked orchestration (prevents timeouts)
+// ============================================================================
+interface SingleProductRequest {
+  material: string;
+  slug: string;
+  name: string;
+}
+
+async function processSingleProduct(
+  singleProduct: SingleProductRequest,
+  dryRun: boolean | undefined,
+  passedJobId: string | undefined,
+  ctx: LogContext
+): Promise<Response> {
+  const { material, slug, name } = singleProduct;
+  
+  logSeparator(ctx, `SINGLE PRODUCT MODE: ${name}`);
+  logInfo(ctx, 'SINGLE', `Processing: ${name} (${material}) - slug: ${slug}`);
+  
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+
+  if (!supabaseUrl || !supabaseKey || !firecrawlKey) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Missing required environment variables',
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const results = {
+    productsScraped: 0,
+    colorsDiscovered: 0,
+    filamentsCreated: 0,
+    filamentsUpdated: 0,
+    errors: [] as string[],
+  };
+
+  try {
+    // Get brand ID
+    const { data: brandData } = await supabase
+      .from('automated_brands')
+      .select('id')
+      .eq('brand_slug', 'bambu-lab')
+      .single();
+    
+    const brandId = brandData?.id || null;
+
+    // Find the product config
+    const materialProducts = ALL_BAMBU_PRODUCTS[material];
+    if (!materialProducts) {
+      throw new Error(`Unknown material: ${material}`);
+    }
+
+    // Find the specific product by slug
+    let productConfig: any = null;
+    let productName: string = name;
+    
+    for (const [pName, pConfig] of Object.entries(materialProducts)) {
+      if ((pConfig as any).slug === slug) {
+        productConfig = pConfig;
+        productName = pName;
+        break;
+      }
+    }
+
+    if (!productConfig) {
+      throw new Error(`Product not found: ${slug}`);
+    }
+
+    ctx.productName = productName;
+    logInfo(ctx, 'SINGLE', `Found product config for: ${productName}`);
+
+    // Update job progress if job ID is provided
+    if (passedJobId) {
+      await supabase.from('scrape_jobs').update({
+        updated_at: new Date().toISOString(),
+        progress: {
+          currentProduct: productName,
+          currentMaterial: material,
+          currentStage: 'fetching_colors',
+        },
+      }).eq('id', passedJobId);
+    }
+
+    // Scrape product page for colors
+    const { colors, invalidFilteredColors, tdsUrl, success, firecrawlMs } = await scrapeProductPage(
+      productConfig.slug,
+      'CA',
+      productConfig.material,
+      { ...ctx, region: 'CA' }
+    );
+
+    let colorVariants = [...colors];
+
+    // Apply fallback logic
+    if (!success || colorVariants.length === 0) {
+      if (PRODUCT_COLOR_FALLBACKS[productConfig.slug]) {
+        colorVariants = [...PRODUCT_COLOR_FALLBACKS[productConfig.slug]];
+        logInfo(ctx, 'FALLBACK', `Using fallback colors for ${productName}: ${colorVariants.length} colors`);
+      } else {
+        colorVariants = [extractColorInfo('Black'), extractColorInfo('White')];
+        logWarn(ctx, 'FALLBACK', `Using default Black/White for ${productName}`);
+      }
+    } else if (colorVariants.length < 3 && PRODUCT_COLOR_FALLBACKS[productConfig.slug]) {
+      const fallbackColors = PRODUCT_COLOR_FALLBACKS[productConfig.slug];
+      if (fallbackColors.length > colorVariants.length * 2) {
+        colorVariants = [...fallbackColors];
+        logWarn(ctx, 'COVERAGE', `Using fallback for better coverage: ${colorVariants.length} colors`);
+      }
+    }
+
+    results.productsScraped = 1;
+    results.colorsDiscovered = colorVariants.length;
+
+    // Update progress
+    if (passedJobId) {
+      await supabase.from('scrape_jobs').update({
+        updated_at: new Date().toISOString(),
+        progress: {
+          currentProduct: productName,
+          currentMaterial: material,
+          currentStage: 'scraping_prices',
+        },
+      }).eq('id', passedJobId);
+    }
+
+    // Scrape regional prices
+    const regionalPrices: Record<string, { price: number | null; compareAtPrice: number | null; url: string }> = {};
+    const regions = Object.keys(BAMBU_REGIONAL_STORES);
+
+    for (let i = 0; i < regions.length; i++) {
+      const region = regions[i];
+      ctx.region = region;
+
+      // Rate limit delay
+      if (i > 0) {
+        await new Promise(r => setTimeout(r, RATE_LIMIT_CONFIG.background.betweenRegions));
+      }
+
+      const { price, compareAtPrice, url } = await scrapeRegionalPrice(
+        productConfig.slug,
+        region,
+        productConfig.material,
+        ctx
+      );
+
+      regionalPrices[region] = { price, compareAtPrice, url };
+    }
+    ctx.region = undefined;
+
+    // Upsert filaments (if not dry run)
+    if (!dryRun) {
+      if (passedJobId) {
+        await supabase.from('scrape_jobs').update({
+          updated_at: new Date().toISOString(),
+          progress: {
+            currentProduct: productName,
+            currentMaterial: material,
+            currentStage: 'saving_db',
+          },
+        }).eq('id', passedJobId);
+      }
+
+      for (const colorVariant of colorVariants) {
+        ctx.colorName = colorVariant.colorName;
+
+        const result = await upsertFilament(
+          supabase,
+          productName,
+          colorVariant,
+          productConfig,
+          brandId,
+          regionalPrices,
+          ctx
+        );
+
+        if (result.created) results.filamentsCreated++;
+        if (result.updated) results.filamentsUpdated++;
+        if (result.error) {
+          results.errors.push(`${colorVariant.colorName}: ${result.error}`);
+        }
+      }
+      ctx.colorName = undefined;
+    }
+
+    const duration = Date.now() - ctx.startTime;
+    logSuccess(ctx, 'SINGLE', `Completed ${productName} in ${duration}ms`, {
+      colors: colorVariants.length,
+      created: results.filamentsCreated,
+      updated: results.filamentsUpdated,
+    });
+
+    return new Response(JSON.stringify({
+      success: true,
+      results,
+      duration,
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    logError(ctx, 'SINGLE', `Failed processing ${name}`, error);
+    results.errors.push(errMsg);
+
+    return new Response(JSON.stringify({
+      success: false,
+      error: errMsg,
+      results,
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// ============================================================================
 // MAIN HANDLER
 // ============================================================================
 serve(async (req) => {
@@ -3449,7 +3672,14 @@ serve(async (req) => {
       dryRun,    // Optional: don't save to DB, just scrape and report
       debug = true, // Optional: enable verbose debug logging (default: true)
       background = false, // New: run in background mode
+      singleProduct, // NEW: Single product mode for chunked processing
+      jobId: passedJobId, // NEW: Job ID for progress updates in chunked mode
     } = await req.json().catch(() => ({}));
+
+    // SINGLE PRODUCT MODE: Process just one product quickly (for chunked orchestration)
+    if (singleProduct && typeof singleProduct === 'object') {
+      return await processSingleProduct(singleProduct, dryRun, passedJobId, ctx);
+    }
 
     // Default to PLA only if no materials specified
     const selectedMaterials: string[] = materials && Array.isArray(materials) && materials.length > 0 
