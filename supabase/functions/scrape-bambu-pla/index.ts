@@ -7,6 +7,86 @@ const corsHeaders = {
 };
 
 // ============================================================================
+// DEBUG LOGGING UTILITIES
+// ============================================================================
+interface LogContext {
+  requestId: string;
+  startTime: number;
+  region?: string;
+  productName?: string;
+  colorName?: string;
+  operation?: string;
+}
+
+interface TimingMetrics {
+  firecrawlMs: number;
+  dbMs: number;
+  delayMs: number;
+  totalMs: number;
+}
+
+const LOG_LEVELS = {
+  DEBUG: '🔍',
+  INFO: 'ℹ️',
+  WARN: '⚠️',
+  ERROR: '❌',
+  SUCCESS: '✅',
+  TIMING: '⏱️',
+} as const;
+
+function generateRequestId(): string {
+  return crypto.randomUUID().substring(0, 8).toUpperCase();
+}
+
+function formatElapsed(startTime: number): string {
+  return `${Date.now() - startTime}ms`;
+}
+
+function log(level: keyof typeof LOG_LEVELS, ctx: LogContext, category: string, message: string, data?: any): void {
+  const elapsed = formatElapsed(ctx.startTime);
+  const prefix = ctx.region ? `[${ctx.requestId}][${ctx.region}]` : `[${ctx.requestId}]`;
+  const dataStr = data !== undefined ? ` | ${typeof data === 'object' ? JSON.stringify(data) : data}` : '';
+  console.log(`${LOG_LEVELS[level]} ${prefix}[${category}][${elapsed}] ${message}${dataStr}`);
+}
+
+function logDebug(ctx: LogContext, category: string, message: string, data?: any): void {
+  log('DEBUG', ctx, category, message, data);
+}
+
+function logInfo(ctx: LogContext, category: string, message: string, data?: any): void {
+  log('INFO', ctx, category, message, data);
+}
+
+function logWarn(ctx: LogContext, category: string, message: string, data?: any): void {
+  log('WARN', ctx, category, message, data);
+}
+
+function logError(ctx: LogContext, category: string, message: string, error?: unknown): void {
+  const errorDetails = error instanceof Error 
+    ? { message: error.message, stack: error.stack?.split('\n').slice(0, 5).join('\n') }
+    : error;
+  log('ERROR', ctx, category, message, errorDetails);
+}
+
+function logSuccess(ctx: LogContext, category: string, message: string, data?: any): void {
+  log('SUCCESS', ctx, category, message, data);
+}
+
+function logTiming(ctx: LogContext, category: string, message: string, durationMs: number): void {
+  log('TIMING', ctx, category, `${message}: ${durationMs}ms`);
+}
+
+function logSeparator(ctx: LogContext, title?: string): void {
+  if (title) {
+    console.log(`\n[${ctx.requestId}] ${'='.repeat(50)}`);
+    console.log(`[${ctx.requestId}] ${title}`);
+    console.log(`[${ctx.requestId}] ${'='.repeat(50)}`);
+  } else {
+    console.log(`[${ctx.requestId}] ${'='.repeat(50)}`);
+  }
+}
+
+// ============================================================================
 // REGIONAL STORE CONFIGURATION
 // ============================================================================
 const BAMBU_REGIONAL_STORES: Record<string, {
@@ -543,18 +623,27 @@ const DISCOUNT_EXCLUSION_KEYWORDS = [
   'subscribe', 'subscription', 'qty', 'quantity', 'x+ items', '+ items'
 ];
 
-function containsDiscountKeywords(text: string): boolean {
+function containsDiscountKeywords(text: string, ctx?: LogContext): boolean {
   const lowerText = text.toLowerCase();
-  return DISCOUNT_EXCLUSION_KEYWORDS.some(keyword => lowerText.includes(keyword));
+  const hasDiscount = DISCOUNT_EXCLUSION_KEYWORDS.some(keyword => lowerText.includes(keyword));
+  if (hasDiscount && ctx) {
+    const matchedKeyword = DISCOUNT_EXCLUSION_KEYWORDS.find(keyword => lowerText.includes(keyword));
+    logDebug(ctx, 'PRICE', `Discount keyword detected: "${matchedKeyword}"`);
+  }
+  return hasDiscount;
 }
 
-function extractNumericPrice(text: string): number | null {
+function extractNumericPrice(text: string, ctx?: LogContext): number | null {
   const cleaned = text.replace(/[C$A$£€¥,\s]/g, '').replace(/CA|AU|US|JP/gi, '');
   const match = cleaned.match(/(\d+\.?\d*)/);
   if (match) {
     const price = parseFloat(match[1]);
-    if (!isNaN(price) && price > 0) return price;
+    if (!isNaN(price) && price > 0) {
+      if (ctx) logDebug(ctx, 'PRICE', `Extracted numeric price: ${price} from "${text.substring(0, 50)}"`);
+      return price;
+    }
   }
+  if (ctx) logDebug(ctx, 'PRICE', `Failed to extract price from: "${text.substring(0, 50)}"`);
   return null;
 }
 
@@ -590,79 +679,136 @@ function extractFromMetaTags(html: string): number | null {
   return null;
 }
 
-function extractBambuLabPrice(html: string, markdown: string, region: string, material: string = 'PLA'): { price: number; source: string } | null {
+function extractBambuLabPrice(
+  html: string, 
+  markdown: string, 
+  region: string, 
+  material: string = 'PLA',
+  ctx?: LogContext
+): { price: number; source: string } | null {
   const store = BAMBU_REGIONAL_STORES[region];
-  if (!store) return null;
+  if (!store) {
+    if (ctx) logWarn(ctx, 'PRICE', `Unknown region: ${region}`);
+    return null;
+  }
 
   // Get material-specific price range, fallback to PLA range
   const materialRanges = PRICE_RANGES_BY_MATERIAL[material] || PRICE_RANGES_BY_MATERIAL['PLA'];
   const [minExpected, maxExpected] = materialRanges[region] || materialRanges['US'];
-  console.log(`[${region}] Expected ${material} price range: ${minExpected}-${maxExpected} ${store.currency}`);
+  
+  if (ctx) {
+    logInfo(ctx, 'PRICE', `Expected ${material} price range: ${minExpected}-${maxExpected} ${store.currency}`);
+    logDebug(ctx, 'PRICE', `HTML size: ${html.length} chars, Markdown size: ${markdown.length} chars`);
+  }
 
   // Strategy 1: bbl-title-1 class (Bambu Lab's main price element)
+  if (ctx) logDebug(ctx, 'PRICE', 'Trying Strategy 1: bbl-title-1 class');
   const bblTitleMatch = html.match(/class="[^"]*bbl-title-1[^"]*"[^>]*>([^<]*(?:\$|€|£|¥|C\$|CA\$|A\$)[^<]*)<\/[^>]+>/i);
   if (bblTitleMatch) {
     const priceText = bblTitleMatch[1];
+    if (ctx) logDebug(ctx, 'PRICE', `Strategy 1 found: "${priceText}"`);
     const matchIndex = html.indexOf(bblTitleMatch[0]);
     const context = html.substring(Math.max(0, matchIndex - 200), Math.min(html.length, matchIndex + 200));
     
-    if (!containsDiscountKeywords(context)) {
-      const price = extractNumericPrice(priceText);
+    if (!containsDiscountKeywords(context, ctx)) {
+      const price = extractNumericPrice(priceText, ctx);
       if (price && price >= minExpected && price <= maxExpected) {
-        console.log(`[${region}] ✓ bbl-title-1 price VALID: ${price} ${store.currency}`);
+        if (ctx) logSuccess(ctx, 'PRICE', `Strategy 1 SUCCESS: ${price} ${store.currency} (bbl-title-1)`);
         return { price, source: 'bbl-title-1' };
+      } else if (price && ctx) {
+        logWarn(ctx, 'PRICE', `Strategy 1 REJECTED: ${price} outside range [${minExpected}-${maxExpected}]`);
       }
+    } else if (ctx) {
+      logDebug(ctx, 'PRICE', 'Strategy 1 SKIPPED: discount keywords in context');
     }
+  } else if (ctx) {
+    logDebug(ctx, 'PRICE', 'Strategy 1: No bbl-title-1 match found');
   }
 
   // Strategy 2: "From $XX.XX" pattern
+  if (ctx) logDebug(ctx, 'PRICE', 'Trying Strategy 2: From/Starting patterns');
   const fromPricePatterns = [
     /From\s+(?:\$|€|£|C\$|CA\$|A\$|¥)\s*(\d{1,3}(?:[.,]\d{2})?)/gi,
     /Starting\s+(?:at\s+)?(?:\$|€|£|C\$|CA\$|A\$|¥)\s*(\d{1,3}(?:[.,]\d{2})?)/gi,
   ];
   
-  for (const pattern of fromPricePatterns) {
+  for (let i = 0; i < fromPricePatterns.length; i++) {
+    const pattern = fromPricePatterns[i];
     const matches = [...html.matchAll(pattern)];
+    if (ctx) logDebug(ctx, 'PRICE', `Strategy 2.${i+1}: Found ${matches.length} pattern matches`);
+    
     for (const match of matches) {
       const fullMatch = match[0];
       const priceStr = match[1].replace(',', '.');
       const price = parseFloat(priceStr);
       
+      if (ctx) logDebug(ctx, 'PRICE', `Strategy 2 candidate: "${fullMatch}" -> ${price}`);
+      
       const matchIndex = html.indexOf(fullMatch);
       const context = html.substring(Math.max(0, matchIndex - 200), Math.min(html.length, matchIndex + 200));
       
-      if (!containsDiscountKeywords(context) && price >= minExpected && price <= maxExpected) {
-        console.log(`[${region}] ✓ "From" price VALID: ${price} ${store.currency}`);
+      if (!containsDiscountKeywords(context, ctx) && price >= minExpected && price <= maxExpected) {
+        if (ctx) logSuccess(ctx, 'PRICE', `Strategy 2 SUCCESS: ${price} ${store.currency} (from-pattern)`);
         return { price, source: 'from-pattern' };
+      } else if (ctx && (price < minExpected || price > maxExpected)) {
+        logDebug(ctx, 'PRICE', `Strategy 2 REJECTED: ${price} outside range [${minExpected}-${maxExpected}]`);
       }
     }
   }
 
   // Strategy 3: JSON-LD
+  if (ctx) logDebug(ctx, 'PRICE', 'Trying Strategy 3: JSON-LD structured data');
   const jsonLdPrice = extractFromJsonLd(html);
-  if (jsonLdPrice && jsonLdPrice >= minExpected && jsonLdPrice <= maxExpected) {
-    console.log(`[${region}] ✓ JSON-LD price VALID: ${jsonLdPrice} ${store.currency}`);
-    return { price: jsonLdPrice, source: 'json-ld' };
+  if (jsonLdPrice) {
+    if (ctx) logDebug(ctx, 'PRICE', `Strategy 3 found JSON-LD price: ${jsonLdPrice}`);
+    if (jsonLdPrice >= minExpected && jsonLdPrice <= maxExpected) {
+      if (ctx) logSuccess(ctx, 'PRICE', `Strategy 3 SUCCESS: ${jsonLdPrice} ${store.currency} (json-ld)`);
+      return { price: jsonLdPrice, source: 'json-ld' };
+    } else if (ctx) {
+      logWarn(ctx, 'PRICE', `Strategy 3 REJECTED: ${jsonLdPrice} outside range [${minExpected}-${maxExpected}]`);
+    }
+  } else if (ctx) {
+    logDebug(ctx, 'PRICE', 'Strategy 3: No JSON-LD price found');
   }
 
   // Strategy 4: Meta tags
+  if (ctx) logDebug(ctx, 'PRICE', 'Trying Strategy 4: Meta tags');
   const metaPrice = extractFromMetaTags(html);
-  if (metaPrice && metaPrice >= minExpected && metaPrice <= maxExpected) {
-    console.log(`[${region}] ✓ Meta tag price VALID: ${metaPrice} ${store.currency}`);
-    return { price: metaPrice, source: 'meta-tag' };
+  if (metaPrice) {
+    if (ctx) logDebug(ctx, 'PRICE', `Strategy 4 found meta price: ${metaPrice}`);
+    if (metaPrice >= minExpected && metaPrice <= maxExpected) {
+      if (ctx) logSuccess(ctx, 'PRICE', `Strategy 4 SUCCESS: ${metaPrice} ${store.currency} (meta-tag)`);
+      return { price: metaPrice, source: 'meta-tag' };
+    } else if (ctx) {
+      logWarn(ctx, 'PRICE', `Strategy 4 REJECTED: ${metaPrice} outside range [${minExpected}-${maxExpected}]`);
+    }
+  } else if (ctx) {
+    logDebug(ctx, 'PRICE', 'Strategy 4: No meta tag price found');
   }
 
   // Strategy 5: Markdown "From" patterns
+  if (ctx) logDebug(ctx, 'PRICE', 'Trying Strategy 5: Markdown patterns');
   const mdFromMatch = markdown.match(/From\s+(?:\$|€|£|C\$|CA\$|A\$|¥)?\s*(\d{1,3}(?:[.,]\d{2})?)/i);
   if (mdFromMatch) {
     const price = parseFloat(mdFromMatch[1].replace(',', '.'));
+    if (ctx) logDebug(ctx, 'PRICE', `Strategy 5 found markdown price: ${price}`);
     if (price >= minExpected && price <= maxExpected) {
-      console.log(`[${region}] ✓ Markdown price VALID: ${price} ${store.currency}`);
+      if (ctx) logSuccess(ctx, 'PRICE', `Strategy 5 SUCCESS: ${price} ${store.currency} (markdown-from)`);
       return { price, source: 'markdown-from' };
+    } else if (ctx) {
+      logWarn(ctx, 'PRICE', `Strategy 5 REJECTED: ${price} outside range [${minExpected}-${maxExpected}]`);
     }
+  } else if (ctx) {
+    logDebug(ctx, 'PRICE', 'Strategy 5: No markdown price pattern found');
   }
 
-  console.warn(`[${region}] Could not extract valid price for ${material}`);
+  if (ctx) {
+    logWarn(ctx, 'PRICE', `ALL STRATEGIES FAILED for ${material} in ${region}`, {
+      htmlHasCurrency: html.includes('$') || html.includes('€') || html.includes('£'),
+      markdownHasCurrency: markdown.includes('$') || markdown.includes('€') || markdown.includes('£'),
+      htmlSample: html.substring(0, 500),
+    });
+  }
   return null;
 }
 
@@ -677,9 +823,12 @@ interface ColorVariant {
   variantId: string | null;
 }
 
-function extractColorVariantsFromHtml(html: string, markdown: string): ColorVariant[] {
+function extractColorVariantsFromHtml(html: string, markdown: string, ctx?: LogContext): ColorVariant[] {
   const variants: ColorVariant[] = [];
   const seenColors = new Set<string>();
+  const patternStats = { p1: 0, p2: 0, p3: 0, p4: 0, p5: 0 };
+
+  if (ctx) logDebug(ctx, 'COLORS', `Starting color extraction from HTML (${html.length} chars) and Markdown (${markdown.length} chars)`);
 
   // Pattern 1: Look for color swatches with data attributes
   const swatchPattern = /data-(?:color|variant|option)=["']([^"']+)["']/gi;
@@ -689,6 +838,8 @@ function extractColorVariantsFromHtml(html: string, markdown: string): ColorVari
     if (colorName && !seenColors.has(colorName.toLowerCase())) {
       seenColors.add(colorName.toLowerCase());
       variants.push(extractColorInfo(colorName));
+      patternStats.p1++;
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 1 (data-attr): Found "${colorName}"`);
     }
   }
 
@@ -702,6 +853,8 @@ function extractColorVariantsFromHtml(html: string, markdown: string): ColorVari
       if (colorName && !seenColors.has(colorName.toLowerCase()) && colorName.length < 50) {
         seenColors.add(colorName.toLowerCase());
         variants.push(extractColorInfo(colorName));
+        patternStats.p2++;
+        if (ctx) logDebug(ctx, 'COLORS', `Pattern 2 (markdown): Found "${colorName}"`);
       }
     }
   }
@@ -721,6 +874,8 @@ function extractColorVariantsFromHtml(html: string, markdown: string): ColorVari
         ...extractColorInfo(lastPart),
         imageUrl,
       });
+      patternStats.p3++;
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 3 (CDN image): Found "${lastPart}" from image`);
     }
   }
 
@@ -731,6 +886,8 @@ function extractColorVariantsFromHtml(html: string, markdown: string): ColorVari
     if (optionValue && !seenColors.has(optionValue.toLowerCase()) && isColorName(optionValue)) {
       seenColors.add(optionValue.toLowerCase());
       variants.push(extractColorInfo(optionValue));
+      patternStats.p4++;
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 4 (script option): Found "${optionValue}"`);
     }
   }
 
@@ -745,6 +902,15 @@ function extractColorVariantsFromHtml(html: string, markdown: string): ColorVari
         ...extractColorInfo(variantTitle),
         variantId,
       });
+      patternStats.p5++;
+      if (ctx) logDebug(ctx, 'COLORS', `Pattern 5 (Shopify variant): Found "${variantTitle}" (id: ${variantId})`);
+    }
+  }
+
+  if (ctx) {
+    logInfo(ctx, 'COLORS', `Extraction complete: ${variants.length} unique colors found`, patternStats);
+    if (variants.length > 0) {
+      logDebug(ctx, 'COLORS', `Color list: ${variants.map(v => `${v.colorName}${v.colorHex ? ` (${v.colorHex})` : ''}`).join(', ')}`);
     }
   }
 
@@ -801,83 +967,129 @@ function extractColorInfo(colorName: string): ColorVariant {
 // ============================================================================
 async function scrapeWithFirecrawl(
   url: string, 
-  region: string
-): Promise<{ html: string; markdown: string; success: boolean; error?: string }> {
+  region: string,
+  ctx?: LogContext
+): Promise<{ html: string; markdown: string; success: boolean; error?: string; durationMs?: number }> {
+  const startTime = Date.now();
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
   
   if (!firecrawlKey) {
+    if (ctx) logError(ctx, 'FIRECRAWL', 'No Firecrawl API key configured');
     return { html: '', markdown: '', success: false, error: 'No Firecrawl API key' };
   }
 
   const location = REGION_TO_FIRECRAWL_LOCATION[region];
-  console.log(`[${region}] Scraping ${url} with geo-location: ${location?.country || 'default'}`);
+  if (ctx) {
+    logInfo(ctx, 'FIRECRAWL', `Request: ${url}`);
+    logDebug(ctx, 'FIRECRAWL', `Geo-location: ${JSON.stringify(location || { country: 'CA', languages: ['en'] })}`);
+  }
 
   try {
+    const requestBody = {
+      url,
+      formats: ['html', 'markdown'],
+      onlyMainContent: false,
+      waitFor: 3000,
+      location: location || { country: 'CA', languages: ['en'] },
+    };
+    
+    if (ctx) logDebug(ctx, 'FIRECRAWL', 'Request body', requestBody);
+
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${firecrawlKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        url,
-        formats: ['html', 'markdown'],
-        onlyMainContent: false,
-        waitFor: 3000,
-        location: location || { country: 'CA', languages: ['en'] },
-      }),
+      body: JSON.stringify(requestBody),
     });
+
+    const durationMs = Date.now() - startTime;
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error(`[${region}] Firecrawl error: ${response.status} - ${errText}`);
-      return { html: '', markdown: '', success: false, error: `HTTP ${response.status}` };
+      if (ctx) {
+        logError(ctx, 'FIRECRAWL', `HTTP ${response.status} error after ${durationMs}ms`, { 
+          status: response.status, 
+          response: errText.substring(0, 500) 
+        });
+      }
+      return { html: '', markdown: '', success: false, error: `HTTP ${response.status}`, durationMs };
     }
 
     const data = await response.json();
     
     if (!data.success || !data.data) {
-      console.error(`[${region}] Firecrawl returned unsuccessful response`);
-      return { html: '', markdown: '', success: false, error: 'Unsuccessful response' };
+      if (ctx) logError(ctx, 'FIRECRAWL', 'Unsuccessful response from Firecrawl', { success: data.success, hasData: !!data.data });
+      return { html: '', markdown: '', success: false, error: 'Unsuccessful response', durationMs };
+    }
+
+    const htmlSize = data.data.html?.length || 0;
+    const mdSize = data.data.markdown?.length || 0;
+    
+    if (ctx) {
+      logSuccess(ctx, 'FIRECRAWL', `Response received in ${durationMs}ms`, { htmlSize, mdSize });
+      if (htmlSize < 1000) {
+        logWarn(ctx, 'FIRECRAWL', `Suspiciously small HTML response (${htmlSize} chars)`);
+      }
     }
 
     return {
       html: data.data.html || '',
       markdown: data.data.markdown || '',
       success: true,
+      durationMs,
     };
   } catch (error: unknown) {
+    const durationMs = Date.now() - startTime;
     const errMsg = error instanceof Error ? error.message : String(error);
-    console.error(`[${region}] Scrape error:`, error);
-    return { html: '', markdown: '', success: false, error: errMsg };
+    if (ctx) logError(ctx, 'FIRECRAWL', `Exception after ${durationMs}ms: ${errMsg}`, error);
+    return { html: '', markdown: '', success: false, error: errMsg, durationMs };
   }
 }
 
-async function scrapeProductPage(productSlug: string, region: string = 'CA', material: string = 'PLA'): Promise<{
+async function scrapeProductPage(
+  productSlug: string, 
+  region: string = 'CA', 
+  material: string = 'PLA',
+  ctx?: LogContext
+): Promise<{
   colors: ColorVariant[];
   price: number | null;
   tdsUrl: string | null;
   success: boolean;
+  firecrawlMs?: number;
 }> {
   const store = BAMBU_REGIONAL_STORES[region];
   const url = `https://${store.subdomain}.store.bambulab.com/products/${productSlug}`;
   
-  console.log(`\n[SCRAPE] Scraping ${url}`);
+  if (ctx) {
+    logSeparator(ctx);
+    logInfo(ctx, 'PRODUCT_SCRAPE', `Scraping product page: ${url}`);
+    logDebug(ctx, 'PRODUCT_SCRAPE', `Slug: ${productSlug}, Region: ${region}, Material: ${material}`);
+  }
   
-  const { html, markdown, success, error } = await scrapeWithFirecrawl(url, region);
+  const { html, markdown, success, error, durationMs } = await scrapeWithFirecrawl(url, region, ctx);
   
   if (!success) {
-    console.error(`[SCRAPE] Failed to scrape ${productSlug}: ${error}`);
-    return { colors: [], price: null, tdsUrl: null, success: false };
+    if (ctx) logError(ctx, 'PRODUCT_SCRAPE', `Failed to scrape ${productSlug}`, { error, url });
+    return { colors: [], price: null, tdsUrl: null, success: false, firecrawlMs: durationMs };
   }
 
   // Extract colors
-  const colors = extractColorVariantsFromHtml(html, markdown);
-  console.log(`[SCRAPE] Found ${colors.length} color variants for ${productSlug}`);
+  if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', 'Extracting color variants...');
+  const colors = extractColorVariantsFromHtml(html, markdown, ctx);
+  if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', `Found ${colors.length} color variants for ${productSlug}`);
 
   // Extract price with material-specific range
-  const priceResult = extractBambuLabPrice(html, markdown, region, material);
+  if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', 'Extracting price...');
+  const priceResult = extractBambuLabPrice(html, markdown, region, material, ctx);
   const price = priceResult?.price || null;
+  if (price && ctx) {
+    logSuccess(ctx, 'PRODUCT_SCRAPE', `Price extracted: ${price} ${store.currency} via ${priceResult?.source}`);
+  } else if (ctx) {
+    logWarn(ctx, 'PRODUCT_SCRAPE', 'No valid price extracted');
+  }
 
   // Extract TDS URL
   let tdsUrl: string | null = null;
@@ -887,26 +1099,50 @@ async function scrapeProductPage(productSlug: string, region: string = 'CA', mat
     if (!tdsUrl.startsWith('http')) {
       tdsUrl = `https://store.bblcdn.com${tdsUrl}`;
     }
+    if (ctx) logInfo(ctx, 'PRODUCT_SCRAPE', `TDS URL found: ${tdsUrl}`);
+  } else if (ctx) {
+    logDebug(ctx, 'PRODUCT_SCRAPE', 'No TDS URL found in page');
   }
 
-  return { colors, price, tdsUrl, success: true };
+  if (ctx) {
+    logSuccess(ctx, 'PRODUCT_SCRAPE', `Page scrape complete`, { 
+      colors: colors.length, 
+      price, 
+      hasTds: !!tdsUrl,
+      firecrawlMs: durationMs 
+    });
+  }
+
+  return { colors, price, tdsUrl, success: true, firecrawlMs: durationMs };
 }
 
-async function scrapeRegionalPrice(productSlug: string, region: string, material: string = 'PLA'): Promise<{
+async function scrapeRegionalPrice(
+  productSlug: string, 
+  region: string, 
+  material: string = 'PLA',
+  ctx?: LogContext
+): Promise<{
   price: number | null;
   url: string;
+  firecrawlMs?: number;
 }> {
   const store = BAMBU_REGIONAL_STORES[region];
   const url = `https://${store.subdomain}.store.bambulab.com/products/${productSlug}`;
   
-  const { html, markdown, success } = await scrapeWithFirecrawl(url, region);
+  if (ctx) logDebug(ctx, 'REGIONAL', `Scraping regional price: ${region} -> ${url}`);
+  
+  const { html, markdown, success, durationMs } = await scrapeWithFirecrawl(url, region, ctx);
   
   if (!success) {
-    return { price: null, url };
+    if (ctx) logWarn(ctx, 'REGIONAL', `Failed to scrape ${region} price for ${productSlug}`);
+    return { price: null, url, firecrawlMs: durationMs };
   }
 
-  const priceResult = extractBambuLabPrice(html, markdown, region, material);
-  return { price: priceResult?.price || null, url };
+  const priceResult = extractBambuLabPrice(html, markdown, region, material, ctx);
+  if (priceResult?.price && ctx) {
+    logSuccess(ctx, 'REGIONAL', `${region}: ${priceResult.price} ${store.currency}`);
+  }
+  return { price: priceResult?.price || null, url, firecrawlMs: durationMs };
 }
 
 // ============================================================================
@@ -919,24 +1155,34 @@ async function upsertFilament(
   productConfig: ProductConfig,
   brandId: string | null,
   prices: Record<string, { price: number | null; url: string }>,
-): Promise<{ created: boolean; updated: boolean; error?: string }> {
-  
+  ctx?: LogContext
+): Promise<{ created: boolean; updated: boolean; error?: string; durationMs?: number }> {
+  const startTime = Date.now();
   const productTitle = `Bambu Lab ${productType} ${colorVariant.colorName}`;
   const productId = `bambu-${productConfig.slug}-${colorVariant.colorName.toLowerCase().replace(/\s+/g, '-')}`;
   
-  console.log(`[DB] Upserting: ${productTitle}`);
+  if (ctx) {
+    logInfo(ctx, 'DB', `Upserting: ${productTitle}`);
+    logDebug(ctx, 'DB', `Product ID: ${productId}`);
+    logDebug(ctx, 'DB', `Color: ${colorVariant.colorName}, Hex: ${colorVariant.colorHex}, Family: ${colorVariant.colorFamily}`);
+  }
 
   // Check if filament exists
+  const checkStart = Date.now();
   const { data: existing, error: checkError } = await supabase
     .from('filaments')
     .select('id')
     .eq('product_id', productId)
     .maybeSingle();
 
+  if (ctx) logTiming(ctx, 'DB', 'Existence check', Date.now() - checkStart);
+
   if (checkError) {
-    console.error(`[DB] Error checking existing filament:`, checkError);
-    return { created: false, updated: false, error: checkError.message };
+    if (ctx) logError(ctx, 'DB', 'Error checking existing filament', checkError);
+    return { created: false, updated: false, error: checkError.message, durationMs: Date.now() - startTime };
   }
+
+  if (ctx) logDebug(ctx, 'DB', `Existing record: ${existing ? `YES (id: ${existing.id})` : 'NO (new insert)'}`);
 
   const filamentData: Record<string, any> = {
     product_id: productId,
@@ -955,7 +1201,7 @@ async function upsertFilament(
     drying_temp_c: productConfig.dryingTempC,
     drying_time_hours: productConfig.dryingTimeHours,
     diameter_nominal_mm: 1.75,
-    net_weight_g: productConfig.netWeightG || 1000, // Support 0.5kg spools
+    net_weight_g: productConfig.netWeightG || 1000,
     auto_created: true,
     auto_updated: true,
     last_scraped_at: new Date().toISOString(),
@@ -963,14 +1209,22 @@ async function upsertFilament(
   };
 
   // Add regional prices and URLs
+  const pricesSummary: string[] = [];
   for (const [region, { price, url }] of Object.entries(prices)) {
     const store = BAMBU_REGIONAL_STORES[region];
     if (store && price) {
       filamentData[store.priceField] = price;
       filamentData[store.urlField] = url;
+      pricesSummary.push(`${region}:${price}`);
     }
   }
+  
+  if (ctx) {
+    logDebug(ctx, 'DB', `Prices to save: ${pricesSummary.join(', ') || 'NONE'}`);
+    logDebug(ctx, 'DB', `Filament data keys: ${Object.keys(filamentData).join(', ')}`);
+  }
 
+  const opStart = Date.now();
   if (existing) {
     // Update
     const { error: updateError } = await supabase
@@ -978,26 +1232,36 @@ async function upsertFilament(
       .update(filamentData)
       .eq('id', existing.id);
 
+    const opDuration = Date.now() - opStart;
+    const totalDuration = Date.now() - startTime;
+
     if (updateError) {
-      console.error(`[DB] Update error:`, updateError);
-      return { created: false, updated: false, error: updateError.message };
+      if (ctx) logError(ctx, 'DB', `Update failed for ${productTitle}`, updateError);
+      return { created: false, updated: false, error: updateError.message, durationMs: totalDuration };
     }
     
-    console.log(`[DB] Updated: ${productTitle}`);
-    return { created: false, updated: true };
+    if (ctx) {
+      logSuccess(ctx, 'DB', `Updated: ${productTitle}`, { opDuration, totalDuration });
+    }
+    return { created: false, updated: true, durationMs: totalDuration };
   } else {
     // Insert
     const { error: insertError } = await supabase
       .from('filaments')
       .insert(filamentData);
 
+    const opDuration = Date.now() - opStart;
+    const totalDuration = Date.now() - startTime;
+
     if (insertError) {
-      console.error(`[DB] Insert error:`, insertError);
-      return { created: false, updated: false, error: insertError.message };
+      if (ctx) logError(ctx, 'DB', `Insert failed for ${productTitle}`, insertError);
+      return { created: false, updated: false, error: insertError.message, durationMs: totalDuration };
     }
     
-    console.log(`[DB] Created: ${productTitle}`);
-    return { created: true, updated: false };
+    if (ctx) {
+      logSuccess(ctx, 'DB', `Created: ${productTitle}`, { opDuration, totalDuration });
+    }
+    return { created: true, updated: false, durationMs: totalDuration };
   }
 }
 
@@ -1009,12 +1273,26 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Initialize logging context
+  const ctx: LogContext = {
+    requestId: generateRequestId(),
+    startTime: Date.now(),
+  };
+
+  // Timing metrics
+  const timing = {
+    firecrawlMs: 0,
+    dbMs: 0,
+    delayMs: 0,
+  };
+
   try {
     const { 
       materials, // Optional: which material categories to scrape e.g., ["PLA", "PETG", "TPU"]
       products,  // Optional: specific product types to scrape e.g., ["PLA Basic", "PLA Matte"]
       limit,     // Optional: limit number of products per material
       dryRun,    // Optional: don't save to DB, just scrape and report
+      debug = true, // Optional: enable verbose debug logging (default: true)
     } = await req.json().catch(() => ({}));
 
     // Default to PLA only if no materials specified
@@ -1022,30 +1300,63 @@ serve(async (req) => {
       ? materials 
       : ['PLA'];
 
-    console.log(`\n========================================`);
-    console.log(`BAMBU LAB UNIFIED SCRAPER`);
-    console.log(`========================================`);
-    console.log(`Materials: ${selectedMaterials.join(', ')}`);
-    console.log(`Products: ${products ? products.join(', ') : 'ALL in selected materials'}`);
-    console.log(`Limit: ${limit || 'NONE'}`);
-    console.log(`Dry Run: ${dryRun || false}`);
+    // Log request initialization
+    logSeparator(ctx, 'BAMBU LAB UNIFIED SCRAPER');
+    logInfo(ctx, 'INIT', `Request ID: ${ctx.requestId}`);
+    logInfo(ctx, 'INIT', `Started at: ${new Date().toISOString()}`);
+    logInfo(ctx, 'INIT', `Request params:`, { 
+      materials: selectedMaterials, 
+      products: products || 'ALL', 
+      limit: limit || 'NONE', 
+      dryRun: dryRun || false,
+      debug 
+    });
+    
+    // Environment check
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+    
+    logInfo(ctx, 'INIT', 'Environment check:', {
+      SUPABASE_URL: !!supabaseUrl,
+      SUPABASE_SERVICE_ROLE_KEY: !!supabaseKey,
+      FIRECRAWL_API_KEY: !!firecrawlKey,
+    });
+
+    if (!supabaseUrl || !supabaseKey) {
+      logError(ctx, 'INIT', 'Missing Supabase credentials');
+      throw new Error('Missing Supabase credentials');
+    }
+
+    if (!firecrawlKey) {
+      logError(ctx, 'INIT', 'Missing Firecrawl API key');
+      throw new Error('Missing Firecrawl API key');
+    }
 
     // Initialize Supabase
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    logInfo(ctx, 'INIT', 'Supabase client initialized');
 
     // Get Bambu Lab brand ID
-    const { data: brandData } = await supabase
+    const brandStart = Date.now();
+    const { data: brandData, error: brandError } = await supabase
       .from('automated_brands')
       .select('id')
       .eq('brand_slug', 'bambu-lab')
       .single();
     
+    logTiming(ctx, 'INIT', 'Brand lookup', Date.now() - brandStart);
+    
+    if (brandError) {
+      logWarn(ctx, 'INIT', 'Brand lookup failed', brandError);
+    }
+    
     const brandId = brandData?.id || null;
-    console.log(`Brand ID: ${brandId || 'NOT FOUND'}`);
+    logInfo(ctx, 'INIT', `Brand ID: ${brandId || 'NOT FOUND (will use null)'}`);
 
     const results = {
+      requestId: ctx.requestId,
+      startedAt: new Date(ctx.startTime).toISOString(),
       materialsProcessed: selectedMaterials,
       productsScraped: 0,
       colorsDiscovered: 0,
@@ -1053,6 +1364,7 @@ serve(async (req) => {
       filamentsUpdated: 0,
       errors: [] as string[],
       productDetails: [] as any[],
+      timing: {} as TimingMetrics,
     };
 
     // Process each selected material category
@@ -1060,14 +1372,14 @@ serve(async (req) => {
       const materialProducts = ALL_BAMBU_PRODUCTS[materialCategory];
       
       if (!materialProducts) {
-        console.warn(`[WARN] Unknown material category: ${materialCategory}`);
+        logWarn(ctx, 'MATERIAL', `Unknown material category: ${materialCategory}`);
         results.errors.push(`Unknown material category: ${materialCategory}`);
         continue;
       }
 
-      console.log(`\n========================================`);
-      console.log(`MATERIAL: ${materialCategory}`);
-      console.log(`========================================`);
+      logSeparator(ctx, `MATERIAL: ${materialCategory}`);
+      logInfo(ctx, 'MATERIAL', `Processing material category: ${materialCategory}`);
+      logInfo(ctx, 'MATERIAL', `Available products: ${Object.keys(materialProducts).length}`);
 
       // Determine which products to scrape for this material
       let productsToScrape = Object.entries(materialProducts);
@@ -1076,33 +1388,50 @@ serve(async (req) => {
         productsToScrape = productsToScrape.filter(([name]) => 
           products.some((p: string) => name.toLowerCase().includes(p.toLowerCase()))
         );
+        logInfo(ctx, 'MATERIAL', `Filtered to ${productsToScrape.length} products matching: ${products.join(', ')}`);
       }
       
       if (limit && limit > 0) {
         productsToScrape = productsToScrape.slice(0, limit);
+        logInfo(ctx, 'MATERIAL', `Limited to first ${limit} products`);
       }
 
-      console.log(`Products to scrape: ${productsToScrape.map(([name]) => name).join(', ')}`);
+      logInfo(ctx, 'MATERIAL', `Products to scrape: ${productsToScrape.map(([name]) => name).join(', ')}`);
 
       // Process each product type in this material category
+      let productIndex = 0;
       for (const [productName, productConfig] of productsToScrape) {
-        console.log(`\n========================================`);
-        console.log(`Processing: ${productName} (${productConfig.material})`);
-        console.log(`========================================`);
+        productIndex++;
+        ctx.productName = productName;
+        
+        logSeparator(ctx, `PRODUCT [${productIndex}/${productsToScrape.length}]: ${productName}`);
+        logInfo(ctx, 'PRODUCT', `Material: ${productConfig.material}, Slug: ${productConfig.slug}`);
+        logDebug(ctx, 'PRODUCT', `Config:`, {
+          nozzleTemp: `${productConfig.nozzleTempMin}-${productConfig.nozzleTempMax}°C`,
+          bedTemp: `${productConfig.bedTempMin}-${productConfig.bedTempMax}°C`,
+          drying: `${productConfig.dryingTempC}°C for ${productConfig.dryingTimeHours}h`,
+          hasTds: !!productConfig.tdsUrl,
+        });
 
         // Step 1: Scrape product page from Canadian store to get colors
-        const { colors, price: caPrice, tdsUrl, success } = await scrapeProductPage(
+        logInfo(ctx, 'PRODUCT', 'Step 1: Scraping CA store for colors and base price');
+        const productScrapeStart = Date.now();
+        const { colors, price: caPrice, tdsUrl, success, firecrawlMs } = await scrapeProductPage(
           productConfig.slug, 
           'CA', 
-          productConfig.material
+          productConfig.material,
+          { ...ctx, region: 'CA' }
         );
         
+        if (firecrawlMs) timing.firecrawlMs += firecrawlMs;
+        logTiming(ctx, 'PRODUCT', 'CA product page scrape', Date.now() - productScrapeStart);
+        
         if (!success || colors.length === 0) {
-          console.log(`[${productName}] No colors found, trying with default colors`);
-          // Use material-appropriate default colors
+          logWarn(ctx, 'PRODUCT', `No colors found for ${productName}, using defaults`);
           const defaultColors = productConfig.material === 'Support' || productConfig.material === 'PVA'
-            ? ['White'] // Support materials usually only have one color
+            ? ['White']
             : ['Black', 'White'];
+          logInfo(ctx, 'PRODUCT', `Default colors: ${defaultColors.join(', ')}`);
           for (const colorName of defaultColors) {
             colors.push(extractColorInfo(colorName));
           }
@@ -1110,11 +1439,18 @@ serve(async (req) => {
 
         // Update TDS URL if found
         if (tdsUrl && !productConfig.tdsUrl) {
+          logInfo(ctx, 'PRODUCT', `TDS URL discovered: ${tdsUrl}`);
           (productConfig as any).tdsUrl = tdsUrl;
         }
 
         results.productsScraped++;
         results.colorsDiscovered += colors.length;
+        
+        logInfo(ctx, 'PRODUCT', `Colors discovered: ${colors.length}`, colors.map(c => ({
+          name: c.colorName,
+          hex: c.colorHex,
+          family: c.colorFamily,
+        })));
 
         const productResult = {
           productName,
@@ -1123,35 +1459,65 @@ serve(async (req) => {
           colorsFound: colors.length,
           colors: colors.map(c => c.colorName),
           prices: {} as Record<string, number | null>,
+          timing: {
+            colorScrapeMs: Date.now() - productScrapeStart,
+            regionalScrapeMs: 0,
+            dbUpsertMs: 0,
+          },
         };
 
-        // Step 2: Scrape regional prices (for the base product)
-        console.log(`\n[${productName}] Scraping regional prices...`);
-        
+        // Step 2: Scrape regional prices
+        logInfo(ctx, 'PRODUCT', 'Step 2: Scraping regional prices');
+        const regionalStart = Date.now();
         const regionalPrices: Record<string, { price: number | null; url: string }> = {};
+        const regions = Object.keys(BAMBU_REGIONAL_STORES);
         
-        for (const region of Object.keys(BAMBU_REGIONAL_STORES)) {
+        for (let i = 0; i < regions.length; i++) {
+          const region = regions[i];
+          ctx.region = region;
+          
           // Add delay between regional scrapes
-          if (Object.keys(regionalPrices).length > 0) {
+          if (i > 0) {
+            logDebug(ctx, 'REGIONAL', 'Rate limit delay: 2000ms');
+            const delayStart = Date.now();
             await new Promise(r => setTimeout(r, 2000));
+            timing.delayMs += Date.now() - delayStart;
           }
           
-          const { price, url } = await scrapeRegionalPrice(
+          logInfo(ctx, 'REGIONAL', `[${i+1}/${regions.length}] Scraping ${region}...`);
+          const { price, url, firecrawlMs: regionFirecrawlMs } = await scrapeRegionalPrice(
             productConfig.slug, 
             region, 
-            productConfig.material
+            productConfig.material,
+            ctx
           );
+          
+          if (regionFirecrawlMs) timing.firecrawlMs += regionFirecrawlMs;
+          
           regionalPrices[region] = { price, url };
           productResult.prices[region] = price;
-          
-          if (price) {
-            console.log(`[${productName}] ${region}: ${price}`);
-          }
         }
+        
+        ctx.region = undefined;
+        productResult.timing.regionalScrapeMs = Date.now() - regionalStart;
+        
+        // Log regional price summary
+        const pricesSummary = Object.entries(regionalPrices)
+          .map(([r, { price }]) => `${r}:${price ?? 'null'}`)
+          .join(', ');
+        logInfo(ctx, 'REGIONAL', `Price summary: ${pricesSummary}`);
 
         // Step 3: Upsert each color variant
         if (!dryRun) {
-          for (const colorVariant of colors) {
+          logInfo(ctx, 'PRODUCT', `Step 3: Upserting ${colors.length} color variants to database`);
+          const dbStart = Date.now();
+          
+          for (let i = 0; i < colors.length; i++) {
+            const colorVariant = colors[i];
+            ctx.colorName = colorVariant.colorName;
+            
+            logDebug(ctx, 'DB', `[${i+1}/${colors.length}] Processing: ${colorVariant.colorName}`);
+            
             const result = await upsertFilament(
               supabase,
               productName,
@@ -1159,30 +1525,80 @@ serve(async (req) => {
               productConfig,
               brandId,
               regionalPrices,
+              ctx
             );
 
+            if (result.durationMs) timing.dbMs += result.durationMs;
             if (result.created) results.filamentsCreated++;
             if (result.updated) results.filamentsUpdated++;
-            if (result.error) results.errors.push(`${productName} ${colorVariant.colorName}: ${result.error}`);
+            if (result.error) {
+              const errorMsg = `${productName} ${colorVariant.colorName}: ${result.error}`;
+              results.errors.push(errorMsg);
+              logError(ctx, 'DB', errorMsg);
+            }
           }
+          
+          ctx.colorName = undefined;
+          productResult.timing.dbUpsertMs = Date.now() - dbStart;
+          logTiming(ctx, 'PRODUCT', 'Database upserts', productResult.timing.dbUpsertMs);
+        } else {
+          logInfo(ctx, 'PRODUCT', 'DRY RUN: Skipping database operations');
         }
 
         results.productDetails.push(productResult);
+        
+        // Log product completion
+        logSuccess(ctx, 'PRODUCT', `Completed: ${productName}`, {
+          colors: colors.length,
+          prices: Object.values(productResult.prices).filter(Boolean).length,
+          created: results.filamentsCreated,
+          updated: results.filamentsUpdated,
+        });
 
         // Delay between products to respect rate limits
+        logDebug(ctx, 'PRODUCT', 'Inter-product rate limit delay: 3000ms');
+        const interProductDelayStart = Date.now();
         await new Promise(r => setTimeout(r, 3000));
+        timing.delayMs += Date.now() - interProductDelayStart;
       }
+      
+      ctx.productName = undefined;
     }
 
-    console.log(`\n========================================`);
-    console.log(`SCRAPE COMPLETE`);
-    console.log(`========================================`);
-    console.log(`Materials: ${selectedMaterials.join(', ')}`);
-    console.log(`Products scraped: ${results.productsScraped}`);
-    console.log(`Colors discovered: ${results.colorsDiscovered}`);
-    console.log(`Filaments created: ${results.filamentsCreated}`);
-    console.log(`Filaments updated: ${results.filamentsUpdated}`);
-    console.log(`Errors: ${results.errors.length}`);
+    // Calculate final timing
+    const totalMs = Date.now() - ctx.startTime;
+    results.timing = {
+      firecrawlMs: timing.firecrawlMs,
+      dbMs: timing.dbMs,
+      delayMs: timing.delayMs,
+      totalMs,
+    };
+
+    // Final summary
+    logSeparator(ctx, 'SCRAPE COMPLETE');
+    logInfo(ctx, 'SUMMARY', `Request ID: ${ctx.requestId}`);
+    logInfo(ctx, 'SUMMARY', `Duration: ${totalMs}ms (${(totalMs / 1000).toFixed(1)}s)`);
+    logInfo(ctx, 'SUMMARY', `Timing breakdown:`, {
+      firecrawl: `${timing.firecrawlMs}ms (${((timing.firecrawlMs / totalMs) * 100).toFixed(1)}%)`,
+      database: `${timing.dbMs}ms (${((timing.dbMs / totalMs) * 100).toFixed(1)}%)`,
+      delays: `${timing.delayMs}ms (${((timing.delayMs / totalMs) * 100).toFixed(1)}%)`,
+    });
+    logInfo(ctx, 'SUMMARY', `Materials: ${selectedMaterials.join(', ')}`);
+    logInfo(ctx, 'SUMMARY', `Products scraped: ${results.productsScraped}`);
+    logInfo(ctx, 'SUMMARY', `Colors discovered: ${results.colorsDiscovered}`);
+    logSuccess(ctx, 'SUMMARY', `Filaments created: ${results.filamentsCreated}`);
+    logSuccess(ctx, 'SUMMARY', `Filaments updated: ${results.filamentsUpdated}`);
+    
+    if (results.errors.length > 0) {
+      logWarn(ctx, 'SUMMARY', `Errors: ${results.errors.length}`);
+      results.errors.forEach((err, i) => {
+        logError(ctx, 'SUMMARY', `  Error ${i+1}: ${err}`);
+      });
+    } else {
+      logSuccess(ctx, 'SUMMARY', 'No errors encountered');
+    }
+
+    logSeparator(ctx);
 
     return new Response(JSON.stringify({
       success: true,
@@ -1194,10 +1610,22 @@ serve(async (req) => {
 
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : String(error);
-    console.error('Error in scrape-bambu-pla:', error);
+    const totalMs = Date.now() - ctx.startTime;
+    
+    logSeparator(ctx, 'SCRAPE FAILED');
+    logError(ctx, 'FATAL', `Unhandled exception after ${totalMs}ms`, error);
+    
+    if (error instanceof Error && error.stack) {
+      logError(ctx, 'FATAL', 'Stack trace:', error.stack);
+    }
+    
+    logSeparator(ctx);
+    
     return new Response(JSON.stringify({
       success: false,
       error: errMsg,
+      requestId: ctx.requestId,
+      durationMs: totalMs,
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
