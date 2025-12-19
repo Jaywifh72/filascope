@@ -6,6 +6,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Regional store configuration for Bambu Lab
+const BAMBU_REGIONAL_STORES: Record<string, { 
+  subdomain: string; 
+  currency: string; 
+  priceField: string;
+  urlField: string;
+}> = {
+  US: { subdomain: "us", currency: "USD", priceField: "variant_price", urlField: "product_url" },
+  CA: { subdomain: "ca", currency: "CAD", priceField: "price_cad", urlField: "product_url_ca" },
+  UK: { subdomain: "uk", currency: "GBP", priceField: "price_gbp", urlField: "product_url_uk" },
+  EU: { subdomain: "eu", currency: "EUR", priceField: "price_eur", urlField: "product_url_eu" },
+  AU: { subdomain: "au", currency: "AUD", priceField: "price_aud", urlField: "product_url_au" },
+  JP: { subdomain: "jp", currency: "JPY", priceField: "price_jpy", urlField: "product_url_jp" },
+};
+
 // Bambu Lab ABS Color variants with official hex codes, image URLs, and Shopify variant IDs
 // Image URLs and variant IDs extracted from: https://us.store.bambulab.com/products/abs-filament
 const BAMBU_ABS_COLORS: Record<string, { hex: string; colorFamily: string; imageUrl: string; variantId: string }> = {
@@ -27,8 +42,6 @@ const BAMBU_ABS_COLORS: Record<string, { hex: string; colorFamily: string; image
 const BAMBU_ABS_BASE_DATA = {
   vendor: "Bambu Lab",
   material: "ABS",
-  base_product_url: "https://us.store.bambulab.com/products/abs-filament",
-  variant_price: 19.99,
   nozzle_temp_min_c: 240,
   nozzle_temp_max_c: 270,
   bed_temp_min_c: 80,
@@ -45,10 +58,61 @@ const BAMBU_ABS_BASE_DATA = {
   net_weight_g: 1000,
 };
 
-// Helper to get the full product URL with variant parameter
-const getProductUrl = (variantId: string): string => {
-  return `${BAMBU_ABS_BASE_DATA.base_product_url}?variant=${variantId}`;
+// Helper to get the product URL for a specific region
+const getRegionalProductUrl = (region: string, variantId: string): string => {
+  const store = BAMBU_REGIONAL_STORES[region] || BAMBU_REGIONAL_STORES.US;
+  return `https://${store.subdomain}.store.bambulab.com/products/abs-filament?variant=${variantId}`;
 };
+
+// Fetch price from a regional Bambu Lab store
+async function fetchRegionalPrice(region: string, variantId: string): Promise<number | null> {
+  const store = BAMBU_REGIONAL_STORES[region];
+  if (!store) return null;
+
+  const url = `https://${store.subdomain}.store.bambulab.com/products/abs-filament.json`;
+  
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; FilamentBot/1.0)",
+        "Accept": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.log(`Failed to fetch ${region} store: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const product = data.product;
+    
+    if (!product || !product.variants) {
+      console.log(`No product data for ${region} store`);
+      return null;
+    }
+
+    // Find the variant by ID
+    const variant = product.variants.find((v: { id: number }) => String(v.id) === variantId);
+    if (variant && variant.price) {
+      const price = parseFloat(variant.price);
+      console.log(`${region} store price for variant ${variantId}: ${price} ${store.currency}`);
+      return price;
+    }
+
+    // If variant not found by ID, try to get any price as fallback
+    if (product.variants.length > 0 && product.variants[0].price) {
+      const price = parseFloat(product.variants[0].price);
+      console.log(`${region} store fallback price: ${price} ${store.currency}`);
+      return price;
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Error fetching ${region} store:`, error);
+    return null;
+  }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -67,7 +131,6 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
 
     const authClient = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace("Bearer ", "");
@@ -106,7 +169,7 @@ serve(async (req) => {
     // Get existing Bambu Lab filaments
     const { data: existingFilaments, error: fetchError } = await supabase
       .from("filaments")
-      .select("id, product_title, color_hex, color_family, featured_image, product_url, variant_price")
+      .select("id, product_title, color_hex, color_family, featured_image, product_url, variant_price, price_cad, price_gbp, price_eur, price_aud, price_jpy, product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp")
       .eq("vendor", "Bambu Lab")
       .ilike("product_title", `%${targetMaterial}%`);
 
@@ -116,26 +179,30 @@ serve(async (req) => {
 
     console.log(`Found ${existingFilaments?.length || 0} existing Bambu Lab ${targetMaterial} filaments`);
 
+    // Fetch regional prices once (they're the same for all color variants)
+    console.log("Fetching regional prices...");
+    const regionalPrices: Record<string, number | null> = {};
+    const firstVariantId = Object.values(BAMBU_ABS_COLORS)[0].variantId;
+    
+    for (const region of Object.keys(BAMBU_REGIONAL_STORES)) {
+      regionalPrices[region] = await fetchRegionalPrice(region, firstVariantId);
+      // Small delay between requests to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    console.log("Regional prices fetched:", regionalPrices);
+
     const results: Array<{
       color: string;
       action: "created" | "updated" | "skipped";
       filamentId?: string;
       title: string;
+      prices?: Record<string, number | null>;
     }> = [];
 
     let created = 0;
     let updated = 0;
     let skipped = 0;
-
-    // Find the base product to clone from
-    const baseFilament = existingFilaments?.find(f => 
-      f.product_title === `Bambu Lab ${targetMaterial}` || 
-      f.product_title.includes(`Bambu Lab ${targetMaterial}`)
-    );
-
-    if (!baseFilament && !dryRun) {
-      console.log(`No base filament found for Bambu Lab ${targetMaterial}`);
-    }
 
     // Process each color variant
     for (const [colorName, colorData] of Object.entries(BAMBU_ABS_COLORS)) {
@@ -147,23 +214,49 @@ serve(async (req) => {
         (f.product_title === `Bambu Lab ${targetMaterial}` && f.color_hex === colorData.hex)
       );
 
+      // Build regional URLs and prices for this variant
+      const regionalData: Record<string, unknown> = {
+        // US is the default/primary
+        product_url: getRegionalProductUrl("US", colorData.variantId),
+        variant_price: regionalPrices.US,
+        // Other regions
+        product_url_ca: getRegionalProductUrl("CA", colorData.variantId),
+        price_cad: regionalPrices.CA,
+        product_url_uk: getRegionalProductUrl("UK", colorData.variantId),
+        price_gbp: regionalPrices.UK,
+        product_url_eu: getRegionalProductUrl("EU", colorData.variantId),
+        price_eur: regionalPrices.EU,
+        product_url_au: getRegionalProductUrl("AU", colorData.variantId),
+        price_aud: regionalPrices.AU,
+        product_url_jp: getRegionalProductUrl("JP", colorData.variantId),
+        price_jpy: regionalPrices.JP,
+      };
+
       if (existing) {
-        // Check if we need to update (image, product_url, price, etc.)
-        const targetProductUrl = getProductUrl(colorData.variantId);
+        // Check if we need to update
         const needsUpdate = 
           existing.color_hex !== colorData.hex || 
           existing.color_family !== colorData.colorFamily ||
           existing.featured_image !== colorData.imageUrl ||
-          existing.product_url !== targetProductUrl ||
-          existing.variant_price !== BAMBU_ABS_BASE_DATA.variant_price;
+          existing.product_url !== regionalData.product_url ||
+          existing.variant_price !== regionalData.variant_price ||
+          existing.price_cad !== regionalData.price_cad ||
+          existing.price_gbp !== regionalData.price_gbp ||
+          existing.price_eur !== regionalData.price_eur ||
+          existing.price_aud !== regionalData.price_aud ||
+          existing.price_jpy !== regionalData.price_jpy ||
+          existing.product_url_ca !== regionalData.product_url_ca ||
+          existing.product_url_uk !== regionalData.product_url_uk ||
+          existing.product_url_eu !== regionalData.product_url_eu ||
+          existing.product_url_au !== regionalData.product_url_au ||
+          existing.product_url_jp !== regionalData.product_url_jp;
 
         if (needsUpdate && !dryRun) {
           const updateData: Record<string, unknown> = {
             color_hex: colorData.hex,
             color_family: colorData.colorFamily,
-            product_url: targetProductUrl,
             featured_image: colorData.imageUrl,
-            variant_price: BAMBU_ABS_BASE_DATA.variant_price,
+            ...regionalData,
           };
           
           const { error: updateError } = await supabase
@@ -180,8 +273,9 @@ serve(async (req) => {
               action: "updated",
               filamentId: existing.id,
               title: productTitle,
+              prices: regionalPrices,
             });
-            console.log(`Updated ${productTitle} with hex: ${colorData.hex}, price: $${BAMBU_ABS_BASE_DATA.variant_price}`);
+            console.log(`Updated ${productTitle} with regional prices`);
           }
         } else if (needsUpdate && dryRun) {
           results.push({
@@ -189,6 +283,7 @@ serve(async (req) => {
             action: "updated",
             filamentId: existing.id,
             title: productTitle,
+            prices: regionalPrices,
           });
         } else {
           skipped++;
@@ -206,7 +301,6 @@ serve(async (req) => {
             product_title: productTitle,
             vendor: BAMBU_ABS_BASE_DATA.vendor,
             material: BAMBU_ABS_BASE_DATA.material,
-            product_url: getProductUrl(colorData.variantId),
             color_hex: colorData.hex,
             color_family: colorData.colorFamily,
             nozzle_temp_min_c: BAMBU_ABS_BASE_DATA.nozzle_temp_min_c,
@@ -224,9 +318,9 @@ serve(async (req) => {
             diameter_nominal_mm: BAMBU_ABS_BASE_DATA.diameter_nominal_mm,
             net_weight_g: BAMBU_ABS_BASE_DATA.net_weight_g,
             featured_image: colorData.imageUrl,
-            variant_price: BAMBU_ABS_BASE_DATA.variant_price,
             auto_created: true,
             variant_available: true,
+            ...regionalData,
           };
 
           const { data: inserted, error: insertError } = await supabase
@@ -244,26 +338,18 @@ serve(async (req) => {
               action: "created",
               filamentId: inserted.id,
               title: productTitle,
+              prices: regionalPrices,
             });
-            console.log(`Created ${productTitle} with hex: ${colorData.hex}`);
+            console.log(`Created ${productTitle} with regional prices`);
           }
         } else {
           results.push({
             color: colorName,
             action: "created",
             title: productTitle,
+            prices: regionalPrices,
           });
         }
-      }
-    }
-
-    // Update the original "Bambu Lab ABS" entry if it exists and has wrong color
-    if (baseFilament && !dryRun) {
-      const firstColor = Object.entries(BAMBU_ABS_COLORS)[0];
-      if (baseFilament.color_hex !== firstColor[1].hex) {
-        // The original entry likely represents one specific color
-        // We should either update it or mark it as the base product
-        console.log(`Base filament "${baseFilament.product_title}" has color_hex: ${baseFilament.color_hex}`);
       }
     }
 
@@ -276,6 +362,7 @@ serve(async (req) => {
       created,
       updated,
       skipped,
+      regionalPrices,
       results,
     };
 
