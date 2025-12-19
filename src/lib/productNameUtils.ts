@@ -6,6 +6,13 @@ export const COLOR_WORDS = [
   'Olive', 'Orange', 'Peach', 'Pink', 'Purple', 'Red', 'Rose', 'Salmon', 'Silver',
   'Tan', 'Teal', 'Turquoise', 'Violet', 'White', 'Yellow', 'Kraft', 'Lemonade', 'Terracotta',
   'Bronze', 'Rust', 'Khaki', 'Mustard', 'Amber', 'Aqua', 'Azure', 'Bone', 'Champagne',
+  // Bambu Lab multi-word colors
+  'Rose Gold', 'Jade White', 'Ash Grey', 'Ice Blue', 'Dark Blue', 'Dark Brown',
+  'Dark Green', 'Dark Red', 'Desert Tan', 'Grass Green', 'Latte Brown',
+  'Lemon Yellow', 'Lilac Purple', 'Mandarin Orange', 'Marine Blue', 'Ivory White',
+  'Sakura Pink', 'Scarlet Red', 'Black Marble', 'Gray Marble', 'Green Marble',
+  'White Marble', 'Aurora Purple', 'Dawn Radiance', 'Black Red', 'Silk Red',
+  'Silk Rose', 'Silk Gold', 'Silk Silver', 'Silk Blue', 'Silk Green', 'Silk Purple',
   // Fillamentum style colors
   'Cobalt Blue', 'Concrete Grey', 'Luminous Orange', 'Metallic Grey', 'Signal Brown',
   'Sky Blue', 'Traffic Black', 'Traffic Red', 'Traffic White', 'Traffic Yellow',
@@ -72,6 +79,30 @@ export const getBaseProductName = (title: string, material?: string | null): str
     .replace(/\s+w\/\s*Spool\s*/gi, ' ')       // "w/ Spool"
     .replace(/\s+with\s+Spool\s*/gi, ' ')      // "with Spool"
     .trim();
+  
+  // BAMBU LAB PATTERN: "Bambu Lab [Material] [ProductType] [Color]"
+  // ProductType examples: Basic, Matte, Silk, Silk Multi-color, Marble, Galaxy, etc.
+  // This pattern extracts the base product name without the color suffix
+  const bambuLabMatch = normalizedTitle.match(
+    /^(Bambu Lab (?:PLA|PETG|TPU|ABS|ASA|PA|PC|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?(?:\s+(?:Basic|Matte|Silk|Translucent|Tough|Wood|Marble|Metal|Galaxy|Glow|Sparkle|Aero|Impact|HF|HS|Lite))?(?:\s+(?:Multi-color|Gradient))?)\s+.+$/i
+  );
+  if (bambuLabMatch) {
+    return bambuLabMatch[1].trim();
+  }
+  
+  // Handle Bambu Lab products that are just "Bambu Lab [Material] [Color]" (no product type)
+  const bambuLabSimpleMatch = normalizedTitle.match(
+    /^(Bambu Lab (?:PLA|PETG|TPU|ABS|ASA|PA|PC|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?)\s+.+$/i
+  );
+  if (bambuLabSimpleMatch) {
+    // Only match if what follows is a color, not a product type
+    const remainder = normalizedTitle.slice(bambuLabSimpleMatch[1].length).trim();
+    const productTypes = ['Basic', 'Matte', 'Silk', 'Translucent', 'Tough', 'Wood', 'Marble', 'Metal', 'Galaxy', 'Glow', 'Sparkle', 'Aero', 'Impact', 'HF', 'HS', 'Lite'];
+    const startsWithProductType = productTypes.some(pt => remainder.toLowerCase().startsWith(pt.toLowerCase()));
+    if (!startsWithProductType) {
+      return bambuLabSimpleMatch[1].trim();
+    }
+  }
   
   // Pattern 0: Paramount 3D style - "Material (Color) Diameter Weight Filament"
   const paramountMatch = normalizedTitle.match(/^((?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC|HIPS|PVA|Nylon)(?:\s+Carbon\s+Fiber)?)\s*\(.+\)\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i);
