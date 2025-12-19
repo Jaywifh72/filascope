@@ -19,7 +19,7 @@ interface PersistedQueueState {
   dryRun: boolean;
 }
 
-const ALL_MATERIALS = ['PLA', 'PETG', 'TPU', 'ABS', 'ASA', 'PA', 'PC', 'Support'];
+const ALL_MATERIALS = ['PLA', 'PETG', 'TPU', 'ABS', 'ASA', 'PA', 'PET', 'PC', 'PPS', 'Support'];
 const STORAGE_KEY = 'bambuScrapeQueue';
 
 function saveQueueToStorage(state: PersistedQueueState | null) {
@@ -66,6 +66,12 @@ export function useBambuScrapeQueue(dryRun: boolean) {
     };
   });
   
+  // Store the dryRun mode used when the queue started
+  const [queueDryRun, setQueueDryRun] = useState<boolean>(() => {
+    const saved = loadQueueFromStorage();
+    return saved?.dryRun ?? dryRun;
+  });
+  
   const isStartingNextRef = useRef(false);
   const { startJob, isStarting } = useStartBambuScrapeJob();
   const { job, isComplete } = useBambuScrapeJob(queueState.currentJobId);
@@ -103,8 +109,8 @@ export function useBambuScrapeQueue(dryRun: boolean) {
       const [next, ...rest] = prev.pending;
       isStartingNextRef.current = true;
       
-      // Start job asynchronously
-      startJob([next], dryRun).then(jobId => {
+      // Start job asynchronously using the persisted queueDryRun mode
+      startJob([next], queueDryRun).then(jobId => {
         isStartingNextRef.current = false;
         if (jobId) {
           setQueueState(p => ({ ...p, currentJobId: jobId }));
@@ -120,7 +126,7 @@ export function useBambuScrapeQueue(dryRun: boolean) {
       
       return { ...prev, pending: rest, current: next };
     });
-  }, [startJob, dryRun]);
+  }, [startJob, queueDryRun]);
 
   // Watch for job completion
   useEffect(() => {
@@ -165,6 +171,9 @@ export function useBambuScrapeQueue(dryRun: boolean) {
     
     const [first, ...rest] = materials;
     isStartingNextRef.current = true;
+    
+    // Store the dryRun mode for this queue session
+    setQueueDryRun(dryRun);
     
     const jobId = await startJob([first], dryRun);
     isStartingNextRef.current = false;

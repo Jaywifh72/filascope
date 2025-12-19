@@ -529,6 +529,7 @@ const BAMBU_PA_PRODUCTS: Record<string, ProductConfig> = {
     nozzleTempMin: 270, nozzleTempMax: 290,
     bedTempMin: 80, bedTempMax: 90,
     dryingTempC: 80, dryingTimeHours: 12,
+    netWeightG: 1000,  // PA6-GF uses standard 1kg spools
   },
   "PPA-CF": {
     slug: "ppa-cf",  // Verified: https://ca.store.bambulab.com/products/ppa-cf
@@ -2799,11 +2800,12 @@ serve(async (req) => {
           const region = regions[i];
           ctx.region = region;
           
-          // Add delay between regional scrapes
+          // Add delay between regional scrapes using config
           if (i > 0) {
-            logDebug(ctx, 'REGIONAL', 'Rate limit delay: 2000ms');
+            const delay = RATE_LIMIT_CONFIG.synchronous.betweenRegions;
+            logDebug(ctx, 'REGIONAL', `Rate limit delay: ${delay}ms`);
             const delayStart = Date.now();
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, delay));
             timing.delayMs += Date.now() - delayStart;
           }
           
@@ -2887,10 +2889,11 @@ serve(async (req) => {
           updated: results.filamentsUpdated,
         });
 
-        // Delay between products to respect rate limits
-        logDebug(ctx, 'PRODUCT', 'Inter-product rate limit delay: 3000ms');
+        // Delay between products to respect rate limits using config
+        const productDelay = RATE_LIMIT_CONFIG.synchronous.betweenProducts;
+        logDebug(ctx, 'PRODUCT', `Inter-product rate limit delay: ${productDelay}ms`);
         const interProductDelayStart = Date.now();
-        await new Promise(r => setTimeout(r, 3000));
+        await new Promise(r => setTimeout(r, productDelay));
         timing.delayMs += Date.now() - interProductDelayStart;
       }
       
