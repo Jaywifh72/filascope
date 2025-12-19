@@ -404,7 +404,7 @@ const BAMBU_ASA_PRODUCTS: Record<string, ProductConfig> = {
   "ASA": {
     slug: "asa-filament",
     material: "ASA",
-    tdsUrl: null,
+    tdsUrl: "https://store.bblcdn.com/ad7b08230c164e72856cffbe06bb7dc9.pdf",
     nozzleTempMin: 240, nozzleTempMax: 270,
     bedTempMin: 80, bedTempMax: 100,
     dryingTempC: 80, dryingTimeHours: 8,
@@ -557,6 +557,15 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "Silver", colorHex: "#959698", colorFamily: "Gray", imageUrl: null, variantId: null },
     { colorName: "Yellow", colorHex: "#F4D53F", colorFamily: "Yellow", imageUrl: null, variantId: null },
     { colorName: "Cyan", colorHex: "#009BD8", colorFamily: "Blue", imageUrl: null, variantId: null },
+  ],
+  // ASA - colors from hex code table on product page
+  "asa-filament": [
+    { colorName: "White", colorHex: "#FFFAF2", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#8A949E", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Green", colorHex: "#00A6A0", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#2140B4", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
 };
 
