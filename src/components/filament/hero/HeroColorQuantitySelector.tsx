@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-import { Minus, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import { normalizeColorHex } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -24,10 +22,8 @@ interface HeroColorQuantitySelectorProps {
   availableWeights: SpoolWeight[];
   selectedWeight: number | null;
   currentVariantId: string;
-  quantity: number;
   onSelectWeight: (weight: number | null) => void;
   onSelectColor: (variant: ColorVariant) => void;
-  onQuantityChange: (quantity: number) => void;
   getColorFromTitle: (title: string, baseName: string) => string | null;
   getBaseProductName: (title: string) => string;
   className?: string;
@@ -38,10 +34,8 @@ export function HeroColorQuantitySelector({
   availableWeights,
   selectedWeight,
   currentVariantId,
-  quantity,
   onSelectWeight,
   onSelectColor,
-  onQuantityChange,
   getColorFromTitle,
   getBaseProductName,
   className
@@ -145,40 +139,6 @@ export function HeroColorQuantitySelector({
         </div>
       )}
 
-      {/* Quantity Selector */}
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Quantity
-        </label>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center rounded-lg border border-border bg-muted/30">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 w-9 p-0 hover:bg-muted"
-              onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
-              disabled={quantity <= 1}
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-            <span className="w-10 text-center font-bold text-lg">{quantity}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 w-9 p-0 hover:bg-muted"
-              onClick={() => onQuantityChange(Math.min(10, quantity + 1))}
-              disabled={quantity >= 10}
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-          {quantity >= 3 && (
-            <span className="text-xs text-emerald-500 font-medium">
-              💰 Bundle discount may apply
-            </span>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
