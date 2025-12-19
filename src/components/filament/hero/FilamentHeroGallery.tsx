@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,11 @@ export function FilamentHeroGallery({ images, productTitle, colorHex }: Filament
   
   // Filter out null/undefined images
   const validImages = images.filter((img): img is string => !!img);
+  
+  // Reset to first image when images array changes (e.g., color variant selection)
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [images[0]]);
   
   // If no valid images, show color swatch or placeholder
   const hasImages = validImages.length > 0;
