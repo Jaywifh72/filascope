@@ -27,6 +27,7 @@ interface FilamentHeroPurchaseCardProps {
   weightGrams: number | null;
   affiliateUrl: string | null;
   productUrl: string | null;
+  originalUsUrl?: string;
   retailerName?: string;
   stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock' | 'unknown';
   stockQuantity?: number | null;
@@ -44,6 +45,7 @@ export function FilamentHeroPurchaseCard({
   weightGrams,
   affiliateUrl,
   productUrl,
+  originalUsUrl,
   retailerName,
   stockStatus = 'unknown',
   stockQuantity,
@@ -55,7 +57,7 @@ export function FilamentHeroPurchaseCard({
   const { formatPrice, formatRegionalPrice, currency } = useCurrency();
   const { trackStoreClick } = useConversionTracking();
   
-  // Fetch live price from the store
+  // Fetch live price from the store (with fallback to US URL if regional 404s)
   const { 
     currentPrice, 
     compareAtPrice,
@@ -63,7 +65,7 @@ export function FilamentHeroPurchaseCard({
     isLoading: priceLoading, 
     isLivePrice,
     currency: priceCurrency
-  } = useCurrentPrice(productUrl, pricePerSpool);
+  } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl);
 
   // Determine the primary retailer name
   const displayRetailer = retailerName || vendor || 'Store';
