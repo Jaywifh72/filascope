@@ -287,7 +287,6 @@ const BAMBU_URL_MAPPINGS: Record<string, string> = {
   // Old global store to US store format
   "bambu-pla-basic-filament": "pla-basic-filament",
   "bambu-pla-matte-filament": "pla-matte-filament",
-  "bambu-petg-basic-filament": "petg-basic-filament",
   "bambu-abs-filament": "abs-filament",
   "bambu-tpu-95a-filament": "tpu-95a-filament",
   "bambu-pla-silk-filament": "pla-silk-filament",

@@ -57,7 +57,6 @@ const PRODUCT_CONFIGS: Record<string, Array<{ slug: string; name: string; materi
     { slug: 'pla-aero', name: 'PLA Aero', material: 'PLA' },
   ],
   'PETG': [
-    { slug: 'petg-basic', name: 'PETG Basic', material: 'PETG' },
     { slug: 'petg-hf', name: 'PETG HF', material: 'PETG' },
     { slug: 'petg-translucent', name: 'PETG Translucent', material: 'PETG' },
     { slug: 'petg-cf', name: 'PETG-CF', material: 'PETG' },
