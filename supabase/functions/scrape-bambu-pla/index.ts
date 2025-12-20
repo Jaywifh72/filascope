@@ -1141,13 +1141,15 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   ],
 
   // ============================================================================
-  // PLA GLOW - Glow-in-the-dark colors
+  // PLA GLOW - Glow-in-the-dark colors (5 official colors from hex code table)
+  // Verified from: https://ca.store.bambulab.com/products/pla-glow
   // ============================================================================
   "pla-glow": [
-    { colorName: "Glow Green", colorHex: "#39FF14", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Glow Blue", colorHex: "#00FFFF", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Glow Yellow", colorHex: "#FFFF00", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Glow Orange", colorHex: "#FF6600", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Glow Green", colorHex: "#A1FFAC", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/d9a59b6344414b648da6c7e2fbf72d7c/PLAGlow.jpg", variantId: null },
+    { colorName: "Glow Yellow", colorHex: "#F8FF80", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/d9a59b6344414b648da6c7e2fbf72d7c/PLAGlow.jpg", variantId: null },
+    { colorName: "Glow Pink", colorHex: "#F17B8F", colorFamily: "Pink", imageUrl: "https://store.bblcdn.com/s7/default/d9a59b6344414b648da6c7e2fbf72d7c/PLAGlow.jpg", variantId: null },
+    { colorName: "Glow Blue", colorHex: "#7AC0E9", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/d9a59b6344414b648da6c7e2fbf72d7c/PLAGlow.jpg", variantId: null },
+    { colorName: "Glow Orange", colorHex: "#FF9D5B", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s7/default/d9a59b6344414b648da6c7e2fbf72d7c/PLAGlow.jpg", variantId: null },
   ],
 
   // ============================================================================
