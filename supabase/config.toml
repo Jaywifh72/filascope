@@ -173,3 +173,6 @@ verify_jwt = true
 
 [functions.cleanup-stuck-jobs]
 verify_jwt = false
+
+[functions.discover-petg-images]
+verify_jwt = false
