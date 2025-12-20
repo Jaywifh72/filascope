@@ -1365,9 +1365,14 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "Translucent Purple", colorHex: "#D6ABFF", colorFamily: "Purple", imageUrl: "https://store.bblcdn.com/s5/default/d437c0bf73fa4bbdadf3b3a8f139e8b0.jpg", variantId: null },
   ],
   
-  // PETG-CF - Carbon Fiber reinforced PETG (1 color)
+  // PETG-CF - Carbon Fiber reinforced PETG (5 colors)
+  // Images from: https://ca.store.bambulab.com/products/petg-cf
   "petg-cf": [
-    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s7/default/9b2c4be00adb4d01a6790d7e89cc6c26/PETG-CF.png", variantId: null },
+    { colorName: "Blue", colorHex: "#1F79E5", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/31093e7d52524e169c240afed3aeb603/PETG-CFblue.png", variantId: null },
+    { colorName: "Green", colorHex: "#00AE42", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/a79d223f175342ef90cd845eaa610c28/PETG-CFgreen.png", variantId: null },
+    { colorName: "Red", colorHex: "#EB3A3A", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s7/default/391c13326e1a4ef4b3b6c2474598aa9e/PETG-CFred.png", variantId: null },
+    { colorName: "Purple", colorHex: "#9B59B6", colorFamily: "Purple", imageUrl: "https://store.bblcdn.com/s7/default/528be7fe6a2c4cd9a10713ef2d2002a6/PETG-CFpurp_4608ff17-99e8-4aec-a822-26b4d3188af1.png", variantId: null },
   ],
 
   // ============================================================================
