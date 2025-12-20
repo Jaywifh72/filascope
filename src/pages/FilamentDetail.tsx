@@ -476,9 +476,17 @@ const FilamentDetail = () => {
     const vendor = variants[0]?.vendor || '';
     const isPrusament = vendor.toLowerCase().includes('prusa');
     
-    // Sort to prioritize variants without suffixes (NFC, Refill) first
-    // Also prioritize shorter names (base product without brand prefix in color)
+    // Sort to prioritize:
+    // 1. Variants with regional prices (better data quality)
+    // 2. Variants without suffixes (NFC, Refill)
+    // 3. Shorter names (base product without brand prefix in color)
     const sorted = [...variants].sort((a, b) => {
+      // First: prefer variants with regional prices (indicates better scraped data)
+      const aHasRegionalPrices = !!(a.price_cad || a.price_eur || a.price_gbp || a.price_aud);
+      const bHasRegionalPrices = !!(b.price_cad || b.price_eur || b.price_gbp || b.price_aud);
+      if (aHasRegionalPrices && !bHasRegionalPrices) return -1;
+      if (!aHasRegionalPrices && bHasRegionalPrices) return 1;
+      
       const aTitle = a.product_title.toLowerCase();
       const bTitle = b.product_title.toLowerCase();
       const aHasSuffix = aTitle.includes('(nfc)') || aTitle.includes('refill');
