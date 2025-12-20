@@ -1104,16 +1104,16 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   ],
 
   // ============================================================================
-  // PLA SPARKLE - Glitter/sparkle effect colors
+  // PLA SPARKLE - Glitter/sparkle effect colors (6 official colors)
+  // Verified from: https://ca.store.bambulab.com/products/pla-sparkle
   // ============================================================================
   "pla-sparkle": [
-    { colorName: "Gold", colorHex: "#FFD700", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Silver", colorHex: "#C0C0C0", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Bronze", colorHex: "#CD7F32", colorFamily: "Brown", imageUrl: null, variantId: null },
-    { colorName: "Red", colorHex: "#FF0000", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Blue", colorHex: "#0000FF", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Purple", colorHex: "#800080", colorFamily: "Purple", imageUrl: null, variantId: null },
-    { colorName: "Green", colorHex: "#00FF00", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Classic Gold Sparkle", colorHex: "#CEA629", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/6d253f46ee464ca2b75c6ea613efb05c/sparkle_gold.png", variantId: null },
+    { colorName: "Slate Gray Sparkle", colorHex: "#8E9089", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/715852b15d6a4342a0cbd7bb13fa7e6f/PLASparkle-SlateGray.png", variantId: null },
+    { colorName: "Crimson Red Sparkle", colorHex: "#792B36", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s7/default/f809b82a992647fb94cf34d2f2cd44ea/PLA-Sparkle_Crimson-Red-Sparkle.png", variantId: null },
+    { colorName: "Royal Purple Sparkle", colorHex: "#483D8B", colorFamily: "Purple", imageUrl: "https://store.bblcdn.com/s7/default/d34f98f6d5fd4efcba3b675018392895/PLASparkle-RoyalPurpleSparkle.png", variantId: null },
+    { colorName: "Alpine Green Sparkle", colorHex: "#3F5443", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/b33fcdd91bfc4dffa7ec8ddbe7b50a91/Sparklegreen.png", variantId: null },
+    { colorName: "Onyx Black Sparkle", colorHex: "#2D2B28", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s7/default/f97e08749626411f89ac590ecd696b74/PLA-Sparkle_Onyx-Black-Sparkle.png", variantId: null },
   ],
 
   // ============================================================================
