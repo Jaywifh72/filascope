@@ -80,6 +80,15 @@ export const getBaseProductName = (title: string, material?: string | null): str
     .replace(/\s+with\s+Spool\s*/gi, ' ')      // "with Spool"
     .trim();
   
+  // BAMBU LAB SPECIAL TPU PATTERNS: Handle specific TPU product lines first
+  // TPU 95A HF, TPU 85A / TPU 90A, TPU for AMS
+  const bambuLabTPUMatch = normalizedTitle.match(
+    /^(Bambu Lab TPU\s+(?:95A\s+HF|85A\s*\/\s*TPU\s*90A|for\s+AMS))\s+.+$/i
+  );
+  if (bambuLabTPUMatch) {
+    return bambuLabTPUMatch[1].trim();
+  }
+  
   // BAMBU LAB PATTERN: "Bambu Lab [Material] [ProductType] [Color]"
   // ProductType examples: Basic, Matte, Silk, Silk Multi-color, Marble, Galaxy, etc.
   // This pattern extracts the base product name without the color suffix
@@ -98,7 +107,7 @@ export const getBaseProductName = (title: string, material?: string | null): str
   if (bambuLabSimpleMatch) {
     // Only match if what follows is a color, not a product type
     const remainder = normalizedTitle.slice(bambuLabSimpleMatch[1].length).trim();
-    const productTypes = ['Basic', 'Matte', 'Silk', 'Translucent', 'Tough', 'Wood', 'Marble', 'Metal', 'Galaxy', 'Glow', 'Sparkle', 'Aero', 'Impact', 'HF', 'HS', 'Lite'];
+    const productTypes = ['Basic', 'Matte', 'Silk', 'Translucent', 'Tough', 'Wood', 'Marble', 'Metal', 'Galaxy', 'Glow', 'Sparkle', 'Aero', 'Impact', 'HF', 'HS', 'Lite', '95A', '85A', 'for'];
     const startsWithProductType = productTypes.some(pt => remainder.toLowerCase().startsWith(pt.toLowerCase()));
     if (!startsWithProductType) {
       return bambuLabSimpleMatch[1].trim();
