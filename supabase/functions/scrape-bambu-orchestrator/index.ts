@@ -71,7 +71,8 @@ const PRODUCT_CONFIGS: Record<string, Array<{ slug: string; name: string; materi
   ],
   'TPU': [
     { slug: 'tpu-95a-hf', name: 'TPU 95A HF', material: 'TPU' },
-    { slug: 'tpu-90a', name: 'TPU 90A', material: 'TPU' },
+    { slug: 'tpu-85a-tpu-90a', name: 'TPU 85A / TPU 90A', material: 'TPU' },  // Fixed: was tpu-90a
+    { slug: 'tpu-for-ams', name: 'TPU for AMS', material: 'TPU' },
   ],
   'PC': [
     { slug: 'pc', name: 'PC', material: 'PC' },
