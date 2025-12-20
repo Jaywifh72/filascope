@@ -1354,15 +1354,15 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   
   // PETG Translucent - 9 colors from product page
   "petg-translucent": [
-    { colorName: "Translucent Teal", colorHex: "#77EDD7", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Translucent Teal", colorHex: "#77EDD7", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s5/default/ffa37db2ff474b71b142f6f3225c7ded.jpg", variantId: null },
     { colorName: "Translucent Light Blue", colorHex: "#61B0FF", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s5/default/2e8d7b9c2a4147da979f544f73f85fb5.jpg", variantId: null },
-    { colorName: "Clear", colorHex: "#E8E8E8", colorFamily: "Clear", imageUrl: null, variantId: null },
-    { colorName: "Translucent Gray", colorHex: "#8E8E8E", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Translucent Olive", colorHex: "#748C45", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Translucent Brown", colorHex: "#C9A381", colorFamily: "Brown", imageUrl: null, variantId: null },
-    { colorName: "Translucent Orange", colorHex: "#FF911A", colorFamily: "Orange", imageUrl: null, variantId: null },
-    { colorName: "Translucent Pink", colorHex: "#F9C1BD", colorFamily: "Pink", imageUrl: null, variantId: null },
-    { colorName: "Translucent Purple", colorHex: "#D6ABFF", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Clear", colorHex: "#E8E8E8", colorFamily: "Clear", imageUrl: "https://store.bblcdn.com/s5/default/1a74ea492a6f4b8ea23c7d84b145d316.png", variantId: null },
+    { colorName: "Translucent Gray", colorHex: "#8E8E8E", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s5/default/18fb283d551c418f9246a22beec492ce.jpg", variantId: null },
+    { colorName: "Translucent Olive", colorHex: "#748C45", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s5/default/8534fe998fa145aeb6599bf16827cf58.jpg", variantId: null },
+    { colorName: "Translucent Brown", colorHex: "#C9A381", colorFamily: "Brown", imageUrl: "https://store.bblcdn.com/s5/default/2c6abde5b9bd4184a9a1ecf31be06500.jpg", variantId: null },
+    { colorName: "Translucent Orange", colorHex: "#FF911A", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s5/default/6415b5d6fb1a473490a0eb605d9d59b0.jpg", variantId: null },
+    { colorName: "Translucent Pink", colorHex: "#F9C1BD", colorFamily: "Pink", imageUrl: "https://store.bblcdn.com/s5/default/3c06d1d78c3c40239fc582a8bd5a5261.jpg", variantId: null },
+    { colorName: "Translucent Purple", colorHex: "#D6ABFF", colorFamily: "Purple", imageUrl: "https://store.bblcdn.com/s5/default/d437c0bf73fa4bbdadf3b3a8f139e8b0.jpg", variantId: null },
   ],
   
   // PETG-CF - Carbon Fiber reinforced PETG (1 color)
