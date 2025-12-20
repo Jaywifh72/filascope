@@ -1230,21 +1230,21 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // ABS PRODUCT COLOR FALLBACKS
   // ============================================================================
   
-  // ABS - 12 colors from hex code table on product page
-  // Verified from: https://ca.store.bambulab.com/products/abs-filament
+  // ABS - 11 colors from product page
+  // Verified from: https://store.bambulab.com/products/abs-filament
+  // Image URLs extracted from live product page - December 2024
   "abs-filament": [
-    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
-    { colorName: "Silver", colorHex: "#87909A", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Red", colorHex: "#D32941", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Orange", colorHex: "#FF6A13", colorFamily: "Orange", imageUrl: null, variantId: null },
-    { colorName: "Olive", colorHex: "#789D4A", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Bambu Green", colorHex: "#00AE42", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Azure", colorHex: "#489FDF", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Blue", colorHex: "#0A2CA5", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Navy Blue", colorHex: "#0C2340", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Purple", colorHex: "#AF1685", colorFamily: "Purple", imageUrl: null, variantId: null },
-    { colorName: "Tangerine Yellow", colorHex: "#FFC72C", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Silver", colorHex: "#87909A", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/06ec2d59ef0347fa876cb303e2d7114e/522789b7d815491293c866621998b103.media", variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s7/default/2af156c62c7641cc81e09d3893bfc513/c46ab8ddcfaf43aaa68ea23f8ec21367.media", variantId: null },
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: "https://store.bblcdn.com/s7/default/e2dceb24af8c463c8b92274f4a7053e3/47a50b15242d40298bc1beb1b8abaca4.media", variantId: null },
+    { colorName: "Bambu Green", colorHex: "#00AE42", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/3b241e8ec7e142d68ea3b0ade56915d5/3ee4dd48e6db461a82125f5e6c57ec9f.media", variantId: null },
+    { colorName: "Olive", colorHex: "#789D4A", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/306df2932fac4e46bc8400c466cf0873/c79c0361ff3d46a681b9b64c4b4a6334.media", variantId: null },
+    { colorName: "Tangerine Yellow", colorHex: "#FFC72C", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/6b8241bccf3e45368fa53b3934304fe6/c3a543a16e0d4869aa547cb1104af70b.media", variantId: null },
+    { colorName: "Orange", colorHex: "#FF6A13", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s7/default/a24e256d98d94c05b0942419b649b9b8/84f5f85de8894faf81d7ce5129c70211.media", variantId: null },
+    { colorName: "Red", colorHex: "#D32941", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s7/default/6e3e144ac8044f2481725f71361ceebe/2ee4f4ced1064bb98b4ee6bec52d86ac.media", variantId: null },
+    { colorName: "Azure", colorHex: "#489FDF", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/02bf90466a8e4125bde565a965f18711/aafe7b43b40641d4b8a111aa26c8eb04.media", variantId: null },
+    { colorName: "Blue", colorHex: "#0A2CA5", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/fcee893cda214ba58cf6a6c2445a1790/0c2aef92cc4d4e509bbfc1b477bdb4c8.media", variantId: null },
+    { colorName: "Navy Blue", colorHex: "#0C2340", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/c69c862548f74de4977203642f14aa85/425caf237fd44c4493617bd11b15a57c.media", variantId: null },
   ],
   
   // ABS-GF - colors from hex code table on product page
@@ -1263,24 +1263,26 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // ASA PRODUCT COLOR FALLBACKS
   // ============================================================================
   
-  // ASA - colors from hex code table on product page
+  // ASA - 6 colors from product page
+  // Verified from: https://store.bambulab.com/products/asa-filament
+  // Image URLs extracted from live product page - December 2024
   "asa-filament": [
-    { colorName: "White", colorHex: "#FFFAF2", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Gray", colorHex: "#8A949E", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Green", colorHex: "#00A6A0", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Blue", colorHex: "#2140B4", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "White", colorHex: "#FFFAF2", colorFamily: "White", imageUrl: "https://store.bblcdn.com/s7/default/50d1a72331c740578d4893eb212d3107/12007d17a7d9416abc87a01a8a299869.media", variantId: null },
+    { colorName: "Green", colorHex: "#00A6A0", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/bf68172ec3754e9f8da0e48fa105fcc4/cb784d59ca1d48cea42f9c2e545854b7.media", variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s7/default/97b5ec1c47b044c4a29b43f7a787441c/11d6469b590e4b8080ca5bd3f2385e22.media", variantId: null },
+    { colorName: "Gray", colorHex: "#8A949E", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/6165d25792ba48ab97860e4cb515a734/7e5829465d8a48b39c5ad1d103db0b5e.media", variantId: null },
+    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s7/default/05a63b0cfeaf42cc9bdd7d4a2ddda66f/1e6d5f24fcc14949a25332fbbd52f7f2.media", variantId: null },
+    { colorName: "Blue", colorHex: "#2140B4", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/e9e66e4dbbc146daaa67f573c7e23dd0/08592504ef0c4ed4a3054fac903bf20f.media", variantId: null },
   ],
   
   // ASA Aero - Lightweight foaming ASA (1 color)
-  // Verified from: https://ca.store.bambulab.com/products/asa-aero
+  // Verified from: https://store.bambulab.com/products/asa-aero
   "asa-aero": [
     { colorName: "White", colorHex: "#F5F1DD", colorFamily: "White", imageUrl: null, variantId: null },
   ],
   
   // ASA-CF - Carbon Fiber reinforced ASA (1 color)
-  // Verified from: https://ca.store.bambulab.com/products/asa-cf
+  // Verified from: https://store.bambulab.com/products/asa-cf
   "asa-cf": [
     { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
@@ -1289,15 +1291,16 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // TPU PRODUCT COLOR FALLBACKS
   // ============================================================================
   
-  // TPU 95A HF - High Flow TPU (6 colors from hex code table)
-  // Verified from: https://ca.store.bambulab.com/products/tpu-95a-hf
+  // TPU 95A HF - High Flow TPU (6 colors from product page)
+  // Verified from: https://store.bambulab.com/products/tpu-95a-hf
+  // Image URLs extracted from live product page - December 2024
   "tpu-95a-hf": [
-    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Yellow", colorHex: "#F3E600", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Blue", colorHex: "#0072CE", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Red", colorHex: "#C8102E", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Gray", colorHex: "#898D8D", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Black", colorHex: "#101820", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: "https://store.bblcdn.com/s7/default/f5d0fa0a95e843bdadbe46f2888fa338/56a0c5fbcaba433ab446292169114622.media", variantId: null },
+    { colorName: "Gray", colorHex: "#898D8D", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/570af064dc0a4dc4a25b9a8128aae8e5/0dd0d24a2c12482e9e9c5ee8dd1e4d80.media", variantId: null },
+    { colorName: "Yellow", colorHex: "#F3E600", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/fd6644cb3958455db9df9622b323b11c/e95a1f33bb46426da4291d5c4935f4af.media", variantId: null },
+    { colorName: "Blue", colorHex: "#0072CE", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/63c4cc00f4274736b9c6b1d1d48b199f/ec223ae1407c4c8d85763da803f86d3c.media", variantId: null },
+    { colorName: "Red", colorHex: "#C8102E", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s7/default/fdef6117016647b3b6a21e8f043a61d5/6da700ce7ba244dca2d677bf2b456880.media", variantId: null },
+    { colorName: "Black", colorHex: "#101820", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s7/default/105698ef4f594b199643eaa538db257a/6c00c3fb2a5b4267913b5fa09b2092cf.media", variantId: null },
   ],
   
   // TPU 85A / TPU 90A - Soft TPU (6 colors from hex code table)
@@ -1328,35 +1331,45 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // ============================================================================
   
   // PETG HF - High Flow PETG (verified colors from Bambu Lab product page)
-  // Verified from: https://ca.store.bambulab.com/products/petg-hf
+  // Verified from: https://store.bambulab.com/products/petg-hf
+  // Image URLs extracted from live product page - December 2024
   "petg-hf": [
-    { colorName: "Ivory White", colorHex: "#FFFFF0", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
-    { colorName: "Gray", colorHex: "#8A949E", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Charcoal", colorHex: "#36454F", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Blue", colorHex: "#2140B4", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Green", colorHex: "#00A6A0", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Yellow", colorHex: "#FFE133", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Orange", colorHex: "#F48438", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s7/default/6c735633c22748908ff584f9f5e1de89/0cf39d0e4c6c43b38fef498561894508.png", variantId: null },
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: "https://store.bblcdn.com/s7/default/4a7f9361225f4f69b388615e247f3b62/d0124e2bbb174c8ba1bad0675d35e37a.png", variantId: null },
+    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s7/default/709cf02acaca4145952913934f200a53/6f6460b12d9348e99b5070a8284c0409.png", variantId: null },
+    { colorName: "Gray", colorHex: "#8A949E", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/5582df632ed74f38a00384ddb2c2064e/9a7dade47ad44a37a39325b7363a0370.png", variantId: null },
+    { colorName: "Dark Gray", colorHex: "#36454F", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/c5498dad6adb4a4eaadde859a7f997ea/1607ecea09a94ff7b3d985685aa31d54.png", variantId: null },
+    { colorName: "Cream", colorHex: "#FFFDD0", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/13884494e0354d6f952db38ca365f3e0/61202de96c7c49ccab34f0cc001157ee.png", variantId: null },
+    { colorName: "Yellow", colorHex: "#FFE133", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/58af1b6933954bd5af530072c5e9c5b1/884a185a0d6e4b58a9c055dcfabe7174.png", variantId: null },
+    { colorName: "Orange", colorHex: "#F48438", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s7/default/5c5e4de6b8424bb8b84793e8dcc9802e/bfa461028ea3467aa362bbe369a84500.png", variantId: null },
+    { colorName: "Peanut Brown", colorHex: "#7B3F00", colorFamily: "Brown", imageUrl: "https://store.bblcdn.com/s7/default/365fda6e85eb4d8896228f46a1d544b0/99c7222bb9d644df8f46109bb1a099da.png", variantId: null },
+    { colorName: "Lime Green", colorHex: "#32CD32", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/153b1266f7334a3f8cce41e99924e32a/38812377e81940668994d607c5af121f.png", variantId: null },
+    { colorName: "Green", colorHex: "#00A6A0", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/f2b2a518b63248339b48fa4da8ed5c3e/aee675e95734414ca1e9b6f83ba6e7cf.png", variantId: null },
+    { colorName: "Forest Green", colorHex: "#228B22", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/8620e8a63e7d46d2a488d7282c2b97fb/616eb09aec544622963c5f1a9fb6424a.png", variantId: null },
+    { colorName: "Lake Blue", colorHex: "#4169E1", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/9d372967762642129819a39527033e1b/26cf49afc41b4a8eb01f53084a0aba3c.png", variantId: null },
+    { colorName: "Blue", colorHex: "#2140B4", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/945e8fad01b048b6b79c3c15859265b8/a3478612f8b24e47b12a3d86116de7a6.png", variantId: null },
   ],
   
-  // PETG Translucent - 8 colors from hex code table on product page
+  // PETG Translucent - 9 colors from product page
+  // Verified from: https://store.bambulab.com/products/petg-translucent
+  // Image URLs extracted from live product page - December 2024
   "petg-translucent": [
-    { colorName: "Translucent Gray", colorHex: "#8E8E8E", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Translucent Light Blue", colorHex: "#61B0FF", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Translucent Olive", colorHex: "#748C45", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Translucent Brown", colorHex: "#C9A381", colorFamily: "Brown", imageUrl: null, variantId: null },
-    { colorName: "Translucent Teal", colorHex: "#77EDD7", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Translucent Orange", colorHex: "#FF911A", colorFamily: "Orange", imageUrl: null, variantId: null },
-    { colorName: "Translucent Purple", colorHex: "#D6ABFF", colorFamily: "Purple", imageUrl: null, variantId: null },
-    { colorName: "Translucent Pink", colorHex: "#F9C1BD", colorFamily: "Pink", imageUrl: null, variantId: null },
+    { colorName: "Translucent Teal", colorHex: "#77EDD7", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/4c9f8c155c174e478018cc44cf031cfb/0f982290866445e2aa2a0e87f3999f85.media", variantId: null },
+    { colorName: "Translucent Light Blue", colorHex: "#61B0FF", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/eb22f4c236594b24acb9ccf60d3c2caf/342df5a8028045e49ad43889ca05d3a7.media", variantId: null },
+    { colorName: "Clear", colorHex: "#E8E8E8", colorFamily: "Clear", imageUrl: "https://store.bblcdn.com/s7/default/f4dd56ed2651490b96abe80c7dc9dcad/daf1de2327714f57bd6aa32670d329cc.media", variantId: null },
+    { colorName: "Translucent Gray", colorHex: "#8E8E8E", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/89c68be306594e00840d023526d07861/ad3609015eb94c1bbca999caf63e20f6.media", variantId: null },
+    { colorName: "Translucent Olive", colorHex: "#748C45", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/aedce0713b0f4abb9b0b6730e52be253/e0a9f45779d04ae28677449c1ff03d44.media", variantId: null },
+    { colorName: "Translucent Brown", colorHex: "#C9A381", colorFamily: "Brown", imageUrl: "https://store.bblcdn.com/s7/default/a7ecdd3737ce4e18abb986f83a081a3e/62a0a80a60d4438d9cdf6624bdef3643.media", variantId: null },
+    { colorName: "Translucent Orange", colorHex: "#FF911A", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s7/default/c66eeabfd6ca486db3c2a6fed2f282a8/5f5b2ce4c11b4a7bb6a577d658fb2c8b.media", variantId: null },
+    { colorName: "Translucent Pink", colorHex: "#F9C1BD", colorFamily: "Pink", imageUrl: "https://store.bblcdn.com/s7/default/19136aee68624543b2f4ea9d2a496d54/042c27699ca7449ba6b4adc1d0b54b00.media", variantId: null },
+    { colorName: "Translucent Purple", colorHex: "#D6ABFF", colorFamily: "Purple", imageUrl: "https://store.bblcdn.com/s7/default/25c823e18c964300ae363a5693b400b3/d7588868519f40ed9286d9230e2f3ae1.media", variantId: null },
   ],
   
   // PETG-CF - Carbon Fiber reinforced PETG (limited colors)
+  // Verified from: https://store.bambulab.com/products/petg-cf
+  // Image URL: Uses PETG-CF banner image
   "petg-cf": [
-    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
-    { colorName: "Gray", colorHex: "#4A4A4A", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s1/default/dea605f26e9b4dd3bf7c7da856d1e0f5/PETG_CF_Banner.jpg", variantId: null },
   ],
 
   // ============================================================================
@@ -1442,12 +1455,14 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // PC (POLYCARBONATE) COLOR FALLBACKS
   // ============================================================================
   
-  // PC Filament - 3 colors (Transparent, Black, White)
-  // Verified from: https://ca.store.bambulab.com/products/pc-filament
+  // PC Filament - 4 colors from product page
+  // Verified from: https://store.bambulab.com/products/pc-filament
+  // Image URLs extracted from live product page - December 2024
   "pc-filament": [
-    { colorName: "Transparent", colorHex: "#E8E8E8", colorFamily: "Clear", imageUrl: null, variantId: null },
-    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
-    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Transparent", colorHex: "#E8E8E8", colorFamily: "Clear", imageUrl: "https://store.bblcdn.com/s7/default/a4810aca02d94b5aaed6f2135f6a10ac/469f4456c6e5449282e739eb8ca7108b.media", variantId: null },
+    { colorName: "Clear Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s7/default/2213436ff26b48d5a32e9a5a3cce5bc5/4fcef33534954555b649c63e981ba667.media", variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s7/default/a8cc5656229b4972bf716cec85d40e47/80c0fdb3cc4642348aafb0ac4cb9a1a6.media", variantId: null },
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: "https://store.bblcdn.com/s7/default/8b27ee03b2224d848bb4c1b3556885a0/bf4e492f67dd4ef991be8d427d3313d6.media", variantId: null },
   ],
   
   // PC FR - 3 colors (White, Gray, Black)
