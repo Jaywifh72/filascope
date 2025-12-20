@@ -1734,13 +1734,33 @@ function extractCompareAtPrice(html: string, markdown: string, ctx?: LogContext)
   return null;
 }
 
+// ============================================================================
+// HELPER: Generate Bambu Lab CDN image URL from product slug and color name
+// Used as fallback when dynamic image extraction fails
+// ============================================================================
+function generateBambuLabImageUrl(productSlug: string, colorName: string): string | null {
+  // Try to get from PRODUCT_COLOR_FALLBACKS first
+  const fallbackColors = PRODUCT_COLOR_FALLBACKS[productSlug];
+  if (fallbackColors) {
+    const colorMatch = fallbackColors.find(
+      c => c.colorName.toLowerCase() === colorName.toLowerCase()
+    );
+    if (colorMatch?.imageUrl) {
+      return colorMatch.imageUrl;
+    }
+  }
+  
+  // No fallback available - return null to use color swatch instead
+  return null;
+}
+
 function extractBambuLabPrice(
   html: string, 
   markdown: string, 
   region: string, 
   material: string = 'PLA',
   ctx?: LogContext
-): { price: number; compareAtPrice: number | null; source: string } | null {
+): { price: number; compareAtPrice: number | null; source: string; actualCurrency?: string } | null {
   const store = BAMBU_REGIONAL_STORES[region];
   if (!store) {
     if (ctx) logWarn(ctx, 'PRICE', `Unknown region: ${region}`);
@@ -1861,31 +1881,51 @@ function extractBambuLabPrice(
 
   // Strategy 6: Direct "$XX.XX USD" or "€XX.XX EUR" pattern in markdown (Bambu Lab specific)
   // This catches the clear price display like "$19.99 USD" near the product title
-  if (ctx) logDebug(ctx, 'PRICE', 'Trying Strategy 6: Direct currency+amount+code pattern');
+  // FIX: Enhanced to detect ACTUAL currency (important for Bambu Lab regional stores that show USD on .ca/.au domains)
+  if (ctx) logDebug(ctx, 'PRICE', 'Trying Strategy 6: Direct currency+amount+code pattern (with actual currency detection)');
+  
+  // Map currency codes to their canonical form
+  const CURRENCY_CODE_MAP: Record<string, string> = {
+    'USD': 'USD',
+    'CAD': 'CAD', 
+    'EUR': 'EUR',
+    'GBP': 'GBP',
+    'AUD': 'AUD',
+    'JPY': 'JPY',
+  };
+  
   const directPricePatterns = [
-    /(?<!\w)(\$)(\d{1,3}(?:\.\d{2})?)\s*USD(?!\s*(?:per|\/|each))/gi,  // $19.99 USD (not per roll)
-    /(?<!\w)(€)(\d{1,3}(?:[.,]\d{2})?)\s*EUR(?!\s*(?:per|\/|each))/gi,  // €18.99 EUR
-    /(?<!\w)(£)(\d{1,3}(?:\.\d{2})?)\s*GBP(?!\s*(?:per|\/|each))/gi,  // £16.99 GBP
-    /(?<!\w)(C\$|CA\$)(\d{1,3}(?:\.\d{2})?)\s*CAD(?!\s*(?:per|\/|each))/gi,  // C$24.99 CAD
-    /(?<!\w)(A\$)(\d{1,3}(?:\.\d{2})?)\s*AUD(?!\s*(?:per|\/|each))/gi,  // A$29.99 AUD
-    /(?<!\w)(¥)(\d{1,5})\s*JPY(?!\s*(?:per|\/|each))/gi,  // ¥2999 JPY
+    { pattern: /(?<!\w)(\$)(\d{1,3}(?:\.\d{2})?)\s*(USD)(?!\s*(?:per|\/|each))/gi, currency: 'USD' },  // $19.99 USD
+    { pattern: /(?<!\w)(\$)(\d{1,3}(?:\.\d{2})?)\s*(CAD)(?!\s*(?:per|\/|each))/gi, currency: 'CAD' },  // $19.99 CAD (rare but possible)
+    { pattern: /(?<!\w)(€)(\d{1,3}(?:[.,]\d{2})?)\s*(EUR)(?!\s*(?:per|\/|each))/gi, currency: 'EUR' },  // €18.99 EUR
+    { pattern: /(?<!\w)(£)(\d{1,3}(?:\.\d{2})?)\s*(GBP)(?!\s*(?:per|\/|each))/gi, currency: 'GBP' },  // £16.99 GBP
+    { pattern: /(?<!\w)(C\$|CA\$)(\d{1,3}(?:\.\d{2})?)\s*(CAD)(?!\s*(?:per|\/|each))/gi, currency: 'CAD' },  // C$24.99 CAD
+    { pattern: /(?<!\w)(A\$)(\d{1,3}(?:\.\d{2})?)\s*(AUD)(?!\s*(?:per|\/|each))/gi, currency: 'AUD' },  // A$29.99 AUD
+    { pattern: /(?<!\w)(¥)(\d{1,5})\s*(JPY)(?!\s*(?:per|\/|each))/gi, currency: 'JPY' },  // ¥2999 JPY
   ];
   
-  for (const pattern of directPricePatterns) {
+  for (const { pattern, currency: expectedCurrencyFromPattern } of directPricePatterns) {
     const matches = [...markdown.matchAll(pattern)];
     for (const priceMatch of matches) {
       const priceStr = priceMatch[2].replace(',', '.');
       const price = parseFloat(priceStr);
+      const detectedCurrency = priceMatch[3] ? CURRENCY_CODE_MAP[priceMatch[3].toUpperCase()] : expectedCurrencyFromPattern;
       
-      if (ctx) logDebug(ctx, 'PRICE', `Strategy 6 candidate: "${priceMatch[0]}" -> ${price}`);
+      if (ctx) logDebug(ctx, 'PRICE', `Strategy 6 candidate: "${priceMatch[0]}" -> ${price} ${detectedCurrency}`);
       
       // Check context around this match - reject if near discount keywords
       const matchIndex = markdown.indexOf(priceMatch[0]);
       const context = markdown.substring(Math.max(0, matchIndex - 100), Math.min(markdown.length, matchIndex + 100));
       
+      // FIX: For currency detection, use the ACTUAL currency from the page, not the expected regional currency
+      // This handles Bambu Lab's case where ca.store shows USD prices
       if (!containsDiscountKeywords(context, ctx) && price >= minExpected && price <= maxExpected) {
-        if (ctx) logSuccess(ctx, 'PRICE', `Strategy 6 SUCCESS: ${price} ${store.currency} (direct-currency-code)`);
-        return { price, compareAtPrice, source: 'direct-currency-code' };
+        const currencyMismatch = detectedCurrency !== store.currency;
+        if (currencyMismatch && ctx) {
+          logWarn(ctx, 'PRICE', `Currency mismatch! Region ${region} expects ${store.currency} but page shows ${detectedCurrency}`);
+        }
+        if (ctx) logSuccess(ctx, 'PRICE', `Strategy 6 SUCCESS: ${price} ${detectedCurrency} (direct-currency-code)${currencyMismatch ? ' [CURRENCY MISMATCH]' : ''}`);
+        return { price, compareAtPrice, source: 'direct-currency-code', actualCurrency: detectedCurrency };
       }
     }
   }
@@ -2897,7 +2937,8 @@ async function upsertFilament(
     material: productConfig.material,
     color_hex: colorVariant.colorHex,
     color_family: colorVariant.colorFamily,
-    featured_image: colorVariant.imageUrl,
+    // FIX: Add fallback image URL generation when colorVariant.imageUrl is null or broken
+    featured_image: colorVariant.imageUrl || generateBambuLabImageUrl(productConfig.slug, colorVariant.colorName),
     tds_url: productConfig.tdsUrl,
     nozzle_temp_min_c: productConfig.nozzleTempMin,
     nozzle_temp_max_c: productConfig.nozzleTempMax,
