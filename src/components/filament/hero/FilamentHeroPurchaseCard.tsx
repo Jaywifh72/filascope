@@ -105,23 +105,30 @@ export function FilamentHeroPurchaseCard({
     displayPricePerKg = pricePerKg;
   }
 
-  // Format the price - convert live prices (USD) to user's currency
+  // Format live prices in their original currency (no conversion)
+  // This is important because Bambu Lab regional stores often show USD prices regardless of region
+  const formatLivePrice = (price: number, showCurrency = false): string => {
+    const symbols: Record<string, string> = { 'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' };
+    const symbol = symbols[priceCurrency] || '$';
+    const formatted = price.toFixed(2);
+    return showCurrency ? `${symbol}${formatted} ${priceCurrency}` : `${symbol}${formatted}`;
+  };
+
+  // Format the price - live prices should be displayed in their actual currency, not converted
   const formattedPricePerKg = displayPricePerKg 
     ? (isLivePrice 
-        ? formatPrice(displayPricePerKg, false) 
+        ? formatLivePrice(displayPricePerKg) 
         : hasActualRegionalPrice ? formatRegionalPrice(displayPricePerKg, false) : formatPrice(displayPricePerKg, false))
     : null;
   const formattedPricePerSpool = displayPrice 
     ? (isLivePrice 
-        ? formatPrice(displayPrice, false) 
+        ? formatLivePrice(displayPrice) 
         : hasActualRegionalPrice ? formatRegionalPrice(displayPrice, false) : formatPrice(displayPrice, false))
     : null;
 
-  // Show original currency if converted (live price is in store currency, user selected different)
-  const showOriginalCurrency = isLivePrice && priceCurrency && priceCurrency !== currency;
-  const currencySymbols: Record<string, string> = { 'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' };
-  const originalSymbol = currencySymbols[priceCurrency] || '$';
-  const originalPricePerKg = displayPricePerKg ? `${originalSymbol}${displayPricePerKg.toFixed(2)} ${priceCurrency}` : null;
+  // Show a note about the currency if it differs from what user expected
+  const showCurrencyNote = isLivePrice && priceCurrency && priceCurrency !== currency;
+  const currencyNote = showCurrencyNote ? `(Store price in ${priceCurrency})` : null;
 
   // Get vendor-specific shipping rules
   const shippingRule = getShippingRule(vendor || 'default');
@@ -149,9 +156,9 @@ export function FilamentHeroPurchaseCard({
                 </span>
                 <span className="text-lg text-muted-foreground font-medium">/kg</span>
               </div>
-              {showOriginalCurrency && originalPricePerKg && (
+              {showCurrencyNote && currencyNote && (
                 <span className="text-sm text-muted-foreground">
-                  ({originalPricePerKg})
+                  {currencyNote}
                 </span>
               )}
             </>
@@ -176,7 +183,7 @@ export function FilamentHeroPurchaseCard({
         {isLivePrice && compareAtPrice && compareAtPrice > (currentPrice || 0) && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground line-through">
-              {formatRegionalPrice(compareAtPrice, false)}
+              {formatLivePrice(compareAtPrice)}
             </span>
             <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
               {Math.round((1 - (currentPrice || 0) / compareAtPrice) * 100)}% OFF
