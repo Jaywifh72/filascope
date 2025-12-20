@@ -1754,9 +1754,16 @@ function extractCompareAtPrice(html: string, markdown: string, ctx?: LogContext)
 // ============================================================================
 // HELPER: Validate Bambu Lab CDN image URL format
 // Rejects broken old-format URLs that no longer work
+// ACCEPTS s5/default URLs (actual product images from collection pages)
 // ============================================================================
 function isValidBambuLabImageUrl(url: string | null): boolean {
   if (!url) return false;
+  
+  // ACCEPT s5/default URLs - these are actual product images (spool renders)
+  // Format: store.bblcdn.com/s5/default/{hash}.jpg
+  if (url.includes('store.bblcdn.com/s5/default/')) {
+    return true;
+  }
   
   // Reject old-format URLs that are now broken (UUID-style .png/.media files)
   // These return blank pages on the new CDN
@@ -1772,7 +1779,146 @@ function isValidBambuLabImageUrl(url: string | null): boolean {
     return false; // UUID-only filename - likely broken
   }
   
+  // Reject s7/default swatch URLs (tiny 40x40 color icons, not product images)
+  if (url.includes('store.bblcdn.com/s7/default/')) {
+    return false;
+  }
+  
   return true;
+}
+
+// ============================================================================
+// HELPER: Scrape collection page to get main product images (s5/default format)
+// These are the actual product photos, not color swatches
+// ============================================================================
+async function scrapeCollectionProductImages(
+  collectionSlug: string,
+  ctx?: LogContext
+): Promise<Map<string, string>> {
+  const productImages = new Map<string, string>();
+  
+  const url = `https://store.bambulab.com/collections/${collectionSlug.toLowerCase()}`;
+  
+  if (ctx) logInfo(ctx, 'COLLECTION', `Scraping collection page for product images: ${url}`);
+  
+  const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!firecrawlKey) {
+    if (ctx) logWarn(ctx, 'COLLECTION', 'No Firecrawl API key - skipping collection scrape');
+    return productImages;
+  }
+  
+  try {
+    const requestBody = {
+      url,
+      formats: ['html'],
+      onlyMainContent: false,
+      waitFor: 5000,
+      location: { country: 'US', languages: ['en'] },
+    };
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    
+    let response: Response;
+    try {
+      response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+    
+    if (!response.ok) {
+      if (ctx) logWarn(ctx, 'COLLECTION', `Failed to scrape collection: HTTP ${response.status}`);
+      return productImages;
+    }
+    
+    const data = await response.json();
+    const html = data.data?.html || '';
+    
+    if (!html) {
+      if (ctx) logWarn(ctx, 'COLLECTION', 'No HTML returned from collection page');
+      return productImages;
+    }
+    
+    if (ctx) logDebug(ctx, 'COLLECTION', `Collection HTML size: ${html.length} chars`);
+    
+    // Pattern to find s5/default product images (actual spool photos)
+    // Format: https://store.bblcdn.com/s5/default/{hash}.jpg
+    const s5ImagePattern = /https:\/\/store\.bblcdn\.com\/s5\/default\/([a-f0-9]+)\.(jpg|png)/gi;
+    
+    // Also need to find product links to map images to products
+    // Pattern: /products/{slug} in the vicinity of the image
+    // Strategy: Find product cards that contain both a product link and an s5 image
+    
+    // Find all s5 images first
+    const allS5Images: string[] = [];
+    let match;
+    while ((match = s5ImagePattern.exec(html)) !== null) {
+      allS5Images.push(match[0]);
+    }
+    
+    if (ctx) logInfo(ctx, 'COLLECTION', `Found ${allS5Images.length} s5/default product images`);
+    
+    // Now try to associate each s5 image with a product slug
+    // Look for product card patterns: href="/products/{slug}" ... img src="...s5/default..."
+    const productCardPattern = /href="\/products\/([^"]+)"[^>]*>[\s\S]*?(?:src|data-src)="(https:\/\/store\.bblcdn\.com\/s5\/default\/[^"]+)"/gi;
+    
+    while ((match = productCardPattern.exec(html)) !== null) {
+      const productSlug = match[1];
+      const imageUrl = match[2];
+      
+      // Clean the product slug - remove query params
+      const cleanSlug = productSlug.split('?')[0];
+      
+      if (!productImages.has(cleanSlug)) {
+        productImages.set(cleanSlug, imageUrl);
+        if (ctx) logDebug(ctx, 'COLLECTION', `Mapped: ${cleanSlug} -> ${imageUrl.substring(0, 60)}...`);
+      }
+    }
+    
+    // Alternative pattern: some pages structure it differently
+    // Look for anchor tags with product paths, then find nearby s5 images
+    const altProductPattern = /<a[^>]+href="\/products\/([^"?]+)"[^>]*>[\s\S]{0,500}?<img[^>]+src="(https:\/\/store\.bblcdn\.com\/s5\/default\/[^"]+)"/gi;
+    
+    while ((match = altProductPattern.exec(html)) !== null) {
+      const productSlug = match[1];
+      const imageUrl = match[2];
+      
+      if (!productImages.has(productSlug)) {
+        productImages.set(productSlug, imageUrl);
+        if (ctx) logDebug(ctx, 'COLLECTION', `Alt pattern mapped: ${productSlug} -> ${imageUrl.substring(0, 60)}...`);
+      }
+    }
+    
+    // Another pattern: srcset with s5 images
+    const srcsetPattern = /<a[^>]+href="\/products\/([^"?]+)"[\s\S]*?srcset="([^"]*store\.bblcdn\.com\/s5\/default\/[^"\s,]+)/gi;
+    
+    while ((match = srcsetPattern.exec(html)) !== null) {
+      const productSlug = match[1];
+      // Extract just the URL from srcset
+      const srcsetValue = match[2];
+      const urlMatch = srcsetValue.match(/https:\/\/store\.bblcdn\.com\/s5\/default\/[a-f0-9]+\.(jpg|png)/i);
+      if (urlMatch && !productImages.has(productSlug)) {
+        productImages.set(productSlug, urlMatch[0]);
+        if (ctx) logDebug(ctx, 'COLLECTION', `Srcset pattern mapped: ${productSlug} -> ${urlMatch[0].substring(0, 60)}...`);
+      }
+    }
+    
+    if (ctx) logSuccess(ctx, 'COLLECTION', `Mapped ${productImages.size} products to s5 images for collection: ${collectionSlug}`);
+    
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (ctx) logError(ctx, 'COLLECTION', `Error scraping collection: ${errMsg}`, { error });
+  }
+  
+  return productImages;
 }
 
 // ============================================================================
@@ -2925,6 +3071,7 @@ async function upsertFilament(
   productConfig: ProductConfig,
   brandId: string | null,
   prices: Record<string, { price: number | null; compareAtPrice: number | null; url: string }>,
+  productImage: string | null,  // NEW: s5/default product image from collection page
   ctx?: LogContext
 ): Promise<{ created: boolean; updated: boolean; error?: string; durationMs?: number }> {
   const startTime = Date.now();
@@ -2980,8 +3127,10 @@ async function upsertFilament(
     material: productConfig.material,
     color_hex: colorVariant.colorHex,
     color_family: colorVariant.colorFamily,
-    // FIX: Add fallback image URL generation when colorVariant.imageUrl is null or broken
-    featured_image: colorVariant.imageUrl || generateBambuLabImageUrl(productConfig.slug, colorVariant.colorName),
+    // Image priority: 1) s5 product image from collection page, 2) valid color variant image, 3) fallback
+    featured_image: productImage || 
+      (colorVariant.imageUrl && isValidBambuLabImageUrl(colorVariant.imageUrl) ? colorVariant.imageUrl : null) ||
+      generateBambuLabImageUrl(productConfig.slug, colorVariant.colorName),
     tds_url: productConfig.tdsUrl,
     nozzle_temp_min_c: productConfig.nozzleTempMin,
     nozzle_temp_max_c: productConfig.nozzleTempMax,
@@ -3285,6 +3434,10 @@ async function runBackgroundScrape(
 
       logSeparator(ctx, `MATERIAL: ${materialCategory}`);
 
+      // NEW: Scrape collection page to get s5/default product images (actual product photos)
+      const collectionImages = await scrapeCollectionProductImages(materialCategory, ctx);
+      if (ctx) logInfo(ctx, 'BACKGROUND', `Collection images loaded: ${collectionImages.size} products mapped for ${materialCategory}`);
+
       // Track issues for this material
       const materialIssues: MaterialIssues = {
         missingPrices: [],
@@ -3516,6 +3669,9 @@ async function runBackgroundScrape(
               materialIssues.missingImages.push(`${productName} - ${colorVariant.colorName}`);
             }
             
+            // Get product image from collection (s5/default) - same for all color variants
+            const productImage = collectionImages.get(productConfig.slug) || null;
+            
             const result = await upsertFilament(
               supabaseClient,
               productName,
@@ -3523,6 +3679,7 @@ async function runBackgroundScrape(
               productConfig,
               brandId,
               regionalPrices,
+              productImage,
               ctx
             );
 
@@ -3836,6 +3993,7 @@ async function processSingleProduct(
           productConfig,
           brandId,
           regionalPrices,
+          null,  // No collection image for single product mode
           ctx
         );
 
@@ -4238,6 +4396,7 @@ serve(async (req) => {
               productConfig,
               brandId,
               regionalPrices,
+              null,  // No collection image for direct product mode
               ctx
             );
 
