@@ -176,3 +176,9 @@ verify_jwt = false
 
 [functions.discover-petg-images]
 verify_jwt = false
+
+[functions.extract-petg-images]
+verify_jwt = false
+
+[functions.update-petg-images]
+verify_jwt = false

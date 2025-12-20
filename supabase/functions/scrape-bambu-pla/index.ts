@@ -1355,7 +1355,7 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // PETG Translucent - 9 colors from product page
   "petg-translucent": [
     { colorName: "Translucent Teal", colorHex: "#77EDD7", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Translucent Light Blue", colorHex: "#61B0FF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Translucent Light Blue", colorHex: "#61B0FF", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s5/default/2e8d7b9c2a4147da979f544f73f85fb5.jpg", variantId: null },
     { colorName: "Clear", colorHex: "#E8E8E8", colorFamily: "Clear", imageUrl: null, variantId: null },
     { colorName: "Translucent Gray", colorHex: "#8E8E8E", colorFamily: "Gray", imageUrl: null, variantId: null },
     { colorName: "Translucent Olive", colorHex: "#748C45", colorFamily: "Green", imageUrl: null, variantId: null },
