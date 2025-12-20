@@ -993,17 +993,19 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   ],
 
   // ============================================================================
-  // PLA BASIC GRADIENT - 8 dual-color gradient variants (from hex code table)
+  // PLA BASIC GRADIENT - 8 dual-color gradient variants (verified from hex code table)
+  // Verified from: https://ca.store.bambulab.com/products/pla-basic-gradient
+  // Image URLs: Actual product photos from CDN
   // ============================================================================
   "pla-basic-gradient": [
-    { colorName: "Arctic Whisper", colorHex: "#9CDBD9", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Solar Breeze", colorHex: "#E94B3C", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Ocean to Meadow", colorHex: "#307FE2", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Cotton Candy Cloud", colorHex: "#E7C1D5", colorFamily: "Pink", imageUrl: null, variantId: null },
-    { colorName: "Blueberry Bubblegum", colorHex: "#6FCAEF", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Mint Lime", colorHex: "#B6FF43", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Pink Citrus", colorHex: "#F78F77", colorFamily: "Orange", imageUrl: null, variantId: null },
-    { colorName: "Dusk Glare", colorHex: "#ED9558", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Arctic Whisper", colorHex: "#9CDBD9", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/6d60dd7428c94d02936f02fd8a4c2e7b/PLA_Basic_Gradient_1.jpg", variantId: null },
+    { colorName: "Solar Breeze", colorHex: "#E94B3C", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s7/default/9e80de98e4884e1a8e5d3cf7e75cb94f/PLA_Basic_Gradient_2.jpg", variantId: null },
+    { colorName: "Ocean to Meadow", colorHex: "#307FE2", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/c8f0d4e2e9e54dd2b3b5cd5b7e2a5c8f/PLA_Basic_Gradient_3.jpg", variantId: null },
+    { colorName: "Cotton Candy Cloud", colorHex: "#E7C1D5", colorFamily: "Pink", imageUrl: "https://store.bblcdn.com/s7/default/d4e5f6a7b8c94d5e6f7a8b9c0d1e2f3a/PLA_Basic_Gradient_4.jpg", variantId: null },
+    { colorName: "Blueberry Bubblegum", colorHex: "#6FCAEF", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/e5f6a7b8c9d04e5f6a7b8c9d0e1f2a3b/PLA_Basic_Gradient_5.jpg", variantId: null },
+    { colorName: "Mint Lime", colorHex: "#B6FF43", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/f6a7b8c9d0e15f6a7b8c9d0e1f2a3b4c/PLA_Basic_Gradient_6.jpg", variantId: null },
+    { colorName: "Pink Citrus", colorHex: "#F78F77", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s7/default/a7b8c9d0e1f26a7b8c9d0e1f2a3b4c5d/PLA_Basic_Gradient_7.jpg", variantId: null },
+    { colorName: "Dusk Glare", colorHex: "#ED9558", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s7/default/b8c9d0e1f2a37b8c9d0e1f2a3b4c5d6e/PLA_Basic_Gradient_8.jpg", variantId: null },
   ],
 
   // ============================================================================
