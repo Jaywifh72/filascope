@@ -182,3 +182,6 @@ verify_jwt = false
 
 [functions.update-petg-images]
 verify_jwt = false
+
+[functions.scrape-bambu-tpu]
+verify_jwt = false
