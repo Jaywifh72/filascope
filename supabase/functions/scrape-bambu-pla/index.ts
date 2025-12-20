@@ -1328,33 +1328,31 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
 
   // ============================================================================
   // PETG PRODUCT COLOR FALLBACKS
-  // NOTE: imageUrl set to null to force dynamic extraction from live pages
-  // The old CDN URLs (UUID format .png/.media) are broken and return blank pages
+  // s5/default URLs are the actual product images (filament spool renders)
+  // Verified December 2024 from live product pages
   // ============================================================================
   
-  // PETG HF - High Flow PETG (verified colors from Bambu Lab product page)
-  // Verified from: https://store.bambulab.com/products/petg-hf
-  // Colors verified December 2024 - images will be dynamically extracted
+  // PETG HF - High Flow PETG (14 colors from Bambu Lab product page)
+  // Image URLs: s5/default format verified from live product page
+  // Hex codes from official hex code table on product page
   "petg-hf": [
-    { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s5/default/6583fc4c677b47c78a79b5af54707241.jpg", variantId: null },
     { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Gray", colorHex: "#8A949E", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Dark Gray", colorHex: "#36454F", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Cream", colorHex: "#FFFDD0", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Yellow", colorHex: "#FFE133", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Orange", colorHex: "#F48438", colorFamily: "Orange", imageUrl: null, variantId: null },
-    { colorName: "Peanut Brown", colorHex: "#7B3F00", colorFamily: "Brown", imageUrl: null, variantId: null },
-    { colorName: "Lime Green", colorHex: "#32CD32", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Green", colorHex: "#00A6A0", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Forest Green", colorHex: "#228B22", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Lake Blue", colorHex: "#4169E1", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Blue", colorHex: "#2140B4", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Red", colorHex: "#EB3A3A", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#ADB1B2", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Dark Gray", colorHex: "#515151", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Cream", colorHex: "#F9DFB9", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Yellow", colorHex: "#FFD00B", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Orange", colorHex: "#F75403", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Peanut Brown", colorHex: "#875718", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Lime Green", colorHex: "#6EE53C", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Green", colorHex: "#00AE42", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Forest Green", colorHex: "#39541A", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Lake Blue", colorHex: "#1F79E5", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#002E96", colorFamily: "Blue", imageUrl: null, variantId: null },
   ],
   
   // PETG Translucent - 9 colors from product page
-  // Verified from: https://store.bambulab.com/products/petg-translucent
-  // Colors verified December 2024 - images will be dynamically extracted
   "petg-translucent": [
     { colorName: "Translucent Teal", colorHex: "#77EDD7", colorFamily: "Blue", imageUrl: null, variantId: null },
     { colorName: "Translucent Light Blue", colorHex: "#61B0FF", colorFamily: "Blue", imageUrl: null, variantId: null },
@@ -1367,9 +1365,7 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
     { colorName: "Translucent Purple", colorHex: "#D6ABFF", colorFamily: "Purple", imageUrl: null, variantId: null },
   ],
   
-  // PETG-CF - Carbon Fiber reinforced PETG (limited colors)
-  // Verified from: https://store.bambulab.com/products/petg-cf
-  // Image will be dynamically extracted
+  // PETG-CF - Carbon Fiber reinforced PETG (1 color)
   "petg-cf": [
     { colorName: "Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
