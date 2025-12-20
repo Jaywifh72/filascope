@@ -31,9 +31,291 @@ interface PriceResponse {
   variantTitle: string | null;
   currency: string;
   available: boolean;
-  source: 'shopify' | 'html' | 'cached';
+  source: 'shopify' | 'firecrawl' | 'html' | 'cached';
   fetchedAt: string;
   error?: string;
+}
+
+// Detect custom storefronts that don't support Shopify JSON API
+function detectCustomStorefront(url: string): 'bambulab' | 'prusa' | null {
+  if (url.includes('store.bambulab.com')) return 'bambulab';
+  if (url.includes('prusa3d.com')) return 'prusa';
+  return null;
+}
+
+// Map currency to Firecrawl location settings for proper regional pricing
+function getFirecrawlLocation(currency: string): { country: string; languages: string[] } {
+  switch (currency) {
+    case 'CAD': return { country: 'CA', languages: ['en-CA', 'en'] };
+    case 'GBP': return { country: 'GB', languages: ['en-GB', 'en'] };
+    case 'EUR': return { country: 'DE', languages: ['de-DE', 'en'] };
+    case 'AUD': return { country: 'AU', languages: ['en-AU', 'en'] };
+    case 'JPY': return { country: 'JP', languages: ['ja-JP', 'en'] };
+    default: return { country: 'US', languages: ['en-US', 'en'] };
+  }
+}
+
+// Extract price from Bambu Lab page content
+// Handles formats like "$28.79 CAD$31.99 CAD" (sale + original)
+// or "$22.49 USD" (single price)
+function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
+  price: number | null;
+  compareAtPrice: number | null;
+  currency: string;
+  available: boolean;
+} {
+  console.log(`Extracting Bambu Lab price, preferred currency: ${preferredCurrency}`);
+  
+  // Pattern to match Bambu Lab price format: "$XX.XX CUR" possibly followed by "$YY.YY CUR"
+  // Examples: "$28.79 CAD$31.99 CAD", "$22.49 USD$24.99 USD", "$28.79 CAD"
+  const currencyPatterns = ['CAD', 'USD', 'GBP', 'EUR', 'AUD', 'JPY'];
+  
+  // First, try to find prices with the preferred currency
+  const preferredPriceRegex = new RegExp(
+    `\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}(?:\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency})?`,
+    'i'
+  );
+  
+  const preferredMatch = markdown.match(preferredPriceRegex);
+  if (preferredMatch) {
+    const price1 = parseFloat(preferredMatch[1].replace(',', ''));
+    const price2 = preferredMatch[2] ? parseFloat(preferredMatch[2].replace(',', '')) : null;
+    
+    // If two prices found, smaller one is sale price, larger is compare-at
+    if (price2 !== null) {
+      const salePrice = Math.min(price1, price2);
+      const comparePrice = Math.max(price1, price2);
+      console.log(`Found ${preferredCurrency} sale price: $${salePrice}, compare-at: $${comparePrice}`);
+      return {
+        price: salePrice,
+        compareAtPrice: comparePrice,
+        currency: preferredCurrency,
+        available: true,
+      };
+    }
+    
+    console.log(`Found ${preferredCurrency} price: $${price1}`);
+    return {
+      price: price1,
+      compareAtPrice: null,
+      currency: preferredCurrency,
+      available: true,
+    };
+  }
+  
+  // If preferred currency not found, try to find any price
+  for (const cur of currencyPatterns) {
+    const priceRegex = new RegExp(
+      `\\$([\\d,]+(?:\\.\\d{2})?)\\s*${cur}(?:\\$([\\d,]+(?:\\.\\d{2})?)\\s*${cur})?`,
+      'i'
+    );
+    const match = markdown.match(priceRegex);
+    if (match) {
+      const price1 = parseFloat(match[1].replace(',', ''));
+      const price2 = match[2] ? parseFloat(match[2].replace(',', '')) : null;
+      
+      if (price2 !== null) {
+        const salePrice = Math.min(price1, price2);
+        const comparePrice = Math.max(price1, price2);
+        console.log(`Found ${cur} sale price: $${salePrice}, compare-at: $${comparePrice} (fallback)`);
+        return {
+          price: salePrice,
+          compareAtPrice: comparePrice,
+          currency: cur,
+          available: true,
+        };
+      }
+      
+      console.log(`Found ${cur} price: $${price1} (fallback)`);
+      return {
+        price: price1,
+        compareAtPrice: null,
+        currency: cur,
+        available: true,
+      };
+    }
+  }
+  
+  // Last resort: try to find any price pattern like "$XX.XX"
+  const genericMatch = markdown.match(/\$([0-9,]+(?:\.[0-9]{2})?)/);
+  if (genericMatch) {
+    const price = parseFloat(genericMatch[1].replace(',', ''));
+    console.log(`Found generic price: $${price}`);
+    return {
+      price,
+      compareAtPrice: null,
+      currency: preferredCurrency, // Assume preferred currency
+      available: true,
+    };
+  }
+  
+  console.log('No price found in content');
+  return {
+    price: null,
+    compareAtPrice: null,
+    currency: preferredCurrency,
+    available: false,
+  };
+}
+
+// Extract weight from page content
+function extractWeightFromContent(markdown: string): number | null {
+  // Look for weight patterns like "1KG", "1 KG", "1000g", "1kg"
+  const kgMatch = markdown.match(/\b(\d+(?:\.\d+)?)\s*kg\b/i);
+  if (kgMatch) return Math.round(parseFloat(kgMatch[1]) * 1000);
+  
+  const gMatch = markdown.match(/\b(\d{3,4})\s*g(?:ram)?s?\b/i);
+  if (gMatch) return Math.round(parseFloat(gMatch[1]));
+  
+  return null;
+}
+
+// Extract diameter from page content
+function extractDiameterFromContent(markdown: string, url: string): number | null {
+  // Check URL first
+  const urlMatch = url.match(/[_-](1[.-]75|2[.-]85)/i);
+  if (urlMatch) {
+    return parseFloat(urlMatch[1].replace('-', '.'));
+  }
+  
+  // Check content
+  const contentMatch = markdown.match(/\b(1\.75|2\.85)\s*mm\b/i);
+  if (contentMatch) return parseFloat(contentMatch[1]);
+  
+  return null;
+}
+
+// Fetch price using Firecrawl API for custom storefronts
+async function fetchPriceWithFirecrawl(productUrl: string, preferredCurrency: string): Promise<PriceResponse> {
+  const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+  
+  if (!firecrawlApiKey) {
+    console.error('FIRECRAWL_API_KEY not configured');
+    return {
+      success: false,
+      price: null,
+      compareAtPrice: null,
+      weightGrams: null,
+      diameterMm: null,
+      variantTitle: null,
+      currency: preferredCurrency,
+      available: false,
+      source: 'firecrawl',
+      fetchedAt: new Date().toISOString(),
+      error: 'Firecrawl not configured',
+    };
+  }
+  
+  const location = getFirecrawlLocation(preferredCurrency);
+  console.log(`Fetching with Firecrawl: ${productUrl} (location: ${location.country}, lang: ${location.languages.join(', ')})`);
+  
+  try {
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: productUrl,
+        formats: ['markdown'],
+        onlyMainContent: true,
+        waitFor: 3000, // Wait for JavaScript to load currency
+        location: location,
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Firecrawl API error: ${response.status} - ${errorText}`);
+      return {
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        weightGrams: null,
+        diameterMm: null,
+        variantTitle: null,
+        currency: preferredCurrency,
+        available: false,
+        source: 'firecrawl',
+        fetchedAt: new Date().toISOString(),
+        error: `Firecrawl error: ${response.status}`,
+      };
+    }
+    
+    const data = await response.json();
+    const markdown = data.data?.markdown || data.markdown || '';
+    
+    if (!markdown) {
+      console.error('No markdown content returned from Firecrawl');
+      return {
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        weightGrams: null,
+        diameterMm: null,
+        variantTitle: null,
+        currency: preferredCurrency,
+        available: false,
+        source: 'firecrawl',
+        fetchedAt: new Date().toISOString(),
+        error: 'No content returned',
+      };
+    }
+    
+    console.log(`Firecrawl returned ${markdown.length} chars of content`);
+    
+    // Extract price based on storefront type
+    const priceData = extractBambuLabPrice(markdown, preferredCurrency);
+    const weightGrams = extractWeightFromContent(markdown);
+    const diameterMm = extractDiameterFromContent(markdown, productUrl);
+    
+    if (priceData.price === null) {
+      return {
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        weightGrams,
+        diameterMm,
+        variantTitle: null,
+        currency: preferredCurrency,
+        available: false,
+        source: 'firecrawl',
+        fetchedAt: new Date().toISOString(),
+        error: 'Could not extract price from page',
+      };
+    }
+    
+    console.log(`Firecrawl price extracted: ${priceData.price} ${priceData.currency} (compare: ${priceData.compareAtPrice})`);
+    
+    return {
+      success: true,
+      price: priceData.price,
+      compareAtPrice: priceData.compareAtPrice,
+      weightGrams,
+      diameterMm,
+      variantTitle: null,
+      currency: priceData.currency,
+      available: priceData.available,
+      source: 'firecrawl',
+      fetchedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('Firecrawl fetch error:', error);
+    return {
+      success: false,
+      price: null,
+      compareAtPrice: null,
+      weightGrams: null,
+      diameterMm: null,
+      variantTitle: null,
+      currency: preferredCurrency,
+      available: false,
+      source: 'firecrawl',
+      fetchedAt: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
 }
 
 // Parse weight from variant title (e.g., "1.75mm - 1KG AMS Compatible")
@@ -127,28 +409,7 @@ function detectCurrencyFromUrl(url: string): string {
   return 'USD';
 }
 
-// Extract the original US URL from a regional URL
-function extractOriginalUrl(regionalUrl: string): string | null {
-  try {
-    const url = new URL(regionalUrl);
-    const hostParts = url.hostname.split('.');
-    
-    // Check for regional subdomains like ca.store.bambulab.com, uk.store.bambulab.com, etc.
-    const regionalSubdomains = ['ca', 'uk', 'eu', 'au', 'jp', 'de', 'fr'];
-    if (regionalSubdomains.includes(hostParts[0].toLowerCase())) {
-      // Replace regional subdomain with 'us' or remove it
-      hostParts[0] = 'us';
-      url.hostname = hostParts.join('.');
-      return url.toString();
-    }
-    
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-// Fetch price from Shopify JSON API with fallback support
+// Fetch price from Shopify JSON API
 async function fetchShopifyPrice(productUrl: string, preferredCurrency: string): Promise<PriceResponse> {
   const jsonUrl = getShopifyJsonUrl(productUrl);
   console.log(`Fetching Shopify JSON from: ${jsonUrl}`);
@@ -171,22 +432,7 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
       headers['Accept-Language'] = 'en-AU';
     }
     
-    let response = await fetch(jsonUrl, { headers });
-    
-    // If we get a 404, try the fallback US URL
-    if (response.status === 404) {
-      const fallbackUrl = extractOriginalUrl(productUrl);
-      if (fallbackUrl) {
-        console.log(`Regional URL returned 404, trying fallback: ${fallbackUrl}`);
-        const fallbackJsonUrl = getShopifyJsonUrl(fallbackUrl);
-        response = await fetch(fallbackJsonUrl, { headers });
-        
-        // If fallback works, log it but note the currency may be USD
-        if (response.ok) {
-          console.log(`Fallback URL succeeded, note: price may be in USD`);
-        }
-      }
-    }
+    const response = await fetch(jsonUrl, { headers });
     
     if (!response.ok) {
       console.error(`Shopify fetch failed: ${response.status} ${response.statusText}`);
@@ -289,26 +535,30 @@ serve(async (req) => {
 
     console.log(`Getting current price for: ${productUrl} (preferred currency: ${currency})`);
     
-    const platform = detectPlatform(productUrl);
+    // Check for custom storefronts first (they don't support Shopify JSON)
+    const customStorefront = detectCustomStorefront(productUrl);
     let result: PriceResponse;
     
-    if (platform === 'shopify') {
-      result = await fetchShopifyPrice(productUrl, currency);
+    if (customStorefront) {
+      console.log(`Detected custom storefront: ${customStorefront}, using Firecrawl`);
+      result = await fetchPriceWithFirecrawl(productUrl, currency);
     } else {
-      // For unknown platforms, return not supported
-      result = {
-        success: false,
-        price: null,
-        compareAtPrice: null,
-        weightGrams: null,
-        diameterMm: null,
-        variantTitle: null,
-        currency,
-        available: false,
-        source: 'shopify',
-        fetchedAt: new Date().toISOString(),
-        error: 'Platform not supported for live pricing',
-      };
+      // Try Shopify JSON API for standard stores
+      const platform = detectPlatform(productUrl);
+      
+      if (platform === 'shopify') {
+        result = await fetchShopifyPrice(productUrl, currency);
+        
+        // If Shopify fails, try Firecrawl as fallback
+        if (!result.success) {
+          console.log('Shopify failed, trying Firecrawl as fallback...');
+          result = await fetchPriceWithFirecrawl(productUrl, currency);
+        }
+      } else {
+        // For unknown platforms, try Firecrawl
+        console.log('Unknown platform, trying Firecrawl...');
+        result = await fetchPriceWithFirecrawl(productUrl, currency);
+      }
     }
 
     return new Response(
@@ -328,7 +578,7 @@ serve(async (req) => {
         variantTitle: null,
         currency: 'USD',
         available: false,
-        source: 'shopify',
+        source: 'firecrawl',
         fetchedAt: new Date().toISOString(),
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
