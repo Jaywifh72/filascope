@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useSessionFilters } from "@/hooks/useSessionFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -119,17 +120,76 @@ const Finder = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMaterials, setSelectedMaterials] = useState<string[]>(["All"]);
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, string[]>>({});
-  const [brassOnly, setBrassOnly] = useState(false);
-  const [foodContact, setFoodContact] = useState(false);
-  const [amsOnly, setAmsOnly] = useState(false);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState("");
+  
+  // Get URL params for color search
+  const urlHexSearch = searchParams.get("hexSearch");
+  const urlColorTolerance = searchParams.get("colorTolerance") ? parseInt(searchParams.get("colorTolerance")!, 10) : null;
+  
+  // Session-persisted filters
+  const { filters, updateFilter, resetFilters } = useSessionFilters(urlHexSearch, urlColorTolerance);
+  
+  // Destructure for convenience
+  const {
+    searchTerm,
+    selectedMaterials,
+    selectedVariants,
+    brassOnly,
+    foodContact,
+    amsOnly,
+    selectedBrands,
+    maxPrice,
+    sortBy,
+    highSpeed,
+    matte,
+    carbonFiber,
+    glassFiber,
+    woodFilled,
+    glow,
+    plasticSpool,
+    cardboardSpool,
+    singleSpool,
+    multiPack,
+    priceRange,
+    selectedColorFamilies,
+    hexSearch,
+    colorTolerance,
+  } = filters;
+  
+  // Setter wrappers for convenience
+  const setSearchTerm = (v: string) => updateFilter("searchTerm", v);
+  const setSelectedMaterials = (v: string[]) => updateFilter("selectedMaterials", v);
+  const setSelectedVariants = (v: Record<string, string[]>) => updateFilter("selectedVariants", v);
+  const setBrassOnly = (v: boolean) => updateFilter("brassOnly", v);
+  const setFoodContact = (v: boolean) => updateFilter("foodContact", v);
+  const setAmsOnly = (v: boolean) => updateFilter("amsOnly", v);
+  const setSelectedBrands = (v: string[]) => updateFilter("selectedBrands", v);
+  const setMaxPrice = (v: string) => updateFilter("maxPrice", v);
+  const setSortBy = (v: string) => updateFilter("sortBy", v);
+  const setHighSpeed = (v: boolean) => updateFilter("highSpeed", v);
+  const setMatte = (v: boolean) => updateFilter("matte", v);
+  const setCarbonFiber = (v: boolean) => updateFilter("carbonFiber", v);
+  const setGlassFiber = (v: boolean) => updateFilter("glassFiber", v);
+  const setWoodFilled = (v: boolean) => updateFilter("woodFilled", v);
+  const setGlow = (v: boolean) => updateFilter("glow", v);
+  const setPlasticSpool = (v: boolean) => updateFilter("plasticSpool", v);
+  const setCardboardSpool = (v: boolean) => updateFilter("cardboardSpool", v);
+  const setSingleSpool = (v: boolean) => updateFilter("singleSpool", v);
+  const setMultiPack = (v: boolean) => updateFilter("multiPack", v);
+  const setPriceRange = (v: [number, number]) => updateFilter("priceRange", v);
+  const setSelectedColorFamilies = (v: string[]) => updateFilter("selectedColorFamilies", v);
+  const setHexSearch = (v: string) => updateFilter("hexSearch", v);
+  const setColorTolerance = (v: number) => updateFilter("colorTolerance", v);
+  
+  // Local UI state (not persisted)
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [printerSelectorOpen, setPrinterSelectorOpen] = useState(false);
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  const [colorSectionOpen, setColorSectionOpen] = useState(() => !!urlHexSearch || hexSearch !== "");
+  const [colorPickerMode, setColorPickerMode] = useState<"grid" | "spectrum">("grid");
+  const [spectrumHue, setSpectrumHue] = useState(0);
+  const [spectrumSaturation, setSpectrumSaturation] = useState(100);
+  const [spectrumLightness, setSpectrumLightness] = useState(50);
+  
   const { 
     isInCompare, 
     addItem, 
@@ -140,7 +200,7 @@ const Finder = () => {
     commitPendingItems,
     clearPendingItems 
   } = useCompare();
-  const [sortBy, setSortBy] = useState<string>("truecost-asc");
+  
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
     const saved = localStorage.getItem("finderViewMode");
     return saved === "list" ? "list" : "grid";
@@ -149,37 +209,11 @@ const Finder = () => {
   // Force card view on mobile
   const effectiveViewMode = isMobile ? "grid" : viewMode;
 
-
-  // New filter states
-  const [highSpeed, setHighSpeed] = useState(false);
-  const [matte, setMatte] = useState(false);
-  const [carbonFiber, setCarbonFiber] = useState(false);
-  const [glassFiber, setGlassFiber] = useState(false);
-  const [woodFilled, setWoodFilled] = useState(false);
-  const [glow, setGlow] = useState(false);
-  const [plasticSpool, setPlasticSpool] = useState(false);
-  const [cardboardSpool, setCardboardSpool] = useState(false);
-  const [singleSpool, setSingleSpool] = useState(false);
-  const [multiPack, setMultiPack] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const MAX_PRICE_LIMIT = 100;
   
   // Pagination state
   const ITEMS_PER_PAGE = 16;
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
-  
-  // Color filter states - initialize from URL params
-  const [selectedColorFamilies, setSelectedColorFamilies] = useState<string[]>([]);
-  const [hexSearch, setHexSearch] = useState(() => searchParams.get("hexSearch") || "");
-  const [colorTolerance, setColorTolerance] = useState(() => {
-    const urlTolerance = searchParams.get("colorTolerance");
-    return urlTolerance ? parseInt(urlTolerance, 10) : 30;
-  });
-  const [colorSectionOpen, setColorSectionOpen] = useState(() => !!searchParams.get("hexSearch"));
-  const [colorPickerMode, setColorPickerMode] = useState<"grid" | "spectrum">("grid");
-  const [spectrumHue, setSpectrumHue] = useState(0);
-  const [spectrumSaturation, setSpectrumSaturation] = useState(100);
-  const [spectrumLightness, setSpectrumLightness] = useState(50);
   // Multi-select mode keyboard listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -983,24 +1017,7 @@ const Finder = () => {
 
   // Clear all filters function
   const handleClearAllFilters = () => {
-    setSelectedMaterials(["All"]);
-    setSelectedBrands([]);
-    setPriceRange([0, MAX_PRICE_LIMIT]);
-    setHighSpeed(false);
-    setMatte(false);
-    setCarbonFiber(false);
-    setGlassFiber(false);
-    setWoodFilled(false);
-    setGlow(false);
-    setBrassOnly(false);
-    setFoodContact(false);
-    setAmsOnly(false);
-    setSelectedColorFamilies([]);
-    setHexSearch("");
-    setPlasticSpool(false);
-    setCardboardSpool(false);
-    setSingleSpool(false);
-    setMultiPack(false);
+    resetFilters();
   };
 
   // Update navbar compatible count
