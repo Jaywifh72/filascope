@@ -6,28 +6,119 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// PETG product configurations with their color mappings
-const PETG_PRODUCTS = [
-  {
-    slug: "petg-hf",
-    url: "https://ca.store.bambulab.com/products/petg-hf",
-    colors: ["Black", "White", "Red", "Gray", "Dark Gray", "Cream", "Yellow", "Orange", "Peanut Brown", "Lime Green", "Green", "Forest Green", "Lake Blue", "Blue"],
+// Known PETG product image mappings - extracted from Bambu Lab store
+// These s5/default URLs are the actual product images shown on the store
+const PETG_IMAGE_MAPPINGS: Record<string, Record<string, string>> = {
+  "petg-hf": {
+    "Black": "https://store.bblcdn.com/s5/default/6583fc4c677b47c78a79b5af54707241.jpg",
+    "White": "",
+    "Red": "",
+    "Gray": "",
+    "Dark Gray": "",
+    "Cream": "",
+    "Yellow": "",
+    "Orange": "",
+    "Peanut Brown": "",
+    "Lime Green": "",
+    "Green": "",
+    "Forest Green": "",
+    "Lake Blue": "",
+    "Blue": "",
   },
-  {
-    slug: "petg-translucent",
-    url: "https://ca.store.bambulab.com/products/petg-translucent",
-    colors: ["Translucent Teal", "Translucent Light Blue", "Clear", "Translucent Gray", "Translucent Olive", "Translucent Brown", "Translucent Orange", "Translucent Pink", "Translucent Purple"],
+  "petg-translucent": {
+    "Translucent Teal": "",
+    "Translucent Light Blue": "https://store.bblcdn.com/s5/default/2e8d7b9c2a4147da979f544f73f85fb5.jpg",
+    "Clear": "",
+    "Translucent Gray": "",
+    "Translucent Olive": "",
+    "Translucent Brown": "",
+    "Translucent Orange": "",
+    "Translucent Pink": "",
+    "Translucent Purple": "",
   },
-  {
-    slug: "petg-cf",
-    url: "https://ca.store.bambulab.com/products/petg-cf",
-    colors: ["Black"],
+  "petg-cf": {
+    "Black": "",
   },
-];
+};
 
-// Convert color name to URL-friendly format for matching
-function normalizeColorName(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+// Try to extract image URLs from HTML by looking for embedded JSON data
+function extractImagesFromHtml(html: string): { 
+  s5Images: string[]; 
+  s7Images: string[];
+  jsonProductData: any[];
+  variantImageMap: Record<string, string>;
+} {
+  const s5ImagePattern = /https:\/\/store\.bblcdn\.com\/s5\/default\/[a-f0-9]{32}\.(?:jpg|png|jpeg)/gi;
+  const s7ImagePattern = /https:\/\/store\.bblcdn\.com\/s7\/default\/[a-f0-9]{32}\.(?:jpg|png|jpeg)/gi;
+  
+  const s5Images = [...new Set((html.match(s5ImagePattern) || []) as string[])];
+  const s7Images = [...new Set((html.match(s7ImagePattern) || []) as string[])];
+  
+  // Try to find product JSON data in the page
+  const jsonProductData: any[] = [];
+  const variantImageMap: Record<string, string> = {};
+  
+  // Look for __NEXT_DATA__ or similar embedded JSON
+  const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([^<]+)<\/script>/);
+  if (nextDataMatch) {
+    try {
+      const nextData = JSON.parse(nextDataMatch[1]);
+      jsonProductData.push({ source: '__NEXT_DATA__', data: nextData });
+      
+      // Try to extract product variants with images
+      const props = nextData?.props?.pageProps;
+      if (props?.product?.variants) {
+        for (const variant of props.product.variants) {
+          if (variant.featured_image?.src) {
+            const colorName = variant.title || variant.option1;
+            variantImageMap[colorName] = variant.featured_image.src;
+          }
+        }
+      }
+    } catch (e) {
+      console.log("Failed to parse __NEXT_DATA__:", e);
+    }
+  }
+  
+  // Look for window.__INITIAL_STATE__ or similar
+  const initialStateMatch = html.match(/window\.__INITIAL_STATE__\s*=\s*(\{[^;]+\});/);
+  if (initialStateMatch) {
+    try {
+      const state = JSON.parse(initialStateMatch[1]);
+      jsonProductData.push({ source: '__INITIAL_STATE__', data: state });
+    } catch (e) {
+      console.log("Failed to parse __INITIAL_STATE__:", e);
+    }
+  }
+  
+  // Look for Shopify product JSON patterns
+  const productJsonPatterns = [
+    /var\s+product\s*=\s*(\{[^;]+\});/,
+    /"product"\s*:\s*(\{[^\n]+\})/,
+    /product_data\s*:\s*(\{[^}]+\})/,
+  ];
+  
+  for (const pattern of productJsonPatterns) {
+    const match = html.match(pattern);
+    if (match) {
+      try {
+        const productData = JSON.parse(match[1]);
+        jsonProductData.push({ source: 'product_var', data: productData });
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+  }
+  
+  // Look for image URLs associated with color codes in the HTML
+  // Pattern: Look for structures like "32600" followed by or near an image URL
+  const colorCodeImagePattern = /(\d{5})[^a-z0-9]*(?:[^"]*)"?(https:\/\/store\.bblcdn\.com\/s5\/default\/[a-f0-9]{32}\.jpg)/gi;
+  let match;
+  while ((match = colorCodeImagePattern.exec(html)) !== null) {
+    variantImageMap[`code_${match[1]}`] = match[2];
+  }
+  
+  return { s5Images, s7Images, jsonProductData, variantImageMap };
 }
 
 serve(async (req) => {
@@ -47,8 +138,12 @@ serve(async (req) => {
       });
     }
 
-    // Parse request body
-    let options: { dryRun?: boolean; updateDatabase?: boolean; productSlug?: string } = {};
+    let options: { 
+      dryRun?: boolean; 
+      updateDatabase?: boolean; 
+      productSlug?: string;
+      useKnownMappings?: boolean;
+    } = {};
     try {
       options = await req.json();
     } catch {
@@ -58,157 +153,147 @@ serve(async (req) => {
     const dryRun = options.dryRun ?? true;
     const updateDatabase = options.updateDatabase ?? false;
     const targetProduct = options.productSlug;
+    const useKnownMappings = options.useKnownMappings ?? true;
 
-    console.log(`Starting PETG image discovery (dryRun: ${dryRun}, updateDatabase: ${updateDatabase})`);
+    console.log(`Starting PETG image discovery (dryRun: ${dryRun}, updateDatabase: ${updateDatabase}, useKnownMappings: ${useKnownMappings})`);
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const results: Record<string, any> = {};
 
-    const productsToProcess = targetProduct 
-      ? PETG_PRODUCTS.filter(p => p.slug === targetProduct)
-      : PETG_PRODUCTS;
+    const productsToScrape = targetProduct 
+      ? [targetProduct]
+      : Object.keys(PETG_IMAGE_MAPPINGS);
 
-    for (const product of productsToProcess) {
-      console.log(`\nProcessing ${product.slug}...`);
+    for (const productSlug of productsToScrape) {
+      const colorMappings = PETG_IMAGE_MAPPINGS[productSlug] || {};
+      const baseUrl = `https://ca.store.bambulab.com/products/${productSlug}`;
       
-      // Scrape each color variant page to get the s5/default image
-      const colorImages: Record<string, string | null> = {};
+      console.log(`\nProcessing ${productSlug}...`);
       
-      // First, scrape the main product page to get variant IDs
-      console.log(`Scraping ${product.url} with Firecrawl...`);
-      
-      const mainPageResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      // First, try to scrape the product page to find any s5 images
+      const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${firecrawlApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          url: product.url,
-          formats: ["html"],
+          url: baseUrl,
+          formats: ["html", "rawHtml"],
           onlyMainContent: false,
-          waitFor: 5000, // Wait for dynamic content to load
+          waitFor: 5000,
         }),
       });
 
-      if (!mainPageResponse.ok) {
-        const errorText = await mainPageResponse.text();
-        console.error(`Firecrawl error for ${product.slug}:`, errorText);
-        results[product.slug] = { error: `Firecrawl failed: ${mainPageResponse.status}` };
-        continue;
-      }
-
-      const mainPageData = await mainPageResponse.json();
-      const html = mainPageData.data?.html || mainPageData.html || "";
+      let extractedData: ReturnType<typeof extractImagesFromHtml> | null = null;
       
-      console.log(`Received ${html.length} characters of HTML for ${product.slug}`);
-
-      // Extract s5/default image URLs from the HTML
-      // Pattern: https://store.bblcdn.com/s5/default/{32-char-hash}.jpg
-      const s5ImagePattern = /https:\/\/store\.bblcdn\.com\/s5\/default\/[a-f0-9]{32}\.(?:jpg|png|jpeg)/gi;
-      const matchedS5Urls: string[] = (html.match(s5ImagePattern) || []) as string[];
-      const uniqueS5Urls: string[] = [...new Set(matchedS5Urls)];
-      
-      console.log(`Found ${uniqueS5Urls.length} unique s5/default image URLs for ${product.slug}`);
-
-      // Also try to extract variant data from the page JSON
-      // Look for patterns like: "id":46336540803312 with associated images
-      const variantPattern = /["']id["']\s*:\s*(\d+)/g;
-      const variantIds: string[] = [];
-      let match;
-      while ((match = variantPattern.exec(html)) !== null) {
-        if (match[1].length > 10) { // Shopify variant IDs are long
-          variantIds.push(match[1]);
+      if (scrapeResponse.ok) {
+        const scrapeData = await scrapeResponse.json();
+        const html = scrapeData.data?.html || scrapeData.data?.rawHtml || scrapeData.html || "";
+        console.log(`Received ${html.length} characters of HTML for ${productSlug}`);
+        
+        extractedData = extractImagesFromHtml(html);
+        console.log(`Extracted: ${extractedData.s5Images.length} s5 images, ${extractedData.s7Images.length} s7 images`);
+        console.log(`Found variant mappings:`, Object.keys(extractedData.variantImageMap).length);
+        
+        if (extractedData.s5Images.length > 0) {
+          console.log(`S5 images found:`, extractedData.s5Images);
         }
+      } else {
+        console.error(`Firecrawl failed for ${productSlug}:`, await scrapeResponse.text());
       }
-      console.log(`Found ${variantIds.length} potential variant IDs`);
 
-      // Try to match images to colors based on proximity in HTML
-      // This is a heuristic approach - look for color names near image URLs
-      for (const color of product.colors) {
-        const normalizedColor = normalizeColorName(color);
+      const colorResults: Record<string, { imageUrl: string | null; source: string; updated: boolean }> = {};
+
+      // Process each color
+      for (const [colorName, knownImageUrl] of Object.entries(colorMappings)) {
+        let imageUrl: string | null = null;
+        let source = "none";
         
-        // Search for the color name in the HTML and find nearby s5 images
-        const colorPattern = new RegExp(color.replace(/\s+/g, '\\s*'), 'gi');
-        const colorMatches = [...html.matchAll(colorPattern)];
+        // Priority 1: Use known mapping if it exists and is not empty
+        if (useKnownMappings && knownImageUrl) {
+          imageUrl = knownImageUrl;
+          source = "known_mapping";
+        }
         
-        if (colorMatches.length > 0) {
-          // For each color match, look for the nearest s5 image URL
-          for (const colorMatch of colorMatches) {
-            const startPos = Math.max(0, colorMatch.index! - 2000);
-            const endPos = Math.min(html.length, colorMatch.index! + 2000);
-            const nearbyHtml = html.substring(startPos, endPos);
-            
-            const nearbyS5Match = nearbyHtml.match(s5ImagePattern);
-            if (nearbyS5Match && nearbyS5Match[0]) {
-              colorImages[color] = nearbyS5Match[0];
-              console.log(`Matched ${color} -> ${nearbyS5Match[0]}`);
-              break;
-            }
+        // Priority 2: Try to find from extracted variant map
+        if (!imageUrl && extractedData?.variantImageMap) {
+          const directMatch = extractedData.variantImageMap[colorName];
+          if (directMatch) {
+            imageUrl = directMatch;
+            source = "extracted_variant";
           }
         }
         
-        if (!colorImages[color]) {
-          colorImages[color] = null;
+        // Priority 3: Use first s5 image as fallback (not ideal but better than nothing)
+        if (!imageUrl && extractedData?.s5Images && extractedData.s5Images.length > 0) {
+          // Only use if we have exactly one color or it's a unique product
+          if (Object.keys(colorMappings).length === 1) {
+            imageUrl = extractedData.s5Images[0];
+            source = "single_s5_fallback";
+          }
         }
-      }
-
-      results[product.slug] = {
-        url: product.url,
-        colorsExpected: product.colors.length,
-        s5ImagesFound: uniqueS5Urls.length,
-        colorImages,
-        allS5Images: uniqueS5Urls,
-        variantIds: variantIds.slice(0, 20),
-      };
-
-      // If we should update the database
-      if (updateDatabase && !dryRun) {
-        for (const [colorName, imageUrl] of Object.entries(colorImages)) {
-          if (!imageUrl) continue;
-          
-          // Find matching filaments in the database
-          const searchTitle = `%${product.slug.replace(/-/g, '%')}%${colorName.replace(/\s+/g, '%')}%`;
+        
+        let updated = false;
+        
+        // Update database if we have an image
+        if (updateDatabase && !dryRun && imageUrl) {
+          const materialSearch = productSlug === "petg-cf" ? "PETG-CF" : 
+                                 productSlug === "petg-translucent" ? "Translucent" : "PETG HF";
           
           const { data: filaments, error: findError } = await supabase
             .from("filaments")
             .select("id, product_title, featured_image")
             .ilike("vendor", "%bambu%")
             .ilike("product_title", `%${colorName}%`)
-            .ilike("product_title", `%PETG%`);
+            .ilike("product_title", `%${materialSearch}%`);
 
           if (findError) {
             console.error(`Error finding filaments for ${colorName}:`, findError.message);
-            continue;
-          }
-
-          for (const filament of filaments || []) {
-            // Only update if image is missing or is a broken s7 URL
-            if (!filament.featured_image || filament.featured_image.includes('/s7/default/')) {
+          } else if (filaments && filaments.length > 0) {
+            for (const filament of filaments) {
               const { error: updateError } = await supabase
                 .from("filaments")
-                .update({ featured_image: imageUrl })
+                .update({ 
+                  featured_image: imageUrl,
+                  updated_at: new Date().toISOString()
+                })
                 .eq("id", filament.id);
 
               if (updateError) {
                 console.error(`Failed to update ${filament.product_title}:`, updateError.message);
               } else {
-                console.log(`Updated ${filament.product_title} with s5 image`);
+                console.log(`✓ Updated ${filament.product_title} with image from ${source}`);
+                updated = true;
               }
             }
           }
         }
+        
+        colorResults[colorName] = { imageUrl, source, updated };
       }
 
-      // Add a small delay between products to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      results[productSlug] = {
+        baseUrl,
+        extractedS5Count: extractedData?.s5Images.length || 0,
+        extractedS5Images: extractedData?.s5Images || [],
+        extractedS7Count: extractedData?.s7Images.length || 0,
+        variantMapKeys: Object.keys(extractedData?.variantImageMap || {}),
+        colorResults,
+      };
+
+      // Rate limit between products
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     const response = {
       success: true,
       dryRun,
       updateDatabase,
+      useKnownMappings,
+      timestamp: new Date().toISOString(),
       results,
+      note: "To add more known mappings, update PETG_IMAGE_MAPPINGS in the function code with s5/default URLs",
     };
 
     return new Response(JSON.stringify(response, null, 2), {
