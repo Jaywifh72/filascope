@@ -1160,14 +1160,16 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   ],
 
   // ============================================================================
-  // PLA WOOD - Wood-textured PLA
+  // PLA WOOD - Wood-textured PLA (6 official colors)
+  // Verified from: https://ca.store.bambulab.com/products/pla-wood
   // ============================================================================
   "pla-wood": [
-    { colorName: "Oak", colorHex: "#806517", colorFamily: "Brown", imageUrl: null, variantId: null },
-    { colorName: "Walnut", colorHex: "#5D432C", colorFamily: "Brown", imageUrl: null, variantId: null },
-    { colorName: "Bamboo", colorHex: "#E3D26F", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Cherry", colorHex: "#DE3163", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Mahogany", colorHex: "#C04000", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Black Walnut", colorHex: "#4F3F24", colorFamily: "Brown", imageUrl: "https://store.bblcdn.com/s7/default/87f38658a86d46bfa25b8983d61f672f/55bfe8a8f9e64d0ebd78df70a08296bd.png", variantId: null },
+    { colorName: "Rosewood", colorHex: "#4C241C", colorFamily: "Brown", imageUrl: "https://store.bblcdn.com/s7/default/20c7a8ee893742dfa740ec429c5c6a2e/8675a05674774cddb53c006e799e4098.png", variantId: null },
+    { colorName: "Clay Brown", colorHex: "#995F11", colorFamily: "Brown", imageUrl: "https://store.bblcdn.com/s7/default/e80e4032105a4d05af49dabcecf64abe/fbf033665a5b477db42f657a2c2ef47f.png", variantId: null },
+    { colorName: "Classic Birch", colorHex: "#918669", colorFamily: "Brown", imageUrl: "https://store.bblcdn.com/s7/default/8c7d604f26174f9d9f18567ab87e5dc8/362e740e8fc745acb359536feee5436e.png", variantId: null },
+    { colorName: "White Oak", colorHex: "#D6CCA3", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/d2bfa12ac291455cb62b12124d28cf73/b18bddd9eebe462ba7eaf2d1eda47048.png", variantId: null },
+    { colorName: "Ochre Yellow", colorHex: "#C98935", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/cf351049f5424c0588acf6c38cfe2e9a/4443eb627f9b4aff8d4c2efc69a32629.png", variantId: null },
   ],
 
   // ============================================================================
