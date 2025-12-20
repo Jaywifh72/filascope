@@ -231,9 +231,10 @@ const FilamentDetail = () => {
   ];
 
   // Terms that are PRODUCT VARIANTS (not colors) - should be kept in base name
+  // NOTE: "Wood" is NOT here because "PLA Wood Black Walnut" should extract "Bambu Lab PLA Wood" as base
   const PRODUCT_VARIANT_TERMS = [
     'Matte', 'Matt', 'Silk', 'Glitter', 'Silk Glitter', 'Carbon Fiber', 'CF',
-    'Recycled', 'CMYK Bundle', 'CMYK', 'Bundle', 'Bulk Buy', 'Wood Fill', 'Wood', 'HF', 'High Flow',
+    'Recycled', 'CMYK Bundle', 'CMYK', 'Bundle', 'Bulk Buy', 'Wood Fill', 'HF', 'High Flow',
     '10 rolls', '10 packs', 'Pack', 'Pellets', 'Large-Format',
     'Conductive', 'ESD', 'Performance', 'Essentials', 'Basics',
   ];
@@ -272,6 +273,20 @@ const FilamentDetail = () => {
     const paramountMatch = normalizedTitle.match(/^((?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC|HIPS|PVA|Nylon|Carbon\s+Fiber\s+\w+))\s*\(.+\)\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i);
     if (paramountMatch) {
       return paramountMatch[1].trim();
+    }
+    
+    // Pattern 0.5: Bambu Lab Wood filaments - "Brand PLA Wood ColorName"
+    // e.g., "Bambu Lab PLA Wood Black Walnut" -> "Bambu Lab PLA Wood"
+    // The color names for wood are: Black Walnut, Classic Birch, Clay Brown, Ochre Yellow, Rosewood, White Oak
+    const bambuWoodMatch = normalizedTitle.match(/^((?:Bambu\s*Lab|Bambu)\s+PLA\s+Wood)\s+(.+)$/i);
+    if (bambuWoodMatch) {
+      const basePart = bambuWoodMatch[1].trim();
+      const colorPart = bambuWoodMatch[2].trim();
+      // Known wood color names
+      const woodColors = ['Black Walnut', 'Classic Birch', 'Clay Brown', 'Ochre Yellow', 'Rosewood', 'White Oak'];
+      if (woodColors.some(c => colorPart.toLowerCase() === c.toLowerCase())) {
+        return basePart;
+      }
     }
     
     // Pattern 1: Handle "Brand Material Color Weight" pattern (Prusament style)
