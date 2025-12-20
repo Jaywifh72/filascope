@@ -1018,29 +1018,38 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
 
   // ============================================================================
   // PLA MATTE - 25 matte finish colors (verified from https://ca.store.bambulab.com/products/pla-matte)
-  // Updated with all colors from hex code table on product page
+  // Complete list with all 25 colors verified from Bambu Lab Hex Code PDF
   // ============================================================================
   "pla-matte": [
+    // Row 1: Whites & Warm Colors
     { colorName: "Ivory White", colorHex: "#FFFFF0", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Jade White", colorHex: "#E8F5E9", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Jade White", colorHex: "#D8E4D8", colorFamily: "White", imageUrl: null, variantId: null },
     { colorName: "Lemon Yellow", colorHex: "#FFF44F", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    { colorName: "Sunflower Yellow", colorHex: "#FFDA03", colorFamily: "Yellow", imageUrl: null, variantId: null },
     { colorName: "Mandarin Orange", colorHex: "#FF8243", colorFamily: "Orange", imageUrl: null, variantId: null },
     { colorName: "Sakura Pink", colorHex: "#FFB7C5", colorFamily: "Pink", imageUrl: null, variantId: null },
     { colorName: "Lilac Purple", colorHex: "#C8A2C8", colorFamily: "Purple", imageUrl: null, variantId: null },
+    // Row 2: Reds
     { colorName: "Scarlet Red", colorHex: "#FF2400", colorFamily: "Red", imageUrl: null, variantId: null },
     { colorName: "Wine Red", colorHex: "#722F37", colorFamily: "Red", imageUrl: null, variantId: null },
     { colorName: "Dark Red", colorHex: "#8B0000", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Grass Green", colorHex: "#7CFC00", colorFamily: "Green", imageUrl: null, variantId: null },
+    // Row 3: Greens
     { colorName: "Light Green", colorHex: "#90EE90", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Grass Green", colorHex: "#7CFC00", colorFamily: "Green", imageUrl: null, variantId: null },
     { colorName: "Army Green", colorHex: "#4B5320", colorFamily: "Green", imageUrl: null, variantId: null },
     { colorName: "Dark Green", colorHex: "#006400", colorFamily: "Green", imageUrl: null, variantId: null },
+    // Row 4: Blues
     { colorName: "Ice Blue", colorHex: "#B0E0E6", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Marine Blue", colorHex: "#00008B", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Marine Blue", colorHex: "#1E4D8C", colorFamily: "Blue", imageUrl: null, variantId: null },
     { colorName: "Dark Blue", colorHex: "#00008B", colorFamily: "Blue", imageUrl: null, variantId: null },
+    // Row 5: Browns & Tans
     { colorName: "Desert Tan", colorHex: "#EDC9AF", colorFamily: "Brown", imageUrl: null, variantId: null },
     { colorName: "Latte Brown", colorHex: "#967969", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Terracotta", colorHex: "#E2725B", colorFamily: "Brown", imageUrl: null, variantId: null },
     { colorName: "Dark Brown", colorHex: "#654321", colorFamily: "Brown", imageUrl: null, variantId: null },
+    // Row 6: Grays & Black
     { colorName: "Ash Grey", colorHex: "#B2BEB5", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Silver Grey", colorHex: "#9E9E9E", colorFamily: "Gray", imageUrl: null, variantId: null },
     { colorName: "Charcoal", colorHex: "#36454F", colorFamily: "Gray", imageUrl: null, variantId: null },
     { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
@@ -1914,6 +1923,23 @@ function logMaterialIssues(material: string, issues: MaterialIssues, ctx?: LogCo
 // NON-COLOR BLOCKLIST - UI elements that should NEVER be treated as colors
 // ============================================================================
 const NON_COLOR_BLOCKLIST = [
+  // ============================================================================
+  // COOKIE CONSENT & THIRD-PARTY SERVICES - commonly parsed as "colors" by mistake
+  // These appear on Bambu Lab pages from TrustArc consent banners
+  // ============================================================================
+  /\btrustarc\b/i,
+  /\breddit\b/i,
+  /\bcookie\b/i,
+  /\bconsent\b/i,
+  /\bprivacy\b/i,
+  /\bpolicy\b/i,
+  /\bpowered\s*by\b/i,
+  /\baccept\s*all\b/i,
+  /\bdo\s*not\s*sell\b/i,
+  /\bpersonal\s*information\b/i,
+  /\bmanage\s*preferences\b/i,
+  /\bcookie\s*settings?\b/i,
+  
   // UI elements from Bambu Lab website
   /hex\s*code/i,
   /\bdisplay\b/i,  // FIX: Added word boundary to prevent false positives
