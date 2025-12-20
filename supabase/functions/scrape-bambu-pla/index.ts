@@ -1061,21 +1061,24 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   ],
 
   // ============================================================================
-  // PLA SILK - Silk-finish colors with metallic sheen
+  // PLA SILK - Silk-finish colors with metallic sheen (13 colors verified)
+  // Verified from: https://ca.store.bambulab.com/products/pla-silk-upgrade
+  // Image URLs: Actual product photos from CDN (PLA_Silk_X.jpg format)
   // ============================================================================
   "pla-silk-upgrade": [
-    { colorName: "Silk Red", colorHex: "#CC0000", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Silk Blue", colorHex: "#4169E1", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Silk Green", colorHex: "#228B22", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Silk Gold", colorHex: "#FFD700", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Silk Silver", colorHex: "#C0C0C0", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Silk Pink", colorHex: "#FF69B4", colorFamily: "Pink", imageUrl: null, variantId: null },
-    { colorName: "Silk Purple", colorHex: "#9370DB", colorFamily: "Purple", imageUrl: null, variantId: null },
-    { colorName: "Silk Orange", colorHex: "#FF8C00", colorFamily: "Orange", imageUrl: null, variantId: null },
-    { colorName: "Silk White", colorHex: "#F8F8FF", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Silk Black", colorHex: "#1A1A1A", colorFamily: "Black", imageUrl: null, variantId: null },
-    { colorName: "Silk Champagne", colorHex: "#F7E7CE", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Silk Rose Gold", colorHex: "#B76E79", colorFamily: "Pink", imageUrl: null, variantId: null },
+    { colorName: "Gold", colorHex: "#F4A925", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/f1c6753f09b6462e81452926a8360c94/PLA_Silk_1.jpg", variantId: null },
+    { colorName: "Silver", colorHex: "#C8C8C8", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/c9d92c7ba5f34919a263318fb16852f0/PLA_Silk_2_58fea091-c6cb-45e3-95f0-3c9b11c57f89.jpg", variantId: null },
+    { colorName: "Titan Gray", colorHex: "#5F6367", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/02258af41f4048839e070cf2215ca724/PLA_Silk_3.jpg", variantId: null },
+    { colorName: "Blue", colorHex: "#008BDA", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/5f3e5ce01de7453a9ceb39837a2574b1/PLA_Silk_4.jpg", variantId: null },
+    { colorName: "Purple", colorHex: "#8671CB", colorFamily: "Purple", imageUrl: "https://store.bblcdn.com/s7/default/dd7fc499e4144dd0a1826ca43f3dd4d0/PLA_Silk_5.jpg", variantId: null },
+    { colorName: "Candy Red", colorHex: "#D02727", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s7/default/c3d94745f6ea493d9c786497701a09b2/PLA_Silk_6.jpg", variantId: null },
+    { colorName: "Candy Green", colorHex: "#018814", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/2401f9efeeb9486a9a21dd02364a13a7/PLA_Silk_7.jpg", variantId: null },
+    { colorName: "Rose Gold", colorHex: "#BA9594", colorFamily: "Pink", imageUrl: "https://store.bblcdn.com/s7/default/8ffced148867425fb0d6d3fb59de0f37/PLA_Silk_8_d3d9592f-96fd-4456-8a9c-fbe9996b41ce.jpg", variantId: null },
+    { colorName: "Baby Blue", colorHex: "#A8C6EE", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/a20bb5bfc489456895f3d594efc256d9/PLA_Silk_9.jpg", variantId: null },
+    { colorName: "Pink", colorHex: "#F7ADA6", colorFamily: "Pink", imageUrl: "https://store.bblcdn.com/s7/default/913d068062cb4e2299f6d51238b611e2/PLA_Silk_10.jpg", variantId: null },
+    { colorName: "Mint", colorHex: "#96DCB9", colorFamily: "Green", imageUrl: "https://store.bblcdn.com/s7/default/0e3f181bc25342ca9c3a96fe019bb796/PLA_Silk_11.jpg", variantId: null },
+    { colorName: "Champagne", colorHex: "#F3CFB2", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/b28f83dcbfaf45fe8f0dcf8e96559fb5/PLA_Silk_12.jpg", variantId: null },
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: "https://store.bblcdn.com/s7/default/7a8f7b8c0848412d90ea0f4594b897e1/PLA_Silk_13.jpg", variantId: null },
   ],
 
   // ============================================================================
