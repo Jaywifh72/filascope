@@ -1103,12 +1103,11 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
 
   // ============================================================================
   // PLA MARBLE - Marble pattern variants
+  // Verified from: https://ca.store.bambulab.com/products/pla-marble
   // ============================================================================
   "pla-marble": [
-    { colorName: "White Marble", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Black Marble", colorHex: "#2C2C2C", colorFamily: "Black", imageUrl: null, variantId: null },
-    { colorName: "Gray Marble", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Green Marble", colorHex: "#2E8B57", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "White Marble", colorHex: "#F7F3F0", colorFamily: "White", imageUrl: null, variantId: null },
+    { colorName: "Red Granite", colorHex: "#AD4E38", colorFamily: "Red", imageUrl: null, variantId: null },
   ],
 
   // ============================================================================
