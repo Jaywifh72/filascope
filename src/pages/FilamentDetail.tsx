@@ -225,6 +225,8 @@ const FilamentDetail = () => {
     'Jet Black', 'Lipstick Red', 'Prusa Pro Green', 'Prusa Galaxy Black', 'Prusa Orange',
     'Signal White', 'Olive Green', 'Sapphire Blue', 'Azure Blue', 'Opal Green', 'Mystic Green',
     'Mystic Brown', 'Galaxy Black', 'Galaxy Silver',
+    // Bambu Lab PETG-CF colors
+    'Brick Red', 'Indigo Blue', 'Malachite Green', 'Titan Gray', 'Violet Purple',
     // Other brand colors
     'Anthracite Grey', 'Carmine Red', 'Chalky Blue', 'Jungle Green', 'Mango Yellow',
     'Neon Green', 'Shimmering Violet', 'Ultramarine Blue', 'Carbon Fiber Black',
