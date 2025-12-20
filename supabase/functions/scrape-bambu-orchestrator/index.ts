@@ -55,41 +55,52 @@ const PRODUCT_CONFIGS: Record<string, Array<{ slug: string; name: string; materi
     { slug: 'pla-sparkle', name: 'PLA Sparkle', material: 'PLA' },
     { slug: 'pla-cf', name: 'PLA-CF', material: 'PLA-CF' },
     { slug: 'pla-aero', name: 'PLA Aero', material: 'PLA' },
+    { slug: 'epla-hs-filament', name: 'ePLA-HS', material: 'PLA' },
+    { slug: 'pla-impact-filament', name: 'PLA Impact', material: 'PLA' },
   ],
   'PETG': [
     { slug: 'petg-hf', name: 'PETG HF', material: 'PETG' },
     { slug: 'petg-translucent', name: 'PETG Translucent', material: 'PETG' },
     { slug: 'petg-cf', name: 'PETG-CF', material: 'PETG' },
+    { slug: 'pet-cf', name: 'PET-CF', material: 'PETG' },
   ],
   'ABS': [
-    { slug: 'abs', name: 'ABS', material: 'ABS' },
+    { slug: 'abs-filament', name: 'ABS', material: 'ABS' },  // Fixed: was 'abs'
     { slug: 'abs-gf', name: 'ABS-GF', material: 'ABS' },
   ],
   'ASA': [
-    { slug: 'asa', name: 'ASA', material: 'ASA' },
+    { slug: 'asa-filament', name: 'ASA', material: 'ASA' },  // Fixed: was 'asa'
     { slug: 'asa-aero', name: 'ASA Aero', material: 'ASA' },
+    { slug: 'asa-cf', name: 'ASA-CF', material: 'ASA' },
   ],
   'TPU': [
     { slug: 'tpu-95a-hf', name: 'TPU 95A HF', material: 'TPU' },
-    { slug: 'tpu-85a-tpu-90a', name: 'TPU 85A / TPU 90A', material: 'TPU' },  // Fixed: was tpu-90a
+    { slug: 'tpu-85a-tpu-90a', name: 'TPU 85A / TPU 90A', material: 'TPU' },
     { slug: 'tpu-for-ams', name: 'TPU for AMS', material: 'TPU' },
   ],
   'PC': [
-    { slug: 'pc', name: 'PC', material: 'PC' },
+    { slug: 'pc-filament', name: 'PC', material: 'PC' },  // Fixed: was 'pc'
+    { slug: 'pc-fr', name: 'PC FR', material: 'PC' },
   ],
   'PA': [
     { slug: 'pa6-cf', name: 'PA6-CF', material: 'PA' },
     { slug: 'pa6-gf', name: 'PA6-GF', material: 'PA' },
     { slug: 'paht-cf', name: 'PAHT-CF', material: 'PA' },
+    { slug: 'ppa-cf', name: 'PPA-CF', material: 'PA' },
   ],
   'Support': [
-    { slug: 'support-for-pla', name: 'Support For PLA', material: 'Support' },
-    { slug: 'support-for-pa-pc', name: 'Support For PA/PC', material: 'Support' },
+    { slug: 'support-for-pla-new', name: 'Support For PLA', material: 'Support' },  // Fixed: was 'support-for-pla'
+    { slug: 'support-for-pla-petg', name: 'Support for PLA/PETG', material: 'Support' },
+    { slug: 'support-for-abs', name: 'Support for ABS', material: 'Support' },
+    { slug: 'support-for-pa-pet', name: 'Support for PA/PET', material: 'Support' },
     { slug: 'support-g', name: 'Support G', material: 'Support' },
     { slug: 'support-w', name: 'Support W', material: 'Support' },
   ],
   'PVA': [
     { slug: 'pva', name: 'PVA', material: 'PVA' },
+  ],
+  'PPS': [
+    { slug: 'pps-cf', name: 'PPS-CF', material: 'PPS' },
   ],
 };
 
