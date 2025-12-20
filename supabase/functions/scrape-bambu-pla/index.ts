@@ -1197,17 +1197,17 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // ============================================================================
   // PLA TOUGH - Engineering-grade PLA (8 colors verified from product page)
   // Verified from: https://ca.store.bambulab.com/products/pla-tough-upgrade
-  // Image URLs extracted from swatch-custom-image elements
+  // Image URLs: Actual product photos from CDN (PLA_Tough_(X).jpg format)
   // ============================================================================
   "pla-tough-upgrade": [
-    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s7/default/36e68fab04e14f93a9fd2207b75c452c/Rectangle_4551.jpg", variantId: null },
-    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: "https://store.bblcdn.com/s7/default/aff73adea3484a94a5e75c8e534742ed/Rectangle_4554_(1).jpg", variantId: null },
-    { colorName: "Yellow", colorHex: "#F4D53F", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s7/default/c9c775f9d407435fa235380f314e16c7/Rectangle_4556.jpg", variantId: null },
-    { colorName: "Orange", colorHex: "#FF6A13", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s7/default/190467eafb084a1f85ebb5fecafa010a/Rectangle_4558.jpg", variantId: null },
-    { colorName: "Gray", colorHex: "#AFB1AE", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/dc990b3281a24dc7a8397938c48de535/Rectangle_4553.jpg", variantId: null },
-    { colorName: "Silver", colorHex: "#959698", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s7/default/91294bd497924b3abeb09f5526dd311c/Rectangle_4555.jpg", variantId: null },
-    { colorName: "Cyan", colorHex: "#009BD8", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/774289b472924860afffdfb4fbdfb98f/Rectangle_4557.jpg", variantId: null },
-    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s7/default/36e68fab04e14f93a9fd2207b75c452c/Rectangle_4559.jpg", variantId: null },
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: "https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(1).jpg", variantId: null },
+    { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: "https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(2).jpg", variantId: null },
+    { colorName: "Yellow", colorHex: "#F4D53F", colorFamily: "Yellow", imageUrl: "https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(3).jpg", variantId: null },
+    { colorName: "Orange", colorHex: "#FF6A13", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(4).jpg", variantId: null },
+    { colorName: "Gray", colorHex: "#AFB1AE", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(5).jpg", variantId: null },
+    { colorName: "Silver", colorHex: "#959698", colorFamily: "Gray", imageUrl: "https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(6).jpg", variantId: null },
+    { colorName: "Cyan", colorHex: "#009BD8", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(7).jpg", variantId: null },
+    { colorName: "Red", colorHex: "#E02928", colorFamily: "Red", imageUrl: "https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(8).jpg", variantId: null },
   ],
 
   // ============================================================================
