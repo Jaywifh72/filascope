@@ -890,6 +890,30 @@ const BAMBU_SUPPORT_PRODUCTS: Record<string, ProductConfig> = {
 };
 
 // ============================================================================
+// MATERIAL NORMALIZATION - Maps variant materials to their base category
+// ============================================================================
+function normalizeMaterialCategory(material: string): string {
+  // Map of material variants to their base category in ALL_BAMBU_PRODUCTS
+  const materialMappings: Record<string, string> = {
+    'PLA-CF': 'PLA',
+    'PLA-GF': 'PLA',
+    'PLA+': 'PLA',
+    'PETG-CF': 'PETG',
+    'PETG-GF': 'PETG',
+    'ABS-CF': 'ABS',
+    'ABS-GF': 'ABS',
+    'ASA-CF': 'ASA',
+    'ASA-GF': 'ASA',
+    'PA-CF': 'PA',
+    'PA-GF': 'PA',
+    'PC-CF': 'PC',
+    'PC-GF': 'PC',
+  };
+  
+  return materialMappings[material] || material;
+}
+
+// ============================================================================
 // UNIFIED PRODUCT MAP BY MATERIAL CATEGORY
 // ============================================================================
 const ALL_BAMBU_PRODUCTS: Record<string, Record<string, ProductConfig>> = {
@@ -3540,10 +3564,18 @@ async function processSingleProduct(
     
     const brandId = brandData?.id || null;
 
+    // Normalize material variants to their base category
+    // PLA-CF, PLA-GF -> PLA (they're stored in PLA products)
+    // PETG-CF, PETG-GF -> PETG, etc.
+    const normalizedMaterial = normalizeMaterialCategory(material);
+    
     // Find the product config
-    const materialProducts = ALL_BAMBU_PRODUCTS[material];
+    const materialProducts = ALL_BAMBU_PRODUCTS[normalizedMaterial];
     if (!materialProducts) {
-      throw new Error(`Unknown material: ${material}`);
+      // Log available materials for debugging
+      const availableMaterials = Object.keys(ALL_BAMBU_PRODUCTS).join(', ');
+      logWarn(ctx, 'MATERIAL', `Unknown material: ${material} (normalized: ${normalizedMaterial}). Available: ${availableMaterials}`);
+      throw new Error(`Unknown material: ${material}. Available categories: ${availableMaterials}`);
     }
 
     // Find the specific product by slug
