@@ -946,44 +946,50 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   // PLA BASIC - 30 colors (verified from https://ca.store.bambulab.com/products/pla-basic-filament)
   // Updated with all colors from hex code table on product page
   // ============================================================================
+  // ============================================================================
+  // PLA BASIC - 30 solid colors (verified from https://ca.store.bambulab.com/products/pla-basic-filament)
+  // ============================================================================
   "pla-basic-filament": [
+    // Whites & Neutrals
     { colorName: "White", colorHex: "#FFFFFF", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Jade White", colorHex: "#E8F5E9", colorFamily: "White", imageUrl: null, variantId: null },
-    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
-    { colorName: "Gray", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Light Gray", colorHex: "#D3D3D3", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Dark Gray", colorHex: "#555555", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Blue Gray", colorHex: "#6699CC", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Charcoal", colorHex: "#36454F", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Silver", colorHex: "#C0C0C0", colorFamily: "Gray", imageUrl: null, variantId: null },
-    { colorName: "Red", colorHex: "#FF0000", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Crimson Red", colorHex: "#DC143C", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Maroon Red", colorHex: "#800000", colorFamily: "Red", imageUrl: null, variantId: null },
-    { colorName: "Orange", colorHex: "#FFA500", colorFamily: "Orange", imageUrl: null, variantId: null },
-    { colorName: "Mandarin Orange", colorHex: "#FF8243", colorFamily: "Orange", imageUrl: null, variantId: null },
-    { colorName: "Pumpkin Orange", colorHex: "#FF7518", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Beige", colorHex: "#F5F5DC", colorFamily: "Brown", imageUrl: null, variantId: null },
+    // Yellows & Golds
     { colorName: "Yellow", colorHex: "#FFFF00", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Lemon Yellow", colorHex: "#FFF44F", colorFamily: "Yellow", imageUrl: null, variantId: null },
     { colorName: "Sunflower Yellow", colorHex: "#FFDA03", colorFamily: "Yellow", imageUrl: null, variantId: null },
-    { colorName: "Green", colorHex: "#00FF00", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Grass Green", colorHex: "#7CFC00", colorFamily: "Green", imageUrl: null, variantId: null },
+    { colorName: "Gold", colorHex: "#FFD700", colorFamily: "Yellow", imageUrl: null, variantId: null },
+    // Oranges
+    { colorName: "Orange", colorHex: "#FFA500", colorFamily: "Orange", imageUrl: null, variantId: null },
+    { colorName: "Pumpkin Orange", colorHex: "#FF7518", colorFamily: "Orange", imageUrl: null, variantId: null },
+    // Greens
     { colorName: "Bright Green", colorHex: "#66FF00", colorFamily: "Green", imageUrl: null, variantId: null },
     { colorName: "Bambu Green", colorHex: "#00AE42", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Dark Green", colorHex: "#006400", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Blue", colorHex: "#0000FF", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Cobalt Blue", colorHex: "#0047AB", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Sky Blue", colorHex: "#87CEEB", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Cyan", colorHex: "#00FFFF", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Navy Blue", colorHex: "#000080", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Purple", colorHex: "#800080", colorFamily: "Purple", imageUrl: null, variantId: null },
-    { colorName: "Lilac Purple", colorHex: "#C8A2C8", colorFamily: "Purple", imageUrl: null, variantId: null },
-    { colorName: "Indigo Purple", colorHex: "#4B0082", colorFamily: "Purple", imageUrl: null, variantId: null },
+    // Pinks & Magentas
     { colorName: "Pink", colorHex: "#FFC0CB", colorFamily: "Pink", imageUrl: null, variantId: null },
-    { colorName: "Sakura Pink", colorHex: "#FFB7C5", colorFamily: "Pink", imageUrl: null, variantId: null },
     { colorName: "Hot Pink", colorHex: "#FF69B4", colorFamily: "Pink", imageUrl: null, variantId: null },
+    { colorName: "Magenta", colorHex: "#FF00FF", colorFamily: "Pink", imageUrl: null, variantId: null },
+    // Reds
+    { colorName: "Red", colorHex: "#FF0000", colorFamily: "Red", imageUrl: null, variantId: null },
+    { colorName: "Maroon Red", colorHex: "#800000", colorFamily: "Red", imageUrl: null, variantId: null },
+    // Purples
+    { colorName: "Purple", colorHex: "#800080", colorFamily: "Purple", imageUrl: null, variantId: null },
+    { colorName: "Indigo Purple", colorHex: "#4B0082", colorFamily: "Purple", imageUrl: null, variantId: null },
+    // Blues & Teals
+    { colorName: "Turquoise", colorHex: "#40E0D0", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Cobalt Blue", colorHex: "#0047AB", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Cyan", colorHex: "#00FFFF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    { colorName: "Blue", colorHex: "#0000FF", colorFamily: "Blue", imageUrl: null, variantId: null },
+    // Browns
     { colorName: "Brown", colorHex: "#8B4513", colorFamily: "Brown", imageUrl: null, variantId: null },
     { colorName: "Cocoa Brown", colorHex: "#D2691E", colorFamily: "Brown", imageUrl: null, variantId: null },
-    { colorName: "Beige", colorHex: "#F5F5DC", colorFamily: "Brown", imageUrl: null, variantId: null },
+    { colorName: "Bronze", colorHex: "#CD7F32", colorFamily: "Brown", imageUrl: null, variantId: null },
+    // Grays
+    { colorName: "Light Gray", colorHex: "#D3D3D3", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Gray", colorHex: "#808080", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Silver", colorHex: "#C0C0C0", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Blue Gray", colorHex: "#6699CC", colorFamily: "Gray", imageUrl: null, variantId: null },
+    { colorName: "Dark Gray", colorHex: "#555555", colorFamily: "Gray", imageUrl: null, variantId: null },
+    // Black
+    { colorName: "Black", colorHex: "#000000", colorFamily: "Black", imageUrl: null, variantId: null },
   ],
 
   // ============================================================================
