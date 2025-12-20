@@ -176,14 +176,17 @@ export function HorizontalFilterBar({
     brand.name.toLowerCase().includes(brandSearch.toLowerCase())
   );
 
-  // Get popular brands (intersection of topBrands and available brands)
+  // Get popular brands (intersection of topBrands and available brands), sorted alphabetically
   const popularBrands = topBrands
     .map(name => brands.find(b => b.name === name))
     .filter((b): b is Brand => b !== undefined)
-    .filter(b => !brandSearch || b.name.toLowerCase().includes(brandSearch.toLowerCase()));
+    .filter(b => !brandSearch || b.name.toLowerCase().includes(brandSearch.toLowerCase()))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
-  // Get other brands (not in popular list), grouped alphabetically
-  const otherBrands = filteredBrands.filter(b => !topBrands.includes(b.name));
+  // Get other brands (not in popular list), sorted alphabetically
+  const otherBrands = filteredBrands
+    .filter(b => !topBrands.includes(b.name))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const applyBrandFilter = () => {
     setIsApplying('brand');
@@ -417,9 +420,9 @@ export function HorizontalFilterBar({
                         ) : (
                           // When not searching, show alphabetical groups
                           LETTER_GROUPS.map(group => {
-                            const groupBrands = otherBrands.filter(b => 
-                              group.letters.includes(b.name.charAt(0).toUpperCase())
-                            );
+                            const groupBrands = otherBrands
+                              .filter(b => group.letters.includes(b.name.charAt(0).toUpperCase()))
+                              .sort((a, b) => a.name.localeCompare(b.name));
                             if (groupBrands.length === 0) return null;
                             return (
                               <div key={group.label}>
