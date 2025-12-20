@@ -1084,16 +1084,23 @@ const PRODUCT_COLOR_FALLBACKS: Record<string, ColorVariant[]> = {
   ],
 
   // ============================================================================
-  // PLA SILK MULTI-COLOR - Multi-color silk gradient variants
-  // Updated with actual gradient names from Bambu Lab's website
+  // PLA SILK MULTI-COLOR - Multi-color silk gradient variants (10 official colors)
+  // Verified from: https://ca.store.bambulab.com/products/pla-silk-dual-color-filament
+  // Includes 8 Dual-Color + 2 Gradient variants
   // ============================================================================
   "pla-silk-multi-color": [
-    { colorName: "Aurora Purple", colorHex: "#9966CC", colorFamily: "Purple", imageUrl: null, variantId: null },
-    { colorName: "Dawn Radiance", colorHex: "#FFB366", colorFamily: "Orange", imageUrl: null, variantId: null },
-    { colorName: "Sunset Glow", colorHex: "#FF6B35", colorFamily: "Orange", imageUrl: null, variantId: null },
-    { colorName: "Ocean Twilight", colorHex: "#2E5A88", colorFamily: "Blue", imageUrl: null, variantId: null },
-    { colorName: "Forest Whisper", colorHex: "#4A7C59", colorFamily: "Green", imageUrl: null, variantId: null },
-    { colorName: "Rose Dream", colorHex: "#E8A0BF", colorFamily: "Pink", imageUrl: null, variantId: null },
+    // Dual-Color variants
+    { colorName: "Aurora Purple", colorHex: "#9966CC", colorFamily: "Purple", imageUrl: "https://store.bblcdn.com/s7/default/Aurora_Purple_(1).jpg", variantId: null },
+    { colorName: "Phantom Blue", colorHex: "#4169E1", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/Phantom_Blue.jpg", variantId: null },
+    { colorName: "Mystic Magenta", colorHex: "#FF00FF", colorFamily: "Pink", imageUrl: "https://store.bblcdn.com/s7/default/Mystic_Magenta.jpg", variantId: null },
+    { colorName: "Neon City", colorHex: "#39FF14", colorFamily: "Multi", imageUrl: "https://store.bblcdn.com/s7/default/neoncity.png", variantId: null },
+    { colorName: "Midnight Blaze", colorHex: "#191970", colorFamily: "Multi", imageUrl: "https://store.bblcdn.com/s7/default/midnightblaze2.png", variantId: null },
+    { colorName: "Gilded Rose", colorHex: "#B76E79", colorFamily: "Pink", imageUrl: "https://store.bblcdn.com/s7/default/glidedrose.png", variantId: null },
+    { colorName: "Blue Hawaii", colorHex: "#00C5CD", colorFamily: "Blue", imageUrl: "https://store.bblcdn.com/s7/default/blueHawaii.png", variantId: null },
+    { colorName: "Black-Red", colorHex: "#8B0000", colorFamily: "Multi", imageUrl: "https://store.bblcdn.com/s7/default/Silk_Dual_Color_Black-red.jpg", variantId: null },
+    // Gradient variants
+    { colorName: "Dawn Radiance", colorHex: "#FFB366", colorFamily: "Orange", imageUrl: "https://store.bblcdn.com/s7/default/Dawn_Radiance.jpg", variantId: null },
+    { colorName: "South Beach", colorHex: "#FF6EC7", colorFamily: "Multi", imageUrl: "https://store.bblcdn.com/s7/default/South_Beach.jpg", variantId: null },
   ],
 
   // ============================================================================
