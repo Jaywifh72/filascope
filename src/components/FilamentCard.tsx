@@ -134,10 +134,10 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const { formatPrice, formatRegionalPrice } = useCurrency();
+  const { formatPrice, formatRegionalPrice, currency: userCurrency } = useCurrency();
   
   // Use regional price for proper currency handling
-  const { regionalPrice, isActualRegionalPrice } = useRegionalPrice(filament as FilamentWithRegionalPrices);
+  const { regionalPrice, isActualRegionalPrice, currency: priceCurrency } = useRegionalPrice(filament as FilamentWithRegionalPrices);
   
   const { 
     addItem, 
@@ -418,7 +418,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           <div className="flex items-center gap-3">
             <div className="flex items-baseline gap-1">
               <span className="text-[28px] font-bold text-white leading-none">
-                {isActualRegionalPrice ? formatRegionalPrice(pricePerKg, false) : formatPrice(pricePerKg, false)}
+                {isActualRegionalPrice 
+                  ? formatRegionalPrice(pricePerKg, false, priceCurrency) 
+                  : formatPrice(pricePerKg, false)}
               </span>
               <span className="text-sm font-medium text-slate-400">/kg</span>
             </div>
