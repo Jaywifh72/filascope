@@ -62,7 +62,9 @@ const PRODUCT_CONFIGS: Record<string, Array<{ slug: string; name: string; materi
     { slug: 'petg-hf', name: 'PETG HF', material: 'PETG' },
     { slug: 'petg-translucent', name: 'PETG Translucent', material: 'PETG' },
     { slug: 'petg-cf', name: 'PETG-CF', material: 'PETG' },
-    { slug: 'pet-cf', name: 'PET-CF', material: 'PETG' },
+  ],
+  'PET': [
+    { slug: 'pet-cf', name: 'PET-CF', material: 'PET' },
   ],
   'ABS': [
     { slug: 'abs-filament', name: 'ABS', material: 'ABS' },  // Fixed: was 'abs'
@@ -174,7 +176,6 @@ serve(async (req) => {
       
       // Normalize material names (handle common aliases)
       const materialAliases: Record<string, string> = {
-        'PET': 'PETG',  // PET is commonly used as shorthand for PETG
         'NYLON': 'PA',
         'POLYAMIDE': 'PA',
       };
