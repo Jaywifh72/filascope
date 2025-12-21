@@ -10,7 +10,8 @@ import {
   Info,
   DollarSign,
   CheckCircle,
-  XCircle
+  XCircle,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,6 +20,7 @@ import { getBrandLogo } from "@/lib/brandLogos";
 import { useCompare } from "@/hooks/useCompare";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
+import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 
 // Material badge colors - using purple as specified
 const MATERIAL_COLORS: Record<string, string> = {
@@ -137,7 +139,21 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const { formatPrice, formatRegionalPrice, currency: userCurrency } = useCurrency();
   
   // Use regional price for proper currency handling
-  const { regionalPrice, isActualRegionalPrice, currency: priceCurrency } = useRegionalPrice(filament as FilamentWithRegionalPrices);
+  const { 
+    regionalPrice, 
+    isActualRegionalPrice, 
+    currency: priceCurrency,
+    regionalUrl,
+    fallbackUrl 
+  } = useRegionalPrice(filament as FilamentWithRegionalPrices);
+  
+  // Fetch live price (same as detail page) for accurate pricing
+  const {
+    currentPrice: livePrice,
+    isLoading: isLivePriceLoading,
+    isLivePrice,
+    weightGrams: liveWeightGrams,
+  } = useCurrentPrice(regionalUrl || filament.product_url, regionalPrice, fallbackUrl);
   
   const { 
     addItem, 
@@ -155,11 +171,14 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const isPendingSelection = isPending(filament.id);
   const isCompareDisabled = isFull && !isSelected;
 
-  // Calculate price per kg using regional price (which already handles currency conversion)
+  // Use live price if available, otherwise fall back to regional price
+  const effectivePrice = isLivePrice && livePrice ? livePrice : regionalPrice;
+  const effectiveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : (filament.net_weight_g ? filament.net_weight_g / 1000 : null);
+
+  // Calculate price per kg using the best available price
   const packQty = filament.pack_quantity || 1;
-  const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
-  const pricePerKg = (regionalPrice && weightKg)
-    ? regionalPrice / (weightKg * packQty)
+  const pricePerKg = (effectivePrice && effectiveWeightKg)
+    ? effectivePrice / (effectiveWeightKg * packQty)
     : null;
   const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
 
@@ -414,13 +433,16 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           ELEMENT 3: Price
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 py-3" data-card-element="3">
-        {isValidPrice && pricePerKg ? (
+        {isLivePriceLoading ? (
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            <span className="text-sm text-muted-foreground">Checking price...</span>
+          </div>
+        ) : isValidPrice && pricePerKg ? (
           <div className="flex items-center gap-3">
             <div className="flex items-baseline gap-1">
               <span className="text-[28px] font-bold text-white leading-none">
-                {isActualRegionalPrice 
-                  ? formatRegionalPrice(pricePerKg, false, priceCurrency) 
-                  : formatPrice(pricePerKg, false)}
+                {formatRegionalPrice(pricePerKg, false, userCurrency)}
               </span>
               <span className="text-sm font-medium text-slate-400">/kg</span>
             </div>
