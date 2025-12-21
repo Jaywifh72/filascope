@@ -93,16 +93,18 @@ export const getBaseProductName = (title: string, material?: string | null): str
   // ProductType examples: Basic, Matte, Silk, Silk Multi-color, Marble, Galaxy, etc.
   // This pattern extracts the base product name without the color suffix
   // Note: e?PLA matches both "PLA" and "ePLA" variants (e.g., ePLA-HS)
+  // PC-FR must come before PC to ensure flame-retardant variant is matched first
   const bambuLabMatch = normalizedTitle.match(
-    /^(Bambu Lab (?:e?PLA|PETG|TPU|ABS|ASA|PA6?-?(?:CF|GF)?|PA-?(?:CF|GF)?|PC|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?(?:\s+(?:Basic|Matte|Silk|Translucent|Tough|Wood|Marble|Metal|Galaxy|Glow|Sparkle|Aero|Impact|HF|HS|Lite))?(?:\s+(?:Multi-color|Gradient))?)\s+.+$/i
+    /^(Bambu Lab (?:e?PLA|PETG|TPU|ABS|ASA|PA6?-?(?:CF|GF)?|PA-?(?:CF|GF)?|PC-FR|PC|PET-CF|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?(?:\s+(?:Basic|Matte|Silk|Translucent|Tough|Wood|Marble|Metal|Galaxy|Glow|Sparkle|Aero|Impact|HF|HS|Lite))?(?:\s+(?:Multi-color|Gradient))?)\s+.+$/i
   );
   if (bambuLabMatch) {
     return bambuLabMatch[1].trim();
   }
   
   // Handle Bambu Lab products that are just "Bambu Lab [Material] [Color]" (no product type)
+  // PC-FR must come before PC to ensure flame-retardant variant is matched first
   const bambuLabSimpleMatch = normalizedTitle.match(
-    /^(Bambu Lab (?:e?PLA|PETG|TPU|ABS|ASA|PA6?-?(?:CF|GF)?|PA-?(?:CF|GF)?|PC|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?)\s+.+$/i
+    /^(Bambu Lab (?:e?PLA|PETG|TPU|ABS|ASA|PA6?-?(?:CF|GF)?|PA-?(?:CF|GF)?|PC-FR|PC|PET-CF|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?)\s+.+$/i
   );
   if (bambuLabSimpleMatch) {
     // Only match if what follows is a color, not a product type
