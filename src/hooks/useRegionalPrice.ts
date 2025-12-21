@@ -189,14 +189,22 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     // Try to get regional URL from database
     let regionalUrl = filament[urlColumn] as string | null | undefined;
     
-    // If no regional URL in database, transform the base URL
+    // If no regional URL in database for user's currency, transform the base URL
     if (!regionalUrl && filament.product_url) {
       regionalUrl = getRegionalUrl(filament.product_url, filament.vendor);
     }
     
-    // Fallback to base URL if nothing else works
+    // If still no URL, try to find ANY available regional URL as fallback
     if (!regionalUrl) {
-      regionalUrl = filament.product_url || '';
+      const urlFallbackOrder = [
+        filament.product_url,
+        filament.product_url_uk,
+        filament.product_url_eu,
+        filament.product_url_ca,
+        filament.product_url_au,
+        filament.product_url_jp,
+      ];
+      regionalUrl = urlFallbackOrder.find(url => url && url.length > 0) || '';
     }
 
     // Determine the best price to use
@@ -240,6 +248,28 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         currency,
         vendorCurrency,
       };
+    }
+    
+    // Priority 4: Find ANY available regional price as fallback
+    const priceFallbackOrder: { price: number | null | undefined; currency: CurrencyCode }[] = [
+      { price: filament.price_gbp, currency: 'GBP' },
+      { price: filament.price_eur, currency: 'EUR' },
+      { price: filament.price_cad, currency: 'CAD' },
+      { price: filament.price_aud, currency: 'AUD' },
+      { price: filament.price_jpy, currency: 'JPY' },
+    ];
+    
+    for (const fallback of priceFallbackOrder) {
+      if (fallback.price && fallback.price > 0) {
+        return {
+          regionalPrice: fallback.price,
+          isActualRegionalPrice: true,
+          regionalUrl: regionalUrl || '',
+          priceSource: 'regional' as const,
+          currency: fallback.currency,
+          vendorCurrency,
+        };
+      }
     }
     
     // No price available
