@@ -268,14 +268,21 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     }
     
     // Priority 4: Find ANY available regional price as fallback
-    // Return the price in its native currency - let useCurrentPrice fetch live price
-    const priceFallbackOrder: { price: number | null | undefined; cur: CurrencyCode; url: string | null | undefined }[] = [
+    // Build fallback order dynamically - prioritize user's selected currency family
+    const allRegionalPrices: { price: number | null | undefined; cur: CurrencyCode; url: string | null | undefined }[] = [
+      { price: filament.price_cad, cur: 'CAD', url: filament.product_url_ca },
       { price: filament.price_gbp, cur: 'GBP', url: filament.product_url_uk },
       { price: filament.price_eur, cur: 'EUR', url: filament.product_url_eu },
-      { price: filament.price_cad, cur: 'CAD', url: filament.product_url_ca },
       { price: filament.price_aud, cur: 'AUD', url: filament.product_url_au },
       { price: filament.price_jpy, cur: 'JPY', url: filament.product_url_jp },
     ];
+    
+    // Sort to prioritize user's currency first
+    const priceFallbackOrder = allRegionalPrices.sort((a, b) => {
+      if (a.cur === currency) return -1;
+      if (b.cur === currency) return 1;
+      return 0;
+    });
     
     for (const fallback of priceFallbackOrder) {
       if (fallback.price && fallback.price > 0) {
