@@ -48,7 +48,7 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
   const { trackAffiliateClick, trackStoreClick } = useConversionTracking();
   
   // Get regional price and URL based on user's currency preference
-  const { regionalPrice, regionalUrl, isActualRegionalPrice, currency: regionalCurrency } = useRegionalPrice(filament);
+  const { regionalPrice, regionalUrl, fallbackUrl, isActualRegionalPrice, currency: regionalCurrency } = useRegionalPrice(filament);
   
   // Fetch live price using Firecrawl for the regional URL
   const {
@@ -60,7 +60,7 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
   } = useCurrentPrice(
     regionalUrl || filament.product_url,
     regionalPrice || filament.variant_price,
-    filament.product_url // Fallback to original URL if regional fails
+    fallbackUrl // Use the fallback URL from useRegionalPrice
   );
   
   // Build retailer list with availability

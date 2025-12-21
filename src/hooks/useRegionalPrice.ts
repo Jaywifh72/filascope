@@ -147,6 +147,8 @@ export interface RegionalPriceResult {
   isActualRegionalPrice: boolean;
   /** The best URL to use for this region */
   regionalUrl: string;
+  /** The original US URL for fallback live price fetching */
+  fallbackUrl: string | null;
   /** Price source indicator for display */
   priceSource: 'regional' | 'converted' | 'unavailable';
   /** Currency code for the regional price */
@@ -170,6 +172,7 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         regionalPrice: null,
         isActualRegionalPrice: false,
         regionalUrl: '',
+        fallbackUrl: null,
         priceSource: 'unavailable' as const,
         currency,
         vendorCurrency: null,
@@ -189,31 +192,43 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     // Try to get regional URL from database
     let regionalUrl = filament[urlColumn] as string | null | undefined;
     
+    // Keep track of the original US URL for fallback live price fetching
+    const originalUsUrl = filament.product_url || null;
+    
     // If no regional URL in database for user's currency, transform the base URL
     if (!regionalUrl && filament.product_url) {
       regionalUrl = getRegionalUrl(filament.product_url, filament.vendor);
     }
     
     // If still no URL, try to find ANY available regional URL as fallback
+    // Track which URL we're using for proper currency handling
+    let fallbackUrlCurrency: CurrencyCode | null = null;
     if (!regionalUrl) {
-      const urlFallbackOrder = [
-        filament.product_url,
-        filament.product_url_uk,
-        filament.product_url_eu,
-        filament.product_url_ca,
-        filament.product_url_au,
-        filament.product_url_jp,
+      const urlFallbackOrder: { url: string | null | undefined; currency: CurrencyCode }[] = [
+        { url: filament.product_url, currency: 'USD' },
+        { url: filament.product_url_uk, currency: 'GBP' },
+        { url: filament.product_url_eu, currency: 'EUR' },
+        { url: filament.product_url_ca, currency: 'CAD' },
+        { url: filament.product_url_au, currency: 'AUD' },
+        { url: filament.product_url_jp, currency: 'JPY' },
       ];
-      regionalUrl = urlFallbackOrder.find(url => url && url.length > 0) || '';
+      for (const fallback of urlFallbackOrder) {
+        if (fallback.url && fallback.url.length > 0) {
+          regionalUrl = fallback.url;
+          fallbackUrlCurrency = fallback.currency;
+          break;
+        }
+      }
     }
 
     // Determine the best price to use
-    // Priority 1: Actual scraped regional price from database
+    // Priority 1: Actual scraped regional price from database for user's currency
     if (actualRegionalPrice && actualRegionalPrice > 0) {
       return {
         regionalPrice: actualRegionalPrice,
         isActualRegionalPrice: true,
         regionalUrl: regionalUrl || '',
+        fallbackUrl: originalUsUrl,
         priceSource: 'regional' as const,
         currency,
         vendorCurrency,
@@ -227,6 +242,7 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         regionalPrice: filament.variant_price,
         isActualRegionalPrice: true, // It's a native price, not converted
         regionalUrl: regionalUrl || '',
+        fallbackUrl: originalUsUrl,
         priceSource: 'regional' as const,
         currency,
         vendorCurrency,
@@ -244,6 +260,7 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         regionalPrice: convertedPrice,
         isActualRegionalPrice: false,
         regionalUrl: regionalUrl || '',
+        fallbackUrl: originalUsUrl,
         priceSource: 'converted' as const,
         currency,
         vendorCurrency,
@@ -251,32 +268,50 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     }
     
     // Priority 4: Find ANY available regional price as fallback
-    const priceFallbackOrder: { price: number | null | undefined; currency: CurrencyCode }[] = [
-      { price: filament.price_gbp, currency: 'GBP' },
-      { price: filament.price_eur, currency: 'EUR' },
-      { price: filament.price_cad, currency: 'CAD' },
-      { price: filament.price_aud, currency: 'AUD' },
-      { price: filament.price_jpy, currency: 'JPY' },
+    // Return the price in its native currency - let useCurrentPrice fetch live price
+    const priceFallbackOrder: { price: number | null | undefined; cur: CurrencyCode; url: string | null | undefined }[] = [
+      { price: filament.price_gbp, cur: 'GBP', url: filament.product_url_uk },
+      { price: filament.price_eur, cur: 'EUR', url: filament.product_url_eu },
+      { price: filament.price_cad, cur: 'CAD', url: filament.product_url_ca },
+      { price: filament.price_aud, cur: 'AUD', url: filament.product_url_au },
+      { price: filament.price_jpy, cur: 'JPY', url: filament.product_url_jp },
     ];
     
     for (const fallback of priceFallbackOrder) {
       if (fallback.price && fallback.price > 0) {
+        // Use the matching regional URL for this price
+        const bestUrl = fallback.url || regionalUrl || '';
         return {
           regionalPrice: fallback.price,
           isActualRegionalPrice: true,
-          regionalUrl: regionalUrl || '',
+          regionalUrl: bestUrl,
+          fallbackUrl: originalUsUrl,
           priceSource: 'regional' as const,
-          currency: fallback.currency,
+          currency: fallback.cur, // Return the actual currency of the price
           vendorCurrency,
         };
       }
     }
     
-    // No price available
+    // Priority 5: No price in DB, but we have a URL - return null price so live fetch can work
+    if (regionalUrl) {
+      return {
+        regionalPrice: null,
+        isActualRegionalPrice: false,
+        regionalUrl: regionalUrl,
+        fallbackUrl: originalUsUrl,
+        priceSource: 'unavailable' as const,
+        currency: fallbackUrlCurrency || currency,
+        vendorCurrency,
+      };
+    }
+    
+    // No price or URL available
     return {
       regionalPrice: null,
       isActualRegionalPrice: false,
-      regionalUrl: regionalUrl || '',
+      regionalUrl: '',
+      fallbackUrl: null,
       priceSource: 'unavailable' as const,
       currency,
       vendorCurrency,
