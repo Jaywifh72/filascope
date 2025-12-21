@@ -33,7 +33,7 @@ interface CurrencyContextType {
   currencyInfo: CurrencyInfo;
   formatPrice: (priceInUSD: number | null | undefined, showCurrency?: boolean) => string;
   convertPrice: (priceInUSD: number | null | undefined) => number | null;
-  formatRegionalPrice: (priceInLocalCurrency: number | null | undefined, showCurrency?: boolean) => string;
+  formatRegionalPrice: (priceInLocalCurrency: number | null | undefined, showCurrency?: boolean, overrideCurrency?: CurrencyCode) => string;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -189,18 +189,22 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
   // Format a price that's ALREADY in the user's selected currency (no conversion needed)
   // Use this for actual scraped regional prices from the database
-  const formatRegionalPrice = (priceInLocalCurrency: number | null | undefined, showCurrency = true): string => {
+  // Optional overrideCurrency allows formatting in a different currency (e.g., for fallback prices)
+  const formatRegionalPrice = (priceInLocalCurrency: number | null | undefined, showCurrency = true, overrideCurrency?: CurrencyCode): string => {
     if (priceInLocalCurrency == null) return 'N/A';
+    
+    const displayCurrency = overrideCurrency || currency;
+    const displayInfo = overrideCurrency ? CURRENCIES[overrideCurrency] : currencyInfo;
     
     // Currencies that don't use decimals
     const noDecimalCurrencies: CurrencyCode[] = ['JPY', 'KRW'];
-    const decimals = noDecimalCurrencies.includes(currency) ? 0 : 2;
+    const decimals = noDecimalCurrencies.includes(displayCurrency) ? 0 : 2;
     const formatted = priceInLocalCurrency.toFixed(decimals);
     
     if (showCurrency) {
-      return `${currencyInfo.symbol}${formatted} ${currency}`;
+      return `${displayInfo.symbol}${formatted} ${displayCurrency}`;
     }
-    return `${currencyInfo.symbol}${formatted}`;
+    return `${displayInfo.symbol}${formatted}`;
   };
 
   return (
