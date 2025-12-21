@@ -227,6 +227,8 @@ const FilamentDetail = () => {
     'Mystic Brown', 'Galaxy Black', 'Galaxy Silver',
     // Bambu Lab PETG-CF colors
     'Brick Red', 'Indigo Blue', 'Malachite Green', 'Titan Gray', 'Violet Purple',
+    // Bambu Lab ABS colors
+    'Bambu Green', 'Navy Blue', 'Tangerine Yellow', 'Azure',
     // Other brand colors
     'Anthracite Grey', 'Carmine Red', 'Chalky Blue', 'Jungle Green', 'Mango Yellow',
     'Neon Green', 'Shimmering Violet', 'Ultramarine Blue', 'Carbon Fiber Black',
