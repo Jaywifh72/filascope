@@ -172,9 +172,20 @@ serve(async (req) => {
       // Create job, build product queue, return immediately
       const { materials = ['PLA'], dryRun = false } = body;
       
+      // Normalize material names (handle common aliases)
+      const materialAliases: Record<string, string> = {
+        'PET': 'PETG',  // PET is commonly used as shorthand for PETG
+        'NYLON': 'PA',
+        'POLYAMIDE': 'PA',
+      };
+      
+      const normalizedMaterials = materials.map((m: string) => 
+        materialAliases[m.toUpperCase()] || m
+      );
+      
       // Build product queue
       const productQueue: Array<{ material: string; slug: string; name: string }> = [];
-      for (const material of materials) {
+      for (const material of normalizedMaterials) {
         const products = PRODUCT_CONFIGS[material] || [];
         for (const product of products) {
           productQueue.push({
@@ -186,9 +197,10 @@ serve(async (req) => {
       }
 
       if (productQueue.length === 0) {
+        const validMaterials = Object.keys(PRODUCT_CONFIGS).join(', ');
         return new Response(JSON.stringify({
           success: false,
-          error: `No products found for materials: ${materials.join(', ')}`,
+          error: `No products found for materials: ${materials.join(', ')}. Valid materials are: ${validMaterials}`,
         }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
