@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useCurrency, CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
+import { useCurrency, CurrencyCode } from '@/hooks/useCurrency';
 import { useRegionalStore } from '@/hooks/useRegionalStore';
 
 /**
@@ -267,8 +267,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
       };
     }
     
-    // Priority 4: Find ANY available regional price and convert to user's currency
-    // This handles products that only have prices in specific regions
+    // Priority 4: Find ANY available regional price as fallback
+    // Return it in its native currency - don't try to convert (that causes double-conversion issues)
     const allRegionalPrices: { price: number | null | undefined; cur: CurrencyCode; url: string | null | undefined }[] = [
       { price: filament.price_cad, cur: 'CAD', url: filament.product_url_ca },
       { price: filament.price_gbp, cur: 'GBP', url: filament.product_url_uk },
@@ -277,37 +277,23 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
       { price: filament.price_jpy, cur: 'JPY', url: filament.product_url_jp },
     ];
     
-    // Find the first available price
-    for (const fallback of allRegionalPrices) {
+    // Prioritize user's selected currency, then fall back to others
+    const sortedPrices = [...allRegionalPrices].sort((a, b) => {
+      if (a.cur === currency) return -1;
+      if (b.cur === currency) return 1;
+      return 0;
+    });
+    
+    for (const fallback of sortedPrices) {
       if (fallback.price && fallback.price > 0) {
         const bestUrl = fallback.url || regionalUrl || '';
-        
-        // If the fallback currency matches user's currency, use it directly
-        if (fallback.cur === currency) {
-          return {
-            regionalPrice: fallback.price,
-            isActualRegionalPrice: true,
-            regionalUrl: bestUrl,
-            fallbackUrl: originalUsUrl,
-            priceSource: 'regional' as const,
-            currency: fallback.cur,
-            vendorCurrency,
-          };
-        }
-        
-        // Otherwise, convert to user's currency
-        // First convert to USD equivalent, then to user's currency
-        const sourceRate = CURRENCIES[fallback.cur]?.rate || 1;
-        const priceInUsd = fallback.price / sourceRate;
-        const convertedPrice = convertPrice(priceInUsd);
-        
         return {
-          regionalPrice: convertedPrice,
-          isActualRegionalPrice: false, // It's converted, not actual
+          regionalPrice: fallback.price,
+          isActualRegionalPrice: true,
           regionalUrl: bestUrl,
           fallbackUrl: originalUsUrl,
-          priceSource: 'converted' as const,
-          currency, // User's currency
+          priceSource: 'regional' as const,
+          currency: fallback.cur, // Return the actual currency of the price
           vendorCurrency,
         };
       }
