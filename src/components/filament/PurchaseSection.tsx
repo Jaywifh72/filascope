@@ -11,9 +11,11 @@ import { PricingTips } from "./PricingTips";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { useCurrentPrice } from "@/hooks/useCurrentPrice";
+import { useRegionalPrice } from "@/hooks/useRegionalPrice";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { Badge } from "@/components/ui/badge";
-import { Ban } from "lucide-react";
+import { Ban, Loader2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 
@@ -42,22 +44,41 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
   const [showAdvancedPricing, setShowAdvancedPricing] = useState(false);
   
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
-  const { formatPrice, convertPrice, currencyInfo } = useCurrency();
+  const { formatPrice, convertPrice, currencyInfo, currency } = useCurrency();
   const { trackAffiliateClick, trackStoreClick } = useConversionTracking();
+  
+  // Get regional price and URL based on user's currency preference
+  const { regionalPrice, regionalUrl, isActualRegionalPrice, currency: regionalCurrency } = useRegionalPrice(filament);
+  
+  // Fetch live price using Firecrawl for the regional URL
+  const {
+    currentPrice: livePrice,
+    compareAtPrice,
+    isLoading: isPriceLoading,
+    isLivePrice,
+    currency: liveCurrency,
+  } = useCurrentPrice(
+    regionalUrl || filament.product_url,
+    regionalPrice || filament.variant_price,
+    filament.product_url // Fallback to original URL if regional fails
+  );
   
   // Build retailer list with availability
   const retailers: RetailerInfo[] = [];
   
   // Primary retailer (manufacturer direct)
   const isDiscontinued = filament.product_url && isDiscontinuedUrl(filament.product_url);
+  const displayPrice = livePrice ?? regionalPrice ?? filament.variant_price;
+  const displayCurrency = isLivePrice ? liveCurrency : (isActualRegionalPrice ? regionalCurrency : 'USD');
+  const productUrl = regionalUrl || filament.product_url;
   
-  if (filament.product_url && !isDiscontinued) {
+  if (productUrl && !isDiscontinued) {
     retailers.push({
       id: 'store',
       name: filament.vendor || 'Store',
-      url: getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url,
-      price: filament.variant_price,
-      currency: 'USD',
+      url: getAffiliateUrl(productUrl, filament.vendor) || productUrl,
+      price: displayPrice,
+      currency: displayCurrency,
       isPrimary: true,
       available: true,
     });
@@ -162,8 +183,24 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
 
   return (
     <div className="bg-card/50 border border-primary/20 rounded-xl p-6 space-y-5">
+      {/* Live Price Loading Indicator */}
+      {isPriceLoading && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Fetching live price...</span>
+        </div>
+      )}
+      
+      {/* Live Price Badge */}
+      {isLivePrice && !isPriceLoading && (
+        <div className="flex items-center gap-2 text-xs text-green-500">
+          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+          <span>Live price from {filament.vendor}</span>
+        </div>
+      )}
+      
       {/* Price Trend Display */}
-      {primaryRetailer?.price && (
+      {primaryRetailer?.price && !isPriceLoading && (
         <PriceTrendBadge 
           filamentId={filament.id}
           currentPrice={primaryRetailer.price}
@@ -205,6 +242,8 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
           quantity={quantity}
           hasBestPrice={hasBestPrice}
           onClick={handlePrimaryClick}
+          isLoading={isPriceLoading}
+          compareAtPrice={compareAtPrice}
         />
       )}
       
