@@ -1,4 +1,4 @@
-import { ShoppingCart, Check, Zap } from "lucide-react";
+import { ShoppingCart, Check, Zap, Loader2 } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
 import { calculateDiscountedPrice } from "@/lib/pricingRules";
@@ -13,6 +13,8 @@ interface PrimaryBuyButtonProps {
   hasBundle?: boolean;
   hasFastShipping?: boolean;
   hasActualRegionalPrice?: boolean;
+  isLoading?: boolean;
+  compareAtPrice?: number | null;
   onClick?: () => void;
 }
 
@@ -26,6 +28,8 @@ export function PrimaryBuyButton({
   hasBundle = false,
   hasFastShipping = false,
   hasActualRegionalPrice = false,
+  isLoading = false,
+  compareAtPrice,
   onClick,
 }: PrimaryBuyButtonProps) {
   const { formatPrice, formatRegionalPrice } = useCurrency();
@@ -40,6 +44,7 @@ export function PrimaryBuyButton({
     : null;
   const total = discountedPrice !== null ? discountedPrice * quantity : null;
   const hasDiscount = price !== null && discountedPrice !== null && discountedPrice < price;
+  const hasLiveSale = compareAtPrice !== null && price !== null && compareAtPrice > price;
   
   return (
     <div className="space-y-2">
@@ -81,19 +86,31 @@ export function PrimaryBuyButton({
           "hover:brightness-110 hover:scale-[1.02] hover:shadow-[0_8px_24px_hsl(var(--primary)/0.4)]",
           "active:scale-[0.98]",
           "transition-all duration-200 ease-out",
-          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
+          isLoading && "opacity-70 pointer-events-none"
         )}
       >
         <span className="flex items-center gap-2">
-          <ShoppingCart className="w-5 h-5" />
+          {isLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <ShoppingCart className="w-5 h-5" />
+          )}
           <span>Buy from {retailerName}</span>
         </span>
         
-        {total !== null && (
+        {isLoading ? (
+          <span className="text-sm opacity-80">Loading...</span>
+        ) : total !== null ? (
           <span className="flex flex-col items-end">
             <span className="font-bold tabular-nums">
               {formatPriceValue(total)}
             </span>
+            {hasLiveSale && quantity === 1 && (
+              <span className="text-xs opacity-80 line-through">
+                {formatPriceValue(compareAtPrice)}
+              </span>
+            )}
             {quantity > 1 && (
               <span className="text-xs opacity-80 tabular-nums">
                 {quantity} × {formatPriceValue(discountedPrice || 0)}
@@ -101,7 +118,7 @@ export function PrimaryBuyButton({
               </span>
             )}
           </span>
-        )}
+        ) : null}
       </a>
     </div>
   );
