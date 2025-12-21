@@ -584,9 +584,11 @@ const FilamentDetail = () => {
             // Standard matching by base name
             const fBaseName = getBaseProductName(f.product_title);
             if (fBaseName !== baseName) return false;
+            // Include if: it's the current filament, OR has extractable color, OR has color_hex
             if (f.id === filament.id) return true;
             const color = getColorFromTitle(f.product_title, baseName);
-            return color !== null;
+            // Also include variants with valid color_hex even if color extraction fails
+            return color !== null || (f.color_hex && f.color_hex.length > 0);
           }
         });
 
