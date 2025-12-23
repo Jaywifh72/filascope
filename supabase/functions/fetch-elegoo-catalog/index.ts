@@ -12,7 +12,7 @@ interface CatalogItem {
   CurrentPrice: number;
   OriginalPrice: number;
   Currency: string;
-  CatalogItemUrl: string;
+  Url: string;
   ImageUrl: string;
   Manufacturer: string;
   ManufacturerPartNumber: string;
@@ -23,6 +23,57 @@ interface CatalogItem {
   Labels: string[];
   ItemSubCategory: string;
   ItemSubCategoryId: string;
+  // Additional fields for TDS extraction
+  Bullets: string[];
+  Text1: string;
+  Text2: string;
+  Text3: string;
+}
+
+// Extract TDS URL from product data
+function extractTdsUrl(item: CatalogItem): string | null {
+  const tdsPatterns = [/tds/i, /datasheet/i, /technical.*data/i, /\.pdf$/i];
+  
+  // Check Text1, Text2, Text3 for TDS URLs
+  const customFields = [item.Text1, item.Text2, item.Text3].filter(Boolean);
+  for (const field of customFields) {
+    if (field) {
+      // Check if field contains TDS-related keywords
+      const hasTdsKeyword = tdsPatterns.some(pattern => pattern.test(field));
+      if (hasTdsKeyword) {
+        const urlMatch = field.match(/https?:\/\/[^\s<>"]+/i);
+        if (urlMatch) return urlMatch[0];
+      }
+      // Also check if it's just a raw URL ending in .pdf
+      if (field.startsWith('http') && field.includes('.pdf')) {
+        return field.trim();
+      }
+    }
+  }
+  
+  // Check Description for TDS links
+  if (item.Description) {
+    const descMatch = item.Description.match(/https?:\/\/[^\s<>"]*(?:tds|datasheet|technical)[^\s<>"]*/i);
+    if (descMatch) return descMatch[0];
+    // Check for any PDF link in description
+    const pdfMatch = item.Description.match(/https?:\/\/[^\s<>"]*\.pdf/i);
+    if (pdfMatch) return pdfMatch[0];
+  }
+  
+  // Check Bullets
+  if (item.Bullets && Array.isArray(item.Bullets)) {
+    for (const bullet of item.Bullets) {
+      if (bullet) {
+        const hasTdsKeyword = tdsPatterns.some(pattern => pattern.test(bullet));
+        if (hasTdsKeyword) {
+          const urlMatch = bullet.match(/https?:\/\/[^\s<>"]+/i);
+          if (urlMatch) return urlMatch[0];
+        }
+      }
+    }
+  }
+  
+  return null;
 }
 
 interface CatalogResponse {
@@ -105,26 +156,47 @@ serve(async (req) => {
     
     console.log(`Fetched ${data.Items?.length || 0} items (page ${data.Page} of ${data.TotalPages}, total: ${data.TotalRecords})`);
 
+    // Log first item's raw data for debugging TDS fields
+    if (data.Items?.length > 0) {
+      const sample = data.Items[0];
+      console.log('Sample item fields for TDS debugging:', {
+        Text1: sample.Text1,
+        Text2: sample.Text2,
+        Text3: sample.Text3,
+        Bullets: sample.Bullets,
+        hasDescription: !!sample.Description,
+        descriptionPreview: sample.Description?.substring(0, 200),
+      });
+    }
+
     // Transform items to match our expected format
-    const products = (data.Items || []).map((item) => ({
-      productId: item.Id,
-      title: item.Name,
-      description: item.Description,
-      price: item.CurrentPrice,
-      compareAtPrice: item.OriginalPrice > item.CurrentPrice ? item.OriginalPrice : null,
-      currency: item.Currency || 'USD',
-      url: item.CatalogItemUrl,
-      imageUrl: item.ImageUrl,
-      manufacturer: item.Manufacturer,
-      mpn: item.ManufacturerPartNumber,
-      upc: item.Upc,
-      ean: item.Ean,
-      inStock: item.InStock,
-      stockQuantity: item.StockQuantity,
-      labels: item.Labels,
-      category: item.ItemSubCategory,
-      categoryId: item.ItemSubCategoryId,
-    }));
+    const products = (data.Items || []).map((item) => {
+      const tdsUrl = extractTdsUrl(item);
+      if (tdsUrl) {
+        console.log(`Found TDS URL for ${item.Name}: ${tdsUrl}`);
+      }
+      
+      return {
+        productId: item.Id,
+        title: item.Name,
+        description: item.Description,
+        price: item.CurrentPrice,
+        compareAtPrice: item.OriginalPrice > item.CurrentPrice ? item.OriginalPrice : null,
+        currency: item.Currency || 'USD',
+        url: item.Url,
+        imageUrl: item.ImageUrl,
+        manufacturer: item.Manufacturer,
+        mpn: item.ManufacturerPartNumber,
+        upc: item.Upc,
+        ean: item.Ean,
+        inStock: item.InStock,
+        stockQuantity: item.StockQuantity,
+        labels: item.Labels,
+        category: item.ItemSubCategory,
+        categoryId: item.ItemSubCategoryId,
+        tdsUrl: tdsUrl,
+      };
+    });
 
     return new Response(
       JSON.stringify({
