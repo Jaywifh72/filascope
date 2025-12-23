@@ -777,12 +777,27 @@ serve(async (req) => {
       processedCount++;
       const product = baseProduct;
       
+      // Check for timeout every 50 products during processing phase
+      if (processedCount % 50 === 0) {
+        const elapsedMs = Date.now() - startTime;
+        if (elapsedMs > MAX_EXECUTION_TIME_MS) {
+          console.warn(`[ELEGOO-SYNC] ⏰ TIMEOUT: Processed ${processedCount}/${productsByNormalizedTitle.size} products (${Math.round(elapsedMs/1000)}s)`);
+          console.warn(`[ELEGOO-SYNC]    Results so far: created=${result.created}, updated=${result.updated}, skipped=${result.skipped}`);
+          result.errors++;
+          break; // Exit the processing loop
+        }
+        console.log(`[ELEGOO-SYNC] ⏱️ Progress: ${processedCount}/${productsByNormalizedTitle.size} (${Math.round(elapsedMs/1000)}s elapsed)`);
+      }
+      
       // Classify product type
       const classification = classifyProductType(product);
       if (!classification.isFilament) {
         filteredCount++;
-        console.log(`[ELEGOO-SYNC] 🚫 Filtered ${processedCount}/${productsByNormalizedTitle.size}: ${product.title}`);
-        console.log(`[ELEGOO-SYNC]    Type: ${classification.type}, Reason: ${classification.reason}`);
+        // Reduce logging verbosity for filtered products
+        if (filteredCount <= 10 || filteredCount % 100 === 0) {
+          console.log(`[ELEGOO-SYNC] 🚫 Filtered ${processedCount}/${productsByNormalizedTitle.size}: ${product.title}`);
+          console.log(`[ELEGOO-SYNC]    Type: ${classification.type}, Reason: ${classification.reason}`);
+        }
         result.products.push({
           title: product.title,
           action: 'filtered',
@@ -796,7 +811,12 @@ serve(async (req) => {
       }
       
       try {
-        console.log(`[ELEGOO-SYNC] 📦 Filament ${processedCount}/${productsByNormalizedTitle.size}: ${product.title}`);
+        // Only log details for first 20 products or every 100th to reduce logging overhead
+        const shouldLogDetails = processedCount <= 20 || processedCount % 100 === 0;
+        
+        if (shouldLogDetails) {
+          console.log(`[ELEGOO-SYNC] 📦 Filament ${processedCount}/${productsByNormalizedTitle.size}: ${product.title}`);
+        }
         
         const material = product.material || extractMaterialFromTitle(product.title);
         const weight = extractWeightFromTitle(product.title);
@@ -804,11 +824,12 @@ serve(async (req) => {
         const techSpecs = product.techSpecs;
         const { colorName, colorHex } = extractColorAndHex(product.title);
 
-        console.log(`[ELEGOO-SYNC]    Material: ${material || 'UNKNOWN'}`);
-        console.log(`[ELEGOO-SYNC]    Weight: ${weight}g, Diameter: ${diameter}mm`);
-        console.log(`[ELEGOO-SYNC]    Color: ${colorName || 'none'} (HEX: ${colorHex ? '#' + colorHex : 'none'})`);
-        console.log(`[ELEGOO-SYNC]    Regions: ${Object.keys(regionalData).join(', ')}`);
-
+        if (shouldLogDetails) {
+          console.log(`[ELEGOO-SYNC]    Material: ${material || 'UNKNOWN'}`);
+          console.log(`[ELEGOO-SYNC]    Weight: ${weight}g, Diameter: ${diameter}mm`);
+          console.log(`[ELEGOO-SYNC]    Color: ${colorName || 'none'} (HEX: ${colorHex ? '#' + colorHex : 'none'})`);
+          console.log(`[ELEGOO-SYNC]    Regions: ${Object.keys(regionalData).join(', ')}`);
+        }
         const hasTdsFromApi = Boolean(product.tdsUrl && product.tdsUrl.trim() !== '');
         const msrpValue = product.originalPrice ?? product.price ?? null;
         const hasMsrp = Boolean(msrpValue && msrpValue > 0);
