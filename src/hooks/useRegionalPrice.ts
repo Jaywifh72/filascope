@@ -208,6 +208,10 @@ export interface RegionalPriceResult {
   currency: CurrencyCode;
   /** The vendor's native currency if detected */
   vendorCurrency: CurrencyCode | null;
+  /** Whether using a different region than user's preference (e.g., showing US data for CA user) */
+  isUsingFallbackRegion: boolean;
+  /** The actual currency of the URL being used (may differ from user's preferred currency) */
+  actualUrlCurrency: CurrencyCode | null;
 }
 
 /**
@@ -229,6 +233,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         priceSource: 'unavailable' as const,
         currency,
         vendorCurrency: null,
+        isUsingFallbackRegion: false,
+        actualUrlCurrency: null,
       };
     }
 
@@ -248,6 +254,10 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     // Keep track of the original US URL for fallback live price fetching
     const originalUsUrl = filament.product_url || null;
     
+    // Track if we're using a fallback region (not the user's preferred region)
+    let fallbackUrlCurrency: CurrencyCode | null = null;
+    let isUsingFallbackRegion = false;
+    
     // If no regional URL in database for user's currency, transform the base URL
     if (!regionalUrl && filament.product_url) {
       regionalUrl = getRegionalUrl(filament.product_url, filament.vendor);
@@ -256,13 +266,13 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     // If still no URL, try to find ANY available regional URL as fallback
     // Track which URL we're using for proper currency handling
     // Use dynamic fallback order based on user's selected currency
-    let fallbackUrlCurrency: CurrencyCode | null = null;
     if (!regionalUrl) {
       const urlFallbackOrder = buildUrlFallbackOrder(currency, filament);
       for (const fallback of urlFallbackOrder) {
         if (fallback.url && fallback.url.length > 0) {
           regionalUrl = fallback.url;
           fallbackUrlCurrency = fallback.currency;
+          isUsingFallbackRegion = fallback.currency !== currency;
           break;
         }
       }
@@ -279,6 +289,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         priceSource: 'regional' as const,
         currency,
         vendorCurrency,
+        isUsingFallbackRegion: false,
+        actualUrlCurrency: currency,
       };
     }
     
@@ -293,6 +305,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         priceSource: 'regional' as const,
         currency,
         vendorCurrency,
+        isUsingFallbackRegion,
+        actualUrlCurrency: fallbackUrlCurrency || currency,
       };
     }
     
@@ -311,6 +325,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         priceSource: 'converted' as const,
         currency,
         vendorCurrency,
+        isUsingFallbackRegion,
+        actualUrlCurrency: fallbackUrlCurrency || 'USD',
       };
     }
     
@@ -326,6 +342,7 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     for (const fallback of allRegionalPrices) {
       if (fallback.price && fallback.price > 0) {
         const bestUrl = fallback.url || regionalUrl || '';
+        const isFallback = fallback.cur !== currency;
         
         // If the fallback currency matches user's currency, use it directly
         if (fallback.cur === currency) {
@@ -337,6 +354,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
             priceSource: 'regional' as const,
             currency: fallback.cur,
             vendorCurrency,
+            isUsingFallbackRegion: false,
+            actualUrlCurrency: fallback.cur,
           };
         }
         
@@ -353,6 +372,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
           priceSource: 'converted' as const,
           currency, // User's selected currency
           vendorCurrency,
+          isUsingFallbackRegion: isFallback,
+          actualUrlCurrency: fallback.cur,
         };
       }
     }
@@ -367,6 +388,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         priceSource: 'unavailable' as const,
         currency: fallbackUrlCurrency || currency,
         vendorCurrency,
+        isUsingFallbackRegion,
+        actualUrlCurrency: fallbackUrlCurrency,
       };
     }
     
@@ -379,6 +402,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
       priceSource: 'unavailable' as const,
       currency,
       vendorCurrency,
+      isUsingFallbackRegion: false,
+      actualUrlCurrency: null,
     };
   }, [filament, currency, convertPrice, getRegionalUrl, currentRegion]);
 }

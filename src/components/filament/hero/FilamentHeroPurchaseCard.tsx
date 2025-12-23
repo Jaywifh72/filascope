@@ -7,10 +7,11 @@ import {
   RotateCcw, 
   ChevronRight,
   RefreshCw,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCurrency } from '@/hooks/useCurrency';
+import { useCurrency, CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
 import { useConversionTracking } from '@/hooks/useConversionTracking';
 import { useCurrentPrice } from '@/hooks/useCurrentPrice';
 import { cn } from '@/lib/utils';
@@ -35,6 +36,8 @@ interface FilamentHeroPurchaseCardProps {
   onViewRetailers?: () => void;
   retailerCount?: number;
   hasActualRegionalPrice?: boolean;
+  isUsingFallbackRegion?: boolean;
+  actualUrlCurrency?: CurrencyCode | null;
 }
 
 export function FilamentHeroPurchaseCard({
@@ -52,7 +55,9 @@ export function FilamentHeroPurchaseCard({
   hasInventoryData = false,
   onViewRetailers,
   retailerCount = 1,
-  hasActualRegionalPrice = false
+  hasActualRegionalPrice = false,
+  isUsingFallbackRegion = false,
+  actualUrlCurrency = null,
 }: FilamentHeroPurchaseCardProps) {
   const { formatPrice, formatRegionalPrice, currency } = useCurrency();
   const { trackStoreClick } = useConversionTracking();
@@ -176,6 +181,16 @@ export function FilamentHeroPurchaseCard({
           <div className="flex items-center gap-1.5 text-xs text-emerald-400">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span className="font-medium">Live price verified</span>
+          </div>
+        )}
+
+        {/* Fallback region warning */}
+        {isUsingFallbackRegion && actualUrlCurrency && !priceLoading && (
+          <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span className="font-medium">
+              {CURRENCIES[actualUrlCurrency]?.name || actualUrlCurrency} store — no {currency} store available
+            </span>
           </div>
         )}
 
