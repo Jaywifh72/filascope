@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, AlertCircle, Package, RefreshCw, Check, X, TrendingDown } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, Package, RefreshCw, Check, X, TrendingDown, Globe, Loader2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,6 +20,12 @@ interface ProductFields {
   msrp: boolean;
 }
 
+interface SyncProgress {
+  currentRegion: string;
+  completedRegions: string[];
+  totalRegions: number;
+}
+
 interface ElegooSyncResult {
   success: boolean;
   dryRun: boolean;
@@ -30,6 +36,7 @@ interface ElegooSyncResult {
     skipped: number;
     errors: number;
     total: number;
+    filtered?: number;
   };
   products: {
     title: string;
@@ -39,13 +46,25 @@ interface ElegooSyncResult {
     currentPrice?: number;
     msrp?: number;
   }[];
+  regionsSynced?: string[];
 }
 
 interface ElegooSyncProgressProps {
   result: ElegooSyncResult | null;
   isLoading: boolean;
   error: string | null;
+  progress?: SyncProgress | null;
 }
+
+// Region display labels
+const REGION_LABELS: Record<string, string> = {
+  'US': '🇺🇸 United States',
+  'AU': '🇦🇺 Australia',
+  'CA': '🇨🇦 Canada',
+  'EU': '🇪🇺 Europe',
+  'UK': '🇬🇧 United Kingdom',
+  'JP': '🇯🇵 Japan',
+};
 
 function FieldIndicator({ available }: { available: boolean }) {
   return available ? (
@@ -110,7 +129,80 @@ function ActionBadge({ action }: { action: 'created' | 'updated' | 'skipped' | '
   return <Badge variant={variant} className="text-xs">{label}</Badge>;
 }
 
-export function ElegooSyncProgress({ result, isLoading, error }: ElegooSyncProgressProps) {
+function RegionProgressBar({ progress }: { progress: SyncProgress }) {
+  const { currentRegion, completedRegions, totalRegions } = progress;
+  const completedCount = completedRegions.length;
+  const progressPercent = totalRegions > 0 ? Math.round((completedCount / totalRegions) * 100) : 0;
+  
+  // All regions in order
+  const allRegions = ['US', 'AU', 'CA', 'EU', 'UK'];
+  
+  return (
+    <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+          <span className="font-medium">Syncing Elegoo Catalogs</span>
+        </div>
+        <Badge variant="outline">
+          {completedCount} / {totalRegions} regions
+        </Badge>
+      </div>
+      
+      {/* Overall Progress */}
+      <div className="space-y-1">
+        <div className="flex justify-between text-sm text-muted-foreground">
+          <span>Overall Progress</span>
+          <span>{progressPercent}%</span>
+        </div>
+        <Progress value={progressPercent} className="h-2" />
+      </div>
+      
+      {/* Region Steps */}
+      <div className="flex flex-wrap gap-2">
+        {allRegions.slice(0, totalRegions).map((region) => {
+          const isCompleted = completedRegions.includes(region);
+          const isCurrent = currentRegion === region;
+          
+          return (
+            <div
+              key={region}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all
+                ${isCompleted 
+                  ? 'bg-green-500/20 text-green-700 dark:text-green-400' 
+                  : isCurrent 
+                    ? 'bg-primary/20 text-primary animate-pulse' 
+                    : 'bg-muted text-muted-foreground'
+                }
+              `}
+            >
+              {isCompleted ? (
+                <CheckCircle2 className="w-4 h-4" />
+              ) : isCurrent ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Globe className="w-4 h-4" />
+              )}
+              <span>{region}</span>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Current Region Status */}
+      <div className="text-sm text-muted-foreground">
+        <span className="flex items-center gap-2">
+          <RefreshCw className="w-4 h-4 animate-spin" />
+          Syncing {REGION_LABELS[currentRegion] || currentRegion}...
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function ElegooSyncProgress({ result, isLoading, error, progress }: ElegooSyncProgressProps) {
   if (error) {
     return (
       <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
@@ -123,11 +215,17 @@ export function ElegooSyncProgress({ result, isLoading, error }: ElegooSyncProgr
     );
   }
 
+  // Show region progress if multi-region sync is in progress
+  if (isLoading && progress) {
+    return <RegionProgressBar progress={progress} />;
+  }
+
+  // Show simple loading for single region
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
         <div className="flex items-center gap-2">
-          <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
           <span className="font-medium">Syncing Elegoo catalog...</span>
         </div>
         <Progress value={undefined} className="h-2" />
@@ -142,7 +240,7 @@ export function ElegooSyncProgress({ result, isLoading, error }: ElegooSyncProgr
     return null;
   }
 
-  const { summary, products, dryRun } = result;
+  const { summary, products, dryRun, regionsSynced } = result;
   const successRate = summary.total > 0 
     ? Math.round(((summary.created + summary.updated) / summary.total) * 100) 
     : 0;
@@ -157,11 +255,22 @@ export function ElegooSyncProgress({ result, isLoading, error }: ElegooSyncProgr
             {dryRun ? 'Preview Complete' : 'Sync Complete'}
           </span>
         </div>
-        {dryRun && (
-          <Badge variant="outline" className="text-amber-500 border-amber-500">
-            Dry Run
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {regionsSynced && regionsSynced.length > 0 && (
+            <div className="flex gap-1">
+              {regionsSynced.map(region => (
+                <Badge key={region} variant="secondary" className="text-xs">
+                  {region}
+                </Badge>
+              ))}
+            </div>
+          )}
+          {dryRun && (
+            <Badge variant="outline" className="text-amber-500 border-amber-500">
+              Dry Run
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Stats Grid */}

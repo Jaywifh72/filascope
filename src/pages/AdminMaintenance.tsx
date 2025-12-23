@@ -97,7 +97,7 @@ const AdminMaintenance = () => {
   const { startJob, isStarting } = useStartBambuScrapeJob();
   const { jobs: recentJobs } = useRecentScrapeJobs(5);
   const { activeJob, hasActiveJob } = useActiveScrapeJob();
-  const { syncProducts, discoverCatalogs, isLoading: elegooLoading, result: elegooResult, error: elegooError, reset: resetElegoo } = useElegooSync();
+  const { syncProducts, discoverCatalogs, isLoading: elegooLoading, result: elegooResult, error: elegooError, reset: resetElegoo, progress: elegooProgress } = useElegooSync();
 
   // Helper function to infer region from catalog name
   const inferRegionFromCatalog = (catalog: CatalogInfo): string => {
@@ -514,7 +514,8 @@ const AdminMaintenance = () => {
                   <ElegooSyncProgress 
                     result={elegooResult} 
                     isLoading={elegooLoading} 
-                    error={elegooError} 
+                    error={elegooError}
+                    progress={elegooProgress}
                   />
                 </div>
               )}

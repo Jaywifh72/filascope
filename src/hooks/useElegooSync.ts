@@ -221,5 +221,6 @@ export function useElegooSync() {
     result,
     error,
     reset,
+    progress,
   };
 }
