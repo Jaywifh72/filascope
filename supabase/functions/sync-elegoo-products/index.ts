@@ -14,6 +14,10 @@ const ELEGOO_CATALOG_IDS: Record<string, string> = {
   'CA': '19910',  // Elegoo Product Datafeed for CA
   'EU': '19908',  // Elegoo Product Datafeed for EU
   'UK': '19907',  // Elegoo Product Datafeed for UK
+  'DE': '21454',  // Elegoo Product Datafeed for DE (Germany)
+  'IT': '21456',  // Elegoo Product Datafeed for Italy
+  'FR': '21457',  // Elegoo Product Datafeed for FR (France)
+  'ES': '21458',  // Elegoo Product Datafeed for ES (Spain)
 };
 
 // Default fallback catalog ID
@@ -31,6 +35,10 @@ const REGION_CURRENCIES: Record<string, string> = {
   'EU': 'EUR',
   'UK': 'GBP',
   'JP': 'JPY',
+  'DE': 'EUR',
+  'IT': 'EUR',
+  'FR': 'EUR',
+  'ES': 'EUR',
 };
 
 // Color name to HEX mapping - enhanced with Elegoo-specific colors
@@ -164,6 +172,10 @@ const REGION_URL_DOMAINS: Record<string, string> = {
   'EU': 'eu.elegoo.com',
   'UK': 'uk.elegoo.com',
   'JP': 'jp.elegoo.com',
+  'DE': 'de.elegoo.com',
+  'IT': 'it.elegoo.com',
+  'FR': 'fr.elegoo.com',
+  'ES': 'es.elegoo.com',
 };
 
 /**
