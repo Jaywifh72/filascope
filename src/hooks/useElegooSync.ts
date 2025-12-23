@@ -38,14 +38,14 @@ export function useElegooSync() {
   const [result, setResult] = useState<ElegooSyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const syncProducts = async (dryRun: boolean, materialFilter?: string) => {
+  const syncProducts = async (dryRun: boolean, materialFilter?: string, regions?: string[]) => {
     setIsLoading(true);
     setError(null);
     setResult(null);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('sync-elegoo-products', {
-        body: { dryRun, materialFilter },
+        body: { dryRun, materialFilter, regions },
       });
 
       if (fnError) {
