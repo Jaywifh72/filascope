@@ -920,6 +920,27 @@ serve(async (req) => {
             console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid JP URL: ${regionalData['JP'].url}`);
           }
         }
+        // DE, IT, FR, ES all use EUR - they map to the EU price field
+        // But we prioritize the generic EU catalog if available, otherwise use country-specific
+        // For URLs, we can use the EU URL field as a fallback
+        for (const euroRegion of ['DE', 'IT', 'FR', 'ES'] as const) {
+          if (regionalData[euroRegion]) {
+            if (validateRegionalUrl(regionalData[euroRegion].url, euroRegion)) {
+              // Only set EUR price if not already set by EU catalog
+              if (!regionalFields.price_eur) {
+                regionalFields.price_eur = regionalData[euroRegion].price;
+                console.log(`[ELEGOO-SYNC]    💶 Set EUR price from ${euroRegion}: €${regionalData[euroRegion].price}`);
+              }
+              // Store the EU URL if not already set
+              if (!regionalFields.product_url_eu) {
+                regionalFields.product_url_eu = regionalData[euroRegion].url;
+                console.log(`[ELEGOO-SYNC]    🔗 Set EU URL from ${euroRegion}`);
+              }
+            } else {
+              console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid ${euroRegion} URL: ${regionalData[euroRegion].url}`);
+            }
+          }
+        }
 
         // Compute product line ID for grouping color variants
         const productLineId = computeProductLineId('Elegoo', product.title, material);
