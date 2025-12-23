@@ -946,20 +946,35 @@ serve(async (req) => {
         const productLineId = computeProductLineId('Elegoo', product.title, material);
         console.log(`[ELEGOO-SYNC]    Product Line ID: ${productLineId}`);
 
-        // CRITICAL: Determine if we have US data
-        const hasUSData = Boolean(regionalData['US']?.price && regionalData['US']?.url);
+        // Determine what data we have available for base product fields
+        // Priority order: US > CA > UK > AU > EU > DE > IT > FR > ES
+        const regionPriority = ['US', 'CA', 'UK', 'AU', 'EU', 'DE', 'IT', 'FR', 'ES'];
+        let primaryRegion: string | null = null;
+        let primaryPrice: number | null = null;
+        let primaryUrl: string | null = null;
+        
+        for (const region of regionPriority) {
+          if (regionalData[region]?.price && regionalData[region]?.url) {
+            if (validateRegionalUrl(regionalData[region].url, region)) {
+              primaryRegion = region;
+              primaryPrice = regionalData[region].price;
+              primaryUrl = regionalData[region].url;
+              break;
+            }
+          }
+        }
+        
+        const hasPrimaryData = Boolean(primaryRegion && primaryPrice && primaryUrl);
         const isCreatingNew = !existing;
         
-        // If creating new product AND no US data available, skip
-        // This prevents creating products with regional URLs in the base product_url field
-        if (isCreatingNew && !hasUSData) {
-          console.log(`[ELEGOO-SYNC]    ⏭️ SKIPPED: No US data available, cannot create base product`);
-          console.log(`[ELEGOO-SYNC]       To sync this product, run US region sync first to create the base product`);
+        // If creating new product AND no valid regional data available, skip
+        if (isCreatingNew && !hasPrimaryData) {
+          console.log(`[ELEGOO-SYNC]    ⏭️ SKIPPED: No valid regional data available to create base product`);
           result.skipped++;
           result.products.push({
             title: product.title,
             action: 'skipped',
-            reason: 'No US data - sync US region first to create base product',
+            reason: 'No valid regional data available',
             fields,
             currentPrice,
             msrp,
@@ -967,7 +982,7 @@ serve(async (req) => {
           continue;
         }
 
-        // Build filament data - ONLY use US data for base price/url fields
+        // Build filament data
         const filamentData: Record<string, unknown> = {
           product_id: product.productId,
           product_title: product.title,
@@ -997,41 +1012,22 @@ serve(async (req) => {
           ...regionalFields,
         };
         
-        // ONLY set base product_url and variant_price from VALIDATED US data
-        // Never overwrite with regional data - prevents AU/CA/etc contamination
-        if (hasUSData) {
-          const usUrl = regionalData['US']!.url;
-          const usPrice = regionalData['US']!.price;
-          
-          // CRITICAL: Validate that US data actually has US URLs (not AU/EU/etc)
-          if (validateRegionalUrl(usUrl, 'US')) {
-            filamentData.variant_price = usPrice;
-            filamentData.product_url = usUrl;
-            console.log(`[ELEGOO-SYNC]    💵 US data VALIDATED: $${usPrice}, URL: ${usUrl?.substring(0, 50)}...`);
-          } else {
-            console.warn(`[ELEGOO-SYNC]    ⚠️ US catalog returned non-US URL, rejecting: ${usUrl}`);
-            console.warn(`[ELEGOO-SYNC]       This indicates catalog ID ${availableCatalogs['US']} is NOT a valid US catalog`);
-            // Treat as no US data - will either skip (new product) or preserve existing (update)
-            if (isCreatingNew) {
-              console.log(`[ELEGOO-SYNC]    ⏭️ SKIPPED: Invalid US URL - cannot create base product`);
-              result.skipped++;
-              result.products.push({
-                title: product.title,
-                action: 'skipped',
-                reason: `Invalid US URL (${usUrl?.substring(0, 30)}...) - likely wrong catalog`,
-                fields,
-                currentPrice,
-                msrp,
-              });
-              continue;
-            } else {
-              console.log(`[ELEGOO-SYNC]    ℹ️ Preserving existing base price/url due to invalid US URL`);
-            }
-          }
+        // Set base product_url and variant_price from the primary region
+        if (hasPrimaryData) {
+          filamentData.variant_price = primaryPrice;
+          filamentData.product_url = primaryUrl;
+          const currencySymbol = REGION_CURRENCIES[primaryRegion!] === 'USD' ? '$' : 
+                                  REGION_CURRENCIES[primaryRegion!] === 'EUR' ? '€' : 
+                                  REGION_CURRENCIES[primaryRegion!] === 'GBP' ? '£' : 
+                                  REGION_CURRENCIES[primaryRegion!] === 'CAD' ? 'C$' : 
+                                  REGION_CURRENCIES[primaryRegion!] === 'AUD' ? 'A$' : '$';
+          console.log(`[ELEGOO-SYNC]    💵 Primary data from ${primaryRegion}: ${currencySymbol}${primaryPrice}`);
         } else if (existing) {
-          // Updating existing product without US data - preserve existing base values
-          console.log(`[ELEGOO-SYNC]    ℹ️ No US data in this sync - preserving existing base price/url`);
+          // Updating existing product without new primary data - preserve existing base values
+          console.log(`[ELEGOO-SYNC]    ℹ️ No new primary data - preserving existing base price/url`);
           // Don't include variant_price or product_url in the update - they'll be preserved
+          delete filamentData.variant_price;
+          delete filamentData.product_url;
         }
 
         if (dryRun) {
@@ -1082,13 +1078,13 @@ serve(async (req) => {
               msrp,
             });
 
-            // Log US price change if different (only when we have US data)
-            if (hasUSData && existing.variant_price !== regionalData['US']!.price) {
-              console.log(`[ELEGOO-SYNC]    💰 US Price changed: $${existing.variant_price} -> $${regionalData['US']!.price}`);
+            // Log price change if different from existing (using primary region data)
+            if (hasPrimaryData && existing.variant_price !== primaryPrice) {
+              console.log(`[ELEGOO-SYNC]    💰 Price changed: ${existing.variant_price} -> ${primaryPrice} (${primaryRegion})`);
               await supabase.from('price_history').insert({
                 filament_id: existing.id,
-                price: regionalData['US']!.price,
-                region: 'US',
+                price: primaryPrice,
+                region: primaryRegion,
                 source: 'elegoo_api',
               });
             }
