@@ -45,6 +45,9 @@ const TDS_URL_MAP: Record<string, string> = {
   'PETG CF': 'https://www.spoolscout.com/data-sheets/elegoo/petg-petg-cf',
   'RAPID PETG': 'https://www.spoolscout.com/data-sheets/elegoo/petg-rapid-petg',
   'RAPID PETG+': 'https://www.spoolscout.com/data-sheets/elegoo/petg-rapid-petg',
+  'PC': 'https://www.spoolscout.com/data-sheets/elegoo/pc-pc',
+  'PC-CF': 'https://www.spoolscout.com/data-sheets/elegoo/pc-pc-cf',
+  'PC CF': 'https://www.spoolscout.com/data-sheets/elegoo/pc-pc-cf',
   'ASA': 'https://www.spoolscout.com/data-sheets/elegoo/asa-asa',
   'TPU': 'https://www.spoolscout.com/data-sheets/elegoo/tpu-tpu',
   'ABS': 'https://www.spoolscout.com/data-sheets/elegoo/abs-abs',
@@ -58,6 +61,7 @@ function extractMaterialFromName(name: string): string | null {
   const patterns = [
     'RAPID PLA+', 'RAPID PLA', 'PLA-PRO', 'PLA PRO', 'PLA+', 'PLA',
     'RAPID PETG+', 'RAPID PETG', 'PETG-CF', 'PETG CF', 'PETG-PRO', 'PETG PRO', 'PETG',
+    'PC-CF', 'PC CF', 'PC',
     'ASA', 'TPU', 'ABS'
   ];
   
