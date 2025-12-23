@@ -99,11 +99,15 @@ const AdminMaintenance = () => {
   // Elegoo Catalog Reference Data (Campaign ID: 19663)
   const DEFAULT_ELEGOO_CATALOGS: CatalogInfo[] = [
     { id: '25495', name: 'Elegoo Filaments Datafeed for US', region: 'US', itemCount: 247, status: 'Active', currency: 'USD' },
-    { id: '19909', name: 'Elegoo Product Datafeed for AU', region: 'AU', itemCount: 2114, status: 'Inactive' },
-    { id: '19910', name: 'Elegoo Product Datafeed for CA', region: 'CA', itemCount: 2313, status: 'Inactive' },
-    { id: '19908', name: 'Elegoo Product Datafeed for EU', region: 'EU', itemCount: 2124, status: 'Inactive' },
-    { id: '19907', name: 'Elegoo Product Datafeed for UK', region: 'UK', itemCount: 2113, status: 'Inactive' },
-    { id: '19906', name: 'Elegoo Product Datafeed for US', region: 'US', itemCount: 2305, status: 'Inactive' },
+    { id: '19909', name: 'Elegoo Product Datafeed for AU', region: 'AU', itemCount: 2114, status: 'Inactive', currency: 'AUD' },
+    { id: '19910', name: 'Elegoo Product Datafeed for CA', region: 'CA', itemCount: 2313, status: 'Inactive', currency: 'CAD' },
+    { id: '19908', name: 'Elegoo Product Datafeed for EU', region: 'EU', itemCount: 2124, status: 'Inactive', currency: 'EUR' },
+    { id: '19907', name: 'Elegoo Product Datafeed for UK', region: 'UK', itemCount: 2113, status: 'Inactive', currency: 'GBP' },
+    { id: '19906', name: 'Elegoo Product Datafeed for US', region: 'US', itemCount: 2305, status: 'Inactive', currency: 'USD' },
+    { id: '21454', name: 'Elegoo Product Datafeed for DE', region: 'DE', itemCount: 0, status: 'Active', currency: 'EUR' },
+    { id: '21456', name: 'Elegoo Product Datafeed for Italy', region: 'IT', itemCount: 0, status: 'Active', currency: 'EUR' },
+    { id: '21457', name: 'Elegoo Product Datafeed for FR', region: 'FR', itemCount: 0, status: 'Active', currency: 'EUR' },
+    { id: '21458', name: 'Elegoo Product Datafeed for ES', region: 'ES', itemCount: 0, status: 'Active', currency: 'EUR' },
   ];
   const ELEGOO_CAMPAIGN_ID = '19663';
   const [catalogInfoOpen, setCatalogInfoOpen] = useState(false);
