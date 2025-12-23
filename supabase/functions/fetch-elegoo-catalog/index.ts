@@ -68,13 +68,11 @@ serve(async (req) => {
       PageSize: pageSize.toString(),
     });
 
-    // Add filters for filament products
-    // According to the spreadsheet, we should filter by ItemSubCategory or Labels
+    // Only add material filter if specified
+    // Note: Catalog 25495 is already a filaments-only feed, so no default filter needed
     if (materialFilter) {
-      params.append('Query', `Name CONTAINS '${materialFilter}' OR Labels CONTAINS '${materialFilter}'`);
-    } else {
-      // Filter for filament products
-      params.append('Query', "Name CONTAINS 'filament' OR Labels CONTAINS 'filament' OR ItemSubCategory CONTAINS 'filament'");
+      // Use simpler query format for Impact API
+      params.append('Query', `Name CONTAINS '${materialFilter}'`);
     }
 
     const url = `${baseUrl}?${params.toString()}`;
