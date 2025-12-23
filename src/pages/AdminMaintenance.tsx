@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { Loader2, Palette, Archive, Layers, ShoppingBag } from "lucide-react";
@@ -168,193 +169,211 @@ const AdminMaintenance = () => {
       {/* AI Scrape Logs */}
       <AIScrapeLogsCard />
 
-      {/* Bambu Lab Scraper Card */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Palette className="w-5 h-5" />
-            <CardTitle>Bambu Lab Filament Scraper</CardTitle>
-          </div>
-          <CardDescription>
-            Scrape Bambu Lab filaments across all materials (PLA, PETG, TPU, ABS, ASA, PA, PET, PC, PPS, Support) with regional pricing for US, CA, UK, EU, AU, JP
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Select Materials to Scrape</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {BAMBU_MATERIAL_OPTIONS.map((material) => (
-                <div key={material.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`bambu-material-${material.id}`}
-                    checked={bambuMaterials.includes(material.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setBambuMaterials([...bambuMaterials, material.id]);
-                      } else {
-                        setBambuMaterials(bambuMaterials.filter(m => m !== material.id));
-                      }
-                    }}
-                  />
-                  <Label htmlFor={`bambu-material-${material.id}`} className="text-sm font-normal cursor-pointer">
-                    {material.label} <span className="text-muted-foreground">({material.count})</span>
-                  </Label>
+      {/* Tabs for Brand Scrapers */}
+      <Tabs defaultValue="bambulab" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="bambulab" className="flex items-center gap-2">
+            <Palette className="w-4 h-4" />
+            Bambu Lab
+          </TabsTrigger>
+          <TabsTrigger value="elegoo" className="flex items-center gap-2">
+            <ShoppingBag className="w-4 h-4" />
+            Elegoo
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Bambu Lab Tab */}
+        <TabsContent value="bambulab" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Palette className="w-5 h-5" />
+                <CardTitle>Bambu Lab Filament Scraper</CardTitle>
+              </div>
+              <CardDescription>
+                Scrape Bambu Lab filaments across all materials (PLA, PETG, TPU, ABS, ASA, PA, PET, PC, PPS, Support) with regional pricing for US, CA, UK, EU, AU, JP
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Select Materials to Scrape</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {BAMBU_MATERIAL_OPTIONS.map((material) => (
+                    <div key={material.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`bambu-material-${material.id}`}
+                        checked={bambuMaterials.includes(material.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setBambuMaterials([...bambuMaterials, material.id]);
+                          } else {
+                            setBambuMaterials(bambuMaterials.filter(m => m !== material.id));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`bambu-material-${material.id}`} className="text-sm font-normal cursor-pointer">
+                        {material.label} <span className="text-muted-foreground">({material.count})</span>
+                      </Label>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="bambu-dry-run"
-              checked={bambuColorsDryRun}
-              onCheckedChange={(checked) => setBambuColorsDryRun(checked === true)}
-            />
-            <Label htmlFor="bambu-dry-run" className="text-sm font-normal">
-              Dry run (preview changes without saving)
-            </Label>
-          </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="bambu-dry-run"
+                  checked={bambuColorsDryRun}
+                  onCheckedChange={(checked) => setBambuColorsDryRun(checked === true)}
+                />
+                <Label htmlFor="bambu-dry-run" className="text-sm font-normal">
+                  Dry run (preview changes without saving)
+                </Label>
+              </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button 
-              onClick={handleStartScrape} 
-              disabled={isStarting || isQueueRunning || bambuMaterials.length === 0}
-              className="w-full sm:w-auto"
-            >
-              {isStarting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Starting...
-                </>
-              ) : (
-                <>
-                  <Palette className="w-4 h-4 mr-2" />
-                  {bambuColorsDryRun ? "Preview Scrape" : `Scrape ${bambuMaterials.length} Material(s)`}
-                </>
-              )}
-            </Button>
-            
-            <Button 
-              onClick={handleStartAllMaterials} 
-              disabled={isStarting || isQueueRunning}
-              variant="secondary"
-              className="w-full sm:w-auto"
-            >
-              <Layers className="w-4 h-4 mr-2" />
-              {bambuColorsDryRun ? "Preview All (10)" : "Scrape All Materials (10)"}
-            </Button>
-          </div>
-
-          {/* Queue Progress */}
-          {(isQueueRunning || isQueueComplete) && (
-            <div className="pt-4 border-t">
-              <BambuScrapeQueueProgress
-                queueState={queueState}
-                currentJob={currentJob}
-                overallProgress={overallProgress}
-                totalMaterials={totalMaterials}
-                completedCount={completedCount}
-                isQueueRunning={isQueueRunning}
-                isQueueComplete={isQueueComplete}
-                onCancel={handleCancelQueue}
-                onReset={resetQueue}
-              />
-            </div>
-          )}
-
-          {/* Active Single Job Progress */}
-          {activeJobId && !isQueueRunning && !isQueueComplete && (
-            <div className="pt-4 border-t">
-              <BambuScrapeProgress jobId={activeJobId} onComplete={handleJobComplete} />
-            </div>
-          )}
-
-          {/* Recent Jobs */}
-          {recentJobs.length > 0 && !activeJobId && !isQueueRunning && !isQueueComplete && (
-            <div className="pt-4 border-t space-y-2">
-              <h4 className="text-sm font-medium text-muted-foreground">Recent Jobs</h4>
-              {recentJobs.slice(0, 3).map((job) => (
-                <BambuScrapeJobRow key={job.id} job={job} />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Elegoo Filament API Card */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5" />
-            <CardTitle>Elegoo Filament API</CardTitle>
-          </div>
-          <CardDescription>
-            Sync Elegoo filaments from Impact.com Affiliate API. Fetches product catalog including prices, availability, images, and UPC/EAN codes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Material Filter (Optional)</Label>
-            <div className="flex flex-wrap gap-2">
-              {ELEGOO_MATERIAL_OPTIONS.map((material) => (
-                <Button
-                  key={material.id}
-                  variant={elegooMaterialFilter === material.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setElegooMaterialFilter(material.id)}
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  onClick={handleStartScrape} 
+                  disabled={isStarting || isQueueRunning || bambuMaterials.length === 0}
+                  className="w-full sm:w-auto"
                 >
-                  {material.label}
+                  {isStarting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Starting...
+                    </>
+                  ) : (
+                    <>
+                      <Palette className="w-4 h-4 mr-2" />
+                      {bambuColorsDryRun ? "Preview Scrape" : `Scrape ${bambuMaterials.length} Material(s)`}
+                    </>
+                  )}
                 </Button>
-              ))}
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="elegoo-dry-run"
-              checked={elegooDryRun}
-              onCheckedChange={(checked) => setElegooDryRun(checked === true)}
-            />
-            <Label htmlFor="elegoo-dry-run" className="text-sm font-normal">
-              Dry run (preview changes without saving)
-            </Label>
-          </div>
+                
+                <Button 
+                  onClick={handleStartAllMaterials} 
+                  disabled={isStarting || isQueueRunning}
+                  variant="secondary"
+                  className="w-full sm:w-auto"
+                >
+                  <Layers className="w-4 h-4 mr-2" />
+                  {bambuColorsDryRun ? "Preview All (10)" : "Scrape All Materials (10)"}
+                </Button>
+              </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button 
-              onClick={handleElegooSync} 
-              disabled={elegooLoading}
-              className="w-full sm:w-auto"
-            >
-              {elegooLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Syncing...
-                </>
-              ) : (
-                <>
-                  <ShoppingBag className="w-4 h-4 mr-2" />
-                  {elegooDryRun ? "Preview Sync" : "Sync Catalog"}
-                </>
+              {/* Queue Progress */}
+              {(isQueueRunning || isQueueComplete) && (
+                <div className="pt-4 border-t">
+                  <BambuScrapeQueueProgress
+                    queueState={queueState}
+                    currentJob={currentJob}
+                    overallProgress={overallProgress}
+                    totalMaterials={totalMaterials}
+                    completedCount={completedCount}
+                    isQueueRunning={isQueueRunning}
+                    isQueueComplete={isQueueComplete}
+                    onCancel={handleCancelQueue}
+                    onReset={resetQueue}
+                  />
+                </div>
               )}
-            </Button>
-          </div>
 
-          {/* Elegoo Sync Progress */}
-          {(elegooLoading || elegooResult || elegooError) && (
-            <div className="pt-4 border-t">
-              <ElegooSyncProgress 
-                result={elegooResult} 
-                isLoading={elegooLoading} 
-                error={elegooError} 
-              />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              {/* Active Single Job Progress */}
+              {activeJobId && !isQueueRunning && !isQueueComplete && (
+                <div className="pt-4 border-t">
+                  <BambuScrapeProgress jobId={activeJobId} onComplete={handleJobComplete} />
+                </div>
+              )}
 
-      {/* Bambu Lab Regional Dashboard */}
-      <BambuLabRegionalDashboard />
+              {/* Recent Jobs */}
+              {recentJobs.length > 0 && !activeJobId && !isQueueRunning && !isQueueComplete && (
+                <div className="pt-4 border-t space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Recent Jobs</h4>
+                  {recentJobs.slice(0, 3).map((job) => (
+                    <BambuScrapeJobRow key={job.id} job={job} />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Bambu Lab Regional Dashboard */}
+          <BambuLabRegionalDashboard />
+        </TabsContent>
+
+        {/* Elegoo Tab */}
+        <TabsContent value="elegoo" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5" />
+                <CardTitle>Elegoo Filament API</CardTitle>
+              </div>
+              <CardDescription>
+                Sync Elegoo filaments from Impact.com Affiliate API. Fetches product catalog including prices, availability, images, and UPC/EAN codes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Material Filter (Optional)</Label>
+                <div className="flex flex-wrap gap-2">
+                  {ELEGOO_MATERIAL_OPTIONS.map((material) => (
+                    <Button
+                      key={material.id}
+                      variant={elegooMaterialFilter === material.id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setElegooMaterialFilter(material.id)}
+                    >
+                      {material.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="elegoo-dry-run"
+                  checked={elegooDryRun}
+                  onCheckedChange={(checked) => setElegooDryRun(checked === true)}
+                />
+                <Label htmlFor="elegoo-dry-run" className="text-sm font-normal">
+                  Dry run (preview changes without saving)
+                </Label>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  onClick={handleElegooSync} 
+                  disabled={elegooLoading}
+                  className="w-full sm:w-auto"
+                >
+                  {elegooLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Syncing...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag className="w-4 h-4 mr-2" />
+                      {elegooDryRun ? "Preview Sync" : "Sync Catalog"}
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Elegoo Sync Progress */}
+              {(elegooLoading || elegooResult || elegooError) && (
+                <div className="pt-4 border-t">
+                  <ElegooSyncProgress 
+                    result={elegooResult} 
+                    isLoading={elegooLoading} 
+                    error={elegooError} 
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
     </>
   );
