@@ -6,9 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Fallback catalog ID if dynamic discovery fails
-// 25495 = "Elegoo Filaments Datafeed for US" - this is the CORRECT US catalog with elegoo.com URLs
-// 19909 = AU catalog - DO NOT USE for US region
+// KNOWN CATALOG IDs from Impact.com for Elegoo
+// These are the authoritative IDs - do NOT rely on dynamic discovery name parsing
+const ELEGOO_CATALOG_IDS: Record<string, string> = {
+  'US': '25495',  // Elegoo Filaments Datafeed for US
+  'AU': '19909',  // Elegoo Product Datafeed for AU
+  'CA': '19910',  // Elegoo Product Datafeed for CA
+  'EU': '19908',  // Elegoo Product Datafeed for EU
+  'UK': '19907',  // Elegoo Product Datafeed for UK
+};
+
+// Default fallback catalog ID
 const DEFAULT_CATALOG_ID = '25495';
 
 // Timeout protection: stop processing before edge function timeout (150s limit)
@@ -303,175 +311,23 @@ interface DiscoveredCatalog {
   status: string; // From Impact API: "Active", "Inactive", etc.
 }
 
-// Discover available catalogs dynamically from Impact API
-// CRITICAL: This function must validate that catalog URLs match expected regions
-// to prevent cross-regional contamination (e.g., AU URLs being mapped to US region)
-async function discoverRegionalCatalogs(supabase: SupabaseClient, supabaseUrl: string, supabaseServiceKey: string): Promise<Record<string, string>> {
-  console.log('[ELEGOO-SYNC] 🔍 Starting dynamic catalog discovery...');
-  
-  try {
-    const response = await fetch(
-      `${supabaseUrl}/functions/v1/list-impact-catalogs`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[ELEGOO-SYNC] ❌ Catalog discovery failed: ${response.status} - ${errorText}`);
-      return { 'US': DEFAULT_CATALOG_ID };
-    }
-
-    const data = await response.json();
-    console.log(`[ELEGOO-SYNC] 📦 Found ${data.catalogs?.length || 0} total catalogs from Impact API`);
-
-    if (!data.catalogs || data.catalogs.length === 0) {
-      console.log('[ELEGOO-SYNC] ⚠️ No catalogs returned, using default US catalog');
-      return { 'US': DEFAULT_CATALOG_ID };
-    }
-
-    // IMPROVED: Map catalogs based on name patterns that reliably indicate region
-    // DO NOT rely solely on currency - multiple catalogs can have the same currency
-    const regionMap: Record<string, string> = {};
-    
-    for (const catalog of data.catalogs as DiscoveredCatalog[]) {
-      console.log(`[ELEGOO-SYNC]   📋 Catalog: ${catalog.name} (ID: ${catalog.id})`);
-      console.log(`[ELEGOO-SYNC]      Currency: ${catalog.currency}, Location: ${catalog.location}`);
-      console.log(`[ELEGOO-SYNC]      Service Areas: ${catalog.serviceAreas?.join(', ') || 'none'}`);
-      console.log(`[ELEGOO-SYNC]      Status: ${catalog.status || 'unknown'}`);
-
-      // Check if catalog is active
-      const isActive = !catalog.status || 
-        catalog.status.toLowerCase() === 'active' || 
-        catalog.status.toLowerCase() === 'approved';
-      
-      if (!isActive) {
-        console.log(`[ELEGOO-SYNC]      ⏭️ Skipping inactive catalog (status: ${catalog.status})`);
-        continue;
-      }
-
-      const catalogNameLower = catalog.name.toLowerCase();
-      const locationLower = (catalog.location || '').toLowerCase();
-
-      // IMPROVED: Use name-based detection FIRST (most reliable), then fall back to currency
-      // The name should contain clear region indicators like "US", "AU", "UK", "EU", "CA"
-      
-      // US detection - look for explicit "US" or "United States" in name
-      if (catalogNameLower.includes(' us ') || 
-          catalogNameLower.includes(' us') || 
-          catalogNameLower.startsWith('us ') ||
-          catalogNameLower.includes('united states') ||
-          catalogNameLower.includes('for us')) {
-        if (!regionMap['US']) {
-          regionMap['US'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to US region (name-based)`);
-        }
-      }
-      // Australia detection
-      else if (catalogNameLower.includes('australia') || 
-               catalogNameLower.includes(' au ') ||
-               catalogNameLower.includes(' au') ||
-               catalogNameLower.startsWith('au ') ||
-               catalogNameLower.includes('for au')) {
-        if (!regionMap['AU']) {
-          regionMap['AU'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to AU region (name-based)`);
-        }
-      }
-      // Canada detection
-      else if (catalogNameLower.includes('canada') || 
-               catalogNameLower.includes(' ca ') ||
-               catalogNameLower.includes(' ca') ||
-               catalogNameLower.startsWith('ca ') ||
-               catalogNameLower.includes('for ca')) {
-        if (!regionMap['CA']) {
-          regionMap['CA'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to CA region (name-based)`);
-        }
-      }
-      // UK detection
-      else if (catalogNameLower.includes(' uk ') || 
-               catalogNameLower.includes(' uk') ||
-               catalogNameLower.startsWith('uk ') ||
-               catalogNameLower.includes('united kingdom') ||
-               catalogNameLower.includes('britain') ||
-               catalogNameLower.includes('for uk')) {
-        if (!regionMap['UK']) {
-          regionMap['UK'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to UK region (name-based)`);
-        }
-      }
-      // EU detection
-      else if (catalogNameLower.includes('europe') || 
-               catalogNameLower.includes(' eu ') ||
-               catalogNameLower.includes(' eu') ||
-               catalogNameLower.startsWith('eu ') ||
-               catalogNameLower.includes('for eu')) {
-        if (!regionMap['EU']) {
-          regionMap['EU'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to EU region (name-based)`);
-        }
-      }
-      // Japan detection
-      else if (catalogNameLower.includes('japan') || 
-               catalogNameLower.includes(' jp ') ||
-               catalogNameLower.includes(' jp') ||
-               catalogNameLower.startsWith('jp ') ||
-               catalogNameLower.includes('for jp')) {
-        if (!regionMap['JP']) {
-          regionMap['JP'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to JP region (name-based)`);
-        }
-      }
-      // Currency-based fallback ONLY if name doesn't indicate region
-      // and we don't already have that region mapped
-      else {
-        console.log(`[ELEGOO-SYNC]      ⚠️ No clear region in name, trying currency-based mapping`);
-        
-        if (catalog.currency === 'USD' && !regionMap['US']) {
-          regionMap['US'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to US region (currency fallback)`);
-        } else if (catalog.currency === 'AUD' && !regionMap['AU']) {
-          regionMap['AU'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to AU region (currency fallback)`);
-        } else if (catalog.currency === 'CAD' && !regionMap['CA']) {
-          regionMap['CA'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to CA region (currency fallback)`);
-        } else if (catalog.currency === 'GBP' && !regionMap['UK']) {
-          regionMap['UK'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to UK region (currency fallback)`);
-        } else if (catalog.currency === 'EUR' && !regionMap['EU']) {
-          regionMap['EU'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to EU region (currency fallback)`);
-        } else if (catalog.currency === 'JPY' && !regionMap['JP']) {
-          regionMap['JP'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to JP region (currency fallback)`);
-        } else {
-          console.log(`[ELEGOO-SYNC]      ℹ️ Skipped catalog - no matching region or already mapped`);
-        }
-      }
-    }
-
-    console.log(`[ELEGOO-SYNC] 🗺️ Final region mapping: ${JSON.stringify(regionMap)}`);
-    
-    // Always ensure we have at least the US catalog with the known-correct ID
-    if (!regionMap['US']) {
-      console.log('[ELEGOO-SYNC] ⚠️ No US catalog found, using default US catalog ID: ' + DEFAULT_CATALOG_ID);
-      regionMap['US'] = DEFAULT_CATALOG_ID;
-    }
-
-    return regionMap;
-  } catch (err) {
-    console.error('[ELEGOO-SYNC] ❌ Catalog discovery error:', err);
-    console.log('[ELEGOO-SYNC] ⚠️ Using fallback US catalog');
-    return { 'US': DEFAULT_CATALOG_ID };
+// Get the catalog ID for a specific region
+// IMPORTANT: We use hardcoded, verified catalog IDs rather than dynamic discovery
+// because Impact API catalog names/metadata are unreliable for region detection
+function getRegionalCatalogId(region: string): string {
+  const catalogId = ELEGOO_CATALOG_IDS[region];
+  if (catalogId) {
+    console.log(`[ELEGOO-SYNC] 📋 Using catalog ID ${catalogId} for region ${region}`);
+    return catalogId;
   }
+  console.warn(`[ELEGOO-SYNC] ⚠️ No catalog ID for region ${region}, falling back to US`);
+  return DEFAULT_CATALOG_ID;
+}
+
+// Get all available region catalog mappings
+function getAvailableRegionalCatalogs(): Record<string, string> {
+  console.log(`[ELEGOO-SYNC] 🗺️ Available catalogs: ${JSON.stringify(ELEGOO_CATALOG_IDS)}`);
+  return { ...ELEGOO_CATALOG_IDS };
 }
 
 function extractMaterialFromTitle(title: string): string | null {
@@ -731,7 +587,7 @@ serve(async (req) => {
     console.log('[ELEGOO-SYNC] ───────────────────────────────────────────────────────');
     console.log('[ELEGOO-SYNC] 🔍 PHASE: Catalog Discovery');
     
-    const availableCatalogs = await discoverRegionalCatalogs(supabase, supabaseUrl, supabaseServiceKey);
+    const availableCatalogs = getAvailableRegionalCatalogs();
     console.log(`[ELEGOO-SYNC] Available catalogs: ${JSON.stringify(availableCatalogs)}`);
 
     // Filter to only requested regions that have catalogs
