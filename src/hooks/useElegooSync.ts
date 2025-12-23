@@ -53,9 +53,9 @@ export function useElegooSync() {
   const [progress, setProgress] = useState<SyncProgress | null>(null);
 
   // Sync a single region
-  const syncSingleRegion = useCallback(async (dryRun: boolean, materialFilter?: string, region?: string) => {
+  const syncSingleRegion = useCallback(async (dryRun: boolean, materialFilter?: string, region?: string, excludedCatalogIds?: string[]) => {
     const { data, error: fnError } = await supabase.functions.invoke('sync-elegoo-products', {
-      body: { dryRun, materialFilter, regions: region ? [region] : ['US'] },
+      body: { dryRun, materialFilter, regions: region ? [region] : ['US'], excludedCatalogIds },
     });
 
     if (fnError) {
@@ -70,7 +70,7 @@ export function useElegooSync() {
   }, []);
 
   // Sync multiple regions sequentially to avoid timeout
-  const syncProducts = useCallback(async (dryRun: boolean, materialFilter?: string, regions?: string[]) => {
+  const syncProducts = useCallback(async (dryRun: boolean, materialFilter?: string, regions?: string[], excludedCatalogIds?: string[]) => {
     setIsLoading(true);
     setError(null);
     setResult(null);
@@ -81,7 +81,7 @@ export function useElegooSync() {
     // If only one region, just call directly
     if (regionsToSync.length === 1) {
       try {
-        const data = await syncSingleRegion(dryRun, materialFilter, regionsToSync[0]);
+        const data = await syncSingleRegion(dryRun, materialFilter, regionsToSync[0], excludedCatalogIds);
         setResult(data);
         return data;
       } catch (err) {
@@ -123,7 +123,7 @@ export function useElegooSync() {
         });
 
         try {
-          const regionResult = await syncSingleRegion(dryRun, materialFilter, region);
+          const regionResult = await syncSingleRegion(dryRun, materialFilter, region, excludedCatalogIds);
           
           // Aggregate results
           aggregatedResult.summary.created += regionResult.summary.created;
