@@ -594,7 +594,7 @@ serve(async (req) => {
           .from('brand_sync_logs')
           .insert({
             brand_slug: 'elegoo',
-            sync_type: 'impact_catalog_sync',
+            sync_type: 'full_scrape',
             status: 'running',
             triggered_by: 'manual',
             started_at: new Date().toISOString(),
