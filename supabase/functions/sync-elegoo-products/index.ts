@@ -1165,7 +1165,7 @@ serve(async (req) => {
         const { error: updateLogError } = await supabase
           .from('brand_sync_logs')
           .update({
-            status: result.errors > 0 ? 'completed_with_errors' : 'completed',
+            status: result.errors > 0 ? 'partial' : 'completed',
             completed_at: new Date().toISOString(),
             duration_seconds: durationSeconds,
             products_discovered: productsByNormalizedTitle.size,
