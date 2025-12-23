@@ -192,16 +192,15 @@ serve(async (req) => {
     
     console.log(`Fetched ${data.Items?.length || 0} items (page ${data.Page} of ${data.TotalPages}, total: ${data.TotalRecords})`);
 
-    // Log first item's raw data for debugging TDS fields
+    // Log first item's raw data for debugging
     if (data.Items?.length > 0) {
       const sample = data.Items[0];
-      console.log('Sample item fields for TDS debugging:', {
+      console.log('Sample item fields for debugging:', {
+        Name: sample.Name,
+        CurrentPrice: sample.CurrentPrice,
+        OriginalPrice: sample.OriginalPrice,
         Text1: sample.Text1,
-        Text2: sample.Text2,
-        Text3: sample.Text3,
-        Bullets: sample.Bullets,
         hasDescription: !!sample.Description,
-        descriptionPreview: sample.Description?.substring(0, 200),
       });
     }
 
@@ -220,7 +219,7 @@ serve(async (req) => {
         title: item.Name,
         description: item.Description,
         price: item.CurrentPrice,
-        originalPrice: item.OriginalPrice,  // Always include MSRP
+        originalPrice: item.OriginalPrice || item.CurrentPrice,  // MSRP: fallback to CurrentPrice if missing
         compareAtPrice: item.OriginalPrice > item.CurrentPrice ? item.OriginalPrice : null,
         currency: item.Currency || 'USD',
         url: item.Url,

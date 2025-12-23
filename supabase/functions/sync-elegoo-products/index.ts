@@ -204,10 +204,10 @@ serve(async (req) => {
         // Build fields availability object - check TDS from API response
         const hasTdsFromApi = Boolean(product.tdsUrl && product.tdsUrl.trim() !== '');
         
-        // MSRP: use originalPrice (always present) or fall back to compareAtPrice
-        const msrpValue = product.originalPrice ?? product.compareAtPrice ?? null;
+        // MSRP: use originalPrice (always present with fallback), or price as last resort
+        const msrpValue = product.originalPrice ?? product.price ?? null;
         const hasMsrp = Boolean(msrpValue && msrpValue > 0);
-        const isOnSale = Boolean(product.compareAtPrice && product.price < product.compareAtPrice);
+        const isOnSale = Boolean(product.originalPrice && product.price < product.originalPrice);
         
         const fields: ProductFields = {
           tds: hasTdsFromApi,
