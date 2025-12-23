@@ -10,6 +10,8 @@ interface ProductFields {
   msrp: boolean;
 }
 
+type ProductType = '3D Printer' | 'Filament' | 'Accessory' | 'Unknown';
+
 interface ElegooSyncResult {
   success: boolean;
   dryRun: boolean;
@@ -24,14 +26,17 @@ interface ElegooSyncResult {
   };
   products: {
     title: string;
-    action: 'created' | 'updated' | 'skipped' | 'error';
+    action: 'created' | 'updated' | 'skipped' | 'error' | 'filtered';
     reason?: string;
+    productType?: ProductType;
     fields: ProductFields;
     currentPrice?: number;
     msrp?: number;
   }[];
   regionsSynced?: string[];
 }
+
+export type { ProductType };
 
 interface SyncProgress {
   currentRegion: string;
