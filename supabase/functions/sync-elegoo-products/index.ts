@@ -1166,7 +1166,181 @@ serve(async (req) => {
       }
     }
 
-    // === PHASE 7: SUMMARY ===
+    // === PHASE 7: TRIGGER TDS PARSING (BACKGROUND) ===
+    if (!dryRun && (result.created > 0 || result.updated > 0)) {
+      console.log('[ELEGOO-SYNC] ───────────────────────────────────────────────────────');
+      console.log('[ELEGOO-SYNC] 📄 PHASE: Triggering TDS parsing (background)');
+      
+      // Find Elegoo filaments with TDS URLs that need parsing
+      // (have tds_url but missing key technical data)
+      const { data: needsTdsParsing, error: tdsQueryError } = await supabase
+        .from('filaments')
+        .select('id, product_title, tds_url, product_url')
+        .eq('vendor', 'Elegoo')
+        .not('tds_url', 'is', null)
+        .or('nozzle_temp_min_c.is.null,density_g_cm3.is.null,drying_temp_c.is.null')
+        .limit(10); // Limit to avoid overwhelming the system
+      
+      if (tdsQueryError) {
+        console.error('[ELEGOO-SYNC] ⚠️ Failed to query filaments needing TDS parsing:', tdsQueryError.message);
+      } else if (needsTdsParsing && needsTdsParsing.length > 0) {
+        console.log(`[ELEGOO-SYNC] 📋 Found ${needsTdsParsing.length} filaments needing TDS parsing`);
+        
+        // Trigger TDS parsing as a background task using waitUntil
+        const parseTdsInBackground = async () => {
+          const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+          const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+          
+          if (!firecrawlApiKey || !lovableApiKey) {
+            console.log('[ELEGOO-SYNC] ⚠️ Missing API keys for TDS parsing, skipping');
+            return;
+          }
+          
+          let parsed = 0;
+          let failed = 0;
+          
+          for (const filament of needsTdsParsing) {
+            try {
+              console.log(`[ELEGOO-SYNC] 🔬 Parsing TDS for: ${filament.product_title}`);
+              
+              // Fetch TDS content via Firecrawl
+              const tdsResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${firecrawlApiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  url: filament.tds_url,
+                  formats: ['markdown'],
+                  onlyMainContent: false,
+                  waitFor: 3000,
+                }),
+              });
+              
+              if (!tdsResponse.ok) {
+                console.error(`[ELEGOO-SYNC] ❌ Firecrawl error for ${filament.product_title}`);
+                failed++;
+                continue;
+              }
+              
+              const tdsData = await tdsResponse.json();
+              const markdown = tdsData.data?.markdown || '';
+              
+              if (markdown.length < 100) {
+                console.log(`[ELEGOO-SYNC] ⚠️ TDS content too short for ${filament.product_title}`);
+                failed++;
+                continue;
+              }
+              
+              // Extract TDS data with AI
+              const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${lovableApiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: 'google/gemini-2.5-flash',
+                  messages: [{
+                    role: 'user',
+                    content: `Extract TDS specs from this filament technical data sheet. Return JSON with these fields (null if not found):
+nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, bed_temp_max_c, print_speed_max_mms,
+drying_temp_c, drying_time_hours, density_g_cm3, tensile_strength_xy_mpa, elongation_break_xy_percent,
+flexural_strength_mpa, tg_c, melt_temp_c, is_nozzle_abrasive (boolean).
+Return ONLY valid JSON.
+
+TDS CONTENT:
+${markdown.substring(0, 12000)}`
+                  }],
+                }),
+              });
+              
+              if (!aiResponse.ok) {
+                console.error(`[ELEGOO-SYNC] ❌ AI error for ${filament.product_title}`);
+                failed++;
+                continue;
+              }
+              
+              const aiData = await aiResponse.json();
+              const content = aiData.choices?.[0]?.message?.content;
+              
+              if (!content) {
+                failed++;
+                continue;
+              }
+              
+              // Extract JSON from response
+              let jsonStr = content;
+              const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+              if (jsonMatch) jsonStr = jsonMatch[1];
+              
+              try {
+                const extracted = JSON.parse(jsonStr.trim());
+                
+                // Update filament with extracted data
+                const updateFields: Record<string, unknown> = {};
+                if (extracted.nozzle_temp_min_c) updateFields.nozzle_temp_min_c = extracted.nozzle_temp_min_c;
+                if (extracted.nozzle_temp_max_c) updateFields.nozzle_temp_max_c = extracted.nozzle_temp_max_c;
+                if (extracted.bed_temp_min_c) updateFields.bed_temp_min_c = extracted.bed_temp_min_c;
+                if (extracted.bed_temp_max_c) updateFields.bed_temp_max_c = extracted.bed_temp_max_c;
+                if (extracted.print_speed_max_mms) updateFields.print_speed_max_mms = extracted.print_speed_max_mms;
+                if (extracted.drying_temp_c) updateFields.drying_temp_c = extracted.drying_temp_c;
+                if (extracted.drying_time_hours) updateFields.drying_time_hours = extracted.drying_time_hours;
+                if (extracted.density_g_cm3) updateFields.density_g_cm3 = extracted.density_g_cm3;
+                if (extracted.tensile_strength_xy_mpa) updateFields.tensile_strength_xy_mpa = extracted.tensile_strength_xy_mpa;
+                if (extracted.elongation_break_xy_percent) updateFields.elongation_break_xy_percent = extracted.elongation_break_xy_percent;
+                if (extracted.flexural_strength_mpa) updateFields.flexural_strength_mpa = extracted.flexural_strength_mpa;
+                if (extracted.tg_c) updateFields.tg_c = extracted.tg_c;
+                if (extracted.melt_temp_c) updateFields.melt_temp_c = extracted.melt_temp_c;
+                if (typeof extracted.is_nozzle_abrasive === 'boolean') updateFields.is_nozzle_abrasive = extracted.is_nozzle_abrasive;
+                
+                if (Object.keys(updateFields).length > 0) {
+                  const { error: updateErr } = await supabase
+                    .from('filaments')
+                    .update(updateFields)
+                    .eq('id', filament.id);
+                  
+                  if (updateErr) {
+                    console.error(`[ELEGOO-SYNC] ❌ Update error: ${updateErr.message}`);
+                    failed++;
+                  } else {
+                    console.log(`[ELEGOO-SYNC] ✅ Parsed TDS for ${filament.product_title}: ${Object.keys(updateFields).length} fields`);
+                    parsed++;
+                  }
+                }
+              } catch {
+                console.error(`[ELEGOO-SYNC] ❌ JSON parse error for ${filament.product_title}`);
+                failed++;
+              }
+              
+              // Rate limit: wait 1 second between AI calls
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            } catch (err) {
+              console.error(`[ELEGOO-SYNC] ❌ TDS parsing error for ${filament.product_title}:`, err);
+              failed++;
+            }
+          }
+          
+          console.log(`[ELEGOO-SYNC] 📄 TDS parsing complete: ${parsed} parsed, ${failed} failed`);
+        };
+        
+        // Use globalThis.EdgeRuntime.waitUntil for background execution (Deno edge runtime)
+        const edgeRuntime = (globalThis as any).EdgeRuntime;
+        if (edgeRuntime && typeof edgeRuntime.waitUntil === 'function') {
+          edgeRuntime.waitUntil(parseTdsInBackground());
+          console.log('[ELEGOO-SYNC] ⏳ TDS parsing started in background');
+        } else {
+          // Fallback: run async but don't block response
+          parseTdsInBackground().catch(err => console.error('[ELEGOO-SYNC] Background TDS error:', err));
+          console.log('[ELEGOO-SYNC] ⏳ TDS parsing started (fallback mode)');
+        }
+      } else {
+        console.log('[ELEGOO-SYNC] ✅ No filaments need TDS parsing');
+      }
+    }
+
+    // === PHASE 8: SUMMARY ===
     console.log('[ELEGOO-SYNC] ═══════════════════════════════════════════════════════');
     console.log('[ELEGOO-SYNC] 🎉 SYNC COMPLETE');
     console.log('[ELEGOO-SYNC] ═══════════════════════════════════════════════════════');
@@ -1180,6 +1354,7 @@ serve(async (req) => {
     console.log(`[ELEGOO-SYNC]    📦 Total unique products: ${productsByNormalizedTitle.size}`);
     console.log(`[ELEGOO-SYNC]    🌍 Regions synced: ${regionsToSync.join(', ')}`);
     console.log(`[ELEGOO-SYNC]    🔧 Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);
+    console.log(`[ELEGOO-SYNC]    📄 TDS parsing: ${!dryRun && (result.created > 0 || result.updated > 0) ? 'triggered in background' : 'skipped'}`);
 
     return new Response(
       JSON.stringify({
