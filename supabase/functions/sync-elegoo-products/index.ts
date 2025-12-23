@@ -548,16 +548,19 @@ serve(async (req) => {
     let dryRun = true;
     let materialFilter: string | undefined;
     let requestedRegions: string[] = ['US'];
+    let excludedCatalogIds: string[] = [];
     
     try {
       const body = await req.json();
       dryRun = body.dryRun ?? true;
       materialFilter = body.materialFilter;
       requestedRegions = body.regions || ['US'];
+      excludedCatalogIds = body.excludedCatalogIds || [];
       console.log('[ELEGOO-SYNC] 📝 Request parameters:');
       console.log(`[ELEGOO-SYNC]    dryRun: ${dryRun}`);
       console.log(`[ELEGOO-SYNC]    materialFilter: ${materialFilter || 'ALL'}`);
       console.log(`[ELEGOO-SYNC]    requestedRegions: ${requestedRegions.join(', ')}`);
+      console.log(`[ELEGOO-SYNC]    excludedCatalogIds: ${excludedCatalogIds.length > 0 ? excludedCatalogIds.join(', ') : 'none'}`);
     } catch (parseErr) {
       console.error('[ELEGOO-SYNC] ⚠️ Failed to parse request body, using defaults');
     }
@@ -602,21 +605,26 @@ serve(async (req) => {
     const availableCatalogs = getAvailableRegionalCatalogs();
     console.log(`[ELEGOO-SYNC] Available catalogs: ${JSON.stringify(availableCatalogs)}`);
 
-    // Filter to only requested regions that have catalogs
+    // Filter to only requested regions that have catalogs (and aren't excluded)
     // IMPORTANT: Only process ONE region per invocation to avoid timeout
     const regionsToSync: string[] = [];
     for (const region of requestedRegions) {
-      if (availableCatalogs[region]) {
-        regionsToSync.push(region);
-        console.log(`[ELEGOO-SYNC] ✅ Region ${region} -> Catalog ${availableCatalogs[region]}`);
+      const catalogId = availableCatalogs[region];
+      if (catalogId) {
+        if (excludedCatalogIds.includes(catalogId)) {
+          console.log(`[ELEGOO-SYNC] ⏭️ Region ${region} -> Catalog ${catalogId} is EXCLUDED, skipping`);
+        } else {
+          regionsToSync.push(region);
+          console.log(`[ELEGOO-SYNC] ✅ Region ${region} -> Catalog ${catalogId}`);
+        }
       } else {
         console.log(`[ELEGOO-SYNC] ⚠️ Region ${region} has no available catalog, skipping`);
       }
     }
 
     if (regionsToSync.length === 0) {
-      console.error('[ELEGOO-SYNC] ❌ No valid regions to sync!');
-      throw new Error(`No catalogs available for requested regions: ${requestedRegions.join(', ')}`);
+      console.error('[ELEGOO-SYNC] ❌ No valid regions to sync (all excluded or unavailable)!');
+      throw new Error(`No catalogs available for requested regions: ${requestedRegions.join(', ')} (excluded: ${excludedCatalogIds.join(', ')})`);
     }
 
     // Limit to single region per invocation to prevent timeout

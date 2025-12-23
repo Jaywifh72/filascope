@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
@@ -117,6 +118,7 @@ const AdminMaintenance = () => {
   const [availableCatalogs, setAvailableCatalogs] = useState<CatalogInfo[]>(DEFAULT_ELEGOO_CATALOGS);
   const [catalogsLoading, setCatalogsLoading] = useState(false);
   const [catalogsError, setCatalogsError] = useState<string | null>(null);
+  const [excludedCatalogIds, setExcludedCatalogIds] = useState<Set<string>>(new Set(['22141']));
   const [lastCatalogRefresh, setLastCatalogRefresh] = useState<Date | null>(null);
   
   const { toast } = useToast();
@@ -265,7 +267,7 @@ const AdminMaintenance = () => {
       const regionsToSync = elegooSelectedRegions.includes('ALL') 
         ? ['US', 'AU', 'CA', 'EU', 'UK', 'DE', 'IT', 'FR', 'ES'] 
         : elegooSelectedRegions;
-      await syncProducts(elegooDryRun, elegooMaterialFilter || undefined, regionsToSync);
+      await syncProducts(elegooDryRun, elegooMaterialFilter || undefined, regionsToSync, Array.from(excludedCatalogIds));
       toast({
         title: elegooDryRun ? "Preview Complete" : "Sync Complete",
         description: `Elegoo catalog sync finished for ${regionsToSync.join(', ')}`,
@@ -657,6 +659,7 @@ const AdminMaintenance = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-16">Sync</TableHead>
                           <TableHead className="w-20">ID</TableHead>
                           <TableHead>Catalog Name</TableHead>
                           <TableHead className="w-20">Region</TableHead>
@@ -669,8 +672,26 @@ const AdminMaintenance = () => {
                         {availableCatalogs.map((catalog) => {
                           const isActive = catalog.status === 'Active';
                           const region = catalog.region || inferRegionFromCatalog(catalog);
+                          const isExcluded = excludedCatalogIds.has(catalog.id);
                           return (
-                            <TableRow key={catalog.id} className={isActive ? 'bg-primary/5' : ''}>
+                            <TableRow key={catalog.id} className={isActive && !isExcluded ? 'bg-primary/5' : isExcluded ? 'bg-muted/30' : ''}>
+                              <TableCell>
+                                <Switch
+                                  checked={!isExcluded}
+                                  onCheckedChange={(checked) => {
+                                    setExcludedCatalogIds(prev => {
+                                      const newSet = new Set(prev);
+                                      if (checked) {
+                                        newSet.delete(catalog.id);
+                                      } else {
+                                        newSet.add(catalog.id);
+                                      }
+                                      return newSet;
+                                    });
+                                  }}
+                                  aria-label={`Toggle sync for ${catalog.name}`}
+                                />
+                              </TableCell>
                               <TableCell className="font-mono text-xs">{catalog.id}</TableCell>
                               <TableCell className="text-sm">
                                 <div>{catalog.name}</div>
