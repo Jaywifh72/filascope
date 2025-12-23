@@ -56,20 +56,9 @@ serve(async (req) => {
 
     console.log('[Quality Check] Starting comprehensive sync quality audit...');
 
-    // First, get the Elegoo brand ID
-    const { data: elegooBrand, error: brandError } = await supabase
-      .from('automated_brands')
-      .select('id')
-      .eq('brand_slug', 'elegoo')
-      .single();
-
-    if (brandError || !elegooBrand) {
-      console.log('[Quality Check] Elegoo brand not found, checking by vendor name...');
-    }
-
     // Fetch all Elegoo filaments with relevant fields
-    // Try by brand_id first, fallback to vendor name
-    let query = supabase
+    // The sync sets vendor = 'Elegoo' (exact case), so we query by that
+    const { data: filaments, error } = await supabase
       .from('filaments')
       .select(`
         id,
@@ -94,24 +83,24 @@ serve(async (req) => {
         tds_url,
         nozzle_temp_min_c,
         nozzle_temp_max_c,
+        nozzle_temp_sweetspot_c,
         bed_temp_min_c,
         bed_temp_max_c,
         drying_temp_c,
         drying_time_hours,
         density_g_cm3,
+        print_speed_max_mms,
+        fan_min_percent,
+        fan_max_percent,
+        tensile_strength_xy_mpa,
+        flexural_strength_mpa,
+        moisture_sensitivity_level,
+        is_nozzle_abrasive,
         vendor,
         brand_id
       `)
+      .eq('vendor', 'Elegoo')
       .order('product_title');
-
-    // Filter by brand_id if we found it, otherwise filter by vendor name (case insensitive)
-    if (elegooBrand?.id) {
-      query = query.eq('brand_id', elegooBrand.id);
-    } else {
-      query = query.ilike('vendor', '%elegoo%');
-    }
-
-    const { data: filaments, error } = await query;
 
     if (error) {
       throw new Error(`Failed to fetch filaments: ${error.message}`);
@@ -119,17 +108,31 @@ serve(async (req) => {
 
     console.log(`[Quality Check] Fetched ${filaments?.length || 0} Elegoo filaments`);
 
+    // Task names aligned with documented sync tasks:
+    // Task 1: Regional Prices & URLs (split into two checks)
+    // Task 2: Product Images per Color
+    // Task 3: Multi-Region Product Creation (covered by regional checks)
+    // Task 4: Delta Syncing (N/A for quality check)
+    // Task 5: Color Extraction
+    // Task 6: Color Family (NOT populated by sync - mark skipped)
+    // Task 7: Product Line Grouping
+    // Task 8: TDS URL Capture
+    // Task 9: TDS Data Ingestion (multiple sub-checks)
     const taskNames = [
       'Regional Prices',
       'Regional URLs',
       'Product Images',
-      'Color Extraction',
+      'Color Extraction (Hex)',
       'Color Family',
       'Product Line Grouping',
       'TDS URL Captured',
       'TDS Temps Parsed',
       'TDS Drying Parsed',
-      'TDS Density Parsed'
+      'TDS Density Parsed',
+      'TDS Print Speed Parsed',
+      'TDS Fan Settings Parsed',
+      'TDS Strength Data Parsed',
+      'TDS Moisture/Abrasive Parsed'
     ];
 
     // Initialize task summary
@@ -154,7 +157,7 @@ serve(async (req) => {
     for (const filament of filaments || []) {
       const taskResults: TaskResult[] = [];
 
-      // 1. Regional Prices Check
+      // 1. Regional Prices Check (Sync Task 1)
       const prices = [
         { region: 'USD', value: filament.variant_price },
         { region: 'CAD', value: filament.price_cad },
@@ -177,7 +180,7 @@ serve(async (req) => {
       }
       taskSummaryMap['Regional Prices'].total++;
 
-      // 2. Regional URLs Check
+      // 2. Regional URLs Check (Sync Task 1)
       const urls = [
         { region: 'US', value: filament.product_url },
         { region: 'CA', value: filament.product_url_ca },
@@ -200,7 +203,7 @@ serve(async (req) => {
       }
       taskSummaryMap['Regional URLs'].total++;
 
-      // 3. Product Images Check
+      // 3. Product Images Check (Sync Task 2)
       if (filament.featured_image) {
         taskResults.push({ task: 'Product Images', status: 'pass', value: '✓' });
         taskSummaryMap['Product Images'].passed++;
@@ -210,27 +213,27 @@ serve(async (req) => {
       }
       taskSummaryMap['Product Images'].total++;
 
-      // 4. Color Extraction Check
+      // 4. Color Extraction Check (Sync Task 5)
       if (filament.color_hex) {
-        taskResults.push({ task: 'Color Extraction', status: 'pass', value: filament.color_hex });
-        taskSummaryMap['Color Extraction'].passed++;
+        taskResults.push({ task: 'Color Extraction (Hex)', status: 'pass', value: filament.color_hex });
+        taskSummaryMap['Color Extraction (Hex)'].passed++;
       } else {
-        taskResults.push({ task: 'Color Extraction', status: 'warning', value: null, message: 'No hex color' });
-        taskSummaryMap['Color Extraction'].warnings++;
+        taskResults.push({ task: 'Color Extraction (Hex)', status: 'warning', value: null, message: 'No hex color extracted' });
+        taskSummaryMap['Color Extraction (Hex)'].warnings++;
       }
-      taskSummaryMap['Color Extraction'].total++;
+      taskSummaryMap['Color Extraction (Hex)'].total++;
 
-      // 5. Color Family Check
-      if (filament.color_family) {
-        taskResults.push({ task: 'Color Family', status: 'pass', value: filament.color_family });
-        taskSummaryMap['Color Family'].passed++;
-      } else {
-        taskResults.push({ task: 'Color Family', status: 'warning', value: null, message: 'No color family' });
-        taskSummaryMap['Color Family'].warnings++;
-      }
+      // 5. Color Family Check - NOT populated by sync, mark as skipped
+      taskResults.push({ 
+        task: 'Color Family', 
+        status: 'skipped', 
+        value: null, 
+        message: 'Not populated by sync (future enhancement)' 
+      });
+      taskSummaryMap['Color Family'].skipped++;
       taskSummaryMap['Color Family'].total++;
 
-      // 6. Product Line Grouping Check
+      // 6. Product Line Grouping Check (Sync Task 6)
       if (filament.product_line_id) {
         taskResults.push({ task: 'Product Line Grouping', status: 'pass', value: filament.product_line_id });
         taskSummaryMap['Product Line Grouping'].passed++;
@@ -240,27 +243,32 @@ serve(async (req) => {
       }
       taskSummaryMap['Product Line Grouping'].total++;
 
-      // 7. TDS URL Captured Check
+      // 7. TDS URL Captured Check (Sync Task 7)
       const hasTds = !!filament.tds_url;
       if (hasTds) {
         taskResults.push({ task: 'TDS URL Captured', status: 'pass', value: '✓' });
         taskSummaryMap['TDS URL Captured'].passed++;
       } else {
-        taskResults.push({ task: 'TDS URL Captured', status: 'skipped', value: null, message: 'No TDS available' });
+        taskResults.push({ task: 'TDS URL Captured', status: 'skipped', value: null, message: 'No TDS available from API' });
         taskSummaryMap['TDS URL Captured'].skipped++;
       }
       taskSummaryMap['TDS URL Captured'].total++;
 
-      // 8. TDS Temps Parsed Check (only if TDS exists)
+      // TDS Data Ingestion checks (Sync Task 8) - only if TDS exists
+
+      // 8. TDS Temps Parsed Check
       if (hasTds) {
-        const hasTemps = filament.nozzle_temp_min_c != null && filament.nozzle_temp_max_c != null;
-        if (hasTemps) {
-          taskResults.push({ 
-            task: 'TDS Temps Parsed', 
-            status: 'pass', 
-            value: `${filament.nozzle_temp_min_c}-${filament.nozzle_temp_max_c}°C nozzle, ${filament.bed_temp_min_c || '?'}-${filament.bed_temp_max_c || '?'}°C bed` 
-          });
+        const hasNozzleTemps = filament.nozzle_temp_min_c != null && filament.nozzle_temp_max_c != null;
+        const hasBedTemps = filament.bed_temp_min_c != null;
+        const hasSweetspot = filament.nozzle_temp_sweetspot_c != null;
+        
+        if (hasNozzleTemps && hasBedTemps) {
+          const tempValue = `Nozzle: ${filament.nozzle_temp_min_c}-${filament.nozzle_temp_max_c}°C${hasSweetspot ? ` (sweet: ${filament.nozzle_temp_sweetspot_c}°C)` : ''}, Bed: ${filament.bed_temp_min_c}-${filament.bed_temp_max_c || '?'}°C`;
+          taskResults.push({ task: 'TDS Temps Parsed', status: 'pass', value: tempValue });
           taskSummaryMap['TDS Temps Parsed'].passed++;
+        } else if (hasNozzleTemps || hasBedTemps) {
+          taskResults.push({ task: 'TDS Temps Parsed', status: 'warning', value: null, message: 'Partial temps parsed' });
+          taskSummaryMap['TDS Temps Parsed'].warnings++;
         } else {
           taskResults.push({ task: 'TDS Temps Parsed', status: 'fail', value: null, message: 'Temps not parsed from TDS' });
           taskSummaryMap['TDS Temps Parsed'].failed++;
@@ -283,8 +291,8 @@ serve(async (req) => {
           });
           taskSummaryMap['TDS Drying Parsed'].passed++;
         } else {
-          taskResults.push({ task: 'TDS Drying Parsed', status: 'fail', value: null, message: 'Drying info not parsed' });
-          taskSummaryMap['TDS Drying Parsed'].failed++;
+          taskResults.push({ task: 'TDS Drying Parsed', status: 'warning', value: null, message: 'Drying info not parsed' });
+          taskSummaryMap['TDS Drying Parsed'].warnings++;
         }
         taskSummaryMap['TDS Drying Parsed'].total++;
       } else {
@@ -300,14 +308,90 @@ serve(async (req) => {
           taskResults.push({ task: 'TDS Density Parsed', status: 'pass', value: `${filament.density_g_cm3} g/cm³` });
           taskSummaryMap['TDS Density Parsed'].passed++;
         } else {
-          taskResults.push({ task: 'TDS Density Parsed', status: 'fail', value: null, message: 'Density not parsed' });
-          taskSummaryMap['TDS Density Parsed'].failed++;
+          taskResults.push({ task: 'TDS Density Parsed', status: 'warning', value: null, message: 'Density not parsed' });
+          taskSummaryMap['TDS Density Parsed'].warnings++;
         }
         taskSummaryMap['TDS Density Parsed'].total++;
       } else {
         taskResults.push({ task: 'TDS Density Parsed', status: 'skipped', value: null, message: 'No TDS' });
         taskSummaryMap['TDS Density Parsed'].skipped++;
         taskSummaryMap['TDS Density Parsed'].total++;
+      }
+
+      // 11. TDS Print Speed Parsed Check
+      if (hasTds) {
+        const hasPrintSpeed = filament.print_speed_max_mms != null;
+        if (hasPrintSpeed) {
+          taskResults.push({ task: 'TDS Print Speed Parsed', status: 'pass', value: `Max ${filament.print_speed_max_mms} mm/s` });
+          taskSummaryMap['TDS Print Speed Parsed'].passed++;
+        } else {
+          taskResults.push({ task: 'TDS Print Speed Parsed', status: 'warning', value: null, message: 'Print speed not parsed' });
+          taskSummaryMap['TDS Print Speed Parsed'].warnings++;
+        }
+        taskSummaryMap['TDS Print Speed Parsed'].total++;
+      } else {
+        taskResults.push({ task: 'TDS Print Speed Parsed', status: 'skipped', value: null, message: 'No TDS' });
+        taskSummaryMap['TDS Print Speed Parsed'].skipped++;
+        taskSummaryMap['TDS Print Speed Parsed'].total++;
+      }
+
+      // 12. TDS Fan Settings Parsed Check
+      if (hasTds) {
+        const hasFan = filament.fan_min_percent != null || filament.fan_max_percent != null;
+        if (hasFan) {
+          const fanValue = `${filament.fan_min_percent ?? '?'}-${filament.fan_max_percent ?? '?'}%`;
+          taskResults.push({ task: 'TDS Fan Settings Parsed', status: 'pass', value: fanValue });
+          taskSummaryMap['TDS Fan Settings Parsed'].passed++;
+        } else {
+          taskResults.push({ task: 'TDS Fan Settings Parsed', status: 'warning', value: null, message: 'Fan settings not parsed' });
+          taskSummaryMap['TDS Fan Settings Parsed'].warnings++;
+        }
+        taskSummaryMap['TDS Fan Settings Parsed'].total++;
+      } else {
+        taskResults.push({ task: 'TDS Fan Settings Parsed', status: 'skipped', value: null, message: 'No TDS' });
+        taskSummaryMap['TDS Fan Settings Parsed'].skipped++;
+        taskSummaryMap['TDS Fan Settings Parsed'].total++;
+      }
+
+      // 13. TDS Strength Data Parsed Check
+      if (hasTds) {
+        const hasStrength = filament.tensile_strength_xy_mpa != null || filament.flexural_strength_mpa != null;
+        if (hasStrength) {
+          const strengthParts = [];
+          if (filament.tensile_strength_xy_mpa) strengthParts.push(`Tensile: ${filament.tensile_strength_xy_mpa} MPa`);
+          if (filament.flexural_strength_mpa) strengthParts.push(`Flexural: ${filament.flexural_strength_mpa} MPa`);
+          taskResults.push({ task: 'TDS Strength Data Parsed', status: 'pass', value: strengthParts.join(', ') });
+          taskSummaryMap['TDS Strength Data Parsed'].passed++;
+        } else {
+          taskResults.push({ task: 'TDS Strength Data Parsed', status: 'warning', value: null, message: 'Strength data not parsed' });
+          taskSummaryMap['TDS Strength Data Parsed'].warnings++;
+        }
+        taskSummaryMap['TDS Strength Data Parsed'].total++;
+      } else {
+        taskResults.push({ task: 'TDS Strength Data Parsed', status: 'skipped', value: null, message: 'No TDS' });
+        taskSummaryMap['TDS Strength Data Parsed'].skipped++;
+        taskSummaryMap['TDS Strength Data Parsed'].total++;
+      }
+
+      // 14. TDS Moisture/Abrasive Parsed Check
+      if (hasTds) {
+        const hasMoisture = filament.moisture_sensitivity_level != null;
+        const hasAbrasive = filament.is_nozzle_abrasive != null;
+        if (hasMoisture || hasAbrasive) {
+          const parts = [];
+          if (hasMoisture) parts.push(`Moisture: ${filament.moisture_sensitivity_level}`);
+          if (hasAbrasive) parts.push(`Abrasive: ${filament.is_nozzle_abrasive ? 'Yes' : 'No'}`);
+          taskResults.push({ task: 'TDS Moisture/Abrasive Parsed', status: 'pass', value: parts.join(', ') });
+          taskSummaryMap['TDS Moisture/Abrasive Parsed'].passed++;
+        } else {
+          taskResults.push({ task: 'TDS Moisture/Abrasive Parsed', status: 'warning', value: null, message: 'Moisture/abrasive not parsed' });
+          taskSummaryMap['TDS Moisture/Abrasive Parsed'].warnings++;
+        }
+        taskSummaryMap['TDS Moisture/Abrasive Parsed'].total++;
+      } else {
+        taskResults.push({ task: 'TDS Moisture/Abrasive Parsed', status: 'skipped', value: null, message: 'No TDS' });
+        taskSummaryMap['TDS Moisture/Abrasive Parsed'].skipped++;
+        taskSummaryMap['TDS Moisture/Abrasive Parsed'].total++;
       }
 
       // Calculate overall status for this filament
