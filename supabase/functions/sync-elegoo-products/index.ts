@@ -7,7 +7,9 @@ const corsHeaders = {
 };
 
 // Fallback catalog ID if dynamic discovery fails
-const DEFAULT_CATALOG_ID = '25495'; // US Elegoo Filaments
+// 25495 = "Elegoo Filaments Datafeed for US" - this is the CORRECT US catalog with elegoo.com URLs
+// 19909 = AU catalog - DO NOT USE for US region
+const DEFAULT_CATALOG_ID = '25495';
 
 // Timeout protection: stop processing before edge function timeout (150s limit)
 const MAX_EXECUTION_TIME_MS = 130000; // 130s to leave 20s buffer for cleanup
@@ -279,6 +281,8 @@ interface DiscoveredCatalog {
 }
 
 // Discover available catalogs dynamically from Impact API
+// CRITICAL: This function must validate that catalog URLs match expected regions
+// to prevent cross-regional contamination (e.g., AU URLs being mapped to US region)
 async function discoverRegionalCatalogs(supabase: SupabaseClient, supabaseUrl: string, supabaseServiceKey: string): Promise<Record<string, string>> {
   console.log('[ELEGOO-SYNC] 🔍 Starting dynamic catalog discovery...');
   
@@ -309,6 +313,8 @@ async function discoverRegionalCatalogs(supabase: SupabaseClient, supabaseUrl: s
       return { 'US': DEFAULT_CATALOG_ID };
     }
 
+    // IMPROVED: Map catalogs based on name patterns that reliably indicate region
+    // DO NOT rely solely on currency - multiple catalogs can have the same currency
     const regionMap: Record<string, string> = {};
     
     for (const catalog of data.catalogs as DiscoveredCatalog[]) {
@@ -317,7 +323,7 @@ async function discoverRegionalCatalogs(supabase: SupabaseClient, supabaseUrl: s
       console.log(`[ELEGOO-SYNC]      Service Areas: ${catalog.serviceAreas?.join(', ') || 'none'}`);
       console.log(`[ELEGOO-SYNC]      Status: ${catalog.status || 'unknown'}`);
 
-      // Check if catalog is active (status can be "Active", "Approved", or we treat unknown as active)
+      // Check if catalog is active
       const isActive = !catalog.status || 
         catalog.status.toLowerCase() === 'active' || 
         catalog.status.toLowerCase() === 'approved';
@@ -327,84 +333,114 @@ async function discoverRegionalCatalogs(supabase: SupabaseClient, supabaseUrl: s
         continue;
       }
 
-      // Map catalog to region based on currency, location, service areas, or name
       const catalogNameLower = catalog.name.toLowerCase();
-      const serviceAreasLower = (catalog.serviceAreas || []).map((s: string) => s.toLowerCase());
       const locationLower = (catalog.location || '').toLowerCase();
 
-      // US detection
-      if (catalog.currency === 'USD' || 
-          catalogNameLower.includes('us') || 
-          serviceAreasLower.some((a: string) => a.includes('us') || a.includes('united states')) ||
-          locationLower.includes('us') || locationLower.includes('united states')) {
+      // IMPROVED: Use name-based detection FIRST (most reliable), then fall back to currency
+      // The name should contain clear region indicators like "US", "AU", "UK", "EU", "CA"
+      
+      // US detection - look for explicit "US" or "United States" in name
+      if (catalogNameLower.includes(' us ') || 
+          catalogNameLower.includes(' us') || 
+          catalogNameLower.startsWith('us ') ||
+          catalogNameLower.includes('united states') ||
+          catalogNameLower.includes('for us')) {
         if (!regionMap['US']) {
           regionMap['US'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to US region`);
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to US region (name-based)`);
         }
       }
-      
-      // Canada detection
-      if (catalog.currency === 'CAD' || 
-          catalogNameLower.includes('canada') || catalogNameLower.includes(' ca ') ||
-          serviceAreasLower.some((a: string) => a.includes('canada') || a.includes(' ca ')) ||
-          locationLower.includes('canada')) {
-        if (!regionMap['CA']) {
-          regionMap['CA'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to CA region`);
-        }
-      }
-      
       // Australia detection
-      if (catalog.currency === 'AUD' || 
-          catalogNameLower.includes('australia') || catalogNameLower.includes(' au ') ||
-          serviceAreasLower.some((a: string) => a.includes('australia') || a.includes(' au ')) ||
-          locationLower.includes('australia')) {
+      else if (catalogNameLower.includes('australia') || 
+               catalogNameLower.includes(' au ') ||
+               catalogNameLower.includes(' au') ||
+               catalogNameLower.startsWith('au ') ||
+               catalogNameLower.includes('for au')) {
         if (!regionMap['AU']) {
           regionMap['AU'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to AU region`);
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to AU region (name-based)`);
         }
       }
-      
+      // Canada detection
+      else if (catalogNameLower.includes('canada') || 
+               catalogNameLower.includes(' ca ') ||
+               catalogNameLower.includes(' ca') ||
+               catalogNameLower.startsWith('ca ') ||
+               catalogNameLower.includes('for ca')) {
+        if (!regionMap['CA']) {
+          regionMap['CA'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to CA region (name-based)`);
+        }
+      }
       // UK detection
-      if (catalog.currency === 'GBP' || 
-          catalogNameLower.includes('uk') || catalogNameLower.includes('united kingdom') || catalogNameLower.includes('britain') ||
-          serviceAreasLower.some((a: string) => a.includes('uk') || a.includes('united kingdom') || a.includes('britain')) ||
-          locationLower.includes('uk') || locationLower.includes('united kingdom')) {
+      else if (catalogNameLower.includes(' uk ') || 
+               catalogNameLower.includes(' uk') ||
+               catalogNameLower.startsWith('uk ') ||
+               catalogNameLower.includes('united kingdom') ||
+               catalogNameLower.includes('britain') ||
+               catalogNameLower.includes('for uk')) {
         if (!regionMap['UK']) {
           regionMap['UK'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to UK region`);
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to UK region (name-based)`);
         }
       }
-      
       // EU detection
-      if (catalog.currency === 'EUR' || 
-          catalogNameLower.includes('europe') || catalogNameLower.includes(' eu ') ||
-          serviceAreasLower.some((a: string) => a.includes('europe') || a.includes(' eu ')) ||
-          locationLower.includes('europe')) {
+      else if (catalogNameLower.includes('europe') || 
+               catalogNameLower.includes(' eu ') ||
+               catalogNameLower.includes(' eu') ||
+               catalogNameLower.startsWith('eu ') ||
+               catalogNameLower.includes('for eu')) {
         if (!regionMap['EU']) {
           regionMap['EU'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to EU region`);
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to EU region (name-based)`);
         }
       }
-
       // Japan detection
-      if (catalog.currency === 'JPY' || 
-          catalogNameLower.includes('japan') || catalogNameLower.includes(' jp ') ||
-          serviceAreasLower.some((a: string) => a.includes('japan') || a.includes(' jp ')) ||
-          locationLower.includes('japan')) {
+      else if (catalogNameLower.includes('japan') || 
+               catalogNameLower.includes(' jp ') ||
+               catalogNameLower.includes(' jp') ||
+               catalogNameLower.startsWith('jp ') ||
+               catalogNameLower.includes('for jp')) {
         if (!regionMap['JP']) {
           regionMap['JP'] = catalog.id;
-          console.log(`[ELEGOO-SYNC]      ✅ Mapped to JP region`);
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to JP region (name-based)`);
+        }
+      }
+      // Currency-based fallback ONLY if name doesn't indicate region
+      // and we don't already have that region mapped
+      else {
+        console.log(`[ELEGOO-SYNC]      ⚠️ No clear region in name, trying currency-based mapping`);
+        
+        if (catalog.currency === 'USD' && !regionMap['US']) {
+          regionMap['US'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to US region (currency fallback)`);
+        } else if (catalog.currency === 'AUD' && !regionMap['AU']) {
+          regionMap['AU'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to AU region (currency fallback)`);
+        } else if (catalog.currency === 'CAD' && !regionMap['CA']) {
+          regionMap['CA'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to CA region (currency fallback)`);
+        } else if (catalog.currency === 'GBP' && !regionMap['UK']) {
+          regionMap['UK'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to UK region (currency fallback)`);
+        } else if (catalog.currency === 'EUR' && !regionMap['EU']) {
+          regionMap['EU'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to EU region (currency fallback)`);
+        } else if (catalog.currency === 'JPY' && !regionMap['JP']) {
+          regionMap['JP'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ⚠️ Mapped to JP region (currency fallback)`);
+        } else {
+          console.log(`[ELEGOO-SYNC]      ℹ️ Skipped catalog - no matching region or already mapped`);
         }
       }
     }
 
     console.log(`[ELEGOO-SYNC] 🗺️ Final region mapping: ${JSON.stringify(regionMap)}`);
     
-    // Always ensure we have at least the US catalog
-    if (Object.keys(regionMap).length === 0) {
-      console.log('[ELEGOO-SYNC] ⚠️ No regions mapped, using default US catalog');
-      return { 'US': DEFAULT_CATALOG_ID };
+    // Always ensure we have at least the US catalog with the known-correct ID
+    if (!regionMap['US']) {
+      console.log('[ELEGOO-SYNC] ⚠️ No US catalog found, using default US catalog ID: ' + DEFAULT_CATALOG_ID);
+      regionMap['US'] = DEFAULT_CATALOG_ID;
     }
 
     return regionMap;
@@ -1028,7 +1064,7 @@ serve(async (req) => {
           product_line_id: productLineId,
           variant_compare_at_price: product.compareAtPrice,
           variant_available: product.inStock,
-          featured_image: product.imageUrl,
+          featured_image: product.imageUrl && product.imageUrl.trim() !== '' ? product.imageUrl : null,
           mpn: product.mpn || null,
           upc: product.upc || null,
           ean: product.ean || null,
@@ -1049,12 +1085,37 @@ serve(async (req) => {
           ...regionalFields,
         };
         
-        // ONLY set base product_url and variant_price from US data
-        // Never overwrite with regional data
+        // ONLY set base product_url and variant_price from VALIDATED US data
+        // Never overwrite with regional data - prevents AU/CA/etc contamination
         if (hasUSData) {
-          filamentData.variant_price = regionalData['US']!.price;
-          filamentData.product_url = regionalData['US']!.url;
-          console.log(`[ELEGOO-SYNC]    💵 US data: $${regionalData['US']!.price}, URL: ${regionalData['US']!.url?.substring(0, 50)}...`);
+          const usUrl = regionalData['US']!.url;
+          const usPrice = regionalData['US']!.price;
+          
+          // CRITICAL: Validate that US data actually has US URLs (not AU/EU/etc)
+          if (validateRegionalUrl(usUrl, 'US')) {
+            filamentData.variant_price = usPrice;
+            filamentData.product_url = usUrl;
+            console.log(`[ELEGOO-SYNC]    💵 US data VALIDATED: $${usPrice}, URL: ${usUrl?.substring(0, 50)}...`);
+          } else {
+            console.warn(`[ELEGOO-SYNC]    ⚠️ US catalog returned non-US URL, rejecting: ${usUrl}`);
+            console.warn(`[ELEGOO-SYNC]       This indicates catalog ID ${availableCatalogs['US']} is NOT a valid US catalog`);
+            // Treat as no US data - will either skip (new product) or preserve existing (update)
+            if (isCreatingNew) {
+              console.log(`[ELEGOO-SYNC]    ⏭️ SKIPPED: Invalid US URL - cannot create base product`);
+              result.skipped++;
+              result.products.push({
+                title: product.title,
+                action: 'skipped',
+                reason: `Invalid US URL (${usUrl?.substring(0, 30)}...) - likely wrong catalog`,
+                fields,
+                currentPrice,
+                msrp,
+              });
+              continue;
+            } else {
+              console.log(`[ELEGOO-SYNC]    ℹ️ Preserving existing base price/url due to invalid US URL`);
+            }
+          }
         } else if (existing) {
           // Updating existing product without US data - preserve existing base values
           console.log(`[ELEGOO-SYNC]    ℹ️ No US data in this sync - preserving existing base price/url`);
