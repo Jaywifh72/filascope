@@ -127,6 +127,14 @@ interface ProductFields {
   msrp: boolean;
 }
 
+type ProductType = '3D Printer' | 'Filament' | 'Accessory' | 'Unknown';
+
+interface ProductClassification {
+  type: ProductType;
+  isFilament: boolean;
+  reason: string;
+}
+
 interface SyncResult {
   created: number;
   updated: number;
@@ -134,8 +142,9 @@ interface SyncResult {
   errors: number;
   products: {
     title: string;
-    action: 'created' | 'updated' | 'skipped' | 'error';
+    action: 'created' | 'updated' | 'skipped' | 'error' | 'filtered';
     reason?: string;
+    productType?: ProductType;
     fields: ProductFields;
     currentPrice?: number;
     msrp?: number;
@@ -366,19 +375,25 @@ function normalizeProductTitle(title: string): string {
     .trim();
 }
 
-// Check if a product is actually filament (not printer, resin, accessories, etc.)
-function isFilamentProduct(product: ElegooProduct): { isFilament: boolean; reason?: string } {
+// Classify product type: 3D Printer, Filament, Accessory, or Unknown
+function classifyProductType(product: ElegooProduct): ProductClassification {
   const titleLower = product.title.toLowerCase();
   const categoryLower = (product.category || '').toLowerCase();
   
-  // Keywords that indicate NON-filament products (check these first)
-  const excludeKeywords = [
-    // Printers
-    'printer', '3d printer', 
+  // Check for 3D Printers first (most specific)
+  const printerKeywords = [
+    'printer', '3d printer',
     'saturn', 'mars', 'neptune', 'centauri', 'orangestorm', 'jupiter',
-    // Resin
+  ];
+  for (const keyword of printerKeywords) {
+    if (titleLower.includes(keyword)) {
+      return { type: '3D Printer', isFilament: false, reason: `Matched printer keyword: "${keyword}"` };
+    }
+  }
+  
+  // Check for Accessories
+  const accessoryKeywords = [
     'resin', 'lcd', 'uv resin', 'photopolymer',
-    // Accessories
     'dryer', 'dry box', 'drybox', 'dehydrator',
     'nozzle', 'hotend', 'hot end', 'extruder',
     'bed', 'build plate', 'pei', 'magnetic sheet',
@@ -390,19 +405,16 @@ function isFilamentProduct(product: ElegooProduct): { isFilament: boolean; reaso
     'enclosure', 'tent', 'cover',
     'fep', 'vat', 'release liner',
     'power supply', 'adapter',
-    // Bundles that are printer-focused
     'starter bundle', 'christmas bundle', 'fbt bundle',
     'frequently bought together',
   ];
-  
-  // Check for exclusion keywords first
-  for (const keyword of excludeKeywords) {
+  for (const keyword of accessoryKeywords) {
     if (titleLower.includes(keyword)) {
-      return { isFilament: false, reason: `Contains excluded keyword: "${keyword}"` };
+      return { type: 'Accessory', isFilament: false, reason: `Matched accessory keyword: "${keyword}"` };
     }
   }
   
-  // Keywords that strongly indicate filament products
+  // Check for Filament
   const filamentKeywords = [
     'filament', 
     'pla', 'petg', 'abs', 'tpu', 'asa', 'nylon', 'pa ', 'pa-', 'pc ',
@@ -410,17 +422,15 @@ function isFilamentProduct(product: ElegooProduct): { isFilament: boolean; reaso
     '1.75mm', '2.85mm', '1kg', '2kg', '500g', '250g',
     'spool', 'rapid', 'hyper', 'high speed',
   ];
-  
-  // Must match at least one filament keyword
   const hasFilamentKeyword = filamentKeywords.some(kw => 
     titleLower.includes(kw) || categoryLower.includes(kw)
   );
   
-  if (!hasFilamentKeyword) {
-    return { isFilament: false, reason: 'No filament keywords found in title or category' };
+  if (hasFilamentKeyword) {
+    return { type: 'Filament', isFilament: true, reason: 'Matched filament keywords' };
   }
   
-  return { isFilament: true };
+  return { type: 'Unknown', isFilament: false, reason: 'No matching keywords found' };
 }
 
 serve(async (req) => {
@@ -666,12 +676,21 @@ serve(async (req) => {
       processedCount++;
       const product = baseProduct;
       
-      // Check if this is actually a filament product
-      const filamentCheck = isFilamentProduct(product);
-      if (!filamentCheck.isFilament) {
+      // Classify product type
+      const classification = classifyProductType(product);
+      if (!classification.isFilament) {
         filteredCount++;
         console.log(`[ELEGOO-SYNC] 🚫 Filtered ${processedCount}/${productsByNormalizedTitle.size}: ${product.title}`);
-        console.log(`[ELEGOO-SYNC]    Reason: ${filamentCheck.reason}`);
+        console.log(`[ELEGOO-SYNC]    Type: ${classification.type}, Reason: ${classification.reason}`);
+        result.products.push({
+          title: product.title,
+          action: 'filtered',
+          productType: classification.type,
+          reason: classification.reason,
+          fields: { tds: false, image: false, price: false, salePrice: false, url: false, msrp: false },
+          currentPrice: product.price,
+          msrp: product.originalPrice || undefined,
+        });
         continue;
       }
       

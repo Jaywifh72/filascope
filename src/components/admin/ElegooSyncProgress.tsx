@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, AlertCircle, Package, RefreshCw, Check, X, TrendingDown, Globe, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, Package, RefreshCw, Check, X, TrendingDown, Globe, Loader2, Printer, Wrench, HelpCircle, Filter } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,6 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+
+type ProductType = '3D Printer' | 'Filament' | 'Accessory' | 'Unknown';
 
 interface ProductFields {
   tds: boolean;
@@ -40,8 +42,9 @@ interface ElegooSyncResult {
   };
   products: {
     title: string;
-    action: 'created' | 'updated' | 'skipped' | 'error';
+    action: 'created' | 'updated' | 'skipped' | 'error' | 'filtered';
     reason?: string;
+    productType?: ProductType;
     fields?: ProductFields;
     currentPrice?: number;
     msrp?: number;
@@ -117,16 +120,37 @@ function MsrpDisplay({ currentPrice, msrp }: { currentPrice?: number; msrp?: num
   );
 }
 
-function ActionBadge({ action }: { action: 'created' | 'updated' | 'skipped' | 'error' }) {
-  const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
+function ActionBadge({ action }: { action: 'created' | 'updated' | 'skipped' | 'error' | 'filtered' }) {
+  const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string; className?: string }> = {
     created: { variant: 'default', label: 'Created' },
     updated: { variant: 'secondary', label: 'Updated' },
     skipped: { variant: 'outline', label: 'Skipped' },
     error: { variant: 'destructive', label: 'Error' },
+    filtered: { variant: 'outline', label: 'Filtered', className: 'border-orange-500 text-orange-600' },
   };
   
-  const { variant, label } = variants[action];
-  return <Badge variant={variant} className="text-xs">{label}</Badge>;
+  const { variant, label, className } = variants[action];
+  return <Badge variant={variant} className={`text-xs ${className || ''}`}>{label}</Badge>;
+}
+
+function ProductTypeBadge({ type }: { type?: ProductType }) {
+  if (!type) return <span className="text-muted-foreground">-</span>;
+  
+  const config: Record<ProductType, { className: string; Icon: typeof Package }> = {
+    'Filament': { className: 'bg-green-500/20 text-green-700 dark:text-green-400', Icon: Package },
+    '3D Printer': { className: 'bg-blue-500/20 text-blue-700 dark:text-blue-400', Icon: Printer },
+    'Accessory': { className: 'bg-orange-500/20 text-orange-700 dark:text-orange-400', Icon: Wrench },
+    'Unknown': { className: 'bg-muted text-muted-foreground', Icon: HelpCircle },
+  };
+  
+  const { className, Icon } = config[type];
+  
+  return (
+    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${className}`}>
+      <Icon className="w-3 h-3" />
+      <span>{type}</span>
+    </div>
+  );
 }
 
 function RegionProgressBar({ progress }: { progress: SyncProgress }) {
@@ -274,7 +298,7 @@ export function ElegooSyncProgress({ result, isLoading, error, progress }: Elego
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
         <div className="rounded-lg border p-3 text-center">
           <div className="text-2xl font-bold text-primary">{summary.total}</div>
           <div className="text-xs text-muted-foreground">Total Found</div>
@@ -290,6 +314,10 @@ export function ElegooSyncProgress({ result, isLoading, error, progress }: Elego
         <div className="rounded-lg border p-3 text-center">
           <div className="text-2xl font-bold text-muted-foreground">{summary.skipped}</div>
           <div className="text-xs text-muted-foreground">Skipped</div>
+        </div>
+        <div className="rounded-lg border p-3 text-center">
+          <div className="text-2xl font-bold text-orange-500">{summary.filtered || 0}</div>
+          <div className="text-xs text-muted-foreground">Filtered</div>
         </div>
         <div className="rounded-lg border p-3 text-center">
           <div className="text-2xl font-bold text-destructive">{summary.errors}</div>
@@ -314,8 +342,9 @@ export function ElegooSyncProgress({ result, isLoading, error, progress }: Elego
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[35%]">Product</TableHead>
+                  <TableHead className="w-[30%]">Product</TableHead>
                   <TableHead className="w-[70px]">Action</TableHead>
+                  <TableHead className="w-[90px]">Type</TableHead>
                   <TableHead className="w-[40px] text-center">TDS</TableHead>
                   <TableHead className="w-[40px] text-center">Img</TableHead>
                   <TableHead className="w-[40px] text-center">URL</TableHead>
@@ -350,7 +379,10 @@ export function ElegooSyncProgress({ result, isLoading, error, progress }: Elego
                           {product.action === 'error' && (
                             <XCircle className="w-4 h-4 text-destructive flex-shrink-0" />
                           )}
-                          <span className="truncate max-w-[200px]" title={product.title}>
+                          {product.action === 'filtered' && (
+                            <Filter className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                          )}
+                          <span className="truncate max-w-[180px]" title={product.title}>
                             {product.title}
                           </span>
                         </div>
@@ -362,6 +394,9 @@ export function ElegooSyncProgress({ result, isLoading, error, progress }: Elego
                       </TableCell>
                       <TableCell>
                         <ActionBadge action={product.action} />
+                      </TableCell>
+                      <TableCell>
+                        <ProductTypeBadge type={product.productType} />
                       </TableCell>
                       <TableCell className="text-center">
                         <FieldIndicator available={fields.tds} />
