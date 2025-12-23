@@ -19,6 +19,7 @@ import { AIScrapeLogsCard } from "@/components/admin/AIScrapeLogsCard";
 import { ScrapeProgressBanner } from "@/components/admin/ScrapeProgressBanner";
 import { ElegooSyncProgress } from "@/components/admin/ElegooSyncProgress";
 import { TdsParsingStatus } from "@/components/admin/TdsParsingStatus";
+import { SyncQualityCheckPanel } from "@/components/admin/SyncQualityCheckPanel";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 import { useActiveScrapeJob } from "@/hooks/useActiveScrapeJob";
@@ -556,6 +557,9 @@ const AdminMaintenance = () => {
 
               {/* TDS Parsing Status */}
               <TdsParsingStatus refreshTrigger={tdsRefreshTrigger} />
+
+              {/* Sync Quality Check */}
+              <SyncQualityCheckPanel />
 
               {/* Sync Tasks Section */}
               <div className="mt-6 border rounded-lg p-4 bg-muted/30">

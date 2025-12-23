@@ -194,3 +194,6 @@ verify_jwt = true
 
 [functions.list-impact-catalogs]
 verify_jwt = true
+
+[functions.run-sync-quality-check]
+verify_jwt = true
