@@ -362,6 +362,63 @@ function normalizeProductTitle(title: string): string {
     .trim();
 }
 
+// Check if a product is actually filament (not printer, resin, accessories, etc.)
+function isFilamentProduct(product: ElegooProduct): { isFilament: boolean; reason?: string } {
+  const titleLower = product.title.toLowerCase();
+  const categoryLower = (product.category || '').toLowerCase();
+  
+  // Keywords that indicate NON-filament products (check these first)
+  const excludeKeywords = [
+    // Printers
+    'printer', '3d printer', 
+    'saturn', 'mars', 'neptune', 'centauri', 'orangestorm', 'jupiter',
+    // Resin
+    'resin', 'lcd', 'uv resin', 'photopolymer',
+    // Accessories
+    'dryer', 'dry box', 'drybox', 'dehydrator',
+    'nozzle', 'hotend', 'hot end', 'extruder',
+    'bed', 'build plate', 'pei', 'magnetic sheet',
+    'tool', 'spatula', 'scraper', 'tweezers', 'toolkit',
+    'upgrade kit', 'accessory', 'accessories',
+    'wash', 'cure', 'cleaning', 'cleaner',
+    'spare parts', 'replacement', 'repair kit',
+    'fan', 'motor', 'cable', 'screen', 'display',
+    'enclosure', 'tent', 'cover',
+    'fep', 'vat', 'release liner',
+    'power supply', 'adapter',
+    // Bundles that are printer-focused
+    'starter bundle', 'christmas bundle', 'fbt bundle',
+    'frequently bought together',
+  ];
+  
+  // Check for exclusion keywords first
+  for (const keyword of excludeKeywords) {
+    if (titleLower.includes(keyword)) {
+      return { isFilament: false, reason: `Contains excluded keyword: "${keyword}"` };
+    }
+  }
+  
+  // Keywords that strongly indicate filament products
+  const filamentKeywords = [
+    'filament', 
+    'pla', 'petg', 'abs', 'tpu', 'asa', 'nylon', 'pa ', 'pa-', 'pc ',
+    'polycarbonate', 'hips', 'pva', 
+    '1.75mm', '2.85mm', '1kg', '2kg', '500g', '250g',
+    'spool', 'rapid', 'hyper', 'high speed',
+  ];
+  
+  // Must match at least one filament keyword
+  const hasFilamentKeyword = filamentKeywords.some(kw => 
+    titleLower.includes(kw) || categoryLower.includes(kw)
+  );
+  
+  if (!hasFilamentKeyword) {
+    return { isFilament: false, reason: 'No filament keywords found in title or category' };
+  }
+  
+  return { isFilament: true };
+}
+
 serve(async (req) => {
   const startTime = Date.now();
   
@@ -577,17 +634,28 @@ serve(async (req) => {
     console.log(`[ELEGOO-SYNC] ═══════════════════════════════════════════════════════`);
     console.log(`[ELEGOO-SYNC] 📊 Total unique products across all regions: ${productsByNormalizedTitle.size}`);
 
-    // === PHASE 5: PROCESS PRODUCTS ===
+    // === PHASE 5: FILTER & PROCESS PRODUCTS ===
     console.log('[ELEGOO-SYNC] ───────────────────────────────────────────────────────');
-    console.log('[ELEGOO-SYNC] ⚙️ PHASE: Processing products');
+    console.log('[ELEGOO-SYNC] 🔍 PHASE: Filtering for filament products only');
 
     let processedCount = 0;
+    let filteredCount = 0;
+    
     for (const [normalizedTitle, { baseProduct, regionalData }] of productsByNormalizedTitle) {
       processedCount++;
       const product = baseProduct;
       
+      // Check if this is actually a filament product
+      const filamentCheck = isFilamentProduct(product);
+      if (!filamentCheck.isFilament) {
+        filteredCount++;
+        console.log(`[ELEGOO-SYNC] 🚫 Filtered ${processedCount}/${productsByNormalizedTitle.size}: ${product.title}`);
+        console.log(`[ELEGOO-SYNC]    Reason: ${filamentCheck.reason}`);
+        continue;
+      }
+      
       try {
-        console.log(`[ELEGOO-SYNC] 📦 Product ${processedCount}/${productsByNormalizedTitle.size}: ${product.title}`);
+        console.log(`[ELEGOO-SYNC] 📦 Filament ${processedCount}/${productsByNormalizedTitle.size}: ${product.title}`);
         
         const material = product.material || extractMaterialFromTitle(product.title);
         const weight = extractWeightFromTitle(product.title);
@@ -838,6 +906,7 @@ serve(async (req) => {
     console.log(`[ELEGOO-SYNC]    ➕ Created: ${result.created}`);
     console.log(`[ELEGOO-SYNC]    🔄 Updated: ${result.updated}`);
     console.log(`[ELEGOO-SYNC]    ⏭️ Skipped: ${result.skipped}`);
+    console.log(`[ELEGOO-SYNC]    🚫 Filtered (non-filament): ${filteredCount}`);
     console.log(`[ELEGOO-SYNC]    ❌ Errors: ${result.errors}`);
     console.log(`[ELEGOO-SYNC]    📦 Total unique products: ${productsByNormalizedTitle.size}`);
     console.log(`[ELEGOO-SYNC]    🌍 Regions synced: ${regionsToSync.join(', ')}`);
@@ -852,6 +921,7 @@ serve(async (req) => {
           created: result.created,
           updated: result.updated,
           skipped: result.skipped,
+          filtered: filteredCount,
           errors: result.errors,
           total: productsByNormalizedTitle.size,
           durationMs,
