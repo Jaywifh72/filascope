@@ -9,6 +9,10 @@ const corsHeaders = {
 // Fallback catalog ID if dynamic discovery fails
 const DEFAULT_CATALOG_ID = '25495'; // US Elegoo Filaments
 
+// Timeout protection: stop processing before edge function timeout (150s limit)
+const MAX_EXECUTION_TIME_MS = 130000; // 130s to leave 20s buffer for cleanup
+const MAX_PAGES_PER_REGION = 30; // Safety limit to prevent runaway fetching
+
 // Region to currency mapping
 const REGION_CURRENCIES: Record<string, string> = {
   'US': 'USD',
@@ -509,6 +513,7 @@ serve(async (req) => {
     console.log(`[ELEGOO-SYNC] Available catalogs: ${JSON.stringify(availableCatalogs)}`);
 
     // Filter to only requested regions that have catalogs
+    // IMPORTANT: Only process ONE region per invocation to avoid timeout
     const regionsToSync: string[] = [];
     for (const region of requestedRegions) {
       if (availableCatalogs[region]) {
@@ -524,7 +529,14 @@ serve(async (req) => {
       throw new Error(`No catalogs available for requested regions: ${requestedRegions.join(', ')}`);
     }
 
-    console.log(`[ELEGOO-SYNC] 📍 Regions to sync: ${regionsToSync.join(', ')}`);
+    // Limit to single region per invocation to prevent timeout
+    if (regionsToSync.length > 1) {
+      console.log(`[ELEGOO-SYNC] ⚠️ Multiple regions requested (${regionsToSync.join(', ')}), but only processing first: ${regionsToSync[0]}`);
+      console.log(`[ELEGOO-SYNC] ℹ️  To sync multiple regions, call this function once per region`);
+      regionsToSync.length = 1; // Keep only first region
+    }
+
+    console.log(`[ELEGOO-SYNC] 📍 Region to sync: ${regionsToSync[0]}`);
 
     const result: SyncResult = {
       created: 0,
@@ -553,7 +565,15 @@ serve(async (req) => {
       let regionProductCount = 0;
 
       while (hasMore) {
-        console.log(`[ELEGOO-SYNC]    📄 Fetching page ${page}...`);
+        // Check for timeout before each page fetch
+        const elapsedMs = Date.now() - startTime;
+        if (elapsedMs > MAX_EXECUTION_TIME_MS) {
+          console.warn(`[ELEGOO-SYNC]    ⏰ Approaching timeout limit (${Math.round(elapsedMs/1000)}s), stopping at page ${page}`);
+          console.warn(`[ELEGOO-SYNC]    ⚠️ Processed ${regionProductCount} products so far for ${region}`);
+          break;
+        }
+        
+        console.log(`[ELEGOO-SYNC]    📄 Fetching page ${page}... (${Math.round(elapsedMs/1000)}s elapsed)`);
         
         try {
           const catalogResponse = await fetch(
@@ -618,8 +638,9 @@ serve(async (req) => {
           hasMore = catalogData.pagination?.hasNextPage || false;
           page++;
 
-          if (page > 50) {
-            console.log(`[ELEGOO-SYNC]    ⚠️ Reached page limit (50), stopping pagination`);
+          // Safety limit on pages per region
+          if (page > MAX_PAGES_PER_REGION) {
+            console.log(`[ELEGOO-SYNC]    ⚠️ Reached page limit (${MAX_PAGES_PER_REGION}), stopping pagination`);
             break;
           }
         } catch (fetchErr) {
