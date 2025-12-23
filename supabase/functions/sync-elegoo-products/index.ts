@@ -185,10 +185,27 @@ const REGION_URL_DOMAINS: Record<string, string> = {
  * IMPORTANT: Impact API returns affiliate tracking URLs like:
  * https://elegoo.sjv.io/c/123/456/789?u=https%3A%2F%2Fau.elegoo.com%2Fproducts%2F...
  * We need to extract the actual store URL from the 'u' parameter for validation
+ * 
+ * UPDATE: We now trust catalog-based region assignment. If a product comes from the US catalog,
+ * we trust its URLs are valid for US region without strict domain validation, since the catalog
+ * is the authoritative source of regional data.
  */
-function validateRegionalUrl(url: string | undefined, expectedRegion: string): boolean {
+function validateRegionalUrl(url: string | undefined, expectedRegion: string, trustCatalog: boolean = true): boolean {
   if (!url) return false;
   
+  // If we trust the catalog assignment (default), accept any non-empty URL
+  // The catalog ID determines the region, not the URL domain
+  if (trustCatalog) {
+    try {
+      new URL(url); // Just validate it's a proper URL
+      return true;
+    } catch {
+      console.warn(`[ELEGOO-SYNC] ⚠️ Invalid URL format: ${url}`);
+      return false;
+    }
+  }
+  
+  // Strict validation mode (trustCatalog = false)
   const expectedDomain = REGION_URL_DOMAINS[expectedRegion];
   if (!expectedDomain) {
     console.warn(`[ELEGOO-SYNC] ⚠️ Unknown region for URL validation: ${expectedRegion}`);
@@ -213,8 +230,9 @@ function validateRegionalUrl(url: string | undefined, expectedRegion: string): b
           return false;
         }
       } else {
-        console.warn(`[ELEGOO-SYNC] ⚠️ Affiliate URL missing 'u' parameter: ${url}`);
-        return false;
+        // No 'u' parameter - could be a direct affiliate link, accept it
+        console.log(`[ELEGOO-SYNC] ℹ️ Affiliate URL without 'u' parameter - accepting: ${url.substring(0, 50)}...`);
+        return true;
       }
     }
     
