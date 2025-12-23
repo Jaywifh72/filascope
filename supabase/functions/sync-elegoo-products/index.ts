@@ -161,6 +161,10 @@ const REGION_URL_DOMAINS: Record<string, string> = {
 /**
  * Validates that a URL belongs to the expected regional store
  * Prevents cross-regional contamination (e.g., AU URLs in CA fields)
+ * 
+ * IMPORTANT: Impact API returns affiliate tracking URLs like:
+ * https://elegoo.sjv.io/c/123/456/789?u=https%3A%2F%2Fau.elegoo.com%2Fproducts%2F...
+ * We need to extract the actual store URL from the 'u' parameter for validation
  */
 function validateRegionalUrl(url: string | undefined, expectedRegion: string): boolean {
   if (!url) return false;
@@ -173,7 +177,26 @@ function validateRegionalUrl(url: string | undefined, expectedRegion: string): b
   
   try {
     const urlObj = new URL(url);
-    const hostname = urlObj.hostname.toLowerCase();
+    let hostname = urlObj.hostname.toLowerCase();
+    
+    // Handle Impact affiliate tracking URLs
+    // These have the actual store URL in the 'u' query parameter (URL-encoded)
+    if (hostname.includes('sjv.io') || hostname.includes('impact.com')) {
+      const actualUrlParam = urlObj.searchParams.get('u');
+      if (actualUrlParam) {
+        try {
+          const decodedUrl = decodeURIComponent(actualUrlParam);
+          const actualUrlObj = new URL(decodedUrl);
+          hostname = actualUrlObj.hostname.toLowerCase();
+        } catch {
+          console.warn(`[ELEGOO-SYNC] ⚠️ Could not decode affiliate URL parameter: ${actualUrlParam}`);
+          return false;
+        }
+      } else {
+        console.warn(`[ELEGOO-SYNC] ⚠️ Affiliate URL missing 'u' parameter: ${url}`);
+        return false;
+      }
+    }
     
     // For US, URL should be elegoo.com (not a regional subdomain)
     if (expectedRegion === 'US') {
@@ -182,7 +205,7 @@ function validateRegionalUrl(url: string | undefined, expectedRegion: string): b
         prefix => hostname.startsWith(prefix)
       );
       if (isRegionalSubdomain) {
-        console.warn(`[ELEGOO-SYNC] ⚠️ Invalid US URL (has regional subdomain): ${url}`);
+        console.warn(`[ELEGOO-SYNC] ⚠️ Invalid US URL (has regional subdomain): ${hostname}`);
         return false;
       }
       return hostname.endsWith('elegoo.com');
@@ -191,7 +214,7 @@ function validateRegionalUrl(url: string | undefined, expectedRegion: string): b
     // For regional stores, URL should have the expected subdomain
     const isValid = hostname === expectedDomain || hostname.endsWith('.' + expectedDomain);
     if (!isValid) {
-      console.warn(`[ELEGOO-SYNC] ⚠️ Invalid ${expectedRegion} URL (expected ${expectedDomain}): ${url}`);
+      console.warn(`[ELEGOO-SYNC] ⚠️ Invalid ${expectedRegion} URL (expected ${expectedDomain}): ${hostname}`);
     }
     return isValid;
   } catch {
