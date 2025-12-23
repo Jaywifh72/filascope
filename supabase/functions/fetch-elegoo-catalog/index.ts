@@ -53,19 +53,10 @@ serve(async (req) => {
 
     const { materialFilter, page = 1, pageSize = 100, catalogId } = await req.json();
     
-    // Use provided catalogId or fall back to environment variable
-    const effectiveCatalogId = catalogId || Deno.env.get('IMPACT_ELEGOO_CATALOG_ID');
-    
-    if (!effectiveCatalogId) {
-      console.error('No catalog ID provided or configured');
-      return new Response(
-        JSON.stringify({ 
-          error: 'No catalog ID configured. Please discover available catalogs first using the list-impact-catalogs endpoint.',
-          hint: 'Use the catalog discovery feature to find available Elegoo catalogs'
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Default catalog ID: 25495 = "Elegoo Filaments Datafeed for US" (247 products)
+    // Campaign ID: 19663
+    const DEFAULT_CATALOG_ID = '25495';
+    const effectiveCatalogId = catalogId || Deno.env.get('IMPACT_ELEGOO_CATALOG_ID') || DEFAULT_CATALOG_ID;
     
     console.log(`Fetching Elegoo catalog ${effectiveCatalogId} - page ${page}, pageSize ${pageSize}, filter: ${materialFilter || 'all'}`);
 

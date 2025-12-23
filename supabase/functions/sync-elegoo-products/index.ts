@@ -92,48 +92,10 @@ serve(async (req) => {
 
     const { dryRun = true, materialFilter, catalogId } = await req.json();
     
-    // Get catalog ID from request, env var, or discover it
-    let effectiveCatalogId = catalogId || Deno.env.get('IMPACT_ELEGOO_CATALOG_ID');
-    
-    // If no catalog ID, try to discover available catalogs
-    if (!effectiveCatalogId) {
-      console.log('No catalog ID provided, discovering available catalogs...');
-      
-      const discoverResponse = await fetch(
-        `${supabaseUrl}/functions/v1/list-impact-catalogs`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseServiceKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({}),
-        }
-      );
-      
-      if (discoverResponse.ok) {
-        const discoverData = await discoverResponse.json();
-        if (discoverData.catalogs && discoverData.catalogs.length > 0) {
-          // Find Elegoo catalog or use the first one
-          const elegooCatalog = discoverData.catalogs.find(
-            (c: { name: string }) => c.name.toLowerCase().includes('elegoo')
-          ) || discoverData.catalogs[0];
-          
-          effectiveCatalogId = elegooCatalog.id;
-          console.log(`Discovered catalog: ${elegooCatalog.name} (ID: ${effectiveCatalogId})`);
-        }
-      }
-      
-      if (!effectiveCatalogId) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'No catalog ID configured and could not discover available catalogs. Please set IMPACT_ELEGOO_CATALOG_ID or provide catalogId in the request.',
-            hint: 'Use the list-impact-catalogs endpoint to find available catalogs'
-          }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
+    // Default catalog ID: 25495 = "Elegoo Filaments Datafeed for US" (247 products)
+    // Campaign ID: 19663
+    const DEFAULT_CATALOG_ID = '25495';
+    const effectiveCatalogId = catalogId || Deno.env.get('IMPACT_ELEGOO_CATALOG_ID') || DEFAULT_CATALOG_ID;
     
     console.log(`Starting Elegoo sync - catalogId: ${effectiveCatalogId}, dryRun: ${dryRun}, filter: ${materialFilter || 'all'}`);
 

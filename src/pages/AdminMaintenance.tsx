@@ -6,7 +6,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Loader2, Palette, Archive, Layers, ShoppingBag } from "lucide-react";
+import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Badge } from "@/components/ui/badge";
 import { BambuLabRegionalDashboard } from "@/components/admin/BambuLabRegionalDashboard";
 import { BambuScrapeProgress, BambuScrapeJobRow } from "@/components/admin/BambuScrapeProgress";
 import { BambuScrapeQueueProgress } from "@/components/admin/BambuScrapeQueueProgress";
@@ -50,6 +53,18 @@ const AdminMaintenance = () => {
     { id: 'TPU', label: 'TPU' },
     { id: 'PLA-CF', label: 'PLA-CF' },
   ];
+
+  // Elegoo Catalog Reference Data (Campaign ID: 19663)
+  const ELEGOO_CATALOGS = [
+    { id: '25495', name: 'Elegoo Filaments Datafeed for US', region: 'US', products: 247, active: true },
+    { id: '19909', name: 'Elegoo Product Datafeed for AU', region: 'AU', products: 2114, active: false },
+    { id: '19910', name: 'Elegoo Product Datafeed for CA', region: 'CA', products: 2313, active: false },
+    { id: '19908', name: 'Elegoo Product Datafeed for EU', region: 'EU', products: 2124, active: false },
+    { id: '19907', name: 'Elegoo Product Datafeed for UK', region: 'UK', products: 2113, active: false },
+    { id: '19906', name: 'Elegoo Product Datafeed for US', region: 'US', products: 2305, active: false },
+  ];
+  const ELEGOO_CAMPAIGN_ID = '19663';
+  const [catalogInfoOpen, setCatalogInfoOpen] = useState(false);
   
   const { toast } = useToast();
   const { startJob, isStarting } = useStartBambuScrapeJob();
@@ -370,6 +385,61 @@ const AdminMaintenance = () => {
                   />
                 </div>
               )}
+
+              {/* Catalog Reference Section */}
+              <Collapsible open={catalogInfoOpen} onOpenChange={setCatalogInfoOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full justify-between mt-4 text-muted-foreground">
+                    <span className="flex items-center gap-2">
+                      <Info className="w-4 h-4" />
+                      Catalog Reference
+                    </span>
+                    <span className="text-xs">{catalogInfoOpen ? 'Hide' : 'Show'}</span>
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-4 space-y-3">
+                  <div className="text-sm text-muted-foreground">
+                    <strong>Campaign ID:</strong> {ELEGOO_CAMPAIGN_ID}
+                  </div>
+                  <div className="border rounded-md overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-20">ID</TableHead>
+                          <TableHead>Catalog Name</TableHead>
+                          <TableHead className="w-20">Region</TableHead>
+                          <TableHead className="w-24 text-right">Products</TableHead>
+                          <TableHead className="w-20">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {ELEGOO_CATALOGS.map((catalog) => (
+                          <TableRow key={catalog.id} className={catalog.active ? 'bg-primary/5' : ''}>
+                            <TableCell className="font-mono text-xs">{catalog.id}</TableCell>
+                            <TableCell className="text-sm">{catalog.name}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{catalog.region}</Badge>
+                            </TableCell>
+                            <TableCell className="text-right">{catalog.products.toLocaleString()}</TableCell>
+                            <TableCell>
+                              {catalog.active && (
+                                <span className="flex items-center gap-1 text-xs text-green-600">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  Active
+                                </span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    The active catalog (25495) is the US Filaments feed optimized for filament products. 
+                    Other catalogs contain the full product range including printers and accessories.
+                  </p>
+                </CollapsibleContent>
+              </Collapsible>
             </CardContent>
           </Card>
         </TabsContent>
