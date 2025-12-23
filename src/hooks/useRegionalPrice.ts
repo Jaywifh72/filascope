@@ -43,6 +43,59 @@ const CURRENCY_TO_URL_COLUMN: Record<CurrencyCode, string> = {
 };
 
 /**
+ * Short region codes used in URL fallback orders
+ */
+type RegionCode = 'USD' | 'CAD' | 'GBP' | 'EUR' | 'AUD' | 'JPY' | 'UK' | 'EU' | 'AU' | 'JP';
+
+/**
+ * Region-specific URL fallback orders
+ * Prioritizes user's selected region, then geographically/linguistically similar regions
+ */
+const URL_FALLBACK_ORDERS: Record<CurrencyCode, RegionCode[]> = {
+  USD: ['USD', 'CAD', 'AU', 'UK', 'EU', 'JP'],           // US → nearby English-speaking
+  CAD: ['CAD', 'USD', 'AU', 'UK', 'EU', 'JP'],           // Canada → US → other English
+  GBP: ['UK', 'EU', 'USD', 'CAD', 'AU', 'JP'],           // UK → Europe → US
+  EUR: ['EU', 'UK', 'USD', 'CAD', 'AU', 'JP'],           // Europe → UK → US
+  AUD: ['AU', 'USD', 'CAD', 'UK', 'EU', 'JP'],           // Australia → US → others
+  JPY: ['JP', 'USD', 'AU', 'UK', 'EU', 'CAD'],           // Japan → US → others
+  CHF: ['EU', 'UK', 'USD', 'CAD', 'AU', 'JP'],           // Switzerland → EU
+  SEK: ['EU', 'UK', 'USD', 'CAD', 'AU', 'JP'],           // Sweden → EU
+  NZD: ['AU', 'USD', 'CAD', 'UK', 'EU', 'JP'],           // NZ → Australia → US
+  CNY: ['USD', 'JP', 'AU', 'UK', 'EU', 'CAD'],           // China → US
+  KRW: ['USD', 'JP', 'AU', 'UK', 'EU', 'CAD'],           // Korea → US
+  INR: ['USD', 'UK', 'EU', 'AU', 'CAD', 'JP'],           // India → US → UK
+  MXN: ['USD', 'CAD', 'UK', 'EU', 'AU', 'JP'],           // Mexico → US
+  BRL: ['USD', 'CAD', 'UK', 'EU', 'AU', 'JP'],           // Brazil → US
+};
+
+/**
+ * Builds a dynamic URL fallback order based on user's currency
+ * Prioritizes the user's region first, then falls back to similar regions
+ */
+function buildUrlFallbackOrder(
+  currency: CurrencyCode,
+  filament: FilamentWithRegionalPrices
+): { url: string | null | undefined; currency: CurrencyCode }[] {
+  const order = URL_FALLBACK_ORDERS[currency] || ['USD', 'CAD', 'UK', 'EU', 'AU', 'JP'];
+  
+  // Map region codes to actual URL values and their currency codes
+  const regionToUrl: Record<RegionCode, { url: string | null | undefined; currency: CurrencyCode }> = {
+    USD: { url: filament.product_url, currency: 'USD' },
+    CAD: { url: filament.product_url_ca, currency: 'CAD' },
+    GBP: { url: filament.product_url_uk, currency: 'GBP' },
+    UK: { url: filament.product_url_uk, currency: 'GBP' },
+    EUR: { url: filament.product_url_eu, currency: 'EUR' },
+    EU: { url: filament.product_url_eu, currency: 'EUR' },
+    AUD: { url: filament.product_url_au, currency: 'AUD' },
+    AU: { url: filament.product_url_au, currency: 'AUD' },
+    JPY: { url: filament.product_url_jp, currency: 'JPY' },
+    JP: { url: filament.product_url_jp, currency: 'JPY' },
+  };
+  
+  return order.map(code => regionToUrl[code]);
+}
+
+/**
  * Known vendors and their native currencies
  * These vendors price in their local currency, NOT USD
  */
@@ -202,16 +255,10 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     
     // If still no URL, try to find ANY available regional URL as fallback
     // Track which URL we're using for proper currency handling
+    // Use dynamic fallback order based on user's selected currency
     let fallbackUrlCurrency: CurrencyCode | null = null;
     if (!regionalUrl) {
-      const urlFallbackOrder: { url: string | null | undefined; currency: CurrencyCode }[] = [
-        { url: filament.product_url, currency: 'USD' },
-        { url: filament.product_url_uk, currency: 'GBP' },
-        { url: filament.product_url_eu, currency: 'EUR' },
-        { url: filament.product_url_ca, currency: 'CAD' },
-        { url: filament.product_url_au, currency: 'AUD' },
-        { url: filament.product_url_jp, currency: 'JPY' },
-      ];
+      const urlFallbackOrder = buildUrlFallbackOrder(currency, filament);
       for (const fallback of urlFallbackOrder) {
         if (fallback.url && fallback.url.length > 0) {
           regionalUrl = fallback.url;
