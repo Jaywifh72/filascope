@@ -150,7 +150,7 @@ interface DiscoveredCatalog {
   currency: string;
   serviceAreas: string[];
   location: string;
-  isActive: boolean;
+  status: string; // From Impact API: "Active", "Inactive", etc.
 }
 
 // Discover available catalogs dynamically from Impact API
@@ -190,10 +190,15 @@ async function discoverRegionalCatalogs(supabase: SupabaseClient, supabaseUrl: s
       console.log(`[ELEGOO-SYNC]   📋 Catalog: ${catalog.name} (ID: ${catalog.id})`);
       console.log(`[ELEGOO-SYNC]      Currency: ${catalog.currency}, Location: ${catalog.location}`);
       console.log(`[ELEGOO-SYNC]      Service Areas: ${catalog.serviceAreas?.join(', ') || 'none'}`);
-      console.log(`[ELEGOO-SYNC]      Active: ${catalog.isActive}`);
+      console.log(`[ELEGOO-SYNC]      Status: ${catalog.status || 'unknown'}`);
 
-      if (!catalog.isActive) {
-        console.log(`[ELEGOO-SYNC]      ⏭️ Skipping inactive catalog`);
+      // Check if catalog is active (status can be "Active", "Approved", or we treat unknown as active)
+      const isActive = !catalog.status || 
+        catalog.status.toLowerCase() === 'active' || 
+        catalog.status.toLowerCase() === 'approved';
+      
+      if (!isActive) {
+        console.log(`[ELEGOO-SYNC]      ⏭️ Skipping inactive catalog (status: ${catalog.status})`);
         continue;
       }
 
