@@ -1387,6 +1387,8 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                   retailerCount={retailers.length}
                   onViewRetailers={handleViewRetailers}
                   hasActualRegionalPrice={hasActualRegionalPrice}
+                  isUsingFallbackRegion={regionalPriceData.isUsingFallbackRegion}
+                  actualUrlCurrency={regionalPriceData.actualUrlCurrency}
                 />
 
                 {/* Suspicious price warning */}
