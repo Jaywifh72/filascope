@@ -7,6 +7,7 @@ interface ProductFields {
   price: boolean;
   salePrice: boolean;
   url: boolean;
+  msrp: boolean;
 }
 
 interface ElegooSyncResult {
@@ -25,6 +26,8 @@ interface ElegooSyncResult {
     action: 'created' | 'updated' | 'skipped' | 'error';
     reason?: string;
     fields: ProductFields;
+    currentPrice?: number;
+    msrp?: number;
   }[];
 }
 

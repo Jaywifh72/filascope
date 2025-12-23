@@ -43,6 +43,7 @@ interface ProductFields {
   price: boolean;
   salePrice: boolean;
   url: boolean;
+  msrp: boolean;
 }
 
 interface SyncResult {
@@ -55,6 +56,8 @@ interface SyncResult {
     action: 'created' | 'updated' | 'skipped' | 'error';
     reason?: string;
     fields: ProductFields;
+    currentPrice?: number;
+    msrp?: number;
   }[];
 }
 
@@ -199,13 +202,19 @@ serve(async (req) => {
 
         // Build fields availability object - check TDS from API response
         const hasTdsFromApi = Boolean(product.tdsUrl && product.tdsUrl.trim() !== '');
+        const hasMsrp = Boolean(product.compareAtPrice && product.compareAtPrice > 0);
         const fields: ProductFields = {
           tds: hasTdsFromApi,
           image: Boolean(product.imageUrl && product.imageUrl.trim() !== ''),
           price: Boolean(product.price && product.price > 0),
-          salePrice: Boolean(product.compareAtPrice && product.compareAtPrice > 0),
+          salePrice: hasMsrp && product.price < product.compareAtPrice!,
           url: Boolean(product.url && product.url.trim() !== ''),
+          msrp: hasMsrp,
         };
+        
+        // Price data for display
+        const currentPrice = product.price;
+        const msrp = product.compareAtPrice || undefined;
         
         if (hasTdsFromApi) {
           console.log(`TDS mapped for ${product.title}: ${product.tdsUrl}`);
@@ -222,6 +231,8 @@ serve(async (req) => {
             action: 'skipped',
             reason: 'Could not detect material type',
             fields,
+            currentPrice,
+            msrp,
           });
           continue;
         }
@@ -276,6 +287,8 @@ serve(async (req) => {
               action: 'updated',
               reason: `Price: $${existing.variant_price} → $${product.price}`,
               fields,
+              currentPrice,
+              msrp,
             });
           } else {
             result.created++;
@@ -283,6 +296,8 @@ serve(async (req) => {
               title: product.title,
               action: 'created',
               fields,
+              currentPrice,
+              msrp,
             });
           }
         } else {
@@ -302,6 +317,8 @@ serve(async (req) => {
               title: product.title,
               action: 'updated',
               fields,
+              currentPrice,
+              msrp,
             });
 
             // Log price change if different
@@ -325,6 +342,8 @@ serve(async (req) => {
               title: product.title,
               action: 'created',
               fields,
+              currentPrice,
+              msrp,
             });
           }
         }
@@ -336,7 +355,7 @@ serve(async (req) => {
           title: product.title,
           action: 'error',
           reason: errorMessage,
-          fields: { tds: false, image: false, price: false, salePrice: false, url: false },
+          fields: { tds: false, image: false, price: false, salePrice: false, url: false, msrp: false },
         });
       }
     }

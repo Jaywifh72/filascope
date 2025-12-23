@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, AlertCircle, Package, RefreshCw, Check, X } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, Package, RefreshCw, Check, X, TrendingDown } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -17,6 +17,7 @@ interface ProductFields {
   price: boolean;
   salePrice: boolean;
   url: boolean;
+  msrp: boolean;
 }
 
 interface ElegooSyncResult {
@@ -35,6 +36,8 @@ interface ElegooSyncResult {
     action: 'created' | 'updated' | 'skipped' | 'error';
     reason?: string;
     fields?: ProductFields;
+    currentPrice?: number;
+    msrp?: number;
   }[];
 }
 
@@ -49,6 +52,43 @@ function FieldIndicator({ available }: { available: boolean }) {
     <Check className="w-4 h-4 text-green-500" />
   ) : (
     <X className="w-4 h-4 text-destructive" />
+  );
+}
+
+function PriceDisplay({ currentPrice, msrp }: { currentPrice?: number; msrp?: number }) {
+  if (!currentPrice) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  const isOnSale = msrp && currentPrice < msrp;
+  const discount = msrp ? Math.round((1 - currentPrice / msrp) * 100) : 0;
+
+  return (
+    <div className="flex items-center gap-1">
+      <span className={isOnSale ? 'text-green-600 font-semibold' : ''}>
+        ${currentPrice.toFixed(2)}
+      </span>
+      {isOnSale && (
+        <TrendingDown className="w-3 h-3 text-green-600" />
+      )}
+      {isOnSale && discount > 0 && (
+        <span className="text-xs text-green-600">-{discount}%</span>
+      )}
+    </div>
+  );
+}
+
+function MsrpDisplay({ currentPrice, msrp }: { currentPrice?: number; msrp?: number }) {
+  if (!msrp) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  const isOnSale = currentPrice && currentPrice < msrp;
+
+  return (
+    <span className={isOnSale ? 'line-through text-muted-foreground' : ''}>
+      ${msrp.toFixed(2)}
+    </span>
   );
 }
 
@@ -159,13 +199,13 @@ export function ElegooSyncProgress({ result, isLoading, error }: ElegooSyncProgr
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40%]">Product</TableHead>
-                  <TableHead className="w-[80px]">Action</TableHead>
-                  <TableHead className="w-[50px] text-center">TDS</TableHead>
-                  <TableHead className="w-[50px] text-center">Image</TableHead>
-                  <TableHead className="w-[50px] text-center">Price</TableHead>
-                  <TableHead className="w-[50px] text-center">Sale</TableHead>
-                  <TableHead className="w-[50px] text-center">URL</TableHead>
+                  <TableHead className="w-[35%]">Product</TableHead>
+                  <TableHead className="w-[70px]">Action</TableHead>
+                  <TableHead className="w-[40px] text-center">TDS</TableHead>
+                  <TableHead className="w-[40px] text-center">Img</TableHead>
+                  <TableHead className="w-[40px] text-center">URL</TableHead>
+                  <TableHead className="w-[100px]">Price</TableHead>
+                  <TableHead className="w-[70px]">MSRP</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -176,6 +216,7 @@ export function ElegooSyncProgress({ result, isLoading, error }: ElegooSyncProgr
                     price: false,
                     salePrice: false,
                     url: false,
+                    msrp: false,
                   };
                   
                   return (
@@ -194,7 +235,7 @@ export function ElegooSyncProgress({ result, isLoading, error }: ElegooSyncProgr
                           {product.action === 'error' && (
                             <XCircle className="w-4 h-4 text-destructive flex-shrink-0" />
                           )}
-                          <span className="truncate max-w-[250px]" title={product.title}>
+                          <span className="truncate max-w-[200px]" title={product.title}>
                             {product.title}
                           </span>
                         </div>
@@ -214,13 +255,13 @@ export function ElegooSyncProgress({ result, isLoading, error }: ElegooSyncProgr
                         <FieldIndicator available={fields.image} />
                       </TableCell>
                       <TableCell className="text-center">
-                        <FieldIndicator available={fields.price} />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <FieldIndicator available={fields.salePrice} />
-                      </TableCell>
-                      <TableCell className="text-center">
                         <FieldIndicator available={fields.url} />
+                      </TableCell>
+                      <TableCell>
+                        <PriceDisplay currentPrice={product.currentPrice} msrp={product.msrp} />
+                      </TableCell>
+                      <TableCell>
+                        <MsrpDisplay currentPrice={product.currentPrice} msrp={product.msrp} />
                       </TableCell>
                     </TableRow>
                   );
