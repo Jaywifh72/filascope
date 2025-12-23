@@ -159,7 +159,7 @@ function RegionProgressBar({ progress }: { progress: SyncProgress }) {
   const progressPercent = totalRegions > 0 ? Math.round((completedCount / totalRegions) * 100) : 0;
   
   // All regions in order
-  const allRegions = ['US', 'AU', 'CA', 'EU', 'UK'];
+  const allRegions = ['US', 'AU', 'CA', 'EU', 'UK', 'JP'];
   
   return (
     <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
