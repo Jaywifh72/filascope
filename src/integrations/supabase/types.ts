@@ -1250,6 +1250,7 @@ export type Database = {
           printability_index: number | null
           product_handle: string | null
           product_id: string | null
+          product_line_id: string | null
           product_title: string
           product_url: string | null
           product_url_au: string | null
@@ -1351,6 +1352,7 @@ export type Database = {
           printability_index?: number | null
           product_handle?: string | null
           product_id?: string | null
+          product_line_id?: string | null
           product_title: string
           product_url?: string | null
           product_url_au?: string | null
@@ -1452,6 +1454,7 @@ export type Database = {
           printability_index?: number | null
           product_handle?: string | null
           product_id?: string | null
+          product_line_id?: string | null
           product_title?: string
           product_url?: string | null
           product_url_au?: string | null
