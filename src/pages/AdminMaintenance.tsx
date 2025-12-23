@@ -163,12 +163,6 @@ const AdminMaintenance = () => {
         </Link>
       </div>
 
-      {/* Scrape Analytics Widget */}
-      <ScrapeAnalyticsWidget />
-
-      {/* AI Scrape Logs */}
-      <AIScrapeLogsCard />
-
       {/* Tabs for Brand Scrapers */}
       <Tabs defaultValue="bambulab" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
@@ -184,6 +178,12 @@ const AdminMaintenance = () => {
 
         {/* Bambu Lab Tab */}
         <TabsContent value="bambulab" className="space-y-6 mt-6">
+          {/* Scrape Analytics Widget */}
+          <ScrapeAnalyticsWidget />
+
+          {/* AI Scrape Logs */}
+          <AIScrapeLogsCard />
+
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
