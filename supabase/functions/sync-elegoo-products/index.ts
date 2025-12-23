@@ -7,12 +7,12 @@ const corsHeaders = {
 };
 
 // Region to Catalog ID mapping
+// NOTE: Only US catalog (25495) is currently active. Other regional catalogs were discontinued.
+// When regional catalogs become available again, add them here.
 const REGION_CATALOGS: Record<string, string> = {
   'US': '25495',  // Elegoo Filaments Datafeed for US (247 products - filaments only)
-  'AU': '19909',  // Elegoo Product Datafeed for AU
-  'CA': '19910',  // Elegoo Product Datafeed for CA
-  'EU': '19908',  // Elegoo Product Datafeed for EU
-  'UK': '19907',  // Elegoo Product Datafeed for UK
+  // Regional catalogs currently not available:
+  // 'AU': '19909', 'CA': '19910', 'EU': '19908', 'UK': '19907' - all return 404
 };
 
 // Region to currency mapping
