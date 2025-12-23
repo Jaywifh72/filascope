@@ -5,21 +5,27 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Loader2, Palette, Archive, Layers } from "lucide-react";
+import { Loader2, Palette, Archive, Layers, ShoppingBag } from "lucide-react";
 import { BambuLabRegionalDashboard } from "@/components/admin/BambuLabRegionalDashboard";
 import { BambuScrapeProgress, BambuScrapeJobRow } from "@/components/admin/BambuScrapeProgress";
 import { BambuScrapeQueueProgress } from "@/components/admin/BambuScrapeQueueProgress";
 import { ScrapeAnalyticsWidget } from "@/components/admin/ScrapeAnalyticsWidget";
 import { AIScrapeLogsCard } from "@/components/admin/AIScrapeLogsCard";
 import { ScrapeProgressBanner } from "@/components/admin/ScrapeProgressBanner";
+import { ElegooSyncProgress } from "@/components/admin/ElegooSyncProgress";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 import { useActiveScrapeJob } from "@/hooks/useActiveScrapeJob";
+import { useElegooSync } from "@/hooks/useElegooSync";
 
 const AdminMaintenance = () => {
   const [bambuColorsDryRun, setBambuColorsDryRun] = useState(true);
   const [bambuMaterials, setBambuMaterials] = useState<string[]>(['PLA']);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  
+  // Elegoo state
+  const [elegooDryRun, setElegooDryRun] = useState(true);
+  const [elegooMaterialFilter, setElegooMaterialFilter] = useState<string>('');
   
   const BAMBU_MATERIAL_OPTIONS = [
     { id: 'PLA', label: 'PLA', count: 17 },
@@ -33,11 +39,22 @@ const AdminMaintenance = () => {
     { id: 'PPS', label: 'PPS', count: 1 },
     { id: 'Support', label: 'Support', count: 5 },
   ];
+
+  const ELEGOO_MATERIAL_OPTIONS = [
+    { id: '', label: 'All Materials' },
+    { id: 'PLA', label: 'PLA' },
+    { id: 'PLA+', label: 'PLA+' },
+    { id: 'PETG', label: 'PETG' },
+    { id: 'ABS', label: 'ABS' },
+    { id: 'TPU', label: 'TPU' },
+    { id: 'PLA-CF', label: 'PLA-CF' },
+  ];
   
   const { toast } = useToast();
   const { startJob, isStarting } = useStartBambuScrapeJob();
   const { jobs: recentJobs } = useRecentScrapeJobs(5);
   const { activeJob, hasActiveJob } = useActiveScrapeJob();
+  const { syncProducts, isLoading: elegooLoading, result: elegooResult, error: elegooError, reset: resetElegoo } = useElegooSync();
   
   // Sync activeJobId with auto-detected job
   useEffect(() => {
@@ -105,6 +122,23 @@ const AdminMaintenance = () => {
       title: "Queue Cancelled",
       description: "Remaining materials will not be processed",
     });
+  };
+
+  const handleElegooSync = async () => {
+    resetElegoo();
+    try {
+      await syncProducts(elegooDryRun, elegooMaterialFilter || undefined);
+      toast({
+        title: elegooDryRun ? "Preview Complete" : "Sync Complete",
+        description: "Elegoo catalog sync finished successfully",
+      });
+    } catch (err) {
+      toast({
+        title: "Sync Failed",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -246,6 +280,79 @@ const AdminMaintenance = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Elegoo Filament API Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5" />
+            <CardTitle>Elegoo Filament API</CardTitle>
+          </div>
+          <CardDescription>
+            Sync Elegoo filaments from Impact.com Affiliate API. Fetches product catalog including prices, availability, images, and UPC/EAN codes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Material Filter (Optional)</Label>
+            <div className="flex flex-wrap gap-2">
+              {ELEGOO_MATERIAL_OPTIONS.map((material) => (
+                <Button
+                  key={material.id}
+                  variant={elegooMaterialFilter === material.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setElegooMaterialFilter(material.id)}
+                >
+                  {material.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="elegoo-dry-run"
+              checked={elegooDryRun}
+              onCheckedChange={(checked) => setElegooDryRun(checked === true)}
+            />
+            <Label htmlFor="elegoo-dry-run" className="text-sm font-normal">
+              Dry run (preview changes without saving)
+            </Label>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={handleElegooSync} 
+              disabled={elegooLoading}
+              className="w-full sm:w-auto"
+            >
+              {elegooLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-4 h-4 mr-2" />
+                  {elegooDryRun ? "Preview Sync" : "Sync Catalog"}
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Elegoo Sync Progress */}
+          {(elegooLoading || elegooResult || elegooError) && (
+            <div className="pt-4 border-t">
+              <ElegooSyncProgress 
+                result={elegooResult} 
+                isLoading={elegooLoading} 
+                error={elegooError} 
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Bambu Lab Regional Dashboard */}
       <BambuLabRegionalDashboard />
     </div>
