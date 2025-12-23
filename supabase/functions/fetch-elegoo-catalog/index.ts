@@ -30,50 +30,86 @@ interface CatalogItem {
   Text3: string;
 }
 
-// Extract TDS URL from product data
-function extractTdsUrl(item: CatalogItem): string | null {
-  const tdsPatterns = [/tds/i, /datasheet/i, /technical.*data/i, /\.pdf$/i];
+// SpoolScout TDS URL mapping by material type
+const TDS_URL_MAP: Record<string, string> = {
+  'PLA': 'https://www.spoolscout.com/data-sheets/elegoo/pla-pla',
+  'PLA+': 'https://www.spoolscout.com/data-sheets/elegoo/pla-pla',
+  'PLA PRO': 'https://www.spoolscout.com/data-sheets/elegoo/pla-pla-pro',
+  'PLA-PRO': 'https://www.spoolscout.com/data-sheets/elegoo/pla-pla-pro',
+  'RAPID PLA': 'https://www.spoolscout.com/data-sheets/elegoo/pla-rapid-pla',
+  'RAPID PLA+': 'https://www.spoolscout.com/data-sheets/elegoo/pla-rapid-pla',
+  'PETG': 'https://www.spoolscout.com/data-sheets/elegoo/petg-petg-pro',
+  'PETG PRO': 'https://www.spoolscout.com/data-sheets/elegoo/petg-petg-pro',
+  'PETG-PRO': 'https://www.spoolscout.com/data-sheets/elegoo/petg-petg-pro',
+  'PETG-CF': 'https://www.spoolscout.com/data-sheets/elegoo/petg-petg-cf',
+  'PETG CF': 'https://www.spoolscout.com/data-sheets/elegoo/petg-petg-cf',
+  'RAPID PETG': 'https://www.spoolscout.com/data-sheets/elegoo/petg-rapid-petg',
+  'RAPID PETG+': 'https://www.spoolscout.com/data-sheets/elegoo/petg-rapid-petg',
+  'ASA': 'https://www.spoolscout.com/data-sheets/elegoo/asa-asa',
+  'TPU': 'https://www.spoolscout.com/data-sheets/elegoo/tpu-tpu',
+  'ABS': 'https://www.spoolscout.com/data-sheets/elegoo/abs-abs',
+};
+
+// Extract material type from product name
+function extractMaterialFromName(name: string): string | null {
+  const upperName = name.toUpperCase();
   
-  // Check Text1, Text2, Text3 for TDS URLs
-  const customFields = [item.Text1, item.Text2, item.Text3].filter(Boolean);
-  for (const field of customFields) {
-    if (field) {
-      // Check if field contains TDS-related keywords
-      const hasTdsKeyword = tdsPatterns.some(pattern => pattern.test(field));
-      if (hasTdsKeyword) {
-        const urlMatch = field.match(/https?:\/\/[^\s<>"]+/i);
-        if (urlMatch) return urlMatch[0];
-      }
-      // Also check if it's just a raw URL ending in .pdf
-      if (field.startsWith('http') && field.includes('.pdf')) {
-        return field.trim();
-      }
+  // Order matters - check more specific patterns first
+  const patterns = [
+    'RAPID PLA+', 'RAPID PLA', 'PLA-PRO', 'PLA PRO', 'PLA+', 'PLA',
+    'RAPID PETG+', 'RAPID PETG', 'PETG-CF', 'PETG CF', 'PETG-PRO', 'PETG PRO', 'PETG',
+    'ASA', 'TPU', 'ABS'
+  ];
+  
+  for (const pattern of patterns) {
+    if (upperName.includes(pattern)) {
+      return pattern;
     }
   }
-  
-  // Check Description for TDS links
-  if (item.Description) {
-    const descMatch = item.Description.match(/https?:\/\/[^\s<>"]*(?:tds|datasheet|technical)[^\s<>"]*/i);
-    if (descMatch) return descMatch[0];
-    // Check for any PDF link in description
-    const pdfMatch = item.Description.match(/https?:\/\/[^\s<>"]*\.pdf/i);
-    if (pdfMatch) return pdfMatch[0];
-  }
-  
-  // Check Bullets
-  if (item.Bullets && Array.isArray(item.Bullets)) {
-    for (const bullet of item.Bullets) {
-      if (bullet) {
-        const hasTdsKeyword = tdsPatterns.some(pattern => pattern.test(bullet));
-        if (hasTdsKeyword) {
-          const urlMatch = bullet.match(/https?:\/\/[^\s<>"]+/i);
-          if (urlMatch) return urlMatch[0];
-        }
-      }
-    }
-  }
-  
   return null;
+}
+
+// Get TDS URL based on material type
+function getTdsUrl(name: string): string | null {
+  const material = extractMaterialFromName(name);
+  if (material && TDS_URL_MAP[material]) {
+    return TDS_URL_MAP[material];
+  }
+  return null;
+}
+
+// Parse Text1 JSON for technical specs
+interface TechSpecs {
+  nozzle_temp_min_c: number | null;
+  nozzle_temp_max_c: number | null;
+  bed_temp_min_c: number | null;
+  bed_temp_max_c: number | null;
+  density_g_cm3: number | null;
+}
+
+function parseTechSpecs(text1: string | null): TechSpecs {
+  const specs: TechSpecs = {
+    nozzle_temp_min_c: null,
+    nozzle_temp_max_c: null,
+    bed_temp_min_c: null,
+    bed_temp_max_c: null,
+    density_g_cm3: null,
+  };
+  
+  if (!text1) return specs;
+  
+  try {
+    const data = JSON.parse(text1);
+    if (data.temp_min) specs.nozzle_temp_min_c = data.temp_min;
+    if (data.temp_max) specs.nozzle_temp_max_c = data.temp_max;
+    if (data.bed_temp_min) specs.bed_temp_min_c = data.bed_temp_min;
+    if (data.bed_temp_max) specs.bed_temp_max_c = data.bed_temp_max;
+    if (data.density) specs.density_g_cm3 = data.density / 1000; // Convert kg/m³ to g/cm³
+  } catch (e) {
+    console.log('Failed to parse Text1 JSON:', text1);
+  }
+  
+  return specs;
 }
 
 interface CatalogResponse {
@@ -171,9 +207,12 @@ serve(async (req) => {
 
     // Transform items to match our expected format
     const products = (data.Items || []).map((item) => {
-      const tdsUrl = extractTdsUrl(item);
+      const tdsUrl = getTdsUrl(item.Name);
+      const techSpecs = parseTechSpecs(item.Text1);
+      const material = extractMaterialFromName(item.Name);
+      
       if (tdsUrl) {
-        console.log(`Found TDS URL for ${item.Name}: ${tdsUrl}`);
+        console.log(`Mapped TDS URL for ${item.Name} (${material}): ${tdsUrl}`);
       }
       
       return {
@@ -195,6 +234,8 @@ serve(async (req) => {
         category: item.ItemSubCategory,
         categoryId: item.ItemSubCategoryId,
         tdsUrl: tdsUrl,
+        material: material,
+        techSpecs: techSpecs,
       };
     });
 

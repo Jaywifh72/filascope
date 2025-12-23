@@ -6,6 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface TechSpecs {
+  nozzle_temp_min_c: number | null;
+  nozzle_temp_max_c: number | null;
+  bed_temp_min_c: number | null;
+  bed_temp_max_c: number | null;
+  density_g_cm3: number | null;
+}
+
 interface ElegooProduct {
   productId: string;
   title: string;
@@ -25,6 +33,8 @@ interface ElegooProduct {
   category: string;
   categoryId: string;
   tdsUrl: string | null;
+  material: string | null;
+  techSpecs: TechSpecs | null;
 }
 
 interface ProductFields {
@@ -181,9 +191,11 @@ serve(async (req) => {
     // Process each product
     for (const product of allProducts) {
       try {
-        const material = extractMaterialFromTitle(product.title);
+        // Use material from API if available, otherwise extract from title
+        const material = product.material || extractMaterialFromTitle(product.title);
         const weight = extractWeightFromTitle(product.title);
         const diameter = extractDiameterFromTitle(product.title);
+        const techSpecs = product.techSpecs;
 
         // Build fields availability object - check TDS from API response
         const hasTdsFromApi = Boolean(product.tdsUrl && product.tdsUrl.trim() !== '');
@@ -196,7 +208,10 @@ serve(async (req) => {
         };
         
         if (hasTdsFromApi) {
-          console.log(`TDS found for ${product.title}: ${product.tdsUrl}`);
+          console.log(`TDS mapped for ${product.title}: ${product.tdsUrl}`);
+        }
+        if (techSpecs && (techSpecs.nozzle_temp_min_c || techSpecs.bed_temp_min_c)) {
+          console.log(`Tech specs found for ${product.title}:`, techSpecs);
         }
 
         // Skip non-filament products if we couldn't detect material
@@ -243,8 +258,14 @@ serve(async (req) => {
           auto_updated: true,
           last_scraped_at: new Date().toISOString(),
           sync_status: 'synced',
-          // Include TDS URL if found from API
+          // Include TDS URL if found from mapping
           ...(product.tdsUrl ? { tds_url: product.tdsUrl } : {}),
+          // Include tech specs from parsed Text1 JSON
+          ...(techSpecs?.nozzle_temp_min_c ? { nozzle_temp_min_c: techSpecs.nozzle_temp_min_c } : {}),
+          ...(techSpecs?.nozzle_temp_max_c ? { nozzle_temp_max_c: techSpecs.nozzle_temp_max_c } : {}),
+          ...(techSpecs?.bed_temp_min_c ? { bed_temp_min_c: techSpecs.bed_temp_min_c } : {}),
+          ...(techSpecs?.bed_temp_max_c ? { bed_temp_max_c: techSpecs.bed_temp_max_c } : {}),
+          ...(techSpecs?.density_g_cm3 ? { density_g_cm3: techSpecs.density_g_cm3 } : {}),
         };
 
         if (dryRun) {
