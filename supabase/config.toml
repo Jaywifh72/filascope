@@ -185,3 +185,9 @@ verify_jwt = false
 
 [functions.scrape-bambu-tpu]
 verify_jwt = false
+
+[functions.fetch-elegoo-catalog]
+verify_jwt = true
+
+[functions.sync-elegoo-products]
+verify_jwt = true
