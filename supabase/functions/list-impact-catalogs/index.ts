@@ -74,22 +74,35 @@ serve(async (req) => {
       );
     }
 
-    const data: CatalogsResponse = await response.json();
+    const data = await response.json();
     
-    console.log(`Found ${data.Catalogs?.length || 0} catalogs (total: ${data.TotalRecords})`);
+    // Log the raw response structure to debug field names
+    console.log(`Raw API response keys: ${Object.keys(data).join(', ')}`);
+    
+    // Impact API may return Catalogs in different structures
+    const rawCatalogs = data.Catalogs || data.catalogs || [];
+    
+    console.log(`Found ${rawCatalogs.length} catalogs (total: ${data.TotalRecords || data.totalRecords || 'N/A'})`);
+    
+    // Log first catalog to see field structure
+    if (rawCatalogs.length > 0) {
+      console.log(`First catalog fields: ${Object.keys(rawCatalogs[0]).join(', ')}`);
+      console.log(`First catalog Status value: "${rawCatalogs[0].Status || rawCatalogs[0].status || 'NOT_FOUND'}"`);
+    }
 
     // Transform catalogs to a simpler format with regional information
-    const catalogs = (data.Catalogs || []).map((catalog) => ({
-      id: catalog.Id,
-      name: catalog.Name,
-      description: catalog.Description,
-      itemCount: catalog.ItemCount,
-      dateCreated: catalog.DateCreated,
-      dateLastUpdated: catalog.DateLastUpdated,
-      status: catalog.Status,
-      location: catalog.AdvertiserLocation || null,
-      currency: catalog.Currency || null,
-      serviceAreas: catalog.ServiceAreas || [],
+    // Handle both PascalCase and camelCase field names from API
+    const catalogs = rawCatalogs.map((catalog: any) => ({
+      id: catalog.Id || catalog.id,
+      name: catalog.Name || catalog.name,
+      description: catalog.Description || catalog.description,
+      itemCount: catalog.ItemCount || catalog.itemCount || 0,
+      dateCreated: catalog.DateCreated || catalog.dateCreated,
+      dateLastUpdated: catalog.DateLastUpdated || catalog.dateLastUpdated,
+      status: catalog.Status || catalog.status || 'Active', // Default to Active if not specified
+      location: catalog.AdvertiserLocation || catalog.advertiserLocation || null,
+      currency: catalog.Currency || catalog.currency || null,
+      serviceAreas: catalog.ServiceAreas || catalog.serviceAreas || [],
     }));
 
     return new Response(
