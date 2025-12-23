@@ -68,6 +68,7 @@ function extractMaterialFromTitle(title: string): string | null {
   // Check for specific materials in order of specificity
   if (titleLower.includes('pla-cf') || titleLower.includes('pla cf')) return 'PLA-CF';
   if (titleLower.includes('petg-cf') || titleLower.includes('petg cf')) return 'PETG-CF';
+  if (titleLower.includes('pc-cf') || titleLower.includes('pc cf')) return 'PC-CF';
   if (titleLower.includes('petg')) return 'PETG';
   if (titleLower.includes('abs')) return 'ABS';
   if (titleLower.includes('tpu')) return 'TPU';
@@ -75,6 +76,8 @@ function extractMaterialFromTitle(title: string): string | null {
   if (titleLower.includes('pla')) return 'PLA';
   if (titleLower.includes('asa')) return 'ASA';
   if (titleLower.includes('nylon') || titleLower.includes('pa')) return 'PA';
+  // PC (Polycarbonate) - check for "PC - " or "PC-" at start to avoid false positives
+  if (/^pc\s*[-–]/.test(titleLower) || titleLower.includes('polycarbonate')) return 'PC';
   
   return null;
 }
