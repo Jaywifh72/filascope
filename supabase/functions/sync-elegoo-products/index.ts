@@ -19,7 +19,8 @@ interface ElegooProduct {
   title: string;
   description: string;
   price: number;
-  compareAtPrice: number | null;
+  originalPrice: number | null;  // MSRP - always included
+  compareAtPrice: number | null; // Only set when on sale
   currency: string;
   url: string;
   imageUrl: string;
@@ -202,19 +203,24 @@ serve(async (req) => {
 
         // Build fields availability object - check TDS from API response
         const hasTdsFromApi = Boolean(product.tdsUrl && product.tdsUrl.trim() !== '');
-        const hasMsrp = Boolean(product.compareAtPrice && product.compareAtPrice > 0);
+        
+        // MSRP: use originalPrice (always present) or fall back to compareAtPrice
+        const msrpValue = product.originalPrice ?? product.compareAtPrice ?? null;
+        const hasMsrp = Boolean(msrpValue && msrpValue > 0);
+        const isOnSale = Boolean(product.compareAtPrice && product.price < product.compareAtPrice);
+        
         const fields: ProductFields = {
           tds: hasTdsFromApi,
           image: Boolean(product.imageUrl && product.imageUrl.trim() !== ''),
           price: Boolean(product.price && product.price > 0),
-          salePrice: hasMsrp && product.price < product.compareAtPrice!,
+          salePrice: isOnSale,
           url: Boolean(product.url && product.url.trim() !== ''),
           msrp: hasMsrp,
         };
         
         // Price data for display
         const currentPrice = product.price;
-        const msrp = product.compareAtPrice || undefined;
+        const msrp = msrpValue || undefined;
         
         if (hasTdsFromApi) {
           console.log(`TDS mapped for ${product.title}: ${product.tdsUrl}`);

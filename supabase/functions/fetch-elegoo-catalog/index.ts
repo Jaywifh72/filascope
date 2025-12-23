@@ -220,6 +220,7 @@ serve(async (req) => {
         title: item.Name,
         description: item.Description,
         price: item.CurrentPrice,
+        originalPrice: item.OriginalPrice,  // Always include MSRP
         compareAtPrice: item.OriginalPrice > item.CurrentPrice ? item.OriginalPrice : null,
         currency: item.Currency || 'USD',
         url: item.Url,
