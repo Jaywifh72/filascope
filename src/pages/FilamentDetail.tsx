@@ -546,6 +546,7 @@ const FilamentDetail = () => {
 
   // Fetch color variants - other filaments of the same base product from the same vendor
   // Also calculates available spool weights for the SpoolSizeSelector
+  // Uses product_line_id for grouping when available (Elegoo), otherwise falls back to base name matching
   useEffect(() => {
     const fetchColorVariants = async () => {
       if (!filament || !filament.vendor) {
@@ -557,6 +558,7 @@ const FilamentDetail = () => {
       try {
         const baseName = getBaseProductName(filament.product_title);
         const isPrusament = filament.vendor.toLowerCase().includes('prusa');
+        const isElegoo = filament.vendor.toLowerCase() === 'elegoo';
         
         // For Prusament, get the product line for grouping
         let productLineKey: string | null = null;
@@ -565,32 +567,49 @@ const FilamentDetail = () => {
           productLineKey = lineInfo?.productLine || null;
         }
         
-        // Fetch all filaments from the same vendor
-        const { data, error } = await supabase
-          .from("filaments")
-          .select("*")
-          .eq("vendor", filament.vendor)
-          .order("product_title");
+        // If the filament has a product_line_id, use it for grouping (Elegoo and future brands)
+        const hasProductLineId = !!(filament as any).product_line_id;
+        
+        let variants: Filament[] = [];
+        
+        if (hasProductLineId) {
+          // Use product_line_id for precise grouping (Elegoo uses this)
+          const { data, error } = await supabase
+            .from("filaments")
+            .select("*")
+            .eq("product_line_id", (filament as any).product_line_id)
+            .order("product_title");
+          
+          if (error) throw error;
+          variants = data || [];
+        } else {
+          // Fetch all filaments from the same vendor and filter by base name
+          const { data, error } = await supabase
+            .from("filaments")
+            .select("*")
+            .eq("vendor", filament.vendor)
+            .order("product_title");
 
-        if (error) throw error;
+          if (error) throw error;
 
-        // Filter to same product line/base name
-        const variants = (data || []).filter(f => {
-          if (isPrusament && productLineKey) {
-            // For Prusament, match by product line
-            const fLineInfo = extractPrusamentProductLine(f.product_title);
-            return fLineInfo?.productLine === productLineKey;
-          } else {
-            // Standard matching by base name
-            const fBaseName = getBaseProductName(f.product_title);
-            if (fBaseName !== baseName) return false;
-            // Include if: it's the current filament, OR has extractable color, OR has color_hex
-            if (f.id === filament.id) return true;
-            const color = getColorFromTitle(f.product_title, baseName);
-            // Also include variants with valid color_hex even if color extraction fails
-            return color !== null || (f.color_hex && f.color_hex.length > 0);
-          }
-        });
+          // Filter to same product line/base name
+          variants = (data || []).filter(f => {
+            if (isPrusament && productLineKey) {
+              // For Prusament, match by product line
+              const fLineInfo = extractPrusamentProductLine(f.product_title);
+              return fLineInfo?.productLine === productLineKey;
+            } else {
+              // Standard matching by base name
+              const fBaseName = getBaseProductName(f.product_title);
+              if (fBaseName !== baseName) return false;
+              // Include if: it's the current filament, OR has extractable color, OR has color_hex
+              if (f.id === filament.id) return true;
+              const color = getColorFromTitle(f.product_title, baseName);
+              // Also include variants with valid color_hex even if color extraction fails
+              return color !== null || (f.color_hex && f.color_hex.length > 0);
+            }
+          });
+        }
 
         // Calculate available weights with price/kg and color counts
         const weightMap = new Map<number, { priceSum: number; priceCount: number; colorCount: number }>();

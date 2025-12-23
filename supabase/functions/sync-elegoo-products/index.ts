@@ -23,8 +23,9 @@ const REGION_CURRENCIES: Record<string, string> = {
   'JP': 'JPY',
 };
 
-// Color name to HEX mapping
+// Color name to HEX mapping - enhanced with Elegoo-specific colors
 const COLOR_HEX_MAP: Record<string, string> = {
+  // Basic colors
   'black': '1A1A1A',
   'white': 'FFFFFF',
   'grey': '808080',
@@ -59,6 +60,7 @@ const COLOR_HEX_MAP: Record<string, string> = {
   'salmon': 'FA8072',
   'maroon': '800000',
   'burgundy': '800020',
+  // Multi-word colors
   'navy blue': '000080',
   'sky blue': '87CEEB',
   'royal blue': '4169E1',
@@ -84,6 +86,64 @@ const COLOR_HEX_MAP: Record<string, string> = {
   'peach': 'FFCBA4',
   'aqua': '00FFFF',
   'turquoise': '40E0D0',
+  // Elegoo-specific colors (Matte, Silk, Rapid, etc.)
+  'ice blue': 'B0E0E6',
+  'earth brown': '5C4033',
+  'lavender purple': 'B57EDC',
+  'mint green': '98FF98',
+  'matte black': '1A1A1A',
+  'matte white': 'FAFAFA',
+  'matte grey': '808080',
+  'matte gray': '808080',
+  'matte beige': 'D4C4A8',
+  'matte red': 'B91C1C',
+  'matte blue': '1D4ED8',
+  'matte green': '15803D',
+  'burgundy red': '800020',
+  'wine red': '722F37',
+  'grass green': '7CFC00',
+  'army green': '4B5320',
+  'lake blue': '4682B4',
+  'peacock blue': '005F69',
+  'sapphire blue': '0F52BA',
+  'cobalt blue': '0047AB',
+  'midnight blue': '191970',
+  'stone grey': '928E85',
+  'space grey': '4F4F4F',
+  'space gray': '4F4F4F',
+  'cement grey': '8D918D',
+  'cement gray': '8D918D',
+  'khaki': 'C3B091',
+  'camel': 'C19A6B',
+  'coffee': '6F4E37',
+  'chocolate': 'D2691E',
+  'skin': 'FFCBA4',
+  'flesh': 'FFCBA4',
+  'glow green': '39FF14',
+  'glow blue': '00BFFF',
+  'glow orange': 'FF4500',
+  'rainbow': 'FF0000',
+  'multicolor': 'FF0000',
+  // Silk colors
+  'silk white': 'FFFEF0',
+  'silk black': '2D2D2D',
+  'silk gold': 'FFD700',
+  'silk silver': 'E8E8E8',
+  'silk copper': 'DA8A67',
+  'silk bronze': 'CD7F32',
+  'silk red': 'DC143C',
+  'silk blue': '4169E1',
+  'silk green': '32CD32',
+  'silk purple': '9370DB',
+  'silk pink': 'FFB6C1',
+  // Transparent/Translucent colors
+  'translucent': 'FFFFFF',
+  'translucent blue': '87CEEB',
+  'translucent green': '90EE90',
+  'translucent red': 'FF6B6B',
+  'translucent orange': 'FFB347',
+  'translucent yellow': 'FFFF99',
+  'translucent purple': 'DDA0DD',
 };
 
 interface TechSpecs {
@@ -346,26 +406,67 @@ function extractDiameterFromTitle(title: string): number {
 function extractColorAndHex(title: string): { colorName: string | null; colorHex: string | null } {
   const titleLower = title.toLowerCase();
   
+  // Pattern 1: "Product - Color" format (most common for Elegoo)
   const dashMatch = title.match(/\s-\s([^-]+)$/);
   if (dashMatch) {
     const colorPart = dashMatch[1].trim().toLowerCase();
+    // Clean out weight/size specs from color part
     const cleanColor = colorPart.replace(/\d+(?:\.\d+)?(?:kg|g|mm)/gi, '').trim();
     
-    for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
-      if (cleanColor.includes(colorName) || colorName.includes(cleanColor)) {
-        return { colorName: cleanColor, colorHex: hex };
+    // Try exact match first
+    if (COLOR_HEX_MAP[cleanColor]) {
+      return { colorName: cleanColor, colorHex: COLOR_HEX_MAP[cleanColor] };
+    }
+    
+    // Try multi-word color match (longest first for accuracy)
+    const sortedColors = Object.keys(COLOR_HEX_MAP).sort((a, b) => b.length - a.length);
+    for (const colorName of sortedColors) {
+      if (cleanColor.includes(colorName)) {
+        return { colorName: cleanColor, colorHex: COLOR_HEX_MAP[colorName] };
       }
     }
+    
+    // Return color name even if no HEX match found
     return { colorName: cleanColor, colorHex: null };
   }
   
-  for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
+  // Pattern 2: Check for color words anywhere in title (longest first)
+  const sortedColors = Object.keys(COLOR_HEX_MAP).sort((a, b) => b.length - a.length);
+  for (const colorName of sortedColors) {
     if (titleLower.includes(colorName)) {
-      return { colorName, colorHex: hex };
+      return { colorName, colorHex: COLOR_HEX_MAP[colorName] };
     }
   }
   
   return { colorName: null, colorHex: null };
+}
+
+// Compute a product line ID for grouping color variants
+// e.g., "PLA Matte - Beige" and "PLA Matte - Black" -> "elegoo-pla-matte"
+function computeProductLineId(vendor: string, title: string, material: string | null): string {
+  // Remove color suffix (after last dash)
+  let baseName = title.replace(/\s-\s[^-]+$/, '').trim();
+  
+  // Remove weight specifications
+  baseName = baseName.replace(/\s*\d+(?:\.\d+)?(?:kg|g)\s*/gi, '').trim();
+  
+  // Remove diameter specifications
+  baseName = baseName.replace(/\s*\d+(?:\.\d+)?mm\s*/gi, '').trim();
+  
+  // Remove parenthetical content like "(1kg)" or "(NFC)"
+  baseName = baseName.replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+  
+  // Normalize: lowercase, replace spaces with dashes, remove special chars
+  const normalized = baseName
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  
+  const vendorSlug = vendor.toLowerCase().replace(/\s+/g, '-');
+  
+  return `${vendorSlug}-${normalized}`;
 }
 
 function normalizeProductTitle(title: string): string {
@@ -779,11 +880,16 @@ serve(async (req) => {
           regionalFields.product_url_jp = regionalData['JP'].url;
         }
 
+        // Compute product line ID for grouping color variants
+        const productLineId = computeProductLineId('Elegoo', product.title, material);
+        console.log(`[ELEGOO-SYNC]    Product Line ID: ${productLineId}`);
+
         const filamentData = {
           product_id: product.productId,
           product_title: product.title,
           vendor: 'Elegoo',
           material,
+          product_line_id: productLineId,
           variant_price: regionalData['US']?.price || product.price,
           variant_compare_at_price: product.compareAtPrice,
           variant_available: product.inStock,
