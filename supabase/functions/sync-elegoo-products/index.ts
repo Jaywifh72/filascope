@@ -90,9 +90,52 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { dryRun = true, materialFilter } = await req.json();
+    const { dryRun = true, materialFilter, catalogId } = await req.json();
     
-    console.log(`Starting Elegoo sync - dryRun: ${dryRun}, filter: ${materialFilter || 'all'}`);
+    // Get catalog ID from request, env var, or discover it
+    let effectiveCatalogId = catalogId || Deno.env.get('IMPACT_ELEGOO_CATALOG_ID');
+    
+    // If no catalog ID, try to discover available catalogs
+    if (!effectiveCatalogId) {
+      console.log('No catalog ID provided, discovering available catalogs...');
+      
+      const discoverResponse = await fetch(
+        `${supabaseUrl}/functions/v1/list-impact-catalogs`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        }
+      );
+      
+      if (discoverResponse.ok) {
+        const discoverData = await discoverResponse.json();
+        if (discoverData.catalogs && discoverData.catalogs.length > 0) {
+          // Find Elegoo catalog or use the first one
+          const elegooCatalog = discoverData.catalogs.find(
+            (c: { name: string }) => c.name.toLowerCase().includes('elegoo')
+          ) || discoverData.catalogs[0];
+          
+          effectiveCatalogId = elegooCatalog.id;
+          console.log(`Discovered catalog: ${elegooCatalog.name} (ID: ${effectiveCatalogId})`);
+        }
+      }
+      
+      if (!effectiveCatalogId) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'No catalog ID configured and could not discover available catalogs. Please set IMPACT_ELEGOO_CATALOG_ID or provide catalogId in the request.',
+            hint: 'Use the list-impact-catalogs endpoint to find available catalogs'
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    
+    console.log(`Starting Elegoo sync - catalogId: ${effectiveCatalogId}, dryRun: ${dryRun}, filter: ${materialFilter || 'all'}`);
 
     // Create a job log entry
     const jobId = crypto.randomUUID();
@@ -101,7 +144,7 @@ serve(async (req) => {
         id: jobId,
         job_type: 'elegoo_sync',
         status: 'running',
-        details: { materialFilter, dryRun },
+        details: { materialFilter, dryRun, catalogId: effectiveCatalogId },
       });
     }
 
@@ -133,7 +176,8 @@ serve(async (req) => {
           body: JSON.stringify({ 
             materialFilter, 
             page, 
-            pageSize: 100 
+            pageSize: 100,
+            catalogId: effectiveCatalogId 
           }),
         }
       );
