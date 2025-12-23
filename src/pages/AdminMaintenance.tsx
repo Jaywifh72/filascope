@@ -606,7 +606,7 @@ const AdminMaintenance = () => {
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                     <div>
-                      <strong>TDS Data Ingestion:</strong> Uses AI to parse TDS documents and extract print settings (temps, speeds), physical properties (density, strength), and drying requirements. <span className="text-xs text-amber-500">(Run separately via parse-filament-tds)</span>
+                      <strong>TDS Data Ingestion:</strong> Uses AI to parse TDS documents and extract print settings (temps, speeds), physical properties (density, strength), and drying requirements. <span className="text-xs text-green-500">(Automatic - runs in background after sync)</span>
                     </div>
                   </div>
                 </div>
