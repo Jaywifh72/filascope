@@ -18,6 +18,7 @@ import { ScrapeAnalyticsWidget } from "@/components/admin/ScrapeAnalyticsWidget"
 import { AIScrapeLogsCard } from "@/components/admin/AIScrapeLogsCard";
 import { ScrapeProgressBanner } from "@/components/admin/ScrapeProgressBanner";
 import { ElegooSyncProgress } from "@/components/admin/ElegooSyncProgress";
+import { TdsParsingStatus } from "@/components/admin/TdsParsingStatus";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 import { useActiveScrapeJob } from "@/hooks/useActiveScrapeJob";
@@ -45,6 +46,7 @@ const AdminMaintenance = () => {
   const [elegooDryRun, setElegooDryRun] = useState(true);
   const [elegooMaterialFilter, setElegooMaterialFilter] = useState<string>('');
   const [elegooSelectedRegions, setElegooSelectedRegions] = useState<string[]>(['US']);
+  const [tdsRefreshTrigger, setTdsRefreshTrigger] = useState(0);
 
   const ELEGOO_REGION_OPTIONS = [
     { id: 'ALL', label: 'All Regions' },
@@ -272,6 +274,10 @@ const AdminMaintenance = () => {
         title: elegooDryRun ? "Preview Complete" : "Sync Complete",
         description: `Elegoo catalog sync finished for ${regionsToSync.join(', ')}`,
       });
+      // Trigger TDS stats refresh after sync completes
+      if (!elegooDryRun) {
+        setTimeout(() => setTdsRefreshTrigger(prev => prev + 1), 2000);
+      }
     } catch (err) {
       toast({
         title: "Sync Failed",
@@ -547,6 +553,9 @@ const AdminMaintenance = () => {
                   />
                 </div>
               )}
+
+              {/* TDS Parsing Status */}
+              <TdsParsingStatus refreshTrigger={tdsRefreshTrigger} />
 
               {/* Sync Tasks Section */}
               <div className="mt-6 border rounded-lg p-4 bg-muted/30">
