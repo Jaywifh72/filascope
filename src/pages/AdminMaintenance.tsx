@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2 } from "lucide-react";
+import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,19 @@ import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 import { useActiveScrapeJob } from "@/hooks/useActiveScrapeJob";
 import { useElegooSync } from "@/hooks/useElegooSync";
+
+interface CatalogInfo {
+  id: string;
+  name: string;
+  description?: string;
+  itemCount: number;
+  status: string;
+  location?: string;
+  currency?: string;
+  serviceAreas?: string[];
+  region?: string;
+  active?: boolean;
+}
 
 const AdminMaintenance = () => {
   const [bambuColorsDryRun, setBambuColorsDryRun] = useState(true);
@@ -65,22 +78,91 @@ const AdminMaintenance = () => {
   ];
 
   // Elegoo Catalog Reference Data (Campaign ID: 19663)
-  const ELEGOO_CATALOGS = [
-    { id: '25495', name: 'Elegoo Filaments Datafeed for US', region: 'US', products: 247, active: true },
-    { id: '19909', name: 'Elegoo Product Datafeed for AU', region: 'AU', products: 2114, active: false },
-    { id: '19910', name: 'Elegoo Product Datafeed for CA', region: 'CA', products: 2313, active: false },
-    { id: '19908', name: 'Elegoo Product Datafeed for EU', region: 'EU', products: 2124, active: false },
-    { id: '19907', name: 'Elegoo Product Datafeed for UK', region: 'UK', products: 2113, active: false },
-    { id: '19906', name: 'Elegoo Product Datafeed for US', region: 'US', products: 2305, active: false },
+  const DEFAULT_ELEGOO_CATALOGS: CatalogInfo[] = [
+    { id: '25495', name: 'Elegoo Filaments Datafeed for US', region: 'US', itemCount: 247, status: 'Active', currency: 'USD' },
+    { id: '19909', name: 'Elegoo Product Datafeed for AU', region: 'AU', itemCount: 2114, status: 'Inactive' },
+    { id: '19910', name: 'Elegoo Product Datafeed for CA', region: 'CA', itemCount: 2313, status: 'Inactive' },
+    { id: '19908', name: 'Elegoo Product Datafeed for EU', region: 'EU', itemCount: 2124, status: 'Inactive' },
+    { id: '19907', name: 'Elegoo Product Datafeed for UK', region: 'UK', itemCount: 2113, status: 'Inactive' },
+    { id: '19906', name: 'Elegoo Product Datafeed for US', region: 'US', itemCount: 2305, status: 'Inactive' },
   ];
   const ELEGOO_CAMPAIGN_ID = '19663';
   const [catalogInfoOpen, setCatalogInfoOpen] = useState(false);
+  const [availableCatalogs, setAvailableCatalogs] = useState<CatalogInfo[]>(DEFAULT_ELEGOO_CATALOGS);
+  const [catalogsLoading, setCatalogsLoading] = useState(false);
+  const [catalogsError, setCatalogsError] = useState<string | null>(null);
+  const [lastCatalogRefresh, setLastCatalogRefresh] = useState<Date | null>(null);
   
   const { toast } = useToast();
   const { startJob, isStarting } = useStartBambuScrapeJob();
   const { jobs: recentJobs } = useRecentScrapeJobs(5);
   const { activeJob, hasActiveJob } = useActiveScrapeJob();
-  const { syncProducts, isLoading: elegooLoading, result: elegooResult, error: elegooError, reset: resetElegoo } = useElegooSync();
+  const { syncProducts, discoverCatalogs, isLoading: elegooLoading, result: elegooResult, error: elegooError, reset: resetElegoo } = useElegooSync();
+
+  // Helper function to infer region from catalog name
+  const inferRegionFromCatalog = (catalog: CatalogInfo): string => {
+    const name = catalog.name.toLowerCase();
+    if (name.includes(' us') || name.includes('for us')) return 'US';
+    if (name.includes(' au') || name.includes('for au')) return 'AU';
+    if (name.includes(' ca') || name.includes('for ca')) return 'CA';
+    if (name.includes(' eu') || name.includes('for eu')) return 'EU';
+    if (name.includes(' uk') || name.includes('for uk')) return 'UK';
+    if (name.includes(' jp') || name.includes('for jp')) return 'JP';
+    // Try to infer from serviceAreas or location
+    if (catalog.serviceAreas?.length) {
+      return catalog.serviceAreas[0];
+    }
+    if (catalog.location) {
+      return catalog.location;
+    }
+    return '?';
+  };
+
+  // Refresh catalogs from Impact API
+  const handleRefreshCatalogs = async () => {
+    setCatalogsLoading(true);
+    setCatalogsError(null);
+    try {
+      const data = await discoverCatalogs();
+      if (data.catalogs && Array.isArray(data.catalogs)) {
+        const mappedCatalogs: CatalogInfo[] = data.catalogs.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          description: c.description,
+          itemCount: c.itemCount || 0,
+          status: c.status || 'Unknown',
+          location: c.location,
+          currency: c.currency,
+          serviceAreas: c.serviceAreas || [],
+          region: inferRegionFromCatalog({ 
+            id: c.id, 
+            name: c.name, 
+            itemCount: c.itemCount, 
+            status: c.status,
+            location: c.location,
+            serviceAreas: c.serviceAreas 
+          }),
+        }));
+        setAvailableCatalogs(mappedCatalogs);
+        setLastCatalogRefresh(new Date());
+        toast({
+          title: "Catalogs Refreshed",
+          description: `Found ${mappedCatalogs.length} catalogs from Impact API`,
+        });
+      } else {
+        throw new Error('No catalogs returned from API');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch catalogs';
+      setCatalogsError(message);
+      toast({ 
+        title: "Failed to refresh catalogs", 
+        description: message,
+        variant: "destructive" 
+      });
+    }
+    setCatalogsLoading(false);
+  };
   
   // Sync activeJobId with auto-detected job
   useEffect(() => {
@@ -449,9 +531,37 @@ const AdminMaintenance = () => {
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-4 space-y-3">
-                  <div className="text-sm text-muted-foreground">
-                    <strong>Campaign ID:</strong> {ELEGOO_CAMPAIGN_ID}
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      <strong>Campaign ID:</strong> {ELEGOO_CAMPAIGN_ID}
+                      {lastCatalogRefresh && (
+                        <span className="ml-3 text-xs">
+                          Last refreshed: {lastCatalogRefresh.toLocaleTimeString()}
+                        </span>
+                      )}
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleRefreshCatalogs}
+                      disabled={catalogsLoading}
+                    >
+                      {catalogsLoading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                      )}
+                      Refresh from API
+                    </Button>
                   </div>
+                  
+                  {catalogsError && (
+                    <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-2 rounded-md">
+                      <XCircle className="w-4 h-4" />
+                      {catalogsError}
+                    </div>
+                  )}
+
                   <div className="border rounded-md overflow-hidden">
                     <Table>
                       <TableHeader>
@@ -459,35 +569,68 @@ const AdminMaintenance = () => {
                           <TableHead className="w-20">ID</TableHead>
                           <TableHead>Catalog Name</TableHead>
                           <TableHead className="w-20">Region</TableHead>
+                          <TableHead className="w-20">Currency</TableHead>
                           <TableHead className="w-24 text-right">Products</TableHead>
-                          <TableHead className="w-20">Status</TableHead>
+                          <TableHead className="w-24">Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {ELEGOO_CATALOGS.map((catalog) => (
-                          <TableRow key={catalog.id} className={catalog.active ? 'bg-primary/5' : ''}>
-                            <TableCell className="font-mono text-xs">{catalog.id}</TableCell>
-                            <TableCell className="text-sm">{catalog.name}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{catalog.region}</Badge>
-                            </TableCell>
-                            <TableCell className="text-right">{catalog.products.toLocaleString()}</TableCell>
-                            <TableCell>
-                              {catalog.active && (
-                                <span className="flex items-center gap-1 text-xs text-green-600">
-                                  <CheckCircle2 className="w-3 h-3" />
-                                  Active
-                                </span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {availableCatalogs.map((catalog) => {
+                          const isActive = catalog.status === 'Active';
+                          const region = catalog.region || inferRegionFromCatalog(catalog);
+                          return (
+                            <TableRow key={catalog.id} className={isActive ? 'bg-primary/5' : ''}>
+                              <TableCell className="font-mono text-xs">{catalog.id}</TableCell>
+                              <TableCell className="text-sm">
+                                <div>{catalog.name}</div>
+                                {catalog.serviceAreas && catalog.serviceAreas.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {catalog.serviceAreas.slice(0, 3).map((area) => (
+                                      <Badge key={area} variant="secondary" className="text-xs py-0">
+                                        {area}
+                                      </Badge>
+                                    ))}
+                                    {catalog.serviceAreas.length > 3 && (
+                                      <Badge variant="secondary" className="text-xs py-0">
+                                        +{catalog.serviceAreas.length - 3}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{region}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                {catalog.currency ? (
+                                  <Badge variant="secondary">{catalog.currency}</Badge>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">{catalog.itemCount.toLocaleString()}</TableCell>
+                              <TableCell>
+                                {isActive ? (
+                                  <span className="flex items-center gap-1 text-xs text-green-600">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    Active
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <XCircle className="w-3 h-3" />
+                                    {catalog.status || 'Inactive'}
+                                  </span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    The active catalog (25495) is the US Filaments feed optimized for filament products. 
-                    Other catalogs contain the full product range including printers and accessories.
+                    Click "Refresh from API" to discover available Elegoo catalogs from Impact.com. 
+                    Active catalogs can be synced; inactive catalogs may have been discontinued.
                   </p>
                 </CollapsibleContent>
               </Collapsible>
