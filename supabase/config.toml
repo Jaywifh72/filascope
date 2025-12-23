@@ -191,3 +191,6 @@ verify_jwt = true
 
 [functions.sync-elegoo-products]
 verify_jwt = true
+
+[functions.list-impact-catalogs]
+verify_jwt = true

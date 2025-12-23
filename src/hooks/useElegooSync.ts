@@ -53,13 +53,40 @@ export function useElegooSync() {
     }
   };
 
-  const fetchCatalog = async (materialFilter?: string, page = 1) => {
+  const fetchCatalog = async (materialFilter?: string, page = 1, catalogId?: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('fetch-elegoo-catalog', {
-        body: { materialFilter, page, pageSize: 50 },
+        body: { materialFilter, page, pageSize: 50, catalogId },
+      });
+
+      if (fnError) {
+        throw new Error(fnError.message);
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const discoverCatalogs = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('list-impact-catalogs', {
+        body: {},
       });
 
       if (fnError) {
@@ -88,6 +115,7 @@ export function useElegooSync() {
   return {
     syncProducts,
     fetchCatalog,
+    discoverCatalogs,
     isLoading,
     result,
     error,

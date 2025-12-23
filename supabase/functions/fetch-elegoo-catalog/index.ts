@@ -51,13 +51,25 @@ serve(async (req) => {
       );
     }
 
-    const { materialFilter, page = 1, pageSize = 100 } = await req.json();
+    const { materialFilter, page = 1, pageSize = 100, catalogId } = await req.json();
     
-    console.log(`Fetching Elegoo catalog - page ${page}, pageSize ${pageSize}, filter: ${materialFilter || 'all'}`);
+    // Use provided catalogId or fall back to environment variable
+    const effectiveCatalogId = catalogId || Deno.env.get('IMPACT_ELEGOO_CATALOG_ID');
+    
+    if (!effectiveCatalogId) {
+      console.error('No catalog ID provided or configured');
+      return new Response(
+        JSON.stringify({ 
+          error: 'No catalog ID configured. Please discover available catalogs first using the list-impact-catalogs endpoint.',
+          hint: 'Use the catalog discovery feature to find available Elegoo catalogs'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log(`Fetching Elegoo catalog ${effectiveCatalogId} - page ${page}, pageSize ${pageSize}, filter: ${materialFilter || 'all'}`);
 
-    // Impact.com API credentials for Elegoo
-    const catalogId = '49631'; // Elegoo's catalog ID from the spreadsheet
-    const baseUrl = `https://api.impact.com/Mediapartners/${accountSid}/Catalogs/${catalogId}/Items`;
+    const baseUrl = `https://api.impact.com/Mediapartners/${accountSid}/Catalogs/${effectiveCatalogId}/Items`;
     
     // Build query parameters
     const params = new URLSearchParams({
