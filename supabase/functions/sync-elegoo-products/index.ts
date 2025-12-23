@@ -24,6 +24,7 @@ interface ElegooProduct {
   labels: string[];
   category: string;
   categoryId: string;
+  tdsUrl: string | null;
 }
 
 interface ProductFields {
@@ -184,14 +185,19 @@ serve(async (req) => {
         const weight = extractWeightFromTitle(product.title);
         const diameter = extractDiameterFromTitle(product.title);
 
-        // Build fields availability object
+        // Build fields availability object - check TDS from API response
+        const hasTdsFromApi = Boolean(product.tdsUrl && product.tdsUrl.trim() !== '');
         const fields: ProductFields = {
-          tds: false, // TDS not available from Impact API
+          tds: hasTdsFromApi,
           image: Boolean(product.imageUrl && product.imageUrl.trim() !== ''),
           price: Boolean(product.price && product.price > 0),
           salePrice: Boolean(product.compareAtPrice && product.compareAtPrice > 0),
           url: Boolean(product.url && product.url.trim() !== ''),
         };
+        
+        if (hasTdsFromApi) {
+          console.log(`TDS found for ${product.title}: ${product.tdsUrl}`);
+        }
 
         // Skip non-filament products if we couldn't detect material
         if (!material) {
@@ -237,6 +243,8 @@ serve(async (req) => {
           auto_updated: true,
           last_scraped_at: new Date().toISOString(),
           sync_status: 'synced',
+          // Include TDS URL if found from API
+          ...(product.tdsUrl ? { tds_url: product.tdsUrl } : {}),
         };
 
         if (dryRun) {
