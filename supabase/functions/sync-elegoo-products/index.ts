@@ -840,16 +840,37 @@ serve(async (req) => {
           continue;
         }
 
-        // Check if product already exists
-        const { data: existing, error: lookupError } = await supabase
+        // Check if product already exists by product_id OR by matching title
+        // This helps merge regional data into existing US products
+        let existing: { id: string; product_id: string; variant_price: number | null; product_url: string | null; updated_at: string; tds_url: string | null; color_hex: string | null } | null = null;
+        
+        // First try exact product_id match
+        const { data: exactMatch, error: lookupError } = await supabase
           .from('filaments')
-          .select('id, variant_price, updated_at, tds_url, color_hex')
+          .select('id, product_id, variant_price, product_url, updated_at, tds_url, color_hex')
           .eq('product_id', product.productId)
           .eq('vendor', 'Elegoo')
           .maybeSingle();
 
         if (lookupError) {
           console.error(`[ELEGOO-SYNC]    ⚠️ Lookup error: ${lookupError.message}`);
+        }
+        
+        if (exactMatch) {
+          existing = exactMatch;
+        } else {
+          // Try to find by normalized title (for cross-region matching)
+          const { data: titleMatch } = await supabase
+            .from('filaments')
+            .select('id, product_id, variant_price, product_url, updated_at, tds_url, color_hex')
+            .eq('vendor', 'Elegoo')
+            .ilike('product_title', product.title)
+            .maybeSingle();
+          
+          if (titleMatch) {
+            console.log(`[ELEGOO-SYNC]    🔗 Found existing product by title match (ID: ${titleMatch.id})`);
+            existing = titleMatch;
+          }
         }
 
         if (existing?.tds_url) {
@@ -884,16 +905,36 @@ serve(async (req) => {
         const productLineId = computeProductLineId('Elegoo', product.title, material);
         console.log(`[ELEGOO-SYNC]    Product Line ID: ${productLineId}`);
 
-        const filamentData = {
+        // CRITICAL: Determine if we have US data
+        const hasUSData = Boolean(regionalData['US']?.price && regionalData['US']?.url);
+        const isCreatingNew = !existing;
+        
+        // If creating new product AND no US data available, skip
+        // This prevents creating products with regional URLs in the base product_url field
+        if (isCreatingNew && !hasUSData) {
+          console.log(`[ELEGOO-SYNC]    ⏭️ SKIPPED: No US data available, cannot create base product`);
+          console.log(`[ELEGOO-SYNC]       To sync this product, run US region sync first to create the base product`);
+          result.skipped++;
+          result.products.push({
+            title: product.title,
+            action: 'skipped',
+            reason: 'No US data - sync US region first to create base product',
+            fields,
+            currentPrice,
+            msrp,
+          });
+          continue;
+        }
+
+        // Build filament data - ONLY use US data for base price/url fields
+        const filamentData: Record<string, unknown> = {
           product_id: product.productId,
           product_title: product.title,
           vendor: 'Elegoo',
           material,
           product_line_id: productLineId,
-          variant_price: regionalData['US']?.price || product.price,
           variant_compare_at_price: product.compareAtPrice,
           variant_available: product.inStock,
-          product_url: regionalData['US']?.url || product.url,
           featured_image: product.imageUrl,
           mpn: product.mpn || null,
           upc: product.upc || null,
@@ -914,6 +955,18 @@ serve(async (req) => {
           ...(techSpecs?.density_g_cm3 ? { density_g_cm3: techSpecs.density_g_cm3 } : {}),
           ...regionalFields,
         };
+        
+        // ONLY set base product_url and variant_price from US data
+        // Never overwrite with regional data
+        if (hasUSData) {
+          filamentData.variant_price = regionalData['US']!.price;
+          filamentData.product_url = regionalData['US']!.url;
+          console.log(`[ELEGOO-SYNC]    💵 US data: $${regionalData['US']!.price}, URL: ${regionalData['US']!.url?.substring(0, 50)}...`);
+        } else if (existing) {
+          // Updating existing product without US data - preserve existing base values
+          console.log(`[ELEGOO-SYNC]    ℹ️ No US data in this sync - preserving existing base price/url`);
+          // Don't include variant_price or product_url in the update - they'll be preserved
+        }
 
         if (dryRun) {
           if (existing) {
@@ -963,12 +1016,12 @@ serve(async (req) => {
               msrp,
             });
 
-            // Log price change if different
-            if (existing.variant_price !== product.price) {
-              console.log(`[ELEGOO-SYNC]    💰 Price changed: $${existing.variant_price} -> $${product.price}`);
+            // Log US price change if different (only when we have US data)
+            if (hasUSData && existing.variant_price !== regionalData['US']!.price) {
+              console.log(`[ELEGOO-SYNC]    💰 US Price changed: $${existing.variant_price} -> $${regionalData['US']!.price}`);
               await supabase.from('price_history').insert({
                 filament_id: existing.id,
-                price: product.price,
+                price: regionalData['US']!.price,
                 region: 'US',
                 source: 'elegoo_api',
               });
