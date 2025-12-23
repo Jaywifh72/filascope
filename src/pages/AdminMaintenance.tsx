@@ -30,6 +30,16 @@ const AdminMaintenance = () => {
   // Elegoo state
   const [elegooDryRun, setElegooDryRun] = useState(true);
   const [elegooMaterialFilter, setElegooMaterialFilter] = useState<string>('');
+  const [elegooSelectedRegions, setElegooSelectedRegions] = useState<string[]>(['US']);
+
+  const ELEGOO_REGION_OPTIONS = [
+    { id: 'ALL', label: 'All Regions' },
+    { id: 'US', label: 'US' },
+    { id: 'AU', label: 'AU' },
+    { id: 'CA', label: 'CA' },
+    { id: 'EU', label: 'EU' },
+    { id: 'UK', label: 'UK' },
+  ];
   
   const BAMBU_MATERIAL_OPTIONS = [
     { id: 'PLA', label: 'PLA', count: 17 },
@@ -143,10 +153,14 @@ const AdminMaintenance = () => {
   const handleElegooSync = async () => {
     resetElegoo();
     try {
-      await syncProducts(elegooDryRun, elegooMaterialFilter || undefined);
+      // If ALL is selected, pass all individual regions
+      const regionsToSync = elegooSelectedRegions.includes('ALL') 
+        ? ['US', 'AU', 'CA', 'EU', 'UK'] 
+        : elegooSelectedRegions;
+      await syncProducts(elegooDryRun, elegooMaterialFilter || undefined, regionsToSync);
       toast({
         title: elegooDryRun ? "Preview Complete" : "Sync Complete",
-        description: "Elegoo catalog sync finished successfully",
+        description: `Elegoo catalog sync finished for ${regionsToSync.join(', ')}`,
       });
     } catch (err) {
       toast({
@@ -328,6 +342,43 @@ const AdminMaintenance = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Region Selection */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Region to Sync</Label>
+                <div className="flex flex-wrap gap-2">
+                  {ELEGOO_REGION_OPTIONS.map((region) => (
+                    <Button
+                      key={region.id}
+                      variant={
+                        region.id === 'ALL' 
+                          ? elegooSelectedRegions.includes('ALL') ? "default" : "outline"
+                          : elegooSelectedRegions.includes(region.id) && !elegooSelectedRegions.includes('ALL') 
+                            ? "default" 
+                            : "outline"
+                      }
+                      size="sm"
+                      onClick={() => {
+                        if (region.id === 'ALL') {
+                          setElegooSelectedRegions(['ALL']);
+                        } else {
+                          const newRegions = elegooSelectedRegions.includes('ALL')
+                            ? [region.id]
+                            : elegooSelectedRegions.includes(region.id)
+                              ? elegooSelectedRegions.filter(r => r !== region.id)
+                              : [...elegooSelectedRegions, region.id];
+                          setElegooSelectedRegions(newRegions.length > 0 ? newRegions : ['US']);
+                        }
+                      }}
+                    >
+                      {region.label}
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Select regions to sync. Regional prices and URLs will be stored.
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Material Filter (Optional)</Label>
                 <div className="flex flex-wrap gap-2">

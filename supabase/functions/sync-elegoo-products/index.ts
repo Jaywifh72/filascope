@@ -6,6 +6,87 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Region to Catalog ID mapping
+const REGION_CATALOGS: Record<string, string> = {
+  'US': '25495',  // Elegoo Filaments Datafeed for US (247 products - filaments only)
+  'AU': '19909',  // Elegoo Product Datafeed for AU
+  'CA': '19910',  // Elegoo Product Datafeed for CA
+  'EU': '19908',  // Elegoo Product Datafeed for EU
+  'UK': '19907',  // Elegoo Product Datafeed for UK
+};
+
+// Region to currency mapping
+const REGION_CURRENCIES: Record<string, string> = {
+  'US': 'USD',
+  'AU': 'AUD',
+  'CA': 'CAD',
+  'EU': 'EUR',
+  'UK': 'GBP',
+};
+
+// Color name to HEX mapping
+const COLOR_HEX_MAP: Record<string, string> = {
+  'black': '1A1A1A',
+  'white': 'FFFFFF',
+  'grey': '808080',
+  'gray': '808080',
+  'red': 'DC2626',
+  'blue': '2563EB',
+  'navy': '1E3A5F',
+  'green': '16A34A',
+  'yellow': 'EAB308',
+  'orange': 'EA580C',
+  'purple': '9333EA',
+  'pink': 'EC4899',
+  'brown': '92400E',
+  'beige': 'D4C4A8',
+  'silver': 'C0C0C0',
+  'gold': 'D4AF37',
+  'copper': 'B87333',
+  'bronze': 'CD7F32',
+  'transparent': 'FFFFFF',
+  'clear': 'FFFFFF',
+  'natural': 'F5F5DC',
+  'ivory': 'FFFFF0',
+  'cream': 'FFFDD0',
+  'tan': 'D2B48C',
+  'olive': '808000',
+  'teal': '008080',
+  'cyan': '00FFFF',
+  'magenta': 'FF00FF',
+  'lime': '00FF00',
+  'mint': '98FF98',
+  'coral': 'FF7F50',
+  'salmon': 'FA8072',
+  'maroon': '800000',
+  'burgundy': '800020',
+  'navy blue': '000080',
+  'sky blue': '87CEEB',
+  'royal blue': '4169E1',
+  'forest green': '228B22',
+  'olive green': '6B8E23',
+  'neon green': '39FF14',
+  'neon pink': 'FF6EC7',
+  'neon orange': 'FF5F1F',
+  'neon yellow': 'CCFF00',
+  'hot pink': 'FF69B4',
+  'light blue': 'ADD8E6',
+  'dark blue': '00008B',
+  'light green': '90EE90',
+  'dark green': '006400',
+  'light grey': 'D3D3D3',
+  'dark grey': 'A9A9A9',
+  'charcoal': '36454F',
+  'midnight': '191970',
+  'rose': 'FF007F',
+  'lavender': 'E6E6FA',
+  'violet': 'EE82EE',
+  'indigo': '4B0082',
+  'peach': 'FFCBA4',
+  'aqua': '00FFFF',
+  'turquoise': '40E0D0',
+};
+
 interface TechSpecs {
   nozzle_temp_min_c: number | null;
   nozzle_temp_max_c: number | null;
@@ -19,8 +100,8 @@ interface ElegooProduct {
   title: string;
   description: string;
   price: number;
-  originalPrice: number | null;  // MSRP - always included
-  compareAtPrice: number | null; // Only set when on sale
+  originalPrice: number | null;
+  compareAtPrice: number | null;
   currency: string;
   url: string;
   imageUrl: string;
@@ -60,6 +141,12 @@ interface SyncResult {
     currentPrice?: number;
     msrp?: number;
   }[];
+}
+
+interface RegionalData {
+  price?: number;
+  url?: string;
+  currency?: string;
 }
 
 function extractMaterialFromTitle(title: string): string | null {
@@ -107,6 +194,45 @@ function extractDiameterFromTitle(title: string): number {
   return 1.75;
 }
 
+// Extract color name and HEX from product title
+function extractColorAndHex(title: string): { colorName: string | null; colorHex: string | null } {
+  // Common pattern: "Material - Color" or "Material Color"
+  const titleLower = title.toLowerCase();
+  
+  // Try to find color after " - " separator
+  const dashMatch = title.match(/\s-\s([^-]+)$/);
+  if (dashMatch) {
+    const colorPart = dashMatch[1].trim().toLowerCase();
+    // Remove weight/size info
+    const cleanColor = colorPart.replace(/\d+(?:\.\d+)?(?:kg|g|mm)/gi, '').trim();
+    
+    // Look up in color map
+    for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
+      if (cleanColor.includes(colorName) || colorName.includes(cleanColor)) {
+        return { colorName: cleanColor, colorHex: hex };
+      }
+    }
+    return { colorName: cleanColor, colorHex: null };
+  }
+  
+  // Try to find a color word anywhere in the title
+  for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
+    if (titleLower.includes(colorName)) {
+      return { colorName, colorHex: hex };
+    }
+  }
+  
+  return { colorName: null, colorHex: null };
+}
+
+// Normalize product title for matching across regions
+function normalizeProductTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -117,14 +243,9 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { dryRun = true, materialFilter, catalogId } = await req.json();
+    const { dryRun = true, materialFilter, regions = ['US'] } = await req.json();
     
-    // Default catalog ID: 25495 = "Elegoo Filaments Datafeed for US" (247 products)
-    // Campaign ID: 19663
-    const DEFAULT_CATALOG_ID = '25495';
-    const effectiveCatalogId = catalogId || Deno.env.get('IMPACT_ELEGOO_CATALOG_ID') || DEFAULT_CATALOG_ID;
-    
-    console.log(`Starting Elegoo sync - catalogId: ${effectiveCatalogId}, dryRun: ${dryRun}, filter: ${materialFilter || 'all'}`);
+    console.log(`Starting Elegoo sync - regions: ${regions.join(', ')}, dryRun: ${dryRun}, filter: ${materialFilter || 'all'}`);
 
     // Create a job log entry
     const jobId = crypto.randomUUID();
@@ -133,7 +254,7 @@ serve(async (req) => {
         id: jobId,
         job_type: 'elegoo_sync',
         status: 'running',
-        details: { materialFilter, dryRun, catalogId: effectiveCatalogId },
+        details: { materialFilter, dryRun, regions },
       });
     }
 
@@ -145,69 +266,108 @@ serve(async (req) => {
       products: [],
     };
 
-    // Fetch all pages from the catalog
-    let page = 1;
-    let hasMore = true;
-    const allProducts: ElegooProduct[] = [];
+    // Collect products from all regions
+    const productsByNormalizedTitle: Map<string, { 
+      baseProduct: ElegooProduct;
+      regionalData: Record<string, RegionalData>;
+    }> = new Map();
 
-    while (hasMore) {
-      console.log(`Fetching page ${page}...`);
-      
-      // Call our fetch-elegoo-catalog function
-      const catalogResponse = await fetch(
-        `${supabaseUrl}/functions/v1/fetch-elegoo-catalog`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseServiceKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            materialFilter, 
-            page, 
-            pageSize: 100,
-            catalogId: effectiveCatalogId 
-          }),
+    // Fetch products from each region
+    for (const region of regions) {
+      const catalogId = REGION_CATALOGS[region];
+      if (!catalogId) {
+        console.log(`Unknown region: ${region}, skipping`);
+        continue;
+      }
+
+      console.log(`Fetching region ${region} (catalog ${catalogId})...`);
+
+      let page = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        console.log(`Fetching ${region} page ${page}...`);
+        
+        const catalogResponse = await fetch(
+          `${supabaseUrl}/functions/v1/fetch-elegoo-catalog`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${supabaseServiceKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              materialFilter, 
+              page, 
+              pageSize: 100,
+              catalogId 
+            }),
+          }
+        );
+
+        if (!catalogResponse.ok) {
+          const errorText = await catalogResponse.text();
+          console.error(`Failed to fetch catalog for ${region}: ${errorText}`);
+          break;
         }
-      );
 
-      if (!catalogResponse.ok) {
-        const errorText = await catalogResponse.text();
-        throw new Error(`Failed to fetch catalog: ${errorText}`);
-      }
+        const catalogData = await catalogResponse.json();
+        
+        if (catalogData.error) {
+          console.error(`Error for ${region}: ${catalogData.error}`);
+          break;
+        }
 
-      const catalogData = await catalogResponse.json();
-      
-      if (catalogData.error) {
-        throw new Error(catalogData.error);
-      }
+        // Process products from this region
+        for (const product of catalogData.products as ElegooProduct[]) {
+          const normalizedTitle = normalizeProductTitle(product.title);
+          
+          if (!productsByNormalizedTitle.has(normalizedTitle)) {
+            // First time seeing this product
+            productsByNormalizedTitle.set(normalizedTitle, {
+              baseProduct: product,
+              regionalData: {
+                [region]: {
+                  price: product.price,
+                  url: product.url,
+                  currency: REGION_CURRENCIES[region],
+                }
+              }
+            });
+          } else {
+            // Add regional data to existing product
+            const existing = productsByNormalizedTitle.get(normalizedTitle)!;
+            existing.regionalData[region] = {
+              price: product.price,
+              url: product.url,
+              currency: REGION_CURRENCIES[region],
+            };
+          }
+        }
 
-      allProducts.push(...catalogData.products);
-      hasMore = catalogData.pagination?.hasNextPage || false;
-      page++;
+        hasMore = catalogData.pagination?.hasNextPage || false;
+        page++;
 
-      // Safety limit
-      if (page > 50) {
-        console.log('Reached page limit, stopping pagination');
-        break;
+        if (page > 50) {
+          console.log(`Reached page limit for ${region}, stopping pagination`);
+          break;
+        }
       }
     }
 
-    console.log(`Total products fetched: ${allProducts.length}`);
+    console.log(`Total unique products across regions: ${productsByNormalizedTitle.size}`);
 
-    // Process each product
-    for (const product of allProducts) {
+    // Process each unique product
+    for (const [normalizedTitle, { baseProduct, regionalData }] of productsByNormalizedTitle) {
       try {
-        // Use material from API if available, otherwise extract from title
+        const product = baseProduct;
         const material = product.material || extractMaterialFromTitle(product.title);
         const weight = extractWeightFromTitle(product.title);
         const diameter = extractDiameterFromTitle(product.title);
         const techSpecs = product.techSpecs;
+        const { colorName, colorHex } = extractColorAndHex(product.title);
 
-        // Build fields availability object - check TDS from API response
         const hasTdsFromApi = Boolean(product.tdsUrl && product.tdsUrl.trim() !== '');
-        
-        // MSRP: use originalPrice (always present with fallback), or price as last resort
         const msrpValue = product.originalPrice ?? product.price ?? null;
         const hasMsrp = Boolean(msrpValue && msrpValue > 0);
         const isOnSale = Boolean(product.originalPrice && product.price < product.originalPrice);
@@ -221,18 +381,16 @@ serve(async (req) => {
           msrp: hasMsrp,
         };
         
-        // Price data for display
         const currentPrice = product.price;
         const msrp = msrpValue || undefined;
         
         if (hasTdsFromApi) {
           console.log(`TDS mapped for ${product.title}: ${product.tdsUrl}`);
         }
-        if (techSpecs && (techSpecs.nozzle_temp_min_c || techSpecs.bed_temp_min_c)) {
-          console.log(`Tech specs found for ${product.title}:`, techSpecs);
+        if (colorHex) {
+          console.log(`Color extracted for ${product.title}: ${colorName} -> #${colorHex}`);
         }
 
-        // Skip non-filament products if we couldn't detect material
         if (!material) {
           result.skipped++;
           result.products.push({
@@ -249,14 +407,33 @@ serve(async (req) => {
         // Check if product already exists
         const { data: existing } = await supabase
           .from('filaments')
-          .select('id, variant_price, updated_at, tds_url')
+          .select('id, variant_price, updated_at, tds_url, color_hex')
           .eq('product_id', product.productId)
           .eq('vendor', 'Elegoo')
           .maybeSingle();
 
-        // Update TDS field if we have it in database
         if (existing?.tds_url) {
           fields.tds = true;
+        }
+
+        // Build regional price and URL fields
+        const regionalFields: Record<string, unknown> = {};
+        
+        if (regionalData['AU']) {
+          regionalFields.price_aud = regionalData['AU'].price;
+          regionalFields.product_url_au = regionalData['AU'].url;
+        }
+        if (regionalData['CA']) {
+          regionalFields.price_cad = regionalData['CA'].price;
+          regionalFields.product_url_ca = regionalData['CA'].url;
+        }
+        if (regionalData['EU']) {
+          regionalFields.price_eur = regionalData['EU'].price;
+          regionalFields.product_url_eu = regionalData['EU'].url;
+        }
+        if (regionalData['UK']) {
+          regionalFields.price_gbp = regionalData['UK'].price;
+          regionalFields.product_url_uk = regionalData['UK'].url;
         }
 
         const filamentData = {
@@ -264,10 +441,10 @@ serve(async (req) => {
           product_title: product.title,
           vendor: 'Elegoo',
           material,
-          variant_price: product.price,
+          variant_price: regionalData['US']?.price || product.price,
           variant_compare_at_price: product.compareAtPrice,
           variant_available: product.inStock,
-          product_url: product.url,
+          product_url: regionalData['US']?.url || product.url,
           featured_image: product.imageUrl,
           mpn: product.mpn || null,
           upc: product.upc || null,
@@ -278,14 +455,19 @@ serve(async (req) => {
           auto_updated: true,
           last_scraped_at: new Date().toISOString(),
           sync_status: 'synced',
-          // Include TDS URL if found from mapping
+          regional_prices_updated_at: new Date().toISOString(),
+          // Include TDS URL if found
           ...(product.tdsUrl ? { tds_url: product.tdsUrl } : {}),
-          // Include tech specs from parsed Text1 JSON
+          // Include color HEX if extracted
+          ...(colorHex ? { color_hex: colorHex } : {}),
+          // Include tech specs
           ...(techSpecs?.nozzle_temp_min_c ? { nozzle_temp_min_c: techSpecs.nozzle_temp_min_c } : {}),
           ...(techSpecs?.nozzle_temp_max_c ? { nozzle_temp_max_c: techSpecs.nozzle_temp_max_c } : {}),
           ...(techSpecs?.bed_temp_min_c ? { bed_temp_min_c: techSpecs.bed_temp_min_c } : {}),
           ...(techSpecs?.bed_temp_max_c ? { bed_temp_max_c: techSpecs.bed_temp_max_c } : {}),
           ...(techSpecs?.density_g_cm3 ? { density_g_cm3: techSpecs.density_g_cm3 } : {}),
+          // Include regional prices and URLs
+          ...regionalFields,
         };
 
         if (dryRun) {
@@ -294,7 +476,7 @@ serve(async (req) => {
             result.products.push({
               title: product.title,
               action: 'updated',
-              reason: `Price: $${existing.variant_price} → $${product.price}`,
+              reason: `Price: $${existing.variant_price} → $${product.price}, Regions: ${Object.keys(regionalData).join(', ')}`,
               fields,
               currentPrice,
               msrp,
@@ -358,10 +540,10 @@ serve(async (req) => {
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        console.error(`Error processing product ${product.title}:`, err);
+        console.error(`Error processing product ${baseProduct.title}:`, err);
         result.errors++;
         result.products.push({
-          title: product.title,
+          title: baseProduct.title,
           action: 'error',
           reason: errorMessage,
           fields: { tds: false, image: false, price: false, salePrice: false, url: false, msrp: false },
@@ -379,6 +561,7 @@ serve(async (req) => {
           details: {
             materialFilter,
             dryRun,
+            regions,
             ...result,
           },
         })
@@ -397,7 +580,7 @@ serve(async (req) => {
           updated: result.updated,
           skipped: result.skipped,
           errors: result.errors,
-          total: allProducts.length,
+          total: productsByNormalizedTitle.size,
         },
         products: result.products,
       }),
