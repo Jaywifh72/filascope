@@ -546,6 +546,58 @@ const AdminMaintenance = () => {
                 </div>
               )}
 
+              {/* Sync Tasks Section */}
+              <div className="mt-6 border rounded-lg p-4 bg-muted/30">
+                <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                  <Layers className="w-4 h-4" />
+                  Sync Tasks
+                </h4>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>Regional Prices:</strong> Syncs prices from all regional catalogs (US, CA, EU, UK, AU, DE, IT, FR, ES) and stores them in currency-specific fields.
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>Regional URLs:</strong> Captures "Buy Now" URLs for each region so users see their local store link based on currency preference.
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>Product Images:</strong> Each color variant gets its own product image, displayed when that color is selected on the filament detail page.
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>Multi-Region Creation:</strong> Products can be created from any regional catalog (priority: US → CA → UK → AU → EU → DE → IT → FR → ES).
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>Delta Sync:</strong> Discovers new products in regional catalogs that don't exist in the database and creates entries for them.
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>Color Extraction:</strong> Extracts color name and hex code from product titles for filtering and display.
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>Product Line Grouping:</strong> Groups color variants under a common product line ID for the color selector UI.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Catalog Reference Section */}
               <Collapsible open={catalogInfoOpen} onOpenChange={setCatalogInfoOpen}>
                 <CollapsibleTrigger asChild>
