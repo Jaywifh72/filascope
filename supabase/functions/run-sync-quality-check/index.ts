@@ -56,8 +56,20 @@ serve(async (req) => {
 
     console.log('[Quality Check] Starting comprehensive sync quality audit...');
 
+    // First, get the Elegoo brand ID
+    const { data: elegooBrand, error: brandError } = await supabase
+      .from('automated_brands')
+      .select('id')
+      .eq('brand_slug', 'elegoo')
+      .single();
+
+    if (brandError || !elegooBrand) {
+      console.log('[Quality Check] Elegoo brand not found, checking by vendor name...');
+    }
+
     // Fetch all Elegoo filaments with relevant fields
-    const { data: filaments, error } = await supabase
+    // Try by brand_id first, fallback to vendor name
+    let query = supabase
       .from('filaments')
       .select(`
         id,
@@ -87,10 +99,19 @@ serve(async (req) => {
         drying_temp_c,
         drying_time_hours,
         density_g_cm3,
-        vendor
+        vendor,
+        brand_id
       `)
-      .eq('vendor', 'Elegoo')
       .order('product_title');
+
+    // Filter by brand_id if we found it, otherwise filter by vendor name (case insensitive)
+    if (elegooBrand?.id) {
+      query = query.eq('brand_id', elegooBrand.id);
+    } else {
+      query = query.ilike('vendor', '%elegoo%');
+    }
+
+    const { data: filaments, error } = await query;
 
     if (error) {
       throw new Error(`Failed to fetch filaments: ${error.message}`);
