@@ -56,17 +56,20 @@ function FieldIndicator({ available }: { available: boolean }) {
 }
 
 function PriceDisplay({ currentPrice, msrp }: { currentPrice?: number; msrp?: number }) {
-  if (!currentPrice) {
+  const price = typeof currentPrice === 'number' ? currentPrice : Number(currentPrice);
+  const msrpNum = typeof msrp === 'number' ? msrp : Number(msrp);
+  
+  if (!currentPrice || isNaN(price)) {
     return <span className="text-muted-foreground">-</span>;
   }
 
-  const isOnSale = msrp && currentPrice < msrp;
-  const discount = msrp ? Math.round((1 - currentPrice / msrp) * 100) : 0;
+  const isOnSale = msrp && !isNaN(msrpNum) && price < msrpNum;
+  const discount = msrp && !isNaN(msrpNum) ? Math.round((1 - price / msrpNum) * 100) : 0;
 
   return (
     <div className="flex items-center gap-1">
       <span className={isOnSale ? 'text-green-600 font-semibold' : ''}>
-        ${currentPrice.toFixed(2)}
+        ${price.toFixed(2)}
       </span>
       {isOnSale && (
         <TrendingDown className="w-3 h-3 text-green-600" />
@@ -79,15 +82,18 @@ function PriceDisplay({ currentPrice, msrp }: { currentPrice?: number; msrp?: nu
 }
 
 function MsrpDisplay({ currentPrice, msrp }: { currentPrice?: number; msrp?: number }) {
-  if (!msrp) {
+  const price = typeof currentPrice === 'number' ? currentPrice : Number(currentPrice);
+  const msrpNum = typeof msrp === 'number' ? msrp : Number(msrp);
+  
+  if (!msrp || isNaN(msrpNum)) {
     return <span className="text-muted-foreground">-</span>;
   }
 
-  const isOnSale = currentPrice && currentPrice < msrp;
+  const isOnSale = currentPrice && !isNaN(price) && price < msrpNum;
 
   return (
     <span className={isOnSale ? 'line-through text-muted-foreground' : ''}>
-      ${msrp.toFixed(2)}
+      ${msrpNum.toFixed(2)}
     </span>
   );
 }
