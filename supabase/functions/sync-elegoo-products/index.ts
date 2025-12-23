@@ -1,19 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Region to Catalog ID mapping
-// NOTE: Only US catalog (25495) is currently active. Other regional catalogs were discontinued.
-// When regional catalogs become available again, add them here.
-const REGION_CATALOGS: Record<string, string> = {
-  'US': '25495',  // Elegoo Filaments Datafeed for US (247 products - filaments only)
-  // Regional catalogs currently not available:
-  // 'AU': '19909', 'CA': '19910', 'EU': '19908', 'UK': '19907' - all return 404
-};
+// Fallback catalog ID if dynamic discovery fails
+const DEFAULT_CATALOG_ID = '25495'; // US Elegoo Filaments
 
 // Region to currency mapping
 const REGION_CURRENCIES: Record<string, string> = {
@@ -22,6 +16,7 @@ const REGION_CURRENCIES: Record<string, string> = {
   'CA': 'CAD',
   'EU': 'EUR',
   'UK': 'GBP',
+  'JP': 'JPY',
 };
 
 // Color name to HEX mapping
@@ -149,6 +144,147 @@ interface RegionalData {
   currency?: string;
 }
 
+interface DiscoveredCatalog {
+  id: string;
+  name: string;
+  currency: string;
+  serviceAreas: string[];
+  location: string;
+  isActive: boolean;
+}
+
+// Discover available catalogs dynamically from Impact API
+async function discoverRegionalCatalogs(supabase: SupabaseClient, supabaseUrl: string, supabaseServiceKey: string): Promise<Record<string, string>> {
+  console.log('[ELEGOO-SYNC] 🔍 Starting dynamic catalog discovery...');
+  
+  try {
+    const response = await fetch(
+      `${supabaseUrl}/functions/v1/list-impact-catalogs`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[ELEGOO-SYNC] ❌ Catalog discovery failed: ${response.status} - ${errorText}`);
+      return { 'US': DEFAULT_CATALOG_ID };
+    }
+
+    const data = await response.json();
+    console.log(`[ELEGOO-SYNC] 📦 Found ${data.catalogs?.length || 0} total catalogs from Impact API`);
+
+    if (!data.catalogs || data.catalogs.length === 0) {
+      console.log('[ELEGOO-SYNC] ⚠️ No catalogs returned, using default US catalog');
+      return { 'US': DEFAULT_CATALOG_ID };
+    }
+
+    const regionMap: Record<string, string> = {};
+    
+    for (const catalog of data.catalogs as DiscoveredCatalog[]) {
+      console.log(`[ELEGOO-SYNC]   📋 Catalog: ${catalog.name} (ID: ${catalog.id})`);
+      console.log(`[ELEGOO-SYNC]      Currency: ${catalog.currency}, Location: ${catalog.location}`);
+      console.log(`[ELEGOO-SYNC]      Service Areas: ${catalog.serviceAreas?.join(', ') || 'none'}`);
+      console.log(`[ELEGOO-SYNC]      Active: ${catalog.isActive}`);
+
+      if (!catalog.isActive) {
+        console.log(`[ELEGOO-SYNC]      ⏭️ Skipping inactive catalog`);
+        continue;
+      }
+
+      // Map catalog to region based on currency, location, service areas, or name
+      const catalogNameLower = catalog.name.toLowerCase();
+      const serviceAreasLower = (catalog.serviceAreas || []).map((s: string) => s.toLowerCase());
+      const locationLower = (catalog.location || '').toLowerCase();
+
+      // US detection
+      if (catalog.currency === 'USD' || 
+          catalogNameLower.includes('us') || 
+          serviceAreasLower.some((a: string) => a.includes('us') || a.includes('united states')) ||
+          locationLower.includes('us') || locationLower.includes('united states')) {
+        if (!regionMap['US']) {
+          regionMap['US'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to US region`);
+        }
+      }
+      
+      // Canada detection
+      if (catalog.currency === 'CAD' || 
+          catalogNameLower.includes('canada') || catalogNameLower.includes(' ca ') ||
+          serviceAreasLower.some((a: string) => a.includes('canada') || a.includes(' ca ')) ||
+          locationLower.includes('canada')) {
+        if (!regionMap['CA']) {
+          regionMap['CA'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to CA region`);
+        }
+      }
+      
+      // Australia detection
+      if (catalog.currency === 'AUD' || 
+          catalogNameLower.includes('australia') || catalogNameLower.includes(' au ') ||
+          serviceAreasLower.some((a: string) => a.includes('australia') || a.includes(' au ')) ||
+          locationLower.includes('australia')) {
+        if (!regionMap['AU']) {
+          regionMap['AU'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to AU region`);
+        }
+      }
+      
+      // UK detection
+      if (catalog.currency === 'GBP' || 
+          catalogNameLower.includes('uk') || catalogNameLower.includes('united kingdom') || catalogNameLower.includes('britain') ||
+          serviceAreasLower.some((a: string) => a.includes('uk') || a.includes('united kingdom') || a.includes('britain')) ||
+          locationLower.includes('uk') || locationLower.includes('united kingdom')) {
+        if (!regionMap['UK']) {
+          regionMap['UK'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to UK region`);
+        }
+      }
+      
+      // EU detection
+      if (catalog.currency === 'EUR' || 
+          catalogNameLower.includes('europe') || catalogNameLower.includes(' eu ') ||
+          serviceAreasLower.some((a: string) => a.includes('europe') || a.includes(' eu ')) ||
+          locationLower.includes('europe')) {
+        if (!regionMap['EU']) {
+          regionMap['EU'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to EU region`);
+        }
+      }
+
+      // Japan detection
+      if (catalog.currency === 'JPY' || 
+          catalogNameLower.includes('japan') || catalogNameLower.includes(' jp ') ||
+          serviceAreasLower.some((a: string) => a.includes('japan') || a.includes(' jp ')) ||
+          locationLower.includes('japan')) {
+        if (!regionMap['JP']) {
+          regionMap['JP'] = catalog.id;
+          console.log(`[ELEGOO-SYNC]      ✅ Mapped to JP region`);
+        }
+      }
+    }
+
+    console.log(`[ELEGOO-SYNC] 🗺️ Final region mapping: ${JSON.stringify(regionMap)}`);
+    
+    // Always ensure we have at least the US catalog
+    if (Object.keys(regionMap).length === 0) {
+      console.log('[ELEGOO-SYNC] ⚠️ No regions mapped, using default US catalog');
+      return { 'US': DEFAULT_CATALOG_ID };
+    }
+
+    return regionMap;
+  } catch (err) {
+    console.error('[ELEGOO-SYNC] ❌ Catalog discovery error:', err);
+    console.log('[ELEGOO-SYNC] ⚠️ Using fallback US catalog');
+    return { 'US': DEFAULT_CATALOG_ID };
+  }
+}
+
 function extractMaterialFromTitle(title: string): string | null {
   const titleLower = title.toLowerCase();
   
@@ -163,14 +299,12 @@ function extractMaterialFromTitle(title: string): string | null {
   if (titleLower.includes('pla')) return 'PLA';
   if (titleLower.includes('asa')) return 'ASA';
   if (titleLower.includes('nylon') || titleLower.includes('pa')) return 'PA';
-  // PC (Polycarbonate) - check for "PC - " or "PC-" at start to avoid false positives
   if (/^pc\s*[-–]/.test(titleLower) || titleLower.includes('polycarbonate')) return 'PC';
   
   return null;
 }
 
 function extractWeightFromTitle(title: string): number | null {
-  // Look for weight patterns like "1kg", "1000g", "2.2lbs", etc.
   const kgMatch = title.match(/(\d+(?:\.\d+)?)\s*kg/i);
   if (kgMatch) {
     return parseFloat(kgMatch[1]) * 1000;
@@ -181,32 +315,24 @@ function extractWeightFromTitle(title: string): number | null {
     return parseInt(gMatch[1]);
   }
   
-  // Default to 1000g for standard spools
   return 1000;
 }
 
 function extractDiameterFromTitle(title: string): number {
-  // Look for diameter patterns
   if (title.includes('2.85') || title.includes('3mm') || title.includes('3.0mm')) {
     return 2.85;
   }
-  // Default to 1.75mm
   return 1.75;
 }
 
-// Extract color name and HEX from product title
 function extractColorAndHex(title: string): { colorName: string | null; colorHex: string | null } {
-  // Common pattern: "Material - Color" or "Material Color"
   const titleLower = title.toLowerCase();
   
-  // Try to find color after " - " separator
   const dashMatch = title.match(/\s-\s([^-]+)$/);
   if (dashMatch) {
     const colorPart = dashMatch[1].trim().toLowerCase();
-    // Remove weight/size info
     const cleanColor = colorPart.replace(/\d+(?:\.\d+)?(?:kg|g|mm)/gi, '').trim();
     
-    // Look up in color map
     for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
       if (cleanColor.includes(colorName) || colorName.includes(cleanColor)) {
         return { colorName: cleanColor, colorHex: hex };
@@ -215,7 +341,6 @@ function extractColorAndHex(title: string): { colorName: string | null; colorHex
     return { colorName: cleanColor, colorHex: null };
   }
   
-  // Try to find a color word anywhere in the title
   for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
     if (titleLower.includes(colorName)) {
       return { colorName, colorHex: hex };
@@ -225,7 +350,6 @@ function extractColorAndHex(title: string): { colorName: string | null; colorHex
   return { colorName: null, colorHex: null };
 }
 
-// Normalize product title for matching across regions
 function normalizeProductTitle(title: string): string {
   return title
     .toLowerCase()
@@ -234,29 +358,111 @@ function normalizeProductTitle(title: string): string {
 }
 
 serve(async (req) => {
+  const startTime = Date.now();
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // === PHASE 1: INITIALIZATION ===
+  console.log('[ELEGOO-SYNC] ═══════════════════════════════════════════════════════');
+  console.log('[ELEGOO-SYNC] 🚀 ELEGOO SYNC STARTED');
+  console.log('[ELEGOO-SYNC] ═══════════════════════════════════════════════════════');
+  console.log(`[ELEGOO-SYNC] Timestamp: ${new Date().toISOString()}`);
+
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    // Validate environment
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    console.log('[ELEGOO-SYNC] 🔧 Validating environment...');
+    if (!supabaseUrl) {
+      console.error('[ELEGOO-SYNC] ❌ FATAL: Missing SUPABASE_URL');
+      throw new Error('Missing SUPABASE_URL environment variable');
+    }
+    if (!supabaseServiceKey) {
+      console.error('[ELEGOO-SYNC] ❌ FATAL: Missing SUPABASE_SERVICE_ROLE_KEY');
+      throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
+    }
+    console.log('[ELEGOO-SYNC] ✅ Environment validated');
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { dryRun = true, materialFilter, regions = ['US'] } = await req.json();
+    // Parse request body
+    let dryRun = true;
+    let materialFilter: string | undefined;
+    let requestedRegions: string[] = ['US'];
     
-    console.log(`Starting Elegoo sync - regions: ${regions.join(', ')}, dryRun: ${dryRun}, filter: ${materialFilter || 'all'}`);
-
-    // Create a job log entry
-    const jobId = crypto.randomUUID();
-    if (!dryRun) {
-      await supabase.from('scrape_job_logs').insert({
-        id: jobId,
-        job_type: 'elegoo_sync',
-        status: 'running',
-        details: { materialFilter, dryRun, regions },
-      });
+    try {
+      const body = await req.json();
+      dryRun = body.dryRun ?? true;
+      materialFilter = body.materialFilter;
+      requestedRegions = body.regions || ['US'];
+      console.log('[ELEGOO-SYNC] 📝 Request parameters:');
+      console.log(`[ELEGOO-SYNC]    dryRun: ${dryRun}`);
+      console.log(`[ELEGOO-SYNC]    materialFilter: ${materialFilter || 'ALL'}`);
+      console.log(`[ELEGOO-SYNC]    requestedRegions: ${requestedRegions.join(', ')}`);
+    } catch (parseErr) {
+      console.error('[ELEGOO-SYNC] ⚠️ Failed to parse request body, using defaults');
     }
+
+    // === PHASE 2: CREATE SYNC LOG ===
+    console.log('[ELEGOO-SYNC] ───────────────────────────────────────────────────────');
+    console.log('[ELEGOO-SYNC] 📋 PHASE: Creating sync log');
+    
+    let syncLogId: string | null = null;
+    if (!dryRun) {
+      try {
+        const { data: logData, error: logError } = await supabase
+          .from('brand_sync_logs')
+          .insert({
+            brand_slug: 'elegoo',
+            sync_type: 'impact_catalog_sync',
+            status: 'running',
+            triggered_by: 'manual',
+            started_at: new Date().toISOString(),
+            notes: `Regions: ${requestedRegions.join(', ')}, Filter: ${materialFilter || 'ALL'}`,
+          })
+          .select('id')
+          .single();
+
+        if (logError) {
+          console.error('[ELEGOO-SYNC] ⚠️ Failed to create sync log:', logError.message);
+        } else {
+          syncLogId = logData?.id;
+          console.log(`[ELEGOO-SYNC] ✅ Created sync log: ${syncLogId}`);
+        }
+      } catch (logErr) {
+        console.error('[ELEGOO-SYNC] ⚠️ Sync log creation error:', logErr);
+      }
+    } else {
+      console.log('[ELEGOO-SYNC] ⏭️ Dry run mode - skipping sync log creation');
+    }
+
+    // === PHASE 3: DISCOVER CATALOGS ===
+    console.log('[ELEGOO-SYNC] ───────────────────────────────────────────────────────');
+    console.log('[ELEGOO-SYNC] 🔍 PHASE: Catalog Discovery');
+    
+    const availableCatalogs = await discoverRegionalCatalogs(supabase, supabaseUrl, supabaseServiceKey);
+    console.log(`[ELEGOO-SYNC] Available catalogs: ${JSON.stringify(availableCatalogs)}`);
+
+    // Filter to only requested regions that have catalogs
+    const regionsToSync: string[] = [];
+    for (const region of requestedRegions) {
+      if (availableCatalogs[region]) {
+        regionsToSync.push(region);
+        console.log(`[ELEGOO-SYNC] ✅ Region ${region} -> Catalog ${availableCatalogs[region]}`);
+      } else {
+        console.log(`[ELEGOO-SYNC] ⚠️ Region ${region} has no available catalog, skipping`);
+      }
+    }
+
+    if (regionsToSync.length === 0) {
+      console.error('[ELEGOO-SYNC] ❌ No valid regions to sync!');
+      throw new Error(`No catalogs available for requested regions: ${requestedRegions.join(', ')}`);
+    }
+
+    console.log(`[ELEGOO-SYNC] 📍 Regions to sync: ${regionsToSync.join(', ')}`);
 
     const result: SyncResult = {
       created: 0,
@@ -266,106 +472,128 @@ serve(async (req) => {
       products: [],
     };
 
-    // Collect products from all regions
+    // === PHASE 4: FETCH PRODUCTS FROM CATALOGS ===
+    console.log('[ELEGOO-SYNC] ───────────────────────────────────────────────────────');
+    console.log('[ELEGOO-SYNC] 📦 PHASE: Fetching products from catalogs');
+
     const productsByNormalizedTitle: Map<string, { 
       baseProduct: ElegooProduct;
       regionalData: Record<string, RegionalData>;
     }> = new Map();
 
-    // Fetch products from each region
-    for (const region of regions) {
-      const catalogId = REGION_CATALOGS[region];
-      if (!catalogId) {
-        console.log(`Unknown region: ${region}, skipping`);
-        continue;
-      }
-
-      console.log(`Fetching region ${region} (catalog ${catalogId})...`);
+    for (const region of regionsToSync) {
+      const catalogId = availableCatalogs[region];
+      console.log(`[ELEGOO-SYNC] ───────────────────────────────────────────────────────`);
+      console.log(`[ELEGOO-SYNC] 🌍 REGION: ${region} (Catalog: ${catalogId})`);
 
       let page = 1;
       let hasMore = true;
+      let regionProductCount = 0;
 
       while (hasMore) {
-        console.log(`Fetching ${region} page ${page}...`);
+        console.log(`[ELEGOO-SYNC]    📄 Fetching page ${page}...`);
         
-        const catalogResponse = await fetch(
-          `${supabaseUrl}/functions/v1/fetch-elegoo-catalog`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${supabaseServiceKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              materialFilter, 
-              page, 
-              pageSize: 100,
-              catalogId 
-            }),
+        try {
+          const catalogResponse = await fetch(
+            `${supabaseUrl}/functions/v1/fetch-elegoo-catalog`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${supabaseServiceKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ 
+                materialFilter, 
+                page, 
+                pageSize: 100,
+                catalogId 
+              }),
+            }
+          );
+
+          if (!catalogResponse.ok) {
+            const errorText = await catalogResponse.text();
+            console.error(`[ELEGOO-SYNC]    ❌ Catalog fetch failed: ${catalogResponse.status}`);
+            console.error(`[ELEGOO-SYNC]    Response: ${errorText.substring(0, 500)}`);
+            break;
           }
-        );
 
-        if (!catalogResponse.ok) {
-          const errorText = await catalogResponse.text();
-          console.error(`Failed to fetch catalog for ${region}: ${errorText}`);
-          break;
-        }
-
-        const catalogData = await catalogResponse.json();
-        
-        if (catalogData.error) {
-          console.error(`Error for ${region}: ${catalogData.error}`);
-          break;
-        }
-
-        // Process products from this region
-        for (const product of catalogData.products as ElegooProduct[]) {
-          const normalizedTitle = normalizeProductTitle(product.title);
+          const catalogData = await catalogResponse.json();
           
-          if (!productsByNormalizedTitle.has(normalizedTitle)) {
-            // First time seeing this product
-            productsByNormalizedTitle.set(normalizedTitle, {
-              baseProduct: product,
-              regionalData: {
-                [region]: {
-                  price: product.price,
-                  url: product.url,
-                  currency: REGION_CURRENCIES[region],
-                }
-              }
-            });
-          } else {
-            // Add regional data to existing product
-            const existing = productsByNormalizedTitle.get(normalizedTitle)!;
-            existing.regionalData[region] = {
-              price: product.price,
-              url: product.url,
-              currency: REGION_CURRENCIES[region],
-            };
+          if (catalogData.error) {
+            console.error(`[ELEGOO-SYNC]    ❌ Catalog error: ${catalogData.error}`);
+            break;
           }
-        }
 
-        hasMore = catalogData.pagination?.hasNextPage || false;
-        page++;
+          const products = catalogData.products as ElegooProduct[];
+          console.log(`[ELEGOO-SYNC]    ✅ Page ${page}: ${products.length} products`);
+          regionProductCount += products.length;
 
-        if (page > 50) {
-          console.log(`Reached page limit for ${region}, stopping pagination`);
+          for (const product of products) {
+            const normalizedTitle = normalizeProductTitle(product.title);
+            
+            if (!productsByNormalizedTitle.has(normalizedTitle)) {
+              productsByNormalizedTitle.set(normalizedTitle, {
+                baseProduct: product,
+                regionalData: {
+                  [region]: {
+                    price: product.price,
+                    url: product.url,
+                    currency: REGION_CURRENCIES[region] || product.currency,
+                  }
+                }
+              });
+            } else {
+              const existing = productsByNormalizedTitle.get(normalizedTitle)!;
+              existing.regionalData[region] = {
+                price: product.price,
+                url: product.url,
+                currency: REGION_CURRENCIES[region] || product.currency,
+              };
+            }
+          }
+
+          hasMore = catalogData.pagination?.hasNextPage || false;
+          page++;
+
+          if (page > 50) {
+            console.log(`[ELEGOO-SYNC]    ⚠️ Reached page limit (50), stopping pagination`);
+            break;
+          }
+        } catch (fetchErr) {
+          console.error(`[ELEGOO-SYNC]    ❌ Fetch error for ${region} page ${page}:`, fetchErr);
           break;
         }
       }
+
+      console.log(`[ELEGOO-SYNC]    📊 Total products from ${region}: ${regionProductCount}`);
     }
 
-    console.log(`Total unique products across regions: ${productsByNormalizedTitle.size}`);
+    console.log(`[ELEGOO-SYNC] ═══════════════════════════════════════════════════════`);
+    console.log(`[ELEGOO-SYNC] 📊 Total unique products across all regions: ${productsByNormalizedTitle.size}`);
 
-    // Process each unique product
+    // === PHASE 5: PROCESS PRODUCTS ===
+    console.log('[ELEGOO-SYNC] ───────────────────────────────────────────────────────');
+    console.log('[ELEGOO-SYNC] ⚙️ PHASE: Processing products');
+
+    let processedCount = 0;
     for (const [normalizedTitle, { baseProduct, regionalData }] of productsByNormalizedTitle) {
+      processedCount++;
+      const product = baseProduct;
+      
       try {
-        const product = baseProduct;
+        console.log(`[ELEGOO-SYNC] 📦 Product ${processedCount}/${productsByNormalizedTitle.size}: ${product.title}`);
+        
         const material = product.material || extractMaterialFromTitle(product.title);
         const weight = extractWeightFromTitle(product.title);
         const diameter = extractDiameterFromTitle(product.title);
         const techSpecs = product.techSpecs;
         const { colorName, colorHex } = extractColorAndHex(product.title);
+
+        console.log(`[ELEGOO-SYNC]    Material: ${material || 'UNKNOWN'}`);
+        console.log(`[ELEGOO-SYNC]    Weight: ${weight}g, Diameter: ${diameter}mm`);
+        console.log(`[ELEGOO-SYNC]    Color: ${colorName || 'none'} (HEX: ${colorHex ? '#' + colorHex : 'none'})`);
+        console.log(`[ELEGOO-SYNC]    Regions: ${Object.keys(regionalData).join(', ')}`);
 
         const hasTdsFromApi = Boolean(product.tdsUrl && product.tdsUrl.trim() !== '');
         const msrpValue = product.originalPrice ?? product.price ?? null;
@@ -383,15 +611,9 @@ serve(async (req) => {
         
         const currentPrice = product.price;
         const msrp = msrpValue || undefined;
-        
-        if (hasTdsFromApi) {
-          console.log(`TDS mapped for ${product.title}: ${product.tdsUrl}`);
-        }
-        if (colorHex) {
-          console.log(`Color extracted for ${product.title}: ${colorName} -> #${colorHex}`);
-        }
 
         if (!material) {
+          console.log(`[ELEGOO-SYNC]    ⏭️ SKIPPED: Could not detect material type`);
           result.skipped++;
           result.products.push({
             title: product.title,
@@ -405,12 +627,16 @@ serve(async (req) => {
         }
 
         // Check if product already exists
-        const { data: existing } = await supabase
+        const { data: existing, error: lookupError } = await supabase
           .from('filaments')
           .select('id, variant_price, updated_at, tds_url, color_hex')
           .eq('product_id', product.productId)
           .eq('vendor', 'Elegoo')
           .maybeSingle();
+
+        if (lookupError) {
+          console.error(`[ELEGOO-SYNC]    ⚠️ Lookup error: ${lookupError.message}`);
+        }
 
         if (existing?.tds_url) {
           fields.tds = true;
@@ -435,6 +661,10 @@ serve(async (req) => {
           regionalFields.price_gbp = regionalData['UK'].price;
           regionalFields.product_url_uk = regionalData['UK'].url;
         }
+        if (regionalData['JP']) {
+          regionalFields.price_jpy = regionalData['JP'].price;
+          regionalFields.product_url_jp = regionalData['JP'].url;
+        }
 
         const filamentData = {
           product_id: product.productId,
@@ -456,22 +686,19 @@ serve(async (req) => {
           last_scraped_at: new Date().toISOString(),
           sync_status: 'synced',
           regional_prices_updated_at: new Date().toISOString(),
-          // Include TDS URL if found
           ...(product.tdsUrl ? { tds_url: product.tdsUrl } : {}),
-          // Include color HEX if extracted
           ...(colorHex ? { color_hex: colorHex } : {}),
-          // Include tech specs
           ...(techSpecs?.nozzle_temp_min_c ? { nozzle_temp_min_c: techSpecs.nozzle_temp_min_c } : {}),
           ...(techSpecs?.nozzle_temp_max_c ? { nozzle_temp_max_c: techSpecs.nozzle_temp_max_c } : {}),
           ...(techSpecs?.bed_temp_min_c ? { bed_temp_min_c: techSpecs.bed_temp_min_c } : {}),
           ...(techSpecs?.bed_temp_max_c ? { bed_temp_max_c: techSpecs.bed_temp_max_c } : {}),
           ...(techSpecs?.density_g_cm3 ? { density_g_cm3: techSpecs.density_g_cm3 } : {}),
-          // Include regional prices and URLs
           ...regionalFields,
         };
 
         if (dryRun) {
           if (existing) {
+            console.log(`[ELEGOO-SYNC]    🔄 DRY RUN: Would UPDATE (current: $${existing.variant_price} -> $${product.price})`);
             result.updated++;
             result.products.push({
               title: product.title,
@@ -482,6 +709,7 @@ serve(async (req) => {
               msrp,
             });
           } else {
+            console.log(`[ELEGOO-SYNC]    ➕ DRY RUN: Would CREATE`);
             result.created++;
             result.products.push({
               title: product.title,
@@ -493,7 +721,7 @@ serve(async (req) => {
           }
         } else {
           if (existing) {
-            const { error } = await supabase
+            const { error: updateError } = await supabase
               .from('filaments')
               .update({
                 ...filamentData,
@@ -501,8 +729,12 @@ serve(async (req) => {
               })
               .eq('id', existing.id);
 
-            if (error) throw error;
+            if (updateError) {
+              console.error(`[ELEGOO-SYNC]    ❌ Update error: ${updateError.message}`);
+              throw updateError;
+            }
             
+            console.log(`[ELEGOO-SYNC]    ✅ UPDATED`);
             result.updated++;
             result.products.push({
               title: product.title,
@@ -514,6 +746,7 @@ serve(async (req) => {
 
             // Log price change if different
             if (existing.variant_price !== product.price) {
+              console.log(`[ELEGOO-SYNC]    💰 Price changed: $${existing.variant_price} -> $${product.price}`);
               await supabase.from('price_history').insert({
                 filament_id: existing.id,
                 price: product.price,
@@ -522,12 +755,16 @@ serve(async (req) => {
               });
             }
           } else {
-            const { error } = await supabase
+            const { error: insertError } = await supabase
               .from('filaments')
               .insert(filamentData);
 
-            if (error) throw error;
+            if (insertError) {
+              console.error(`[ELEGOO-SYNC]    ❌ Insert error: ${insertError.message}`);
+              throw insertError;
+            }
             
+            console.log(`[ELEGOO-SYNC]    ✅ CREATED`);
             result.created++;
             result.products.push({
               title: product.title,
@@ -540,7 +777,7 @@ serve(async (req) => {
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        console.error(`Error processing product ${baseProduct.title}:`, err);
+        console.error(`[ELEGOO-SYNC]    ❌ ERROR: ${errorMessage}`);
         result.errors++;
         result.products.push({
           title: baseProduct.title,
@@ -551,36 +788,71 @@ serve(async (req) => {
       }
     }
 
-    // Update job log
-    if (!dryRun) {
-      await supabase
-        .from('scrape_job_logs')
-        .update({
-          status: result.errors > 0 ? 'completed_with_errors' : 'completed',
-          completed_at: new Date().toISOString(),
-          details: {
-            materialFilter,
-            dryRun,
-            regions,
-            ...result,
-          },
-        })
-        .eq('id', jobId);
+    // === PHASE 6: UPDATE SYNC LOG ===
+    const durationMs = Date.now() - startTime;
+    const durationSeconds = Math.round(durationMs / 1000);
+
+    console.log('[ELEGOO-SYNC] ───────────────────────────────────────────────────────');
+    console.log('[ELEGOO-SYNC] 📋 PHASE: Updating sync log');
+
+    if (syncLogId && !dryRun) {
+      try {
+        const { error: updateLogError } = await supabase
+          .from('brand_sync_logs')
+          .update({
+            status: result.errors > 0 ? 'completed_with_errors' : 'completed',
+            completed_at: new Date().toISOString(),
+            duration_seconds: durationSeconds,
+            products_discovered: productsByNormalizedTitle.size,
+            products_created: result.created,
+            products_updated: result.updated,
+            products_failed: result.errors,
+            success_details: {
+              regions_synced: regionsToSync,
+              catalogs_used: availableCatalogs,
+            },
+          })
+          .eq('id', syncLogId);
+
+        if (updateLogError) {
+          console.error('[ELEGOO-SYNC] ⚠️ Failed to update sync log:', updateLogError.message);
+        } else {
+          console.log('[ELEGOO-SYNC] ✅ Sync log updated');
+        }
+      } catch (logErr) {
+        console.error('[ELEGOO-SYNC] ⚠️ Sync log update error:', logErr);
+      }
     }
 
-    console.log(`Sync complete: ${result.created} created, ${result.updated} updated, ${result.skipped} skipped, ${result.errors} errors`);
+    // === PHASE 7: SUMMARY ===
+    console.log('[ELEGOO-SYNC] ═══════════════════════════════════════════════════════');
+    console.log('[ELEGOO-SYNC] 🎉 SYNC COMPLETE');
+    console.log('[ELEGOO-SYNC] ═══════════════════════════════════════════════════════');
+    console.log(`[ELEGOO-SYNC] ⏱️ Duration: ${durationMs}ms (${durationSeconds}s)`);
+    console.log(`[ELEGOO-SYNC] 📊 Results:`);
+    console.log(`[ELEGOO-SYNC]    ➕ Created: ${result.created}`);
+    console.log(`[ELEGOO-SYNC]    🔄 Updated: ${result.updated}`);
+    console.log(`[ELEGOO-SYNC]    ⏭️ Skipped: ${result.skipped}`);
+    console.log(`[ELEGOO-SYNC]    ❌ Errors: ${result.errors}`);
+    console.log(`[ELEGOO-SYNC]    📦 Total unique products: ${productsByNormalizedTitle.size}`);
+    console.log(`[ELEGOO-SYNC]    🌍 Regions synced: ${regionsToSync.join(', ')}`);
+    console.log(`[ELEGOO-SYNC]    🔧 Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);
 
     return new Response(
       JSON.stringify({
         success: true,
         dryRun,
-        jobId: dryRun ? null : jobId,
+        syncLogId: dryRun ? null : syncLogId,
         summary: {
           created: result.created,
           updated: result.updated,
           skipped: result.skipped,
           errors: result.errors,
           total: productsByNormalizedTitle.size,
+          durationMs,
+          regionsRequested: requestedRegions,
+          regionsSynced: regionsToSync,
+          catalogsUsed: availableCatalogs,
         },
         products: result.products,
       }),
@@ -588,10 +860,25 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error syncing Elegoo products:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const durationMs = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.error('[ELEGOO-SYNC] ═══════════════════════════════════════════════════════');
+    console.error('[ELEGOO-SYNC] ❌ SYNC FAILED');
+    console.error('[ELEGOO-SYNC] ═══════════════════════════════════════════════════════');
+    console.error(`[ELEGOO-SYNC] Error: ${errorMessage}`);
+    console.error(`[ELEGOO-SYNC] Duration: ${durationMs}ms`);
+    if (errorStack) {
+      console.error(`[ELEGOO-SYNC] Stack: ${errorStack}`);
+    }
+
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ 
+        success: false,
+        error: errorMessage,
+        durationMs,
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
