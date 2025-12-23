@@ -598,6 +598,28 @@ serve(async (req) => {
       console.log('[ELEGOO-SYNC] ⏭️ Dry run mode - skipping sync log creation');
     }
 
+    // === PHASE 2.5: GET ELEGOO BRAND ID ===
+    console.log('[ELEGOO-SYNC] ───────────────────────────────────────────────────────');
+    console.log('[ELEGOO-SYNC] 🏷️ PHASE: Fetching Elegoo brand ID');
+    
+    let elegooBrandId: string | null = null;
+    try {
+      const { data: brandData, error: brandError } = await supabase
+        .from('automated_brands')
+        .select('id')
+        .eq('brand_slug', 'elegoo')
+        .single();
+      
+      if (brandError) {
+        console.warn('[ELEGOO-SYNC] ⚠️ Could not fetch Elegoo brand ID:', brandError.message);
+      } else if (brandData) {
+        elegooBrandId = brandData.id;
+        console.log(`[ELEGOO-SYNC] ✅ Elegoo brand ID: ${elegooBrandId}`);
+      }
+    } catch (brandErr) {
+      console.warn('[ELEGOO-SYNC] ⚠️ Error fetching brand ID:', brandErr);
+    }
+
     // === PHASE 3: DISCOVER CATALOGS ===
     console.log('[ELEGOO-SYNC] ───────────────────────────────────────────────────────');
     console.log('[ELEGOO-SYNC] 🔍 PHASE: Catalog Discovery');
@@ -1010,6 +1032,7 @@ serve(async (req) => {
           last_scraped_at: new Date().toISOString(),
           sync_status: 'synced',
           regional_prices_updated_at: new Date().toISOString(),
+          ...(elegooBrandId ? { brand_id: elegooBrandId } : {}),
           ...(product.tdsUrl ? { tds_url: product.tdsUrl } : {}),
           ...(colorHex ? { color_hex: colorHex } : {}),
           ...(techSpecs?.nozzle_temp_min_c ? { nozzle_temp_min_c: techSpecs.nozzle_temp_min_c } : {}),
