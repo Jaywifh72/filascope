@@ -1,7 +1,23 @@
-import { CheckCircle2, XCircle, AlertCircle, Package, RefreshCw } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, Package, RefreshCw, Check, X } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
+interface ProductFields {
+  tds: boolean;
+  image: boolean;
+  price: boolean;
+  salePrice: boolean;
+  url: boolean;
+}
 
 interface ElegooSyncResult {
   success: boolean;
@@ -18,6 +34,7 @@ interface ElegooSyncResult {
     title: string;
     action: 'created' | 'updated' | 'skipped' | 'error';
     reason?: string;
+    fields?: ProductFields;
   }[];
 }
 
@@ -25,6 +42,26 @@ interface ElegooSyncProgressProps {
   result: ElegooSyncResult | null;
   isLoading: boolean;
   error: string | null;
+}
+
+function FieldIndicator({ available }: { available: boolean }) {
+  return available ? (
+    <Check className="w-4 h-4 text-green-500" />
+  ) : (
+    <X className="w-4 h-4 text-destructive" />
+  );
+}
+
+function ActionBadge({ action }: { action: 'created' | 'updated' | 'skipped' | 'error' }) {
+  const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
+    created: { variant: 'default', label: 'Created' },
+    updated: { variant: 'secondary', label: 'Updated' },
+    skipped: { variant: 'outline', label: 'Skipped' },
+    error: { variant: 'destructive', label: 'Error' },
+  };
+  
+  const { variant, label } = variants[action];
+  return <Badge variant={variant} className="text-xs">{label}</Badge>;
 }
 
 export function ElegooSyncProgress({ result, isLoading, error }: ElegooSyncProgressProps) {
@@ -114,40 +151,82 @@ export function ElegooSyncProgress({ result, isLoading, error }: ElegooSyncProgr
         <Progress value={successRate} className="h-2" />
       </div>
 
-      {/* Products List */}
+      {/* Products Table */}
       {products.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium">Products ({products.length})</h4>
-          <ScrollArea className="h-[200px] rounded-lg border">
-            <div className="p-2 space-y-1">
-              {products.map((product, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between text-sm py-1 px-2 rounded hover:bg-muted/50"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    {product.action === 'created' && (
-                      <Package className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    )}
-                    {product.action === 'updated' && (
-                      <RefreshCw className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                    )}
-                    {product.action === 'skipped' && (
-                      <AlertCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    )}
-                    {product.action === 'error' && (
-                      <XCircle className="w-4 h-4 text-destructive flex-shrink-0" />
-                    )}
-                    <span className="truncate">{product.title}</span>
-                  </div>
-                  {product.reason && (
-                    <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
-                      {product.reason}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
+          <ScrollArea className="h-[300px] rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[40%]">Product</TableHead>
+                  <TableHead className="w-[80px]">Action</TableHead>
+                  <TableHead className="w-[50px] text-center">TDS</TableHead>
+                  <TableHead className="w-[50px] text-center">Image</TableHead>
+                  <TableHead className="w-[50px] text-center">Price</TableHead>
+                  <TableHead className="w-[50px] text-center">Sale</TableHead>
+                  <TableHead className="w-[50px] text-center">URL</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {products.map((product, index) => {
+                  const fields = product.fields || {
+                    tds: false,
+                    image: false,
+                    price: false,
+                    salePrice: false,
+                    url: false,
+                  };
+                  
+                  return (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {product.action === 'created' && (
+                            <Package className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          )}
+                          {product.action === 'updated' && (
+                            <RefreshCw className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                          )}
+                          {product.action === 'skipped' && (
+                            <AlertCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          )}
+                          {product.action === 'error' && (
+                            <XCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                          )}
+                          <span className="truncate max-w-[250px]" title={product.title}>
+                            {product.title}
+                          </span>
+                        </div>
+                        {product.reason && (
+                          <span className="text-xs text-muted-foreground block mt-1">
+                            {product.reason}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <ActionBadge action={product.action} />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <FieldIndicator available={fields.tds} />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <FieldIndicator available={fields.image} />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <FieldIndicator available={fields.price} />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <FieldIndicator available={fields.salePrice} />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <FieldIndicator available={fields.url} />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </ScrollArea>
         </div>
       )}

@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface ProductFields {
+  tds: boolean;
+  image: boolean;
+  price: boolean;
+  salePrice: boolean;
+  url: boolean;
+}
+
 interface ElegooSyncResult {
   success: boolean;
   dryRun: boolean;
@@ -16,8 +24,11 @@ interface ElegooSyncResult {
     title: string;
     action: 'created' | 'updated' | 'skipped' | 'error';
     reason?: string;
+    fields: ProductFields;
   }[];
 }
+
+export type { ElegooSyncResult, ProductFields };
 
 export function useElegooSync() {
   const [isLoading, setIsLoading] = useState(false);

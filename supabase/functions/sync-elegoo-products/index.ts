@@ -26,6 +26,14 @@ interface ElegooProduct {
   categoryId: string;
 }
 
+interface ProductFields {
+  tds: boolean;
+  image: boolean;
+  price: boolean;
+  salePrice: boolean;
+  url: boolean;
+}
+
 interface SyncResult {
   created: number;
   updated: number;
@@ -35,6 +43,7 @@ interface SyncResult {
     title: string;
     action: 'created' | 'updated' | 'skipped' | 'error';
     reason?: string;
+    fields: ProductFields;
   }[];
 }
 
@@ -175,6 +184,15 @@ serve(async (req) => {
         const weight = extractWeightFromTitle(product.title);
         const diameter = extractDiameterFromTitle(product.title);
 
+        // Build fields availability object
+        const fields: ProductFields = {
+          tds: false, // TDS not available from Impact API
+          image: Boolean(product.imageUrl && product.imageUrl.trim() !== ''),
+          price: Boolean(product.price && product.price > 0),
+          salePrice: Boolean(product.compareAtPrice && product.compareAtPrice > 0),
+          url: Boolean(product.url && product.url.trim() !== ''),
+        };
+
         // Skip non-filament products if we couldn't detect material
         if (!material) {
           result.skipped++;
@@ -182,6 +200,7 @@ serve(async (req) => {
             title: product.title,
             action: 'skipped',
             reason: 'Could not detect material type',
+            fields,
           });
           continue;
         }
@@ -189,10 +208,15 @@ serve(async (req) => {
         // Check if product already exists
         const { data: existing } = await supabase
           .from('filaments')
-          .select('id, variant_price, updated_at')
+          .select('id, variant_price, updated_at, tds_url')
           .eq('product_id', product.productId)
           .eq('vendor', 'Elegoo')
           .maybeSingle();
+
+        // Update TDS field if we have it in database
+        if (existing?.tds_url) {
+          fields.tds = true;
+        }
 
         const filamentData = {
           product_id: product.productId,
@@ -222,12 +246,14 @@ serve(async (req) => {
               title: product.title,
               action: 'updated',
               reason: `Price: $${existing.variant_price} → $${product.price}`,
+              fields,
             });
           } else {
             result.created++;
             result.products.push({
               title: product.title,
               action: 'created',
+              fields,
             });
           }
         } else {
@@ -246,6 +272,7 @@ serve(async (req) => {
             result.products.push({
               title: product.title,
               action: 'updated',
+              fields,
             });
 
             // Log price change if different
@@ -268,6 +295,7 @@ serve(async (req) => {
             result.products.push({
               title: product.title,
               action: 'created',
+              fields,
             });
           }
         }
@@ -279,6 +307,7 @@ serve(async (req) => {
           title: product.title,
           action: 'error',
           reason: errorMessage,
+          fields: { tds: false, image: false, price: false, salePrice: false, url: false },
         });
       }
     }
