@@ -146,6 +146,58 @@ const COLOR_HEX_MAP: Record<string, string> = {
   'translucent purple': 'DDA0DD',
 };
 
+// Region to expected URL domain mapping for validation
+const REGION_URL_DOMAINS: Record<string, string> = {
+  'US': 'elegoo.com',      // Main domain (no subdomain prefix)
+  'AU': 'au.elegoo.com',
+  'CA': 'ca.elegoo.com',
+  'EU': 'eu.elegoo.com',
+  'UK': 'uk.elegoo.com',
+  'JP': 'jp.elegoo.com',
+};
+
+/**
+ * Validates that a URL belongs to the expected regional store
+ * Prevents cross-regional contamination (e.g., AU URLs in CA fields)
+ */
+function validateRegionalUrl(url: string | undefined, expectedRegion: string): boolean {
+  if (!url) return false;
+  
+  const expectedDomain = REGION_URL_DOMAINS[expectedRegion];
+  if (!expectedDomain) {
+    console.warn(`[ELEGOO-SYNC] ⚠️ Unknown region for URL validation: ${expectedRegion}`);
+    return true; // Allow if region unknown
+  }
+  
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
+    
+    // For US, URL should be elegoo.com (not a regional subdomain)
+    if (expectedRegion === 'US') {
+      // US URLs should NOT have regional subdomains
+      const isRegionalSubdomain = ['au.', 'ca.', 'eu.', 'uk.', 'jp.'].some(
+        prefix => hostname.startsWith(prefix)
+      );
+      if (isRegionalSubdomain) {
+        console.warn(`[ELEGOO-SYNC] ⚠️ Invalid US URL (has regional subdomain): ${url}`);
+        return false;
+      }
+      return hostname.endsWith('elegoo.com');
+    }
+    
+    // For regional stores, URL should have the expected subdomain
+    const isValid = hostname === expectedDomain || hostname.endsWith('.' + expectedDomain);
+    if (!isValid) {
+      console.warn(`[ELEGOO-SYNC] ⚠️ Invalid ${expectedRegion} URL (expected ${expectedDomain}): ${url}`);
+    }
+    return isValid;
+  } catch {
+    console.warn(`[ELEGOO-SYNC] ⚠️ Invalid URL format: ${url}`);
+    return false;
+  }
+}
+
 interface TechSpecs {
   nozzle_temp_min_c: number | null;
   nozzle_temp_max_c: number | null;
@@ -898,28 +950,48 @@ serve(async (req) => {
           fields.tds = true;
         }
 
-        // Build regional price and URL fields
+        // Build regional price and URL fields with validation to prevent cross-contamination
         const regionalFields: Record<string, unknown> = {};
         
         if (regionalData['AU']) {
-          regionalFields.price_aud = regionalData['AU'].price;
-          regionalFields.product_url_au = regionalData['AU'].url;
+          if (validateRegionalUrl(regionalData['AU'].url, 'AU')) {
+            regionalFields.price_aud = regionalData['AU'].price;
+            regionalFields.product_url_au = regionalData['AU'].url;
+          } else {
+            console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid AU URL: ${regionalData['AU'].url}`);
+          }
         }
         if (regionalData['CA']) {
-          regionalFields.price_cad = regionalData['CA'].price;
-          regionalFields.product_url_ca = regionalData['CA'].url;
+          if (validateRegionalUrl(regionalData['CA'].url, 'CA')) {
+            regionalFields.price_cad = regionalData['CA'].price;
+            regionalFields.product_url_ca = regionalData['CA'].url;
+          } else {
+            console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid CA URL: ${regionalData['CA'].url}`);
+          }
         }
         if (regionalData['EU']) {
-          regionalFields.price_eur = regionalData['EU'].price;
-          regionalFields.product_url_eu = regionalData['EU'].url;
+          if (validateRegionalUrl(regionalData['EU'].url, 'EU')) {
+            regionalFields.price_eur = regionalData['EU'].price;
+            regionalFields.product_url_eu = regionalData['EU'].url;
+          } else {
+            console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid EU URL: ${regionalData['EU'].url}`);
+          }
         }
         if (regionalData['UK']) {
-          regionalFields.price_gbp = regionalData['UK'].price;
-          regionalFields.product_url_uk = regionalData['UK'].url;
+          if (validateRegionalUrl(regionalData['UK'].url, 'UK')) {
+            regionalFields.price_gbp = regionalData['UK'].price;
+            regionalFields.product_url_uk = regionalData['UK'].url;
+          } else {
+            console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid UK URL: ${regionalData['UK'].url}`);
+          }
         }
         if (regionalData['JP']) {
-          regionalFields.price_jpy = regionalData['JP'].price;
-          regionalFields.product_url_jp = regionalData['JP'].url;
+          if (validateRegionalUrl(regionalData['JP'].url, 'JP')) {
+            regionalFields.price_jpy = regionalData['JP'].price;
+            regionalFields.product_url_jp = regionalData['JP'].url;
+          } else {
+            console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid JP URL: ${regionalData['JP'].url}`);
+          }
         }
 
         // Compute product line ID for grouping color variants
