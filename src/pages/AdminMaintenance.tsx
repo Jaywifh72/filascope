@@ -595,6 +595,18 @@ const AdminMaintenance = () => {
                       <strong>Product Line Grouping:</strong> Groups color variants under a common product line ID for the color selector UI.
                     </div>
                   </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>TDS URL Capture:</strong> Stores Technical Data Sheet URLs from the catalog feed for each product.
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>TDS Data Ingestion:</strong> Uses AI to parse TDS documents and extract print settings (temps, speeds), physical properties (density, strength), and drying requirements. <span className="text-xs text-amber-500">(Run separately via parse-filament-tds)</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
