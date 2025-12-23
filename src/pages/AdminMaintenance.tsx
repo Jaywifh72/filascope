@@ -52,7 +52,10 @@ const AdminMaintenance = () => {
     { id: 'CA', label: 'CA' },
     { id: 'EU', label: 'EU' },
     { id: 'UK', label: 'UK' },
-    { id: 'JP', label: 'JP' },
+    { id: 'DE', label: 'DE' },
+    { id: 'IT', label: 'IT' },
+    { id: 'FR', label: 'FR' },
+    { id: 'ES', label: 'ES' },
   ];
   
   const BAMBU_MATERIAL_OPTIONS = [
@@ -260,7 +263,7 @@ const AdminMaintenance = () => {
     try {
       // If ALL is selected, pass all individual regions
       const regionsToSync = elegooSelectedRegions.includes('ALL') 
-        ? ['US', 'AU', 'CA', 'EU', 'UK', 'JP'] 
+        ? ['US', 'AU', 'CA', 'EU', 'UK', 'DE', 'IT', 'FR', 'ES'] 
         : elegooSelectedRegions;
       await syncProducts(elegooDryRun, elegooMaterialFilter || undefined, regionsToSync);
       toast({
