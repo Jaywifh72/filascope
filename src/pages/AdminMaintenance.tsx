@@ -69,12 +69,30 @@ const AdminMaintenance = () => {
 
   const ELEGOO_MATERIAL_OPTIONS = [
     { id: '', label: 'All Materials' },
+    // Standard PLA variants
     { id: 'PLA', label: 'PLA' },
+    { id: 'PLA Basic', label: 'PLA Basic' },
+    { id: 'PLA Plus', label: 'PLA Plus' },
     { id: 'PLA+', label: 'PLA+' },
-    { id: 'PETG', label: 'PETG' },
-    { id: 'ABS', label: 'ABS' },
-    { id: 'TPU', label: 'TPU' },
+    // Specialty PLA variants
+    { id: 'PLA Matte', label: 'PLA Matte' },
+    { id: 'PLA Silk', label: 'PLA Silk' },
+    { id: 'PLA Galaxy', label: 'PLA Galaxy' },
+    { id: 'PLA Marble', label: 'PLA Marble' },
+    { id: 'PLA Metal', label: 'PLA Metal' },
     { id: 'PLA-CF', label: 'PLA-CF' },
+    { id: 'Rapid PLA', label: 'Rapid PLA Plus' },
+    // PETG variants
+    { id: 'PETG', label: 'PETG' },
+    { id: 'PETG-CF', label: 'PETG-CF' },
+    { id: 'PETG-GF', label: 'PETG-GF' },
+    // Engineering & Specialty
+    { id: 'ABS', label: 'ABS' },
+    { id: 'PC', label: 'PC' },
+    { id: 'PAHT-CF', label: 'PAHT-CF' },
+    // Flexible
+    { id: 'TPU', label: 'TPU' },
+    { id: 'Rapid TPU', label: 'Rapid TPU 95A' },
   ];
 
   // Elegoo Catalog Reference Data (Campaign ID: 19663)
