@@ -13,6 +13,9 @@ interface Catalog {
   DateCreated: string;
   DateLastUpdated: string;
   Status: string;
+  AdvertiserLocation: string;
+  Currency: string;
+  ServiceAreas: string[];
 }
 
 interface CatalogsResponse {
@@ -75,7 +78,7 @@ serve(async (req) => {
     
     console.log(`Found ${data.Catalogs?.length || 0} catalogs (total: ${data.TotalRecords})`);
 
-    // Transform catalogs to a simpler format
+    // Transform catalogs to a simpler format with regional information
     const catalogs = (data.Catalogs || []).map((catalog) => ({
       id: catalog.Id,
       name: catalog.Name,
@@ -84,6 +87,9 @@ serve(async (req) => {
       dateCreated: catalog.DateCreated,
       dateLastUpdated: catalog.DateLastUpdated,
       status: catalog.Status,
+      location: catalog.AdvertiserLocation || null,
+      currency: catalog.Currency || null,
+      serviceAreas: catalog.ServiceAreas || [],
     }));
 
     return new Response(
