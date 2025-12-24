@@ -562,7 +562,7 @@ const AdminMaintenance = () => {
                       products: [],
                       regionsSynced: activeElegooJob.progress?.completedRegions || [],
                     } : null}
-                    isLoading={isElegooRunning || elegooLoading}
+                    isLoading={isElegooRunning || (elegooLoading && !activeElegooJob)}
                     error={elegooError || activeElegooJob?.error || null}
                     progress={isElegooRunning && activeElegooJob?.progress ? {
                       currentRegion: activeElegooJob.progress.currentRegion || '',
