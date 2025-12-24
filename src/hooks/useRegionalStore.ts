@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useCurrency, CurrencyCode } from '@/hooks/useCurrency';
-import { getBrandConfig, RegionCode, BrandStoreConfig } from '@/lib/brandRegionalStores';
+import { getBrandConfig, RegionCode, BrandStoreConfig, RegionConfig } from '@/lib/brandRegionalStores';
 
 /**
  * Maps currency codes to region codes
@@ -25,6 +25,10 @@ const CURRENCY_TO_REGION: Record<CurrencyCode, RegionCode> = {
 /**
  * Transforms a product URL to the regional variant based on brand config
  */
+/**
+ * Transforms a product URL to the regional variant based on brand config.
+ * Handles both direct URLs and affiliate-wrapped URLs (e.g., elegoo.sjv.io)
+ */
 function transformUrl(
   originalUrl: string,
   config: BrandStoreConfig,
@@ -47,23 +51,63 @@ function transformUrl(
   
   try {
     const url = new URL(originalUrl);
+    
+    // Check if this is an affiliate-wrapped URL (e.g., elegoo.sjv.io, shareasale, etc.)
+    // These URLs contain the real store URL in a parameter like 'u=' or 'url='
+    const isAffiliateUrl = url.hostname.includes('.sjv.io') || 
+                           url.hostname.includes('shareasale.com') ||
+                           url.hostname.includes('avantlink.com') ||
+                           url.hostname.includes('pjtra.com') ||
+                           url.hostname.includes('pntra.com');
+    
+    if (isAffiliateUrl) {
+      // Extract the real URL from the 'u' parameter
+      const encodedRealUrl = url.searchParams.get('u');
+      if (encodedRealUrl) {
+        const realUrl = decodeURIComponent(encodedRealUrl);
+        const transformedRealUrl = transformDirectUrl(realUrl, config, targetRegion, regionConfig);
+        
+        if (transformedRealUrl !== realUrl) {
+          // Re-encode the transformed URL back into the affiliate wrapper
+          url.searchParams.set('u', encodeURIComponent(transformedRealUrl));
+          return url.toString();
+        }
+      }
+      return originalUrl;
+    }
+    
+    // Direct URL transformation
+    return transformDirectUrl(originalUrl, config, targetRegion, regionConfig);
+  } catch (e) {
+    console.warn('Failed to transform URL:', originalUrl, e);
+    return originalUrl;
+  }
+}
+
+/**
+ * Transforms a direct (non-affiliate) URL to the regional variant
+ */
+function transformDirectUrl(
+  originalUrl: string,
+  config: BrandStoreConfig,
+  targetRegion: RegionCode,
+  regionConfig: RegionConfig
+): string {
+  try {
+    const url = new URL(originalUrl);
     const hostParts = url.hostname.split('.');
     
     if (config.pattern === 'subdomain') {
-      // Handle subdomain pattern: us.store.bambulab.com -> ca.store.bambulab.com
       const newSubdomain = regionConfig.subdomain || 'www';
       
       // Check if URL matches the brand's base domain
       if (url.hostname.includes(config.baseDomain)) {
-        // Replace or add subdomain
         const baseDomainParts = config.baseDomain.split('.');
         
         // If current hostname has more parts than base domain, it has a subdomain
         if (hostParts.length > baseDomainParts.length) {
-          // Replace first part (subdomain)
           hostParts[0] = newSubdomain;
         } else {
-          // Add subdomain
           hostParts.unshift(newSubdomain);
         }
         
@@ -71,21 +115,15 @@ function transformUrl(
         return url.toString();
       }
     } else if (config.pattern === 'path' && regionConfig.pathPrefix) {
-      // Handle path pattern: /en-us/product -> /en-ca/product
-      // This is less common but some stores use it
       const pathParts = url.pathname.split('/');
-      if (pathParts.length > 1) {
-        // Check if first path segment looks like a locale
-        if (/^[a-z]{2}(-[a-z]{2})?$/i.test(pathParts[1])) {
-          pathParts[1] = regionConfig.pathPrefix;
-          url.pathname = pathParts.join('/');
-          return url.toString();
-        }
+      if (pathParts.length > 1 && /^[a-z]{2}(-[a-z]{2})?$/i.test(pathParts[1])) {
+        pathParts[1] = regionConfig.pathPrefix;
+        url.pathname = pathParts.join('/');
+        return url.toString();
       }
     }
   } catch (e) {
-    // Invalid URL, return original
-    console.warn('Failed to transform URL:', originalUrl, e);
+    console.warn('Failed to transform direct URL:', originalUrl, e);
   }
   
   return originalUrl;
