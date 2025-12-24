@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useCurrency, CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
 import { useRegionalStore } from '@/hooks/useRegionalStore';
+import { isRegionalBrand as checkIsRegionalBrand } from '@/hooks/useRegionalFiltering';
 
 /**
  * Maps currency codes to regional price columns
@@ -212,6 +213,10 @@ export interface RegionalPriceResult {
   isUsingFallbackRegion: boolean;
   /** The actual currency of the URL being used (may differ from user's preferred currency) */
   actualUrlCurrency: CurrencyCode | null;
+  /** Whether the product is available in the user's selected region (has regional URL/price) */
+  isAvailableInUserRegion: boolean;
+  /** Whether the vendor has regional stores (vs global shipping) */
+  isRegionalBrand: boolean;
 }
 
 /**
@@ -235,8 +240,13 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         vendorCurrency: null,
         isUsingFallbackRegion: false,
         actualUrlCurrency: null,
+        isAvailableInUserRegion: false,
+        isRegionalBrand: false,
       };
     }
+
+    // Check if this is a regional brand (has regional stores vs ships globally)
+    const isRegionalBrand = checkIsRegionalBrand(filament.vendor);
 
     // Detect vendor's native currency
     const vendorCurrency = detectVendorCurrency(filament.vendor, filament.product_url);
@@ -278,6 +288,13 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
       }
     }
 
+    // Determine if product is actually available in user's region
+    // For regional brands, we check if there's a regional URL or price
+    // For global brands, always available
+    const hasDirectRegionalUrl = !!(filament[urlColumn] as string | null | undefined);
+    const hasDirectRegionalPrice = actualRegionalPrice && actualRegionalPrice > 0;
+    const isAvailableInUserRegion = !isRegionalBrand || hasDirectRegionalUrl || hasDirectRegionalPrice;
+
     // Determine the best price to use
     // Priority 1: Actual scraped regional price from database for user's currency
     if (actualRegionalPrice && actualRegionalPrice > 0) {
@@ -291,6 +308,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         vendorCurrency,
         isUsingFallbackRegion: false,
         actualUrlCurrency: currency,
+        isAvailableInUserRegion: true,
+        isRegionalBrand,
       };
     }
     
@@ -307,6 +326,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         vendorCurrency,
         isUsingFallbackRegion,
         actualUrlCurrency: fallbackUrlCurrency || currency,
+        isAvailableInUserRegion,
+        isRegionalBrand,
       };
     }
     
@@ -327,6 +348,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         vendorCurrency,
         isUsingFallbackRegion,
         actualUrlCurrency: fallbackUrlCurrency || 'USD',
+        isAvailableInUserRegion,
+        isRegionalBrand,
       };
     }
     
@@ -356,6 +379,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
             vendorCurrency,
             isUsingFallbackRegion: false,
             actualUrlCurrency: fallback.cur,
+            isAvailableInUserRegion: true,
+            isRegionalBrand,
           };
         }
         
@@ -374,6 +399,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
           vendorCurrency,
           isUsingFallbackRegion: isFallback,
           actualUrlCurrency: fallback.cur,
+          isAvailableInUserRegion: false,
+          isRegionalBrand,
         };
       }
     }
@@ -390,6 +417,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         vendorCurrency,
         isUsingFallbackRegion,
         actualUrlCurrency: fallbackUrlCurrency,
+        isAvailableInUserRegion,
+        isRegionalBrand,
       };
     }
     
@@ -404,6 +433,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
       vendorCurrency,
       isUsingFallbackRegion: false,
       actualUrlCurrency: null,
+      isAvailableInUserRegion: false,
+      isRegionalBrand,
     };
   }, [filament, currency, convertPrice, getRegionalUrl, currentRegion]);
 }
