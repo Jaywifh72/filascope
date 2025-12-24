@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { Star, TrendingDown, Sparkles, AlertTriangle } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { normalizeColorHex } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useRegionalFiltering, type FilamentWithRegion } from "@/hooks/useRegionalFiltering";
 
 interface Filament {
   id: string;
@@ -20,14 +22,22 @@ interface Filament {
   value_score: number | null;
   printability_index: number | null;
   created_at: string | null;
+  // Regional fields for filtering
+  product_url?: string | null;
+  product_url_ca?: string | null;
+  product_url_uk?: string | null;
+  product_url_eu?: string | null;
+  product_url_au?: string | null;
+  product_url_jp?: string | null;
 }
 
 const BentoGrid = () => {
   const { formatPrice, currencyInfo } = useCurrency();
+  const { filterByRegion, currentRegion } = useRegionalFiltering();
   
-  // Fetch featured filament (highest rated by value_score)
-  const { data: featuredFilament } = useQuery({
-    queryKey: ["featured-filament"],
+  // Fetch featured filament candidates (highest rated by value_score)
+  const { data: featuredCandidates } = useQuery({
+    queryKey: ["featured-filament-candidates"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("filaments")
@@ -35,46 +45,66 @@ const BentoGrid = () => {
         .not("value_score", "is", null)
         .not("featured_image", "is", null)
         .order("value_score", { ascending: false })
-        .limit(1)
-        .single();
+        .limit(20); // Fetch more to filter by region
       
       if (error) throw error;
-      return data as Filament;
+      return data as (Filament & FilamentWithRegion)[];
     },
   });
 
-  // Fetch price drops (items with lower current price - simulated with low variant_price)
-  const { data: priceDrops } = useQuery({
-    queryKey: ["price-drops"],
+  // Apply regional filtering and get top result
+  const featuredFilament = useMemo(() => {
+    if (!featuredCandidates) return undefined;
+    const filtered = filterByRegion(featuredCandidates);
+    return filtered[0] as Filament | undefined;
+  }, [featuredCandidates, filterByRegion]);
+
+  // Fetch price drops candidates (items with lower current price)
+  const { data: priceDropCandidates } = useQuery({
+    queryKey: ["price-drops-candidates"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("filaments")
         .select("*")
         .not("variant_price", "is", null)
         .order("variant_price", { ascending: true })
-        .limit(5);
+        .limit(30); // Fetch more to filter by region
       
       if (error) throw error;
-      return data as Filament[];
+      return data as (Filament & FilamentWithRegion)[];
     },
   });
 
-  // Fetch new arrivals (most recently created)
-  const { data: newArrival } = useQuery({
-    queryKey: ["new-arrival"],
+  // Apply regional filtering and get top 5
+  const priceDrops = useMemo(() => {
+    if (!priceDropCandidates) return undefined;
+    const filtered = filterByRegion(priceDropCandidates);
+    return filtered.slice(0, 5) as Filament[];
+  }, [priceDropCandidates, filterByRegion]);
+
+  // Fetch new arrivals candidates (most recently created)
+  const { data: newArrivalCandidates } = useQuery({
+    queryKey: ["new-arrival-candidates"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("filaments")
         .select("*")
         .not("featured_image", "is", null)
         .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+        .limit(20); // Fetch more to filter by region
       
       if (error) throw error;
-      return data as Filament;
+      return data as (Filament & FilamentWithRegion)[];
     },
   });
+
+  // Apply regional filtering and get top result
+  const newArrival = useMemo(() => {
+    if (!newArrivalCandidates) return undefined;
+    const filtered = filterByRegion(newArrivalCandidates);
+    return filtered[0] as Filament | undefined;
+  }, [newArrivalCandidates, filterByRegion]);
+
 
   const getTrueCost = (filament: Filament) => {
     if (!filament.variant_price || !filament.net_weight_g) return null;

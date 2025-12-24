@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionFilters } from "@/hooks/useSessionFilters";
 import { supabase } from "@/integrations/supabase/client";
+import { useRegionalFiltering } from "@/hooks/useRegionalFiltering";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -561,6 +562,13 @@ const Finder = () => {
     },
   });
 
+  // Apply regional filtering to filaments
+  const { filterByRegion, currentRegion } = useRegionalFiltering();
+  const regionalFilaments = useMemo(() => {
+    if (!filaments) return undefined;
+    return filterByRegion(filaments);
+  }, [filaments, filterByRegion]);
+
   const { data: brands } = useQuery({
     queryKey: ["brands"],
     queryFn: async () => {
@@ -721,12 +729,12 @@ const Finder = () => {
 
   // Calculate filter counts based on currently applied filters (excluding the filter being counted)
   const filterCounts = useMemo(() => {
-    if (!filaments) return {};
+    if (!regionalFilaments) return {};
 
     const counts: Record<string, number> = {};
 
     // Apply base filters (search, price, compatibility, brand) to get filtered set
-    const baseFiltered = filaments.filter(f => {
+    const baseFiltered = regionalFilaments.filter(f => {
       // Apply search filter
       if (searchTerm && f.product_title && f.vendor) {
         const searchLower = searchTerm.toLowerCase();
@@ -844,11 +852,11 @@ const Finder = () => {
     });
 
     return counts;
-  }, [filaments, searchTerm, maxPrice, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrands, materials]);
+  }, [regionalFilaments, searchTerm, maxPrice, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrands, materials]);
 
   // Helper function to get count for a material (checks both base and variants)
   const getMaterialCount = (baseMaterial: string) => {
-    if (!materials || !filaments) return 0;
+    if (!materials || !regionalFilaments) return 0;
     
     // Check if this material has variants
     const variants = materials.variantsByBase?.[baseMaterial] || [];
@@ -865,7 +873,7 @@ const Finder = () => {
       });
     } else {
       // Otherwise count materials that match the base
-      count = filaments.filter(f => f.material?.includes(baseMaterial)).length;
+      count = regionalFilaments.filter(f => f.material?.includes(baseMaterial)).length;
     }
     
     return count;
@@ -873,7 +881,7 @@ const Finder = () => {
 
   // Helper function to get count for a specific variant
   const getVariantCount = (baseMaterial: string, variant: string) => {
-    if (!materials || !filaments) return 0;
+    if (!materials || !regionalFilaments) return 0;
     
     const rawMaterials = materials.normalizedToRaw?.[baseMaterial]?.[variant] || [];
     return rawMaterials.reduce((sum, rawMaterial) => {
@@ -881,7 +889,7 @@ const Finder = () => {
     }, 0);
   };
 
-  const filteredAndSortedFilaments = filaments?.filter(f => {
+  const filteredAndSortedFilaments = regionalFilaments?.filter(f => {
     // Apply price range filter
     if (f.variant_price) {
       if (f.variant_price < priceRange[0] || f.variant_price > priceRange[1]) return false;
