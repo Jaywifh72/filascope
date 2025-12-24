@@ -317,9 +317,65 @@ async function processNextRegion(supabase: any, state: SyncState): Promise<void>
 }
 
 /**
- * Mark job as completed
+ * Mark job as completed and run image fix
  */
 async function completeJob(supabase: any, state: SyncState, error?: string): Promise<void> {
+  // Skip image fix if dry run or if there was an error
+  if (!state.dryRun && !error) {
+    console.log(`[ELEGOO-ORCHESTRATOR] Running per-color image fix for job ${state.jobId}`);
+    
+    // Update progress to show image fix phase
+    await supabase.from('scrape_jobs').update({
+      progress: {
+        currentRegion: 'Fixing per-color images...',
+        completedRegions: state.regions,
+        totalRegions: state.regions.length,
+        allRegions: state.regions,
+        regionsProcessed: state.regions.length,
+        created: state.results.created,
+        updated: state.results.updated,
+        skipped: state.results.skipped,
+        filtered: state.results.filtered,
+        errors: state.results.errors,
+        total: state.results.total,
+        regionResults: state.results.regionResults,
+        phase: 'fixing_images',
+      },
+      updated_at: new Date().toISOString(),
+    }).eq('id', state.jobId);
+
+    try {
+      // Call fix-elegoo-images to scrape per-color images
+      const fixImagesUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/fix-elegoo-images`;
+      const imageFixResponse = await fetch(fixImagesUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dryRun: false,
+          limit: 500, // Process up to 500 products
+        }),
+      });
+
+      const imageFixResult = await imageFixResponse.json();
+      
+      if (imageFixResult.success) {
+        console.log(`[ELEGOO-ORCHESTRATOR] Image fix completed: ${imageFixResult.stats?.updated || 0} images updated`);
+        state.results.regionResults['image_fix'] = {
+          created: 0,
+          updated: imageFixResult.stats?.updated || 0,
+          errors: imageFixResult.stats?.failed || 0,
+        };
+      } else {
+        console.error(`[ELEGOO-ORCHESTRATOR] Image fix failed: ${imageFixResult.error}`);
+      }
+    } catch (imgError) {
+      console.error(`[ELEGOO-ORCHESTRATOR] Error running image fix:`, imgError);
+    }
+  }
+
   const status = error ? 'failed' : 'completed';
   
   console.log(`[ELEGOO-ORCHESTRATOR] Completing job ${state.jobId} with status: ${status}`);
@@ -352,6 +408,7 @@ async function completeJob(supabase: any, state: SyncState, error?: string): Pro
       errors: state.results.errors,
       total: state.results.total,
       regionResults: state.results.regionResults,
+      phase: 'completed',
     },
     updated_at: new Date().toISOString(),
   }).eq('id', state.jobId);
