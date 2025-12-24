@@ -61,7 +61,8 @@ export function useElegooSync() {
     setProgress(null);
     setCurrentJobId(null);
 
-    const regionsToSync = regions || ['US'];
+    // Default to ALL regions for comprehensive sync
+    const regionsToSync = regions || ['US', 'CA', 'EU', 'UK', 'AU', 'JP'];
 
     try {
       // Use the orchestrator which tracks progress in the database
