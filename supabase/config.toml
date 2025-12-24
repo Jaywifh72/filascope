@@ -212,3 +212,6 @@ verify_jwt = true
 
 [functions.sync-filaments]
 verify_jwt = true
+
+[functions.scrape-elegoo-variant-images]
+verify_jwt = true
