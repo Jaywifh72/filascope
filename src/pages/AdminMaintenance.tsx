@@ -568,6 +568,7 @@ const AdminMaintenance = () => {
                       currentRegion: activeElegooJob.progress.currentRegion || '',
                       completedRegions: activeElegooJob.progress.completedRegions || [],
                       totalRegions: activeElegooJob.progress.totalRegions || 0,
+                      allRegions: activeElegooJob.progress.allRegions || [],
                     } : null}
                   />
                   {(activeElegooJob?.status === 'completed' || activeElegooJob?.status === 'failed') && (
