@@ -854,11 +854,15 @@ serve(async (req) => {
         const diameter = extractDiameterFromTitle(product.title);
         const techSpecs = product.techSpecs;
         const { colorName, colorHex } = extractColorAndHex(product.title);
+        
+        // Compute product line ID early - needed for cross-region matching
+        const productLineId = computeProductLineId('Elegoo', product.title, material);
 
         if (shouldLogDetails) {
           console.log(`[ELEGOO-SYNC]    Material: ${material || 'UNKNOWN'}`);
           console.log(`[ELEGOO-SYNC]    Weight: ${weight}g, Diameter: ${diameter}mm`);
           console.log(`[ELEGOO-SYNC]    Color: ${colorName || 'none'} (HEX: ${colorHex ? '#' + colorHex : 'none'})`);
+          console.log(`[ELEGOO-SYNC]    Product Line: ${productLineId}`);
           console.log(`[ELEGOO-SYNC]    Regions: ${Object.keys(regionalData).join(', ')}`);
         }
         const hasTdsFromApi = Boolean(product.tdsUrl && product.tdsUrl.trim() !== '');
@@ -892,14 +896,36 @@ serve(async (req) => {
           continue;
         }
 
-        // Check if product already exists by product_id OR by matching title
-        // This helps merge regional data into existing US products
-        let existing: { id: string; product_id: string; variant_price: number | null; product_url: string | null; updated_at: string; tds_url: string | null; color_hex: string | null } | null = null;
+        // Check if product already exists - USE MULTI-STRATEGY MATCHING:
+        // 1. By product_id (exact same region's product)
+        // 2. By product_line_id + color name (cross-region matching)
+        // 3. By title (fallback for legacy data)
+        // This ensures regional data is MERGED into existing products, not creating duplicates
         
-        // First try exact product_id match
+        let existing: { 
+          id: string; 
+          product_id: string; 
+          variant_price: number | null; 
+          product_url: string | null; 
+          updated_at: string; 
+          tds_url: string | null; 
+          color_hex: string | null;
+          price_cad: number | null;
+          price_eur: number | null;
+          price_aud: number | null;
+          price_gbp: number | null;
+          price_jpy: number | null;
+          product_url_ca: string | null;
+          product_url_eu: string | null;
+          product_url_au: string | null;
+          product_url_uk: string | null;
+          product_url_jp: string | null;
+        } | null = null;
+        
+        // Strategy 1: First try exact product_id match (same product from same region)
         const { data: exactMatch, error: lookupError } = await supabase
           .from('filaments')
-          .select('id, product_id, variant_price, product_url, updated_at, tds_url, color_hex')
+          .select('id, product_id, variant_price, product_url, updated_at, tds_url, color_hex, price_cad, price_eur, price_aud, price_gbp, price_jpy, product_url_ca, product_url_eu, product_url_au, product_url_uk, product_url_jp')
           .eq('product_id', product.productId)
           .eq('vendor', 'Elegoo')
           .maybeSingle();
@@ -910,18 +936,41 @@ serve(async (req) => {
         
         if (exactMatch) {
           existing = exactMatch;
+          console.log(`[ELEGOO-SYNC]    🔗 Found by product_id match (ID: ${existing.id})`);
         } else {
-          // Try to find by normalized title (for cross-region matching)
-          const { data: titleMatch } = await supabase
-            .from('filaments')
-            .select('id, product_id, variant_price, product_url, updated_at, tds_url, color_hex')
-            .eq('vendor', 'Elegoo')
-            .ilike('product_title', product.title)
-            .maybeSingle();
+          // Strategy 2: Try to find by product_line_id + color name (cross-region matching)
+          // This is the KEY for multi-region sync - products from different regions have different product_ids
+          // but the SAME product line + color should be merged
+          if (colorName) {
+            const colorSearchPattern = `% - ${colorName}%`;
+            const { data: lineColorMatch } = await supabase
+              .from('filaments')
+              .select('id, product_id, variant_price, product_url, updated_at, tds_url, color_hex, price_cad, price_eur, price_aud, price_gbp, price_jpy, product_url_ca, product_url_eu, product_url_au, product_url_uk, product_url_jp')
+              .eq('vendor', 'Elegoo')
+              .eq('product_line_id', productLineId)
+              .ilike('product_title', colorSearchPattern)
+              .maybeSingle();
+            
+            if (lineColorMatch) {
+              console.log(`[ELEGOO-SYNC]    🔗 Found by product_line_id + color match (ID: ${lineColorMatch.id})`);
+              console.log(`[ELEGOO-SYNC]       Line: ${productLineId}, Color: ${colorName}`);
+              existing = lineColorMatch;
+            }
+          }
           
-          if (titleMatch) {
-            console.log(`[ELEGOO-SYNC]    🔗 Found existing product by title match (ID: ${titleMatch.id})`);
-            existing = titleMatch;
+          // Strategy 3: Try to find by normalized title (fallback for legacy data)
+          if (!existing) {
+            const { data: titleMatch } = await supabase
+              .from('filaments')
+              .select('id, product_id, variant_price, product_url, updated_at, tds_url, color_hex, price_cad, price_eur, price_aud, price_gbp, price_jpy, product_url_ca, product_url_eu, product_url_au, product_url_uk, product_url_jp')
+              .eq('vendor', 'Elegoo')
+              .ilike('product_title', product.title)
+              .maybeSingle();
+            
+            if (titleMatch) {
+              console.log(`[ELEGOO-SYNC]    🔗 Found existing product by title match (ID: ${titleMatch.id})`);
+              existing = titleMatch;
+            }
           }
         }
 
@@ -929,93 +978,14 @@ serve(async (req) => {
           fields.tds = true;
         }
 
-        // Build regional price and URL fields with validation to prevent cross-contamination
-        const regionalFields: Record<string, unknown> = {};
+        // Regional data is now handled directly in the filamentData build below
+        // This ensures we only set fields for regions we're currently syncing
+        // and preserve existing data for other regions
         
-        if (regionalData['AU']) {
-          if (validateRegionalUrl(regionalData['AU'].url, 'AU')) {
-            regionalFields.price_aud = regionalData['AU'].price;
-            regionalFields.product_url_au = regionalData['AU'].url;
-          } else {
-            console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid AU URL: ${regionalData['AU'].url}`);
-          }
-        }
-        if (regionalData['CA']) {
-          if (validateRegionalUrl(regionalData['CA'].url, 'CA')) {
-            regionalFields.price_cad = regionalData['CA'].price;
-            regionalFields.product_url_ca = regionalData['CA'].url;
-          } else {
-            console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid CA URL: ${regionalData['CA'].url}`);
-          }
-        }
-        if (regionalData['EU']) {
-          if (validateRegionalUrl(regionalData['EU'].url, 'EU')) {
-            regionalFields.price_eur = regionalData['EU'].price;
-            regionalFields.product_url_eu = regionalData['EU'].url;
-          } else {
-            console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid EU URL: ${regionalData['EU'].url}`);
-          }
-        }
-        if (regionalData['UK']) {
-          if (validateRegionalUrl(regionalData['UK'].url, 'UK')) {
-            regionalFields.price_gbp = regionalData['UK'].price;
-            regionalFields.product_url_uk = regionalData['UK'].url;
-          } else {
-            console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid UK URL: ${regionalData['UK'].url}`);
-          }
-        }
-        if (regionalData['JP']) {
-          if (validateRegionalUrl(regionalData['JP'].url, 'JP')) {
-            regionalFields.price_jpy = regionalData['JP'].price;
-            regionalFields.product_url_jp = regionalData['JP'].url;
-          } else {
-            console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid JP URL: ${regionalData['JP'].url}`);
-          }
-        }
-        // DE, IT, FR, ES all use EUR - they map to the EU price field
-        // But we prioritize the generic EU catalog if available, otherwise use country-specific
-        // For URLs, we can use the EU URL field as a fallback
-        for (const euroRegion of ['DE', 'IT', 'FR', 'ES'] as const) {
-          if (regionalData[euroRegion]) {
-            if (validateRegionalUrl(regionalData[euroRegion].url, euroRegion)) {
-              // Only set EUR price if not already set by EU catalog
-              if (!regionalFields.price_eur) {
-                regionalFields.price_eur = regionalData[euroRegion].price;
-                console.log(`[ELEGOO-SYNC]    💶 Set EUR price from ${euroRegion}: €${regionalData[euroRegion].price}`);
-              }
-              // Store the EU URL if not already set
-              if (!regionalFields.product_url_eu) {
-                regionalFields.product_url_eu = regionalData[euroRegion].url;
-                console.log(`[ELEGOO-SYNC]    🔗 Set EU URL from ${euroRegion}`);
-              }
-            } else {
-              console.log(`[ELEGOO-SYNC]    ⚠️ Rejected invalid ${euroRegion} URL: ${regionalData[euroRegion].url}`);
-            }
-          }
-        }
-
-        // Compute product line ID for grouping color variants
-        const productLineId = computeProductLineId('Elegoo', product.title, material);
-        console.log(`[ELEGOO-SYNC]    Product Line ID: ${productLineId}`);
-
-        // Determine what data we have available for base product fields
-        // CRITICAL: Base product_url MUST be US only. Other regions go in their specific columns.
-        // This ensures the frontend URL transformer works correctly when converting to regional URLs.
-        let usData: { price: number; url: string } | null = null;
-        
-        if (regionalData['US']?.price && regionalData['US']?.url) {
-          if (validateRegionalUrl(regionalData['US'].url, 'US')) {
-            usData = { price: regionalData['US'].price, url: regionalData['US'].url };
-          }
-        }
-        
-        const hasUsData = Boolean(usData);
-        const hasAnyRegionalData = Object.keys(regionalData).length > 0;
         const isCreatingNew = !existing;
         
-        // If creating new product AND no US data AND no regional data, skip
-        // Note: We allow creating products with only regional data - they just won't have a base URL
-        if (isCreatingNew && !hasUsData && !hasAnyRegionalData) {
+        // If creating new product AND no regional data at all, skip
+        if (isCreatingNew && Object.keys(regionalData).length === 0) {
           console.log(`[ELEGOO-SYNC]    ⏭️ SKIPPED: No valid regional data available to create base product`);
           result.skipped++;
           result.products.push({
@@ -1029,59 +999,99 @@ serve(async (req) => {
           continue;
         }
 
-        // Build filament data
+        // Build filament data - CRITICAL: Only include fields we want to update
+        // For regional syncs, preserve existing data we don't have new values for
+        const newImageUrl = product.imageUrl && product.imageUrl.trim() !== '' ? product.imageUrl : null;
+        const shouldUpdateImage = newImageUrl && (!existing || !existing.color_hex || 
+          // Only update image if we don't have one yet OR if the new image is color-specific (not generic)
+          (newImageUrl.toLowerCase().includes(colorName?.toLowerCase() || 'NEVER_MATCH'))
+        );
+        
         const filamentData: Record<string, unknown> = {
-          product_id: product.productId,
           product_title: product.title,
           vendor: 'Elegoo',
           material,
           product_line_id: productLineId,
           variant_compare_at_price: product.compareAtPrice,
           variant_available: product.inStock,
-          featured_image: product.imageUrl && product.imageUrl.trim() !== '' ? product.imageUrl : null,
-          mpn: product.mpn || null,
-          upc: product.upc || null,
-          ean: product.ean || null,
           net_weight_g: weight,
           diameter_nominal_mm: diameter,
-          auto_created: true,
+          auto_created: !existing, // Only true for new products
           auto_updated: true,
           last_scraped_at: new Date().toISOString(),
           sync_status: 'synced',
           regional_prices_updated_at: new Date().toISOString(),
           ...(elegooBrandId ? { brand_id: elegooBrandId } : {}),
+          // Only update these if we have data - don't overwrite existing with null
           ...(product.tdsUrl ? { tds_url: product.tdsUrl } : {}),
-          ...(colorHex ? { color_hex: colorHex } : {}),
+          ...(colorHex && !existing?.color_hex ? { color_hex: colorHex } : {}), // Preserve existing color_hex
+          ...(shouldUpdateImage ? { featured_image: newImageUrl } : {}),
+          ...(product.mpn ? { mpn: product.mpn } : {}),
+          ...(product.upc ? { upc: product.upc } : {}),
+          ...(product.ean ? { ean: product.ean } : {}),
           ...(techSpecs?.nozzle_temp_min_c ? { nozzle_temp_min_c: techSpecs.nozzle_temp_min_c } : {}),
           ...(techSpecs?.nozzle_temp_max_c ? { nozzle_temp_max_c: techSpecs.nozzle_temp_max_c } : {}),
           ...(techSpecs?.bed_temp_min_c ? { bed_temp_min_c: techSpecs.bed_temp_min_c } : {}),
           ...(techSpecs?.bed_temp_max_c ? { bed_temp_max_c: techSpecs.bed_temp_max_c } : {}),
           ...(techSpecs?.density_g_cm3 ? { density_g_cm3: techSpecs.density_g_cm3 } : {}),
-          ...regionalFields,
         };
         
-        // Set base product_url and variant_price ONLY if we have US data
-        // This ensures the base URL is always a US URL, enabling proper regional transformation
-        if (hasUsData && usData) {
-          filamentData.variant_price = usData.price;
-          filamentData.product_url = usData.url;
-          console.log(`[ELEGOO-SYNC]    💵 Base data from US: $${usData.price}`);
-        } else if (existing) {
-          // Updating existing product without new US data - preserve existing base values
-          console.log(`[ELEGOO-SYNC]    ℹ️ No US data - preserving existing base price/url, updating regional fields only`);
-          // Don't include variant_price or product_url in the update - they'll be preserved
-          delete filamentData.variant_price;
-          delete filamentData.product_url;
-        } else {
-          // Creating new product without US data - set base fields to null
-          // Product will only have regional URLs, frontend will use those directly
-          console.log(`[ELEGOO-SYNC]    ⚠️ Creating without US data - regional URLs only`);
-          // Use the first available price for variant_price (for backwards compatibility)
+        // Add product_id only for new products (don't change existing product_id)
+        if (!existing) {
+          filamentData.product_id = product.productId;
+        }
+        
+        // Merge regional fields - only update fields for regions we're syncing, preserve others
+        // This is CRITICAL: don't overwrite CA data when syncing EU, etc.
+        if (regionalData['US']) {
+          filamentData.variant_price = regionalData['US'].price;
+          filamentData.product_url = regionalData['US'].url;
+          console.log(`[ELEGOO-SYNC]    💵 US data: $${regionalData['US'].price}`);
+        } else if (existing && existing.variant_price) {
+          // Preserve existing US data when syncing other regions
+          console.log(`[ELEGOO-SYNC]    💵 Preserving existing US price: $${existing.variant_price}`);
+        }
+        
+        if (regionalData['CA']) {
+          filamentData.price_cad = regionalData['CA'].price;
+          filamentData.product_url_ca = regionalData['CA'].url;
+          console.log(`[ELEGOO-SYNC]    🍁 CA data: $${regionalData['CA'].price} CAD`);
+        }
+        
+        if (regionalData['AU']) {
+          filamentData.price_aud = regionalData['AU'].price;
+          filamentData.product_url_au = regionalData['AU'].url;
+          console.log(`[ELEGOO-SYNC]    🦘 AU data: $${regionalData['AU'].price} AUD`);
+        }
+        
+        if (regionalData['EU'] || regionalData['DE'] || regionalData['FR'] || regionalData['IT'] || regionalData['ES']) {
+          // Prefer EU catalog, fall back to country-specific
+          const euData = regionalData['EU'] || regionalData['DE'] || regionalData['FR'] || regionalData['IT'] || regionalData['ES'];
+          if (euData) {
+            filamentData.price_eur = euData.price;
+            filamentData.product_url_eu = euData.url;
+            console.log(`[ELEGOO-SYNC]    🇪🇺 EU data: €${euData.price}`);
+          }
+        }
+        
+        if (regionalData['UK']) {
+          filamentData.price_gbp = regionalData['UK'].price;
+          filamentData.product_url_uk = regionalData['UK'].url;
+          console.log(`[ELEGOO-SYNC]    🇬🇧 UK data: £${regionalData['UK'].price}`);
+        }
+        
+        if (regionalData['JP']) {
+          filamentData.price_jpy = regionalData['JP'].price;
+          filamentData.product_url_jp = regionalData['JP'].url;
+          console.log(`[ELEGOO-SYNC]    🇯🇵 JP data: ¥${regionalData['JP'].price}`);
+        }
+        
+        // For new products without US data, use first available price for backwards compatibility
+        if (!existing && !regionalData['US']) {
           const firstRegion = Object.keys(regionalData)[0];
           if (firstRegion && regionalData[firstRegion]) {
             filamentData.variant_price = regionalData[firstRegion].price;
-            // Don't set product_url - leave it null so frontend uses regional columns
-            console.log(`[ELEGOO-SYNC]    💰 Using ${firstRegion} price for variant_price: ${regionalData[firstRegion].price}`);
+            console.log(`[ELEGOO-SYNC]    ⚠️ No US data - using ${firstRegion} price for variant_price: ${regionalData[firstRegion].price}`);
           }
         }
 
@@ -1134,11 +1144,11 @@ serve(async (req) => {
             });
 
             // Log price change if US price is different from existing
-            if (hasUsData && usData && existing.variant_price !== usData.price) {
-              console.log(`[ELEGOO-SYNC]    💰 Price changed: ${existing.variant_price} -> ${usData.price} (US)`);
+            if (regionalData['US'] && existing.variant_price !== regionalData['US'].price) {
+              console.log(`[ELEGOO-SYNC]    💰 US Price changed: ${existing.variant_price} -> ${regionalData['US'].price}`);
               await supabase.from('price_history').insert({
                 filament_id: existing.id,
-                price: usData.price,
+                price: regionalData['US'].price,
                 region: 'US',
                 source: 'elegoo_api',
               });
