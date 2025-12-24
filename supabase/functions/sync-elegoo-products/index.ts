@@ -1223,7 +1223,7 @@ serve(async (req) => {
         .eq('vendor', 'Elegoo')
         .not('product_url', 'is', null)
         .or('tds_url.is.null,nozzle_temp_min_c.is.null,density_g_cm3.is.null,drying_temp_c.is.null')
-        .limit(10); // Process 10 per sync to avoid timeout
+        .limit(50); // Process 50 per sync - complete coverage in ~4 syncs instead of 20+
       
       if (tdsQueryError) {
         console.error('[ELEGOO-SYNC] ⚠️ Failed to query filaments for TDS work:', tdsQueryError.message);

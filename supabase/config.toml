@@ -203,3 +203,12 @@ verify_jwt = false
 
 [functions.fix-elegoo-images]
 verify_jwt = true
+
+[functions.elegoo-data-stats]
+verify_jwt = true
+
+[functions.cleanup-filament-titles]
+verify_jwt = true
+
+[functions.sync-filaments]
+verify_jwt = true
