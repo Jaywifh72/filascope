@@ -91,7 +91,7 @@ function ScrapeLogEntry({ job }: { job: ScrapeJobWithAI }) {
     whatWentRight: job.results?.filamentsCreated 
       ? [`${job.results.filamentsCreated} filaments created`, `${job.results.filamentsUpdated || 0} filaments updated`]
       : [],
-    whatWentWrong: job.results?.errors?.slice(0, 3) || (job.error ? [job.error] : []),
+    whatWentWrong: Array.isArray(job.results?.errors) ? job.results.errors.slice(0, 3) : (job.error ? [job.error] : []),
     userImpact: job.status === 'completed' 
       ? 'Product data has been updated with the latest information.'
       : job.status === 'failed'
