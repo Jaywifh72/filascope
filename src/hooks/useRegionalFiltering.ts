@@ -97,6 +97,14 @@ export function isRegionalBrand(vendor: string | null | undefined): boolean {
 
 /**
  * Check if a filament is available in a specific region
+ * 
+ * For regional brands (like Elegoo, Bambu Lab), products are considered available if:
+ * 1. The brand has the region configured in BRAND_REGIONAL_STORES, OR
+ * 2. There's a stored regional URL (product_url_ca, product_url_uk, etc.), OR
+ * 3. The main product_url already points to that region's store
+ * 
+ * This ensures we don't incorrectly mark products as unavailable just because
+ * the specific regional URL hasn't been synced yet.
  */
 export function isFilamentAvailableInRegion(
   filament: FilamentWithRegion,
@@ -110,106 +118,66 @@ export function isFilamentAvailableInRegion(
     return true;
   }
   
-  // Helper to check Elegoo store domains
-  const isElegooVendor = vendor?.toLowerCase() === 'elegoo';
+  // Get brand config to check if this region is supported
+  const brandConfig = getBrandConfig(vendor);
   
-  // US region: check if the main product_url contains US store domain
-  if (region === 'US') {
-    if (!url) return false;
-    
-    if (isElegooVendor) {
-      // US Elegoo URLs: elegoo-us.myshopify.com, us.elegoo.com, or elegoo.com without regional subdomain
-      const isUsStore = url.includes('elegoo-us.myshopify.com') || 
-                        url.includes('us.elegoo.com') ||
-                        (url.includes('elegoo.com') && 
-                         !url.includes('ca.elegoo.com') && 
-                         !url.includes('au.elegoo.com') && 
-                         !url.includes('eu.elegoo.com') && 
-                         !url.includes('uk.elegoo.com') &&
-                         !url.includes('de.elegoo.com') &&
-                         !url.includes('it.elegoo.com') &&
-                         !url.includes('fr.elegoo.com') &&
-                         !url.includes('es.elegoo.com'));
-      return isUsStore;
-    }
-    
-    // For other regional brands, assume main URL is US
+  // If brand has this region configured, the product is available
+  // (URL can be dynamically transformed)
+  if (brandConfig?.regions && brandConfig.regions[region]) {
     return true;
   }
   
-  // CA region: check for Canadian store
-  if (region === 'CA') {
-    // Check if main URL is already Canadian store
-    if (isElegooVendor && url?.includes('ca.elegoo.com')) {
-      return true;
-    }
-    // Check if regional CA URL exists
-    const regionalUrl = filament.product_url_ca;
+  // Check if we have a stored regional URL for this region
+  const urlField = REGION_TO_URL_FIELD[region];
+  if (urlField) {
+    const regionalUrl = filament[urlField as keyof FilamentWithRegion];
     if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
       return true;
     }
-    return false;
   }
   
-  // UK region: check for UK store
-  if (region === 'UK') {
-    if (isElegooVendor && url?.includes('uk.elegoo.com')) {
+  // Check if main URL already points to this region's store
+  if (url) {
+    const isElegooVendor = vendor?.toLowerCase() === 'elegoo';
+    
+    if (region === 'US') {
+      if (isElegooVendor) {
+        // US Elegoo URLs: elegoo-us.myshopify.com, us.elegoo.com, or elegoo.com without regional subdomain
+        const isUsStore = url.includes('elegoo-us.myshopify.com') || 
+                          url.includes('us.elegoo.com') ||
+                          (url.includes('elegoo.com') && 
+                           !url.includes('ca.elegoo.com') && 
+                           !url.includes('au.elegoo.com') && 
+                           !url.includes('eu.elegoo.com') && 
+                           !url.includes('uk.elegoo.com') &&
+                           !url.includes('de.elegoo.com') &&
+                           !url.includes('it.elegoo.com') &&
+                           !url.includes('fr.elegoo.com') &&
+                           !url.includes('es.elegoo.com'));
+        return isUsStore;
+      }
       return true;
     }
-    const regionalUrl = filament.product_url_uk;
-    if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
+    
+    if (region === 'CA' && isElegooVendor && url.includes('ca.elegoo.com')) {
       return true;
     }
-    return false;
-  }
-  
-  // AU region: check for Australian store
-  if (region === 'AU') {
-    if (isElegooVendor && url?.includes('au.elegoo.com')) {
+    if (region === 'UK' && isElegooVendor && url.includes('uk.elegoo.com')) {
       return true;
     }
-    const regionalUrl = filament.product_url_au;
-    if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
+    if (region === 'AU' && isElegooVendor && url.includes('au.elegoo.com')) {
       return true;
     }
-    return false;
-  }
-  
-  // JP region: check for Japanese store
-  if (region === 'JP') {
-    if (isElegooVendor && url?.includes('jp.elegoo.com')) {
+    if (region === 'JP' && isElegooVendor && url.includes('jp.elegoo.com')) {
       return true;
     }
-    const regionalUrl = filament.product_url_jp;
-    if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
-      return true;
-    }
-    return false;
-  }
-  
-  // EU region: check for EU stores (eu, de, it, fr, es)
-  if (region === 'EU') {
-    if (isElegooVendor && url) {
+    if (region === 'EU' && isElegooVendor) {
       const isEuStore = url.includes('eu.elegoo.com') ||
                         url.includes('de.elegoo.com') ||
                         url.includes('it.elegoo.com') ||
                         url.includes('fr.elegoo.com') ||
                         url.includes('es.elegoo.com');
       if (isEuStore) return true;
-    }
-    const regionalUrl = filament.product_url_eu;
-    if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
-      return true;
-    }
-    return false;
-  }
-  
-  // For other regions without specific store URLs, check generic regional URL field
-  const urlField = REGION_TO_URL_FIELD[region];
-  if (urlField) {
-    const regionalUrl = filament[urlField as keyof FilamentWithRegion];
-    if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
-      return true;
     }
   }
   
