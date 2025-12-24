@@ -200,3 +200,6 @@ verify_jwt = true
 
 [functions.sync-elegoo-orchestrator]
 verify_jwt = false
+
+[functions.fix-elegoo-images]
+verify_jwt = true
