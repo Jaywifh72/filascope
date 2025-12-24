@@ -6,6 +6,7 @@ export interface ElegooSyncProgress {
   completedRegions: string[];
   totalRegions: number;
   regionsProcessed: number;
+  allRegions: string[];
   created: number;
   updated: number;
   skipped: number;

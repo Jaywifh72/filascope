@@ -26,6 +26,7 @@ interface SyncProgress {
   currentRegion: string;
   completedRegions: string[];
   totalRegions: number;
+  allRegions?: string[];
 }
 
 interface ElegooSyncResult {
@@ -66,7 +67,10 @@ const REGION_LABELS: Record<string, string> = {
   'CA': '🇨🇦 Canada',
   'EU': '🇪🇺 Europe',
   'UK': '🇬🇧 United Kingdom',
-  'JP': '🇯🇵 Japan',
+  'DE': '🇩🇪 Germany',
+  'IT': '🇮🇹 Italy',
+  'FR': '🇫🇷 France',
+  'ES': '🇪🇸 Spain',
 };
 
 function FieldIndicator({ available }: { available: boolean }) {
@@ -154,12 +158,12 @@ function ProductTypeBadge({ type }: { type?: ProductType }) {
 }
 
 function RegionProgressBar({ progress }: { progress: SyncProgress }) {
-  const { currentRegion, completedRegions, totalRegions } = progress;
+  const { currentRegion, completedRegions, totalRegions, allRegions: progressRegions } = progress;
   const completedCount = completedRegions.length;
   const progressPercent = totalRegions > 0 ? Math.round((completedCount / totalRegions) * 100) : 0;
   
-  // All regions in order
-  const allRegions = ['US', 'AU', 'CA', 'EU', 'UK', 'JP'];
+  // Use provided regions or fall back to default
+  const regionsToShow = progressRegions || ['US', 'AU', 'CA', 'EU', 'UK', 'DE', 'IT', 'FR', 'ES'];
   
   return (
     <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
@@ -185,7 +189,7 @@ function RegionProgressBar({ progress }: { progress: SyncProgress }) {
       
       {/* Region Steps */}
       <div className="flex flex-wrap gap-2">
-        {allRegions.slice(0, totalRegions).map((region) => {
+        {regionsToShow.map((region) => {
           const isCompleted = completedRegions.includes(region);
           const isCurrent = currentRegion === region;
           
