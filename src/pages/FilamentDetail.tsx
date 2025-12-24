@@ -58,6 +58,7 @@ const FilamentDetail = () => {
   const [selectedWeight, setSelectedWeight] = useState<number | null>(null);
   const [availableWeights, setAvailableWeights] = useState<{ weight: number; pricePerKg: number | null; count: number }[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<Filament | null>(null);
+  const [productLineAvailableInRegion, setProductLineAvailableInRegion] = useState<boolean>(false);
   
   // The filament to display - either the selected color variant or the base filament from URL
   const displayFilament = selectedVariant || filament;
@@ -641,11 +642,18 @@ const FilamentDetail = () => {
         // Deduplicate by color name, prioritizing non-NFC/Refill variants
         const deduplicatedVariants = deduplicateColorVariants(variants, baseName);
         
-        // RULE: Color picker shows ONLY variants that are individually available in the region
-        // Each variant must have its own regional URL or main URL pointing to that region's store
-        const regionFilteredVariants = deduplicatedVariants.filter(v => 
+        // RULE: For product lines, if ANY variant is available in region, ALL colors are available
+        // (Regional stores sell the same product with all colors, database may be incomplete)
+        const anyVariantAvailableInRegion = hasProductLineId && deduplicatedVariants.some(v => 
           isFilamentAvailableInRegion(v as FilamentWithRegion, currentRegion)
         );
+        
+        // If product line exists in region, show all variants; otherwise filter strictly
+        const regionFilteredVariants = anyVariantAvailableInRegion 
+          ? deduplicatedVariants 
+          : deduplicatedVariants.filter(v => 
+              isFilamentAvailableInRegion(v as FilamentWithRegion, currentRegion)
+            );
 
         // Sort: current filament first, then alphabetically by color
         regionFilteredVariants.sort((a, b) => {
@@ -657,6 +665,7 @@ const FilamentDetail = () => {
         });
 
         setColorVariants(regionFilteredVariants);
+        setProductLineAvailableInRegion(anyVariantAvailableInRegion);
         // Reset weight selection when filament changes
         setSelectedWeight(null);
       } catch (error) {
@@ -1142,7 +1151,8 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
   if (!displayFilament) return null;
 
   // Check if this product is available in the user's region
-  const isAvailableInRegion = isFilamentAvailableInRegion(
+  // For product lines: if ANY variant is available, the whole line is available
+  const isAvailableInRegion = productLineAvailableInRegion || isFilamentAvailableInRegion(
     displayFilament as FilamentWithRegion,
     currentRegion
   );
