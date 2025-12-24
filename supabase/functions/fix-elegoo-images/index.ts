@@ -15,19 +15,56 @@ const ELEGOO_PRODUCT_PAGES: Record<string, string> = {
   // PLA
   "PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-pla-filament-1-75mm-1kg-spool",
   "PLA+": "https://us.elegoo.com/collections/filaments/products/elegoo-pla-plus-filament-1-75mm-1kg-spool",
+  "PLA Filament 5 kg": "https://us.elegoo.com/collections/filaments/products/elegoo-pla-filament-5-kg",
+  "PLA Filament 10 kg": "https://us.elegoo.com/collections/filaments/products/elegoo-pla-filament-10-kg",
   // PETG
   "PETG": "https://us.elegoo.com/collections/filaments/products/elegoo-petg-filament-1-75mm-1kg-spool",
-  // Rapid
+  "PETG+": "https://us.elegoo.com/collections/filaments/products/elegoo-petg-plus-filament",
+  // High Speed / Rapid lines
   "Rapid PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-rapid-pla-filament-1-75mm-1kg-spool",
   "Rapid PLA+": "https://us.elegoo.com/collections/filaments/products/elegoo-rapid-pla-plus-filament-1-75mm-1kg-spool",
-  // Specialty
+  "High Speed PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-high-speed-pla-filament",
+  "High Speed PLA+": "https://us.elegoo.com/collections/filaments/products/elegoo-high-speed-pla-plus-filament",
+  "High Speed PETG": "https://us.elegoo.com/collections/filaments/products/elegoo-high-speed-petg-filament",
+  "High Speed PETG+": "https://us.elegoo.com/collections/filaments/products/elegoo-high-speed-petg-plus-filament",
+  // Specialty PLA
   "Silk PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-silk-pla-filament-1-75mm-1kg-spool",
   "Matte PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-matte-pla-filament-1-75mm-1kg-spool",
-  "TPU": "https://us.elegoo.com/collections/filaments/products/elegoo-tpu-filament-1-75mm-1kg-spool",
+  "Glow PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-glow-pla-filament",
+  "Dual Color PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-dual-color-pla-filament",
+  "Galaxy PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-galaxy-pla-filament",
+  "Marble PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-marble-pla-filament",
+  "Wood PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-wood-pla-filament",
+  "Sparkle PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-sparkle-pla-filament",
+  // Carbon Fiber
   "PLA-CF": "https://us.elegoo.com/collections/filaments/products/elegoo-pla-cf-filament",
   "PETG-CF": "https://us.elegoo.com/collections/filaments/products/elegoo-petg-cf-filament",
+  "PA-CF": "https://us.elegoo.com/collections/filaments/products/elegoo-pa-cf-filament",
+  "ABS-CF": "https://us.elegoo.com/collections/filaments/products/elegoo-abs-cf-filament",
+  // Other materials
+  "TPU": "https://us.elegoo.com/collections/filaments/products/elegoo-tpu-filament-1-75mm-1kg-spool",
   "ASA": "https://us.elegoo.com/collections/filaments/products/elegoo-asa-filament",
+  "PA": "https://us.elegoo.com/collections/filaments/products/elegoo-pa-filament",
+  "PC": "https://us.elegoo.com/collections/filaments/products/elegoo-pc-filament",
 };
+
+/**
+ * Dynamically construct a product URL for product lines not in the map
+ * This is a fallback to try and find images for new product lines
+ */
+function constructDynamicProductUrl(productLine: string): string | null {
+  // Normalize the product line to a URL-friendly slug
+  const slug = productLine
+    .toLowerCase()
+    .replace(/\+/g, '-plus')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  
+  // Try common URL patterns
+  return `https://us.elegoo.com/collections/filaments/products/elegoo-${slug}-filament`;
+}
 
 // Color name variants to match DB entries
 const COLOR_ALIASES: Record<string, string[]> = {
@@ -228,25 +265,42 @@ function matchColorToVariant(
   return null;
 }
 
-// Determine product line from title
+// Determine product line from title (expanded to match all Elegoo lines)
 function getProductLine(title: string): string | null {
   const titleLower = title.toLowerCase();
 
   // Check specific product lines first (order matters - most specific first)
   if (titleLower.includes("pla-cf") || titleLower.includes("pla cf")) return "PLA-CF";
   if (titleLower.includes("petg-cf") || titleLower.includes("petg cf")) return "PETG-CF";
+  if (titleLower.includes("abs-cf") || titleLower.includes("abs cf")) return "ABS-CF";
+  if (titleLower.includes("pa-cf") || titleLower.includes("pa cf")) return "PA-CF";
   if (titleLower.includes("silk pla")) return "Silk PLA";
   if (titleLower.includes("matte pla")) return "Matte PLA";
+  if (titleLower.includes("glow pla")) return "Glow PLA";
+  if (titleLower.includes("dual color pla") || titleLower.includes("dual-color pla")) return "Dual Color PLA";
+  if (titleLower.includes("galaxy pla")) return "Galaxy PLA";
+  if (titleLower.includes("marble pla")) return "Marble PLA";
+  if (titleLower.includes("wood pla")) return "Wood PLA";
+  if (titleLower.includes("sparkle pla")) return "Sparkle PLA";
+  if (titleLower.includes("high speed petg+") || titleLower.includes("high speed petg plus")) return "High Speed PETG+";
+  if (titleLower.includes("high speed petg")) return "High Speed PETG";
+  if (titleLower.includes("high speed pla+") || titleLower.includes("high speed pla plus")) return "High Speed PLA+";
+  if (titleLower.includes("high speed pla")) return "High Speed PLA";
   if (titleLower.includes("rapid pla+") || titleLower.includes("rapid pla plus")) return "Rapid PLA+";
   if (titleLower.includes("rapid pla")) return "Rapid PLA";
   if (titleLower.includes("pla+") || titleLower.includes("pla plus")) return "PLA+";
+  if (titleLower.includes("petg+") || titleLower.includes("petg plus")) return "PETG+";
   if (titleLower.includes("abs filament 10 kg") || titleLower.includes("abs 10kg")) return "ABS Filament 10 kg";
   if (titleLower.includes("abs filament 5 kg") || titleLower.includes("abs 5kg")) return "ABS Filament 5 kg";
+  if (titleLower.includes("pla filament 10 kg") || titleLower.includes("pla 10kg")) return "PLA Filament 10 kg";
+  if (titleLower.includes("pla filament 5 kg") || titleLower.includes("pla 5kg")) return "PLA Filament 5 kg";
   if (titleLower.includes("asa")) return "ASA";
   if (titleLower.includes("tpu")) return "TPU";
   if (titleLower.includes("petg")) return "PETG";
   if (titleLower.includes("abs")) return "ABS";
   if (titleLower.includes("pla")) return "PLA";
+  if (titleLower.includes("pa") || titleLower.includes("nylon")) return "PA";
+  if (titleLower.includes("pc")) return "PC";
 
   return null;
 }
@@ -386,20 +440,36 @@ Deno.serve(async (req) => {
     const pageCache: Record<string, VariantImageData[]> = {};
 
     // Determine which product lines to process
+    // Include lines with known URLs PLUS lines we can try with dynamic URL construction
+    const allProductLines = Object.keys(filamentsByLine);
     const productLinesToProcess = productLine
-      ? (ELEGOO_PRODUCT_PAGES[productLine] ? [productLine] : [])
-      : Object.keys(filamentsByLine).filter(line => ELEGOO_PRODUCT_PAGES[line]);
+      ? [productLine]
+      : allProductLines;
 
-    console.log(`Processing ${productLinesToProcess.length} product lines with known URLs`);
+    console.log(`Processing ${productLinesToProcess.length} product lines (${Object.keys(ELEGOO_PRODUCT_PAGES).length} with known URLs)`);
 
     for (const line of productLinesToProcess) {
-      const productUrl = ELEGOO_PRODUCT_PAGES[line];
+      // Get URL from map or try dynamic construction
+      let productUrl: string | null = ELEGOO_PRODUCT_PAGES[line] || null;
+      const isDynamicUrl = !productUrl;
+      
+      if (!productUrl) {
+        productUrl = constructDynamicProductUrl(line);
+        if (productUrl) {
+          console.log(`\n📦 Processing ${line} (dynamic URL): ${productUrl}`);
+        }
+      } else {
+        console.log(`\n📦 Processing ${line}: ${productUrl}`);
+      }
+      
       if (!productUrl) {
         console.log(`No URL for product line: ${line}`);
+        for (const filament of filamentsByLine[line] || []) {
+          results.push({ id: filament.id, title: filament.product_title, status: "no_page_url" });
+          skipped++;
+        }
         continue;
       }
-
-      console.log(`\n📦 Processing ${line}: ${productUrl}`);
       console.log(`   ${filamentsByLine[line]?.length || 0} filaments in this line`);
 
       try {
