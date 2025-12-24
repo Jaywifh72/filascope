@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { SlidersHorizontal, X, Zap, Sparkles, Atom, Sun, Package, Recycle, ChevronDown, ChevronRight, Layers } from "lucide-react";
+import { SlidersHorizontal, X, Zap, Sparkles, Atom, Sun, Package, Recycle, ChevronDown, ChevronRight, Layers, Scale } from "lucide-react";
 import { MATERIAL_CATEGORIES, getMaterialsInCategory } from "@/lib/materialHierarchy";
 
 interface FilterPreset {
@@ -65,6 +65,10 @@ interface FilamentFiltersProps {
   multiPack: boolean;
   onMultiPackChange: (checked: boolean) => void;
   
+  // Large spools (>1kg)
+  largeSpools: boolean;
+  onLargeSpoolsChange: (checked: boolean) => void;
+  
   // Price range
   priceRange: [number, number];
   onPriceRangeChange: (range: [number, number]) => void;
@@ -111,6 +115,8 @@ const FilterContent = ({
   onSingleSpoolChange,
   multiPack,
   onMultiPackChange,
+  largeSpools,
+  onLargeSpoolsChange,
   priceRange,
   onPriceRangeChange,
   maxPriceLimit,
@@ -445,6 +451,32 @@ const FilterContent = ({
               </Badge>
             )}
           </label>
+        </div>
+      </div>
+
+      <Separator className="bg-border/50" />
+
+      {/* Spool Weight */}
+      <div className="space-y-2">
+        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+          <Scale className="w-3 h-3" />
+          Spool Weight
+        </h4>
+        <div className="space-y-0.5">
+          <label className="flex items-center gap-2 py-1.5 px-2 rounded-md bg-background/50 hover:bg-background/80 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer group">
+            <Checkbox
+              checked={largeSpools}
+              onCheckedChange={(checked) => onLargeSpoolsChange(checked as boolean)}
+              className="border-muted-foreground/50 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500 h-3.5 w-3.5"
+            />
+            <span className="text-xs text-foreground group-hover:text-cyan-400 transition-colors">Include Large Spools (&gt;1kg)</span>
+            {filterCounts && (
+              <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-muted/50 ml-auto">
+                {filterCounts['large_spools'] || 0}
+              </Badge>
+            )}
+          </label>
+          <p className="text-[10px] text-muted-foreground pl-7">By default, only 1kg and smaller spools are shown</p>
         </div>
       </div>
 
