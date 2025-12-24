@@ -118,17 +118,11 @@ export function isFilamentAvailableInRegion(
     return true;
   }
   
-  // Get brand config to check if this region is supported
-  const brandConfig = getBrandConfig(vendor);
+  // For regional brands, we must check if THIS SPECIFIC PRODUCT is available in this region
+  // Brand having a regional store does NOT mean all products are available there
+  // Each regional store has its own product catalog
   
-  // For regional brands like Elegoo, Bambu Lab, etc.:
-  // If the brand has this region configured in BRAND_REGIONAL_STORES,
-  // ALL products from that brand are available - URLs are dynamically transformed
-  if (brandConfig?.regions?.[region]) {
-    return true;
-  }
-  
-  // Fallback: Check if we have a stored regional URL for this region
+  // Check 1: Do we have a stored regional URL for this specific product?
   const urlField = REGION_TO_URL_FIELD[region];
   if (urlField) {
     const regionalUrl = filament[urlField as keyof FilamentWithRegion];
