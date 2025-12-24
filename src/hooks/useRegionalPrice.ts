@@ -52,20 +52,20 @@ type RegionCode = 'USD' | 'CAD' | 'GBP' | 'EUR' | 'AUD' | 'JPY' | 'UK' | 'EU' | 
  * Prioritizes user's selected region, then geographically/linguistically similar regions
  */
 const URL_FALLBACK_ORDERS: Record<CurrencyCode, RegionCode[]> = {
-  USD: ['USD', 'CAD', 'AU', 'UK', 'EU', 'JP'],           // US → nearby English-speaking
-  CAD: ['CAD', 'USD', 'AU', 'UK', 'EU', 'JP'],           // Canada → US → other English
+  USD: ['USD', 'CAD', 'EU', 'UK', 'AU', 'JP'],           // US → Canada → EU (similar prices) → UK → AU → JP
+  CAD: ['CAD', 'USD', 'EU', 'UK', 'AU', 'JP'],           // Canada → US → EU (similar prices) → UK → AU → JP
   GBP: ['UK', 'EU', 'USD', 'CAD', 'AU', 'JP'],           // UK → Europe → US
   EUR: ['EU', 'UK', 'USD', 'CAD', 'AU', 'JP'],           // Europe → UK → US
-  AUD: ['AU', 'USD', 'CAD', 'UK', 'EU', 'JP'],           // Australia → US → others
+  AUD: ['AU', 'USD', 'UK', 'EU', 'CAD', 'JP'],           // Australia → US → UK → EU → others
   JPY: ['JP', 'USD', 'AU', 'UK', 'EU', 'CAD'],           // Japan → US → others
   CHF: ['EU', 'UK', 'USD', 'CAD', 'AU', 'JP'],           // Switzerland → EU
   SEK: ['EU', 'UK', 'USD', 'CAD', 'AU', 'JP'],           // Sweden → EU
-  NZD: ['AU', 'USD', 'CAD', 'UK', 'EU', 'JP'],           // NZ → Australia → US
-  CNY: ['USD', 'JP', 'AU', 'UK', 'EU', 'CAD'],           // China → US
-  KRW: ['USD', 'JP', 'AU', 'UK', 'EU', 'CAD'],           // Korea → US
+  NZD: ['AU', 'USD', 'UK', 'EU', 'CAD', 'JP'],           // NZ → Australia → US
+  CNY: ['USD', 'JP', 'EU', 'UK', 'AU', 'CAD'],           // China → US → JP
+  KRW: ['USD', 'JP', 'EU', 'UK', 'AU', 'CAD'],           // Korea → US → JP
   INR: ['USD', 'UK', 'EU', 'AU', 'CAD', 'JP'],           // India → US → UK
-  MXN: ['USD', 'CAD', 'UK', 'EU', 'AU', 'JP'],           // Mexico → US
-  BRL: ['USD', 'CAD', 'UK', 'EU', 'AU', 'JP'],           // Brazil → US
+  MXN: ['USD', 'CAD', 'EU', 'UK', 'AU', 'JP'],           // Mexico → US → Canada → EU
+  BRL: ['USD', 'CAD', 'EU', 'UK', 'AU', 'JP'],           // Brazil → US → Canada → EU
 };
 
 /**
