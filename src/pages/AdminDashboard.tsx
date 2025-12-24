@@ -11,7 +11,8 @@ import { RecentActivityLog } from "@/components/admin/RecentActivityLog";
 import { 
   Database, Users, Package, Upload, TrendingUp, Shield, ExternalLink, 
   BarChart3, ShoppingCart, ClipboardCheck, Wrench, RefreshCw, Building2,
-  Link2, Copy, Calendar, DollarSign, PieChart, Star, FlaskConical, FileText
+  Link2, Copy, Calendar, DollarSign, PieChart, Star, FlaskConical, FileText,
+  ShoppingBag
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -71,6 +72,7 @@ const AdminDashboard = () => {
     { to: "/admin/import", icon: Upload, title: "Import Filaments", desc: "Upload filament data from CSV", color: "text-primary" },
     { to: "/admin/printers", icon: Database, title: "Manage Printers", desc: "Printer database & pricing", color: "text-primary" },
     { to: "/admin/filaments", icon: Package, title: "Manage Filaments", desc: "Edit filament entries", color: "text-primary" },
+    { to: "/admin/maintenance?tab=elegoo", icon: ShoppingBag, title: "Elegoo Pipeline", desc: "Full sync & image enrichment", color: "text-emerald-500" },
     { to: "/admin/maintenance", icon: Wrench, title: "Maintenance", desc: "Scraping & data tools", color: "text-cyan-500" },
     { to: "/admin/data-quality", icon: BarChart3, title: "Data Quality", desc: "Completeness metrics", color: "text-cyan-500" },
     { to: "/admin/filament-audit", icon: ClipboardCheck, title: "Filament Audit", desc: "Quality audit & URL testing", color: "text-green-500" },
