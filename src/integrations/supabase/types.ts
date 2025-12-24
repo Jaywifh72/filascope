@@ -1199,6 +1199,7 @@ export type Database = {
           amazon_prices_last_updated_at: string | null
           auto_created: boolean | null
           auto_updated: boolean | null
+          available_regions: string[] | null
           bed_temp_max_c: number | null
           bed_temp_min_c: number | null
           brand_id: string | null
@@ -1301,6 +1302,7 @@ export type Database = {
           amazon_prices_last_updated_at?: string | null
           auto_created?: boolean | null
           auto_updated?: boolean | null
+          available_regions?: string[] | null
           bed_temp_max_c?: number | null
           bed_temp_min_c?: number | null
           brand_id?: string | null
@@ -1403,6 +1405,7 @@ export type Database = {
           amazon_prices_last_updated_at?: string | null
           auto_created?: boolean | null
           auto_updated?: boolean | null
+          available_regions?: string[] | null
           bed_temp_max_c?: number | null
           bed_temp_min_c?: number | null
           brand_id?: string | null
