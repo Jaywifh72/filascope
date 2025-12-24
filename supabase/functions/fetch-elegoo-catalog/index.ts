@@ -30,29 +30,6 @@ interface CatalogItem {
   Text3: string;
 }
 
-// SpoolScout TDS URL mapping by material type
-const TDS_URL_MAP: Record<string, string> = {
-  'PLA': 'https://www.spoolscout.com/data-sheets/elegoo/pla-pla',
-  'PLA+': 'https://www.spoolscout.com/data-sheets/elegoo/pla-pla',
-  'PLA PRO': 'https://www.spoolscout.com/data-sheets/elegoo/pla-pla-pro',
-  'PLA-PRO': 'https://www.spoolscout.com/data-sheets/elegoo/pla-pla-pro',
-  'RAPID PLA': 'https://www.spoolscout.com/data-sheets/elegoo/pla-rapid-pla',
-  'RAPID PLA+': 'https://www.spoolscout.com/data-sheets/elegoo/pla-rapid-pla',
-  'PETG': 'https://www.spoolscout.com/data-sheets/elegoo/petg-petg-pro',
-  'PETG PRO': 'https://www.spoolscout.com/data-sheets/elegoo/petg-petg-pro',
-  'PETG-PRO': 'https://www.spoolscout.com/data-sheets/elegoo/petg-petg-pro',
-  'PETG-CF': 'https://www.spoolscout.com/data-sheets/elegoo/petg-petg-cf',
-  'PETG CF': 'https://www.spoolscout.com/data-sheets/elegoo/petg-petg-cf',
-  'RAPID PETG': 'https://www.spoolscout.com/data-sheets/elegoo/petg-rapid-petg',
-  'RAPID PETG+': 'https://www.spoolscout.com/data-sheets/elegoo/petg-rapid-petg',
-  'PC': 'https://www.spoolscout.com/data-sheets/elegoo/pc-pc',
-  'PC-CF': 'https://www.spoolscout.com/data-sheets/elegoo/pc-pc-cf',
-  'PC CF': 'https://www.spoolscout.com/data-sheets/elegoo/pc-pc-cf',
-  'ASA': 'https://www.spoolscout.com/data-sheets/elegoo/asa-asa',
-  'TPU': 'https://www.spoolscout.com/data-sheets/elegoo/tpu-tpu',
-  'ABS': 'https://www.spoolscout.com/data-sheets/elegoo/abs-abs',
-};
-
 // Extract material type from product name
 function extractMaterialFromName(name: string): string | null {
   const upperName = name.toUpperCase();
@@ -69,15 +46,6 @@ function extractMaterialFromName(name: string): string | null {
     if (upperName.includes(pattern)) {
       return pattern;
     }
-  }
-  return null;
-}
-
-// Get TDS URL based on material type
-function getTdsUrl(name: string): string | null {
-  const material = extractMaterialFromName(name);
-  if (material && TDS_URL_MAP[material]) {
-    return TDS_URL_MAP[material];
   }
   return null;
 }
@@ -209,14 +177,10 @@ serve(async (req) => {
     }
 
     // Transform items to match our expected format
+    // TDS URLs will be discovered during sync by scraping product pages
     const products = (data.Items || []).map((item) => {
-      const tdsUrl = getTdsUrl(item.Name);
       const techSpecs = parseTechSpecs(item.Text1);
       const material = extractMaterialFromName(item.Name);
-      
-      if (tdsUrl) {
-        console.log(`Mapped TDS URL for ${item.Name} (${material}): ${tdsUrl}`);
-      }
       
       return {
         productId: item.Id,
@@ -237,7 +201,7 @@ serve(async (req) => {
         labels: item.Labels,
         category: item.ItemSubCategory,
         categoryId: item.ItemSubCategoryId,
-        tdsUrl: tdsUrl,
+        tdsUrl: null,  // Will be discovered by scraping product pages
         material: material,
         techSpecs: techSpecs,
       };

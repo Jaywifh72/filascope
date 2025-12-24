@@ -6,8 +6,10 @@ import { FileText, RefreshCw, CheckCircle2, Clock, FileSearch } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 
 interface TdsStats {
-  totalWithTds: number;
+  totalFilaments: number;
+  withTdsUrl: number;
   fullyParsed: number;
+  pendingDiscovery: number;
   pendingParsing: number;
   percentComplete: number;
 }
@@ -25,8 +27,14 @@ export function TdsParsingStatus({ onRefresh, refreshTrigger }: TdsParsingStatus
   const fetchStats = async () => {
     setIsLoading(true);
     try {
+      // Get total Elegoo filaments count
+      const { count: totalFilaments } = await supabase
+        .from("filaments")
+        .select("*", { count: "exact", head: true })
+        .eq("vendor", "Elegoo");
+
       // Get count of filaments with TDS URL
-      const { count: totalWithTds } = await supabase
+      const { count: withTdsUrl } = await supabase
         .from("filaments")
         .select("*", { count: "exact", head: true })
         .not("tds_url", "is", null)
@@ -42,15 +50,19 @@ export function TdsParsingStatus({ onRefresh, refreshTrigger }: TdsParsingStatus
         .not("drying_temp_c", "is", null)
         .eq("vendor", "Elegoo");
 
-      const total = totalWithTds || 0;
+      const total = totalFilaments || 0;
+      const hasTds = withTdsUrl || 0;
       const parsed = fullyParsed || 0;
-      const pending = total - parsed;
+      const needsDiscovery = total - hasTds;
+      const needsParsing = hasTds - parsed;
       const percent = total > 0 ? Math.round((parsed / total) * 100) : 0;
 
       setStats({
-        totalWithTds: total,
+        totalFilaments: total,
+        withTdsUrl: hasTds,
         fullyParsed: parsed,
-        pendingParsing: pending,
+        pendingDiscovery: needsDiscovery,
+        pendingParsing: needsParsing,
         percentComplete: percent,
       });
       setLastRefresh(new Date());
@@ -104,7 +116,7 @@ export function TdsParsingStatus({ onRefresh, refreshTrigger }: TdsParsingStatus
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-3">
           <div className="text-center p-3 rounded-lg bg-background/50">
             <div className="flex items-center justify-center gap-1.5 text-green-600 mb-1">
               <CheckCircle2 className="w-4 h-4" />
@@ -115,23 +127,30 @@ export function TdsParsingStatus({ onRefresh, refreshTrigger }: TdsParsingStatus
           <div className="text-center p-3 rounded-lg bg-background/50">
             <div className="flex items-center justify-center gap-1.5 text-amber-600 mb-1">
               <Clock className="w-4 h-4" />
-              <span className="text-xs font-medium">Pending</span>
+              <span className="text-xs font-medium">Need Parse</span>
             </div>
             <div className="text-2xl font-bold">{stats?.pendingParsing.toLocaleString() ?? "-"}</div>
           </div>
           <div className="text-center p-3 rounded-lg bg-background/50">
-            <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
+            <div className="flex items-center justify-center gap-1.5 text-orange-600 mb-1">
               <FileSearch className="w-4 h-4" />
-              <span className="text-xs font-medium">Total TDS</span>
+              <span className="text-xs font-medium">Need TDS</span>
             </div>
-            <div className="text-2xl font-bold">{stats?.totalWithTds.toLocaleString() ?? "-"}</div>
+            <div className="text-2xl font-bold">{stats?.pendingDiscovery.toLocaleString() ?? "-"}</div>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-background/50">
+            <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
+              <FileText className="w-4 h-4" />
+              <span className="text-xs font-medium">Total</span>
+            </div>
+            <div className="text-2xl font-bold">{stats?.totalFilaments.toLocaleString() ?? "-"}</div>
           </div>
         </div>
 
         {/* Info Footer */}
         <p className="text-xs text-muted-foreground flex items-center gap-1.5">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500" />
-          Parsing runs automatically after each sync (10 filaments/batch)
+          TDS discovery & parsing runs automatically after each sync (10/batch)
           {lastRefresh && (
             <span className="ml-auto">
               Updated {lastRefresh.toLocaleTimeString()}
