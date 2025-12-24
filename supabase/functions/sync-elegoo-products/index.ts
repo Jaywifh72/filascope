@@ -8,17 +8,21 @@ const corsHeaders = {
 
 // KNOWN CATALOG IDs from Impact.com for Elegoo
 // These are the authoritative IDs - do NOT rely on dynamic discovery name parsing
+// NOTE: JP does NOT have a filament catalog - Elegoo Japan store may not carry filaments
 const ELEGOO_CATALOG_IDS: Record<string, string> = {
   'US': '25495',  // Elegoo Filaments Datafeed for US
   'AU': '19909',  // Elegoo Product Datafeed for AU
   'CA': '19910',  // Elegoo Product Datafeed for CA
   'EU': '19908',  // Elegoo Product Datafeed for EU
-  'UK': '19907',  // Elegoo Product Datafeed for UK
+  'UK': '19907',  // Elegoo Product Datafeed for UK - NOTE: May not have filaments
   'DE': '21454',  // Elegoo Product Datafeed for DE (Germany)
   'IT': '21456',  // Elegoo Product Datafeed for Italy
   'FR': '21457',  // Elegoo Product Datafeed for FR (France)
   'ES': '21458',  // Elegoo Product Datafeed for ES (Spain)
 };
+
+// Valid regions with catalogs - JP is excluded because it has no catalog
+const VALID_REGIONS = Object.keys(ELEGOO_CATALOG_IDS);
 
 // Default fallback catalog ID
 const DEFAULT_CATALOG_ID = '25495';
@@ -1259,7 +1263,54 @@ serve(async (req) => {
                 }
               }
               
-              console.log(`[ELEGOO-SYNC] 🔍 Scraping product page for TDS: ${actualUrl}`);
+              console.log(`[ELEGOO-SYNC] 🔍 TDS Discovery starting for: ${actualUrl}`);
+              
+              // First, try the product.json endpoint (faster, more reliable)
+              const jsonUrl = actualUrl.replace(/\/?(\?.*)?$/, '.json');
+              console.log(`[ELEGOO-SYNC] 📋 Trying product.json: ${jsonUrl}`);
+              
+              try {
+                const jsonResponse = await fetch(jsonUrl, {
+                  headers: { 'Accept': 'application/json' }
+                });
+                
+                if (jsonResponse.ok) {
+                  const productData = await jsonResponse.json();
+                  console.log(`[ELEGOO-SYNC] ✓ Got product.json, checking for TDS links...`);
+                  
+                  // Check body_html for PDF links
+                  const bodyHtml = productData.product?.body_html || '';
+                  const descriptionText = productData.product?.description || '';
+                  const combinedText = bodyHtml + ' ' + descriptionText;
+                  
+                  // Look for TDS PDF links
+                  const pdfPattern = /https?:\/\/[^\s"'<>]+\.pdf/gi;
+                  const pdfMatches = combinedText.match(pdfPattern);
+                  
+                  if (pdfMatches && pdfMatches.length > 0) {
+                    // Prefer TDS-specific PDFs
+                    for (const pdf of pdfMatches) {
+                      const pdfLower = pdf.toLowerCase();
+                      if (pdfLower.includes('tds') || pdfLower.includes('technical') || pdfLower.includes('data-sheet') || pdfLower.includes('datasheet')) {
+                        console.log(`[ELEGOO-SYNC] ✅ Found TDS PDF in product.json: ${pdf}`);
+                        return pdf;
+                      }
+                    }
+                    // Return first PDF if no TDS-specific one
+                    console.log(`[ELEGOO-SYNC] ✅ Found PDF in product.json: ${pdfMatches[0]}`);
+                    return pdfMatches[0];
+                  } else {
+                    console.log(`[ELEGOO-SYNC] ⚠️ No PDF links found in product.json body_html`);
+                  }
+                } else {
+                  console.log(`[ELEGOO-SYNC] ⚠️ product.json returned ${jsonResponse.status}`);
+                }
+              } catch (jsonErr) {
+                console.log(`[ELEGOO-SYNC] ⚠️ product.json fetch failed:`, jsonErr);
+              }
+              
+              // Fallback: Scrape the product page with Firecrawl
+              console.log(`[ELEGOO-SYNC] 🔍 Falling back to Firecrawl scrape...`);
               
               const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
                 method: 'POST',
@@ -1276,13 +1327,16 @@ serve(async (req) => {
               });
               
               if (!scrapeResponse.ok) {
-                console.log(`[ELEGOO-SYNC] ⚠️ Scrape failed for ${actualUrl}`);
+                const errorText = await scrapeResponse.text();
+                console.log(`[ELEGOO-SYNC] ❌ Firecrawl scrape failed: ${scrapeResponse.status} - ${errorText.substring(0, 200)}`);
                 return null;
               }
               
               const scrapeData = await scrapeResponse.json();
               const links = scrapeData.data?.links || [];
               const markdown = scrapeData.data?.markdown || '';
+              
+              console.log(`[ELEGOO-SYNC] 📄 Firecrawl returned ${markdown.length} chars of markdown, ${links.length} links`);
               
               // Look for TDS PDF links in the page
               const tdsPatterns = [
@@ -1293,22 +1347,27 @@ serve(async (req) => {
               ];
               
               // Check links array first
+              console.log(`[ELEGOO-SYNC] 🔍 Checking ${links.length} links for PDFs...`);
               for (const link of links) {
                 const linkUrl = typeof link === 'string' ? link : link.url || link.href;
                 if (!linkUrl) continue;
                 
                 const linkLower = linkUrl.toLowerCase();
-                if (linkLower.includes('.pdf') && 
-                    (linkLower.includes('tds') || linkLower.includes('technical') || linkLower.includes('data-sheet') || linkLower.includes('datasheet'))) {
-                  console.log(`[ELEGOO-SYNC] ✅ Found TDS link: ${linkUrl}`);
-                  return linkUrl;
+                if (linkLower.includes('.pdf')) {
+                  console.log(`[ELEGOO-SYNC] 📄 Found PDF link: ${linkUrl}`);
+                  if (linkLower.includes('tds') || linkLower.includes('technical') || linkLower.includes('data-sheet') || linkLower.includes('datasheet')) {
+                    console.log(`[ELEGOO-SYNC] ✅ Found TDS link: ${linkUrl}`);
+                    return linkUrl;
+                  }
                 }
               }
               
               // Search in markdown content
+              console.log(`[ELEGOO-SYNC] 🔍 Searching markdown for PDF patterns...`);
               for (const pattern of tdsPatterns) {
                 const matches = markdown.match(pattern);
                 if (matches && matches.length > 0) {
+                  console.log(`[ELEGOO-SYNC] 📄 Pattern found ${matches.length} PDFs`);
                   // Filter for TDS-related PDFs
                   for (const match of matches) {
                     const matchLower = match.toLowerCase();
@@ -1323,7 +1382,8 @@ serve(async (req) => {
                 }
               }
               
-              console.log(`[ELEGOO-SYNC] ⚠️ No TDS found on product page`);
+              console.log(`[ELEGOO-SYNC] ⚠️ No TDS/PDF found on product page`);
+              console.log(`[ELEGOO-SYNC] 🔍 DEBUG: First 500 chars of markdown: ${markdown.substring(0, 500)}`);
               return null;
             } catch (err) {
               console.error(`[ELEGOO-SYNC] ❌ TDS discovery error:`, err);

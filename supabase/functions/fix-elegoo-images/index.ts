@@ -97,14 +97,19 @@ function extractVariantImages(html: string, pageUrl: string): VariantImageData[]
   const variants: VariantImageData[] = [];
   const seenColors = new Set<string>();
 
+  console.log(`[ELEGOO-IMAGES] 🔍 Starting extraction from ${pageUrl}`);
+  console.log(`[ELEGOO-IMAGES] 📄 HTML length: ${html.length} chars`);
+
   // Pattern 1: Shopify product JSON with variants array
   // Look for the main product JSON that Shopify embeds
   const shopifyJsonPattern = /var\s+meta\s*=\s*({[\s\S]*?"variants"[\s\S]*?});/;
   const metaMatch = html.match(shopifyJsonPattern);
   if (metaMatch) {
+    console.log(`[ELEGOO-IMAGES] ✓ Found meta JSON pattern`);
     try {
       const meta = JSON.parse(metaMatch[1]);
       if (meta.product?.variants) {
+        console.log(`[ELEGOO-IMAGES] 📦 Found ${meta.product.variants.length} variants in meta.product.variants`);
         for (const variant of meta.product.variants) {
           const title = (variant.name || variant.title || '').toLowerCase().trim();
           const featuredImage = variant.featured_image?.src || variant.image?.src;
@@ -115,21 +120,26 @@ function extractVariantImages(html: string, pageUrl: string): VariantImageData[]
               imageUrl: featuredImage.startsWith('//') ? 'https:' + featuredImage : featuredImage,
               variantId: variant.id?.toString(),
             });
+            console.log(`[ELEGOO-IMAGES]   → Color: "${title}" Image: ${featuredImage.substring(0, 60)}...`);
           }
         }
       }
     } catch (e) {
-      console.log("[ELEGOO-IMAGES] Meta JSON parse error:", e);
+      console.log("[ELEGOO-IMAGES] ❌ Meta JSON parse error:", e);
     }
+  } else {
+    console.log(`[ELEGOO-IMAGES] ✗ No meta JSON pattern found`);
   }
 
   // Pattern 2: Look for product.json endpoint data embedded
   const productJsonPattern = /"product"\s*:\s*({[\s\S]*?"variants"\s*:\s*\[[\s\S]*?\][\s\S]*?})/;
   const productMatch = html.match(productJsonPattern);
   if (productMatch && variants.length === 0) {
+    console.log(`[ELEGOO-IMAGES] ✓ Found product JSON pattern`);
     try {
       const product = JSON.parse(productMatch[1]);
       if (product.variants) {
+        console.log(`[ELEGOO-IMAGES] 📦 Found ${product.variants.length} variants in product JSON`);
         for (const variant of product.variants) {
           // Shopify variants have option1, option2, etc for color
           const colorOption = variant.option1 || variant.title || '';
@@ -142,17 +152,49 @@ function extractVariantImages(html: string, pageUrl: string): VariantImageData[]
               imageUrl: featuredImage.startsWith('//') ? 'https:' + featuredImage : featuredImage,
               variantId: variant.id?.toString(),
             });
+            console.log(`[ELEGOO-IMAGES]   → Color: "${colorLower}" Image: ${featuredImage.substring(0, 60)}...`);
           }
         }
       }
     } catch (e) {
-      console.log("[ELEGOO-IMAGES] Product JSON parse error:", e);
+      console.log("[ELEGOO-IMAGES] ❌ Product JSON parse error:", e);
+    }
+  }
+
+  // Pattern 2b: Look for window.__INITIAL_STATE__ or similar Shopify patterns
+  const initialStatePattern = /window\.__INITIAL_STATE__\s*=\s*({[\s\S]*?});?\s*(?:<\/script>|window\.)/;
+  const stateMatch = html.match(initialStatePattern);
+  if (stateMatch && variants.length === 0) {
+    console.log(`[ELEGOO-IMAGES] ✓ Found __INITIAL_STATE__ pattern`);
+    try {
+      const state = JSON.parse(stateMatch[1]);
+      // Navigate to product variants
+      const product = state?.product || state?.productData?.product;
+      if (product?.variants) {
+        console.log(`[ELEGOO-IMAGES] 📦 Found ${product.variants.length} variants in INITIAL_STATE`);
+        for (const variant of product.variants) {
+          const colorOption = variant.option1 || variant.title || variant.name || '';
+          const colorLower = colorOption.toLowerCase().trim();
+          const featuredImage = variant.featured_image?.src || variant.image;
+          if (colorLower && featuredImage && !seenColors.has(colorLower)) {
+            seenColors.add(colorLower);
+            variants.push({
+              color: colorLower,
+              imageUrl: featuredImage.startsWith('//') ? 'https:' + featuredImage : featuredImage,
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.log("[ELEGOO-IMAGES] ❌ INITIAL_STATE parse error:", e);
     }
   }
 
   // Pattern 3: Look for variant-option blocks with data attributes
+  console.log(`[ELEGOO-IMAGES] 🔍 Checking variant-option patterns...`);
   const variantOptionPattern = /<(?:label|button|div|span)[^>]*(?:data-value|data-option-value)="([^"]+)"[^>]*>[\s\S]*?(?:<img[^>]*src="([^"]+)")/gi;
   let match;
+  let pattern3Count = 0;
   while ((match = variantOptionPattern.exec(html)) !== null) {
     const colorRaw = match[1];
     const imageUrl = match[2];
@@ -164,12 +206,18 @@ function extractVariantImages(html: string, pageUrl: string): VariantImageData[]
         color: colorLower,
         imageUrl: imageUrl.startsWith('//') ? 'https:' + imageUrl : imageUrl,
       });
+      pattern3Count++;
     }
+  }
+  if (pattern3Count > 0) {
+    console.log(`[ELEGOO-IMAGES] ✓ Pattern 3 found ${pattern3Count} variants`);
   }
 
   // Pattern 4: Extract from Shopify CDN image URLs with variant info
   // Elegoo images often follow pattern: product-title_color.jpg
+  console.log(`[ELEGOO-IMAGES] 🔍 Checking CDN URL patterns...`);
   const imgPattern = /https?:\/\/cdn\.shopify\.com\/s\/files\/[^"'\s]+?(?:elegoo|filament)[^"'\s]*?[-_]([a-z]+(?:[-\s][a-z]+)*)(?:[-_]|\.(?:jpg|png|webp))/gi;
+  let pattern4Count = 0;
   while ((match = imgPattern.exec(html)) !== null) {
     const fullUrl = match[0].replace(/\.(jpg|png|webp).*/, '.$1');
     const colorPart = match[1].toLowerCase().trim();
@@ -183,11 +231,17 @@ function extractVariantImages(html: string, pageUrl: string): VariantImageData[]
         color: colorPart,
         imageUrl: fullUrl,
       });
+      pattern4Count++;
     }
+  }
+  if (pattern4Count > 0) {
+    console.log(`[ELEGOO-IMAGES] ✓ Pattern 4 found ${pattern4Count} variants from CDN URLs`);
   }
 
   // Pattern 5: Look for image gallery with color-specific filenames
+  console.log(`[ELEGOO-IMAGES] 🔍 Checking gallery img alt patterns...`);
   const galleryImgPattern = /<img[^>]*src="([^"]+cdn\.shopify\.com[^"]+)"[^>]*alt="([^"]*(?:black|white|red|blue|green|grey|gray|orange|yellow|pink|purple|brown|gold|silver|copper|transparent|natural|beige)[^"]*)"[^>]*>/gi;
+  let pattern5Count = 0;
   while ((match = galleryImgPattern.exec(html)) !== null) {
     let imageUrl = match[1];
     const altText = match[2].toLowerCase();
@@ -203,11 +257,35 @@ function extractVariantImages(html: string, pageUrl: string): VariantImageData[]
           color: colorLower,
           imageUrl,
         });
+        pattern5Count++;
       }
     }
   }
+  if (pattern5Count > 0) {
+    console.log(`[ELEGOO-IMAGES] ✓ Pattern 5 found ${pattern5Count} variants from img alt`);
+  }
 
-  console.log(`[ELEGOO-IMAGES] Extracted ${variants.length} variant images from ${pageUrl}`);
+  // Pattern 6: Try Shopify product.json API directly (as fallback data in HTML)
+  const productJsonUrl = pageUrl.replace(/\/?$/, '.json');
+  const jsonEmbedPattern = new RegExp(`"${productJsonUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^}]*"variants":\\s*\\[([^\\]]+)\\]`, 'i');
+  const jsonEmbed = html.match(jsonEmbedPattern);
+  if (jsonEmbed && variants.length === 0) {
+    console.log(`[ELEGOO-IMAGES] ✓ Found embedded product.json reference`);
+  }
+
+  console.log(`[ELEGOO-IMAGES] ✅ Extracted ${variants.length} total variant images from ${pageUrl}`);
+  if (variants.length === 0) {
+    // Log some HTML samples to help debug
+    console.log(`[ELEGOO-IMAGES] 🔍 DEBUG: First 500 chars of HTML:`);
+    console.log(html.substring(0, 500));
+    console.log(`[ELEGOO-IMAGES] 🔍 DEBUG: Checking for variant-related content...`);
+    console.log(`[ELEGOO-IMAGES]   Contains "variants": ${html.includes('"variants"')}`);
+    console.log(`[ELEGOO-IMAGES]   Contains "option1": ${html.includes('"option1"')}`);
+    console.log(`[ELEGOO-IMAGES]   Contains "featured_image": ${html.includes('"featured_image"')}`);
+    console.log(`[ELEGOO-IMAGES]   Contains "cdn.shopify.com": ${html.includes('cdn.shopify.com')}`);
+  } else {
+    console.log(`[ELEGOO-IMAGES] 📋 Colors found: ${Array.from(seenColors).join(', ')}`);
+  }
   return variants;
 }
 
@@ -474,52 +552,123 @@ Deno.serve(async (req) => {
 
       try {
         // Check cache first
-        let variants: VariantImageData[];
+        let variants: VariantImageData[] = [];
         if (pageCache[productUrl]) {
           variants = pageCache[productUrl];
           console.log(`   Using cached variants (${variants.length})`);
         } else {
-          // Scrape the product page
-          console.log(`   Scraping product page...`);
-          const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${firecrawlApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              url: productUrl,
-              formats: ['html'],
-              waitFor: 3000,
-            }),
-          });
-
-          if (!scrapeResponse.ok) {
-            console.log(`   ❌ Scrape failed: ${scrapeResponse.status}`);
-            for (const filament of filamentsByLine[line] || []) {
-              results.push({ id: filament.id, title: filament.product_title, status: "scrape_failed" });
-              errors++;
+          // Strategy 1: Try Shopify product.json API first (faster, more reliable)
+          const jsonUrl = productUrl.replace(/\/?(\?.*)?$/, '.json');
+          console.log(`   📋 Trying product.json API: ${jsonUrl}`);
+          
+          let gotVariantsFromJson = false;
+          try {
+            const jsonResponse = await fetch(jsonUrl, {
+              headers: { 'Accept': 'application/json' }
+            });
+            
+            if (jsonResponse.ok) {
+              const productData = await jsonResponse.json();
+              const product = productData.product;
+              
+              if (product?.variants && product.variants.length > 0) {
+                console.log(`   ✓ Got ${product.variants.length} variants from product.json`);
+                
+                for (const variant of product.variants) {
+                  // Get color from option1 (typically the color option)
+                  const colorOption = variant.option1 || variant.title || '';
+                  const colorLower = colorOption.toLowerCase().trim();
+                  
+                  // Get image - prefer featured_image, fall back to looking in images array
+                  let imageUrl = variant.featured_image?.src;
+                  
+                  // If no featured_image, try to find matching image in product.images
+                  if (!imageUrl && product.images && product.images.length > 0) {
+                    // Check if variant has image_id
+                    if (variant.image_id) {
+                      const matchingImage = product.images.find((img: any) => img.id === variant.image_id);
+                      if (matchingImage) {
+                        imageUrl = matchingImage.src;
+                      }
+                    }
+                    // Also check position-based matching (variant index = image index)
+                    if (!imageUrl) {
+                      const variantIndex = product.variants.indexOf(variant);
+                      if (variantIndex >= 0 && variantIndex < product.images.length) {
+                        imageUrl = product.images[variantIndex].src;
+                      }
+                    }
+                  }
+                  
+                  if (colorLower && imageUrl) {
+                    if (imageUrl.startsWith('//')) imageUrl = 'https:' + imageUrl;
+                    variants.push({
+                      color: colorLower,
+                      imageUrl,
+                      variantId: variant.id?.toString(),
+                    });
+                    console.log(`     → "${colorLower}": ${imageUrl.substring(0, 60)}...`);
+                  }
+                }
+                
+                if (variants.length > 0) {
+                  gotVariantsFromJson = true;
+                  pageCache[productUrl] = variants;
+                  console.log(`   ✅ Extracted ${variants.length} variants from product.json`);
+                }
+              } else {
+                console.log(`   ⚠️ No variants in product.json`);
+              }
+            } else {
+              console.log(`   ⚠️ product.json returned ${jsonResponse.status}`);
             }
-            continue;
+          } catch (jsonErr) {
+            console.log(`   ⚠️ product.json fetch failed:`, jsonErr);
           }
+          
+          // Strategy 2: Fallback to Firecrawl HTML scraping
+          if (!gotVariantsFromJson) {
+            console.log(`   🔍 Falling back to Firecrawl HTML scrape...`);
+            const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${firecrawlApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                url: productUrl,
+                formats: ['html'],
+                waitFor: 3000,
+              }),
+            });
 
-          const scrapeData = await scrapeResponse.json();
-          const html = scrapeData.data?.html || '';
-
-          if (!html || html.length < 1000) {
-            console.log(`   ⚠️ HTML too short (${html.length} chars)`);
-            for (const filament of filamentsByLine[line] || []) {
-              results.push({ id: filament.id, title: filament.product_title, status: "no_html" });
-              errors++;
+            if (!scrapeResponse.ok) {
+              console.log(`   ❌ Scrape failed: ${scrapeResponse.status}`);
+              for (const filament of filamentsByLine[line] || []) {
+                results.push({ id: filament.id, title: filament.product_title, status: "scrape_failed" });
+                errors++;
+              }
+              continue;
             }
-            continue;
+
+            const scrapeData = await scrapeResponse.json();
+            const html = scrapeData.data?.html || '';
+
+            if (!html || html.length < 1000) {
+              console.log(`   ⚠️ HTML too short (${html.length} chars)`);
+              for (const filament of filamentsByLine[line] || []) {
+                results.push({ id: filament.id, title: filament.product_title, status: "no_html" });
+                errors++;
+              }
+              continue;
+            }
+
+            console.log(`   HTML length: ${html.length}`);
+
+            // Extract variant images from HTML
+            variants = extractVariantImages(html, productUrl);
+            pageCache[productUrl] = variants;
           }
-
-          console.log(`   HTML length: ${html.length}`);
-
-          // Extract variant images
-          variants = extractVariantImages(html, productUrl);
-          pageCache[productUrl] = variants;
 
           console.log(`   Found ${variants.length} color variants`);
           if (variants.length > 0) {
