@@ -19,24 +19,36 @@ const REGIONAL_STORES: Record<string, string> = {
   ES: "https://es.elegoo.com",
 };
 
-// Extract product handle from Elegoo URL
-function extractProductHandle(url: string): string | null {
+// Extract product handle and variant ID from Elegoo URL
+function extractProductInfo(url: string): { handle: string | null; variantId: string | null } {
   try {
-    // Handle Impact affiliate URLs - extract the real URL from 'u' param
+    let variantId: string | null = null;
+    
+    // Handle Impact affiliate URLs - extract the real URL from 'u' param and prodsku
     if (url.includes("sjv.io") || url.includes("impact.com")) {
       const urlObj = new URL(url);
+      // prodsku often contains the Shopify variant ID
+      variantId = urlObj.searchParams.get("prodsku");
       const actualUrl = urlObj.searchParams.get("u");
       if (actualUrl) {
         url = decodeURIComponent(actualUrl);
       }
     }
 
+    // Extract variant ID from URL query param (variant=51296906281141)
+    const variantMatch = url.match(/[?&]variant=(\d+)/);
+    if (variantMatch) {
+      variantId = variantMatch[1];
+    }
+
     // Extract handle from URL like /products/abs-filament-1-75mm-colored-1kg
-    const match = url.match(/\/products\/([^?#]+)/);
-    return match ? match[1] : null;
+    const handleMatch = url.match(/\/products\/([^?#]+)/);
+    const handle = handleMatch ? handleMatch[1] : null;
+    
+    return { handle, variantId };
   } catch (e) {
-    console.error(`Failed to extract handle from URL: ${url}`, e);
-    return null;
+    console.error(`Failed to extract info from URL: ${url}`, e);
+    return { handle: null, variantId: null };
   }
 }
 
@@ -75,6 +87,7 @@ interface ShopifyVariant {
   featured_image: {
     src: string;
   } | null;
+  image_id: number | null;
 }
 
 interface ShopifyProduct {
@@ -87,6 +100,37 @@ interface ShopifyProduct {
     src: string;
     variant_ids: number[];
   }>;
+}
+
+// Find image by variant ID (most accurate method)
+function findImageByVariantId(product: ShopifyProduct, variantId: string): string | null {
+  const variantIdNum = parseInt(variantId, 10);
+  if (isNaN(variantIdNum)) return null;
+  
+  // First check if the variant exists and has an image_id
+  const variant = product.variants.find(v => v.id === variantIdNum);
+  if (variant) {
+    // Check featured_image on the variant
+    if (variant.featured_image?.src) {
+      return variant.featured_image.src;
+    }
+    
+    // Check image_id reference
+    if (variant.image_id) {
+      const image = product.images.find(img => img.id === variant.image_id);
+      if (image) {
+        return image.src;
+      }
+    }
+  }
+  
+  // Look for image with this variant_id in variant_ids array
+  const matchedImage = product.images.find(img => img.variant_ids.includes(variantIdNum));
+  if (matchedImage) {
+    return matchedImage.src;
+  }
+  
+  return null;
 }
 
 // Fetch product data from Shopify JSON API
@@ -259,13 +303,23 @@ serve(async (req) => {
 
     console.log(`[SCRAPE-IMAGES] Found ${filaments?.length || 0} filaments to process`);
 
+    // Type for filament with variant ID
+    type FilamentWithVariant = {
+      id: string;
+      product_title: string;
+      product_url: string | null;
+      featured_image: string | null;
+      vendor: string | null;
+      variantId: string | null;
+    };
+
     // Group filaments by product handle
-    const productGroups: Map<string, typeof filaments> = new Map();
+    const productGroups = new Map<string, FilamentWithVariant[]>();
     
     for (const filament of filaments || []) {
       if (!filament.product_url) continue;
 
-      const handle = extractProductHandle(filament.product_url);
+      const { handle, variantId } = extractProductInfo(filament.product_url);
       if (!handle) continue;
 
       // If targeting a specific handle, skip others
@@ -274,7 +328,14 @@ serve(async (req) => {
       if (!productGroups.has(handle)) {
         productGroups.set(handle, []);
       }
-      productGroups.get(handle)!.push(filament);
+      productGroups.get(handle)!.push({ 
+        id: filament.id,
+        product_title: filament.product_title,
+        product_url: filament.product_url,
+        featured_image: filament.featured_image,
+        vendor: filament.vendor,
+        variantId,
+      });
     }
 
     console.log(`[SCRAPE-IMAGES] Grouped into ${productGroups.size} product handles`);
@@ -283,7 +344,7 @@ serve(async (req) => {
       handle: string;
       filamentId: string;
       title: string;
-      color: string;
+      color: string | null;
       oldImage: string | null;
       newImage: string | null;
       updated: boolean;
@@ -325,33 +386,36 @@ serve(async (req) => {
       for (const filament of groupFilaments) {
         const color = extractColorFromTitle(filament.product_title);
         
-        if (!color) {
-          results.push({
-            handle,
-            filamentId: filament.id,
-            title: filament.product_title,
-            color: "unknown",
-            oldImage: filament.featured_image,
-            newImage: null,
-            updated: false,
-            error: "Could not extract color from title",
-          });
-          skippedCount++;
-          continue;
+        // Try to find image by variant ID first (most accurate)
+        let newImage: string | null = null;
+        
+        if (filament.variantId) {
+          newImage = findImageByVariantId(product, filament.variantId);
+          if (newImage) {
+            console.log(`[SCRAPE-IMAGES] Found image by variant ID ${filament.variantId} for: ${filament.product_title}`);
+          }
         }
-
-        const newImage = findVariantImage(product, color);
+        
+        // Fallback to color matching if no variant ID or no match
+        if (!newImage && color) {
+          newImage = findVariantImage(product, color);
+          if (newImage) {
+            console.log(`[SCRAPE-IMAGES] Found image by color match for: ${filament.product_title}`);
+          }
+        }
 
         if (!newImage) {
           results.push({
             handle,
             filamentId: filament.id,
             title: filament.product_title,
-            color,
+            color: color || "unknown",
             oldImage: filament.featured_image,
             newImage: null,
             updated: false,
-            error: "No matching variant image found",
+            error: filament.variantId 
+              ? `No image found for variant ID ${filament.variantId}` 
+              : "No matching variant image found",
           });
           skippedCount++;
           continue;
