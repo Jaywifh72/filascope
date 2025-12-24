@@ -503,8 +503,11 @@ const Finder = () => {
     },
   });
 
+  // Get regional filtering hook BEFORE the query so currentRegion is available for cache key
+  const { filterByRegion, currentRegion } = useRegionalFiltering();
+
   const { data: filaments, isLoading } = useQuery({
-    queryKey: ["filaments", searchTerm, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrands, materials],
+    queryKey: ["filaments", currentRegion, searchTerm, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrands, materials],
     enabled: !!materials, // Wait for materials to load first
     queryFn: async () => {
       let query = supabase.from("filaments").select("*");
@@ -556,14 +559,14 @@ const Finder = () => {
         query = query.or(brandFilters);
       }
 
-      const { data, error } = await query;
+      // Fetch all filaments (override default 1000-row limit)
+      const { data, error } = await query.limit(10000);
       if (error) throw error;
       return data;
     },
   });
 
   // Apply regional filtering to filaments
-  const { filterByRegion, currentRegion } = useRegionalFiltering();
   const regionalFilaments = useMemo(() => {
     if (!filaments) return undefined;
     return filterByRegion(filaments);
