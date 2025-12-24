@@ -103,20 +103,22 @@ export function isFilamentAvailableInRegion(
   region: RegionCode
 ): boolean {
   const vendor = filament.vendor;
+  const url = filament.product_url;
   
   // Global brands are always available
   if (!isRegionalBrand(vendor)) {
     return true;
   }
   
+  // Helper to check Elegoo store domains
+  const isElegooVendor = vendor?.toLowerCase() === 'elegoo';
+  
   // US region: check if the main product_url contains US store domain
   if (region === 'US') {
-    const url = filament.product_url;
     if (!url) return false;
     
-    // For Elegoo specifically, check if it's the US store
-    if (vendor?.toLowerCase() === 'elegoo') {
-      // US Elegoo URLs contain elegoo-us.myshopify.com or just elegoo.com (not regional subdomain)
+    if (isElegooVendor) {
+      // US Elegoo URLs: elegoo-us.myshopify.com, us.elegoo.com, or elegoo.com without regional subdomain
       const isUsStore = url.includes('elegoo-us.myshopify.com') || 
                         url.includes('us.elegoo.com') ||
                         (url.includes('elegoo.com') && 
@@ -135,26 +137,79 @@ export function isFilamentAvailableInRegion(
     return true;
   }
   
-  // For non-US regions, check if the regional URL exists
-  const urlField = REGION_TO_URL_FIELD[region];
-  if (urlField) {
-    const regionalUrl = filament[urlField as keyof FilamentWithRegion];
+  // CA region: check for Canadian store
+  if (region === 'CA') {
+    // Check if main URL is already Canadian store
+    if (isElegooVendor && url?.includes('ca.elegoo.com')) {
+      return true;
+    }
+    // Check if regional CA URL exists
+    const regionalUrl = filament.product_url_ca;
     if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
       return true;
     }
+    return false;
   }
   
-  // Special handling for EU sub-regions (DE, IT, FR, ES)
-  // These might be stored in the main product_url with regional subdomain
+  // UK region: check for UK store
+  if (region === 'UK') {
+    if (isElegooVendor && url?.includes('uk.elegoo.com')) {
+      return true;
+    }
+    const regionalUrl = filament.product_url_uk;
+    if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
+      return true;
+    }
+    return false;
+  }
+  
+  // AU region: check for Australian store
+  if (region === 'AU') {
+    if (isElegooVendor && url?.includes('au.elegoo.com')) {
+      return true;
+    }
+    const regionalUrl = filament.product_url_au;
+    if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
+      return true;
+    }
+    return false;
+  }
+  
+  // JP region: check for Japanese store
+  if (region === 'JP') {
+    if (isElegooVendor && url?.includes('jp.elegoo.com')) {
+      return true;
+    }
+    const regionalUrl = filament.product_url_jp;
+    if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
+      return true;
+    }
+    return false;
+  }
+  
+  // EU region: check for EU stores (eu, de, it, fr, es)
   if (region === 'EU') {
-    const url = filament.product_url;
-    if (url) {
+    if (isElegooVendor && url) {
       const isEuStore = url.includes('eu.elegoo.com') ||
                         url.includes('de.elegoo.com') ||
                         url.includes('it.elegoo.com') ||
                         url.includes('fr.elegoo.com') ||
                         url.includes('es.elegoo.com');
       if (isEuStore) return true;
+    }
+    const regionalUrl = filament.product_url_eu;
+    if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
+      return true;
+    }
+    return false;
+  }
+  
+  // For other regions without specific store URLs, check generic regional URL field
+  const urlField = REGION_TO_URL_FIELD[region];
+  if (urlField) {
+    const regionalUrl = filament[urlField as keyof FilamentWithRegion];
+    if (regionalUrl && typeof regionalUrl === 'string' && regionalUrl.trim() !== '') {
+      return true;
     }
   }
   

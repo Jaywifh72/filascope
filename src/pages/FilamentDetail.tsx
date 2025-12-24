@@ -36,8 +36,10 @@ import { RetailersModal, type Retailer } from "@/components/filament/hero/Retail
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { TechnicalDetailsAccordion } from "@/components/filament/TechnicalDetailsAccordion";
 import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
-import { useRegionalStore } from "@/hooks/useRegionalStore";
+import { useRegionalStore, getRegionDisplayName } from "@/hooks/useRegionalStore";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
+import { isFilamentAvailableInRegion, isRegionalBrand, type FilamentWithRegion } from "@/hooks/useRegionalFiltering";
+import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -1132,6 +1134,33 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
   
   // Use displayFilament for all rendering (supports color variant selection)
   if (!displayFilament) return null;
+
+  // Check if this product is available in the user's region
+  const isAvailableInRegion = isFilamentAvailableInRegion(
+    displayFilament as FilamentWithRegion,
+    currentRegion
+  );
+  
+  // Show "Not Available" message for regional products not available in user's region
+  if (!isAvailableInRegion && isRegionalBrand(displayFilament.vendor)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+        <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
+          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 hover:bg-accent/50 transition-colors">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          
+          <RegionNotAvailable
+            productTitle={displayFilament.product_title}
+            vendor={displayFilament.vendor}
+            material={displayFilament.material}
+            regionName={getRegionDisplayName(currentRegion)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   // Get pack quantity (default to 1 for single spools)
   const packQuantity = (displayFilament as any).pack_quantity || 1;
