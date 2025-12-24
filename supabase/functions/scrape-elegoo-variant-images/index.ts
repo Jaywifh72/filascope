@@ -264,9 +264,11 @@ serve(async (req) => {
     let options: { 
       dryRun?: boolean;
       region?: string;
+      regions?: string[];  // Multi-region support
       productHandle?: string;
       vendor?: string;
       limit?: number;
+      onlyMissingImages?: boolean;  // Only process filaments without images
     } = {};
     
     try {
@@ -276,24 +278,52 @@ serve(async (req) => {
     }
 
     const dryRun = options.dryRun ?? true;
-    const region = options.region || "US";
+    const regions = options.regions || (options.region ? [options.region] : ["US"]);
     const targetVendor = options.vendor || "Elegoo";
     const limit = options.limit || 100;
     const targetProductHandle = options.productHandle;
+    const onlyMissingImages = options.onlyMissingImages ?? false;
 
-    console.log(`[SCRAPE-IMAGES] Starting variant image scrape (dryRun: ${dryRun}, region: ${region}, vendor: ${targetVendor})`);
+    console.log(`[SCRAPE-IMAGES] Starting variant image scrape (dryRun: ${dryRun}, regions: ${regions.join(',')}, vendor: ${targetVendor}, onlyMissing: ${onlyMissingImages})`);
 
-    const storeUrl = getRegionalStore(region);
-    console.log(`[SCRAPE-IMAGES] Using store: ${storeUrl}`);
+    // Process each region
+    const allResults: Array<{
+      region: string;
+      storeUrl: string;
+      results: Array<{
+        handle: string;
+        filamentId: string;
+        title: string;
+        color: string | null;
+        oldImage: string | null;
+        newImage: string | null;
+        updated: boolean;
+        error?: string;
+      }>;
+      summary: {
+        updated: number;
+        skipped: number;
+        errors: number;
+      };
+    }> = [];
+
+    let totalUpdated = 0;
+    let totalSkipped = 0;
+    let totalErrors = 0;
 
     // Fetch filaments that need image updates
     let query = supabase
       .from("filaments")
-      .select("id, product_title, product_url, featured_image, vendor")
+      .select("id, product_title, product_url, featured_image, vendor, product_url_ca, product_url_eu, product_url_au")
       .eq("vendor", targetVendor)
       .not("product_url", "is", null)
       .order("product_title")
       .limit(limit);
+
+    // Only fetch filaments without images if specified
+    if (onlyMissingImages) {
+      query = query.is("featured_image", null);
+    }
 
     const { data: filaments, error: fetchError } = await query;
 
@@ -340,115 +370,95 @@ serve(async (req) => {
 
     console.log(`[SCRAPE-IMAGES] Grouped into ${productGroups.size} product handles`);
 
-    const results: Array<{
-      handle: string;
-      filamentId: string;
-      title: string;
-      color: string | null;
-      oldImage: string | null;
-      newImage: string | null;
-      updated: boolean;
-      error?: string;
-    }> = [];
+    // Process each region
+    for (const region of regions) {
+      const storeUrl = getRegionalStore(region);
+      console.log(`[SCRAPE-IMAGES] Processing region: ${region} using store: ${storeUrl}`);
 
-    let updatedCount = 0;
-    let skippedCount = 0;
-    let errorCount = 0;
+      const regionResults: Array<{
+        handle: string;
+        filamentId: string;
+        title: string;
+        color: string | null;
+        oldImage: string | null;
+        newImage: string | null;
+        updated: boolean;
+        error?: string;
+      }> = [];
 
-    // Process each product group
-    for (const [handle, groupFilaments] of productGroups) {
-      console.log(`[SCRAPE-IMAGES] Processing handle: ${handle} (${groupFilaments.length} variants)`);
+      let updatedCount = 0;
+      let skippedCount = 0;
+      let errorCount = 0;
 
-      // Fetch the Shopify product data
-      const product = await fetchShopifyProduct(storeUrl, handle);
-      
-      if (!product) {
-        console.log(`[SCRAPE-IMAGES] Could not fetch product: ${handle}`);
+      // Process each product group
+      for (const [handle, groupFilaments] of productGroups) {
+        console.log(`[SCRAPE-IMAGES] Processing handle: ${handle} (${groupFilaments.length} variants)`);
+
+        // Fetch the Shopify product data
+        const product = await fetchShopifyProduct(storeUrl, handle);
+        
+        if (!product) {
+          console.log(`[SCRAPE-IMAGES] Could not fetch product: ${handle}`);
+          for (const filament of groupFilaments) {
+            regionResults.push({
+              handle,
+              filamentId: filament.id,
+              title: filament.product_title,
+              color: extractColorFromTitle(filament.product_title) || "unknown",
+              oldImage: filament.featured_image,
+              newImage: null,
+              updated: false,
+              error: "Product not found in store",
+            });
+            errorCount++;
+          }
+          continue;
+        }
+
+        console.log(`[SCRAPE-IMAGES] Product has ${product.variants.length} variants and ${product.images.length} images`);
+
+        // Match each filament to a variant image
         for (const filament of groupFilaments) {
-          results.push({
-            handle,
-            filamentId: filament.id,
-            title: filament.product_title,
-            color: extractColorFromTitle(filament.product_title) || "unknown",
-            oldImage: filament.featured_image,
-            newImage: null,
-            updated: false,
-            error: "Product not found in store",
-          });
-          errorCount++;
-        }
-        continue;
-      }
-
-      console.log(`[SCRAPE-IMAGES] Product has ${product.variants.length} variants and ${product.images.length} images`);
-
-      // Match each filament to a variant image
-      for (const filament of groupFilaments) {
-        const color = extractColorFromTitle(filament.product_title);
-        
-        // Try to find image by variant ID first (most accurate)
-        let newImage: string | null = null;
-        
-        if (filament.variantId) {
-          newImage = findImageByVariantId(product, filament.variantId);
-          if (newImage) {
-            console.log(`[SCRAPE-IMAGES] Found image by variant ID ${filament.variantId} for: ${filament.product_title}`);
+          const color = extractColorFromTitle(filament.product_title);
+          
+          // Try to find image by variant ID first (most accurate)
+          let newImage: string | null = null;
+          
+          if (filament.variantId) {
+            newImage = findImageByVariantId(product, filament.variantId);
+            if (newImage) {
+              console.log(`[SCRAPE-IMAGES] Found image by variant ID ${filament.variantId} for: ${filament.product_title}`);
+            }
           }
-        }
-        
-        // Fallback to color matching if no variant ID or no match
-        if (!newImage && color) {
-          newImage = findVariantImage(product, color);
-          if (newImage) {
-            console.log(`[SCRAPE-IMAGES] Found image by color match for: ${filament.product_title}`);
+          
+          // Fallback to color matching if no variant ID or no match
+          if (!newImage && color) {
+            newImage = findVariantImage(product, color);
+            if (newImage) {
+              console.log(`[SCRAPE-IMAGES] Found image by color match for: ${filament.product_title}`);
+            }
           }
-        }
 
-        if (!newImage) {
-          results.push({
-            handle,
-            filamentId: filament.id,
-            title: filament.product_title,
-            color: color || "unknown",
-            oldImage: filament.featured_image,
-            newImage: null,
-            updated: false,
-            error: filament.variantId 
-              ? `No image found for variant ID ${filament.variantId}` 
-              : "No matching variant image found",
-          });
-          skippedCount++;
-          continue;
-        }
+          if (!newImage) {
+            regionResults.push({
+              handle,
+              filamentId: filament.id,
+              title: filament.product_title,
+              color: color || "unknown",
+              oldImage: filament.featured_image,
+              newImage: null,
+              updated: false,
+              error: filament.variantId 
+                ? `No image found for variant ID ${filament.variantId}` 
+                : "No matching variant image found",
+            });
+            skippedCount++;
+            continue;
+          }
 
-        // Check if image is actually different
-        if (filament.featured_image === newImage) {
-          results.push({
-            handle,
-            filamentId: filament.id,
-            title: filament.product_title,
-            color,
-            oldImage: filament.featured_image,
-            newImage,
-            updated: false,
-            error: "Image already matches",
-          });
-          skippedCount++;
-          continue;
-        }
-
-        // Update if not dry run
-        if (!dryRun) {
-          const { error: updateError } = await supabase
-            .from("filaments")
-            .update({ 
-              featured_image: newImage,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", filament.id);
-
-          if (updateError) {
-            results.push({
+          // Check if image is actually different
+          if (filament.featured_image === newImage) {
+            regionResults.push({
               handle,
               filamentId: filament.id,
               title: filament.product_title,
@@ -456,45 +466,88 @@ serve(async (req) => {
               oldImage: filament.featured_image,
               newImage,
               updated: false,
-              error: updateError.message,
+              error: "Image already matches",
             });
-            errorCount++;
+            skippedCount++;
             continue;
           }
+
+          // Update if not dry run
+          if (!dryRun) {
+            const { error: updateError } = await supabase
+              .from("filaments")
+              .update({ 
+                featured_image: newImage,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", filament.id);
+
+            if (updateError) {
+              regionResults.push({
+                handle,
+                filamentId: filament.id,
+                title: filament.product_title,
+                color,
+                oldImage: filament.featured_image,
+                newImage,
+                updated: false,
+                error: updateError.message,
+              });
+              errorCount++;
+              continue;
+            }
+          }
+
+          regionResults.push({
+            handle,
+            filamentId: filament.id,
+            title: filament.product_title,
+            color,
+            oldImage: filament.featured_image,
+            newImage,
+            updated: !dryRun,
+          });
+          updatedCount++;
         }
 
-        results.push({
-          handle,
-          filamentId: filament.id,
-          title: filament.product_title,
-          color,
-          oldImage: filament.featured_image,
-          newImage,
-          updated: !dryRun,
-        });
-        updatedCount++;
+        // Rate limit: wait between product fetches
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      // Rate limit: wait between product fetches
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Add to all results
+      allResults.push({
+        region,
+        storeUrl,
+        results: regionResults,
+        summary: {
+          updated: updatedCount,
+          skipped: skippedCount,
+          errors: errorCount,
+        },
+      });
+
+      totalUpdated += updatedCount;
+      totalSkipped += skippedCount;
+      totalErrors += errorCount;
+
+      console.log(`[SCRAPE-IMAGES] Region ${region} complete: ${updatedCount} updated, ${skippedCount} skipped, ${errorCount} errors`);
     }
 
     const response = {
       success: true,
       dryRun,
-      region,
-      storeUrl,
+      regionsProcessed: regions,
       summary: {
-        totalProcessed: results.length,
-        updated: updatedCount,
-        skipped: skippedCount,
-        errors: errorCount,
+        totalProcessed: filaments?.length || 0,
+        updated: totalUpdated,
+        skipped: totalSkipped,
+        errors: totalErrors,
         productHandles: productGroups.size,
       },
-      results,
+      regionResults: allResults,
     };
 
-    console.log(`[SCRAPE-IMAGES] Complete: ${updatedCount} updated, ${skippedCount} skipped, ${errorCount} errors`);
+    console.log(`[SCRAPE-IMAGES] Complete: ${totalUpdated} updated, ${totalSkipped} skipped, ${totalErrors} errors`);
 
     return new Response(JSON.stringify(response, null, 2), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
