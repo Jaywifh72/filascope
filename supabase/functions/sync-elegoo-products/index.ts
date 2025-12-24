@@ -45,6 +45,40 @@ const REGION_CURRENCIES: Record<string, string> = {
   'ES': 'EUR',
 };
 
+// Color name aliases for cross-region matching (e.g., US "Gray" vs UK "Grey")
+const COLOR_ALIASES: Record<string, string[]> = {
+  'grey': ['gray', 'grey'],
+  'gray': ['gray', 'grey'],
+  'light grey': ['light gray', 'light grey'],
+  'light gray': ['light gray', 'light grey'],
+  'dark grey': ['dark gray', 'dark grey'],
+  'dark gray': ['dark gray', 'dark grey'],
+  'space grey': ['space gray', 'space grey'],
+  'space gray': ['space gray', 'space grey'],
+  'cement grey': ['cement gray', 'cement grey'],
+  'cement gray': ['cement gray', 'cement grey'],
+  'matte grey': ['matte gray', 'matte grey'],
+  'matte gray': ['matte gray', 'matte grey'],
+  'stone grey': ['stone gray', 'stone grey'],
+  'stone gray': ['stone gray', 'stone grey'],
+};
+
+// Get all possible color name variants for matching
+function getColorVariants(colorName: string): string[] {
+  const normalized = colorName.toLowerCase().trim();
+  const aliases = COLOR_ALIASES[normalized];
+  if (aliases) {
+    return aliases;
+  }
+  return [normalized];
+}
+
+// Normalize color name for consistent matching
+function normalizeColorName(colorName: string): string {
+  // Primary normalization: convert all grey variants to "grey" for consistency
+  return colorName.toLowerCase().trim().replace(/gray/gi, 'grey');
+}
+
 // Color name to HEX mapping - enhanced with Elegoo-specific colors
 const COLOR_HEX_MAP: Record<string, string> = {
   // Basic colors
@@ -956,13 +990,18 @@ serve(async (req) => {
           // This is the KEY for multi-region sync - products from different regions have different product_ids
           // but the SAME product line + color should be merged
           if (colorName) {
-            // Normalize color name for case-insensitive matching
-            const normalizedColor = colorName.toLowerCase().trim();
-            const colorSearchPatterns = [
-              `% - ${normalizedColor}`,        // Standard format
-              `% - ${normalizedColor} %`,      // Color with suffix
-              `%${normalizedColor}%`,          // Anywhere in title
-            ];
+            // Get all color variants for matching (e.g., gray/grey)
+            const colorVariants = getColorVariants(colorName);
+            console.log(`[ELEGOO-SYNC]    🎨 Color matching: "${colorName}" → variants: [${colorVariants.join(', ')}]`);
+            
+            // Build search patterns for each color variant
+            const colorSearchPatterns: string[] = [];
+            for (const variant of colorVariants) {
+              colorSearchPatterns.push(`% - ${variant}`);        // Standard format: "PLA - Red"
+              colorSearchPatterns.push(`% - ${variant} %`);      // Color with suffix: "PLA - Red 1kg"
+            }
+            // Also try the original color anywhere in title as fallback
+            colorSearchPatterns.push(`%${normalizeColorName(colorName)}%`);
             
             // Try each pattern until we find a match
             for (const pattern of colorSearchPatterns) {
@@ -1079,9 +1118,43 @@ serve(async (req) => {
         }
         
         if (regionalData['CA']) {
-          filamentData.price_cad = regionalData['CA'].price;
-          filamentData.product_url_ca = regionalData['CA'].url;
-          console.log(`[ELEGOO-SYNC]    🍁 CA data: $${regionalData['CA'].price} CAD`);
+          const caPrice = regionalData['CA'].price;
+          const caUrl = regionalData['CA'].url;
+          
+          // Price validation: CA prices should be in a reasonable range relative to US
+          // Typical CAD/USD rate is ~1.35, so CA price should be ~1.2x-1.6x US price
+          // Also reject suspiciously low prices (likely data errors)
+          const usPrice = existing?.variant_price || regionalData['US']?.price;
+          let shouldUpdateCA = true;
+          let priceValidationReason = '';
+          
+          if (usPrice && caPrice) {
+            const ratio = caPrice / usPrice;
+            if (ratio < 0.5) {
+              shouldUpdateCA = false;
+              priceValidationReason = `CA price ($${caPrice}) is suspiciously low compared to US ($${usPrice}) - ratio ${ratio.toFixed(2)}`;
+            } else if (ratio > 2.5) {
+              shouldUpdateCA = false;
+              priceValidationReason = `CA price ($${caPrice}) is suspiciously high compared to US ($${usPrice}) - ratio ${ratio.toFixed(2)}`;
+            }
+          }
+          
+          // Debug logging for CA data
+          console.log(`[ELEGOO-SYNC]    🍁 CA DEBUG: Incoming price=$${caPrice}, URL=${caUrl?.substring(0, 80)}...`);
+          if (existing?.price_cad) {
+            console.log(`[ELEGOO-SYNC]    🍁 CA DEBUG: Existing price=$${existing.price_cad}`);
+          }
+          if (usPrice && caPrice) {
+            console.log(`[ELEGOO-SYNC]    🍁 CA DEBUG: US reference price=$${usPrice}, CA/US ratio=${(caPrice / usPrice).toFixed(2)}`);
+          }
+          
+          if (shouldUpdateCA) {
+            filamentData.price_cad = caPrice;
+            filamentData.product_url_ca = caUrl;
+            console.log(`[ELEGOO-SYNC]    🍁 CA data: $${caPrice} CAD ✓`);
+          } else {
+            console.log(`[ELEGOO-SYNC]    🍁 CA SKIPPED: ${priceValidationReason}`);
+          }
         }
         
         if (regionalData['AU']) {
