@@ -855,6 +855,20 @@ serve(async (req) => {
         const techSpecs = product.techSpecs;
         const { colorName, colorHex } = extractColorAndHex(product.title);
         
+        // FIX: Filter out ghost variants - products without a valid color name
+        // These are base product entries from Impact.com that shouldn't create DB records
+        if (!colorName || colorName.toLowerCase() === 'color' || colorName === product.title.toLowerCase()) {
+          console.log(`[ELEGOO-SYNC]    ⏭️ SKIPPED: Ghost variant (no valid color) - "${product.title}"`);
+          result.skipped++;
+          result.products.push({
+            title: product.title,
+            action: 'skipped',
+            reason: 'Ghost variant - no valid color name',
+            fields: { tds: false, image: false, price: false, salePrice: false, url: false, msrp: false },
+          });
+          continue;
+        }
+        
         // Compute product line ID early - needed for cross-region matching
         const productLineId = computeProductLineId('Elegoo', product.title, material);
 
@@ -942,19 +956,31 @@ serve(async (req) => {
           // This is the KEY for multi-region sync - products from different regions have different product_ids
           // but the SAME product line + color should be merged
           if (colorName) {
-            const colorSearchPattern = `% - ${colorName}%`;
-            const { data: lineColorMatch } = await supabase
-              .from('filaments')
-              .select('id, product_id, variant_price, product_url, updated_at, tds_url, color_hex, price_cad, price_eur, price_aud, price_gbp, price_jpy, product_url_ca, product_url_eu, product_url_au, product_url_uk, product_url_jp')
-              .eq('vendor', 'Elegoo')
-              .eq('product_line_id', productLineId)
-              .ilike('product_title', colorSearchPattern)
-              .maybeSingle();
+            // Normalize color name for case-insensitive matching
+            const normalizedColor = colorName.toLowerCase().trim();
+            const colorSearchPatterns = [
+              `% - ${normalizedColor}`,        // Standard format
+              `% - ${normalizedColor} %`,      // Color with suffix
+              `%${normalizedColor}%`,          // Anywhere in title
+            ];
             
-            if (lineColorMatch) {
-              console.log(`[ELEGOO-SYNC]    🔗 Found by product_line_id + color match (ID: ${lineColorMatch.id})`);
-              console.log(`[ELEGOO-SYNC]       Line: ${productLineId}, Color: ${colorName}`);
-              existing = lineColorMatch;
+            // Try each pattern until we find a match
+            for (const pattern of colorSearchPatterns) {
+              const { data: lineColorMatch } = await supabase
+                .from('filaments')
+                .select('id, product_id, variant_price, product_url, updated_at, tds_url, color_hex, price_cad, price_eur, price_aud, price_gbp, price_jpy, product_url_ca, product_url_eu, product_url_au, product_url_uk, product_url_jp, product_title')
+                .eq('vendor', 'Elegoo')
+                .eq('product_line_id', productLineId)
+                .ilike('product_title', pattern)
+                .maybeSingle();
+              
+              if (lineColorMatch) {
+                console.log(`[ELEGOO-SYNC]    🔗 Found by product_line_id + color match (ID: ${lineColorMatch.id})`);
+                console.log(`[ELEGOO-SYNC]       Line: ${productLineId}, Pattern: ${pattern}`);
+                console.log(`[ELEGOO-SYNC]       Matched product: ${lineColorMatch.product_title}`);
+                existing = lineColorMatch;
+                break;
+              }
             }
           }
           
