@@ -1121,40 +1121,48 @@ serve(async (req) => {
           const caPrice = regionalData['CA'].price;
           const caUrl = regionalData['CA'].url;
           
-          // Price validation: CA prices should be in a reasonable range relative to US
-          // Typical CAD/USD rate is ~1.35, so CA price should be ~1.2x-1.6x US price
-          // Also reject suspiciously low prices (likely data errors)
+          // TIGHTENED price validation for CA:
+          // CAD/USD rate is typically ~1.35, so valid CA prices should be 1.0x-2.0x US price
+          // This rejects suspicious prices like $17.99 CAD when US is $18.99 (ratio 0.94)
           const usPrice = existing?.variant_price || regionalData['US']?.price;
           let shouldUpdateCA = true;
           let priceValidationReason = '';
           
+          // Always log CA matching attempt prominently
+          console.log(`[ELEGOO-SYNC] ════════════════════════════════════════════════`);
+          console.log(`[ELEGOO-SYNC] 🍁 CA MATCHING for: ${product.title}`);
+          console.log(`[ELEGOO-SYNC]    Incoming CA price: $${caPrice} CAD`);
+          console.log(`[ELEGOO-SYNC]    Incoming CA URL: ${caUrl}`);
+          console.log(`[ELEGOO-SYNC]    Existing CA price: $${existing?.price_cad ?? 'none'} CAD`);
+          console.log(`[ELEGOO-SYNC]    US reference price: $${usPrice ?? 'none'} USD`);
+          
           if (usPrice && caPrice) {
             const ratio = caPrice / usPrice;
-            if (ratio < 0.5) {
+            console.log(`[ELEGOO-SYNC]    CA/US ratio: ${ratio.toFixed(3)}`);
+            
+            // TIGHTENED: CA price must be >= US price (CAD is weaker than USD)
+            // and not more than 2x US price (accounting for shipping/import)
+            if (ratio < 1.0) {
               shouldUpdateCA = false;
-              priceValidationReason = `CA price ($${caPrice}) is suspiciously low compared to US ($${usPrice}) - ratio ${ratio.toFixed(2)}`;
-            } else if (ratio > 2.5) {
+              priceValidationReason = `CA price ($${caPrice}) is LOWER than US ($${usPrice}) - ratio ${ratio.toFixed(2)} < 1.0 - REJECTED`;
+            } else if (ratio > 2.0) {
               shouldUpdateCA = false;
-              priceValidationReason = `CA price ($${caPrice}) is suspiciously high compared to US ($${usPrice}) - ratio ${ratio.toFixed(2)}`;
+              priceValidationReason = `CA price ($${caPrice}) is too HIGH vs US ($${usPrice}) - ratio ${ratio.toFixed(2)} > 2.0 - REJECTED`;
+            } else {
+              console.log(`[ELEGOO-SYNC]    ✅ Price ratio ${ratio.toFixed(2)} is within valid range (1.0-2.0)`);
             }
-          }
-          
-          // Debug logging for CA data
-          console.log(`[ELEGOO-SYNC]    🍁 CA DEBUG: Incoming price=$${caPrice}, URL=${caUrl?.substring(0, 80)}...`);
-          if (existing?.price_cad) {
-            console.log(`[ELEGOO-SYNC]    🍁 CA DEBUG: Existing price=$${existing.price_cad}`);
-          }
-          if (usPrice && caPrice) {
-            console.log(`[ELEGOO-SYNC]    🍁 CA DEBUG: US reference price=$${usPrice}, CA/US ratio=${(caPrice / usPrice).toFixed(2)}`);
+          } else if (!usPrice) {
+            console.log(`[ELEGOO-SYNC]    ⚠️ No US price available for validation - accepting CA price`);
           }
           
           if (shouldUpdateCA) {
             filamentData.price_cad = caPrice;
             filamentData.product_url_ca = caUrl;
-            console.log(`[ELEGOO-SYNC]    🍁 CA data: $${caPrice} CAD ✓`);
+            console.log(`[ELEGOO-SYNC]    🍁 CA UPDATE APPLIED: $${caPrice} CAD ✓`);
           } else {
-            console.log(`[ELEGOO-SYNC]    🍁 CA SKIPPED: ${priceValidationReason}`);
+            console.log(`[ELEGOO-SYNC]    🚫 CA UPDATE REJECTED: ${priceValidationReason}`);
           }
+          console.log(`[ELEGOO-SYNC] ════════════════════════════════════════════════`);
         }
         
         if (regionalData['AU']) {
