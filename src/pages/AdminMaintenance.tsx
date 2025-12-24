@@ -20,6 +20,7 @@ import { ScrapeProgressBanner } from "@/components/admin/ScrapeProgressBanner";
 import { ElegooSyncProgress } from "@/components/admin/ElegooSyncProgress";
 import { TdsParsingStatus } from "@/components/admin/TdsParsingStatus";
 import { SyncQualityCheckPanel } from "@/components/admin/SyncQualityCheckPanel";
+import { ElegooSyncDashboard } from "@/components/admin/ElegooSyncDashboard";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 import { useActiveScrapeJob } from "@/hooks/useActiveScrapeJob";
@@ -448,6 +449,9 @@ const AdminMaintenance = () => {
 
         {/* Elegoo Tab */}
         <TabsContent value="elegoo" className="space-y-6 mt-6">
+          {/* Data Quality Dashboard */}
+          <ElegooSyncDashboard />
+          
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
