@@ -640,9 +640,15 @@ const FilamentDetail = () => {
 
         // Deduplicate by color name, prioritizing non-NFC/Refill variants
         const deduplicatedVariants = deduplicateColorVariants(variants, baseName);
+        
+        // CRITICAL: Filter variants to only those available in the current region
+        // Regional brands (Elegoo, Bambu Lab) have separate product catalogs per store
+        const regionFilteredVariants = deduplicatedVariants.filter(v => 
+          isFilamentAvailableInRegion(v as FilamentWithRegion, currentRegion)
+        );
 
         // Sort: current filament first, then alphabetically by color
-        deduplicatedVariants.sort((a, b) => {
+        regionFilteredVariants.sort((a, b) => {
           if (a.id === filament.id) return -1;
           if (b.id === filament.id) return 1;
           const colorA = getColorFromTitle(a.product_title, baseName) || '';
@@ -650,7 +656,7 @@ const FilamentDetail = () => {
           return colorA.localeCompare(colorB);
         });
 
-        setColorVariants(deduplicatedVariants);
+        setColorVariants(regionFilteredVariants);
         // Reset weight selection when filament changes
         setSelectedWeight(null);
       } catch (error) {
@@ -661,7 +667,7 @@ const FilamentDetail = () => {
     };
 
     fetchColorVariants();
-  }, [filament]);
+  }, [filament, currentRegion]);
 
   const fetchFilament = async () => {
     try {
