@@ -24,6 +24,7 @@ import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 import { useActiveScrapeJob } from "@/hooks/useActiveScrapeJob";
 import { useElegooSync } from "@/hooks/useElegooSync";
+import { useActiveElegooSyncJob } from "@/hooks/useActiveElegooSyncJob";
 
 interface CatalogInfo {
   id: string;
@@ -128,7 +129,8 @@ const AdminMaintenance = () => {
   const { startJob, isStarting } = useStartBambuScrapeJob();
   const { jobs: recentJobs } = useRecentScrapeJobs(5);
   const { activeJob, hasActiveJob } = useActiveScrapeJob();
-  const { syncProducts, discoverCatalogs, isLoading: elegooLoading, result: elegooResult, error: elegooError, reset: resetElegoo, progress: elegooProgress } = useElegooSync();
+  const { syncProducts, discoverCatalogs, isLoading: elegooLoading, error: elegooError, reset: resetElegoo, currentJobId } = useElegooSync();
+  const { activeJob: activeElegooJob, hasActiveJob: hasActiveElegooJob, isRunning: isElegooRunning, clearActiveJob: clearActiveElegooJob } = useActiveElegooSyncJob();
 
   // Helper function to infer region from catalog name
   const inferRegionFromCatalog = (catalog: CatalogInfo): string => {
@@ -265,6 +267,7 @@ const AdminMaintenance = () => {
 
   const handleElegooSync = async () => {
     resetElegoo();
+    clearActiveElegooJob();
     try {
       // If ALL is selected, pass all individual regions
       const regionsToSync = elegooSelectedRegions.includes('ALL') 
@@ -272,13 +275,10 @@ const AdminMaintenance = () => {
         : elegooSelectedRegions;
       await syncProducts(elegooDryRun, elegooMaterialFilter || undefined, regionsToSync, Array.from(excludedCatalogIds));
       toast({
-        title: elegooDryRun ? "Preview Complete" : "Sync Complete",
-        description: `Elegoo catalog sync finished for ${regionsToSync.join(', ')}`,
+        title: "Sync Started",
+        description: `Elegoo catalog sync started for ${regionsToSync.join(', ')}. Progress will continue even if you leave this page.`,
       });
-      // Trigger TDS stats refresh after sync completes
-      if (!elegooDryRun) {
-        setTimeout(() => setTdsRefreshTrigger(prev => prev + 1), 2000);
-      }
+      // Trigger TDS stats refresh after sync completes (handled by job completion)
     } catch (err) {
       toast({
         title: "Sync Failed",
@@ -543,15 +543,40 @@ const AdminMaintenance = () => {
                 </Button>
               </div>
 
-              {/* Elegoo Sync Progress */}
-              {(elegooLoading || elegooResult || elegooError) && (
+              {/* Elegoo Sync Progress - Show live progress from DB or error */}
+              {(hasActiveElegooJob || elegooError || activeElegooJob?.status === 'completed' || activeElegooJob?.status === 'failed') && (
                 <div className="pt-4 border-t">
                   <ElegooSyncProgress 
-                    result={elegooResult} 
-                    isLoading={elegooLoading} 
-                    error={elegooError}
-                    progress={elegooProgress}
+                    result={activeElegooJob?.status === 'completed' || activeElegooJob?.status === 'failed' ? {
+                      success: activeElegooJob.status === 'completed',
+                      dryRun: activeElegooJob.dry_run,
+                      jobId: activeElegooJob.id,
+                      summary: {
+                        created: activeElegooJob.progress?.created || 0,
+                        updated: activeElegooJob.progress?.updated || 0,
+                        skipped: activeElegooJob.progress?.skipped || 0,
+                        errors: activeElegooJob.progress?.errors || 0,
+                        total: activeElegooJob.progress?.total || 0,
+                        filtered: activeElegooJob.progress?.filtered || 0,
+                      },
+                      products: [],
+                      regionsSynced: activeElegooJob.progress?.completedRegions || [],
+                    } : null}
+                    isLoading={isElegooRunning || elegooLoading}
+                    error={elegooError || activeElegooJob?.error || null}
+                    progress={isElegooRunning && activeElegooJob?.progress ? {
+                      currentRegion: activeElegooJob.progress.currentRegion || '',
+                      completedRegions: activeElegooJob.progress.completedRegions || [],
+                      totalRegions: activeElegooJob.progress.totalRegions || 0,
+                    } : null}
                   />
+                  {(activeElegooJob?.status === 'completed' || activeElegooJob?.status === 'failed') && (
+                    <div className="mt-2 flex justify-end">
+                      <Button variant="ghost" size="sm" onClick={clearActiveElegooJob}>
+                        Dismiss
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
