@@ -641,11 +641,24 @@ const FilamentDetail = () => {
         // Deduplicate by color name, prioritizing non-NFC/Refill variants
         const deduplicatedVariants = deduplicateColorVariants(variants, baseName);
         
-        // CRITICAL: Filter variants to only those available in the current region
-        // Regional brands (Elegoo, Bambu Lab) have separate product catalogs per store
-        const regionFilteredVariants = deduplicatedVariants.filter(v => 
+        // For product lines (like Elegoo ABS), if ANY variant has a regional URL,
+        // all color variants are likely available in that region (same product, different colors)
+        // Check if at least one variant is available in the current region
+        const anyVariantAvailableInRegion = hasProductLineId && deduplicatedVariants.some(v => 
           isFilamentAvailableInRegion(v as FilamentWithRegion, currentRegion)
         );
+        
+        // Filter variants based on regional availability
+        // If product has a product_line_id AND any variant is available, show all variants
+        // Otherwise, filter strictly by individual availability
+        const regionFilteredVariants = deduplicatedVariants.filter(v => {
+          if (anyVariantAvailableInRegion) {
+            // Product line exists in this region - show all color variants
+            return true;
+          }
+          // No product_line_id or no variants available - filter strictly
+          return isFilamentAvailableInRegion(v as FilamentWithRegion, currentRegion);
+        });
 
         // Sort: current filament first, then alphabetically by color
         regionFilteredVariants.sort((a, b) => {
