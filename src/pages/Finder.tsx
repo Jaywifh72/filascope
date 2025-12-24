@@ -150,6 +150,7 @@ const Finder = () => {
     cardboardSpool,
     singleSpool,
     multiPack,
+    largeSpools,
     priceRange,
     selectedColorFamilies,
     hexSearch,
@@ -176,6 +177,7 @@ const Finder = () => {
   const setCardboardSpool = (v: boolean) => updateFilter("cardboardSpool", v);
   const setSingleSpool = (v: boolean) => updateFilter("singleSpool", v);
   const setMultiPack = (v: boolean) => updateFilter("multiPack", v);
+  const setLargeSpools = (v: boolean) => updateFilter("largeSpools", v);
   const setPriceRange = (v: [number, number]) => updateFilter("priceRange", v);
   const setSelectedColorFamilies = (v: string[]) => updateFilter("selectedColorFamilies", v);
   const setHexSearch = (v: string) => updateFilter("hexSearch", v);
@@ -774,6 +776,12 @@ const Finder = () => {
       } else {
         counts['pack_multi'] = (counts['pack_multi'] || 0) + 1;
       }
+      
+      // Count large spools (>1kg)
+      const weightG = f.net_weight_g || 1000;
+      if (weightG > 1000) {
+        counts['large_spools'] = (counts['large_spools'] || 0) + 1;
+      }
     });
 
     // Count by brand (apply all filters except brand)
@@ -927,6 +935,10 @@ const Finder = () => {
     const packQty = f.pack_quantity || 1;
     if (singleSpool && !multiPack && packQty !== 1) return false;
     if (multiPack && !singleSpool && packQty <= 1) return false;
+    
+    // Apply spool weight filter (default: hide spools > 1kg unless largeSpools is enabled)
+    const weightG = f.net_weight_g || 1000; // Default to 1kg if unknown
+    if (!largeSpools && weightG > 1000) return false;
     
     // Apply color family filter
     if (selectedColorFamilies.length > 0) {
@@ -1099,6 +1111,7 @@ const Finder = () => {
           (cardboardSpool ? 1 : 0) +
           (singleSpool ? 1 : 0) +
           (multiPack ? 1 : 0) +
+          (largeSpools ? 1 : 0) +
           (brassOnly ? 1 : 0) +
           (foodContact ? 1 : 0) +
           (amsOnly ? 1 : 0)
@@ -1128,6 +1141,7 @@ const Finder = () => {
               ...(glassFiber ? [{ id: 'glassFiber', label: 'Glass Fiber', type: 'property' as const }] : []),
               ...(woodFilled ? [{ id: 'woodFilled', label: 'Wood Filled', type: 'property' as const }] : []),
               ...(glow ? [{ id: 'glow', label: 'Glow', type: 'property' as const }] : []),
+              ...(largeSpools ? [{ id: 'largeSpools', label: 'Large Spools', type: 'property' as const }] : []),
               ...(brassOnly ? [{ id: 'brassOnly', label: 'Brass Safe', type: 'property' as const }] : []),
               ...(foodContact ? [{ id: 'foodContact', label: 'Food Safe', type: 'property' as const }] : []),
               ...(amsOnly ? [{ id: 'amsOnly', label: 'AMS Compatible', type: 'property' as const }] : []),
@@ -1153,6 +1167,7 @@ const Finder = () => {
                   case 'glassFiber': setGlassFiber(false); break;
                   case 'woodFilled': setWoodFilled(false); break;
                   case 'glow': setGlow(false); break;
+                  case 'largeSpools': setLargeSpools(false); break;
                   case 'brassOnly': setBrassOnly(false); break;
                   case 'foodContact': setFoodContact(false); break;
                   case 'amsOnly': setAmsOnly(false); break;
@@ -1169,6 +1184,7 @@ const Finder = () => {
               setGlassFiber(false);
               setWoodFilled(false);
               setGlow(false);
+              setLargeSpools(false);
               setBrassOnly(false);
               setFoodContact(false);
               setAmsOnly(false);
@@ -1217,6 +1233,8 @@ const Finder = () => {
         onSingleSpoolChange={setSingleSpool}
         multiPack={multiPack}
         onMultiPackChange={setMultiPack}
+        largeSpools={largeSpools}
+        onLargeSpoolsChange={setLargeSpools}
         brassOnly={brassOnly}
         onBrassOnlyChange={setBrassOnly}
         foodContact={foodContact}

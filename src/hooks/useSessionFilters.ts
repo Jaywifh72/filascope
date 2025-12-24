@@ -22,6 +22,7 @@ export interface FilamentFiltersState {
   cardboardSpool: boolean;
   singleSpool: boolean;
   multiPack: boolean;
+  largeSpools: boolean;
   priceRange: [number, number];
   selectedColorFamilies: string[];
   hexSearch: string;
@@ -48,6 +49,7 @@ const defaultFilters: FilamentFiltersState = {
   cardboardSpool: false,
   singleSpool: false,
   multiPack: false,
+  largeSpools: false,
   priceRange: [0, 100],
   selectedColorFamilies: [],
   hexSearch: "",
@@ -126,6 +128,7 @@ export function useSessionFilters(urlHexSearch?: string | null, urlColorToleranc
     filters.cardboardSpool ||
     filters.singleSpool ||
     filters.multiPack ||
+    filters.largeSpools ||
     filters.priceRange[0] !== 0 ||
     filters.priceRange[1] !== 100 ||
     filters.selectedColorFamilies.length > 0 ||

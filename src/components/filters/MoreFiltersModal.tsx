@@ -68,6 +68,8 @@ interface MoreFiltersModalProps {
   onSingleSpoolChange: (value: boolean) => void;
   multiPack: boolean;
   onMultiPackChange: (value: boolean) => void;
+  largeSpools: boolean;
+  onLargeSpoolsChange: (value: boolean) => void;
   
   // Compatibility
   brassOnly: boolean;
@@ -136,6 +138,8 @@ export function MoreFiltersModal({
   onSingleSpoolChange,
   multiPack,
   onMultiPackChange,
+  largeSpools,
+  onLargeSpoolsChange,
   brassOnly,
   onBrassOnlyChange,
   foodContact,
@@ -157,6 +161,7 @@ export function MoreFiltersModal({
     onCardboardSpoolChange(false);
     onSingleSpoolChange(false);
     onMultiPackChange(false);
+    onLargeSpoolsChange(false);
     onBrassOnlyChange(false);
     onFoodContactChange(false);
     onAmsOnlyChange(false);
@@ -175,7 +180,7 @@ export function MoreFiltersModal({
   const activeCount = [
     highSpeed, matte, glow,
     carbonFiber, glassFiber, woodFilled,
-    plasticSpool, cardboardSpool, singleSpool, multiPack,
+    plasticSpool, cardboardSpool, singleSpool, multiPack, largeSpools,
     brassOnly, foodContact, amsOnly,
     selectedColorFamilies.length > 0
   ].filter(Boolean).length;
@@ -310,6 +315,17 @@ export function MoreFiltersModal({
                         onChange={onMultiPackChange} 
                         label="Multi-Pack" 
                       />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-2">Spool Weight</p>
+                    <div className="grid grid-cols-1 gap-1">
+                      <FilterCheckbox 
+                        checked={largeSpools} 
+                        onChange={onLargeSpoolsChange} 
+                        label="Include Large Spools (>1kg)" 
+                      />
+                      <p className="text-[10px] text-muted-foreground px-2">By default only 1kg and smaller are shown</p>
                     </div>
                   </div>
                 </div>
