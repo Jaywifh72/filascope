@@ -62,6 +62,12 @@ const FilamentDetail = () => {
   
   // The filament to display - either the selected color variant or the base filament from URL
   const displayFilament = selectedVariant || filament;
+  
+  // IMPORTANT: Use the BASE filament (not selected variant) for pricing, URLs, and regional availability
+  // This ensures consistent pricing across all color variants and prevents "Ships from US store" warnings
+  // when individual variant data is incomplete but the product line IS available in the region
+  const pricingFilament = filament;
+  
   const [editImageOpen, setEditImageOpen] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [savingImage, setSavingImage] = useState(false);
@@ -79,39 +85,40 @@ const FilamentDetail = () => {
   const { getRegionalUrl, regionShortName, currentRegion } = useRegionalStore();
   
   // Get regional price and URL from database (prioritizes actual regional prices over converted)
-  // Uses displayFilament to get correct prices when a color variant is selected
-  const regionalPriceData = useRegionalPrice(displayFilament as FilamentWithRegionalPrices | null);
+  // Uses pricingFilament (base product) for consistent pricing across all color variants
+  const regionalPriceData = useRegionalPrice(pricingFilament as FilamentWithRegionalPrices | null);
 
   const compatibility = selectedPrinter && displayFilament 
     ? checkPrinterFilamentCompatibility(selectedPrinter, displayFilament)
     : null;
 
   // Build retailers array for modal - uses regional store URLs based on user's currency setting
-  // Uses displayFilament to show correct retailer URLs for selected color variant
+  // Uses pricingFilament (base product) for consistent pricing and URLs across all color variants
   const retailers: Retailer[] = useMemo(() => {
-    if (!displayFilament) return [];
+    if (!pricingFilament) return [];
     
     const result: Retailer[] = [];
     
     // Primary retailer (brand store) - use regional URL from database if available, otherwise transform
-    const bestRegionalUrl = regionalPriceData.regionalUrl || getRegionalUrl(displayFilament.product_url, displayFilament.vendor);
+    const bestRegionalUrl = regionalPriceData.regionalUrl || getRegionalUrl(pricingFilament.product_url, pricingFilament.vendor);
     
     if (bestRegionalUrl) {
       result.push({
         id: 'store',
-        name: `${displayFilament.vendor || 'Store'} (${regionShortName})`,
+        name: `${pricingFilament.vendor || 'Store'} (${regionShortName})`,
         price: regionalPriceData.regionalPrice, // Use actual regional price if available
         inStock: !isDiscontinuedUrl(bestRegionalUrl),
-        url: getAffiliateUrl(bestRegionalUrl, displayFilament.vendor),
+        url: getAffiliateUrl(bestRegionalUrl, pricingFilament.vendor),
         shippingEstimate: 'Ships within 24hrs',
       });
     }
     
     // Amazon - show region-appropriate Amazon first based on user's currency
+    // Use pricingFilament for consistent Amazon links across variants
     const amazonLinks = [
-      { id: 'amazon_us', name: 'Amazon US', link: displayFilament.amazon_link_us, price: displayFilament.amazon_price_usd, region: 'US' },
-      { id: 'amazon_uk', name: 'Amazon UK', link: displayFilament.amazon_link_uk, price: null, region: 'UK' },
-      { id: 'amazon_de', name: 'Amazon DE', link: displayFilament.amazon_link_de, price: null, region: 'EU' },
+      { id: 'amazon_us', name: 'Amazon US', link: pricingFilament.amazon_link_us, price: pricingFilament.amazon_price_usd, region: 'US' },
+      { id: 'amazon_uk', name: 'Amazon UK', link: pricingFilament.amazon_link_uk, price: null, region: 'UK' },
+      { id: 'amazon_de', name: 'Amazon DE', link: pricingFilament.amazon_link_de, price: null, region: 'EU' },
     ].filter(a => a.link);
     
     // Sort Amazon links: user's region first, then others
@@ -136,7 +143,7 @@ const FilamentDetail = () => {
     }
     
     return result;
-  }, [displayFilament, getAffiliateUrl, getAmazonUrl, getRegionalUrl, regionShortName, regionalPriceData]);
+  }, [pricingFilament, getAffiliateUrl, getAmazonUrl, getRegionalUrl, regionShortName, regionalPriceData]);
   
   // Reset selected variant when base filament changes (new page load)
   useEffect(() => {
@@ -1179,13 +1186,15 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
   }
 
   // Get pack quantity (default to 1 for single spools)
-  const packQuantity = (displayFilament as any).pack_quantity || 1;
+  // Use pricingFilament (base product) for consistent pricing across all color variants
+  const packQuantity = (pricingFilament as any).pack_quantity || 1;
   const isMultiPack = packQuantity > 1;
   
   // variant_price is the TOTAL price for the listing in USD (may be multi-pack)
   // Calculate true per-kg price: total_price / (pack_quantity * weight_per_spool_kg)
-  const totalWeightKg = displayFilament.net_weight_g 
-    ? (displayFilament.net_weight_g / 1000) * packQuantity 
+  // Use pricingFilament for weight calculations to ensure consistency
+  const totalWeightKg = pricingFilament.net_weight_g 
+    ? (pricingFilament.net_weight_g / 1000) * packQuantity 
     : packQuantity; // Assume 1kg per spool if weight unknown
   
   // Use actual scraped regional price if available, otherwise fall back to USD conversion
@@ -1193,28 +1202,29 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
   const hasActualRegionalPrice = regionalPriceData.isActualRegionalPrice && regionalPriceData.regionalPrice !== null;
   
   // Calculate raw price values based on whether we have actual regional data
+  // Use pricingFilament (base product) for consistent pricing across all color variants
   const rawPricePerKg = hasActualRegionalPrice
     ? (regionalPriceData.regionalPrice! / totalWeightKg)
-    : displayFilament.variant_price 
-      ? (displayFilament.variant_price / totalWeightKg) 
+    : pricingFilament.variant_price 
+      ? (pricingFilament.variant_price / totalWeightKg) 
       : null;
   
   // Validate price for suspicious patterns (MOQ/bundle miscalculations)
   // Use USD price for validation since thresholds are USD-based
   const priceValidation = validateFilamentPrice(
-    displayFilament.variant_price,
-    displayFilament.net_weight_g,
+    pricingFilament.variant_price,
+    pricingFilament.net_weight_g,
     packQuantity,
-    displayFilament.material,
-    displayFilament.product_title,
-    displayFilament.product_url
+    pricingFilament.material,
+    pricingFilament.product_title,
+    pricingFilament.product_url
   );
   
   // Per-spool price = total price / pack quantity
   const rawPricePerSpool = hasActualRegionalPrice
     ? (regionalPriceData.regionalPrice! / packQuantity)
-    : displayFilament.variant_price 
-      ? (displayFilament.variant_price / packQuantity)
+    : pricingFilament.variant_price 
+      ? (pricingFilament.variant_price / packQuantity)
       : null;
   
   // Format prices - use formatRegionalPrice for actual scraped prices (no conversion),
@@ -1419,16 +1429,18 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
                 />
 
                 {/* Purchase Card - THE CONVERSION ENGINE */}
+                {/* Uses pricingFilament (base product) for pricing, URLs, and regional data */}
+                {/* This ensures consistent pricing across all color variants */}
                 <FilamentHeroPurchaseCard
                   filamentId={displayFilament.id}
-                  vendor={displayFilament.vendor}
+                  vendor={pricingFilament.vendor}
                   pricePerKg={rawPricePerKg}
                   pricePerSpool={rawPricePerSpool}
-                  weightGrams={displayFilament.net_weight_g}
-                  affiliateUrl={getAffiliateUrl(regionalPriceData.regionalUrl || displayFilament.product_url || '', displayFilament.vendor)}
-                  productUrl={regionalPriceData.regionalUrl || displayFilament.product_url || ''}
-                  originalUsUrl={regionalPriceData.fallbackUrl || displayFilament.product_url || undefined}
-                  retailerName={displayFilament.vendor || undefined}
+                  weightGrams={pricingFilament.net_weight_g}
+                  affiliateUrl={getAffiliateUrl(regionalPriceData.regionalUrl || pricingFilament.product_url || '', pricingFilament.vendor)}
+                  productUrl={regionalPriceData.regionalUrl || pricingFilament.product_url || ''}
+                  originalUsUrl={regionalPriceData.fallbackUrl || pricingFilament.product_url || undefined}
+                  retailerName={pricingFilament.vendor || undefined}
                   retailerCount={retailers.length}
                   onViewRetailers={handleViewRetailers}
                   hasActualRegionalPrice={hasActualRegionalPrice}
@@ -1656,10 +1668,11 @@ filament_notes = Exported from Filament Finder\\n${filament.product_url || ''}
       )}
 
       {/* Sticky Buy Bar - appears when scrolling past hero */}
-      {displayFilament && (
+      {/* Uses pricingFilament (base product) for consistent pricing/URLs across all color variants */}
+      {pricingFilament && (
         <StickyBuyBar
-          filament={displayFilament}
-          affiliateUrl={getAffiliateUrl(getRegionalUrl(displayFilament.product_url, displayFilament.vendor), displayFilament.vendor)}
+          filament={pricingFilament}
+          affiliateUrl={getAffiliateUrl(regionalPriceData.regionalUrl || pricingFilament.product_url || '', pricingFilament.vendor)}
           pricePerKg={rawPricePerKg}
           isVisible={stickyBarVisible}
           hasActualRegionalPrice={hasActualRegionalPrice}
