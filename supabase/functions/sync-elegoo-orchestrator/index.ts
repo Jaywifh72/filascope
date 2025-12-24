@@ -50,7 +50,13 @@ serve(async (req) => {
     const mode = body.mode || 'start';
 
     if (mode === 'start') {
-      const { regions = ['US'], dryRun = false, materialFilter, excludedCatalogIds } = body;
+      // Default to ALL regions for comprehensive sync
+      const { 
+        regions = ['US', 'CA', 'EU', 'UK', 'AU', 'JP'], 
+        dryRun = false, 
+        materialFilter, 
+        excludedCatalogIds 
+      } = body;
 
       console.log(`[ELEGOO-ORCHESTRATOR] Starting sync for regions: ${regions.join(', ')}, dryRun: ${dryRun}`);
 

@@ -50,35 +50,191 @@ function extractMaterialFromName(name: string): string | null {
   return null;
 }
 
-// Parse Text1 JSON for technical specs
+// Parse Text1 JSON for technical specs - enhanced to handle various field names
 interface TechSpecs {
   nozzle_temp_min_c: number | null;
   nozzle_temp_max_c: number | null;
   bed_temp_min_c: number | null;
   bed_temp_max_c: number | null;
   density_g_cm3: number | null;
+  print_speed_max_mms: number | null;
+  drying_temp_c: number | null;
+  drying_time_hours: number | null;
 }
 
-function parseTechSpecs(text1: string | null): TechSpecs {
+function parseTechSpecs(text1: string | null, text2?: string | null, text3?: string | null, bullets?: string[]): TechSpecs {
   const specs: TechSpecs = {
     nozzle_temp_min_c: null,
     nozzle_temp_max_c: null,
     bed_temp_min_c: null,
     bed_temp_max_c: null,
     density_g_cm3: null,
+    print_speed_max_mms: null,
+    drying_temp_c: null,
+    drying_time_hours: null,
   };
   
-  if (!text1) return specs;
+  // Helper to parse number from various formats
+  const parseNum = (val: unknown): number | null => {
+    if (typeof val === 'number' && !isNaN(val)) return val;
+    if (typeof val === 'string') {
+      const num = parseFloat(val.replace(/[^0-9.-]/g, ''));
+      return isNaN(num) ? null : num;
+    }
+    return null;
+  };
+
+  // Try parsing JSON from Text1
+  if (text1) {
+    try {
+      const data = JSON.parse(text1);
+      
+      // Nozzle temperature - various possible field names
+      const nozzleMinKeys = ['temp_min', 'nozzle_temp_min', 'nozzle_min', 'hotend_temp_min', 'print_temp_min', 'printing_temp_min'];
+      const nozzleMaxKeys = ['temp_max', 'nozzle_temp_max', 'nozzle_max', 'hotend_temp_max', 'print_temp_max', 'printing_temp_max'];
+      
+      for (const key of nozzleMinKeys) {
+        const val = parseNum(data[key]);
+        if (val !== null && val >= 150 && val <= 350) {
+          specs.nozzle_temp_min_c = val;
+          break;
+        }
+      }
+      
+      for (const key of nozzleMaxKeys) {
+        const val = parseNum(data[key]);
+        if (val !== null && val >= 150 && val <= 350) {
+          specs.nozzle_temp_max_c = val;
+          break;
+        }
+      }
+      
+      // Bed temperature - various possible field names
+      const bedMinKeys = ['bed_temp_min', 'bed_min', 'platform_temp_min', 'heated_bed_min'];
+      const bedMaxKeys = ['bed_temp_max', 'bed_max', 'platform_temp_max', 'heated_bed_max'];
+      
+      for (const key of bedMinKeys) {
+        const val = parseNum(data[key]);
+        if (val !== null && val >= 0 && val <= 150) {
+          specs.bed_temp_min_c = val;
+          break;
+        }
+      }
+      
+      for (const key of bedMaxKeys) {
+        const val = parseNum(data[key]);
+        if (val !== null && val >= 0 && val <= 150) {
+          specs.bed_temp_max_c = val;
+          break;
+        }
+      }
+      
+      // Density - handle both kg/m³ and g/cm³
+      const densityKeys = ['density', 'material_density', 'filament_density'];
+      for (const key of densityKeys) {
+        const val = parseNum(data[key]);
+        if (val !== null) {
+          // If value > 100, assume kg/m³ and convert
+          specs.density_g_cm3 = val > 100 ? val / 1000 : val;
+          break;
+        }
+      }
+      
+      // Print speed
+      const speedKeys = ['print_speed', 'max_speed', 'speed_max', 'printing_speed'];
+      for (const key of speedKeys) {
+        const val = parseNum(data[key]);
+        if (val !== null && val >= 10 && val <= 1000) {
+          specs.print_speed_max_mms = val;
+          break;
+        }
+      }
+      
+      // Drying temperature
+      const dryTempKeys = ['drying_temp', 'dry_temp', 'dehydration_temp'];
+      for (const key of dryTempKeys) {
+        const val = parseNum(data[key]);
+        if (val !== null && val >= 30 && val <= 120) {
+          specs.drying_temp_c = val;
+          break;
+        }
+      }
+      
+      // Drying time
+      const dryTimeKeys = ['drying_time', 'dry_time', 'dehydration_time'];
+      for (const key of dryTimeKeys) {
+        const val = parseNum(data[key]);
+        if (val !== null && val >= 1 && val <= 48) {
+          specs.drying_time_hours = val;
+          break;
+        }
+      }
+    } catch (e) {
+      // Not JSON, try regex parsing on the raw text
+      const tempRangeMatch = text1.match(/(\d{3})\s*[-–~]\s*(\d{3})\s*(?:°?C|celsius)/i);
+      if (tempRangeMatch) {
+        const min = parseInt(tempRangeMatch[1]);
+        const max = parseInt(tempRangeMatch[2]);
+        if (min >= 150 && min <= 350 && max >= 150 && max <= 350) {
+          specs.nozzle_temp_min_c = min;
+          specs.nozzle_temp_max_c = max;
+        }
+      }
+    }
+  }
   
-  try {
-    const data = JSON.parse(text1);
-    if (data.temp_min) specs.nozzle_temp_min_c = data.temp_min;
-    if (data.temp_max) specs.nozzle_temp_max_c = data.temp_max;
-    if (data.bed_temp_min) specs.bed_temp_min_c = data.bed_temp_min;
-    if (data.bed_temp_max) specs.bed_temp_max_c = data.bed_temp_max;
-    if (data.density) specs.density_g_cm3 = data.density / 1000; // Convert kg/m³ to g/cm³
-  } catch (e) {
-    console.log('Failed to parse Text1 JSON:', text1);
+  // Also try parsing Text2 and Text3 for additional specs
+  for (const text of [text2, text3]) {
+    if (!text) continue;
+    try {
+      const data = JSON.parse(text);
+      // Apply same parsing logic for any missing fields
+      if (specs.nozzle_temp_min_c === null && data.temp_min) specs.nozzle_temp_min_c = parseNum(data.temp_min);
+      if (specs.nozzle_temp_max_c === null && data.temp_max) specs.nozzle_temp_max_c = parseNum(data.temp_max);
+      if (specs.bed_temp_min_c === null && data.bed_temp_min) specs.bed_temp_min_c = parseNum(data.bed_temp_min);
+      if (specs.bed_temp_max_c === null && data.bed_temp_max) specs.bed_temp_max_c = parseNum(data.bed_temp_max);
+    } catch {
+      // Not JSON, skip
+    }
+  }
+  
+  // Parse bullets for additional specs
+  if (bullets && Array.isArray(bullets)) {
+    const allText = bullets.join(' ');
+    
+    // Temperature range patterns in bullets
+    if (specs.nozzle_temp_min_c === null || specs.nozzle_temp_max_c === null) {
+      const nozzleMatch = allText.match(/(?:nozzle|hotend|printing?)[\s:]*(\d{3})\s*[-–~]\s*(\d{3})\s*(?:°?C)?/i);
+      if (nozzleMatch) {
+        if (specs.nozzle_temp_min_c === null) specs.nozzle_temp_min_c = parseInt(nozzleMatch[1]);
+        if (specs.nozzle_temp_max_c === null) specs.nozzle_temp_max_c = parseInt(nozzleMatch[2]);
+      }
+    }
+    
+    if (specs.bed_temp_min_c === null || specs.bed_temp_max_c === null) {
+      const bedMatch = allText.match(/(?:bed|platform|heated[\s-]?bed)[\s:]*(\d{1,3})\s*[-–~]\s*(\d{1,3})\s*(?:°?C)?/i);
+      if (bedMatch) {
+        if (specs.bed_temp_min_c === null) specs.bed_temp_min_c = parseInt(bedMatch[1]);
+        if (specs.bed_temp_max_c === null) specs.bed_temp_max_c = parseInt(bedMatch[2]);
+      }
+    }
+    
+    // Speed pattern
+    if (specs.print_speed_max_mms === null) {
+      const speedMatch = allText.match(/(?:speed|high[\s-]?speed)[\s:]*(?:up\s+to\s+)?(\d+)\s*(?:mm\/s|mms)/i);
+      if (speedMatch) {
+        specs.print_speed_max_mms = parseInt(speedMatch[1]);
+      }
+    }
+    
+    // Drying info
+    if (specs.drying_temp_c === null || specs.drying_time_hours === null) {
+      const dryMatch = allText.match(/dry(?:ing)?[\s:]*(\d+)\s*(?:°?C)?[\s,]*(?:for\s+)?(\d+)\s*(?:h(?:ours?)?)/i);
+      if (dryMatch) {
+        if (specs.drying_temp_c === null) specs.drying_temp_c = parseInt(dryMatch[1]);
+        if (specs.drying_time_hours === null) specs.drying_time_hours = parseInt(dryMatch[2]);
+      }
+    }
   }
   
   return specs;
@@ -179,7 +335,7 @@ serve(async (req) => {
     // Transform items to match our expected format
     // TDS URLs will be discovered during sync by scraping product pages
     const products = (data.Items || []).map((item) => {
-      const techSpecs = parseTechSpecs(item.Text1);
+      const techSpecs = parseTechSpecs(item.Text1, item.Text2, item.Text3, item.Bullets);
       const material = extractMaterialFromName(item.Name);
       
       return {
