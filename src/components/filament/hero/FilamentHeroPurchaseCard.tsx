@@ -8,7 +8,8 @@ import {
   ChevronRight,
   RefreshCw,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrency, CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
@@ -19,6 +20,7 @@ import { getShippingRule } from '@/lib/pricingRules';
 import { PriceUrgencyBadge } from '../urgency/PriceUrgencyBadge';
 import { StockUrgencyIndicator } from '../urgency/StockUrgencyIndicator';
 import { ShippingCountdown } from '../urgency/ShippingCountdown';
+import { RegionalAvailabilityBadge, CrossBorderNote } from '../RegionalAvailabilityBadge';
 
 interface FilamentHeroPurchaseCardProps {
   filamentId: string;
@@ -38,6 +40,8 @@ interface FilamentHeroPurchaseCardProps {
   hasActualRegionalPrice?: boolean;
   isUsingFallbackRegion?: boolean;
   actualUrlCurrency?: CurrencyCode | null;
+  isAvailableInUserRegion?: boolean;
+  isRegionalBrand?: boolean;
 }
 
 export function FilamentHeroPurchaseCard({
@@ -58,6 +62,8 @@ export function FilamentHeroPurchaseCard({
   hasActualRegionalPrice = false,
   isUsingFallbackRegion = false,
   actualUrlCurrency = null,
+  isAvailableInUserRegion = true,
+  isRegionalBrand = false,
 }: FilamentHeroPurchaseCardProps) {
   const { formatPrice, formatRegionalPrice, currency } = useCurrency();
   const { trackStoreClick } = useConversionTracking();
@@ -145,6 +151,24 @@ export function FilamentHeroPurchaseCard({
       "bg-gradient-to-br from-primary/5 to-primary/[0.02]",
       "border border-primary/15"
     )}>
+      {/* Regional Availability Warning - Show prominently at top */}
+      {isRegionalBrand && !isAvailableInUserRegion && (
+        <div className="mb-4">
+          <RegionalAvailabilityBadge
+            isAvailableInRegion={isAvailableInUserRegion}
+            userCurrency={currency}
+            fallbackCurrency={actualUrlCurrency}
+            isRegionalBrand={isRegionalBrand}
+            size="md"
+          />
+          {isUsingFallbackRegion && actualUrlCurrency && (
+            <p className="text-xs text-muted-foreground mt-2">
+              This product is not sold in your region's store. The price shown is from the {CURRENCIES[actualUrlCurrency]?.name || actualUrlCurrency} store and may require international shipping.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Price Section */}
       <div className="space-y-3 mb-4">
         <div className="flex items-baseline gap-3">
@@ -184,12 +208,12 @@ export function FilamentHeroPurchaseCard({
           </div>
         )}
 
-        {/* Fallback region warning */}
-        {isUsingFallbackRegion && actualUrlCurrency && !priceLoading && (
+        {/* Fallback region warning - only if not already shown above */}
+        {isUsingFallbackRegion && actualUrlCurrency && !priceLoading && isAvailableInUserRegion && (
           <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md">
-            <AlertTriangle className="w-3.5 h-3.5" />
+            <Globe className="w-3.5 h-3.5" />
             <span className="font-medium">
-              {CURRENCIES[actualUrlCurrency]?.name || actualUrlCurrency} store — no {currency} store available
+              Price from {CURRENCIES[actualUrlCurrency]?.name || actualUrlCurrency} store
             </span>
           </div>
         )}
