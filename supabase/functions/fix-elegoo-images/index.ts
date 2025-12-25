@@ -68,6 +68,8 @@ const ELEGOO_PRODUCT_PAGES: Record<string, string> = {
   // PLA
   "PLA": "https://us.elegoo.com/collections/filaments/products/elegoo-pla-filament-1-75mm-1kg-spool",
   "PLA+": "https://us.elegoo.com/collections/filaments/products/elegoo-pla-plus-filament-1-75mm-1kg-spool",
+  "PLA Basic": "https://us.elegoo.com/collections/filaments/products/pla-basic-filament-1-75mm-colored-1kg",
+  "PLA Basic Refill": "https://us.elegoo.com/collections/filaments/products/pla-basic-filament-1-75mm-colored-1kg",
   "PLA Filament 5 kg": "https://us.elegoo.com/collections/filaments/products/elegoo-pla-filament-5-kg",
   "PLA Filament 10 kg": "https://us.elegoo.com/collections/filaments/products/elegoo-pla-filament-10-kg",
   // PETG
@@ -97,6 +99,7 @@ const ELEGOO_PRODUCT_PAGES: Record<string, string> = {
   // Other materials
   "TPU": "https://us.elegoo.com/collections/filaments/products/elegoo-tpu-filament-1-75mm-1kg-spool",
   "ASA": "https://us.elegoo.com/collections/filaments/products/elegoo-asa-filament",
+  "ASA Draft": "https://us.elegoo.com/collections/filaments/products/elegoo-asa-draft-filament",
   "PA": "https://us.elegoo.com/collections/filaments/products/elegoo-pa-filament",
   "PC": "https://us.elegoo.com/collections/filaments/products/elegoo-pc-filament",
 };
@@ -115,7 +118,16 @@ function constructDynamicProductUrl(productLine: string): string | null {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
   
-  // Try common URL patterns
+  // Try different URL patterns based on common Elegoo naming conventions
+  // Pattern 1: elegoo-{slug}-filament (most common)
+  // Pattern 2: {slug}-filament-1-75mm-colored-1kg (for basic lines like PLA Basic)
+  // We return the most common pattern; the scraper will handle 404s gracefully
+  
+  // For "basic" product lines, they often don't have "elegoo-" prefix
+  if (slug.includes('basic')) {
+    return `https://us.elegoo.com/collections/filaments/products/${slug}-filament-1-75mm-colored-1kg`;
+  }
+  
   return `https://us.elegoo.com/collections/filaments/products/elegoo-${slug}-filament`;
 }
 
@@ -420,11 +432,14 @@ function getProductLine(title: string): string | null {
   if (titleLower.includes("rapid pla+") || titleLower.includes("rapid pla plus")) return "Rapid PLA+";
   if (titleLower.includes("rapid pla")) return "Rapid PLA";
   if (titleLower.includes("pla+") || titleLower.includes("pla plus")) return "PLA+";
+  if (titleLower.includes("pla basic refill")) return "PLA Basic Refill";
+  if (titleLower.includes("pla basic")) return "PLA Basic";
   if (titleLower.includes("petg+") || titleLower.includes("petg plus")) return "PETG+";
   if (titleLower.includes("abs filament 10 kg") || titleLower.includes("abs 10kg")) return "ABS Filament 10 kg";
   if (titleLower.includes("abs filament 5 kg") || titleLower.includes("abs 5kg")) return "ABS Filament 5 kg";
   if (titleLower.includes("pla filament 10 kg") || titleLower.includes("pla 10kg")) return "PLA Filament 10 kg";
   if (titleLower.includes("pla filament 5 kg") || titleLower.includes("pla 5kg")) return "PLA Filament 5 kg";
+  if (titleLower.includes("asa draft")) return "ASA Draft";
   if (titleLower.includes("asa")) return "ASA";
   if (titleLower.includes("tpu")) return "TPU";
   if (titleLower.includes("petg")) return "PETG";
