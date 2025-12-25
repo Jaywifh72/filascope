@@ -355,7 +355,7 @@ async function processRegionPhase(supabase: any, state: SyncState): Promise<void
 async function processImagePhase(supabase: any, state: SyncState): Promise<void> {
   console.log(`[ELEGOO-ORCHESTRATOR] Starting image fix phase for job ${state.jobId}`);
 
-  // Update progress
+  // Update progress to indicate image fix is starting
   await supabase.from('scrape_jobs').update({
     progress: {
       phase: 'images',
@@ -371,9 +371,19 @@ async function processImagePhase(supabase: any, state: SyncState): Promise<void>
       errors: state.results.errors,
       total: state.results.total,
       regionResults: state.results.regionResults,
+      imagesFixed: 0,
+      imagesFailed: 0,
     },
     updated_at: new Date().toISOString(),
   }).eq('id', state.jobId);
+
+  // Set up a heartbeat interval to prevent auto-cancellation during long image fix
+  const heartbeatInterval = setInterval(async () => {
+    console.log(`[ELEGOO-ORCHESTRATOR] Image fix heartbeat for job ${state.jobId}`);
+    await supabase.from('scrape_jobs').update({
+      updated_at: new Date().toISOString(),
+    }).eq('id', state.jobId);
+  }, 30000); // Every 30 seconds
 
   try {
     // Call fix-elegoo-images
@@ -404,10 +414,42 @@ async function processImagePhase(supabase: any, state: SyncState): Promise<void>
     } else {
       console.error(`[ELEGOO-ORCHESTRATOR] Image fix failed: ${result.error}`);
       state.results.imagesFailed++;
+      state.results.regionResults['image_fix'] = {
+        created: 0,
+        updated: 0,
+        errors: 1,
+      };
     }
+
+    // Update progress with image fix results
+    await supabase.from('scrape_jobs').update({
+      progress: {
+        phase: 'images',
+        currentRegion: 'Image fix complete',
+        completedRegions: state.regions,
+        totalRegions: state.regions.length,
+        allRegions: state.regions,
+        regionsProcessed: state.regions.length,
+        created: state.results.created,
+        updated: state.results.updated,
+        imagesFixed: state.results.imagesFixed,
+        imagesFailed: state.results.imagesFailed,
+        regionResults: state.results.regionResults,
+      },
+      updated_at: new Date().toISOString(),
+    }).eq('id', state.jobId);
+
   } catch (err) {
     console.error(`[ELEGOO-ORCHESTRATOR] Image fix error:`, err);
     state.results.imagesFailed++;
+    state.results.regionResults['image_fix'] = {
+      created: 0,
+      updated: 0,
+      errors: 1,
+    };
+  } finally {
+    // Clear heartbeat interval
+    clearInterval(heartbeatInterval);
   }
 
   // Move to next phase
@@ -492,24 +534,52 @@ async function moveToNextPhase(supabase: any, state: SyncState): Promise<void> {
 }
 
 /**
- * Queue continuation via self-invocation
+ * Queue continuation via self-invocation with error handling
  */
 async function queueContinue(supabase: any, state: SyncState): Promise<void> {
   const orchestratorUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/sync-elegoo-orchestrator`;
   
   console.log(`[ELEGOO-ORCHESTRATOR] Queuing continue for phase ${state.phase}`);
   
-  await fetch(orchestratorUrl, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      mode: 'continue',
-      syncState: state,
-    }),
-  });
+  try {
+    const response = await fetch(orchestratorUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        mode: 'continue',
+        syncState: state,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[ELEGOO-ORCHESTRATOR] Self-invocation failed with status ${response.status}: ${errorText}`);
+      
+      // Update job with error status so it doesn't hang
+      await supabase.from('scrape_jobs').update({
+        status: 'failed',
+        error: `Self-invocation failed during ${state.phase} phase: ${response.status}`,
+        completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }).eq('id', state.jobId);
+    } else {
+      console.log(`[ELEGOO-ORCHESTRATOR] Successfully queued continuation for phase ${state.phase}`);
+    }
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error(`[ELEGOO-ORCHESTRATOR] Failed to queue continuation: ${errorMsg}`);
+    
+    // Mark job as failed to prevent it from being stuck
+    await supabase.from('scrape_jobs').update({
+      status: 'failed',
+      error: `Failed to continue ${state.phase} phase: ${errorMsg}`,
+      completed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }).eq('id', state.jobId);
+  }
 }
 
 /**
