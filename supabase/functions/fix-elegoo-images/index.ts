@@ -514,7 +514,17 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     console.log("=== ELEGOO IMAGE FIX (Enhanced) ===");
-    console.log(`Options: dryRun=${dryRun}, productLine=${productLine}, limit=${limit}, forceUpdate=${forceUpdate}`);
+    console.log(`Options: dryRun=${dryRun}, productLine=${productLine}, limit=${limit}, forceUpdate=${forceUpdate}, jobId=${jobId}`);
+
+    // Log start event if jobId provided
+    if (jobId) {
+      await logActivity(supabase, jobId, 'images', 'phase_started', 'info', {
+        message: `Starting image fix: dryRun=${dryRun}, limit=${limit}`,
+        dryRun,
+        limit,
+        forceUpdate,
+      });
+    }
 
     // Fetch Elegoo filaments
     let query = supabase
@@ -871,6 +881,18 @@ Deno.serve(async (req) => {
 
     console.log(`\n=== COMPLETE ===`);
     console.log(`Updated: ${updated}, Skipped: ${skipped}, Errors: ${errors}`);
+
+    // Log completion event if jobId provided
+    if (jobId) {
+      await logActivity(supabase, jobId, 'images', 'phase_completed', 'success', {
+        message: `Image fix complete: ${updated} updated, ${skipped} skipped, ${errors} errors`,
+        updated,
+        skipped,
+        errors,
+        processed: filaments.length,
+        productLinesProcessed: productLinesToProcess.length,
+      });
+    }
 
     return new Response(JSON.stringify({
       success: true,

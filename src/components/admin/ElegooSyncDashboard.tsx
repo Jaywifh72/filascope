@@ -106,14 +106,14 @@ export function ElegooSyncDashboard() {
     }
   };
 
-  // Check for active sync jobs - check both job types
+  // Check for active sync jobs - check all job types
   const checkSyncStatus = async () => {
     try {
-      // Check for running jobs with either elegoo_full_sync or elegoo_sync type
+      // Check for running jobs with any elegoo job type
       const { data, error } = await supabase
         .from("scrape_jobs")
         .select("*")
-        .in("job_type", ["elegoo_full_sync", "elegoo_sync"])
+        .in("job_type", ["elegoo_full_sync", "elegoo_sync", "fix_elegoo_images", "scrape_variant_images"])
         .eq("status", "running")
         .order("started_at", { ascending: false })
         .limit(1)
@@ -149,11 +149,11 @@ export function ElegooSyncDashboard() {
           setActiveTab("activity");
         }
       } else {
-        // Get last completed sync
+        // Get last completed sync (any type)
         const { data: lastJob } = await supabase
           .from("scrape_jobs")
           .select("*")
-          .in("job_type", ["elegoo_full_sync", "elegoo_sync"])
+          .in("job_type", ["elegoo_full_sync", "elegoo_sync", "fix_elegoo_images", "scrape_variant_images"])
           .in("status", ["completed", "completed_with_errors", "failed"])
           .order("completed_at", { ascending: false })
           .limit(1)
@@ -238,54 +238,162 @@ export function ElegooSyncDashboard() {
 
   const handleFixImages = async () => {
     setIsLoading(true);
+    let newJobId: string | null = null;
+    
     try {
+      // 1. Create a job record first
+      const { data: jobData, error: jobError } = await supabase
+        .from('scrape_jobs')
+        .insert({
+          job_type: 'fix_elegoo_images',
+          status: 'running',
+          dry_run: options.dryRun,
+          progress: { phase: 'images', started: new Date().toISOString() }
+        })
+        .select()
+        .single();
+      
+      if (jobError) throw jobError;
+      newJobId = jobData.id;
+      
+      // Update state so ActivityLog can subscribe
+      setSyncStatus(prev => ({
+        ...prev,
+        isRunning: true,
+        phase: 'images',
+        progress: 10,
+        jobId: newJobId!,
+      }));
+      setActiveTab('activity'); // Switch to activity tab
+      
+      // 2. Call edge function WITH jobId
       const { data, error } = await supabase.functions.invoke("fix-elegoo-images", {
         body: {
           dryRun: options.dryRun,
           forceUpdate: false,
           limit: 500,
+          jobId: newJobId,
         },
       });
 
       if (error) throw error;
+      
+      // 3. Update job as completed
+      await supabase
+        .from('scrape_jobs')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          results: data,
+          progress: { phase: 'completed', ...data.stats }
+        })
+        .eq('id', newJobId);
 
       toast.success(
         `Image fix ${options.dryRun ? "(dry run)" : ""}: ${data?.stats?.updated || 0} updated, ${data?.stats?.skipped || 0} skipped`
       );
-
+      
+      setActiveTab('summary'); // Switch to summary when done
       fetchMetrics();
     } catch (err) {
       console.error("Image fix failed:", err);
+      // Mark job as failed
+      if (newJobId) {
+        await supabase
+          .from('scrape_jobs')
+          .update({ 
+            status: 'failed', 
+            completed_at: new Date().toISOString(),
+            error: String(err) 
+          })
+          .eq('id', newJobId);
+      }
       toast.error("Failed to fix images: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setIsLoading(false);
+      setSyncStatus(prev => ({ ...prev, isRunning: false }));
+      checkSyncStatus(); // Refresh to get final job state
     }
   };
 
   const handleScrapeVariantImages = async () => {
     setIsLoading(true);
+    let newJobId: string | null = null;
+    
     try {
+      // 1. Create a job record first
+      const { data: jobData, error: jobError } = await supabase
+        .from('scrape_jobs')
+        .insert({
+          job_type: 'scrape_variant_images',
+          status: 'running',
+          dry_run: options.dryRun,
+          progress: { phase: 'variants', regions: options.regions, started: new Date().toISOString() }
+        })
+        .select()
+        .single();
+      
+      if (jobError) throw jobError;
+      newJobId = jobData.id;
+      
+      // Update state so ActivityLog can subscribe
+      setSyncStatus(prev => ({
+        ...prev,
+        isRunning: true,
+        phase: 'variants',
+        progress: 10,
+        jobId: newJobId!,
+      }));
+      setActiveTab('activity'); // Switch to activity tab
+      
+      // 2. Call edge function WITH jobId
       const { data, error } = await supabase.functions.invoke("scrape-elegoo-variant-images", {
         body: {
           dryRun: options.dryRun,
           regions: options.regions,
           onlyMissingImages: true,
           limit: 200,
+          jobId: newJobId,
         },
       });
 
       if (error) throw error;
+      
+      // 3. Update job as completed
+      await supabase
+        .from('scrape_jobs')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          results: data,
+          progress: { phase: 'completed', ...data.summary }
+        })
+        .eq('id', newJobId);
 
       toast.success(
         `Variant scrape ${options.dryRun ? "(dry run)" : ""}: ${data?.summary?.updated || 0} updated`
       );
-
+      
+      setActiveTab('summary'); // Switch to summary when done
       fetchMetrics();
     } catch (err) {
       console.error("Variant scrape failed:", err);
+      // Mark job as failed
+      if (newJobId) {
+        await supabase
+          .from('scrape_jobs')
+          .update({ 
+            status: 'failed', 
+            completed_at: new Date().toISOString(),
+            error: String(err) 
+          })
+          .eq('id', newJobId);
+      }
       toast.error("Failed to scrape variant images: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setIsLoading(false);
+      setSyncStatus(prev => ({ ...prev, isRunning: false }));
+      checkSyncStatus(); // Refresh to get final job state
     }
   };
 

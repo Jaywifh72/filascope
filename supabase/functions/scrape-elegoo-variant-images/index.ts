@@ -269,6 +269,7 @@ serve(async (req) => {
       vendor?: string;
       limit?: number;
       onlyMissingImages?: boolean;  // Only process filaments without images
+      jobId?: string | null; // For activity logging
     } = {};
     
     try {
@@ -283,8 +284,31 @@ serve(async (req) => {
     const limit = options.limit || 100;
     const targetProductHandle = options.productHandle;
     const onlyMissingImages = options.onlyMissingImages ?? false;
+    const jobId = options.jobId || null;
 
-    console.log(`[SCRAPE-IMAGES] Starting variant image scrape (dryRun: ${dryRun}, regions: ${regions.join(',')}, vendor: ${targetVendor}, onlyMissing: ${onlyMissingImages})`);
+    console.log(`[SCRAPE-IMAGES] Starting variant image scrape (dryRun: ${dryRun}, regions: ${regions.join(',')}, vendor: ${targetVendor}, onlyMissing: ${onlyMissingImages}, jobId: ${jobId})`);
+
+    // Log start event if jobId provided
+    if (jobId) {
+      const { error: logError } = await supabase.from('sync_activity_log').insert({
+        job_id: jobId,
+        phase: 'variants',
+        action: 'phase_started',
+        level: 'info',
+        details: {
+          message: `Starting variant image scrape: regions=${regions.join(',')}, dryRun=${dryRun}`,
+          regions,
+          dryRun,
+          vendor: targetVendor,
+          onlyMissingImages,
+        },
+      });
+      if (logError) {
+        console.error(`[SCRAPE-IMAGES] Failed to log start: ${logError.message}`);
+      } else {
+        console.log(`[SCRAPE-IMAGES] ✓ Logged phase_started`);
+      }
+    }
 
     // Process each region
     const allResults: Array<{
@@ -531,6 +555,29 @@ serve(async (req) => {
       totalErrors += errorCount;
 
       console.log(`[SCRAPE-IMAGES] Region ${region} complete: ${updatedCount} updated, ${skippedCount} skipped, ${errorCount} errors`);
+    }
+
+    // Log completion event if jobId provided
+    if (jobId) {
+      const { error: logError } = await supabase.from('sync_activity_log').insert({
+        job_id: jobId,
+        phase: 'variants',
+        action: 'phase_completed',
+        level: 'success',
+        details: {
+          message: `Variant scrape complete: ${totalUpdated} updated, ${totalSkipped} skipped, ${totalErrors} errors`,
+          updated: totalUpdated,
+          skipped: totalSkipped,
+          errors: totalErrors,
+          regionsProcessed: regions,
+          productHandles: productGroups.size,
+        },
+      });
+      if (logError) {
+        console.error(`[SCRAPE-IMAGES] Failed to log completion: ${logError.message}`);
+      } else {
+        console.log(`[SCRAPE-IMAGES] ✓ Logged phase_completed`);
+      }
     }
 
     const response = {
