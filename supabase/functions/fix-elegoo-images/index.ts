@@ -7,6 +7,7 @@ const corsHeaders = {
 
 /**
  * Log an activity entry to the sync_activity_log table
+ * Enhanced with visible error logging and confirmation
  */
 async function logActivity(
   supabase: any,
@@ -24,11 +25,14 @@ async function logActivity(
     message?: string;
     [key: string]: any;
   }
-): Promise<void> {
-  if (!jobId) return; // Skip logging if no jobId provided
+): Promise<boolean> {
+  if (!jobId) {
+    console.log(`[FIX-ELEGOO-IMAGES] ⚠️ No jobId provided, skipping activity log`);
+    return false;
+  }
   
   try {
-    await supabase.from('sync_activity_log').insert({
+    const { error } = await supabase.from('sync_activity_log').insert({
       job_id: jobId,
       phase,
       region: details?.region || null,
@@ -38,8 +42,19 @@ async function logActivity(
       details: details ? JSON.parse(JSON.stringify(details)) : null,
       level,
     });
+    
+    if (error) {
+      console.error(`[FIX-ELEGOO-IMAGES] ❌ CRITICAL: Failed to write activity log: ${error.message}`);
+      console.error(`[FIX-ELEGOO-IMAGES] ❌ Log entry: job=${jobId}, phase=${phase}, action=${action}, level=${level}`);
+      return false;
+    }
+    
+    console.log(`[FIX-ELEGOO-IMAGES] ✓ Logged: [${level}] ${phase}/${action}${details?.message ? ` - ${details.message}` : ''}`);
+    return true;
   } catch (err) {
-    console.error(`[FIX-ELEGOO-IMAGES] Failed to log activity: ${err}`);
+    console.error(`[FIX-ELEGOO-IMAGES] ❌ CRITICAL: Exception writing activity log: ${err}`);
+    console.error(`[FIX-ELEGOO-IMAGES] ❌ Log entry: job=${jobId}, phase=${phase}, action=${action}`);
+    return false;
   }
 }
 
@@ -676,7 +691,7 @@ Deno.serve(async (req) => {
           
           // Strategy 2: Fallback to Firecrawl HTML scraping
           if (!gotVariantsFromJson) {
-            console.log(`   🔍 Falling back to Firecrawl HTML scrape...`);
+            console.log(`   🔍 Falling back to Firecrawl HTML scrape with JS rendering...`);
             const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
               method: 'POST',
               headers: {
@@ -686,7 +701,9 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 url: productUrl,
                 formats: ['html'],
-                waitFor: 3000,
+                waitFor: 5000, // Wait 5 seconds for JS to render
+                location: { country: 'US' }, // Request from US to avoid geo-blocking
+                onlyMainContent: false, // Get full page including product data
               }),
             });
 

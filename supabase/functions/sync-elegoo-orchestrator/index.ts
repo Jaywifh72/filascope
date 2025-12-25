@@ -12,6 +12,7 @@ const corsHeaders = {
 
 /**
  * Log an activity entry to the sync_activity_log table
+ * Enhanced with visible error logging and confirmation
  */
 async function logActivity(
   supabase: any,
@@ -29,9 +30,9 @@ async function logActivity(
     message?: string;
     [key: string]: any;
   }
-): Promise<void> {
+): Promise<boolean> {
   try {
-    await supabase.from('sync_activity_log').insert({
+    const { error } = await supabase.from('sync_activity_log').insert({
       job_id: jobId,
       phase,
       region: details?.region || null,
@@ -41,8 +42,19 @@ async function logActivity(
       details: details ? JSON.parse(JSON.stringify(details)) : null,
       level,
     });
+    
+    if (error) {
+      console.error(`[ELEGOO-ORCHESTRATOR] ❌ CRITICAL: Failed to write activity log: ${error.message}`);
+      console.error(`[ELEGOO-ORCHESTRATOR] ❌ Log entry: job=${jobId}, phase=${phase}, action=${action}, level=${level}`);
+      return false;
+    }
+    
+    console.log(`[ELEGOO-ORCHESTRATOR] ✓ Logged: [${level}] ${phase}/${action}${details?.message ? ` - ${details.message}` : ''}`);
+    return true;
   } catch (err) {
-    console.error(`[ELEGOO-ORCHESTRATOR] Failed to log activity: ${err}`);
+    console.error(`[ELEGOO-ORCHESTRATOR] ❌ CRITICAL: Exception writing activity log: ${err}`);
+    console.error(`[ELEGOO-ORCHESTRATOR] ❌ Log entry: job=${jobId}, phase=${phase}, action=${action}`);
+    return false;
   }
 }
 
@@ -579,58 +591,91 @@ async function processQualityPhase(supabase: any, state: SyncState): Promise<voi
     updated_at: new Date().toISOString(),
   }).eq('id', state.jobId);
 
-  // Gather quality metrics
-  const { data: qualityMetrics } = await supabase
-    .from('filaments')
-    .select('id, featured_image, product_url, product_url_ca, product_url_eu, product_url_au, variant_price, available_regions')
-    .eq('vendor', 'Elegoo');
+  // Set up a heartbeat interval to prevent auto-cancellation during quality check
+  const heartbeatInterval = setInterval(async () => {
+    console.log(`[ELEGOO-ORCHESTRATOR] Quality check heartbeat for job ${state.jobId}`);
+    await supabase.from('scrape_jobs').update({
+      updated_at: new Date().toISOString(),
+    }).eq('id', state.jobId);
+  }, 30000); // Every 30 seconds
 
-  const totalProducts = qualityMetrics?.length || 0;
-  const withImages = qualityMetrics?.filter((f: any) => f.featured_image).length || 0;
-  const withUSUrl = qualityMetrics?.filter((f: any) => f.product_url).length || 0;
-  const withPrice = qualityMetrics?.filter((f: any) => f.variant_price).length || 0;
+  try {
+    // Gather quality metrics with extended range to handle >1000 products
+    const { count: totalCount } = await supabase
+      .from('filaments')
+      .select('*', { count: 'exact', head: true })
+      .eq('vendor', 'Elegoo');
 
-  const qualityStats = {
-    totalProducts,
-    withImages,
-    withUSUrl,
-    withPrice,
-    imageCoverage: totalProducts > 0 ? Math.round((withImages / totalProducts) * 100) : 0,
-    urlCoverage: totalProducts > 0 ? Math.round((withUSUrl / totalProducts) * 100) : 0,
-    priceCoverage: totalProducts > 0 ? Math.round((withPrice / totalProducts) * 100) : 0,
-  };
+    const { data: qualityMetrics } = await supabase
+      .from('filaments')
+      .select('id, featured_image, product_url, product_url_ca, product_url_eu, product_url_au, variant_price, available_regions')
+      .eq('vendor', 'Elegoo')
+      .range(0, 1999); // Extended range for accurate metrics
 
-  state.results.regionResults['quality_check'] = {
-    created: 0,
-    updated: 0,
-    errors: 0,
-  };
+    // Use exact count if available, otherwise use fetched data length
+    const totalProducts = totalCount || qualityMetrics?.length || 0;
+    const withImages = qualityMetrics?.filter((f: any) => f.featured_image).length || 0;
+    const withUSUrl = qualityMetrics?.filter((f: any) => f.product_url).length || 0;
+    const withPrice = qualityMetrics?.filter((f: any) => f.variant_price).length || 0;
 
-  console.log(`[ELEGOO-ORCHESTRATOR] Quality check: ${totalProducts} products, ${withImages} with images, ${withUSUrl} with URLs`);
+    const qualityStats = {
+      totalProducts,
+      withImages,
+      withUSUrl,
+      withPrice,
+      imageCoverage: totalProducts > 0 ? Math.round((withImages / totalProducts) * 100) : 0,
+      urlCoverage: totalProducts > 0 ? Math.round((withUSUrl / totalProducts) * 100) : 0,
+      priceCoverage: totalProducts > 0 ? Math.round((withPrice / totalProducts) * 100) : 0,
+    };
 
-  // Log quality check results
-  await logActivity(supabase, state.jobId, 'quality', 'phase_completed', 'success', {
-    message: `Quality check completed`,
-    ...qualityStats,
-  });
+    state.results.regionResults['quality_check'] = {
+      created: 0,
+      updated: 0,
+      errors: 0,
+    };
 
-  // Log warnings for low coverage
-  if (qualityStats.imageCoverage < 80) {
-    await logActivity(supabase, state.jobId, 'quality', 'warning', 'warning', {
-      message: `Image coverage is only ${qualityStats.imageCoverage}%`,
-      missing: totalProducts - withImages,
+    console.log(`[ELEGOO-ORCHESTRATOR] Quality check: ${totalProducts} products, ${withImages} with images, ${withUSUrl} with URLs`);
+
+    // Log quality check results
+    await logActivity(supabase, state.jobId, 'quality', 'phase_completed', 'success', {
+      message: `Quality check completed`,
+      ...qualityStats,
     });
-  }
-  if (qualityStats.urlCoverage < 80) {
-    await logActivity(supabase, state.jobId, 'quality', 'warning', 'warning', {
-      message: `URL coverage is only ${qualityStats.urlCoverage}%`,
-      missing: totalProducts - withUSUrl,
-    });
-  }
 
-  // Complete the job
-  state.phase = 'completed';
-  await completeJob(supabase, state);
+    // Log warnings for low coverage
+    if (qualityStats.imageCoverage < 80) {
+      await logActivity(supabase, state.jobId, 'quality', 'warning', 'warning', {
+        message: `Image coverage is only ${qualityStats.imageCoverage}%`,
+        missing: totalProducts - withImages,
+      });
+    }
+    if (qualityStats.urlCoverage < 80) {
+      await logActivity(supabase, state.jobId, 'quality', 'warning', 'warning', {
+        message: `URL coverage is only ${qualityStats.urlCoverage}%`,
+        missing: totalProducts - withUSUrl,
+      });
+    }
+
+    // Complete the job
+    state.phase = 'completed';
+    await completeJob(supabase, state);
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error(`[ELEGOO-ORCHESTRATOR] Quality check error:`, err);
+    
+    // Log quality phase error
+    await logActivity(supabase, state.jobId, 'quality', 'phase_error', 'error', {
+      message: `Quality check phase encountered an error`,
+      error: errorMsg,
+    });
+    
+    // Complete the job with error
+    state.phase = 'completed';
+    await completeJob(supabase, state, errorMsg);
+  } finally {
+    // Clear heartbeat interval
+    clearInterval(heartbeatInterval);
+  }
 }
 
 /**

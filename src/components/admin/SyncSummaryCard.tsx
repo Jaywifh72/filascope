@@ -12,7 +12,8 @@ import {
   Image, 
   Database,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -127,8 +128,16 @@ export function SyncSummaryCard({ jobId, className }: SyncSummaryCardProps) {
     );
   }
 
+  // Show job progress even if results aren't populated yet
   if (!job) {
-    return null;
+    return (
+      <Card className={cn(className)}>
+        <CardContent className="p-6 text-center text-muted-foreground">
+          <Info className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p>No job data available</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   const results = job.results;

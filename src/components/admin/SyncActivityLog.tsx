@@ -61,33 +61,49 @@ export function SyncActivityLog({ jobId, className, maxHeight = "400px" }: SyncA
   const [isLoading, setIsLoading] = useState(true);
   const [autoScroll, setAutoScroll] = useState(true);
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
+  const [jobProgress, setJobProgress] = useState<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch initial entries
+  // Fetch initial entries and job progress
   useEffect(() => {
     if (!jobId) {
       setEntries([]);
+      setJobProgress(null);
       setIsLoading(false);
       return;
     }
 
-    const fetchEntries = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch activity log entries
+      const { data: logData, error: logError } = await supabase
         .from('sync_activity_log')
         .select('*')
         .eq('job_id', jobId)
         .order('timestamp', { ascending: true });
 
-      if (error) {
-        console.error('Failed to fetch activity log:', error);
+      if (logError) {
+        console.error('Failed to fetch activity log:', logError);
       } else {
-        setEntries((data as ActivityLogEntry[]) || []);
+        setEntries((logData as ActivityLogEntry[]) || []);
       }
+      
+      // Also fetch job progress for fallback display
+      const { data: jobData, error: jobError } = await supabase
+        .from('scrape_jobs')
+        .select('progress, status, started_at, completed_at')
+        .eq('id', jobId)
+        .single();
+      
+      if (!jobError && jobData) {
+        setJobProgress(jobData);
+      }
+      
       setIsLoading(false);
     };
 
-    fetchEntries();
+    fetchData();
   }, [jobId]);
 
   // Subscribe to realtime updates
@@ -107,6 +123,18 @@ export function SyncActivityLog({ jobId, className, maxHeight = "400px" }: SyncA
         (payload) => {
           const newEntry = payload.new as ActivityLogEntry;
           setEntries((prev) => [...prev, newEntry]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'scrape_jobs',
+          filter: `id=eq.${jobId}`,
+        },
+        (payload) => {
+          setJobProgress(payload.new);
         }
       )
       .subscribe();
@@ -196,11 +224,52 @@ export function SyncActivityLog({ jobId, className, maxHeight = "400px" }: SyncA
     );
   }
 
+  // Fallback: Show job progress when activity log is empty
+  if (entries.length === 0 && jobProgress) {
+    const progress = jobProgress.progress || {};
+    return (
+      <div className={cn("space-y-3 p-4", className)}>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Info className="h-5 w-5" />
+          <span>Activity log is empty - showing job progress</span>
+        </div>
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">{progress.phase || 'unknown'}</Badge>
+            <span className="text-muted-foreground">
+              {progress.currentRegion || jobProgress.status || 'Processing...'}
+            </span>
+          </div>
+          {progress.completedRegions && progress.completedRegions.length > 0 && (
+            <div className="text-muted-foreground">
+              Completed regions: {progress.completedRegions.join(', ')}
+            </div>
+          )}
+          {(progress.created > 0 || progress.updated > 0) && (
+            <div className="flex gap-4 text-xs">
+              <span className="text-green-500">{progress.created || 0} created</span>
+              <span className="text-blue-500">{progress.updated || 0} updated</span>
+              {progress.errors > 0 && <span className="text-destructive">{progress.errors} errors</span>}
+            </div>
+          )}
+          {progress.imagesFixed !== undefined && (
+            <div className="text-xs text-muted-foreground">
+              Images: {progress.imagesFixed || 0} fixed, {progress.imagesFailed || 0} failed
+            </div>
+          )}
+        </div>
+        <div className="text-xs text-muted-foreground/60 italic">
+          Tip: Check edge function logs for detailed output
+        </div>
+      </div>
+    );
+  }
+
   if (entries.length === 0) {
     return (
       <div className={cn("flex items-center justify-center text-muted-foreground p-8", className)}>
         <Info className="h-5 w-5 mr-2" />
-        No activity logged yet
+        No activity logged yet - check edge function logs
       </div>
     );
   }
