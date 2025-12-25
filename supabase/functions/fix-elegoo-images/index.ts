@@ -256,6 +256,116 @@ async function fetchShopifyProduct(storeUrl: string, handle: string): Promise<Sh
   }
 }
 
+// ============ FIRECRAWL FALLBACK ============
+
+// Extract direct Elegoo URL from affiliate link
+function extractDirectUrl(productUrl: string): string {
+  try {
+    if (productUrl.includes("sjv.io") || productUrl.includes("impact.com")) {
+      const urlObj = new URL(productUrl);
+      const actualUrl = urlObj.searchParams.get("u");
+      if (actualUrl) {
+        return decodeURIComponent(actualUrl);
+      }
+    }
+    return productUrl;
+  } catch {
+    return productUrl;
+  }
+}
+
+// Extract product image from Firecrawl HTML response
+function extractImageFromHtml(html: string): string | null {
+  // Patterns to find Shopify product images, ordered by priority
+  const patterns = [
+    // OpenGraph image (most reliable for main product image)
+    /<meta\s+property="og:image"\s+content="([^"]+)"/i,
+    /<meta\s+content="([^"]+)"\s+property="og:image"/i,
+    // Product media images
+    /<img[^>]*class="[^"]*product[^"]*media[^"]*"[^>]*src="([^"]+)"/i,
+    /<img[^>]*data-product-featured-image[^>]*src="([^"]+)"/i,
+    // Shopify CDN images with product keywords
+    /(https:\/\/cdn\.shopify\.com\/s\/files\/[^"'\s]+(?:filament|pla|abs|petg|tpu)[^"'\s]*\.(?:jpg|png|webp))/i,
+    // Any Shopify CDN product images
+    /(https:\/\/cdn\.shopify\.com\/s\/files\/[^"'\s]+\/products\/[^"'\s]+\.(?:jpg|png|webp))/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match && match[1]) {
+      let imageUrl = match[1];
+      // Normalize URL
+      if (imageUrl.startsWith('//')) {
+        imageUrl = 'https:' + imageUrl;
+      }
+      // Skip placeholder/icon images
+      if (imageUrl.includes('placeholder') || imageUrl.includes('icon') || imageUrl.length < 50) {
+        continue;
+      }
+      return imageUrl;
+    }
+  }
+  return null;
+}
+
+// Scrape product page with Firecrawl to get variant image
+async function scrapeImageWithFirecrawl(
+  productUrl: string,
+  variantId: string | null
+): Promise<string | null> {
+  const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY') || Deno.env.get('FIRECRAWL_API_KEY_1');
+  if (!firecrawlApiKey) {
+    console.log('[FIX-ELEGOO-IMAGES] ⚠️ No Firecrawl API key available');
+    return null;
+  }
+
+  try {
+    // Build direct URL with variant parameter
+    let directUrl = extractDirectUrl(productUrl);
+    if (variantId && !directUrl.includes('variant=')) {
+      directUrl += (directUrl.includes('?') ? '&' : '?') + `variant=${variantId}`;
+    }
+
+    console.log(`[FIX-ELEGOO-IMAGES] 🔥 Firecrawl scraping: ${directUrl}`);
+
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: directUrl,
+        formats: ['html'],
+        onlyMainContent: false,
+        waitFor: 2000, // Wait for images to load
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`[FIX-ELEGOO-IMAGES] Firecrawl API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const html = data.data?.html || data.html;
+    
+    if (!html) {
+      console.log('[FIX-ELEGOO-IMAGES] ⚠️ No HTML returned from Firecrawl');
+      return null;
+    }
+
+    const imageUrl = extractImageFromHtml(html);
+    if (imageUrl) {
+      console.log(`[FIX-ELEGOO-IMAGES] ✓ Firecrawl found image: ${imageUrl.substring(0, 60)}...`);
+    }
+    return imageUrl;
+  } catch (e) {
+    console.error('[FIX-ELEGOO-IMAGES] Firecrawl error:', e);
+    return null;
+  }
+}
+
 // ============ MAIN HANDLER ============
 
 Deno.serve(async (req) => {
@@ -427,6 +537,11 @@ Deno.serve(async (req) => {
     let updated = 0;
     let errors = 0;
     let skipped = 0;
+    let firecrawlAttempts = 0;
+    let firecrawlSuccesses = 0;
+    const MAX_FIRECRAWL_ATTEMPTS = 50; // Limit Firecrawl API calls per run
+    const FIRECRAWL_DELAY_MS = 1000; // Delay between Firecrawl calls
+    
     const results: { 
       id: string; 
       title: string; 
@@ -436,6 +551,7 @@ Deno.serve(async (req) => {
       color?: string;
       variantId?: string | null;
       handle?: string;
+      matchMethod?: string;
     }[] = [];
 
     // Process each product group
@@ -486,6 +602,31 @@ Deno.serve(async (req) => {
               console.log(`[FIX-ELEGOO-IMAGES] ✓ Found image by color match: "${color}"`);
             }
           }
+        }
+
+        // Strategy 3: Firecrawl fallback (scrape actual product page)
+        if (!newImage && filament.product_url && firecrawlAttempts < MAX_FIRECRAWL_ATTEMPTS) {
+          firecrawlAttempts++;
+          console.log(`[FIX-ELEGOO-IMAGES] 🔥 Trying Firecrawl fallback (attempt ${firecrawlAttempts}/${MAX_FIRECRAWL_ATTEMPTS})`);
+          
+          newImage = await scrapeImageWithFirecrawl(filament.product_url, filament.variantId);
+          if (newImage) {
+            matchMethod = "firecrawl";
+            firecrawlSuccesses++;
+            console.log(`[FIX-ELEGOO-IMAGES] ✓ Found image via Firecrawl`);
+            
+            if (jobId) {
+              await logActivity(supabase, jobId, 'images', 'firecrawl_image_found', 'success', {
+                productId: filament.id,
+                productTitle: filament.product_title,
+                variantId: filament.variantId,
+                imageUrl: newImage,
+              });
+            }
+          }
+          
+          // Rate limit Firecrawl calls
+          await new Promise(resolve => setTimeout(resolve, FIRECRAWL_DELAY_MS));
         }
 
         // No image found
@@ -590,6 +731,7 @@ Deno.serve(async (req) => {
           newImage,
           handle,
           variantId: filament.variantId,
+          matchMethod,
         });
         updated++;
       }
@@ -601,10 +743,12 @@ Deno.serve(async (req) => {
     // Log completion
     if (jobId) {
       await logActivity(supabase, jobId, 'images', 'phase_completed', 'success', {
-        message: `Image fix completed: ${updated} updated, ${skipped} skipped, ${errors} errors`,
+        message: `Image fix completed: ${updated} updated, ${skipped} skipped, ${errors} errors, Firecrawl: ${firecrawlSuccesses}/${firecrawlAttempts}`,
         updated,
         skipped,
         errors,
+        firecrawlAttempts,
+        firecrawlSuccesses,
         dryRun,
       });
     }
@@ -613,18 +757,21 @@ Deno.serve(async (req) => {
     console.log(`Updated: ${updated}`);
     console.log(`Skipped: ${skipped}`);
     console.log(`Errors: ${errors}`);
+    console.log(`Firecrawl attempts: ${firecrawlAttempts} (${firecrawlSuccesses} successful)`);
 
     return new Response(JSON.stringify({
       success: true,
       message: dryRun 
         ? `Dry run complete. Would update ${updated} images.` 
-        : `Updated ${updated} images.`,
+        : `Updated ${updated} images (${firecrawlSuccesses} via Firecrawl).`,
       stats: {
         processed: filaments.length,
         productHandles: productGroups.size,
         updated,
         skipped,
         errors,
+        firecrawlAttempts,
+        firecrawlSuccesses,
       },
       results: results.slice(0, 100), // Limit response size
     }), {
