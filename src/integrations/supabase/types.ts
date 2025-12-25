@@ -3411,6 +3411,81 @@ export type Database = {
           },
         ]
       }
+      sync_activity_log: {
+        Row: {
+          action: string
+          details: Json | null
+          id: string
+          job_id: string
+          level: string
+          phase: string
+          product_id: string | null
+          product_title: string | null
+          region: string | null
+          timestamp: string
+        }
+        Insert: {
+          action: string
+          details?: Json | null
+          id?: string
+          job_id: string
+          level?: string
+          phase: string
+          product_id?: string | null
+          product_title?: string | null
+          region?: string | null
+          timestamp?: string
+        }
+        Update: {
+          action?: string
+          details?: Json | null
+          id?: string
+          job_id?: string
+          level?: string
+          phase?: string
+          product_id?: string | null
+          product_title?: string | null
+          region?: string | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_activity_log_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "scrape_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sync_activity_log_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "sync_activity_log_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sync_activity_log_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "sync_activity_log_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+        ]
+      }
       sync_logs: {
         Row: {
           completed_at: string | null

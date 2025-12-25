@@ -5,6 +5,44 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/**
+ * Log an activity entry to the sync_activity_log table
+ */
+async function logActivity(
+  supabase: any,
+  jobId: string | null,
+  phase: string,
+  action: string,
+  level: 'info' | 'warning' | 'error' | 'success' = 'info',
+  details?: {
+    region?: string;
+    productId?: string;
+    productTitle?: string;
+    oldValue?: any;
+    newValue?: any;
+    count?: number;
+    message?: string;
+    [key: string]: any;
+  }
+): Promise<void> {
+  if (!jobId) return; // Skip logging if no jobId provided
+  
+  try {
+    await supabase.from('sync_activity_log').insert({
+      job_id: jobId,
+      phase,
+      region: details?.region || null,
+      action,
+      product_id: details?.productId || null,
+      product_title: details?.productTitle || null,
+      details: details ? JSON.parse(JSON.stringify(details)) : null,
+      level,
+    });
+  } catch (err) {
+    console.error(`[FIX-ELEGOO-IMAGES] Failed to log activity: ${err}`);
+  }
+}
+
 // Map of product lines to their base Elegoo product URLs
 // Each product page contains color variant images
 const ELEGOO_PRODUCT_PAGES: Record<string, string> = {
@@ -455,7 +493,8 @@ Deno.serve(async (req) => {
       productLine = null,
       limit = 200,
       forceUpdate = false, // If true, update even if image already exists
-    } = body as { dryRun?: boolean; productLine?: string | null; limit?: number; forceUpdate?: boolean };
+      jobId = null, // Optional: for detailed activity logging
+    } = body as { dryRun?: boolean; productLine?: string | null; limit?: number; forceUpdate?: boolean; jobId?: string | null };
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -525,6 +564,15 @@ Deno.serve(async (req) => {
       : allProductLines;
 
     console.log(`Processing ${productLinesToProcess.length} product lines (${Object.keys(ELEGOO_PRODUCT_PAGES).length} with known URLs)`);
+
+    // Log processing start if jobId provided
+    if (jobId) {
+      await logActivity(supabase, jobId, 'images', 'processing_started', 'info', {
+        message: `Processing ${productLinesToProcess.length} product lines for ${filaments?.length} filaments`,
+        productLinesCount: productLinesToProcess.length,
+        filamentsCount: filaments?.length,
+      });
+    }
 
     for (const line of productLinesToProcess) {
       // Get URL from map or try dynamic construction
@@ -699,6 +747,17 @@ Deno.serve(async (req) => {
             console.log(`   ✗ No match for "${color}" in ${line}`);
             results.push({ id: filament.id, title: filament.product_title, status: "no_match", color });
             skipped++;
+            
+            // Log no match
+            if (jobId) {
+              await logActivity(supabase, jobId, 'images', 'no_match', 'warning', {
+                productId: filament.id,
+                productTitle: filament.product_title,
+                message: `No variant image match for color "${color}"`,
+                color,
+                productLine: line,
+              });
+            }
             continue;
           }
 
@@ -724,6 +783,16 @@ Deno.serve(async (req) => {
               console.log(`   ✗ DB update failed: ${updateError.message}`);
               results.push({ id: filament.id, title: filament.product_title, status: "db_error", color });
               errors++;
+              
+              // Log DB error
+              if (jobId) {
+                await logActivity(supabase, jobId, 'images', 'update_failed', 'error', {
+                  productId: filament.id,
+                  productTitle: filament.product_title,
+                  message: `Database update failed: ${updateError.message}`,
+                  error: updateError.message,
+                });
+              }
             } else {
               results.push({
                 id: filament.id,
@@ -734,6 +803,18 @@ Deno.serve(async (req) => {
                 color
               });
               updated++;
+              
+              // Log successful update
+              if (jobId) {
+                await logActivity(supabase, jobId, 'images', 'image_updated', 'success', {
+                  productId: filament.id,
+                  productTitle: filament.product_title,
+                  message: `Updated image for "${color}"`,
+                  color,
+                  oldImage: filament.featured_image,
+                  newImage: matchedVariant.imageUrl,
+                });
+              }
             }
           } else {
             results.push({
