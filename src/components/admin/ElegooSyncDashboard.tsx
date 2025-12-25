@@ -89,13 +89,14 @@ export function ElegooSyncDashboard() {
     }
   };
 
-  // Check for active sync jobs
+  // Check for active sync jobs - check both job types
   const checkSyncStatus = async () => {
     try {
+      // Check for running jobs with either elegoo_full_sync or elegoo_sync type
       const { data, error } = await supabase
         .from("scrape_jobs")
         .select("*")
-        .eq("job_type", "elegoo_full_sync")
+        .in("job_type", ["elegoo_full_sync", "elegoo_sync"])
         .eq("status", "running")
         .order("started_at", { ascending: false })
         .limit(1)
@@ -104,10 +105,25 @@ export function ElegooSyncDashboard() {
       if (error) throw error;
 
       if (data) {
+        const progress = data.progress as any;
+        const regionsProcessed = progress?.regionsProcessed || 0;
+        const totalRegions = progress?.totalRegions || 1;
+        const phase = progress?.phase || "running";
+        
+        // Calculate progress based on phase
+        let progressPercent = 0;
+        if (phase === 'regions') {
+          progressPercent = Math.round((regionsProcessed / totalRegions) * 60); // 0-60% for regions
+        } else if (phase === 'images') {
+          progressPercent = 70; // 70% during image fix
+        } else if (phase === 'quality') {
+          progressPercent = 90; // 90% during quality check
+        }
+
         setSyncStatus({
           isRunning: true,
-          phase: (data.progress as any)?.phase || "running",
-          progress: 50,
+          phase: progress?.currentRegion || phase,
+          progress: progressPercent,
           jobId: data.id,
         });
       } else {
@@ -115,8 +131,8 @@ export function ElegooSyncDashboard() {
         const { data: lastJob } = await supabase
           .from("scrape_jobs")
           .select("*")
-          .eq("job_type", "elegoo_full_sync")
-          .in("status", ["completed", "completed_with_errors"])
+          .in("job_type", ["elegoo_full_sync", "elegoo_sync"])
+          .in("status", ["completed", "completed_with_errors", "failed"])
           .order("completed_at", { ascending: false })
           .limit(1)
           .maybeSingle();
