@@ -202,7 +202,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.fix-elegoo-images]
-verify_jwt = true
+verify_jwt = false
 
 [functions.elegoo-data-stats]
 verify_jwt = true
