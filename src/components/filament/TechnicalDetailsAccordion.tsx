@@ -6,6 +6,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
   ThermometerSun, 
@@ -18,12 +19,16 @@ import {
   FileText,
   ExternalLink,
   Gauge,
-  Shield
+  Shield,
+  Download,
+  Database
 } from 'lucide-react';
-import { Database } from '@/integrations/supabase/types';
+import { Database as SupabaseDB } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
+import { exportFilamentToFullCSV, FILAMENT_FIELD_MAPPINGS } from '@/lib/filamentExportUtils';
+import { toast } from 'sonner';
 
-type Filament = Database["public"]["Tables"]["filaments"]["Row"];
+type Filament = SupabaseDB["public"]["Tables"]["filaments"]["Row"];
 
 interface TechnicalDetailsAccordionProps {
   filament: Filament;
@@ -331,6 +336,41 @@ export function TechnicalDetailsAccordion({ filament, className }: TechnicalDeta
             </AccordionContent>
           </AccordionItem>
         )}
+
+        {/* Export Full Data */}
+        <AccordionItem value="export-data" className="border-border">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/50">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Database className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-left">
+                <div className="font-semibold">Export Full Data</div>
+                <div className="text-xs text-muted-foreground">
+                  Download all {FILAMENT_FIELD_MAPPINGS.length} fields as CSV
+                </div>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6">
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Export complete filament data including pricing, technical specs, mechanical properties, 
+                and all metadata fields organized by category.
+              </p>
+              <Button 
+                onClick={() => {
+                  exportFilamentToFullCSV(filament);
+                  toast.success(`Exported ${FILAMENT_FIELD_MAPPINGS.length} fields to CSV`);
+                }}
+                className="gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download Full CSV ({FILAMENT_FIELD_MAPPINGS.length} fields)
+              </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
       </Accordion>
     </Card>
   );

@@ -7,19 +7,42 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Image, FileSpreadsheet, Printer, Loader2 } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Printer, Loader2, Database } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatAsPlainText, formatAsMarkdown, type PrintSettings } from '@/lib/settingsFormatters';
+import { exportFilamentToFullCSV, FILAMENT_FIELD_MAPPINGS } from '@/lib/filamentExportUtils';
+import { Database as SupabaseDB } from '@/integrations/supabase/types';
+
+type Filament = SupabaseDB["public"]["Tables"]["filaments"]["Row"];
 
 interface ExportOptionsModalProps {
   settings: PrintSettings;
   filamentImage?: string;
   trigger?: React.ReactNode;
+  filament?: Filament;
 }
 
-export function ExportOptionsModal({ settings, filamentImage, trigger }: ExportOptionsModalProps) {
+export function ExportOptionsModal({ settings, filamentImage, trigger, filament }: ExportOptionsModalProps) {
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState<string | null>(null);
+
+  const handleFullDataExport = () => {
+    if (!filament) {
+      toast.error('Filament data not available');
+      return;
+    }
+    setExporting('fulldata');
+    
+    try {
+      exportFilamentToFullCSV(filament);
+      toast.success(`Exported all ${FILAMENT_FIELD_MAPPINGS.length} fields to CSV`);
+    } catch (error) {
+      toast.error('Failed to export data');
+      console.error('Export error:', error);
+    }
+    
+    setExporting(null);
+  };
 
   const handlePDFExport = () => {
     setExporting('pdf');
@@ -180,6 +203,13 @@ export function ExportOptionsModal({ settings, filamentImage, trigger }: ExportO
   };
 
   const exportOptions = [
+    ...(filament ? [{
+      id: 'fulldata',
+      icon: Database,
+      label: 'Full Data Export',
+      description: `All ${FILAMENT_FIELD_MAPPINGS.length} fields in CSV format`,
+      onClick: handleFullDataExport,
+    }] : []),
     {
       id: 'pdf',
       icon: Printer,
