@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
@@ -15,8 +16,12 @@ import {
   AlertCircle,
   Clock,
   Database,
-  TrendingUp
+  TrendingUp,
+  FileText,
+  BarChart3
 } from "lucide-react";
+import { SyncActivityLog } from "./SyncActivityLog";
+import { SyncSummaryCard } from "./SyncSummaryCard";
 
 interface DataQualityMetrics {
   totalProducts: number;
@@ -53,6 +58,7 @@ export function ElegooSyncDashboard() {
     skipProductSync: false,
     regions: ["US", "CA", "EU", "AU"],
   });
+  const [activeTab, setActiveTab] = useState("progress");
 
   // Fetch data quality metrics
   const fetchMetrics = async () => {
@@ -115,7 +121,7 @@ export function ElegooSyncDashboard() {
         if (phase === 'regions') {
           progressPercent = Math.round((regionsProcessed / totalRegions) * 60); // 0-60% for regions
         } else if (phase === 'images') {
-          progressPercent = 70; // 70% during image fix
+          progressPercent = 60 + Math.round((progress?.imagesFixed || 0) / Math.max(progress?.total || 1, 1) * 25); // 60-85%
         } else if (phase === 'quality') {
           progressPercent = 90; // 90% during quality check
         }
@@ -126,6 +132,11 @@ export function ElegooSyncDashboard() {
           progress: progressPercent,
           jobId: data.id,
         });
+        
+        // Auto-switch to activity log when running
+        if (activeTab === "summary") {
+          setActiveTab("activity");
+        }
       } else {
         // Get last completed sync
         const { data: lastJob } = await supabase
@@ -137,12 +148,20 @@ export function ElegooSyncDashboard() {
           .limit(1)
           .maybeSingle();
 
+        const wasRunning = syncStatus.isRunning;
+        
         setSyncStatus({
           isRunning: false,
           phase: "idle",
           progress: 0,
           lastSync: lastJob?.completed_at,
+          jobId: lastJob?.id,
         });
+        
+        // Auto-switch to summary when job completes
+        if (wasRunning && lastJob) {
+          setActiveTab("summary");
+        }
       }
     } catch (err) {
       console.error("Failed to check sync status:", err);
@@ -159,7 +178,7 @@ export function ElegooSyncDashboard() {
         checkSyncStatus();
         fetchMetrics();
       }
-    }, 5000);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [syncStatus.isRunning]);
@@ -187,9 +206,14 @@ export function ElegooSyncDashboard() {
       setSyncStatus({
         isRunning: !options.dryRun,
         phase: "starting",
-        progress: 10,
+        progress: 5,
         jobId: data?.jobId,
       });
+      
+      // Switch to activity log
+      if (!options.dryRun) {
+        setActiveTab("activity");
+      }
 
       // Refresh metrics after sync
       setTimeout(fetchMetrics, 2000);
@@ -337,6 +361,9 @@ export function ElegooSyncDashboard() {
               <Badge>{syncStatus.phase}</Badge>
             </div>
             <Progress value={syncStatus.progress} className="h-2" />
+            <div className="text-xs text-muted-foreground">
+              {syncStatus.progress}% complete
+            </div>
           </div>
         )}
 
@@ -425,6 +452,33 @@ export function ElegooSyncDashboard() {
             Scrape Variant Images
           </Button>
         </div>
+
+        {/* Activity Log & Summary Tabs */}
+        {syncStatus.jobId && (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="activity" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Activity Log
+              </TabsTrigger>
+              <TabsTrigger value="summary" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Summary
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="activity" className="mt-4">
+              <SyncActivityLog 
+                jobId={syncStatus.jobId} 
+                maxHeight="350px"
+              />
+            </TabsContent>
+            
+            <TabsContent value="summary" className="mt-4">
+              <SyncSummaryCard jobId={syncStatus.jobId} />
+            </TabsContent>
+          </Tabs>
+        )}
 
         {/* Tips */}
         <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t">

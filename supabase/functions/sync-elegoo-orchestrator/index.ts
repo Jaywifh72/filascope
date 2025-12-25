@@ -11,6 +11,42 @@ const corsHeaders = {
 };
 
 /**
+ * Log an activity entry to the sync_activity_log table
+ */
+async function logActivity(
+  supabase: any,
+  jobId: string,
+  phase: string,
+  action: string,
+  level: 'info' | 'warning' | 'error' | 'success' = 'info',
+  details?: {
+    region?: string;
+    productId?: string;
+    productTitle?: string;
+    oldValue?: any;
+    newValue?: any;
+    count?: number;
+    message?: string;
+    [key: string]: any;
+  }
+): Promise<void> {
+  try {
+    await supabase.from('sync_activity_log').insert({
+      job_id: jobId,
+      phase,
+      region: details?.region || null,
+      action,
+      product_id: details?.productId || null,
+      product_title: details?.productTitle || null,
+      details: details ? JSON.parse(JSON.stringify(details)) : null,
+      level,
+    });
+  } catch (err) {
+    console.error(`[ELEGOO-ORCHESTRATOR] Failed to log activity: ${err}`);
+  }
+}
+
+/**
  * Orchestrator for Elegoo product sync - processes regions sequentially
  * and tracks progress in the scrape_jobs table for live updates.
  * 
@@ -113,6 +149,15 @@ serve(async (req) => {
       }
 
       console.log(`[ELEGOO-ORCHESTRATOR] Created job ${job.id} for ${regions.length} regions`);
+
+      // Log job start
+      await logActivity(supabase, job.id, 'regions', 'job_started', 'info', {
+        message: `Starting full sync for ${regions.length} regions`,
+        regions,
+        dryRun,
+        runImageFix,
+        runQualityCheck,
+      });
 
       // Store sync state
       const syncState: SyncState = {
@@ -246,6 +291,12 @@ async function processRegionPhase(supabase: any, state: SyncState): Promise<void
   const completedRegions = regions.slice(0, currentIndex);
   
   console.log(`[ELEGOO-ORCHESTRATOR] Processing region ${currentIndex + 1}/${regions.length}: ${region}`);
+  
+  // Log region start
+  await logActivity(supabase, jobId, 'regions', 'region_started', 'info', {
+    region,
+    message: `Starting sync for region ${region} (${currentIndex + 1}/${regions.length})`,
+  });
 
   // Update job progress - starting region
   await supabase.from('scrape_jobs').update({
@@ -302,6 +353,16 @@ async function processRegionPhase(supabase: any, state: SyncState): Promise<void
     };
     
     console.log(`[ELEGOO-ORCHESTRATOR] Completed ${region}: created=${result.summary.created}, updated=${result.summary.updated}`);
+    
+    // Log region completion
+    await logActivity(supabase, jobId, 'regions', 'region_completed', 'success', {
+      region,
+      message: `Completed region ${region}`,
+      created: result.summary.created || 0,
+      updated: result.summary.updated || 0,
+      skipped: result.summary.skipped || 0,
+      errors: result.summary.errors || 0,
+    });
   } else if (!result.success) {
     state.results.errors++;
     state.results.regionResults[region] = {
@@ -310,6 +371,13 @@ async function processRegionPhase(supabase: any, state: SyncState): Promise<void
       errors: 1,
     };
     console.error(`[ELEGOO-ORCHESTRATOR] Failed to sync ${region}: ${result.error}`);
+    
+    // Log region failure
+    await logActivity(supabase, jobId, 'regions', 'region_failed', 'error', {
+      region,
+      message: `Failed to sync region ${region}`,
+      error: result.error,
+    });
   }
 
   // Move to next region
@@ -355,6 +423,11 @@ async function processRegionPhase(supabase: any, state: SyncState): Promise<void
 async function processImagePhase(supabase: any, state: SyncState): Promise<void> {
   console.log(`[ELEGOO-ORCHESTRATOR] Starting image fix phase for job ${state.jobId}`);
 
+  // Log image phase start
+  await logActivity(supabase, state.jobId, 'images', 'phase_started', 'info', {
+    message: 'Starting image fix phase to match color-specific product images',
+  });
+
   // Update progress to indicate image fix is starting
   await supabase.from('scrape_jobs').update({
     progress: {
@@ -386,7 +459,7 @@ async function processImagePhase(supabase: any, state: SyncState): Promise<void>
   }, 30000); // Every 30 seconds
 
   try {
-    // Call fix-elegoo-images
+    // Call fix-elegoo-images with jobId for detailed logging
     const fixImagesUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/fix-elegoo-images`;
     const response = await fetch(fixImagesUrl, {
       method: 'POST',
@@ -397,6 +470,7 @@ async function processImagePhase(supabase: any, state: SyncState): Promise<void>
       body: JSON.stringify({
         dryRun: false,
         limit: 500,
+        jobId: state.jobId, // Pass jobId for detailed logging
       }),
     });
 
@@ -404,13 +478,22 @@ async function processImagePhase(supabase: any, state: SyncState): Promise<void>
 
     if (result.success) {
       state.results.imagesFixed = result.stats?.updated || 0;
-      state.results.imagesFailed = result.stats?.failed || 0;
+      state.results.imagesFailed = result.stats?.errors || result.stats?.failed || 0;
       state.results.regionResults['image_fix'] = {
         created: 0,
         updated: result.stats?.updated || 0,
-        errors: result.stats?.failed || 0,
+        errors: result.stats?.errors || result.stats?.failed || 0,
       };
       console.log(`[ELEGOO-ORCHESTRATOR] Image fix completed: ${state.results.imagesFixed} updated, ${state.results.imagesFailed} failed`);
+      
+      // Log image phase completion
+      await logActivity(supabase, state.jobId, 'images', 'phase_completed', 'success', {
+        message: `Image fix completed`,
+        updated: state.results.imagesFixed,
+        skipped: result.stats?.skipped || 0,
+        errors: state.results.imagesFailed,
+        productLinesProcessed: result.stats?.productLinesProcessed || 0,
+      });
     } else {
       console.error(`[ELEGOO-ORCHESTRATOR] Image fix failed: ${result.error}`);
       state.results.imagesFailed++;
@@ -419,6 +502,12 @@ async function processImagePhase(supabase: any, state: SyncState): Promise<void>
         updated: 0,
         errors: 1,
       };
+      
+      // Log image phase failure
+      await logActivity(supabase, state.jobId, 'images', 'phase_failed', 'error', {
+        message: `Image fix phase failed`,
+        error: result.error,
+      });
     }
 
     // Update progress with image fix results
@@ -440,6 +529,7 @@ async function processImagePhase(supabase: any, state: SyncState): Promise<void>
     }).eq('id', state.jobId);
 
   } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
     console.error(`[ELEGOO-ORCHESTRATOR] Image fix error:`, err);
     state.results.imagesFailed++;
     state.results.regionResults['image_fix'] = {
@@ -447,6 +537,12 @@ async function processImagePhase(supabase: any, state: SyncState): Promise<void>
       updated: 0,
       errors: 1,
     };
+    
+    // Log image phase error
+    await logActivity(supabase, state.jobId, 'images', 'phase_error', 'error', {
+      message: `Image fix phase encountered an error`,
+      error: errorMsg,
+    });
   } finally {
     // Clear heartbeat interval
     clearInterval(heartbeatInterval);
@@ -461,6 +557,11 @@ async function processImagePhase(supabase: any, state: SyncState): Promise<void>
  */
 async function processQualityPhase(supabase: any, state: SyncState): Promise<void> {
   console.log(`[ELEGOO-ORCHESTRATOR] Starting quality check phase for job ${state.jobId}`);
+
+  // Log quality phase start
+  await logActivity(supabase, state.jobId, 'quality', 'phase_started', 'info', {
+    message: 'Starting data quality check',
+  });
 
   // Update progress
   await supabase.from('scrape_jobs').update({
@@ -489,6 +590,16 @@ async function processQualityPhase(supabase: any, state: SyncState): Promise<voi
   const withUSUrl = qualityMetrics?.filter((f: any) => f.product_url).length || 0;
   const withPrice = qualityMetrics?.filter((f: any) => f.variant_price).length || 0;
 
+  const qualityStats = {
+    totalProducts,
+    withImages,
+    withUSUrl,
+    withPrice,
+    imageCoverage: totalProducts > 0 ? Math.round((withImages / totalProducts) * 100) : 0,
+    urlCoverage: totalProducts > 0 ? Math.round((withUSUrl / totalProducts) * 100) : 0,
+    priceCoverage: totalProducts > 0 ? Math.round((withPrice / totalProducts) * 100) : 0,
+  };
+
   state.results.regionResults['quality_check'] = {
     created: 0,
     updated: 0,
@@ -496,6 +607,26 @@ async function processQualityPhase(supabase: any, state: SyncState): Promise<voi
   };
 
   console.log(`[ELEGOO-ORCHESTRATOR] Quality check: ${totalProducts} products, ${withImages} with images, ${withUSUrl} with URLs`);
+
+  // Log quality check results
+  await logActivity(supabase, state.jobId, 'quality', 'phase_completed', 'success', {
+    message: `Quality check completed`,
+    ...qualityStats,
+  });
+
+  // Log warnings for low coverage
+  if (qualityStats.imageCoverage < 80) {
+    await logActivity(supabase, state.jobId, 'quality', 'warning', 'warning', {
+      message: `Image coverage is only ${qualityStats.imageCoverage}%`,
+      missing: totalProducts - withImages,
+    });
+  }
+  if (qualityStats.urlCoverage < 80) {
+    await logActivity(supabase, state.jobId, 'quality', 'warning', 'warning', {
+      message: `URL coverage is only ${qualityStats.urlCoverage}%`,
+      missing: totalProducts - withUSUrl,
+    });
+  }
 
   // Complete the job
   state.phase = 'completed';
@@ -596,6 +727,21 @@ async function completeJob(supabase: any, state: SyncState, error?: string): Pro
   console.log(`  - Updated: ${state.results.updated}`);
   console.log(`  - Errors: ${state.results.errors}`);
   console.log(`  - Images fixed: ${state.results.imagesFixed}`);
+
+  // Log job completion
+  await logActivity(supabase, state.jobId, 'completed', error ? 'job_failed' : 'job_completed', error ? 'error' : 'success', {
+    message: error ? `Sync failed: ${error}` : 'Full sync completed successfully',
+    created: state.results.created,
+    updated: state.results.updated,
+    skipped: state.results.skipped,
+    filtered: state.results.filtered,
+    errors: state.results.errors,
+    imagesFixed: state.results.imagesFixed,
+    imagesFailed: state.results.imagesFailed,
+    regions: state.regions,
+    dryRun: state.dryRun,
+    error: error || undefined,
+  });
 
   await supabase.from('scrape_jobs').update({
     status,
