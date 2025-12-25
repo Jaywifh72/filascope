@@ -12,6 +12,7 @@ interface SyncRequest {
   regions?: string[];
   tasks?: string[];
   limit?: number;
+  background?: boolean;
 }
 
 interface BrandConfig {
@@ -29,6 +30,94 @@ interface BrandConfig {
   scraping_enabled: boolean;
 }
 
+interface ProductResult {
+  productId: string;
+  title: string;
+  action: 'created' | 'updated' | 'skipped' | 'error';
+  reason?: string;
+  fields: {
+    image: boolean;
+    price: boolean;
+    tds: boolean;
+    colorHex: boolean;
+    mpn: boolean;
+    specifications: boolean;
+  };
+  price?: number;
+  compareAtPrice?: number;
+  region?: string;
+}
+
+interface SyncProgress {
+  stage: 'initializing' | 'fetching' | 'processing' | 'saving' | 'complete' | 'error';
+  currentRegion?: string;
+  currentProduct?: string;
+  productsProcessed: number;
+  totalProducts: number;
+  regionsProcessed: number;
+  totalRegions: number;
+  errors: string[];
+}
+
+// Helper to detect which fields were found for a product
+function detectFields(product: any): ProductResult['fields'] {
+  return {
+    image: !!product.imageUrl,
+    price: product.price !== null && product.price !== undefined,
+    tds: !!product.tdsUrl,
+    colorHex: !!product.colorHex,
+    mpn: !!product.mpn,
+    specifications: !!(product.nozzleTempMin || product.bedTempMin || product.netWeightG),
+  };
+}
+
+// Calculate field coverage percentages
+function calculateFieldCoverage(products: ProductResult[], total: number) {
+  if (total === 0) {
+    return {
+      images: { count: 0, percent: 0 },
+      prices: { count: 0, percent: 0 },
+      tds: { count: 0, percent: 0 },
+      colors: { count: 0, percent: 0 },
+      mpn: { count: 0, percent: 0 },
+      specifications: { count: 0, percent: 0 },
+    };
+  }
+
+  const counts = {
+    images: products.filter(p => p.fields.image).length,
+    prices: products.filter(p => p.fields.price).length,
+    tds: products.filter(p => p.fields.tds).length,
+    colors: products.filter(p => p.fields.colorHex).length,
+    mpn: products.filter(p => p.fields.mpn).length,
+    specifications: products.filter(p => p.fields.specifications).length,
+  };
+
+  return {
+    images: { count: counts.images, percent: Math.round((counts.images / total) * 100) },
+    prices: { count: counts.prices, percent: Math.round((counts.prices / total) * 100) },
+    tds: { count: counts.tds, percent: Math.round((counts.tds / total) * 100) },
+    colors: { count: counts.colors, percent: Math.round((counts.colors / total) * 100) },
+    mpn: { count: counts.mpn, percent: Math.round((counts.mpn / total) * 100) },
+    specifications: { count: counts.specifications, percent: Math.round((counts.specifications / total) * 100) },
+  };
+}
+
+// Update progress in the sync log
+async function updateProgress(supabase: any, jobId: string, progress: SyncProgress, products?: ProductResult[]) {
+  if (!jobId) return;
+  
+  await supabase
+    .from('brand_sync_logs')
+    .update({
+      products_processed: {
+        progress,
+        products: products?.slice(-100) || [], // Keep last 100 products for display
+      },
+    })
+    .eq('id', jobId);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -40,7 +129,7 @@ Deno.serve(async (req) => {
 
   try {
     const body: SyncRequest = await req.json();
-    const { brandSlug, dryRun = true, materialFilter, regions, tasks = ['products'], limit = 100 } = body;
+    const { brandSlug, dryRun = true, materialFilter, regions, tasks = ['products'], limit = 100, background = false } = body;
 
     if (!brandSlug) {
       return new Response(
@@ -49,7 +138,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[sync-brand-products] Starting sync for ${brandSlug}`, { dryRun, tasks, limit });
+    const startTime = Date.now();
+    console.log(`[sync-brand-products] Starting sync for ${brandSlug}`, { dryRun, tasks, limit, background });
 
     // Get brand configuration from database
     const { data: brand, error: brandError } = await supabase
@@ -73,7 +163,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create sync log entry
+    // Create sync log entry with initial progress
+    const initialProgress: SyncProgress = {
+      stage: 'initializing',
+      productsProcessed: 0,
+      totalProducts: 0,
+      regionsProcessed: 0,
+      totalRegions: (regions || brand.supported_regions || ['US']).length,
+      errors: [],
+    };
+
     const { data: syncLog, error: logError } = await supabase
       .from('brand_sync_logs')
       .insert({
@@ -82,6 +181,7 @@ Deno.serve(async (req) => {
         sync_type: tasks.join(','),
         status: 'running',
         triggered_by: 'manual',
+        products_processed: { progress: initialProgress, products: [] },
       })
       .select('id')
       .single();
@@ -97,160 +197,265 @@ Deno.serve(async (req) => {
       .from('automated_brands')
       .update({ 
         scraping_active: true,
-        scrape_timeout_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 min timeout
+        scrape_timeout_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
       })
       .eq('brand_slug', brandSlug);
 
-    // Determine which scraper to use based on platform
-    let scrapedProducts: any[] = [];
-    let scrapingError: string | null = null;
+    // Main sync function
+    async function performSync() {
+      let scrapedProducts: any[] = [];
+      let processedProducts: ProductResult[] = [];
+      let scrapingError: string | null = null;
+      const regionBreakdown: any[] = [];
+      const syncRegions = regions || brand.supported_regions || ['US'];
 
-    try {
-      switch (brand.platform_type) {
-        case 'shopify':
-          scrapedProducts = await scrapeShopify(brand, materialFilter, limit);
-          break;
-        case 'woocommerce':
-          scrapedProducts = await scrapeWooCommerce(brand, materialFilter, limit);
-          break;
-        case 'firecrawl':
-          scrapedProducts = await scrapeFirecrawl(brand, materialFilter, limit);
-          break;
-        case 'amazon':
-          // Amazon requires special handling - return info about existing products
-          scrapedProducts = await getAmazonProducts(supabase, brand.brand_name, limit);
-          break;
-        case 'bigcommerce':
-          scrapedProducts = await scrapeBigCommerce(brand, materialFilter, limit);
-          break;
-        default:
-          scrapingError = `Unsupported platform: ${brand.platform_type}`;
+      const progress: SyncProgress = {
+        stage: 'fetching',
+        productsProcessed: 0,
+        totalProducts: 0,
+        regionsProcessed: 0,
+        totalRegions: syncRegions.length,
+        errors: [],
+      };
+
+      try {
+        // Update progress to fetching
+        await updateProgress(supabase, jobId, progress);
+
+        switch (brand.platform_type) {
+          case 'shopify':
+            scrapedProducts = await scrapeShopify(brand, materialFilter, limit);
+            break;
+          case 'woocommerce':
+            scrapedProducts = await scrapeWooCommerce(brand, materialFilter, limit);
+            break;
+          case 'firecrawl':
+            scrapedProducts = await scrapeFirecrawl(brand, materialFilter, limit);
+            break;
+          case 'amazon':
+            scrapedProducts = await getAmazonProducts(supabase, brand.brand_name, limit);
+            break;
+          case 'bigcommerce':
+            scrapedProducts = await scrapeBigCommerce(brand, materialFilter, limit);
+            break;
+          default:
+            scrapingError = `Unsupported platform: ${brand.platform_type}`;
+        }
+      } catch (err) {
+        scrapingError = err instanceof Error ? err.message : 'Unknown scraping error';
+        console.error(`[sync-brand-products] Scraping error for ${brandSlug}:`, err);
+        progress.errors.push(scrapingError);
       }
-    } catch (err) {
-      scrapingError = err instanceof Error ? err.message : 'Unknown scraping error';
-      console.error(`[sync-brand-products] Scraping error for ${brandSlug}:`, err);
-    }
 
-    // Process scraped products
-    let summary = { created: 0, updated: 0, skipped: 0, errors: 0, total: scrapedProducts.length };
+      // Update progress with total count
+      progress.stage = 'processing';
+      progress.totalProducts = scrapedProducts.length;
+      await updateProgress(supabase, jobId, progress);
 
-    if (!scrapingError && !dryRun && scrapedProducts.length > 0) {
-      for (const product of scrapedProducts) {
-        try {
-          // Check if product already exists
-          const { data: existing } = await supabase
-            .from('filaments')
-            .select('id, user_override_fields')
-            .eq('product_id', product.productId)
-            .ilike('vendor', brand.brand_name)
-            .maybeSingle();
+      // Process scraped products with detailed logging
+      let summary = { created: 0, updated: 0, skipped: 0, errors: 0, total: scrapedProducts.length };
 
-          if (existing) {
-            // Update existing - respect user override fields
-            const overrideFields = existing.user_override_fields || [];
-            const updateData = buildUpdateData(product, overrideFields);
-            
-            await supabase
+      for (let i = 0; i < scrapedProducts.length; i++) {
+        const product = scrapedProducts[i];
+        const fields = detectFields(product);
+        
+        let productResult: ProductResult = {
+          productId: product.productId,
+          title: product.title,
+          action: 'skipped',
+          fields,
+          price: product.price,
+          compareAtPrice: product.compareAtPrice,
+          region: product.region || 'US',
+        };
+
+        // Update progress
+        progress.productsProcessed = i + 1;
+        progress.currentProduct = product.title?.slice(0, 50);
+        
+        if (!dryRun) {
+          try {
+            // Check if product already exists
+            const { data: existing } = await supabase
               .from('filaments')
-              .update({
-                ...updateData,
-                last_scraped_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                auto_updated: true,
-                sync_status: 'synced',
-              })
-              .eq('id', existing.id);
+              .select('id, user_override_fields')
+              .eq('product_id', product.productId)
+              .ilike('vendor', brand.brand_name)
+              .maybeSingle();
 
-            summary.updated++;
-          } else {
-            // Create new filament
-            await supabase
-              .from('filaments')
-              .insert({
-                product_id: product.productId,
-                product_title: product.title,
-                vendor: brand.brand_name,
-                brand_id: brand.id,
-                variant_price: product.price,
-                variant_compare_at_price: product.compareAtPrice,
-                variant_available: product.available ?? true,
-                product_url: product.url,
-                featured_image: product.imageUrl,
-                mpn: product.mpn,
-                tds_url: product.tdsUrl,
-                color_hex: product.colorHex,
-                nozzle_temp_min_c: product.nozzleTempMin,
-                nozzle_temp_max_c: product.nozzleTempMax,
-                bed_temp_min_c: product.bedTempMin,
-                bed_temp_max_c: product.bedTempMax,
-                diameter_nominal_mm: product.diameterMm ?? 1.75,
-                net_weight_g: product.netWeightG,
-                material: product.material,
-                auto_created: true,
-                auto_updated: true,
-                last_scraped_at: new Date().toISOString(),
-                sync_status: 'synced',
-              });
+            if (existing) {
+              // Update existing
+              const overrideFields = existing.user_override_fields || [];
+              const updateData = buildUpdateData(product, overrideFields);
+              
+              const { error: updateError } = await supabase
+                .from('filaments')
+                .update({
+                  ...updateData,
+                  last_scraped_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                  auto_updated: true,
+                  sync_status: 'synced',
+                })
+                .eq('id', existing.id);
 
-            summary.created++;
+              if (updateError) throw updateError;
+              productResult.action = 'updated';
+              summary.updated++;
+            } else {
+              // Create new filament
+              const { error: insertError } = await supabase
+                .from('filaments')
+                .insert({
+                  product_id: product.productId,
+                  product_title: product.title,
+                  vendor: brand.brand_name,
+                  brand_id: brand.id,
+                  variant_price: product.price,
+                  variant_compare_at_price: product.compareAtPrice,
+                  variant_available: product.available ?? true,
+                  product_url: product.url,
+                  featured_image: product.imageUrl,
+                  mpn: product.mpn,
+                  tds_url: product.tdsUrl,
+                  color_hex: product.colorHex,
+                  nozzle_temp_min_c: product.nozzleTempMin,
+                  nozzle_temp_max_c: product.nozzleTempMax,
+                  bed_temp_min_c: product.bedTempMin,
+                  bed_temp_max_c: product.bedTempMax,
+                  diameter_nominal_mm: product.diameterMm ?? 1.75,
+                  net_weight_g: product.netWeightG,
+                  material: product.material,
+                  auto_created: true,
+                  auto_updated: true,
+                  last_scraped_at: new Date().toISOString(),
+                  sync_status: 'synced',
+                });
+
+              if (insertError) throw insertError;
+              productResult.action = 'created';
+              summary.created++;
+            }
+          } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+            console.error(`[sync-brand-products] Error processing product ${product.productId}:`, err);
+            productResult.action = 'error';
+            productResult.reason = errorMsg;
+            progress.errors.push(`${product.title}: ${errorMsg}`);
+            summary.errors++;
           }
-        } catch (err) {
-          console.error(`[sync-brand-products] Error processing product ${product.productId}:`, err);
-          summary.errors++;
+        } else {
+          // Dry run - mark as would be created/updated
+          productResult.action = 'skipped';
+          productResult.reason = 'Dry run mode';
+          summary.skipped++;
+        }
+
+        processedProducts.push(productResult);
+
+        // Update progress every 10 products
+        if (i % 10 === 0 || i === scrapedProducts.length - 1) {
+          await updateProgress(supabase, jobId, progress, processedProducts);
         }
       }
-    }
 
-    // Update sync log and brand stats
-    const duration = 0; // Would calculate actual duration
-    
-    if (jobId) {
+      // Calculate field coverage
+      const fieldCoverage = calculateFieldCoverage(processedProducts, scrapedProducts.length);
+
+      // Update progress to complete
+      progress.stage = scrapingError ? 'error' : 'complete';
+      progress.regionsProcessed = syncRegions.length;
+
+      const duration = Date.now() - startTime;
+
+      // Update sync log with final results
+      if (jobId) {
+        await supabase
+          .from('brand_sync_logs')
+          .update({
+            status: scrapingError ? 'failed' : 'completed',
+            completed_at: new Date().toISOString(),
+            duration_seconds: Math.round(duration / 1000),
+            products_discovered: scrapedProducts.length,
+            products_created: summary.created,
+            products_updated: summary.updated,
+            products_failed: summary.errors,
+            error_details: scrapingError ? { error: scrapingError } : null,
+            products_processed: {
+              progress,
+              products: processedProducts,
+              fieldCoverage,
+              regionBreakdown,
+            },
+          })
+          .eq('id', jobId);
+      }
+
+      // Release scraping lock and update brand stats
       await supabase
-        .from('brand_sync_logs')
+        .from('automated_brands')
         .update({
-          status: scrapingError ? 'failed' : 'completed',
-          completed_at: new Date().toISOString(),
-          products_discovered: scrapedProducts.length,
-          products_created: summary.created,
-          products_updated: summary.updated,
-          products_failed: summary.errors,
-          error_details: scrapingError ? { error: scrapingError } : null,
+          scraping_active: false,
+          scrape_timeout_at: null,
+          last_scrape_at: new Date().toISOString(),
+          next_scrape_at: new Date(Date.now() + (brand.scrape_frequency_hours || 12) * 60 * 60 * 1000).toISOString(),
+          total_scrapes: (brand.total_scrapes || 0) + 1,
+          successful_scrapes: scrapingError ? brand.successful_scrapes : (brand.successful_scrapes || 0) + 1,
+          failed_scrapes: scrapingError ? (brand.failed_scrapes || 0) + 1 : brand.failed_scrapes,
+          last_error: scrapingError || null,
+          last_error_at: scrapingError ? new Date().toISOString() : brand.last_error_at,
         })
-        .eq('id', jobId);
-    }
+        .eq('brand_slug', brandSlug);
 
-    // Release scraping lock and update brand stats
-    await supabase
-      .from('automated_brands')
-      .update({
-        scraping_active: false,
-        scrape_timeout_at: null,
-        last_scrape_at: new Date().toISOString(),
-        next_scrape_at: new Date(Date.now() + (brand.scrape_frequency_hours || 12) * 60 * 60 * 1000).toISOString(),
-        total_scrapes: (brand.total_scrapes || 0) + 1,
-        successful_scrapes: scrapingError ? brand.successful_scrapes : (brand.successful_scrapes || 0) + 1,
-        failed_scrapes: scrapingError ? (brand.failed_scrapes || 0) + 1 : brand.failed_scrapes,
-        last_error: scrapingError || null,
-        last_error_at: scrapingError ? new Date().toISOString() : brand.last_error_at,
-      })
-      .eq('brand_slug', brandSlug);
+      // Update product counts
+      await supabase.rpc('update_brand_product_counts', { p_brand_slug: brandSlug });
 
-    // Update product counts
-    await supabase.rpc('update_brand_product_counts', { p_brand_slug: brandSlug });
+      console.log(`[sync-brand-products] Completed sync for ${brandSlug}`, summary);
 
-    console.log(`[sync-brand-products] Completed sync for ${brandSlug}`, summary);
-
-    return new Response(
-      JSON.stringify({
+      return {
         success: !scrapingError,
         jobId,
         dryRun,
         brandSlug,
         platform: brand.platform_type,
         message: scrapingError || `Synced ${summary.total} products`,
-        summary,
-        products: dryRun ? scrapedProducts.slice(0, 10) : undefined, // Preview first 10 in dry run
-      }),
+        summary: {
+          totalDiscovered: summary.total,
+          created: summary.created,
+          updated: summary.updated,
+          skipped: summary.skipped,
+          errors: summary.errors,
+        },
+        products: processedProducts,
+        fieldCoverage,
+        regionBreakdown,
+        duration_ms: duration,
+        startedAt: new Date(startTime).toISOString(),
+        completedAt: new Date().toISOString(),
+      };
+    }
+
+    // If background mode, use waitUntil and return immediately
+    if (background) {
+      // @ts-ignore - EdgeRuntime exists in Supabase edge functions
+      EdgeRuntime.waitUntil(performSync());
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          jobId,
+          message: `Started background sync for ${brandSlug}`,
+          status: 'running',
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Synchronous mode - wait for completion
+    const result = await performSync();
+    
+    return new Response(
+      JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
