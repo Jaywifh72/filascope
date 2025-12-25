@@ -339,7 +339,7 @@ function StatCard({
         {label}
       </div>
       <div className={cn("text-xl font-semibold", color)}>
-        {value.toLocaleString()}
+        {(value ?? 0).toLocaleString()}
       </div>
     </div>
   );
