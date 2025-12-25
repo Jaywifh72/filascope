@@ -218,3 +218,6 @@ verify_jwt = true
 
 [functions.elegoo-full-sync]
 verify_jwt = true
+
+[functions.generate-filament-csv]
+verify_jwt = true
