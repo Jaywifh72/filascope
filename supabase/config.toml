@@ -221,3 +221,6 @@ verify_jwt = true
 
 [functions.generate-filament-csv]
 verify_jwt = true
+
+[functions.sync-brand-products]
+verify_jwt = false

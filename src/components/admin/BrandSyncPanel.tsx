@@ -1,0 +1,192 @@
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Loader2, Play, RefreshCw, ExternalLink, Image, FileText, Palette, DollarSign, Barcode } from "lucide-react";
+import { useBrandSync } from "@/hooks/useBrandSync";
+import { useBrandDataQuality } from "@/hooks/useBrandDataQuality";
+import { formatDistanceToNow } from "date-fns";
+
+interface BrandSyncPanelProps {
+  brand: {
+    brand_slug: string;
+    brand_name: string;
+    display_name: string;
+    platform_type: string;
+    base_url: string;
+    product_count: number | null;
+    products_with_prices: number | null;
+    products_with_images: number | null;
+    products_with_tds: number | null;
+    products_with_color_hex: number | null;
+    products_with_mpn: number | null;
+    products_with_codes: number | null;
+    last_scrape_at: string | null;
+    scraping_enabled: boolean | null;
+    scraping_active: boolean | null;
+  };
+  onSyncComplete?: () => void;
+}
+
+const PLATFORM_COLORS: Record<string, string> = {
+  shopify: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  woocommerce: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  bigcommerce: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  amazon: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+  firecrawl: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+};
+
+export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
+  const [dryRun, setDryRun] = useState(true);
+  const { syncBrand, isLoading } = useBrandSync();
+  const { data: quality, isLoading: qualityLoading } = useBrandDataQuality(brand.brand_slug);
+
+  const handleSync = async () => {
+    const result = await syncBrand({
+      brandSlug: brand.brand_slug,
+      dryRun,
+      tasks: ['products'],
+    });
+
+    if (result.success && onSyncComplete) {
+      onSyncComplete();
+    }
+  };
+
+  const total = brand.product_count || 0;
+  const completeness = quality?.completenessScore ?? 0;
+
+  const stats = [
+    { 
+      label: 'Prices', 
+      value: brand.products_with_prices || 0, 
+      icon: DollarSign,
+      color: 'text-green-600 dark:text-green-400'
+    },
+    { 
+      label: 'Images', 
+      value: brand.products_with_images || 0, 
+      icon: Image,
+      color: 'text-blue-600 dark:text-blue-400'
+    },
+    { 
+      label: 'TDS', 
+      value: brand.products_with_tds || 0, 
+      icon: FileText,
+      color: 'text-purple-600 dark:text-purple-400'
+    },
+    { 
+      label: 'Colors', 
+      value: brand.products_with_color_hex || 0, 
+      icon: Palette,
+      color: 'text-pink-600 dark:text-pink-400'
+    },
+    { 
+      label: 'MPN', 
+      value: brand.products_with_mpn || 0, 
+      icon: Barcode,
+      color: 'text-orange-600 dark:text-orange-400'
+    },
+  ];
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-lg">{brand.display_name}</CardTitle>
+            <Badge className={PLATFORM_COLORS[brand.platform_type] || 'bg-muted'}>
+              {brand.platform_type}
+            </Badge>
+            {brand.scraping_active && (
+              <Badge variant="outline" className="animate-pulse">
+                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                Syncing
+              </Badge>
+            )}
+          </div>
+          <a 
+            href={brand.base_url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        </div>
+        <CardDescription className="flex items-center gap-4 mt-1">
+          <span>{total} products</span>
+          {brand.last_scrape_at && (
+            <span className="text-xs">
+              Last sync: {formatDistanceToNow(new Date(brand.last_scrape_at), { addSuffix: true })}
+            </span>
+          )}
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Data Quality Progress */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Data Completeness</span>
+            <span className="font-medium">{completeness}%</span>
+          </div>
+          <Progress value={completeness} className="h-2" />
+        </div>
+
+        {/* Field Coverage Stats */}
+        <div className="grid grid-cols-5 gap-2">
+          {stats.map(stat => {
+            const percentage = total > 0 ? Math.round((stat.value / total) * 100) : 0;
+            return (
+              <div 
+                key={stat.label} 
+                className="flex flex-col items-center p-2 rounded-lg bg-muted/50"
+              >
+                <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                <span className="text-xs font-medium mt-1">{percentage}%</span>
+                <span className="text-xs text-muted-foreground">{stat.label}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Sync Controls */}
+        <div className="flex items-center justify-between pt-2 border-t">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id={`dry-run-${brand.brand_slug}`}
+              checked={dryRun}
+              onCheckedChange={(checked) => setDryRun(checked === true)}
+            />
+            <Label 
+              htmlFor={`dry-run-${brand.brand_slug}`} 
+              className="text-sm font-normal cursor-pointer"
+            >
+              Dry run
+            </Label>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSync}
+              disabled={isLoading || brand.scraping_active}
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-1" />
+              )}
+              Sync
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
