@@ -63,14 +63,25 @@ export function ElegooSyncDashboard() {
   // Fetch data quality metrics
   const fetchMetrics = async () => {
     try {
+      // Get exact total count first
+      const { count: totalCount, error: countError } = await supabase
+        .from("filaments")
+        .select("*", { count: "exact", head: true })
+        .eq("vendor", "Elegoo");
+
+      if (countError) throw countError;
+
+      const total = totalCount || 0;
+
+      // Fetch all products with extended range (up to 2000)
       const { data, error } = await supabase
         .from("filaments")
         .select("id, featured_image, product_url, product_url_ca, product_url_eu, product_url_au, variant_price")
-        .eq("vendor", "Elegoo");
+        .eq("vendor", "Elegoo")
+        .range(0, 1999); // Fetch up to 2000 products
 
       if (error) throw error;
 
-      const total = data?.length || 0;
       const withImages = data?.filter(f => f.featured_image).length || 0;
       const withUSUrl = data?.filter(f => f.product_url).length || 0;
       const withCAUrl = data?.filter(f => f.product_url_ca).length || 0;
