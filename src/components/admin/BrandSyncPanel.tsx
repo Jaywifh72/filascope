@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,8 @@ import {
   History,
   CheckCircle2,
   XCircle,
-  Clock
+  Clock,
+  Globe
 } from "lucide-react";
 import { useBrandSync } from "@/hooks/useBrandSync";
 import { useBrandDataQuality } from "@/hooks/useBrandDataQuality";
@@ -31,6 +32,7 @@ import { useBrandSyncJob, useRecentBrandSyncJobs } from "@/hooks/useBrandSyncJob
 import { BrandSyncResultPanel } from "./BrandSyncResultPanel";
 import { BrandSyncResult } from "@/types/brand-sync";
 import { formatDistanceToNow, format } from "date-fns";
+import { REGION_FLAGS, type RegionCode } from "@/lib/brandRegionalAvailability";
 
 interface BrandSyncPanelProps {
   brand: {
@@ -69,10 +71,30 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
   const [showHistory, setShowHistory] = useState(false);
   const [syncResult, setSyncResult] = useState<BrandSyncResult | null>(null);
   
+  // Multi-region support
+  const supportedRegions = (brand.supported_regions || ['US']) as RegionCode[];
+  const [selectedRegions, setSelectedRegions] = useState<RegionCode[]>(supportedRegions);
+  
   const { syncBrand, isLoading, currentJobId } = useBrandSync();
   const { data: quality, isLoading: qualityLoading } = useBrandDataQuality(brand.brand_slug);
   const { job, isRunning: jobRunning, progressPercent } = useBrandSyncJob(currentJobId);
   const { jobs: recentJobs, isLoading: jobsLoading } = useRecentBrandSyncJobs(brand.brand_slug, 5);
+
+  const toggleRegion = useCallback((region: RegionCode) => {
+    setSelectedRegions(prev => 
+      prev.includes(region)
+        ? prev.filter(r => r !== region)
+        : [...prev, region]
+    );
+  }, []);
+
+  const selectAllRegions = useCallback(() => {
+    setSelectedRegions(supportedRegions);
+  }, [supportedRegions]);
+
+  const selectNoRegions = useCallback(() => {
+    setSelectedRegions(['US']); // Always keep at least US
+  }, []);
 
   const handleSync = async () => {
     setSyncResult(null);
@@ -81,6 +103,7 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
       dryRun,
       materialFilter: materialFilter || undefined,
       tasks: ['products'],
+      regions: selectedRegions.length > 0 ? selectedRegions : undefined,
     });
 
     if (result.success && onSyncComplete) {
@@ -265,16 +288,54 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
                   className="h-8"
                 />
               </div>
-              {brand.supported_regions && brand.supported_regions.length > 1 && (
-                <div className="space-y-2">
-                  <Label className="text-sm">Regions</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {brand.supported_regions.map(region => (
-                      <Badge key={region} variant="outline" className="text-xs">
-                        {region}
-                      </Badge>
-                    ))}
+              {supportedRegions.length > 1 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm flex items-center gap-2">
+                      <Globe className="w-4 h-4" />
+                      Regions to Sync
+                    </Label>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 text-xs"
+                        onClick={selectAllRegions}
+                      >
+                        All
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 text-xs"
+                        onClick={selectNoRegions}
+                      >
+                        US Only
+                      </Button>
+                    </div>
                   </div>
+                  <div className="flex flex-wrap gap-2">
+                    {supportedRegions.map(region => {
+                      const isSelected = selectedRegions.includes(region);
+                      return (
+                        <Badge 
+                          key={region} 
+                          variant={isSelected ? "default" : "outline"}
+                          className={`cursor-pointer transition-colors ${
+                            isSelected 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                          onClick={() => toggleRegion(region)}
+                        >
+                          {REGION_FLAGS[region]} {region}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedRegions.length} of {supportedRegions.length} regions selected
+                  </p>
                 </div>
               )}
             </CollapsibleContent>
