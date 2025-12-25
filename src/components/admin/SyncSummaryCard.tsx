@@ -29,6 +29,9 @@ interface SyncJobResult {
   regions: string[];
   regionResults: Record<string, { created: number; updated: number; errors: number }>;
   dryRun: boolean;
+  // Firecrawl stats (optional, for image fix jobs)
+  firecrawlAttempts?: number;
+  firecrawlSuccesses?: number;
 }
 
 interface SyncJob {
@@ -262,6 +265,12 @@ export function SyncSummaryCard({ jobId, className }: SyncSummaryCardProps) {
                       color={results.imagesFailed > 0 ? "text-amber-500" : "text-muted-foreground"}
                     />
                   </div>
+                  {/* Firecrawl stats */}
+                  {(results.firecrawlAttempts !== undefined && results.firecrawlAttempts > 0) && (
+                    <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                      🔥 Firecrawl: {results.firecrawlSuccesses ?? 0}/{results.firecrawlAttempts} successful
+                    </div>
+                  )}
                 </div>
               </>
             )}
