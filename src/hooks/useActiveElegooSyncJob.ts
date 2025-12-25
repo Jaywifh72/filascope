@@ -50,11 +50,11 @@ export function useActiveElegooSyncJob() {
 
   const fetchActiveJob = useCallback(async () => {
     try {
-      // Look for running or recently completed Elegoo sync jobs
+      // Look for running or recently completed Elegoo sync jobs (both types)
       const { data, error } = await supabase
         .from('scrape_jobs')
         .select('*')
-        .eq('job_type', 'elegoo_sync')
+        .in('job_type', ['elegoo_sync', 'elegoo_full_sync'])
         .in('status', ['running', 'pending'])
         .order('created_at', { ascending: false })
         .limit(1)
@@ -87,7 +87,8 @@ export function useActiveElegooSyncJob() {
     let pollingInterval: NodeJS.Timeout | null = null;
     let realtimeWorking = false;
 
-    // Subscribe to realtime updates for elegoo_sync jobs
+    // Subscribe to realtime updates for elegoo sync jobs (both types)
+    // Note: Supabase filter doesn't support OR, so we filter on table and check job_type in callback
     const channel = supabase
       .channel('elegoo_sync_jobs')
       .on(
@@ -96,10 +97,15 @@ export function useActiveElegooSyncJob() {
           event: '*',
           schema: 'public',
           table: 'scrape_jobs',
-          filter: 'job_type=eq.elegoo_sync',
         },
         (payload) => {
-          console.log('[useActiveElegooSyncJob] Realtime update:', payload.eventType);
+          // Filter for elegoo sync job types in callback since Supabase doesn't support OR in filter
+          const jobType = (payload.new as any)?.job_type;
+          if (jobType !== 'elegoo_sync' && jobType !== 'elegoo_full_sync') {
+            return;
+          }
+          
+          console.log('[useActiveElegooSyncJob] Realtime update:', payload.eventType, 'job_type:', jobType);
           realtimeWorking = true;
           
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
