@@ -764,6 +764,21 @@ Deno.serve(async (req) => {
       message: dryRun 
         ? `Dry run complete. Would update ${updated} images.` 
         : `Updated ${updated} images (${firecrawlSuccesses} via Firecrawl).`,
+      // Match SyncJobResult interface expected by SyncSummaryCard
+      total: filaments.length,
+      created: 0, // Not applicable for image fix
+      updated: updated,
+      skipped: skipped,
+      filtered: 0, // Not applicable
+      errors: errors,
+      imagesFixed: updated,
+      imagesFailed: errors,
+      firecrawlAttempts,
+      firecrawlSuccesses,
+      regions: [],
+      regionResults: {},
+      dryRun: dryRun,
+      // Also keep the detailed stats for backwards compatibility
       stats: {
         processed: filaments.length,
         productHandles: productGroups.size,
