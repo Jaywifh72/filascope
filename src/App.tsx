@@ -35,6 +35,8 @@ const AdminFilaments = lazy(() => import("./pages/AdminFilaments"));
 const AdminAmazonLinks = lazy(() => import("./pages/AdminAmazonLinks"));
 const AdminFilamentAudit = lazy(() => import("./pages/AdminFilamentAudit"));
 const AdminBrands = lazy(() => import("./pages/AdminBrands"));
+const AdminBrandPipeline = lazy(() => import("./pages/AdminBrandPipeline"));
+const AdminDataHealth = lazy(() => import("./pages/AdminDataHealth"));
 const AdminBrokenLinks = lazy(() => import("./pages/AdminBrokenLinks"));
 const AdminDuplicates = lazy(() => import("./pages/AdminDuplicates"));
 const AdminScheduler = lazy(() => import("./pages/AdminScheduler"));
@@ -113,6 +115,8 @@ const App = () => (
                   <Route path="/admin/amazon-links" element={<AdminAmazonLinks />} />
                   <Route path="/admin/filament-audit" element={<AdminFilamentAudit />} />
                   <Route path="/admin/brands" element={<AdminBrands />} />
+                  <Route path="/admin/brand-pipeline" element={<AdminBrandPipeline />} />
+                  <Route path="/admin/data-health" element={<AdminDataHealth />} />
                   <Route path="/admin/broken-links" element={<AdminBrokenLinks />} />
                   <Route path="/admin/duplicates" element={<AdminDuplicates />} />
                   <Route path="/admin/scheduler" element={<AdminScheduler />} />

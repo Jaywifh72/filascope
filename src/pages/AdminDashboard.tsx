@@ -69,25 +69,15 @@ const AdminDashboard = () => {
   }
 
   const quickActions = [
-    { to: "/admin/import", icon: Upload, title: "Import Filaments", desc: "Upload filament data from CSV", color: "text-primary" },
-    { to: "/admin/printers", icon: Database, title: "Manage Printers", desc: "Printer database & pricing", color: "text-primary" },
+    { to: "/admin/brand-pipeline", icon: Building2, title: "Brand Pipeline", desc: "Unified scraping & sync", color: "text-emerald-500" },
+    { to: "/admin/data-health", icon: BarChart3, title: "Data Health", desc: "Quality & completeness", color: "text-cyan-500" },
     { to: "/admin/filaments", icon: Package, title: "Manage Filaments", desc: "Edit filament entries", color: "text-primary" },
-    { to: "/admin/maintenance?tab=elegoo", icon: ShoppingBag, title: "Elegoo Pipeline", desc: "Full sync & image enrichment", color: "text-emerald-500" },
-    { to: "/admin/maintenance", icon: Wrench, title: "Maintenance", desc: "Scraping & data tools", color: "text-cyan-500" },
-    { to: "/admin/data-quality", icon: BarChart3, title: "Data Quality", desc: "Completeness metrics", color: "text-cyan-500" },
+    { to: "/admin/printers", icon: Database, title: "Manage Printers", desc: "Printer database & pricing", color: "text-primary" },
     { to: "/admin/filament-audit", icon: ClipboardCheck, title: "Filament Audit", desc: "Quality audit & URL testing", color: "text-green-500" },
     { to: "/admin/module-analytics", icon: PieChart, title: "Module Analytics", desc: "Sidebar engagement metrics", color: "text-pink-500" },
     { to: "/admin/featured-content", icon: Star, title: "Featured Content", desc: "Curate sidebar content", color: "text-amber-500" },
-    { to: "/admin/ab-tests", icon: FlaskConical, title: "A/B Tests", desc: "Experiments & optimization", color: "text-violet-500" },
-    { to: "/admin/brands", icon: Building2, title: "Brand Management", desc: "All brands in one place", color: "text-purple-500" },
-    { to: "/admin/broken-links", icon: Link2, title: "Broken Links", desc: "URL validation & fixes", color: "text-orange-500" },
-    { to: "/admin/duplicates", icon: Copy, title: "Duplicates", desc: "Find & merge duplicates", color: "text-yellow-500" },
     { to: "/admin/scheduler", icon: Calendar, title: "Scheduler", desc: "Automated tasks & cron jobs", color: "text-indigo-500" },
-    { to: "/admin/price-anomalies", icon: DollarSign, title: "Price Anomalies", desc: "Flag suspicious pricing", color: "text-red-500" },
-    { to: "/admin/affiliates", icon: ExternalLink, title: "Affiliate Links", desc: "Configure affiliate URLs", color: "text-primary" },
-    { to: "/admin/amazon-links", icon: ShoppingCart, title: "Amazon Links", desc: "Find Amazon product links", color: "text-orange-500" },
     { to: "/admin/users", icon: Users, title: "User Management", desc: "Manage accounts & roles", color: "text-primary" },
-    { to: "/admin/enrichment", icon: TrendingUp, title: "Data Enrichment", desc: "Add missing weight data", color: "text-green-500" },
     { to: "/admin/docs", icon: FileText, title: "Documentation", desc: "Architecture & technical docs", color: "text-blue-500" },
   ];
 
