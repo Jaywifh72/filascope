@@ -167,7 +167,7 @@ async function createFilamentFromScrapedProduct(
   const diameter = extractDiameter(product.title);
   
   // Extract handle from URL
-  const urlParts = product.url.split('/');
+  const urlParts = (product.url || '').split('/');
   const handle = urlParts[urlParts.length - 1] || product.productId;
   
   const filamentData = {
@@ -202,7 +202,7 @@ async function createFilamentFromScrapedProduct(
     spool_material: product.spoolMaterial || null,
     spool_outer_d_mm: product.spoolOuterDiameterMm || null,
     spool_width_mm: product.spoolWidthMm || null,
-    ...parseBarcodeFields(product.barcode),
+    ...parseBarcodeFields(product.barcode ?? null),
   };
   
   const { error } = await supabase.from("filaments").insert(filamentData);
@@ -846,7 +846,7 @@ Deno.serve(async (req) => {
           for (const product of products) {
             // Sanitize first to fix common issues
             const sanitized = sanitizeScrapedProduct(product as unknown as Record<string, unknown>);
-            const validation = validateScrapedProduct(sanitized);
+            const validation = validateScrapedProduct(sanitized as unknown as ScrapedProduct);
             
             if (validation.valid) {
               validProducts.push(product); // Use original product (typed correctly)
