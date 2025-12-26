@@ -10,6 +10,8 @@ import {
   REGIONAL_FIELD_MAPPING,
   type RegionCode 
 } from '../_shared/filament-schema.ts';
+import { validateScrapedProduct, type ScrapedProduct } from '../_shared/scraper-validation.ts';
+import { getColorHex, getColorFamily } from '../_shared/color-mapping.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -465,6 +467,37 @@ Deno.serve(async (req) => {
           compareAtPrice: product.compareAtPrice,
           region: productRegion,
         };
+
+        // Validate scraped product before processing
+        const validation = validateScrapedProduct({
+          productId: product.productId || '',
+          title: product.title || '',
+          price: product.price || null,
+          compareAtPrice: product.compareAtPrice || null,
+          available: product.available ?? true,
+          currency: product.currency || 'USD',
+          url: product.url || '',
+          imageUrl: product.imageUrl || null,
+          material: product.material || null,
+          colorFamily: product.colorFamily || null,
+          colorHex: product.colorHex || null,
+          netWeightG: product.netWeightG || null,
+          mpn: product.mpn || null,
+          sku: product.sku || null,
+          tdsUrl: product.tdsUrl || null,
+          nozzleTempMin: product.nozzleTempMin || null,
+          nozzleTempMax: product.nozzleTempMax || null,
+          bedTempMin: product.bedTempMin || null,
+          bedTempMax: product.bedTempMax || null,
+          region: productRegion,
+        });
+        
+        if (!validation.valid) {
+          console.warn(`[sync-brand-products] Validation failed for "${product.title}":`, validation.errors);
+        }
+        if (validation.warnings.length > 0) {
+          console.log(`[sync-brand-products] Validation warnings for "${product.title}":`, validation.warnings);
+        }
 
         // Update progress
         progress.productsProcessed = i + 1;
