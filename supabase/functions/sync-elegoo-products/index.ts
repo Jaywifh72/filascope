@@ -49,11 +49,9 @@ const DEFAULT_CATALOG_ID = '25495';
 const MAX_EXECUTION_TIME_MS = 130000; // 130s to leave 20s buffer for cleanup
 const MAX_PAGES_PER_REGION = 30; // Safety limit to prevent runaway fetching
 
-// Region to currency mapping - use shared constants with Elegoo-specific additions
-const REGION_CURRENCIES: Record<string, string> = {
-  ...SHARED_REGION_CURRENCIES,
-  // Elegoo-specific overrides/additions if any
-};
+// Use shared constants directly - no Elegoo-specific overrides needed
+// NOTE: Removed local REGION_CURRENCIES merge to prevent redundancy
+// Use SHARED_REGION_CURRENCIES directly throughout this file
 
 // NOTE: Color aliases and COLOR_HEX_MAP have been moved to _shared/color-mapping.ts
 // Use getColorHex(), getColorFamily(), getColorVariants() from that module
@@ -566,7 +564,7 @@ serve(async (req) => {
                   [region]: {
                     price: product.price,
                     url: product.url,
-                    currency: REGION_CURRENCIES[region] || product.currency,
+                    currency: SHARED_REGION_CURRENCIES[region as RegionCode] || product.currency,
                   }
                 }
               });
@@ -575,7 +573,7 @@ serve(async (req) => {
               existing.regionalData[region] = {
                 price: product.price,
                 url: product.url,
-                currency: REGION_CURRENCIES[region] || product.currency,
+                currency: SHARED_REGION_CURRENCIES[region as RegionCode] || product.currency,
               };
             }
           }
