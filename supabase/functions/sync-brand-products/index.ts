@@ -8,6 +8,7 @@ import {
   getRegionalFieldMapping,
   getMainRegion,
   REGIONAL_FIELD_MAPPING,
+  REGION_CURRENCIES,
   type RegionCode 
 } from '../_shared/filament-schema.ts';
 import { validateScrapedProduct, type ScrapedProduct } from '../_shared/scraper-validation.ts';
@@ -111,14 +112,8 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
   },
 };
 
-const REGION_CURRENCIES: Record<string, string> = {
-  US: 'USD',
-  CA: 'CAD',
-  UK: 'GBP',
-  EU: 'EUR',
-  AU: 'AUD',
-  JP: 'JPY',
-};
+// Use shared REGION_CURRENCIES from filament-schema.ts via import
+// (already imported as REGIONAL_FIELD_MAPPING which includes currency info)
 
 // Get regional URL for a brand
 function getRegionalBaseUrl(brandSlug: string, region: string, defaultUrl: string): string {
@@ -416,13 +411,13 @@ Deno.serve(async (req) => {
           // Tag products with region and currency
           for (const product of regionProducts) {
             product.region = region;
-            product.currency = REGION_CURRENCIES[region] || 'USD';
+            product.currency = REGION_CURRENCIES[region as RegionCode] || 'USD';
           }
 
           // Add region breakdown
           regionBreakdown.push({
             region,
-            currency: REGION_CURRENCIES[region] || 'USD',
+            currency: REGION_CURRENCIES[region as RegionCode] || 'USD',
             productsFound: regionProducts.length,
             created: 0,
             updated: 0,

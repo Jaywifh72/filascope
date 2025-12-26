@@ -678,20 +678,27 @@ serve(async (req) => {
           // Update all variants of this product
           for (const filament of filaments) {
             if (!dryRun) {
+              // Build regional data for available_regions calculation
+              const regionalData = {
+                variant_price: regionalPrices.US || filament.variant_price,
+                price_cad: regionalPrices.CA || filament.price_cad,
+                price_gbp: regionalPrices.UK || filament.price_gbp,
+                price_eur: regionalPrices.EU || filament.price_eur,
+                price_aud: regionalPrices.AU || filament.price_aud,
+                price_jpy: regionalPrices.JP || filament.price_jpy,
+                product_url: filament.product_url,
+                product_url_ca: regionalUrls.CA,
+                product_url_uk: regionalUrls.UK,
+                product_url_eu: regionalUrls.EU,
+                product_url_au: regionalUrls.AU,
+                product_url_jp: regionalUrls.JP,
+              };
+              
               const { error: updateError } = await supabase
                 .from("filaments")
                 .update({
-                  variant_price: regionalPrices.US || filament.variant_price,
-                  price_cad: regionalPrices.CA || filament.price_cad,
-                  price_gbp: regionalPrices.UK || filament.price_gbp,
-                  price_eur: regionalPrices.EU || filament.price_eur,
-                  price_aud: regionalPrices.AU || filament.price_aud,
-                  price_jpy: regionalPrices.JP || filament.price_jpy,
-                  product_url_ca: regionalUrls.CA,
-                  product_url_uk: regionalUrls.UK,
-                  product_url_eu: regionalUrls.EU,
-                  product_url_au: regionalUrls.AU,
-                  product_url_jp: regionalUrls.JP,
+                  ...regionalData,
+                  available_regions: buildAvailableRegions(regionalData),
                   regional_prices_updated_at: new Date().toISOString(),
                 })
                 .eq("id", filament.id);
