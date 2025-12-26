@@ -1,12 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { 
+  REGIONAL_FIELD_MAPPING,
+  REGION_CURRENCIES,
+  buildAvailableRegions,
+  extractColorFamily,
+  type RegionCode 
+} from "../_shared/filament-schema.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Regional store configuration for Bambu Lab
+// Regional store configuration for Bambu Lab - extends shared schema with Bambu-specific data
 const BAMBU_REGIONAL_STORES: Record<string, { 
   subdomain: string; 
   currency: string; 
@@ -15,12 +22,12 @@ const BAMBU_REGIONAL_STORES: Record<string, {
   urlField: string;
   fallbackPrice: number; // Fallback if Firecrawl scraping fails
 }> = {
-  US: { subdomain: "us", currency: "USD", currencySymbol: "$", priceField: "variant_price", urlField: "product_url", fallbackPrice: 19.99 },
-  CA: { subdomain: "ca", currency: "CAD", currencySymbol: "C$", priceField: "price_cad", urlField: "product_url_ca", fallbackPrice: 25.99 },
-  UK: { subdomain: "uk", currency: "GBP", currencySymbol: "£", priceField: "price_gbp", urlField: "product_url_uk", fallbackPrice: 17.99 },
-  EU: { subdomain: "eu", currency: "EUR", currencySymbol: "€", priceField: "price_eur", urlField: "product_url_eu", fallbackPrice: 21.99 },
-  AU: { subdomain: "au", currency: "AUD", currencySymbol: "A$", priceField: "price_aud", urlField: "product_url_au", fallbackPrice: 29.99 },
-  JP: { subdomain: "jp", currency: "JPY", currencySymbol: "¥", priceField: "price_jpy", urlField: "product_url_jp", fallbackPrice: 2980 },
+  US: { subdomain: "us", currency: "USD", currencySymbol: "$", ...REGIONAL_FIELD_MAPPING.US, fallbackPrice: 19.99 },
+  CA: { subdomain: "ca", currency: "CAD", currencySymbol: "C$", ...REGIONAL_FIELD_MAPPING.CA, fallbackPrice: 25.99 },
+  UK: { subdomain: "uk", currency: "GBP", currencySymbol: "£", ...REGIONAL_FIELD_MAPPING.UK, fallbackPrice: 17.99 },
+  EU: { subdomain: "eu", currency: "EUR", currencySymbol: "€", ...REGIONAL_FIELD_MAPPING.EU, fallbackPrice: 21.99 },
+  AU: { subdomain: "au", currency: "AUD", currencySymbol: "A$", ...REGIONAL_FIELD_MAPPING.AU, fallbackPrice: 29.99 },
+  JP: { subdomain: "jp", currency: "JPY", currencySymbol: "¥", ...REGIONAL_FIELD_MAPPING.JP, fallbackPrice: 2980 },
 };
 
 // Firecrawl geo-location mapping for each region

@@ -5,6 +5,9 @@ import {
   generateProductLineId, 
   extractMaterial,
   buildAvailableRegions,
+  getRegionalFieldMapping,
+  getMainRegion,
+  REGIONAL_FIELD_MAPPING,
   type RegionCode 
 } from '../_shared/filament-schema.ts';
 
@@ -527,26 +530,16 @@ Deno.serve(async (req) => {
                 sync_status: 'synced',
               };
 
-              // Set regional price/URL fields based on region
-              if (productRegion === 'US') {
-                insertData.variant_price = product.price;
-                insertData.variant_compare_at_price = product.compareAtPrice;
-                insertData.product_url = product.url;
-              } else if (productRegion === 'CA') {
-                insertData.price_cad = product.price;
-                insertData.product_url_ca = product.url;
-              } else if (productRegion === 'UK') {
-                insertData.price_gbp = product.price;
-                insertData.product_url_uk = product.url;
-              } else if (productRegion === 'EU') {
-                insertData.price_eur = product.price;
-                insertData.product_url_eu = product.url;
-              } else if (productRegion === 'AU') {
-                insertData.price_aud = product.price;
-                insertData.product_url_au = product.url;
-              } else if (productRegion === 'JP') {
-                insertData.price_jpy = product.price;
-                insertData.product_url_jp = product.url;
+              // Set regional price/URL fields using shared mapping
+              const fieldMap = getRegionalFieldMapping(productRegion);
+              if (product.price !== undefined) {
+                insertData[fieldMap.priceField] = product.price;
+              }
+              if (fieldMap.compareAtPriceField && product.compareAtPrice !== undefined) {
+                insertData[fieldMap.compareAtPriceField] = product.compareAtPrice;
+              }
+              if (product.url) {
+                insertData[fieldMap.urlField] = product.url;
               }
 
               // Set available_regions array
@@ -714,6 +707,7 @@ Deno.serve(async (req) => {
 });
 
 // Helper: Build update data respecting user overrides and region
+// Uses REGIONAL_FIELD_MAPPING from shared schema for consistency
 function buildUpdateData(product: any, overrideFields: string[], region: string = 'US'): Record<string, any> {
   const data: Record<string, any> = {};
   
@@ -741,52 +735,22 @@ function buildUpdateData(product: any, overrideFields: string[], region: string 
     }
   }
 
-  // Regional price and URL fields
-  if (region === 'US') {
-    if (product.price !== undefined && !overrideFields.includes('variant_price')) {
-      data.variant_price = product.price;
-    }
-    if (product.compareAtPrice !== undefined && !overrideFields.includes('variant_compare_at_price')) {
-      data.variant_compare_at_price = product.compareAtPrice;
-    }
-    if (product.url && !overrideFields.includes('product_url')) {
-      data.product_url = product.url;
-    }
-  } else if (region === 'CA') {
-    if (product.price !== undefined && !overrideFields.includes('price_cad')) {
-      data.price_cad = product.price;
-    }
-    if (product.url && !overrideFields.includes('product_url_ca')) {
-      data.product_url_ca = product.url;
-    }
-  } else if (region === 'UK') {
-    if (product.price !== undefined && !overrideFields.includes('price_gbp')) {
-      data.price_gbp = product.price;
-    }
-    if (product.url && !overrideFields.includes('product_url_uk')) {
-      data.product_url_uk = product.url;
-    }
-  } else if (region === 'EU') {
-    if (product.price !== undefined && !overrideFields.includes('price_eur')) {
-      data.price_eur = product.price;
-    }
-    if (product.url && !overrideFields.includes('product_url_eu')) {
-      data.product_url_eu = product.url;
-    }
-  } else if (region === 'AU') {
-    if (product.price !== undefined && !overrideFields.includes('price_aud')) {
-      data.price_aud = product.price;
-    }
-    if (product.url && !overrideFields.includes('product_url_au')) {
-      data.product_url_au = product.url;
-    }
-  } else if (region === 'JP') {
-    if (product.price !== undefined && !overrideFields.includes('price_jpy')) {
-      data.price_jpy = product.price;
-    }
-    if (product.url && !overrideFields.includes('product_url_jp')) {
-      data.product_url_jp = product.url;
-    }
+  // Get regional field mapping from shared schema (handles EU sub-regions too)
+  const fieldMap = getRegionalFieldMapping(region);
+  
+  // Set price field if not overridden
+  if (product.price !== undefined && !overrideFields.includes(fieldMap.priceField)) {
+    data[fieldMap.priceField] = product.price;
+  }
+  
+  // Set compare at price for US region
+  if (fieldMap.compareAtPriceField && product.compareAtPrice !== undefined && !overrideFields.includes(fieldMap.compareAtPriceField)) {
+    data[fieldMap.compareAtPriceField] = product.compareAtPrice;
+  }
+  
+  // Set URL field if not overridden
+  if (product.url && !overrideFields.includes(fieldMap.urlField)) {
+    data[fieldMap.urlField] = product.url;
   }
 
   return data;

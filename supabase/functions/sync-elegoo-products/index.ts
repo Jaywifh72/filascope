@@ -1,5 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { 
+  extractColorFamily as sharedExtractColorFamily,
+  extractWeight as sharedExtractWeight,
+  extractMaterial as sharedExtractMaterial,
+  generateProductLineId as sharedGenerateProductLineId,
+  buildAvailableRegions,
+  getRegionalFieldMapping,
+  REGION_CURRENCIES as SHARED_REGION_CURRENCIES,
+  type RegionCode 
+} from "../_shared/filament-schema.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,18 +41,10 @@ const DEFAULT_CATALOG_ID = '25495';
 const MAX_EXECUTION_TIME_MS = 130000; // 130s to leave 20s buffer for cleanup
 const MAX_PAGES_PER_REGION = 30; // Safety limit to prevent runaway fetching
 
-// Region to currency mapping
+// Region to currency mapping - use shared constants with Elegoo-specific additions
 const REGION_CURRENCIES: Record<string, string> = {
-  'US': 'USD',
-  'AU': 'AUD',
-  'CA': 'CAD',
-  'EU': 'EUR',
-  'UK': 'GBP',
-  'JP': 'JPY',
-  'DE': 'EUR',
-  'IT': 'EUR',
-  'FR': 'EUR',
-  'ES': 'EUR',
+  ...SHARED_REGION_CURRENCIES,
+  // Elegoo-specific overrides/additions if any
 };
 
 // Color name aliases for cross-region matching (e.g., US "Gray" vs UK "Grey")
