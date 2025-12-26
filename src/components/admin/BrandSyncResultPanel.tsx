@@ -16,10 +16,11 @@ import {
   Barcode,
   Settings2,
   Clock,
-  Package
+  Package,
+  Globe
 } from "lucide-react";
 import { BrandSyncResult, SyncProductResult, RegionSyncResult } from "@/types/brand-sync";
-import { formatDistanceToNow } from "date-fns";
+import { REGION_FLAGS, type RegionCode } from "@/lib/brandRegionalAvailability";
 
 interface BrandSyncResultPanelProps {
   result: BrandSyncResult;
@@ -90,27 +91,41 @@ function ProductRow({ product }: { product: SyncProductResult }) {
 }
 
 function RegionTab({ region }: { region: RegionSyncResult }) {
+  const flag = REGION_FLAGS[region.region as RegionCode] || '🌐';
+  
   return (
-    <div className="grid grid-cols-5 gap-4 p-4">
-      <div className="text-center">
-        <p className="text-2xl font-bold">{region.productsFound}</p>
-        <p className="text-xs text-muted-foreground">Found</p>
+    <div className="space-y-4 p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-xl">{flag}</span>
+        <span className="font-medium">{region.region}</span>
+        <Badge variant="outline" className="ml-2">{region.currency}</Badge>
+        {region.duration_ms && (
+          <span className="text-xs text-muted-foreground ml-auto">
+            {(region.duration_ms / 1000).toFixed(1)}s
+          </span>
+        )}
       </div>
-      <div className="text-center">
-        <p className="text-2xl font-bold text-green-600">{region.created}</p>
-        <p className="text-xs text-muted-foreground">Created</p>
-      </div>
-      <div className="text-center">
-        <p className="text-2xl font-bold text-blue-600">{region.updated}</p>
-        <p className="text-xs text-muted-foreground">Updated</p>
-      </div>
-      <div className="text-center">
-        <p className="text-2xl font-bold text-muted-foreground">{region.skipped}</p>
-        <p className="text-xs text-muted-foreground">Skipped</p>
-      </div>
-      <div className="text-center">
-        <p className="text-2xl font-bold text-destructive">{region.errors}</p>
-        <p className="text-xs text-muted-foreground">Errors</p>
+      <div className="grid grid-cols-5 gap-4">
+        <div className="text-center p-3 bg-muted/50 rounded-lg">
+          <p className="text-2xl font-bold">{region.productsFound}</p>
+          <p className="text-xs text-muted-foreground">Found</p>
+        </div>
+        <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+          <p className="text-2xl font-bold text-green-600">{region.created}</p>
+          <p className="text-xs text-muted-foreground">Created</p>
+        </div>
+        <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <p className="text-2xl font-bold text-blue-600">{region.updated}</p>
+          <p className="text-xs text-muted-foreground">Updated</p>
+        </div>
+        <div className="text-center p-3 bg-muted/50 rounded-lg">
+          <p className="text-2xl font-bold text-muted-foreground">{region.skipped}</p>
+          <p className="text-xs text-muted-foreground">Skipped</p>
+        </div>
+        <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+          <p className="text-2xl font-bold text-destructive">{region.errors}</p>
+          <p className="text-xs text-muted-foreground">Errors</p>
+        </div>
       </div>
     </div>
   );
@@ -229,17 +244,32 @@ export function BrandSyncResultPanel({ result }: BrandSyncResultPanelProps) {
         {/* Region Breakdown (if applicable) */}
         {hasRegions && (
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">Regional Breakdown</h4>
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-muted-foreground" />
+              <h4 className="text-sm font-medium">Regional Breakdown</h4>
+              <Badge variant="outline" className="ml-auto">
+                {result.regionBreakdown!.length} regions
+              </Badge>
+            </div>
             <Tabs defaultValue={result.regionBreakdown![0].region}>
-              <TabsList className="w-full justify-start flex-wrap h-auto gap-1">
-                {result.regionBreakdown!.map(region => (
-                  <TabsTrigger key={region.region} value={region.region} className="text-xs">
-                    {region.region} ({region.currency})
-                  </TabsTrigger>
-                ))}
+              <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-muted/50">
+                {result.regionBreakdown!.map(region => {
+                  const flag = REGION_FLAGS[region.region as RegionCode] || '🌐';
+                  return (
+                    <TabsTrigger 
+                      key={region.region} 
+                      value={region.region} 
+                      className="text-xs gap-1"
+                    >
+                      <span>{flag}</span>
+                      {region.region} 
+                      <span className="text-muted-foreground">({region.productsFound})</span>
+                    </TabsTrigger>
+                  );
+                })}
               </TabsList>
               {result.regionBreakdown!.map(region => (
-                <TabsContent key={region.region} value={region.region}>
+                <TabsContent key={region.region} value={region.region} className="mt-3">
                   <RegionTab region={region} />
                 </TabsContent>
               ))}

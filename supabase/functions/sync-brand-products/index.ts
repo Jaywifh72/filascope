@@ -5,6 +5,79 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Regional configuration for multi-region brands
+const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
+  'bambu-lab': { 
+    US: 'us.store.bambulab.com', 
+    CA: 'ca.store.bambulab.com', 
+    UK: 'uk.store.bambulab.com', 
+    EU: 'eu.store.bambulab.com', 
+    AU: 'au.store.bambulab.com', 
+    JP: 'jp.store.bambulab.com' 
+  },
+  'elegoo': { 
+    US: 'us.elegoo.com', 
+    CA: 'ca.elegoo.com', 
+    UK: 'uk.elegoo.com', 
+    EU: 'eu.elegoo.com', 
+    AU: 'au.elegoo.com' 
+  },
+  'polymaker': { 
+    US: 'us.polymaker.com', 
+    EU: 'eu.polymaker.com' 
+  },
+  'creality': { 
+    US: 'www.creality.com', 
+    CA: 'ca.creality.com', 
+    UK: 'uk.creality.com', 
+    EU: 'eu.creality.com', 
+    AU: 'au.creality.com' 
+  },
+  'anycubic': { 
+    US: 'www.anycubic.com', 
+    CA: 'ca.anycubic.com', 
+    UK: 'uk.anycubic.com', 
+    EU: 'eu.anycubic.com', 
+    AU: 'au.anycubic.com' 
+  },
+  'qidi': { 
+    US: 'qidi3d.com', 
+    EU: 'eu.qidi3d.com' 
+  },
+  'flashforge': { 
+    US: 'www.flashforge.com', 
+    EU: 'eu.flashforge.com' 
+  },
+};
+
+const REGION_CURRENCIES: Record<string, string> = {
+  US: 'USD',
+  CA: 'CAD',
+  UK: 'GBP',
+  EU: 'EUR',
+  AU: 'AUD',
+  JP: 'JPY',
+};
+
+// Get regional URL for a brand
+function getRegionalBaseUrl(brandSlug: string, region: string, defaultUrl: string): string {
+  const domains = BRAND_REGIONAL_DOMAINS[brandSlug];
+  if (domains && domains[region]) {
+    try {
+      const url = new URL(defaultUrl);
+      return `https://${domains[region]}${url.pathname}`;
+    } catch {
+      return `https://${domains[region]}`;
+    }
+  }
+  return defaultUrl;
+}
+
+// Check if brand supports multi-region
+function isMultiRegionBrand(brandSlug: string): boolean {
+  return brandSlug in BRAND_REGIONAL_DOMAINS;
+}
+
 interface SyncRequest {
   brandSlug: string;
   dryRun: boolean;
@@ -46,6 +119,17 @@ interface ProductResult {
   price?: number;
   compareAtPrice?: number;
   region?: string;
+}
+
+interface RegionBreakdown {
+  region: string;
+  currency: string;
+  productsFound: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+  duration_ms: number;
 }
 
 interface SyncProgress {
@@ -203,11 +287,12 @@ Deno.serve(async (req) => {
 
     // Main sync function
     async function performSync() {
-      let scrapedProducts: any[] = [];
+      let allScrapedProducts: any[] = [];
       let processedProducts: ProductResult[] = [];
       let scrapingError: string | null = null;
-      const regionBreakdown: any[] = [];
+      const regionBreakdown: RegionBreakdown[] = [];
       const syncRegions = regions || brand.supported_regions || ['US'];
+      const isMultiRegion = isMultiRegionBrand(brand.brand_slug) && syncRegions.length > 1;
 
       const progress: SyncProgress = {
         stage: 'fetching',
@@ -222,24 +307,75 @@ Deno.serve(async (req) => {
         // Update progress to fetching
         await updateProgress(supabase, jobId, progress);
 
-        switch (brand.platform_type) {
-          case 'shopify':
-            scrapedProducts = await scrapeShopify(brand, materialFilter, limit);
-            break;
-          case 'woocommerce':
-            scrapedProducts = await scrapeWooCommerce(brand, materialFilter, limit);
-            break;
-          case 'firecrawl':
-            scrapedProducts = await scrapeFirecrawl(brand, materialFilter, limit);
-            break;
-          case 'amazon':
-            scrapedProducts = await getAmazonProducts(supabase, brand.brand_name, limit);
-            break;
-          case 'bigcommerce':
-            scrapedProducts = await scrapeBigCommerce(brand, materialFilter, limit);
-            break;
-          default:
-            scrapingError = `Unsupported platform: ${brand.platform_type}`;
+        // Iterate through each region for multi-region brands
+        for (let regionIdx = 0; regionIdx < syncRegions.length; regionIdx++) {
+          const region = syncRegions[regionIdx];
+          const regionStartTime = Date.now();
+          let regionProducts: any[] = [];
+          
+          progress.currentRegion = region;
+          progress.regionsProcessed = regionIdx;
+          await updateProgress(supabase, jobId, progress);
+          
+          // Get regional URL for multi-region brands
+          const regionalBaseUrl = isMultiRegion 
+            ? getRegionalBaseUrl(brand.brand_slug, region, brand.base_url)
+            : brand.base_url;
+          
+          const regionalBrand = { ...brand, base_url: regionalBaseUrl };
+          
+          console.log(`[sync-brand-products] Scraping region ${region} from ${regionalBaseUrl}`);
+
+          try {
+            switch (brand.platform_type) {
+              case 'shopify':
+                regionProducts = await scrapeShopify(regionalBrand, materialFilter, limit);
+                break;
+              case 'woocommerce':
+                regionProducts = await scrapeWooCommerce(regionalBrand, materialFilter, limit);
+                break;
+              case 'firecrawl':
+                regionProducts = await scrapeFirecrawl(regionalBrand, materialFilter, limit);
+                break;
+              case 'amazon':
+                regionProducts = await getAmazonProducts(supabase, brand.brand_name, limit);
+                break;
+              case 'bigcommerce':
+                regionProducts = await scrapeBigCommerce(regionalBrand, materialFilter, limit);
+                break;
+              default:
+                scrapingError = `Unsupported platform: ${brand.platform_type}`;
+            }
+          } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : 'Unknown scraping error';
+            console.error(`[sync-brand-products] Scraping error for ${brandSlug} region ${region}:`, err);
+            progress.errors.push(`${region}: ${errorMsg}`);
+          }
+
+          // Tag products with region and currency
+          for (const product of regionProducts) {
+            product.region = region;
+            product.currency = REGION_CURRENCIES[region] || 'USD';
+          }
+
+          // Add region breakdown
+          regionBreakdown.push({
+            region,
+            currency: REGION_CURRENCIES[region] || 'USD',
+            productsFound: regionProducts.length,
+            created: 0,
+            updated: 0,
+            skipped: 0,
+            errors: 0,
+            duration_ms: Date.now() - regionStartTime,
+          });
+
+          allScrapedProducts.push(...regionProducts);
+          
+          // Rate limit between regions
+          if (regionIdx < syncRegions.length - 1) {
+            await new Promise(r => setTimeout(r, brand.rate_limit_ms || 1000));
+          }
         }
       } catch (err) {
         scrapingError = err instanceof Error ? err.message : 'Unknown scraping error';
@@ -249,15 +385,17 @@ Deno.serve(async (req) => {
 
       // Update progress with total count
       progress.stage = 'processing';
-      progress.totalProducts = scrapedProducts.length;
+      progress.totalProducts = allScrapedProducts.length;
+      progress.regionsProcessed = syncRegions.length;
       await updateProgress(supabase, jobId, progress);
 
       // Process scraped products with detailed logging
-      let summary = { created: 0, updated: 0, skipped: 0, errors: 0, total: scrapedProducts.length };
+      let summary = { created: 0, updated: 0, skipped: 0, errors: 0, total: allScrapedProducts.length };
 
-      for (let i = 0; i < scrapedProducts.length; i++) {
-        const product = scrapedProducts[i];
+      for (let i = 0; i < allScrapedProducts.length; i++) {
+        const product = allScrapedProducts[i];
         const fields = detectFields(product);
+        const productRegion = product.region || 'US';
         
         let productResult: ProductResult = {
           productId: product.productId,
@@ -266,7 +404,7 @@ Deno.serve(async (req) => {
           fields,
           price: product.price,
           compareAtPrice: product.compareAtPrice,
-          region: product.region || 'US',
+          region: productRegion,
         };
 
         // Update progress
@@ -284,9 +422,9 @@ Deno.serve(async (req) => {
               .maybeSingle();
 
             if (existing) {
-              // Update existing
+              // Update existing - pass region for regional field writes
               const overrideFields = existing.user_override_fields || [];
-              const updateData = buildUpdateData(product, overrideFields);
+              const updateData = buildUpdateData(product, overrideFields, productRegion);
               
               const { error: updateError } = await supabase
                 .from('filaments')
@@ -302,39 +440,68 @@ Deno.serve(async (req) => {
               if (updateError) throw updateError;
               productResult.action = 'updated';
               summary.updated++;
+              
+              // Update region breakdown
+              const regionStats = regionBreakdown.find(r => r.region === productRegion);
+              if (regionStats) regionStats.updated++;
             } else {
-              // Create new filament
+              // Create new filament - use regional fields based on region
+              const insertData: Record<string, any> = {
+                product_id: product.productId,
+                product_title: product.title,
+                vendor: brand.brand_name,
+                brand_id: brand.id,
+                variant_available: product.available ?? true,
+                featured_image: product.imageUrl,
+                mpn: product.mpn,
+                tds_url: product.tdsUrl,
+                color_hex: product.colorHex,
+                nozzle_temp_min_c: product.nozzleTempMin,
+                nozzle_temp_max_c: product.nozzleTempMax,
+                bed_temp_min_c: product.bedTempMin,
+                bed_temp_max_c: product.bedTempMax,
+                diameter_nominal_mm: product.diameterMm ?? 1.75,
+                net_weight_g: product.netWeightG,
+                material: product.material,
+                auto_created: true,
+                auto_updated: true,
+                last_scraped_at: new Date().toISOString(),
+                sync_status: 'synced',
+              };
+
+              // Set regional price/URL fields based on region
+              if (productRegion === 'US') {
+                insertData.variant_price = product.price;
+                insertData.variant_compare_at_price = product.compareAtPrice;
+                insertData.product_url = product.url;
+              } else if (productRegion === 'CA') {
+                insertData.price_cad = product.price;
+                insertData.product_url_ca = product.url;
+              } else if (productRegion === 'UK') {
+                insertData.price_gbp = product.price;
+                insertData.product_url_uk = product.url;
+              } else if (productRegion === 'EU') {
+                insertData.price_eur = product.price;
+                insertData.product_url_eu = product.url;
+              } else if (productRegion === 'AU') {
+                insertData.price_aud = product.price;
+                insertData.product_url_au = product.url;
+              } else if (productRegion === 'JP') {
+                insertData.price_jpy = product.price;
+                insertData.product_url_jp = product.url;
+              }
+
               const { error: insertError } = await supabase
                 .from('filaments')
-                .insert({
-                  product_id: product.productId,
-                  product_title: product.title,
-                  vendor: brand.brand_name,
-                  brand_id: brand.id,
-                  variant_price: product.price,
-                  variant_compare_at_price: product.compareAtPrice,
-                  variant_available: product.available ?? true,
-                  product_url: product.url,
-                  featured_image: product.imageUrl,
-                  mpn: product.mpn,
-                  tds_url: product.tdsUrl,
-                  color_hex: product.colorHex,
-                  nozzle_temp_min_c: product.nozzleTempMin,
-                  nozzle_temp_max_c: product.nozzleTempMax,
-                  bed_temp_min_c: product.bedTempMin,
-                  bed_temp_max_c: product.bedTempMax,
-                  diameter_nominal_mm: product.diameterMm ?? 1.75,
-                  net_weight_g: product.netWeightG,
-                  material: product.material,
-                  auto_created: true,
-                  auto_updated: true,
-                  last_scraped_at: new Date().toISOString(),
-                  sync_status: 'synced',
-                });
+                .insert(insertData);
 
               if (insertError) throw insertError;
               productResult.action = 'created';
               summary.created++;
+              
+              // Update region breakdown
+              const regionStats = regionBreakdown.find(r => r.region === productRegion);
+              if (regionStats) regionStats.created++;
             }
           } catch (err) {
             const errorMsg = err instanceof Error ? err.message : 'Unknown error';
@@ -343,30 +510,44 @@ Deno.serve(async (req) => {
             productResult.reason = errorMsg;
             progress.errors.push(`${product.title}: ${errorMsg}`);
             summary.errors++;
+            
+            // Update region breakdown
+            const regionStats = regionBreakdown.find(r => r.region === productRegion);
+            if (regionStats) regionStats.errors++;
           }
         } else {
           // Dry run - mark as would be created/updated
           productResult.action = 'skipped';
           productResult.reason = 'Dry run mode';
           summary.skipped++;
+          
+          // Update region breakdown
+          const regionStats = regionBreakdown.find(r => r.region === productRegion);
+          if (regionStats) regionStats.skipped++;
         }
 
         processedProducts.push(productResult);
 
         // Update progress every 10 products
-        if (i % 10 === 0 || i === scrapedProducts.length - 1) {
+        if (i % 10 === 0 || i === allScrapedProducts.length - 1) {
           await updateProgress(supabase, jobId, progress, processedProducts);
         }
       }
 
       // Calculate field coverage
-      const fieldCoverage = calculateFieldCoverage(processedProducts, scrapedProducts.length);
+      const fieldCoverage = calculateFieldCoverage(processedProducts, allScrapedProducts.length);
 
       // Update progress to complete
       progress.stage = scrapingError ? 'error' : 'complete';
       progress.regionsProcessed = syncRegions.length;
 
       const duration = Date.now() - startTime;
+      
+      console.log(`[sync-brand-products] Sync complete for ${brandSlug}`, {
+        regions: syncRegions,
+        regionBreakdown: regionBreakdown.map(r => ({ region: r.region, found: r.productsFound })),
+        total: allScrapedProducts.length,
+      });
 
       // Update sync log with final results
       if (jobId) {
@@ -376,7 +557,7 @@ Deno.serve(async (req) => {
             status: scrapingError ? 'failed' : 'completed',
             completed_at: new Date().toISOString(),
             duration_seconds: Math.round(duration / 1000),
-            products_discovered: scrapedProducts.length,
+            products_discovered: allScrapedProducts.length,
             products_created: summary.created,
             products_updated: summary.updated,
             products_failed: summary.errors,
@@ -471,16 +652,13 @@ Deno.serve(async (req) => {
   }
 });
 
-// Helper: Build update data respecting user overrides
-function buildUpdateData(product: any, overrideFields: string[]): Record<string, any> {
+// Helper: Build update data respecting user overrides and region
+function buildUpdateData(product: any, overrideFields: string[], region: string = 'US'): Record<string, any> {
   const data: Record<string, any> = {};
   
-  const fieldMapping: Record<string, string> = {
+  // Common fields (always update regardless of region)
+  const commonFieldMapping: Record<string, string> = {
     title: 'product_title',
-    price: 'variant_price',
-    compareAtPrice: 'variant_compare_at_price',
-    available: 'variant_available',
-    url: 'product_url',
     imageUrl: 'featured_image',
     mpn: 'mpn',
     tdsUrl: 'tds_url',
@@ -491,11 +669,60 @@ function buildUpdateData(product: any, overrideFields: string[]): Record<string,
     bedTempMax: 'bed_temp_max_c',
     material: 'material',
     netWeightG: 'net_weight_g',
+    available: 'variant_available',
   };
 
-  for (const [productKey, dbKey] of Object.entries(fieldMapping)) {
+  for (const [productKey, dbKey] of Object.entries(commonFieldMapping)) {
     if (product[productKey] !== undefined && !overrideFields.includes(dbKey)) {
       data[dbKey] = product[productKey];
+    }
+  }
+
+  // Regional price and URL fields
+  if (region === 'US') {
+    if (product.price !== undefined && !overrideFields.includes('variant_price')) {
+      data.variant_price = product.price;
+    }
+    if (product.compareAtPrice !== undefined && !overrideFields.includes('variant_compare_at_price')) {
+      data.variant_compare_at_price = product.compareAtPrice;
+    }
+    if (product.url && !overrideFields.includes('product_url')) {
+      data.product_url = product.url;
+    }
+  } else if (region === 'CA') {
+    if (product.price !== undefined && !overrideFields.includes('price_cad')) {
+      data.price_cad = product.price;
+    }
+    if (product.url && !overrideFields.includes('product_url_ca')) {
+      data.product_url_ca = product.url;
+    }
+  } else if (region === 'UK') {
+    if (product.price !== undefined && !overrideFields.includes('price_gbp')) {
+      data.price_gbp = product.price;
+    }
+    if (product.url && !overrideFields.includes('product_url_uk')) {
+      data.product_url_uk = product.url;
+    }
+  } else if (region === 'EU') {
+    if (product.price !== undefined && !overrideFields.includes('price_eur')) {
+      data.price_eur = product.price;
+    }
+    if (product.url && !overrideFields.includes('product_url_eu')) {
+      data.product_url_eu = product.url;
+    }
+  } else if (region === 'AU') {
+    if (product.price !== undefined && !overrideFields.includes('price_aud')) {
+      data.price_aud = product.price;
+    }
+    if (product.url && !overrideFields.includes('product_url_au')) {
+      data.product_url_au = product.url;
+    }
+  } else if (region === 'JP') {
+    if (product.price !== undefined && !overrideFields.includes('price_jpy')) {
+      data.price_jpy = product.price;
+    }
+    if (product.url && !overrideFields.includes('product_url_jp')) {
+      data.product_url_jp = product.url;
     }
   }
 

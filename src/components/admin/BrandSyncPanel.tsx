@@ -110,23 +110,27 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
       onSyncComplete();
     }
 
-    // Transform to BrandSyncResult format if we have detailed data
-    if (result.success && result.summary) {
-      const mockResult: BrandSyncResult = {
+    // Transform API response to BrandSyncResult format
+    if (result.success) {
+      // Access the full result from the API (may include products, fieldCoverage, regionBreakdown)
+      const apiResult = result as any;
+      
+      const syncResultData: BrandSyncResult = {
         success: true,
         jobId: result.jobId || '',
         brandSlug: brand.brand_slug,
         platform: brand.platform_type,
         dryRun,
         summary: {
-          totalDiscovered: result.summary.total || 0,
-          created: result.summary.created || 0,
-          updated: result.summary.updated || 0,
-          skipped: result.summary.skipped || 0,
-          errors: result.summary.errors || 0,
+          totalDiscovered: result.summary?.total ?? apiResult.summary?.totalDiscovered ?? 0,
+          created: result.summary?.created ?? 0,
+          updated: result.summary?.updated ?? 0,
+          skipped: result.summary?.skipped ?? 0,
+          errors: result.summary?.errors ?? 0,
         },
-        products: [],
-        fieldCoverage: {
+        products: apiResult.products || [],
+        regionBreakdown: apiResult.regionBreakdown || [],
+        fieldCoverage: apiResult.fieldCoverage || {
           images: { count: 0, percent: 0 },
           prices: { count: 0, percent: 0 },
           tds: { count: 0, percent: 0 },
@@ -134,11 +138,11 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
           mpn: { count: 0, percent: 0 },
           specifications: { count: 0, percent: 0 },
         },
-        duration_ms: 0,
-        startedAt: new Date().toISOString(),
-        completedAt: new Date().toISOString(),
+        duration_ms: apiResult.duration_ms || 0,
+        startedAt: apiResult.startedAt || new Date().toISOString(),
+        completedAt: apiResult.completedAt || new Date().toISOString(),
       };
-      setSyncResult(mockResult);
+      setSyncResult(syncResultData);
     }
   };
 

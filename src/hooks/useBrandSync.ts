@@ -25,6 +25,12 @@ export interface SyncResult {
     errors: number;
     total: number;
   };
+  products?: any[];
+  fieldCoverage?: any;
+  regionBreakdown?: any[];
+  duration_ms?: number;
+  startedAt?: string;
+  completedAt?: string;
 }
 
 export function useBrandSync() {
@@ -66,6 +72,12 @@ export function useBrandSync() {
         jobId: data?.jobId,
         message: data?.message,
         summary: data?.summary,
+        products: data?.products,
+        fieldCoverage: data?.fieldCoverage,
+        regionBreakdown: data?.regionBreakdown,
+        duration_ms: data?.duration_ms,
+        startedAt: data?.startedAt,
+        completedAt: data?.completedAt,
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to sync brand';
