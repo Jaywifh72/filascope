@@ -24,15 +24,20 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Globe
+  Globe,
+  Package
 } from "lucide-react";
-import { useBrandSync } from "@/hooks/useBrandSync";
+import { useBrandSyncRouter } from "@/hooks/useBrandSyncRouter";
 import { useBrandDataQuality } from "@/hooks/useBrandDataQuality";
 import { useBrandSyncJob, useRecentBrandSyncJobs } from "@/hooks/useBrandSyncJob";
 import { BrandSyncResultPanel } from "./BrandSyncResultPanel";
 import { BrandSyncResult } from "@/types/brand-sync";
 import { formatDistanceToNow, format } from "date-fns";
 import { REGION_FLAGS, type RegionCode } from "@/lib/brandRegionalAvailability";
+
+// Bambu Lab material types
+const BAMBU_MATERIALS = ['PLA', 'PETG', 'TPU', 'ABS', 'ASA', 'PA', 'PC', 'Support'] as const;
+type BambuMaterial = typeof BAMBU_MATERIALS[number];
 
 interface BrandSyncPanelProps {
   brand: {
@@ -71,13 +76,28 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
   const [showHistory, setShowHistory] = useState(false);
   const [syncResult, setSyncResult] = useState<BrandSyncResult | null>(null);
   
+  // Bambu Lab material selection
+  const isBambuLab = brand.brand_slug === 'bambu-lab';
+  const [selectedMaterials, setSelectedMaterials] = useState<BambuMaterial[]>(['PLA']);
+  
   // Multi-region support
   const supportedRegions = (brand.supported_regions || ['US']) as RegionCode[];
   const [selectedRegions, setSelectedRegions] = useState<RegionCode[]>(supportedRegions);
   
-  const { syncBrand, isLoading, currentJobId } = useBrandSync();
+  // Use unified sync router
+  const { 
+    sync, 
+    isLoading, 
+    currentJobId, 
+    progress,
+    progressPercent,
+    brandType,
+    bambuJob,
+    elegooJob 
+  } = useBrandSyncRouter(brand.brand_slug);
+  
   const { data: quality, isLoading: qualityLoading } = useBrandDataQuality(brand.brand_slug);
-  const { job, isRunning: jobRunning, progressPercent } = useBrandSyncJob(currentJobId);
+  const { job, isRunning: jobRunning } = useBrandSyncJob(currentJobId);
   const { jobs: recentJobs, isLoading: jobsLoading } = useRecentBrandSyncJobs(brand.brand_slug, 5);
 
   const toggleRegion = useCallback((region: RegionCode) => {
@@ -85,6 +105,14 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
       prev.includes(region)
         ? prev.filter(r => r !== region)
         : [...prev, region]
+    );
+  }, []);
+  
+  const toggleMaterial = useCallback((material: BambuMaterial) => {
+    setSelectedMaterials(prev => 
+      prev.includes(material)
+        ? prev.filter(m => m !== material)
+        : [...prev, material]
     );
   }, []);
 
@@ -95,15 +123,20 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
   const selectNoRegions = useCallback(() => {
     setSelectedRegions(['US']); // Always keep at least US
   }, []);
+  
+  const selectAllMaterials = useCallback(() => {
+    setSelectedMaterials([...BAMBU_MATERIALS]);
+  }, []);
 
   const handleSync = async () => {
     setSyncResult(null);
-    const result = await syncBrand({
+    
+    const result = await sync({
       brandSlug: brand.brand_slug,
       dryRun,
       materialFilter: materialFilter || undefined,
-      tasks: ['products'],
       regions: selectedRegions.length > 0 ? selectedRegions : undefined,
+      materials: isBambuLab ? selectedMaterials : undefined,
     });
 
     if (result.success && onSyncComplete) {
@@ -111,10 +144,7 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
     }
 
     // Transform API response to BrandSyncResult format
-    if (result.success) {
-      // Access the full result from the API (may include products, fieldCoverage, regionBreakdown)
-      const apiResult = result as any;
-      
+    if (result.success && result.summary) {
       const syncResultData: BrandSyncResult = {
         success: true,
         jobId: result.jobId || '',
@@ -122,15 +152,15 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
         platform: brand.platform_type,
         dryRun,
         summary: {
-          totalDiscovered: result.summary?.total ?? apiResult.summary?.totalDiscovered ?? 0,
-          created: result.summary?.created ?? 0,
-          updated: result.summary?.updated ?? 0,
-          skipped: result.summary?.skipped ?? 0,
-          errors: result.summary?.errors ?? 0,
+          totalDiscovered: result.summary.total ?? 0,
+          created: result.summary.created ?? 0,
+          updated: result.summary.updated ?? 0,
+          skipped: result.summary.skipped ?? 0,
+          errors: result.summary.errors ?? 0,
         },
-        products: apiResult.products || [],
-        regionBreakdown: apiResult.regionBreakdown || [],
-        fieldCoverage: apiResult.fieldCoverage || {
+        products: [],
+        regionBreakdown: [],
+        fieldCoverage: {
           images: { count: 0, percent: 0 },
           prices: { count: 0, percent: 0 },
           tds: { count: 0, percent: 0 },
@@ -138,14 +168,18 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
           mpn: { count: 0, percent: 0 },
           specifications: { count: 0, percent: 0 },
         },
-        duration_ms: apiResult.duration_ms || 0,
-        startedAt: apiResult.startedAt || new Date().toISOString(),
-        completedAt: apiResult.completedAt || new Date().toISOString(),
+        duration_ms: 0,
+        startedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
       };
       setSyncResult(syncResultData);
     }
   };
 
+  // Derive active progress from the correct source
+  const activeProgress = progress || job?.progress;
+  const activeProgressPercent = progressPercent || (job?.progress ? 
+    Math.round((job.progress.productsProcessed / (job.progress.totalProducts || 1)) * 100) : 0);
   const total = brand.product_count || 0;
   const completeness = quality?.completenessScore ?? 0;
 
@@ -225,21 +259,21 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
 
         <CardContent className="space-y-4">
           {/* Progress Bar (when syncing) */}
-          {isActive && job?.progress && (
+          {isActive && activeProgress && (
             <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
-                  {job.progress.stage === 'fetching' && 'Fetching products...'}
-                  {job.progress.stage === 'processing' && `Processing ${job.progress.currentProduct || ''}...`}
-                  {job.progress.stage === 'saving' && 'Saving to database...'}
-                  {job.progress.currentRegion && ` (${job.progress.currentRegion})`}
+                  {activeProgress.stage}
+                  {activeProgress.currentRegion && ` (${activeProgress.currentRegion})`}
+                  {activeProgress.currentProduct && ` - ${activeProgress.currentProduct}`}
                 </span>
-                <span className="font-medium">{progressPercent}%</span>
+                <span className="font-medium">{activeProgressPercent}%</span>
               </div>
-              <Progress value={progressPercent} className="h-2" />
+              <Progress value={activeProgressPercent} className="h-2" />
               <p className="text-xs text-muted-foreground">
-                {job.progress.productsProcessed} / {job.progress.totalProducts} products
-                {job.progress.totalRegions > 1 && ` • ${job.progress.regionsProcessed}/${job.progress.totalRegions} regions`}
+                {activeProgress.productsProcessed} / {activeProgress.totalProducts} products
+                {activeProgress.totalRegions && activeProgress.totalRegions > 1 && 
+                  ` • ${activeProgress.regionsProcessed || 0}/${activeProgress.totalRegions} regions`}
               </p>
             </div>
           )}
@@ -282,16 +316,61 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-3 pt-3">
-              <div className="space-y-2">
-                <Label htmlFor={`material-${brand.brand_slug}`} className="text-sm">Material Filter</Label>
-                <Input
-                  id={`material-${brand.brand_slug}`}
-                  placeholder="e.g., PLA, PETG"
-                  value={materialFilter}
-                  onChange={(e) => setMaterialFilter(e.target.value)}
-                  className="h-8"
-                />
-              </div>
+              {/* Bambu Lab Material Selection */}
+              {isBambuLab && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm flex items-center gap-2">
+                      <Package className="w-4 h-4" />
+                      Materials to Sync
+                    </Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 text-xs"
+                      onClick={selectAllMaterials}
+                    >
+                      All
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {BAMBU_MATERIALS.map(material => {
+                      const isSelected = selectedMaterials.includes(material);
+                      return (
+                        <Badge 
+                          key={material} 
+                          variant={isSelected ? "default" : "outline"}
+                          className={`cursor-pointer transition-colors ${
+                            isSelected 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                          onClick={() => toggleMaterial(material)}
+                        >
+                          {material}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedMaterials.length} of {BAMBU_MATERIALS.length} materials selected
+                  </p>
+                </div>
+              )}
+              
+              {/* Material Filter (for non-Bambu brands) */}
+              {!isBambuLab && (
+                <div className="space-y-2">
+                  <Label htmlFor={`material-${brand.brand_slug}`} className="text-sm">Material Filter</Label>
+                  <Input
+                    id={`material-${brand.brand_slug}`}
+                    placeholder="e.g., PLA, PETG"
+                    value={materialFilter}
+                    onChange={(e) => setMaterialFilter(e.target.value)}
+                    className="h-8"
+                  />
+                </div>
+              )}
               {supportedRegions.length > 1 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
