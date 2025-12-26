@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getColorHex, getColorFamily } from "../_shared/color-mapping.ts";
+import { validateScrapedProduct, type ScrapedProduct } from "../_shared/scraper-validation.ts";
+import { buildAvailableRegions } from "../_shared/filament-schema.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,7 +44,6 @@ interface ShopifyImage {
 
 // Extract TDS URL from product HTML
 function extractTdsUrl(bodyHtml: string): string | null {
-  // Look for TDS links in the body
   const tdsPatterns = [
     /href="([^"]*TDS[^"]*\.pdf[^"]*)"/i,
     /href="([^"]*technical[^"]*data[^"]*sheet[^"]*\.pdf[^"]*)"/i,
@@ -58,11 +60,11 @@ function extractTdsUrl(bodyHtml: string): string | null {
 }
 
 // Extract material type from product title and tags
-function extractMaterial(title: string, tags: string[] | string): string {
-  const titleLower = title.toLowerCase();
-  const tagsLower = Array.isArray(tags) ? tags.join(' ').toLowerCase() : (tags || '').toLowerCase();
+// Using local function optimized for 3DXTech's specialized materials
+function extract3DXTechMaterial(title: string, tags: string[] | string): string {
+  const combined = `${title} ${Array.isArray(tags) ? tags.join(' ') : tags || ''}`;
   
-  // Check for specific materials in order of specificity
+  // Check for specific materials in order of specificity (3DXTech specialty materials)
   const materialPatterns: [RegExp, string][] = [
     [/esd[- ]?pei[- ]?1010/i, 'ESD PEI 1010'],
     [/esd[- ]?pei[- ]?9085/i, 'ESD PEI 9085'],
@@ -115,7 +117,6 @@ function extractMaterial(title: string, tags: string[] | string): string {
     [/\bhips\b/i, 'HIPS'],
   ];
   
-  const combined = `${title} ${tags}`;
   for (const [pattern, material] of materialPatterns) {
     if (pattern.test(combined)) {
       return material;
@@ -172,66 +173,6 @@ function parseDiameter(diameterStr: string | null): number | null {
   const match = diameterStr.match(/([\d.]+)\s*mm/i);
   if (match) {
     return parseFloat(match[1]);
-  }
-  
-  return null;
-}
-
-// Get color hex from color name
-function getColorHex(color: string): string | null {
-  const colorMap: Record<string, string> = {
-    'black': '#000000',
-    'white': '#FFFFFF',
-    'natural': '#F5F5DC',
-    'red': '#FF0000',
-    'blue': '#0000FF',
-    'reflex blue': '#001489',
-    'mid blue': '#0066CC',
-    'green': '#008000',
-    'yellow': '#FFFF00',
-    'orange': '#FFA500',
-    'grey': '#808080',
-    'gray': '#808080',
-    'dark grey': '#404040',
-    'dark gray': '#404040',
-    'glacier grey': '#A0A0A0',
-    'flat dark earth': '#8B7355',
-    'brown': '#8B4513',
-    'pink': '#FFC0CB',
-    'purple': '#800080',
-    'gold': '#FFD700',
-    'silver': '#C0C0C0',
-    'copper': '#B87333',
-  };
-  
-  const colorLower = color.toLowerCase();
-  return colorMap[colorLower] || null;
-}
-
-// Determine color family from color name
-function getColorFamily(color: string): string | null {
-  const colorLower = color.toLowerCase();
-  
-  const families: [string[], string][] = [
-    [['black'], 'Black'],
-    [['white'], 'White'],
-    [['natural', 'clear', 'transparent'], 'Natural'],
-    [['red', 'ruby', 'garnet', 'crimson'], 'Red'],
-    [['blue', 'azure', 'navy', 'reflex', 'mid blue'], 'Blue'],
-    [['green', 'emerald', 'jade', 'mint'], 'Green'],
-    [['yellow', 'gold', 'glow yellow'], 'Yellow'],
-    [['orange', 'amber'], 'Orange'],
-    [['grey', 'gray', 'glacier', 'silver'], 'Gray'],
-    [['brown', 'earth', 'tan', 'flat dark earth'], 'Brown'],
-    [['pink', 'rose', 'magenta'], 'Pink'],
-    [['purple', 'violet', 'amethyst'], 'Purple'],
-    [['copper', 'bronze'], 'Metallic'],
-  ];
-  
-  for (const [keywords, family] of families) {
-    if (keywords.some(kw => colorLower.includes(kw))) {
-      return family;
-    }
   }
   
   return null;
@@ -337,15 +278,16 @@ serve(async (req) => {
       created: 0,
       updated: 0,
       skipped: 0,
+      validationWarnings: 0,
       errors: [] as string[],
-      products: [] as any[],
+      products: [] as { title: string; color: string; sku: string; image: string; tds: string }[],
     };
 
     for (const product of filamentProducts) {
       try {
         // Extract TDS URL
         const tdsUrl = extractTdsUrl(product.body_html || '');
-        const material = extractMaterial(product.title, product.tags);
+        const material = extract3DXTechMaterial(product.title, product.tags);
         const productUrl = `${SHOPIFY_BASE_URL}/products/${product.handle}`;
 
         // Get unique colors from variants (filter for 1.75mm only for now)
@@ -381,6 +323,36 @@ serve(async (req) => {
             ? `3DXTech ${product.title} - ${color}`
             : `3DXTech ${product.title}`;
           
+          // Create scraped product for validation
+          const scrapedProduct: ScrapedProduct = {
+            productId: `3dxtech-${product.id}-${variant.id}`,
+            title: productTitle,
+            price: parseFloat(variant.price) || null,
+            url: productUrl,
+            imageUrl: colorImage,
+            tdsUrl: tdsUrl,
+            material: material,
+            colorHex: getColorHex(color),
+            colorFamily: getColorFamily(color),
+            netWeightG: weight || 1000,
+            diameterMm: diameter || 1.75,
+            sku: variant.sku || null,
+            barcode: variant.barcode,
+            available: true,
+            currency: 'USD',
+            region: 'US',
+          };
+          
+          // Validate scraped product using shared validation
+          const validation = validateScrapedProduct(scrapedProduct);
+          if (!validation.valid) {
+            console.warn(`Validation errors for ${productTitle}:`, validation.errors);
+            results.validationWarnings++;
+          }
+          if (validation.warnings.length > 0) {
+            console.log(`Validation warnings for ${productTitle}:`, validation.warnings);
+          }
+          
           // Check if this product already exists
           const { data: existing } = await supabase
             .from('filaments')
@@ -406,6 +378,7 @@ serve(async (req) => {
             net_weight_g: weight || 1000,
             diameter_nominal_mm: diameter || 1.75,
             variant_available: true,
+            available_regions: ['US'], // 3DXTech is US-only
           };
 
           if (existing) {

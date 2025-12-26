@@ -1,41 +1,18 @@
+/**
+ * BASE SCRAPER MODULE
+ * 
+ * Provides abstract base class for all brand scrapers.
+ * ScrapedProduct interface is imported from shared module for consistency.
+ * 
+ * @deprecated ScrapedProduct - Use import from '../_shared/scraper-validation.ts' instead
+ */
+
 import type { BrandConfig } from "../config.ts";
 import { sleep, retryWithBackoff, DEFAULT_USER_AGENT } from "../utils.ts";
 
-export interface ScrapedProduct {
-  productId: string;
-  sku: string | null;
-  title: string;
-  price: number | null;
-  compareAtPrice: number | null;
-  available: boolean;
-  currency: string;
-  url: string;
-  scrapedAt: Date;
-  source: string;
-  // Enhanced fields for comprehensive data capture
-  imageUrl: string | null;
-  barcode: string | null;
-  description: string | null;
-  // NEW: Additional identifiers
-  mpn: string | null;
-  // NEW: TDS Discovery
-  tdsUrl: string | null;
-  // NEW: Color extraction
-  colorHex: string | null;
-  colorName: string | null;
-  // NEW: Print settings from product page
-  nozzleTempMin: number | null;
-  nozzleTempMax: number | null;
-  bedTempMin: number | null;
-  bedTempMax: number | null;
-  // NEW: Physical specs
-  spoolMaterial: string | null;
-  netWeightG: number | null;
-  diameterMm: number | null;
-  // NEW: Spool dimensions
-  spoolOuterDiameterMm: number | null;
-  spoolWidthMm: number | null;
-}
+// Re-export ScrapedProduct from shared module for backwards compatibility
+export type { ScrapedProduct } from "../../_shared/scraper-validation.ts";
+import type { ScrapedProduct } from "../../_shared/scraper-validation.ts";
 
 export abstract class BaseScraper {
   protected config: BrandConfig;
