@@ -1572,7 +1572,8 @@ export type FilamentRecord = {
 // REGION AND CURRENCY SUPPORT
 // ============================================================================
 
-export type RegionCode = 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP';
+// Core regions plus European sub-regions (DE, IT, FR, ES have separate catalogs but map to EUR/EU)
+export type RegionCode = 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP' | 'DE' | 'IT' | 'FR' | 'ES';
 
 export const REGION_CURRENCIES: Record<RegionCode, string> = {
   US: 'USD',
@@ -1581,16 +1582,49 @@ export const REGION_CURRENCIES: Record<RegionCode, string> = {
   EU: 'EUR',
   AU: 'AUD',
   JP: 'JPY',
+  DE: 'EUR', // European sub-region
+  IT: 'EUR', // European sub-region
+  FR: 'EUR', // European sub-region
+  ES: 'EUR', // European sub-region
 };
 
-export const REGIONAL_FIELD_MAPPING: Record<RegionCode, { priceField: string; urlField: string }> = {
-  US: { priceField: 'variant_price', urlField: 'product_url' },
+// Mapping from EU sub-regions to main EU region for price/URL field storage
+export const EU_SUB_REGION_TO_MAIN: Record<string, RegionCode> = {
+  DE: 'EU',
+  IT: 'EU',
+  FR: 'EU',
+  ES: 'EU',
+};
+
+// Get the main region for field storage (maps EU sub-regions to EU)
+export function getMainRegion(region: string): RegionCode {
+  const euSubRegion = EU_SUB_REGION_TO_MAIN[region as keyof typeof EU_SUB_REGION_TO_MAIN];
+  return euSubRegion || (region as RegionCode);
+}
+
+export const REGIONAL_FIELD_MAPPING: Record<RegionCode, { priceField: string; urlField: string; compareAtPriceField?: string }> = {
+  US: { priceField: 'variant_price', urlField: 'product_url', compareAtPriceField: 'variant_compare_at_price' },
   CA: { priceField: 'price_cad', urlField: 'product_url_ca' },
   UK: { priceField: 'price_gbp', urlField: 'product_url_uk' },
   EU: { priceField: 'price_eur', urlField: 'product_url_eu' },
   AU: { priceField: 'price_aud', urlField: 'product_url_au' },
   JP: { priceField: 'price_jpy', urlField: 'product_url_jp' },
+  // EU sub-regions map to main EU fields
+  DE: { priceField: 'price_eur', urlField: 'product_url_eu' },
+  IT: { priceField: 'price_eur', urlField: 'product_url_eu' },
+  FR: { priceField: 'price_eur', urlField: 'product_url_eu' },
+  ES: { priceField: 'price_eur', urlField: 'product_url_eu' },
 };
+
+// Get regional field mapping for any region (including sub-regions)
+export function getRegionalFieldMapping(region: string): { priceField: string; urlField: string; compareAtPriceField?: string } {
+  const mapping = REGIONAL_FIELD_MAPPING[region as RegionCode];
+  if (mapping) return mapping;
+  
+  // Fallback to US if unknown region
+  console.warn(`Unknown region: ${region}, falling back to US field mapping`);
+  return REGIONAL_FIELD_MAPPING.US;
+}
 
 // ============================================================================
 // DATA EXTRACTION HELPERS
