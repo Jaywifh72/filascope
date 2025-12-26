@@ -141,16 +141,27 @@ export const FILAMENT_SCHEMA: FilamentFieldDefinition[] = [
         'PLA+', 'ABS+', 'PETG+',
         // Carbon fiber composites
         'PLA-CF', 'PETG-CF', 'ABS-CF', 'ASA-CF', 'PA-CF', 'PC-CF', 'PET-CF',
+        'PEEK-CF', 'PEI-CF', 'PEKK-CF', 'CPE-CF', 'PPA-CF', 'PP-CF',
         // Glass fiber composites
-        'PA-GF', 'PP-GF', 'PLA-GF', 'PETG-GF', 'ABS-GF',
+        'PA-GF', 'PP-GF', 'PLA-GF', 'PETG-GF', 'ABS-GF', 'ASA-GF', 'PET-GF', 'PPA-GF',
         // Engineering/specialty plastics
-        'PCTG', 'CPE', 'PEEK', 'PEI', 'PEBA', 'POM',
+        'PCTG', 'CPE', 'CPE+', 'PEEK', 'PEI', 'PEBA', 'POM', 'PEKK', 'PPA', 'PPSU', 'PSU', 'PPS',
+        // ESD (Electrostatic Discharge) variants
+        'ESD-ABS', 'ESD-PETG', 'ESD-PLA', 'ESD-PC', 'ESD-PEEK', 'ESD-PEKK', 'ESD-PEI',
+        // FR (Flame Retardant) variants
+        'FR-ABS', 'FR-PC',
         // Blends
-        'PC-ABS', 'PC-ASA',
-        // Flexible
-        'TPE', 'TPU-95A', 'TPU-85A', 'TPU-90A',
-        // Other
-        'Other'
+        'PC-ABS', 'PC-ASA', 'PC-PBT',
+        // Flexible with hardness
+        'TPE', 'TPU-95A', 'TPU-90A', 'TPU-85A', 'TPU-83A', 'TPU-98A', 'TPU-64D',
+        'PEBA-95A', 'PEBA-85A',
+        // Specialty/additive materials
+        'PLA-Wood', 'PLA-Metal', 'PLA-Marble', 'PLA-Stone', 'PLA-Glow',
+        'PVB', 'HTPLA', 'LW-PLA', 'LW-ASA',
+        // Support materials
+        'Support', 'Breakaway', 'Cleaning',
+        // Other/Unknown
+        'Other', 'Unknown'
       ]
     },
     exportOrder: 3,
@@ -1825,45 +1836,155 @@ export function extractMaterial(title: string, productType?: string): string | n
   const combined = `${title} ${productType || ''}`.toUpperCase();
   
   // Material normalization mappings (non-standard → canonical)
+  // Order matters: check specific multi-word patterns before shorter patterns
   const normalizationMap: Record<string, string> = {
-    // PLA variants
+    // PLA specialty variants (check before base PLA)
+    'PLA-WOOD': 'PLA-Wood',
+    'PLA WOOD': 'PLA-Wood',
+    'WOODFILL': 'PLA-Wood',
+    'WOOD FILL': 'PLA-Wood',
+    'WOOD PLA': 'PLA-Wood',
+    'PLA-METAL': 'PLA-Metal',
+    'PLA METAL': 'PLA-Metal',
+    'METALFILL': 'PLA-Metal',
+    'PLA-MARBLE': 'PLA-Marble',
+    'PLA MARBLE': 'PLA-Marble',
+    'MARBLE PLA': 'PLA-Marble',
+    'PLA-STONE': 'PLA-Stone',
+    'PLA STONE': 'PLA-Stone',
+    'PLA-GLOW': 'PLA-Glow',
+    'PLA GLOW': 'PLA-Glow',
+    'GLOW PLA': 'PLA-Glow',
+    'LUMINOUS PLA': 'PLA-Glow',
+    // PLA enhanced variants
     'RAPID PLA+': 'PLA+',
     'RAPID PLA': 'PLA',
     'PLA PRO': 'PLA+',
     'PLA PLUS': 'PLA+',
     'PLA TOUGH': 'PLA+',
+    'TOUGH PLA': 'PLA+',
     'PLA MATTE': 'PLA',
     'PLA SILK': 'PLA',
     'HYPER PLA': 'PLA',
     'HIGH SPEED PLA': 'PLA',
     'HS PLA': 'PLA',
+    'HTPLA': 'HTPLA',
+    'HT-PLA': 'HTPLA',
+    'HT PLA': 'HTPLA',
+    'LW-PLA': 'LW-PLA',
+    'LW PLA': 'LW-PLA',
+    'LIGHTWEIGHT PLA': 'LW-PLA',
+    'FLEXPLA': 'TPU',
     // Nylon/PA variants
-    'NYLON': 'PA',
     'NYLON-CF': 'PA-CF',
-    'NYLON-GF': 'PA-GF',
     'NYLON CF': 'PA-CF',
+    'NYLONX': 'PA-CF',
+    'NYLON-GF': 'PA-GF',
     'NYLON GF': 'PA-GF',
-    'PA6': 'PA',
-    'PA12': 'PA',
+    'NYLONG': 'PA-GF',
+    'NYLON-AF': 'PA',
+    'NYLON AF': 'PA',
+    'NYLON': 'PA',
     'PA6-CF': 'PA-CF',
     'PA12-CF': 'PA-CF',
     'PA6-GF': 'PA-GF',
+    'PA6': 'PA',
+    'PA12': 'PA',
     // PETG variants
     'PETG+': 'PETG+',
     'PRO PETG': 'PETG+',
     'PETG PRO': 'PETG+',
+    'RPETG': 'PETG',
+    'R-PETG': 'PETG',
     // ABS variants
     'ABS+': 'ABS+',
     'ABS PRO': 'ABS+',
-    // TPU variants
+    'ABS HT': 'ABS',
+    'LW-ASA': 'LW-ASA',
+    'LW ASA': 'LW-ASA',
+    'ASA+': 'ASA',
+    // TPU variants with hardness
     'TPU 95A': 'TPU-95A',
     'TPU 90A': 'TPU-90A',
     'TPU 85A': 'TPU-85A',
+    'TPU 83A': 'TPU-83A',
+    'TPU 98A': 'TPU-98A',
+    'TPU 64D': 'TPU-64D',
     'TPU95A': 'TPU-95A',
     'TPU90A': 'TPU-90A',
     'TPU85A': 'TPU-85A',
-    // Other
+    'TPE-83A': 'TPU-83A',
+    'TPU VARIOSHORE': 'TPU',
+    'TPU AIR': 'TPU',
+    'TPU GLOW': 'TPU',
+    // PEBA variants
+    'PEBA 95A': 'PEBA-95A',
+    'PEBA 85A': 'PEBA-85A',
+    'PEBA AIR': 'PEBA',
+    // ESD variants (must come before base materials)
+    'ESD-PEI 1010': 'ESD-PEI',
+    'ESD-PEI 9085': 'ESD-PEI',
+    'ESD-PEEK': 'ESD-PEEK',
+    'ESD-PEKK': 'ESD-PEKK',
+    'ESD-PETG': 'ESD-PETG',
+    'ESD-PLA': 'ESD-PLA',
+    'ESD-ABS': 'ESD-ABS',
+    'ESD-PC': 'ESD-PC',
+    'ESD ABS': 'ESD-ABS',
+    'ESD PETG': 'ESD-PETG',
+    'ESD PC': 'ESD-PC',
+    // FR variants
+    'FR-ABS': 'FR-ABS',
+    'FR ABS': 'FR-ABS',
+    'FIREWIRE ABS': 'FR-ABS',
+    'FR-PC': 'FR-PC',
+    'FR PC': 'FR-PC',
+    'PC-FR': 'FR-PC',
+    'FIREWIRE PC': 'FR-PC',
+    // PEI variants
+    'PEI 1010': 'PEI',
+    'PEI 9085': 'PEI',
+    'ULTEM': 'PEI',
+    // PEKK variants
+    'PEKK-A': 'PEKK',
+    'PEKK-CF': 'PEKK-CF',
+    'PEKK CF': 'PEKK-CF',
+    // PC variants
+    'PC PRO': 'PC',
+    'EZPC': 'PC',
+    'PC BLEND': 'PC',
+    'PC-PBT': 'PC-PBT',
+    'PC PBT': 'PC-PBT',
+    // CPE variants
+    'CPE+': 'CPE+',
+    'CPE-CF': 'CPE-CF',
+    'CPE CF': 'CPE-CF',
+    // PPA variants
+    'PPA-CF': 'PPA-CF',
+    'PPA CF': 'PPA-CF',
+    'PPA-GF': 'PPA-GF',
+    'PPA GF': 'PPA-GF',
+    // Other specialty
     'PRO PCTG': 'PCTG',
+    'PVB': 'PVB',
+    'PPS-CF': 'PPS',
+    'PPS CF': 'PPS',
+    'RPLA': 'PLA',
+    'R-PLA': 'PLA',
+    'ALLPHA': 'Other',
+    'PLA/PHA': 'Other',
+    'TITANX': 'ASA',
+    'RYNO': 'ASA',
+    // Support materials
+    'BREAKAWAY': 'Breakaway',
+    'BREAK AWAY': 'Breakaway',
+    'CLEANING': 'Cleaning',
+    'SUPPORT': 'Support',
+    'SIMUBONE': 'Other',
+    'CARBON': 'Other',
+    'CARBON FIBER': 'Other',
+    'METAL': 'Other',
+    'UNKNOWN': 'Unknown',
   };
   
   // Check normalization mappings first (specific variants)
@@ -1875,9 +1996,13 @@ export function extractMaterial(title: string, productType?: string): string | n
   
   // Check for composite materials (must come before base materials)
   const composites = [
+    // CF composites
+    'PEEK-CF', 'PEI-CF', 'PEKK-CF', 'CPE-CF', 'PPA-CF', 'PP-CF',
     'PLA-CF', 'PETG-CF', 'ABS-CF', 'PA-CF', 'PC-CF', 'ASA-CF', 'PET-CF',
-    'PLA-GF', 'PETG-GF', 'ABS-GF', 'PA-GF', 'PP-GF',
-    'PC-ABS', 'PC-ASA',
+    // GF composites
+    'PLA-GF', 'PETG-GF', 'ABS-GF', 'PA-GF', 'PP-GF', 'ASA-GF', 'PET-GF', 'PPA-GF',
+    // Blends
+    'PC-ABS', 'PC-ASA', 'PC-PBT',
   ];
   
   for (const mat of composites) {
@@ -1887,18 +2012,35 @@ export function extractMaterial(title: string, productType?: string): string | n
   }
   
   // Check for TPU with hardness
-  const tpuMatch = combined.match(/TPU[\s-]?(95|90|85)A?/i);
+  const tpuMatch = combined.match(/TPU[\s-]?(95|90|85|83|98)A?/i);
   if (tpuMatch) {
     return `TPU-${tpuMatch[1]}A`;
   }
   
+  // Check for TPU with D hardness
+  const tpuDMatch = combined.match(/TPU[\s-]?(64)D/i);
+  if (tpuDMatch) {
+    return `TPU-${tpuDMatch[1]}D`;
+  }
+  
+  // Check for PEBA with hardness
+  const pebaMatch = combined.match(/PEBA[\s-]?(95|85)A?/i);
+  if (pebaMatch) {
+    return `PEBA-${pebaMatch[1]}A`;
+  }
+  
   // Check for base materials (order matters - check longer names first)
   const baseMaterials = [
-    'PETG+', 'PLA+', 'ABS+',
-    'PETG', 'ABS', 'TPU', 'ASA', 'PLA',
-    'PCTG', 'PEEK', 'PEI', 'PEBA', 'CPE', 'POM',
-    'PA', 'PC', 'PVA', 'HIPS', 'PP', 'PET',
-    'TPE',
+    // Enhanced variants first
+    'PETG+', 'PLA+', 'ABS+', 'CPE+',
+    // Engineering plastics
+    'PCTG', 'PEEK', 'PEKK', 'PEI', 'PEBA', 'CPE', 'POM', 'PPA', 'PPSU', 'PSU', 'PPS',
+    // Common plastics
+    'PETG', 'ABS', 'ASA', 'PLA',
+    // Flexible
+    'TPU', 'TPE',
+    // Other base
+    'PA', 'PC', 'PVA', 'HIPS', 'PP', 'PET', 'PVB',
   ];
   
   for (const mat of baseMaterials) {
@@ -1914,6 +2056,7 @@ export function extractMaterial(title: string, productType?: string): string | n
 
 /**
  * Normalize an existing material value to canonical form
+ * This handles database values that may have been stored in non-canonical forms
  */
 export function normalizeMaterial(material: string | null | undefined): string | null {
   if (!material) return null;
@@ -1921,31 +2064,153 @@ export function normalizeMaterial(material: string | null | undefined): string |
   const upper = material.toUpperCase().trim();
   
   const normMap: Record<string, string> = {
+    // PLA specialty
+    'PLA-WOOD': 'PLA-Wood',
+    'WOOD': 'PLA-Wood',
+    'PLA-METAL': 'PLA-Metal',
+    'METAL': 'PLA-Metal',
+    'PLA-MARBLE': 'PLA-Marble',
+    'MARBLE PLA': 'PLA-Marble',
+    'PLA-STONE': 'PLA-Stone',
+    'PLA-GLOW': 'PLA-Glow',
+    // PLA variants
     'RAPID PLA+': 'PLA+',
     'RAPID PLA': 'PLA',
     'PLA PRO': 'PLA+',
     'PLA PLUS': 'PLA+',
+    'TOUGH PLA': 'PLA+',
     'HYPER PLA': 'PLA',
     'HIGH SPEED PLA': 'PLA',
     'HS PLA': 'PLA',
+    'PLA-BASIC': 'PLA',
+    'PLA-MATTE': 'PLA',
+    'PLA MATTE': 'PLA',
+    'PLA META': 'PLA',
+    'PLA TEMP': 'PLA',
+    'PLA UV': 'PLA',
+    'PLA+ 2.0': 'PLA+',
+    'VOLCANO PLA': 'PLA',
+    'PEARLESCENT PLA': 'PLA',
+    'PLA-GALAXY': 'PLA',
+    'PLA BLEND': 'PLA',
+    'PLA-CONDUCTIVE': 'ESD-PLA',
+    'PLA/PHA': 'Other',
+    'ALLPHA': 'Other',
+    // HTPLA
+    'HTPLA': 'HTPLA',
+    'HT-PLA': 'HTPLA',
+    'HTPLA-CF': 'PLA-CF',
+    // LW variants
+    'LW-PLA': 'LW-PLA',
+    'LW-PLA-HT': 'LW-PLA',
+    'LW-ASA': 'LW-ASA',
+    // Nylon/PA
     'NYLON': 'PA',
     'NYLON-CF': 'PA-CF',
     'NYLON-GF': 'PA-GF',
+    'NYLON-AF': 'PA',
+    'NYLONX': 'PA-CF',
+    'NYLONG': 'PA-GF',
     'PA6': 'PA',
     'PA12': 'PA',
     'PA6-CF': 'PA-CF',
     'PA12-CF': 'PA-CF',
+    // PETG
     'PRO PETG': 'PETG+',
     'PETG PRO': 'PETG+',
+    'RPETG': 'PETG',
+    'PETG IRIDESCENT': 'PETG',
+    // ABS
     'ABS PRO': 'ABS+',
-    'PRO PCTG': 'PCTG',
+    'ABS HT': 'ABS',
+    // ASA
+    'ASA+': 'ASA',
+    'TITANX': 'ASA',
+    'RYNO': 'ASA',
+    // TPU with hardness
     'TPU 95A': 'TPU-95A',
     'TPU 90A': 'TPU-90A',
     'TPU 85A': 'TPU-85A',
+    'TPU 83A': 'TPU-83A',
+    'TPU 98A': 'TPU-98A',
+    'TPU 64D': 'TPU-64D',
     'TPU95A': 'TPU-95A',
     'TPU90A': 'TPU-90A',
     'TPU85A': 'TPU-85A',
+    'TPE-83A': 'TPU-83A',
+    'TPU VARIOSHORE': 'TPU',
+    'TPU AIR': 'TPU',
+    'TPU GLOW': 'TPU',
+    'FLEXPLA': 'TPU',
+    // PEBA
+    'PEBA 95A': 'PEBA-95A',
+    'PEBA 85A': 'PEBA-85A',
+    'PEBA AIR': 'PEBA',
+    // ESD variants
+    'ESD-ABS': 'ESD-ABS',
+    'ESD-PETG': 'ESD-PETG',
+    'ESD-PLA': 'ESD-PLA',
+    'ESD-PC': 'ESD-PC',
+    'ESD-PEEK': 'ESD-PEEK',
+    'ESD-PEKK': 'ESD-PEKK',
+    'ESD-PEI': 'ESD-PEI',
+    'ESD PEI 1010': 'ESD-PEI',
+    'ESD PEI 9085': 'ESD-PEI',
+    // FR variants
+    'FR-ABS': 'FR-ABS',
+    'FR-PC': 'FR-PC',
+    'PC-FR': 'FR-PC',
+    // PEI
+    'PEI 1010': 'PEI',
+    'PEI 9085': 'PEI',
+    'PEI-CF': 'PEI-CF',
+    'ULTEM': 'PEI',
+    // PEKK
+    'PEKK-A': 'PEKK',
+    'PEKK-CF': 'PEKK-CF',
+    // PC variants
+    'PC PRO': 'PC',
+    'EZPC': 'PC',
+    'PC BLEND': 'PC',
+    'PC-PBT': 'PC-PBT',
+    // CPE
+    'CPE+': 'CPE+',
+    'CPE-CF': 'CPE-CF',
+    // CoPoly (ColorFabb)
+    'COPOLY-CF': 'PETG-CF',
+    'COPOLY-NGEN': 'PETG',
+    'COPOLY-HT': 'PETG',
+    'COPOLY-XT': 'PETG',
+    'NGEN': 'PETG',
+    // PPA
+    'PPA-CF': 'PPA-CF',
+    'PPA-GF': 'PPA-GF',
+    // PPS
+    'PPS-CF': 'PPS',
+    // Other specialty
+    'PRO PCTG': 'PCTG',
+    'CARBON': 'Other',
+    'CARBON FIBER': 'Other',
+    'SIMUBONE': 'Other',
+    'RPLA': 'PLA',
+    // Support materials
+    'SUPPORT': 'Support',
+    'BREAKAWAY': 'Breakaway',
+    'CLEANING': 'Cleaning',
+    'UNKNOWN': 'Unknown',
   };
   
-  return normMap[upper] || material;
+  // First check exact match
+  if (normMap[upper]) {
+    return normMap[upper];
+  }
+  
+  // Then check if any key is contained in the material string
+  for (const [key, value] of Object.entries(normMap)) {
+    if (upper.includes(key)) {
+      return value;
+    }
+  }
+  
+  return material;
 }
