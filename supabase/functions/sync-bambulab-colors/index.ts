@@ -8,6 +8,7 @@ import {
   type RegionCode 
 } from "../_shared/filament-schema.ts";
 import { getColorHex, getColorFamily } from "../_shared/color-mapping.ts";
+import { validateScrapedProduct } from "../_shared/scraper-validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -792,6 +793,30 @@ serve(async (req) => {
     // Process each color variant
     for (const [colorName, colorData] of Object.entries(BAMBU_ABS_COLORS)) {
       const productTitle = `Bambu Lab ${targetMaterial} - ${colorName}`;
+      
+      // Validate product data using shared validation
+      const validation = validateScrapedProduct({
+        productId: colorData.variantId,
+        title: productTitle,
+        price: regionalPrices.US,
+        url: getRegionalProductUrl("US", colorData.variantId),
+        material: targetMaterial,
+        colorFamily: colorData.colorFamily,
+        colorHex: colorData.hex,
+        netWeightG: BAMBU_ABS_BASE_DATA.net_weight_g,
+        nozzleTempMin: BAMBU_ABS_BASE_DATA.nozzle_temp_min_c,
+        nozzleTempMax: BAMBU_ABS_BASE_DATA.nozzle_temp_max_c,
+        bedTempMin: BAMBU_ABS_BASE_DATA.bed_temp_min_c,
+        bedTempMax: BAMBU_ABS_BASE_DATA.bed_temp_max_c,
+        region: 'US',
+      });
+      
+      if (!validation.valid) {
+        console.warn(`[BAMBU-COLORS] ⚠️ Validation errors for ${colorName}: ${validation.errors.join(', ')}`);
+      }
+      if (validation.warnings.length > 0) {
+        console.log(`[BAMBU-COLORS] ℹ️ Validation warnings for ${colorName}: ${validation.warnings.join(', ')}`);
+      }
       
       // Check if this specific color variant already exists
       const existing = existingFilaments?.find(f => 
