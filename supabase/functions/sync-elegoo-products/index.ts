@@ -254,38 +254,11 @@ function getAvailableRegionalCatalogs(): Record<string, string> {
   return { ...ELEGOO_CATALOG_IDS };
 }
 
-function extractMaterialFromTitle(title: string): string | null {
-  const titleLower = title.toLowerCase();
-  
-  // Check for specific materials in order of specificity
-  if (titleLower.includes('pla-cf') || titleLower.includes('pla cf')) return 'PLA-CF';
-  if (titleLower.includes('petg-cf') || titleLower.includes('petg cf')) return 'PETG-CF';
-  if (titleLower.includes('pc-cf') || titleLower.includes('pc cf')) return 'PC-CF';
-  if (titleLower.includes('petg')) return 'PETG';
-  if (titleLower.includes('abs')) return 'ABS';
-  if (titleLower.includes('tpu')) return 'TPU';
-  if (titleLower.includes('pla+') || titleLower.includes('pla plus')) return 'PLA+';
-  if (titleLower.includes('pla')) return 'PLA';
-  if (titleLower.includes('asa')) return 'ASA';
-  if (titleLower.includes('nylon') || titleLower.includes('pa')) return 'PA';
-  if (/^pc\s*[-–]/.test(titleLower) || titleLower.includes('polycarbonate')) return 'PC';
-  
-  return null;
-}
-
-function extractWeightFromTitle(title: string): number | null {
-  const kgMatch = title.match(/(\d+(?:\.\d+)?)\s*kg/i);
-  if (kgMatch) {
-    return parseFloat(kgMatch[1]) * 1000;
-  }
-  
-  const gMatch = title.match(/(\d+)\s*g\b/i);
-  if (gMatch) {
-    return parseInt(gMatch[1]);
-  }
-  
-  return 1000;
-}
+// NOTE: extractMaterialFromTitle, extractWeightFromTitle, and computeProductLineId
+// have been removed - use shared helpers from filament-schema.ts instead:
+// - sharedExtractMaterial(title, material)
+// - sharedExtractWeight(title, defaultWeight)  
+// - sharedGenerateProductLineId(vendor, material, title)
 
 function extractDiameterFromTitle(title: string): number {
   if (title.includes('2.85') || title.includes('3mm') || title.includes('3.0mm')) {
@@ -298,34 +271,6 @@ function extractDiameterFromTitle(title: string): number {
 function extractColorAndHex(title: string): { colorName: string | null; colorHex: string | null } {
   const { colorName, colorHex } = sharedExtractColor(title);
   return { colorName, colorHex };
-}
-
-// Compute a product line ID for grouping color variants
-// e.g., "PLA Matte - Beige" and "PLA Matte - Black" -> "elegoo-pla-matte"
-function computeProductLineId(vendor: string, title: string, material: string | null): string {
-  // Remove color suffix (after last dash)
-  let baseName = title.replace(/\s-\s[^-]+$/, '').trim();
-  
-  // Remove weight specifications
-  baseName = baseName.replace(/\s*\d+(?:\.\d+)?(?:kg|g)\s*/gi, '').trim();
-  
-  // Remove diameter specifications
-  baseName = baseName.replace(/\s*\d+(?:\.\d+)?mm\s*/gi, '').trim();
-  
-  // Remove parenthetical content like "(1kg)" or "(NFC)"
-  baseName = baseName.replace(/\s*\([^)]*\)\s*/g, ' ').trim();
-  
-  // Normalize: lowercase, replace spaces with dashes, remove special chars
-  const normalized = baseName
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-  
-  const vendorSlug = vendor.toLowerCase().replace(/\s+/g, '-');
-  
-  return `${vendorSlug}-${normalized}`;
 }
 
 function normalizeProductTitle(title: string): string {
@@ -707,8 +652,8 @@ serve(async (req) => {
           console.log(`[ELEGOO-SYNC] 📦 Filament ${processedCount}/${productsByNormalizedTitle.size}: ${product.title}`);
         }
         
-        const material = product.material || extractMaterialFromTitle(product.title);
-        const weight = extractWeightFromTitle(product.title);
+        const material = product.material || sharedExtractMaterial(product.title, '');
+        const weight = sharedExtractWeight(product.title, 1000);
         const diameter = extractDiameterFromTitle(product.title);
         const techSpecs = product.techSpecs;
         const { colorName, colorHex } = extractColorAndHex(product.title);
@@ -728,7 +673,7 @@ serve(async (req) => {
         }
         
         // Compute product line ID early - needed for cross-region matching
-        const productLineId = computeProductLineId('Elegoo', product.title, material);
+        const productLineId = sharedGenerateProductLineId('elegoo', material || '', product.title);
 
         if (shouldLogDetails) {
           console.log(`[ELEGOO-SYNC]    Material: ${material || 'UNKNOWN'}`);
