@@ -59,6 +59,173 @@ function extractTdsUrl(bodyHtml: string): string | null {
   return null;
 }
 
+// Extract temperature specifications from product body HTML
+function extractTemperatures(bodyHtml: string, material: string): { 
+  nozzleTempMin: number | null; 
+  nozzleTempMax: number | null; 
+  bedTempMin: number | null; 
+  bedTempMax: number | null 
+} {
+  const result = {
+    nozzleTempMin: null as number | null,
+    nozzleTempMax: null as number | null,
+    bedTempMin: null as number | null,
+    bedTempMax: null as number | null,
+  };
+  
+  // Normalize HTML for parsing
+  const text = bodyHtml.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+  
+  // Pattern for nozzle/extruder temperature ranges like "260-280°C" or "260 - 280 C"
+  const nozzlePatterns = [
+    /(?:nozzle|extruder|printing|print|hotend)\s*(?:temp(?:erature)?)?[:\s]*(\d{2,3})\s*[-–]\s*(\d{2,3})\s*[°]?\s*[CF]/i,
+    /(\d{2,3})\s*[-–]\s*(\d{2,3})\s*[°]?\s*[CF]?\s*(?:nozzle|extruder|printing)/i,
+    /print\s*temp[:\s]*(\d{2,3})\s*[-–]\s*(\d{2,3})/i,
+  ];
+  
+  for (const pattern of nozzlePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      const temp1 = parseInt(match[1], 10);
+      const temp2 = parseInt(match[2], 10);
+      if (temp1 >= 150 && temp1 <= 500 && temp2 >= 150 && temp2 <= 500) {
+        result.nozzleTempMin = Math.min(temp1, temp2);
+        result.nozzleTempMax = Math.max(temp1, temp2);
+        break;
+      }
+    }
+  }
+  
+  // Pattern for bed/build plate temperature ranges
+  const bedPatterns = [
+    /(?:bed|build\s*plate|platform|heated\s*bed)\s*(?:temp(?:erature)?)?[:\s]*(\d{2,3})\s*[-–]\s*(\d{2,3})\s*[°]?\s*[CF]/i,
+    /(\d{2,3})\s*[-–]\s*(\d{2,3})\s*[°]?\s*[CF]?\s*(?:bed|build\s*plate|platform)/i,
+  ];
+  
+  for (const pattern of bedPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      const temp1 = parseInt(match[1], 10);
+      const temp2 = parseInt(match[2], 10);
+      if (temp1 >= 20 && temp1 <= 200 && temp2 >= 20 && temp2 <= 200) {
+        result.bedTempMin = Math.min(temp1, temp2);
+        result.bedTempMax = Math.max(temp1, temp2);
+        break;
+      }
+    }
+  }
+  
+  // If no temps found from HTML, use material-based defaults for 3DXTech specialty materials
+  if (!result.nozzleTempMin && !result.nozzleTempMax) {
+    const defaults = get3DXTechMaterialDefaults(material);
+    if (defaults) {
+      result.nozzleTempMin = defaults.nozzleTempMin;
+      result.nozzleTempMax = defaults.nozzleTempMax;
+      result.bedTempMin = result.bedTempMin || defaults.bedTempMin;
+      result.bedTempMax = result.bedTempMax || defaults.bedTempMax;
+    }
+  }
+  
+  return result;
+}
+
+// Material-based temperature defaults for 3DXTech specialty materials
+function get3DXTechMaterialDefaults(material: string): {
+  nozzleTempMin: number;
+  nozzleTempMax: number;
+  bedTempMin: number;
+  bedTempMax: number;
+} | null {
+  const materialLower = material.toLowerCase();
+  
+  // High-performance materials
+  if (materialLower.includes('peek')) {
+    return { nozzleTempMin: 370, nozzleTempMax: 410, bedTempMin: 120, bedTempMax: 150 };
+  }
+  if (materialLower.includes('pekk')) {
+    return { nozzleTempMin: 340, nozzleTempMax: 380, bedTempMin: 120, bedTempMax: 140 };
+  }
+  if (materialLower.includes('pei') || materialLower.includes('ultem')) {
+    return { nozzleTempMin: 350, nozzleTempMax: 390, bedTempMin: 120, bedTempMax: 160 };
+  }
+  
+  // Carbon fiber reinforced
+  if (materialLower.includes('cf')) {
+    if (materialLower.includes('nylon') || materialLower.includes('pa')) {
+      return { nozzleTempMin: 250, nozzleTempMax: 280, bedTempMin: 70, bedTempMax: 90 };
+    }
+    if (materialLower.includes('abs')) {
+      return { nozzleTempMin: 240, nozzleTempMax: 270, bedTempMin: 100, bedTempMax: 110 };
+    }
+    if (materialLower.includes('petg')) {
+      return { nozzleTempMin: 245, nozzleTempMax: 270, bedTempMin: 70, bedTempMax: 85 };
+    }
+    if (materialLower.includes('pc')) {
+      return { nozzleTempMin: 270, nozzleTempMax: 310, bedTempMin: 110, bedTempMax: 130 };
+    }
+    if (materialLower.includes('asa')) {
+      return { nozzleTempMin: 245, nozzleTempMax: 270, bedTempMin: 90, bedTempMax: 110 };
+    }
+  }
+  
+  // ESD materials
+  if (materialLower.includes('esd')) {
+    if (materialLower.includes('abs')) {
+      return { nozzleTempMin: 230, nozzleTempMax: 260, bedTempMin: 100, bedTempMax: 110 };
+    }
+    if (materialLower.includes('petg')) {
+      return { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 70, bedTempMax: 85 };
+    }
+    if (materialLower.includes('pc')) {
+      return { nozzleTempMin: 270, nozzleTempMax: 300, bedTempMin: 100, bedTempMax: 120 };
+    }
+  }
+  
+  // Fire retardant
+  if (materialLower.includes('fr')) {
+    if (materialLower.includes('abs')) {
+      return { nozzleTempMin: 230, nozzleTempMax: 260, bedTempMin: 100, bedTempMax: 110 };
+    }
+    if (materialLower.includes('pc')) {
+      return { nozzleTempMin: 270, nozzleTempMax: 300, bedTempMin: 100, bedTempMax: 120 };
+    }
+  }
+  
+  // Standard materials
+  if (materialLower === 'asa') {
+    return { nozzleTempMin: 240, nozzleTempMax: 260, bedTempMin: 90, bedTempMax: 110 };
+  }
+  if (materialLower === 'abs') {
+    return { nozzleTempMin: 230, nozzleTempMax: 260, bedTempMin: 100, bedTempMax: 110 };
+  }
+  if (materialLower === 'petg') {
+    return { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 70, bedTempMax: 85 };
+  }
+  if (materialLower === 'pc' || materialLower === 'polycarbonate') {
+    return { nozzleTempMin: 270, nozzleTempMax: 310, bedTempMin: 100, bedTempMax: 120 };
+  }
+  if (materialLower === 'pc-abs') {
+    return { nozzleTempMin: 250, nozzleTempMax: 280, bedTempMin: 100, bedTempMax: 110 };
+  }
+  if (materialLower.includes('nylon') || materialLower.includes('pa')) {
+    return { nozzleTempMin: 250, nozzleTempMax: 280, bedTempMin: 70, bedTempMax: 90 };
+  }
+  if (materialLower === 'pla') {
+    return { nozzleTempMin: 190, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 65 };
+  }
+  if (materialLower === 'tpu') {
+    return { nozzleTempMin: 220, nozzleTempMax: 250, bedTempMin: 40, bedTempMax: 60 };
+  }
+  if (materialLower === 'pva') {
+    return { nozzleTempMin: 180, nozzleTempMax: 210, bedTempMin: 45, bedTempMax: 60 };
+  }
+  if (materialLower === 'hips') {
+    return { nozzleTempMin: 220, nozzleTempMax: 250, bedTempMin: 90, bedTempMax: 110 };
+  }
+  
+  return null;
+}
+
 // Extract material type from product title and tags
 // Using local function optimized for 3DXTech's specialized materials
 function extract3DXTechMaterial(title: string, tags: string[] | string): string {
@@ -356,11 +523,14 @@ serve(async (req) => {
           // Check if this product already exists
           const { data: existing } = await supabase
             .from('filaments')
-            .select('id, featured_image, tds_url')
+            .select('id, featured_image, tds_url, nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, bed_temp_max_c')
             .eq('vendor', '3DXTech')
             .ilike('product_title', `%${product.title}%`)
             .ilike('product_title', `%${color}%`)
             .maybeSingle();
+
+          // Extract temperatures from body_html
+          const temps = extractTemperatures(product.body_html || '', material);
 
           const filamentData = {
             product_title: productTitle,
@@ -379,10 +549,15 @@ serve(async (req) => {
             diameter_nominal_mm: diameter || 1.75,
             variant_available: true,
             available_regions: ['US'], // 3DXTech is US-only
+            // Add temperatures if found
+            ...(temps.nozzleTempMin ? { nozzle_temp_min_c: temps.nozzleTempMin } : {}),
+            ...(temps.nozzleTempMax ? { nozzle_temp_max_c: temps.nozzleTempMax } : {}),
+            ...(temps.bedTempMin ? { bed_temp_min_c: temps.bedTempMin } : {}),
+            ...(temps.bedTempMax ? { bed_temp_max_c: temps.bedTempMax } : {}),
           };
 
           if (existing) {
-            // Update existing
+            // Update existing - preserve temps if we don't have new ones
             const { error } = await supabase
               .from('filaments')
               .update({
@@ -391,6 +566,11 @@ serve(async (req) => {
                 featured_image: colorImage || existing.featured_image,
                 // Don't overwrite TDS if already set and new is null
                 tds_url: tdsUrl || existing.tds_url,
+                // Preserve existing temps if new ones not found
+                nozzle_temp_min_c: temps.nozzleTempMin || existing.nozzle_temp_min_c,
+                nozzle_temp_max_c: temps.nozzleTempMax || existing.nozzle_temp_max_c,
+                bed_temp_min_c: temps.bedTempMin || existing.bed_temp_min_c,
+                bed_temp_max_c: temps.bedTempMax || existing.bed_temp_max_c,
               })
               .eq('id', existing.id);
 

@@ -95,29 +95,64 @@ serve(async (req) => {
         const html = scrapeData.data?.html || '';
         const markdown = scrapeData.data?.markdown || '';
 
-        // Extract product image from HTML
+        // Extract product image from HTML using multiple strategies
         let imageUrl: string | null = null;
         
-        // Look for product images in NinjaTek's HTML structure
-        const imgPatterns = [
-          /src="(https:\/\/ninjatek\.com\/wp-content\/uploads\/[^"]+\.(?:jpg|jpeg|png|webp))"/gi,
-          /srcset="(https:\/\/ninjatek\.com\/wp-content\/uploads\/[^"\s]+\.(?:jpg|jpeg|png|webp))[^"]*"/gi,
-          /<img[^>]+class="[^"]*woocommerce-product-gallery__image[^"]*"[^>]+src="([^"]+)"/gi,
-          /data-large_image="([^"]+)"/gi,
-        ];
-
-        for (const pattern of imgPatterns) {
-          const matches = html.matchAll(pattern);
-          for (const match of matches) {
-            const url = match[1];
-            if (url && !url.includes('placeholder') && !url.includes('icon') && !url.includes('logo')) {
-              // Prefer larger images
-              if (!imageUrl || url.length > imageUrl.length) {
-                imageUrl = url;
-              }
-            }
+        // Strategy 1: OG image tag (most reliable for WooCommerce)
+        const ogImageMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) ||
+                            html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
+        if (ogImageMatch && ogImageMatch[1]) {
+          imageUrl = ogImageMatch[1];
+          console.log(`Found og:image for ${filament.product_title}`);
+        }
+        
+        // Strategy 2: WooCommerce gallery data-large_image (full-size product images)
+        if (!imageUrl) {
+          const largeImageMatch = html.match(/data-large_image="([^"]+)"/i);
+          if (largeImageMatch && largeImageMatch[1]) {
+            imageUrl = largeImageMatch[1];
+            console.log(`Found data-large_image for ${filament.product_title}`);
           }
-          if (imageUrl) break;
+        }
+        
+        // Strategy 3: WooCommerce gallery wrapper with data-thumb
+        if (!imageUrl) {
+          const thumbMatch = html.match(/data-thumb="([^"]+ninjatek\.com[^"]+)"/i);
+          if (thumbMatch && thumbMatch[1]) {
+            // Convert thumbnail to full-size by removing size suffix
+            imageUrl = thumbMatch[1].replace(/-\d+x\d+\./, '.');
+            console.log(`Found data-thumb for ${filament.product_title}`);
+          }
+        }
+        
+        // Strategy 4: First product image in wp-content/uploads
+        if (!imageUrl) {
+          const wpUploadMatch = html.match(/src="(https:\/\/ninjatek\.com\/wp-content\/uploads\/[^"]+\.(?:jpg|jpeg|png|webp))"/i);
+          if (wpUploadMatch && wpUploadMatch[1] && 
+              !wpUploadMatch[1].includes('placeholder') && 
+              !wpUploadMatch[1].includes('icon') && 
+              !wpUploadMatch[1].includes('logo')) {
+            // Try to get larger version by removing size suffix
+            imageUrl = wpUploadMatch[1].replace(/-\d+x\d+\./, '.');
+            console.log(`Found wp-content image for ${filament.product_title}`);
+          }
+        }
+        
+        // Extract TDS URL from product page
+        let tdsUrl: string | null = null;
+        const tdsPatterns = [
+          /href="([^"]*TDS[^"]*\.pdf[^"]*)"/i,
+          /href="([^"]*technical[^"]*data[^"]*sheet[^"]*\.pdf[^"]*)"/i,
+          /href="([^"]*_TDS_[^"]*\.pdf[^"]*)"/i,
+          /href="([^"]*Safety[^"]*Data[^"]*\.pdf[^"]*)"/i,
+        ];
+        for (const pattern of tdsPatterns) {
+          const match = html.match(pattern);
+          if (match && match[1]) {
+            tdsUrl = match[1].startsWith('http') ? match[1] : `https://ninjatek.com${match[1]}`;
+            console.log(`Found TDS for ${filament.product_title}`);
+            break;
+          }
         }
 
         // Extract price from markdown/HTML
@@ -162,6 +197,7 @@ serve(async (req) => {
         // Update the filament record
         const updateData: any = {};
         if (imageUrl) updateData.featured_image = imageUrl;
+        if (tdsUrl) updateData.tds_url = tdsUrl;
         if (price) updateData.variant_price = price;
         if (weight) updateData.net_weight_g = weight;
 
@@ -175,12 +211,13 @@ serve(async (req) => {
             console.error(`Update error for ${filament.product_title}: ${updateError.message}`);
             results.push({ id: filament.id, title: filament.product_title, status: 'error', error: updateError.message });
           } else {
-            console.log(`Updated ${filament.product_title}: image=${!!imageUrl}, price=${price}, weight=${weight}`);
+            console.log(`Updated ${filament.product_title}: image=${!!imageUrl}, tds=${!!tdsUrl}, price=${price}, weight=${weight}`);
             results.push({ 
               id: filament.id, 
               title: filament.product_title, 
               status: 'updated',
               image: imageUrl,
+              tds: tdsUrl,
               price,
               weight,
             });
