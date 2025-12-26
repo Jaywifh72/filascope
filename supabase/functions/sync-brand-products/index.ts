@@ -1,4 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { 
+  extractColorFamily, 
+  extractWeight, 
+  generateProductLineId, 
+  extractMaterial,
+  buildAvailableRegions,
+  type RegionCode 
+} from '../_shared/filament-schema.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,7 +14,9 @@ const corsHeaders = {
 };
 
 // Regional configuration for multi-region brands
+// Comprehensive list including all brands with regional stores
 const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
+  // === MAJOR BRANDS WITH REGIONAL SUBDOMAINS ===
   'bambu-lab': { 
     US: 'us.store.bambulab.com', 
     CA: 'ca.store.bambulab.com', 
@@ -47,6 +57,52 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
   'flashforge': { 
     US: 'www.flashforge.com', 
     EU: 'eu.flashforge.com' 
+  },
+  // === ADDITIONAL BRANDS WITH REGIONAL STORES ===
+  'eryone': {
+    US: 'eryone3d.com',
+    EU: 'eu.eryone3d.com'
+  },
+  'jayo': {
+    US: 'jayo3d.com',
+    UK: 'uk.jayo3d.com',
+    EU: 'eu.jayo3d.com'
+  },
+  'kingroon': {
+    US: 'kingroon.com',
+    EU: 'eu.kingroon.com'
+  },
+  'sovol': {
+    US: 'sovol3d.com',
+    EU: 'eu.sovol3d.com'
+  },
+  'artillery': {
+    US: 'artillery3d.com',
+    EU: 'eu.artillery3d.com'
+  },
+  'longer': {
+    US: 'www.longer3d.com',
+    EU: 'eu.longer3d.com'
+  },
+  'two-trees': {
+    US: 'www.twotrees3d.com',
+    EU: 'eu.twotrees3d.com'
+  },
+  'flsun': {
+    US: 'flsun3d.com',
+    EU: 'eu.flsun3d.com'
+  },
+  'tronxy': {
+    US: 'www.tronxy.com',
+    EU: 'eu.tronxy.com'
+  },
+  'geeetech': {
+    US: 'www.geeetech.com',
+    EU: 'eu.geeetech.com'
+  },
+  'voxelab': {
+    US: 'www.voxelab3dp.com',
+    EU: 'eu.voxelab3dp.com'
   },
 };
 
@@ -456,6 +512,8 @@ Deno.serve(async (req) => {
                 mpn: product.mpn,
                 tds_url: product.tdsUrl,
                 color_hex: product.colorHex,
+                color_family: product.colorFamily,
+                product_line_id: product.productLineId,
                 nozzle_temp_min_c: product.nozzleTempMin,
                 nozzle_temp_max_c: product.nozzleTempMax,
                 bed_temp_min_c: product.bedTempMin,
@@ -490,6 +548,9 @@ Deno.serve(async (req) => {
                 insertData.price_jpy = product.price;
                 insertData.product_url_jp = product.url;
               }
+
+              // Set available_regions array
+              insertData.available_regions = buildAvailableRegions(insertData);
 
               const { error: insertError } = await supabase
                 .from('filaments')
@@ -663,6 +724,8 @@ function buildUpdateData(product: any, overrideFields: string[], region: string 
     mpn: 'mpn',
     tdsUrl: 'tds_url',
     colorHex: 'color_hex',
+    colorFamily: 'color_family',
+    productLineId: 'product_line_id',
     nozzleTempMin: 'nozzle_temp_min_c',
     nozzleTempMax: 'nozzle_temp_max_c',
     bedTempMin: 'bed_temp_min_c',
@@ -729,7 +792,7 @@ function buildUpdateData(product: any, overrideFields: string[], region: string 
   return data;
 }
 
-// Shopify Scraper
+// Shopify Scraper - with enhanced field extraction
 async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit = 100): Promise<any[]> {
   const apiEndpoint = brand.api_endpoint || `${brand.base_url}/products.json`;
   const products: any[] = [];
@@ -763,16 +826,30 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
       const variant = product.variants?.[0];
       if (!variant) continue;
 
+      // Extract fields using unified schema helpers
+      const title = cleanTitle(product.title);
+      const material = extractMaterial(title, product.product_type);
+      const colorFamily = extractColorFamily(title);
+      const netWeightG = extractWeight(title, variant.grams);
+      const productLineId = generateProductLineId(brand.brand_slug, material, title);
+
       products.push({
         productId: String(product.id),
-        title: cleanTitle(product.title),
+        title,
         price: parseFloat(variant.price) || null,
         compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
         available: variant.available,
         url: `${brand.base_url}/products/${product.handle}`,
         imageUrl: product.images?.[0]?.src || null,
         mpn: variant.sku || null,
-        material: extractMaterial(product.title, product.product_type),
+        sku: variant.sku || null,
+        barcode: variant.barcode || null,
+        material,
+        colorFamily,
+        netWeightG,
+        productLineId,
+        // Extract color hex from variant if available
+        colorHex: extractColorHexFromVariant(variant, product),
       });
 
       if (products.length >= limit) break;
@@ -788,7 +865,24 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
   return products;
 }
 
-// WooCommerce Scraper
+// Extract color hex from Shopify variant options
+function extractColorHexFromVariant(variant: any, product: any): string | null {
+  // Check variant options for color
+  const colorOption = variant.option1 || variant.option2 || variant.option3;
+  if (!colorOption) return null;
+  
+  // Check product metafields if available (some stores include color_hex)
+  const metafields = product.metafields || [];
+  for (const meta of metafields) {
+    if (meta.key === 'color_hex' || meta.key === 'hex_color') {
+      return meta.value;
+    }
+  }
+  
+  return null;
+}
+
+// WooCommerce Scraper - with enhanced field extraction
 async function scrapeWooCommerce(brand: BrandConfig, materialFilter?: string, limit = 100): Promise<any[]> {
   const apiEndpoint = brand.api_endpoint || `${brand.base_url}/wp-json/wc/store/v1/products`;
   const products: any[] = [];
@@ -824,17 +918,28 @@ async function scrapeWooCommerce(brand: BrandConfig, materialFilter?: string, li
 
       const price = product.prices?.price ? parseFloat(product.prices.price) / 100 : null;
       const regularPrice = product.prices?.regular_price ? parseFloat(product.prices.regular_price) / 100 : null;
+      
+      // Extract fields using unified schema helpers
+      const title = cleanTitle(product.name);
+      const material = extractMaterial(title, '');
+      const colorFamily = extractColorFamily(title);
+      const netWeightG = extractWeight(title);
+      const productLineId = generateProductLineId(brand.brand_slug, material, title);
 
       products.push({
         productId: String(product.id),
-        title: cleanTitle(product.name),
+        title,
         price,
         compareAtPrice: regularPrice !== price ? regularPrice : null,
         available: product.is_purchasable && product.is_in_stock,
         url: product.permalink,
         imageUrl: product.images?.[0]?.src || null,
         mpn: product.sku || null,
-        material: extractMaterial(product.name, ''),
+        sku: product.sku || null,
+        material,
+        colorFamily,
+        netWeightG,
+        productLineId,
       });
 
       if (products.length >= limit) break;
@@ -917,20 +1022,4 @@ function cleanTitle(title: string): string {
     .trim();
 }
 
-// Helper: Extract material from title
-function extractMaterial(title: string, type: string): string | null {
-  const combined = `${title} ${type}`.toUpperCase();
-  
-  const materials = [
-    'PLA', 'PETG', 'ABS', 'TPU', 'ASA', 'NYLON', 'PA', 'PC', 'PVA', 'HIPS',
-    'PP', 'PET', 'PEEK', 'PEI', 'CF', 'GF'
-  ];
-  
-  for (const mat of materials) {
-    if (combined.includes(mat)) {
-      return mat;
-    }
-  }
-  
-  return null;
-}
+// Note: extractMaterial is now imported from _shared/filament-schema.ts

@@ -118,6 +118,57 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
     }
   },
 
+  'Eryone': {
+    pattern: 'subdomain',
+    baseDomain: 'eryone3d.com',
+    fallbackRegion: 'US',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+
+  'Jayo': {
+    pattern: 'subdomain',
+    baseDomain: 'jayo3d.com',
+    fallbackRegion: 'US',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+
+  'Kingroon': {
+    pattern: 'subdomain',
+    baseDomain: 'kingroon.com',
+    fallbackRegion: 'US',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+
+  'Sovol': {
+    pattern: 'subdomain',
+    baseDomain: 'sovol3d.com',
+    fallbackRegion: 'US',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+
+  'Artillery': {
+    pattern: 'subdomain',
+    baseDomain: 'artillery3d.com',
+    fallbackRegion: 'US',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+
   // === GLOBAL STORES (Single URL, multi-currency checkout) ===
 
   'Prusa Research': {
@@ -282,11 +333,7 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
     defaultCurrency: 'USD',
   },
 
-  'Eryone': {
-    pattern: 'global',
-    baseDomain: 'eryone3d.com',
-    defaultCurrency: 'USD',
-  },
+  // Eryone moved to regional section above
 
   'Geeetech': {
     pattern: 'global',
@@ -312,11 +359,7 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
     defaultCurrency: 'USD',
   },
 
-  'Kingroon': {
-    pattern: 'global',
-    baseDomain: 'kingroon.com',
-    defaultCurrency: 'USD',
-  },
+  // Kingroon moved to regional section above
 
   'Longer': {
     pattern: 'global',
@@ -324,17 +367,9 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
     defaultCurrency: 'USD',
   },
 
-  'Artillery': {
-    pattern: 'global',
-    baseDomain: 'artillery3d.com',
-    defaultCurrency: 'USD',
-  },
+  // Artillery moved to regional section above
 
-  'Sovol': {
-    pattern: 'global',
-    baseDomain: 'sovol3d.com',
-    defaultCurrency: 'USD',
-  },
+  // Sovol moved to regional section above
 
   'Tronxy': {
     pattern: 'global',

@@ -1567,3 +1567,227 @@ export type ScrapedFilamentData = {
 export type FilamentRecord = {
   [K in typeof FILAMENT_SCHEMA[number]['key']]: unknown;
 };
+
+// ============================================================================
+// REGION AND CURRENCY SUPPORT
+// ============================================================================
+
+export type RegionCode = 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP';
+
+export const REGION_CURRENCIES: Record<RegionCode, string> = {
+  US: 'USD',
+  CA: 'CAD',
+  UK: 'GBP',
+  EU: 'EUR',
+  AU: 'AUD',
+  JP: 'JPY',
+};
+
+export const REGIONAL_FIELD_MAPPING: Record<RegionCode, { priceField: string; urlField: string }> = {
+  US: { priceField: 'variant_price', urlField: 'product_url' },
+  CA: { priceField: 'price_cad', urlField: 'product_url_ca' },
+  UK: { priceField: 'price_gbp', urlField: 'product_url_uk' },
+  EU: { priceField: 'price_eur', urlField: 'product_url_eu' },
+  AU: { priceField: 'price_aud', urlField: 'product_url_au' },
+  JP: { priceField: 'price_jpy', urlField: 'product_url_jp' },
+};
+
+// ============================================================================
+// DATA EXTRACTION HELPERS
+// ============================================================================
+
+/**
+ * Color family definitions for normalization
+ */
+export const COLOR_FAMILIES = [
+  'Black', 'White', 'Gray', 'Red', 'Orange', 'Yellow', 'Green', 
+  'Blue', 'Purple', 'Pink', 'Brown', 'Clear', 'Natural', 'Silver', 
+  'Gold', 'Multi', 'Wood', 'Glow'
+] as const;
+
+export type ColorFamily = typeof COLOR_FAMILIES[number];
+
+/**
+ * Extract color family from a product title or color name
+ */
+export function extractColorFamily(text: string): ColorFamily | null {
+  if (!text) return null;
+  
+  const lowerText = text.toLowerCase();
+  
+  const colorMappings: Record<string, ColorFamily> = {
+    'black': 'Black',
+    'white': 'White',
+    'grey': 'Gray',
+    'gray': 'Gray',
+    'silver': 'Silver',
+    'gold': 'Gold',
+    'red': 'Red',
+    'scarlet': 'Red',
+    'crimson': 'Red',
+    'maroon': 'Red',
+    'orange': 'Orange',
+    'tangerine': 'Orange',
+    'coral': 'Orange',
+    'yellow': 'Yellow',
+    'lemon': 'Yellow',
+    'mustard': 'Yellow',
+    'green': 'Green',
+    'olive': 'Green',
+    'lime': 'Green',
+    'mint': 'Green',
+    'forest': 'Green',
+    'teal': 'Green',
+    'blue': 'Blue',
+    'navy': 'Blue',
+    'cobalt': 'Blue',
+    'sky': 'Blue',
+    'azure': 'Blue',
+    'cyan': 'Blue',
+    'purple': 'Purple',
+    'violet': 'Purple',
+    'lavender': 'Purple',
+    'plum': 'Purple',
+    'magenta': 'Purple',
+    'pink': 'Pink',
+    'rose': 'Pink',
+    'fuchsia': 'Pink',
+    'salmon': 'Pink',
+    'brown': 'Brown',
+    'tan': 'Brown',
+    'chocolate': 'Brown',
+    'coffee': 'Brown',
+    'bronze': 'Brown',
+    'beige': 'Brown',
+    'clear': 'Clear',
+    'transparent': 'Clear',
+    'translucent': 'Clear',
+    'natural': 'Natural',
+    'wood': 'Wood',
+    'maple': 'Wood',
+    'walnut': 'Wood',
+    'oak': 'Wood',
+    'glow': 'Glow',
+    'phosphor': 'Glow',
+    'luminous': 'Glow',
+    'rainbow': 'Multi',
+    'multicolor': 'Multi',
+    'gradient': 'Multi',
+  };
+  
+  for (const [keyword, family] of Object.entries(colorMappings)) {
+    if (lowerText.includes(keyword)) {
+      return family;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Extract net weight from product title or variant info
+ */
+export function extractWeight(title: string, variantGrams?: number): number | null {
+  if (!title) return null;
+  
+  const lowerTitle = title.toLowerCase();
+  
+  // Check for kg patterns
+  const kgMatch = lowerTitle.match(/(\d+(?:\.\d+)?)\s*kg/i);
+  if (kgMatch) {
+    return Math.round(parseFloat(kgMatch[1]) * 1000);
+  }
+  
+  // Check for gram patterns
+  const gMatch = lowerTitle.match(/(\d+)\s*g(?:ram)?s?(?:\s|$|[^a-z])/i);
+  if (gMatch) {
+    const grams = parseInt(gMatch[1]);
+    if (grams >= 100 && grams <= 5000) {
+      return grams;
+    }
+  }
+  
+  // Fallback to variant.grams if reasonable
+  if (variantGrams && variantGrams >= 100 && variantGrams <= 3000) {
+    return variantGrams;
+  }
+  
+  return 1000; // Default 1kg
+}
+
+/**
+ * Generate consistent product line ID for grouping variants
+ */
+export function generateProductLineId(
+  brandSlug: string,
+  material: string | null | undefined,
+  productName: string
+): string {
+  const normalizedBrand = brandSlug.toLowerCase().replace(/\s+/g, '-');
+  const normalizedMaterial = (material || 'unknown').toLowerCase().replace(/\s+/g, '-');
+  
+  const productType = extractProductType(productName);
+  
+  return `${normalizedBrand}__${normalizedMaterial}__${productType}`;
+}
+
+function extractProductType(name: string): string {
+  const productLines = [
+    'polyterra', 'polylite', 'polymax', 'polywood', 'polycast', 'polysmooth',
+    'basic', 'matte', 'silk', 'marble', 'metal', 'galaxy', 'glow', 'sparkle',
+    'tough', 'pro', 'plus', 'premium', 'standard', 'eco', 'recycled',
+    'cf', 'gf', 'high-speed', 'hs', 'rapid',
+    'translucent', 'transparent', 'clear',
+  ];
+  
+  const lowerName = name.toLowerCase();
+  
+  for (const line of productLines) {
+    if (lowerName.includes(line)) {
+      return line.replace(/\s+/g, '-');
+    }
+  }
+  
+  return 'standard';
+}
+
+/**
+ * Build available_regions array based on which regional data exists
+ */
+export function buildAvailableRegions(data: Record<string, unknown>): RegionCode[] {
+  const regions: RegionCode[] = [];
+  
+  if (data.variant_price || data.product_url) regions.push('US');
+  if (data.price_cad || data.product_url_ca) regions.push('CA');
+  if (data.price_gbp || data.product_url_uk) regions.push('UK');
+  if (data.price_eur || data.product_url_eu) regions.push('EU');
+  if (data.price_aud || data.product_url_au) regions.push('AU');
+  if (data.price_jpy || data.product_url_jp) regions.push('JP');
+  
+  return regions;
+}
+
+/**
+ * Extract material from product title
+ */
+export function extractMaterial(title: string, productType?: string): string | null {
+  const combined = `${title} ${productType || ''}`.toUpperCase();
+  
+  const materials = [
+    'PLA-CF', 'PETG-CF', 'ABS-CF', 'PA-CF', 'PC-CF', 'ASA-CF',
+    'PLA-GF', 'PETG-GF', 'PA-GF', 'PP-GF',
+    'TPU 95A', 'TPU 85A', 'TPU 90A',
+    'PLA+', 'PETG', 'ABS', 'TPU', 'ASA', 'PLA',
+    'NYLON', 'PA12', 'PA6', 'PA',
+    'PC', 'PVA', 'HIPS', 'PP', 'PET',
+    'PEEK', 'PEI', 'PCTG', 'CPE',
+  ];
+  
+  for (const mat of materials) {
+    if (combined.includes(mat.replace(/-/g, ' ')) || combined.includes(mat)) {
+      return mat;
+    }
+  }
+  
+  return null;
+}
