@@ -579,17 +579,12 @@ const MATERIALS = [
   'Wood', 'Metal', 'Carbon', 'Glass'
 ];
 
+// Delegate to shared extractMaterial from filament-schema.ts
+import { extractMaterial as sharedExtractMaterial } from "../_shared/filament-schema.ts";
+
 export function detectMaterial(title: string): string | null {
-  const upperTitle = title.toUpperCase();
-  
-  // Check composite materials first (longer matches)
-  for (const mat of MATERIALS) {
-    if (upperTitle.includes(mat.toUpperCase())) {
-      return mat;
-    }
-  }
-  
-  return null;
+  // Use shared extraction - it handles all material patterns consistently
+  return sharedExtractMaterial(title) || null;
 }
 
 // Import the intelligent color classifier
@@ -606,42 +601,29 @@ import {
 export { classifyVariant, extractColorInfo, filterColorVariants, COLOR_HEX_MAP, COLOR_FAMILY_MAP };
 export type { VariantClassification };
 
+// Delegate to shared color extraction from color-mapping.ts
+import { extractColorFromTitle as sharedExtractColorFromTitle } from "../_shared/color-mapping.ts";
+
 export function extractColor(title: string): { name: string; hex: string; family: string } | null {
-  const lowerTitle = title.toLowerCase();
-  
-  for (const [colorName, hex] of Object.entries(COLOR_HEX_MAP)) {
-    if (lowerTitle.includes(colorName)) {
-      return {
-        name: colorName.charAt(0).toUpperCase() + colorName.slice(1),
-        hex,
-        family: COLOR_FAMILY_MAP[colorName] || 'Other',
-      };
-    }
+  const result = sharedExtractColorFromTitle(title);
+  if (result.colorName && result.colorHex) {
+    return {
+      name: result.colorName,
+      hex: result.colorHex,
+      family: result.colorFamily || 'Other',
+    };
   }
-  
   return null;
 }
 
+// Delegate to shared extractWeight from filament-schema.ts
+import { extractWeight as sharedExtractWeight } from "../_shared/filament-schema.ts";
+
 export function extractWeight(title: string, variants?: string[]): number | null {
   const textToSearch = [title, ...(variants || [])].join(' ');
-  
-  // Match patterns like "1kg", "1 kg", "1000g", "750g", "2.2lb"
-  const kgMatch = textToSearch.match(/(\d+(?:\.\d+)?)\s*kg/i);
-  if (kgMatch) {
-    return Math.round(parseFloat(kgMatch[1]) * 1000);
-  }
-  
-  const gMatch = textToSearch.match(/(\d+)\s*g(?:ram)?/i);
-  if (gMatch) {
-    return parseInt(gMatch[1]);
-  }
-  
-  const lbMatch = textToSearch.match(/(\d+(?:\.\d+)?)\s*lb/i);
-  if (lbMatch) {
-    return Math.round(parseFloat(lbMatch[1]) * 453.592);
-  }
-  
-  return null;
+  // Use shared extraction which has consistent logic
+  const weight = sharedExtractWeight(textToSearch);
+  return weight;
 }
 
 export function extractDiameter(title: string, variants?: string[]): number | null {

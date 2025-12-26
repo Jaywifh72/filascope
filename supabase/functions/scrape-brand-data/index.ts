@@ -8,6 +8,8 @@ import { FirecrawlScraper } from "./scrapers/firecrawl.ts";
 import type { BaseScraper, ScrapedProduct } from "./scrapers/base.ts";
 import { calculateHash, detectMaterial, extractColor, extractWeight, extractDiameter, parseBarcodeFields, intelligentTitleClean, extractDataFromTitle } from "./utils.ts";
 import { validateScrapedProduct, sanitizeScrapedProduct, type ValidationResult } from "./validation.ts";
+// Import shared modules for consistent field handling
+import { buildAvailableRegions } from "../_shared/filament-schema.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -205,7 +207,13 @@ async function createFilamentFromScrapedProduct(
     ...parseBarcodeFields(product.barcode ?? null),
   };
   
-  const { error } = await supabase.from("filaments").insert(filamentData);
+  // Add available_regions based on which regional data exists
+  const filamentDataWithRegions = {
+    ...filamentData,
+    available_regions: buildAvailableRegions(filamentData),
+  };
+  
+  const { error } = await supabase.from("filaments").insert(filamentDataWithRegions);
   
   if (error) {
     console.error(`❌ Failed to create filament ${product.title}:`, error);
@@ -540,6 +548,11 @@ async function processScrapedProducts(
       if (tempSpecsAdded) {
         stats.tempSpecsExtracted++;
       }
+
+      // Recalculate available_regions based on updated data
+      // Merge existing filament data with updates to get accurate regions
+      const mergedData = { ...filament, ...updates };
+      updates.available_regions = buildAvailableRegions(mergedData);
 
       // Update filament (trigger will log to price_history if price changed)
       const { error: updateError } = await supabase
