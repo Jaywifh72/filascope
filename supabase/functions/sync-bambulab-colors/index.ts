@@ -7,6 +7,7 @@ import {
   extractColorFamily,
   type RegionCode 
 } from "../_shared/filament-schema.ts";
+import { getColorHex, getColorFamily } from "../_shared/color-mapping.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -816,6 +817,9 @@ serve(async (req) => {
         price_jpy: regionalPrices.JP,
       };
 
+      // Build available_regions array
+      const availableRegions = buildAvailableRegions(regionalData);
+
       if (existing) {
         // Check if we need to update
         const needsUpdate = 
@@ -840,6 +844,7 @@ serve(async (req) => {
             color_hex: colorData.hex,
             color_family: colorData.colorFamily,
             featured_image: colorData.imageUrl,
+            available_regions: availableRegions,
             ...regionalData,
           };
           
@@ -904,6 +909,7 @@ serve(async (req) => {
             featured_image: colorData.imageUrl,
             auto_created: true,
             variant_available: true,
+            available_regions: availableRegions,
             ...regionalData,
           };
 

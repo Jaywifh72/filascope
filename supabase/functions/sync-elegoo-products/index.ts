@@ -10,6 +10,14 @@ import {
   REGION_CURRENCIES as SHARED_REGION_CURRENCIES,
   type RegionCode 
 } from "../_shared/filament-schema.ts";
+import { 
+  getColorHex, 
+  getColorFamily,
+  extractColorFromTitle as sharedExtractColor,
+  normalizeColorName,
+  getColorVariants
+} from "../_shared/color-mapping.ts";
+import { validateScrapedProduct } from "../_shared/scraper-validation.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -47,162 +55,8 @@ const REGION_CURRENCIES: Record<string, string> = {
   // Elegoo-specific overrides/additions if any
 };
 
-// Color name aliases for cross-region matching (e.g., US "Gray" vs UK "Grey")
-const COLOR_ALIASES: Record<string, string[]> = {
-  'grey': ['gray', 'grey'],
-  'gray': ['gray', 'grey'],
-  'light grey': ['light gray', 'light grey'],
-  'light gray': ['light gray', 'light grey'],
-  'dark grey': ['dark gray', 'dark grey'],
-  'dark gray': ['dark gray', 'dark grey'],
-  'space grey': ['space gray', 'space grey'],
-  'space gray': ['space gray', 'space grey'],
-  'cement grey': ['cement gray', 'cement grey'],
-  'cement gray': ['cement gray', 'cement grey'],
-  'matte grey': ['matte gray', 'matte grey'],
-  'matte gray': ['matte gray', 'matte grey'],
-  'stone grey': ['stone gray', 'stone grey'],
-  'stone gray': ['stone gray', 'stone grey'],
-};
-
-// Get all possible color name variants for matching
-function getColorVariants(colorName: string): string[] {
-  const normalized = colorName.toLowerCase().trim();
-  const aliases = COLOR_ALIASES[normalized];
-  if (aliases) {
-    return aliases;
-  }
-  return [normalized];
-}
-
-// Normalize color name for consistent matching
-function normalizeColorName(colorName: string): string {
-  // Primary normalization: convert all grey variants to "grey" for consistency
-  return colorName.toLowerCase().trim().replace(/gray/gi, 'grey');
-}
-
-// Color name to HEX mapping - enhanced with Elegoo-specific colors
-const COLOR_HEX_MAP: Record<string, string> = {
-  // Basic colors
-  'black': '1A1A1A',
-  'white': 'FFFFFF',
-  'grey': '808080',
-  'gray': '808080',
-  'red': 'DC2626',
-  'blue': '2563EB',
-  'navy': '1E3A5F',
-  'green': '16A34A',
-  'yellow': 'EAB308',
-  'orange': 'EA580C',
-  'purple': '9333EA',
-  'pink': 'EC4899',
-  'brown': '92400E',
-  'beige': 'D4C4A8',
-  'silver': 'C0C0C0',
-  'gold': 'D4AF37',
-  'copper': 'B87333',
-  'bronze': 'CD7F32',
-  'transparent': 'FFFFFF',
-  'clear': 'FFFFFF',
-  'natural': 'F5F5DC',
-  'ivory': 'FFFFF0',
-  'cream': 'FFFDD0',
-  'tan': 'D2B48C',
-  'olive': '808000',
-  'teal': '008080',
-  'cyan': '00FFFF',
-  'magenta': 'FF00FF',
-  'lime': '00FF00',
-  'mint': '98FF98',
-  'coral': 'FF7F50',
-  'salmon': 'FA8072',
-  'maroon': '800000',
-  'burgundy': '800020',
-  // Multi-word colors
-  'navy blue': '000080',
-  'sky blue': '87CEEB',
-  'royal blue': '4169E1',
-  'forest green': '228B22',
-  'olive green': '6B8E23',
-  'neon green': '39FF14',
-  'neon pink': 'FF6EC7',
-  'neon orange': 'FF5F1F',
-  'neon yellow': 'CCFF00',
-  'hot pink': 'FF69B4',
-  'light blue': 'ADD8E6',
-  'dark blue': '00008B',
-  'light green': '90EE90',
-  'dark green': '006400',
-  'light grey': 'D3D3D3',
-  'dark grey': 'A9A9A9',
-  'charcoal': '36454F',
-  'midnight': '191970',
-  'rose': 'FF007F',
-  'lavender': 'E6E6FA',
-  'violet': 'EE82EE',
-  'indigo': '4B0082',
-  'peach': 'FFCBA4',
-  'aqua': '00FFFF',
-  'turquoise': '40E0D0',
-  // Elegoo-specific colors (Matte, Silk, Rapid, etc.)
-  'ice blue': 'B0E0E6',
-  'earth brown': '5C4033',
-  'lavender purple': 'B57EDC',
-  'mint green': '98FF98',
-  'matte black': '1A1A1A',
-  'matte white': 'FAFAFA',
-  'matte grey': '808080',
-  'matte gray': '808080',
-  'matte beige': 'D4C4A8',
-  'matte red': 'B91C1C',
-  'matte blue': '1D4ED8',
-  'matte green': '15803D',
-  'burgundy red': '800020',
-  'wine red': '722F37',
-  'grass green': '7CFC00',
-  'army green': '4B5320',
-  'lake blue': '4682B4',
-  'peacock blue': '005F69',
-  'sapphire blue': '0F52BA',
-  'cobalt blue': '0047AB',
-  'midnight blue': '191970',
-  'stone grey': '928E85',
-  'space grey': '4F4F4F',
-  'space gray': '4F4F4F',
-  'cement grey': '8D918D',
-  'cement gray': '8D918D',
-  'khaki': 'C3B091',
-  'camel': 'C19A6B',
-  'coffee': '6F4E37',
-  'chocolate': 'D2691E',
-  'skin': 'FFCBA4',
-  'flesh': 'FFCBA4',
-  'glow green': '39FF14',
-  'glow blue': '00BFFF',
-  'glow orange': 'FF4500',
-  'rainbow': 'FF0000',
-  'multicolor': 'FF0000',
-  // Silk colors
-  'silk white': 'FFFEF0',
-  'silk black': '2D2D2D',
-  'silk gold': 'FFD700',
-  'silk silver': 'E8E8E8',
-  'silk copper': 'DA8A67',
-  'silk bronze': 'CD7F32',
-  'silk red': 'DC143C',
-  'silk blue': '4169E1',
-  'silk green': '32CD32',
-  'silk purple': '9370DB',
-  'silk pink': 'FFB6C1',
-  // Transparent/Translucent colors
-  'translucent': 'FFFFFF',
-  'translucent blue': '87CEEB',
-  'translucent green': '90EE90',
-  'translucent red': 'FF6B6B',
-  'translucent orange': 'FFB347',
-  'translucent yellow': 'FFFF99',
-  'translucent purple': 'DDA0DD',
-};
+// NOTE: Color aliases and COLOR_HEX_MAP have been moved to _shared/color-mapping.ts
+// Use getColorHex(), getColorFamily(), getColorVariants() from that module
 
 // Region to expected URL domain mapping for validation
 const REGION_URL_DOMAINS: Record<string, string> = {
@@ -440,42 +294,10 @@ function extractDiameterFromTitle(title: string): number {
   return 1.75;
 }
 
+// Use the shared color extraction utility
 function extractColorAndHex(title: string): { colorName: string | null; colorHex: string | null } {
-  const titleLower = title.toLowerCase();
-  
-  // Pattern 1: "Product - Color" format (most common for Elegoo)
-  const dashMatch = title.match(/\s-\s([^-]+)$/);
-  if (dashMatch) {
-    const colorPart = dashMatch[1].trim().toLowerCase();
-    // Clean out weight/size specs from color part
-    const cleanColor = colorPart.replace(/\d+(?:\.\d+)?(?:kg|g|mm)/gi, '').trim();
-    
-    // Try exact match first
-    if (COLOR_HEX_MAP[cleanColor]) {
-      return { colorName: cleanColor, colorHex: COLOR_HEX_MAP[cleanColor] };
-    }
-    
-    // Try multi-word color match (longest first for accuracy)
-    const sortedColors = Object.keys(COLOR_HEX_MAP).sort((a, b) => b.length - a.length);
-    for (const colorName of sortedColors) {
-      if (cleanColor.includes(colorName)) {
-        return { colorName: cleanColor, colorHex: COLOR_HEX_MAP[colorName] };
-      }
-    }
-    
-    // Return color name even if no HEX match found
-    return { colorName: cleanColor, colorHex: null };
-  }
-  
-  // Pattern 2: Check for color words anywhere in title (longest first)
-  const sortedColors = Object.keys(COLOR_HEX_MAP).sort((a, b) => b.length - a.length);
-  for (const colorName of sortedColors) {
-    if (titleLower.includes(colorName)) {
-      return { colorName, colorHex: COLOR_HEX_MAP[colorName] };
-    }
-  }
-  
-  return { colorName: null, colorHex: null };
+  const { colorName, colorHex } = sharedExtractColor(title);
+  return { colorName, colorHex };
 }
 
 // Compute a product line ID for grouping color variants
@@ -1217,6 +1039,8 @@ serve(async (req) => {
           }
         }
 
+        // Build available_regions based on which regional data exists
+        filamentData.available_regions = buildAvailableRegions(filamentData);
         if (dryRun) {
           if (existing) {
             console.log(`[ELEGOO-SYNC]    🔄 DRY RUN: Would UPDATE (current: $${existing.variant_price} -> $${product.price})`);
