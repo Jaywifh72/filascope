@@ -134,7 +134,24 @@ export const FILAMENT_SCHEMA: FilamentFieldDefinition[] = [
     required: true,
     dataSources: ['api', 'html', 'tds'],
     validation: {
-      allowedValues: ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PA', 'PC', 'PVA', 'HIPS', 'PP', 'PLA+', 'PETG-CF', 'PLA-CF', 'PA-CF', 'PA-GF', 'PET-CF', 'TPE', 'Other']
+      allowedValues: [
+        // Base materials
+        'PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PA', 'PC', 'PVA', 'HIPS', 'PP', 'PET',
+        // Enhanced variants
+        'PLA+', 'ABS+', 'PETG+',
+        // Carbon fiber composites
+        'PLA-CF', 'PETG-CF', 'ABS-CF', 'ASA-CF', 'PA-CF', 'PC-CF', 'PET-CF',
+        // Glass fiber composites
+        'PA-GF', 'PP-GF', 'PLA-GF', 'PETG-GF', 'ABS-GF',
+        // Engineering/specialty plastics
+        'PCTG', 'CPE', 'PEEK', 'PEI', 'PEBA', 'POM',
+        // Blends
+        'PC-ABS', 'PC-ASA',
+        // Flexible
+        'TPE', 'TPU-95A', 'TPU-85A', 'TPU-90A',
+        // Other
+        'Other'
+      ]
     },
     exportOrder: 3,
     description: 'Base material type'
@@ -1807,21 +1824,128 @@ export function buildAvailableRegions(data: Record<string, unknown>): RegionCode
 export function extractMaterial(title: string, productType?: string): string | null {
   const combined = `${title} ${productType || ''}`.toUpperCase();
   
-  const materials = [
-    'PLA-CF', 'PETG-CF', 'ABS-CF', 'PA-CF', 'PC-CF', 'ASA-CF',
-    'PLA-GF', 'PETG-GF', 'PA-GF', 'PP-GF',
-    'TPU 95A', 'TPU 85A', 'TPU 90A',
-    'PLA+', 'PETG', 'ABS', 'TPU', 'ASA', 'PLA',
-    'NYLON', 'PA12', 'PA6', 'PA',
-    'PC', 'PVA', 'HIPS', 'PP', 'PET',
-    'PEEK', 'PEI', 'PCTG', 'CPE',
+  // Material normalization mappings (non-standard → canonical)
+  const normalizationMap: Record<string, string> = {
+    // PLA variants
+    'RAPID PLA+': 'PLA+',
+    'RAPID PLA': 'PLA',
+    'PLA PRO': 'PLA+',
+    'PLA PLUS': 'PLA+',
+    'PLA TOUGH': 'PLA+',
+    'PLA MATTE': 'PLA',
+    'PLA SILK': 'PLA',
+    'HYPER PLA': 'PLA',
+    'HIGH SPEED PLA': 'PLA',
+    'HS PLA': 'PLA',
+    // Nylon/PA variants
+    'NYLON': 'PA',
+    'NYLON-CF': 'PA-CF',
+    'NYLON-GF': 'PA-GF',
+    'NYLON CF': 'PA-CF',
+    'NYLON GF': 'PA-GF',
+    'PA6': 'PA',
+    'PA12': 'PA',
+    'PA6-CF': 'PA-CF',
+    'PA12-CF': 'PA-CF',
+    'PA6-GF': 'PA-GF',
+    // PETG variants
+    'PETG+': 'PETG+',
+    'PRO PETG': 'PETG+',
+    'PETG PRO': 'PETG+',
+    // ABS variants
+    'ABS+': 'ABS+',
+    'ABS PRO': 'ABS+',
+    // TPU variants
+    'TPU 95A': 'TPU-95A',
+    'TPU 90A': 'TPU-90A',
+    'TPU 85A': 'TPU-85A',
+    'TPU95A': 'TPU-95A',
+    'TPU90A': 'TPU-90A',
+    'TPU85A': 'TPU-85A',
+    // Other
+    'PRO PCTG': 'PCTG',
+  };
+  
+  // Check normalization mappings first (specific variants)
+  for (const [pattern, canonical] of Object.entries(normalizationMap)) {
+    if (combined.includes(pattern)) {
+      return canonical;
+    }
+  }
+  
+  // Check for composite materials (must come before base materials)
+  const composites = [
+    'PLA-CF', 'PETG-CF', 'ABS-CF', 'PA-CF', 'PC-CF', 'ASA-CF', 'PET-CF',
+    'PLA-GF', 'PETG-GF', 'ABS-GF', 'PA-GF', 'PP-GF',
+    'PC-ABS', 'PC-ASA',
   ];
   
-  for (const mat of materials) {
+  for (const mat of composites) {
     if (combined.includes(mat.replace(/-/g, ' ')) || combined.includes(mat)) {
       return mat;
     }
   }
   
+  // Check for TPU with hardness
+  const tpuMatch = combined.match(/TPU[\s-]?(95|90|85)A?/i);
+  if (tpuMatch) {
+    return `TPU-${tpuMatch[1]}A`;
+  }
+  
+  // Check for base materials (order matters - check longer names first)
+  const baseMaterials = [
+    'PETG+', 'PLA+', 'ABS+',
+    'PETG', 'ABS', 'TPU', 'ASA', 'PLA',
+    'PCTG', 'PEEK', 'PEI', 'PEBA', 'CPE', 'POM',
+    'PA', 'PC', 'PVA', 'HIPS', 'PP', 'PET',
+    'TPE',
+  ];
+  
+  for (const mat of baseMaterials) {
+    // Use word boundary matching for accuracy
+    const regex = new RegExp(`\\b${mat}\\b`, 'i');
+    if (regex.test(combined)) {
+      return mat;
+    }
+  }
+  
   return null;
+}
+
+/**
+ * Normalize an existing material value to canonical form
+ */
+export function normalizeMaterial(material: string | null | undefined): string | null {
+  if (!material) return null;
+  
+  const upper = material.toUpperCase().trim();
+  
+  const normMap: Record<string, string> = {
+    'RAPID PLA+': 'PLA+',
+    'RAPID PLA': 'PLA',
+    'PLA PRO': 'PLA+',
+    'PLA PLUS': 'PLA+',
+    'HYPER PLA': 'PLA',
+    'HIGH SPEED PLA': 'PLA',
+    'HS PLA': 'PLA',
+    'NYLON': 'PA',
+    'NYLON-CF': 'PA-CF',
+    'NYLON-GF': 'PA-GF',
+    'PA6': 'PA',
+    'PA12': 'PA',
+    'PA6-CF': 'PA-CF',
+    'PA12-CF': 'PA-CF',
+    'PRO PETG': 'PETG+',
+    'PETG PRO': 'PETG+',
+    'ABS PRO': 'ABS+',
+    'PRO PCTG': 'PCTG',
+    'TPU 95A': 'TPU-95A',
+    'TPU 90A': 'TPU-90A',
+    'TPU 85A': 'TPU-85A',
+    'TPU95A': 'TPU-95A',
+    'TPU90A': 'TPU-90A',
+    'TPU85A': 'TPU-85A',
+  };
+  
+  return normMap[upper] || material;
 }
