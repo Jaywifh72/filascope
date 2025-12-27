@@ -1,18 +1,201 @@
+/**
+ * OVERTURE IMAGE & DATA SCRAPER
+ * 
+ * Uses Shopify JSON API for reliable product data extraction
+ * Extracts: featured_image, variant_price, tds_url, mpn, color_hex
+ * 
+ * Compliant with shared ScrapedProduct schema and validation
+ */
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { 
+  validateScrapedProduct, 
+  sanitizeScrapedProduct,
+  type ScrapedProduct 
+} from "../_shared/scraper-validation.ts";
+import { getColorHex, getColorFamily, extractColorFromTitle } from "../_shared/color-mapping.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Rate limiting
+const RATE_LIMIT_MS = 300;
+
+interface ShopifyProduct {
+  id: number;
+  title: string;
+  handle: string;
+  body_html: string;
+  vendor: string;
+  product_type: string;
+  tags: string[];
+  images: Array<{
+    id: number;
+    src: string;
+  }>;
+  variants: Array<{
+    id: number;
+    title: string;
+    price: string;
+    compare_at_price: string | null;
+    sku: string;
+    barcode: string | null;
+    available: boolean;
+  }>;
+}
+
+interface ScrapeResult {
+  id: string;
+  title: string;
+  status: 'updated' | 'skipped' | 'error' | 'no_data';
+  image?: string | null;
+  price?: number | null;
+  error?: string;
+}
+
+/**
+ * Extract TDS URL from product HTML/description
+ */
+function extractTdsUrl(bodyHtml: string): string | null {
+  const patterns = [
+    /href="([^"]*tds[^"]*\.pdf)"/i,
+    /href="([^"]*technical[_-]?data[^"]*\.pdf)"/i,
+    /href="([^"]*datasheet[^"]*\.pdf)"/i,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = bodyHtml.match(pattern);
+    if (match?.[1]) {
+      const url = match[1];
+      if (url.startsWith('http')) return url;
+      if (url.startsWith('//')) return 'https:' + url;
+      return 'https://overture3d.com' + url;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Extract weight from product title or description
+ */
+function extractWeight(title: string, bodyHtml: string): number | null {
+  const text = `${title} ${bodyHtml}`;
+  
+  if (text.toLowerCase().includes('1kg') || text.includes('1000g')) return 1000;
+  if (text.toLowerCase().includes('2kg') || text.includes('2000g')) return 2000;
+  if (text.toLowerCase().includes('500g') || text.includes('0.5kg')) return 500;
+  if (text.toLowerCase().includes('250g')) return 250;
+  
+  const match = text.match(/(\d+(?:\.\d+)?)\s*(?:kg|g)/i);
+  if (match) {
+    const value = parseFloat(match[1]);
+    if (text.toLowerCase().includes('kg') && value < 10) return value * 1000;
+    if (value >= 100 && value <= 5000) return Math.round(value);
+  }
+  
+  return 1000; // Default to 1kg for Overture products
+}
+
+/**
+ * Scrape product data from Overture Shopify store
+ */
+async function scrapeOvertureProduct(
+  productUrl: string,
+  filamentTitle: string
+): Promise<ScrapedProduct | null> {
+  // Extract handle from URL
+  const urlMatch = productUrl.match(/\/products\/([^/?#]+)/);
+  if (!urlMatch) {
+    console.log(`[OVERTURE] Invalid URL format: ${productUrl}`);
+    return null;
+  }
+  
+  const handle = urlMatch[1];
+  const jsonUrl = `https://overture3d.com/products/${handle}.json`;
+  
+  console.log(`[OVERTURE] Fetching: ${jsonUrl}`);
+  
+  try {
+    const response = await fetch(jsonUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; FilaScopeBot/1.0)",
+        "Accept": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.log(`[OVERTURE] HTTP ${response.status} for ${handle}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const product: ShopifyProduct = data.product;
+    
+    if (!product) {
+      console.log(`[OVERTURE] No product data for ${handle}`);
+      return null;
+    }
+
+    // Get image - first product image, cleaned up
+    let imageUrl: string | null = null;
+    if (product.images?.[0]?.src) {
+      imageUrl = product.images[0].src.split("?")[0]; // Remove size params
+    }
+    
+    // Get variant data (first available or first)
+    const variant = product.variants?.find(v => v.available) || product.variants?.[0];
+    const price = variant?.price ? parseFloat(variant.price) : null;
+    
+    // Extract other data
+    const tdsUrl = extractTdsUrl(product.body_html || '');
+    const weight = extractWeight(filamentTitle, product.body_html || '');
+    const { colorName, colorHex } = extractColorFromTitle(filamentTitle);
+    
+    const scrapedProduct: ScrapedProduct = {
+      productId: String(product.id),
+      title: filamentTitle,
+      price: price && price > 0 && price < 500 ? price : null,
+      url: productUrl,
+      imageUrl,
+      tdsUrl,
+      netWeightG: weight,
+      mpn: variant?.sku || null,
+      barcode: variant?.barcode || null,
+      colorName,
+      colorHex: colorHex ? `#${colorHex}` : null,
+      colorFamily: colorName ? getColorFamily(colorName) : null,
+      available: variant?.available ?? true,
+      currency: 'USD',
+      scrapedAt: new Date(),
+      source: 'overture-scraper',
+    };
+
+    return scrapedProduct;
+    
+  } catch (error) {
+    console.error(`[OVERTURE] Error scraping ${handle}:`, error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  console.log('[OVERTURE] ═══════════════════════════════════════════════════════');
+  console.log('[OVERTURE] 🚀 OVERTURE SCRAPER STARTED');
+  console.log('[OVERTURE] ═══════════════════════════════════════════════════════');
+
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
     // Verify admin access
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -21,9 +204,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     const authClient = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace("Bearer ", "");
@@ -46,114 +226,146 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch all Overture filaments
-    const { data: filaments, error: fetchError } = await supabase
+    // Parse options
+    let limit = 100;
+    let skipExisting = true;
+    try {
+      const body = await req.json();
+      limit = body.limit ?? 100;
+      skipExisting = body.skipExisting ?? true;
+    } catch {
+      // Use defaults
+    }
+
+    // Fetch Overture filaments
+    let query = supabase
       .from("filaments")
-      .select("id, product_title, product_url, featured_image")
+      .select("id, product_title, product_url, featured_image, variant_price, tds_url")
       .ilike("vendor", "%overture%")
       .not("product_url", "is", null);
+    
+    if (skipExisting) {
+      query = query.or('featured_image.is.null,featured_image.eq.');
+    }
+
+    const { data: filaments, error: fetchError } = await query.limit(limit);
 
     if (fetchError) {
       throw new Error(`Failed to fetch filaments: ${fetchError.message}`);
     }
 
-    console.log(`Found ${filaments?.length || 0} Overture filaments to process`);
+    console.log(`[OVERTURE] Found ${filaments?.length || 0} filaments to process (limit: ${limit})`);
 
-    const results: Array<{ id: string; title: string; status: string; image?: string }> = [];
+    const results: ScrapeResult[] = [];
+    let updated = 0;
+    let skipped = 0;
+    let errors = 0;
 
     for (const filament of filaments || []) {
-      try {
-        if (!filament.product_url) {
-          results.push({ id: filament.id, title: filament.product_title, status: "skipped - no URL" });
-          continue;
-        }
+      if (!filament.product_url) {
+        results.push({ id: filament.id, title: filament.product_title, status: 'skipped', error: 'No URL' });
+        skipped++;
+        continue;
+      }
 
-        // Extract product handle from URL
-        const urlMatch = filament.product_url.match(/\/products\/([^/?#]+)/);
-        if (!urlMatch) {
-          results.push({ id: filament.id, title: filament.product_title, status: "invalid URL format" });
-          continue;
-        }
+      console.log(`[OVERTURE] Processing: ${filament.product_title}`);
 
-        const productHandle = urlMatch[1];
-        const jsonUrl = `https://overture3d.com/products/${productHandle}.json`;
-        
-        console.log(`Fetching: ${jsonUrl}`);
+      const scrapedProduct = await scrapeOvertureProduct(filament.product_url, filament.product_title);
 
-        // Use Shopify JSON API - much faster and reliable
-        const response = await fetch(jsonUrl, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-            "Accept": "application/json",
-          },
-        });
+      if (!scrapedProduct) {
+        results.push({ id: filament.id, title: filament.product_title, status: 'error', error: 'Scrape failed' });
+        errors++;
+        continue;
+      }
 
-        if (!response.ok) {
-          results.push({ id: filament.id, title: filament.product_title, status: `HTTP ${response.status}` });
-          continue;
-        }
+      // Validate the scraped product
+      const validation = validateScrapedProduct(scrapedProduct);
+      
+      if (!validation.valid) {
+        console.log(`[OVERTURE] ⚠️ Validation errors: ${validation.errors.join(', ')}`);
+      }
 
-        const productData = await response.json();
-        
-        // Get the first image from the product
-        const images = productData?.product?.images || [];
-        if (images.length === 0) {
-          results.push({ id: filament.id, title: filament.product_title, status: "no images in product data" });
-          continue;
-        }
+      // Sanitize the product data
+      const sanitized = sanitizeScrapedProduct(scrapedProduct as unknown as Record<string, unknown>);
 
-        // Get the src of the first image, removing size parameters
-        let imageUrl = images[0]?.src;
-        if (!imageUrl) {
-          results.push({ id: filament.id, title: filament.product_title, status: "no src in first image" });
-          continue;
-        }
+      // Build update payload
+      const updateData: Record<string, unknown> = {};
+      
+      if (sanitized.imageUrl && !filament.featured_image) {
+        updateData.featured_image = sanitized.imageUrl;
+      }
+      if (sanitized.tdsUrl && !filament.tds_url) {
+        updateData.tds_url = sanitized.tdsUrl;
+      }
+      if (sanitized.price && !filament.variant_price) {
+        updateData.variant_price = sanitized.price;
+      }
+      if (sanitized.netWeightG) {
+        updateData.net_weight_g = sanitized.netWeightG;
+      }
+      if (sanitized.colorHex) {
+        updateData.color_hex = sanitized.colorHex;
+      }
+      if (sanitized.mpn) {
+        updateData.mpn = sanitized.mpn;
+      }
+      if (sanitized.barcode) {
+        updateData.upc = sanitized.barcode;
+      }
+      
+      updateData.last_scraped_at = new Date().toISOString();
 
-        // Clean up the URL - remove width parameter to get full size
-        imageUrl = imageUrl.split("?")[0];
-
-        // Update the filament with the new image
+      if (Object.keys(updateData).length > 1) {
         const { error: updateError } = await supabase
           .from("filaments")
-          .update({ featured_image: imageUrl })
+          .update(updateData)
           .eq("id", filament.id);
 
         if (updateError) {
-          results.push({ id: filament.id, title: filament.product_title, status: `update failed: ${updateError.message}` });
+          results.push({ id: filament.id, title: filament.product_title, status: 'error', error: updateError.message });
+          errors++;
         } else {
-          results.push({ id: filament.id, title: filament.product_title, status: "updated", image: imageUrl });
-          console.log(`Updated ${filament.product_title} with image: ${imageUrl}`);
+          results.push({
+            id: filament.id,
+            title: filament.product_title,
+            status: 'updated',
+            image: sanitized.imageUrl as string | null,
+            price: sanitized.price as number | null,
+          });
+          updated++;
+          console.log(`[OVERTURE] ✅ Updated: ${filament.product_title}`);
         }
-
-        // Small delay between requests to be polite
-        await new Promise(resolve => setTimeout(resolve, 200));
-      } catch (error: unknown) {
-        console.error(`Error processing ${filament.product_title}:`, error);
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        results.push({ id: filament.id, title: filament.product_title, status: `error: ${errorMessage}` });
+      } else {
+        results.push({ id: filament.id, title: filament.product_title, status: 'no_data' });
+        skipped++;
       }
+
+      // Rate limiting
+      await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_MS));
     }
 
-    const updated = results.filter(r => r.status === "updated").length;
-    const failed = results.filter(r => r.status !== "updated" && r.status !== "skipped - no URL").length;
-
-    console.log(`Completed: ${updated} updated, ${failed} failed`);
+    const duration = Math.round((Date.now() - startTime) / 1000);
+    console.log('[OVERTURE] ═══════════════════════════════════════════════════════');
+    console.log(`[OVERTURE] ✅ COMPLETED in ${duration}s`);
+    console.log(`[OVERTURE] Updated: ${updated}, Skipped: ${skipped}, Errors: ${errors}`);
+    console.log('[OVERTURE] ═══════════════════════════════════════════════════════');
 
     return new Response(
       JSON.stringify({
         success: true,
-        total: filaments?.length || 0,
+        processed: results.length,
         updated,
-        failed,
+        skipped,
+        errors,
+        duration,
         results,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error: unknown) {
-    console.error("Error:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
+  } catch (error) {
+    console.error("[OVERTURE] ❌ Fatal error:", error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
