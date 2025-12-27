@@ -407,6 +407,10 @@ Deno.serve(async (req) => {
               case 'bigcommerce':
                 regionProducts = await scrapeBigCommerce(regionalBrand, materialFilter, limit);
                 break;
+              case 'custom':
+                // Route to brand-specific scrapers for custom platforms
+                regionProducts = await scrapeCustomPlatform(supabase, regionalBrand, materialFilter, limit);
+                break;
               default:
                 scrapingError = `Unsupported platform: ${brand.platform_type}`;
             }
@@ -1085,19 +1089,336 @@ function extractWooCommerceColorFamily(product: any, title: string): string | nu
   return extractColorFamily(title);
 }
 
-// Firecrawl Scraper (simplified - would need Firecrawl API key for full implementation)
+// Firecrawl Scraper - Uses Firecrawl API for HTML-based sites
 async function scrapeFirecrawl(brand: BrandConfig, materialFilter?: string, limit = 100): Promise<any[]> {
-  console.log(`[firecrawl] Firecrawl scraping for ${brand.brand_name} - requires FIRECRAWL_API_KEY`);
+  console.log(`[firecrawl] Firecrawl scraping for ${brand.brand_name}`);
   
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
   if (!firecrawlKey) {
-    console.warn('[firecrawl] FIRECRAWL_API_KEY not set');
+    console.warn('[firecrawl] FIRECRAWL_API_KEY not set - falling back to Shopify JSON');
+    // Try Shopify JSON as fallback for many sites
+    try {
+      return await scrapeShopify(brand, materialFilter, limit);
+    } catch (e) {
+      console.warn('[firecrawl] Shopify fallback failed:', e);
+      return [];
+    }
+  }
+
+  const products: any[] = [];
+  const productsUrl = brand.api_endpoint || `${brand.base_url}/collections/all`;
+  
+  try {
+    // First, map the site to discover product URLs
+    console.log(`[firecrawl] Mapping site: ${brand.base_url}`);
+    const mapResponse = await fetch('https://api.firecrawl.dev/v1/map', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: brand.base_url,
+        search: 'filament product',
+        limit: Math.min(limit * 2, 500), // Get more URLs than needed to filter
+        includeSubdomains: false,
+      }),
+    });
+
+    if (!mapResponse.ok) {
+      const errorText = await mapResponse.text();
+      console.error(`[firecrawl] Map API error: ${mapResponse.status}`, errorText);
+      // Fallback to Shopify JSON
+      return await scrapeShopify(brand, materialFilter, limit);
+    }
+
+    const mapData = await mapResponse.json();
+    const productUrls = (mapData.links || []).filter((url: string) => 
+      url.includes('/products/') || url.includes('/product/') || url.includes('filament')
+    ).slice(0, limit);
+
+    console.log(`[firecrawl] Found ${productUrls.length} potential product URLs`);
+
+    // Scrape individual product pages
+    for (const productUrl of productUrls) {
+      if (products.length >= limit) break;
+      
+      try {
+        const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${firecrawlKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: productUrl,
+            formats: ['markdown', 'html'],
+            onlyMainContent: true,
+          }),
+        });
+
+        if (!scrapeResponse.ok) continue;
+
+        const scrapeData = await scrapeResponse.json();
+        const html = scrapeData.data?.html || '';
+        const markdown = scrapeData.data?.markdown || '';
+        const metadata = scrapeData.data?.metadata || {};
+
+        // Extract product info from scraped content
+        const product = extractProductFromHtml(html, markdown, productUrl, brand, metadata);
+        
+        if (product && product.title) {
+          // Apply material filter
+          if (materialFilter && !product.title.toLowerCase().includes(materialFilter.toLowerCase())) {
+            continue;
+          }
+          products.push(product);
+        }
+
+        // Rate limiting between requests
+        await new Promise(r => setTimeout(r, brand.rate_limit_ms || 1000));
+      } catch (err) {
+        console.warn(`[firecrawl] Error scraping ${productUrl}:`, err);
+      }
+    }
+  } catch (err) {
+    console.error(`[firecrawl] Error:`, err);
+    // Fallback to Shopify JSON
+    return await scrapeShopify(brand, materialFilter, limit);
+  }
+
+  console.log(`[firecrawl] Scraped ${products.length} products for ${brand.brand_name}`);
+  return products;
+}
+
+// Extract product data from scraped HTML/markdown
+function extractProductFromHtml(html: string, markdown: string, url: string, brand: BrandConfig, metadata: any): any | null {
+  try {
+    // Extract product ID from URL
+    const urlParts = url.split('/');
+    const slug = urlParts[urlParts.length - 1]?.split('?')[0] || '';
+    const productId = slug || `fc-${Date.now()}`;
+
+    // Extract title from metadata or HTML
+    let title = metadata.title || '';
+    const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i) || 
+                       html.match(/<title>([^<]+)<\/title>/i);
+    if (!title && titleMatch) {
+      title = titleMatch[1].trim();
+    }
+    
+    // Clean title - remove brand/site name suffixes
+    title = title.replace(/\s*[-|–]\s*(.*?)$/, '').trim();
+    title = cleanTitle(title);
+
+    if (!title || title.length < 3) return null;
+
+    // Extract price from JSON-LD or HTML
+    let price: number | null = null;
+    const jsonLdMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+    if (jsonLdMatch) {
+      for (const match of jsonLdMatch) {
+        try {
+          const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
+          const jsonData = JSON.parse(jsonContent);
+          if (jsonData.offers?.price) {
+            price = parseFloat(jsonData.offers.price);
+          } else if (jsonData['@graph']) {
+            for (const item of jsonData['@graph']) {
+              if (item.offers?.price) {
+                price = parseFloat(item.offers.price);
+                break;
+              }
+            }
+          }
+        } catch {}
+      }
+    }
+
+    // Fallback price extraction from HTML
+    if (!price) {
+      const priceMatch = html.match(/\$(\d+(?:\.\d{2})?)/);
+      if (priceMatch) {
+        price = parseFloat(priceMatch[1]);
+      }
+    }
+
+    // Extract image
+    let imageUrl: string | null = null;
+    const ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i);
+    if (ogImageMatch) {
+      imageUrl = ogImageMatch[1];
+    } else {
+      const imgMatch = html.match(/<img[^>]*class="[^"]*product[^"]*"[^>]*src="([^"]+)"/i) ||
+                       html.match(/<img[^>]*src="([^"]+)"[^>]*class="[^"]*product/i);
+      if (imgMatch) {
+        imageUrl = imgMatch[1];
+      }
+    }
+
+    // Extract TDS URL
+    let tdsUrl: string | null = null;
+    const tdsPatterns = [
+      /href="([^"]+(?:tds|technical[-_]?data|datasheet|spec)(?:sheet)?[^"]*\.pdf)"/gi,
+      /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical|Datasheet|Spec))/gi,
+    ];
+    for (const pattern of tdsPatterns) {
+      const tdsMatch = html.match(pattern);
+      if (tdsMatch?.[1]) {
+        tdsUrl = tdsMatch[1];
+        if (!tdsUrl.startsWith('http')) {
+          tdsUrl = new URL(tdsUrl, brand.base_url).href;
+        }
+        break;
+      }
+    }
+
+    // Extract material and color
+    const material = extractMaterial(title, '');
+    const colorResult = extractColorFromTitle(title);
+    const netWeightG = extractWeight(title);
+    const productLineId = generateProductLineId(brand.brand_slug, material, title);
+
+    return {
+      productId,
+      title,
+      price,
+      compareAtPrice: null,
+      available: true,
+      url,
+      imageUrl,
+      mpn: null,
+      sku: null,
+      material,
+      colorFamily: colorResult.colorFamily,
+      colorHex: colorResult.colorHex ? `#${colorResult.colorHex}` : null,
+      netWeightG,
+      tdsUrl,
+      productLineId,
+    };
+  } catch (err) {
+    console.warn('[firecrawl] Error extracting product:', err);
+    return null;
+  }
+}
+
+// Custom platform scraper - routes to brand-specific implementations
+async function scrapeCustomPlatform(supabase: any, brand: BrandConfig, materialFilter?: string, limit = 100): Promise<any[]> {
+  console.log(`[custom] Custom scraping for ${brand.brand_slug}`);
+  
+  switch (brand.brand_slug) {
+    case 'matterhackers':
+      return await scrapeMatterHackers(brand, materialFilter, limit);
+    case 'treed-filaments':
+      // TreeD uses Shopify - try JSON first, then Firecrawl
+      try {
+        const products = await scrapeShopify(brand, materialFilter, limit);
+        if (products.length > 0) return products;
+      } catch (e) {
+        console.log('[custom] TreeD Shopify failed, trying Firecrawl');
+      }
+      return await scrapeFirecrawl(brand, materialFilter, limit);
+    case 'ninjatek':
+      // NinjaTek uses Shopify now (migrated from WooCommerce)
+      return await scrapeShopify({ ...brand, api_endpoint: `${brand.base_url}/products.json` }, materialFilter, limit);
+    default:
+      // Try Shopify first, then Firecrawl as fallback
+      try {
+        return await scrapeShopify(brand, materialFilter, limit);
+      } catch (e) {
+        return await scrapeFirecrawl(brand, materialFilter, limit);
+      }
+  }
+}
+
+// MatterHackers custom scraper
+async function scrapeMatterHackers(brand: BrandConfig, materialFilter?: string, limit = 100): Promise<any[]> {
+  console.log(`[matterhackers] Scraping MatterHackers`);
+  const products: any[] = [];
+  
+  const catalogUrls = [
+    'https://www.matterhackers.com/store/c/3d-printer-filament',
+    'https://www.matterhackers.com/store/c/pla-3d-printer-filament',
+    'https://www.matterhackers.com/store/c/petg-3d-printer-filament',
+    'https://www.matterhackers.com/store/c/abs-3d-printer-filament',
+    'https://www.matterhackers.com/store/c/tpu-3d-printer-filament',
+  ];
+
+  const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!firecrawlKey) {
+    console.warn('[matterhackers] FIRECRAWL_API_KEY not set');
     return [];
   }
 
-  // For now, return empty - full implementation would use Firecrawl API
-  // This is a placeholder for brands that need HTML scraping
-  return [];
+  for (const catalogUrl of catalogUrls) {
+    if (products.length >= limit) break;
+
+    try {
+      // Scrape catalog page
+      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: catalogUrl,
+          formats: ['html'],
+          onlyMainContent: true,
+        }),
+      });
+
+      if (!response.ok) continue;
+
+      const data = await response.json();
+      const html = data.data?.html || '';
+
+      // Extract product URLs and basic info from catalog
+      const productMatches = html.matchAll(/<a[^>]*href="(\/store\/3d-printer-filament\/[^"]+)"[^>]*>([^<]+)/gi);
+      
+      for (const match of productMatches) {
+        if (products.length >= limit) break;
+        
+        const productPath = match[1];
+        const productUrl = `https://www.matterhackers.com${productPath}`;
+        const title = match[2]?.trim();
+
+        if (!title || title.length < 5) continue;
+        if (materialFilter && !title.toLowerCase().includes(materialFilter.toLowerCase())) continue;
+
+        // Extract product ID from URL
+        const productId = productPath.split('/').pop() || `mh-${Date.now()}`;
+
+        // Extract color and material
+        const material = extractMaterial(title, '');
+        const colorResult = extractColorFromTitle(title);
+        const netWeightG = extractWeight(title);
+
+        products.push({
+          productId,
+          title: cleanTitle(title),
+          price: null, // Would need to scrape individual pages
+          compareAtPrice: null,
+          available: true,
+          url: productUrl,
+          imageUrl: null,
+          mpn: null,
+          material,
+          colorFamily: colorResult.colorFamily,
+          colorHex: colorResult.colorHex ? `#${colorResult.colorHex}` : null,
+          netWeightG,
+          productLineId: generateProductLineId(brand.brand_slug, material, title),
+        });
+      }
+
+      await new Promise(r => setTimeout(r, 1000));
+    } catch (err) {
+      console.warn(`[matterhackers] Error scraping ${catalogUrl}:`, err);
+    }
+  }
+
+  console.log(`[matterhackers] Found ${products.length} products`);
+  return products;
 }
 
 // BigCommerce Scraper
