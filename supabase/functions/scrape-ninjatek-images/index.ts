@@ -10,7 +10,7 @@
  * - Weight from product specs
  * - Color from variant selectors and title
  * 
- * Compliant with shared ScrapedProduct schema and validation
+ * DEBUG ENHANCED: Comprehensive logging for troubleshooting
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -27,7 +27,7 @@ const corsHeaders = {
 };
 
 // Rate limiting - NinjaTek can be slow
-const RATE_LIMIT_MS = 2000;
+const RATE_LIMIT_MS = 2500;
 const MAX_RETRIES = 3;
 
 interface ScrapeResult {
@@ -43,23 +43,25 @@ interface ScrapeResult {
   validationErrors?: string[];
   validationWarnings?: string[];
   error?: string;
+  debugInfo?: Record<string, unknown>;
 }
 
 /**
- * Enhanced WooCommerce price extraction
- * Handles: regular price, sale price, price ranges
+ * Enhanced WooCommerce price extraction with debug logging
  */
-function extractWooCommercePrice(html: string, markdown: string): { price: number | null; compareAtPrice: number | null } {
+function extractWooCommercePrice(html: string, markdown: string): { price: number | null; compareAtPrice: number | null; debugInfo: string[] } {
   let price: number | null = null;
   let compareAtPrice: number | null = null;
+  const debugInfo: string[] = [];
   
   // Strategy 1: Sale price (in <ins> tag) with original price (in <del> tag)
   const saleMatch = html.match(/<del[^>]*>.*?<bdi>\s*\$\s*(\d+(?:\.\d{2})?)\s*<\/bdi>.*?<\/del>.*?<ins[^>]*>.*?<bdi>\s*\$\s*(\d+(?:\.\d{2})?)\s*<\/bdi>.*?<\/ins>/is);
   if (saleMatch) {
     compareAtPrice = parseFloat(saleMatch[1]);
     price = parseFloat(saleMatch[2]);
+    debugInfo.push(`Sale price found: $${price} (was $${compareAtPrice})`);
     if (price > 0 && price < 200) {
-      return { price, compareAtPrice };
+      return { price, compareAtPrice, debugInfo };
     }
   }
   
@@ -67,8 +69,9 @@ function extractWooCommercePrice(html: string, markdown: string): { price: numbe
   const priceAmountMatch = html.match(/<span class="woocommerce-Price-amount[^"]*"[^>]*>.*?<bdi>\s*\$\s*(\d+(?:\.\d{2})?)\s*<\/bdi>/i);
   if (priceAmountMatch?.[1]) {
     price = parseFloat(priceAmountMatch[1]);
+    debugInfo.push(`WooCommerce bdi price: $${price}`);
     if (price > 0 && price < 200) {
-      return { price, compareAtPrice: null };
+      return { price, compareAtPrice: null, debugInfo };
     }
   }
   
@@ -76,8 +79,9 @@ function extractWooCommercePrice(html: string, markdown: string): { price: numbe
   const simplePriceMatch = html.match(/<span class="woocommerce-Price-amount[^"]*"[^>]*>\s*\$?\s*(\d+(?:\.\d{2})?)\s*<\/span>/i);
   if (simplePriceMatch?.[1]) {
     price = parseFloat(simplePriceMatch[1]);
+    debugInfo.push(`Simple price span: $${price}`);
     if (price > 0 && price < 200) {
-      return { price, compareAtPrice: null };
+      return { price, compareAtPrice: null, debugInfo };
     }
   }
   
@@ -86,83 +90,143 @@ function extractWooCommercePrice(html: string, markdown: string): { price: numbe
                          html.match(/<meta[^>]*content="(\d+(?:\.\d{2})?)"[^>]*property="product:price:amount"/i);
   if (metaPriceMatch?.[1]) {
     price = parseFloat(metaPriceMatch[1]);
+    debugInfo.push(`Meta tag price: $${price}`);
     if (price > 0 && price < 200) {
-      return { price, compareAtPrice: null };
+      return { price, compareAtPrice: null, debugInfo };
     }
   }
   
-  // Strategy 5: Markdown price patterns
+  // Strategy 5: JSON-LD structured data
+  const jsonLdMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+  if (jsonLdMatch) {
+    for (const match of jsonLdMatch) {
+      try {
+        const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
+        const json = JSON.parse(jsonContent);
+        if (json.offers?.price || json['@graph']?.find((item: Record<string, unknown>) => item.offers)) {
+          const offers = json.offers || json['@graph']?.find((item: Record<string, unknown>) => item.offers)?.offers;
+          if (offers?.price) {
+            price = parseFloat(offers.price);
+            debugInfo.push(`JSON-LD price: $${price}`);
+            if (price > 0 && price < 200) {
+              return { price, compareAtPrice: null, debugInfo };
+            }
+          }
+        }
+      } catch {
+        // Invalid JSON, continue
+      }
+    }
+  }
+  
+  // Strategy 6: Markdown price patterns
   const mdPriceMatch = markdown.match(/\$(\d+(?:\.\d{2})?)/);
   if (mdPriceMatch?.[1]) {
     price = parseFloat(mdPriceMatch[1]);
+    debugInfo.push(`Markdown price: $${price}`);
     if (price >= 15 && price <= 150) {
-      return { price, compareAtPrice: null };
+      return { price, compareAtPrice: null, debugInfo };
     }
   }
   
-  return { price: null, compareAtPrice: null };
+  debugInfo.push('No valid price found');
+  return { price: null, compareAtPrice: null, debugInfo };
 }
 
 /**
- * Enhanced WooCommerce image extraction
- * Priority: data-large_image > gallery image > og:image > first product image
+ * Enhanced WooCommerce image extraction with debug logging
  */
-function extractWooCommerceImage(html: string): string | null {
+function extractWooCommerceImage(html: string): { imageUrl: string | null; debugInfo: string[] } {
+  const debugInfo: string[] = [];
+  
   // Strategy 1: data-large_image attribute (highest resolution)
   const largeImageMatch = html.match(/data-large_image="([^"]+)"/i);
   if (largeImageMatch?.[1]) {
-    return largeImageMatch[1];
+    debugInfo.push(`Found data-large_image: ${largeImageMatch[1].substring(0, 60)}...`);
+    return { imageUrl: largeImageMatch[1], debugInfo };
   }
   
   // Strategy 2: WooCommerce product gallery main image
   const galleryMatch = html.match(/class="woocommerce-product-gallery__image[^"]*"[^>]*>\s*<a[^>]*href="([^"]+)"/i);
   if (galleryMatch?.[1]) {
-    return galleryMatch[1];
+    debugInfo.push(`Found gallery image: ${galleryMatch[1].substring(0, 60)}...`);
+    return { imageUrl: galleryMatch[1], debugInfo };
   }
   
-  // Strategy 3: OG image
+  // Strategy 3: WooCommerce product gallery wrapper with data-thumb
+  const galleryWrapperMatch = html.match(/class="woocommerce-product-gallery__wrapper"[^>]*>[\s\S]*?data-large_image="([^"]+)"/i);
+  if (galleryWrapperMatch?.[1]) {
+    debugInfo.push(`Found gallery wrapper image: ${galleryWrapperMatch[1].substring(0, 60)}...`);
+    return { imageUrl: galleryWrapperMatch[1], debugInfo };
+  }
+  
+  // Strategy 4: OG image
   const ogImageMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) ||
                       html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
   if (ogImageMatch?.[1]) {
-    return ogImageMatch[1];
+    debugInfo.push(`Found og:image: ${ogImageMatch[1].substring(0, 60)}...`);
+    return { imageUrl: ogImageMatch[1], debugInfo };
   }
   
-  // Strategy 4: First product image in wp-content/uploads
+  // Strategy 5: Twitter image
+  const twitterImageMatch = html.match(/<meta\s+(?:name="twitter:image"|property="twitter:image")\s+content="([^"]+)"/i);
+  if (twitterImageMatch?.[1]) {
+    debugInfo.push(`Found twitter:image: ${twitterImageMatch[1].substring(0, 60)}...`);
+    return { imageUrl: twitterImageMatch[1], debugInfo };
+  }
+  
+  // Strategy 6: First product image in wp-content/uploads
   const productImageMatch = html.match(/src="(https:\/\/ninjatek\.com\/wp-content\/uploads\/[^"]+\.(?:jpg|jpeg|png|webp))"/i);
   if (productImageMatch?.[1] && 
       !productImageMatch[1].includes('placeholder') && 
       !productImageMatch[1].includes('icon') && 
       !productImageMatch[1].includes('logo')) {
     // Remove size suffix to get full-size image
-    return productImageMatch[1].replace(/-\d+x\d+\./, '.');
+    const fullSizeUrl = productImageMatch[1].replace(/-\d+x\d+\./, '.');
+    debugInfo.push(`Found wp-content image: ${fullSizeUrl.substring(0, 60)}...`);
+    return { imageUrl: fullSizeUrl, debugInfo };
   }
   
-  // Strategy 5: Any attachment image in content
+  // Strategy 7: Any image with product in class
+  const productClassImageMatch = html.match(/class="[^"]*product[^"]*"[^>]*src="([^"]+\.(?:jpg|jpeg|png|webp))"/i) ||
+                                  html.match(/src="([^"]+\.(?:jpg|jpeg|png|webp))"[^>]*class="[^"]*product[^"]*"/i);
+  if (productClassImageMatch?.[1] && 
+      !productClassImageMatch[1].includes('placeholder') && 
+      !productClassImageMatch[1].includes('icon')) {
+    debugInfo.push(`Found product class image: ${productClassImageMatch[1].substring(0, 60)}...`);
+    return { imageUrl: productClassImageMatch[1], debugInfo };
+  }
+  
+  // Strategy 8: Any attachment image in content
   const attachmentMatch = html.match(/class="attachment-[^"]*"[^>]*src="([^"]+)"/i);
   if (attachmentMatch?.[1] && !attachmentMatch[1].includes('icon')) {
-    return attachmentMatch[1];
+    debugInfo.push(`Found attachment image: ${attachmentMatch[1].substring(0, 60)}...`);
+    return { imageUrl: attachmentMatch[1], debugInfo };
   }
   
-  return null;
+  debugInfo.push('No valid image found');
+  return { imageUrl: null, debugInfo };
 }
 
 /**
  * Enhanced TDS URL extraction with NinjaTek-specific patterns
  */
-function extractNinjaTekTds(html: string, markdown: string): string | null {
+function extractNinjaTekTds(html: string, markdown: string): { tdsUrl: string | null; debugInfo: string[] } {
+  const debugInfo: string[] = [];
   const tdsPatterns = [
     // NinjaTek uses these patterns
-    /href="([^"]*TDS[^"]*\.pdf)"/gi,
-    /href="([^"]*technical[_-]?data[_-]?sheet[^"]*\.pdf)"/gi,
-    /href="([^"]*_TDS_[^"]*\.pdf)"/gi,
-    /href="(https?:\/\/[^"]*ninjatek[^"]*\.pdf)"/gi,
-    /href="([^"]*datasheet[^"]*\.pdf)"/gi,
-    /href="([^"]*safety[_-]?data[^"]*\.pdf)"/gi,
-    // CDN-hosted PDFs
-    /href="(https?:\/\/cdn[^"]*\.pdf)"/gi,
+    { pattern: /href="([^"]*TDS[^"]*\.pdf)"/gi, name: 'TDS pattern' },
+    { pattern: /href="([^"]*technical[_-]?data[_-]?sheet[^"]*\.pdf)"/gi, name: 'Technical data sheet' },
+    { pattern: /href="([^"]*_TDS_[^"]*\.pdf)"/gi, name: '_TDS_ pattern' },
+    { pattern: /href="(https?:\/\/[^"]*ninjatek[^"]*\.pdf)"/gi, name: 'NinjaTek PDF' },
+    { pattern: /href="([^"]*datasheet[^"]*\.pdf)"/gi, name: 'Datasheet' },
+    { pattern: /href="([^"]*safety[_-]?data[^"]*\.pdf)"/gi, name: 'Safety data' },
+    { pattern: /href="(https?:\/\/cdn[^"]*\.pdf)"/gi, name: 'CDN PDF' },
+    { pattern: /href="([^"]*spec[_-]?sheet[^"]*\.pdf)"/gi, name: 'Spec sheet' },
+    { pattern: /href="([^"]*product[_-]?info[^"]*\.pdf)"/gi, name: 'Product info' },
   ];
   
-  for (const pattern of tdsPatterns) {
+  for (const { pattern, name } of tdsPatterns) {
     const matches = html.matchAll(pattern);
     for (const match of matches) {
       if (match[1]) {
@@ -170,19 +234,29 @@ function extractNinjaTekTds(html: string, markdown: string): string | null {
         if (!url.startsWith('http')) {
           url = url.startsWith('/') ? `https://ninjatek.com${url}` : `https://ninjatek.com/${url}`;
         }
-        return url;
+        debugInfo.push(`Found TDS via ${name}: ${url.substring(0, 60)}...`);
+        return { tdsUrl: url, debugInfo };
       }
     }
   }
   
   // Check markdown for PDF links
-  const mdPdfMatch = markdown.match(/\[.*?TDS.*?\]\((https?:\/\/[^\)]+\.pdf)\)/i) ||
-                     markdown.match(/\((https?:\/\/[^\)]*TDS[^\)]*\.pdf)\)/i);
+  const mdPdfMatch = markdown.match(/\[.*?(?:TDS|datasheet|spec).*?\]\((https?:\/\/[^\)]+\.pdf)\)/i) ||
+                     markdown.match(/\((https?:\/\/[^\)]*(?:TDS|datasheet)[^\)]*\.pdf)\)/i);
   if (mdPdfMatch?.[1]) {
-    return mdPdfMatch[1];
+    debugInfo.push(`Found TDS in markdown: ${mdPdfMatch[1].substring(0, 60)}...`);
+    return { tdsUrl: mdPdfMatch[1], debugInfo };
   }
   
-  return null;
+  // Check for any PDF link as last resort
+  const anyPdfMatch = html.match(/href="(https?:\/\/[^"]+\.pdf)"/i);
+  if (anyPdfMatch?.[1] && !anyPdfMatch[1].includes('msds') && !anyPdfMatch[1].includes('invoice')) {
+    debugInfo.push(`Found generic PDF: ${anyPdfMatch[1].substring(0, 60)}...`);
+    return { tdsUrl: anyPdfMatch[1], debugInfo };
+  }
+  
+  debugInfo.push('No TDS found');
+  return { tdsUrl: null, debugInfo };
 }
 
 /**
@@ -210,6 +284,12 @@ function extractWooCommerceMpn(html: string): string | null {
     return dataSkuMatch[1];
   }
   
+  // JSON-LD SKU
+  const jsonLdMatch = html.match(/"sku"\s*:\s*"([^"]+)"/i);
+  if (jsonLdMatch?.[1]) {
+    return jsonLdMatch[1];
+  }
+  
   return null;
 }
 
@@ -221,9 +301,9 @@ function extractNinjaTekWeight(html: string, markdown: string, title: string): n
   
   // Common NinjaTek spool weights
   const weightPatterns = [
-    /(\d+(?:\.\d+)?)\s*(?:grams?|g)\b/gi,
     /Net\s*Weight[:\s]*(\d+(?:\.\d+)?)\s*(?:g|grams?)/gi,
     /Weight[:\s]*(\d+(?:\.\d+)?)\s*(?:g|grams?)/gi,
+    /(\d+(?:\.\d+)?)\s*(?:grams?|g)\b/gi,
     /(\d+(?:\.\d+)?)\s*kg\b/gi,
   ];
   
@@ -294,12 +374,20 @@ async function scrapeNinjaTekProduct(
   productUrl: string, 
   productTitle: string,
   firecrawlKey: string
-): Promise<ScrapedProduct | null> {
-  console.log(`[NINJATEK] Scraping: ${productUrl}`);
+): Promise<{ product: ScrapedProduct | null; debugInfo: Record<string, unknown> }> {
+  const debugInfo: Record<string, unknown> = {
+    url: productUrl,
+    title: productTitle,
+    startTime: new Date().toISOString(),
+  };
+  
+  console.log(`[NINJATEK] 🔍 Scraping: ${productUrl}`);
   
   let retries = 0;
   while (retries <= MAX_RETRIES) {
     try {
+      console.log(`[NINJATEK] 📡 Calling Firecrawl (attempt ${retries + 1}/${MAX_RETRIES + 1})...`);
+      
       const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
         method: 'POST',
         headers: {
@@ -310,31 +398,58 @@ async function scrapeNinjaTekProduct(
           url: productUrl,
           formats: ['markdown', 'html'],
           onlyMainContent: false, // Need full page for meta tags and structured data
-          waitFor: 3000, // NinjaTek pages can be slow
+          waitFor: 4000, // NinjaTek pages can be slow
         }),
       });
 
+      debugInfo.firecrawlStatus = response.status;
+      
       if (!response.ok) {
         if (response.status === 429 && retries < MAX_RETRIES) {
-          console.log(`[NINJATEK] Rate limited, waiting 10s and retrying...`);
-          await new Promise(r => setTimeout(r, 10000));
+          console.log(`[NINJATEK] ⏳ Rate limited (429), waiting 15s and retrying...`);
+          await new Promise(r => setTimeout(r, 15000));
           retries++;
           continue;
         }
-        throw new Error(`Firecrawl error: ${response.status}`);
+        const errorText = await response.text();
+        debugInfo.firecrawlError = errorText;
+        throw new Error(`Firecrawl error: ${response.status} - ${errorText.substring(0, 100)}`);
       }
 
       const scrapeData = await response.json();
       const html = scrapeData.data?.html || '';
       const markdown = scrapeData.data?.markdown || '';
+      
+      debugInfo.htmlLength = html.length;
+      debugInfo.markdownLength = markdown.length;
+      
+      console.log(`[NINJATEK] 📄 Received HTML: ${html.length} chars, Markdown: ${markdown.length} chars`);
+      
+      if (html.length < 500) {
+        console.log(`[NINJATEK] ⚠️ HTML too short, may be blocked or error page`);
+        debugInfo.warning = 'HTML too short';
+      }
 
-      // Extract all data using enhanced functions
-      const imageUrl = extractWooCommerceImage(html);
-      const { price, compareAtPrice } = extractWooCommercePrice(html, markdown);
-      const tdsUrl = extractNinjaTekTds(html, markdown);
+      // Extract all data using enhanced functions with debug info
+      const imageResult = extractWooCommerceImage(html);
+      const priceResult = extractWooCommercePrice(html, markdown);
+      const tdsResult = extractNinjaTekTds(html, markdown);
       const mpn = extractWooCommerceMpn(html);
       const weight = extractNinjaTekWeight(html, markdown, productTitle);
       const { colorName, colorHex } = extractNinjaTekColor(html, productTitle);
+      
+      // Collect debug info
+      debugInfo.imageDebug = imageResult.debugInfo;
+      debugInfo.priceDebug = priceResult.debugInfo;
+      debugInfo.tdsDebug = tdsResult.debugInfo;
+      
+      // Log extraction results
+      console.log(`[NINJATEK] 🖼️ Image: ${imageResult.imageUrl ? 'FOUND' : 'NOT FOUND'}`);
+      console.log(`[NINJATEK] 💰 Price: ${priceResult.price ? `$${priceResult.price}` : 'NOT FOUND'}`);
+      console.log(`[NINJATEK] 📄 TDS: ${tdsResult.tdsUrl ? 'FOUND' : 'NOT FOUND'}`);
+      console.log(`[NINJATEK] 🏷️ MPN: ${mpn || 'NOT FOUND'}`);
+      console.log(`[NINJATEK] ⚖️ Weight: ${weight ? `${weight}g` : 'NOT FOUND'}`);
+      console.log(`[NINJATEK] 🎨 Color: ${colorName || 'NOT FOUND'} (${colorHex || 'no hex'})`);
       
       // Extract product ID from URL
       const urlParts = productUrl.split('/');
@@ -343,11 +458,11 @@ async function scrapeNinjaTekProduct(
       const scrapedProduct: ScrapedProduct = {
         productId,
         title: productTitle,
-        price,
-        compareAtPrice,
+        price: priceResult.price,
+        compareAtPrice: priceResult.compareAtPrice,
         url: productUrl,
-        imageUrl,
-        tdsUrl,
+        imageUrl: imageResult.imageUrl,
+        tdsUrl: tdsResult.tdsUrl,
         netWeightG: weight,
         mpn,
         colorName,
@@ -359,22 +474,32 @@ async function scrapeNinjaTekProduct(
         source: 'ninjatek-woocommerce-scraper',
       };
 
-      console.log(`[NINJATEK] Extracted: image=${!!imageUrl}, price=${price}, tds=${!!tdsUrl}, mpn=${mpn}, color=${colorName}`);
-      return scrapedProduct;
+      debugInfo.extractedData = {
+        hasImage: !!imageResult.imageUrl,
+        hasPrice: !!priceResult.price,
+        hasTds: !!tdsResult.tdsUrl,
+        hasMpn: !!mpn,
+        hasWeight: !!weight,
+        hasColor: !!colorName,
+      };
+
+      return { product: scrapedProduct, debugInfo };
       
     } catch (error) {
+      debugInfo.error = error instanceof Error ? error.message : String(error);
+      
       if (retries < MAX_RETRIES) {
-        console.log(`[NINJATEK] Error, retrying (${retries + 1}/${MAX_RETRIES}): ${error}`);
+        console.log(`[NINJATEK] ❌ Error, retrying (${retries + 1}/${MAX_RETRIES}): ${error}`);
         retries++;
-        await new Promise(r => setTimeout(r, 3000));
+        await new Promise(r => setTimeout(r, 5000));
         continue;
       }
-      console.error(`[NINJATEK] Failed after ${MAX_RETRIES} retries:`, error);
-      return null;
+      console.error(`[NINJATEK] ❌ Failed after ${MAX_RETRIES} retries:`, error);
+      return { product: null, debugInfo };
     }
   }
   
-  return null;
+  return { product: null, debugInfo };
 }
 
 serve(async (req) => {
@@ -384,7 +509,8 @@ serve(async (req) => {
 
   const startTime = Date.now();
   console.log('[NINJATEK] ═══════════════════════════════════════════════════════');
-  console.log('[NINJATEK] 🚀 NINJATEK SCRAPER STARTED');
+  console.log('[NINJATEK] 🚀 NINJATEK ENHANCED SCRAPER STARTED');
+  console.log(`[NINJATEK] 📅 ${new Date().toISOString()}`);
   console.log('[NINJATEK] ═══════════════════════════════════════════════════════');
 
   try {
@@ -392,8 +518,10 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
     
+    console.log(`[NINJATEK] 🔑 FIRECRAWL_API_KEY: ${firecrawlKey ? 'CONFIGURED' : 'MISSING!'}`);
+    
     if (!firecrawlKey) {
-      throw new Error('FIRECRAWL_API_KEY not configured');
+      throw new Error('FIRECRAWL_API_KEY not configured - please add it in Supabase Edge Function secrets');
     }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -434,13 +562,17 @@ serve(async (req) => {
     // Parse options
     let limit = 50;
     let skipExisting = true;
+    let forceUpdate = false;
     try {
       const body = await req.json();
       limit = body.limit ?? 50;
       skipExisting = body.skipExisting ?? true;
+      forceUpdate = body.forceUpdate ?? false;
     } catch {
       // Use defaults
     }
+
+    console.log(`[NINJATEK] ⚙️ Options: limit=${limit}, skipExisting=${skipExisting}, forceUpdate=${forceUpdate}`);
 
     // Fetch NinjaTek filaments with product URLs
     let query = supabase
@@ -449,7 +581,7 @@ serve(async (req) => {
       .eq('vendor', 'NinjaTek')
       .not('product_url', 'is', null);
     
-    if (skipExisting) {
+    if (skipExisting && !forceUpdate) {
       query = query.or('featured_image.is.null,featured_image.eq.');
     }
     
@@ -459,7 +591,20 @@ serve(async (req) => {
       throw new Error(`Failed to fetch filaments: ${fetchError.message}`);
     }
 
-    console.log(`[NINJATEK] Found ${filaments?.length || 0} filaments to process (limit: ${limit})`);
+    console.log(`[NINJATEK] 📊 Found ${filaments?.length || 0} filaments to process (limit: ${limit})`);
+
+    if (!filaments || filaments.length === 0) {
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'No filaments to process - all may already have images',
+        processed: 0,
+        updated: 0,
+        skipped: 0,
+        errors: 0,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const results: ScrapeResult[] = [];
     let updated = 0;
@@ -474,16 +619,24 @@ serve(async (req) => {
       }
 
       console.log(`[NINJATEK] ───────────────────────────────────────────────────────`);
-      console.log(`[NINJATEK] Processing: ${filament.product_title}`);
+      console.log(`[NINJATEK] 📦 Processing: ${filament.product_title}`);
+      console.log(`[NINJATEK] 🔗 URL: ${filament.product_url}`);
 
-      const scrapedProduct = await scrapeNinjaTekProduct(
+      const { product: scrapedProduct, debugInfo } = await scrapeNinjaTekProduct(
         filament.product_url,
         filament.product_title,
         firecrawlKey
       );
 
       if (!scrapedProduct) {
-        results.push({ id: filament.id, title: filament.product_title, status: 'error', error: 'Scrape failed' });
+        console.log(`[NINJATEK] ❌ Scrape failed - debug info:`, JSON.stringify(debugInfo, null, 2));
+        results.push({ 
+          id: filament.id, 
+          title: filament.product_title, 
+          status: 'error', 
+          error: 'Scrape failed',
+          debugInfo 
+        });
         errors++;
         continue;
       }
@@ -504,13 +657,13 @@ serve(async (req) => {
       // Build update payload - only update fields that have new values
       const updateData: Record<string, unknown> = {};
       
-      if (sanitized.imageUrl && !filament.featured_image) {
+      if (sanitized.imageUrl && (!filament.featured_image || forceUpdate)) {
         updateData.featured_image = sanitized.imageUrl;
       }
-      if (sanitized.tdsUrl && !filament.tds_url) {
+      if (sanitized.tdsUrl && (!filament.tds_url || forceUpdate)) {
         updateData.tds_url = sanitized.tdsUrl;
       }
-      if (sanitized.price && !filament.variant_price) {
+      if (sanitized.price && (!filament.variant_price || forceUpdate)) {
         updateData.variant_price = sanitized.price;
       }
       if (sanitized.netWeightG) {
@@ -554,12 +707,18 @@ serve(async (req) => {
             colorHex: sanitized.colorHex as string | null,
             mpn: sanitized.mpn as string | null,
             validationWarnings: validation.warnings.length > 0 ? validation.warnings : undefined,
+            debugInfo,
           });
           updated++;
         }
       } else {
         console.log(`[NINJATEK] ⏭️ No new data extracted`);
-        results.push({ id: filament.id, title: filament.product_title, status: 'no_data' });
+        results.push({ 
+          id: filament.id, 
+          title: filament.product_title, 
+          status: 'no_data',
+          debugInfo 
+        });
         skipped++;
       }
 
@@ -570,7 +729,7 @@ serve(async (req) => {
     const duration = Math.round((Date.now() - startTime) / 1000);
     console.log('[NINJATEK] ═══════════════════════════════════════════════════════');
     console.log(`[NINJATEK] ✅ COMPLETED in ${duration}s`);
-    console.log(`[NINJATEK] Updated: ${updated}, Skipped: ${skipped}, Errors: ${errors}`);
+    console.log(`[NINJATEK] 📊 Updated: ${updated}, Skipped: ${skipped}, Errors: ${errors}`);
     console.log('[NINJATEK] ═══════════════════════════════════════════════════════');
 
     return new Response(JSON.stringify({

@@ -10,7 +10,7 @@
  * - Weight from product/variant properties
  * - Color from variant title and product options
  * 
- * Compliant with shared ScrapedProduct schema and validation
+ * DEBUG ENHANCED: Comprehensive logging + multi-vendor support
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -27,7 +27,7 @@ const corsHeaders = {
 };
 
 // Rate limiting - Shopify is generally fast
-const RATE_LIMIT_MS = 600;
+const RATE_LIMIT_MS = 800;
 const MAX_RETRIES = 3;
 
 interface ShopifyProduct {
@@ -84,15 +84,28 @@ interface ScrapeResult {
   mpn?: string | null;
   error?: string;
   validationWarnings?: string[];
+  debugInfo?: Record<string, unknown>;
 }
 
 /**
- * Extract product handle from URL
+ * Extract product handle from URL with enhanced patterns
  */
 function extractHandle(url: string, storedHandle?: string): string | null {
   if (storedHandle) return storedHandle;
+  
+  // Standard Shopify pattern
   const match = url.match(/\/products\/([^/?#]+)/);
-  return match?.[1] || null;
+  if (match?.[1]) return match[1];
+  
+  // Handle with variant
+  const variantMatch = url.match(/\/products\/([^/?#]+)\?variant=/);
+  if (variantMatch?.[1]) return variantMatch[1];
+  
+  // Collection product pattern
+  const collectionMatch = url.match(/\/collections\/[^/]+\/products\/([^/?#]+)/);
+  if (collectionMatch?.[1]) return collectionMatch[1];
+  
+  return null;
 }
 
 /**
@@ -147,41 +160,46 @@ function findMatchingVariant(
 }
 
 /**
- * Extract TDS URL from product HTML, tags, and metafields
+ * Extract TDS URL from product HTML, tags, and metafields - Enhanced patterns
  */
-function extractTdsUrl(product: ShopifyProduct): string | null {
+function extractTdsUrl(product: ShopifyProduct): { tdsUrl: string | null; debugInfo: string[] } {
   const html = product.body_html || '';
+  const debugInfo: string[] = [];
   
-  // Check for TDS link in description
+  // Check for TDS link in description with expanded patterns
   const tdsPatterns = [
-    /href="([^"]*tds[^"]*\.pdf)"/i,
-    /href="([^"]*technical[_-]?data[_-]?sheet[^"]*\.pdf)"/i,
-    /href="([^"]*datasheet[^"]*\.pdf)"/i,
-    /href="([^"]*_TDS_[^"]*\.pdf)"/i,
-    /href="([^"]*safety[_-]?data[_-]?sheet[^"]*\.pdf)"/i,
-    /href="(https?:\/\/cdn\.shopify\.com\/[^"]*\.pdf)"/i,
-    /href="(https?:\/\/[^"]*\.pdf)"/i,
+    { pattern: /href="([^"]*tds[^"]*\.pdf)"/i, name: 'tds.pdf' },
+    { pattern: /href="([^"]*technical[_-]?data[_-]?sheet[^"]*\.pdf)"/i, name: 'technical-data-sheet' },
+    { pattern: /href="([^"]*datasheet[^"]*\.pdf)"/i, name: 'datasheet' },
+    { pattern: /href="([^"]*_TDS_[^"]*\.pdf)"/i, name: '_TDS_' },
+    { pattern: /href="([^"]*safety[_-]?data[_-]?sheet[^"]*\.pdf)"/i, name: 'safety-data-sheet' },
+    { pattern: /href="([^"]*spec[_-]?sheet[^"]*\.pdf)"/i, name: 'spec-sheet' },
+    { pattern: /href="(https?:\/\/cdn\.shopify\.com\/[^"]*\.pdf)"/i, name: 'Shopify CDN PDF' },
+    { pattern: /href="(https?:\/\/[^"]*\.pdf)"/i, name: 'generic PDF' },
   ];
   
-  for (const pattern of tdsPatterns) {
+  for (const { pattern, name } of tdsPatterns) {
     const match = html.match(pattern);
     if (match?.[1]) {
       let url = match[1];
       if (url.startsWith('//')) url = 'https:' + url;
       if (url.startsWith('/')) url = 'https://www.printedsolid.com' + url;
-      return url;
+      debugInfo.push(`Found ${name}: ${url.substring(0, 50)}...`);
+      return { tdsUrl: url, debugInfo };
     }
   }
   
   // Check tags for TDS URL
   const tdsTag = product.tags.find(tag => 
     tag.toLowerCase().includes('tds:') || 
-    tag.toLowerCase().includes('datasheet:')
+    tag.toLowerCase().includes('datasheet:') ||
+    tag.toLowerCase().includes('pdf:')
   );
   if (tdsTag) {
     const urlPart = tdsTag.split(':').slice(1).join(':').trim();
     if (urlPart.startsWith('http')) {
-      return urlPart;
+      debugInfo.push(`Found TDS in tags: ${urlPart.substring(0, 50)}...`);
+      return { tdsUrl: urlPart, debugInfo };
     }
   }
   
@@ -189,14 +207,17 @@ function extractTdsUrl(product: ShopifyProduct): string | null {
   if (product.metafields) {
     const tdsMetafield = product.metafields.find(m => 
       m.key.toLowerCase().includes('tds') || 
-      m.key.toLowerCase().includes('datasheet')
+      m.key.toLowerCase().includes('datasheet') ||
+      m.key.toLowerCase().includes('spec')
     );
     if (tdsMetafield?.value && tdsMetafield.value.startsWith('http')) {
-      return tdsMetafield.value;
+      debugInfo.push(`Found TDS in metafields: ${tdsMetafield.value.substring(0, 50)}...`);
+      return { tdsUrl: tdsMetafield.value, debugInfo };
     }
   }
   
-  return null;
+  debugInfo.push('No TDS found');
+  return { tdsUrl: null, debugInfo };
 }
 
 /**
@@ -291,15 +312,25 @@ async function scrapePrintedSolidProduct(
   productUrl: string,
   productHandle: string | null,
   filamentTitle: string
-): Promise<ScrapedProduct | null> {
+): Promise<{ product: ScrapedProduct | null; debugInfo: Record<string, unknown> }> {
+  const debugInfo: Record<string, unknown> = {
+    url: productUrl,
+    title: filamentTitle,
+    startTime: new Date().toISOString(),
+  };
+  
   const handle = productHandle || extractHandle(productUrl);
+  debugInfo.handle = handle;
+  
   if (!handle) {
-    console.log(`[PRINTEDSOLID] No handle found for: ${filamentTitle}`);
-    return null;
+    console.log(`[PRINTEDSOLID] ❌ No handle found for: ${filamentTitle}`);
+    console.log(`[PRINTEDSOLID]    URL: ${productUrl}`);
+    debugInfo.error = 'No handle extracted from URL';
+    return { product: null, debugInfo };
   }
   
   const jsonUrl = `https://www.printedsolid.com/products/${handle}.json`;
-  console.log(`[PRINTEDSOLID] Fetching: ${jsonUrl}`);
+  console.log(`[PRINTEDSOLID] 📡 Fetching: ${jsonUrl}`);
   
   let retries = 0;
   while (retries <= MAX_RETRIES) {
@@ -311,12 +342,19 @@ async function scrapePrintedSolidProduct(
         },
       });
 
+      debugInfo.httpStatus = response.status;
+
       if (!response.ok) {
         if (response.status === 429 && retries < MAX_RETRIES) {
-          console.log(`[PRINTEDSOLID] Rate limited, waiting 5s and retrying...`);
+          console.log(`[PRINTEDSOLID] ⏳ Rate limited (429), waiting 5s and retrying...`);
           await new Promise(r => setTimeout(r, 5000));
           retries++;
           continue;
+        }
+        if (response.status === 404) {
+          debugInfo.error = 'Product not found (404)';
+          console.log(`[PRINTEDSOLID] ⚠️ Product not found: ${handle}`);
+          return { product: null, debugInfo };
         }
         throw new Error(`HTTP ${response.status}`);
       }
@@ -325,28 +363,55 @@ async function scrapePrintedSolidProduct(
       const product: ShopifyProduct = data.product;
       
       if (!product) {
+        debugInfo.error = 'No product data in response';
         throw new Error('No product data in response');
       }
 
+      debugInfo.shopifyProductId = product.id;
+      debugInfo.shopifyVendor = product.vendor;
+      debugInfo.variantCount = product.variants?.length || 0;
+      debugInfo.imageCount = product.images?.length || 0;
+
+      console.log(`[PRINTEDSOLID] 📦 Product found: ${product.title}`);
+      console.log(`[PRINTEDSOLID]    Vendor: ${product.vendor}, Variants: ${product.variants?.length || 0}, Images: ${product.images?.length || 0}`);
+
       // Find best matching variant
       const variant = findMatchingVariant(product, filamentTitle);
+      debugInfo.matchedVariant = variant?.title || null;
       
       // Get image - prefer variant image, then first product image
       let imageUrl: string | null = null;
       if (variant?.featured_image?.src) {
         imageUrl = variant.featured_image.src;
+        debugInfo.imageSource = 'variant';
       } else if (product.images?.[0]?.src) {
         imageUrl = product.images[0].src;
+        debugInfo.imageSource = 'product';
       }
       
       // Get price
       const price = variant?.price ? parseFloat(variant.price) : null;
       
       // Extract other data using enhanced functions
-      const tdsUrl = extractTdsUrl(product);
+      const tdsResult = extractTdsUrl(product);
       const weight = extractWeight(product, variant, filamentTitle);
       const { colorName, colorHex } = extractVariantColor(product, variant, filamentTitle);
       const compareAtPrice = variant?.compare_at_price ? parseFloat(variant.compare_at_price) : null;
+      
+      debugInfo.tdsDebug = tdsResult.debugInfo;
+      debugInfo.extractedData = {
+        hasImage: !!imageUrl,
+        hasPrice: !!price,
+        hasTds: !!tdsResult.tdsUrl,
+        hasWeight: !!weight,
+        hasColor: !!colorName,
+      };
+
+      console.log(`[PRINTEDSOLID] 🖼️ Image: ${imageUrl ? 'FOUND' : 'NOT FOUND'} (source: ${debugInfo.imageSource || 'none'})`);
+      console.log(`[PRINTEDSOLID] 💰 Price: ${price ? `$${price}` : 'NOT FOUND'}`);
+      console.log(`[PRINTEDSOLID] 📄 TDS: ${tdsResult.tdsUrl ? 'FOUND' : 'NOT FOUND'}`);
+      console.log(`[PRINTEDSOLID] ⚖️ Weight: ${weight ? `${weight}g` : 'NOT FOUND'}`);
+      console.log(`[PRINTEDSOLID] 🎨 Color: ${colorName || 'NOT FOUND'} (${colorHex || 'no hex'})`);
       
       const scrapedProduct: ScrapedProduct = {
         productId: String(product.id),
@@ -355,7 +420,7 @@ async function scrapePrintedSolidProduct(
         compareAtPrice: compareAtPrice && compareAtPrice > 0 ? compareAtPrice : null,
         url: productUrl,
         imageUrl,
-        tdsUrl,
+        tdsUrl: tdsResult.tdsUrl,
         netWeightG: weight,
         mpn: variant?.sku || null,
         barcode: variant?.barcode || null,
@@ -367,24 +432,24 @@ async function scrapePrintedSolidProduct(
         scrapedAt: new Date(),
         source: 'printedsolid-enhanced-scraper',
       };
-      
-      console.log(`[PRINTEDSOLID] Extracted: image=${!!imageUrl}, price=${price}, tds=${!!tdsUrl}, weight=${weight}, color=${colorName}`);
 
-      return scrapedProduct;
+      return { product: scrapedProduct, debugInfo };
       
     } catch (error) {
+      debugInfo.error = error instanceof Error ? error.message : String(error);
+      
       if (retries < MAX_RETRIES) {
-        console.log(`[PRINTEDSOLID] Error, retrying (${retries + 1}/${MAX_RETRIES}): ${error}`);
+        console.log(`[PRINTEDSOLID] ❌ Error, retrying (${retries + 1}/${MAX_RETRIES}): ${error}`);
         retries++;
         await new Promise(r => setTimeout(r, 2000));
         continue;
       }
-      console.error(`[PRINTEDSOLID] Failed after ${MAX_RETRIES} retries:`, error);
-      return null;
+      console.error(`[PRINTEDSOLID] ❌ Failed after ${MAX_RETRIES} retries:`, error);
+      return { product: null, debugInfo };
     }
   }
   
-  return null;
+  return { product: null, debugInfo };
 }
 
 serve(async (req) => {
@@ -394,7 +459,8 @@ serve(async (req) => {
 
   const startTime = Date.now();
   console.log('[PRINTEDSOLID] ═══════════════════════════════════════════════════════');
-  console.log('[PRINTEDSOLID] 🚀 PRINTED SOLID SCRAPER STARTED');
+  console.log('[PRINTEDSOLID] 🚀 PRINTED SOLID ENHANCED SCRAPER STARTED');
+  console.log(`[PRINTEDSOLID] 📅 ${new Date().toISOString()}`);
   console.log('[PRINTEDSOLID] ═══════════════════════════════════════════════════════');
 
   try {
@@ -438,22 +504,32 @@ serve(async (req) => {
     // Parse options
     let limit = 50;
     let skipExisting = true;
+    let forceUpdate = false;
+    let vendorFilter: string | null = null;
     try {
       const body = await req.json();
       limit = body.limit ?? 50;
       skipExisting = body.skipExisting ?? true;
+      forceUpdate = body.forceUpdate ?? false;
+      vendorFilter = body.vendor ?? null;
     } catch {
       // Use defaults
     }
 
-    // Fetch Printed Solid filaments with product URLs
+    console.log(`[PRINTEDSOLID] ⚙️ Options: limit=${limit}, skipExisting=${skipExisting}, forceUpdate=${forceUpdate}, vendor=${vendorFilter || 'any'}`);
+
+    // Build query - NOTE: Removed strict vendor filter since Printed Solid sells multiple brands
     let query = supabase
       .from('filaments')
       .select('id, product_title, product_url, product_handle, vendor, featured_image, tds_url, variant_price')
-      .eq('vendor', 'Printed Solid')
-      .not('product_url', 'is', null);
+      .not('product_url', 'is', null)
+      .ilike('product_url', '%printedsolid.com%'); // Filter by URL domain instead of vendor
     
-    if (skipExisting) {
+    if (vendorFilter) {
+      query = query.eq('vendor', vendorFilter);
+    }
+    
+    if (skipExisting && !forceUpdate) {
       query = query.or('featured_image.is.null,featured_image.eq.');
     }
 
@@ -463,7 +539,20 @@ serve(async (req) => {
       throw new Error(`Failed to fetch filaments: ${fetchError.message}`);
     }
 
-    console.log(`[PRINTEDSOLID] Found ${filaments?.length || 0} filaments to process (limit: ${limit})`);
+    console.log(`[PRINTEDSOLID] 📊 Found ${filaments?.length || 0} filaments to process (limit: ${limit})`);
+
+    if (!filaments || filaments.length === 0) {
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'No filaments to process - all may already have images or no Printed Solid URLs found',
+        processed: 0,
+        updated: 0,
+        skipped: 0,
+        errors: 0,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const results: ScrapeResult[] = [];
     let updated = 0;
@@ -478,16 +567,25 @@ serve(async (req) => {
       }
 
       console.log(`[PRINTEDSOLID] ───────────────────────────────────────────────────────`);
-      console.log(`[PRINTEDSOLID] Processing: ${filament.product_title}`);
+      console.log(`[PRINTEDSOLID] 📦 Processing: ${filament.product_title}`);
+      console.log(`[PRINTEDSOLID] 🏭 Vendor: ${filament.vendor}`);
+      console.log(`[PRINTEDSOLID] 🔗 URL: ${filament.product_url}`);
 
-      const scrapedProduct = await scrapePrintedSolidProduct(
+      const { product: scrapedProduct, debugInfo } = await scrapePrintedSolidProduct(
         filament.product_url,
         filament.product_handle,
         filament.product_title
       );
 
       if (!scrapedProduct) {
-        results.push({ id: filament.id, title: filament.product_title, status: 'error', error: 'Scrape failed' });
+        console.log(`[PRINTEDSOLID] ❌ Scrape failed - debug:`, JSON.stringify(debugInfo, null, 2));
+        results.push({ 
+          id: filament.id, 
+          title: filament.product_title, 
+          status: 'error', 
+          error: (debugInfo.error as string) || 'Scrape failed',
+          debugInfo
+        });
         errors++;
         continue;
       }
@@ -508,13 +606,13 @@ serve(async (req) => {
       // Build update payload - only update fields that have new values
       const updateData: Record<string, unknown> = {};
       
-      if (sanitized.imageUrl && !filament.featured_image) {
+      if (sanitized.imageUrl && (!filament.featured_image || forceUpdate)) {
         updateData.featured_image = sanitized.imageUrl;
       }
-      if (sanitized.tdsUrl && !filament.tds_url) {
+      if (sanitized.tdsUrl && (!filament.tds_url || forceUpdate)) {
         updateData.tds_url = sanitized.tdsUrl;
       }
-      if (sanitized.price && !filament.variant_price) {
+      if (sanitized.price && (!filament.variant_price || forceUpdate)) {
         updateData.variant_price = sanitized.price;
       }
       if (sanitized.netWeightG) {
@@ -561,12 +659,18 @@ serve(async (req) => {
             colorHex: sanitized.colorHex as string | null,
             mpn: sanitized.mpn as string | null,
             validationWarnings: validation.warnings.length > 0 ? validation.warnings : undefined,
+            debugInfo,
           });
           updated++;
         }
       } else {
         console.log(`[PRINTEDSOLID] ⏭️ No new data extracted`);
-        results.push({ id: filament.id, title: filament.product_title, status: 'no_data' });
+        results.push({ 
+          id: filament.id, 
+          title: filament.product_title, 
+          status: 'no_data',
+          debugInfo 
+        });
         skipped++;
       }
 
@@ -577,7 +681,7 @@ serve(async (req) => {
     const duration = Math.round((Date.now() - startTime) / 1000);
     console.log('[PRINTEDSOLID] ═══════════════════════════════════════════════════════');
     console.log(`[PRINTEDSOLID] ✅ COMPLETED in ${duration}s`);
-    console.log(`[PRINTEDSOLID] Updated: ${updated}, Skipped: ${skipped}, Errors: ${errors}`);
+    console.log(`[PRINTEDSOLID] 📊 Updated: ${updated}, Skipped: ${skipped}, Errors: ${errors}`);
     console.log('[PRINTEDSOLID] ═══════════════════════════════════════════════════════');
 
     return new Response(JSON.stringify({
