@@ -7,10 +7,117 @@ const corsHeaders = {
 
 interface AffiliateConfig {
   vendor_name: string;
+  brand_id: string | null;
+  affiliate_network: string | null;
+  affiliate_id: string | null;
   affiliate_url_pattern: string | null;
   amazon_us_tag: string | null;
   amazon_uk_tag: string | null;
   amazon_de_tag: string | null;
+  amazon_ca_tag: string | null;
+  amazon_au_tag: string | null;
+  amazon_jp_tag: string | null;
+  awin_advertiser_id: string | null;
+  awin_affiliate_id: string | null;
+  impact_program_id: string | null;
+  impact_media_partner_id: string | null;
+  tracking_url_template: string | null;
+  is_active: boolean;
+}
+
+// Detect Amazon region from URL
+function detectAmazonRegion(url: string): string {
+  const hostname = new URL(url).hostname.toLowerCase();
+  if (hostname.includes("amazon.com") && !hostname.includes(".co.")) return "us";
+  if (hostname.includes("amazon.co.uk")) return "uk";
+  if (hostname.includes("amazon.de")) return "de";
+  if (hostname.includes("amazon.ca")) return "ca";
+  if (hostname.includes("amazon.com.au")) return "au";
+  if (hostname.includes("amazon.co.jp") || hostname.includes("amazon.jp")) return "jp";
+  if (hostname.includes("amazon.fr")) return "fr";
+  if (hostname.includes("amazon.it")) return "it";
+  if (hostname.includes("amazon.es")) return "es";
+  return "us"; // default
+}
+
+// Add Amazon affiliate tag
+function addAmazonTag(url: string, config: AffiliateConfig, region: string): string {
+  try {
+    const urlObj = new URL(url);
+    
+    let tag: string | null = null;
+    switch (region) {
+      case "us": tag = config.amazon_us_tag; break;
+      case "uk": tag = config.amazon_uk_tag; break;
+      case "de": tag = config.amazon_de_tag; break;
+      case "ca": tag = config.amazon_ca_tag; break;
+      case "au": tag = config.amazon_au_tag; break;
+      case "jp": tag = config.amazon_jp_tag; break;
+      default: tag = config.amazon_us_tag;
+    }
+    
+    if (tag) {
+      urlObj.searchParams.set("tag", tag);
+      return urlObj.toString();
+    }
+    
+    return url;
+  } catch {
+    return url;
+  }
+}
+
+// Wrap URL with Awin tracking
+function wrapWithAwin(url: string, config: AffiliateConfig): string {
+  if (!config.awin_affiliate_id || !config.awin_advertiser_id) {
+    return url;
+  }
+  
+  // Awin deep link format
+  const encodedUrl = encodeURIComponent(url);
+  return `https://www.awin1.com/cread.php?awinmid=${config.awin_advertiser_id}&awinaffid=${config.awin_affiliate_id}&ued=${encodedUrl}`;
+}
+
+// Wrap URL with Impact tracking
+function wrapWithImpact(url: string, config: AffiliateConfig): string {
+  if (!config.impact_media_partner_id || !config.impact_program_id) {
+    return url;
+  }
+  
+  // Impact.com deep link format
+  const encodedUrl = encodeURIComponent(url);
+  return `https://${config.impact_program_id}.pxf.io/c/${config.impact_media_partner_id}/${encodedUrl}`;
+}
+
+// Apply custom URL pattern
+function applyPattern(url: string, pattern: string, affiliateId: string | null): string {
+  if (!pattern) return url;
+  
+  try {
+    // Replace placeholders
+    let result = pattern
+      .replace(/\{\{url\}\}/gi, encodeURIComponent(url))
+      .replace(/\{\{id\}\}/gi, affiliateId || "")
+      .replace(/\{\{raw_url\}\}/gi, url);
+    
+    // If pattern is just parameters, append to URL
+    if (pattern.startsWith("?") || pattern.startsWith("&")) {
+      const urlObj = new URL(url);
+      const params = pattern.substring(1).replace(/\{\{id\}\}/gi, affiliateId || "");
+      const paramPairs = params.split("&");
+      for (const pair of paramPairs) {
+        const [key, value] = pair.split("=");
+        if (key) {
+          urlObj.searchParams.set(key, value || "");
+        }
+      }
+      return urlObj.toString();
+    }
+    
+    return result;
+  } catch {
+    return url;
+  }
 }
 
 function transformUrl(
@@ -22,60 +129,79 @@ function transformUrl(
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
 
-    // Check Amazon links
-    if (hostname.includes("amazon.com")) {
-      const amazonConfig = configs.find(c => c.vendor_name.toLowerCase() === "amazon");
-      if (amazonConfig?.amazon_us_tag) {
-        urlObj.searchParams.set("tag", amazonConfig.amazon_us_tag);
-        return urlObj.toString();
-      }
-    } else if (hostname.includes("amazon.co.uk")) {
-      const amazonConfig = configs.find(c => c.vendor_name.toLowerCase() === "amazon");
-      if (amazonConfig?.amazon_uk_tag) {
-        urlObj.searchParams.set("tag", amazonConfig.amazon_uk_tag);
-        return urlObj.toString();
-      }
-    } else if (hostname.includes("amazon.de")) {
-      const amazonConfig = configs.find(c => c.vendor_name.toLowerCase() === "amazon");
-      if (amazonConfig?.amazon_de_tag) {
-        urlObj.searchParams.set("tag", amazonConfig.amazon_de_tag);
-        return urlObj.toString();
+    // Check if this is an Amazon link
+    const isAmazonLink = hostname.includes("amazon.");
+    
+    if (isAmazonLink) {
+      // Find Amazon config or global Amazon config
+      const amazonConfig = configs.find(c => 
+        c.vendor_name.toLowerCase() === "amazon" ||
+        c.affiliate_network === "amazon"
+      );
+      
+      if (amazonConfig && amazonConfig.is_active !== false) {
+        const region = detectAmazonRegion(url);
+        return addAmazonTag(url, amazonConfig, region);
       }
     }
 
-    // Find config by vendor or hostname
+    // Find config by vendor name or hostname
     let config: AffiliateConfig | undefined;
 
     if (vendor) {
       config = configs.find(c =>
-        c.vendor_name.toLowerCase() === vendor.toLowerCase()
+        c.vendor_name.toLowerCase() === vendor.toLowerCase() &&
+        c.is_active !== false
       );
     }
 
     if (!config) {
       config = configs.find(c => {
+        if (c.is_active === false) return false;
         const vendorSlug = c.vendor_name.toLowerCase().replace(/\s+/g, "");
         return hostname.includes(vendorSlug) ||
           hostname.includes(c.vendor_name.toLowerCase().replace(/\s+/g, "-"));
       });
     }
 
-    if (config?.affiliate_url_pattern) {
-      const pattern = config.affiliate_url_pattern;
-
-      if (pattern.includes("{{url}}")) {
-        return pattern.replace("{{url}}", url);
-      }
-
-      if (pattern.startsWith("?") || pattern.startsWith("&")) {
-        const hasQuery = url.includes("?");
-        const separator = hasQuery ? "&" : "?";
-        const params = pattern.substring(1);
-        return `${url}${separator}${params}`;
-      }
+    if (!config) {
+      return url;
     }
 
-    return url;
+    // Apply transformation based on network type
+    switch (config.affiliate_network) {
+      case "amazon":
+        const region = detectAmazonRegion(url);
+        return addAmazonTag(url, config, region);
+        
+      case "awin":
+        return wrapWithAwin(url, config);
+        
+      case "impact":
+        return wrapWithImpact(url, config);
+        
+      case "goaffpro":
+      case "shareasale":
+      case "direct":
+        if (config.affiliate_url_pattern) {
+          return applyPattern(url, config.affiliate_url_pattern, config.affiliate_id);
+        } else if (config.affiliate_id) {
+          // Default to adding ?ref=ID for GoAffPro
+          const separator = url.includes("?") ? "&" : "?";
+          return `${url}${separator}ref=${config.affiliate_id}`;
+        }
+        return url;
+        
+      case "none":
+        return url;
+        
+      default:
+        // Legacy pattern support
+        if (config.affiliate_url_pattern) {
+          return applyPattern(url, config.affiliate_url_pattern, config.affiliate_id);
+        }
+        return url;
+    }
   } catch {
     return url;
   }
@@ -101,7 +227,25 @@ Deno.serve(async (req) => {
     if (!cachedConfigs || now - cacheTime > CACHE_TTL) {
       const { data, error } = await supabase
         .from("affiliate_configs")
-        .select("vendor_name, affiliate_url_pattern, amazon_us_tag, amazon_uk_tag, amazon_de_tag");
+        .select(`
+          vendor_name,
+          brand_id,
+          affiliate_network,
+          affiliate_id,
+          affiliate_url_pattern,
+          amazon_us_tag,
+          amazon_uk_tag,
+          amazon_de_tag,
+          amazon_ca_tag,
+          amazon_au_tag,
+          amazon_jp_tag,
+          awin_advertiser_id,
+          awin_affiliate_id,
+          impact_program_id,
+          impact_media_partner_id,
+          tracking_url_template,
+          is_active
+        `);
 
       if (error) {
         console.error("Error fetching configs:", error);

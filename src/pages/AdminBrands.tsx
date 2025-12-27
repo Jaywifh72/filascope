@@ -18,6 +18,7 @@ import {
   Palette, Thermometer, Barcode, Tag, PlayCircle, ShoppingCart,
   Link, DollarSign, Pencil, ExternalLink
 } from "lucide-react";
+import { BrandAffiliateSettings } from "@/components/admin/BrandAffiliateSettings";
 import { toast } from "sonner";
 
 interface AutomatedBrand {
@@ -1092,6 +1093,13 @@ const AdminBrands = () => {
                           }
                         </span>
                       </div>
+
+                      {/* Affiliate Settings Section */}
+                      <BrandAffiliateSettings
+                        brandId={brand.id}
+                        brandName={brand.brand_name}
+                        brandSlug={brand.brand_slug}
+                      />
 
                       {/* Error Display */}
                       {brand.last_error && (
