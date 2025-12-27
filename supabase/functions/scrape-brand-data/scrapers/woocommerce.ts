@@ -306,11 +306,8 @@ export class WooCommerceScraper extends BaseScraper {
     const compareMatch = html.match(/<del[^>]*>.*?\$([\d.,]+).*?<\/del>/s);
     const compareAtPrice = compareMatch ? this.parsePrice(compareMatch[1]) : null;
 
-    // Extract image
-    const imageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/) ||
-                       html.match(/class="[^"]*woocommerce-product-gallery__image[^"]*"[^>]*data-thumb="([^"]+)"/) ||
-                       html.match(/<img[^>]*class="[^"]*wp-post-image[^"]*"[^>]*src="([^"]+)"/);
-    const imageUrl = imageMatch ? imageMatch[1] : null;
+    // Extract image with enhanced patterns for better coverage
+    const imageUrl = this.extractProductImage(html);
 
     // Extract enhanced data
     const tdsUrl = findTdsUrl(html);
@@ -367,6 +364,49 @@ export class WooCommerceScraper extends BaseScraper {
       lower.includes("tpu") ||
       lower.includes("filament")
     );
+  }
+
+  /**
+   * Enhanced product image extraction with multiple fallback patterns
+   */
+  private extractProductImage(html: string): string | null {
+    // Priority 1: OG image (most reliable)
+    const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+    if (ogMatch?.[1]) return ogMatch[1];
+
+    // Priority 2: WooCommerce gallery main image
+    const galleryMatch = html.match(/class="[^"]*woocommerce-product-gallery__image[^"]*"[^>]*data-thumb="([^"]+)"/);
+    if (galleryMatch?.[1]) return galleryMatch[1];
+
+    // Priority 3: Main product image with flex-active-slide class
+    const activeSlideMatch = html.match(/class="[^"]*flex-active-slide[^"]*"[^>]*>\s*<img[^>]*src="([^"]+)"/);
+    if (activeSlideMatch?.[1]) return activeSlideMatch[1];
+
+    // Priority 4: Featured image
+    const featuredMatch = html.match(/<img[^>]*class="[^"]*wp-post-image[^"]*"[^>]*src="([^"]+)"/);
+    if (featuredMatch?.[1]) return featuredMatch[1];
+
+    // Priority 5: Product image from zoom container
+    const zoomMatch = html.match(/class="[^"]*woocommerce-product-gallery__wrapper[^"]*"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/);
+    if (zoomMatch?.[1]) return zoomMatch[1];
+
+    // Priority 6: Any large image in gallery
+    const largeImageMatch = html.match(/<a[^>]*href="([^"]+\.(jpg|jpeg|png|webp))"[^>]*class="[^"]*woocommerce-product-gallery__image[^"]*"/i);
+    if (largeImageMatch?.[1]) return largeImageMatch[1];
+
+    // Priority 7: First product-related image
+    const imgMatch = html.match(/<img[^>]*class="[^"]*attachment-[^"]*[^>]*src="([^"]+)"/);
+    if (imgMatch?.[1]) return imgMatch[1];
+
+    // Priority 8: data-src attribute (lazy loaded images)
+    const lazySrcMatch = html.match(/class="[^"]*wp-post-image[^"]*"[^>]*data-src="([^"]+)"/);
+    if (lazySrcMatch?.[1]) return lazySrcMatch[1];
+
+    // Priority 9: srcset first image
+    const srcsetMatch = html.match(/class="[^"]*wp-post-image[^"]*"[^>]*srcset="([^\s,]+)/);
+    if (srcsetMatch?.[1]) return srcsetMatch[1];
+
+    return null;
   }
 
   /**

@@ -40,6 +40,7 @@ const BRAND_TDS_PATTERNS: Record<string, RegExp[]> = {
   ],
   'anycubic': [
     /href="([^"]+anycubic[^"]+\.pdf)"/gi,
+    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical|Download))/gi,
   ],
   'filaments-ca': [
     /href="([^"]+filaments\.ca[^"]+\.pdf)"/gi,
@@ -67,6 +68,37 @@ const BRAND_TDS_PATTERNS: Record<string, RegExp[]> = {
   'recreus': [
     /href="([^"]+recreus[^"]+\.pdf)"/gi,
     /href="([^"]+filaflex[^"]+\.pdf)"/gi,
+  ],
+  'elegoo': [
+    /href="([^"]+elegoo[^"]+\.pdf)"/gi,
+    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical|Datasheet|下载))/gi,
+    /data-url="([^"]+\.pdf)"/gi,
+  ],
+  'push-plastic': [
+    /href="([^"]+pushplastic[^"]+\.pdf)"/gi,
+    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*TDS)/gi,
+  ],
+  'creality': [
+    /href="([^"]+creality[^"]+\.pdf)"/gi,
+    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical|Download))/gi,
+  ],
+  'ninjatek': [
+    /href="([^"]+ninjatek[^"]+\.pdf)"/gi,
+    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical|Safety))/gi,
+  ],
+  'protopasta': [
+    /href="([^"]+protopasta[^"]+\.pdf)"/gi,
+    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:Technical|Safety|Material))/gi,
+  ],
+  'eryone': [
+    /href="([^"]+eryone[^"]+\.pdf)"/gi,
+  ],
+  'sovol': [
+    /href="([^"]+sovol[^"]+\.pdf)"/gi,
+  ],
+  'sunlu': [
+    /href="([^"]+sunlu[^"]+\.pdf)"/gi,
+    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:TDS|技术|下载))/gi,
   ],
 };
 
