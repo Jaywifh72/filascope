@@ -396,7 +396,35 @@ function extractNinjaTekColor(html: string, title: string): { colorName: string 
 }
 
 /**
- * Extract data from NinjaTek WooCommerce product page using Firecrawl
+ * Try to scrape NinjaTek product using direct fetch (for static pages)
+ */
+async function scrapeNinjaTekDirect(productUrl: string): Promise<{ html: string; markdown: string } | null> {
+  try {
+    console.log(`[NINJATEK] 📡 Trying direct fetch: ${productUrl}`);
+    const response = await fetch(productUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+      },
+    });
+    
+    if (!response.ok) {
+      console.log(`[NINJATEK] ❌ Direct fetch failed: ${response.status}`);
+      return null;
+    }
+    
+    const html = await response.text();
+    console.log(`[NINJATEK] ✅ Direct fetch succeeded, HTML length: ${html.length}`);
+    return { html, markdown: '' };
+  } catch (error) {
+    console.error(`[NINJATEK] ❌ Direct fetch error:`, error);
+    return null;
+  }
+}
+
+/**
+ * Extract data from NinjaTek WooCommerce product page using Firecrawl with direct fetch fallback
  */
 async function scrapeNinjaTekProduct(
   productUrl: string, 
@@ -410,6 +438,59 @@ async function scrapeNinjaTekProduct(
   };
   
   console.log(`[NINJATEK] 🔍 Scraping: ${productUrl}`);
+  
+  // First try direct fetch (faster and often works for WooCommerce)
+  const directResult = await scrapeNinjaTekDirect(productUrl);
+  
+  if (directResult && directResult.html.length > 5000) {
+    debugInfo.method = 'direct_fetch';
+    debugInfo.htmlLength = directResult.html.length;
+    
+    // Extract data from direct fetch result
+    const html = directResult.html;
+    const markdown = '';
+    
+    // Use existing extraction functions
+    const { imageUrl, debugInfo: imageDebug } = extractWooCommerceImage(html);
+    const { price, compareAtPrice, debugInfo: priceDebug } = extractWooCommercePrice(html, markdown);
+    const { tdsUrl, debugInfo: tdsDebug } = extractNinjaTekTds(html, markdown);
+    const mpn = extractWooCommerceMpn(html);
+    const weight = extractNinjaTekWeight(html, markdown, productTitle);
+    const { colorName, colorHex } = extractNinjaTekColor(html, productTitle);
+    
+    debugInfo.imageExtraction = imageDebug;
+    debugInfo.priceExtraction = priceDebug;
+    debugInfo.tdsExtraction = tdsDebug;
+    debugInfo.extractedData = { imageUrl: !!imageUrl, price, tdsUrl: !!tdsUrl, mpn, weight, colorName, colorHex };
+    
+    console.log(`[NINJATEK] 📦 Direct fetch results: image=${!!imageUrl}, price=${price}, tds=${!!tdsUrl}`);
+    
+    return {
+      product: {
+        productId: productUrl.split('/').pop()?.split('?')[0] || productUrl,
+        title: productTitle,
+        price,
+        compareAtPrice,
+        url: productUrl,
+        imageUrl,
+        tdsUrl,
+        netWeightG: weight,
+        mpn,
+        colorName,
+        colorHex,
+        colorFamily: colorName ? getColorFamily(colorName) : null,
+        available: true,
+        currency: 'USD',
+        scrapedAt: new Date(),
+        source: 'ninjatek-direct',
+      },
+      debugInfo,
+    };
+  }
+  
+  // Fallback to Firecrawl if direct fetch fails
+  console.log(`[NINJATEK] 📡 Direct fetch insufficient, trying Firecrawl...`);
+  debugInfo.method = 'firecrawl';
   
   let retries = 0;
   while (retries <= MAX_RETRIES) {

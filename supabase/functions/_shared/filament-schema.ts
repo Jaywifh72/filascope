@@ -177,7 +177,7 @@ export const FILAMENT_SCHEMA: FilamentFieldDefinition[] = [
     required: false,
     dataSources: ['api', 'html', 'calculated'],
     validation: {
-      allowedValues: ['Black', 'White', 'Gray', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Transparent', 'Metallic', 'Multi-color', 'Natural']
+      allowedValues: ['Black', 'White', 'Gray', 'Red', 'Orange', 'Yellow', 'Gold', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Clear', 'Transparent', 'Metallic', 'Multi-color', 'Natural', 'Wood']
     },
     exportOrder: 4,
     description: 'Broad color category for filtering'

@@ -152,7 +152,7 @@ export const ScrapedProductSchema = z.object({
   
   // Physical specs
   spoolMaterial: z.string().nullable().optional(),
-  netWeightG: z.number().int().positive().max(50000).nullable().optional(),
+  netWeightG: z.number().int().positive().max(100000).nullable().optional(), // Increased for bulk orders (up to 100kg)
   
   // Spool dimensions
   spoolOuterDiameterMm: z.number().positive().max(500).nullable().optional(),
@@ -315,8 +315,8 @@ export function validateScrapedProduct(product: ScrapedProduct): ValidationResul
   
   // === Weight validation ===
   if (product.netWeightG !== null && product.netWeightG !== undefined) {
-    if (product.netWeightG < 100 || product.netWeightG > 10000) {
-      warnings.push(`Unusual weight: ${product.netWeightG}g (expected 100-10000)`);
+    if (product.netWeightG < 50 || product.netWeightG > 50000) {
+      warnings.push(`Unusual weight: ${product.netWeightG}g (expected 50-50000 for bulk orders)`);
     }
   }
   

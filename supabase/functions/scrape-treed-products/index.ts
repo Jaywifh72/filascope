@@ -245,7 +245,7 @@ function extractWeight(product: ShopifyProduct, filamentTitle: string): number |
 }
 
 /**
- * Scrape TreeD product
+ * Scrape TreeD product using Shopify JSON API (no Firecrawl needed)
  */
 async function scrapeTreeDProduct(
   productUrl: string,
@@ -278,6 +278,13 @@ async function scrapeTreeDProduct(
           retries++;
           continue;
         }
+        
+        // If JSON API fails, try scraping the HTML page directly
+        if (response.status === 404 || response.status === 403) {
+          console.log(`[TREED] 📄 JSON API failed (${response.status}), trying HTML fallback...`);
+          return await scrapeTreeDHtmlFallback(productUrl, filamentTitle);
+        }
+        
         throw new Error(`HTTP ${response.status}`);
       }
 
@@ -333,6 +340,67 @@ async function scrapeTreeDProduct(
   }
   
   return null;
+}
+
+/**
+ * HTML fallback for TreeD when Shopify JSON API fails
+ */
+async function scrapeTreeDHtmlFallback(productUrl: string, filamentTitle: string): Promise<ScrapedProduct | null> {
+  try {
+    console.log(`[TREED] 📄 Fetching HTML: ${productUrl}`);
+    const response = await fetch(productUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; FilaScopeBot/1.0)',
+        'Accept': 'text/html,application/xhtml+xml',
+      },
+    });
+    
+    if (!response.ok) {
+      console.log(`[TREED] ❌ HTML fetch failed: ${response.status}`);
+      return null;
+    }
+    
+    const html = await response.text();
+    
+    // Extract from JSON-LD
+    const jsonLdMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/i);
+    if (jsonLdMatch) {
+      try {
+        const jsonLd = JSON.parse(jsonLdMatch[1]);
+        const imageUrl = jsonLd.image || (Array.isArray(jsonLd.image) ? jsonLd.image[0] : null);
+        const price = jsonLd.offers?.price ? parseFloat(jsonLd.offers.price) : null;
+        
+        // Extract color from title
+        const { colorName, colorHex } = extractColorFromTitle(filamentTitle);
+        const translatedColor = colorName ? translateItalianColor(colorName) : null;
+        const finalHex = colorHex || (translatedColor ? getColorHex(translatedColor) : null);
+        
+        console.log(`[TREED] ✅ HTML fallback found: image=${!!imageUrl}, price=${price}`);
+        
+        return {
+          productId: productUrl.split('/').pop()?.split('?')[0] || productUrl,
+          title: filamentTitle,
+          price: price && price > 0 && price < 500 ? price : null,
+          url: productUrl,
+          imageUrl: typeof imageUrl === 'string' ? imageUrl : null,
+          colorName: translatedColor,
+          colorHex: finalHex ? `#${finalHex}` : null,
+          colorFamily: translatedColor ? getColorFamily(translatedColor) : null,
+          available: true,
+          currency: 'EUR',
+          scrapedAt: new Date(),
+          source: 'treed-html-fallback',
+        };
+      } catch {
+        console.log(`[TREED] ❌ JSON-LD parse failed`);
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`[TREED] ❌ HTML fallback error:`, error);
+    return null;
+  }
 }
 
 serve(async (req) => {
