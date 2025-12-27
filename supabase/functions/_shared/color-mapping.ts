@@ -505,6 +505,69 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   '琥珀色': 'FFBF00',
   '木色': '8B4513',
 
+  // ==================== ADDITIONAL CHINESE COLORS (Anycubic/Creality variants) ====================
+  '丝绸': 'E8E8E8',  // Silk
+  '丝绸黑': '2D2D2D', // Silk Black
+  '丝绸白': 'FFFEF0', // Silk White
+  '丝绸金': 'FFD700', // Silk Gold
+  '丝绸银': 'E8E8E8', // Silk Silver
+  '丝绸红': 'DC143C', // Silk Red
+  '丝绸蓝': '4169E1', // Silk Blue
+  '丝绸绿': '32CD32', // Silk Green
+  '丝绸紫': '9370DB', // Silk Purple
+  '丝绸玫瑰金': 'B76E79', // Silk Rose Gold
+  '哑光白': 'FAFAFA', // Matte White
+  '哑光红': 'B91C1C', // Matte Red
+  '哑光蓝': '1D4ED8', // Matte Blue
+  '哑光绿': '15803D', // Matte Green
+  '夜光绿': '39FF14', // Glow Green
+  '夜光蓝': '00BFFF', // Glow Blue
+  '荧光绿': '39FF14', // Fluorescent Green
+  '荧光橙': 'FF5F1F', // Fluorescent Orange
+  '荧光粉': 'FF6EC7', // Fluorescent Pink
+  '荧光黄': 'CCFF00', // Fluorescent Yellow
+  '碳纤维黑': '1A1A1A', // Carbon Fiber Black
+  '木纹': '8B4513', // Wood Grain
+  '大理石': 'E0E0E0', // Marble
+  '星空蓝': '1A1A2E', // Starry Blue
+  '星空紫': '2F1B41', // Starry Purple
+  '渐变色': 'FF0000', // Gradient
+  '彩虹色': 'FF0000', // Rainbow
+  '多色': 'FF0000', // Multicolor
+  '双色': 'FF0000', // Dual Color
+  '三色': 'FF0000', // Tri Color
+  '原色': 'F5F5DC', // Original/Natural
+  '本色': 'F5F5DC', // Natural Color
+  '无色': 'FFFFFF', // Colorless
+  '浅灰色': 'D3D3D3', // Light Gray
+  '深灰色': '696969', // Dark Gray
+  '炭灰色': '36454F', // Charcoal Gray
+  '太空灰': '4F4F4F', // Space Gray
+  '水泥灰': '8D918D', // Cement Gray
+  '消光灰': '808080', // Matte Gray
+  '浅粉色': 'FFB6C1', // Light Pink
+  '深粉色': 'FF1493', // Deep Pink
+  '荧光色': '39FF14', // Fluorescent
+  '纯黑': '000000', // Pure Black
+  '纯白': 'FFFFFF', // Pure White
+  '墨色': '1A1A1A', // Ink Black
+  '烟灰色': '696969', // Smoke Gray
+  '钢灰色': '4682B4', // Steel Gray
+  '铁灰色': '48494B', // Iron Gray
+  '深红色': '8B0000', // Dark Red
+  '浅红色': 'FF6B6B', // Light Red
+  '大红色': 'FF0000', // Bright Red
+  '深蓝': '00008B', // Deep Blue
+  '浅蓝': 'ADD8E6', // Light Blue
+  '深绿': '006400', // Deep Green
+  '浅绿': '90EE90', // Light Green
+  '深紫': '4B0082', // Deep Purple
+  '浅紫': 'DDA0DD', // Light Purple
+  '淡黄色': 'FFFFE0', // Pale Yellow
+  '亮黄色': 'FFFF00', // Bright Yellow
+  '亮橙色': 'FF8C00', // Bright Orange
+  '土黄色': 'D2B48C', // Earth Yellow
+
   // ==================== PORTUGUESE COLORS (Brazilian brands) ====================
   'preto': '1A1A1A',
   'branco': 'FFFFFF',
