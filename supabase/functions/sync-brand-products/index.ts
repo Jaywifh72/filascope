@@ -1306,29 +1306,160 @@ function extractProductFromHtml(html: string, markdown: string, url: string, bra
 async function scrapeCustomPlatform(supabase: any, brand: BrandConfig, materialFilter?: string, limit = 100): Promise<any[]> {
   console.log(`[custom] Custom scraping for ${brand.brand_slug}`);
   
+  const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+  
   switch (brand.brand_slug) {
     case 'matterhackers':
       return await scrapeMatterHackers(brand, materialFilter, limit);
+      
     case 'treed-filaments':
-      // TreeD uses Shopify - try JSON first, then Firecrawl
+      // TreeD uses Shopify with correct domain (treed-filaments.com)
       try {
-        const products = await scrapeShopify(brand, materialFilter, limit);
+        const shopifyBrand = { 
+          ...brand, 
+          base_url: 'https://treed-filaments.com',
+          api_endpoint: 'https://treed-filaments.com/products.json' 
+        };
+        const products = await scrapeShopify(shopifyBrand, materialFilter, limit);
         if (products.length > 0) return products;
       } catch (e) {
-        console.log('[custom] TreeD Shopify failed, trying Firecrawl');
+        console.log('[custom] TreeD Shopify failed:', e);
+      }
+      // Fallback to Firecrawl if Shopify fails
+      return await scrapeFirecrawl({ ...brand, base_url: 'https://treed-filaments.com' }, materialFilter, limit);
+      
+    case 'ninjatek':
+      // NinjaTek uses Shopify (verified from site structure)
+      try {
+        const shopifyBrand = { 
+          ...brand, 
+          base_url: 'https://ninjatek.com',
+          api_endpoint: 'https://ninjatek.com/products.json' 
+        };
+        const products = await scrapeShopify(shopifyBrand, materialFilter, limit);
+        if (products.length > 0) return products;
+      } catch (e) {
+        console.log('[custom] NinjaTek Shopify failed, trying Firecrawl:', e);
+      }
+      // Fallback to Firecrawl scraping if Shopify JSON isn't available
+      return await scrapeNinjaTekFirecrawl(brand, materialFilter, limit);
+      
+    case 'gst3d':
+      // GST3D - try dedicated scraper or Firecrawl
+      return await scrapeFirecrawl(brand, materialFilter, limit);
+      
+    case 'recreus':
+      // Recreus (Filaflex) - Spanish brand, use Firecrawl
+      return await scrapeFirecrawl(brand, materialFilter, limit);
+      
+    default:
+      // Generic fallback: Try Shopify first, then Firecrawl
+      try {
+        const shopifyProducts = await scrapeShopify(brand, materialFilter, limit);
+        if (shopifyProducts.length > 0) return shopifyProducts;
+      } catch (e) {
+        console.log(`[custom] Shopify fallback failed for ${brand.brand_slug}:`, e);
       }
       return await scrapeFirecrawl(brand, materialFilter, limit);
-    case 'ninjatek':
-      // NinjaTek uses Shopify now (migrated from WooCommerce)
-      return await scrapeShopify({ ...brand, api_endpoint: `${brand.base_url}/products.json` }, materialFilter, limit);
-    default:
-      // Try Shopify first, then Firecrawl as fallback
-      try {
-        return await scrapeShopify(brand, materialFilter, limit);
-      } catch (e) {
-        return await scrapeFirecrawl(brand, materialFilter, limit);
-      }
   }
+}
+
+// NinjaTek Firecrawl scraper - uses HTML scraping for WooCommerce-like product pages
+async function scrapeNinjaTekFirecrawl(brand: BrandConfig, materialFilter?: string, limit = 100): Promise<any[]> {
+  console.log(`[ninjatek] Firecrawl scraping for NinjaTek`);
+  const products: any[] = [];
+  
+  const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!firecrawlKey) {
+    console.warn('[ninjatek] FIRECRAWL_API_KEY not set');
+    return [];
+  }
+  
+  const catalogUrls = [
+    'https://ninjatek.com/shop/filament/',
+    'https://ninjatek.com/shop/filament/ninjaflex/',
+    'https://ninjatek.com/shop/filament/cheetah/',
+    'https://ninjatek.com/shop/filament/armadillo/',
+    'https://ninjatek.com/shop/filament/eel/',
+  ];
+
+  for (const catalogUrl of catalogUrls) {
+    if (products.length >= limit) break;
+
+    try {
+      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: catalogUrl,
+          formats: ['html'],
+          onlyMainContent: true,
+        }),
+      });
+
+      if (!response.ok) continue;
+
+      const data = await response.json();
+      const html = data.data?.html || '';
+
+      // Extract product links from catalog page
+      const productLinkRegex = /<a[^>]*href="(https:\/\/ninjatek\.com\/shop\/[^"]+)"[^>]*class="[^"]*woocommerce-LoopProduct-link/gi;
+      const matches = [...html.matchAll(productLinkRegex)];
+      
+      for (const match of matches) {
+        if (products.length >= limit) break;
+        
+        const productUrl = match[1];
+        if (!productUrl || products.some(p => p.url === productUrl)) continue;
+
+        // Scrape individual product page
+        try {
+          const productResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${firecrawlKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: productUrl,
+              formats: ['html', 'markdown'],
+              onlyMainContent: true,
+            }),
+          });
+
+          if (!productResponse.ok) continue;
+
+          const productData = await productResponse.json();
+          const productHtml = productData.data?.html || '';
+          const productMarkdown = productData.data?.markdown || '';
+          const metadata = productData.data?.metadata || {};
+
+          const product = extractProductFromHtml(productHtml, productMarkdown, productUrl, brand, metadata);
+          
+          if (product && product.title) {
+            if (materialFilter && !product.title.toLowerCase().includes(materialFilter.toLowerCase())) {
+              continue;
+            }
+            products.push(product);
+          }
+
+          await new Promise(r => setTimeout(r, 1000));
+        } catch (err) {
+          console.warn(`[ninjatek] Error scraping product ${productUrl}:`, err);
+        }
+      }
+
+      await new Promise(r => setTimeout(r, 1000));
+    } catch (err) {
+      console.warn(`[ninjatek] Error scraping catalog ${catalogUrl}:`, err);
+    }
+  }
+
+  console.log(`[ninjatek] Found ${products.length} products`);
+  return products;
 }
 
 // MatterHackers custom scraper

@@ -257,3 +257,6 @@ verify_jwt = true
 
 [functions.extract-anycubic-colors]
 verify_jwt = true
+
+[functions.discover-brand-tds]
+verify_jwt = true
