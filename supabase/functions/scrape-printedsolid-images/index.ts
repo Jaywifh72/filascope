@@ -1,8 +1,14 @@
 /**
- * PRINTED SOLID IMAGE & DATA SCRAPER
+ * PRINTED SOLID IMAGE & DATA SCRAPER (Enhanced Shopify)
  * 
  * Uses Shopify JSON API for reliable product data extraction
- * Extracts: featured_image, variant_price, tds_url, mpn, color_hex, net_weight
+ * Enhanced extraction for:
+ * - Product images (variant-specific + product-level)
+ * - Prices with sale price detection
+ * - TDS URLs from description HTML and metafields
+ * - MPN/SKU from variant data
+ * - Weight from product/variant properties
+ * - Color from variant title and product options
  * 
  * Compliant with shared ScrapedProduct schema and validation
  */
@@ -13,16 +19,16 @@ import {
   sanitizeScrapedProduct,
   type ScrapedProduct 
 } from "../_shared/scraper-validation.ts";
-import { getColorHex, getColorFamily, extractColorFromTitle } from "../_shared/color-mapping.ts";
+import { getColorHex, getColorFamily, extractColorFromTitle, COLOR_HEX_MAP } from "../_shared/color-mapping.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Rate limiting
-const RATE_LIMIT_MS = 800;
-const MAX_RETRIES = 2;
+// Rate limiting - Shopify is generally fast
+const RATE_LIMIT_MS = 600;
+const MAX_RETRIES = 3;
 
 interface ShopifyProduct {
   id: number;
@@ -36,6 +42,7 @@ interface ShopifyProduct {
     id: number;
     src: string;
     alt: string | null;
+    variant_ids?: number[];
   }>;
   variants: Array<{
     id: number;
@@ -45,9 +52,18 @@ interface ShopifyProduct {
     sku: string;
     barcode: string | null;
     available: boolean;
+    weight: number | null;
+    weight_unit: string | null;
     featured_image?: {
       src: string;
     };
+    option1: string | null;
+    option2: string | null;
+    option3: string | null;
+  }>;
+  options: Array<{
+    name: string;
+    values: string[];
   }>;
   metafields?: Array<{
     key: string;
@@ -81,6 +97,7 @@ function extractHandle(url: string, storedHandle?: string): string | null {
 
 /**
  * Find best matching variant for a specific filament title
+ * Enhanced to handle color matching across multiple options
  */
 function findMatchingVariant(
   product: ShopifyProduct, 
@@ -88,32 +105,49 @@ function findMatchingVariant(
 ): ShopifyProduct['variants'][0] | null {
   const titleLower = filamentTitle.toLowerCase();
   
-  // Strategy 1: Try to match by color name in title
-  for (const variant of product.variants) {
-    const variantTitle = variant.title.toLowerCase();
-    if (titleLower.includes(variantTitle) || variantTitle.includes('default')) {
-      return variant;
-    }
-  }
-  
-  // Strategy 2: Extract color from filament title and match
+  // Strategy 1: Match by variant title containing color from filament title
   const { colorName } = extractColorFromTitle(filamentTitle);
   if (colorName) {
     const colorLower = colorName.toLowerCase();
     for (const variant of product.variants) {
-      if (variant.title.toLowerCase().includes(colorLower)) {
+      const variantTitle = variant.title.toLowerCase();
+      if (variantTitle.includes(colorLower)) {
+        return variant;
+      }
+      // Check option values
+      if (variant.option1?.toLowerCase().includes(colorLower) ||
+          variant.option2?.toLowerCase().includes(colorLower) ||
+          variant.option3?.toLowerCase().includes(colorLower)) {
         return variant;
       }
     }
   }
   
-  // Strategy 3: Return first available variant
+  // Strategy 2: Try to match by weight in title
+  const weightMatch = titleLower.match(/(\d+)\s*(?:g|kg)/);
+  if (weightMatch) {
+    for (const variant of product.variants) {
+      if (variant.title.toLowerCase().includes(weightMatch[0])) {
+        return variant;
+      }
+    }
+  }
+  
+  // Strategy 3: Match default variants
+  for (const variant of product.variants) {
+    const variantTitle = variant.title.toLowerCase();
+    if (variantTitle === 'default title' || variantTitle === 'default') {
+      return variant;
+    }
+  }
+  
+  // Strategy 4: Return first available variant
   const availableVariant = product.variants.find(v => v.available);
   return availableVariant || product.variants[0] || null;
 }
 
 /**
- * Extract TDS URL from product HTML or tags
+ * Extract TDS URL from product HTML, tags, and metafields
  */
 function extractTdsUrl(product: ShopifyProduct): string | null {
   const html = product.body_html || '';
@@ -124,15 +158,41 @@ function extractTdsUrl(product: ShopifyProduct): string | null {
     /href="([^"]*technical[_-]?data[_-]?sheet[^"]*\.pdf)"/i,
     /href="([^"]*datasheet[^"]*\.pdf)"/i,
     /href="([^"]*_TDS_[^"]*\.pdf)"/i,
+    /href="([^"]*safety[_-]?data[_-]?sheet[^"]*\.pdf)"/i,
+    /href="(https?:\/\/cdn\.shopify\.com\/[^"]*\.pdf)"/i,
+    /href="(https?:\/\/[^"]*\.pdf)"/i,
   ];
   
   for (const pattern of tdsPatterns) {
     const match = html.match(pattern);
     if (match?.[1]) {
-      const url = match[1];
-      if (url.startsWith('http')) return url;
-      if (url.startsWith('//')) return 'https:' + url;
-      return 'https://www.printedsolid.com' + url;
+      let url = match[1];
+      if (url.startsWith('//')) url = 'https:' + url;
+      if (url.startsWith('/')) url = 'https://www.printedsolid.com' + url;
+      return url;
+    }
+  }
+  
+  // Check tags for TDS URL
+  const tdsTag = product.tags.find(tag => 
+    tag.toLowerCase().includes('tds:') || 
+    tag.toLowerCase().includes('datasheet:')
+  );
+  if (tdsTag) {
+    const urlPart = tdsTag.split(':').slice(1).join(':').trim();
+    if (urlPart.startsWith('http')) {
+      return urlPart;
+    }
+  }
+  
+  // Check metafields if available
+  if (product.metafields) {
+    const tdsMetafield = product.metafields.find(m => 
+      m.key.toLowerCase().includes('tds') || 
+      m.key.toLowerCase().includes('datasheet')
+    );
+    if (tdsMetafield?.value && tdsMetafield.value.startsWith('http')) {
+      return tdsMetafield.value;
     }
   }
   
@@ -140,14 +200,30 @@ function extractTdsUrl(product: ShopifyProduct): string | null {
 }
 
 /**
- * Extract weight from product title or HTML
+ * Extract weight from product variant or title
  */
-function extractWeight(product: ShopifyProduct, filamentTitle: string): number | null {
-  const text = `${filamentTitle} ${product.body_html || ''}`;
+function extractWeight(product: ShopifyProduct, variant: ShopifyProduct['variants'][0] | null, filamentTitle: string): number | null {
+  // First check variant weight
+  if (variant?.weight && variant.weight_unit) {
+    let weight = variant.weight;
+    if (variant.weight_unit.toLowerCase() === 'kg') {
+      weight = weight * 1000;
+    } else if (variant.weight_unit.toLowerCase() === 'lb') {
+      weight = weight * 453.592;
+    }
+    if (weight >= 100 && weight <= 5000) {
+      return Math.round(weight);
+    }
+  }
+  
+  // Check body HTML for weight specs
+  const html = product.body_html || '';
+  const text = `${filamentTitle} ${html}`;
   
   const patterns = [
-    /(\d+(?:\.\d+)?)\s*(?:kg|kilogram)/gi,
+    /(\d+(?:\.\d+)?)\s*kg/gi,
     /(\d+(?:\.\d+)?)\s*(?:g|gram)/gi,
+    /Net\s*Weight[:\s]*(\d+(?:\.\d+)?)\s*(?:g|grams?)/gi,
   ];
   
   for (const pattern of patterns) {
@@ -163,18 +239,49 @@ function extractWeight(product: ShopifyProduct, filamentTitle: string): number |
     }
   }
   
-  // Default weight based on common spool sizes
-  if (filamentTitle.toLowerCase().includes('1kg') || filamentTitle.toLowerCase().includes('1000g')) {
-    return 1000;
-  }
-  if (filamentTitle.toLowerCase().includes('500g') || filamentTitle.toLowerCase().includes('0.5kg')) {
-    return 500;
-  }
-  if (filamentTitle.toLowerCase().includes('2kg') || filamentTitle.toLowerCase().includes('2000g')) {
-    return 2000;
-  }
+  // Check title for common spool sizes
+  const titleLower = filamentTitle.toLowerCase();
+  if (titleLower.includes('1kg') || titleLower.includes('1000g')) return 1000;
+  if (titleLower.includes('500g') || titleLower.includes('0.5kg')) return 500;
+  if (titleLower.includes('2kg') || titleLower.includes('2000g')) return 2000;
+  if (titleLower.includes('750g') || titleLower.includes('0.75kg')) return 750;
   
   return null;
+}
+
+/**
+ * Extract color from variant and product options
+ */
+function extractVariantColor(product: ShopifyProduct, variant: ShopifyProduct['variants'][0] | null, filamentTitle: string): { colorName: string | null; colorHex: string | null } {
+  // Check variant options first
+  if (variant) {
+    const colorOption = product.options.find(o => 
+      o.name.toLowerCase().includes('color') || 
+      o.name.toLowerCase().includes('colour')
+    );
+    
+    if (colorOption) {
+      const optionIndex = product.options.indexOf(colorOption) + 1;
+      const optionValue = variant[`option${optionIndex}` as keyof typeof variant] as string | null;
+      if (optionValue) {
+        const hex = getColorHex(optionValue);
+        return { colorName: optionValue, colorHex: hex ? `#${hex}` : null };
+      }
+    }
+    
+    // Check variant title for color
+    const variantTitle = variant.title;
+    if (variantTitle && variantTitle !== 'Default Title') {
+      const hex = getColorHex(variantTitle);
+      if (hex) {
+        return { colorName: variantTitle, colorHex: `#${hex}` };
+      }
+    }
+  }
+  
+  // Fall back to extracting from filament title
+  const { colorName, colorHex } = extractColorFromTitle(filamentTitle);
+  return { colorName, colorHex: colorHex ? `#${colorHex}` : null };
 }
 
 /**
@@ -235,15 +342,17 @@ async function scrapePrintedSolidProduct(
       // Get price
       const price = variant?.price ? parseFloat(variant.price) : null;
       
-      // Extract other data
+      // Extract other data using enhanced functions
       const tdsUrl = extractTdsUrl(product);
-      const weight = extractWeight(product, filamentTitle);
-      const { colorName, colorHex } = extractColorFromTitle(filamentTitle);
+      const weight = extractWeight(product, variant, filamentTitle);
+      const { colorName, colorHex } = extractVariantColor(product, variant, filamentTitle);
+      const compareAtPrice = variant?.compare_at_price ? parseFloat(variant.compare_at_price) : null;
       
       const scrapedProduct: ScrapedProduct = {
         productId: String(product.id),
         title: filamentTitle,
         price: price && price > 0 && price < 500 ? price : null,
+        compareAtPrice: compareAtPrice && compareAtPrice > 0 ? compareAtPrice : null,
         url: productUrl,
         imageUrl,
         tdsUrl,
@@ -251,13 +360,15 @@ async function scrapePrintedSolidProduct(
         mpn: variant?.sku || null,
         barcode: variant?.barcode || null,
         colorName,
-        colorHex: colorHex ? `#${colorHex}` : null,
+        colorHex,
         colorFamily: colorName ? getColorFamily(colorName) : null,
         available: variant?.available ?? true,
         currency: 'USD',
         scrapedAt: new Date(),
-        source: 'printedsolid-scraper',
+        source: 'printedsolid-enhanced-scraper',
       };
+      
+      console.log(`[PRINTEDSOLID] Extracted: image=${!!imageUrl}, price=${price}, tds=${!!tdsUrl}, weight=${weight}, color=${colorName}`);
 
       return scrapedProduct;
       
