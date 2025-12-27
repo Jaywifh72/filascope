@@ -139,55 +139,83 @@ function extractWooCommercePrice(html: string, markdown: string): { price: numbe
 function extractWooCommerceImage(html: string): { imageUrl: string | null; debugInfo: string[] } {
   const debugInfo: string[] = [];
   
-  // Strategy 1: data-large_image attribute (highest resolution)
+  // Strategy 1: JSON-LD structured data (most reliable for WooCommerce)
+  const jsonLdMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+  if (jsonLdMatch) {
+    for (const match of jsonLdMatch) {
+      try {
+        const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
+        const json = JSON.parse(jsonContent);
+        const image = json.image || json['@graph']?.find((item: Record<string, unknown>) => item.image)?.image;
+        if (image) {
+          const imgUrl = Array.isArray(image) ? image[0] : image;
+          if (typeof imgUrl === 'string' && imgUrl.includes('.')) {
+            debugInfo.push(`Found JSON-LD image: ${imgUrl.substring(0, 60)}...`);
+            return { imageUrl: imgUrl, debugInfo };
+          }
+        }
+      } catch {
+        // Invalid JSON, continue
+      }
+    }
+  }
+  
+  // Strategy 2: data-large_image attribute (highest resolution for WooCommerce)
   const largeImageMatch = html.match(/data-large_image="([^"]+)"/i);
   if (largeImageMatch?.[1]) {
     debugInfo.push(`Found data-large_image: ${largeImageMatch[1].substring(0, 60)}...`);
     return { imageUrl: largeImageMatch[1], debugInfo };
   }
   
-  // Strategy 2: WooCommerce product gallery main image
+  // Strategy 3: WooCommerce product gallery main image
   const galleryMatch = html.match(/class="woocommerce-product-gallery__image[^"]*"[^>]*>\s*<a[^>]*href="([^"]+)"/i);
   if (galleryMatch?.[1]) {
     debugInfo.push(`Found gallery image: ${galleryMatch[1].substring(0, 60)}...`);
     return { imageUrl: galleryMatch[1], debugInfo };
   }
   
-  // Strategy 3: WooCommerce product gallery wrapper with data-thumb
+  // Strategy 4: WooCommerce product gallery wrapper with data-thumb
   const galleryWrapperMatch = html.match(/class="woocommerce-product-gallery__wrapper"[^>]*>[\s\S]*?data-large_image="([^"]+)"/i);
   if (galleryWrapperMatch?.[1]) {
     debugInfo.push(`Found gallery wrapper image: ${galleryWrapperMatch[1].substring(0, 60)}...`);
     return { imageUrl: galleryWrapperMatch[1], debugInfo };
   }
   
-  // Strategy 4: OG image
+  // Strategy 5: OG image (reliable fallback)
   const ogImageMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) ||
                       html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
-  if (ogImageMatch?.[1]) {
+  if (ogImageMatch?.[1] && !ogImageMatch[1].includes('placeholder') && !ogImageMatch[1].includes('logo')) {
     debugInfo.push(`Found og:image: ${ogImageMatch[1].substring(0, 60)}...`);
     return { imageUrl: ogImageMatch[1], debugInfo };
   }
   
-  // Strategy 5: Twitter image
+  // Strategy 6: Twitter image
   const twitterImageMatch = html.match(/<meta\s+(?:name="twitter:image"|property="twitter:image")\s+content="([^"]+)"/i);
-  if (twitterImageMatch?.[1]) {
+  if (twitterImageMatch?.[1] && !twitterImageMatch[1].includes('placeholder')) {
     debugInfo.push(`Found twitter:image: ${twitterImageMatch[1].substring(0, 60)}...`);
     return { imageUrl: twitterImageMatch[1], debugInfo };
   }
   
-  // Strategy 6: First product image in wp-content/uploads
-  const productImageMatch = html.match(/src="(https:\/\/ninjatek\.com\/wp-content\/uploads\/[^"]+\.(?:jpg|jpeg|png|webp))"/i);
-  if (productImageMatch?.[1] && 
-      !productImageMatch[1].includes('placeholder') && 
-      !productImageMatch[1].includes('icon') && 
-      !productImageMatch[1].includes('logo')) {
+  // Strategy 7: First product image in wp-content/uploads for NinjaTek specifically
+  const ninjatekImageMatch = html.match(/src="(https:\/\/ninjatek\.com\/wp-content\/uploads\/[^"]+\.(?:jpg|jpeg|png|webp))"/i);
+  if (ninjatekImageMatch?.[1] && 
+      !ninjatekImageMatch[1].includes('placeholder') && 
+      !ninjatekImageMatch[1].includes('icon') && 
+      !ninjatekImageMatch[1].includes('logo')) {
     // Remove size suffix to get full-size image
-    const fullSizeUrl = productImageMatch[1].replace(/-\d+x\d+\./, '.');
-    debugInfo.push(`Found wp-content image: ${fullSizeUrl.substring(0, 60)}...`);
+    const fullSizeUrl = ninjatekImageMatch[1].replace(/-\d+x\d+\./, '.');
+    debugInfo.push(`Found NinjaTek wp-content image: ${fullSizeUrl.substring(0, 60)}...`);
     return { imageUrl: fullSizeUrl, debugInfo };
   }
   
-  // Strategy 7: Any image with product in class
+  // Strategy 8: Any high-quality product image with size indicators
+  const sizedImageMatch = html.match(/src="([^"]+(?:1024x|800x|600x|product)[^"]*\.(?:jpg|jpeg|png|webp))"/i);
+  if (sizedImageMatch?.[1] && !sizedImageMatch[1].includes('placeholder') && !sizedImageMatch[1].includes('icon')) {
+    debugInfo.push(`Found sized product image: ${sizedImageMatch[1].substring(0, 60)}...`);
+    return { imageUrl: sizedImageMatch[1], debugInfo };
+  }
+  
+  // Strategy 9: Any image with product in class
   const productClassImageMatch = html.match(/class="[^"]*product[^"]*"[^>]*src="([^"]+\.(?:jpg|jpeg|png|webp))"/i) ||
                                   html.match(/src="([^"]+\.(?:jpg|jpeg|png|webp))"[^>]*class="[^"]*product[^"]*"/i);
   if (productClassImageMatch?.[1] && 
@@ -197,7 +225,7 @@ function extractWooCommerceImage(html: string): { imageUrl: string | null; debug
     return { imageUrl: productClassImageMatch[1], debugInfo };
   }
   
-  // Strategy 8: Any attachment image in content
+  // Strategy 10: Any attachment image in content
   const attachmentMatch = html.match(/class="attachment-[^"]*"[^>]*src="([^"]+)"/i);
   if (attachmentMatch?.[1] && !attachmentMatch[1].includes('icon')) {
     debugInfo.push(`Found attachment image: ${attachmentMatch[1].substring(0, 60)}...`);
