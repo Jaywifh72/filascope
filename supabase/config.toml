@@ -227,3 +227,33 @@ verify_jwt = false
 
 [functions.audit-schema-compliance]
 verify_jwt = true
+
+[functions.scrape-matterhackers-products]
+verify_jwt = true
+
+[functions.scrape-treed-products]
+verify_jwt = true
+
+[functions.scrape-gst3d-products]
+verify_jwt = true
+
+[functions.scrape-recreus-products]
+verify_jwt = true
+
+[functions.scrape-printedsolid-images]
+verify_jwt = true
+
+[functions.scrape-pushplastic-tds]
+verify_jwt = true
+
+[functions.scrape-atomic-tds]
+verify_jwt = true
+
+[functions.scrape-elegoo-tds]
+verify_jwt = true
+
+[functions.extract-brand-colors]
+verify_jwt = true
+
+[functions.extract-anycubic-colors]
+verify_jwt = true

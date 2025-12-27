@@ -12,7 +12,7 @@ import {
   type RegionCode 
 } from '../_shared/filament-schema.ts';
 import { validateScrapedProduct, type ScrapedProduct } from '../_shared/scraper-validation.ts';
-import { getColorHex, getColorFamily } from '../_shared/color-mapping.ts';
+import { getColorHex, getColorFamily, extractColorFromTitle } from '../_shared/color-mapping.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -109,6 +109,14 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
   'voxelab': {
     US: 'www.voxelab3dp.com',
     EU: 'eu.voxelab3dp.com'
+  },
+  // MatterHackers - custom platform
+  'matterhackers': {
+    US: 'www.matterhackers.com',
+  },
+  // NinjaTek - WooCommerce
+  'ninjatek': {
+    US: 'ninjatek.com',
   },
 };
 
