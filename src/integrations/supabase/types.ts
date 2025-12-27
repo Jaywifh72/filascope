@@ -199,39 +199,106 @@ export type Database = {
       }
       affiliate_configs: {
         Row: {
+          affiliate_id: string | null
+          affiliate_network: string | null
           affiliate_url_pattern: string | null
+          amazon_au_tag: string | null
+          amazon_ca_tag: string | null
           amazon_de_tag: string | null
+          amazon_jp_tag: string | null
           amazon_uk_tag: string | null
           amazon_us_tag: string | null
+          awin_advertiser_id: string | null
+          awin_affiliate_id: string | null
+          brand_id: string | null
+          commission_rate: number | null
+          cookie_duration_days: number | null
           created_at: string | null
           id: string
+          impact_media_partner_id: string | null
+          impact_program_id: string | null
+          is_active: boolean | null
           notes: string | null
+          signup_url: string | null
+          tracking_url_template: string | null
           updated_at: string | null
           vendor_name: string
         }
         Insert: {
+          affiliate_id?: string | null
+          affiliate_network?: string | null
           affiliate_url_pattern?: string | null
+          amazon_au_tag?: string | null
+          amazon_ca_tag?: string | null
           amazon_de_tag?: string | null
+          amazon_jp_tag?: string | null
           amazon_uk_tag?: string | null
           amazon_us_tag?: string | null
+          awin_advertiser_id?: string | null
+          awin_affiliate_id?: string | null
+          brand_id?: string | null
+          commission_rate?: number | null
+          cookie_duration_days?: number | null
           created_at?: string | null
           id?: string
+          impact_media_partner_id?: string | null
+          impact_program_id?: string | null
+          is_active?: boolean | null
           notes?: string | null
+          signup_url?: string | null
+          tracking_url_template?: string | null
           updated_at?: string | null
           vendor_name: string
         }
         Update: {
+          affiliate_id?: string | null
+          affiliate_network?: string | null
           affiliate_url_pattern?: string | null
+          amazon_au_tag?: string | null
+          amazon_ca_tag?: string | null
           amazon_de_tag?: string | null
+          amazon_jp_tag?: string | null
           amazon_uk_tag?: string | null
           amazon_us_tag?: string | null
+          awin_advertiser_id?: string | null
+          awin_affiliate_id?: string | null
+          brand_id?: string | null
+          commission_rate?: number | null
+          cookie_duration_days?: number | null
           created_at?: string | null
           id?: string
+          impact_media_partner_id?: string | null
+          impact_program_id?: string | null
+          is_active?: boolean | null
           notes?: string | null
+          signup_url?: string | null
+          tracking_url_template?: string | null
           updated_at?: string | null
           vendor_name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_configs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "automated_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_configs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_configs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       automated_brands: {
         Row: {
