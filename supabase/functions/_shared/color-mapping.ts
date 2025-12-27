@@ -177,6 +177,23 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'silk pink': 'FFB6C1',
   'silk rose gold': 'B76E79',
   'silk champagne': 'F7E7CE',
+  'silk teal': '20B2AA',
+  'silk orange': 'FF8C00',
+  'silk navy': '2C3E50',
+  'silk violet': '8B5CF6',
+  
+  // ==================== GOLD VARIANTS ====================
+  'rose gold': 'B76E79',
+  'old gold': 'CFB53B',
+  'antique gold': 'C9AE5D',
+  'champagne gold': 'F7E7CE',
+  'pale gold': 'EEE8AA',
+  
+  // ==================== CLEAR/GLASS VARIANTS ====================
+  'crystal clear': 'F5F5F5',
+  'ultra clear': 'FAFAFA',
+  'water clear': 'F0FFFF',
+  'glass clear': 'E8F4F8',
 
   // ==================== TRANSLUCENT/TRANSPARENT ====================
   'translucent': 'FFFFFF',
@@ -312,9 +329,16 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'yellow': 'Yellow',
   'neon yellow': 'Yellow',
   'tangerine yellow': 'Yellow',
-  'gold': 'Yellow',
-  'silk gold': 'Yellow',
   'lemon': 'Yellow',
+  
+  // Golds
+  'gold': 'Gold',
+  'silk gold': 'Gold',
+  'rose gold': 'Gold',
+  'old gold': 'Gold',
+  'antique gold': 'Gold',
+  'champagne gold': 'Gold',
+  'pale gold': 'Gold',
   'mustard': 'Yellow',
   
   // Greens
@@ -393,12 +417,18 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'transparent': 'Clear',
   'translucent': 'Clear',
   'clear': 'Clear',
+  'crystal clear': 'Clear',
+  'ultra clear': 'Clear',
+  'water clear': 'Clear',
+  'glass clear': 'Clear',
+  'glass': 'Clear',
   'translucent blue': 'Clear',
   'translucent green': 'Clear',
   'translucent red': 'Clear',
   'translucent orange': 'Clear',
   'translucent yellow': 'Clear',
   'translucent purple': 'Clear',
+  'translucent pink': 'Clear',
   
   // Natural
   'natural': 'Natural',

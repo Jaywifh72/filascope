@@ -837,11 +837,11 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
         sku: variant.sku || null,
         barcode: variant.barcode || null,
         material,
-        colorFamily,
+        // Use enhanced color extraction with shared color-mapping
+        colorFamily: extractColorFamilyFromVariant(variant, product, title) || colorFamily,
+        colorHex: extractColorHexFromVariant(variant, product, title),
         netWeightG,
         productLineId,
-        // Extract color hex from variant if available
-        colorHex: extractColorHexFromVariant(variant, product),
       });
 
       if (products.length >= limit) break;
@@ -857,13 +857,12 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
   return products;
 }
 
-// Extract color hex from Shopify variant options
-function extractColorHexFromVariant(variant: any, product: any): string | null {
+// Extract color hex from Shopify variant options - enhanced with color-mapping
+function extractColorHexFromVariant(variant: any, product: any, title: string): string | null {
   // Check variant options for color
   const colorOption = variant.option1 || variant.option2 || variant.option3;
-  if (!colorOption) return null;
   
-  // Check product metafields if available (some stores include color_hex)
+  // First try: Check product metafields if available
   const metafields = product.metafields || [];
   for (const meta of metafields) {
     if (meta.key === 'color_hex' || meta.key === 'hex_color') {
@@ -871,7 +870,68 @@ function extractColorHexFromVariant(variant: any, product: any): string | null {
     }
   }
   
+  // Second try: Extract from variant option using color-mapping
+  if (colorOption) {
+    const hex = getColorHex(colorOption);
+    if (hex) {
+      return `#${hex}`;
+    }
+  }
+  
+  // Third try: Extract from product title
+  const titleLower = title.toLowerCase();
+  // Look for common color patterns in title
+  const colorPatterns = [
+    // Match "- Color" pattern (e.g., "PLA - Red")
+    /\s-\s([^-\d]+)$/i,
+    // Match color at end after material (e.g., "PLA 1kg Black")
+    /(?:kg|g)\s+(.+?)$/i,
+    // Match in parentheses (e.g., "PLA (Matte Black)")
+    /\(([^)]+)\)/i,
+  ];
+  
+  for (const pattern of colorPatterns) {
+    const match = title.match(pattern);
+    if (match?.[1]) {
+      const potentialColor = match[1].trim();
+      const hex = getColorHex(potentialColor);
+      if (hex) {
+        return `#${hex}`;
+      }
+    }
+  }
+  
   return null;
+}
+
+// Extract color family from Shopify product - enhanced
+function extractColorFamilyFromVariant(variant: any, product: any, title: string): string | null {
+  const colorOption = variant.option1 || variant.option2 || variant.option3;
+  
+  // First try variant option
+  if (colorOption) {
+    const family = getColorFamily(colorOption);
+    if (family) return family;
+  }
+  
+  // Second try from title
+  const titleLower = title.toLowerCase();
+  const colorPatterns = [
+    /\s-\s([^-\d]+)$/i,
+    /(?:kg|g)\s+(.+?)$/i,
+    /\(([^)]+)\)/i,
+  ];
+  
+  for (const pattern of colorPatterns) {
+    const match = title.match(pattern);
+    if (match?.[1]) {
+      const family = getColorFamily(match[1].trim());
+      if (family) return family;
+    }
+  }
+  
+  // Fallback to basic extraction
+  return extractColorFamily(title);
 }
 
 // WooCommerce Scraper - with enhanced field extraction
@@ -914,9 +974,12 @@ async function scrapeWooCommerce(brand: BrandConfig, materialFilter?: string, li
       // Extract fields using unified schema helpers
       const title = cleanTitle(product.name);
       const material = extractMaterial(title, '');
-      const colorFamily = extractColorFamily(title);
       const netWeightG = extractWeight(title);
       const productLineId = generateProductLineId(brand.brand_slug, material, title);
+      
+      // Extract color using enhanced color-mapping
+      const colorHex = extractWooCommerceColorHex(product, title);
+      const colorFamily = extractWooCommerceColorFamily(product, title);
 
       products.push({
         productId: String(product.id),
@@ -930,6 +993,7 @@ async function scrapeWooCommerce(brand: BrandConfig, materialFilter?: string, li
         sku: product.sku || null,
         material,
         colorFamily,
+        colorHex,
         netWeightG,
         productLineId,
       });
@@ -944,6 +1008,73 @@ async function scrapeWooCommerce(brand: BrandConfig, materialFilter?: string, li
   }
 
   return products;
+}
+
+// Extract color hex from WooCommerce product
+function extractWooCommerceColorHex(product: any, title: string): string | null {
+  // Check attributes for color
+  const attributes = product.attributes || [];
+  for (const attr of attributes) {
+    const attrName = (attr.name || '').toLowerCase();
+    if (attrName.includes('color') || attrName.includes('colour')) {
+      const value = Array.isArray(attr.terms) ? attr.terms[0]?.name : attr.value;
+      if (value) {
+        const hex = getColorHex(value);
+        if (hex) return `#${hex}`;
+      }
+    }
+  }
+  
+  // Extract from title
+  const colorPatterns = [
+    /\s-\s([^-\d]+)$/i,
+    /(?:kg|g)\s+(.+?)$/i,
+    /\(([^)]+)\)/i,
+  ];
+  
+  for (const pattern of colorPatterns) {
+    const match = title.match(pattern);
+    if (match?.[1]) {
+      const hex = getColorHex(match[1].trim());
+      if (hex) return `#${hex}`;
+    }
+  }
+  
+  return null;
+}
+
+// Extract color family from WooCommerce product
+function extractWooCommerceColorFamily(product: any, title: string): string | null {
+  // Check attributes for color
+  const attributes = product.attributes || [];
+  for (const attr of attributes) {
+    const attrName = (attr.name || '').toLowerCase();
+    if (attrName.includes('color') || attrName.includes('colour')) {
+      const value = Array.isArray(attr.terms) ? attr.terms[0]?.name : attr.value;
+      if (value) {
+        const family = getColorFamily(value);
+        if (family) return family;
+      }
+    }
+  }
+  
+  // Extract from title
+  const colorPatterns = [
+    /\s-\s([^-\d]+)$/i,
+    /(?:kg|g)\s+(.+?)$/i,
+    /\(([^)]+)\)/i,
+  ];
+  
+  for (const pattern of colorPatterns) {
+    const match = title.match(pattern);
+    if (match?.[1]) {
+      const family = getColorFamily(match[1].trim());
+      if (family) return family;
+    }
+  }
+  
+  // Fallback to basic extraction
+  return extractColorFamily(title);
 }
 
 // Firecrawl Scraper (simplified - would need Firecrawl API key for full implementation)
