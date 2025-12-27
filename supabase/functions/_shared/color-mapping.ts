@@ -83,6 +83,8 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'midnight blue': '191970',
   'ice blue': 'B0E0E6',
   'azure': '489FDF',
+  'ocean blue': '006994',
+  'steel blue': '4682B4',
 
   // ==================== GREEN VARIANTS ====================
   'forest green': '228B22',
@@ -93,6 +95,10 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'grass green': '7CFC00',
   'army green': '4B5320',
   'bambu green': '00AE42',
+  'forest': '228B22',
+  'hunter green': '355E3B',
+  'sage': '9DC183',
+  'emerald': '50C878',
 
   // ==================== GREY VARIANTS ====================
   'light grey': 'D3D3D3',
@@ -105,18 +111,29 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'space gray': '4F4F4F',
   'cement grey': '8D918D',
   'cement gray': '8D918D',
+  'gunmetal': '2A3439',
+  'slate': '708090',
+  'ash': 'B2BEB5',
 
   // ==================== RED VARIANTS ====================
   'burgundy red': '800020',
   'wine red': '722F37',
   'scarlet': 'FF2400',
   'crimson': 'DC143C',
+  'cherry': 'DE3163',
+  'ruby': 'E0115F',
+  'blood red': '660000',
+  'fire red': 'CE2029',
 
   // ==================== YELLOW/ORANGE VARIANTS ====================
   'tangerine': 'FF9966',
   'tangerine yellow': 'FFC72C',
   'mustard': 'FFDB58',
   'lemon': 'FFF44F',
+  'amber': 'FFBF00',
+  'apricot': 'FBCEB1',
+  'sunset': 'FAD6A5',
+  'pumpkin': 'FF7518',
 
   // ==================== NEON COLORS ====================
   'neon green': '39FF14',
@@ -124,11 +141,15 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'neon orange': 'FF5F1F',
   'neon yellow': 'CCFF00',
   'hot pink': 'FF69B4',
+  'neon blue': '1B03A3',
+  'neon purple': 'BC13FE',
 
   // ==================== GLOW COLORS ====================
   'glow green': '39FF14',
   'glow blue': '00BFFF',
   'glow orange': 'FF4500',
+  'glow yellow': 'FFFF00',
+  'glow pink': 'FF1493',
 
   // ==================== MATTE FINISH ====================
   'matte black': '1A1A1A',
@@ -139,6 +160,8 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'matte red': 'B91C1C',
   'matte blue': '1D4ED8',
   'matte green': '15803D',
+  'matte navy': '1E3A5F',
+  'matte brown': '5C4033',
 
   // ==================== SILK FINISH ====================
   'silk white': 'FFFEF0',
@@ -152,6 +175,8 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'silk green': '32CD32',
   'silk purple': '9370DB',
   'silk pink': 'FFB6C1',
+  'silk rose gold': 'B76E79',
+  'silk champagne': 'F7E7CE',
 
   // ==================== TRANSLUCENT/TRANSPARENT ====================
   'translucent': 'FFFFFF',
@@ -161,18 +186,73 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'translucent orange': 'FFB347',
   'translucent yellow': 'FFFF99',
   'translucent purple': 'DDA0DD',
+  'translucent pink': 'FFB6C1',
+  'glass': 'E8F4F8',
 
   // ==================== SPECIAL/MULTI ====================
   'rainbow': 'FF0000',
   'multicolor': 'FF0000',
   'earth brown': '5C4033',
   'lavender purple': 'B57EDC',
+  'galaxy': '2F1B41',
+  'cosmic': '1B1464',
+  'nebula': '3D1C56',
+  'starry': '1A1A2E',
 
   // ==================== WOOD TONES ====================
   'maple': 'C19A6B',
   'walnut': '5D432C',
   'oak': 'B8860B',
   'bamboo': 'D4B896',
+  'ebony': '3D3635',
+  'mahogany': 'C04000',
+  'pine': 'C5AE91',
+  'cedar': 'A0522D',
+  'cherry wood': '7B3F00',
+  'driftwood': 'AF8751',
+
+  // ==================== 3D-FUEL SPECIALTY COLORS ====================
+  'lava': 'FF4500',
+  'ocean': '006994',
+  'arctic': 'E0FFFF',
+  'volcano': 'CF1020',
+  'glacier': 'DFFFFE',
+  'sunshine': 'FFD700',
+  'meadow': '7CFC00',
+  'storm': '4F5D75',
+  'snow': 'FFFAFA',
+  'iron': '48494B',
+
+  // ==================== TREED ITALIAN COLORS ====================
+  'nero': '1A1A1A',
+  'bianco': 'FFFFFF',
+  'rosso': 'DC2626',
+  'blu': '2563EB',
+  'verde': '16A34A',
+  'giallo': 'EAB308',
+  'arancione': 'EA580C',
+  'grigio': '808080',
+  'marrone': '92400E',
+  'rosa': 'EC4899',
+  'viola': '9333EA',
+  'azzurro': '87CEEB',
+
+  // ==================== SAINSMART/COMMON BRAND COLORS ====================
+  'army': '4B5320',
+  'sea': '2E8B57',
+  'grass': '7CFC00',
+  'wine': '722F37',
+  'skin tone': 'FFCBA4',
+  'bone': 'E3DAC9',
+  'clay': 'B66A50',
+
+  // ==================== RECREUS/FILAFLEX COLORS ====================
+  'filaflex': 'FFFFFF',
+  'fluor': '39FF14',
+  'fluorescent green': '39FF14',
+  'fluorescent orange': 'FF5F1F',
+  'fluorescent pink': 'FF6EC7',
+  'fluorescent yellow': 'CCFF00',
 };
 
 // ============================================================================
