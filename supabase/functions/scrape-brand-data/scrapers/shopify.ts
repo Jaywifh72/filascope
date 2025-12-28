@@ -98,6 +98,9 @@ export class ShopifyScraper extends BaseScraper {
       const extractedData = extractDataFromTitle(product.title);
       const cleanedTitle = intelligentTitleClean(extractedData.cleanedTitle, product.vendor);
 
+      // Enhanced image extraction - try variant image first, then product images
+      const imageUrl = this.extractBestImage(product, variant);
+
       return {
         productId: String(product.id),
         sku: variant.sku || null,
@@ -109,7 +112,7 @@ export class ShopifyScraper extends BaseScraper {
         url,
         scrapedAt: new Date(),
         source: `shopify-${this.config.vendor.toLowerCase()}`,
-        imageUrl: product.images?.[0]?.src || null,
+        imageUrl,
         barcode: variant.barcode || null,
         description: bodyHtml,
         // Enhanced fields
@@ -131,6 +134,56 @@ export class ShopifyScraper extends BaseScraper {
       this.logError(`Error scraping ${url}:`, error);
       return null;
     }
+  }
+
+  /**
+   * Extract best available image from product/variant
+   * Handles Eryone, Printed Solid, and other stores with various image structures
+   */
+  private extractBestImage(product: ShopifyProduct, variant: ShopifyVariant): string | null {
+    // Priority 1: Variant-specific featured image (if product has variant images)
+    const variantWithImage = variant as any;
+    if (variantWithImage.featured_image?.src) {
+      return variantWithImage.featured_image.src;
+    }
+    
+    // Priority 2: Look for image by variant ID in product images array
+    if (product.images && product.images.length > 0) {
+      const productImages = product.images as any[];
+      
+      // Some stores include variant_ids in image objects
+      for (const img of productImages) {
+        if (img.variant_ids && img.variant_ids.includes(variant.id)) {
+          return img.src;
+        }
+      }
+      
+      // Priority 3: First image
+      if (productImages[0]?.src) {
+        return productImages[0].src;
+      }
+    }
+    
+    // Priority 4: Check for image in product-level featured_image (some themes)
+    const productAny = product as any;
+    if (productAny.featured_image) {
+      return productAny.featured_image;
+    }
+    
+    // Priority 5: Check body_html for image URLs (fallback for some stores)
+    if (product.body_html) {
+      const imgMatch = product.body_html.match(/src=["']([^"']+\.(?:jpg|jpeg|png|webp)[^"']*)["']/i);
+      if (imgMatch?.[1]) {
+        // Clean up URL and ensure it's absolute
+        let imgUrl = imgMatch[1];
+        if (imgUrl.startsWith('//')) imgUrl = 'https:' + imgUrl;
+        if (!imgUrl.includes('placeholder') && !imgUrl.includes('no-image')) {
+          return imgUrl;
+        }
+      }
+    }
+    
+    return null;
   }
 
   async scrapeAllProducts(limit: number = 250): Promise<ScrapedProduct[]> {
