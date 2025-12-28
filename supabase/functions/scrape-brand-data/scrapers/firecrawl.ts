@@ -142,6 +142,14 @@ export class FirecrawlScraper extends BaseScraper {
         return gizmoDorksProducts.slice(0, limit);
       }
 
+      // IC3D Printers - WooCommerce with custom structure
+      if (vendor === 'ic3d printers' || baseUrl.includes('ic3dprinters.com')) {
+        this.log(`Using IC3D Printers extraction`);
+        const ic3dProducts = await this.extractIC3DProducts(baseUrl);
+        this.log(`Successfully extracted ${ic3dProducts.length} IC3D Printers products`);
+        return ic3dProducts.slice(0, limit);
+      }
+
       let productUrls: string[] = [];
       
       // Step 1: Use Firecrawl Map API to discover all URLs on the shop
@@ -1515,7 +1523,8 @@ export class FirecrawlScraper extends BaseScraper {
         /matterhackers\.com\/store\/l\/[^\/]+\/ln\//i,
       ],
       'ic3d printers': [
-        /ic3dprinters\.com\/shop\/[^\/]+\/[^\/]+\/?$/i,
+        /ic3dprinters\.com\/shop\/[a-z0-9-]+\/?$/i, // Pattern: /shop/product-slug/
+        /ic3dprinters\.com\/product\/[a-z0-9-]+\/?$/i, // Alt pattern: /product/product-slug/
       ],
       'geeetech': [
         /geeetech\.com\/[a-z0-9-]+-p-\d+\.html$/i,  // Pattern: /product-name-p-123.html
@@ -2254,6 +2263,187 @@ export class FirecrawlScraper extends BaseScraper {
       }
     } catch (error) {
       this.logError(`Gizmo Dorks extraction error:`, error);
+    }
+    
+    return products;
+  }
+
+  /**
+   * IC3D Printers Products Extraction - WooCommerce platform
+   * IC3D uses a WooCommerce store with product pages at /shop/product-slug/
+   */
+  private async extractIC3DProducts(baseUrl: string): Promise<ScrapedProduct[]> {
+    const products: ScrapedProduct[] = [];
+    const seenIds = new Set<string>();
+    
+    // IC3D filament collection page
+    const collectionUrl = 'https://www.ic3dprinters.com/collections/filament/';
+
+    try {
+      this.log(`Scraping IC3D collection: ${collectionUrl}`);
+      
+      // First, get the collection page to find all product links
+      const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.firecrawlApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: collectionUrl,
+          formats: ["html"],
+          waitFor: 3000,
+        }),
+      });
+
+      if (!response.ok) {
+        this.logError(`Failed to scrape IC3D collection: ${response.status}`);
+        return [];
+      }
+
+      const data = await response.json();
+      const html = data.data?.html || data.html || "";
+      
+      // Extract product URLs from the collection page
+      // IC3D uses /shop/product-slug/ pattern
+      const productUrlPattern = /href="(https?:\/\/(?:www\.)?ic3dprinters\.com\/shop\/([a-z0-9-]+)\/?)"/gi;
+      const matches = [...html.matchAll(productUrlPattern)];
+      
+      // Filter to only product URLs, not category URLs
+      const productUrls: string[] = [];
+      const categoryKeywords = ['filaments', 'pla-filaments', 'petg-filaments', 'abs-filaments', 'collections'];
+      
+      for (const match of matches) {
+        const url = match[1];
+        const slug = match[2];
+        
+        // Skip if it's a category page
+        if (categoryKeywords.some(kw => slug.includes(kw) || slug === kw)) continue;
+        
+        // Skip if already seen
+        if (seenIds.has(slug)) continue;
+        seenIds.add(slug);
+        
+        productUrls.push(url);
+      }
+      
+      this.log(`Found ${productUrls.length} IC3D product URLs`);
+      
+      // Scrape each product page
+      for (const productUrl of productUrls) {
+        try {
+          const slug = productUrl.split('/shop/')[1]?.replace(/\/$/, '') || '';
+          
+          const prodResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${this.firecrawlApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              url: productUrl,
+              formats: ["markdown", "html"],
+              onlyMainContent: true,
+              waitFor: 2000,
+            }),
+          });
+
+          if (!prodResponse.ok) {
+            this.log(`Failed to scrape IC3D product: ${productUrl}`);
+            continue;
+          }
+
+          const prodData = await prodResponse.json();
+          const prodHtml = prodData.data?.html || prodData.html || "";
+          const prodMarkdown = prodData.data?.markdown || prodData.markdown || "";
+          const metadata = prodData.data?.metadata || {};
+          
+          // Extract title
+          let title = metadata.title?.replace(/\s*[-–|]\s*IC3D\s*Printers.*$/i, '').trim() ||
+                      metadata.ogTitle?.replace(/\s*[-–|]\s*IC3D\s*Printers.*$/i, '').trim();
+          
+          // Extract from h1 if not in metadata
+          if (!title) {
+            const h1Match = prodHtml.match(/<h1[^>]*class="[^"]*product[^"]*title[^"]*"[^>]*>([^<]+)<\/h1>/i) ||
+                           prodHtml.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+            title = h1Match?.[1]?.trim();
+          }
+          
+          if (!title) continue;
+          
+          // Extract price from WooCommerce structure
+          const priceMatch = prodHtml.match(/<span[^>]*class="[^"]*woocommerce-Price-amount[^"]*"[^>]*>\s*<bdi>\s*<span[^>]*class="[^"]*woocommerce-Price-currencySymbol[^"]*">\$<\/span>([\d.,]+)<\/bdi>/i) ||
+                            prodHtml.match(/\$\s*([\d.,]+)\s*(?:USD)?/i);
+          const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '')) : null;
+          
+          // Extract image
+          const imageMatch = prodHtml.match(/<img[^>]*class="[^"]*woocommerce-product-gallery__image[^"]*"[^>]*src="([^"]+)"/i) ||
+                            prodHtml.match(/data-large_image="([^"]+)"/i) ||
+                            prodHtml.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
+          const imageUrl = imageMatch?.[1] || metadata.ogImage?.[0]?.url || null;
+          
+          // Extract SKU/MPN
+          const skuMatch = prodHtml.match(/class="[^"]*sku[^"]*"[^>]*>([A-Z0-9-]+)<\//i) ||
+                          prodMarkdown.match(/SKU:\s*([A-Z0-9-]+)/i);
+          const sku = skuMatch?.[1] || slug.toUpperCase();
+          
+          // Extract weight from title or description
+          const weightMatch = (title + ' ' + prodMarkdown).match(/(\d+)\s*(kg|g)\s*(?:spool|filament)?/i);
+          let netWeightG = 1000; // Default 1kg
+          if (weightMatch) {
+            netWeightG = weightMatch[2].toLowerCase() === 'kg' 
+              ? parseInt(weightMatch[1]) * 1000 
+              : parseInt(weightMatch[1]);
+          }
+          
+          // Detect material and color
+          const material = this.detectMaterial(title);
+          const colorInfo = this.extractColorFromText(title);
+          
+          // Extract TDS URL
+          const tdsMatch = prodHtml.match(/href="([^"]+\.pdf)"/i) ||
+                          prodHtml.match(/href="([^"]+technical[^"]*data[^"]*)"/i);
+          const tdsUrl = tdsMatch?.[1] || null;
+          
+          const product: ScrapedProduct = {
+            productId: slug,
+            sku,
+            title,
+            price,
+            compareAtPrice: null,
+            available: !prodHtml.includes('out-of-stock') && !prodHtml.includes('Out of stock'),
+            currency: "USD",
+            url: productUrl,
+            scrapedAt: new Date(),
+            source: "firecrawl-ic3d",
+            imageUrl,
+            barcode: null,
+            description: prodMarkdown?.substring(0, 2000) || null,
+            mpn: sku,
+            tdsUrl,
+            colorHex: colorInfo?.hex || null,
+            colorName: colorInfo?.name || null,
+            nozzleTempMin: null,
+            nozzleTempMax: null,
+            bedTempMin: null,
+            bedTempMax: null,
+            spoolMaterial: null,
+            netWeightG,
+            diameterMm: 1.75,
+            spoolOuterDiameterMm: null,
+            spoolWidthMm: null,
+          };
+          
+          products.push(product);
+          this.log(`✓ IC3D product: ${title} - $${price} - Image: ${imageUrl ? 'Yes' : 'No'}`);
+          
+          await new Promise(resolve => setTimeout(resolve, 600));
+        } catch (err) {
+          this.logError(`Error scraping IC3D product:`, err);
+        }
+      }
+    } catch (error) {
+      this.logError(`IC3D extraction error:`, error);
     }
     
     return products;
