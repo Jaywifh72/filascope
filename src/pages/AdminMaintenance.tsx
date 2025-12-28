@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle, Store } from "lucide-react";
+import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle, Store, Sparkles } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -22,6 +22,7 @@ import { TdsParsingStatus } from "@/components/admin/TdsParsingStatus";
 import { SyncQualityCheckPanel } from "@/components/admin/SyncQualityCheckPanel";
 import { ElegooSyncDashboard } from "@/components/admin/ElegooSyncDashboard";
 import { BrandCategoryTabs } from "@/components/admin/BrandCategoryTabs";
+import { EnrichmentDashboard } from "@/components/admin/EnrichmentDashboard";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 import { useActiveScrapeJob } from "@/hooks/useActiveScrapeJob";
@@ -313,10 +314,14 @@ const AdminMaintenance = () => {
 
       {/* Tabs for Brand Scrapers */}
       <Tabs defaultValue="all-brands" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-lg">
+        <TabsList className="grid w-full grid-cols-4 max-w-xl">
           <TabsTrigger value="all-brands" className="flex items-center gap-2">
             <Store className="w-4 h-4" />
             All Brands
+          </TabsTrigger>
+          <TabsTrigger value="enrichment" className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4" />
+            Enrichment
           </TabsTrigger>
           <TabsTrigger value="bambulab" className="flex items-center gap-2">
             <Palette className="w-4 h-4" />
@@ -331,6 +336,11 @@ const AdminMaintenance = () => {
         {/* All Brands Tab - Dynamic Brand Management */}
         <TabsContent value="all-brands" className="space-y-6 mt-6">
           <BrandCategoryTabs />
+        </TabsContent>
+
+        {/* Enrichment Tab - Color, TDS, Regional Pricing */}
+        <TabsContent value="enrichment" className="space-y-6 mt-6">
+          <EnrichmentDashboard />
         </TabsContent>
 
         {/* Bambu Lab Tab */}
