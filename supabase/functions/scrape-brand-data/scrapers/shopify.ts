@@ -274,12 +274,30 @@ export class ShopifyScraper extends BaseScraper {
       }
     }
 
-    // Many brands use SKU as MPN
-    if (variant.sku && /^[A-Z0-9-]+$/i.test(variant.sku)) {
-      return variant.sku;
+    // For Elegoo and similar brands: extract MPN from SKU patterns
+    // Elegoo SKUs often look like: RAPID-PLA-1KG-BLACK, EL-PLA-PLUS-WH, etc.
+    if (variant.sku) {
+      const sku = variant.sku.trim();
+      
+      // Elegoo-specific: SKU is the MPN
+      const vendor = this.config.vendor.toLowerCase();
+      if (vendor.includes('elegoo') || vendor.includes('anycubic') || vendor.includes('creality')) {
+        if (sku.length >= 4) {
+          return sku;
+        }
+      }
+      
+      // General: SKU with alphanumeric pattern is likely MPN
+      if (/^[A-Z0-9][A-Z0-9-_]{3,}$/i.test(sku)) {
+        return sku;
+      }
     }
 
-    return null;
+    // Fallback: generate MPN from product ID + variant ID
+    const vendor = this.config.vendor.toLowerCase().replace(/\s+/g, '-').substring(0, 10);
+    const productPart = String(product.id).slice(-6);
+    const variantPart = String(variant.id).slice(-4);
+    return `${vendor.toUpperCase()}-${productPart}-${variantPart}`;
   }
 
   /**
