@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export type EnrichmentOperation = 
   | { type: 'color-extraction'; brandSlug: string; dryRun?: boolean }
@@ -26,6 +27,7 @@ export interface EnrichmentQueueState {
 
 export function useEnrichmentQueue() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [state, setState] = useState<EnrichmentQueueState>({
     isRunning: false,
     currentIndex: 0,
@@ -180,8 +182,12 @@ export function useEnrichmentQueue() {
       variant: errors.length > 0 ? 'destructive' : 'default',
     });
 
+    // Invalidate related queries to refresh data
+    queryClient.invalidateQueries({ queryKey: ['enrichment-history'] });
+    queryClient.invalidateQueries({ queryKey: ['enrichment-metrics'] });
+
     return results;
-  }, [toast]);
+  }, [toast, queryClient]);
 
   const runSingle = useCallback(async (operation: EnrichmentOperation) => {
     setState(prev => ({
@@ -210,8 +216,12 @@ export function useEnrichmentQueue() {
       variant: result.success ? 'default' : 'destructive',
     });
 
+    // Invalidate related queries to refresh data
+    queryClient.invalidateQueries({ queryKey: ['enrichment-history'] });
+    queryClient.invalidateQueries({ queryKey: ['enrichment-metrics'] });
+
     return result;
-  }, [toast]);
+  }, [toast, queryClient]);
 
   const reset = useCallback(() => {
     setState({

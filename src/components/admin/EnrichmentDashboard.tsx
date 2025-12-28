@@ -2,11 +2,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Palette, FileText, Globe, BarChart3, RefreshCw } from 'lucide-react';
+import { Palette, FileText, Globe, BarChart3, RefreshCw, History, CheckCircle2, Clock, Zap } from 'lucide-react';
 import { ColorExtractionPanel } from './ColorExtractionPanel';
 import { TdsDiscoveryPanel } from './TdsDiscoveryPanel';
 import { RegionalPricingPanel } from './RegionalPricingPanel';
+import { EnrichmentHistory } from './EnrichmentHistory';
 import { useEnrichmentMetrics } from '@/hooks/useEnrichmentMetrics';
+import { useEnrichmentHistory } from '@/hooks/useEnrichmentHistory';
+import { formatDistanceToNow } from 'date-fns';
 
 function MetricCard({ 
   label, 
@@ -58,6 +61,7 @@ function MetricCard({
 
 export function EnrichmentDashboard() {
   const { overall, lowColorBrands, lowTdsBrands, regionalBrands, isLoading, refresh, isFetching } = useEnrichmentMetrics();
+  const { summary: historySummary, isLoading: historyLoading } = useEnrichmentHistory();
 
   const metrics = overall ? [
     { label: 'Color Hex', current: overall.withColorHex, total: overall.total, percent: overall.total > 0 ? (overall.withColorHex / overall.total) * 100 : 0 },
@@ -107,9 +111,61 @@ export function EnrichmentDashboard() {
         </CardContent>
       </Card>
 
+      {/* Activity Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-primary/10">
+              <Zap className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{historyLoading ? '...' : historySummary.operationsToday}</p>
+              <p className="text-xs text-muted-foreground">Operations Today</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-green-100 dark:bg-green-900/20">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{historyLoading ? '...' : `${historySummary.successRate.toFixed(0)}%`}</p>
+              <p className="text-xs text-muted-foreground">Success Rate</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900/20">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{historyLoading ? '...' : historySummary.productsEnrichedToday.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">Products Enriched Today</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-muted">
+              <Clock className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">
+                {historyLoading ? '...' : historySummary.lastColorRun 
+                  ? formatDistanceToNow(new Date(historySummary.lastColorRun), { addSuffix: true })
+                  : 'Never'}
+              </p>
+              <p className="text-xs text-muted-foreground">Last Color Sync</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
       {/* Enrichment Tabs */}
       <Tabs defaultValue="colors" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-md">
+        <TabsList className="grid w-full grid-cols-4 max-w-lg">
           <TabsTrigger value="colors" className="flex items-center gap-2">
             <Palette className="w-4 h-4" />
             Colors
@@ -121,6 +177,10 @@ export function EnrichmentDashboard() {
           <TabsTrigger value="regional" className="flex items-center gap-2">
             <Globe className="w-4 h-4" />
             Regional
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="w-4 h-4" />
+            History
           </TabsTrigger>
         </TabsList>
 
@@ -134,6 +194,10 @@ export function EnrichmentDashboard() {
 
         <TabsContent value="regional" className="mt-4">
           <RegionalPricingPanel />
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-4">
+          <EnrichmentHistory />
         </TabsContent>
       </Tabs>
 
