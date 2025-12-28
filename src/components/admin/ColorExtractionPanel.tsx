@@ -5,31 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Palette, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useEnrichmentQueue } from '@/hooks/useEnrichmentQueue';
-
-interface BrandColorStatus {
-  brandSlug: string;
-  brandName: string;
-  totalProducts: number;
-  withColorHex: number;
-  coverage: number;
-}
-
-// Brands with low color coverage
-const LOW_COVERAGE_BRANDS: BrandColorStatus[] = [
-  { brandSlug: 'push-plastic', brandName: 'Push Plastic', totalProducts: 142, withColorHex: 0, coverage: 0 },
-  { brandSlug: 'printed-solid', brandName: 'Printed Solid', totalProducts: 135, withColorHex: 14, coverage: 10.4 },
-  { brandSlug: 'amolen', brandName: 'Amolen', totalProducts: 105, withColorHex: 26, coverage: 24.8 },
-  { brandSlug: 'sainsmart', brandName: 'SainSmart', totalProducts: 97, withColorHex: 35, coverage: 36.1 },
-  { brandSlug: 'polymaker', brandName: 'Polymaker', totalProducts: 91, withColorHex: 46, coverage: 50.5 },
-  { brandSlug: '3d-fuel', brandName: '3D-Fuel', totalProducts: 120, withColorHex: 78, coverage: 65.0 },
-];
+import { useEnrichmentMetrics } from '@/hooks/useEnrichmentMetrics';
 
 export function ColorExtractionPanel() {
   const [dryRun, setDryRun] = useState(true);
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const { runSingle, runQueue, state, isRunning } = useEnrichmentQueue();
+  const { lowColorBrands, isLoading, refresh } = useEnrichmentMetrics();
 
   const toggleBrand = (slug: string) => {
     setSelectedBrands(prev => {
@@ -45,6 +30,7 @@ export function ColorExtractionPanel() {
 
   const handleExtractSingle = async (brandSlug: string) => {
     await runSingle({ type: 'color-extraction', brandSlug, dryRun });
+    if (!dryRun) refresh();
   };
 
   const handleExtractSelected = async () => {
@@ -54,15 +40,17 @@ export function ColorExtractionPanel() {
       dryRun,
     }));
     await runQueue(ops);
+    if (!dryRun) refresh();
   };
 
   const handleExtractAll = async () => {
-    const ops = LOW_COVERAGE_BRANDS.map(b => ({
+    const ops = lowColorBrands.map(b => ({
       type: 'color-extraction' as const,
       brandSlug: b.brandSlug,
       dryRun,
     }));
     await runQueue(ops);
+    if (!dryRun) refresh();
   };
 
   const getResultForBrand = (slug: string) => {
@@ -90,7 +78,7 @@ export function ColorExtractionPanel() {
           </div>
         </div>
         <CardDescription>
-          Extract color hex values from product images for brands with low coverage
+          Extract color hex values from product images for {lowColorBrands.length} brands with &lt;90% coverage
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -107,68 +95,83 @@ export function ColorExtractionPanel() {
           </div>
         )}
 
-        <div className="space-y-2">
-          {LOW_COVERAGE_BRANDS.map(brand => {
-            const result = getResultForBrand(brand.brandSlug);
-            const isProcessing = isRunning && 
-              state.currentOperation?.type === 'color-extraction' && 
-              state.currentOperation.brandSlug === brand.brandSlug;
-
-            return (
-              <div
-                key={brand.brandSlug}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
+        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedBrands.has(brand.brandSlug)}
-                    onChange={() => toggleBrand(brand.brandSlug)}
-                    className="rounded"
-                    disabled={isRunning}
-                  />
+                  <Skeleton className="w-4 h-4" />
                   <div>
-                    <p className="font-medium">{brand.brandName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {brand.withColorHex}/{brand.totalProducts} products ({brand.coverage.toFixed(1)}%)
-                    </p>
+                    <Skeleton className="h-4 w-24 mb-1" />
+                    <Skeleton className="h-3 w-32" />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {result && (
-                    result.success ? (
-                      <Badge variant="default" className="bg-green-600">
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        Done
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive">
-                        <XCircle className="w-3 h-3 mr-1" />
-                        Failed
-                      </Badge>
-                    )
-                  )}
-                  <Badge 
-                    variant={brand.coverage < 20 ? 'destructive' : brand.coverage < 50 ? 'secondary' : 'outline'}
-                  >
-                    {brand.coverage.toFixed(0)}%
-                  </Badge>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleExtractSingle(brand.brandSlug)}
-                    disabled={isRunning}
-                  >
-                    {isProcessing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      'Extract'
-                    )}
-                  </Button>
-                </div>
+                <Skeleton className="w-16 h-8" />
               </div>
-            );
-          })}
+            ))
+          ) : (
+            lowColorBrands.map(brand => {
+              const result = getResultForBrand(brand.brandSlug);
+              const isProcessing = isRunning && 
+                state.currentOperation?.type === 'color-extraction' && 
+                state.currentOperation.brandSlug === brand.brandSlug;
+
+              return (
+                <div
+                  key={brand.brandSlug}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedBrands.has(brand.brandSlug)}
+                      onChange={() => toggleBrand(brand.brandSlug)}
+                      className="rounded"
+                      disabled={isRunning}
+                    />
+                    <div>
+                      <p className="font-medium">{brand.brandName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {brand.withColorHex}/{brand.totalProducts} products ({brand.colorCoverage}%)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {result && (
+                      result.success ? (
+                        <Badge variant="default" className="bg-green-600">
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          Done
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive">
+                          <XCircle className="w-3 h-3 mr-1" />
+                          Failed
+                        </Badge>
+                      )
+                    )}
+                    <Badge 
+                      variant={brand.colorCoverage < 20 ? 'destructive' : brand.colorCoverage < 50 ? 'secondary' : 'outline'}
+                    >
+                      {brand.colorCoverage}%
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleExtractSingle(brand.brandSlug)}
+                      disabled={isRunning}
+                    >
+                      {isProcessing ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'Extract'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         <div className="flex gap-2 pt-2 border-t">
@@ -181,7 +184,7 @@ export function ColorExtractionPanel() {
           </Button>
           <Button
             onClick={handleExtractAll}
-            disabled={isRunning}
+            disabled={isRunning || lowColorBrands.length === 0}
           >
             {isRunning ? (
               <>
@@ -191,7 +194,7 @@ export function ColorExtractionPanel() {
             ) : (
               <>
                 <Palette className="w-4 h-4 mr-2" />
-                Extract All Low-Coverage
+                Extract All Low-Coverage ({lowColorBrands.length})
               </>
             )}
           </Button>

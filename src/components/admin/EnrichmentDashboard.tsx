@@ -1,22 +1,26 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Palette, FileText, Globe, BarChart3 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Palette, FileText, Globe, BarChart3, RefreshCw } from 'lucide-react';
 import { ColorExtractionPanel } from './ColorExtractionPanel';
 import { TdsDiscoveryPanel } from './TdsDiscoveryPanel';
 import { RegionalPricingPanel } from './RegionalPricingPanel';
+import { useEnrichmentMetrics } from '@/hooks/useEnrichmentMetrics';
 
-// Data quality metrics (these would ideally come from a live query)
-const DATA_QUALITY_METRICS = [
-  { label: 'Color Hex', current: 4240, total: 5282, percent: 80.3 },
-  { label: 'TDS URLs', current: 1967, total: 5282, percent: 37.2 },
-  { label: 'EUR Price', current: 531, total: 5282, percent: 10.0 },
-  { label: 'GBP Price', current: 193, total: 5282, percent: 3.7 },
-  { label: 'CAD Price', current: 1040, total: 5282, percent: 19.7 },
-  { label: 'AUD Price', current: 488, total: 5282, percent: 9.2 },
-];
-
-function MetricCard({ label, current, total, percent }: { label: string; current: number; total: number; percent: number }) {
+function MetricCard({ 
+  label, 
+  current, 
+  total, 
+  percent,
+  isLoading 
+}: { 
+  label: string; 
+  current: number; 
+  total: number; 
+  percent: number;
+  isLoading?: boolean;
+}) {
   const getColor = (p: number) => {
     if (p >= 80) return 'text-green-600';
     if (p >= 50) return 'text-yellow-600';
@@ -31,6 +35,16 @@ function MetricCard({ label, current, total, percent }: { label: string; current
     return 'bg-red-100 dark:bg-red-900/20';
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-3 rounded-lg bg-muted">
+        <Skeleton className="h-3 w-16 mb-2" />
+        <Skeleton className="h-6 w-12 mb-1" />
+        <Skeleton className="h-3 w-20" />
+      </div>
+    );
+  }
+
   return (
     <div className={`p-3 rounded-lg ${getBgColor(percent)}`}>
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
@@ -43,24 +57,52 @@ function MetricCard({ label, current, total, percent }: { label: string; current
 }
 
 export function EnrichmentDashboard() {
+  const { overall, lowColorBrands, lowTdsBrands, regionalBrands, isLoading, refresh, isFetching } = useEnrichmentMetrics();
+
+  const metrics = overall ? [
+    { label: 'Color Hex', current: overall.withColorHex, total: overall.total, percent: overall.total > 0 ? (overall.withColorHex / overall.total) * 100 : 0 },
+    { label: 'TDS URLs', current: overall.withTds, total: overall.total, percent: overall.total > 0 ? (overall.withTds / overall.total) * 100 : 0 },
+    { label: 'EUR Price', current: overall.withEur, total: overall.total, percent: overall.total > 0 ? (overall.withEur / overall.total) * 100 : 0 },
+    { label: 'GBP Price', current: overall.withGbp, total: overall.total, percent: overall.total > 0 ? (overall.withGbp / overall.total) * 100 : 0 },
+    { label: 'CAD Price', current: overall.withCad, total: overall.total, percent: overall.total > 0 ? (overall.withCad / overall.total) * 100 : 0 },
+    { label: 'AUD Price', current: overall.withAud, total: overall.total, percent: overall.total > 0 ? (overall.withAud / overall.total) * 100 : 0 },
+  ] : [];
+
   return (
     <div className="space-y-6">
       {/* Overview Metrics */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-primary" />
-            <CardTitle>Data Quality Overview</CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              <CardTitle>Data Quality Overview</CardTitle>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refresh}
+              disabled={isFetching}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
           </div>
           <CardDescription>
-            Current enrichment coverage across all filament products
+            Current enrichment coverage across {overall?.total.toLocaleString() || '...'} filament products
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {DATA_QUALITY_METRICS.map(metric => (
-              <MetricCard key={metric.label} {...metric} />
-            ))}
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <MetricCard key={i} label="" current={0} total={0} percent={0} isLoading />
+              ))
+            ) : (
+              metrics.map(metric => (
+                <MetricCard key={metric.label} {...metric} />
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
@@ -105,37 +147,46 @@ export function EnrichmentDashboard() {
             <div className="space-y-2">
               <p className="font-medium flex items-center gap-2">
                 <Palette className="w-4 h-4" />
-                Color Extraction
+                Color Extraction ({lowColorBrands.length} brands &lt;90%)
               </p>
               <ul className="space-y-1 text-muted-foreground">
-                <li>• Push Plastic: 0% → 90%+</li>
-                <li>• Printed Solid: 10% → 90%+</li>
-                <li>• Amolen: 25% → 90%+</li>
-                <li>• SainSmart: 36% → 90%+</li>
+                {isLoading ? (
+                  <li><Skeleton className="h-4 w-32" /></li>
+                ) : (
+                  lowColorBrands.slice(0, 4).map(b => (
+                    <li key={b.brandSlug}>• {b.brandName}: {b.colorCoverage}% → 90%+</li>
+                  ))
+                )}
               </ul>
             </div>
             <div className="space-y-2">
               <p className="font-medium flex items-center gap-2">
                 <FileText className="w-4 h-4" />
-                TDS Discovery
+                TDS Discovery ({lowTdsBrands.length} brands &lt;50%)
               </p>
               <ul className="space-y-1 text-muted-foreground">
-                <li>• 15 brands at 0% coverage</li>
-                <li>• Target: 60%+ overall</li>
-                <li>• Priority: Elegoo (1,127 products)</li>
-                <li>• Uses Firecrawl for scraping</li>
+                {isLoading ? (
+                  <li><Skeleton className="h-4 w-32" /></li>
+                ) : (
+                  lowTdsBrands.slice(0, 4).map(b => (
+                    <li key={b.brandSlug}>• {b.brandName} ({b.totalProducts} products)</li>
+                  ))
+                )}
               </ul>
             </div>
             <div className="space-y-2">
               <p className="font-medium flex items-center gap-2">
                 <Globe className="w-4 h-4" />
-                Regional Pricing
+                Regional Pricing ({regionalBrands.length} brands)
               </p>
               <ul className="space-y-1 text-muted-foreground">
-                <li>• EUR: 10% → 40%+</li>
-                <li>• GBP: 3.7% → 25%+</li>
-                <li>• 7 brands with regional stores</li>
-                <li>• Price validation with FX ratios</li>
+                {isLoading ? (
+                  <li><Skeleton className="h-4 w-32" /></li>
+                ) : (
+                  regionalBrands.slice(0, 4).map(b => (
+                    <li key={b.brandSlug}>• {b.brandName}: {b.supportedRegions.join(', ')}</li>
+                  ))
+                )}
               </ul>
             </div>
           </div>

@@ -5,35 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, Loader2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
 import { useEnrichmentQueue } from '@/hooks/useEnrichmentQueue';
-
-interface BrandTdsStatus {
-  brandSlug: string;
-  brandName: string;
-  totalProducts: number;
-  withTds: number;
-  coverage: number;
-}
-
-// Brands with 0% or low TDS coverage
-const LOW_TDS_BRANDS: BrandTdsStatus[] = [
-  { brandSlug: 'elegoo', brandName: 'Elegoo', totalProducts: 1127, withTds: 0, coverage: 0 },
-  { brandSlug: 'azurefilm', brandName: 'AzureFilm', totalProducts: 181, withTds: 0, coverage: 0 },
-  { brandSlug: 'push-plastic', brandName: 'Push Plastic', totalProducts: 142, withTds: 0, coverage: 0 },
-  { brandSlug: 'filaments-ca', brandName: 'Filaments.ca', totalProducts: 139, withTds: 0, coverage: 0 },
-  { brandSlug: 'geeetech', brandName: 'GEEETECH', totalProducts: 100, withTds: 0, coverage: 0 },
-  { brandSlug: 'sainsmart', brandName: 'SainSmart', totalProducts: 97, withTds: 0, coverage: 0 },
-  { brandSlug: 'polymaker', brandName: 'Polymaker', totalProducts: 91, withTds: 0, coverage: 0 },
-  { brandSlug: 'anycubic', brandName: 'Anycubic', totalProducts: 80, withTds: 0, coverage: 0 },
-  { brandSlug: 'kingroon', brandName: 'Kingroon', totalProducts: 53, withTds: 0, coverage: 0 },
-  { brandSlug: 'amolen', brandName: 'Amolen', totalProducts: 105, withTds: 0, coverage: 0 },
-];
+import { useEnrichmentMetrics } from '@/hooks/useEnrichmentMetrics';
 
 export function TdsDiscoveryPanel() {
   const [dryRun, setDryRun] = useState(true);
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const { runSingle, runQueue, state, isRunning } = useEnrichmentQueue();
+  const { lowTdsBrands, isLoading, refresh } = useEnrichmentMetrics();
 
   const toggleBrand = (slug: string) => {
     setSelectedBrands(prev => {
@@ -49,6 +30,7 @@ export function TdsDiscoveryPanel() {
 
   const handleDiscoverSingle = async (brandSlug: string) => {
     await runSingle({ type: 'tds-discovery', brandSlug, dryRun });
+    if (!dryRun) refresh();
   };
 
   const handleDiscoverSelected = async () => {
@@ -58,15 +40,17 @@ export function TdsDiscoveryPanel() {
       dryRun,
     }));
     await runQueue(ops);
+    if (!dryRun) refresh();
   };
 
   const handleDiscoverAll = async () => {
-    const ops = LOW_TDS_BRANDS.map(b => ({
+    const ops = lowTdsBrands.map(b => ({
       type: 'tds-discovery' as const,
       brandSlug: b.brandSlug,
       dryRun,
     }));
     await runQueue(ops);
+    if (!dryRun) refresh();
   };
 
   const getResultForBrand = (slug: string) => {
@@ -94,7 +78,7 @@ export function TdsDiscoveryPanel() {
           </div>
         </div>
         <CardDescription>
-          Discover Technical Data Sheet URLs for brands with 0% TDS coverage
+          Discover Technical Data Sheet URLs for {lowTdsBrands.length} brands with &lt;50% TDS coverage
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -112,63 +96,80 @@ export function TdsDiscoveryPanel() {
         )}
 
         <div className="space-y-2 max-h-[400px] overflow-y-auto">
-          {LOW_TDS_BRANDS.map(brand => {
-            const result = getResultForBrand(brand.brandSlug);
-            const isProcessing = isRunning && 
-              state.currentOperation?.type === 'tds-discovery' && 
-              state.currentOperation.brandSlug === brand.brandSlug;
-
-            return (
-              <div
-                key={brand.brandSlug}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedBrands.has(brand.brandSlug)}
-                    onChange={() => toggleBrand(brand.brandSlug)}
-                    className="rounded"
-                    disabled={isRunning}
-                  />
+                  <Skeleton className="w-4 h-4" />
                   <div>
-                    <p className="font-medium">{brand.brandName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {brand.withTds}/{brand.totalProducts} products with TDS
-                    </p>
+                    <Skeleton className="h-4 w-24 mb-1" />
+                    <Skeleton className="h-3 w-32" />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {result && (
-                    result.success ? (
-                      <Badge variant="default" className="bg-green-600">
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        {result.details?.discovered || 0} found
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive">
-                        <XCircle className="w-3 h-3 mr-1" />
-                        Failed
-                      </Badge>
-                    )
-                  )}
-                  <Badge variant="destructive">0%</Badge>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDiscoverSingle(brand.brandSlug)}
-                    disabled={isRunning}
-                  >
-                    {isProcessing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      'Discover'
-                    )}
-                  </Button>
-                </div>
+                <Skeleton className="w-16 h-8" />
               </div>
-            );
-          })}
+            ))
+          ) : (
+            lowTdsBrands.map(brand => {
+              const result = getResultForBrand(brand.brandSlug);
+              const isProcessing = isRunning && 
+                state.currentOperation?.type === 'tds-discovery' && 
+                state.currentOperation.brandSlug === brand.brandSlug;
+
+              return (
+                <div
+                  key={brand.brandSlug}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedBrands.has(brand.brandSlug)}
+                      onChange={() => toggleBrand(brand.brandSlug)}
+                      className="rounded"
+                      disabled={isRunning}
+                    />
+                    <div>
+                      <p className="font-medium">{brand.brandName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {brand.withTds}/{brand.totalProducts} products with TDS ({brand.tdsCoverage}%)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {result && (
+                      result.success ? (
+                        <Badge variant="default" className="bg-green-600">
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          {result.details?.discovered || 0} found
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive">
+                          <XCircle className="w-3 h-3 mr-1" />
+                          Failed
+                        </Badge>
+                      )
+                    )}
+                    <Badge variant={brand.tdsCoverage === 0 ? 'destructive' : brand.tdsCoverage < 25 ? 'secondary' : 'outline'}>
+                      {brand.tdsCoverage}%
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDiscoverSingle(brand.brandSlug)}
+                      disabled={isRunning}
+                    >
+                      {isProcessing ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'Discover'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         <div className="flex gap-2 pt-2 border-t">
@@ -181,7 +182,7 @@ export function TdsDiscoveryPanel() {
           </Button>
           <Button
             onClick={handleDiscoverAll}
-            disabled={isRunning}
+            disabled={isRunning || lowTdsBrands.length === 0}
           >
             {isRunning ? (
               <>
@@ -191,7 +192,7 @@ export function TdsDiscoveryPanel() {
             ) : (
               <>
                 <FileText className="w-4 h-4 mr-2" />
-                Discover All ({LOW_TDS_BRANDS.length} brands)
+                Discover All ({lowTdsBrands.length} brands)
               </>
             )}
           </Button>
