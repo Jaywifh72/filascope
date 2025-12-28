@@ -6,19 +6,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Globe, Loader2, CheckCircle2, XCircle, DollarSign } from 'lucide-react';
 import { useEnrichmentQueue } from '@/hooks/useEnrichmentQueue';
-
-interface BrandRegionalStatus {
-  brandSlug: string;
-  brandName: string;
-  totalProducts: number;
-  supportedRegions: string[];
-  eurCoverage: number;
-  gbpCoverage: number;
-  cadCoverage: number;
-  audCoverage: number;
-}
+import { useEnrichmentMetrics } from '@/hooks/useEnrichmentMetrics';
 
 const REGION_OPTIONS = [
   { id: 'EU', label: 'Europe (EUR)', currency: '€' },
@@ -27,22 +18,12 @@ const REGION_OPTIONS = [
   { id: 'AU', label: 'Australia (AUD)', currency: 'A$' },
 ];
 
-// Brands with supported regions but low regional pricing coverage
-const REGIONAL_BRANDS: BrandRegionalStatus[] = [
-  { brandSlug: 'sunlu', brandName: 'Sunlu', totalProducts: 144, supportedRegions: ['EU'], eurCoverage: 0, gbpCoverage: 0, cadCoverage: 0, audCoverage: 0 },
-  { brandSlug: 'polymaker', brandName: 'Polymaker', totalProducts: 91, supportedRegions: ['EU'], eurCoverage: 0, gbpCoverage: 0, cadCoverage: 0, audCoverage: 0 },
-  { brandSlug: 'anycubic', brandName: 'Anycubic', totalProducts: 80, supportedRegions: ['CA', 'UK', 'EU', 'AU'], eurCoverage: 0, gbpCoverage: 0, cadCoverage: 0, audCoverage: 0 },
-  { brandSlug: 'kingroon', brandName: 'Kingroon', totalProducts: 53, supportedRegions: ['EU'], eurCoverage: 0, gbpCoverage: 0, cadCoverage: 0, audCoverage: 0 },
-  { brandSlug: 'creality', brandName: 'Creality', totalProducts: 16, supportedRegions: ['CA', 'UK', 'EU', 'AU'], eurCoverage: 0, gbpCoverage: 0, cadCoverage: 0, audCoverage: 0 },
-  { brandSlug: 'sovol', brandName: 'Sovol', totalProducts: 11, supportedRegions: ['EU'], eurCoverage: 0, gbpCoverage: 0, cadCoverage: 0, audCoverage: 0 },
-  { brandSlug: 'elegoo', brandName: 'Elegoo', totalProducts: 1127, supportedRegions: ['UK'], eurCoverage: 31, gbpCoverage: 0, cadCoverage: 75, audCoverage: 71 },
-];
-
 export function RegionalPricingPanel() {
   const [dryRun, setDryRun] = useState(true);
   const [selectedRegions, setSelectedRegions] = useState<Set<string>>(new Set(['EU']));
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const { runSingle, runQueue, state, isRunning } = useEnrichmentQueue();
+  const { regionalBrands, isLoading, refresh } = useEnrichmentMetrics();
 
   const toggleRegion = (regionId: string) => {
     setSelectedRegions(prev => {
@@ -69,7 +50,7 @@ export function RegionalPricingPanel() {
   };
 
   const handleSyncSingle = async (brandSlug: string) => {
-    const brand = REGIONAL_BRANDS.find(b => b.brandSlug === brandSlug);
+    const brand = regionalBrands.find(b => b.brandSlug === brandSlug);
     if (!brand) return;
     
     // Use selected regions that are also supported by this brand
@@ -93,11 +74,12 @@ export function RegionalPricingPanel() {
         dryRun 
       });
     }
+    if (!dryRun) refresh();
   };
 
   const handleSyncSelected = async () => {
     const ops = Array.from(selectedBrands).map(brandSlug => {
-      const brand = REGIONAL_BRANDS.find(b => b.brandSlug === brandSlug);
+      const brand = regionalBrands.find(b => b.brandSlug === brandSlug);
       const regionsToSync = Array.from(selectedRegions).filter(r => 
         brand?.supportedRegions.includes(r)
       );
@@ -109,16 +91,18 @@ export function RegionalPricingPanel() {
       };
     });
     await runQueue(ops);
+    if (!dryRun) refresh();
   };
 
   const handleSyncAll = async () => {
-    const ops = REGIONAL_BRANDS.map(brand => ({
+    const ops = regionalBrands.map(brand => ({
       type: 'regional-pricing' as const,
       brandSlug: brand.brandSlug,
       regions: brand.supportedRegions,
       dryRun,
     }));
     await runQueue(ops);
+    if (!dryRun) refresh();
   };
 
   const getResultForBrand = (slug: string) => {
@@ -152,7 +136,7 @@ export function RegionalPricingPanel() {
           </div>
         </div>
         <CardDescription>
-          Sync regional prices (EUR, GBP, CAD, AUD) from brand Shopify stores
+          Sync regional prices (EUR, GBP, CAD, AUD) from {regionalBrands.length} brand Shopify stores
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -196,78 +180,103 @@ export function RegionalPricingPanel() {
         )}
 
         <div className="space-y-2 max-h-[350px] overflow-y-auto">
-          {REGIONAL_BRANDS.map(brand => {
-            const result = getResultForBrand(brand.brandSlug);
-            const isProcessing = isRunning && 
-              state.currentOperation?.type === 'regional-pricing' && 
-              state.currentOperation.brandSlug === brand.brandSlug;
-
-            return (
-              <div
-                key={brand.brandSlug}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedBrands.has(brand.brandSlug)}
-                    onChange={() => toggleBrand(brand.brandSlug)}
-                    className="rounded"
-                    disabled={isRunning}
-                  />
+                  <Skeleton className="w-4 h-4" />
                   <div>
-                    <p className="font-medium">{brand.brandName}</p>
-                    <div className="flex gap-1 mt-1">
-                      {brand.supportedRegions.map(r => (
-                        <Badge key={r} variant="outline" className="text-xs py-0">
-                          {r}
-                        </Badge>
-                      ))}
+                    <Skeleton className="h-4 w-24 mb-1" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+                <Skeleton className="w-16 h-8" />
+              </div>
+            ))
+          ) : (
+            regionalBrands.map(brand => {
+              const result = getResultForBrand(brand.brandSlug);
+              const isProcessing = isRunning && 
+                state.currentOperation?.type === 'regional-pricing' && 
+                state.currentOperation.brandSlug === brand.brandSlug;
+
+              return (
+                <div
+                  key={brand.brandSlug}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedBrands.has(brand.brandSlug)}
+                      onChange={() => toggleBrand(brand.brandSlug)}
+                      className="rounded"
+                      disabled={isRunning}
+                    />
+                    <div>
+                      <p className="font-medium">{brand.brandName}</p>
+                      <div className="flex gap-1 mt-1">
+                        {brand.supportedRegions.map(r => (
+                          <Badge key={r} variant="outline" className="text-xs py-0">
+                            {r}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {result && (
-                    result.success ? (
-                      <Badge variant="default" className="bg-green-600">
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        {result.details?.summary?.totalUpdated || 0} updated
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive">
-                        <XCircle className="w-3 h-3 mr-1" />
-                        Failed
-                      </Badge>
-                    )
-                  )}
-                  <div className="hidden md:flex gap-1">
-                    {brand.supportedRegions.includes('EU') && (
-                      <Badge variant={getCoverageColor(brand.eurCoverage)} className="text-xs">
-                        €{brand.eurCoverage}%
-                      </Badge>
+                  <div className="flex items-center gap-2">
+                    {result && (
+                      result.success ? (
+                        <Badge variant="default" className="bg-green-600">
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          {result.details?.summary?.totalUpdated || 0} updated
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive">
+                          <XCircle className="w-3 h-3 mr-1" />
+                          Failed
+                        </Badge>
+                      )
                     )}
-                    {brand.supportedRegions.includes('UK') && (
-                      <Badge variant={getCoverageColor(brand.gbpCoverage)} className="text-xs">
-                        £{brand.gbpCoverage}%
-                      </Badge>
-                    )}
+                    <div className="hidden md:flex gap-1">
+                      {brand.supportedRegions.includes('EU') && (
+                        <Badge variant={getCoverageColor(brand.eurCoverage)} className="text-xs">
+                          €{brand.eurCoverage}%
+                        </Badge>
+                      )}
+                      {brand.supportedRegions.includes('UK') && (
+                        <Badge variant={getCoverageColor(brand.gbpCoverage)} className="text-xs">
+                          £{brand.gbpCoverage}%
+                        </Badge>
+                      )}
+                      {brand.supportedRegions.includes('CA') && (
+                        <Badge variant={getCoverageColor(brand.cadCoverage)} className="text-xs">
+                          C${brand.cadCoverage}%
+                        </Badge>
+                      )}
+                      {brand.supportedRegions.includes('AU') && (
+                        <Badge variant={getCoverageColor(brand.audCoverage)} className="text-xs">
+                          A${brand.audCoverage}%
+                        </Badge>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleSyncSingle(brand.brandSlug)}
+                      disabled={isRunning}
+                    >
+                      {isProcessing ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'Sync'
+                      )}
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleSyncSingle(brand.brandSlug)}
-                    disabled={isRunning}
-                  >
-                    {isProcessing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      'Sync'
-                    )}
-                  </Button>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         <div className="flex gap-2 pt-2 border-t">
@@ -280,7 +289,7 @@ export function RegionalPricingPanel() {
           </Button>
           <Button
             onClick={handleSyncAll}
-            disabled={isRunning}
+            disabled={isRunning || regionalBrands.length === 0}
           >
             {isRunning ? (
               <>
@@ -290,7 +299,7 @@ export function RegionalPricingPanel() {
             ) : (
               <>
                 <DollarSign className="w-4 h-4 mr-2" />
-                Sync All Brands
+                Sync All Brands ({regionalBrands.length})
               </>
             )}
           </Button>
