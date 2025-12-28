@@ -269,3 +269,15 @@ verify_jwt = true
 
 [functions.scrape-creality-tds]
 verify_jwt = true
+
+[functions.scrape-ninjatek-tds]
+verify_jwt = true
+
+[functions.scrape-sainsmart-tds]
+verify_jwt = true
+
+[functions.scrape-azurefilm-tds]
+verify_jwt = true
+
+[functions.scrape-filaments-ca-tds]
+verify_jwt = true
