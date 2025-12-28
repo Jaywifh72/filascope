@@ -31,6 +31,25 @@ export class WooCommerceScraper extends BaseScraper {
 
   async scrapeProduct(url: string): Promise<ScrapedProduct | null> {
     try {
+      // First try JSON endpoint (NinjaTek pattern: /shop/product/?params -> /shop/product/)
+      const baseUrl = url.split('?')[0];
+      const jsonUrl = baseUrl.endsWith('/') ? `${baseUrl.slice(0, -1)}.json` : `${baseUrl}.json`;
+      
+      try {
+        const jsonResponse = await this.fetchWithRetry(jsonUrl, {
+          headers: { Accept: "application/json" },
+        });
+        
+        if (jsonResponse.ok) {
+          const data = await jsonResponse.json();
+          if (data.product) {
+            return this.parseShopifyStyleProduct(data.product, url);
+          }
+        }
+      } catch {
+        // JSON endpoint not available, continue to HTML
+      }
+      
       const response = await this.fetchWithRetry(url);
       if (!response.ok) {
         this.log(`Product not found: ${url}`);
@@ -55,11 +74,107 @@ export class WooCommerceScraper extends BaseScraper {
         return apiProducts;
       }
     } catch (error) {
-      this.log(`API scrape failed, falling back to HTML: ${error}`);
+      this.log(`API scrape failed, trying alternative endpoints: ${error}`);
+    }
+
+    // Try alternative WooCommerce REST API (v3)
+    try {
+      const altApiProducts = await this.scrapeViaAltApi(limit);
+      if (altApiProducts.length > 0) {
+        return altApiProducts;
+      }
+    } catch (error) {
+      this.log(`Alt API scrape failed, falling back to HTML: ${error}`);
     }
 
     // Fallback to HTML scraping
     return this.scrapeViaHtml(limit);
+  }
+
+  /**
+   * Alternative WooCommerce REST API endpoint for sites with disabled Store API
+   */
+  private async scrapeViaAltApi(limit: number): Promise<ScrapedProduct[]> {
+    const products: ScrapedProduct[] = [];
+    let page = 1;
+    const perPage = 100;
+
+    // Try products.json endpoint (Shopify-style, some WC plugins support this)
+    const shopifyStyleUrl = `${this.config.baseUrl}/products.json?limit=${perPage}`;
+    this.log(`Trying Shopify-style endpoint: ${shopifyStyleUrl}`);
+    
+    try {
+      const response = await this.fetchWithRetry(shopifyStyleUrl, {
+        headers: { Accept: "application/json" },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.products && Array.isArray(data.products)) {
+          for (const product of data.products) {
+            if (!this.isFilamentProduct(product.title?.toLowerCase() || '', product.handle?.toLowerCase() || '')) {
+              continue;
+            }
+            const parsed = this.parseShopifyStyleProduct(product, `${this.config.baseUrl}/products/${product.handle}`);
+            if (parsed) {
+              products.push(parsed);
+              if (products.length >= limit) break;
+            }
+          }
+          return products;
+        }
+      }
+    } catch {
+      // Continue to next method
+    }
+
+    return products;
+  }
+
+  /**
+   * Parse Shopify-style product JSON (used by some WooCommerce plugins)
+   */
+  private parseShopifyStyleProduct(product: any, url: string): ScrapedProduct | null {
+    if (!product || !product.title) return null;
+    
+    const variant = product.variants?.[0] || {};
+    const price = this.parsePrice(variant.price);
+    const compareAtPrice = this.parsePrice(variant.compare_at_price);
+    const description = product.body_html || product.description || '';
+    
+    const colorInfo = this.extractColorFromText(product.title);
+    const tdsUrl = findTdsUrl(description);
+    const printSettings = extractPrintSettings(description);
+    const spoolSpecs = extractSpoolSpecs(description, product.title);
+    
+    return {
+      productId: String(product.id),
+      sku: variant.sku || null,
+      title: product.title,
+      price: price ? this.convertToUSD(price) : null,
+      compareAtPrice: compareAtPrice ? this.convertToUSD(compareAtPrice) : null,
+      available: variant.available ?? true,
+      currency: "USD",
+      url,
+      scrapedAt: new Date(),
+      source: `woocommerce-${this.config.vendor.toLowerCase()}`,
+      imageUrl: product.images?.[0]?.src || product.featured_image || null,
+      barcode: variant.barcode || null,
+      description,
+      mpn: variant.sku || null,
+      tdsUrl,
+      colorHex: colorInfo?.hex || null,
+      colorName: colorInfo?.name || null,
+      nozzleTempMin: printSettings?.nozzleTempMin || null,
+      nozzleTempMax: printSettings?.nozzleTempMax || null,
+      bedTempMin: printSettings?.bedTempMin || null,
+      bedTempMax: printSettings?.bedTempMax || null,
+      spoolMaterial: spoolSpecs?.material || null,
+      netWeightG: spoolSpecs?.weightG || null,
+      diameterMm: spoolSpecs?.diameterMm || null,
+      spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
+      spoolWidthMm: spoolSpecs?.widthMm || null,
+    };
   }
 
   private async scrapeViaApi(limit: number): Promise<ScrapedProduct[]> {
@@ -368,43 +483,70 @@ export class WooCommerceScraper extends BaseScraper {
 
   /**
    * Enhanced product image extraction with multiple fallback patterns
+   * Improved for NinjaTek and other WooCommerce stores
    */
   private extractProductImage(html: string): string | null {
     // Priority 1: OG image (most reliable)
     const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
-    if (ogMatch?.[1]) return ogMatch[1];
+    if (ogMatch?.[1] && !ogMatch[1].includes('placeholder')) return ogMatch[1];
+    
+    // Also try reverse order (content before property)
+    const ogMatch2 = html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+    if (ogMatch2?.[1] && !ogMatch2[1].includes('placeholder')) return ogMatch2[1];
 
-    // Priority 2: WooCommerce gallery main image
+    // Priority 2: WooCommerce gallery main image with data-large_image
+    const largeImageAttr = html.match(/data-large_image="([^"]+)"/);
+    if (largeImageAttr?.[1]) return largeImageAttr[1];
+
+    // Priority 3: WooCommerce gallery zoom link
+    const zoomLinkMatch = html.match(/<a[^>]*href="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/i);
+    if (zoomLinkMatch?.[1] && zoomLinkMatch[1].includes('wp-content/uploads')) {
+      return zoomLinkMatch[1];
+    }
+
+    // Priority 4: WooCommerce gallery main image
     const galleryMatch = html.match(/class="[^"]*woocommerce-product-gallery__image[^"]*"[^>]*data-thumb="([^"]+)"/);
     if (galleryMatch?.[1]) return galleryMatch[1];
 
-    // Priority 3: Main product image with flex-active-slide class
+    // Priority 5: Main product image with flex-active-slide class
     const activeSlideMatch = html.match(/class="[^"]*flex-active-slide[^"]*"[^>]*>\s*<img[^>]*src="([^"]+)"/);
     if (activeSlideMatch?.[1]) return activeSlideMatch[1];
 
-    // Priority 4: Featured image
+    // Priority 6: Featured image (wp-post-image)
     const featuredMatch = html.match(/<img[^>]*class="[^"]*wp-post-image[^"]*"[^>]*src="([^"]+)"/);
     if (featuredMatch?.[1]) return featuredMatch[1];
 
-    // Priority 5: Product image from zoom container
+    // Priority 7: Product image from zoom container
     const zoomMatch = html.match(/class="[^"]*woocommerce-product-gallery__wrapper[^"]*"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/);
     if (zoomMatch?.[1]) return zoomMatch[1];
 
-    // Priority 6: Any large image in gallery
+    // Priority 8: NinjaTek-specific patterns (spool images)
+    const ninjatekMatch = html.match(/src="([^"]*(?:ninjatek|spool)[^"]*\.(jpg|jpeg|png|webp)[^"]*)"/i);
+    if (ninjatekMatch?.[1]) return ninjatekMatch[1];
+
+    // Priority 9: Any large image in gallery
     const largeImageMatch = html.match(/<a[^>]*href="([^"]+\.(jpg|jpeg|png|webp))"[^>]*class="[^"]*woocommerce-product-gallery__image[^"]*"/i);
     if (largeImageMatch?.[1]) return largeImageMatch[1];
 
-    // Priority 7: First product-related image
+    // Priority 10: First product-related image
     const imgMatch = html.match(/<img[^>]*class="[^"]*attachment-[^"]*[^>]*src="([^"]+)"/);
     if (imgMatch?.[1]) return imgMatch[1];
 
-    // Priority 8: data-src attribute (lazy loaded images)
+    // Priority 11: data-src attribute (lazy loaded images)
     const lazySrcMatch = html.match(/class="[^"]*wp-post-image[^"]*"[^>]*data-src="([^"]+)"/);
     if (lazySrcMatch?.[1]) return lazySrcMatch[1];
+    
+    // Priority 12: data-lazy-src (common lazy loading)
+    const lazyMatch = html.match(/data-lazy-src="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/i);
+    if (lazyMatch?.[1]) return lazyMatch[1];
 
-    // Priority 9: srcset first image
+    // Priority 13: srcset first image
     const srcsetMatch = html.match(/class="[^"]*wp-post-image[^"]*"[^>]*srcset="([^\s,]+)/);
     if (srcsetMatch?.[1]) return srcsetMatch[1];
+    
+    // Priority 14: Any product image in wp-content/uploads
+    const wpContentMatch = html.match(/src="([^"]*wp-content\/uploads[^"]*\.(jpg|jpeg|png|webp)[^"]*)"/i);
+    if (wpContentMatch?.[1]) return wpContentMatch[1];
 
     return null;
   }
