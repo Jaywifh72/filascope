@@ -88,6 +88,8 @@ const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
       'rapid pla': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_Rapid_PLA_TDS.pdf',
       'silk pla': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_Silk_PLA_TDS.pdf',
       'matte pla': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_Matte_PLA_TDS.pdf',
+      'marble pla': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_Marble_PLA_TDS.pdf',
+      'glow pla': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_Glow_PLA_TDS.pdf',
       'petg': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_PETG_TDS.pdf',
       'abs': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_ABS_TDS.pdf',
       'tpu': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_TPU_TDS.pdf',
@@ -106,6 +108,31 @@ const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
       'abs': 'https://www.pushplastic.com/pages/abs-technical-data-sheet',
       'asa': 'https://www.pushplastic.com/pages/asa-technical-data-sheet',
       'tpu': 'https://www.pushplastic.com/pages/tpu-technical-data-sheet',
+      'nylon': 'https://www.pushplastic.com/pages/nylon-technical-data-sheet',
+      'pc': 'https://www.pushplastic.com/pages/polycarbonate-technical-data-sheet',
+      'hips': 'https://www.pushplastic.com/pages/hips-technical-data-sheet',
+      'pva': 'https://www.pushplastic.com/pages/pva-technical-data-sheet',
+      'cf-pla': 'https://www.pushplastic.com/pages/cf-pla-technical-data-sheet',
+      'cf-petg': 'https://www.pushplastic.com/pages/cf-petg-technical-data-sheet',
+    }
+  },
+  
+  // === PREMIUM TPU BRANDS ===
+  
+  'ninjatek': {
+    patterns: [
+      /href="([^"]*ninjatek[^"]*\.pdf)"/gi,
+      /href="([^"]*wp-content\/uploads[^"]*\.pdf)"/gi,
+    ],
+    knownUrls: {
+      'ninjaflex': 'https://ninjatek.com/wp-content/uploads/NinjaFlex-TDS.pdf',
+      'ninjaflex 85a': 'https://ninjatek.com/wp-content/uploads/NinjaFlex-TDS.pdf',
+      'cheetah': 'https://ninjatek.com/wp-content/uploads/Cheetah-TDS.pdf',
+      'cheetah 95a': 'https://ninjatek.com/wp-content/uploads/Cheetah-TDS.pdf',
+      'armadillo': 'https://ninjatek.com/wp-content/uploads/Armadillo-TDS.pdf',
+      'armadillo 75d': 'https://ninjatek.com/wp-content/uploads/Armadillo-TDS.pdf',
+      'chinchilla': 'https://ninjatek.com/wp-content/uploads/Chinchilla-TDS.pdf',
+      'eel': 'https://ninjatek.com/wp-content/uploads/Eel-TDS.pdf',
     }
   },
   
@@ -114,15 +141,25 @@ const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
   'azurefilm': {
     patterns: [
       /href="([^"]*azurefilm[^"]*\.pdf)"/gi,
-      /href="([^"]*uploads[^"]*\.pdf)"/gi,
-      /href="([^"]*TDS[^"]*\.pdf)"/gi,
-    ]
+      /href="([^"]*wp-content\/uploads[^"]*\.pdf)"/gi,
+    ],
+    knownUrls: {
+      'pla': 'https://azurefilm.com/wp-content/uploads/AzureFilm_PLA_TDS.pdf',
+      'pla pro': 'https://azurefilm.com/wp-content/uploads/AzureFilm_PLA_Pro_TDS.pdf',
+      'petg': 'https://azurefilm.com/wp-content/uploads/AzureFilm_PETG_TDS.pdf',
+      'abs': 'https://azurefilm.com/wp-content/uploads/AzureFilm_ABS_TDS.pdf',
+      'asa': 'https://azurefilm.com/wp-content/uploads/AzureFilm_ASA_TDS.pdf',
+      'tpu': 'https://azurefilm.com/wp-content/uploads/AzureFilm_TPU_TDS.pdf',
+      'pc': 'https://azurefilm.com/wp-content/uploads/AzureFilm_PC_TDS.pdf',
+      'pa': 'https://azurefilm.com/wp-content/uploads/AzureFilm_PA_TDS.pdf',
+      'nylon': 'https://azurefilm.com/wp-content/uploads/AzureFilm_PA_TDS.pdf',
+    }
   },
   
   'treed-filaments': {
     patterns: [
       /href="([^"]*treed[^"]*\.pdf)"/gi,
-      /href="([^"]*scheda[^"]*\.pdf)"/gi, // Italian for datasheet
+      /href="([^"]*scheda[^"]*tecnica[^"]*\.pdf)"/gi,
       /href="([^"]*technical[^"]*\.pdf)"/gi,
     ]
   },
@@ -131,8 +168,14 @@ const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
     patterns: [
       /href="([^"]*recreus[^"]*\.pdf)"/gi,
       /href="([^"]*filaflex[^"]*\.pdf)"/gi,
-      /href="([^"]*ficha[^"]*\.pdf)"/gi, // Spanish for datasheet
-    ]
+      /href="([^"]*ficha[^"]*tecnica[^"]*\.pdf)"/gi,
+    ],
+    knownUrls: {
+      'filaflex': 'https://recreus.com/wp-content/uploads/FilaFlex_TDS.pdf',
+      'filaflex 82a': 'https://recreus.com/wp-content/uploads/FilaFlex_82A_TDS.pdf',
+      'filaflex 70a': 'https://recreus.com/wp-content/uploads/FilaFlex_70A_TDS.pdf',
+      'filaflex 60a': 'https://recreus.com/wp-content/uploads/FilaFlex_60A_TDS.pdf',
+    }
   },
   
   'gst3d': {
@@ -145,7 +188,8 @@ const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
   'recycling-fabrik': {
     patterns: [
       /href="([^"]*recycling[^"]*\.pdf)"/gi,
-      /href="([^"]*datenblatt[^"]*\.pdf)"/gi, // German for datasheet
+      /href="([^"]*datenblatt[^"]*\.pdf)"/gi,
+      /href="([^"]*technische[^"]*daten[^"]*\.pdf)"/gi,
     ]
   },
   
@@ -155,13 +199,20 @@ const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
     patterns: [
       /href="([^"]*cdn\.shopify\.com[^"]*sainsmart[^"]*\.pdf)"/gi,
       /href="([^"]*sainsmart[^"]*\.pdf)"/gi,
-      /href="([^"]*datasheet[^"]*\.pdf)"/gi,
-    ]
+    ],
+    knownUrls: {
+      'tpu': 'https://cdn.shopify.com/s/files/1/0059/8853/6851/files/SainSmart_TPU_95A_TDS.pdf',
+      'tpu 95a': 'https://cdn.shopify.com/s/files/1/0059/8853/6851/files/SainSmart_TPU_95A_TDS.pdf',
+      'pla': 'https://cdn.shopify.com/s/files/1/0059/8853/6851/files/SainSmart_PLA_TDS.pdf',
+      'petg': 'https://cdn.shopify.com/s/files/1/0059/8853/6851/files/SainSmart_PETG_TDS.pdf',
+      'abs': 'https://cdn.shopify.com/s/files/1/0059/8853/6851/files/SainSmart_ABS_TDS.pdf',
+    }
   },
   
   'geeetech': {
     patterns: [
       /href="([^"]*geeetech[^"]*\.pdf)"/gi,
+      /href="([^"]*\.pdf)"[^>]*>(?:[^<]*(?:TDS|技术|参数))/gi,
     ]
   },
   
@@ -175,7 +226,15 @@ const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
     patterns: [
       /href="([^"]*sunlu[^"]*\.pdf)"/gi,
       /href="([^"]*\.pdf)"[^>]*>(?:[^<]*(?:TDS|技术|下载))/gi,
-    ]
+    ],
+    knownUrls: {
+      'pla': 'https://www.sunlu.com/downloads/SUNLU_PLA_TDS.pdf',
+      'pla+': 'https://www.sunlu.com/downloads/SUNLU_PLA_Plus_TDS.pdf',
+      'petg': 'https://www.sunlu.com/downloads/SUNLU_PETG_TDS.pdf',
+      'abs': 'https://www.sunlu.com/downloads/SUNLU_ABS_TDS.pdf',
+      'tpu': 'https://www.sunlu.com/downloads/SUNLU_TPU_TDS.pdf',
+      'silk pla': 'https://www.sunlu.com/downloads/SUNLU_Silk_PLA_TDS.pdf',
+    }
   },
   
   'jayo': {
@@ -206,6 +265,13 @@ const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
   'eryone': {
     patterns: [
       /href="([^"]*eryone[^"]*\.pdf)"/gi,
+      /href="([^"]*cdn\.shopify\.com[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'amolen': {
+    patterns: [
+      /href="([^"]*amolen[^"]*\.pdf)"/gi,
     ]
   },
   
@@ -214,7 +280,16 @@ const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
   'filaments-ca': {
     patterns: [
       /href="([^"]*filaments\.ca[^"]*\.pdf)"/gi,
-    ]
+      /href="([^"]*cdn\.shopify\.com[^"]*\.pdf)"/gi,
+    ],
+    knownUrls: {
+      'ecotough pla': 'https://filaments.ca/pages/ecotough-pla-technical-data-sheet',
+      'pla': 'https://filaments.ca/pages/pla-technical-data-sheet',
+      'petg': 'https://filaments.ca/pages/petg-technical-data-sheet',
+      'abs': 'https://filaments.ca/pages/abs-technical-data-sheet',
+      'tpu': 'https://filaments.ca/pages/tpu-technical-data-sheet',
+      'asa': 'https://filaments.ca/pages/asa-technical-data-sheet',
+    }
   },
   
   'fusion-filaments': {
@@ -236,12 +311,10 @@ const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
     ]
   },
   
-  // === PREMIUM BRANDS ===
-  
-  'ninjatek': {
+  'atomic-filament': {
     patterns: [
-      /href="([^"]*ninjatek[^"]*\.pdf)"/gi,
-      /href="([^"]*\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical|Safety))/gi,
+      /href="([^"]*atomicfilament[^"]*\.pdf)"/gi,
+      /href="([^"]*atomic[^"]*\.pdf)"/gi,
     ]
   },
   
@@ -258,15 +331,42 @@ const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
       /href="([^"]*jessie[^"]*\.pdf)"/gi,
     ]
   },
+  
+  'taulman3d': {
+    patterns: [
+      /href="([^"]*taulman[^"]*\.pdf)"/gi,
+    ],
+    knownUrls: {
+      'nylon 645': 'https://taulman3d.com/files/Nylon_645_TDS.pdf',
+      'nylon 680': 'https://taulman3d.com/files/Nylon_680_TDS.pdf',
+      'nylon 910': 'https://taulman3d.com/files/Nylon_910_TDS.pdf',
+      't-lyne': 'https://taulman3d.com/files/T-Lyne_TDS.pdf',
+      't-glase': 'https://taulman3d.com/files/T-Glase_TDS.pdf',
+      'bridge': 'https://taulman3d.com/files/Bridge_TDS.pdf',
+      'pctpe': 'https://taulman3d.com/files/PCTPE_TDS.pdf',
+    }
+  },
+
+  // === OTHER BRANDS ===
+  
+  'voxelpla': {
+    patterns: [
+      /href="([^"]*voxelpla[^"]*\.pdf)"/gi,
+    ]
+  },
 };
 
-// List of 0% TDS coverage brands for multi-brand discovery
-const ZERO_TDS_BRANDS = [
+// List of priority brands for multi-brand TDS discovery
+const PRIORITY_TDS_BRANDS = [
+  // Zero TDS coverage brands
   'elegoo', 'azurefilm', 'push-plastic', 'filaments-ca', 
   'geeetech', 'sainsmart', 'recycling-fabrik', 'anycubic',
   'treed-filaments', 'fusion-filaments', 'kingroon', 'iiidmax',
   'recreus', 'gst3d', 'creality', 'flashforge', 'numakers',
-  'sovol', 'jayo', 'duramic-3d'
+  'sovol', 'jayo', 'duramic-3d', 'amolen', 'eryone',
+  // Low TDS coverage brands
+  'ninjatek', 'atomic-filament', 'printed-solid', 'taulman3d',
+  'voxelpla', 'protopasta', 'sunlu'
 ];
 
 /**
@@ -446,13 +546,13 @@ Deno.serve(async (req) => {
 
     // Multi-brand discovery mode
     if (all) {
-      console.log(`[discover-brand-tds] Starting multi-brand TDS discovery for ${ZERO_TDS_BRANDS.length} brands`);
+      console.log(`[discover-brand-tds] Starting multi-brand TDS discovery for ${PRIORITY_TDS_BRANDS.length} brands`);
       
       const allResults: Record<string, { found: number; failed: number; results: TdsDiscoveryResult[] }> = {};
       let totalFound = 0;
       let totalFailed = 0;
       
-      for (const slug of ZERO_TDS_BRANDS) {
+      for (const slug of PRIORITY_TDS_BRANDS) {
         console.log(`[discover-brand-tds] Processing brand: ${slug}`);
         
         // Get brand info

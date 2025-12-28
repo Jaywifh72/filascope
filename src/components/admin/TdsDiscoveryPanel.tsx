@@ -6,24 +6,36 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileText, Loader2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
+import { FileText, Loader2, CheckCircle2, XCircle, ExternalLink, Play } from 'lucide-react';
 import { useEnrichmentQueue } from '@/hooks/useEnrichmentQueue';
 import { useEnrichmentMetrics } from '@/hooks/useEnrichmentMetrics';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+// Brand-specific TDS scrapers
+const BRAND_SPECIFIC_SCRAPERS: Record<string, string> = {
+  'elegoo': 'scrape-elegoo-tds',
+  'anycubic': 'scrape-anycubic-tds',
+  'ninjatek': 'scrape-ninjatek-tds',
+  'sainsmart': 'scrape-sainsmart-tds',
+  'azurefilm': 'scrape-azurefilm-tds',
+  'push-plastic': 'scrape-pushplastic-tds',
+  'filaments-ca': 'scrape-filaments-ca-tds',
+};
 
 export function TdsDiscoveryPanel() {
+  const { toast } = useToast();
   const [dryRun, setDryRun] = useState(true);
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
+  const [specificRunning, setSpecificRunning] = useState<string | null>(null);
+  const [specificResults, setSpecificResults] = useState<Record<string, { found: number; notFound: number }>>({});
   const { runSingle, runQueue, state, isRunning } = useEnrichmentQueue();
   const { lowTdsBrands, isLoading, refresh } = useEnrichmentMetrics();
 
   const toggleBrand = (slug: string) => {
     setSelectedBrands(prev => {
       const next = new Set(prev);
-      if (next.has(slug)) {
-        next.delete(slug);
-      } else {
-        next.add(slug);
-      }
+      next.has(slug) ? next.delete(slug) : next.add(slug);
       return next;
     });
   };
@@ -35,9 +47,7 @@ export function TdsDiscoveryPanel() {
 
   const handleDiscoverSelected = async () => {
     const ops = Array.from(selectedBrands).map(brandSlug => ({
-      type: 'tds-discovery' as const,
-      brandSlug,
-      dryRun,
+      type: 'tds-discovery' as const, brandSlug, dryRun,
     }));
     await runQueue(ops);
     if (!dryRun) refresh();
@@ -45,19 +55,34 @@ export function TdsDiscoveryPanel() {
 
   const handleDiscoverAll = async () => {
     const ops = lowTdsBrands.map(b => ({
-      type: 'tds-discovery' as const,
-      brandSlug: b.brandSlug,
-      dryRun,
+      type: 'tds-discovery' as const, brandSlug: b.brandSlug, dryRun,
     }));
     await runQueue(ops);
     if (!dryRun) refresh();
   };
 
+  const handleRunSpecificScraper = async (brandSlug: string, functionName: string) => {
+    setSpecificRunning(brandSlug);
+    try {
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: { limit: 100, validateUrls: true, scrapePages: true }
+      });
+      if (error) throw error;
+      setSpecificResults(prev => ({
+        ...prev,
+        [brandSlug]: { found: data?.found || 0, notFound: data?.notFound || 0 }
+      }));
+      toast({ title: 'TDS Discovery Complete', description: `Found ${data?.found || 0} TDS URLs for ${brandSlug}` });
+      refresh();
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed', variant: 'destructive' });
+    } finally {
+      setSpecificRunning(null);
+    }
+  };
+
   const getResultForBrand = (slug: string) => {
-    return state.results.find(r => 
-      r.operation.type === 'tds-discovery' && 
-      r.operation.brandSlug === slug
-    );
+    return state.results.find(r => r.operation.type === 'tds-discovery' && r.operation.brandSlug === slug);
   };
 
   return (
@@ -69,11 +94,7 @@ export function TdsDiscoveryPanel() {
             <CardTitle>TDS Discovery</CardTitle>
           </div>
           <div className="flex items-center gap-2">
-            <Switch
-              id="tds-dry-run"
-              checked={dryRun}
-              onCheckedChange={setDryRun}
-            />
+            <Switch id="tds-dry-run" checked={dryRun} onCheckedChange={setDryRun} />
             <Label htmlFor="tds-dry-run" className="text-sm">Dry Run</Label>
           </div>
         </div>
@@ -89,9 +110,7 @@ export function TdsDiscoveryPanel() {
               <span>Discovering TDS for: {state.currentOperation.brandSlug}</span>
             </div>
             <Progress value={(state.currentIndex / state.totalOperations) * 100} />
-            <p className="text-xs text-muted-foreground">
-              {state.currentIndex + 1} of {state.totalOperations} brands
-            </p>
+            <p className="text-xs text-muted-foreground">{state.currentIndex + 1} of {state.totalOperations} brands</p>
           </div>
         )}
 
@@ -99,28 +118,19 @@ export function TdsDiscoveryPanel() {
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="w-4 h-4" />
-                  <div>
-                    <Skeleton className="h-4 w-24 mb-1" />
-                    <Skeleton className="h-3 w-32" />
-                  </div>
-                </div>
+                <Skeleton className="h-4 w-24" />
                 <Skeleton className="w-16 h-8" />
               </div>
             ))
           ) : (
             lowTdsBrands.map(brand => {
               const result = getResultForBrand(brand.brandSlug);
-              const isProcessing = isRunning && 
-                state.currentOperation?.type === 'tds-discovery' && 
-                state.currentOperation.brandSlug === brand.brandSlug;
+              const specificResult = specificResults[brand.brandSlug];
+              const isProcessing = isRunning && state.currentOperation?.brandSlug === brand.brandSlug;
+              const hasSpecificScraper = BRAND_SPECIFIC_SCRAPERS[brand.brandSlug];
 
               return (
-                <div
-                  key={brand.brandSlug}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
+                <div key={brand.brandSlug} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
@@ -132,39 +142,35 @@ export function TdsDiscoveryPanel() {
                     <div>
                       <p className="font-medium">{brand.brandName}</p>
                       <p className="text-xs text-muted-foreground">
-                        {brand.withTds}/{brand.totalProducts} products with TDS ({brand.tdsCoverage}%)
+                        {brand.withTds}/{brand.totalProducts} with TDS ({brand.tdsCoverage}%)
+                        {hasSpecificScraper && <Badge variant="outline" className="ml-2 text-xs">Has Scraper</Badge>}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {result && (
-                      result.success ? (
-                        <Badge variant="default" className="bg-green-600">
-                          <CheckCircle2 className="w-3 h-3 mr-1" />
-                          {result.details?.discovered || 0} found
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive">
-                          <XCircle className="w-3 h-3 mr-1" />
-                          Failed
-                        </Badge>
-                      )
+                    {(result || specificResult) && (
+                      <Badge variant="default" className="bg-green-600">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        {result?.details?.discovered || specificResult?.found || 0} found
+                      </Badge>
                     )}
                     <Badge variant={brand.tdsCoverage === 0 ? 'destructive' : brand.tdsCoverage < 25 ? 'secondary' : 'outline'}>
                       {brand.tdsCoverage}%
                     </Badge>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDiscoverSingle(brand.brandSlug)}
-                      disabled={isRunning}
-                    >
-                      {isProcessing ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        'Discover'
-                      )}
-                    </Button>
+                    {hasSpecificScraper ? (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => handleRunSpecificScraper(brand.brandSlug, hasSpecificScraper)}
+                        disabled={specificRunning !== null || isRunning}
+                      >
+                        {specificRunning === brand.brandSlug ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="outline" onClick={() => handleDiscoverSingle(brand.brandSlug)} disabled={isRunning}>
+                        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Discover'}
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
@@ -173,28 +179,11 @@ export function TdsDiscoveryPanel() {
         </div>
 
         <div className="flex gap-2 pt-2 border-t">
-          <Button
-            onClick={handleDiscoverSelected}
-            disabled={isRunning || selectedBrands.size === 0}
-            variant="secondary"
-          >
+          <Button onClick={handleDiscoverSelected} disabled={isRunning || selectedBrands.size === 0} variant="secondary">
             Discover Selected ({selectedBrands.size})
           </Button>
-          <Button
-            onClick={handleDiscoverAll}
-            disabled={isRunning || lowTdsBrands.length === 0}
-          >
-            {isRunning ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <FileText className="w-4 h-4 mr-2" />
-                Discover All ({lowTdsBrands.length} brands)
-              </>
-            )}
+          <Button onClick={handleDiscoverAll} disabled={isRunning || lowTdsBrands.length === 0}>
+            {isRunning ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</> : <>Discover All ({lowTdsBrands.length})</>}
           </Button>
         </div>
 
@@ -204,17 +193,10 @@ export function TdsDiscoveryPanel() {
             <div className="space-y-1 text-sm max-h-[200px] overflow-y-auto">
               {state.results.filter(r => r.operation.type === 'tds-discovery').map((result, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  {result.success ? (
-                    <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-                  ) : (
-                    <XCircle className="w-4 h-4 text-destructive shrink-0" />
-                  )}
+                  {result.success ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-destructive" />}
                   <span className="truncate">{result.operation.brandSlug}: {result.message}</span>
                   {result.success && result.details?.discovered > 0 && (
-                    <Badge variant="outline" className="ml-auto shrink-0">
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      {result.details.discovered} URLs
-                    </Badge>
+                    <Badge variant="outline" className="ml-auto"><ExternalLink className="w-3 h-3 mr-1" />{result.details.discovered}</Badge>
                   )}
                 </div>
               ))}
