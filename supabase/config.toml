@@ -260,3 +260,9 @@ verify_jwt = true
 
 [functions.discover-brand-tds]
 verify_jwt = true
+
+[functions.scrape-anycubic-tds]
+verify_jwt = true
+
+[functions.scrape-creality-tds]
+verify_jwt = true
