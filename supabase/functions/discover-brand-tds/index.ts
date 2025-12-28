@@ -28,84 +28,280 @@ const TDS_PATTERNS = [
   /href="(https:\/\/(?:www\.)?dropbox\.com\/[^"]+\.pdf[^"]*)"/gi,
 ];
 
-// Known TDS URL patterns by brand
-const BRAND_TDS_PATTERNS: Record<string, RegExp[]> = {
-  'azurefilm': [
-    /href="([^"]+azurefilm[^"]+\.pdf)"/gi,
-    /href="([^"]+TDS[^"]+\.pdf)"/gi,
-  ],
-  'sainsmart': [
-    /href="([^"]+sainsmart[^"]+\.pdf)"/gi,
-    /href="([^"]+datasheet[^"]+\.pdf)"/gi,
-  ],
-  'anycubic': [
-    /href="([^"]+anycubic[^"]+\.pdf)"/gi,
-    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical|Download))/gi,
-  ],
-  'filaments-ca': [
-    /href="([^"]+filaments\.ca[^"]+\.pdf)"/gi,
-  ],
-  'geeetech': [
-    /href="([^"]+geeetech[^"]+\.pdf)"/gi,
-  ],
-  'kingroon': [
-    /href="([^"]+kingroon[^"]+\.pdf)"/gi,
-  ],
-  'fusion-filaments': [
-    /href="([^"]+fusion[^"]+\.pdf)"/gi,
-  ],
-  'recycling-fabrik': [
-    /href="([^"]+recycling[^"]+\.pdf)"/gi,
-    /href="([^"]+datenblatt[^"]+\.pdf)"/gi, // German for datasheet
-  ],
-  'iiidmax': [
-    /href="([^"]+iiidmax[^"]+\.pdf)"/gi,
-    /href="([^"]+3dmax[^"]+\.pdf)"/gi,
-  ],
-  'gst3d': [
-    /href="([^"]+gst3d[^"]+\.pdf)"/gi,
-  ],
-  'recreus': [
-    /href="([^"]+recreus[^"]+\.pdf)"/gi,
-    /href="([^"]+filaflex[^"]+\.pdf)"/gi,
-  ],
-  'elegoo': [
-    /href="([^"]+elegoo[^"]+\.pdf)"/gi,
-    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical|Datasheet|下载))/gi,
-    /data-url="([^"]+\.pdf)"/gi,
-  ],
-  'push-plastic': [
-    /href="([^"]+pushplastic[^"]+\.pdf)"/gi,
-    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*TDS)/gi,
-  ],
-  'creality': [
-    /href="([^"]+creality[^"]+\.pdf)"/gi,
-    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical|Download))/gi,
-  ],
-  'ninjatek': [
-    /href="([^"]+ninjatek[^"]+\.pdf)"/gi,
-    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical|Safety))/gi,
-  ],
-  'protopasta': [
-    /href="([^"]+protopasta[^"]+\.pdf)"/gi,
-    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:Technical|Safety|Material))/gi,
-  ],
-  'eryone': [
-    /href="([^"]+eryone[^"]+\.pdf)"/gi,
-  ],
-  'sovol': [
-    /href="([^"]+sovol[^"]+\.pdf)"/gi,
-  ],
-  'sunlu': [
-    /href="([^"]+sunlu[^"]+\.pdf)"/gi,
-    /href="([^"]+\.pdf)"[^>]*>(?:[^<]*(?:TDS|技术|下载))/gi,
-  ],
+// Known TDS URL patterns by brand with centralized TDS URLs
+interface BrandTdsConfig {
+  patterns?: RegExp[];
+  knownUrls?: Record<string, string>;
+}
+
+const BRAND_TDS_CONFIGS: Record<string, BrandTdsConfig> = {
+  // === MAJOR BRANDS WITH KNOWN TDS URL PATTERNS ===
+  
+  'anycubic': {
+    patterns: [
+      /href="([^"]*nice-cdn\.com[^"]*\.pdf)"/gi,
+      /href="([^"]*anycubic[^"]*\.pdf)"/gi,
+    ],
+    knownUrls: {
+      'pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_PLA_V3.0.pdf',
+      'pla+': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_PLA_V3.0.pdf',
+      'pla basic': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_PLA_V3.0.pdf',
+      'high speed pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_High_Speed_PLA.pdf',
+      'hs pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_High_Speed_PLA.pdf',
+      'silk pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_SILK_PLA.pdf',
+      'matte pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_Matte_PLA.pdf',
+      'petg': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_PETG.pdf',
+      'abs': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_ABS.pdf',
+      'tpu': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_TPU.pdf',
+      'asa': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_ASA.pdf',
+    }
+  },
+  
+  'creality': {
+    patterns: [
+      /href="([^"]*download\.creality\.com[^"]*\.pdf)"/gi,
+      /href="([^"]*creality[^"]*\.pdf)"/gi,
+    ],
+    knownUrls: {
+      'pla': 'https://download.creality.com/download/filament/TDS_PLA.pdf',
+      'pla+': 'https://download.creality.com/download/filament/TDS_PLA_Plus.pdf',
+      'hyper pla': 'https://download.creality.com/download/filament/TDS_Hyper_PLA.pdf',
+      'petg': 'https://download.creality.com/download/filament/TDS_PETG.pdf',
+      'hyper petg': 'https://download.creality.com/download/filament/TDS_Hyper_PETG.pdf',
+      'abs': 'https://download.creality.com/download/filament/TDS_ABS.pdf',
+      'tpu': 'https://download.creality.com/download/filament/TDS_TPU.pdf',
+      'silk pla': 'https://download.creality.com/download/filament/TDS_Silk_PLA.pdf',
+      'matte pla': 'https://download.creality.com/download/filament/TDS_Matte_PLA.pdf',
+      'asa': 'https://download.creality.com/download/filament/TDS_ASA.pdf',
+    }
+  },
+  
+  'elegoo': {
+    patterns: [
+      /href="([^"]*cdn\.shopify\.com[^"]*elegoo[^"]*\.pdf)"/gi,
+      /href="([^"]*elegoo[^"]*\.pdf)"/gi,
+      /data-url="([^"]+\.pdf)"/gi,
+    ],
+    knownUrls: {
+      'pla': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_PLA_TDS.pdf',
+      'pla+': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_PLA_Plus_TDS.pdf',
+      'rapid pla': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_Rapid_PLA_TDS.pdf',
+      'silk pla': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_Silk_PLA_TDS.pdf',
+      'matte pla': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_Matte_PLA_TDS.pdf',
+      'petg': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_PETG_TDS.pdf',
+      'abs': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_ABS_TDS.pdf',
+      'tpu': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_TPU_TDS.pdf',
+      'asa': 'https://cdn.shopify.com/s/files/1/0533/0523/3813/files/ELEGOO_ASA_TDS.pdf',
+    }
+  },
+  
+  'push-plastic': {
+    patterns: [
+      /href="([^"]*pushplastic[^"]*\.pdf)"/gi,
+      /href="([^"]*\.pdf)"[^>]*>(?:[^<]*TDS)/gi,
+    ],
+    knownUrls: {
+      'pla': 'https://www.pushplastic.com/pages/pla-technical-data-sheet',
+      'petg': 'https://www.pushplastic.com/pages/petg-technical-data-sheet',
+      'abs': 'https://www.pushplastic.com/pages/abs-technical-data-sheet',
+      'asa': 'https://www.pushplastic.com/pages/asa-technical-data-sheet',
+      'tpu': 'https://www.pushplastic.com/pages/tpu-technical-data-sheet',
+    }
+  },
+  
+  // === EUROPEAN BRANDS ===
+  
+  'azurefilm': {
+    patterns: [
+      /href="([^"]*azurefilm[^"]*\.pdf)"/gi,
+      /href="([^"]*uploads[^"]*\.pdf)"/gi,
+      /href="([^"]*TDS[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'treed-filaments': {
+    patterns: [
+      /href="([^"]*treed[^"]*\.pdf)"/gi,
+      /href="([^"]*scheda[^"]*\.pdf)"/gi, // Italian for datasheet
+      /href="([^"]*technical[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'recreus': {
+    patterns: [
+      /href="([^"]*recreus[^"]*\.pdf)"/gi,
+      /href="([^"]*filaflex[^"]*\.pdf)"/gi,
+      /href="([^"]*ficha[^"]*\.pdf)"/gi, // Spanish for datasheet
+    ]
+  },
+  
+  'gst3d': {
+    patterns: [
+      /href="([^"]*gst3d[^"]*\.pdf)"/gi,
+      /href="([^"]*ficha[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'recycling-fabrik': {
+    patterns: [
+      /href="([^"]*recycling[^"]*\.pdf)"/gi,
+      /href="([^"]*datenblatt[^"]*\.pdf)"/gi, // German for datasheet
+    ]
+  },
+  
+  // === CHINESE BRANDS ===
+  
+  'sainsmart': {
+    patterns: [
+      /href="([^"]*cdn\.shopify\.com[^"]*sainsmart[^"]*\.pdf)"/gi,
+      /href="([^"]*sainsmart[^"]*\.pdf)"/gi,
+      /href="([^"]*datasheet[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'geeetech': {
+    patterns: [
+      /href="([^"]*geeetech[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'kingroon': {
+    patterns: [
+      /href="([^"]*kingroon[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'sunlu': {
+    patterns: [
+      /href="([^"]*sunlu[^"]*\.pdf)"/gi,
+      /href="([^"]*\.pdf)"[^>]*>(?:[^<]*(?:TDS|技术|下载))/gi,
+    ]
+  },
+  
+  'jayo': {
+    patterns: [
+      /href="([^"]*jayo[^"]*\.pdf)"/gi,
+      /href="([^"]*\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical))/gi,
+    ]
+  },
+  
+  'duramic-3d': {
+    patterns: [
+      /href="([^"]*duramic[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'sovol': {
+    patterns: [
+      /href="([^"]*sovol[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'flashforge': {
+    patterns: [
+      /href="([^"]*flashforge[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'eryone': {
+    patterns: [
+      /href="([^"]*eryone[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  // === NORTH AMERICAN BRANDS ===
+  
+  'filaments-ca': {
+    patterns: [
+      /href="([^"]*filaments\.ca[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'fusion-filaments': {
+    patterns: [
+      /href="([^"]*fusion[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'iiidmax': {
+    patterns: [
+      /href="([^"]*iiidmax[^"]*\.pdf)"/gi,
+      /href="([^"]*3dmax[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  'numakers': {
+    patterns: [
+      /href="([^"]*numakers[^"]*\.pdf)"/gi,
+    ]
+  },
+  
+  // === PREMIUM BRANDS ===
+  
+  'ninjatek': {
+    patterns: [
+      /href="([^"]*ninjatek[^"]*\.pdf)"/gi,
+      /href="([^"]*\.pdf)"[^>]*>(?:[^<]*(?:TDS|Technical|Safety))/gi,
+    ]
+  },
+  
+  'protopasta': {
+    patterns: [
+      /href="([^"]*protopasta[^"]*\.pdf)"/gi,
+      /href="([^"]*\.pdf)"[^>]*>(?:[^<]*(?:Technical|Safety|Material))/gi,
+    ]
+  },
+  
+  'printed-solid': {
+    patterns: [
+      /href="([^"]*printedsolid[^"]*\.pdf)"/gi,
+      /href="([^"]*jessie[^"]*\.pdf)"/gi,
+    ]
+  },
 };
+
+// List of 0% TDS coverage brands for multi-brand discovery
+const ZERO_TDS_BRANDS = [
+  'elegoo', 'azurefilm', 'push-plastic', 'filaments-ca', 
+  'geeetech', 'sainsmart', 'recycling-fabrik', 'anycubic',
+  'treed-filaments', 'fusion-filaments', 'kingroon', 'iiidmax',
+  'recreus', 'gst3d', 'creality', 'flashforge', 'numakers',
+  'sovol', 'jayo', 'duramic-3d'
+];
+
+/**
+ * Try to match product title to known TDS URL for a brand
+ */
+function matchKnownTdsUrl(productTitle: string, brandSlug: string): string | null {
+  const config = BRAND_TDS_CONFIGS[brandSlug];
+  if (!config?.knownUrls) return null;
+  
+  const titleLower = productTitle.toLowerCase();
+  
+  // Sort by pattern length (longest first) for most specific match
+  const sortedPatterns = Object.entries(config.knownUrls)
+    .sort((a, b) => b[0].length - a[0].length);
+  
+  for (const [pattern, url] of sortedPatterns) {
+    if (titleLower.includes(pattern)) {
+      return url;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Get brand-specific regex patterns
+ */
+function getBrandPatterns(brandSlug: string): RegExp[] {
+  return BRAND_TDS_CONFIGS[brandSlug]?.patterns || [];
+}
 
 // Extract TDS URL from HTML content
 function extractTdsUrl(html: string, brandSlug: string, baseUrl: string): string | null {
   // First try brand-specific patterns
-  const brandPatterns = BRAND_TDS_PATTERNS[brandSlug] || [];
+  const brandPatterns = getBrandPatterns(brandSlug);
   for (const pattern of brandPatterns) {
     const matches = html.matchAll(new RegExp(pattern.source, pattern.flags));
     for (const match of matches) {
@@ -148,7 +344,6 @@ function extractTdsUrl(html: string, brandSlug: string, baseUrl: string): string
       try {
         const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
         const data = JSON.parse(jsonContent);
-        // Look for document URLs in various places
         const documentUrl = findDocumentInJsonLd(data);
         if (documentUrl) return documentUrl;
       } catch {}
@@ -170,7 +365,7 @@ function isValidTdsUrl(url: string): boolean {
   // Exclude common non-TDS PDFs
   const excludePatterns = [
     'invoice', 'order', 'receipt', 'manual', 'guide', 'instruction',
-    'warranty', 'terms', 'privacy', 'cookie', 'return'
+    'warranty', 'terms', 'privacy', 'cookie', 'return', 'sds', 'safety'
   ];
   
   for (const exclude of excludePatterns) {
@@ -198,13 +393,11 @@ function findDocumentInJsonLd(data: any): string | null {
   }
   
   if (typeof data === 'object') {
-    // Check common document fields
     for (const key of ['document', 'datasheet', 'technicalDocument', 'specification', 'pdf', 'url']) {
       if (data[key] && typeof data[key] === 'string' && data[key].includes('.pdf')) {
         return data[key];
       }
     }
-    // Recurse into nested objects
     for (const value of Object.values(data)) {
       const result = findDocumentInJsonLd(value);
       if (result) return result;
@@ -234,20 +427,174 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    const { brandSlug, limit = 50, dryRun = true, validateUrls = false } = await req.json();
-
-    if (!brandSlug) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'brandSlug is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const { 
+      brandSlug, 
+      limit = 50, 
+      dryRun = true, 
+      validateUrls = false,
+      all = false,  // Multi-brand discovery mode
+      limitPerBrand = 25  // Limit per brand in multi-brand mode
+    } = await req.json();
 
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
     if (!firecrawlKey) {
       return new Response(
         JSON.stringify({ success: false, error: 'FIRECRAWL_API_KEY not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Multi-brand discovery mode
+    if (all) {
+      console.log(`[discover-brand-tds] Starting multi-brand TDS discovery for ${ZERO_TDS_BRANDS.length} brands`);
+      
+      const allResults: Record<string, { found: number; failed: number; results: TdsDiscoveryResult[] }> = {};
+      let totalFound = 0;
+      let totalFailed = 0;
+      
+      for (const slug of ZERO_TDS_BRANDS) {
+        console.log(`[discover-brand-tds] Processing brand: ${slug}`);
+        
+        // Get brand info
+        const { data: brand } = await supabase
+          .from('automated_brands')
+          .select('brand_name, base_url')
+          .eq('brand_slug', slug)
+          .single();
+        
+        if (!brand) {
+          console.log(`[discover-brand-tds] Brand not found: ${slug}`);
+          continue;
+        }
+        
+        // Get filaments missing TDS
+        const { data: filaments } = await supabase
+          .from('filaments')
+          .select('id, product_title, product_url')
+          .ilike('vendor', brand.brand_name)
+          .is('tds_url', null)
+          .not('product_url', 'is', null)
+          .limit(limitPerBrand);
+        
+        if (!filaments?.length) {
+          console.log(`[discover-brand-tds] No filaments needing TDS for ${slug}`);
+          continue;
+        }
+        
+        const brandResults: TdsDiscoveryResult[] = [];
+        let brandFound = 0;
+        let brandFailed = 0;
+        
+        for (const filament of filaments) {
+          const result: TdsDiscoveryResult = {
+            filamentId: filament.id,
+            productTitle: filament.product_title,
+            productUrl: filament.product_url,
+            tdsUrl: null,
+            source: 'none',
+            success: false,
+          };
+          
+          // Step 1: Try known TDS URL patterns (no API call needed)
+          const knownUrl = matchKnownTdsUrl(filament.product_title, slug);
+          if (knownUrl) {
+            if (validateUrls) {
+              const isValid = await validateTdsUrl(knownUrl);
+              if (isValid) {
+                result.tdsUrl = knownUrl;
+                result.source = 'known_pattern';
+              }
+            } else {
+              result.tdsUrl = knownUrl;
+              result.source = 'known_pattern';
+            }
+          }
+          
+          // Step 2: Scrape product page if no known URL found
+          if (!result.tdsUrl && filament.product_url) {
+            try {
+              const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${firecrawlKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  url: filament.product_url,
+                  formats: ['html'],
+                  onlyMainContent: false,
+                }),
+              });
+
+              if (scrapeResponse.ok) {
+                const scrapeData = await scrapeResponse.json();
+                const html = scrapeData.data?.html || '';
+                const tdsUrl = extractTdsUrl(html, slug, brand.base_url);
+                
+                if (tdsUrl) {
+                  if (validateUrls) {
+                    const isValid = await validateTdsUrl(tdsUrl);
+                    if (isValid) {
+                      result.tdsUrl = tdsUrl;
+                      result.source = 'product_page';
+                    }
+                  } else {
+                    result.tdsUrl = tdsUrl;
+                    result.source = 'product_page';
+                  }
+                }
+              }
+              
+              // Rate limiting
+              await new Promise(r => setTimeout(r, 1000));
+            } catch (err) {
+              result.error = err instanceof Error ? err.message : 'Scrape failed';
+            }
+          }
+          
+          if (result.tdsUrl) {
+            result.success = true;
+            brandFound++;
+            totalFound++;
+            
+            if (!dryRun) {
+              await supabase
+                .from('filaments')
+                .update({ tds_url: result.tdsUrl })
+                .eq('id', filament.id);
+            }
+          } else {
+            result.error = result.error || 'No TDS URL found';
+            brandFailed++;
+            totalFailed++;
+          }
+          
+          brandResults.push(result);
+        }
+        
+        allResults[slug] = { found: brandFound, failed: brandFailed, results: brandResults };
+        console.log(`[discover-brand-tds] ${slug}: ${brandFound} found, ${brandFailed} failed`);
+      }
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          mode: 'multi_brand',
+          brandsProcessed: Object.keys(allResults).length,
+          totalFound,
+          totalFailed,
+          dryRun,
+          results: allResults,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Single brand discovery mode
+    if (!brandSlug) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'brandSlug is required (or use all: true for multi-brand mode)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -306,78 +653,87 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      try {
-        // Scrape the product page
-        const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: filament.product_url,
-            formats: ['html'],
-            onlyMainContent: false, // Get full page to find PDF links
-          }),
-        });
-
-        if (!scrapeResponse.ok) {
-          result.error = `Scrape failed: ${scrapeResponse.status}`;
-          results.push(result);
-          failCount++;
-          await new Promise(r => setTimeout(r, 1000));
-          continue;
-        }
-
-        const scrapeData = await scrapeResponse.json();
-        const html = scrapeData.data?.html || '';
-
-        // Extract TDS URL
-        const tdsUrl = extractTdsUrl(html, brandSlug, brand.base_url);
-
-        if (tdsUrl) {
-          result.tdsUrl = tdsUrl;
-          result.source = 'product_page';
-          
-          // Optionally validate the URL
-          if (validateUrls) {
-            const isValid = await validateTdsUrl(tdsUrl);
-            if (!isValid) {
-              result.error = 'TDS URL validation failed';
-              result.tdsUrl = null;
-            }
-          }
-        }
-
-        if (result.tdsUrl) {
-          result.success = true;
-          successCount++;
-
-          // Update database if not dry run
-          if (!dryRun) {
-            const { error: updateError } = await supabase
-              .from('filaments')
-              .update({ tds_url: result.tdsUrl })
-              .eq('id', filament.id);
-
-            if (updateError) {
-              console.error(`[discover-brand-tds] Failed to update filament ${filament.id}:`, updateError);
-            }
+      // Step 1: Try known TDS URL patterns first (no API call)
+      const knownUrl = matchKnownTdsUrl(filament.product_title, brandSlug);
+      if (knownUrl) {
+        if (validateUrls) {
+          const isValid = await validateTdsUrl(knownUrl);
+          if (isValid) {
+            result.tdsUrl = knownUrl;
+            result.source = 'known_pattern';
           }
         } else {
-          result.error = result.error || 'No TDS URL found';
-          failCount++;
+          result.tdsUrl = knownUrl;
+          result.source = 'known_pattern';
         }
+      }
 
-        results.push(result);
+      // Step 2: Scrape product page if no known URL
+      if (!result.tdsUrl) {
+        try {
+          const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${firecrawlKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: filament.product_url,
+              formats: ['html'],
+              onlyMainContent: false,
+            }),
+          });
 
-        // Rate limiting
-        await new Promise(r => setTimeout(r, 1000));
-      } catch (err) {
-        result.error = err instanceof Error ? err.message : 'Unknown error';
-        results.push(result);
+          if (!scrapeResponse.ok) {
+            result.error = `Scrape failed: ${scrapeResponse.status}`;
+            results.push(result);
+            failCount++;
+            await new Promise(r => setTimeout(r, 1000));
+            continue;
+          }
+
+          const scrapeData = await scrapeResponse.json();
+          const html = scrapeData.data?.html || '';
+          const tdsUrl = extractTdsUrl(html, brandSlug, brand.base_url);
+
+          if (tdsUrl) {
+            result.tdsUrl = tdsUrl;
+            result.source = 'product_page';
+            
+            if (validateUrls) {
+              const isValid = await validateTdsUrl(tdsUrl);
+              if (!isValid) {
+                result.error = 'TDS URL validation failed';
+                result.tdsUrl = null;
+              }
+            }
+          }
+        } catch (err) {
+          result.error = err instanceof Error ? err.message : 'Unknown error';
+        }
+      }
+
+      if (result.tdsUrl) {
+        result.success = true;
+        successCount++;
+
+        if (!dryRun) {
+          const { error: updateError } = await supabase
+            .from('filaments')
+            .update({ tds_url: result.tdsUrl })
+            .eq('id', filament.id);
+
+          if (updateError) {
+            console.error(`[discover-brand-tds] Failed to update filament ${filament.id}:`, updateError);
+          }
+        }
+      } else {
+        result.error = result.error || 'No TDS URL found';
         failCount++;
       }
+
+      results.push(result);
+      await new Promise(r => setTimeout(r, 1000));
     }
 
     console.log(`[discover-brand-tds] Complete: ${successCount} found, ${failCount} failed`);
@@ -390,7 +746,7 @@ Deno.serve(async (req) => {
         tdsFound: successCount,
         tdsFailed: failCount,
         dryRun,
-        results: results.slice(0, 100), // Limit response size
+        results: results.slice(0, 100),
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
