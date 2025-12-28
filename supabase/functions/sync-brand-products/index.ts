@@ -20,9 +20,9 @@ const corsHeaders = {
 };
 
 // Regional configuration for multi-region brands
-// Comprehensive list including all brands with regional stores
+// CORRECTED mappings with verified store URLs
 const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
-  // === MAJOR BRANDS WITH REGIONAL SUBDOMAINS ===
+  // === MAJOR BRANDS WITH VERIFIED REGIONAL SUBDOMAINS ===
   'bambu-lab': { 
     US: 'us.store.bambulab.com', 
     CA: 'ca.store.bambulab.com', 
@@ -42,19 +42,21 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     US: 'us.polymaker.com', 
     EU: 'eu.polymaker.com' 
   },
+  // Creality - FIXED: uses store.creality.com prefix for Shopify
   'creality': { 
-    US: 'www.creality.com', 
-    CA: 'ca.creality.com', 
-    UK: 'uk.creality.com', 
-    EU: 'eu.creality.com', 
-    AU: 'au.creality.com' 
+    US: 'store.creality.com', 
+    CA: 'ca.store.creality.com', 
+    UK: 'uk.store.creality.com', 
+    EU: 'eu.store.creality.com', 
+    AU: 'au.store.creality.com' 
   },
+  // Anycubic - FIXED: uses store.anycubic.com prefix for Shopify
   'anycubic': { 
-    US: 'www.anycubic.com', 
-    CA: 'ca.anycubic.com', 
-    UK: 'uk.anycubic.com', 
-    EU: 'eu.anycubic.com', 
-    AU: 'au.anycubic.com' 
+    US: 'store.anycubic.com', 
+    CA: 'ca.store.anycubic.com', 
+    UK: 'uk.store.anycubic.com', 
+    EU: 'eu.store.anycubic.com', 
+    AU: 'au.store.anycubic.com' 
   },
   'qidi': { 
     US: 'qidi3d.com', 
@@ -65,21 +67,28 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     EU: 'eu.flashforge.com' 
   },
   // === ADDITIONAL BRANDS WITH REGIONAL STORES ===
+  // Sunlu - ADDED regional domains
+  'sunlu': {
+    US: 'www.sunlu.com',
+    EU: 'eu.sunlu.com'
+  },
   'eryone': {
     US: 'eryone3d.com',
     EU: 'eu.eryone3d.com'
   },
   'jayo': {
-    US: 'jayo3d.com',
+    US: 'www.jayo3d.com',
     UK: 'uk.jayo3d.com',
     EU: 'eu.jayo3d.com'
   },
+  // Kingroon - FIXED: added www prefix
   'kingroon': {
-    US: 'kingroon.com',
+    US: 'www.kingroon.com',
     EU: 'eu.kingroon.com'
   },
+  // Sovol - FIXED: added www prefix  
   'sovol': {
-    US: 'sovol3d.com',
+    US: 'www.sovol3d.com',
     EU: 'eu.sovol3d.com'
   },
   'artillery': {
@@ -110,11 +119,11 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     US: 'www.voxelab3dp.com',
     EU: 'eu.voxelab3dp.com'
   },
-  // MatterHackers - custom platform
+  // MatterHackers - custom platform (US only)
   'matterhackers': {
     US: 'www.matterhackers.com',
   },
-  // NinjaTek - WooCommerce
+  // NinjaTek - WooCommerce (US only)
   'ninjatek': {
     US: 'ninjatek.com',
   },

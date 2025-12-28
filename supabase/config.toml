@@ -1,5 +1,8 @@
 project_id = "cfqfavmhdbyjzejipiwa"
 
+[functions.sync-regional-prices]
+verify_jwt = true
+
 [functions.fix-filament-url]
 verify_jwt = true
 
