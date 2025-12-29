@@ -4620,6 +4620,16 @@ export type Database = {
         }
         Returns: string
       }
+      find_duplicate_hexes: {
+        Args: { p_vendor: string }
+        Returns: {
+          color_hex: string
+          duplicate_count: number
+          id: string
+          product_line_id: string
+          product_title: string
+        }[]
+      }
       get_brands_needing_scrape: {
         Args: never
         Returns: {

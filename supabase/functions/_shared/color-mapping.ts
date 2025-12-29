@@ -319,6 +319,60 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'matte candy rainbow': 'D81B60',     // Dark Pink
   'matte sunset rainbow': 'E65100',    // Dark Orange
   'matte pastel rainbow': 'AB47BC',    // Medium Purple
+  
+  // ==================== AMOLEN SILK RAINBOW SPECIFIC COLORS ====================
+  // Each silk rainbow variant needs unique hex to prevent grouping
+  'silk rainbow apple': '8BC34A',           // Light green (apple)
+  'silk rainbow bloom': 'E91E63',           // Pink (bloom)
+  'silk rainbow christmas': '4CAF50',       // Green/Red holiday
+  'silk rainbow fusion': '673AB7',          // Deep purple
+  'silk rainbow pink blue': 'FF4081',       // Pink accent
+  'silk rainbow yellow pink blue': 'FFEB3B', // Yellow accent
+  'shiny cosmic rainbow': 'FF5722',         // Deep orange cosmic
+  'silk metal rainbow': '9E9E9E',           // Metallic gray
+  'rainbow apple': '8BC34A',                // Alias without silk prefix
+  'rainbow bloom': 'E91E63',                // Alias without silk prefix
+  'rainbow christmas': '4CAF50',            // Alias without silk prefix
+  'rainbow fusion': '673AB7',               // Alias without silk prefix
+  'rainbow pink blue': 'FF4081',            // Alias without silk prefix
+  'rainbow yellow pink blue': 'FFEB3B',     // Alias without silk prefix
+  'cosmic rainbow': 'FF5722',               // Alias
+  'metal rainbow': '9E9E9E',                // Alias
+  
+  // ==================== AMOLEN SILK SHINY GRADIENT SPECIFIC ====================
+  'black & shiny blue': '1E88E5',
+  'black & shiny fuchsia': 'E91E63',
+  'black & shiny green': '4CAF50',
+  'black & shiny purple': '9C27B0',
+  'black & shiny red': 'F44336',
+  'black & shiny red gold': 'FF5722',
+  'black shiny blue': '1E88E5',             // Alias without &
+  'black shiny fuchsia': 'E91E63',          // Alias without &
+  'black shiny green': '4CAF50',            // Alias without &
+  'black shiny purple': '9C27B0',           // Alias without &
+  'black shiny red': 'F44336',              // Alias without &
+  'black shiny red gold': 'FF5722',         // Alias without &
+  'gold & shiny purple': '7B1FA2',
+  'gold & shiny red': 'D32F2F',
+  'gold shiny purple': '7B1FA2',            // Alias without &
+  'gold shiny red': 'D32F2F',               // Alias without &
+  'gradient azure blue': '039BE5',
+  'gradient blue green purple': '00897B',
+  'azure blue gradient': '039BE5',          // Alias reordered
+  'blue green purple gradient': '00897B',   // Alias reordered
+  
+  // ==================== AMOLEN MATTE SPECIFIC ====================
+  'porcelain white': 'FFFEF0',
+  'quartz white': 'F5F5F5',
+  'lilac purple': 'C8A2C8',
+  'lilac': 'C8A2C8',
+  'wasabi green': '8DB600',
+  'wasabi': '8DB600',
+  'amolen blue': '2196F3',
+  
+  // ==================== AMOLEN SILK BASIC SPECIFIC ====================
+  'baby blue': '87CEEB',
+  
   'earth brown': '5C4033',
   'lavender purple': 'B57EDC',
   'galaxy': '2F1B41',
