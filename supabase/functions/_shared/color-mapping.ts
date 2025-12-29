@@ -181,6 +181,20 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'silk orange': 'FF8C00',
   'silk navy': '2C3E50',
   'silk violet': '8B5CF6',
+  // Amolen Silk variants
+  'silk coffee gold': '6F4E37',
+  'silk mercury silver': 'C0C0C0',
+  'silk baby blue': 'B0E0E6',
+  'silk fluoro yellow': 'CCFF00',
+  'silk cucumber green': '77DD77',
+  'silk neon green': '39FF14',
+  'silk sakura pink': 'FFB7C5',
+  'silk ice blue': 'B0E0E6',
+  'silk black blue': '2563EB',
+  'silk bronze green': '16A34A',
+  'silk red copper': 'B87333',
+  'silk sapphire blue': '0F52BA',
+  'silk gradient aged brass': 'D4AF37',
   
   // ==================== GOLD VARIANTS ====================
   'rose gold': 'B76E79',
