@@ -185,11 +185,14 @@ export const getBaseProductName = (title: string, material?: string | null): str
   //           "PEBA 90A Flexible Filament 1.75mm, 1KG Black" → "PEBA 90A Flexible"
   const amelonProductLines = [
     'Basic-High Speed', 'Basic High Speed', 'Basic Dual Color-High Speed', 'Basic Dual Color',
+    'High Speed',  // For "PLA+ High Speed" products
+    'Crystal-Transparent', 'Crystal Transparent',  // For "PLA Crystal-Transparent" products
     'Matte Triple', 'Matte Dual', 'Matte Basic', 'Matte Rainbow', 'Matte Tri-Color', 'Matte',
     'Silk Dual', 'Silk Triple', 'Silk Rainbow', 'Silk Starry', 'Silk Tri-Color', 'Silk',
     'Marble', 'Marble Texture', 'Sparkle', 'Galaxy', 'Glow in the Dark', 'Glow', 
     'Wood', 'Carbon Fiber', 'Metal',
-    'Transparent', 'Transparent Rainbow', 'Clear',
+    'Transparent Rainbow', 'Transparent',  // "Transparent Rainbow" before "Transparent"
+    'Clear',
     'Basic', '90A Flexible', '95A Flexible', '85A',
   ];
   // Sort by length descending to match longer patterns first
