@@ -1336,6 +1336,7 @@ const Finder = () => {
                       weights: Array.from(group.weights).sort((a, b) => a - b),
                       variantCount: group.variants.length,
                       priceRange: group.priceRange,
+                      anyInStock: group.anyInStock,
                     } : undefined}
                   />
                 );
