@@ -281,3 +281,6 @@ verify_jwt = true
 
 [functions.scrape-filaments-ca-tds]
 verify_jwt = true
+
+[functions.discover-brand-images]
+verify_jwt = true
