@@ -6,6 +6,7 @@ export interface OverallMetrics {
   withColorHex: number;
   withTds: number;
   withImage: number;
+  withFullParsing: number;
   withEur: number;
   withGbp: number;
   withCad: number;
@@ -14,6 +15,7 @@ export interface OverallMetrics {
 }
 
 export interface BrandMetrics {
+  brandId?: string;
   brandSlug: string;
   brandName: string;
   totalProducts: number;
@@ -21,6 +23,7 @@ export interface BrandMetrics {
   withTds: number;
   withImage: number;
   withoutImage: number;
+  withFullParsing: number;
   withEur: number;
   withGbp: number;
   withCad: number;
@@ -29,6 +32,7 @@ export interface BrandMetrics {
   colorCoverage: number;
   tdsCoverage: number;
   imageCoverage: number;
+  parsingCoverage: number;
   eurCoverage: number;
   gbpCoverage: number;
   cadCoverage: number;
@@ -43,14 +47,14 @@ interface EnrichmentMetricsData {
   lowColorBrands: BrandMetrics[];
   lowTdsBrands: BrandMetrics[];
   lowImageBrands: BrandMetrics[];
+  lowParsingBrands: BrandMetrics[];
   regionalBrands: BrandMetrics[];
 }
 
 async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
-  // Fetch overall metrics
   const { data: overallData, error: overallError } = await supabase
     .from('filaments')
-    .select('id, color_hex, tds_url, featured_image, price_eur, price_gbp, price_cad, price_aud, price_jpy');
+    .select('id, color_hex, tds_url, featured_image, nozzle_temp_min_c, drying_temp_c, density_g_cm3, price_eur, price_gbp, price_cad, price_aud, price_jpy');
 
   if (overallError) throw overallError;
 
@@ -59,6 +63,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
     withColorHex: overallData?.filter(f => f.color_hex !== null).length || 0,
     withTds: overallData?.filter(f => f.tds_url !== null).length || 0,
     withImage: overallData?.filter(f => f.featured_image !== null).length || 0,
+    withFullParsing: overallData?.filter(f => f.tds_url && f.nozzle_temp_min_c && f.drying_temp_c && f.density_g_cm3).length || 0,
     withEur: overallData?.filter(f => f.price_eur !== null).length || 0,
     withGbp: overallData?.filter(f => f.price_gbp !== null).length || 0,
     withCad: overallData?.filter(f => f.price_cad !== null).length || 0,
@@ -66,38 +71,33 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
     withJpy: overallData?.filter(f => f.price_jpy !== null).length || 0,
   };
 
-  // Fetch per-brand metrics with supported_regions from automated_brands
   const { data: brandsData, error: brandsError } = await supabase
     .from('automated_brands')
-    .select('brand_slug, brand_name, supported_regions')
+    .select('id, brand_slug, brand_name, supported_regions')
     .eq('is_visible', true);
 
   if (brandsError) throw brandsError;
 
-  // Fetch filament counts per brand
   const { data: filamentsByVendor, error: vendorError } = await supabase
     .from('filaments')
-    .select('vendor, color_hex, tds_url, featured_image, price_eur, price_gbp, price_cad, price_aud, price_jpy');
+    .select('vendor, color_hex, tds_url, featured_image, nozzle_temp_min_c, drying_temp_c, density_g_cm3, price_eur, price_gbp, price_cad, price_aud, price_jpy');
 
   if (vendorError) throw vendorError;
 
-  // Group filaments by vendor (case-insensitive)
   const vendorMap = new Map<string, typeof filamentsByVendor>();
   filamentsByVendor?.forEach(f => {
     const key = f.vendor?.toLowerCase() || '';
-    if (!vendorMap.has(key)) {
-      vendorMap.set(key, []);
-    }
+    if (!vendorMap.has(key)) vendorMap.set(key, []);
     vendorMap.get(key)!.push(f);
   });
 
-  // Build brand metrics
   const brands: BrandMetrics[] = (brandsData || []).map(brand => {
     const vendorFilaments = vendorMap.get(brand.brand_name.toLowerCase()) || [];
     const total = vendorFilaments.length;
     const withColorHex = vendorFilaments.filter(f => f.color_hex !== null).length;
     const withTds = vendorFilaments.filter(f => f.tds_url !== null).length;
     const withImage = vendorFilaments.filter(f => f.featured_image !== null).length;
+    const withFullParsing = vendorFilaments.filter(f => f.tds_url && f.nozzle_temp_min_c && f.drying_temp_c && f.density_g_cm3).length;
     const withEur = vendorFilaments.filter(f => f.price_eur !== null).length;
     const withGbp = vendorFilaments.filter(f => f.price_gbp !== null).length;
     const withCad = vendorFilaments.filter(f => f.price_cad !== null).length;
@@ -105,6 +105,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
     const withJpy = vendorFilaments.filter(f => f.price_jpy !== null).length;
 
     return {
+      brandId: brand.id,
       brandSlug: brand.brand_slug,
       brandName: brand.brand_name,
       totalProducts: total,
@@ -112,6 +113,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
       withTds,
       withImage,
       withoutImage: total - withImage,
+      withFullParsing,
       withEur,
       withGbp,
       withCad,
@@ -120,6 +122,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
       colorCoverage: total > 0 ? Math.round((withColorHex / total) * 1000) / 10 : 0,
       tdsCoverage: total > 0 ? Math.round((withTds / total) * 1000) / 10 : 0,
       imageCoverage: total > 0 ? Math.round((withImage / total) * 1000) / 10 : 0,
+      parsingCoverage: withTds > 0 ? Math.round((withFullParsing / withTds) * 1000) / 10 : 0,
       eurCoverage: total > 0 ? Math.round((withEur / total) * 1000) / 10 : 0,
       gbpCoverage: total > 0 ? Math.round((withGbp / total) * 1000) / 10 : 0,
       cadCoverage: total > 0 ? Math.round((withCad / total) * 1000) / 10 : 0,
@@ -129,31 +132,13 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
     };
   }).filter(b => b.totalProducts > 0).sort((a, b) => b.totalProducts - a.totalProducts);
 
-  // Filter for low coverage brands
-  const lowColorBrands = brands
-    .filter(b => b.colorCoverage < 90)
-    .sort((a, b) => a.colorCoverage - b.colorCoverage);
+  const lowColorBrands = brands.filter(b => b.colorCoverage < 90).sort((a, b) => a.colorCoverage - b.colorCoverage);
+  const lowTdsBrands = brands.filter(b => b.tdsCoverage < 50).sort((a, b) => b.totalProducts - a.totalProducts);
+  const lowImageBrands = brands.filter(b => b.imageCoverage < 90).sort((a, b) => a.imageCoverage - b.imageCoverage);
+  const lowParsingBrands = brands.filter(b => b.withTds > 0 && b.parsingCoverage < 80).sort((a, b) => a.parsingCoverage - b.parsingCoverage);
+  const regionalBrands = brands.filter(b => b.supportedRegions && b.supportedRegions.length > 0).sort((a, b) => b.totalProducts - a.totalProducts);
 
-  const lowTdsBrands = brands
-    .filter(b => b.tdsCoverage < 50)
-    .sort((a, b) => b.totalProducts - a.totalProducts);
-
-  const lowImageBrands = brands
-    .filter(b => b.imageCoverage < 90)
-    .sort((a, b) => a.imageCoverage - b.imageCoverage);
-
-  const regionalBrands = brands
-    .filter(b => b.supportedRegions && b.supportedRegions.length > 0)
-    .sort((a, b) => b.totalProducts - a.totalProducts);
-
-  return {
-    overall,
-    brands,
-    lowColorBrands,
-    lowTdsBrands,
-    lowImageBrands,
-    regionalBrands,
-  };
+  return { overall, brands, lowColorBrands, lowTdsBrands, lowImageBrands, lowParsingBrands, regionalBrands };
 }
 
 export function useEnrichmentMetrics() {
@@ -162,8 +147,8 @@ export function useEnrichmentMetrics() {
   const query = useQuery({
     queryKey: ['enrichment-metrics'],
     queryFn: fetchEnrichmentMetrics,
-    staleTime: 60 * 1000, // 1 minute
-    refetchInterval: 60 * 1000, // Auto-refresh every minute
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
   });
 
   const refresh = () => {
@@ -178,6 +163,7 @@ export function useEnrichmentMetrics() {
     lowColorBrands: query.data?.lowColorBrands || [],
     lowTdsBrands: query.data?.lowTdsBrands || [],
     lowImageBrands: query.data?.lowImageBrands || [],
+    lowParsingBrands: query.data?.lowParsingBrands || [],
     regionalBrands: query.data?.regionalBrands || [],
   };
 }
