@@ -5,6 +5,7 @@ export interface OverallMetrics {
   total: number;
   withColorHex: number;
   withTds: number;
+  withImage: number;
   withEur: number;
   withGbp: number;
   withCad: number;
@@ -18,6 +19,8 @@ export interface BrandMetrics {
   totalProducts: number;
   withColorHex: number;
   withTds: number;
+  withImage: number;
+  withoutImage: number;
   withEur: number;
   withGbp: number;
   withCad: number;
@@ -25,6 +28,7 @@ export interface BrandMetrics {
   withJpy: number;
   colorCoverage: number;
   tdsCoverage: number;
+  imageCoverage: number;
   eurCoverage: number;
   gbpCoverage: number;
   cadCoverage: number;
@@ -38,6 +42,7 @@ interface EnrichmentMetricsData {
   brands: BrandMetrics[];
   lowColorBrands: BrandMetrics[];
   lowTdsBrands: BrandMetrics[];
+  lowImageBrands: BrandMetrics[];
   regionalBrands: BrandMetrics[];
 }
 
@@ -45,7 +50,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
   // Fetch overall metrics
   const { data: overallData, error: overallError } = await supabase
     .from('filaments')
-    .select('id, color_hex, tds_url, price_eur, price_gbp, price_cad, price_aud, price_jpy');
+    .select('id, color_hex, tds_url, featured_image, price_eur, price_gbp, price_cad, price_aud, price_jpy');
 
   if (overallError) throw overallError;
 
@@ -53,6 +58,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
     total: overallData?.length || 0,
     withColorHex: overallData?.filter(f => f.color_hex !== null).length || 0,
     withTds: overallData?.filter(f => f.tds_url !== null).length || 0,
+    withImage: overallData?.filter(f => f.featured_image !== null).length || 0,
     withEur: overallData?.filter(f => f.price_eur !== null).length || 0,
     withGbp: overallData?.filter(f => f.price_gbp !== null).length || 0,
     withCad: overallData?.filter(f => f.price_cad !== null).length || 0,
@@ -71,7 +77,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
   // Fetch filament counts per brand
   const { data: filamentsByVendor, error: vendorError } = await supabase
     .from('filaments')
-    .select('vendor, color_hex, tds_url, price_eur, price_gbp, price_cad, price_aud, price_jpy');
+    .select('vendor, color_hex, tds_url, featured_image, price_eur, price_gbp, price_cad, price_aud, price_jpy');
 
   if (vendorError) throw vendorError;
 
@@ -91,6 +97,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
     const total = vendorFilaments.length;
     const withColorHex = vendorFilaments.filter(f => f.color_hex !== null).length;
     const withTds = vendorFilaments.filter(f => f.tds_url !== null).length;
+    const withImage = vendorFilaments.filter(f => f.featured_image !== null).length;
     const withEur = vendorFilaments.filter(f => f.price_eur !== null).length;
     const withGbp = vendorFilaments.filter(f => f.price_gbp !== null).length;
     const withCad = vendorFilaments.filter(f => f.price_cad !== null).length;
@@ -103,6 +110,8 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
       totalProducts: total,
       withColorHex,
       withTds,
+      withImage,
+      withoutImage: total - withImage,
       withEur,
       withGbp,
       withCad,
@@ -110,6 +119,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
       withJpy,
       colorCoverage: total > 0 ? Math.round((withColorHex / total) * 1000) / 10 : 0,
       tdsCoverage: total > 0 ? Math.round((withTds / total) * 1000) / 10 : 0,
+      imageCoverage: total > 0 ? Math.round((withImage / total) * 1000) / 10 : 0,
       eurCoverage: total > 0 ? Math.round((withEur / total) * 1000) / 10 : 0,
       gbpCoverage: total > 0 ? Math.round((withGbp / total) * 1000) / 10 : 0,
       cadCoverage: total > 0 ? Math.round((withCad / total) * 1000) / 10 : 0,
@@ -128,6 +138,10 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
     .filter(b => b.tdsCoverage < 50)
     .sort((a, b) => b.totalProducts - a.totalProducts);
 
+  const lowImageBrands = brands
+    .filter(b => b.imageCoverage < 90)
+    .sort((a, b) => a.imageCoverage - b.imageCoverage);
+
   const regionalBrands = brands
     .filter(b => b.supportedRegions && b.supportedRegions.length > 0)
     .sort((a, b) => b.totalProducts - a.totalProducts);
@@ -137,6 +151,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
     brands,
     lowColorBrands,
     lowTdsBrands,
+    lowImageBrands,
     regionalBrands,
   };
 }
@@ -162,6 +177,7 @@ export function useEnrichmentMetrics() {
     brands: query.data?.brands || [],
     lowColorBrands: query.data?.lowColorBrands || [],
     lowTdsBrands: query.data?.lowTdsBrands || [],
+    lowImageBrands: query.data?.lowImageBrands || [],
     regionalBrands: query.data?.regionalBrands || [],
   };
 }

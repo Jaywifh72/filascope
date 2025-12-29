@@ -2,10 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Palette, FileText, Globe, BarChart3, RefreshCw, History, CheckCircle2, Clock, Zap } from 'lucide-react';
+import { Palette, FileText, Globe, BarChart3, RefreshCw, History, CheckCircle2, Clock, Zap, Image } from 'lucide-react';
 import { ColorExtractionPanel } from './ColorExtractionPanel';
 import { TdsDiscoveryPanel } from './TdsDiscoveryPanel';
 import { RegionalPricingPanel } from './RegionalPricingPanel';
+import { ImageEnrichmentPanel } from './ImageEnrichmentPanel';
 import { EnrichmentHistory } from './EnrichmentHistory';
 import { useEnrichmentMetrics } from '@/hooks/useEnrichmentMetrics';
 import { useEnrichmentHistory } from '@/hooks/useEnrichmentHistory';
@@ -60,16 +61,16 @@ function MetricCard({
 }
 
 export function EnrichmentDashboard() {
-  const { overall, lowColorBrands, lowTdsBrands, regionalBrands, isLoading, refresh, isFetching } = useEnrichmentMetrics();
+  const { overall, lowColorBrands, lowTdsBrands, lowImageBrands, regionalBrands, isLoading, refresh, isFetching } = useEnrichmentMetrics();
   const { summary: historySummary, isLoading: historyLoading } = useEnrichmentHistory();
 
   const metrics = overall ? [
+    { label: 'Images', current: overall.withImage, total: overall.total, percent: overall.total > 0 ? (overall.withImage / overall.total) * 100 : 0 },
     { label: 'Color Hex', current: overall.withColorHex, total: overall.total, percent: overall.total > 0 ? (overall.withColorHex / overall.total) * 100 : 0 },
     { label: 'TDS URLs', current: overall.withTds, total: overall.total, percent: overall.total > 0 ? (overall.withTds / overall.total) * 100 : 0 },
     { label: 'EUR Price', current: overall.withEur, total: overall.total, percent: overall.total > 0 ? (overall.withEur / overall.total) * 100 : 0 },
     { label: 'GBP Price', current: overall.withGbp, total: overall.total, percent: overall.total > 0 ? (overall.withGbp / overall.total) * 100 : 0 },
     { label: 'CAD Price', current: overall.withCad, total: overall.total, percent: overall.total > 0 ? (overall.withCad / overall.total) * 100 : 0 },
-    { label: 'AUD Price', current: overall.withAud, total: overall.total, percent: overall.total > 0 ? (overall.withAud / overall.total) * 100 : 0 },
   ] : [];
 
   return (
@@ -164,8 +165,12 @@ export function EnrichmentDashboard() {
       </div>
 
       {/* Enrichment Tabs */}
-      <Tabs defaultValue="colors" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-lg">
+      <Tabs defaultValue="images" className="w-full">
+        <TabsList className="grid w-full grid-cols-5 max-w-2xl">
+          <TabsTrigger value="images" className="flex items-center gap-2">
+            <Image className="w-4 h-4" />
+            Images
+          </TabsTrigger>
           <TabsTrigger value="colors" className="flex items-center gap-2">
             <Palette className="w-4 h-4" />
             Colors
@@ -183,6 +188,10 @@ export function EnrichmentDashboard() {
             History
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="images" className="mt-4">
+          <ImageEnrichmentPanel />
+        </TabsContent>
 
         <TabsContent value="colors" className="mt-4">
           <ColorExtractionPanel />
@@ -207,7 +216,22 @@ export function EnrichmentDashboard() {
           <CardTitle className="text-lg">Enrichment Targets</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+            <div className="space-y-2">
+              <p className="font-medium flex items-center gap-2">
+                <Image className="w-4 h-4" />
+                Images ({lowImageBrands.length} brands &lt;90%)
+              </p>
+              <ul className="space-y-1 text-muted-foreground">
+                {isLoading ? (
+                  <li><Skeleton className="h-4 w-32" /></li>
+                ) : (
+                  lowImageBrands.slice(0, 4).map(b => (
+                    <li key={b.brandSlug}>• {b.brandName}: {b.imageCoverage}% ({b.withoutImage} missing)</li>
+                  ))
+                )}
+              </ul>
+            </div>
             <div className="space-y-2">
               <p className="font-medium flex items-center gap-2">
                 <Palette className="w-4 h-4" />
