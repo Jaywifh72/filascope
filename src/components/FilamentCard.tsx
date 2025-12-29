@@ -361,26 +361,28 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             {getDisplayTitle()}
           </h3>
           
-          {/* Multiple color swatches for grouped products */}
-          {hasMultipleVariants && variantIndicators.colors.length > 0 ? (
-            <div className="flex items-center gap-0.5 flex-shrink-0 mt-1">
-              {variantIndicators.colors.slice(0, 6).map((hex, i) => (
-                <div 
-                  key={i}
-                  className="w-3 h-3 rounded-full border border-white/20"
-                  style={{ backgroundColor: hex }}
-                />
-              ))}
-              {variantIndicators.colors.length > 6 && (
-                <span className="text-[10px] text-slate-400 ml-1">+{variantIndicators.colors.length - 6}</span>
-              )}
-            </div>
-          ) : filament.color_hex ? (
-            <div 
-              className="w-4 h-4 rounded-full border-2 border-white/20 flex-shrink-0 mt-1"
-              style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
-            />
-          ) : null}
+          {/* Color swatches - show multiple for grouped products or single for individual */}
+          <div className="flex items-center gap-0.5 flex-shrink-0 mt-1">
+            {hasMultipleVariants && variantIndicators.colors.length > 0 ? (
+              <>
+                {variantIndicators.colors.slice(0, 6).map((hex, i) => (
+                  <div 
+                    key={i}
+                    className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm"
+                    style={{ backgroundColor: hex }}
+                  />
+                ))}
+                {variantIndicators.colors.length > 6 && (
+                  <span className="text-[10px] text-slate-400 ml-1">+{variantIndicators.colors.length - 6}</span>
+                )}
+              </>
+            ) : filament.color_hex ? (
+              <div 
+                className="w-4 h-4 rounded-full border-2 border-white/20 shadow-sm"
+                style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
+              />
+            ) : null}
+          </div>
         </div>
         
         {/* Weight options indicator for grouped products */}
