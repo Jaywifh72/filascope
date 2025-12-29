@@ -94,6 +94,56 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'blue purple': '8A2BE2',
   'yellow green red': 'FFD700',
   'rainbow nebula glaze': 'FF6B6B',
+  
+  // ==================== AMOLEN MATTE DUAL COLORS ====================
+  // Each dual-color combination needs a unique hex to prevent deduplication
+  'green purple': '6B5B95',         // Muted purple-green blend
+  'pink purple': 'DA70D6',          // Orchid (pink-purple blend)
+  'blue pink': '9370DB',            // Medium purple (blue-pink blend)
+  'brown white': 'A0826D',          // Taupe (brown-white blend)
+  'cyan chartreuse': '7FFF00',      // Chartreuse
+  'peach gold': 'FFDAB9',           // Peach puff
+  'red gold': 'CD853F',             // Peru (red-gold blend)
+  
+  // ==================== AMOLEN SILK DUAL COLORS ====================
+  'black gold': 'B8860B',           // Dark goldenrod
+  'black & gold': 'B8860B',         // Dark goldenrod (alias)
+  'black green': '355E3B',          // Hunter green
+  'black & green': '355E3B',        // Hunter green (alias)
+  'black orange': 'FF4500',         // Orange red
+  'black & orange': 'FF4500',       // Orange red (alias)
+  'black pink': 'DB7093',           // Pale violet red
+  'black & pink': 'DB7093',         // Pale violet red (alias)
+  'black purple': '4B0082',         // Indigo
+  'black & purple': '4B0082',       // Indigo (alias)
+  'black silver': '708090',         // Slate gray
+  'black & silver': '708090',       // Slate gray (alias)
+  'black blue': '1E3A5F',           // Dark navy
+  'black & blue': '1E3A5F',         // Dark navy (alias)
+  'black red': '8B0000',            // Dark red
+  'black & red': '8B0000',          // Dark red (alias)
+  'red black': '8B0000',            // Dark red (alias)
+  'red & black': '8B0000',          // Dark red (alias)
+  'blue fuchsia': 'DA1D81',         // Deep fuchsia
+  'blue & fuchsia': 'DA1D81',       // Deep fuchsia (alias)
+  'blue green coral': '5F9EA0',     // Cadet blue
+  'blue green & coral': '5F9EA0',   // Cadet blue (alias)
+  'blue green dark violet': '483D8B', // Dark slate blue
+  'blue green & dark violet': '483D8B', // Dark slate blue (alias)
+  'gold fuchsia': 'FF1493',         // Deep pink
+  'gold & fuchsia': 'FF1493',       // Deep pink (alias)
+  'gold purple': 'BA55D3',          // Medium orchid
+  'gold & purple': 'BA55D3',        // Medium orchid (alias)
+  'peach orange': 'FF8C69',         // Salmon
+  'purple green': '9ACD32',         // Yellow green
+  'purple & green': '9ACD32',       // Yellow green (alias)
+  'red blue': '8B008B',             // Dark magenta
+  'red & blue': '8B008B',           // Dark magenta (alias)
+  'red & gold': 'FF6347',           // Tomato (alias)
+  'red green': 'A0522D',            // Sienna (red-green blend)
+  'red & green': 'A0522D',          // Sienna (alias)
+  'sky blue pink': '87CEEB',        // Sky blue
+  'sky blue & pink': 'B0C4DE',      // Light steel blue
 
   // ==================== GREEN VARIANTS ====================
   'forest green': '228B22',
