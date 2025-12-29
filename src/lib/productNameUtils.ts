@@ -17,8 +17,8 @@ export function cleanFilamentDisplayName(title: string): string {
     // Remove spool count patterns (3 Spools, x3, etc.)
     .replace(/\s*,?\s*\d+\s*spools?\b/gi, '')
     .replace(/\s*,?\s*x\d+\b/gi, '')
-    // Remove trailing commas and extra whitespace
-    .replace(/,\s*$/, '')
+    // Remove trailing special characters (commas, slashes, dashes, etc.)
+    .replace(/[\s,\-–—\/\\|:;]+$/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
