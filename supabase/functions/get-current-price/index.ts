@@ -371,6 +371,23 @@ function parseWeightFromTitle(title: string): number | null {
   return null;
 }
 
+// Parse pack quantity from product content (e.g., "12pcs", "12 Pack", "12 Rolls", "12 Spools")
+function parsePackQuantity(title: string, content?: string): number {
+  const textToSearch = `${title} ${content || ''}`;
+  
+  // Match patterns like "12pcs", "12 pcs", "12-pack", "12 pack", "12 rolls", "12 spools"
+  const packMatch = textToSearch.match(/(\d+)\s*(?:pcs?|pack|rolls?|spools?|pieces?|x\s*\d)/i);
+  if (packMatch) {
+    const qty = parseInt(packMatch[1]);
+    // Only consider it a pack if quantity > 1 and reasonable (max 100)
+    if (qty > 1 && qty <= 100) {
+      return qty;
+    }
+  }
+  
+  return 1;
+}
+
 // Parse diameter from URL or title (e.g., "1.75mm", "2.85", "1-75", "2-85")
 function parseDiameter(url: string, title: string): number | null {
   // Check URL first - often has patterns like "2-85" or "1-75"
@@ -519,7 +536,13 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
     const weightFromProductTitle = parseWeightFromTitle(data.product.title);
     // Only use variant.grams if it's a reasonable filament weight (250g-3000g) and no title weight found
     const isReasonableGrams = variant.grams && variant.grams >= 250 && variant.grams <= 3000;
-    const weightGrams = weightFromVariantTitle || weightFromProductTitle || (isReasonableGrams ? variant.grams : null) || null;
+    let singleSpoolWeight = weightFromVariantTitle || weightFromProductTitle || (isReasonableGrams ? variant.grams : null) || null;
+    
+    // Detect pack quantity and adjust weight accordingly
+    const packQuantity = parsePackQuantity(data.product.title, variant.title);
+    const weightGrams = singleSpoolWeight !== null ? singleSpoolWeight * packQuantity : null;
+    
+    console.log(`Weight extraction: variant="${variant.title}", product="${data.product.title}", singleSpool=${singleSpoolWeight}g, packQty=${packQuantity}, total=${weightGrams}g`);
     
     // Extract diameter from URL or title (check both product and variant title)
     const diameterMm = parseDiameter(productUrl, variant.title) || parseDiameter(productUrl, data.product.title);
@@ -527,7 +550,7 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
     // Detect currency from URL since Shopify JSON doesn't include it
     const detectedCurrency = detectCurrencyFromUrl(productUrl);
     
-    console.log(`Shopify price fetched: ${price} ${detectedCurrency} (weight: ${weightGrams}g, diameter: ${diameterMm}mm, available: ${variant.available})`);
+    console.log(`Shopify price fetched: ${price} ${detectedCurrency} (weight: ${weightGrams}g, packQty: ${packQuantity}, diameter: ${diameterMm}mm, available: ${variant.available})`);
     
     return {
       success: true,
