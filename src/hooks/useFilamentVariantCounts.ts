@@ -67,18 +67,40 @@ export function useFilamentVariantCounts(
           });
         }
 
-        // Extract unique colors (by hex value, uppercased for deduplication)
+        // Extract unique colors - prioritize title-extracted color name over hex
+        // This matches the detail page logic and handles rainbow/gradient filaments correctly
         const uniqueColors = new Set<string>();
+        const colorHexes: string[] = [];
+        
         matchingVariants.forEach(v => {
-          if (v.color_hex) {
+          // Try to extract color from title first (matches detail page logic)
+          const colorName = getColorFromTitle(v.product_title, baseName);
+          
+          if (colorName) {
+            // Use normalized color name as the deduplication key
+            const normalizedColor = colorName.toLowerCase().trim();
+            if (!uniqueColors.has(normalizedColor)) {
+              uniqueColors.add(normalizedColor);
+              // Store the hex for display
+              if (v.color_hex) {
+                const hex = v.color_hex.startsWith('#') ? v.color_hex : `#${v.color_hex}`;
+                colorHexes.push(hex.toUpperCase());
+              }
+            }
+          } else if (v.color_hex) {
+            // Fallback to hex only if no color name extractable
             const hex = v.color_hex.startsWith('#') ? v.color_hex : `#${v.color_hex}`;
-            uniqueColors.add(hex.toUpperCase());
+            const normalizedHex = hex.toUpperCase();
+            if (!uniqueColors.has(normalizedHex)) {
+              uniqueColors.add(normalizedHex);
+              colorHexes.push(normalizedHex);
+            }
           }
         });
 
         setVariantInfo({
-          colors: Array.from(uniqueColors),
-          count: matchingVariants.length,
+          colors: colorHexes,
+          count: uniqueColors.size,
         });
       } catch (error) {
         console.error('Error fetching variant counts:', error);

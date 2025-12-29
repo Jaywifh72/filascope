@@ -186,15 +186,16 @@ export const getBaseProductName = (title: string, material?: string | null): str
   const amelonProductLines = [
     // Multi-packs must be matched before single-spool product lines
     'Crystal-Transparent Gradient Variety Pack', 'Gradient Variety Pack', 'Variety Pack',
+    // Sub-lines with Rainbow/Dual/Triple BEFORE base patterns (longer patterns first)
     'Basic-High Speed', 'Basic High Speed', 'Basic Dual Color-High Speed', 'Basic Dual Color',
     'High Speed',  // For "PLA+ High Speed" products
     'Crystal-Transparent', 'Crystal Transparent',  // For "PLA Crystal-Transparent" products
-    'Matte Triple', 'Matte Dual', 'Matte Basic', 'Matte Rainbow', 'Matte Tri-Color', 'Matte',
-    'Silk Dual', 'Silk Triple', 'Silk Rainbow', 'Silk Starry', 'Silk Tri-Color', 'Silk',
-    'Marble', 'Marble Texture', 'Sparkle', 'Galaxy', 'Glow in the Dark', 'Glow', 
-    'Wood', 'Carbon Fiber', 'Metal',
-    'Transparent Rainbow', 'Transparent',  // "Transparent Rainbow" before "Transparent"
-    'Clear',
+    'Matte Rainbow', 'Matte Triple', 'Matte Dual', 'Matte Basic', 'Matte Tri-Color',
+    'Silk Rainbow', 'Silk Triple', 'Silk Dual', 'Silk Starry', 'Silk Tri-Color',
+    'Transparent Rainbow',
+    // Base patterns last
+    'Matte', 'Silk', 'Marble', 'Marble Texture', 'Sparkle', 'Galaxy', 'Glow in the Dark', 'Glow', 
+    'Wood', 'Carbon Fiber', 'Metal', 'Transparent', 'Clear',
     'Basic', '90A Flexible', '95A Flexible', '85A',
   ];
   // Sort by length descending to match longer patterns first
