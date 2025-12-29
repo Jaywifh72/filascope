@@ -694,6 +694,15 @@ Deno.serve(async (req) => {
       // Update product counts
       await supabase.rpc('update_brand_product_counts', { p_brand_slug: brandSlug });
 
+      // Validate and fix any duplicate hex codes created during sync
+      let duplicateValidation = { fixed: 0, duplicates: [] as any[] };
+      if (!dryRun) {
+        duplicateValidation = await validateAndFixDuplicateHexes(supabase, brand.brand_name);
+        if (duplicateValidation.fixed > 0) {
+          console.log(`[sync-brand-products] Fixed ${duplicateValidation.fixed} duplicate hex codes for ${brandSlug}`);
+        }
+      }
+
       console.log(`[sync-brand-products] Completed sync for ${brandSlug}`, summary);
 
       return {
@@ -1030,7 +1039,7 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
   return products;
 }
 
-// Extract color hex from Shopify variant options - enhanced with color-mapping
+// Extract color hex from Shopify variant options - enhanced with color-mapping and fallback
 function extractColorHexFromVariant(variant: any, product: any, title: string): string | null {
   // Check variant options for color
   const colorOption = variant.option1 || variant.option2 || variant.option3;
@@ -1043,7 +1052,7 @@ function extractColorHexFromVariant(variant: any, product: any, title: string): 
     }
   }
   
-  // Second try: Extract from variant option using color-mapping
+  // Second try: Extract from variant option using color-mapping (exact match first)
   if (colorOption) {
     const hex = getColorHex(colorOption);
     if (hex) {
@@ -1052,8 +1061,6 @@ function extractColorHexFromVariant(variant: any, product: any, title: string): 
   }
   
   // Third try: Extract from product title
-  const titleLower = title.toLowerCase();
-  // Look for common color patterns in title
   const colorPatterns = [
     // Match "- Color" pattern (e.g., "PLA - Red")
     /\s-\s([^-\d]+)$/i,
@@ -1074,7 +1081,112 @@ function extractColorHexFromVariant(variant: any, product: any, title: string): 
     }
   }
   
+  // Fourth try: Generate a deterministic unique hex for unmapped colors
+  // This prevents duplicates by creating consistent colors based on name hash
+  if (colorOption && colorOption.trim().length > 0) {
+    return generateDeterministicHex(colorOption);
+  }
+  
   return null;
+}
+
+// Generate a deterministic unique hex from color name
+// Uses a simple hash to ensure same color name always gets same hex across syncs
+function generateDeterministicHex(colorName: string): string {
+  const normalized = colorName.toLowerCase().trim();
+  const hash = simpleHash(normalized);
+  
+  // Generate HSL values from hash for good color distribution
+  const hue = hash % 360;
+  const sat = 50 + (hash % 30);  // 50-80% saturation
+  const light = 40 + ((hash >> 8) % 30); // 40-70% lightness
+  
+  return `#${hslToHex(hue, sat, light)}`;
+}
+
+// Simple string hash function (djb2 algorithm)
+function simpleHash(str: string): number {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
+// Convert HSL to hex color
+function hslToHex(h: number, s: number, l: number): string {
+  s /= 100;
+  l /= 100;
+  
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const m = l - c / 2;
+  
+  let r = 0, g = 0, b = 0;
+  
+  if (0 <= h && h < 60) { r = c; g = x; b = 0; }
+  else if (60 <= h && h < 120) { r = x; g = c; b = 0; }
+  else if (120 <= h && h < 180) { r = 0; g = c; b = x; }
+  else if (180 <= h && h < 240) { r = 0; g = x; b = c; }
+  else if (240 <= h && h < 300) { r = x; g = 0; b = c; }
+  else if (300 <= h && h < 360) { r = c; g = 0; b = x; }
+  
+  const toHex = (n: number) => {
+    const hex = Math.round((n + m) * 255).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
+  
+  return `${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
+}
+
+// Validate and fix duplicate hex codes after sync
+async function validateAndFixDuplicateHexes(supabase: any, brandName: string): Promise<{ fixed: number; duplicates: any[] }> {
+  try {
+    const { data: duplicates, error } = await supabase.rpc('find_duplicate_hexes', { 
+      p_vendor: brandName 
+    });
+    
+    if (error || !duplicates?.length) {
+      return { fixed: 0, duplicates: [] };
+    }
+    
+    console.warn(`[sync-validation] Found ${duplicates.length} duplicate hex codes for ${brandName}`);
+    
+    // Group duplicates by product_line_id
+    const groupedDupes: Record<string, any[]> = {};
+    for (const dup of duplicates) {
+      const key = dup.product_line_id || 'unknown';
+      if (!groupedDupes[key]) groupedDupes[key] = [];
+      groupedDupes[key].push(dup);
+    }
+    
+    let fixed = 0;
+    
+    // For each group, generate unique hexes for all but the first
+    for (const [productLineId, dupes] of Object.entries(groupedDupes)) {
+      // Skip the first one (keep original hex), fix the rest
+      for (let i = 1; i < dupes.length; i++) {
+        const dup = dupes[i];
+        const uniqueHex = generateDeterministicHex(dup.product_title);
+        
+        const { error: updateError } = await supabase
+          .from('filaments')
+          .update({ color_hex: uniqueHex })
+          .eq('id', dup.id);
+          
+        if (!updateError) {
+          fixed++;
+          console.log(`[sync-validation] Fixed duplicate hex for "${dup.product_title}" -> ${uniqueHex}`);
+        }
+      }
+    }
+    
+    return { fixed, duplicates };
+  } catch (err) {
+    console.error('[sync-validation] Error validating duplicates:', err);
+    return { fixed: 0, duplicates: [] };
+  }
 }
 
 // Extract color family from Shopify product - enhanced
