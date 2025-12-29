@@ -13,11 +13,16 @@ interface VariantInfo {
  * 
  * IMPORTANT: This hook must use the SAME logic as useFilamentColorVariants
  * to ensure cards and detail pages show identical color options.
+ * 
+ * Priority:
+ * 1. If filament has product_line_id, match by product_line_id (same as detail page)
+ * 2. Otherwise, fallback to base name matching
  */
 export function useFilamentVariantCounts(
   filamentId: string,
   productTitle: string,
-  vendor: string | null
+  vendor: string | null,
+  productLineId?: string | null
 ): VariantInfo {
   const [variantInfo, setVariantInfo] = useState<VariantInfo>({ colors: [], count: 1 });
 
@@ -31,26 +36,36 @@ export function useFilamentVariantCounts(
       try {
         const baseName = getBaseProductName(productTitle);
         
-        // Fetch all filaments from this vendor (same as detail page hook)
+        // Fetch all filaments from this vendor with product_line_id
         const { data, error } = await supabase
           .from('filaments')
-          .select('id, product_title, color_hex')
+          .select('id, product_title, color_hex, product_line_id')
           .eq('vendor', vendor)
           .order('product_title');
 
         if (error) throw error;
 
-        // Filter using the SAME logic as useFilamentColorVariants (lines 347-358)
-        const matchingVariants = (data || []).filter(f => {
-          const fBaseName = getBaseProductName(f.product_title);
-          // Match base name (case-insensitive for robustness)
-          if (fBaseName.toLowerCase() !== baseName.toLowerCase()) return false;
-          // If it's the current filament, include it
-          if (f.id === filamentId) return true;
-          // Otherwise, must have a detectable color name OR a color_hex
-          const color = getColorFromTitle(f.product_title, baseName);
-          return color !== null || (f.color_hex && f.color_hex.length > 0);
-        });
+        // Find the current filament to get its product_line_id
+        const currentFilament = data?.find(f => f.id === filamentId);
+        const effectiveProductLineId = productLineId || currentFilament?.product_line_id;
+
+        let matchingVariants;
+
+        if (effectiveProductLineId) {
+          // Priority 1: Match by product_line_id (same as detail page)
+          matchingVariants = (data || []).filter(f => 
+            f.product_line_id === effectiveProductLineId
+          );
+        } else {
+          // Priority 2: Fallback to base name matching
+          matchingVariants = (data || []).filter(f => {
+            const fBaseName = getBaseProductName(f.product_title);
+            if (fBaseName.toLowerCase() !== baseName.toLowerCase()) return false;
+            if (f.id === filamentId) return true;
+            const color = getColorFromTitle(f.product_title, baseName);
+            return color !== null || (f.color_hex && f.color_hex.length > 0);
+          });
+        }
 
         // Extract unique colors (by hex value, uppercased for deduplication)
         const uniqueColors = new Set<string>();
@@ -72,7 +87,7 @@ export function useFilamentVariantCounts(
     };
 
     fetchVariants();
-  }, [filamentId, productTitle, vendor]);
+  }, [filamentId, productTitle, vendor, productLineId]);
 
   return variantInfo;
 }

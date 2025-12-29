@@ -61,6 +61,7 @@ interface Filament {
   wood_powder_percentage?: number | null;
   featured_image?: string | null;
   variant_available?: boolean | null;
+  product_line_id?: string | null;
   // Regional pricing fields
   product_url?: string | null;
   product_url_ca?: string | null;
@@ -141,10 +142,12 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const { formatPrice, formatRegionalPrice, currency: userCurrency } = useCurrency();
   
   // Fetch all color variants from DB if not provided via variantIndicators
+  // Pass product_line_id to ensure cards use same grouping logic as detail pages
   const fetchedVariants = useFilamentVariantCounts(
     filament.id,
     filament.product_title,
-    filament.vendor || null
+    filament.vendor || null,
+    filament.product_line_id || null
   );
   
   // Use provided variantIndicators or fall back to fetched data
