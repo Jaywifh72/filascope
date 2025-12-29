@@ -806,12 +806,13 @@ function buildUpdateData(product: any, overrideFields: string[], region: string 
 }
 
 // Helper: Check if Shopify product has multiple color variants that should be exploded
+// AGGRESSIVE EXPLOSION: For filament products, multiple variants almost always mean color variations
 function hasMultipleColorVariants(product: any): boolean {
   const variants = product.variants || [];
   if (variants.length <= 1) return false;
   
   // Check if variants differ by color-related options
-  const colorOptionNames = ['color', 'colour', 'farbe', 'couleur'];
+  const colorOptionNames = ['color', 'colour', 'farbe', 'couleur', 'title'];
   const options = product.options || [];
   
   // Check if any option is color-related
@@ -822,27 +823,41 @@ function hasMultipleColorVariants(product: any): boolean {
     }
   }
   
-  // Fallback: if option1 values differ across variants and look like colors
+  // AGGRESSIVE: If option1 values differ across variants, assume they're color variants
+  // For filament products, different option1 values almost always represent colors
   const option1Values = new Set(variants.map((v: any) => v.option1).filter(Boolean));
   if (option1Values.size > 1) {
-    // Check if first few values look like colors using color-mapping
-    const sampleValues = Array.from(option1Values).slice(0, 3);
-    const colorMatches = sampleValues.filter(v => getColorHex(String(v)) !== null);
-    return colorMatches.length >= 2;
+    // If at least ONE value looks like a color, explode ALL variants
+    const sampleValues = Array.from(option1Values);
+    const hasAnyColorMatch = sampleValues.some(v => {
+      const val = String(v).toLowerCase();
+      // Check direct color match
+      if (getColorHex(val) !== null) return true;
+      // Check if contains common color words (for compound names like "Silk Coffee Gold")
+      const colorWords = ['black', 'white', 'grey', 'gray', 'red', 'blue', 'green', 'yellow', 
+        'orange', 'purple', 'pink', 'brown', 'gold', 'silver', 'copper', 'bronze', 'rainbow',
+        'transparent', 'clear', 'glow', 'silk', 'matte', 'neon', 'coffee', 'aqua', 'sky'];
+      return colorWords.some(cw => val.includes(cw));
+    });
+    
+    // If any color indicator found OR there are 3+ unique option values, explode
+    if (hasAnyColorMatch || option1Values.size >= 3) {
+      return true;
+    }
   }
   
   return false;
 }
 
 // Helper: Extract color name from variant options
+// ALWAYS returns the option value for color-like variants, even if not in color mapping
 function extractColorNameFromVariant(variant: any): string | null {
   // Check option1 first (most common for color)
   const colorOption = variant.option1 || variant.option2 || variant.option3;
   if (colorOption && typeof colorOption === 'string') {
-    // Verify it's a color by checking against color-mapping
-    if (getColorHex(colorOption) || getColorFamily(colorOption)) {
-      return colorOption;
-    }
+    // Return the color option as-is - we want to capture ALL variant names
+    // The color mapping will handle hex extraction separately
+    return colorOption;
   }
   return null;
 }
