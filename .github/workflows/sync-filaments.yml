@@ -383,10 +383,50 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"brand": "${{ matrix.brand }}", "dryRun": false, "limit": 100}'
 
+  # Weekly TDS parsing job - extracts specs from discovered TDS URLs
+  parse-tds:
+    name: Parse TDS - ${{ matrix.brand }}
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 1 * * 0' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'parse-tds')
+    strategy:
+      max-parallel: 1  # Serial for AI rate limits
+      fail-fast: false
+      matrix:
+        brand: ['overture-3d', 'bambu-lab', '3dxtech', '3d-fuel', 'polymaker', 'prusament', 'colorfabb', 'fillamentum']
+    steps:
+      - name: Parse TDS for ${{ matrix.brand }}
+        run: |
+          echo "🔬 Parsing TDS specs for ${{ matrix.brand }}..."
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/parse-filament-tds" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"brand_slug": "${{ matrix.brand }}", "limit": 25}')
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "Response code: $http_code"
+          
+          PARSED=$(echo "$body" | jq -r '.parsed // 0' 2>/dev/null || echo "0")
+          FAILED=$(echo "$body" | jq -r '.failed // 0' 2>/dev/null || echo "0")
+          
+          echo "📊 Stats - Parsed: $PARSED, Failed: $FAILED"
+          
+          if [ "$http_code" -ne 200 ]; then
+            echo "⚠️ TDS parsing may have failed for ${{ matrix.brand }}"
+            echo "::warning::TDS parsing failed for ${{ matrix.brand }}"
+          else
+            echo "✅ Successfully parsed TDS for ${{ matrix.brand }}"
+          fi
+          
+          # Rate limit between brands (60s for AI cooldown)
+          sleep 60
+
   summary:
     name: Generate Summary Report
     runs-on: ubuntu-latest
-    needs: [sync-spoolman, scrape-shopify, scrape-amazon, scrape-other, sync-regional-prices, scrape-images]
+    needs: [sync-spoolman, scrape-shopify, scrape-amazon, scrape-other, sync-regional-prices, scrape-images, parse-tds]
     if: always()
     
     steps:
@@ -426,3 +466,4 @@ jobs:
           echo "- scrape-other: ${{ needs.scrape-other.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- sync-regional-prices: ${{ needs.sync-regional-prices.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- scrape-images: ${{ needs.scrape-images.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- parse-tds: ${{ needs.parse-tds.result }}" >> $GITHUB_STEP_SUMMARY

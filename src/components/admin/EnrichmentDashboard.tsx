@@ -2,9 +2,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Palette, FileText, Globe, BarChart3, RefreshCw, History, CheckCircle2, Clock, Zap, Image } from 'lucide-react';
+import { Palette, FileText, Globe, BarChart3, RefreshCw, History, CheckCircle2, Clock, Zap, Image, FileSearch } from 'lucide-react';
 import { ColorExtractionPanel } from './ColorExtractionPanel';
 import { TdsDiscoveryPanel } from './TdsDiscoveryPanel';
+import { TdsParsingPanel } from './TdsParsingPanel';
 import { RegionalPricingPanel } from './RegionalPricingPanel';
 import { ImageEnrichmentPanel } from './ImageEnrichmentPanel';
 import { EnrichmentHistory } from './EnrichmentHistory';
@@ -61,16 +62,16 @@ function MetricCard({
 }
 
 export function EnrichmentDashboard() {
-  const { overall, lowColorBrands, lowTdsBrands, lowImageBrands, regionalBrands, isLoading, refresh, isFetching } = useEnrichmentMetrics();
+  const { overall, lowColorBrands, lowTdsBrands, lowImageBrands, lowParsingBrands, regionalBrands, isLoading, refresh, isFetching } = useEnrichmentMetrics();
   const { summary: historySummary, isLoading: historyLoading } = useEnrichmentHistory();
 
   const metrics = overall ? [
     { label: 'Images', current: overall.withImage, total: overall.total, percent: overall.total > 0 ? (overall.withImage / overall.total) * 100 : 0 },
     { label: 'Color Hex', current: overall.withColorHex, total: overall.total, percent: overall.total > 0 ? (overall.withColorHex / overall.total) * 100 : 0 },
     { label: 'TDS URLs', current: overall.withTds, total: overall.total, percent: overall.total > 0 ? (overall.withTds / overall.total) * 100 : 0 },
+    { label: 'TDS Parsed', current: overall.withFullParsing, total: overall.withTds, percent: overall.withTds > 0 ? (overall.withFullParsing / overall.withTds) * 100 : 0 },
     { label: 'EUR Price', current: overall.withEur, total: overall.total, percent: overall.total > 0 ? (overall.withEur / overall.total) * 100 : 0 },
     { label: 'GBP Price', current: overall.withGbp, total: overall.total, percent: overall.total > 0 ? (overall.withGbp / overall.total) * 100 : 0 },
-    { label: 'CAD Price', current: overall.withCad, total: overall.total, percent: overall.total > 0 ? (overall.withCad / overall.total) * 100 : 0 },
   ] : [];
 
   return (
@@ -166,7 +167,7 @@ export function EnrichmentDashboard() {
 
       {/* Enrichment Tabs */}
       <Tabs defaultValue="images" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 max-w-2xl">
+        <TabsList className="grid w-full grid-cols-6 max-w-3xl">
           <TabsTrigger value="images" className="flex items-center gap-2">
             <Image className="w-4 h-4" />
             Images
@@ -178,6 +179,10 @@ export function EnrichmentDashboard() {
           <TabsTrigger value="tds" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
             TDS
+          </TabsTrigger>
+          <TabsTrigger value="tds-parsing" className="flex items-center gap-2">
+            <FileSearch className="w-4 h-4" />
+            Parse
           </TabsTrigger>
           <TabsTrigger value="regional" className="flex items-center gap-2">
             <Globe className="w-4 h-4" />
@@ -201,6 +206,10 @@ export function EnrichmentDashboard() {
           <TdsDiscoveryPanel />
         </TabsContent>
 
+        <TabsContent value="tds-parsing" className="mt-4">
+          <TdsParsingPanel />
+        </TabsContent>
+
         <TabsContent value="regional" className="mt-4">
           <RegionalPricingPanel />
         </TabsContent>
@@ -216,7 +225,7 @@ export function EnrichmentDashboard() {
           <CardTitle className="text-lg">Enrichment Targets</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
             <div className="space-y-2">
               <p className="font-medium flex items-center gap-2">
                 <Image className="w-4 h-4" />
@@ -226,8 +235,8 @@ export function EnrichmentDashboard() {
                 {isLoading ? (
                   <li><Skeleton className="h-4 w-32" /></li>
                 ) : (
-                  lowImageBrands.slice(0, 4).map(b => (
-                    <li key={b.brandSlug}>• {b.brandName}: {b.imageCoverage}% ({b.withoutImage} missing)</li>
+                  lowImageBrands.slice(0, 3).map(b => (
+                    <li key={b.brandSlug}>• {b.brandName}: {b.imageCoverage}%</li>
                   ))
                 )}
               </ul>
@@ -235,14 +244,14 @@ export function EnrichmentDashboard() {
             <div className="space-y-2">
               <p className="font-medium flex items-center gap-2">
                 <Palette className="w-4 h-4" />
-                Color Extraction ({lowColorBrands.length} brands &lt;90%)
+                Colors ({lowColorBrands.length} brands &lt;90%)
               </p>
               <ul className="space-y-1 text-muted-foreground">
                 {isLoading ? (
                   <li><Skeleton className="h-4 w-32" /></li>
                 ) : (
-                  lowColorBrands.slice(0, 4).map(b => (
-                    <li key={b.brandSlug}>• {b.brandName}: {b.colorCoverage}% → 90%+</li>
+                  lowColorBrands.slice(0, 3).map(b => (
+                    <li key={b.brandSlug}>• {b.brandName}: {b.colorCoverage}%</li>
                   ))
                 )}
               </ul>
@@ -250,14 +259,29 @@ export function EnrichmentDashboard() {
             <div className="space-y-2">
               <p className="font-medium flex items-center gap-2">
                 <FileText className="w-4 h-4" />
-                TDS Discovery ({lowTdsBrands.length} brands &lt;50%)
+                TDS ({lowTdsBrands.length} brands &lt;50%)
               </p>
               <ul className="space-y-1 text-muted-foreground">
                 {isLoading ? (
                   <li><Skeleton className="h-4 w-32" /></li>
                 ) : (
-                  lowTdsBrands.slice(0, 4).map(b => (
-                    <li key={b.brandSlug}>• {b.brandName} ({b.totalProducts} products)</li>
+                  lowTdsBrands.slice(0, 3).map(b => (
+                    <li key={b.brandSlug}>• {b.brandName}: {b.tdsCoverage}%</li>
+                  ))
+                )}
+              </ul>
+            </div>
+            <div className="space-y-2">
+              <p className="font-medium flex items-center gap-2">
+                <FileSearch className="w-4 h-4" />
+                Parsing ({lowParsingBrands.length} brands &lt;80%)
+              </p>
+              <ul className="space-y-1 text-muted-foreground">
+                {isLoading ? (
+                  <li><Skeleton className="h-4 w-32" /></li>
+                ) : (
+                  lowParsingBrands.slice(0, 3).map(b => (
+                    <li key={b.brandSlug}>• {b.brandName}: {b.parsingCoverage}%</li>
                   ))
                 )}
               </ul>
@@ -265,14 +289,14 @@ export function EnrichmentDashboard() {
             <div className="space-y-2">
               <p className="font-medium flex items-center gap-2">
                 <Globe className="w-4 h-4" />
-                Regional Pricing ({regionalBrands.length} brands)
+                Regional ({regionalBrands.length} brands)
               </p>
               <ul className="space-y-1 text-muted-foreground">
                 {isLoading ? (
                   <li><Skeleton className="h-4 w-32" /></li>
                 ) : (
-                  regionalBrands.slice(0, 4).map(b => (
-                    <li key={b.brandSlug}>• {b.brandName}: {b.supportedRegions.join(', ')}</li>
+                  regionalBrands.slice(0, 3).map(b => (
+                    <li key={b.brandSlug}>• {b.brandName}</li>
                   ))
                 )}
               </ul>
