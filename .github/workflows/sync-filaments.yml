@@ -305,10 +305,70 @@ jobs:
           
           echo "✅ Successfully scraped $BRAND (Created: $CREATED, Updated: $UPDATED)"
 
+  sync-regional-prices:
+    name: Sync Regional Prices
+    runs-on: ubuntu-latest
+    # Only run on weekly schedule (Sundays)
+    if: github.event.schedule == '0 1 * * 0' || (github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'regional-prices')
+    
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+    
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+    
+    steps:
+      - name: Sync Bambu Lab regional prices
+        run: |
+          echo "🌍 Syncing Bambu Lab regional prices..."
+          curl -sS -w "\n%{http_code}" \
+            "$SUPABASE_URL/functions/v1/sync-regional-prices" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"brandSlug":"bambu-lab","regions":["EU","UK","CA","AU","JP"],"dryRun":false}'
+          
+      - name: Sync Elegoo regional prices
+        run: |
+          echo "🌍 Syncing Elegoo regional prices..."
+          curl -sS -w "\n%{http_code}" \
+            "$SUPABASE_URL/functions/v1/sync-regional-prices" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"brandSlug":"elegoo","regions":["EU","UK","CA","AU"],"dryRun":false}'
+          
+      - name: Sync Polymaker regional prices
+        run: |
+          echo "🌍 Syncing Polymaker regional prices..."
+          curl -sS -w "\n%{http_code}" \
+            "$SUPABASE_URL/functions/v1/sync-regional-prices" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"brandSlug":"polymaker","regions":["EU"],"dryRun":false}'
+          
+      - name: Sync Creality regional prices
+        run: |
+          echo "🌍 Syncing Creality regional prices..."
+          curl -sS -w "\n%{http_code}" \
+            "$SUPABASE_URL/functions/v1/sync-regional-prices" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"brandSlug":"creality","regions":["EU","UK","CA","AU"],"dryRun":false}'
+          
+      - name: Sync Anycubic regional prices
+        run: |
+          echo "🌍 Syncing Anycubic regional prices..."
+          curl -sS -w "\n%{http_code}" \
+            "$SUPABASE_URL/functions/v1/sync-regional-prices" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"brandSlug":"anycubic","regions":["EU","UK","CA","AU"],"dryRun":false}'
+
   summary:
     name: Generate Summary Report
     runs-on: ubuntu-latest
-    needs: [sync-spoolman, scrape-shopify, scrape-amazon, scrape-other]
+    needs: [sync-spoolman, scrape-shopify, scrape-amazon, scrape-other, sync-regional-prices]
     if: always()
     
     steps:
@@ -390,6 +450,14 @@ jobs:
             echo "✅ **Other Platforms (5):** Success" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ **Other Platforms:** Completed with warnings" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.sync-regional-prices.result }}" == "success" ]; then
+            echo "✅ **Regional Prices (5):** Success" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.sync-regional-prices.result }}" == "skipped" ]; then
+            echo "⏭️ **Regional Prices:** Skipped (weekly only)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Regional Prices:** Completed with warnings" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY

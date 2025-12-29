@@ -16,6 +16,7 @@ const REGION_OPTIONS = [
   { id: 'UK', label: 'UK (GBP)', currency: '£' },
   { id: 'CA', label: 'Canada (CAD)', currency: 'C$' },
   { id: 'AU', label: 'Australia (AUD)', currency: 'A$' },
+  { id: 'JP', label: 'Japan (JPY)', currency: '¥' },
 ];
 
 export function RegionalPricingPanel() {
@@ -118,6 +119,43 @@ export function RegionalPricingPanel() {
     return 'outline';
   };
 
+  // Calculate overall regional coverage stats
+  const overallStats = {
+    eur: regionalBrands.length > 0 
+      ? Math.round(regionalBrands.filter(b => b.supportedRegions.includes('EU')).reduce((acc, b) => acc + b.eurCoverage, 0) / Math.max(1, regionalBrands.filter(b => b.supportedRegions.includes('EU')).length))
+      : 0,
+    gbp: regionalBrands.length > 0 
+      ? Math.round(regionalBrands.filter(b => b.supportedRegions.includes('UK')).reduce((acc, b) => acc + b.gbpCoverage, 0) / Math.max(1, regionalBrands.filter(b => b.supportedRegions.includes('UK')).length))
+      : 0,
+    cad: regionalBrands.length > 0 
+      ? Math.round(regionalBrands.filter(b => b.supportedRegions.includes('CA')).reduce((acc, b) => acc + b.cadCoverage, 0) / Math.max(1, regionalBrands.filter(b => b.supportedRegions.includes('CA')).length))
+      : 0,
+    aud: regionalBrands.length > 0 
+      ? Math.round(regionalBrands.filter(b => b.supportedRegions.includes('AU')).reduce((acc, b) => acc + b.audCoverage, 0) / Math.max(1, regionalBrands.filter(b => b.supportedRegions.includes('AU')).length))
+      : 0,
+    jpy: regionalBrands.length > 0 
+      ? Math.round(regionalBrands.filter(b => b.supportedRegions.includes('JP')).reduce((acc, b) => acc + (b.jpyCoverage || 0), 0) / Math.max(1, regionalBrands.filter(b => b.supportedRegions.includes('JP')).length))
+      : 0,
+  };
+
+  const lowCoverageBrands = regionalBrands.filter(b => 
+    (b.supportedRegions.includes('EU') && b.eurCoverage === 0) ||
+    (b.supportedRegions.includes('UK') && b.gbpCoverage === 0) ||
+    (b.supportedRegions.includes('CA') && b.cadCoverage === 0) ||
+    (b.supportedRegions.includes('AU') && b.audCoverage === 0)
+  );
+
+  const handleSyncLowCoverage = async () => {
+    const ops = lowCoverageBrands.map(brand => ({
+      type: 'regional-pricing' as const,
+      brandSlug: brand.brandSlug,
+      regions: brand.supportedRegions.filter(r => r !== 'US'),
+      dryRun,
+    }));
+    await runQueue(ops);
+    if (!dryRun) refresh();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -136,10 +174,59 @@ export function RegionalPricingPanel() {
           </div>
         </div>
         <CardDescription>
-          Sync regional prices (EUR, GBP, CAD, AUD) from {regionalBrands.length} brand Shopify stores
+          Sync regional prices (EUR, GBP, CAD, AUD, JPY) from {regionalBrands.length} brand Shopify stores
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Coverage Summary */}
+        <div className="grid grid-cols-5 gap-2 p-3 bg-muted rounded-lg">
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">EUR</p>
+            <p className={`text-lg font-bold ${overallStats.eur < 30 ? 'text-destructive' : overallStats.eur < 60 ? 'text-yellow-600' : 'text-green-600'}`}>
+              {overallStats.eur}%
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">GBP</p>
+            <p className={`text-lg font-bold ${overallStats.gbp < 30 ? 'text-destructive' : overallStats.gbp < 60 ? 'text-yellow-600' : 'text-green-600'}`}>
+              {overallStats.gbp}%
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">CAD</p>
+            <p className={`text-lg font-bold ${overallStats.cad < 30 ? 'text-destructive' : overallStats.cad < 60 ? 'text-yellow-600' : 'text-green-600'}`}>
+              {overallStats.cad}%
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">AUD</p>
+            <p className={`text-lg font-bold ${overallStats.aud < 30 ? 'text-destructive' : overallStats.aud < 60 ? 'text-yellow-600' : 'text-green-600'}`}>
+              {overallStats.aud}%
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">JPY</p>
+            <p className={`text-lg font-bold ${overallStats.jpy < 30 ? 'text-destructive' : overallStats.jpy < 60 ? 'text-yellow-600' : 'text-green-600'}`}>
+              {overallStats.jpy}%
+            </p>
+          </div>
+        </div>
+
+        {lowCoverageBrands.length > 0 && (
+          <div className="flex items-center justify-between p-2 bg-destructive/10 rounded-lg">
+            <span className="text-sm text-destructive">
+              {lowCoverageBrands.length} brand(s) with 0% coverage in supported regions
+            </span>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleSyncLowCoverage}
+              disabled={isRunning}
+            >
+              Sync Low Coverage
+            </Button>
+          </div>
+        )}
         {/* Region Selection */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Target Regions</Label>
@@ -257,6 +344,11 @@ export function RegionalPricingPanel() {
                       {brand.supportedRegions.includes('AU') && (
                         <Badge variant={getCoverageColor(brand.audCoverage)} className="text-xs">
                           A${brand.audCoverage}%
+                        </Badge>
+                      )}
+                      {brand.supportedRegions.includes('JP') && (
+                        <Badge variant={getCoverageColor(brand.jpyCoverage || 0)} className="text-xs">
+                          ¥{brand.jpyCoverage || 0}%
                         </Badge>
                       )}
                     </div>

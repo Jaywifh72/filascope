@@ -9,6 +9,7 @@ export interface OverallMetrics {
   withGbp: number;
   withCad: number;
   withAud: number;
+  withJpy: number;
 }
 
 export interface BrandMetrics {
@@ -21,12 +22,14 @@ export interface BrandMetrics {
   withGbp: number;
   withCad: number;
   withAud: number;
+  withJpy: number;
   colorCoverage: number;
   tdsCoverage: number;
   eurCoverage: number;
   gbpCoverage: number;
   cadCoverage: number;
   audCoverage: number;
+  jpyCoverage: number;
   supportedRegions: string[];
 }
 
@@ -42,7 +45,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
   // Fetch overall metrics
   const { data: overallData, error: overallError } = await supabase
     .from('filaments')
-    .select('id, color_hex, tds_url, price_eur, price_gbp, price_cad, price_aud');
+    .select('id, color_hex, tds_url, price_eur, price_gbp, price_cad, price_aud, price_jpy');
 
   if (overallError) throw overallError;
 
@@ -54,6 +57,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
     withGbp: overallData?.filter(f => f.price_gbp !== null).length || 0,
     withCad: overallData?.filter(f => f.price_cad !== null).length || 0,
     withAud: overallData?.filter(f => f.price_aud !== null).length || 0,
+    withJpy: overallData?.filter(f => f.price_jpy !== null).length || 0,
   };
 
   // Fetch per-brand metrics with supported_regions from automated_brands
@@ -67,7 +71,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
   // Fetch filament counts per brand
   const { data: filamentsByVendor, error: vendorError } = await supabase
     .from('filaments')
-    .select('vendor, color_hex, tds_url, price_eur, price_gbp, price_cad, price_aud');
+    .select('vendor, color_hex, tds_url, price_eur, price_gbp, price_cad, price_aud, price_jpy');
 
   if (vendorError) throw vendorError;
 
@@ -91,6 +95,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
     const withGbp = vendorFilaments.filter(f => f.price_gbp !== null).length;
     const withCad = vendorFilaments.filter(f => f.price_cad !== null).length;
     const withAud = vendorFilaments.filter(f => f.price_aud !== null).length;
+    const withJpy = vendorFilaments.filter(f => f.price_jpy !== null).length;
 
     return {
       brandSlug: brand.brand_slug,
@@ -102,12 +107,14 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
       withGbp,
       withCad,
       withAud,
+      withJpy,
       colorCoverage: total > 0 ? Math.round((withColorHex / total) * 1000) / 10 : 0,
       tdsCoverage: total > 0 ? Math.round((withTds / total) * 1000) / 10 : 0,
       eurCoverage: total > 0 ? Math.round((withEur / total) * 1000) / 10 : 0,
       gbpCoverage: total > 0 ? Math.round((withGbp / total) * 1000) / 10 : 0,
       cadCoverage: total > 0 ? Math.round((withCad / total) * 1000) / 10 : 0,
       audCoverage: total > 0 ? Math.round((withAud / total) * 1000) / 10 : 0,
+      jpyCoverage: total > 0 ? Math.round((withJpy / total) * 1000) / 10 : 0,
       supportedRegions: brand.supported_regions || [],
     };
   }).filter(b => b.totalProducts > 0).sort((a, b) => b.totalProducts - a.totalProducts);

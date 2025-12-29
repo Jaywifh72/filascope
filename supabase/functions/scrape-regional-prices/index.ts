@@ -64,6 +64,63 @@ const BRAND_REGIONAL_STORES: Record<string, {
       AU: { subdomain: 'au', currency: 'AUD' },
     }
   },
+  'Sunlu': {
+    pattern: 'subdomain',
+    baseDomain: 'sunlu.com',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+  'Eryone': {
+    pattern: 'subdomain',
+    baseDomain: 'eryone3d.com',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+  'Jayo': {
+    pattern: 'subdomain',
+    baseDomain: 'jayo3d.com',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+  'Kingroon': {
+    pattern: 'subdomain',
+    baseDomain: 'kingroon.com',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+  'Sovol': {
+    pattern: 'subdomain',
+    baseDomain: 'sovol3d.com',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+  'Flashforge': {
+    pattern: 'subdomain',
+    baseDomain: 'flashforge.com',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+  'QIDI': {
+    pattern: 'subdomain',
+    baseDomain: 'qidi3d.com',
+    regions: {
+      US: { subdomain: 'www', currency: 'USD' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
 };
 
 // Brand-specific scrape configuration
@@ -76,6 +133,13 @@ const BRAND_SCRAPE_CONFIG: Record<string, {
   'Creality': { useFirecrawl: true, waitFor: 2000 },
   'Anycubic': { useFirecrawl: true, waitFor: 2000 },
   'Elegoo': { useFirecrawl: true, waitFor: 2000 },
+  'Sunlu': { useFirecrawl: true, waitFor: 2000 },
+  'Eryone': { useFirecrawl: true, waitFor: 2000 },
+  'Jayo': { useFirecrawl: true, waitFor: 2000 },
+  'Kingroon': { useFirecrawl: true, waitFor: 2000 },
+  'Sovol': { useFirecrawl: true, waitFor: 2000 },
+  'Flashforge': { useFirecrawl: true, waitFor: 2000 },
+  'QIDI': { useFirecrawl: true, waitFor: 2000 },
 };
 
 // Firecrawl geo-location mapping for regional scraping
@@ -476,6 +540,130 @@ function extractBambuLabPrice(
   return null;
 }
 
+// ============================================================
+// ELEGOO SPECIFIC PRICE EXTRACTOR
+// ============================================================
+const ELEGOO_PRICE_RANGES: Record<string, [number, number]> = {
+  'USD': [12, 50],
+  'CAD': [15, 70],
+  'GBP': [10, 45],
+  'EUR': [12, 55],
+  'AUD': [18, 80],
+};
+
+function extractElegooPrice(
+  html: string, 
+  markdown: string, 
+  expectedCurrency: string,
+  productTitle: string
+): { price: number; source: string; validated: boolean; reason: string } | null {
+  const [minExpected, maxExpected] = ELEGOO_PRICE_RANGES[expectedCurrency] || [10, 60];
+  console.log(`[ELEGOO] Expected price range: ${minExpected}-${maxExpected} ${expectedCurrency}`);
+  
+  // Strategy 1: JSON-LD structured data
+  const jsonLdPrice = extractFromJsonLd(html);
+  if (jsonLdPrice && jsonLdPrice >= minExpected && jsonLdPrice <= maxExpected) {
+    console.log(`[ELEGOO] ✓ JSON-LD price VALID: ${jsonLdPrice} ${expectedCurrency}`);
+    return { price: jsonLdPrice, source: 'json-ld', validated: true, reason: 'Structured data' };
+  }
+
+  // Strategy 2: Meta tags
+  const metaPrice = extractFromMetaTags(html);
+  if (metaPrice && metaPrice >= minExpected && metaPrice <= maxExpected) {
+    console.log(`[ELEGOO] ✓ Meta tag price VALID: ${metaPrice} ${expectedCurrency}`);
+    return { price: metaPrice, source: 'meta-tag', validated: true, reason: 'Meta tag price' };
+  }
+
+  // Strategy 3: Shopify variant price
+  const shopifyPrice = extractShopifyPrice(html);
+  if (shopifyPrice && shopifyPrice >= minExpected && shopifyPrice <= maxExpected) {
+    console.log(`[ELEGOO] ✓ Shopify price VALID: ${shopifyPrice} ${expectedCurrency}`);
+    return { price: shopifyPrice, source: 'shopify-data', validated: true, reason: 'Shopify variant' };
+  }
+
+  console.log(`[ELEGOO] No valid price found for ${productTitle}`);
+  return null;
+}
+
+// ============================================================
+// POLYMAKER SPECIFIC PRICE EXTRACTOR
+// ============================================================
+const POLYMAKER_PRICE_RANGES: Record<string, [number, number]> = {
+  'USD': [18, 80],
+  'EUR': [18, 85],
+};
+
+function extractPolymakerPrice(
+  html: string, 
+  markdown: string, 
+  expectedCurrency: string,
+  productTitle: string
+): { price: number; source: string; validated: boolean; reason: string } | null {
+  const [minExpected, maxExpected] = POLYMAKER_PRICE_RANGES[expectedCurrency] || [15, 90];
+  console.log(`[POLYMAKER] Expected price range: ${minExpected}-${maxExpected} ${expectedCurrency}`);
+  
+  // Polymaker uses standard Shopify patterns
+  const jsonLdPrice = extractFromJsonLd(html);
+  if (jsonLdPrice && jsonLdPrice >= minExpected && jsonLdPrice <= maxExpected) {
+    console.log(`[POLYMAKER] ✓ JSON-LD price VALID: ${jsonLdPrice} ${expectedCurrency}`);
+    return { price: jsonLdPrice, source: 'json-ld', validated: true, reason: 'Structured data' };
+  }
+
+  const metaPrice = extractFromMetaTags(html);
+  if (metaPrice && metaPrice >= minExpected && metaPrice <= maxExpected) {
+    console.log(`[POLYMAKER] ✓ Meta tag price VALID: ${metaPrice} ${expectedCurrency}`);
+    return { price: metaPrice, source: 'meta-tag', validated: true, reason: 'Meta tag price' };
+  }
+
+  const shopifyPrice = extractShopifyPrice(html);
+  if (shopifyPrice && shopifyPrice >= minExpected && shopifyPrice <= maxExpected) {
+    console.log(`[POLYMAKER] ✓ Shopify price VALID: ${shopifyPrice} ${expectedCurrency}`);
+    return { price: shopifyPrice, source: 'shopify-data', validated: true, reason: 'Shopify variant' };
+  }
+
+  console.log(`[POLYMAKER] No valid price found for ${productTitle}`);
+  return null;
+}
+
+// ============================================================
+// SUNLU SPECIFIC PRICE EXTRACTOR
+// ============================================================
+const SUNLU_PRICE_RANGES: Record<string, [number, number]> = {
+  'USD': [12, 50],
+  'EUR': [12, 55],
+};
+
+function extractSunluPrice(
+  html: string, 
+  markdown: string, 
+  expectedCurrency: string,
+  productTitle: string
+): { price: number; source: string; validated: boolean; reason: string } | null {
+  const [minExpected, maxExpected] = SUNLU_PRICE_RANGES[expectedCurrency] || [10, 60];
+  console.log(`[SUNLU] Expected price range: ${minExpected}-${maxExpected} ${expectedCurrency}`);
+  
+  const jsonLdPrice = extractFromJsonLd(html);
+  if (jsonLdPrice && jsonLdPrice >= minExpected && jsonLdPrice <= maxExpected) {
+    console.log(`[SUNLU] ✓ JSON-LD price VALID: ${jsonLdPrice} ${expectedCurrency}`);
+    return { price: jsonLdPrice, source: 'json-ld', validated: true, reason: 'Structured data' };
+  }
+
+  const metaPrice = extractFromMetaTags(html);
+  if (metaPrice && metaPrice >= minExpected && metaPrice <= maxExpected) {
+    console.log(`[SUNLU] ✓ Meta tag price VALID: ${metaPrice} ${expectedCurrency}`);
+    return { price: metaPrice, source: 'meta-tag', validated: true, reason: 'Meta tag price' };
+  }
+
+  const shopifyPrice = extractShopifyPrice(html);
+  if (shopifyPrice && shopifyPrice >= minExpected && shopifyPrice <= maxExpected) {
+    console.log(`[SUNLU] ✓ Shopify price VALID: ${shopifyPrice} ${expectedCurrency}`);
+    return { price: shopifyPrice, source: 'shopify-data', validated: true, reason: 'Shopify variant' };
+  }
+
+  console.log(`[SUNLU] No valid price found for ${productTitle}`);
+  return null;
+}
+
 // Extract numeric price from text containing currency symbol
 function extractNumericPrice(text: string, expectedCurrency: string): number | null {
   // Remove currency symbols and extract number
@@ -698,7 +886,46 @@ async function scrapeWithFirecrawl(
       return null;
     }
 
-    // For non-Bambu Lab brands, use generic extraction
+    // Use brand-specific extraction for Elegoo
+    if (vendor === 'Elegoo') {
+      const result = extractElegooPrice(html, markdown, expectedCurrency, productTitle);
+      if (result) {
+        const available = !html.toLowerCase().includes('out of stock') && 
+                         !html.toLowerCase().includes('sold out');
+        console.log(`[FIRECRAWL] ✓ SUCCESS: ${result.price} ${expectedCurrency} (${result.source})`);
+        return { price: result.price, currency: expectedCurrency, available, source: result.source, validated: true };
+      }
+      console.log('[FIRECRAWL] No valid Elegoo price found');
+      return null;
+    }
+
+    // Use brand-specific extraction for Polymaker
+    if (vendor === 'Polymaker') {
+      const result = extractPolymakerPrice(html, markdown, expectedCurrency, productTitle);
+      if (result) {
+        const available = !html.toLowerCase().includes('out of stock') && 
+                         !html.toLowerCase().includes('sold out');
+        console.log(`[FIRECRAWL] ✓ SUCCESS: ${result.price} ${expectedCurrency} (${result.source})`);
+        return { price: result.price, currency: expectedCurrency, available, source: result.source, validated: true };
+      }
+      console.log('[FIRECRAWL] No valid Polymaker price found');
+      return null;
+    }
+
+    // Use brand-specific extraction for Sunlu
+    if (vendor === 'Sunlu') {
+      const result = extractSunluPrice(html, markdown, expectedCurrency, productTitle);
+      if (result) {
+        const available = !html.toLowerCase().includes('out of stock') && 
+                         !html.toLowerCase().includes('sold out');
+        console.log(`[FIRECRAWL] ✓ SUCCESS: ${result.price} ${expectedCurrency} (${result.source})`);
+        return { price: result.price, currency: expectedCurrency, available, source: result.source, validated: true };
+      }
+      console.log('[FIRECRAWL] No valid Sunlu price found');
+      return null;
+    }
+
+    // For other brands, use generic extraction
     const price = extractPriceFromContent(html, markdown, expectedCurrency);
     
     if (price) {
