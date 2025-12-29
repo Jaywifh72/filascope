@@ -37,8 +37,31 @@ const MATERIAL_COLOR_DEFAULTS: Record<string, { colorName: string; colorHex: str
   'nat': { colorName: 'natural', colorHex: '#F5F5DC' },
   'wood': { colorName: 'brown', colorHex: '#8B4513' },
   'wood fill': { colorName: 'brown', colorHex: '#8B4513' },
+  'wood pla': { colorName: 'brown', colorHex: '#8B4513' },
   'glass fiber': { colorName: 'beige', colorHex: '#D4C4A8' },
   'gf': { colorName: 'beige', colorHex: '#D4C4A8' },
+  'pp cf': { colorName: 'black', colorHex: '#1A1A1A' },
+  'polypropylene carbon': { colorName: 'black', colorHex: '#1A1A1A' },
+  'peek': { colorName: 'amber', colorHex: '#C19A6B' },
+  'pei': { colorName: 'amber', colorHex: '#C19A6B' },
+  'ultem': { colorName: 'amber', colorHex: '#C19A6B' },
+  'asa cf': { colorName: 'black', colorHex: '#1A1A1A' },
+  'petg cf': { colorName: 'black', colorHex: '#1A1A1A' },
+  'pa cf': { colorName: 'black', colorHex: '#1A1A1A' },
+  'nylon cf': { colorName: 'black', colorHex: '#1A1A1A' },
+  'abs cf': { colorName: 'black', colorHex: '#1A1A1A' },
+  'pla cf': { colorName: 'black', colorHex: '#1A1A1A' },
+  'marble': { colorName: 'white', colorHex: '#E0E0E0' },
+  'granite': { colorName: 'grey', colorHex: '#696969' },
+  'stone': { colorName: 'grey', colorHex: '#808080' },
+  'recycled': { colorName: 'grey', colorHex: '#808080' },
+  'recycled pla': { colorName: 'grey', colorHex: '#808080' },
+  'regrind': { colorName: 'grey', colorHex: '#808080' },
+  'galaxy': { colorName: 'galaxy', colorHex: '#2F1B41' },
+  'sparkly': { colorName: 'purple', colorHex: '#9370DB' },
+  'glitter': { colorName: 'silver', colorHex: '#C0C0C0' },
+  'metallic': { colorName: 'silver', colorHex: '#C0C0C0' },
+  'burnt titanium': { colorName: 'bronze', colorHex: '#CD7F32' },
 };
 
 // Check if title contains material that implies a default color
@@ -119,11 +142,36 @@ const BRAND_STRATEGIES: Record<string, (title: string, variantTitle?: string) =>
       if (hex) return { colorName: variantColor, colorHex: `#${hex}` };
     }
     
+    const titleLower = title.toLowerCase();
+    
+    // Check for Filaflex + color patterns
+    const filaflex82aColors: Record<string, string> = {
+      'black': '#1A1A1A', 'negro': '#1A1A1A',
+      'white': '#FFFFFF', 'blanco': '#FFFFFF',
+      'red': '#DC2626', 'rojo': '#DC2626',
+      'blue': '#2563EB', 'azul': '#2563EB',
+      'green': '#16A34A', 'verde': '#16A34A',
+      'yellow': '#EAB308', 'amarillo': '#EAB308',
+      'orange': '#EA580C', 'naranja': '#EA580C',
+      'pink': '#EC4899', 'rosa': '#EC4899',
+      'grey': '#808080', 'gris': '#808080', 'gray': '#808080',
+      'skin': '#FFCBA4', 'piel': '#FFCBA4',
+      'natural': '#F5F5DC',
+      'transparent': '#FFFFFF', 'transparente': '#FFFFFF',
+    };
+    
+    for (const [color, hex] of Object.entries(filaflex82aColors)) {
+      if (titleLower.includes(color)) {
+        return { colorName: color, colorHex: hex };
+      }
+    }
+    
     // Spanish/Filaflex specific patterns
     const patterns = [
       /filaflex\s+[\d.]+[a-z]?\s+([a-z]+(?:\s+[a-z]+)?)/i,
       /([a-z]+(?:\s+[a-z]+)?)\s+filaflex/i,
       /recreus\s+([a-z]+)/i,
+      /\s-\s([a-z]+(?:\s+[a-z]+)?)\s*$/i,  // "Product - Color" pattern
     ];
     
     for (const pattern of patterns) {
@@ -131,7 +179,7 @@ const BRAND_STRATEGIES: Record<string, (title: string, variantTitle?: string) =>
       if (match?.[1]) {
         const colorName = match[1].toLowerCase().trim();
         // Skip material names
-        if (!['82a', '60a', '70a', '95a', 'tpu', 'tpe', 'filament'].includes(colorName)) {
+        if (!['82a', '60a', '70a', '95a', 'tpu', 'tpe', 'filament', 'kg', '1kg', '500g', '750g'].includes(colorName)) {
           const hex = getColorHex(colorName);
           if (hex) return { colorName, colorHex: `#${hex}` };
         }
@@ -139,13 +187,17 @@ const BRAND_STRATEGIES: Record<string, (title: string, variantTitle?: string) =>
     }
     
     // Check specialty Filaflex colors
-    const specialtyColors = ['purifier', 'foamy', 'balena', 'conductive'];
-    const titleLower = title.toLowerCase();
+    const specialtyColors = ['purifier', 'foamy', 'balena', 'conductive', 'fluor', 'fluorescent'];
     for (const color of specialtyColors) {
       if (titleLower.includes(color)) {
         const hex = getColorHex(color);
         if (hex) return { colorName: color, colorHex: `#${hex}` };
       }
+    }
+    
+    // Shore hardness defaults (82A, 60A are typically natural/white)
+    if (/\b(82a|60a|70a|95a)\b/i.test(titleLower) && !Object.keys(filaflex82aColors).some(c => titleLower.includes(c))) {
+      return { colorName: 'natural', colorHex: '#F5F5DC' };
     }
     
     // Material default for Filaflex
@@ -183,13 +235,50 @@ const BRAND_STRATEGIES: Record<string, (title: string, variantTitle?: string) =>
     return { colorName: null, colorHex: null };
   },
   
-  // Printed Solid - Jessie line has color patterns
+  // Printed Solid - Jessie line and Prusament colors
   'printed solid': (title: string, variantTitle?: string) => {
     // Check variant first
     if (variantTitle) {
       const variantColor = variantTitle.toLowerCase().trim();
       const hex = getColorHex(variantColor);
       if (hex) return { colorName: variantColor, colorHex: `#${hex}` };
+    }
+    
+    const titleLower = title.toLowerCase();
+    
+    // Prusament patterns: "Prusament [Material] [Color] [Size]"
+    const prusamentPatterns = [
+      /prusament\s+(?:pla|petg|asa|pc|abs)\s+([a-z]+(?:\s+[a-z]+)?(?:\s+[a-z]+)?)/i,
+      /prusament\s+([a-z]+(?:\s+[a-z]+)?)\s+(?:\d+g|\d+kg)/i,
+    ];
+    
+    for (const pattern of prusamentPatterns) {
+      const match = title.match(pattern);
+      if (match?.[1]) {
+        const colorName = match[1].toLowerCase().trim();
+        // Skip material/size words
+        if (!['pla', 'petg', 'asa', 'pc', 'abs', 'blend', 'filament', 'refill', 'kg', 'g', 'mm', '1kg', '2kg'].includes(colorName)) {
+          const hex = getColorHex(colorName);
+          if (hex) return { colorName, colorHex: `#${hex}` };
+        }
+      }
+    }
+    
+    // Try Prusament specialty colors (check in order of specificity)
+    const prusamentColors = [
+      'azure blue', 'pristine white', 'galaxy black', 'urban grey', 'jet black',
+      'anthracite grey', 'vanilla white', 'army green', 'recycled black', 'recycled grey',
+      'recycled orange', 'lipstick red', 'royal purple', 'gentleman grey', 'mystic green',
+      'rusty orange', 'oh my gold', 'carmine red', 'signal white', 'prusa orange',
+      'prusa galaxy silver', 'viva la bronze', 'bloody dragon red', 'aubergine purple',
+      'mystic brown', 'royal blue', 'terracotta', 'pineapple yellow', 'lime green', 'opal green'
+    ];
+    
+    for (const color of prusamentColors) {
+      if (titleLower.includes(color)) {
+        const hex = getColorHex(color);
+        if (hex) return { colorName: color, colorHex: `#${hex}` };
+      }
     }
     
     // Jessie pattern: "X [ColorName] 1kg" or "[ColorName] X 1kg"
@@ -215,7 +304,6 @@ const BRAND_STRATEGIES: Record<string, (title: string, variantTitle?: string) =>
     const jessieColors = ['abyss', 'aquamarine', 'electric lemonade', 'gold rush', 'misty green', 
                           'nightshade', 'royal ruby', 'elixir', 'fire opal', 'obsidian', 'onyx',
                           'sapphire', 'amethyst', 'topaz', 'garnet', 'opal'];
-    const titleLower = title.toLowerCase();
     for (const color of jessieColors) {
       if (titleLower.includes(color)) {
         const hex = getColorHex(color);
@@ -247,19 +335,41 @@ const BRAND_STRATEGIES: Record<string, (title: string, variantTitle?: string) =>
   },
   
   // Amolen - Often has multicolor and specialty names
-  'amolen': (title: string) => {
+  'amolen': (title: string, variantTitle?: string) => {
+    // Check variant first
+    if (variantTitle) {
+      const variantColor = variantTitle.toLowerCase().trim();
+      const hex = getColorHex(variantColor);
+      if (hex) return { colorName: variantColor, colorHex: `#${hex}` };
+    }
+    
+    const titleLower = title.toLowerCase();
+    
+    // Check for color change / temperature change patterns
+    if (titleLower.includes('color change') || titleLower.includes('temperature')) {
+      // Try to extract the base color (usually the first color in description)
+      const colorMatch = titleLower.match(/to\s+([a-z]+)/i);
+      if (colorMatch?.[1]) {
+        const hex = getColorHex(colorMatch[1]);
+        if (hex) return { colorName: colorMatch[1], colorHex: `#${hex}` };
+      }
+    }
+    
     const patterns = [
       /(?:pla|petg|tpu|silk|matte)\s+([a-z]+(?:\s+[a-z]+)?)/i,
       /([a-z]+(?:\s+[a-z]+)?)\s+(?:pla|petg|tpu)/i,
       /(?:filament|3d)\s*-?\s*([a-z]+(?:\s+[a-z]+)?)/i,
+      /\s-\s([a-z]+(?:\s+[a-z]+)?)\s*$/i,
     ];
     
     for (const pattern of patterns) {
       const match = title.match(pattern);
       if (match?.[1]) {
         const colorName = match[1].toLowerCase().trim();
-        const hex = getColorHex(colorName);
-        if (hex) return { colorName, colorHex: `#${hex}` };
+        if (!['filament', 'pla', 'petg', 'tpu', 'kg', '1kg'].includes(colorName)) {
+          const hex = getColorHex(colorName);
+          if (hex) return { colorName, colorHex: `#${hex}` };
+        }
       }
     }
     return extractColorFromTitle(title);
@@ -309,19 +419,47 @@ const BRAND_STRATEGIES: Record<string, (title: string, variantTitle?: string) =>
   },
   
   // Jayo - Often multicolor or gradient names
-  'jayo': (title: string) => {
+  'jayo': (title: string, variantTitle?: string) => {
+    // Check variant first
+    if (variantTitle) {
+      const variantColor = variantTitle.toLowerCase().trim();
+      const hex = getColorHex(variantColor);
+      if (hex) return { colorName: variantColor, colorHex: `#${hex}` };
+    }
+    
+    const titleLower = title.toLowerCase();
+    
+    // Check for multi-color/gradient patterns
+    if (titleLower.includes('rainbow') || titleLower.includes('gradient') || titleLower.includes('multicolor')) {
+      return { colorName: 'rainbow', colorHex: '#FF0000' };
+    }
+    
+    // Check for dual/tri-color patterns
+    if (/\b(dual|tri|triple|quad|double)\s*(color|colour)?\b/i.test(titleLower)) {
+      // Try to get the first color mentioned
+      const colorMatch = titleLower.match(/\b(dual|tri|triple|quad|double)\s*(?:color|colour)?\s*([a-z]+)/i);
+      if (colorMatch?.[2]) {
+        const hex = getColorHex(colorMatch[2]);
+        if (hex) return { colorName: colorMatch[2], colorHex: `#${hex}` };
+      }
+      return { colorName: 'multicolor', colorHex: '#FF0000' };
+    }
+    
     const patterns = [
       /(?:silk|matte|metal|rainbow)\s+([a-z]+(?:\s+[a-z]+)?)/i,
       /([a-z]+(?:\s+[a-z]+)?)\s+(?:silk|matte)/i,
       /(?:pla|petg)\s+([a-z]+(?:\s+[a-z]+)?)/i,
+      /\s-\s([a-z]+(?:\s+[a-z]+)?)\s*$/i,
     ];
     
     for (const pattern of patterns) {
       const match = title.match(pattern);
       if (match?.[1]) {
         const colorName = match[1].toLowerCase().trim();
-        const hex = getColorHex(colorName);
-        if (hex) return { colorName, colorHex: `#${hex}` };
+        if (!['pla', 'petg', 'tpu', 'filament', 'kg', '1kg', '2kg', 'pack'].includes(colorName)) {
+          const hex = getColorHex(colorName);
+          if (hex) return { colorName, colorHex: `#${hex}` };
+        }
       }
     }
     return extractColorFromTitle(title);

@@ -78,7 +78,8 @@ export function ColorExtractionPanel() {
           </div>
         </div>
         <CardDescription>
-          Extract color hex values from product images for {lowColorBrands.length} brands with &lt;90% coverage
+          Extract color hex values from product titles for {lowColorBrands.length} brands with &lt;90% coverage.
+          Enhanced with Prusament, Recreus/Filaflex, Eryone, and Jayo pattern matching.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
