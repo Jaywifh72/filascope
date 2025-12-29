@@ -1810,14 +1810,18 @@ function extractProductType(name: string): string {
   // AMOLEN-SPECIFIC: Check for sub-product-lines BEFORE base patterns
   // Order matters: longer/more specific patterns first
   const amelonSubLines = [
-    // Gradient/Variety packs (must be separate products)
+    // Gradient/Variety packs and sample packs (must be separate products)
     'gradient variety pack', 'variety pack',
     'crystal-transparent gradient', 'crystal transparent gradient',
+    'all in one sample pack', 'sample pack',
     // Basic sub-lines (MUST be before matte/silk since "basic dual" won't match those)
     'basic dual', 'basic tri-color', 'basic triple', 'basic dual color',
     // Matte sub-lines
     'matte rainbow', 'matte triple', 'matte dual', 'matte basic', 'matte tri-color',
-    // Silk sub-lines  
+    // Silk sub-lines (specific variants before generic silk)
+    'silk s-series', 's-series',
+    'silk glow in the dark', 'glow in the dark',
+    'silk shiny gradient', 'shiny gradient',
     'silk rainbow', 'silk triple', 'silk dual', 'silk starry', 'silk tri-color',
     // Transparent sub-lines
     'transparent rainbow', 'crystal-transparent',
