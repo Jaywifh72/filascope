@@ -1,3 +1,28 @@
+/**
+ * Clean filament display name by removing size/weight suffixes
+ * Converts: "PLA Matte Basic 1.75mm, 1KG/2.2LB" → "PLA Matte Basic"
+ */
+export function cleanFilamentDisplayName(title: string): string {
+  if (!title) return '';
+  
+  return title
+    // Remove diameter specifications (1.75mm, 2.85mm, 3.00mm)
+    .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')
+    // Remove weight specifications (1KG, 2.2LB, 1000g, 500G, etc.)
+    .replace(/\s*,?\s*\d+\.?\d*\s*kg\b/gi, '')
+    .replace(/\s*,?\s*\d+\.?\d*\s*lb\b/gi, '')
+    .replace(/\s*,?\s*\d{3,4}\s*g\b/gi, '')
+    // Remove combined weight patterns (1KG/2.2LB)
+    .replace(/\s*,?\s*\d+\.?\d*\s*kg\s*\/\s*\d+\.?\d*\s*lb\b/gi, '')
+    // Remove spool count patterns (3 Spools, x3, etc.)
+    .replace(/\s*,?\s*\d+\s*spools?\b/gi, '')
+    .replace(/\s*,?\s*x\d+\b/gi, '')
+    // Remove trailing commas and extra whitespace
+    .replace(/,\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Common color names to detect at the end of product titles
 export const COLOR_WORDS = [
   // Basic colors

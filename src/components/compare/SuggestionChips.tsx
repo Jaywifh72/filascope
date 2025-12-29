@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CompareItem } from "@/hooks/useCompare";
 import { useSimilarFilaments } from "@/hooks/useSimilarFilaments";
+import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 
 interface SuggestionChipsProps {
   currentItem: CompareItem;
@@ -69,7 +70,7 @@ export function SuggestionChips({ currentItem, onAdd }: SuggestionChipsProps) {
                 }}
               />
             )}
-            <span className="truncate max-w-[120px]">{similar.product_title}</span>
+            <span className="truncate max-w-[120px]">{cleanFilamentDisplayName(similar.product_title)}</span>
             <Plus className="w-3 h-3 text-primary flex-shrink-0" />
           </button>
         ))}

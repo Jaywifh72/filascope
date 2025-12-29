@@ -6,6 +6,7 @@ import { SidebarModule } from "./SidebarModule";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 
 export function WatchlistModule() {
   const navigate = useNavigate();
@@ -66,7 +67,7 @@ export function WatchlistModule() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate">
-                      {item.product_title}
+                      {cleanFilamentDisplayName(item.product_title)}
                     </p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-xs font-bold text-green-500">
@@ -100,7 +101,7 @@ export function WatchlistModule() {
                     className="w-8 h-8 rounded shrink-0"
                     style={{ backgroundColor: item.color_hex || "#ccc" }}
                   />
-                  <p className="text-xs truncate flex-1">{item.product_title}</p>
+                  <p className="text-xs truncate flex-1">{cleanFilamentDisplayName(item.product_title)}</p>
                 </div>
               ))}
             </div>

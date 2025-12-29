@@ -21,6 +21,7 @@ import { useCompare } from "@/hooks/useCompare";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
+import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 
 // Material badge colors - using purple as specified
 const MATERIAL_COLORS: Record<string, string> = {
@@ -204,15 +205,17 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   // Budget-friendly threshold
   const isBudgetFriendly = pricePerKg && pricePerKg < 20;
 
-  // Display title - use override for grouped products or strip vendor from product title
+  // Display title - use override for grouped products or strip vendor and size/weight from product title
   const getDisplayTitle = () => {
-    if (displayTitle) return displayTitle;
-    const title = filament.product_title || "";
+    if (displayTitle) return cleanFilamentDisplayName(displayTitle);
+    let title = filament.product_title || "";
     const vendor = filament.vendor || "";
     if (vendor && title.toLowerCase().startsWith(vendor.toLowerCase())) {
-      return title.slice(vendor.length).trim();
+      title = title.slice(vendor.length).trim();
     }
-    return title;
+    // Strip leading colon/dash if present after vendor removal
+    title = title.replace(/^[:\-]\s*/, '');
+    return cleanFilamentDisplayName(title);
   };
 
   const brandLogo = filament.vendor ? getBrandLogo(filament.vendor) : null;
