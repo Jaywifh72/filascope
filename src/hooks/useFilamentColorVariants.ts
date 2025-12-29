@@ -289,6 +289,14 @@ function deduplicateColorVariants(variants: Filament[], baseName: string): Filam
   });
   
   for (const variant of sorted) {
+    const colorName = getColorFromTitle(variant.product_title, baseName);
+    const hasColorHex = variant.color_hex && variant.color_hex.length > 0;
+    
+    // Skip variants with no color identifier - these are likely bulk packs
+    if (!colorName && !hasColorHex) {
+      continue;
+    }
+    
     let colorKey: string;
     
     if (isPrusament) {
@@ -299,7 +307,6 @@ function deduplicateColorVariants(variants: Filament[], baseName: string): Filam
         colorKey = variant.color_hex?.toLowerCase() || variant.id;
       }
     } else {
-      const colorName = getColorFromTitle(variant.product_title, baseName);
       colorKey = colorName 
         ? normalizeColorName(colorName, vendor) 
         : (variant.color_hex?.toLowerCase() || variant.id);
