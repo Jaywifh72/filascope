@@ -21,6 +21,7 @@ import { useCompare } from "@/hooks/useCompare";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
+import { useFilamentVariantCounts } from "@/hooks/useFilamentVariantCounts";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 
 // Material badge colors - using purple as specified
@@ -139,6 +140,20 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const [imageError, setImageError] = useState(false);
   const { formatPrice, formatRegionalPrice, currency: userCurrency } = useCurrency();
   
+  // Fetch all color variants from DB if not provided via variantIndicators
+  const fetchedVariants = useFilamentVariantCounts(
+    filament.id,
+    filament.product_title,
+    filament.vendor || null
+  );
+  
+  // Use provided variantIndicators or fall back to fetched data
+  const effectiveVariantIndicators = variantIndicators || {
+    colors: fetchedVariants.colors,
+    weights: [],
+    variantCount: fetchedVariants.count,
+  };
+  
   // Use regional price for proper currency handling
   const { 
     regionalPrice, 
@@ -184,11 +199,11 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
 
   // For grouped products, show price range if available
-  const hasMultipleVariants = variantIndicators && variantIndicators.variantCount > 1;
+  const hasMultipleVariants = effectiveVariantIndicators.variantCount > 1;
   const hasPriceRange = hasMultipleVariants && 
-    variantIndicators.priceRange?.min !== null && 
-    variantIndicators.priceRange?.max !== null &&
-    variantIndicators.priceRange.min !== variantIndicators.priceRange.max;
+    variantIndicators?.priceRange?.min !== null && 
+    variantIndicators?.priceRange?.max !== null &&
+    variantIndicators?.priceRange?.min !== variantIndicators?.priceRange?.max;
 
   // Score
   const overallScore = filament.value_score || 7.0;
@@ -357,17 +372,17 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         
         {/* Color swatches - below brand/vendor */}
         <div className="flex items-center gap-1 pl-8 mb-2">
-          {hasMultipleVariants && variantIndicators.colors.length > 0 ? (
+          {hasMultipleVariants && effectiveVariantIndicators.colors.length > 0 ? (
             <>
-              {variantIndicators.colors.slice(0, 6).map((hex, i) => (
+              {effectiveVariantIndicators.colors.slice(0, 6).map((hex, i) => (
                 <div 
                   key={i}
                   className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm"
                   style={{ backgroundColor: hex }}
                 />
               ))}
-              {variantIndicators.colors.length > 6 && (
-                <span className="text-[10px] text-slate-400 ml-1">+{variantIndicators.colors.length - 6}</span>
+              {effectiveVariantIndicators.colors.length > 6 && (
+                <span className="text-[10px] text-slate-400 ml-1">+{effectiveVariantIndicators.colors.length - 6}</span>
               )}
             </>
           ) : filament.color_hex ? (
@@ -386,7 +401,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         </div>
         
         {/* Weight options indicator for grouped products */}
-        {hasMultipleVariants && variantIndicators.weights.length > 1 && (
+        {hasMultipleVariants && variantIndicators?.weights && variantIndicators.weights.length > 1 && (
           <div className="pl-8 mt-1">
             <span className="text-[10px] text-slate-400">
               {variantIndicators.weights.map(w => w >= 1000 ? `${(w/1000).toFixed(1)}kg` : `${w}g`).join(' • ')}
