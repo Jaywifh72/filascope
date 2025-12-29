@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getBaseProductName as getBaseProductNameFromUtils } from '@/lib/productNameUtils';
+import { getBaseProductName } from '@/hooks/useFilamentColorVariants';
 
 interface VariantInfo {
   colors: string[];
@@ -26,7 +26,7 @@ export function useFilamentVariantCounts(
 
     const fetchVariants = async () => {
       try {
-        const baseName = getBaseProductNameFromUtils(productTitle);
+        const baseName = getBaseProductName(productTitle);
         
         // Fetch all filaments from this vendor
         const { data, error } = await supabase
@@ -37,10 +37,10 @@ export function useFilamentVariantCounts(
 
         if (error) throw error;
 
-        // Filter to only those matching the base product name
+        // Filter to only those matching the base product name (case-insensitive)
         const matchingVariants = (data || []).filter(f => {
-          const fBaseName = getBaseProductNameFromUtils(f.product_title);
-          return fBaseName === baseName;
+          const fBaseName = getBaseProductName(f.product_title);
+          return fBaseName.toLowerCase() === baseName.toLowerCase();
         });
 
         // Extract unique colors
