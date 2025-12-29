@@ -51,6 +51,11 @@ interface EnrichmentMetricsData {
   regionalBrands: BrandMetrics[];
 }
 
+// Helper to check if a filament has full parsing (core specs extracted)
+function hasFullParsing(f: { tds_url: string | null; nozzle_temp_min_c: number | null; drying_temp_c: number | null; density_g_cm3: number | null }) {
+  return f.tds_url && f.nozzle_temp_min_c && f.drying_temp_c;
+}
+
 async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
   const { data: overallData, error: overallError } = await supabase
     .from('filaments')
@@ -135,7 +140,7 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
   const lowColorBrands = brands.filter(b => b.colorCoverage < 90).sort((a, b) => a.colorCoverage - b.colorCoverage);
   const lowTdsBrands = brands.filter(b => b.tdsCoverage < 50).sort((a, b) => b.totalProducts - a.totalProducts);
   const lowImageBrands = brands.filter(b => b.imageCoverage < 90).sort((a, b) => a.imageCoverage - b.imageCoverage);
-  const lowParsingBrands = brands.filter(b => b.withTds > 0 && b.parsingCoverage < 80).sort((a, b) => a.parsingCoverage - b.parsingCoverage);
+  const lowParsingBrands = brands.filter(b => b.withTds > 0 && b.parsingCoverage < 80).sort((a, b) => b.withTds - a.withTds);
   const regionalBrands = brands.filter(b => b.supportedRegions && b.supportedRegions.length > 0).sort((a, b) => b.totalProducts - a.totalProducts);
 
   return { overall, brands, lowColorBrands, lowTdsBrands, lowImageBrands, lowParsingBrands, regionalBrands };
