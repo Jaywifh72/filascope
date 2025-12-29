@@ -1,11 +1,12 @@
 /**
- * Clean filament display name by removing size/weight suffixes
+ * Clean filament display name by removing size/weight suffixes and color names
  * Converts: "PLA Matte Basic 1.75mm, 1KG/2.2LB" → "PLA Matte Basic"
+ * Converts: "PLA Matte Triple Filament/ White Pink" → "PLA Matte Triple Filament"
  */
 export function cleanFilamentDisplayName(title: string): string {
   if (!title) return '';
   
-  return title
+  let cleaned = title
     // Remove diameter specifications (1.75mm, 2.85mm, 3.00mm)
     .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')
     // Remove weight specifications (1KG, 2.2LB, 1000g, 500G, etc.)
@@ -17,10 +18,14 @@ export function cleanFilamentDisplayName(title: string): string {
     // Remove spool count patterns (3 Spools, x3, etc.)
     .replace(/\s*,?\s*\d+\s*spools?\b/gi, '')
     .replace(/\s*,?\s*x\d+\b/gi, '')
+    // Remove color names after slash (Amolen pattern: "/ White Pink Purple")
+    .replace(/\s*\/\s*[A-Za-z\s&]+$/g, '')
     // Remove trailing special characters (commas, slashes, dashes, etc.)
     .replace(/[\s,\-–—\/\\|:;]+$/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+  
+  return cleaned;
 }
 
 // Common color names to detect at the end of product titles
@@ -167,14 +172,15 @@ export const getBaseProductName = (title: string, material?: string | null): str
     }
   }
   
-  // AMOLEN PATTERN: Handle "Material ProductLine [Filament] Size Color" format
+  // AMOLEN PATTERN: Handle "Material ProductLine [Filament] [Size] [Color]" format
   // Examples: "PLA Basic-High Speed 1.75mm, 1 KG Carrot Orange" → "PLA Basic-High Speed"
   //           "PLA Matte Dual Filament 1.75mm, 1 KG Purple & Blue" → "PLA Matte Dual"
+  //           "PLA Matte Triple Filament 1.75mm, 1KG/2.2LB White Pink Purple" → "PLA Matte Triple"
   //           "PETG Basic 1.75mm, 1KG/2.2LB Black" → "PETG Basic"
   //           "PEBA 90A Flexible Filament 1.75mm, 1KG Black" → "PEBA 90A Flexible"
   const amelonProductLines = [
     'Basic-High Speed', 'Basic High Speed', 'Basic Dual Color-High Speed', 'Basic Dual Color',
-    'Matte Dual', 'Matte Basic', 'Matte Rainbow', 'Matte Tri-Color', 'Matte',
+    'Matte Triple', 'Matte Dual', 'Matte Basic', 'Matte Rainbow', 'Matte Tri-Color', 'Matte',
     'Silk Dual', 'Silk Triple', 'Silk Rainbow', 'Silk Starry', 'Silk Tri-Color', 'Silk',
     'Marble', 'Marble Texture', 'Sparkle', 'Galaxy', 'Glow in the Dark', 'Glow', 
     'Wood', 'Carbon Fiber', 'Metal',
@@ -184,11 +190,11 @@ export const getBaseProductName = (title: string, material?: string | null): str
   // Sort by length descending to match longer patterns first
   const sortedProductLines = [...amelonProductLines].sort((a, b) => b.length - a.length);
   
-  // Try to match Amolen pattern: "Material ProductLine [Filament] Size Color"
+  // Try to match Amolen pattern: "Material ProductLine [Filament] [Size] [Color]"
   for (const productLine of sortedProductLines) {
-    // Match: Material + ProductLine + optional "Filament" + size/weight specs + anything (color)
+    // Match: Material + ProductLine + optional "Filament" + optional size/weight specs + anything (color)
     const regex = new RegExp(
-      `^((?:PLA\\+?|PETG|ABS|TPU|TPE|ASA|PEBA|PA\\d*|PC|HIPS|PVA|Nylon)\\s+${productLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?:\\s+Filament)?\\s+[\\d.]+\\s*mm.*$`,
+      `^((?:PLA\\+?|PETG|ABS|TPU|TPE|ASA|PEBA|PA\\d*|PC|HIPS|PVA|Nylon)\\s+${productLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?:\\s+Filament)?(?:\\s+[\\d.]+\\s*mm.*|\\s+.+)?$`,
       'i'
     );
     const match = normalizedTitle.match(regex);
