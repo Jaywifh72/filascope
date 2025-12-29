@@ -322,6 +322,7 @@ export interface GroupedFilament {
   weights: Set<number>;
   priceRange: { min: number | null; max: number | null };
   anyInStock: boolean; // True if ANY variant is in stock
+  colorStockStatus: Map<string, boolean>; // Map of color hex -> inStock status
 }
 
 interface FilamentBase {
@@ -369,6 +370,7 @@ export function groupFilamentsByProduct<T extends FilamentBase>(filaments: T[]):
         weights: new Set<number>(),
         priceRange: { min: null, max: null },
         anyInStock: false, // Will be set to true if any variant is available
+        colorStockStatus: new Map<string, boolean>(), // Track stock status per color
       });
     }
     
@@ -376,13 +378,19 @@ export function groupFilamentsByProduct<T extends FilamentBase>(filaments: T[]):
     group.variants.push(filament);
     
     // Track stock status - if ANY variant is in stock, the group is in stock
-    if (filament.variant_available !== false) {
+    const isVariantInStock = filament.variant_available !== false;
+    if (isVariantInStock) {
       group.anyInStock = true;
     }
     
-    // Track colors
+    // Track colors and their stock status
     if (filament.color_hex) {
-      group.colors.add(filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`);
+      const normalizedHex = filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`;
+      group.colors.add(normalizedHex);
+      // If this color is in stock, mark it as such (only update if not already marked as in stock)
+      if (!group.colorStockStatus.has(normalizedHex) || isVariantInStock) {
+        group.colorStockStatus.set(normalizedHex, group.colorStockStatus.get(normalizedHex) || isVariantInStock);
+      }
     }
     
     // Track weights (in grams)

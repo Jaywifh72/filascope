@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCompare } from "@/hooks/useCompare";
@@ -83,6 +84,7 @@ interface VariantIndicators {
   variantCount: number;   // Total number of variants
   priceRange?: { min: number | null; max: number | null };
   anyInStock?: boolean;   // True if ANY variant is in stock (for grouped products)
+  colorStockStatus?: Record<string, boolean>; // Map of color hex -> inStock status
 }
 
 interface FilamentCardProps {
@@ -378,21 +380,72 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           </span>
         </div>
         
-        {/* Color swatches - below brand/vendor */}
+        {/* Color swatches - below brand/vendor with hover stock info */}
         <div className="flex items-center gap-1 pl-8 mb-2">
           {hasMultipleVariants && effectiveVariantIndicators.colors.length > 0 ? (
-            <>
-              {effectiveVariantIndicators.colors.slice(0, 6).map((hex, i) => (
-                <div 
-                  key={i}
-                  className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm"
-                  style={{ backgroundColor: hex }}
-                />
-              ))}
-              {effectiveVariantIndicators.colors.length > 6 && (
-                <span className="text-[10px] text-slate-400 ml-1">+{effectiveVariantIndicators.colors.length - 6}</span>
-              )}
-            </>
+            <HoverCard openDelay={200} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <div className="flex items-center gap-1 cursor-pointer">
+                  {effectiveVariantIndicators.colors.slice(0, 6).map((hex, i) => {
+                    const isColorInStock = variantIndicators?.colorStockStatus?.[hex] !== false;
+                    return (
+                      <div 
+                        key={i}
+                        className={cn(
+                          "w-3.5 h-3.5 rounded-full border shadow-sm transition-opacity",
+                          isColorInStock ? "border-white/20" : "border-white/10 opacity-50"
+                        )}
+                        style={{ backgroundColor: hex }}
+                      />
+                    );
+                  })}
+                  {effectiveVariantIndicators.colors.length > 6 && (
+                    <span className="text-[10px] text-slate-400 ml-1">+{effectiveVariantIndicators.colors.length - 6}</span>
+                  )}
+                </div>
+              </HoverCardTrigger>
+              <HoverCardContent 
+                side="bottom" 
+                align="start" 
+                className="w-64 p-3 bg-slate-900/95 border-white/10"
+              >
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold text-white/90 mb-2">Color Availability</div>
+                  <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto">
+                    {effectiveVariantIndicators.colors.map((hex, i) => {
+                      const isColorInStock = variantIndicators?.colorStockStatus?.[hex] !== false;
+                      return (
+                        <div 
+                          key={i}
+                          className={cn(
+                            "flex items-center gap-2 px-2 py-1 rounded text-[11px]",
+                            isColorInStock 
+                              ? "bg-emerald-500/10 text-emerald-400" 
+                              : "bg-red-500/10 text-red-400"
+                          )}
+                        >
+                          <div 
+                            className="w-3 h-3 rounded-full border border-white/20 flex-shrink-0"
+                            style={{ backgroundColor: hex }}
+                          />
+                          {isColorInStock ? (
+                            <CheckCircle className="w-3 h-3 flex-shrink-0" />
+                          ) : (
+                            <XCircle className="w-3 h-3 flex-shrink-0" />
+                          )}
+                          <span className="truncate">{isColorInStock ? "In Stock" : "Out"}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {variantIndicators?.anyInStock && (
+                    <div className="text-[10px] text-slate-400 mt-2 pt-2 border-t border-white/10">
+                      {effectiveVariantIndicators.colors.filter(hex => variantIndicators?.colorStockStatus?.[hex] !== false).length} of {effectiveVariantIndicators.colors.length} colors available
+                    </div>
+                  )}
+                </div>
+              </HoverCardContent>
+            </HoverCard>
           ) : filament.color_hex ? (
             <div 
               className="w-4 h-4 rounded-full border-2 border-white/20 shadow-sm"

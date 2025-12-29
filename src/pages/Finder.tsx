@@ -1337,6 +1337,7 @@ const Finder = () => {
                       variantCount: group.variants.length,
                       priceRange: group.priceRange,
                       anyInStock: group.anyInStock,
+                      colorStockStatus: Object.fromEntries(group.colorStockStatus),
                     } : undefined}
                   />
                 );
