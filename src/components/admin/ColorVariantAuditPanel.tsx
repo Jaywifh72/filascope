@@ -11,7 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { 
   Loader2, CheckCircle2, XCircle, AlertTriangle, 
   ExternalLink, Download, ChevronDown, ChevronUp,
-  Palette, RefreshCw, FileWarning, Package
+  Palette, RefreshCw, FileWarning, Package, AlertCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,9 +25,11 @@ interface AuditResult {
     url: string | null;
   };
   databaseCount: number;
+  uiDisplayCount: number;
   websiteCount: number | null;
-  status: 'match' | 'mismatch' | 'website_error' | 'no_url' | 'bundle_skipped';
+  status: 'match' | 'mismatch' | 'data_quality_issue' | 'website_error' | 'no_url' | 'bundle_skipped';
   discrepancy: number | null;
+  hexDuplicates: string[];
   errorMessage: string | null;
   scrapedAt: string;
 }
@@ -40,6 +42,7 @@ interface AuditReport {
   summary: {
     matches: number;
     mismatches: number;
+    dataQualityIssues: number;
     websiteErrors: number;
     noUrl: number;
     bundlesSkipped: number;
@@ -47,7 +50,7 @@ interface AuditReport {
   };
 }
 
-type FilterType = 'all' | 'match' | 'mismatch' | 'website_error' | 'no_url' | 'bundle_skipped';
+type FilterType = 'all' | 'match' | 'mismatch' | 'data_quality_issue' | 'website_error' | 'no_url' | 'bundle_skipped';
 
 export function ColorVariantAuditPanel() {
   const { toast } = useToast();
@@ -122,6 +125,8 @@ export function ColorVariantAuditPanel() {
         return <CheckCircle2 className="w-4 h-4 text-green-500" />;
       case 'mismatch':
         return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'data_quality_issue':
+        return <AlertCircle className="w-4 h-4 text-purple-500" />;
       case 'website_error':
         return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       case 'bundle_skipped':
@@ -135,6 +140,7 @@ export function ColorVariantAuditPanel() {
     const variants: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
       match: 'default',
       mismatch: 'destructive',
+      data_quality_issue: 'secondary',
       website_error: 'secondary',
       no_url: 'outline',
       bundle_skipped: 'outline',
@@ -142,12 +148,13 @@ export function ColorVariantAuditPanel() {
     const labels: Record<string, string> = {
       match: 'Match',
       mismatch: 'Mismatch',
+      data_quality_issue: 'Data Issue',
       website_error: 'Error',
       no_url: 'No URL',
       bundle_skipped: 'Bundle',
     };
     return (
-      <Badge variant={variants[status] || 'outline'}>
+      <Badge variant={variants[status] || 'outline'} className={status === 'data_quality_issue' ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' : ''}>
         {labels[status] || status}
       </Badge>
     );
@@ -172,16 +179,18 @@ export function ColorVariantAuditPanel() {
 
   const downloadCSV = () => {
     if (!report) return;
-    const headers = ['Product Line ID', 'Vendor', 'Material', 'Sample Title', 'DB Count', 'Website Count', 'Discrepancy', 'Status', 'Error'];
+    const headers = ['Product Line ID', 'Vendor', 'Material', 'Sample Title', 'DB Count', 'UI Display', 'Website Count', 'Discrepancy', 'Status', 'Hex Duplicates', 'Error'];
     const rows = report.auditResults.map(r => [
       r.productLineId,
       r.vendor,
       r.material || '',
       r.sampleProduct.title,
       r.databaseCount,
+      r.uiDisplayCount,
       r.websiteCount ?? '',
       r.discrepancy ?? '',
       r.status,
+      r.hexDuplicates?.join('; ') || '',
       r.errorMessage || '',
     ]);
     const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
@@ -194,7 +203,7 @@ export function ColorVariantAuditPanel() {
     URL.revokeObjectURL(url);
   };
 
-  const matchRate = report ? (report.summary.matches / (report.summary.matches + report.summary.mismatches || 1) * 100) : 0;
+  const matchRate = report ? (report.summary.matches / (report.summary.matches + report.summary.mismatches + report.summary.dataQualityIssues || 1) * 100) : 0;
 
   return (
     <Card>
@@ -204,7 +213,7 @@ export function ColorVariantAuditPanel() {
           <CardTitle>Color Variant Audit</CardTitle>
         </div>
         <CardDescription>
-          Compare database variant counts against website color counts to identify sync discrepancies
+          Compare UI display counts (after deduplication) against website color counts to identify sync discrepancies
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -278,7 +287,7 @@ export function ColorVariantAuditPanel() {
         {/* Summary Stats */}
         {report && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
               <Card className="p-4">
                 <div className="text-2xl font-bold">{report.totalProductLines}</div>
                 <div className="text-sm text-muted-foreground">Product Lines</div>
@@ -290,6 +299,10 @@ export function ColorVariantAuditPanel() {
               <Card className="p-4 border-red-500/50">
                 <div className="text-2xl font-bold text-red-600">{report.summary.mismatches}</div>
                 <div className="text-sm text-muted-foreground">Mismatches</div>
+              </Card>
+              <Card className="p-4 border-purple-500/50">
+                <div className="text-2xl font-bold text-purple-600">{report.summary.dataQualityIssues}</div>
+                <div className="text-sm text-muted-foreground">Data Issues</div>
               </Card>
               <Card className="p-4 border-yellow-500/50">
                 <div className="text-2xl font-bold text-yellow-600">{report.summary.websiteErrors}</div>
@@ -306,10 +319,10 @@ export function ColorVariantAuditPanel() {
             </div>
 
             {/* Match Rate Progress */}
-            {(report.summary.matches + report.summary.mismatches) > 0 && (
+            {(report.summary.matches + report.summary.mismatches + report.summary.dataQualityIssues) > 0 && (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Match Rate</span>
+                  <span>Match Rate (excludes data quality issues)</span>
                   <span className={matchRate >= 90 ? 'text-green-600' : matchRate >= 70 ? 'text-yellow-600' : 'text-red-600'}>
                     {matchRate.toFixed(1)}%
                   </span>
@@ -320,7 +333,7 @@ export function ColorVariantAuditPanel() {
 
             {/* Filter and Export Controls */}
             <div className="flex flex-wrap gap-2 justify-between items-center">
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant={filter === 'all' ? 'default' : 'outline'}
                   size="sm"
@@ -341,6 +354,14 @@ export function ColorVariantAuditPanel() {
                   onClick={() => setFilter('mismatch')}
                 >
                   Mismatches ({report.summary.mismatches})
+                </Button>
+                <Button
+                  variant={filter === 'data_quality_issue' ? 'secondary' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('data_quality_issue')}
+                  className={filter === 'data_quality_issue' ? 'bg-purple-500/20 text-purple-400' : ''}
+                >
+                  Data Issues ({report.summary.dataQualityIssues})
                 </Button>
                 <Button
                   variant={filter === 'website_error' ? 'secondary' : 'outline'}
@@ -379,10 +400,11 @@ export function ColorVariantAuditPanel() {
                         <TableHead>Product Line</TableHead>
                         <TableHead>Vendor</TableHead>
                         <TableHead>Material</TableHead>
-                        <TableHead className="text-center">DB Count</TableHead>
-                        <TableHead className="text-center">Website</TableHead>
+                        <TableHead className="text-center">DB</TableHead>
+                        <TableHead className="text-center">UI</TableHead>
+                        <TableHead className="text-center">Web</TableHead>
                         <TableHead className="text-center">Diff</TableHead>
-                        <TableHead>Error</TableHead>
+                        <TableHead>Hex Issues</TableHead>
                         <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -393,6 +415,7 @@ export function ColorVariantAuditPanel() {
                           className={
                             result.status === 'mismatch' ? 'bg-red-500/5' :
                             result.status === 'match' ? 'bg-green-500/5' :
+                            result.status === 'data_quality_issue' ? 'bg-purple-500/5' :
                             result.status === 'website_error' ? 'bg-yellow-500/5' :
                             ''
                           }
@@ -409,6 +432,11 @@ export function ColorVariantAuditPanel() {
                           <TableCell>{result.vendor}</TableCell>
                           <TableCell>{result.material || '-'}</TableCell>
                           <TableCell className="text-center font-bold">{result.databaseCount}</TableCell>
+                          <TableCell className="text-center font-bold">
+                            <span className={result.databaseCount !== result.uiDisplayCount ? 'text-purple-500' : ''}>
+                              {result.uiDisplayCount}
+                            </span>
+                          </TableCell>
                           <TableCell className="text-center">
                             {result.websiteCount !== null ? result.websiteCount : '-'}
                           </TableCell>
@@ -419,8 +447,10 @@ export function ColorVariantAuditPanel() {
                               </span>
                             ) : '-'}
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate" title={result.errorMessage || ''}>
-                            {result.errorMessage || '-'}
+                          <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate" title={result.hexDuplicates?.join('\n') || ''}>
+                            {result.hexDuplicates?.length > 0 ? (
+                              <span className="text-purple-400">{result.hexDuplicates.length} dupes</span>
+                            ) : '-'}
                           </TableCell>
                           <TableCell>
                             {result.sampleProduct.url && (
@@ -438,8 +468,8 @@ export function ColorVariantAuditPanel() {
                       ))}
                       {filteredResults.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                            No results match the current filter
+                          <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                            No results found for selected filter
                           </TableCell>
                         </TableRow>
                       )}
@@ -453,10 +483,12 @@ export function ColorVariantAuditPanel() {
 
         {/* Initial State */}
         {!report && !isLoading && (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-12 text-muted-foreground">
             <Palette className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Select a brand and click "Run Audit" to compare database variants with website colors.</p>
-            <p className="text-sm mt-2">This will scrape product pages using Firecrawl to verify color counts match.</p>
+            <p>Select a brand and run an audit to compare color variant counts</p>
+            <p className="text-sm mt-2">
+              This tool compares: <strong>DB Count</strong> (raw variants) → <strong>UI Display</strong> (after deduplication) → <strong>Website Count</strong> (scraped)
+            </p>
           </div>
         )}
       </CardContent>
