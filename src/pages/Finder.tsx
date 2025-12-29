@@ -573,6 +573,12 @@ const Finder = () => {
     queryFn: async () => {
       let query = supabase.from("filaments").select("*");
 
+      // Filter 1: Exclude non-filament products (null material = not a filament)
+      query = query.not("material", "is", null);
+
+      // Filter 2: Exclude sample spools (< 100g) but allow null weights
+      query = query.or("net_weight_g.is.null,net_weight_g.gte.100");
+
       // Check if search term is a color name - if so, skip text search (will filter by color later)
       const isColorSearch = searchTerm ? extractColorFromText(searchTerm) : null;
       
