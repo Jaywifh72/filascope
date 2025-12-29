@@ -616,6 +616,63 @@ export type Database = {
           },
         ]
       }
+      color_audit_logs: {
+        Row: {
+          audit_run_id: string | null
+          created_at: string | null
+          database_count: number
+          discrepancy: number | null
+          error_message: string | null
+          id: string
+          notes: string | null
+          product_line_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sample_product_title: string | null
+          sample_product_url: string | null
+          scraped_at: string | null
+          status: string
+          vendor: string
+          website_count: number | null
+        }
+        Insert: {
+          audit_run_id?: string | null
+          created_at?: string | null
+          database_count: number
+          discrepancy?: number | null
+          error_message?: string | null
+          id?: string
+          notes?: string | null
+          product_line_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sample_product_title?: string | null
+          sample_product_url?: string | null
+          scraped_at?: string | null
+          status: string
+          vendor: string
+          website_count?: number | null
+        }
+        Update: {
+          audit_run_id?: string | null
+          created_at?: string | null
+          database_count?: number
+          discrepancy?: number | null
+          error_message?: string | null
+          id?: string
+          notes?: string | null
+          product_line_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sample_product_title?: string | null
+          sample_product_url?: string | null
+          scraped_at?: string | null
+          status?: string
+          vendor?: string
+          website_count?: number | null
+        }
+        Relationships: []
+      }
       community_report_upvotes: {
         Row: {
           created_at: string | null
