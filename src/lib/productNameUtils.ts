@@ -119,11 +119,37 @@ export const getBaseProductName = (title: string, material?: string | null): str
   // This pattern extracts the base product name without the color suffix
   // Note: e?PLA matches both "PLA" and "ePLA" variants (e.g., ePLA-HS)
   // PC-FR must come before PC to ensure flame-retardant variant is matched first
-  const bambuLabMatch = normalizedTitle.match(
-    /^(Bambu Lab (?:e?PLA|PETG|TPU|ABS|ASA|PA6?-?(?:CF|GF)?|PA-?(?:CF|GF)?|PC-FR|PC|PET-CF|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?(?:\s+(?:Basic|Matte|Silk|Translucent|Tough|Wood|Marble|Metal|Galaxy|Glow|Sparkle|Aero|Impact|HF|HS|Lite))?(?:\s+(?:Multi-color|Gradient))?)\s+.+$/i
-  );
-  if (bambuLabMatch) {
-    return bambuLabMatch[1].trim();
+  // IMPORTANT: Product type words (Basic, Matte, etc.) MUST be matched greedily when present
+  const bambuLabProductTypes = ['Basic', 'Matte', 'Silk', 'Translucent', 'Tough', 'Wood', 'Marble', 'Metal', 'Galaxy', 'Glow', 'Sparkle', 'Aero', 'Impact', 'HF', 'HS', 'Lite'];
+  const bambuLabMaterials = /^Bambu Lab (e?PLA|PETG|TPU|ABS|ASA|PA6?-?(?:CF|GF)?|PA-?(?:CF|GF)?|PC-FR|PC|PET-CF|PVA|PAHT|PCTG|PPS|PPA)(?:-CF|-GF)?/i;
+  const materialMatch = normalizedTitle.match(bambuLabMaterials);
+  
+  if (materialMatch) {
+    let baseName = materialMatch[0]; // e.g., "Bambu Lab PLA"
+    let remainder = normalizedTitle.slice(baseName.length).trim(); // e.g., "Basic Green"
+    
+    // Check if remainder starts with a product type
+    for (const productType of bambuLabProductTypes) {
+      if (remainder.toLowerCase().startsWith(productType.toLowerCase())) {
+        baseName += ' ' + productType;
+        remainder = remainder.slice(productType.length).trim();
+        break;
+      }
+    }
+    
+    // Check for Multi-color or Gradient suffix
+    if (remainder.toLowerCase().startsWith('multi-color')) {
+      baseName += ' Multi-color';
+      remainder = remainder.slice('multi-color'.length).trim();
+    } else if (remainder.toLowerCase().startsWith('gradient')) {
+      baseName += ' Gradient';
+      remainder = remainder.slice('gradient'.length).trim();
+    }
+    
+    // If there's still a remainder (the color), return the base name
+    if (remainder.length > 0) {
+      return baseName.trim();
+    }
   }
   
   // Handle Bambu Lab products that are just "Bambu Lab [Material] [Color]" (no product type)
