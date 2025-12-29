@@ -805,7 +805,81 @@ function buildUpdateData(product: any, overrideFields: string[], region: string 
   return data;
 }
 
-// Shopify Scraper - with enhanced field extraction
+// Helper: Check if Shopify product has multiple color variants that should be exploded
+function hasMultipleColorVariants(product: any): boolean {
+  const variants = product.variants || [];
+  if (variants.length <= 1) return false;
+  
+  // Check if variants differ by color-related options
+  const colorOptionNames = ['color', 'colour', 'farbe', 'couleur'];
+  const options = product.options || [];
+  
+  // Check if any option is color-related
+  for (const option of options) {
+    const optionName = (option.name || '').toLowerCase();
+    if (colorOptionNames.some(c => optionName.includes(c))) {
+      return option.values?.length > 1;
+    }
+  }
+  
+  // Fallback: if option1 values differ across variants and look like colors
+  const option1Values = new Set(variants.map((v: any) => v.option1).filter(Boolean));
+  if (option1Values.size > 1) {
+    // Check if first few values look like colors using color-mapping
+    const sampleValues = Array.from(option1Values).slice(0, 3);
+    const colorMatches = sampleValues.filter(v => getColorHex(String(v)) !== null);
+    return colorMatches.length >= 2;
+  }
+  
+  return false;
+}
+
+// Helper: Extract color name from variant options
+function extractColorNameFromVariant(variant: any): string | null {
+  // Check option1 first (most common for color)
+  const colorOption = variant.option1 || variant.option2 || variant.option3;
+  if (colorOption && typeof colorOption === 'string') {
+    // Verify it's a color by checking against color-mapping
+    if (getColorHex(colorOption) || getColorFamily(colorOption)) {
+      return colorOption;
+    }
+  }
+  return null;
+}
+
+// Helper: Find variant-specific image from Shopify product
+function findVariantImage(product: any, variant: any, colorName: string | null): string | null {
+  const images = product.images || [];
+  
+  // First: Check if variant has specific image_id
+  if (variant.image_id) {
+    const variantImg = images.find((img: any) => img.id === variant.image_id);
+    if (variantImg?.src) return variantImg.src;
+  }
+  
+  // Second: Check variant_ids on images
+  for (const img of images) {
+    if (img.variant_ids?.includes(variant.id)) {
+      return img.src;
+    }
+  }
+  
+  // Third: Try matching image alt text to color name
+  if (colorName) {
+    const colorLower = colorName.toLowerCase();
+    for (const img of images) {
+      const alt = (img.alt || '').toLowerCase();
+      if (alt.includes(colorLower)) {
+        return img.src;
+      }
+    }
+  }
+  
+  // Fallback: return first image
+  return images[0]?.src || null;
+}
+
+// Shopify Scraper - with enhanced field extraction and VARIANT EXPLOSION
 async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit = 100): Promise<any[]> {
   const apiEndpoint = brand.api_endpoint || `${brand.base_url}/products.json`;
   const products: any[] = [];
@@ -835,35 +909,82 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
         continue;
       }
 
-      // Get best variant
-      const variant = product.variants?.[0];
-      if (!variant) continue;
+      const variants = product.variants || [];
+      if (variants.length === 0) continue;
 
-      // Extract fields using unified schema helpers
-      const title = cleanTitle(product.title);
-      const material = extractMaterial(title, product.product_type);
-      const colorFamily = extractColorFamily(title);
-      const netWeightG = extractWeight(title, variant.grams);
-      const productLineId = generateProductLineId(brand.brand_slug, material, title);
+      // Identify if this product has color variants that should be exploded
+      // Check if variants differ by color options (option1, option2, option3)
+      const hasColorVariants = hasMultipleColorVariants(product);
+      
+      // Extract common fields from product title
+      const baseTitle = cleanTitle(product.title);
+      const material = extractMaterial(baseTitle, product.product_type);
+      const productLineId = generateProductLineId(brand.brand_slug, material, baseTitle);
 
-      products.push({
-        productId: String(product.id),
-        title,
-        price: parseFloat(variant.price) || null,
-        compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
-        available: variant.available,
-        url: `${brand.base_url}/products/${product.handle}`,
-        imageUrl: product.images?.[0]?.src || null,
-        mpn: variant.sku || null,
-        sku: variant.sku || null,
-        barcode: variant.barcode || null,
-        material,
-        // Use enhanced color extraction with shared color-mapping
-        colorFamily: extractColorFamilyFromVariant(variant, product, title) || colorFamily,
-        colorHex: extractColorHexFromVariant(variant, product, title),
-        netWeightG,
-        productLineId,
-      });
+      if (hasColorVariants) {
+        // VARIANT EXPLOSION: Create separate database row for each color variant
+        for (const variant of variants) {
+          // Skip if we've hit the limit
+          if (products.length >= limit) break;
+          
+          // Extract color from variant options
+          const colorName = extractColorNameFromVariant(variant);
+          const colorHex = extractColorHexFromVariant(variant, product, baseTitle);
+          const colorFamily = extractColorFamilyFromVariant(variant, product, baseTitle) || extractColorFamily(baseTitle);
+          
+          // Build variant-specific title (include color if not already in title)
+          const variantTitle = colorName && !baseTitle.toLowerCase().includes(colorName.toLowerCase())
+            ? `${baseTitle} ${colorName}`
+            : baseTitle;
+          
+          // Find variant-specific image (match by variant_id or color name)
+          const variantImage = findVariantImage(product, variant, colorName);
+          
+          const netWeightG = extractWeight(variantTitle, variant.grams);
+
+          products.push({
+            // CRITICAL: Unique product_id per variant for separate database rows
+            productId: `${product.id}_${variant.id}`,
+            title: variantTitle,
+            price: parseFloat(variant.price) || null,
+            compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
+            available: variant.available,
+            url: `${brand.base_url}/products/${product.handle}?variant=${variant.id}`,
+            imageUrl: variantImage,
+            mpn: variant.sku || null,
+            sku: variant.sku || null,
+            barcode: variant.barcode || null,
+            material,
+            colorFamily,
+            colorHex,
+            netWeightG,
+            productLineId,
+          });
+        }
+      } else {
+        // Single variant or non-color variants: use first variant only
+        const variant = variants[0];
+        const netWeightG = extractWeight(baseTitle, variant.grams);
+        const colorFamily = extractColorFamilyFromVariant(variant, product, baseTitle) || extractColorFamily(baseTitle);
+
+        products.push({
+          productId: String(product.id),
+          title: baseTitle,
+          price: parseFloat(variant.price) || null,
+          compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
+          available: variant.available,
+          url: `${brand.base_url}/products/${product.handle}`,
+          imageUrl: product.images?.[0]?.src || null,
+          mpn: variant.sku || null,
+          sku: variant.sku || null,
+          barcode: variant.barcode || null,
+          material,
+          colorFamily,
+          colorHex: extractColorHexFromVariant(variant, product, baseTitle),
+          netWeightG,
+          productLineId,
+        });
+      }
 
       if (products.length >= limit) break;
     }
