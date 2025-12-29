@@ -236,59 +236,13 @@ export class ShopifyScraper extends BaseScraper {
             continue;
           }
 
-          const variant = this.selectBestVariant(product.variants);
-          if (!variant) continue;
-
-          const price = this.parsePrice(variant.price);
-          const compareAtPrice = this.parsePrice(variant.compare_at_price);
-          const bodyHtml = product.body_html || "";
-
-          // Check if API already returns USD - only convert if it's a different currency
-          const apiCurrency = variant.price_currency || this.config.currency;
-          const needsConversion = apiCurrency !== 'USD';
+          // Explode color variants into separate products
+          const explodedProducts = this.explodeColorVariants(product);
           
-          if (products.length === 0) {
-            this.log(`💱 API currency: ${apiCurrency}, config currency: ${this.config.currency}, needs conversion: ${needsConversion}`);
+          for (const explodedProduct of explodedProducts) {
+            products.push(explodedProduct);
+            if (products.length >= limit) break;
           }
-
-          // Extract enhanced data
-          const tdsUrl = findTdsUrl(bodyHtml);
-          const printSettings = extractPrintSettings(bodyHtml);
-          const spoolSpecs = extractSpoolSpecs(bodyHtml, product.title);
-          const mpn = this.extractMpn(product, variant);
-          
-          // Use intelligent color extraction from variant options
-          const colorInfo = this.extractColorFromVariant(variant, product);
-
-          products.push({
-            productId: String(product.id),
-            sku: variant.sku || null,
-            title: product.title,
-            price: price ? (needsConversion ? this.convertToUSD(price) : price) : null,
-            compareAtPrice: compareAtPrice ? (needsConversion ? this.convertToUSD(compareAtPrice) : compareAtPrice) : null,
-            available: variant.available,
-            currency: "USD",
-            url: `${this.config.baseUrl}/products/${product.handle}`,
-            scrapedAt: new Date(),
-            source: `shopify-${this.config.vendor.toLowerCase()}`,
-            imageUrl: product.images?.[0]?.src || null,
-            barcode: variant.barcode || null,
-            description: bodyHtml,
-            // Enhanced fields
-            mpn,
-            tdsUrl,
-            colorHex: colorInfo?.hex || null,
-            colorName: colorInfo?.name || null,
-            nozzleTempMin: printSettings?.nozzleTempMin || null,
-            nozzleTempMax: printSettings?.nozzleTempMax || null,
-            bedTempMin: printSettings?.bedTempMin || null,
-            bedTempMax: printSettings?.bedTempMax || null,
-            spoolMaterial: spoolSpecs?.material || null,
-            netWeightG: spoolSpecs?.weightG || null,
-            diameterMm: spoolSpecs?.diameterMm || null,
-            spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
-            spoolWidthMm: spoolSpecs?.widthMm || null,
-          });
 
           if (products.length >= limit) break;
         }
@@ -305,8 +259,184 @@ export class ShopifyScraper extends BaseScraper {
       }
     }
 
-    this.log(`Scraped ${products.length} products`);
+    this.log(`Scraped ${products.length} products (including color variants)`);
     return products;
+  }
+
+  /**
+   * Explode a single Shopify product into multiple ScrapedProducts, one per color variant.
+   * This allows each color variant to be stored as a separate database row with its own
+   * color_hex, featured_image, and product_id.
+   */
+  private explodeColorVariants(product: ShopifyProduct): ScrapedProduct[] {
+    const results: ScrapedProduct[] = [];
+    const bodyHtml = product.body_html || "";
+    
+    // Check if API already returns USD - only convert if it's a different currency
+    const firstVariant = product.variants[0];
+    const apiCurrency = firstVariant?.price_currency || this.config.currency;
+    const needsConversion = apiCurrency !== 'USD';
+    
+    // Extract shared data
+    const tdsUrl = findTdsUrl(bodyHtml);
+    const printSettings = extractPrintSettings(bodyHtml);
+    const spoolSpecs = extractSpoolSpecs(bodyHtml, product.title);
+    
+    // Identify which option index is the color option
+    let colorOptionIndex = -1;
+    if (product.options) {
+      for (let i = 0; i < product.options.length; i++) {
+        const opt = product.options[i];
+        const optName = opt.name.toLowerCase();
+        if (optName.includes('color') || optName.includes('colour') || optName.includes('farbe')) {
+          colorOptionIndex = i;
+          break;
+        }
+      }
+    }
+    
+    // If no explicit color option, check if option values look like colors
+    if (colorOptionIndex === -1 && product.options) {
+      for (let i = 0; i < product.options.length; i++) {
+        const opt = product.options[i];
+        // Check if most values in this option are color-like
+        let colorLikeCount = 0;
+        for (const val of opt.values) {
+          const classification = classifyVariant(val);
+          if (classification.isColorVariant) colorLikeCount++;
+        }
+        if (colorLikeCount >= opt.values.length * 0.5 && opt.values.length > 1) {
+          colorOptionIndex = i;
+          break;
+        }
+      }
+    }
+    
+    // Group variants by color
+    const variantsByColor = new Map<string, ShopifyVariant[]>();
+    
+    for (const variant of product.variants) {
+      let colorValue: string | null = null;
+      
+      if (colorOptionIndex === 0) colorValue = variant.option1 || null;
+      else if (colorOptionIndex === 1) colorValue = variant.option2 || null;
+      else if (colorOptionIndex === 2) colorValue = variant.option3 || null;
+      
+      // If no color option identified, try to extract color from variant title
+      if (!colorValue) {
+        const classification = classifyVariant(variant.title);
+        if (classification.isColorVariant && classification.colorName) {
+          colorValue = classification.colorName;
+        }
+      }
+      
+      // Default to 'Default' if no color found
+      const colorKey = colorValue || 'Default';
+      
+      if (!variantsByColor.has(colorKey)) {
+        variantsByColor.set(colorKey, []);
+      }
+      variantsByColor.get(colorKey)!.push(variant);
+    }
+    
+    // If only one color (or default), just return the single best variant as before
+    if (variantsByColor.size <= 1) {
+      const variant = this.selectBestVariant(product.variants);
+      if (!variant) return [];
+      
+      const price = this.parsePrice(variant.price);
+      const compareAtPrice = this.parsePrice(variant.compare_at_price);
+      const colorInfo = this.extractColorFromVariant(variant, product);
+      const mpn = this.extractMpn(product, variant);
+      const imageUrl = this.extractBestImage(product, variant);
+      
+      results.push({
+        productId: String(product.id),
+        sku: variant.sku || null,
+        title: product.title,
+        price: price ? (needsConversion ? this.convertToUSD(price) : price) : null,
+        compareAtPrice: compareAtPrice ? (needsConversion ? this.convertToUSD(compareAtPrice) : compareAtPrice) : null,
+        available: variant.available,
+        currency: "USD",
+        url: `${this.config.baseUrl}/products/${product.handle}`,
+        scrapedAt: new Date(),
+        source: `shopify-${this.config.vendor.toLowerCase()}`,
+        imageUrl,
+        barcode: variant.barcode || null,
+        description: bodyHtml,
+        mpn,
+        tdsUrl,
+        colorHex: colorInfo?.hex || null,
+        colorName: colorInfo?.name || null,
+        nozzleTempMin: printSettings?.nozzleTempMin || null,
+        nozzleTempMax: printSettings?.nozzleTempMax || null,
+        bedTempMin: printSettings?.bedTempMin || null,
+        bedTempMax: printSettings?.bedTempMax || null,
+        spoolMaterial: spoolSpecs?.material || null,
+        netWeightG: spoolSpecs?.weightG || null,
+        diameterMm: spoolSpecs?.diameterMm || null,
+        spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
+        spoolWidthMm: spoolSpecs?.widthMm || null,
+      });
+      
+      return results;
+    }
+    
+    // Multiple colors - create a separate product entry for each color
+    this.log(`🎨 Exploding ${variantsByColor.size} color variants for "${product.title}"`);
+    
+    for (const [colorKey, colorVariants] of variantsByColor) {
+      // Select best variant within this color group (prefer 1.75mm, available)
+      const variant = this.selectBestVariant(colorVariants);
+      if (!variant) continue;
+      
+      const price = this.parsePrice(variant.price);
+      const compareAtPrice = this.parsePrice(variant.compare_at_price);
+      const mpn = this.extractMpn(product, variant);
+      
+      // Get color info from the color key
+      const colorInfo = extractColorInfo(colorKey);
+      const colorName = colorInfo?.name || colorKey;
+      const colorHex = colorInfo?.hex || '#CCCCCC';
+      
+      // Try to get variant-specific image
+      const imageUrl = this.extractBestImage(product, variant);
+      
+      // Create unique product ID by combining product ID with variant ID
+      const uniqueProductId = `${product.id}_${variant.id}`;
+      
+      results.push({
+        productId: uniqueProductId,
+        sku: variant.sku || null,
+        title: `${product.title} - ${colorName}`,
+        price: price ? (needsConversion ? this.convertToUSD(price) : price) : null,
+        compareAtPrice: compareAtPrice ? (needsConversion ? this.convertToUSD(compareAtPrice) : compareAtPrice) : null,
+        available: variant.available,
+        currency: "USD",
+        url: `${this.config.baseUrl}/products/${product.handle}?variant=${variant.id}`,
+        scrapedAt: new Date(),
+        source: `shopify-${this.config.vendor.toLowerCase()}`,
+        imageUrl,
+        barcode: variant.barcode || null,
+        description: bodyHtml,
+        mpn,
+        tdsUrl,
+        colorHex,
+        colorName,
+        nozzleTempMin: printSettings?.nozzleTempMin || null,
+        nozzleTempMax: printSettings?.nozzleTempMax || null,
+        bedTempMin: printSettings?.bedTempMin || null,
+        bedTempMax: printSettings?.bedTempMax || null,
+        spoolMaterial: spoolSpecs?.material || null,
+        netWeightG: spoolSpecs?.weightG || null,
+        diameterMm: spoolSpecs?.diameterMm || null,
+        spoolOuterDiameterMm: spoolSpecs?.outerDiameterMm || null,
+        spoolWidthMm: spoolSpecs?.widthMm || null,
+      });
+    }
+    
+    this.log(`  → Created ${results.length} variant products for "${product.title}"`);
+    return results;
   }
 
   private extractMpn(product: ShopifyProduct, variant: ShopifyVariant): string | null {

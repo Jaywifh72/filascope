@@ -12,6 +12,7 @@ import { FilamentKeySpecsBar } from './FilamentKeySpecsBar';
 import { normalizeColorHex } from '@/lib/utils';
 import { Database } from '@/integrations/supabase/types';
 import type { Retailer } from './RetailersModal';
+import { cleanFilamentDisplayName } from '@/lib/productNameUtils';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -165,7 +166,7 @@ export function FilamentHeroSection({
             {/* Product Title */}
             <div className="flex items-start gap-4">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
-                {baseName}
+                {cleanFilamentDisplayName(baseName)}
               </h1>
               {isAdmin && (
                 <div className="flex gap-2 flex-shrink-0">
