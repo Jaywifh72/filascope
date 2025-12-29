@@ -134,14 +134,20 @@ function isProductVariant(term: string): boolean {
 }
 
 export function getColorFromTitle(title: string, baseName: string): string | null {
-  const cleanedTitle = cleanProductTitle(title);
-  const cleanTitle = cleanedTitle
+  // First apply cleanFilamentDisplayName to remove weight/diameter for consistency
+  const displayCleaned = cleanFilamentDisplayName(title);
+  const cleanedTitle = cleanProductTitle(displayCleaned);
+  
+  let cleanTitle = cleanedTitle
     .replace(/\s*\(NFC\)\s*/gi, '')
     .replace(/\s+Refill\s*$/gi, '')
     .replace(/\s+\d+(?:\.\d+)?(?:kg|g)\s*$/gi, '')
     .trim();
   
-  if (cleanTitle === baseName) return null;
+  // Strip "Filament" for matching purposes (Amolen pattern)
+  const cleanTitleNoFilament = cleanTitle.replace(/\s+Filament\b/gi, '').trim();
+  
+  if (cleanTitleNoFilament === baseName || cleanTitle === baseName) return null;
   
   // Prusament-specific handling
   if (cleanTitle.toLowerCase().includes('prusament')) {
@@ -190,7 +196,14 @@ export function getColorFromTitle(title: string, baseName: string): string | nul
     return extracted;
   }
   
-  // Fallback: everything after base name
+  // Fallback: check with "Filament" stripped first (handles Amolen pattern)
+  if (cleanTitleNoFilament.startsWith(baseName)) {
+    const extracted = cleanTitleNoFilament.slice(baseName.length).replace(/^[\s-]+/, '').trim();
+    if (!extracted || isProductVariant(extracted)) return null;
+    return extracted;
+  }
+  
+  // Original fallback: everything after base name
   if (cleanTitle.startsWith(baseName)) {
     const extracted = cleanTitle.slice(baseName.length).replace(/^[\s-]+/, '').trim();
     if (!extracted || isProductVariant(extracted)) return null;
