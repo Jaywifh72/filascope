@@ -350,7 +350,7 @@ export function useFilamentColorVariants(
               return fLineInfo?.productLine === productLineKey;
             } else {
               const fBaseName = getBaseProductName(f.product_title);
-              if (fBaseName !== baseName) return false;
+              if (fBaseName.toLowerCase() !== baseName.toLowerCase()) return false;
               if (f.id === filament.id) return true;
               const color = getColorFromTitle(f.product_title, baseName);
               return color !== null || (f.color_hex && f.color_hex.length > 0);
