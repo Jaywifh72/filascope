@@ -70,8 +70,9 @@ export function getBaseProductName(title: string): string {
   const sortedProductLines = [...amelonProductLines].sort((a, b) => b.length - a.length);
   
   for (const productLine of sortedProductLines) {
+    // Match: Material + ProductLine + optional "Filament" (with possible comma) + anything else
     const regex = new RegExp(
-      `^((?:PLA\\+?|PETG|ABS|TPU|TPE|ASA|PEBA|PA\\d*|PC|HIPS|PVA|Nylon)\\s+${productLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?:\\s+Filament)?(?:\\s+[\\d.]+\\s*mm.*|\\s+.+)?$`,
+      `^((?:PLA\\+?|PETG|ABS|TPU|TPE|ASA|PEBA|PA\\d*|PC|HIPS|PVA|Nylon)\\s+${productLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?:[,\\s]+Filament)?(?:[,\\s]+[\\d.]+\\s*mm.*|[,\\s]+.+)?$`,
       'i'
     );
     const match = normalizedTitle.match(regex);

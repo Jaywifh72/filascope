@@ -20,6 +20,11 @@ export function cleanFilamentDisplayName(title: string): string {
     .replace(/\s*,?\s*x\d+\b/gi, '')
     // Remove color names after slash (Amolen pattern: "/ White Pink Purple")
     .replace(/\s*\/\s*[A-Za-z\s&]+$/g, '')
+    // Clean up orphaned commas left after removing size/weight
+    .replace(/,\s*,/g, ',')         // double commas
+    .replace(/\s+,/g, ',')          // space before comma
+    .replace(/,\s*$/g, '')          // trailing comma
+    .replace(/,\s*([A-Z])/g, ' $1') // comma before color name → space
     // Remove trailing special characters (commas, slashes, dashes, etc.)
     .replace(/[\s,\-–—\/\\|:;]+$/g, '')
     .replace(/\s+/g, ' ')
