@@ -184,6 +184,8 @@ export const getBaseProductName = (title: string, material?: string | null): str
   //           "PETG Basic 1.75mm, 1KG/2.2LB Black" → "PETG Basic"
   //           "PEBA 90A Flexible Filament 1.75mm, 1KG Black" → "PEBA 90A Flexible"
   const amelonProductLines = [
+    // Multi-packs must be matched before single-spool product lines
+    'Crystal-Transparent Gradient Variety Pack', 'Gradient Variety Pack', 'Variety Pack',
     'Basic-High Speed', 'Basic High Speed', 'Basic Dual Color-High Speed', 'Basic Dual Color',
     'High Speed',  // For "PLA+ High Speed" products
     'Crystal-Transparent', 'Crystal Transparent',  // For "PLA Crystal-Transparent" products

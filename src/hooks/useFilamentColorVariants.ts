@@ -59,6 +59,8 @@ export function getBaseProductName(title: string): string {
   // AMOLEN PATTERN - Handle "Material ProductLine [Filament] [Size] [Color]" format
   // Must come BEFORE other patterns to correctly extract product lines like "PLA Matte Triple"
   const amelonProductLines = [
+    // Multi-packs must be matched before single-spool product lines
+    'Crystal-Transparent Gradient Variety Pack', 'Gradient Variety Pack', 'Variety Pack',
     'Basic-High Speed', 'Basic High Speed', 'Basic Dual Color-High Speed', 'Basic Dual Color',
     'Matte Triple', 'Matte Dual', 'Matte Basic', 'Matte Rainbow', 'Matte Tri-Color', 'Matte',
     'Silk Dual', 'Silk Triple', 'Silk Rainbow', 'Silk Starry', 'Silk Tri-Color', 'Silk',
