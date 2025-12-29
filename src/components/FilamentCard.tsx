@@ -340,8 +340,8 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           ELEMENT 1: Brand + Product Name
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 pt-6 pb-3 border-b border-white/[0.05]" data-card-element="1">
-        {/* Brand */}
-        <div className="flex items-center gap-2 mb-2 pl-8">
+        {/* Brand + Vendor Name */}
+        <div className="flex items-center gap-2 mb-1 pl-8">
           {brandLogo && !imageError ? (
             <img 
               src={brandLogo} 
@@ -355,34 +355,34 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           </span>
         </div>
         
-        {/* Product Name + Color Swatches */}
-        <div className="flex items-start gap-2 pl-8">
-          <h3 className="text-lg font-semibold text-white leading-tight line-clamp-2 flex-1">
+        {/* Color swatches - below brand/vendor */}
+        <div className="flex items-center gap-1 pl-8 mb-2">
+          {hasMultipleVariants && variantIndicators.colors.length > 0 ? (
+            <>
+              {variantIndicators.colors.slice(0, 6).map((hex, i) => (
+                <div 
+                  key={i}
+                  className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm"
+                  style={{ backgroundColor: hex }}
+                />
+              ))}
+              {variantIndicators.colors.length > 6 && (
+                <span className="text-[10px] text-slate-400 ml-1">+{variantIndicators.colors.length - 6}</span>
+              )}
+            </>
+          ) : filament.color_hex ? (
+            <div 
+              className="w-4 h-4 rounded-full border-2 border-white/20 shadow-sm"
+              style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
+            />
+          ) : null}
+        </div>
+        
+        {/* Product Name */}
+        <div className="pl-8">
+          <h3 className="text-lg font-semibold text-white leading-tight line-clamp-2">
             {getDisplayTitle()}
           </h3>
-          
-          {/* Color swatches - show multiple for grouped products or single for individual */}
-          <div className="flex items-center gap-0.5 flex-shrink-0 mt-1">
-            {hasMultipleVariants && variantIndicators.colors.length > 0 ? (
-              <>
-                {variantIndicators.colors.slice(0, 6).map((hex, i) => (
-                  <div 
-                    key={i}
-                    className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm"
-                    style={{ backgroundColor: hex }}
-                  />
-                ))}
-                {variantIndicators.colors.length > 6 && (
-                  <span className="text-[10px] text-slate-400 ml-1">+{variantIndicators.colors.length - 6}</span>
-                )}
-              </>
-            ) : filament.color_hex ? (
-              <div 
-                className="w-4 h-4 rounded-full border-2 border-white/20 shadow-sm"
-                style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
-              />
-            ) : null}
-          </div>
         </div>
         
         {/* Weight options indicator for grouped products */}
