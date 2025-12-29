@@ -56,6 +56,30 @@ export function getBaseProductName(title: string): string {
     .replace(/\s+Refill\s*$/gi, '')
     .trim();
   
+  // AMOLEN PATTERN - Handle "Material ProductLine [Filament] [Size] [Color]" format
+  // Must come BEFORE other patterns to correctly extract product lines like "PLA Matte Triple"
+  const amelonProductLines = [
+    'Basic-High Speed', 'Basic High Speed', 'Basic Dual Color-High Speed', 'Basic Dual Color',
+    'Matte Triple', 'Matte Dual', 'Matte Basic', 'Matte Rainbow', 'Matte Tri-Color', 'Matte',
+    'Silk Dual', 'Silk Triple', 'Silk Rainbow', 'Silk Starry', 'Silk Tri-Color', 'Silk',
+    'Marble', 'Marble Texture', 'Sparkle', 'Galaxy', 'Glow in the Dark', 'Glow',
+    'Wood', 'Carbon Fiber', 'Metal',
+    'Transparent', 'Transparent Rainbow', 'Clear',
+    'Basic', '90A Flexible', '95A Flexible', '85A',
+  ];
+  const sortedProductLines = [...amelonProductLines].sort((a, b) => b.length - a.length);
+  
+  for (const productLine of sortedProductLines) {
+    const regex = new RegExp(
+      `^((?:PLA\\+?|PETG|ABS|TPU|TPE|ASA|PEBA|PA\\d*|PC|HIPS|PVA|Nylon)\\s+${productLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?:\\s+Filament)?(?:\\s+[\\d.]+\\s*mm.*|\\s+.+)?$`,
+      'i'
+    );
+    const match = normalizedTitle.match(regex);
+    if (match) {
+      return match[1].trim();
+    }
+  }
+  
   // Pattern 0: Paramount 3D style
   const paramountMatch = normalizedTitle.match(/^((?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC|HIPS|PVA|Nylon|Carbon\s+Fiber\s+\w+))\s*\(.+\)\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i);
   if (paramountMatch) return paramountMatch[1].trim();
