@@ -43,6 +43,23 @@ function detectCustomStorefront(url: string): 'bambulab' | 'prusa' | null {
   return null;
 }
 
+// Detect Shopify stores known to use multi-currency (geo-based pricing)
+// These stores show different prices based on visitor location, but Shopify JSON API
+// always returns prices in the store's base currency (usually USD)
+function isMultiCurrencyShopifyStore(url: string): boolean {
+  const multiCurrencyDomains = [
+    'amolen.com',
+    'polymaker.com',
+    'esun3d.com',
+    'sunlu.com',
+    'overture3d.com',
+    'geeetech.com',
+    // Add other known multi-currency Shopify stores here
+  ];
+  const urlLower = url.toLowerCase();
+  return multiCurrencyDomains.some(domain => urlLower.includes(domain));
+}
+
 // Map currency to Firecrawl location settings for proper regional pricing
 function getFirecrawlLocation(currency: string): { country: string; languages: string[] } {
   switch (currency) {
@@ -55,22 +72,41 @@ function getFirecrawlLocation(currency: string): { country: string; languages: s
   }
 }
 
-// Extract price from Bambu Lab page content
-// Handles formats like "$28.79 CAD$31.99 CAD" (sale + original)
-// or "$22.49 USD" (single price)
+// Extract price from page content using various patterns
+// Handles formats like:
+// - "$28.79 CAD$31.99 CAD" (sale + original, Bambu style)
+// - "$22.49 USD" (single price)
+// - "Sale price$19.99 USDRegular price$28.98 USD" (Shopify multi-currency)
+// - "$28.00 CAD" (simple format)
 function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
   price: number | null;
   compareAtPrice: number | null;
   currency: string;
   available: boolean;
 } {
-  console.log(`Extracting Bambu Lab price, preferred currency: ${preferredCurrency}`);
+  console.log(`Extracting price from content, preferred currency: ${preferredCurrency}`);
   
-  // Pattern to match Bambu Lab price format: "$XX.XX CUR" possibly followed by "$YY.YY CUR"
-  // Examples: "$28.79 CAD$31.99 CAD", "$22.49 USD$24.99 USD", "$28.79 CAD"
   const currencyPatterns = ['CAD', 'USD', 'GBP', 'EUR', 'AUD', 'JPY'];
   
-  // First, try to find prices with the preferred currency
+  // Pattern 1: Shopify multi-currency format "Sale price$XX.XX CURRegular price$YY.YY CUR"
+  const shopifySaleRegex = new RegExp(
+    `Sale\\s*price\\s*\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}[^\\d]*Regular\\s*price\\s*\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}`,
+    'i'
+  );
+  const shopifySaleMatch = markdown.match(shopifySaleRegex);
+  if (shopifySaleMatch) {
+    const salePrice = parseFloat(shopifySaleMatch[1].replace(',', ''));
+    const regularPrice = parseFloat(shopifySaleMatch[2].replace(',', ''));
+    console.log(`Found Shopify sale format: $${salePrice} ${preferredCurrency}, regular: $${regularPrice}`);
+    return {
+      price: salePrice,
+      compareAtPrice: regularPrice,
+      currency: preferredCurrency,
+      available: true,
+    };
+  }
+  
+  // Pattern 2: Bambu Lab style "$XX.XX CUR$YY.YY CUR" (two prices back to back)
   const preferredPriceRegex = new RegExp(
     `\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}(?:\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency})?`,
     'i'
@@ -547,12 +583,24 @@ serve(async (req) => {
       const platform = detectPlatform(productUrl);
       
       if (platform === 'shopify') {
-        result = await fetchShopifyPrice(productUrl, currency);
+        // Check if this is a multi-currency Shopify store and user wants non-USD
+        // These stores show geo-based prices on the frontend, but Shopify JSON API
+        // always returns the base currency (USD), so we need Firecrawl to get the
+        // actual localized price
+        const isMultiCurrency = isMultiCurrencyShopifyStore(productUrl);
         
-        // If Shopify fails, try Firecrawl as fallback
-        if (!result.success) {
-          console.log('Shopify failed, trying Firecrawl as fallback...');
+        if (isMultiCurrency && currency !== 'USD') {
+          console.log(`Multi-currency Shopify store detected (${currency} requested), using Firecrawl for geo-localized price`);
           result = await fetchPriceWithFirecrawl(productUrl, currency);
+        } else {
+          // Standard Shopify store or USD requested - use JSON API
+          result = await fetchShopifyPrice(productUrl, currency);
+          
+          // If Shopify fails, try Firecrawl as fallback
+          if (!result.success) {
+            console.log('Shopify failed, trying Firecrawl as fallback...');
+            result = await fetchPriceWithFirecrawl(productUrl, currency);
+          }
         }
       } else {
         // For unknown platforms, try Firecrawl
