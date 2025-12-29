@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCompare } from "@/hooks/useCompare";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import type { EnhancedSimilarFilament } from "@/hooks/useEnhancedSimilarFilaments";
 
 interface SideBySideComparisonDialogProps {
@@ -211,7 +212,7 @@ export function SideBySideComparisonDialog({
                 {currentFilament.vendor}
               </p>
               <p className="text-sm font-medium text-foreground line-clamp-2">
-                {currentFilament.product_title}
+                {cleanFilamentDisplayName(currentFilament.product_title)}
               </p>
             </div>
 
@@ -240,7 +241,7 @@ export function SideBySideComparisonDialog({
                 {compareFilament.vendor}
               </p>
               <p className="text-sm font-medium text-foreground line-clamp-2">
-                {compareFilament.product_title}
+                {cleanFilamentDisplayName(compareFilament.product_title)}
               </p>
             </div>
           </div>

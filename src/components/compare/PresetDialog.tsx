@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Save } from "lucide-react";
 import { CompareItem } from "@/hooks/useCompare";
+import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 
 interface PresetDialogProps {
   isOpen: boolean;
@@ -83,7 +84,7 @@ export function PresetDialog({ isOpen, onClose, onSave, items }: PresetDialogPro
                     />
                   )}
                   <span className="text-sm truncate max-w-[150px]">
-                    {item.product_title}
+                    {cleanFilamentDisplayName(item.product_title)}
                   </span>
                   {item.material && (
                     <Badge variant="outline" className="text-xs">

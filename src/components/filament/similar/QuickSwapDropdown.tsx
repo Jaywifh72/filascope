@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCompare, CompareItem } from "@/hooks/useCompare";
 import { toast } from "sonner";
+import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import type { EnhancedSimilarFilament } from "@/hooks/useEnhancedSimilarFilaments";
 
 interface QuickSwapDropdownProps {
@@ -42,7 +43,7 @@ export function QuickSwapDropdown({
       triggerGlow();
 
       toast.success("Swapped in comparison", {
-        description: `Replaced "${itemToRemove.product_title.slice(0, 30)}..." with "${filament.product_title.slice(0, 30)}..."`,
+        description: `Replaced "${cleanFilamentDisplayName(itemToRemove.product_title).slice(0, 30)}..." with "${cleanFilamentDisplayName(filament.product_title).slice(0, 30)}..."`,
       });
 
       onSwapComplete?.();
@@ -91,7 +92,7 @@ export function QuickSwapDropdown({
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
-                  {item.product_title}
+                  {cleanFilamentDisplayName(item.product_title)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {item.vendor || "Unknown brand"}

@@ -2,6 +2,7 @@ import { X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CompareItem } from "@/hooks/useCompare";
+import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 
 interface SwapModalProps {
   isOpen: boolean;
@@ -49,7 +50,7 @@ export function SwapModal({ isOpen, newItem, existingItems, onSwap, onCancel }: 
               }}
             />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{newItem.product_title}</p>
+              <p className="text-sm font-medium truncate">{cleanFilamentDisplayName(newItem.product_title)}</p>
               <p className="text-xs text-muted-foreground">{newItem.vendor} • {newItem.material}</p>
             </div>
           </div>
@@ -83,7 +84,7 @@ export function SwapModal({ isOpen, newItem, existingItems, onSwap, onCancel }: 
               />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate group-hover:text-destructive transition-colors">
-                  {item.product_title}
+                  {cleanFilamentDisplayName(item.product_title)}
                 </p>
                 <p className="text-[10px] text-muted-foreground truncate">{item.vendor}</p>
               </div>

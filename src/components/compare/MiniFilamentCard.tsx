@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { CompareItem } from "@/hooks/useCompare";
 import { Button } from "@/components/ui/button";
+import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 
 const MATERIAL_BADGE_COLORS: Record<string, string> = {
   "PLA": "bg-blue-500/20 text-blue-400",
@@ -63,10 +64,10 @@ export function MiniFilamentCard({
     ? item.variant_price / (item.net_weight_g / 1000) 
     : null;
 
-  // Clean title - remove brand name if present
-  const cleanTitle = item.product_title
-    ?.replace(new RegExp(`^${item.vendor}\\s*`, 'i'), '')
-    .trim() || item.product_title;
+  // Clean title - remove brand name and size/weight suffixes
+  const cleanTitle = cleanFilamentDisplayName(
+    item.product_title?.replace(new RegExp(`^${item.vendor}\\s*`, 'i'), '').trim() || item.product_title
+  );
 
   // Unavailable state
   if (item.unavailable) {
