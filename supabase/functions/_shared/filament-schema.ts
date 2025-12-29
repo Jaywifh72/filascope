@@ -1823,8 +1823,14 @@ function extractProductType(name: string): string {
     'silk glow in the dark', 'glow in the dark',
     'silk shiny gradient', 'shiny gradient',
     'silk rainbow', 'silk triple', 'silk dual', 'silk starry', 'silk tri-color',
+    'silk basic',
+    // Specialty PLA patterns
+    'shiny glitter', 'galaxy', 'sparkle',
+    'temperature color change', 'temp color change', 'temperature',
+    'uv color change', 'uv change',
+    'carbon fiber',
     // Transparent sub-lines
-    'transparent rainbow', 'crystal-transparent',
+    'transparent rainbow', 'crystal-transparent', 'transparent',
   ];
   
   for (const subLine of amelonSubLines) {
