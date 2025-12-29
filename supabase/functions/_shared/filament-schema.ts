@@ -1813,6 +1813,8 @@ function extractProductType(name: string): string {
     // Gradient/Variety packs (must be separate products)
     'gradient variety pack', 'variety pack',
     'crystal-transparent gradient', 'crystal transparent gradient',
+    // Basic sub-lines (MUST be before matte/silk since "basic dual" won't match those)
+    'basic dual', 'basic tri-color', 'basic triple', 'basic dual color',
     // Matte sub-lines
     'matte rainbow', 'matte triple', 'matte dual', 'matte basic', 'matte tri-color',
     // Silk sub-lines  
