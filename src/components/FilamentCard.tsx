@@ -82,6 +82,7 @@ interface VariantIndicators {
   weights: number[];      // Array of weights in grams
   variantCount: number;   // Total number of variants
   priceRange?: { min: number | null; max: number | null };
+  anyInStock?: boolean;   // True if ANY variant is in stock (for grouped products)
 }
 
 interface FilamentCardProps {
@@ -135,7 +136,11 @@ function getStandoutFeature(filament: Filament): { label: string; colorClass: st
 }
 
 export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTitle, variantIndicators }: FilamentCardProps) {
-  const isOutOfStock = filament.variant_available === false;
+  // For grouped products (multiple variants), only show out of stock if ALL variants are out
+  // For single products, use the individual filament's status
+  const isOutOfStock = variantIndicators && variantIndicators.variantCount > 1
+    ? variantIndicators.anyInStock === false  // All variants out of stock
+    : filament.variant_available === false;   // Single filament check
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [imageError, setImageError] = useState(false);

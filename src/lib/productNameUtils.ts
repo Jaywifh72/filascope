@@ -321,6 +321,7 @@ export interface GroupedFilament {
   colors: Set<string>;
   weights: Set<number>;
   priceRange: { min: number | null; max: number | null };
+  anyInStock: boolean; // True if ANY variant is in stock
 }
 
 interface FilamentBase {
@@ -367,11 +368,17 @@ export function groupFilamentsByProduct<T extends FilamentBase>(filaments: T[]):
         colors: new Set<string>(),
         weights: new Set<number>(),
         priceRange: { min: null, max: null },
+        anyInStock: false, // Will be set to true if any variant is available
       });
     }
     
     const group = groups.get(groupKey)!;
     group.variants.push(filament);
+    
+    // Track stock status - if ANY variant is in stock, the group is in stock
+    if (filament.variant_available !== false) {
+      group.anyInStock = true;
+    }
     
     // Track colors
     if (filament.color_hex) {
