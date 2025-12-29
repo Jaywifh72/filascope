@@ -85,6 +85,15 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'azure': '489FDF',
   'ocean blue': '006994',
   'steel blue': '4682B4',
+  'haze blue': '6699CC',
+  'phantom blue': '4169E1',
+  'crystal blue': '5DADE2',
+  
+  // ==================== MULTI-COLOR / GRADIENT VARIANTS ====================
+  'blue green': '00CED1',
+  'blue purple': '8A2BE2',
+  'yellow green red': 'FFD700',
+  'rainbow nebula glaze': 'FF6B6B',
 
   // ==================== GREEN VARIANTS ====================
   'forest green': '228B22',
