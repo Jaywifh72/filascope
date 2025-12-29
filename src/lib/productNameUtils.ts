@@ -167,6 +167,36 @@ export const getBaseProductName = (title: string, material?: string | null): str
     }
   }
   
+  // AMOLEN PATTERN: Handle "Material ProductLine [Filament] Size Color" format
+  // Examples: "PLA Basic-High Speed 1.75mm, 1 KG Carrot Orange" → "PLA Basic-High Speed"
+  //           "PLA Matte Dual Filament 1.75mm, 1 KG Purple & Blue" → "PLA Matte Dual"
+  //           "PETG Basic 1.75mm, 1KG/2.2LB Black" → "PETG Basic"
+  //           "PEBA 90A Flexible Filament 1.75mm, 1KG Black" → "PEBA 90A Flexible"
+  const amelonProductLines = [
+    'Basic-High Speed', 'Basic High Speed', 'Basic Dual Color-High Speed', 'Basic Dual Color',
+    'Matte Dual', 'Matte Basic', 'Matte Rainbow', 'Matte Tri-Color', 'Matte',
+    'Silk Dual', 'Silk Triple', 'Silk Rainbow', 'Silk Starry', 'Silk Tri-Color', 'Silk',
+    'Marble', 'Marble Texture', 'Sparkle', 'Galaxy', 'Glow in the Dark', 'Glow', 
+    'Wood', 'Carbon Fiber', 'Metal',
+    'Transparent', 'Transparent Rainbow', 'Clear',
+    'Basic', '90A Flexible', '95A Flexible', '85A',
+  ];
+  // Sort by length descending to match longer patterns first
+  const sortedProductLines = [...amelonProductLines].sort((a, b) => b.length - a.length);
+  
+  // Try to match Amolen pattern: "Material ProductLine [Filament] Size Color"
+  for (const productLine of sortedProductLines) {
+    // Match: Material + ProductLine + optional "Filament" + size/weight specs + anything (color)
+    const regex = new RegExp(
+      `^((?:PLA\\+?|PETG|ABS|TPU|TPE|ASA|PEBA|PA\\d*|PC|HIPS|PVA|Nylon)\\s+${productLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?:\\s+Filament)?\\s+[\\d.]+\\s*mm.*$`,
+      'i'
+    );
+    const match = normalizedTitle.match(regex);
+    if (match) {
+      return match[1].trim();
+    }
+  }
+  
   // Pattern 0: Paramount 3D style - "Material (Color) Diameter Weight Filament"
   const paramountMatch = normalizedTitle.match(/^((?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC|HIPS|PVA|Nylon)(?:\s+Carbon\s+Fiber)?)\s*\(.+\)\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i);
   if (paramountMatch) {
