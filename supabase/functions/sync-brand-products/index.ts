@@ -934,7 +934,6 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
       // Extract common fields from product title
       const baseTitle = cleanTitle(product.title);
       const material = extractMaterial(baseTitle, product.product_type);
-      const productLineId = generateProductLineId(brand.brand_slug, material, baseTitle);
 
       if (hasColorVariants) {
         // VARIANT EXPLOSION: Create separate database row for each UNIQUE COLOR variant
@@ -967,6 +966,9 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
           const variantImage = findVariantImage(product, variant, colorName);
           
           const netWeightG = extractWeight(variantTitle, variant.grams);
+          
+          // Generate product line ID with weight to separate bulk packs
+          const productLineId = generateProductLineId(brand.brand_slug, material, baseTitle, netWeightG);
 
           products.push({
             // CRITICAL: Unique product_id per variant for separate database rows
@@ -992,6 +994,9 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
         const variant = variants[0];
         const netWeightG = extractWeight(baseTitle, variant.grams);
         const colorFamily = extractColorFamilyFromVariant(variant, product, baseTitle) || extractColorFamily(baseTitle);
+        
+        // Generate product line ID with weight to separate bulk packs
+        const productLineId = generateProductLineId(brand.brand_slug, material, baseTitle, netWeightG);
 
         products.push({
           productId: String(product.id),
@@ -1143,7 +1148,7 @@ async function scrapeWooCommerce(brand: BrandConfig, materialFilter?: string, li
       const title = cleanTitle(product.name);
       const material = extractMaterial(title, '');
       const netWeightG = extractWeight(title);
-      const productLineId = generateProductLineId(brand.brand_slug, material, title);
+      const productLineId = generateProductLineId(brand.brand_slug, material, title, netWeightG);
       
       // Extract color using enhanced color-mapping
       const colorHex = extractWooCommerceColorHex(product, title);
@@ -1433,7 +1438,7 @@ function extractProductFromHtml(html: string, markdown: string, url: string, bra
     const material = extractMaterial(title, '');
     const colorResult = extractColorFromTitle(title);
     const netWeightG = extractWeight(title);
-    const productLineId = generateProductLineId(brand.brand_slug, material, title);
+    const productLineId = generateProductLineId(brand.brand_slug, material, title, netWeightG);
 
     return {
       productId,
@@ -1694,7 +1699,7 @@ async function scrapeMatterHackers(brand: BrandConfig, materialFilter?: string, 
           colorFamily: colorResult.colorFamily,
           colorHex: colorResult.colorHex ? `#${colorResult.colorHex}` : null,
           netWeightG,
-          productLineId: generateProductLineId(brand.brand_slug, material, title),
+          productLineId: generateProductLineId(brand.brand_slug, material, title, netWeightG),
         });
       }
 

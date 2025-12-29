@@ -1779,18 +1779,29 @@ export function extractWeight(title: string, variantGrams?: number): number | nu
 
 /**
  * Generate consistent product line ID for grouping variants
+ * 
+ * @param brandSlug - Brand identifier (e.g., 'amolen')
+ * @param material - Material type (e.g., 'PLA')
+ * @param productName - Product title for extracting product type
+ * @param weightGrams - Optional weight in grams; bulk packs (≥4kg) get separate IDs
  */
 export function generateProductLineId(
   brandSlug: string,
   material: string | null | undefined,
-  productName: string
+  productName: string,
+  weightGrams?: number | null
 ): string {
   const normalizedBrand = brandSlug.toLowerCase().replace(/\s+/g, '-');
   const normalizedMaterial = (material || 'unknown').toLowerCase().replace(/\s+/g, '-');
   
   const productType = extractProductType(productName);
   
-  return `${normalizedBrand}__${normalizedMaterial}__${productType}`;
+  // Separate bulk packs (4kg+) from single-spool color variants
+  // This prevents bulk packs from appearing as color swatches
+  const isBulkPack = weightGrams && weightGrams >= 4000;
+  const weightSuffix = isBulkPack ? `_${Math.round(weightGrams / 1000)}kg` : '';
+  
+  return `${normalizedBrand}__${normalizedMaterial}__${productType}${weightSuffix}`;
 }
 
 function extractProductType(name: string): string {
