@@ -433,6 +433,19 @@ function getShopifyJsonUrl(url: string): string {
   return cleanUrl.endsWith('.json') ? cleanUrl : `${cleanUrl}.json`;
 }
 
+// Extract variant ID from URL query parameter
+function extractVariantIdFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    const variantId = urlObj.searchParams.get('variant');
+    return variantId || null;
+  } catch {
+    // Fallback: try regex
+    const match = url.match(/[?&]variant=(\d+)/);
+    return match ? match[1] : null;
+  }
+}
+
 // Detect currency from URL domain
 function detectCurrencyFromUrl(url: string): string {
   const urlLower = url.toLowerCase();
@@ -522,9 +535,27 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
       };
     }
     
-    // Find best variant (first available, or first if none available)
-    const availableVariant = data.product.variants.find(v => v.available);
-    const variant = availableVariant || data.product.variants[0];
+    // Find the specific variant requested in the URL, or fall back to first available
+    const requestedVariantId = extractVariantIdFromUrl(productUrl);
+    let variant: ShopifyVariant;
+    
+    if (requestedVariantId) {
+      // Look for exact variant ID match
+      const matchedVariant = data.product.variants.find(v => String(v.id) === requestedVariantId);
+      if (matchedVariant) {
+        variant = matchedVariant;
+        console.log(`Found requested variant ${requestedVariantId}: "${variant.title}"`);
+      } else {
+        // Variant ID not found - fall back to first available
+        console.log(`Requested variant ${requestedVariantId} not found, using first available`);
+        const availableVariant = data.product.variants.find(v => v.available);
+        variant = availableVariant || data.product.variants[0];
+      }
+    } else {
+      // No variant ID in URL - use first available
+      const availableVariant = data.product.variants.find(v => v.available);
+      variant = availableVariant || data.product.variants[0];
+    }
     
     const price = parseFloat(variant.price);
     const compareAtPrice = variant.compare_at_price ? parseFloat(variant.compare_at_price) : null;
