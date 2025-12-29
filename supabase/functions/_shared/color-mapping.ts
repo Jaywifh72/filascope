@@ -246,6 +246,29 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   // ==================== SPECIAL/MULTI ====================
   'rainbow': 'FF0000',
   'multicolor': 'FF0000',
+  
+  // ==================== AMOLEN RAINBOW/GRADIENT COLORS ====================
+  // Each rainbow variant needs a unique hex to prevent deduplication
+  'candy rainbow': 'E91E63',           // Hot Pink
+  'lemon mint rainbow': '7CB342',      // Lime Green  
+  'multicolor rainbow': 'FF5722',      // Deep Orange
+  'pastel berry rainbow': 'CE93D8',    // Lavender
+  'rosy rainbow': 'F48FB1',            // Light Pink
+  'sunset rainbow': 'FF9800',          // Orange
+  'pastel rainbow': 'B2EBF2',          // Light Cyan
+  'ocean rainbow': '0097A7',           // Dark Cyan
+  'forest rainbow': '4CAF50',          // Green
+  'galaxy rainbow': '673AB7',          // Deep Purple
+  'neon rainbow': '00E676',            // Bright Green
+  'earth rainbow': '8D6E63',           // Brown
+  // Silk Rainbow variants
+  'silk candy rainbow': 'EC407A',      // Pink
+  'silk sunset rainbow': 'FFA726',     // Orange
+  'silk pastel rainbow': 'B39DDB',     // Light Purple
+  // Matte Rainbow variants
+  'matte candy rainbow': 'D81B60',     // Dark Pink
+  'matte sunset rainbow': 'E65100',    // Dark Orange
+  'matte pastel rainbow': 'AB47BC',    // Medium Purple
   'earth brown': '5C4033',
   'lavender purple': 'B57EDC',
   'galaxy': '2F1B41',

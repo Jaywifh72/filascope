@@ -1794,6 +1794,29 @@ export function generateProductLineId(
 }
 
 function extractProductType(name: string): string {
+  const lowerName = name.toLowerCase();
+  
+  // AMOLEN-SPECIFIC: Check for sub-product-lines BEFORE base patterns
+  // Order matters: longer/more specific patterns first
+  const amelonSubLines = [
+    // Gradient/Variety packs (must be separate products)
+    'gradient variety pack', 'variety pack',
+    'crystal-transparent gradient', 'crystal transparent gradient',
+    // Matte sub-lines
+    'matte rainbow', 'matte triple', 'matte dual', 'matte basic', 'matte tri-color',
+    // Silk sub-lines  
+    'silk rainbow', 'silk triple', 'silk dual', 'silk starry', 'silk tri-color',
+    // Transparent sub-lines
+    'transparent rainbow', 'crystal-transparent',
+  ];
+  
+  for (const subLine of amelonSubLines) {
+    if (lowerName.includes(subLine)) {
+      return subLine.replace(/\s+/g, '_').replace(/-/g, '_');
+    }
+  }
+  
+  // Standard product lines
   const productLines = [
     'polyterra', 'polylite', 'polymax', 'polywood', 'polycast', 'polysmooth',
     'basic', 'matte', 'silk', 'marble', 'metal', 'galaxy', 'glow', 'sparkle',
@@ -1801,8 +1824,6 @@ function extractProductType(name: string): string {
     'cf', 'gf', 'high-speed', 'hs', 'rapid',
     'translucent', 'transparent', 'clear',
   ];
-  
-  const lowerName = name.toLowerCase();
   
   for (const line of productLines) {
     if (lowerName.includes(line)) {
