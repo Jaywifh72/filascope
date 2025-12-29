@@ -512,11 +512,17 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
     const price = parseFloat(variant.price);
     const compareAtPrice = variant.compare_at_price ? parseFloat(variant.compare_at_price) : null;
     
-    // Extract weight from title first (more reliable), fall back to grams field
-    const weightGrams = parseWeightFromTitle(variant.title) || variant.grams || null;
+    // Extract weight: try variant title first, then product title, then grams field
+    // Product title often has weight like "PLA Matte Basic 1.75mm, 1KG/2.2LB"
+    // Note: variant.grams is often shipping weight (including packaging), not net weight
+    const weightFromVariantTitle = parseWeightFromTitle(variant.title);
+    const weightFromProductTitle = parseWeightFromTitle(data.product.title);
+    // Only use variant.grams if it's a reasonable filament weight (250g-3000g) and no title weight found
+    const isReasonableGrams = variant.grams && variant.grams >= 250 && variant.grams <= 3000;
+    const weightGrams = weightFromVariantTitle || weightFromProductTitle || (isReasonableGrams ? variant.grams : null) || null;
     
-    // Extract diameter from URL or title
-    const diameterMm = parseDiameter(productUrl, variant.title);
+    // Extract diameter from URL or title (check both product and variant title)
+    const diameterMm = parseDiameter(productUrl, variant.title) || parseDiameter(productUrl, data.product.title);
     
     // Detect currency from URL since Shopify JSON doesn't include it
     const detectedCurrency = detectCurrencyFromUrl(productUrl);

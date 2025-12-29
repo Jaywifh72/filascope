@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { isFilamentAvailableInRegion, type FilamentWithRegion } from '@/hooks/useRegionalFiltering';
 import type { RegionCode } from '@/lib/brandRegionalStores';
+import { cleanFilamentDisplayName } from '@/lib/productNameUtils';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -47,7 +48,9 @@ export function cleanProductTitle(title: string): string {
 }
 
 export function getBaseProductName(title: string): string {
-  const cleanedTitle = cleanProductTitle(title);
+  // First, clean the title by removing diameter/weight suffixes
+  const cleanedForDisplay = cleanFilamentDisplayName(title);
+  const cleanedTitle = cleanProductTitle(cleanedForDisplay);
   let normalizedTitle = cleanedTitle
     .replace(/\s*\(NFC\)\s*/gi, '')
     .replace(/\s+Refill\s*$/gi, '')
