@@ -134,6 +134,20 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'apricot': 'FBCEB1',
   'sunset': 'FAD6A5',
   'pumpkin': 'FF7518',
+  'peach fuzz': 'FFBE98',
+  'carrot orange': 'ED9121',
+  'cream yellow': 'FFFDD0',
+  'cheese yellow': 'FFC000',
+  'butter yellow': 'FFF5BA',
+  'real gold': 'D4AF37',
+  
+  // ==================== GREEN VARIANTS (SPECIALTY) ====================
+  'matcha green': '8DB600',
+  'matcha': '8DB600',
+  
+  // ==================== GREY VARIANTS (SPECIALTY) ====================
+  'koala grey': 'A5A5A5',
+  'koala gray': 'A5A5A5',
 
   // ==================== NEON COLORS ====================
   'neon green': '39FF14',

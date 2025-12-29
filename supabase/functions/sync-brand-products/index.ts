@@ -937,13 +937,24 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
       const productLineId = generateProductLineId(brand.brand_slug, material, baseTitle);
 
       if (hasColorVariants) {
-        // VARIANT EXPLOSION: Create separate database row for each color variant
+        // VARIANT EXPLOSION: Create separate database row for each UNIQUE COLOR variant
+        // Track seen colors to avoid duplicates (e.g., same color with different delivery options)
+        const seenColors = new Set<string>();
+        
         for (const variant of variants) {
           // Skip if we've hit the limit
           if (products.length >= limit) break;
           
           // Extract color from variant options
           const colorName = extractColorNameFromVariant(variant);
+          
+          // DEDUPLICATION: Skip if we've already seen this color
+          // This handles stores with multiple variants per color (e.g., different delivery options)
+          const colorKey = (colorName || 'default').toLowerCase().trim();
+          if (seenColors.has(colorKey)) {
+            continue; // Skip duplicate color
+          }
+          seenColors.add(colorKey);
           const colorHex = extractColorHexFromVariant(variant, product, baseTitle);
           const colorFamily = extractColorFamilyFromVariant(variant, product, baseTitle) || extractColorFamily(baseTitle);
           
