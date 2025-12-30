@@ -123,7 +123,13 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
     fallbackRegion: 'US',
     regions: {
       US: { subdomain: 'www', currency: 'USD' },
+      CA: { subdomain: 'ca', currency: 'CAD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
       EU: { subdomain: 'eu', currency: 'EUR' },
+      DE: { subdomain: 'de', currency: 'EUR' },
+      FR: { subdomain: 'fr', currency: 'EUR' },
+      ES: { subdomain: 'es', currency: 'EUR' },
+      AU: { subdomain: 'au', currency: 'AUD' },
     }
   },
 
