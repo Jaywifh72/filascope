@@ -389,3 +389,6 @@ verify_jwt = false
 
 [functions.sync-creality-products]
 verify_jwt = false
+
+[functions.sync-extrudr-products]
+verify_jwt = false
