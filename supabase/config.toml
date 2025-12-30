@@ -359,3 +359,6 @@ verify_jwt = false
 
 [functions.sync-sovol-products]
 verify_jwt = false
+
+[functions.sync-hatchbox-products]
+verify_jwt = false
