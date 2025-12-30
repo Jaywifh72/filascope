@@ -362,3 +362,6 @@ verify_jwt = false
 
 [functions.sync-hatchbox-products]
 verify_jwt = false
+
+[functions.sync-paramount-products]
+verify_jwt = false
