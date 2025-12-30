@@ -332,3 +332,6 @@ verify_jwt = false
 
 [functions.sync-protopasta-products]
 verify_jwt = false
+
+[functions.sync-pushplastic-products]
+verify_jwt = false
