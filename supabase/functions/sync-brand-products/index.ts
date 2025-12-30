@@ -1140,15 +1140,44 @@ function hslToHex(h: number, s: number, l: number): string {
   return `${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
 }
 
-// Validate and fix duplicate hex codes after sync
-async function validateAndFixDuplicateHexes(supabase: any, brandName: string): Promise<{ fixed: number; duplicates: any[] }> {
+// Validate and fix ALL color hex issues (NULL and duplicates) after sync
+async function validateAndFixDuplicateHexes(supabase: any, brandName: string): Promise<{ fixed: number; duplicates: any[]; nullsFixed: number }> {
+  let fixed = 0;
+  let nullsFixed = 0;
+  
   try {
+    // STEP 1: Fix NULL hex codes first
+    const { data: nullHexFilaments, error: nullError } = await supabase
+      .from('filaments')
+      .select('id, product_title')
+      .ilike('vendor', brandName)
+      .is('color_hex', null);
+    
+    if (!nullError && nullHexFilaments?.length) {
+      console.log(`[sync-validation] Found ${nullHexFilaments.length} filaments with NULL hex codes for ${brandName}`);
+      
+      for (const filament of nullHexFilaments) {
+        const uniqueHex = generateDeterministicHex(filament.product_title);
+        
+        const { error: updateError } = await supabase
+          .from('filaments')
+          .update({ color_hex: uniqueHex })
+          .eq('id', filament.id);
+          
+        if (!updateError) {
+          nullsFixed++;
+          console.log(`[sync-validation] Fixed NULL hex for "${filament.product_title}" -> ${uniqueHex}`);
+        }
+      }
+    }
+    
+    // STEP 2: Fix duplicate hex codes
     const { data: duplicates, error } = await supabase.rpc('find_duplicate_hexes', { 
       p_vendor: brandName 
     });
     
     if (error || !duplicates?.length) {
-      return { fixed: 0, duplicates: [] };
+      return { fixed: 0, duplicates: [], nullsFixed };
     }
     
     console.warn(`[sync-validation] Found ${duplicates.length} duplicate hex codes for ${brandName}`);
@@ -1160,8 +1189,6 @@ async function validateAndFixDuplicateHexes(supabase: any, brandName: string): P
       if (!groupedDupes[key]) groupedDupes[key] = [];
       groupedDupes[key].push(dup);
     }
-    
-    let fixed = 0;
     
     // For each group, generate unique hexes for all but the first
     for (const [productLineId, dupes] of Object.entries(groupedDupes)) {
@@ -1182,10 +1209,10 @@ async function validateAndFixDuplicateHexes(supabase: any, brandName: string): P
       }
     }
     
-    return { fixed, duplicates };
+    return { fixed, duplicates, nullsFixed };
   } catch (err) {
-    console.error('[sync-validation] Error validating duplicates:', err);
-    return { fixed: 0, duplicates: [] };
+    console.error('[sync-validation] Error validating color hexes:', err);
+    return { fixed: 0, duplicates: [], nullsFixed };
   }
 }
 

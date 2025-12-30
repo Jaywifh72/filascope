@@ -95,6 +95,71 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'yellow green red': 'FFD700',
   'rainbow nebula glaze': 'FF6B6B',
   
+  // ==================== AMOLEN GLOW SPECIFIC (unique per variant) ====================
+  'firefly green': '32CD32',         // Lime Green (distinct from regular green)
+  'firefly blue': '1E90FF',          // Dodger Blue (distinct from regular blue)
+  'aurora glow': '7FFFD4',           // Aquamarine
+  'neon nightfall': 'FF1493',        // Deep Pink
+  'rainbow flux': 'FF4500',          // Orange Red
+  'galaxy glow': '9400D3',           // Dark Violet
+  'rainbow 5m': 'FF7F50',            // Coral
+  'rainbow 10m': 'FF6347',           // Tomato
+  'rainbow 10m-neon nightfall': 'FF69B4', // Hot Pink
+  
+  // ==================== AMOLEN SILK TRIPLE (unique per combo) ====================
+  'black blue purple': '4B0082',     // Indigo
+  'black blue purple 1kg': '4B0082', // Indigo
+  'blue purple orange': 'FF8C00',    // Dark Orange accent
+  'blue purple orange 1kg': 'FF8C00', // Dark Orange accent
+  'blue green orange': '20B2AA',     // Light Sea Green
+  'blue green orange 1kg': '20B2AA', // Light Sea Green
+  'blue green purple': '6A5ACD',     // Slate Blue
+  'blue green purple 1kg': '6A5ACD', // Slate Blue
+  'gold fuchsia black': 'C71585',    // Medium Violet Red
+  'gold fuchsia black 1kg': 'C71585', // Medium Violet Red
+  'gold fuchsia blue': 'DA70D6',     // Orchid
+  'gold fuchsia blue 1kg': 'DA70D6', // Orchid
+  'gold fuchsia green': 'DB7093',    // Pale Violet Red
+  'gold fuchsia green 1kg': 'DB7093', // Pale Violet Red
+  'red gold purple': 'B22222',       // Firebrick
+  'red gold purple 1kg': 'B22222',   // Firebrick
+  'red green blue': '00CED1',        // Dark Turquoise
+  'red green blue 1kg': '00CED1',    // Dark Turquoise
+  'red yellow blue': 'FF7F50',       // Coral
+  'red yellow blue 1kg': 'FF7F50',   // Coral
+  'turquoise coral gold': '40E0D0',  // Turquoise
+  'turquoise coral gold 1kg': '40E0D0', // Turquoise
+  'purple/blue green/burnt orange': '8B4513', // Saddle Brown
+  'purple/blue green/burnt orange 1kg': '8B4513', // Saddle Brown
+  
+  // ==================== AMOLEN S-SERIES SPECIFIC ====================
+  'amber sea': 'FFBF00',             // Amber
+  'berry pop': 'DC143C',             // Crimson
+  'nebula ribbon': '9932CC',         // Dark Orchid
+  'twilight': '483D8B',              // Dark Slate Blue
+  
+  // ==================== AMOLEN MARBLE SPECIFIC ====================
+  'fossil gradient': 'A8A39D',       // Fossil gray-brown
+  'fossil': 'A8A39D',                // Alias
+  'cement grey marble': '8D918D',    // Cement gray
+  'green schist': '568203',          // Olive green rock
+  'yellow feldspar rock': 'D4A017',  // Golden rock
+  'sedimentary rock': '8B7355',      // Brown rock
+  'red limestone': 'C04000',         // Terracotta red
+  'rainbow rock': 'A0522D',          // Sienna
+  
+  // ==================== AMOLEN VARIETY PACK SPECIFIC ====================
+  's series a': '6A5ACD',            // Slate Blue
+  's series b': '9370DB',            // Medium Purple
+  'silk a': 'C0C0C0',                // Silver
+  'silk b': 'B0B0B0',                // Darker Silver
+  'dual e': 'A8A8A8',                // Gray Silver
+  
+  // ==================== AMOLEN SILK SHINY GRADIENT SPECIFIC ====================
+  'silk black & shiny red gold': 'FF5722', // Deep Orange
+  'silk black & shiny red': 'F44336',      // Red
+  
+  
   // ==================== AMOLEN MATTE DUAL COLORS ====================
   // Each dual-color combination needs a unique hex to prevent deduplication
   'green purple': '6B5B95',         // Muted purple-green blend
