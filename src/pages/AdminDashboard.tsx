@@ -12,7 +12,7 @@ import {
   Database, Users, Package, Upload, TrendingUp, Shield, ExternalLink, 
   BarChart3, ShoppingCart, ClipboardCheck, Wrench, RefreshCw, Building2,
   Link2, Copy, Calendar, DollarSign, PieChart, Star, FlaskConical, FileText,
-  ShoppingBag
+  ShoppingBag, Scan
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -71,6 +71,7 @@ const AdminDashboard = () => {
   const quickActions = [
     { to: "/admin/brand-pipeline", icon: Building2, title: "Brand Pipeline", desc: "Unified scraping & sync", color: "text-emerald-500" },
     { to: "/admin/data-health", icon: BarChart3, title: "Data Health", desc: "Quality & completeness", color: "text-cyan-500" },
+    { to: "/admin/filament-scraper", icon: Scan, title: "Filament Scraper", desc: "Scrape product pages to DB", color: "text-violet-500" },
     { to: "/admin/filaments", icon: Package, title: "Manage Filaments", desc: "Edit filament entries", color: "text-primary" },
     { to: "/admin/printers", icon: Database, title: "Manage Printers", desc: "Printer database & pricing", color: "text-primary" },
     { to: "/admin/filament-audit", icon: ClipboardCheck, title: "Filament Audit", desc: "Quality audit & URL testing", color: "text-green-500" },

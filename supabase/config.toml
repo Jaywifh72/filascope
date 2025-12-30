@@ -287,3 +287,6 @@ verify_jwt = true
 
 [functions.audit-color-variants]
 verify_jwt = true
+
+[functions.scrape-filament-product]
+verify_jwt = true
