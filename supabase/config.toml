@@ -386,3 +386,6 @@ verify_jwt = true
 
 [functions.sync-colorfabb-products]
 verify_jwt = false
+
+[functions.sync-creality-products]
+verify_jwt = false
