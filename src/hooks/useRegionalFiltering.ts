@@ -164,7 +164,9 @@ export function isFilamentAvailableInRegion(
                                      url.includes('//eu.anycubic.com') ||
                                      url.includes('//au.anycubic.com');
         // US store is the default without regional subdomain
-        return url.includes('store.anycubic.com') && !hasRegionalSubdomain;
+        const isUsStore = url.includes('store.anycubic.com') && !hasRegionalSubdomain;
+        console.log('[RegionalFilter] Anycubic US check:', { url, hasRegionalSubdomain, isUsStore, region });
+        return isUsStore;
       }
       return true;
     }
