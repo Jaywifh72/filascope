@@ -326,3 +326,6 @@ verify_jwt = false
 
 [functions.sync-polymaker-products]
 verify_jwt = false
+
+[functions.sync-protopasta-products]
+verify_jwt = false

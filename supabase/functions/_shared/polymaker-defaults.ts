@@ -587,7 +587,7 @@ export const POLYMAKER_TITLE_NOISE: RegExp[] = [
   /\s*750g\s*/gi,
   /\s*500g\s*/gi,
   /\s*3kg\s*/gi,
-  /\s+{2,}/g,
+  /\s{2,}/g,
 ];
 
 export function cleanPolymakerTitle(title: string): string {
