@@ -333,14 +333,49 @@ async function extractColorCountFromWebsite(url: string, vendor: string, firecra
     
     let colorCount: number | null = null;
     
-    // Strategy 1: Look for color swatches in Shopify stores
-    const swatchMatches = html.match(/class="[^"]*swatch[^"]*"/gi);
-    if (swatchMatches && swatchMatches.length > 0) {
-      const colorSwatches = html.match(/data-value="[^"]+"/gi);
-      if (colorSwatches) {
-        const uniqueColors = new Set(colorSwatches.map((s: string) => s.toLowerCase()));
+    // Strategy 1: Amolen-specific - Look for .color-swatch labels with sr-only spans
+    if (vendor.toLowerCase().includes('amolen')) {
+      // Pattern: <label class="color-swatch..."><span class="sr-only">ColorName</span></label>
+      const amelonSwatchPattern = /<label[^>]*class="[^"]*color-swatch[^"]*"[^>]*>[\s\S]*?<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi;
+      const amelonMatches = [...html.matchAll(amelonSwatchPattern)];
+      
+      if (amelonMatches.length > 0) {
+        const uniqueColors = new Set(amelonMatches.map(m => m[1].trim().toLowerCase()));
         colorCount = uniqueColors.size;
-        console.log(`Found ${colorCount} color swatches for ${vendor}`);
+        console.log(`Found ${colorCount} colors via Amolen swatch pattern`);
+      }
+      
+      // Fallback: Count sr-only spans inside variant-picker
+      if (!colorCount) {
+        const variantPickerMatch = html.match(/<variant-picker[^>]*>[\s\S]*?<\/variant-picker>/gi);
+        if (variantPickerMatch && variantPickerMatch.length > 0) {
+          const firstPicker = variantPickerMatch[0];
+          const srOnlyMatches = [...firstPicker.matchAll(/<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi)];
+          if (srOnlyMatches.length > 0) {
+            // Filter out non-color entries like "Delivery Option"
+            const colorEntries = srOnlyMatches
+              .map(m => m[1].trim())
+              .filter(s => !s.includes('Delivery') && !s.includes('Option') && s.length > 1 && s.length < 50);
+            
+            if (colorEntries.length > 0) {
+              colorCount = new Set(colorEntries.map(c => c.toLowerCase())).size;
+              console.log(`Found ${colorCount} colors via sr-only spans for Amolen`);
+            }
+          }
+        }
+      }
+    }
+    
+    // Strategy 2: Look for color swatches in other Shopify stores (data-value pattern)
+    if (!colorCount) {
+      const swatchMatches = html.match(/class="[^"]*swatch[^"]*"/gi);
+      if (swatchMatches && swatchMatches.length > 0) {
+        const colorSwatches = html.match(/data-value="[^"]+"/gi);
+        if (colorSwatches) {
+          const uniqueColors = new Set(colorSwatches.map((s: string) => s.toLowerCase()));
+          colorCount = uniqueColors.size;
+          console.log(`Found ${colorCount} color swatches for ${vendor}`);
+        }
       }
     }
     
