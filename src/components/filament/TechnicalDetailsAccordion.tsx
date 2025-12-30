@@ -88,7 +88,7 @@ export function TechnicalDetailsAccordion({ filament, className }: TechnicalDeta
                   <ThermometerSun className="w-5 h-5 text-orange-500" />
                 </div>
                 <div className="text-left">
-                  <div className="font-semibold">Print Settings</div>
+                  <h2 className="font-semibold">Print Settings</h2>
                   <div className="text-xs text-muted-foreground">
                     Temperature, speed & fan settings
                   </div>
@@ -163,7 +163,7 @@ export function TechnicalDetailsAccordion({ filament, className }: TechnicalDeta
                   <Shield className="w-5 h-5 text-emerald-500" />
                 </div>
                 <div className="text-left">
-                  <div className="font-semibold">Mechanical Properties</div>
+                  <h2 className="font-semibold">Mechanical Properties</h2>
                   <div className="text-xs text-muted-foreground">
                     Strength, hardness & flexibility
                   </div>
@@ -234,7 +234,7 @@ export function TechnicalDetailsAccordion({ filament, className }: TechnicalDeta
                   <Droplets className="w-5 h-5 text-blue-500" />
                 </div>
                 <div className="text-left">
-                  <div className="font-semibold">Storage & Care</div>
+                  <h2 className="font-semibold">Storage & Care</h2>
                   <div className="text-xs text-muted-foreground">
                     Drying & moisture sensitivity
                   </div>
@@ -285,7 +285,7 @@ export function TechnicalDetailsAccordion({ filament, className }: TechnicalDeta
                   <Package className="w-5 h-5 text-purple-500" />
                 </div>
                 <div className="text-left">
-                  <div className="font-semibold">Spool Specifications</div>
+                  <h2 className="font-semibold">Spool Specifications</h2>
                   <div className="text-xs text-muted-foreground">
                     Dimensions & physical properties
                   </div>
@@ -345,7 +345,7 @@ export function TechnicalDetailsAccordion({ filament, className }: TechnicalDeta
                 <Database className="w-5 h-5 text-primary" />
               </div>
               <div className="text-left">
-                <div className="font-semibold">Export Full Data</div>
+                <h2 className="font-semibold">Export Full Data</h2>
                 <div className="text-xs text-muted-foreground">
                   Download all {FILAMENT_FIELD_MAPPINGS.length} fields as CSV
                 </div>

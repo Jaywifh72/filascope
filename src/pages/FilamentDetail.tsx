@@ -30,6 +30,8 @@ import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRe
 import { isFilamentAvailableInRegion, isRegionalBrand, type FilamentWithRegion } from "@/hooks/useRegionalFiltering";
 import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
 import { useFilamentColorVariants, getBaseProductName, getColorFromTitle } from "@/hooks/useFilamentColorVariants";
+import { ProductSEO, ProductJsonLd } from "@/components/seo";
+import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -490,8 +492,57 @@ const FilamentDetail = () => {
 
   const baseProductName = getBaseName(filament.product_title);
 
+  // Build SEO description
+  const seoDescription = `${displayFilament.vendor || ''} ${displayFilament.material || ''} filament${displayFilament.transmission_distance ? ` with TD ${displayFilament.transmission_distance} for HueForge` : ''}. ${
+    displayFilament.nozzle_temp_min_c && displayFilament.nozzle_temp_max_c
+      ? `Nozzle: ${displayFilament.nozzle_temp_min_c}-${displayFilament.nozzle_temp_max_c}°C. `
+      : ''
+  }${
+    displayFilament.bed_temp_min_c && displayFilament.bed_temp_max_c
+      ? `Bed: ${displayFilament.bed_temp_min_c}-${displayFilament.bed_temp_max_c}°C. `
+      : ''
+  }${rawPricePerKg ? `From $${rawPricePerKg.toFixed(2)}/kg. ` : ''}Compare specs & prices at FilaScope.`;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      {/* SEO Meta Tags */}
+      <ProductSEO
+        title={`${displayFilament.vendor || ''} ${cleanFilamentDisplayName(baseProductName)}`}
+        description={seoDescription}
+        canonicalUrl={`/filament/${displayFilament.id}`}
+        image={displayFilament.featured_image}
+        brand={displayFilament.vendor}
+        material={displayFilament.material}
+        price={rawPricePerKg}
+        availability={displayFilament.variant_available ?? true}
+        transmissionDistance={displayFilament.transmission_distance}
+      />
+      
+      {/* JSON-LD Structured Data */}
+      <ProductJsonLd
+        name={`${displayFilament.vendor || ''} ${cleanFilamentDisplayName(baseProductName)}`}
+        description={seoDescription}
+        image={displayFilament.featured_image}
+        brand={displayFilament.vendor}
+        sku={displayFilament.variant_sku}
+        gtin={displayFilament.gtin || displayFilament.ean || displayFilament.upc}
+        mpn={displayFilament.mpn}
+        material={displayFilament.material}
+        color={displayFilament.color_family}
+        url={`https://filascope.com/filament/${displayFilament.id}`}
+        price={rawPricePerKg}
+        availability={displayFilament.variant_available ?? true}
+        transmissionDistance={displayFilament.transmission_distance}
+        nozzleTempMin={displayFilament.nozzle_temp_min_c}
+        nozzleTempMax={displayFilament.nozzle_temp_max_c}
+        bedTempMin={displayFilament.bed_temp_min_c}
+        bedTempMax={displayFilament.bed_temp_max_c}
+        tensileStrength={displayFilament.tensile_strength_xy_mpa}
+        printSpeedMax={displayFilament.print_speed_max_mms}
+        weightGrams={displayFilament.net_weight_g}
+        diameter={displayFilament.diameter_nominal_mm}
+      />
+
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 hover:bg-accent/50 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />

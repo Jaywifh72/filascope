@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import Navbar from "./components/Navbar";
 import { CurrencyProvider } from "./hooks/useCurrency";
 import { CompareProvider } from "./hooks/useCompare";
@@ -70,15 +71,16 @@ const queryClient = new QueryClient();
 // Navbar no longer needs compatible count - printer selector moved to hero section
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <CurrencyProvider>
-      <CompatibleCountProvider>
-        <CompareProvider>
-          <PrinterCompareProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <CurrencyProvider>
+        <CompatibleCountProvider>
+          <CompareProvider>
+            <PrinterCompareProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
                 <Navbar />
                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-muted-foreground">Loading...</div></div>}>
                   <Routes>
@@ -137,14 +139,15 @@ const App = () => (
                 </Routes>
               </Suspense>
               <CompareTray />
-              <PrinterCompareBar />
-            </BrowserRouter>
-          </TooltipProvider>
-        </PrinterCompareProvider>
-      </CompareProvider>
-    </CompatibleCountProvider>
-  </CurrencyProvider>
-</QueryClientProvider>
+                <PrinterCompareBar />
+              </BrowserRouter>
+            </TooltipProvider>
+          </PrinterCompareProvider>
+        </CompareProvider>
+      </CompatibleCountProvider>
+    </CurrencyProvider>
+  </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;
