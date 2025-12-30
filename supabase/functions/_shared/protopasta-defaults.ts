@@ -338,52 +338,20 @@ export function normalizeProtoPastaMaterial(title: string, existingMaterial?: st
 
 // ============= TDS URL MAPPING =============
 
+// Proto-Pasta consolidated TDS page - individual PDFs have unpredictable version suffixes
+export const PROTOPASTA_TDS_PAGE = 'https://proto-pasta.com/pages/technical-data-sheets';
+
+// For future: if we discover stable patterns, add them here
+// Current CDN pattern observed: TDS__[Name]_[version].pdf where version varies
 export const PROTOPASTA_TDS_URLS: Record<string, string> = {
-  // HTPLA lines
-  'translucent': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Translucent_Sparkly_HTPLA.pdf',
-  'metallic': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Metallic_HTPLA.pdf',
-  'glitter': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Glitter_Flake_HTPLA.pdf',
-  'nebula': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Nebula_Multicolor_HTPLA.pdf',
-  'matte-fiber': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Matte_Fiber_HTPLA.pdf',
-  'standard': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__HTPLA.pdf',
-
-  // Carbon Fiber
-  'htpla-cf': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Carbon_Fiber_HTPLA.pdf',
-  'pla-cf': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Carbon_Fiber_PLA.pdf',
-
-  // Metal Composites
-  'brass': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Brass_Metal_Composite.pdf',
-  'bronze': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Bronze_Metal_Composite.pdf',
-  'copper': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Copper_Metal_Composite.pdf',
-  'iron': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Iron_Metal_Composite.pdf',
-  'steel': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Steel_Metal_Composite.pdf',
-
-  // Specialty
-  'conductive': 'https://cdn.shopify.com/s/files/1/0717/9095/files/TDS__Conductive_PLA.pdf',
+  // All products link to the main TDS page since individual PDFs have unpredictable URLs
+  'default': PROTOPASTA_TDS_PAGE,
 };
 
-export function getProtoPastaTdsUrl(productLineId: string): string | null {
-  // Extract the sub-line from product_line_id (e.g., 'protopasta__htpla__translucent' -> 'translucent')
-  const parts = productLineId.split('__');
-  if (parts.length < 3) return null;
-
-  const subLine = parts[2];
-
-  // Direct match
-  if (PROTOPASTA_TDS_URLS[subLine]) {
-    return PROTOPASTA_TDS_URLS[subLine];
-  }
-
-  // Check material part for CF
-  const material = parts[1];
-  if (material === 'htpla-cf') return PROTOPASTA_TDS_URLS['htpla-cf'];
-  if (material === 'pla-cf') return PROTOPASTA_TDS_URLS['pla-cf'];
-  if (material === 'pla-conductive') return PROTOPASTA_TDS_URLS['conductive'];
-
-  // Fallback to generic HTPLA TDS
-  if (material === 'htpla') return PROTOPASTA_TDS_URLS['standard'];
-
-  return null;
+export function getProtoPastaTdsUrl(_productLineId: string): string {
+  // Proto-Pasta's individual TDS PDFs have unpredictable version suffixes
+  // Return the consolidated TDS page which contains all datasheets
+  return PROTOPASTA_TDS_PAGE;
 }
 
 // ============= COLOR MAPPING =============
