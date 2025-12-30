@@ -317,3 +317,6 @@ verify_jwt = false
 
 [functions.sync-matter3d-products]
 verify_jwt = false
+
+[functions.sync-ninjatek-products]
+verify_jwt = false
