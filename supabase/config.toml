@@ -252,6 +252,9 @@ verify_jwt = true
 [functions.sync-treed-products]
 verify_jwt = false
 
+[functions.sync-ultimaker-products]
+verify_jwt = false
+
 [functions.scrape-gst3d-products]
 verify_jwt = true
 
