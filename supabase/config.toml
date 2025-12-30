@@ -368,3 +368,6 @@ verify_jwt = false
 
 [functions.sync-yousu-products]
 verify_jwt = false
+
+[functions.sync-ziro-products]
+verify_jwt = false
