@@ -234,8 +234,40 @@ export function useRegionalFiltering() {
    * Filter an array of filaments to only those available in current region
    */
   const filterByRegion = useCallback(<T extends FilamentWithRegion>(filaments: T[]): T[] => {
-    return filaments.filter(isAvailableInCurrentRegion);
-  }, [isAvailableInCurrentRegion]);
+    console.log('[RegionalFilter] Input count:', filaments.length, 'Region:', currentRegion);
+    
+    // Log Anycubic products specifically
+    const anycubicProducts = filaments.filter(f => f.vendor?.toLowerCase() === 'anycubic');
+    console.log('[RegionalFilter] Anycubic products in input:', anycubicProducts.length);
+    if (anycubicProducts.length > 0) {
+      console.log('[RegionalFilter] Sample Anycubic URLs:', anycubicProducts.slice(0, 3).map(f => ({
+        id: f.id,
+        vendor: f.vendor,
+        url: f.product_url
+      })));
+    }
+    
+    const result = filaments.filter(isAvailableInCurrentRegion);
+    
+    console.log('[RegionalFilter] Output count:', result.length);
+    
+    // Log excluded items
+    const excluded = filaments.filter(f => !isAvailableInCurrentRegion(f));
+    if (excluded.length > 0) {
+      const excludedAnycubic = excluded.filter(f => f.vendor?.toLowerCase() === 'anycubic');
+      console.log('[RegionalFilter] Total excluded:', excluded.length, 'Anycubic excluded:', excludedAnycubic.length);
+      if (excludedAnycubic.length > 0) {
+        console.log('[RegionalFilter] Excluded Anycubic samples:', excludedAnycubic.slice(0, 3).map(f => ({
+          id: f.id,
+          vendor: f.vendor,
+          url: f.product_url,
+          isRegionalBrand: isRegionalBrand(f.vendor)
+        })));
+      }
+    }
+    
+    return result;
+  }, [isAvailableInCurrentRegion, currentRegion]);
   
   /**
    * Get the regional URL field name for current region
