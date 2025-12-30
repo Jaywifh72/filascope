@@ -65,6 +65,9 @@ const ReferenceCAD = lazy(() => import("./pages/ReferenceCAD"));
 const ReferenceRepos = lazy(() => import("./pages/ReferenceRepos"));
 const ReferenceInfluencers = lazy(() => import("./pages/ReferenceInfluencers"));
 const ReferenceSpecialty = lazy(() => import("./pages/ReferenceSpecialty"));
+const ReferenceMethodology = lazy(() => import("./pages/ReferenceMethodology"));
+const HueForgeFinder = lazy(() => import("./pages/HueForgeFinder"));
+const TDDatabase = lazy(() => import("./pages/TDDatabase"));
 const QuizScoringTest = lazy(() => import("./components/reference/repos/quiz/QuizScoringTest"));
 
 const queryClient = new QueryClient();
@@ -135,7 +138,10 @@ const App = () => (
                   <Route path="/reference/repos" element={<ReferenceRepos />} />
                   <Route path="/reference/influencers" element={<ReferenceInfluencers />} />
                   <Route path="/reference/specialty" element={<ReferenceSpecialty />} />
+                  <Route path="/reference/methodology" element={<ReferenceMethodology />} />
                   <Route path="/reference/repos/quiz-test" element={<QuizScoringTest />} />
+                  <Route path="/hueforge-filaments" element={<HueForgeFinder />} />
+                  <Route path="/td-database" element={<TDDatabase />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

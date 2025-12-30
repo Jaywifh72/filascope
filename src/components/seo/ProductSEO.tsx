@@ -25,15 +25,19 @@ export function ProductSEO({
   availability = true,
   transmissionDistance,
 }: ProductSEOProps) {
-  // Build SEO-optimized title
+  // Build SEO-optimized title with HueForge targeting
   const seoTitle = transmissionDistance 
-    ? `${title} - TD ${transmissionDistance} HueForge Compatible | FilaScope`
-    : `${title} | FilaScope`;
+    ? `${title} - TD ${transmissionDistance} HueForge Filament | FilaScope`
+    : `${title} | FilaScope 3D Printing Database`;
 
-  // Build meta description with key specs
-  const seoDescription = description.length > 160 
-    ? description.substring(0, 157) + '...'
-    : description;
+  // Build meta description with key specs and HueForge targeting
+  let metaDesc = description;
+  if (transmissionDistance && !description.toLowerCase().includes('hueforge')) {
+    metaDesc = `TD ${transmissionDistance} for HueForge lithophanes. ${description}`;
+  }
+  const seoDescription = metaDesc.length > 160 
+    ? metaDesc.substring(0, 157) + '...'
+    : metaDesc;
 
   const fullUrl = canonicalUrl.startsWith('http') 
     ? canonicalUrl 
@@ -72,6 +76,14 @@ export function ProductSEO({
         </>
       )}
       <meta property="product:availability" content={availability ? 'in stock' : 'out of stock'} />
+      
+      {/* HueForge-specific meta */}
+      {transmissionDistance && (
+        <>
+          <meta name="keywords" content={`HueForge, TD value, transmission distance, ${material || 'filament'}, ${brand || '3D printing'}, lithophane, multicolor printing`} />
+          <meta property="product:transmission_distance" content={transmissionDistance.toString()} />
+        </>
+      )}
     </Helmet>
   );
 }
