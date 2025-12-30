@@ -261,15 +261,23 @@ export function normalizeAnycubicMaterial(title: string): string | null {
 // TITLE CLEANING - Anycubic-specific noise removal
 // ============================================================================
 
-const ANYCUBIC_TITLE_NOISE = [
-  // Promotional text
+export const PROMOTIONAL_PATTERNS = [
   /christmas\s*(?:bulk\s*)?sale/gi,
   /buy\s*\d+[,\s]*get\s*\d+\s*free/gi,
-  /bulk\s*sale/gi,
+  /bulk\s*(?:sale|deal)/gi,
   /special\s*offer/gi,
   /limited\s*(?:time\s*)?(?:offer|deal)/gi,
   /hot\s*deal/gi,
   /best\s*seller/gi,
+  /flash\s*sale/gi,
+  /\d+-\d+kg\s*deals?/gi,
+  /multi.?pack/gi,
+  /bundle\s*deal/gi,
+];
+
+const ANYCUBIC_TITLE_NOISE = [
+  // Promotional text
+  ...PROMOTIONAL_PATTERNS,
   
   // Filament Hub prefix
   /^filament\s*hub\s*[-–:]?\s*/gi,
@@ -309,6 +317,71 @@ export function cleanAnycubicTitle(title: string): string {
     .trim();
   
   return cleaned;
+}
+
+/**
+ * Check if product is a promotional variant (should get separate product_line_id)
+ */
+export function isPromotionalProduct(title: string): boolean {
+  return PROMOTIONAL_PATTERNS.some(pattern => pattern.test(title));
+}
+
+// ============================================================================
+// PRODUCT LINE ID GENERATION (Matches Amolen approach)
+// ============================================================================
+
+const ANYCUBIC_PRODUCT_LINES = [
+  // High speed variants (most specific first)
+  'High Speed', 'High-Speed', 'HS',
+  
+  // Finish types
+  'Silk', 'Matte', 'Marble', 'Sparkle', 'Glow in the Dark', 'Glow-in-the-Dark', 'Glow',
+  
+  // Composite
+  'Carbon Fiber', 'CF',
+  
+  // Base types
+  'Basic', 'Standard', 'Plus', 'Pro',
+];
+
+/**
+ * Generate product_line_id for Anycubic products (matches Amolen approach)
+ */
+export function generateAnycubicProductLineId(title: string, material?: string | null): string {
+  const cleanedTitle = cleanAnycubicTitle(title).toLowerCase();
+  
+  // Promotional products get unique IDs to prevent incorrect grouping
+  if (isPromotionalProduct(title)) {
+    const promoMatch = title.match(/christmas\s*bulk\s*sale|flash\s*sale|buy\s*\d+.*get\s*\d+|bulk\s*deal/i);
+    const promoSuffix = promoMatch ? `_promo_${promoMatch[0].toLowerCase().replace(/\s+/g, '_').substring(0, 20)}` : '_promo';
+    return `anycubic_${cleanedTitle.replace(/[^a-z0-9]/g, '_').substring(0, 30)}${promoSuffix}`;
+  }
+  
+  // Build product line ID from material + product line
+  let baseId = 'anycubic';
+  
+  // Add material
+  const normalizedMaterial = normalizeAnycubicMaterial(title);
+  if (normalizedMaterial) {
+    baseId += `_${normalizedMaterial.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+  } else if (material) {
+    baseId += `_${material.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+  }
+  
+  // Add finish type
+  const finishType = extractFinishType(title);
+  if (finishType !== 'Standard') {
+    baseId += `_${finishType.toLowerCase().replace(/\s+/g, '')}`;
+  }
+  
+  // Check for high speed
+  if (cleanedTitle.includes('high speed') || cleanedTitle.includes('high-speed') || /\bhs\s/i.test(cleanedTitle)) {
+    if (!baseId.includes('highspeed') && !baseId.includes('hs')) {
+      baseId += '_hs';
+    }
+  }
+  
+  return baseId;
 }
 
 // ============================================================================

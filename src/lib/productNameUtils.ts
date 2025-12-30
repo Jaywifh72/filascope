@@ -214,6 +214,71 @@ export const getBaseProductName = (title: string, material?: string | null): str
     }
   }
   
+  // ANYCUBIC PATTERN: Handle promotional products and product lines
+  // Examples: "PLA Silk Christmas Bulk Sale Copper" → "PLA Silk" (after cleaning promo)
+  //           "PETG Filament Lake Blue" → "PETG"
+  //           "High Speed PLA Black" → "High Speed PLA"
+  //           "Matte PLA Grey" → "Matte PLA"
+  const vendorLower = (typeof material === 'string' ? material : '').toLowerCase();
+  const isAnycubic = normalizedTitle.toLowerCase().includes('anycubic') || 
+                     vendorLower.includes('anycubic');
+  
+  if (isAnycubic || normalizedTitle.match(/^(?:High[- ]?Speed|Silk|Matte|Marble|Sparkle|Glow)\s+(?:PLA|PETG|ABS)/i)) {
+    // Clean promotional text first
+    const promotionalPatterns = [
+      /Christmas\s*Bulk\s*Sale/gi,
+      /Flash\s*Sale/gi,
+      /Buy\s*\d+.*Get\s*\d+.*Free/gi,
+      /\d+-\d+kg\s*Deals?/gi,
+      /Bulk\s*Sale/gi,
+      /Special\s*Offer/gi,
+    ];
+    
+    let cleanedForParsing = normalizedTitle;
+    for (const pattern of promotionalPatterns) {
+      cleanedForParsing = cleanedForParsing.replace(pattern, '');
+    }
+    cleanedForParsing = cleanedForParsing.replace(/\s+/g, ' ').trim();
+    
+    // Anycubic product lines (ordered from most specific to least)
+    const anycubicProductLines = [
+      'High Speed', 'High-Speed', 'HS',
+      'Silk', 'Matte', 'Marble', 'Sparkle', 'Glow in the Dark', 'Glow-in-the-Dark', 'Glow',
+      'Carbon Fiber', 'CF',
+      'Basic', 'Standard', 'Plus',
+    ];
+    
+    for (const productLine of anycubicProductLines) {
+      // Match: [optional Brand] [ProductLine] Material [Color]
+      const regex = new RegExp(
+        `^((?:Anycubic\\s+)?${productLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+(?:PLA\\+?|PETG\\+?|ABS|TPU|ASA|PC))(?:\\s+Filament)?(?:\\s+.+)?$`,
+        'i'
+      );
+      const match = cleanedForParsing.match(regex);
+      if (match) {
+        return match[1].trim();
+      }
+      
+      // Also try: Material [ProductLine] [Color] pattern
+      const regex2 = new RegExp(
+        `^((?:Anycubic\\s+)?(?:PLA\\+?|PETG\\+?|ABS|TPU|ASA|PC)\\s+${productLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?:\\s+Filament)?(?:\\s+.+)?$`,
+        'i'
+      );
+      const match2 = cleanedForParsing.match(regex2);
+      if (match2) {
+        return match2[1].trim();
+      }
+    }
+    
+    // Simple material match for Anycubic: "[Anycubic] Material [Filament] Color"
+    const simpleMatch = cleanedForParsing.match(
+      /^((?:Anycubic\s+)?(?:PLA\+?|PETG\+?|ABS|TPU|TPU\s+95A|ASA|PC))(?:\s+Filament)?(?:\s+.+)?$/i
+    );
+    if (simpleMatch) {
+      return simpleMatch[1].trim();
+    }
+  }
+  
   // Pattern 0: Paramount 3D style - "Material (Color) Diameter Weight Filament"
   const paramountMatch = normalizedTitle.match(/^((?:PLA\+?|PETG|ABS|TPU|TPE|ASA|PA\d*|PC|HIPS|PVA|Nylon)(?:\s+Carbon\s+Fiber)?)\s*\(.+\)\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i);
   if (paramountMatch) {
