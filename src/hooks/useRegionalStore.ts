@@ -146,6 +146,11 @@ export function getRegionDisplayName(region: RegionCode): string {
     MX: 'Mexico',
     BR: 'Brazil',
     NZ: 'New Zealand',
+    DE: 'Germany',
+    FR: 'France',
+    ES: 'Spain',
+    IT: 'Italy',
+    PL: 'Poland',
   };
   return names[region] || region;
 }

@@ -5,7 +5,7 @@
  * Zero database changes - purely client-side URL transformation.
  */
 
-export type RegionCode = 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP' | 'CN' | 'KR' | 'IN' | 'MX' | 'BR' | 'NZ';
+export type RegionCode = 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP' | 'CN' | 'KR' | 'IN' | 'MX' | 'BR' | 'NZ' | 'DE' | 'FR' | 'ES' | 'IT' | 'PL';
 
 export interface RegionConfig {
   subdomain?: string;
@@ -74,14 +74,23 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
 
   'Anycubic': {
     pattern: 'subdomain',
-    baseDomain: 'store.anycubic.com',
+    baseDomain: 'anycubic.com',
     fallbackRegion: 'US',
     regions: {
-      US: { subdomain: '', currency: 'USD' },  // US store has no subdomain: store.anycubic.com
-      CA: { subdomain: 'ca', currency: 'CAD' },
-      UK: { subdomain: 'uk', currency: 'GBP' },
-      EU: { subdomain: 'eu', currency: 'EUR' },
-      AU: { subdomain: 'au', currency: 'AUD' },
+      // North America
+      US: { subdomain: 'store', currency: 'USD' },  // store.anycubic.com
+      CA: { subdomain: 'ca', currency: 'CAD' },     // ca.anycubic.com
+      // Europe - subdomains
+      UK: { subdomain: 'uk', currency: 'GBP' },     // uk.anycubic.com
+      EU: { subdomain: 'eu', currency: 'EUR' },     // eu.anycubic.com
+      DE: { subdomain: 'de', currency: 'EUR' },     // de.anycubic.com
+      FR: { subdomain: 'fr', currency: 'EUR' },     // fr.anycubic.com
+      // Europe - different domains (use domain override)
+      ES: { domain: 'www.anycubic.es', currency: 'EUR' },         // anycubic.es
+      IT: { domain: 'anycubic.it', currency: 'EUR' },             // anycubic.it
+      PL: { domain: 'anycubicofficial.pl', currency: 'PLN' },     // anycubicofficial.pl
+      // Asia Pacific
+      AU: { domain: 'www.anycubic.au', currency: 'AUD' },         // anycubic.au
     }
   },
 
