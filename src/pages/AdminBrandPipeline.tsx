@@ -11,11 +11,21 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { 
   Building2, Search, Package, RefreshCw, CheckCircle2, XCircle, 
   Clock, TrendingUp, AlertCircle, Play, Activity, ArrowLeft,
   Zap, Database, Image, FileText, Palette, Thermometer, 
   Barcode, Tag, PlayCircle, ShoppingCart, Link2, DollarSign,
-  Store, Loader2
+  Store, Loader2, Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import { BrandCategoryTabs } from "@/components/admin/BrandCategoryTabs";
@@ -86,6 +96,8 @@ const AdminBrandPipeline = () => {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all-brands");
   const [scrapingBrandId, setScrapingBrandId] = useState<string | null>(null);
+  const [deletingBrandId, setDeletingBrandId] = useState<string | null>(null);
+  const [deleteConfirmBrand, setDeleteConfirmBrand] = useState<AutomatedBrand | null>(null);
 
   useEffect(() => {
     if (!authLoading && user && !isAdmin) {
@@ -186,6 +198,39 @@ const AdminBrandPipeline = () => {
     onError: (error, brand) => {
       setScrapingBrandId(null);
       toast.error(`Failed to scrape ${brand.display_name}: ${error.message}`);
+    },
+  });
+
+  // Delete all products for a brand (clean-slate resync)
+  const deleteProducts = useMutation({
+    mutationFn: async (brand: AutomatedBrand) => {
+      setDeletingBrandId(brand.id);
+      
+      // Delete all filaments for this vendor
+      const { error } = await supabase
+        .from('filaments')
+        .delete()
+        .ilike('vendor', brand.brand_name);
+      
+      if (error) throw error;
+      
+      // Update brand product counts
+      await supabase.rpc('update_brand_product_counts', { 
+        p_brand_slug: brand.brand_slug 
+      });
+      
+      return { brandName: brand.display_name };
+    },
+    onSuccess: (data) => {
+      setDeletingBrandId(null);
+      setDeleteConfirmBrand(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-brand-pipeline"] });
+      toast.success(`Deleted all ${data.brandName} products`);
+    },
+    onError: (error, brand) => {
+      setDeletingBrandId(null);
+      setDeleteConfirmBrand(null);
+      toast.error(`Failed to delete ${brand.display_name} products: ${error.message}`);
     },
   });
 
@@ -344,6 +389,21 @@ const AdminBrandPipeline = () => {
                         onCheckedChange={(checked) => toggleScraping.mutate({ id: brand.id, enabled: checked })}
                       />
 
+                      {/* Delete button */}
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={deletingBrandId === brand.id || brand.product_count === 0}
+                        onClick={() => setDeleteConfirmBrand(brand)}
+                        title="Delete all products"
+                      >
+                        {deletingBrandId === brand.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </Button>
+
                       {/* Scrape button */}
                       <Button
                         size="sm"
@@ -419,6 +479,28 @@ const AdminBrandPipeline = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirmBrand} onOpenChange={(open) => !open && setDeleteConfirmBrand(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All {deleteConfirmBrand?.display_name} Products?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <strong>{deleteConfirmBrand?.product_count} products</strong> from the database. 
+              This action cannot be undone. You can resync after deletion to get fresh data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteConfirmBrand && deleteProducts.mutate(deleteConfirmBrand)}
+            >
+              Delete All Products
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
