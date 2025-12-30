@@ -960,9 +960,10 @@ const Finder = () => {
     if (singleSpool && !multiPack && packQty !== 1) return false;
     if (multiPack && !singleSpool && packQty <= 1) return false;
     
-    // Apply spool weight filter (default: hide spools > 1kg unless largeSpools is enabled)
+    // Apply spool weight filter (default: hide very large spools > 2kg unless largeSpools is enabled)
+    // Standard spools are 0.5kg-1.5kg, large multi-packs are 2kg+
     const weightG = f.net_weight_g || 1000; // Default to 1kg if unknown
-    if (!largeSpools && weightG > 1000) return false;
+    if (!largeSpools && weightG > 2000) return false;
     
     // Apply color family filter
     if (selectedColorFamilies.length > 0) {
