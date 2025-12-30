@@ -293,3 +293,6 @@ verify_jwt = true
 
 [functions.sync-anycubic-products]
 verify_jwt = true
+
+[functions.sync-atomic-products]
+verify_jwt = false
