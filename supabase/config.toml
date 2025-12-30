@@ -290,3 +290,6 @@ verify_jwt = true
 
 [functions.scrape-filament-product]
 verify_jwt = true
+
+[functions.sync-anycubic-products]
+verify_jwt = true
