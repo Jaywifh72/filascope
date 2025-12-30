@@ -77,7 +77,7 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
     baseDomain: 'store.anycubic.com',
     fallbackRegion: 'US',
     regions: {
-      US: { subdomain: 'www', currency: 'USD' },
+      US: { subdomain: '', currency: 'USD' },  // US store has no subdomain: store.anycubic.com
       CA: { subdomain: 'ca', currency: 'CAD' },
       UK: { subdomain: 'uk', currency: 'GBP' },
       EU: { subdomain: 'eu', currency: 'EUR' },

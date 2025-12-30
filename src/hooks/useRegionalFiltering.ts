@@ -118,6 +118,9 @@ export function isFilamentAvailableInRegion(
     return true;
   }
   
+  // Get brand config for fallback region support
+  const brandConfig = getBrandConfig(vendor);
+  
   // For regional brands, we must check if THIS SPECIFIC PRODUCT is available in this region
   // Brand having a regional store does NOT mean all products are available there
   // Each regional store has its own product catalog
@@ -154,7 +157,7 @@ export function isFilamentAvailableInRegion(
         return isUsStore;
       }
       if (isAnycubicVendor) {
-        // US Anycubic URLs: store.anycubic.com or www.store.anycubic.com without regional subdomain
+        // US Anycubic URLs: store.anycubic.com without regional subdomain
         const hasRegionalSubdomain = url.includes('ca.store.anycubic.com') || 
                                      url.includes('uk.store.anycubic.com') ||
                                      url.includes('eu.store.anycubic.com') ||
@@ -164,8 +167,7 @@ export function isFilamentAvailableInRegion(
                                      url.includes('//eu.anycubic.com') ||
                                      url.includes('//au.anycubic.com');
         // US store is the default without regional subdomain
-        const isUsStore = url.includes('store.anycubic.com') && !hasRegionalSubdomain;
-        console.log('[RegionalFilter] Anycubic US check:', { url, hasRegionalSubdomain, isUsStore, region });
+        const isUsStore = (url.includes('store.anycubic.com') || url.includes('anycubic.com')) && !hasRegionalSubdomain;
         return isUsStore;
       }
       return true;
@@ -208,6 +210,60 @@ export function isFilamentAvailableInRegion(
         return true;
       }
     }
+  }
+  
+  // FALLBACK: If the user's region is not supported by this regional brand,
+  // check if the product is available in the brand's fallback region (usually US)
+  // This prevents hiding products when user is in an unsupported region
+  if (brandConfig?.fallbackRegion && brandConfig.fallbackRegion !== region) {
+    // Check if product exists in fallback region
+    const fallbackAvailable = isFilamentAvailableInFallbackRegion(filament, brandConfig.fallbackRegion, vendor);
+    if (fallbackAvailable) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Helper to check if filament is available in a fallback region
+ * Prevents infinite recursion by not using the main function
+ */
+function isFilamentAvailableInFallbackRegion(
+  filament: FilamentWithRegion,
+  fallbackRegion: RegionCode,
+  vendor: string | null | undefined
+): boolean {
+  const url = filament.product_url;
+  if (!url) return false;
+  
+  const normalizedVendor = vendor?.toLowerCase();
+  
+  if (fallbackRegion === 'US') {
+    // Check if this is a US store URL
+    if (normalizedVendor === 'anycubic') {
+      const hasRegionalSubdomain = url.includes('ca.store.anycubic.com') || 
+                                   url.includes('uk.store.anycubic.com') ||
+                                   url.includes('eu.store.anycubic.com') ||
+                                   url.includes('au.store.anycubic.com') ||
+                                   url.includes('//ca.anycubic.com') ||
+                                   url.includes('//uk.anycubic.com') ||
+                                   url.includes('//eu.anycubic.com') ||
+                                   url.includes('//au.anycubic.com');
+      return (url.includes('store.anycubic.com') || url.includes('anycubic.com')) && !hasRegionalSubdomain;
+    }
+    if (normalizedVendor === 'elegoo') {
+      return url.includes('elegoo-us.myshopify.com') || 
+             url.includes('us.elegoo.com') ||
+             (url.includes('elegoo.com') && 
+              !url.includes('ca.elegoo.com') && 
+              !url.includes('au.elegoo.com') && 
+              !url.includes('eu.elegoo.com') && 
+              !url.includes('uk.elegoo.com'));
+    }
+    // For other regional brands, assume US store is available if URL exists
+    return true;
   }
   
   return false;
