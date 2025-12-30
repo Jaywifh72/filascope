@@ -374,3 +374,6 @@ verify_jwt = false
 
 [functions.sync-gizmodorks-products]
 verify_jwt = false
+
+[functions.sync-azurefilm-products]
+verify_jwt = false
