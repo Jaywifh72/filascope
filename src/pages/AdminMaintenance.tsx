@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle, Store, Sparkles, ClipboardCheck } from "lucide-react";
+import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle, Store, Sparkles, ClipboardCheck, BarChart3 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -305,12 +305,20 @@ const AdminMaintenance = () => {
             Automated data scraping tools for filament brands
           </p>
         </div>
-        <Link to="/admin/maintenance/archive">
-          <Button variant="outline">
-            <Archive className="w-4 h-4 mr-2" />
-            Legacy Scrapers
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/admin/field-coverage">
+            <Button variant="outline">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Field Coverage
+            </Button>
+          </Link>
+          <Link to="/admin/maintenance/archive">
+            <Button variant="outline">
+              <Archive className="w-4 h-4 mr-2" />
+              Legacy Scrapers
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Tabs for Brand Scrapers */}
