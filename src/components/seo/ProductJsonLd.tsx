@@ -56,14 +56,24 @@ export function ProductJsonLd({
     name: string;
     value: string | number;
     unitCode?: string;
+    description?: string;
   }> = [];
 
-  // TD Value for HueForge
+  // TD Value for HueForge - critical for SEO targeting
   if (transmissionDistance) {
     additionalProperties.push({
       '@type': 'PropertyValue',
-      name: 'Transmission Distance (TD)',
+      name: 'HueForge Transmission Distance (TD)',
       value: transmissionDistance,
+      unitCode: 'MMT',
+      description: 'Light transmission value for HueForge lithophane and multicolor printing',
+    });
+    
+    // Add HueForge compatibility indicator
+    additionalProperties.push({
+      '@type': 'PropertyValue',
+      name: 'HueForge Compatibility',
+      value: 'Verified Compatible',
     });
   }
 
