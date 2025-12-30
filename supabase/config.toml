@@ -383,3 +383,6 @@ verify_jwt = false
 
 [functions.enrich-bambulab-existing]
 verify_jwt = true
+
+[functions.sync-colorfabb-products]
+verify_jwt = false
