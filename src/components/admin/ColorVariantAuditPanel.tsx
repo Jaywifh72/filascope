@@ -55,6 +55,7 @@ type FilterType = 'all' | 'match' | 'mismatch' | 'data_quality_issue' | 'website
 export function ColorVariantAuditPanel() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFixing, setIsFixing] = useState(false);
   const [report, setReport] = useState<AuditReport | null>(null);
   const [selectedVendor, setSelectedVendor] = useState<string>('all');
   const [skipScrape, setSkipScrape] = useState(false);
@@ -63,6 +64,37 @@ export function ColorVariantAuditPanel() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(true);
   const [vendors, setVendors] = useState<string[]>([]);
   const [limit, setLimit] = useState<number>(0);
+
+  // Fix all color issues for a vendor
+  const fixAllColorIssues = async (vendor: string) => {
+    setIsFixing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fix-color-issues', {
+        body: { vendor },
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Colors Fixed",
+        description: `Fixed ${data.nullsFixed || 0} NULL hex codes and ${data.duplicatesFixed || 0} duplicates for ${vendor}`,
+      });
+      
+      // Re-run audit after fix
+      if (report) {
+        await runAudit();
+      }
+    } catch (err) {
+      console.error('Fix failed:', err);
+      toast({
+        title: "Fix Failed",
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: "destructive",
+      });
+    } finally {
+      setIsFixing(false);
+    }
+  };
 
   // Fetch unique vendors on mount
   useEffect(() => {
@@ -269,7 +301,7 @@ export function ColorVariantAuditPanel() {
             <Label htmlFor="save-results" className="text-sm">Save results to history</Label>
           </div>
 
-          <Button onClick={runAudit} disabled={isLoading}>
+          <Button onClick={runAudit} disabled={isLoading || isFixing}>
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -282,6 +314,27 @@ export function ColorVariantAuditPanel() {
               </>
             )}
           </Button>
+
+          {selectedVendor !== 'all' && (
+            <Button 
+              onClick={() => fixAllColorIssues(selectedVendor)} 
+              disabled={isLoading || isFixing}
+              variant="outline"
+              className="border-orange-500/50 text-orange-500 hover:bg-orange-500/10"
+            >
+              {isFixing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Fixing...
+                </>
+              ) : (
+                <>
+                  <Palette className="w-4 h-4 mr-2" />
+                  Fix All Colors
+                </>
+              )}
+            </Button>
+          )}
         </div>
 
         {/* Summary Stats */}
