@@ -377,3 +377,6 @@ verify_jwt = false
 
 [functions.sync-azurefilm-products]
 verify_jwt = false
+
+[functions.sync-cc3d-products]
+verify_jwt = false
