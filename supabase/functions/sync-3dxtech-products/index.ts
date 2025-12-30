@@ -1,15 +1,17 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getColorHex, getColorFamily } from "../_shared/color-mapping.ts";
-import { validateScrapedProduct, type ScrapedProduct } from "../_shared/scraper-validation.ts";
-import { buildAvailableRegions } from "../_shared/filament-schema.ts";
+import {
+  enrich3DXTechProduct,
+  DXTECH_STORE_INFO,
+} from "../_shared/3dxtech-defaults.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SHOPIFY_BASE_URL = 'https://www.3dxtech.com';
+const SHOPIFY_BASE_URL = DXTECH_STORE_INFO.baseUrl;
+const VENDOR_NAME = DXTECH_STORE_INFO.vendorName;
 
 interface ShopifyProduct {
   id: number;
@@ -33,6 +35,7 @@ interface ShopifyVariant {
   option2: string | null; // Diameter
   option3: string | null; // Weight
   barcode: string | null;
+  available?: boolean;
 }
 
 interface ShopifyImage {
@@ -42,596 +45,549 @@ interface ShopifyImage {
   variant_ids: number[];
 }
 
-// Extract TDS URL from product HTML
-function extractTdsUrl(bodyHtml: string): string | null {
-  const tdsPatterns = [
-    /href="([^"]*TDS[^"]*\.pdf[^"]*)"/i,
-    /href="([^"]*technical[^"]*data[^"]*sheet[^"]*\.pdf[^"]*)"/i,
-    /href="([^"]*_TDS_[^"]*\.pdf[^"]*)"/i,
-  ];
-  
-  for (const pattern of tdsPatterns) {
-    const match = bodyHtml.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
-  }
-  return null;
+interface ProductVariant {
+  productId: string;
+  title: string;
+  color: string;
+  price: number | null;
+  sku: string | null;
+  barcode: string | null;
+  imageUrl: string | null;
+  productUrl: string;
+  handle: string;
+  diameter: number;
+  weight: number;
+  available: boolean;
 }
 
-// Extract temperature specifications from product body HTML
-function extractTemperatures(bodyHtml: string, material: string): { 
-  nozzleTempMin: number | null; 
-  nozzleTempMax: number | null; 
-  bedTempMin: number | null; 
-  bedTempMax: number | null 
-} {
-  const result = {
-    nozzleTempMin: null as number | null,
-    nozzleTempMax: null as number | null,
-    bedTempMin: null as number | null,
-    bedTempMax: null as number | null,
-  };
-  
-  // Normalize HTML for parsing
-  const text = bodyHtml.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
-  
-  // Pattern for nozzle/extruder temperature ranges like "260-280°C" or "260 - 280 C"
-  const nozzlePatterns = [
-    /(?:nozzle|extruder|printing|print|hotend)\s*(?:temp(?:erature)?)?[:\s]*(\d{2,3})\s*[-–]\s*(\d{2,3})\s*[°]?\s*[CF]/i,
-    /(\d{2,3})\s*[-–]\s*(\d{2,3})\s*[°]?\s*[CF]?\s*(?:nozzle|extruder|printing)/i,
-    /print\s*temp[:\s]*(\d{2,3})\s*[-–]\s*(\d{2,3})/i,
-  ];
-  
-  for (const pattern of nozzlePatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      const temp1 = parseInt(match[1], 10);
-      const temp2 = parseInt(match[2], 10);
-      if (temp1 >= 150 && temp1 <= 500 && temp2 >= 150 && temp2 <= 500) {
-        result.nozzleTempMin = Math.min(temp1, temp2);
-        result.nozzleTempMax = Math.max(temp1, temp2);
-        break;
-      }
-    }
-  }
-  
-  // Pattern for bed/build plate temperature ranges
-  const bedPatterns = [
-    /(?:bed|build\s*plate|platform|heated\s*bed)\s*(?:temp(?:erature)?)?[:\s]*(\d{2,3})\s*[-–]\s*(\d{2,3})\s*[°]?\s*[CF]/i,
-    /(\d{2,3})\s*[-–]\s*(\d{2,3})\s*[°]?\s*[CF]?\s*(?:bed|build\s*plate|platform)/i,
-  ];
-  
-  for (const pattern of bedPatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      const temp1 = parseInt(match[1], 10);
-      const temp2 = parseInt(match[2], 10);
-      if (temp1 >= 20 && temp1 <= 200 && temp2 >= 20 && temp2 <= 200) {
-        result.bedTempMin = Math.min(temp1, temp2);
-        result.bedTempMax = Math.max(temp1, temp2);
-        break;
-      }
-    }
-  }
-  
-  // If no temps found from HTML, use material-based defaults for 3DXTech specialty materials
-  if (!result.nozzleTempMin && !result.nozzleTempMax) {
-    const defaults = get3DXTechMaterialDefaults(material);
-    if (defaults) {
-      result.nozzleTempMin = defaults.nozzleTempMin;
-      result.nozzleTempMax = defaults.nozzleTempMax;
-      result.bedTempMin = result.bedTempMin || defaults.bedTempMin;
-      result.bedTempMax = result.bedTempMax || defaults.bedTempMax;
-    }
-  }
-  
-  return result;
+interface SyncResult {
+  step: string;
+  success: boolean;
+  count?: number;
+  details?: string;
+  error?: string;
 }
 
-// Material-based temperature defaults for 3DXTech specialty materials
-function get3DXTechMaterialDefaults(material: string): {
-  nozzleTempMin: number;
-  nozzleTempMax: number;
-  bedTempMin: number;
-  bedTempMax: number;
-} | null {
-  const materialLower = material.toLowerCase();
-  
-  // High-performance materials
-  if (materialLower.includes('peek')) {
-    return { nozzleTempMin: 370, nozzleTempMax: 410, bedTempMin: 120, bedTempMax: 150 };
-  }
-  if (materialLower.includes('pekk')) {
-    return { nozzleTempMin: 340, nozzleTempMax: 380, bedTempMin: 120, bedTempMax: 140 };
-  }
-  if (materialLower.includes('pei') || materialLower.includes('ultem')) {
-    return { nozzleTempMin: 350, nozzleTempMax: 390, bedTempMin: 120, bedTempMax: 160 };
-  }
-  
-  // Carbon fiber reinforced
-  if (materialLower.includes('cf')) {
-    if (materialLower.includes('nylon') || materialLower.includes('pa')) {
-      return { nozzleTempMin: 250, nozzleTempMax: 280, bedTempMin: 70, bedTempMax: 90 };
-    }
-    if (materialLower.includes('abs')) {
-      return { nozzleTempMin: 240, nozzleTempMax: 270, bedTempMin: 100, bedTempMax: 110 };
-    }
-    if (materialLower.includes('petg')) {
-      return { nozzleTempMin: 245, nozzleTempMax: 270, bedTempMin: 70, bedTempMax: 85 };
-    }
-    if (materialLower.includes('pc')) {
-      return { nozzleTempMin: 270, nozzleTempMax: 310, bedTempMin: 110, bedTempMax: 130 };
-    }
-    if (materialLower.includes('asa')) {
-      return { nozzleTempMin: 245, nozzleTempMax: 270, bedTempMin: 90, bedTempMax: 110 };
-    }
-  }
-  
-  // ESD materials
-  if (materialLower.includes('esd')) {
-    if (materialLower.includes('abs')) {
-      return { nozzleTempMin: 230, nozzleTempMax: 260, bedTempMin: 100, bedTempMax: 110 };
-    }
-    if (materialLower.includes('petg')) {
-      return { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 70, bedTempMax: 85 };
-    }
-    if (materialLower.includes('pc')) {
-      return { nozzleTempMin: 270, nozzleTempMax: 300, bedTempMin: 100, bedTempMax: 120 };
-    }
-  }
-  
-  // Fire retardant
-  if (materialLower.includes('fr')) {
-    if (materialLower.includes('abs')) {
-      return { nozzleTempMin: 230, nozzleTempMax: 260, bedTempMin: 100, bedTempMax: 110 };
-    }
-    if (materialLower.includes('pc')) {
-      return { nozzleTempMin: 270, nozzleTempMax: 300, bedTempMin: 100, bedTempMax: 120 };
-    }
-  }
-  
-  // Standard materials
-  if (materialLower === 'asa') {
-    return { nozzleTempMin: 240, nozzleTempMax: 260, bedTempMin: 90, bedTempMax: 110 };
-  }
-  if (materialLower === 'abs') {
-    return { nozzleTempMin: 230, nozzleTempMax: 260, bedTempMin: 100, bedTempMax: 110 };
-  }
-  if (materialLower === 'petg') {
-    return { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 70, bedTempMax: 85 };
-  }
-  if (materialLower === 'pc' || materialLower === 'polycarbonate') {
-    return { nozzleTempMin: 270, nozzleTempMax: 310, bedTempMin: 100, bedTempMax: 120 };
-  }
-  if (materialLower === 'pc-abs') {
-    return { nozzleTempMin: 250, nozzleTempMax: 280, bedTempMin: 100, bedTempMax: 110 };
-  }
-  if (materialLower.includes('nylon') || materialLower.includes('pa')) {
-    return { nozzleTempMin: 250, nozzleTempMax: 280, bedTempMin: 70, bedTempMax: 90 };
-  }
-  if (materialLower === 'pla') {
-    return { nozzleTempMin: 190, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 65 };
-  }
-  if (materialLower === 'tpu') {
-    return { nozzleTempMin: 220, nozzleTempMax: 250, bedTempMin: 40, bedTempMax: 60 };
-  }
-  if (materialLower === 'pva') {
-    return { nozzleTempMin: 180, nozzleTempMax: 210, bedTempMin: 45, bedTempMax: 60 };
-  }
-  if (materialLower === 'hips') {
-    return { nozzleTempMin: 220, nozzleTempMax: 250, bedTempMin: 90, bedTempMax: 110 };
-  }
-  
-  return null;
-}
+// ============================================================================
+// STEP 1: FETCH SHOPIFY PRODUCTS
+// ============================================================================
 
-// Extract material type from product title and tags
-// Using local function optimized for 3DXTech's specialized materials
-function extract3DXTechMaterial(title: string, tags: string[] | string): string {
-  const combined = `${title} ${Array.isArray(tags) ? tags.join(' ') : tags || ''}`;
+async function fetchShopifyProducts(): Promise<{ products: ShopifyProduct[]; result: SyncResult }> {
+  console.log('Step 1: Fetching products from Shopify API...');
   
-  // Check for specific materials in order of specificity (3DXTech specialty materials)
-  const materialPatterns: [RegExp, string][] = [
-    [/esd[- ]?pei[- ]?1010/i, 'ESD PEI 1010'],
-    [/esd[- ]?pei[- ]?9085/i, 'ESD PEI 9085'],
-    [/esd[- ]?peek/i, 'ESD PEEK'],
-    [/esd[- ]?pekk/i, 'ESD PEKK'],
-    [/esd[- ]?petg/i, 'ESD PETG'],
-    [/esd[- ]?pla/i, 'ESD PLA'],
-    [/esd[- ]?abs/i, 'ESD ABS'],
-    [/esd[- ]?pc/i, 'ESD PC'],
-    [/carbonx.*nylon.*cf/i, 'Nylon CF'],
-    [/carbonx.*abs.*cf/i, 'ABS CF'],
-    [/carbonx.*asa.*cf/i, 'ASA CF'],
-    [/carbonx.*petg.*cf/i, 'PETG CF'],
-    [/carbonx.*pc.*cf/i, 'PC CF'],
-    [/carbonx.*pei.*cf/i, 'PEI CF'],
-    [/carbonx.*peek.*cf/i, 'PEEK CF'],
-    [/carbonx.*pekk.*cf/i, 'PEKK CF'],
-    [/firewire.*abs/i, 'FR ABS'],
-    [/firewire.*pc/i, 'FR PC'],
-    [/3dxmax.*asa/i, 'ASA'],
-    [/3dxmax.*abs/i, 'ABS'],
-    [/3dxmax.*pc[- ]?abs/i, 'PC-ABS'],
-    [/3dxmax.*pc/i, 'PC'],
-    [/3dxmax.*pei/i, 'PEI'],
-    [/3dxmax.*peek/i, 'PEEK'],
-    [/3dxmax.*pekk/i, 'PEKK'],
-    [/max[- ]?g.*petg/i, 'PETG'],
-    [/aquatek.*pva/i, 'PVA'],
-    [/aquatek.*hips/i, 'HIPS'],
-    [/thermax.*pei/i, 'PEI'],
-    [/thermax.*peek/i, 'PEEK'],
-    [/thermax.*pekk/i, 'PEKK'],
-    [/peek/i, 'PEEK'],
-    [/pekk/i, 'PEKK'],
-    [/pei.*1010/i, 'PEI 1010'],
-    [/pei.*9085/i, 'PEI 9085'],
-    [/ultem/i, 'PEI'],
-    [/nylon/i, 'Nylon'],
-    [/pa[- ]?12/i, 'PA12'],
-    [/pa[- ]?6/i, 'PA6'],
-    [/pc[- ]?abs/i, 'PC-ABS'],
-    [/polycarbonate/i, 'PC'],
-    [/\bpc\b/i, 'PC'],
-    [/\basa\b/i, 'ASA'],
-    [/\babs\b/i, 'ABS'],
-    [/\bpetg\b/i, 'PETG'],
-    [/\bpla\b/i, 'PLA'],
-    [/\btpu\b/i, 'TPU'],
-    [/\bpva\b/i, 'PVA'],
-    [/\bhips\b/i, 'HIPS'],
-  ];
-  
-  for (const [pattern, material] of materialPatterns) {
-    if (pattern.test(combined)) {
-      return material;
-    }
-  }
-  
-  return 'Unknown';
-}
-
-// Get color-specific image from product images
-function getColorImage(images: ShopifyImage[], variantId: number, color: string): string | null {
-  // First try to find image specifically assigned to this variant
-  const variantImage = images.find(img => img.variant_ids.includes(variantId));
-  if (variantImage) {
-    return variantImage.src;
-  }
-  
-  // Try to match by color in image URL or alt text
-  const colorLower = color.toLowerCase().replace(/\s+/g, '');
-  for (const img of images) {
-    const srcLower = img.src.toLowerCase();
-    const altLower = (img.alt || '').toLowerCase();
-    
-    if (srcLower.includes(colorLower) || altLower.includes(colorLower)) {
-      return img.src;
-    }
-  }
-  
-  // Return first image as fallback
-  return images.length > 0 ? images[0].src : null;
-}
-
-// Parse weight from variant option (e.g., "1kg" -> 1000)
-function parseWeightGrams(weightStr: string | null): number | null {
-  if (!weightStr) return null;
-  
-  const kgMatch = weightStr.match(/([\d.]+)\s*kg/i);
-  if (kgMatch) {
-    return Math.round(parseFloat(kgMatch[1]) * 1000);
-  }
-  
-  const gMatch = weightStr.match(/([\d.]+)\s*g(?!k)/i);
-  if (gMatch) {
-    return Math.round(parseFloat(gMatch[1]));
-  }
-  
-  return null;
-}
-
-// Parse diameter from variant option (e.g., "1.75mm" -> 1.75)
-function parseDiameter(diameterStr: string | null): number | null {
-  if (!diameterStr) return null;
-  
-  const match = diameterStr.match(/([\d.]+)\s*mm/i);
-  if (match) {
-    return parseFloat(match[1]);
-  }
-  
-  return null;
-}
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  let allProducts: ShopifyProduct[] = [];
+  let page = 1;
+  const limit = 250;
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    // Admin authorization check
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'No authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { data: isAdmin } = await authClient.rpc('has_role', { 
-      _user_id: user.id, 
-      _role: 'admin' 
-    });
-    if (!isAdmin) {
-      return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    console.log('Starting 3DXTech product sync...');
-
-    // Fetch all products from Shopify JSON API
-    let allProducts: ShopifyProduct[] = [];
-    let page = 1;
-    const limit = 250;
-
     while (true) {
       const url = `${SHOPIFY_BASE_URL}/products.json?limit=${limit}&page=${page}`;
-      console.log(`Fetching page ${page}: ${url}`);
+      console.log(`  Fetching page ${page}...`);
       
       const response = await fetch(url);
       if (!response.ok) {
-        console.error(`Failed to fetch page ${page}: ${response.status}`);
-        break;
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
       const products = data.products || [];
       
-      if (products.length === 0) {
-        break;
-      }
+      if (products.length === 0) break;
 
       allProducts = [...allProducts, ...products];
-      console.log(`Fetched ${products.length} products from page ${page}`);
+      console.log(`  Page ${page}: ${products.length} products`);
       
-      if (products.length < limit) {
-        break;
-      }
+      if (products.length < limit) break;
       
       page++;
-      // Small delay to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    console.log(`Total products fetched: ${allProducts.length}`);
-
-    // Filter for filament products only
+    // Filter for filament products only (exclude nozzles, accessories, pellets)
     const filamentProducts = allProducts.filter(p => {
-      const typeMatch = p.product_type?.toLowerCase().includes('reel') || 
-                        p.product_type?.toLowerCase().includes('filament');
+      const titleLower = p.title?.toLowerCase() || '';
+      const typeLower = p.product_type?.toLowerCase() || '';
       const tagsStr = Array.isArray(p.tags) ? p.tags.join(' ').toLowerCase() : (p.tags || '').toLowerCase();
-      const tagMatch = tagsStr.includes('filament');
-      const titleExclude = p.title?.toLowerCase().includes('nozzle') ||
-                          p.title?.toLowerCase().includes('adhesive') ||
-                          p.title?.toLowerCase().includes('build sheet');
-      return (typeMatch || tagMatch) && !titleExclude;
+      
+      // Exclude non-filament products
+      const isExcluded = 
+        titleLower.includes('nozzle') ||
+        titleLower.includes('adhesive') ||
+        titleLower.includes('build sheet') ||
+        titleLower.includes('pellet') ||
+        titleLower.includes('25kg') ||
+        titleLower.includes('sample') ||
+        typeLower.includes('nozzle') ||
+        typeLower.includes('accessory');
+      
+      // Include if it's a filament/reel
+      const isFilament = 
+        typeLower.includes('reel') || 
+        typeLower.includes('filament') ||
+        tagsStr.includes('filament') ||
+        tagsStr.includes('reel');
+      
+      return isFilament && !isExcluded;
     });
 
-    console.log(`Filament products to process: ${filamentProducts.length}`);
-
-    const results = {
-      created: 0,
-      updated: 0,
-      skipped: 0,
-      validationWarnings: 0,
-      errors: [] as string[],
-      products: [] as { title: string; color: string; sku: string; image: string; tds: string }[],
+    console.log(`  Filtered to ${filamentProducts.length} filament products`);
+    
+    return {
+      products: filamentProducts,
+      result: {
+        step: 'fetch_products',
+        success: true,
+        count: filamentProducts.length,
+        details: `Fetched ${allProducts.length} total, ${filamentProducts.length} filament products`
+      }
     };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('  Fetch error:', message);
+    return {
+      products: [],
+      result: {
+        step: 'fetch_products',
+        success: false,
+        error: message
+      }
+    };
+  }
+}
 
-    for (const product of filamentProducts) {
-      try {
-        // Extract TDS URL
-        const tdsUrl = extractTdsUrl(product.body_html || '');
-        const material = extract3DXTechMaterial(product.title, product.tags);
-        const productUrl = `${SHOPIFY_BASE_URL}/products/${product.handle}`;
+// ============================================================================
+// STEP 2: EXPLODE VARIANTS
+// ============================================================================
 
-        // Get unique colors from variants (filter for 1.75mm only for now)
-        const colorVariants = product.variants.filter(v => {
-          const diameter = v.option2?.toLowerCase();
-          return diameter?.includes('1.75') || !v.option2;
-        });
+function explodeVariants(products: ShopifyProduct[]): { variants: ProductVariant[]; result: SyncResult } {
+  console.log('Step 2: Exploding variants...');
+  
+  const variants: ProductVariant[] = [];
+  const seenColors = new Map<number, Set<string>>(); // Track colors per product
 
-        // Group by color to get best variant per color
-        const colorGroups = new Map<string, ShopifyVariant>();
-        for (const variant of colorVariants) {
-          const color = variant.option1 || 'Default';
-          if (!colorGroups.has(color)) {
-            colorGroups.set(color, variant);
-          } else {
-            // Prefer 1kg variant
-            const existing = colorGroups.get(color)!;
-            const existingWeight = parseWeightGrams(existing.option3);
-            const newWeight = parseWeightGrams(variant.option3);
-            if (newWeight === 1000 && existingWeight !== 1000) {
-              colorGroups.set(color, variant);
-            }
+  for (const product of products) {
+    const productUrl = `${SHOPIFY_BASE_URL}/products/${product.handle}`;
+    seenColors.set(product.id, new Set());
+
+    for (const variant of product.variants) {
+      const color = variant.option1 || 'Default';
+      const colorLower = color.toLowerCase();
+      
+      // Skip if we've already processed this color for this product
+      if (seenColors.get(product.id)?.has(colorLower)) continue;
+      seenColors.get(product.id)?.add(colorLower);
+      
+      // Parse diameter - prefer 1.75mm
+      let diameter = 1.75;
+      if (variant.option2) {
+        const diamMatch = variant.option2.match(/([\d.]+)\s*mm/i);
+        if (diamMatch) diameter = parseFloat(diamMatch[1]);
+      }
+      
+      // Parse weight
+      let weight = 1000; // Default 1kg
+      const weightOption = variant.option3 || variant.option2 || '';
+      const kgMatch = weightOption.match(/([\d.]+)\s*kg/i);
+      const gMatch = weightOption.match(/([\d.]+)\s*g(?!k)/i);
+      if (kgMatch) weight = Math.round(parseFloat(kgMatch[1]) * 1000);
+      else if (gMatch) weight = Math.round(parseFloat(gMatch[1]));
+      
+      // Get color-specific image
+      let imageUrl: string | null = null;
+      const variantImage = product.images.find(img => img.variant_ids.includes(variant.id));
+      if (variantImage) {
+        imageUrl = variantImage.src;
+      } else {
+        // Try to match by color in image URL/alt
+        for (const img of product.images) {
+          const srcLower = img.src.toLowerCase();
+          const altLower = (img.alt || '').toLowerCase();
+          if (srcLower.includes(colorLower.replace(/\s+/g, '')) || altLower.includes(colorLower)) {
+            imageUrl = img.src;
+            break;
           }
         }
-
-        for (const [color, variant] of colorGroups) {
-          const colorImage = getColorImage(product.images, variant.id, color);
-          const weight = parseWeightGrams(variant.option3);
-          const diameter = parseDiameter(variant.option2);
-          
-          // Build product title with color
-          const productTitle = color !== 'Default' && color !== 'Natural' && !product.title.includes(color)
-            ? `3DXTech ${product.title} - ${color}`
-            : `3DXTech ${product.title}`;
-          
-          // Create scraped product for validation
-          const scrapedProduct: ScrapedProduct = {
-            productId: `3dxtech-${product.id}-${variant.id}`,
-            title: productTitle,
-            price: parseFloat(variant.price) || null,
-            url: productUrl,
-            imageUrl: colorImage,
-            tdsUrl: tdsUrl,
-            material: material,
-            colorHex: getColorHex(color),
-            colorFamily: getColorFamily(color),
-            netWeightG: weight || 1000,
-            diameterMm: diameter || 1.75,
-            sku: variant.sku || null,
-            barcode: variant.barcode,
-            available: true,
-            currency: 'USD',
-            region: 'US',
-          };
-          
-          // Validate scraped product using shared validation
-          const validation = validateScrapedProduct(scrapedProduct);
-          if (!validation.valid) {
-            console.warn(`Validation errors for ${productTitle}:`, validation.errors);
-            results.validationWarnings++;
-          }
-          if (validation.warnings.length > 0) {
-            console.log(`Validation warnings for ${productTitle}:`, validation.warnings);
-          }
-          
-          // Check if this product already exists
-          const { data: existing } = await supabase
-            .from('filaments')
-            .select('id, featured_image, tds_url, nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, bed_temp_max_c')
-            .eq('vendor', '3DXTech')
-            .ilike('product_title', `%${product.title}%`)
-            .ilike('product_title', `%${color}%`)
-            .maybeSingle();
-
-          // Extract temperatures from body_html
-          const temps = extractTemperatures(product.body_html || '', material);
-
-          const filamentData = {
-            product_title: productTitle,
-            product_handle: product.handle,
-            product_url: productUrl,
-            vendor: '3DXTech',
-            material: material,
-            variant_sku: variant.sku || null,
-            upc: variant.barcode || null,
-            variant_price: parseFloat(variant.price) || null,
-            featured_image: colorImage,
-            tds_url: tdsUrl,
-            color_hex: getColorHex(color),
-            color_family: getColorFamily(color),
-            net_weight_g: weight || 1000,
-            diameter_nominal_mm: diameter || 1.75,
-            variant_available: true,
-            available_regions: ['US'], // 3DXTech is US-only
-            // Add temperatures if found
-            ...(temps.nozzleTempMin ? { nozzle_temp_min_c: temps.nozzleTempMin } : {}),
-            ...(temps.nozzleTempMax ? { nozzle_temp_max_c: temps.nozzleTempMax } : {}),
-            ...(temps.bedTempMin ? { bed_temp_min_c: temps.bedTempMin } : {}),
-            ...(temps.bedTempMax ? { bed_temp_max_c: temps.bedTempMax } : {}),
-          };
-
-          if (existing) {
-            // Update existing - preserve temps if we don't have new ones
-            const { error } = await supabase
-              .from('filaments')
-              .update({
-                ...filamentData,
-                // Don't overwrite image if already set and new is null
-                featured_image: colorImage || existing.featured_image,
-                // Don't overwrite TDS if already set and new is null
-                tds_url: tdsUrl || existing.tds_url,
-                // Preserve existing temps if new ones not found
-                nozzle_temp_min_c: temps.nozzleTempMin || existing.nozzle_temp_min_c,
-                nozzle_temp_max_c: temps.nozzleTempMax || existing.nozzle_temp_max_c,
-                bed_temp_min_c: temps.bedTempMin || existing.bed_temp_min_c,
-                bed_temp_max_c: temps.bedTempMax || existing.bed_temp_max_c,
-              })
-              .eq('id', existing.id);
-
-            if (error) {
-              console.error(`Error updating ${productTitle}:`, error);
-              results.errors.push(`Update error: ${productTitle}`);
-            } else {
-              results.updated++;
-              console.log(`Updated: ${productTitle}`);
-            }
-          } else {
-            // Create new
-            const { error } = await supabase
-              .from('filaments')
-              .insert(filamentData);
-
-            if (error) {
-              console.error(`Error creating ${productTitle}:`, error);
-              results.errors.push(`Create error: ${productTitle}`);
-            } else {
-              results.created++;
-              console.log(`Created: ${productTitle}`);
-            }
-          }
-
-          results.products.push({
-            title: productTitle,
-            color: color,
-            sku: variant.sku,
-            image: colorImage ? 'Yes' : 'No',
-            tds: tdsUrl ? 'Yes' : 'No',
-          });
+        // Fallback to first image
+        if (!imageUrl && product.images.length > 0) {
+          imageUrl = product.images[0].src;
         }
-      } catch (error) {
-        console.error(`Error processing ${product.title}:`, error);
-        results.errors.push(`Process error: ${product.title}`);
+      }
+
+      variants.push({
+        productId: `3dxtech-${product.id}-${variant.id}`,
+        title: product.title,
+        color,
+        price: parseFloat(variant.price) || null,
+        sku: variant.sku || null,
+        barcode: variant.barcode || null,
+        imageUrl,
+        productUrl,
+        handle: product.handle,
+        diameter,
+        weight,
+        available: variant.available !== false,
+      });
+    }
+  }
+
+  console.log(`  Exploded to ${variants.length} variants`);
+  
+  return {
+    variants,
+    result: {
+      step: 'explode_variants',
+      success: true,
+      count: variants.length,
+      details: `Created ${variants.length} variant rows from ${products.length} products`
+    }
+  };
+}
+
+// ============================================================================
+// STEP 3: UPSERT WITH ENRICHMENTS
+// ============================================================================
+
+async function upsertVariants(
+  supabase: any,
+  variants: ProductVariant[],
+  brandId: string | null
+): Promise<SyncResult> {
+  console.log('Step 3: Upserting variants with enrichments...');
+  
+  let created = 0;
+  let updated = 0;
+  let errors = 0;
+
+  for (const variant of variants) {
+    try {
+      // Apply brand-specific enrichments
+      const enrichment = enrich3DXTechProduct(variant.title, null, variant.color);
+      
+      // Get color hex - prefer brand-specific, fallback to generic
+      const colorHex = enrichment.colorHex || getColorHex(variant.color);
+      const colorFamily = getColorFamily(variant.color);
+      
+      // Build full title with color
+      const fullTitle = variant.color !== 'Default' && variant.color !== 'Natural' && !variant.title.includes(variant.color)
+        ? `${VENDOR_NAME} ${variant.title} - ${variant.color}`
+        : `${VENDOR_NAME} ${variant.title}`;
+
+      // Check if exists
+      const { data: existing } = await supabase
+        .from('filaments')
+        .select('id')
+        .eq('product_id', variant.productId)
+        .maybeSingle();
+
+      const filamentData = {
+        product_id: variant.productId,
+        product_title: fullTitle,
+        product_handle: variant.handle,
+        product_url: variant.productUrl,
+        vendor: VENDOR_NAME,
+        brand_id: brandId,
+        material: enrichment.material,
+        product_line_id: enrichment.productLineId,
+        finish_type: enrichment.finishType,
+        variant_sku: variant.sku,
+        upc: variant.barcode,
+        variant_price: variant.price,
+        featured_image: variant.imageUrl,
+        color_hex: colorHex,
+        color_family: colorFamily,
+        net_weight_g: variant.weight,
+        diameter_nominal_mm: variant.diameter,
+        variant_available: variant.available,
+        available_regions: ['US'],
+        is_nozzle_abrasive: enrichment.isAbrasive,
+        // Print settings
+        nozzle_temp_min_c: enrichment.printSettings?.nozzleTempMin || null,
+        nozzle_temp_max_c: enrichment.printSettings?.nozzleTempMax || null,
+        bed_temp_min_c: enrichment.printSettings?.bedTempMin || null,
+        bed_temp_max_c: enrichment.printSettings?.bedTempMax || null,
+        // Flags
+        auto_created: true,
+        auto_updated: true,
+        last_scraped_at: new Date().toISOString(),
+        sync_status: 'synced',
+      };
+
+      if (existing) {
+        const { error } = await supabase
+          .from('filaments')
+          .update({
+            ...filamentData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id);
+
+        if (error) throw error;
+        updated++;
+      } else {
+        const { error } = await supabase
+          .from('filaments')
+          .insert(filamentData);
+
+        if (error) throw error;
+        created++;
+      }
+    } catch (error) {
+      console.error(`  Error processing ${variant.title}:`, error);
+      errors++;
+    }
+  }
+
+  console.log(`  Created: ${created}, Updated: ${updated}, Errors: ${errors}`);
+
+  return {
+    step: 'upsert_variants',
+    success: errors === 0,
+    count: created + updated,
+    details: `Created ${created}, updated ${updated}, errors ${errors}`
+  };
+}
+
+// ============================================================================
+// STEP 4: UPDATE BRAND STATS
+// ============================================================================
+
+async function updateBrandStats(supabase: any): Promise<SyncResult> {
+  console.log('Step 4: Updating brand statistics...');
+
+  try {
+    // Get current product count
+    const { count } = await supabase
+      .from('filaments')
+      .select('*', { count: 'exact', head: true })
+      .ilike('vendor', VENDOR_NAME);
+
+    // Update automated_brands
+    const { error } = await supabase
+      .from('automated_brands')
+      .update({
+        platform_type: 'shopify',
+        base_url: SHOPIFY_BASE_URL,
+        products_url: `${SHOPIFY_BASE_URL}/products.json`,
+        product_count: count || 0,
+        last_scrape_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .ilike('brand_name', VENDOR_NAME);
+
+    if (error) throw error;
+
+    // Update enrichment counts
+    await supabase.rpc('update_brand_product_counts', { p_brand_slug: '3dxtech' });
+
+    console.log(`  Updated brand stats: ${count} products`);
+
+    return {
+      step: 'update_brand_stats',
+      success: true,
+      count: count || 0,
+      details: `Updated brand with ${count} products`
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('  Error updating brand stats:', message);
+    return {
+      step: 'update_brand_stats',
+      success: false,
+      error: message
+    };
+  }
+}
+
+// ============================================================================
+// STEP 5: FIX DUPLICATE HEX CODES
+// ============================================================================
+
+async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
+  console.log('Step 5: Fixing duplicate hex codes...');
+
+  try {
+    const { data: duplicates, error } = await supabase.rpc('find_duplicate_hexes', {
+      p_vendor: VENDOR_NAME
+    });
+
+    if (error) throw error;
+
+    if (!duplicates || duplicates.length === 0) {
+      console.log('  No duplicate hex codes found');
+      return {
+        step: 'fix_duplicate_hexes',
+        success: true,
+        count: 0,
+        details: 'No duplicates found'
+      };
+    }
+
+    console.log(`  Found ${duplicates.length} products with duplicate hex codes`);
+
+    // Group by product_line_id and hex
+    const groups = new Map<string, typeof duplicates>();
+    for (const d of duplicates) {
+      const key = `${d.product_line_id}|${d.color_hex?.toLowerCase()}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(d);
+    }
+
+    let fixed = 0;
+    for (const [, group] of groups) {
+      if (group.length <= 1) continue;
+
+      // Adjust hex values slightly for duplicates (skip first one)
+      for (let i = 1; i < group.length; i++) {
+        const originalHex = group[i].color_hex;
+        if (!originalHex) continue;
+
+        // Adjust brightness slightly
+        const adjustment = i * 3;
+        const r = Math.min(255, parseInt(originalHex.slice(1, 3), 16) + adjustment);
+        const g = Math.min(255, parseInt(originalHex.slice(3, 5), 16) + adjustment);
+        const b = Math.min(255, parseInt(originalHex.slice(5, 7), 16) + adjustment);
+        const newHex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
+
+        await supabase
+          .from('filaments')
+          .update({ color_hex: newHex })
+          .eq('id', group[i].id);
+
+        fixed++;
       }
     }
 
-    console.log('Sync complete:', results);
+    console.log(`  Fixed ${fixed} duplicate hex codes`);
+
+    return {
+      step: 'fix_duplicate_hexes',
+      success: true,
+      count: fixed,
+      details: `Fixed ${fixed} duplicate hex codes`
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('  Error fixing duplicates:', message);
+    return {
+      step: 'fix_duplicate_hexes',
+      success: false,
+      error: message
+    };
+  }
+}
+
+// ============================================================================
+// MAIN HANDLER
+// ============================================================================
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  const startTime = Date.now();
+  const results: SyncResult[] = [];
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Parse options
+    let cleanSlate = false;
+    let skipFetch = false;
+    
+    try {
+      const body = await req.json();
+      cleanSlate = body?.cleanSlate === true;
+      skipFetch = body?.skipFetch === true;
+    } catch {
+      // No body or invalid JSON - use defaults
+    }
+
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`3DXTech Sync Pipeline Started`);
+    console.log(`Options: cleanSlate=${cleanSlate}, skipFetch=${skipFetch}`);
+    console.log(`${'='.repeat(60)}\n`);
+
+    // Get brand ID
+    const { data: brand } = await supabase
+      .from('automated_brands')
+      .select('id')
+      .ilike('brand_name', VENDOR_NAME)
+      .maybeSingle();
+
+    const brandId = brand?.id || null;
+
+    // Clean slate if requested
+    if (cleanSlate) {
+      console.log('Performing clean slate deletion...');
+      const { data: deleted } = await supabase
+        .from('filaments')
+        .delete()
+        .ilike('vendor', VENDOR_NAME)
+        .select('id');
+      
+      const deletedCount = deleted?.length || 0;
+      
+      results.push({
+        step: 'clean_slate',
+        success: true,
+        count: deletedCount,
+        details: `Deleted ${deletedCount} existing products`
+      });
+    }
+
+    // Step 1: Fetch products
+    const { products, result: fetchResult } = await fetchShopifyProducts();
+    results.push(fetchResult);
+    
+    if (!fetchResult.success || products.length === 0) {
+      throw new Error('Failed to fetch products from Shopify');
+    }
+
+    // Step 2: Explode variants
+    const { variants, result: explodeResult } = explodeVariants(products);
+    results.push(explodeResult);
+
+    // Step 3: Upsert with enrichments
+    const upsertResult = await upsertVariants(supabase, variants, brandId);
+    results.push(upsertResult);
+
+    // Step 4: Update brand stats
+    const statsResult = await updateBrandStats(supabase);
+    results.push(statsResult);
+
+    // Step 5: Fix duplicate hex codes
+    const hexResult = await fixDuplicateHexCodes(supabase);
+    results.push(hexResult);
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`Sync completed in ${duration}s`);
+    console.log(`${'='.repeat(60)}\n`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `3DXTech sync complete: ${results.created} created, ${results.updated} updated`,
-        results,
+        message: `${VENDOR_NAME} sync complete`,
+        duration: `${duration}s`,
+        results
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: unknown) {
-    console.error('Error in sync-3dxtech-products:', error);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Fatal error:', message);
+    
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error'
+      JSON.stringify({
+        success: false,
+        error: message,
+        results
       }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
