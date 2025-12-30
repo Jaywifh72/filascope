@@ -302,3 +302,6 @@ verify_jwt = false
 
 [functions.sync-eryone-products]
 verify_jwt = false
+
+[functions.sync-esun-products]
+verify_jwt = false
