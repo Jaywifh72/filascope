@@ -3,6 +3,9 @@ project_id = "cfqfavmhdbyjzejipiwa"
 [functions.sync-recreus-products]
 verify_jwt = false
 
+[functions.sync-sirayatech-products]
+verify_jwt = false
+
 [functions.sync-prusament-products]
 verify_jwt = false
 
