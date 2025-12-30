@@ -142,19 +142,36 @@ const AdminBrandPipeline = () => {
     },
   });
 
-  // Trigger brand scrape
+  // Trigger brand scrape - routes to specialized scrapers for certain brands
   const triggerScrape = useMutation({
     mutationFn: async (brand: AutomatedBrand) => {
       setScrapingBrandId(brand.id);
-      const { data, error } = await supabase.functions.invoke("scrape-brand-data", {
-        body: { 
-          vendor: brand.brand_name, 
-          limit: 200, 
-          force: true,
-          dryRun: false,
-          parseTds: true,
-          tdsLimit: 20
+      
+      // Route to specialized scrapers for brands with custom implementations
+      const specializedScrapers: Record<string, { function: string; body: Record<string, unknown> }> = {
+        'anycubic': {
+          function: 'sync-anycubic-products',
+          body: { limit: 200, dryRun: false }
         },
+        'elegoo': {
+          function: 'sync-elegoo-products', 
+          body: { limit: 200, dryRun: false }
+        }
+      };
+      
+      const specialized = specializedScrapers[brand.brand_slug];
+      const functionName = specialized?.function || 'scrape-brand-data';
+      const requestBody = specialized?.body || { 
+        vendor: brand.brand_name, 
+        limit: 200, 
+        force: true,
+        dryRun: false,
+        parseTds: true,
+        tdsLimit: 20
+      };
+      
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: requestBody,
       });
       if (error) throw error;
       return data;
