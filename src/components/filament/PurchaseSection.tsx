@@ -13,6 +13,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { useRegionalPrice } from "@/hooks/useRegionalPrice";
+import { useFilamentListings } from "@/hooks/useFilamentListings";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { Badge } from "@/components/ui/badge";
 import { Ban, Loader2 } from "lucide-react";
@@ -33,6 +34,20 @@ interface RetailerInfo {
   flag?: string;
 }
 
+// Helper to get region flag emoji
+function getRegionFlag(region: string): string | undefined {
+  const flags: Record<string, string> = {
+    'US': '🇺🇸',
+    'UK': '🇬🇧',
+    'DE': '🇩🇪',
+    'EU': '🇪🇺',
+    'CA': '🇨🇦',
+    'AU': '🇦🇺',
+    'JP': '🇯🇵',
+  };
+  return flags[region];
+}
+
 interface PurchaseSectionProps {
   filament: Filament;
   printerBrand?: string | null;
@@ -43,11 +58,24 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
   const [quantity, setQuantity] = useState(1);
   const [showAdvancedPricing, setShowAdvancedPricing] = useState(false);
   
-  const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
-  const { formatPrice, convertPrice, currencyInfo, currency } = useCurrency();
+  const { getAffiliateUrl } = useAffiliateLinks();
+  const { currencyInfo, currency } = useCurrency();
   const { trackAffiliateClick, trackStoreClick } = useConversionTracking();
   
-  // Get regional price and URL based on user's currency preference
+  // Map currency to region for listings query
+  const regionFromCurrency: Record<string, string> = {
+    'USD': 'US', 'GBP': 'UK', 'EUR': 'DE', 'CAD': 'CA', 'AUD': 'AU', 'JPY': 'JP'
+  };
+  const listingsRegion = regionFromCurrency[currency] || 'US';
+  
+  // Fetch listings from the new filament_listings table
+  const { data: listings, isLoading: listingsLoading } = useFilamentListings(filament.id, {
+    region: listingsRegion,
+    currency: currency,
+    includeUnavailable: false,
+  });
+  
+  // Get regional price and URL based on user's currency preference (fallback)
   const { regionalPrice, regionalUrl, fallbackUrl, isActualRegionalPrice, currency: regionalCurrency } = useRegionalPrice(filament);
   
   // Fetch live price using Firecrawl for the regional URL
@@ -60,77 +88,67 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
   } = useCurrentPrice(
     regionalUrl || filament.product_url,
     regionalPrice || filament.variant_price,
-    fallbackUrl // Use the fallback URL from useRegionalPrice
+    fallbackUrl
   );
   
-  // Build retailer list with availability
+  // Check if discontinued
+  const isDiscontinued = filament.product_url && isDiscontinuedUrl(filament.product_url);
+  
+  // Build retailer list from listings OR fallback to legacy data
   const retailers: RetailerInfo[] = [];
   
-  // Primary retailer (manufacturer direct)
-  const isDiscontinued = filament.product_url && isDiscontinuedUrl(filament.product_url);
-  const displayPrice = livePrice ?? regionalPrice ?? filament.variant_price;
-  const displayCurrency = isLivePrice ? liveCurrency : (isActualRegionalPrice ? regionalCurrency : 'USD');
-  const productUrl = regionalUrl || filament.product_url;
-  
-  if (productUrl && !isDiscontinued) {
-    retailers.push({
-      id: 'store',
-      name: filament.vendor || 'Store',
-      url: getAffiliateUrl(productUrl, filament.vendor) || productUrl,
-      price: displayPrice,
-      currency: displayCurrency,
-      isPrimary: true,
-      available: true,
+  if (listings && listings.length > 0) {
+    // Use new listings data
+    listings.forEach((listing, index) => {
+      const affiliateUrl = listing.affiliate_url || getAffiliateUrl(listing.product_url, listing.retailer_name);
+      retailers.push({
+        id: listing.listing_id,
+        name: listing.retailer_name,
+        region: listing.region,
+        url: affiliateUrl || listing.product_url,
+        price: listing.current_price,
+        currency: listing.currency,
+        isPrimary: listing.is_primary || index === 0, // First listing is primary if none marked
+        available: listing.available,
+        flag: getRegionFlag(listing.region),
+      });
     });
+  } else if (!listingsLoading) {
+    // Fallback to legacy filament columns
+    const displayPrice = livePrice ?? regionalPrice ?? filament.variant_price;
+    const displayCurrency = isLivePrice ? liveCurrency : (isActualRegionalPrice ? regionalCurrency : 'USD');
+    const productUrl = regionalUrl || filament.product_url;
+    
+    if (productUrl && !isDiscontinued) {
+      retailers.push({
+        id: 'store',
+        name: filament.vendor || 'Store',
+        url: getAffiliateUrl(productUrl, filament.vendor) || productUrl,
+        price: displayPrice,
+        currency: displayCurrency,
+        isPrimary: true,
+        available: true,
+      });
+    }
+    
+    // Legacy Amazon links
+    if (filament.amazon_link_us) {
+      retailers.push({
+        id: 'amazon_us',
+        name: 'Amazon',
+        region: 'US',
+        url: getAffiliateUrl(filament.amazon_link_us, 'Amazon') || filament.amazon_link_us,
+        price: null,
+        currency: 'USD',
+        isPrimary: false,
+        available: true,
+        flag: '🇺🇸',
+      });
+    }
   }
   
-  // Amazon retailers - now with scraped prices
-  const amazonPrice = (filament as any).amazon_price_usd;
-  
-  if (filament.amazon_link_us) {
-    retailers.push({
-      id: 'amazon_us',
-      name: 'Amazon',
-      region: 'US',
-      url: getAmazonUrl(filament.amazon_link_us, "us") || filament.amazon_link_us,
-      price: amazonPrice || null,
-      currency: 'USD',
-      isPrimary: false,
-      available: true,
-      flag: '🇺🇸',
-    });
-  }
-  
-  if (filament.amazon_link_uk) {
-    retailers.push({
-      id: 'amazon_uk',
-      name: 'Amazon',
-      region: 'UK',
-      url: getAmazonUrl(filament.amazon_link_uk, "uk") || filament.amazon_link_uk,
-      price: null,
-      currency: 'GBP',
-      isPrimary: false,
-      available: true,
-      flag: '🇬🇧',
-    });
-  }
-  
-  if (filament.amazon_link_de) {
-    retailers.push({
-      id: 'amazon_de',
-      name: 'Amazon',
-      region: 'DE',
-      url: getAmazonUrl(filament.amazon_link_de, "de") || filament.amazon_link_de,
-      price: null,
-      currency: 'EUR',
-      isPrimary: false,
-      available: true,
-      flag: '🇩🇪',
-    });
-  }
-  
-  const primaryRetailer = retailers.find(r => r.isPrimary);
-  const secondaryRetailers = retailers.filter(r => !r.isPrimary);
+  const primaryRetailer = retailers.find(r => r.isPrimary) || retailers[0];
+  const secondaryRetailers = retailers.filter(r => r !== primaryRetailer);
   
   // Calculate best price indicator
   const hasBestPrice = primaryRetailer && primaryRetailer.price !== null;
