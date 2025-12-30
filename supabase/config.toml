@@ -305,3 +305,6 @@ verify_jwt = false
 
 [functions.sync-esun-products]
 verify_jwt = false
+
+[functions.sync-fiberlogy-products]
+verify_jwt = false
