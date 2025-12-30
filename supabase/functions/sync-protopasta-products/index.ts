@@ -366,9 +366,10 @@ async function fixDuplicateHexCodes(
 async function validateTdsUrls(
   supabase: any
 ): Promise<number> {
-  console.log('[Proto-Pasta] Step 5: Validating TDS URLs...');
+  console.log('[Proto-Pasta] Step 5: Verifying TDS URLs are set...');
 
-  // Get all Proto-Pasta products with TDS URLs
+  // Proto-Pasta uses the consolidated TDS page since individual PDF URLs have unpredictable versions
+  // This step just confirms all products have the TDS URL set
   const { data: products, error } = await supabase
     .from('filaments')
     .select('id, product_title, tds_url')
@@ -380,36 +381,9 @@ async function validateTdsUrls(
     return 0;
   }
 
-  if (!products || products.length === 0) {
-    console.log('[Proto-Pasta] No products with TDS URLs to validate');
-    return 0;
-  }
-
-  let validated = 0;
-
-  // Validate a sample of URLs (avoid rate limiting)
-  const sample = products.slice(0, 5);
-  for (const product of sample) {
-    if (!product.tds_url) continue;
-
-    try {
-      const response = await fetch(product.tds_url, { method: 'HEAD' });
-      if (response.ok) {
-        validated++;
-        console.log(`[Proto-Pasta] TDS URL valid: ${product.product_title}`);
-      } else {
-        console.log(`[Proto-Pasta] TDS URL invalid (${response.status}): ${product.product_title}`);
-      }
-    } catch (e) {
-      console.log(`[Proto-Pasta] TDS URL error: ${product.product_title}`);
-    }
-
-    // Rate limiting
-    await new Promise(resolve => setTimeout(resolve, 200));
-  }
-
-  console.log(`[Proto-Pasta] Validated ${validated}/${sample.length} TDS URLs`);
-  return validated;
+  const count = products?.length || 0;
+  console.log(`[Proto-Pasta] ${count} products have TDS URL set (consolidated page)`);
+  return count;
 }
 
 // ============= MAIN HANDLER =============
