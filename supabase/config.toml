@@ -1,5 +1,8 @@
 project_id = "cfqfavmhdbyjzejipiwa"
 
+[functions.sync-sunlu-products]
+verify_jwt = false
+
 [functions.sync-recreus-products]
 verify_jwt = false
 
