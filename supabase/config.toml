@@ -311,3 +311,6 @@ verify_jwt = false
 
 [functions.sync-flashforge-products]
 verify_jwt = false
+
+[functions.sync-kingroon-products]
+verify_jwt = false
