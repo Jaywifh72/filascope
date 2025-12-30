@@ -30,6 +30,7 @@ interface TDSData {
   enclosure_required: boolean | null;
   retraction_distance_mm: number | null;
   annealing_temp_c: number | null;
+  transmission_distance: number | null;
   extraction_confidence: number;
 }
 
@@ -71,6 +72,12 @@ PHYSICAL PROPERTIES:
 - melt_temp_c: Melting temperature in Celsius (number)
 - annealing_temp_c: Annealing temperature if applicable (number)
 
+HUEFORGE/OPTICAL PROPERTIES (CRITICAL FOR LITHOPHANES):
+- transmission_distance: Light transmission distance in mm for HueForge lithophanes (number, typically 0.5-8.0)
+  Also look for: "TD", "TD value", "transmission", "light transmission", "optical distance", "light penetration"
+  This is the most important value for HueForge lithophane printing.
+  If multiple TD values given for different colors, extract the average or the "white" value.
+
 OTHER:
 - moisture_sensitivity_level: "low", "medium", or "high"
 - is_nozzle_abrasive: true if contains glass fiber, carbon fiber, metal, or other abrasive materials (boolean)
@@ -82,6 +89,7 @@ IMPORTANT RULES:
 3. For temperature ranges like "200-220°C", extract min and max separately
 4. For single recommended temps, use that as the sweetspot
 5. Return ONLY valid JSON, no additional text
+6. For transmission_distance, look carefully for TD values - they are critical for HueForge users
 
 TDS CONTENT:
 `;
@@ -97,6 +105,7 @@ const VALIDATION_RULES = {
   elongation: { min: 0.5, max: 800 },
   tg: { min: 30, max: 250 },
   melt_temp: { min: 100, max: 400 },
+  transmission_distance: { min: 0.2, max: 15.0 },
 };
 
 function validateExtractedData(data: Partial<TDSData>, material?: string): ValidationResult {
@@ -310,6 +319,7 @@ async function extractTDSWithAI(tdsContent: string, lovableApiKey: string): Prom
         enclosure_required: extracted.enclosure_required ?? null,
         retraction_distance_mm: extracted.retraction_distance_mm ?? null,
         annealing_temp_c: extracted.annealing_temp_c ?? null,
+        transmission_distance: extracted.transmission_distance ?? null,
         extraction_confidence: extracted.extraction_confidence ?? 0,
       };
     } catch (parseError) {
@@ -554,7 +564,8 @@ Deno.serve(async (req) => {
               'fan_min_percent', 'fan_max_percent', 'drying_temp_c', 'drying_time_hours',
               'density_g_cm3', 'tensile_strength_xy_mpa', 'tensile_modulus_xy_mpa',
               'elongation_break_xy_percent', 'flexural_strength_mpa', 'shore_hardness_d',
-              'tg_c', 'melt_temp_c', 'moisture_sensitivity_level', 'is_nozzle_abrasive'
+              'tg_c', 'melt_temp_c', 'moisture_sensitivity_level', 'is_nozzle_abrasive',
+              'transmission_distance'
             ];
 
             for (const field of fields) {
@@ -684,7 +695,8 @@ Deno.serve(async (req) => {
         'fan_min_percent', 'fan_max_percent', 'drying_temp_c', 'drying_time_hours',
         'density_g_cm3', 'tensile_strength_xy_mpa', 'tensile_modulus_xy_mpa',
         'elongation_break_xy_percent', 'flexural_strength_mpa', 'shore_hardness_d',
-        'tg_c', 'melt_temp_c', 'moisture_sensitivity_level', 'is_nozzle_abrasive'
+        'tg_c', 'melt_temp_c', 'moisture_sensitivity_level', 'is_nozzle_abrasive',
+        'transmission_distance'
       ];
 
       for (const field of fields) {

@@ -2,13 +2,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Palette, FileText, Globe, BarChart3, RefreshCw, History, CheckCircle2, Clock, Zap, Image, FileSearch } from 'lucide-react';
+import { Palette, FileText, Globe, BarChart3, RefreshCw, History, CheckCircle2, Clock, Zap, Image, FileSearch, Link2, Sun } from 'lucide-react';
 import { ColorExtractionPanel } from './ColorExtractionPanel';
 import { TdsDiscoveryPanel } from './TdsDiscoveryPanel';
 import { TdsParsingPanel } from './TdsParsingPanel';
 import { RegionalPricingPanel } from './RegionalPricingPanel';
 import { ImageEnrichmentPanel } from './ImageEnrichmentPanel';
 import { EnrichmentHistory } from './EnrichmentHistory';
+import { ManualTdsScraper } from './ManualTdsScraper';
+import { TdReviewPanel } from './TdReviewPanel';
+import { TdCoverageWidget } from './TdCoverageWidget';
 import { useEnrichmentMetrics } from '@/hooks/useEnrichmentMetrics';
 import { useEnrichmentHistory } from '@/hooks/useEnrichmentHistory';
 import { formatDistanceToNow } from 'date-fns';
@@ -114,7 +117,7 @@ export function EnrichmentDashboard() {
       </Card>
 
       {/* Activity Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-md bg-primary/10">
@@ -163,11 +166,12 @@ export function EnrichmentDashboard() {
             </div>
           </div>
         </Card>
+        <TdCoverageWidget />
       </div>
 
       {/* Enrichment Tabs */}
       <Tabs defaultValue="images" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 max-w-3xl">
+        <TabsList className="grid w-full grid-cols-8 max-w-4xl">
           <TabsTrigger value="images" className="flex items-center gap-2">
             <Image className="w-4 h-4" />
             Images
@@ -183,6 +187,14 @@ export function EnrichmentDashboard() {
           <TabsTrigger value="tds-parsing" className="flex items-center gap-2">
             <FileSearch className="w-4 h-4" />
             Parse
+          </TabsTrigger>
+          <TabsTrigger value="manual-scraper" className="flex items-center gap-2">
+            <Link2 className="w-4 h-4" />
+            Scraper
+          </TabsTrigger>
+          <TabsTrigger value="td-review" className="flex items-center gap-2">
+            <Sun className="w-4 h-4" />
+            TD Review
           </TabsTrigger>
           <TabsTrigger value="regional" className="flex items-center gap-2">
             <Globe className="w-4 h-4" />
@@ -208,6 +220,14 @@ export function EnrichmentDashboard() {
 
         <TabsContent value="tds-parsing" className="mt-4">
           <TdsParsingPanel />
+        </TabsContent>
+
+        <TabsContent value="manual-scraper" className="mt-4">
+          <ManualTdsScraper />
+        </TabsContent>
+
+        <TabsContent value="td-review" className="mt-4">
+          <TdReviewPanel />
         </TabsContent>
 
         <TabsContent value="regional" className="mt-4">

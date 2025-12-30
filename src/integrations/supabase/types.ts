@@ -4064,6 +4064,84 @@ export type Database = {
         }
         Relationships: []
       }
+      tds_review_queue: {
+        Row: {
+          created_at: string | null
+          extraction_attempt: Json | null
+          filament_id: string | null
+          id: string
+          notes: string | null
+          reason: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+          tds_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          extraction_attempt?: Json | null
+          filament_id?: string | null
+          id?: string
+          notes?: string | null
+          reason: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          tds_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          extraction_attempt?: Json | null
+          filament_id?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          tds_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tds_review_queue_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "tds_review_queue_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tds_review_queue_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "tds_review_queue_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "tds_review_queue_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trend_upvotes: {
         Row: {
           anonymous_id: string | null
