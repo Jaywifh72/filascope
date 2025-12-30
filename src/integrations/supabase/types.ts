@@ -673,6 +673,33 @@ export type Database = {
         }
         Relationships: []
       }
+      color_families: {
+        Row: {
+          aliases: string[] | null
+          created_at: string | null
+          display_order: number | null
+          hex_default: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          aliases?: string[] | null
+          created_at?: string | null
+          display_order?: number | null
+          hex_default?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          aliases?: string[] | null
+          created_at?: string | null
+          display_order?: number | null
+          hex_default?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       community_report_upvotes: {
         Row: {
           created_at: string | null
@@ -783,6 +810,13 @@ export type Database = {
             referencedRelation: "recent_price_drops"
             referencedColumns: ["filament_id"]
           },
+          {
+            foreignKeyName: "community_safety_reports_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
         ]
       }
       deals: {
@@ -847,6 +881,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_price_drops"
             referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "deals_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1096,6 +1137,13 @@ export type Database = {
             referencedColumns: ["filament_id"]
           },
           {
+            foreignKeyName: "filament_comments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "filament_comments_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -1171,6 +1219,13 @@ export type Database = {
             referencedColumns: ["filament_id"]
           },
           {
+            foreignKeyName: "filament_inventory_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "filament_inventory_retailer_id_fkey"
             columns: ["retailer_id"]
             isOneToOne: false
@@ -1235,6 +1290,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_price_drops"
             referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_score_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1305,6 +1367,13 @@ export type Database = {
             referencedColumns: ["filament_id"]
           },
           {
+            foreignKeyName: "filament_user_ratings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "filament_user_ratings_printer_id_fkey"
             columns: ["printer_id"]
             isOneToOne: false
@@ -1329,6 +1398,7 @@ export type Database = {
           brand_id: string | null
           carbon_fiber_percentage: number | null
           color_family: string | null
+          color_family_id: string | null
           color_hex: string | null
           created_at: string | null
           density_g_cm3: number | null
@@ -1344,6 +1414,7 @@ export type Database = {
           fan_min_percent: number | null
           featured_image: string | null
           finish_type: string | null
+          finish_type_id: string | null
           flexural_strength_mpa: number | null
           food_contact_rating: string | null
           glass_fiber_percentage: number | null
@@ -1355,8 +1426,10 @@ export type Database = {
           last_external_sync_at: string | null
           last_scraped_at: string | null
           material: string | null
+          material_id: string | null
           melt_temp_c: number | null
           moisture_care: string | null
+          moisture_level_id: string | null
           moisture_sensitivity_level: string | null
           mpn: string | null
           net_weight_g: number | null
@@ -1432,6 +1505,7 @@ export type Database = {
           brand_id?: string | null
           carbon_fiber_percentage?: number | null
           color_family?: string | null
+          color_family_id?: string | null
           color_hex?: string | null
           created_at?: string | null
           density_g_cm3?: number | null
@@ -1447,6 +1521,7 @@ export type Database = {
           fan_min_percent?: number | null
           featured_image?: string | null
           finish_type?: string | null
+          finish_type_id?: string | null
           flexural_strength_mpa?: number | null
           food_contact_rating?: string | null
           glass_fiber_percentage?: number | null
@@ -1458,8 +1533,10 @@ export type Database = {
           last_external_sync_at?: string | null
           last_scraped_at?: string | null
           material?: string | null
+          material_id?: string | null
           melt_temp_c?: number | null
           moisture_care?: string | null
+          moisture_level_id?: string | null
           moisture_sensitivity_level?: string | null
           mpn?: string | null
           net_weight_g?: number | null
@@ -1535,6 +1612,7 @@ export type Database = {
           brand_id?: string | null
           carbon_fiber_percentage?: number | null
           color_family?: string | null
+          color_family_id?: string | null
           color_hex?: string | null
           created_at?: string | null
           density_g_cm3?: number | null
@@ -1550,6 +1628,7 @@ export type Database = {
           fan_min_percent?: number | null
           featured_image?: string | null
           finish_type?: string | null
+          finish_type_id?: string | null
           flexural_strength_mpa?: number | null
           food_contact_rating?: string | null
           glass_fiber_percentage?: number | null
@@ -1561,8 +1640,10 @@ export type Database = {
           last_external_sync_at?: string | null
           last_scraped_at?: string | null
           material?: string | null
+          material_id?: string | null
           melt_temp_c?: number | null
           moisture_care?: string | null
+          moisture_level_id?: string | null
           moisture_sensitivity_level?: string | null
           mpn?: string | null
           net_weight_g?: number | null
@@ -1645,7 +1726,110 @@ export type Database = {
             referencedRelation: "v_brands_overview"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "filaments_color_family_id_fkey"
+            columns: ["color_family_id"]
+            isOneToOne: false
+            referencedRelation: "color_families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_finish_type_id_fkey"
+            columns: ["finish_type_id"]
+            isOneToOne: false
+            referencedRelation: "finish_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_moisture_level_id_fkey"
+            columns: ["moisture_level_id"]
+            isOneToOne: false
+            referencedRelation: "moisture_levels"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      finish_types: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      materials: {
+        Row: {
+          base_type: string
+          composite_additive: string | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_composite: boolean | null
+          name: string
+          requires_enclosure: boolean | null
+          requires_hardened_nozzle: boolean | null
+          typical_bed_temp_max: number | null
+          typical_bed_temp_min: number | null
+          typical_nozzle_temp_max: number | null
+          typical_nozzle_temp_min: number | null
+        }
+        Insert: {
+          base_type: string
+          composite_additive?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_composite?: boolean | null
+          name: string
+          requires_enclosure?: boolean | null
+          requires_hardened_nozzle?: boolean | null
+          typical_bed_temp_max?: number | null
+          typical_bed_temp_min?: number | null
+          typical_nozzle_temp_max?: number | null
+          typical_nozzle_temp_min?: number | null
+        }
+        Update: {
+          base_type?: string
+          composite_additive?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_composite?: boolean | null
+          name?: string
+          requires_enclosure?: boolean | null
+          requires_hardened_nozzle?: boolean | null
+          typical_bed_temp_max?: number | null
+          typical_bed_temp_min?: number | null
+          typical_nozzle_temp_max?: number | null
+          typical_nozzle_temp_min?: number | null
+        }
+        Relationships: []
       }
       module_engagement_metrics: {
         Row: {
@@ -1737,6 +1921,36 @@ export type Database = {
         }
         Relationships: []
       }
+      moisture_levels: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          drying_recommended: boolean | null
+          id: string
+          max_humidity_percent: number | null
+          name: string
+          severity_rank: number
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          drying_recommended?: boolean | null
+          id?: string
+          max_humidity_percent?: number | null
+          name: string
+          severity_rank: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          drying_recommended?: boolean | null
+          id?: string
+          max_humidity_percent?: number | null
+          name?: string
+          severity_rank?: number
+        }
+        Relationships: []
+      }
       price_history: {
         Row: {
           available: boolean | null
@@ -1805,6 +2019,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_price_drops"
             referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1968,6 +2189,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_price_drops"
             referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "printer_compatibility_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2944,6 +3172,13 @@ export type Database = {
             referencedColumns: ["filament_id"]
           },
           {
+            foreignKeyName: "project_filaments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "project_filaments_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -3271,6 +3506,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_price_drops"
             referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "safety_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3608,6 +3850,13 @@ export type Database = {
             referencedRelation: "recent_price_drops"
             referencedColumns: ["filament_id"]
           },
+          {
+            foreignKeyName: "sync_activity_log_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sync_logs: {
@@ -3915,6 +4164,13 @@ export type Database = {
             referencedRelation: "recent_price_drops"
             referencedColumns: ["filament_id"]
           },
+          {
+            foreignKeyName: "user_browse_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_favorites: {
@@ -3983,6 +4239,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_price_drops"
             referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_favorites_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "user_favorites_user_id_fkey"
@@ -4147,6 +4410,13 @@ export type Database = {
             referencedColumns: ["filament_id"]
           },
           {
+            foreignKeyName: "user_purchases_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "user_purchases_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -4304,6 +4574,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_price_drops"
             referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "user_slicer_profiles_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4544,6 +4821,43 @@ export type Database = {
           success_rate_percent?: never
           successful_scrapes?: number | null
           total_scrapes?: number | null
+        }
+        Relationships: []
+      }
+      v_filaments_normalized: {
+        Row: {
+          bed_temp_max_c: number | null
+          bed_temp_min_c: number | null
+          brand_display_name: string | null
+          brand_logo: string | null
+          brand_name: string | null
+          color_family_hex: string | null
+          color_family_name: string | null
+          color_hex: string | null
+          created_at: string | null
+          diameter_nominal_mm: number | null
+          featured_image: string | null
+          finish_type_name: string | null
+          id: string | null
+          material_base_type: string | null
+          material_is_composite: boolean | null
+          material_name: string | null
+          moisture_level_name: string | null
+          moisture_severity: number | null
+          net_weight_g: number | null
+          nozzle_temp_max_c: number | null
+          nozzle_temp_min_c: number | null
+          product_handle: string | null
+          product_id: string | null
+          product_line_id: string | null
+          product_title: string | null
+          product_url: string | null
+          requires_hardened_nozzle: boolean | null
+          tds_url: string | null
+          updated_at: string | null
+          variant_available: boolean | null
+          variant_price: number | null
+          vendor: string | null
         }
         Relationships: []
       }
