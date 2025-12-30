@@ -160,17 +160,25 @@ export function isFilamentAvailableInRegion(
         return isUsStore;
       }
       if (isAnycubicVendor) {
-        // US Anycubic URLs: store.anycubic.com without regional subdomain
-        const hasRegionalSubdomain = url.includes('ca.store.anycubic.com') || 
-                                     url.includes('uk.store.anycubic.com') ||
-                                     url.includes('eu.store.anycubic.com') ||
-                                     url.includes('au.store.anycubic.com') ||
-                                     url.includes('//ca.anycubic.com') ||
-                                     url.includes('//uk.anycubic.com') ||
-                                     url.includes('//eu.anycubic.com') ||
-                                     url.includes('//au.anycubic.com');
-        // US store is the default without regional subdomain
-        const isUsStore = (url.includes('store.anycubic.com') || url.includes('anycubic.com')) && !hasRegionalSubdomain;
+        // US Anycubic URLs: store.anycubic.com without regional patterns
+        const hasRegionalPattern = url.includes('ca.store.anycubic.com') || 
+                                   url.includes('uk.store.anycubic.com') ||
+                                   url.includes('eu.store.anycubic.com') ||
+                                   url.includes('au.store.anycubic.com') ||
+                                   url.includes('de.store.anycubic.com') ||
+                                   url.includes('fr.store.anycubic.com') ||
+                                   url.includes('//ca.anycubic.com') ||
+                                   url.includes('//uk.anycubic.com') ||
+                                   url.includes('//eu.anycubic.com') ||
+                                   url.includes('//au.anycubic.com') ||
+                                   url.includes('//de.anycubic.com') ||
+                                   url.includes('//fr.anycubic.com') ||
+                                   url.includes('anycubic.es') ||
+                                   url.includes('anycubic.it') ||
+                                   url.includes('anycubic.au') ||
+                                   url.includes('anycubicofficial.pl');
+        // US store is store.anycubic.com without regional patterns
+        const isUsStore = url.includes('store.anycubic.com') && !hasRegionalPattern;
         return isUsStore;
       }
       return true;
@@ -198,7 +206,7 @@ export function isFilamentAvailableInRegion(
       if (isEuStore) return true;
     }
     
-    // Anycubic regional checks
+    // Anycubic regional checks - check for regional store URLs
     if (isAnycubicVendor) {
       if (region === 'CA' && (url.includes('ca.store.anycubic.com') || url.includes('//ca.anycubic.com'))) {
         return true;
@@ -206,7 +214,22 @@ export function isFilamentAvailableInRegion(
       if (region === 'UK' && (url.includes('uk.store.anycubic.com') || url.includes('//uk.anycubic.com'))) {
         return true;
       }
-      if (region === 'AU' && (url.includes('au.store.anycubic.com') || url.includes('//au.anycubic.com'))) {
+      if (region === 'AU' && (url.includes('anycubic.au') || url.includes('au.store.anycubic.com'))) {
+        return true;
+      }
+      if (region === 'DE' && (url.includes('de.store.anycubic.com') || url.includes('//de.anycubic.com'))) {
+        return true;
+      }
+      if (region === 'FR' && (url.includes('fr.store.anycubic.com') || url.includes('//fr.anycubic.com'))) {
+        return true;
+      }
+      if (region === 'ES' && url.includes('anycubic.es')) {
+        return true;
+      }
+      if (region === 'IT' && url.includes('anycubic.it')) {
+        return true;
+      }
+      if (region === 'PL' && url.includes('anycubicofficial.pl')) {
         return true;
       }
       if (region === 'EU' && (url.includes('eu.store.anycubic.com') || url.includes('//eu.anycubic.com'))) {
@@ -253,15 +276,25 @@ function isFilamentAvailableInFallbackRegion(
   if (fallbackRegion === 'US') {
     // Check if this is a US store URL
     if (normalizedVendor === 'anycubic') {
-      const hasRegionalSubdomain = url.includes('ca.store.anycubic.com') || 
-                                   url.includes('uk.store.anycubic.com') ||
-                                   url.includes('eu.store.anycubic.com') ||
-                                   url.includes('au.store.anycubic.com') ||
-                                   url.includes('//ca.anycubic.com') ||
-                                   url.includes('//uk.anycubic.com') ||
-                                   url.includes('//eu.anycubic.com') ||
-                                   url.includes('//au.anycubic.com');
-      return (url.includes('store.anycubic.com') || url.includes('anycubic.com')) && !hasRegionalSubdomain;
+      // Exclude all regional stores (subdomains and different domains)
+      const hasRegionalPattern = url.includes('ca.store.anycubic.com') || 
+                                 url.includes('uk.store.anycubic.com') ||
+                                 url.includes('eu.store.anycubic.com') ||
+                                 url.includes('au.store.anycubic.com') ||
+                                 url.includes('de.store.anycubic.com') ||
+                                 url.includes('fr.store.anycubic.com') ||
+                                 url.includes('//ca.anycubic.com') ||
+                                 url.includes('//uk.anycubic.com') ||
+                                 url.includes('//eu.anycubic.com') ||
+                                 url.includes('//au.anycubic.com') ||
+                                 url.includes('//de.anycubic.com') ||
+                                 url.includes('//fr.anycubic.com') ||
+                                 url.includes('anycubic.es') ||
+                                 url.includes('anycubic.it') ||
+                                 url.includes('anycubic.au') ||
+                                 url.includes('anycubicofficial.pl');
+      // US store is store.anycubic.com without regional patterns
+      return url.includes('store.anycubic.com') && !hasRegionalPattern;
     }
     if (normalizedVendor === 'elegoo') {
       return url.includes('elegoo-us.myshopify.com') || 
