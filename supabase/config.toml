@@ -1,5 +1,8 @@
 project_id = "cfqfavmhdbyjzejipiwa"
 
+[functions.sync-prusament-products]
+verify_jwt = false
+
 [functions.sync-regional-prices]
 verify_jwt = true
 
