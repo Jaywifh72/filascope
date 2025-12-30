@@ -95,6 +95,9 @@ export function isRegionalBrand(vendor: string | null | undefined): boolean {
   return config !== null && config.pattern !== 'global';
 }
 
+// Version marker for debugging cache issues
+const CODE_VERSION = '2024-12-30-fallback-v2';
+
 /**
  * Check if a filament is available in a specific region
  * 
@@ -216,13 +219,20 @@ export function isFilamentAvailableInRegion(
   // check if the product is available in the brand's fallback region (usually US)
   // This prevents hiding products when user is in an unsupported region
   if (brandConfig?.fallbackRegion && brandConfig.fallbackRegion !== region) {
+    console.log(`[RegionalFilter:${CODE_VERSION}] Checking fallback for ${vendor}`, {
+      region,
+      fallbackRegion: brandConfig.fallbackRegion,
+      url: filament.product_url?.substring(0, 60)
+    });
     // Check if product exists in fallback region
     const fallbackAvailable = isFilamentAvailableInFallbackRegion(filament, brandConfig.fallbackRegion, vendor);
+    console.log(`[RegionalFilter:${CODE_VERSION}] Fallback result:`, fallbackAvailable);
     if (fallbackAvailable) {
       return true;
     }
   }
   
+  console.log(`[RegionalFilter:${CODE_VERSION}] REJECTED ${vendor}`, { region, url: filament.product_url?.substring(0, 60) });
   return false;
 }
 
