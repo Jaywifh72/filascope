@@ -3,6 +3,26 @@ import { AlertTriangle, Globe, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
 
+/**
+ * Maps currency codes to human-readable region names
+ */
+const CURRENCY_TO_REGION_NAME: Record<CurrencyCode, string> = {
+  USD: 'United States',
+  CAD: 'Canada',
+  GBP: 'United Kingdom',
+  EUR: 'Europe',
+  AUD: 'Australia',
+  JPY: 'Japan',
+  CHF: 'Switzerland',
+  SEK: 'Sweden',
+  CNY: 'China',
+  KRW: 'South Korea',
+  INR: 'India',
+  MXN: 'Mexico',
+  BRL: 'Brazil',
+  NZD: 'New Zealand',
+};
+
 interface RegionalAvailabilityBadgeProps {
   /** Whether the product is available in the user's selected region */
   isAvailableInRegion: boolean;
@@ -52,7 +72,7 @@ export function RegionalAvailabilityBadge({
 
   // Using fallback region (e.g., Canadian user seeing US store)
   if (fallbackCurrency && fallbackCurrency !== userCurrency) {
-    const fallbackRegionName = CURRENCIES[fallbackCurrency]?.name || fallbackCurrency;
+    const fallbackRegionName = CURRENCY_TO_REGION_NAME[fallbackCurrency] || fallbackCurrency;
     
     return (
       <div
@@ -83,7 +103,7 @@ export function RegionalAvailabilityBadge({
     >
       <AlertTriangle className={cn(size === 'sm' ? 'w-3 h-3' : 'w-3.5 h-3.5')} />
       <span>
-        Not available in {CURRENCIES[userCurrency]?.name || 'your region'}
+        Not available in {CURRENCY_TO_REGION_NAME[userCurrency] || 'your region'}
       </span>
     </div>
   );

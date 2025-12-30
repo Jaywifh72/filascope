@@ -2,6 +2,27 @@ import { useMemo } from 'react';
 import { useCurrency, CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
 import { useRegionalStore } from '@/hooks/useRegionalStore';
 import { isRegionalBrand as checkIsRegionalBrand } from '@/hooks/useRegionalFiltering';
+import { getBrandConfig } from '@/lib/brandRegionalStores';
+
+/**
+ * Maps currency codes to region codes for brand config lookup
+ */
+const CURRENCY_TO_REGION_CODE: Record<CurrencyCode, string> = {
+  USD: 'US',
+  CAD: 'CA',
+  GBP: 'UK',
+  EUR: 'EU',
+  AUD: 'AU',
+  JPY: 'JP',
+  CHF: 'EU',
+  SEK: 'EU',
+  CNY: 'US',
+  KRW: 'US',
+  INR: 'US',
+  MXN: 'US',
+  BRL: 'US',
+  NZD: 'AU',
+};
 
 /**
  * Maps currency codes to regional price columns
@@ -289,11 +310,23 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     }
 
     // Determine if product is actually available in user's region
-    // For regional brands, we check if there's a regional URL or price
+    // For regional brands, we check if there's a regional URL or price OR brand has regional store configured
     // For global brands, always available
     const hasDirectRegionalUrl = !!(filament[urlColumn] as string | null | undefined);
     const hasDirectRegionalPrice = actualRegionalPrice && actualRegionalPrice > 0;
-    const isAvailableInUserRegion = !isRegionalBrand || hasDirectRegionalUrl || hasDirectRegionalPrice;
+    
+    // Check if brand has a regional store configured for user's currency
+    const brandConfig = getBrandConfig(filament.vendor);
+    const userRegionCode = CURRENCY_TO_REGION_CODE[currency];
+    const brandHasRegionalStore = brandConfig?.regions?.[userRegionCode] !== undefined;
+    
+    // If brand has regional store for user's region, we're not using a fallback
+    if (brandHasRegionalStore && isUsingFallbackRegion) {
+      isUsingFallbackRegion = false;
+      fallbackUrlCurrency = null;
+    }
+    
+    const isAvailableInUserRegion = !isRegionalBrand || hasDirectRegionalUrl || hasDirectRegionalPrice || brandHasRegionalStore;
 
     // Determine the best price to use
     // Priority 1: Actual scraped regional price from database for user's currency
