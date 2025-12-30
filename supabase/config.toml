@@ -371,3 +371,6 @@ verify_jwt = false
 
 [functions.sync-ziro-products]
 verify_jwt = false
+
+[functions.sync-gizmodorks-products]
+verify_jwt = false
