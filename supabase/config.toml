@@ -314,3 +314,6 @@ verify_jwt = false
 
 [functions.sync-kingroon-products]
 verify_jwt = false
+
+[functions.sync-matter3d-products]
+verify_jwt = false

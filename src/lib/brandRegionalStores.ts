@@ -32,6 +32,19 @@ export interface BrandStoreConfig {
  * Add new brands here as needed - zero risk to existing code
  */
 export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
+  // === CANADIAN MANUFACTURERS ===
+  
+  'Matter3D': {
+    pattern: 'global',
+    baseDomain: 'matter3d.com',
+    defaultCurrency: 'CAD',
+    fallbackRegion: 'CA',
+    regions: {
+      CA: { subdomain: 'www', currency: 'CAD' },
+      US: { subdomain: 'www', currency: 'CAD' }, // Ships to US, prices in CAD
+    }
+  },
+
   // === MAJOR BRANDS WITH REGIONAL STORES ===
   
   'Bambu Lab': {
