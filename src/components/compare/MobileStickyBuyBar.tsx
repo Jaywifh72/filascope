@@ -3,6 +3,7 @@ import { ShoppingCart, Trophy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useBestPrices } from "@/hooks/useBestPrice";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -21,11 +22,18 @@ export function MobileStickyBuyBar({
 }: MobileStickyBuyBarProps) {
   const [isVisible, setIsVisible] = useState(false);
   const { getAffiliateUrl } = useAffiliateLinks();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency } = useCurrency();
 
   // Get the winner or best price filament
   const featuredIndex = overallWinnerIndices[0] ?? bestPriceIndices[0] ?? 0;
   const featuredFilament = filaments[featuredIndex];
+  
+  // Fetch best prices from listings
+  const filamentIds = filaments.map(f => f.id);
+  const { data: bestPricesMap } = useBestPrices(filamentIds, {
+    region: currency === 'GBP' ? 'UK' : currency === 'EUR' ? 'DE' : 'US',
+    currency: currency,
+  });
 
   const getPricePerKg = (price: number | null, weight: number | null): number | null => {
     if (!price || !weight) return null;
@@ -44,10 +52,18 @@ export function MobileStickyBuyBar({
 
   if (!featuredFilament || !isVisible) return null;
 
-  const affiliateUrl = getAffiliateUrl(featuredFilament.product_url, featuredFilament.vendor);
-  const pricePerKg = getPricePerKg(featuredFilament.variant_price, featuredFilament.net_weight_g);
+  // Get best listing for featured filament
+  const bestListing = bestPricesMap?.get(featuredFilament.id);
+  const price = bestListing?.current_price ?? featuredFilament.variant_price;
+  const productUrl = bestListing?.product_url ?? featuredFilament.product_url;
+  const retailerName = bestListing?.retailer_name ?? featuredFilament.vendor;
+  
+  const affiliateUrl = productUrl 
+    ? (bestListing?.affiliate_url || getAffiliateUrl(productUrl, retailerName))
+    : null;
+  const pricePerKg = getPricePerKg(price, featuredFilament.net_weight_g);
   const isWinner = overallWinnerIndices.includes(featuredIndex);
-  const inStock = featuredFilament.variant_available !== false;
+  const inStock = bestListing?.available ?? featuredFilament.variant_available !== false;
 
   if (!affiliateUrl) return null;
 

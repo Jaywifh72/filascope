@@ -1,9 +1,10 @@
-import { ShoppingCart, ExternalLink, Check, Lightbulb } from "lucide-react";
+import { ShoppingCart, ExternalLink, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useBestPrices } from "@/hooks/useBestPrice";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -21,7 +22,14 @@ export function CompareActionRow({
   overallWinnerIndices 
 }: CompareActionRowProps) {
   const { getAffiliateUrl } = useAffiliateLinks();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency } = useCurrency();
+  
+  // Fetch best prices for all filaments from listings table
+  const filamentIds = filaments.map(f => f.id);
+  const { data: bestPricesMap, isLoading: pricesLoading } = useBestPrices(filamentIds, {
+    region: currency === 'GBP' ? 'UK' : currency === 'EUR' ? 'DE' : 'US',
+    currency: currency,
+  });
 
   const getPricePerKg = (price: number | null, weight: number | null): number | null => {
     if (!price || !weight) return null;
@@ -37,11 +45,19 @@ export function CompareActionRow({
         <span className="text-sm font-semibold text-foreground">Quick Buy</span>
       </div>
       {filaments.map((filament, idx) => {
-        const affiliateUrl = getAffiliateUrl(filament.product_url, filament.vendor);
-        const pricePerKg = getPricePerKg(filament.variant_price, filament.net_weight_g);
+        // Use best price from listings if available, fallback to filament data
+        const bestListing = bestPricesMap?.get(filament.id);
+        const price = bestListing?.current_price ?? filament.variant_price;
+        const productUrl = bestListing?.product_url ?? filament.product_url;
+        const retailerName = bestListing?.retailer_name ?? filament.vendor;
+        
+        const affiliateUrl = productUrl 
+          ? (bestListing?.affiliate_url || getAffiliateUrl(productUrl, retailerName))
+          : null;
+        const pricePerKg = getPricePerKg(price, filament.net_weight_g);
         const isWinner = overallWinnerIndices.includes(idx);
         const isBestPrice = bestPriceIndices.includes(idx);
-        const inStock = filament.variant_available !== false;
+        const inStock = bestListing?.available ?? filament.variant_available !== false;
         
         return (
           <div key={filament.id} className="flex flex-col items-center gap-2">
@@ -73,9 +89,9 @@ export function CompareActionRow({
                 )}>
                   {formatPrice(pricePerKg)}/kg
                 </span>
-                {filament.variant_price && (
+                {price && (
                   <p className="text-xs text-muted-foreground">
-                    {formatPrice(filament.variant_price)} per spool
+                    {formatPrice(price)} per spool
                   </p>
                 )}
               </div>
@@ -114,10 +130,10 @@ export function CompareActionRow({
               </Button>
             )}
 
-            {/* Vendor link */}
-            {filament.vendor && (
+            {/* Vendor/Retailer link */}
+            {retailerName && (
               <span className="text-xs text-muted-foreground">
-                from {filament.vendor}
+                from {retailerName}
               </span>
             )}
           </div>
