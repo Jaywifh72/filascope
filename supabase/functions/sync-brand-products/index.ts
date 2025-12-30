@@ -50,13 +50,13 @@ const BRAND_REGIONAL_DOMAINS: Record<string, Record<string, string>> = {
     EU: 'eu.store.creality.com', 
     AU: 'au.store.creality.com' 
   },
-  // Anycubic - FIXED: uses store.anycubic.com prefix for Shopify
+  // Anycubic - Uses regional subdomains (e.g., ca.anycubic.com)
   'anycubic': { 
     US: 'store.anycubic.com', 
-    CA: 'ca.store.anycubic.com', 
-    UK: 'uk.store.anycubic.com', 
-    EU: 'eu.store.anycubic.com', 
-    AU: 'au.store.anycubic.com' 
+    CA: 'ca.anycubic.com', 
+    UK: 'uk.anycubic.com', 
+    EU: 'eu.anycubic.com', 
+    AU: 'au.anycubic.com' 
   },
   'qidi': { 
     US: 'qidi3d.com', 
@@ -814,11 +814,20 @@ function buildUpdateData(product: any, overrideFields: string[], region: string 
   return data;
 }
 
+// Brands that ALWAYS use variant explosion regardless of heuristics
+// These brands are known to have multi-color products that need 1:1 variant mapping
+const FORCE_VARIANT_EXPLOSION_BRANDS = ['amolen', 'anycubic', 'eryone', 'sunlu', 'jayo'];
+
 // Helper: Check if Shopify product has multiple color variants that should be exploded
 // AGGRESSIVE EXPLOSION: For filament products, multiple variants almost always mean color variations
-function hasMultipleColorVariants(product: any): boolean {
+function hasMultipleColorVariants(product: any, brandSlug?: string): boolean {
   const variants = product.variants || [];
   if (variants.length <= 1) return false;
+  
+  // FORCE variant explosion for specific brands
+  if (brandSlug && FORCE_VARIANT_EXPLOSION_BRANDS.includes(brandSlug.toLowerCase())) {
+    return true;
+  }
   
   // Check if variants differ by color-related options
   const colorOptionNames = ['color', 'colour', 'farbe', 'couleur', 'title'];
@@ -938,7 +947,7 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
 
       // Identify if this product has color variants that should be exploded
       // Check if variants differ by color options (option1, option2, option3)
-      const hasColorVariants = hasMultipleColorVariants(product);
+      const hasColorVariants = hasMultipleColorVariants(product, brand.brand_slug);
       
       // Extract common fields from product title
       const baseTitle = cleanTitle(product.title);
