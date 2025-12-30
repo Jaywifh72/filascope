@@ -341,3 +341,6 @@ verify_jwt = false
 
 [functions.sync-pushplastic-products]
 verify_jwt = false
+
+[functions.sync-sovol-products]
+verify_jwt = false
