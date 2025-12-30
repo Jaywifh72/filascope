@@ -1,10 +1,11 @@
-import { X, ImageOff, GripVertical, AlertCircle, RefreshCw } from "lucide-react";
+import { X, ImageOff, GripVertical, AlertCircle, RefreshCw, ShoppingCart, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { CompareItem } from "@/hooks/useCompare";
 import { Button } from "@/components/ui/button";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 
 const MATERIAL_BADGE_COLORS: Record<string, string> = {
   "PLA": "bg-blue-500/20 text-blue-400",
@@ -59,9 +60,13 @@ export function MiniFilamentCard({
   onDragEnd,
   cardIndex,
 }: MiniFilamentCardProps) {
+  const { getAffiliateUrl } = useAffiliateLinks();
   const brandLogo = item.vendor ? getBrandLogo(item.vendor) : null;
   const pricePerKg = item.variant_price && item.net_weight_g 
     ? item.variant_price / (item.net_weight_g / 1000) 
+    : null;
+  const affiliateUrl = (item as any).product_url 
+    ? getAffiliateUrl((item as any).product_url, item.vendor) 
     : null;
 
   // Clean title - remove brand name and size/weight suffixes
@@ -183,12 +188,27 @@ export function MiniFilamentCard({
           {cleanTitle}
         </p>
 
-        {/* Price */}
-        {pricePerKg && pricePerKg > 0 && pricePerKg < 500 && (
-          <p className="text-sm font-mono font-bold text-primary mt-auto">
-            ${pricePerKg.toFixed(2)}/kg
-          </p>
-        )}
+        {/* Price & Quick Buy */}
+        <div className="flex items-center justify-between mt-auto gap-2">
+          {pricePerKg && pricePerKg > 0 && pricePerKg < 500 && (
+            <p className="text-sm font-mono font-bold text-primary">
+              ${pricePerKg.toFixed(2)}/kg
+            </p>
+          )}
+          {affiliateUrl && (
+            <a
+              href={affiliateUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              draggable={false}
+              className="opacity-0 group-hover/mini:opacity-100 transition-opacity p-1.5 rounded-md bg-primary/20 hover:bg-primary/30 text-primary"
+              title={`Buy from ${item.vendor}`}
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+            </a>
+          )}
+        </div>
       </Link>
     </div>
   );

@@ -10,12 +10,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, RefreshCcw, BookOpen } from "lucide-react";
+import { AlertTriangle, RefreshCcw, BookOpen, ShoppingCart, ExternalLink, Lightbulb } from "lucide-react";
 import { GitCompare, ArrowLeft, Trophy, Share2, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import MaterialReference from "@/components/MaterialReference";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { ExportMenu } from "@/components/compare/ExportMenu";
+import { CompareActionRow, TDValueBadge } from "@/components/compare/CompareActionRow";
+import { MobileCompareView } from "@/components/compare/MobileCompareView";
+import { MobileStickyBuyBar } from "@/components/compare/MobileStickyBuyBar";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useCurrency } from "@/hooks/useCurrency";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   RadarChart,
@@ -44,6 +50,8 @@ const Compare = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [diffMode, setDiffMode] = useState(false);
+  const { getAffiliateUrl } = useAffiliateLinks();
+  const { formatPrice } = useCurrency();
   
   // Tab state - default to reference, but switch to comparison if filament IDs are in URL
   const activeTab = searchParams.get("tab") || (searchParams.get("ids") ? "comparison" : "reference");
@@ -440,49 +448,109 @@ const Compare = () => {
                   </div>
                 </div>
 
-        {/* Sticky Filament Headers */}
-        <div className="sticky top-0 z-20 bg-background pb-4 -mx-8 px-8 pt-2 border-b border-border/50">
+        {/* Mobile Comparison View */}
+        <MobileCompareView 
+          filaments={filaments}
+          winCounts={winCounts}
+          bestPriceIndices={bestPriceIndices}
+          overallWinnerIndices={overallWinnerIndices}
+          totalCategories={totalCategories}
+        />
+
+        {/* Mobile Sticky Buy Bar */}
+        <MobileStickyBuyBar 
+          filaments={filaments}
+          overallWinnerIndices={overallWinnerIndices}
+          bestPriceIndices={bestPriceIndices}
+        />
+
+        {/* Desktop Sticky Filament Headers */}
+        <div className="sticky top-0 z-20 bg-background pb-4 -mx-8 px-8 pt-2 border-b border-border/50 hidden md:block">
           <div className="grid gap-4" style={{ gridTemplateColumns: `200px repeat(${maxSlots}, 1fr)` }}>
             <div></div>
-            {filaments.map((filament) => (
-              <Card key={filament.id} className="bg-card border-border shadow-md">
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      {filament.color_hex && (
-                        <div 
-                          className="w-8 h-8 rounded-full border border-border shrink-0"
-                          style={{ backgroundColor: filament.color_hex }}
-                        />
-                      )}
-                      {filament.vendor && getBrandLogo(filament.vendor) && (
-                        <img
-                          src={getBrandLogo(filament.vendor)!}
-                          alt={filament.vendor}
-                          className="h-6 object-contain shrink-0"
-                        />
-                      )}
-                    </div>
-                    <h3 className="font-semibold text-sm line-clamp-2">{filament.product_title}</h3>
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex gap-1 flex-wrap">
-                        {filament.material && <Badge variant="outline" className="text-xs">{filament.material}</Badge>}
-                      </div>
-                      {filament.variant_price && filament.net_weight_g && (
-                        <div className={`text-lg font-bold shrink-0 ${bestPriceIndices.includes(filaments.indexOf(filament)) ? "text-amber-500" : "text-primary"}`}>
-                          <div className="flex items-center gap-1">
-                            {bestPriceIndices.includes(filaments.indexOf(filament)) && (
-                              <Trophy className="w-4 h-4 shrink-0" />
-                            )}
-                            <span>${getPricePerKgFormatted(filament.variant_price, filament.net_weight_g)}/kg</span>
-                          </div>
+            {filaments.map((filament, idx) => {
+              const affiliateUrl = getAffiliateUrl(filament.product_url, filament.vendor);
+              const inStock = filament.variant_available !== false;
+              const isWinner = overallWinnerIndices.includes(idx);
+              
+              return (
+                <Card key={filament.id} className={cn(
+                  "bg-card border-border shadow-md",
+                  isWinner && "border-amber-500/50 bg-gradient-to-b from-amber-500/5 to-transparent"
+                )}>
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {/* Winner badge */}
+                      {isWinner && (
+                        <div className="flex items-center gap-1.5">
+                          <Trophy className="w-4 h-4 text-amber-500" />
+                          <span className="text-xs font-medium text-amber-400">Winner</span>
                         </div>
                       )}
+                      
+                      <div className="flex items-center gap-3">
+                        {filament.color_hex && (
+                          <div 
+                            className="w-8 h-8 rounded-full border border-border shrink-0"
+                            style={{ backgroundColor: filament.color_hex }}
+                          />
+                        )}
+                        {filament.vendor && getBrandLogo(filament.vendor) && (
+                          <img
+                            src={getBrandLogo(filament.vendor)!}
+                            alt={filament.vendor}
+                            className="h-6 object-contain shrink-0"
+                          />
+                        )}
+                      </div>
+                      <h3 className="font-semibold text-sm line-clamp-2">{filament.product_title}</h3>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex gap-1 flex-wrap">
+                          {filament.material && <Badge variant="outline" className="text-xs">{filament.material}</Badge>}
+                        </div>
+                        {filament.variant_price && filament.net_weight_g && (
+                          <div className={`text-lg font-bold shrink-0 ${bestPriceIndices.includes(filaments.indexOf(filament)) ? "text-amber-500" : "text-primary"}`}>
+                            <div className="flex items-center gap-1">
+                              {bestPriceIndices.includes(filaments.indexOf(filament)) && (
+                                <Trophy className="w-4 h-4 shrink-0" />
+                              )}
+                              <span>${getPricePerKgFormatted(filament.variant_price, filament.net_weight_g)}/kg</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Buy button in header */}
+                      {affiliateUrl && (
+                        <Button
+                          asChild
+                          size="sm"
+                          disabled={!inStock}
+                          className={cn(
+                            "w-full gap-1.5 font-semibold",
+                            isWinner && "bg-amber-500 hover:bg-amber-400 text-amber-950",
+                            !inStock && "opacity-50"
+                          )}
+                        >
+                          <a 
+                            href={affiliateUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            onClick={(e) => {
+                              if (!inStock) e.preventDefault();
+                            }}
+                          >
+                            <ShoppingCart className="w-3.5 h-3.5" />
+                            {inStock ? "Buy Now" : "Out of Stock"}
+                            <ExternalLink className="w-3 h-3 opacity-60" />
+                          </a>
+                        </Button>
+                      )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
             {/* Empty slots */}
             {Array.from({ length: emptySlots }).map((_, idx) => (
               <Card 
@@ -499,8 +567,8 @@ const Compare = () => {
           </div>
         </div>
 
-        {/* Print Settings */}
-        <Card className="mb-6">
+        {/* Print Settings - Desktop only */}
+        <Card className="mb-6 hidden md:block">
           <CardHeader>
             <CardTitle>Print Settings</CardTitle>
           </CardHeader>
@@ -558,12 +626,19 @@ const Compare = () => {
           </CardContent>
         </Card>
 
-        {/* Material Properties */}
-        <Card className="mb-6">
+        {/* Material Properties - Desktop only */}
+        <Card className="mb-6 hidden md:block">
           <CardHeader>
             <CardTitle>Material Properties</CardTitle>
           </CardHeader>
           <CardContent>
+            <ComparisonRow 
+              label="Transmission Distance (TD)" 
+              values={filaments.map(f => f.transmission_distance)} 
+              unit=" mm"
+              compareMode="higher"
+            />
+            <Separator />
             <ComparisonRow 
               label="Tensile Strength (XY)" 
               values={filaments.map(f => f.tensile_strength_xy_mpa)} 
