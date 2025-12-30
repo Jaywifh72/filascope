@@ -133,7 +133,9 @@ export function isFilamentAvailableInRegion(
   
   // Check if main URL already points to this region's store
   if (url) {
-    const isElegooVendor = vendor?.toLowerCase() === 'elegoo';
+    const normalizedVendor = vendor?.toLowerCase();
+    const isElegooVendor = normalizedVendor === 'elegoo';
+    const isAnycubicVendor = normalizedVendor === 'anycubic';
     
     if (region === 'US') {
       if (isElegooVendor) {
@@ -151,9 +153,19 @@ export function isFilamentAvailableInRegion(
                            !url.includes('es.elegoo.com'));
         return isUsStore;
       }
+      if (isAnycubicVendor) {
+        // US Anycubic URLs: store.anycubic.com without regional subdomain
+        const isUsStore = url.includes('store.anycubic.com') && 
+                          !url.includes('ca.anycubic.com') && 
+                          !url.includes('uk.anycubic.com') &&
+                          !url.includes('eu.anycubic.com') &&
+                          !url.includes('au.anycubic.com');
+        return isUsStore;
+      }
       return true;
     }
     
+    // Elegoo regional checks
     if (region === 'CA' && isElegooVendor && url.includes('ca.elegoo.com')) {
       return true;
     }
@@ -173,6 +185,20 @@ export function isFilamentAvailableInRegion(
                         url.includes('fr.elegoo.com') ||
                         url.includes('es.elegoo.com');
       if (isEuStore) return true;
+    }
+    
+    // Anycubic regional checks
+    if (region === 'CA' && isAnycubicVendor && url.includes('ca.anycubic.com')) {
+      return true;
+    }
+    if (region === 'UK' && isAnycubicVendor && url.includes('uk.anycubic.com')) {
+      return true;
+    }
+    if (region === 'AU' && isAnycubicVendor && url.includes('au.anycubic.com')) {
+      return true;
+    }
+    if (region === 'EU' && isAnycubicVendor && url.includes('eu.anycubic.com')) {
+      return true;
     }
   }
   
