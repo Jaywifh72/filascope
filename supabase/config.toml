@@ -320,3 +320,6 @@ verify_jwt = false
 
 [functions.sync-ninjatek-products]
 verify_jwt = false
+
+[functions.sync-numakers-products]
+verify_jwt = false
