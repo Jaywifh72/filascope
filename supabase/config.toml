@@ -323,3 +323,6 @@ verify_jwt = false
 
 [functions.sync-numakers-products]
 verify_jwt = false
+
+[functions.sync-polymaker-products]
+verify_jwt = false
