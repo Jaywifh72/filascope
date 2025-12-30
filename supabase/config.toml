@@ -299,3 +299,6 @@ verify_jwt = false
 
 [functions.sync-duramic-products]
 verify_jwt = false
+
+[functions.sync-eryone-products]
+verify_jwt = false
