@@ -1234,6 +1234,118 @@ export type Database = {
           },
         ]
       }
+      filament_listings: {
+        Row: {
+          affiliate_url: string | null
+          available: boolean | null
+          compare_at_price: number | null
+          created_at: string | null
+          currency: string
+          current_price: number | null
+          display_order: number | null
+          filament_id: string
+          id: string
+          is_primary: boolean | null
+          last_scraped_at: string | null
+          product_url: string
+          region: string
+          retailer_id: string
+          scrape_source: string | null
+          scrape_status: string | null
+          ships_from: string | null
+          sku: string | null
+          stock_level: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          affiliate_url?: string | null
+          available?: boolean | null
+          compare_at_price?: number | null
+          created_at?: string | null
+          currency?: string
+          current_price?: number | null
+          display_order?: number | null
+          filament_id: string
+          id?: string
+          is_primary?: boolean | null
+          last_scraped_at?: string | null
+          product_url: string
+          region?: string
+          retailer_id: string
+          scrape_source?: string | null
+          scrape_status?: string | null
+          ships_from?: string | null
+          sku?: string | null
+          stock_level?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          affiliate_url?: string | null
+          available?: boolean | null
+          compare_at_price?: number | null
+          created_at?: string | null
+          currency?: string
+          current_price?: number | null
+          display_order?: number | null
+          filament_id?: string
+          id?: string
+          is_primary?: boolean | null
+          last_scraped_at?: string | null
+          product_url?: string
+          region?: string
+          retailer_id?: string
+          scrape_source?: string | null
+          scrape_status?: string | null
+          ships_from?: string | null
+          sku?: string | null
+          stock_level?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_listings_retailer_id_fkey"
+            columns: ["retailer_id"]
+            isOneToOne: false
+            referencedRelation: "retailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filament_score_history: {
         Row: {
           change_reason: string | null
@@ -1779,6 +1891,54 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      listing_price_history: {
+        Row: {
+          available: boolean | null
+          compare_at_price: number | null
+          currency: string
+          id: string
+          listing_id: string
+          price: number
+          recorded_at: string | null
+          source: string | null
+        }
+        Insert: {
+          available?: boolean | null
+          compare_at_price?: number | null
+          currency?: string
+          id?: string
+          listing_id: string
+          price: number
+          recorded_at?: string | null
+          source?: string | null
+        }
+        Update: {
+          available?: boolean | null
+          compare_at_price?: number | null
+          currency?: string
+          id?: string
+          listing_id?: string
+          price?: number
+          recorded_at?: string | null
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_price_history_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "filament_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_price_history_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_filament_listings"
+            referencedColumns: ["listing_id"]
+          },
+        ]
       }
       materials: {
         Row: {
@@ -4824,6 +4984,79 @@ export type Database = {
         }
         Relationships: []
       }
+      v_filament_listings: {
+        Row: {
+          affiliate_url: string | null
+          available: boolean | null
+          brand: string | null
+          color_hex: string | null
+          compare_at_price: number | null
+          currency: string | null
+          current_price: number | null
+          filament_id: string | null
+          is_primary: boolean | null
+          last_scraped_at: string | null
+          listing_id: string | null
+          material: string | null
+          net_weight_g: number | null
+          price_per_kg: number | null
+          product_title: string | null
+          product_url: string | null
+          region: string | null
+          retailer_id: string | null
+          retailer_logo: string | null
+          retailer_name: string | null
+          retailer_slug: string | null
+          retailer_trust_score: number | null
+          scrape_status: string | null
+          stock_level: string | null
+          transmission_distance: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_listings_retailer_id_fkey"
+            columns: ["retailer_id"]
+            isOneToOne: false
+            referencedRelation: "retailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_filaments_normalized: {
         Row: {
           bed_temp_max_c: number | null
@@ -4942,6 +5175,17 @@ export type Database = {
           id: string
           product_line_id: string
           product_title: string
+        }[]
+      }
+      get_best_listing: {
+        Args: { _currency?: string; _filament_id: string; _region?: string }
+        Returns: {
+          available: boolean
+          current_price: number
+          listing_id: string
+          product_url: string
+          retailer_name: string
+          retailer_slug: string
         }[]
       }
       get_brands_needing_scrape: {
