@@ -284,13 +284,10 @@ async function upsertVariants(
     
     const { error } = await supabase
       .from('filaments')
-      .upsert(records, { 
-        onConflict: 'product_id',
-        ignoreDuplicates: false 
-      });
+      .insert(records);
     
     if (error) {
-      console.error(`Batch upsert error:`, error);
+      console.error(`Batch insert error:`, error);
       errors += batch.length;
     } else {
       upserted += batch.length;
