@@ -313,10 +313,18 @@ Be precise and derive rules from the actual data, not assumptions.`;
     console.log('Calling AI for analysis...');
     const aiResponse = await callLovableAI(analysisPrompt);
     
-    // Parse AI response
+    // Parse AI response - strip markdown code blocks if present
     let analysis;
     try {
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      let cleanedResponse = aiResponse;
+      
+      // Remove markdown code blocks (```json ... ``` or ``` ... ```)
+      cleanedResponse = cleanedResponse.replace(/^```(?:json)?\s*\n?/i, '');
+      cleanedResponse = cleanedResponse.replace(/\n?```\s*$/i, '');
+      cleanedResponse = cleanedResponse.trim();
+      
+      // Find the JSON object in the response
+      const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         analysis = JSON.parse(jsonMatch[0]);
       } else {
