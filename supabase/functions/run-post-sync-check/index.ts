@@ -198,12 +198,50 @@ function isValidColorName(name: string): boolean {
 }
 
 /**
+ * Extract product line name from alt text
+ * e.g., "Standard PLA+, Desert Tan, 1.75mm" -> "standard pla+"
+ */
+function extractProductLineFromAltText(altText: string): string | null {
+  const parts = altText.split(',');
+  if (parts.length >= 2) {
+    return parts[0].trim().toLowerCase();
+  }
+  return null;
+}
+
+/**
+ * Check if two product lines are the same (from alt text comparison)
+ */
+function productLinesMatchByName(line1: string | null, line2: string | null): boolean {
+  if (!line1 || !line2) return true; // If we can't determine, allow it
+  
+  const norm1 = line1.toLowerCase().replace(/[+\-]/g, '').replace(/\s+/g, ' ').trim();
+  const norm2 = line2.toLowerCase().replace(/[+\-]/g, '').replace(/\s+/g, ' ').trim();
+  
+  if (norm1 === norm2) return true;
+  
+  // Check if one contains the other
+  if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
+  
+  // Check synonyms
+  for (const [canonical, synonyms] of Object.entries(PRODUCT_LINE_SYNONYMS)) {
+    const allVariants = [canonical, ...synonyms];
+    const match1 = allVariants.some(v => norm1.includes(v.replace(/[+\-]/g, '')) || v.replace(/[+\-]/g, '').includes(norm1));
+    const match2 = allVariants.some(v => norm2.includes(v.replace(/[+\-]/g, '')) || v.replace(/[+\-]/g, '').includes(norm2));
+    if (match1 && match2) return true;
+  }
+  
+  return false;
+}
+
+/**
  * Extract product info from scraped page HTML
  * 
  * Key extraction strategy for 3D-Fuel and similar brands:
  * - These brands use cross-product color swatches (links to other products)
  * - The swatch images have alt text like "Standard PLA+, Desert Tan, 1.75mm"
  * - We need to extract just the color name (second part of the comma-separated string)
+ * - We filter swatches to only count those matching the current page's product line
  */
 function extractProductInfoFromHtml(html: string, markdown: string, currentProductUrl?: string): ScrapedProductInfo {
   const result: ScrapedProductInfo = {
@@ -212,8 +250,8 @@ function extractProductInfoFromHtml(html: string, markdown: string, currentProdu
     statusCode: 200,
   };
   
-  // Extract current product line slug from URL to filter swatches
-  const currentLineSlug = currentProductUrl ? extractProductLineSlugFromUrl(currentProductUrl) : null;
+  // We'll determine the current product line from the page title (first extraction)
+  let currentProductLine: string | null = null;
   
   const addColorSwatch = (name: string, productUrl?: string) => {
     const trimmed = name.trim();
@@ -227,14 +265,26 @@ function extractProductInfoFromHtml(html: string, markdown: string, currentProdu
   const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
   if (h1Match) {
     result.pageTitle = h1Match[1].trim();
+    // Extract current product line from page title (first part before comma)
+    currentProductLine = extractProductLineFromAltText(result.pageTitle);
   } else {
-    // Try to get from <title> tag
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    if (titleMatch) {
-      // Clean up title (often has "– Brand Name" suffix)
-      result.pageTitle = titleMatch[1].split('–')[0].split('|')[0].trim();
+    // Try <h3> (3D-Fuel uses this)
+    const h3Match = html.match(/<h3[^>]*class="[^"]*product[^"]*"[^>]*>([^<]+)<\/h3>/i);
+    if (h3Match) {
+      result.pageTitle = h3Match[1].trim();
+      currentProductLine = extractProductLineFromAltText(result.pageTitle);
+    } else {
+      // Try to get from <title> tag
+      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+      if (titleMatch) {
+        // Clean up title (often has "– Brand Name" suffix)
+        result.pageTitle = titleMatch[1].split('–')[0].split('|')[0].trim();
+        currentProductLine = extractProductLineFromAltText(result.pageTitle);
+      }
     }
   }
+  
+  console.log(`[PostSyncCheck] Current product line from page: "${currentProductLine}"`);
   
   // ========== PATTERN 1: Linked images with href and alt text ==========
   // Captures both the product URL and color info from swatch links
@@ -248,10 +298,14 @@ function extractProductInfoFromHtml(html: string, markdown: string, currentProdu
       // Color is the 2nd part: "Desert Tan" from "Standard PLA+, Desert Tan, 1.75mm"
       const colorName = parts[1].trim();
       if (colorName && !colorName.match(/\d+\.\d+mm$/i)) {
-        // Only add if swatch is from the SAME product line
-        const swatchLineSlug = extractProductLineSlugFromUrl(productUrl);
-        if (!currentLineSlug || !swatchLineSlug || productLinesMatch(currentLineSlug, swatchLineSlug)) {
+        // Extract product line from the swatch alt text (first part)
+        const swatchProductLine = extractProductLineFromAltText(altText);
+        
+        // Only add if swatch is from the SAME product line (matching by alt text, not URL)
+        if (productLinesMatchByName(currentProductLine, swatchProductLine)) {
           addColorSwatch(colorName, productUrl);
+        } else {
+          console.log(`[PostSyncCheck] Skipping swatch "${colorName}" (product line "${swatchProductLine}" != "${currentProductLine}")`);
         }
       }
     }
@@ -265,9 +319,12 @@ function extractProductInfoFromHtml(html: string, markdown: string, currentProdu
     const parts = altText.split(',');
     if (parts.length >= 2) {
       const potentialColor = parts[1].trim();
-      // Skip if it looks like a size/diameter
+      const swatchProductLine = extractProductLineFromAltText(altText);
+      // Skip if it looks like a size/diameter, or if product line doesn't match
       if (!potentialColor.match(/\d+\.\d+mm$/i) && !potentialColor.match(/^\d+/)) {
-        addColorSwatch(potentialColor);
+        if (productLinesMatchByName(currentProductLine, swatchProductLine)) {
+          addColorSwatch(potentialColor);
+        }
       }
     }
   }
@@ -301,54 +358,12 @@ function extractProductInfoFromHtml(html: string, markdown: string, currentProdu
     addColorSwatch(match[1]);
   }
   
+  console.log(`[PostSyncCheck] Found ${result.colorSwatches.length} swatches for product line "${currentProductLine}"`);
+  
   return result;
 }
 
-/**
- * Extract product line slug from a product URL
- * e.g., "/products/dual-color-silk-pla-silky-lagoon-1-75mm" -> "dual-color-silk-pla"
- */
-function extractProductLineSlugFromUrl(url: string): string | null {
-  // Match URL pattern and extract the base product line
-  const match = url.match(/\/products\/([a-z0-9-]+)-[a-z0-9-]+-1-75mm/i);
-  if (match) {
-    return match[1];
-  }
-  
-  // Try simpler extraction - get everything before the last color-like segment
-  const simpleMatch = url.match(/\/products\/([a-z-]+)(?:-[a-z]+-1-75mm|-1-75mm-[a-z-]+)/i);
-  if (simpleMatch) {
-    return simpleMatch[1];
-  }
-  
-  return null;
-}
-
-/**
- * Check if two product line slugs match (same product line)
- */
-function productLinesMatch(slug1: string, slug2: string): boolean {
-  if (slug1 === slug2) return true;
-  
-  // Normalize both
-  const norm1 = slug1.toLowerCase().replace(/-/g, ' ').trim();
-  const norm2 = slug2.toLowerCase().replace(/-/g, ' ').trim();
-  
-  if (norm1 === norm2) return true;
-  
-  // Check if one contains the other
-  if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
-  
-  // Check synonyms
-  for (const [canonical, synonyms] of Object.entries(PRODUCT_LINE_SYNONYMS)) {
-    const allVariants = [canonical, ...synonyms];
-    const match1 = allVariants.some(v => norm1.includes(v) || v.includes(norm1));
-    const match2 = allVariants.some(v => norm2.includes(v) || v.includes(norm2));
-    if (match1 && match2) return true;
-  }
-  
-  return false;
-}
+// Old URL-based functions removed - now using alt-text based product line matching
 
 /**
  * Normalize a title for comparison (lowercase, remove extra spaces/punctuation)
@@ -404,18 +419,23 @@ function extractTitleComponents(title: string): { productLine: string; color: st
  * Normalize a product line name to canonical form
  */
 function normalizeProductLine(line: string): string {
-  const lower = line.toLowerCase().trim();
+  let normalized = line.toLowerCase().trim();
   
-  // Check synonyms first
+  // Strip version indicators like "v2", "v2Hemp", "v3"
+  normalized = normalized.replace(/\s*v\d+\s*/gi, ' ');
+  
+  // Strip "hemp" suffix for matching (Entwined == Entwined Hemp)
+  normalized = normalized.replace(/\s*hemp\b/gi, '');
+  
+  // Check synonyms
   for (const [canonical, synonyms] of Object.entries(PRODUCT_LINE_SYNONYMS)) {
-    if (synonyms.some(s => lower.includes(s)) || lower.includes(canonical)) {
+    if (synonyms.some(s => normalized.includes(s)) || normalized.includes(canonical)) {
       return canonical;
     }
   }
   
-  // Remove common suffixes/prefixes and normalize
-  return lower
-    .replace(/\bv2\s*hemp\b/i, 'hemp')
+  // Clean up and return
+  return normalized
     .replace(/\s+/g, ' ')
     .trim();
 }
