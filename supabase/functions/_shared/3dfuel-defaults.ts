@@ -36,6 +36,7 @@ const PRODUCT_LINE_TERMS = new Set([
 
 // Used to extract the base product line from product titles/handles (without color)
 // CRITICAL: Order matters - more specific patterns must come first
+// CRITICAL: Title-based matching is now prioritized for rebranded products
 export const PRODUCT_LINE_PATTERNS: Array<{ pattern: RegExp; line: string; handlePattern?: RegExp }> = [
   // Non-filament products (to be filtered out)
   { pattern: /\b3D\s*Clean\b/i, line: '3D Clean', handlePattern: /3d-clean/i },
@@ -43,7 +44,8 @@ export const PRODUCT_LINE_PATTERNS: Array<{ pattern: RegExp; line: string; handl
   // Specialty/Composite lines (must match before generic materials)
   { pattern: /\bPET-CF\b|\bPET CF\b/i, line: 'PET-CF', handlePattern: /pet-cf/i },
   { pattern: /\bPLA-CF\b|\bPLA CF\b/i, line: 'PLA-CF', handlePattern: /pla-cf/i },
-  { pattern: /\bDual[\s-]*Color[\s-]*Silk/i, line: 'Dual Color Silk PLA', handlePattern: /dual-color-silk/i },
+  // Dual Color Silk MUST match before regular Silk PLA - include silk-pla-silky handles
+  { pattern: /\bDual[\s-]*Color[\s-]*Silk/i, line: 'Dual Color Silk PLA', handlePattern: /dual-color-silk|silk-pla-silky/i },
   { pattern: /\bBiome3D/i, line: 'Biome3D', handlePattern: /biome3d/i },
   { pattern: /\bBuzzed/i, line: 'Buzzed', handlePattern: /buzzed/i },
   { pattern: /\bEntwined/i, line: 'Entwined', handlePattern: /entwined/i },
@@ -53,6 +55,7 @@ export const PRODUCT_LINE_PATTERNS: Array<{ pattern: RegExp; line: string; handl
   { pattern: /\bReFuel\b/i, line: 'ReFuel PETG', handlePattern: /refuel/i },
   
   // Pro/Advanced lines (specific variants first)
+  // Tough Pro PLA+ MUST match before Pro PLA - these products were rebranded but handles still use pro-pla-*
   { pattern: /\bTough Pro PLA\+/i, line: 'Tough Pro PLA+', handlePattern: /tough-pro-pla/i },
   { pattern: /\bTough Pro PLA\b/i, line: 'Tough Pro PLA+', handlePattern: /tough-pro-pla/i },
   { pattern: /\bStandard PLA\+/i, line: 'Standard PLA+', handlePattern: /standard-pla/i },
@@ -69,8 +72,8 @@ export const PRODUCT_LINE_PATTERNS: Array<{ pattern: RegExp; line: string; handl
   { pattern: /\bWorkDay PETG/i, line: 'WorkDay PETG', handlePattern: /workday-petg/i },
   { pattern: /\bWorkDay PLA/i, line: 'WorkDay PLA', handlePattern: /workday-pla/i },
   
-  // Silk variants
-  { pattern: /\bSilk PLA/i, line: 'Silk PLA', handlePattern: /silk-pla/i },
+  // Silk variants - must come AFTER Dual Color Silk
+  { pattern: /\bSilk PLA/i, line: 'Silk PLA', handlePattern: /^silk-pla(?!-silky)/i },
 ];
 
 // ============================================================================
@@ -193,25 +196,27 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'recycled gray': '#808080',
   'eco natural': '#F5F5DC',
   
-  // Standard colors (various names)
+  // Standard colors (various names) - ensure UNIQUE hex codes
   'standard black': '#1A1A1A',
   'standard white': '#FAFAFA',
   'standard grey': '#808080',
   'standard gray': '#808080',
   'tough black': '#1A1A1A',
-  'tough white': '#FAFAFA',
+  'tough white': '#FCFCFC',  // Slightly different from standard white
   'tough grey': '#808080',
   'tough gray': '#808080',
   'basic black': '#1A1A1A',
-  'basic white': '#FAFAFA',
+  'basic white': '#F8F8F8',  // Slightly different from standard white
   
-  // Primary colors
+  // Primary colors - ensure unique hex codes for similar whites
   'black': '#1A1A1A',
   'jet black': '#0A0A0A',
   'true black': '#000000',
   'white': '#FFFFFF',
-  'pure white': '#FFFFFF',
+  'pure white': '#FEFEFE',   // Slightly different from white
+  'brightest white': '#FDFDFD', // Unique for Tough Pro PLA+
   'pearl white': '#F0EAD6',
+  'bone white': '#F3E2C7',
   'grey': '#808080',
   'gray': '#808080',
   'silver': '#C0C0C0',
@@ -239,11 +244,15 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'apricot': '#FBCEB1',
   'burnt orange': '#CC5500',
   
-  // Yellows
+  // Yellows - ensure unique hex codes for gold variants
   'yellow': '#EAB308',
   'bright yellow': '#FFFF00',
+  'fluorescent yellow': '#F0E130',  // High-vis safety yellow
   'gold': '#FFD700',
-  'golden': '#FFD700',
+  'golden': '#D4AF37',   // Metallic gold (different from pure gold)
+  'metallic gold': '#CFB53B',  // Different metallic gold shade
+  'harvest gold': '#F9B247',   // Unique harvest shade
+  'daffodil yellow': '#FFC02C', // Unique daffodil shade
   'mustard': '#FFDB58',
   'lemon': '#FFF44F',
   'canary': '#FFEF00',
@@ -652,10 +661,29 @@ export function extractDiameter(variant: any): number {
  * Generate product line ID for grouping color variants together
  * 
  * CRITICAL: This must strip the color name to ensure all colors of the same product
- * share the same product_line_id. Uses product HANDLE for accurate product identification.
+ * share the same product_line_id.
+ * 
+ * IMPORTANT: Title-based matching is now prioritized over handle-based matching
+ * because 3D-Fuel rebranded some products (e.g., "Tough Pro PLA+") but kept old
+ * handles (e.g., "pro-pla-*"). Title is the source of truth for the actual product name.
  */
 export function generateProductLineId(productTitle: string, productHandle?: string): string {
-  // Method 1: Use product handle for more accurate product identification
+  // Method 1 (PRIORITY): Use product TITLE for accurate product identification
+  // This handles rebranded products where title says "Tough Pro PLA+" but handle says "pro-pla-*"
+  for (const { pattern, line } of PRODUCT_LINE_PATTERNS) {
+    if (pattern.test(productTitle)) {
+      const base = line
+        .replace(/\s+/g, '-')
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      console.log(`[ProductLineId] Title match: "${productTitle}" -> ${line} -> 3dfuel__${base}`);
+      return `3dfuel__${base}`;
+    }
+  }
+  
+  // Method 2: Fall back to handle-based extraction (for products without matching title pattern)
   if (productHandle) {
     for (const { handlePattern, line } of PRODUCT_LINE_PATTERNS) {
       if (handlePattern && handlePattern.test(productHandle)) {
@@ -665,12 +693,13 @@ export function generateProductLineId(productTitle: string, productHandle?: stri
           .replace(/[^a-z0-9-]+/g, '-')
           .replace(/-+/g, '-')
           .replace(/^-|-$/g, '');
+        console.log(`[ProductLineId] Handle match: "${productHandle}" -> ${line} -> 3dfuel__${base}`);
         return `3dfuel__${base}`;
       }
     }
   }
   
-  // Method 2: Fall back to title-based extraction
+  // Method 3: Fall back to generic title extraction
   const productLine = extractProductLine(productTitle);
   
   // Create clean base ID from product line only (no color)
@@ -691,6 +720,7 @@ export function generateProductLineId(productTitle: string, productHandle?: stri
     base = material.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   }
   
+  console.log(`[ProductLineId] Fallback: "${productTitle}" -> 3dfuel__${base}`);
   return `3dfuel__${base}`;
 }
 
