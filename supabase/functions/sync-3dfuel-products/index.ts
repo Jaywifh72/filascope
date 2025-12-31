@@ -22,6 +22,7 @@ import {
   extractProductLine,
   getColorFamily,
   enrichVariant,
+  isNonFilament,
 } from '../_shared/3dfuel-defaults.ts';
 import { 
   buildFieldCoverage, 
@@ -186,11 +187,17 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
   const filterStats = createFilterStats();
   
   for (const product of products) {
+    // Skip non-filament products (3D Clean, etc.)
+    if (isNonFilament(product.title, product.handle)) {
+      console.log(`[3D-Fuel] Skipping non-filament: ${product.title} (handle: ${product.handle})`);
+      continue;
+    }
+    
     // Extract product-level info once (shared across all color variants)
     const material = extractMaterial(product.title);
     const finishType = extractFinish(product.title);
-    // Generate product_line_id WITHOUT color - this groups all colors together
-    const productLineId = generateProductLineId(product.title);
+    // Generate product_line_id using HANDLE for accurate product identification (no color)
+    const productLineId = generateProductLineId(product.title, product.handle);
     
     for (const variant of product.variants) {
       const colorName = extractColorName(variant, product.title);
@@ -240,7 +247,7 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
         diameter,
         weight,
         colorHex,  // Now properly mapped from expanded COLOR_HEX_MAP
-        productLineId,  // Now correctly shared across all colors
+        productLineId,  // Now correctly using handle-based detection
       });
     }
   }
