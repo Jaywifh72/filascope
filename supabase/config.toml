@@ -416,3 +416,6 @@ verify_jwt = false
 
 [functions.sync-3dfuel-products]
 verify_jwt = false
+
+[functions.run-post-sync-check]
+verify_jwt = true

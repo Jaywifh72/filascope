@@ -1,0 +1,310 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { 
+  CheckCircle2, 
+  XCircle, 
+  AlertTriangle, 
+  Loader2, 
+  ChevronDown,
+  Download,
+  ClipboardCheck,
+  ExternalLink
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface CheckResult {
+  checkName: string;
+  status: 'pass' | 'fail' | 'warning';
+  count: number;
+  details?: string;
+  products?: Array<{ id: string; title: string; issue: string; url?: string }>;
+}
+
+interface PostSyncCheckReport {
+  generatedAt: string;
+  brand: string;
+  brandSlug: string;
+  totalProducts: number;
+  checks: CheckResult[];
+  overallStatus: 'pass' | 'warning' | 'fail';
+  scrapedProducts: number;
+  scrapeErrors: string[];
+}
+
+interface PostSyncCheckPanelProps {
+  brandSlug: string;
+  brandName: string;
+  disabled?: boolean;
+}
+
+export function PostSyncCheckPanel({ brandSlug, brandName, disabled }: PostSyncCheckPanelProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [report, setReport] = useState<PostSyncCheckReport | null>(null);
+  const [expandedChecks, setExpandedChecks] = useState<Set<string>>(new Set());
+
+  const runCheck = async () => {
+    setIsLoading(true);
+    setReport(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("run-post-sync-check", {
+        body: { brandSlug, brandName, sampleSize: 5 },
+      });
+
+      if (error) throw error;
+
+      if (data.success && data.report) {
+        setReport(data.report);
+        
+        if (data.report.overallStatus === 'pass') {
+          toast.success("All checks passed!");
+        } else if (data.report.overallStatus === 'warning') {
+          toast.warning("Some checks have warnings");
+        } else {
+          toast.error("Some checks failed");
+        }
+      } else {
+        throw new Error(data.error || "Check failed");
+      }
+    } catch (error) {
+      console.error("Post sync check error:", error);
+      toast.error(`Check failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleCheck = (checkName: string) => {
+    setExpandedChecks((prev) => {
+      const next = new Set(prev);
+      if (next.has(checkName)) {
+        next.delete(checkName);
+      } else {
+        next.add(checkName);
+      }
+      return next;
+    });
+  };
+
+  const downloadReport = () => {
+    if (!report) return;
+    
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `post-sync-check-${brandSlug}-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const getStatusIcon = (status: 'pass' | 'fail' | 'warning') => {
+    switch (status) {
+      case 'pass':
+        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+      case 'fail':
+        return <XCircle className="w-4 h-4 text-destructive" />;
+      case 'warning':
+        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: 'pass' | 'fail' | 'warning') => {
+    switch (status) {
+      case 'pass':
+        return <Badge className="bg-green-600">Pass</Badge>;
+      case 'fail':
+        return <Badge variant="destructive">Fail</Badge>;
+      case 'warning':
+        return <Badge className="bg-yellow-600">Warning</Badge>;
+    }
+  };
+
+  return (
+    <div className="space-y-4 border border-border rounded-lg p-4 bg-muted/30">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ClipboardCheck className="w-5 h-5 text-muted-foreground" />
+          <span className="font-medium">Post Sync Quality Check</span>
+        </div>
+        <Button
+          onClick={runCheck}
+          disabled={disabled || isLoading}
+          size="sm"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Checking...
+            </>
+          ) : (
+            "Run Check"
+          )}
+        </Button>
+      </div>
+
+      {report && (
+        <div className="space-y-4">
+          {/* Summary Header */}
+          <div className="flex items-center justify-between bg-background rounded-lg p-3">
+            <div className="flex items-center gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Brand:</span>{" "}
+                <span className="font-medium">{report.brand}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Products:</span>{" "}
+                <span className="font-medium">{report.totalProducts}</span>
+              </div>
+              {report.scrapedProducts > 0 && (
+                <div>
+                  <span className="text-muted-foreground">Scraped:</span>{" "}
+                  <span className="font-medium">{report.scrapedProducts}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {getStatusBadge(report.overallStatus)}
+              <Button variant="ghost" size="sm" onClick={downloadReport}>
+                <Download className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Database Checks Section */}
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-muted-foreground">Database Checks</div>
+            {report.checks
+              .filter((c) => 
+                c.checkName.includes("Bulk") || 
+                c.checkName.includes("2.85") || 
+                c.checkName.includes("Sample")
+              )
+              .map((check) => (
+                <CheckResultRow
+                  key={check.checkName}
+                  check={check}
+                  expanded={expandedChecks.has(check.checkName)}
+                  onToggle={() => toggleCheck(check.checkName)}
+                  getStatusIcon={getStatusIcon}
+                />
+              ))}
+          </div>
+
+          {/* Scrape Validation Section */}
+          {report.checks.some((c) => 
+            c.checkName.includes("URL") || 
+            c.checkName.includes("Color") || 
+            c.checkName.includes("Swatch") ||
+            c.checkName.includes("Scrape")
+          ) && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
+                Scrape Validation {report.scrapedProducts > 0 && `(${report.scrapedProducts} sampled)`}
+              </div>
+              {report.checks
+                .filter((c) => 
+                  c.checkName.includes("URL") || 
+                  c.checkName.includes("Color") || 
+                  c.checkName.includes("Swatch") ||
+                  c.checkName.includes("Scrape")
+                )
+                .map((check) => (
+                  <CheckResultRow
+                    key={check.checkName}
+                    check={check}
+                    expanded={expandedChecks.has(check.checkName)}
+                    onToggle={() => toggleCheck(check.checkName)}
+                    getStatusIcon={getStatusIcon}
+                  />
+                ))}
+            </div>
+          )}
+
+          {/* Scrape Errors */}
+          {report.scrapeErrors.length > 0 && (
+            <div className="text-xs text-muted-foreground bg-destructive/10 rounded p-2">
+              <div className="font-medium mb-1">Scrape Errors:</div>
+              {report.scrapeErrors.slice(0, 3).map((err, i) => (
+                <div key={i}>• {err}</div>
+              ))}
+              {report.scrapeErrors.length > 3 && (
+                <div>...and {report.scrapeErrors.length - 3} more</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CheckResultRow({ 
+  check, 
+  expanded, 
+  onToggle,
+  getStatusIcon 
+}: { 
+  check: CheckResult;
+  expanded: boolean;
+  onToggle: () => void;
+  getStatusIcon: (status: 'pass' | 'fail' | 'warning') => React.ReactNode;
+}) {
+  const hasProducts = check.products && check.products.length > 0;
+
+  return (
+    <div className="bg-background rounded-lg border border-border">
+      <div 
+        className={`flex items-center justify-between p-3 ${hasProducts ? 'cursor-pointer hover:bg-muted/50' : ''}`}
+        onClick={hasProducts ? onToggle : undefined}
+      >
+        <div className="flex items-center gap-3">
+          {getStatusIcon(check.status)}
+          <span className="text-sm font-medium">{check.checkName}</span>
+          {check.details && (
+            <span className="text-xs text-muted-foreground">{check.details}</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {check.status !== 'pass' && check.count > 0 && (
+            <Badge variant="outline" className="text-xs">
+              {check.count} {check.count === 1 ? 'issue' : 'issues'}
+            </Badge>
+          )}
+          {hasProducts && (
+            <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          )}
+        </div>
+      </div>
+
+      {expanded && hasProducts && (
+        <div className="border-t border-border p-3 space-y-2 max-h-48 overflow-y-auto">
+          {check.products!.map((product, i) => (
+            <div key={i} className="flex items-center justify-between text-xs bg-muted/50 rounded p-2">
+              <div className="flex-1 min-w-0">
+                <div className="font-medium truncate">{product.title}</div>
+                <div className="text-destructive">{product.issue}</div>
+              </div>
+              {product.url && (
+                <a 
+                  href={product.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="ml-2 text-muted-foreground hover:text-foreground"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

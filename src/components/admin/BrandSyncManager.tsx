@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import { useBrandSyncManager } from "@/hooks/useBrandSyncManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Slider } from "@/components/ui/slider";
+import { PostSyncCheckPanel } from "./PostSyncCheckPanel";
 
 interface Brand {
   id: string;
@@ -364,6 +365,15 @@ export function BrandSyncManager() {
               <p className="text-sm text-muted-foreground">{result.message}</p>
             )}
           </div>
+        )}
+
+        {/* Post Sync Check - shown after sync completes */}
+        {result?.success && selectedBrand && (
+          <PostSyncCheckPanel 
+            brandSlug={selectedBrand.brand_slug}
+            brandName={selectedBrand.brand_name}
+            disabled={isLoading}
+          />
         )}
 
         {/* Error */}
