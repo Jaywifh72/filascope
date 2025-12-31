@@ -18,7 +18,10 @@ export type DecisionType =
   | 'material_separation'
   | 'price_validation'
   | 'deduplication'
-  | 'multi_material';
+  | 'multi_material'
+  | 'title_source'
+  | 'swatch_detection'
+  | 'product_line_match';
 
 export interface DecisionLog {
   productId: string;

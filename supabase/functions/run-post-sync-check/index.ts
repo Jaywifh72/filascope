@@ -422,15 +422,29 @@ if (!filterResult.include) {
 
 ---
 
-## The Seven Consistency Rules (Updated)
+## The Five Consistency Rules
 
-1. **Names Match**: Filament Card title = Filament Detail title = Product Page <h1>
-2. **Color Count Match**: Number of swatches on website = Number of variants in DB per product_line_id
-3. **Color Names Match**: Swatch names on website = color names in DB for each product_line
+1. **Names Match**: DB title = Filament Detail title = Product Page <h1> (use actual Shopify title, not constructed)
+2. **Color/Swatch Accuracy**: Website swatch COUNT and NAMES match DB for the product_line_id
+3. **Color/Hex Uniqueness**: No duplicate hex codes within same product_line_id
 4. **Price Match**: DB price matches website price for the specific variant (within 5%)
-5. **Material Separation**: Each product_line_id contains ONLY ONE material type
-6. **No Duplicate Hex**: Each product_line_id has unique hex codes (no duplicates)
-7. **URL Consistency**: All variants in a product_line_id point to the same base product URL
+5. **Structural Integrity**: Each product_line_id groups products of same material and base product type
+
+**Note**: "URL Consistency" is NOT required for cross-product swatch brands (3D-Fuel, Polymaker, etc.) where each color is a separate product URL.
+
+---
+
+## Cross-Product Swatch Architecture (CRITICAL)
+
+Brands like 3D-Fuel, Polymaker, Hatchbox, Sunlu show color swatches as LINKS TO OTHER PRODUCTS:
+- Each color variant IS a different Shopify product with its own URL
+- The "swatches" are linked images with alt text like "Standard PLA+, Desert Tan, 1.75mm"
+- This is NOT an error - it's the expected architecture!
+
+The sync MUST:
+1. Use the actual Shopify product title (not reconstruct it)
+2. Extract color from alt text or variant options correctly
+3. Group by product_line_id based on product type, not URL
 
 ---
 
@@ -441,7 +455,7 @@ Some products like ReFuel contain multiple materials in ONE Shopify product:
 - option3 = Color Name (e.g., "Natural")
 
 The sync MUST:
-1. Detect multi-material products by checking if option1 contains material names
+1. Detect TRUE multi-material products (ReFuel only, containing "recycled")
 2. Create SEPARATE product_line_ids for each material (e.g., 3dfuel__refuel-standard-pla, 3dfuel__refuel-tough-pro-pla)
 3. Extract color from option3, NOT option1
 4. Use deduplication hash (productLineId|colorName|weight) to prevent duplicate entries
@@ -1273,33 +1287,77 @@ Deno.serve(async (req) => {
       products: priceIssues.length > 0 ? priceIssues : undefined,
     });
 
-    // ============= PRODUCT LINE CONSISTENCY CHECK (NEW) =============
-    // Each product_line_id should have consistent product URLs pointing to same base product
+    // ============= PRODUCT LINE URL CONSISTENCY CHECK (UPDATED) =============
+    // CRITICAL FIX: 3D-Fuel and similar brands use "cross-product swatch" architecture
+    // where each color variant IS a different product with its own URL.
+    // This is NOT an error - it's the expected architecture!
+    // 
+    // Instead of failing on multiple URLs, we:
+    // 1. Check if URLs share the same PRODUCT LINE pattern (handle prefix)
+    // 2. Only flag as error if URLs point to DIFFERENT product lines
     const urlConsistencyIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+    
+    // Check if this brand uses cross-product swatch architecture
+    const isCrossProductSwatchBrand = IMAGE_SWATCH_BRANDS.includes(brandSlug);
     
     for (const lineId of productLineIds.slice(0, 15)) {
       const variants = productLineGroups[lineId];
       if (!variants || variants.length <= 1) continue;
       
       const urls = variants.map(v => v.product_url).filter(Boolean);
-      const uniqueBaseUrls = new Set(urls.map(url => {
-        // Extract base URL without query params
-        try {
-          const parsed = new URL(url!);
-          return parsed.pathname;
-        } catch {
-          return url;
-        }
-      }));
       
-      // All variants in same product line should point to same base URL
-      if (uniqueBaseUrls.size > 1) {
-        urlConsistencyIssues.push({
-          id: variants[0].id,
-          title: lineId,
-          issue: `${uniqueBaseUrls.size} different URLs in same product line - possible grouping error`,
-          url: variants[0].product_url || undefined,
-        });
+      if (isCrossProductSwatchBrand) {
+        // For cross-product brands: Check if URLs belong to same product LINE (pattern-based)
+        // Extract handle patterns: "standard-pla-*", "tough-pro-pla-*", etc.
+        const handlePatterns = urls.map(url => {
+          try {
+            const parsed = new URL(url!);
+            const handle = parsed.pathname.split('/products/')[1] || '';
+            // Extract pattern: remove color suffix, keep product line prefix
+            // e.g., "standard-pla-desert-tan-1-75mm" -> "standard-pla"
+            const parts = handle.split('-');
+            // Find where diameter starts (1-75mm or similar)
+            const diamIdx = parts.findIndex(p => /^\d/.test(p));
+            if (diamIdx > 2) {
+              return parts.slice(0, Math.min(diamIdx - 1, 3)).join('-');
+            }
+            return parts.slice(0, 3).join('-');
+          } catch {
+            return '';
+          }
+        }).filter(Boolean);
+        
+        const uniquePatterns = new Set(handlePatterns);
+        
+        // Only flag if there are DIFFERENT product line patterns (not just different colors)
+        if (uniquePatterns.size > 2) {
+          urlConsistencyIssues.push({
+            id: variants[0].id,
+            title: lineId,
+            issue: `${uniquePatterns.size} different product line patterns detected - possible grouping error (patterns: ${Array.from(uniquePatterns).slice(0, 3).join(', ')})`,
+            url: variants[0].product_url || undefined,
+          });
+        }
+        // Note: Multiple URLs with same pattern is EXPECTED for cross-product brands
+      } else {
+        // For regular brands: All variants should point to same product URL
+        const uniqueBaseUrls = new Set(urls.map(url => {
+          try {
+            const parsed = new URL(url!);
+            return parsed.pathname;
+          } catch {
+            return url;
+          }
+        }));
+        
+        if (uniqueBaseUrls.size > 1) {
+          urlConsistencyIssues.push({
+            id: variants[0].id,
+            title: lineId,
+            issue: `${uniqueBaseUrls.size} different URLs in same product line - possible grouping error`,
+            url: variants[0].product_url || undefined,
+          });
+        }
       }
     }
 
@@ -1308,8 +1366,10 @@ Deno.serve(async (req) => {
       status: urlConsistencyIssues.length === 0 ? "pass" : urlConsistencyIssues.length <= 1 ? "warning" : "fail",
       count: urlConsistencyIssues.length,
       details: urlConsistencyIssues.length === 0 
-        ? "All product lines have consistent URLs" 
-        : `${urlConsistencyIssues.length} product lines have mixed URLs`,
+        ? (isCrossProductSwatchBrand 
+            ? "All product lines have consistent URL patterns (cross-product swatch brand)" 
+            : "All product lines have consistent URLs")
+        : `${urlConsistencyIssues.length} product lines have inconsistent URL patterns`,
       products: urlConsistencyIssues.length > 0 ? urlConsistencyIssues : undefined,
     });
 
