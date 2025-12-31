@@ -3712,6 +3712,63 @@ export type Database = {
         }
         Relationships: []
       }
+      scrape_decision_logs: {
+        Row: {
+          brand_slug: string
+          created_at: string | null
+          decision_reason: string | null
+          decision_type: string
+          id: string
+          input_data: Json | null
+          output_data: Json | null
+          product_id: string | null
+          product_title: string | null
+          success: boolean | null
+          sync_log_id: string | null
+        }
+        Insert: {
+          brand_slug: string
+          created_at?: string | null
+          decision_reason?: string | null
+          decision_type: string
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          product_id?: string | null
+          product_title?: string | null
+          success?: boolean | null
+          sync_log_id?: string | null
+        }
+        Update: {
+          brand_slug?: string
+          created_at?: string | null
+          decision_reason?: string | null
+          decision_type?: string
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          product_id?: string | null
+          product_title?: string | null
+          success?: boolean | null
+          sync_log_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_decision_logs_sync_log_id_fkey"
+            columns: ["sync_log_id"]
+            isOneToOne: false
+            referencedRelation: "brand_sync_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scrape_decision_logs_sync_log_id_fkey"
+            columns: ["sync_log_id"]
+            isOneToOne: false
+            referencedRelation: "v_recent_syncs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scrape_job_logs: {
         Row: {
           created_at: string | null
