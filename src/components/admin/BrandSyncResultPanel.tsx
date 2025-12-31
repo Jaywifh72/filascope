@@ -77,7 +77,7 @@ function ProductRow({ product }: { product: SyncProductResult }) {
         <FieldIndicator hasField={product.fields.specifications} icon={Settings2} label="Specs" />
       </div>
 
-      {product.price !== undefined && (
+      {product.price != null && (
         <div className="text-sm font-medium tabular-nums">
           ${product.price.toFixed(2)}
         </div>
@@ -99,7 +99,7 @@ function RegionTab({ region }: { region: RegionSyncResult }) {
         <span className="text-xl">{flag}</span>
         <span className="font-medium">{region.region}</span>
         <Badge variant="outline" className="ml-2">{region.currency}</Badge>
-        {region.duration_ms && (
+        {region.duration_ms != null && region.duration_ms > 0 && (
           <span className="text-xs text-muted-foreground ml-auto">
             {(region.duration_ms / 1000).toFixed(1)}s
           </span>
@@ -168,7 +168,7 @@ export function BrandSyncResultPanel({ result }: BrandSyncResultPanelProps) {
           </CardTitle>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="w-4 h-4" />
-            {Math.round(result.duration_ms / 1000)}s
+            {result.duration_ms ? Math.round(result.duration_ms / 1000) : 0}s
           </div>
         </div>
       </CardHeader>
