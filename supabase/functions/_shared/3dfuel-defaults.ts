@@ -24,6 +24,16 @@ export const BRAND_CONFIG = {
 // 3D-FUEL PRODUCT LINE PATTERNS
 // ============================================================================
 
+// Product line terms that should NEVER be returned as colors
+// Used to detect when extractColorName incorrectly returns a product line name
+const PRODUCT_LINE_TERMS = new Set([
+  'silk pla', 'silk pla+', 'dual color', 'dual-color', 'dual color silk',
+  'standard pla', 'standard pla+', 'pro pla', 'tough pro', 'tough pro pla',
+  'pro pctg', 'pro petg', 'pro ht', 'workday', 'workday pla', 'workday abs',
+  'workday petg', 'biome3d', 'buzzed', 'entwined', 'wound up', 'landfillament',
+  'c2renew', 'refuel', 'pet-cf', 'pla-cf', 'pro asa', 'pro abs',
+]);
+
 // Used to extract the base product line from product titles/handles (without color)
 // CRITICAL: Order matters - more specific patterns must come first
 export const PRODUCT_LINE_PATTERNS: Array<{ pattern: RegExp; line: string; handlePattern?: RegExp }> = [
@@ -348,6 +358,18 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'marble': '#E8E4E1',
   'wood': '#DEB887',
   'woodgrain': '#DEB887',
+  
+  // Dual-Color Silk PLA+ colors (10 dual-tone shimmer variants)
+  'silky lagoon': '#2DD4BF',
+  'silky blushing violet': '#DDA0DD',
+  'silky blue orange theory': '#4169E1',
+  'silky lemon lime': '#BFFF00',
+  'silky mixed berry': '#8B008B',
+  'silky vine leaf green': '#228B22',
+  'silky black hills gold': '#FFD700',
+  'silky crimson tide': '#DC143C',
+  'silky copper canyon': '#B87333',
+  'silky purple rain': '#9370DB',
 };
 
 // ============================================================================
@@ -483,6 +505,22 @@ export function extractColorName(variant: any, productTitle: string, productHand
   // Method 3: Extract from product handle (e.g., "standard-pla-1-75mm-desert-tan")
   if (productHandle) {
     const handleLower = productHandle.toLowerCase();
+    
+    // Special handling for "Silky X" colors in Dual-Color Silk products
+    // Pattern: "dual-color-silk-pla-silky-lagoon-1-75mm" or similar
+    const silkyMatch = handleLower.match(/silky-([a-z-]+?)(?:-1-75|-1\.75|$)/i);
+    if (silkyMatch && silkyMatch[1]) {
+      // Convert slug to title case: "lagoon" -> "Silky Lagoon"
+      const colorPart = silkyMatch[1]
+        .split('-')
+        .filter(w => w.length > 0)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      const silkyColor = `Silky ${colorPart}`;
+      console.log(`[Color] Extracted Silky color from handle: ${silkyColor}`);
+      return silkyColor;
+    }
+    
     // Common pattern: material-size-color at the end
     const colorMatch = handleLower.match(/1-75mm-([a-z-]+)$/);
     if (colorMatch && colorMatch[1]) {
@@ -492,7 +530,14 @@ export function extractColorName(variant: any, productTitle: string, productHand
         .split('-')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
-      return colorName;
+      
+      // Check if extracted "color" is actually a product line term
+      if (PRODUCT_LINE_TERMS.has(colorName.toLowerCase())) {
+        console.log(`[Color] Skipping product line term as color: ${colorName}`);
+        // Fall through to title extraction
+      } else {
+        return colorName;
+      }
     }
   }
   
@@ -503,7 +548,10 @@ export function extractColorName(variant: any, productTitle: string, productHand
     const extracted = dashMatch[1].trim();
     // Make sure it's not a material or weight
     if (!extracted.match(/^(pla|petg|abs|pctg|tpu|nylon|\d)/i)) {
-      return extracted;
+      // Check if extracted is a product line term
+      if (!PRODUCT_LINE_TERMS.has(extracted.toLowerCase())) {
+        return extracted;
+      }
     }
   }
   
