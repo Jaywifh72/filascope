@@ -57,11 +57,139 @@ const NON_COLOR_WORDS = new Set([
   'buy', 'add', 'cart', 'shop', 'view', 'select', 'choose', 'now', 'new', 'sale',
 ]);
 
+interface AIWebsiteAnalysis {
+  swatchType: string;
+  extractionPattern: string;
+  missingReason: string;
+  fixCode: string;
+  colorMappings: Record<string, string>;
+}
+
+/**
+ * Analyze website patterns using Lovable AI (Gemini)
+ * This provides intelligent insights about how the brand displays colors
+ */
+async function analyzeWebsiteWithAI(
+  brandName: string,
+  brandSlug: string,
+  htmlSamples: string[],
+  failingChecks: CheckResult[],
+  dbColorData: Array<{ productLine: string; colors: string[] }>
+): Promise<AIWebsiteAnalysis | null> {
+  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!lovableApiKey) {
+    console.log("[PostSyncCheck] LOVABLE_API_KEY not configured, skipping AI analysis");
+    return null;
+  }
+
+  // Extract relevant HTML snippets (swatch sections only, to reduce token usage)
+  const swatchPatterns: string[] = [];
+  for (const html of htmlSamples.slice(0, 2)) {
+    // Extract swatch-related HTML sections
+    const swatchSection = html.match(/<(?:div|ul|section)[^>]*(?:swatch|color|variant)[^>]*>[\s\S]{0,3000}/gi);
+    if (swatchSection) {
+      swatchPatterns.push(swatchSection[0].slice(0, 1500));
+    }
+    // Also extract linked product images with alt text
+    const linkedImages = html.match(/<a[^>]*href="[^"]*\/products\/[^"]*"[^>]*>[\s\S]{0,500}<img[^>]*alt="[^"]*"[^>]*>/gi);
+    if (linkedImages) {
+      swatchPatterns.push(linkedImages.slice(0, 5).join('\n'));
+    }
+  }
+
+  // Get missing colors from failing checks
+  const missingColorsCheck = failingChecks.find(c => c.checkName.includes('Color Names Match'));
+  const missingColorsList = missingColorsCheck?.products?.map(p => p.issue).join('\n') || 'None detected';
+
+  const prompt = `You are a web scraping expert analyzing a 3D printer filament e-commerce website.
+
+BRAND: ${brandName} (slug: ${brandSlug})
+SYNC FUNCTION: supabase/functions/sync-${brandSlug}-products/index.ts
+DEFAULTS FILE: supabase/functions/_shared/${brandSlug}-defaults.ts
+
+FAILING CHECKS:
+${failingChecks.map(c => `- ${c.checkName}: ${c.count} issues`).join('\n')}
+
+MISSING COLORS DETECTED:
+${missingColorsList}
+
+SAMPLE HTML SWATCH PATTERNS FROM WEBSITE:
+${swatchPatterns.join('\n---\n').slice(0, 3000)}
+
+DATABASE COLOR DATA (sample):
+${JSON.stringify(dbColorData.slice(0, 3), null, 2)}
+
+ANALYZE AND RESPOND WITH JSON ONLY (no markdown):
+{
+  "swatchType": "css-color | image-alt | cross-product-link",
+  "extractionPattern": "description of the HTML pattern to extract colors",
+  "missingReason": "explanation of why colors are being missed by the sync",
+  "fixCode": "TypeScript code snippet to fix extractColorName() function",
+  "colorMappings": {
+    "color name": "#hexcode"
+  }
+}
+
+Focus on:
+1. How does this brand display color swatches? (CSS hex, image alt text, linked product images?)
+2. What extraction pattern should be used in the sync function?
+3. Why might the current sync be missing these specific colors?
+4. Provide hex codes for any missing colors mentioned above.`;
+
+  try {
+    console.log("[PostSyncCheck] Calling Lovable AI for website analysis...");
+    
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[PostSyncCheck] AI gateway error:", response.status, errorText);
+      return null;
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    
+    if (!content) {
+      console.error("[PostSyncCheck] Empty AI response");
+      return null;
+    }
+
+    console.log("[PostSyncCheck] AI analysis received, parsing response...");
+    
+    // Parse JSON from response (handle markdown code blocks)
+    let jsonStr = content;
+    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[1];
+    }
+    
+    const analysis = JSON.parse(jsonStr.trim()) as AIWebsiteAnalysis;
+    console.log("[PostSyncCheck] AI analysis parsed successfully:", analysis.swatchType);
+    
+    return analysis;
+  } catch (error) {
+    console.error("[PostSyncCheck] AI analysis error:", error);
+    return null;
+  }
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
   checks: CheckResult[], 
-  totalProducts: number
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
 ): string | null {
   const failedChecks = checks.filter(c => c.status === 'fail');
   const warningChecks = checks.filter(c => c.status === 'warning');
@@ -95,6 +223,42 @@ function generateAIFixPrompt(
     return section;
   }).join('\n\n');
 
+  // Build AI insights section if available
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    aiInsightsSection = `
+---
+
+## 🤖 AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+**Extraction Pattern**:
+${aiAnalysis.extractionPattern}
+
+**Root Cause Identified**:
+${aiAnalysis.missingReason}
+
+### Recommended Code Fix
+
+Update the color extraction in \`_shared/${brandSlug}-defaults.ts\`:
+
+\`\`\`typescript
+${aiAnalysis.fixCode}
+\`\`\`
+
+### Missing Color Hex Mappings
+
+Add these to the \`COLOR_HEX_MAP\` in \`_shared/${brandSlug}-defaults.ts\`:
+
+\`\`\`typescript
+// Add to COLOR_HEX_MAP
+${Object.entries(aiAnalysis.colorMappings || {}).map(([name, hex]) => `'${name.toLowerCase()}': '${hex}',`).join('\n')}
+\`\`\`
+
+---`;
+  }
+
   const prompt = `## Fix Post Sync Check Issues for ${brand}
 
 The Post Sync Check for ${brand} found the following issues that need to be fixed in the sync function.
@@ -113,6 +277,7 @@ ${issuesSummary}
 ## Detailed Issues
 
 ${detailedIssues}
+${aiInsightsSection}
 
 ---
 
@@ -637,6 +802,10 @@ Deno.serve(async (req) => {
     const colorCountIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
     const colorNameIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
     const urlIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+    
+    // Collect HTML samples for AI analysis
+    const htmlSamples: string[] = [];
+    const dbColorData: Array<{ productLine: string; colors: string[] }> = [];
 
     const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
     
@@ -696,6 +865,20 @@ Deno.serve(async (req) => {
               url: representative.product_url,
             });
             continue;
+          }
+
+          // Collect HTML samples for AI analysis (first 3 pages only)
+          if (htmlSamples.length < 3 && html.length > 1000) {
+            htmlSamples.push(html);
+            // Also collect DB color data for this product line
+            dbColorData.push({
+              productLine: lineId,
+              colors: variants.map(v => {
+                const title = v.product_title.toLowerCase();
+                const parts = title.split(',');
+                return parts.length >= 2 ? parts[1].trim() : '';
+              }).filter(Boolean),
+            });
           }
 
           // Extract product info from the page, passing URL for product line filtering
@@ -882,8 +1065,23 @@ Deno.serve(async (req) => {
     if (failCount > 0) overallStatus = "fail";
     else if (warnCount > 0) overallStatus = "warning";
 
-    // Generate AI fix prompt if there are issues
-    const aiFixPrompt = generateAIFixPrompt(brandName, brandSlug, checks, totalProducts || 0);
+    // Run AI analysis if there are failures and we have HTML samples
+    let aiAnalysis: AIWebsiteAnalysis | null = null;
+    const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
+    
+    if (failingChecks.length > 0 && htmlSamples.length > 0) {
+      console.log(`[PostSyncCheck] Running AI analysis with ${htmlSamples.length} HTML samples...`);
+      aiAnalysis = await analyzeWebsiteWithAI(
+        brandName,
+        brandSlug,
+        htmlSamples,
+        failingChecks,
+        dbColorData
+      );
+    }
+
+    // Generate AI fix prompt if there are issues (now with AI analysis)
+    const aiFixPrompt = generateAIFixPrompt(brandName, brandSlug, checks, totalProducts || 0, aiAnalysis);
 
     const report: PostSyncCheckReport = {
       generatedAt: new Date().toISOString(),
