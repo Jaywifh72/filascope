@@ -870,6 +870,57 @@ Deno.serve(async (req) => {
       })),
     });
 
+    // Check 4 (CRITICAL): Cross-Material Grouping Detection
+    // This detects when product_line_id incorrectly groups products with DIFFERENT materials
+    // e.g., PLA+, PCTG, and PETG products all sharing the same product_line_id
+    const { data: crossMaterialData, error: crossMaterialError } = await supabase
+      .from("filaments")
+      .select("id, product_title, product_line_id, material, product_url")
+      .ilike("vendor", brandName)
+      .not("product_line_id", "is", null)
+      .not("material", "is", null);
+
+    if (crossMaterialError) {
+      console.error("[PostSyncCheck] Cross-material check error:", crossMaterialError);
+    }
+
+    // Group by product_line_id and check for multiple materials
+    const lineIdMaterials: Record<string, { materials: Set<string>; products: NonNullable<typeof crossMaterialData> }> = {};
+    for (const product of crossMaterialData || []) {
+      const lineId = product.product_line_id!;
+      if (!lineIdMaterials[lineId]) {
+        lineIdMaterials[lineId] = { materials: new Set(), products: [] };
+      }
+      lineIdMaterials[lineId].materials.add(product.material!);
+      lineIdMaterials[lineId].products!.push(product);
+    }
+
+    const crossMaterialIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+    for (const [lineId, data] of Object.entries(lineIdMaterials)) {
+      if (data.materials.size > 1) {
+        // This product line groups multiple materials - critical data corruption!
+        const materialsList = Array.from(data.materials).join(', ');
+        const sampleProduct = data.products[0];
+        crossMaterialIssues.push({
+          id: sampleProduct.id,
+          title: lineId,
+          issue: `CRITICAL: Groups ${data.materials.size} different materials (${materialsList}) - should be separate product lines`,
+          url: sampleProduct.product_url || undefined,
+        });
+        console.error(`[PostSyncCheck] CRITICAL: ${lineId} groups materials: ${materialsList}`);
+      }
+    }
+
+    checks.push({
+      checkName: "No Cross-Material Grouping",
+      status: crossMaterialIssues.length === 0 ? "pass" : "fail",
+      count: crossMaterialIssues.length,
+      details: crossMaterialIssues.length 
+        ? `CRITICAL: ${crossMaterialIssues.length} product lines incorrectly group different material types together` 
+        : "All product lines contain consistent material types",
+      products: crossMaterialIssues.length > 0 ? crossMaterialIssues : undefined,
+    });
+
     // ============= SCRAPE-BASED VALIDATION =============
     
     // Get product lines with their representative products for validation

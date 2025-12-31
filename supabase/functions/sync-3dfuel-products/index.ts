@@ -272,8 +272,26 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       );
       
       // Build display title matching page format: "Product Line, Color Name, 1.75mm"
-      // This ensures DB title matches what Post Sync Check finds on the page
-      const productLine = extractProductLine(product.title);
+      // CRITICAL FIX: For ReFuel products, use the actual material from the product title
+      // ReFuel products have different materials (PLA+, PCTG, PETG) and must show the correct one
+      let productLine = extractProductLine(product.title);
+      
+      // For ReFuel products, append material to the product line for clarity
+      if (product.title.toLowerCase().includes('refuel')) {
+        // Extract material and create proper product line
+        if (product.title.toLowerCase().includes('tough pro pla')) {
+          productLine = 'ReFuel Tough Pro PLA+';
+        } else if (product.title.toLowerCase().includes('standard pla')) {
+          productLine = 'ReFuel Standard PLA+';
+        } else if (material === 'PCTG') {
+          productLine = 'ReFuel Pro PCTG';
+        } else if (material === 'PETG') {
+          productLine = 'ReFuel PETG';
+        } else {
+          productLine = `ReFuel ${material}`;
+        }
+      }
+      
       const displayTitle = `${productLine}, ${colorName}, 1.75mm`;
       
       // Log title format decision
