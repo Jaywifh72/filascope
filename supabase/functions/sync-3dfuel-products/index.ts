@@ -40,6 +40,8 @@ import {
   is285mmDiameter,
 } from '../_shared/variant-filters.ts';
 import { createDecisionLogger, type DecisionLogger } from '../_shared/decision-logger.ts';
+import { loadBrandProfile, getColorOptionField } from '../_shared/profile-loader.ts';
+import { aiExtractColor, aiExtractHexColor, type BrandProfile } from '../_shared/ai-extraction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -726,10 +728,20 @@ Deno.serve(async (req) => {
       }
     }
     
+    // Load AI-generated brand profile for intelligent extraction
+    console.log('[AI Profile] Loading brand profile for 3d-fuel...');
+    const brandProfile = await loadBrandProfile('3d-fuel');
+    if (brandProfile) {
+      console.log(`[AI Profile] Loaded profile with ${Object.keys(brandProfile.color_hex_mappings || {}).length} color mappings`);
+      console.log(`[AI Profile] Product structure: ${brandProfile.product_structure}, Swatch type: ${brandProfile.swatch_type}`);
+    } else {
+      console.log('[AI Profile] No profile found, using hardcoded defaults');
+    }
+    
     // Step 1: Discovery
     const products = await fetchShopifyProducts();
     
-    // Step 2: Variant Explosion
+    // Step 2: Variant Explosion (now with AI profile context)
     const variants = explodeVariants(products);
     
     // Step 3-4: Enrichment & Upsert
