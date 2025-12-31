@@ -309,7 +309,7 @@ export function BrandSyncManager() {
               <span className="font-medium">
                 {result.success ? 'Sync Completed' : 'Sync Failed'}
               </span>
-              {result.duration_ms && (
+              {result.duration_ms != null && (
                 <span className="text-muted-foreground text-sm">
                   ({(result.duration_ms / 1000).toFixed(1)}s)
                 </span>
