@@ -398,3 +398,6 @@ verify_jwt = false
 
 [functions.sync-formfutura-products]
 verify_jwt = false
+
+[functions.sync-fusion-filaments-products]
+verify_jwt = false
