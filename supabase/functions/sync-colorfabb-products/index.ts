@@ -5,6 +5,14 @@ import {
   getColorFabbColorHex,
   COLORFABB_STORE_INFO,
 } from '../_shared/colorfabb-defaults.ts';
+import {
+  shouldIncludeVariant,
+  extractWeightFromText,
+  extractDiameterFromText,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

@@ -17,6 +17,12 @@ import {
   extractPushPlasticDiameter,
   PUSHPLASTIC_PRINT_SETTINGS,
 } from '../_shared/pushplastic-defaults.ts';
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
 
 // ============================================================================
 // TYPES
@@ -166,6 +172,7 @@ async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
 
 function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
   const variants: ProductVariant[] = [];
+  const filterStats = createFilterStats();
   
   for (const product of products) {
     const productUrl = `${SHOPIFY_BASE_URL}/products/${product.handle}`;
@@ -191,6 +198,14 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
                        extractPushPlasticDiameter(variant.title) || 
                        1.75;
       
+      // Apply standard filters (exclude bulk >1.4kg, samples <300g, 2.85mm)
+      const filterResult = shouldIncludeVariant(weight, diameter);
+      if (!filterResult.include) {
+        updateFilterStats(filterStats, filterResult);
+        console.log(`[Push Plastic] Skipping: ${product.title} - ${color} - ${filterResult.reason}`);
+        continue;
+      }
+      
       // Create unique product ID
       const productId = `pushplastic-${product.id}-${variant.id}`;
       
@@ -213,6 +228,7 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
     }
   }
   
+  logFilterStats('Push Plastic', filterStats);
   console.log(`Exploded into ${variants.length} individual variants`);
   return variants;
 }

@@ -6,6 +6,12 @@ import {
   FILLAMENTUM_STORE_INFO,
   FILLAMENTUM_COLLECTION_SLUGS
 } from '../_shared/fillamentum-defaults.ts';
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

@@ -1,6 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enrichSpectrumProduct } from "../_shared/spectrum-defaults.ts";
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from "../_shared/variant-filters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

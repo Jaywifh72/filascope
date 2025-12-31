@@ -6,6 +6,12 @@ import {
   cleanOvertureTitle,
   extractOvertureWeight,
 } from "../_shared/overture-defaults.ts";
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from "../_shared/variant-filters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -194,6 +200,8 @@ function explodeVariants(product: ShopifyProduct): Array<{
     weight: number;
   }> = [];
   
+  const filterStats = createFilterStats();
+  
   // Find color option
   const colorOption = product.options.find(o => 
     o.name.toLowerCase() === 'color' || 
@@ -212,6 +220,16 @@ function explodeVariants(product: ShopifyProduct): Array<{
       );
       
       if (matchingVariant) {
+        const weight = extractOvertureWeight(product.title, matchingVariant.title);
+        
+        // Apply standard filters (exclude bulk >1.4kg, samples <300g, 2.85mm)
+        const filterResult = shouldIncludeVariant(weight, 1.75); // Overture is 1.75mm only
+        if (!filterResult.include) {
+          updateFilterStats(filterStats, filterResult);
+          console.log(`[Overture] Skipping: ${product.title} - ${color} - ${filterResult.reason}`);
+          continue;
+        }
+        
         const colorSlug = color.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const productId = `overture-${product.handle}-${colorSlug}`;
         
@@ -226,30 +244,39 @@ function explodeVariants(product: ShopifyProduct): Array<{
           available: matchingVariant.available,
           imageUrl: featuredImage,
           productUrl: `${productUrl}?variant=${matchingVariant.id}`,
-          weight: extractOvertureWeight(product.title, matchingVariant.title),
+          weight,
         });
       }
     }
   } else if (product.variants.length > 0) {
     // No color option, use first variant
     const variant = product.variants[0];
-    const productId = `overture-${product.handle}`;
+    const weight = extractOvertureWeight(product.title, variant.title);
     
-    variants.push({
-      productId,
-      title: product.title,
-      color: '',
-      price: parseFloat(variant.price),
-      compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
-      sku: variant.sku || null,
-      barcode: variant.barcode || null,
-      available: variant.available,
-      imageUrl: featuredImage,
-      productUrl,
-      weight: extractOvertureWeight(product.title, variant.title),
-    });
+    const filterResult = shouldIncludeVariant(weight, 1.75);
+    if (filterResult.include) {
+      const productId = `overture-${product.handle}`;
+      
+      variants.push({
+        productId,
+        title: product.title,
+        color: '',
+        price: parseFloat(variant.price),
+        compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
+        sku: variant.sku || null,
+        barcode: variant.barcode || null,
+        available: variant.available,
+        imageUrl: featuredImage,
+        productUrl,
+        weight,
+      });
+    } else {
+      updateFilterStats(filterStats, filterResult);
+      console.log(`[Overture] Skipping: ${product.title} - ${filterResult.reason}`);
+    }
   }
   
+  logFilterStats('Overture', filterStats);
   return variants;
 }
 

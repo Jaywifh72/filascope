@@ -7,6 +7,12 @@ import {
   isDiameter285,
   getWeightVariant,
 } from '../_shared/fiberlogy-defaults.ts';
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
