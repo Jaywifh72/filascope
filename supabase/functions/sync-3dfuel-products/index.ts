@@ -7,6 +7,8 @@
  * 3. Enrichment - Apply brand-specific material/color/finish rules
  * 4. Upsert - Insert/update products with proper product_id
  * 5. Field Coverage - Return rich sync results
+ * 
+ * Enhanced with verbose decision logging for AI-powered debugging.
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -37,11 +39,15 @@ import {
   logFilterStats,
   is285mmDiameter,
 } from '../_shared/variant-filters.ts';
+import { createDecisionLogger, type DecisionLogger } from '../_shared/decision-logger.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Global decision logger instance (set during main handler)
+let decisionLogger: DecisionLogger;
 
 // ============================================================================
 // INTERFACES
@@ -198,13 +204,32 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
     const finishType = extractFinish(product.title);
     
     for (const variant of product.variants) {
+      const productId = `3dfuel-${product.id}-${variant.id}`;
+      
       // Pass product.handle for improved Silky color extraction
       const colorName = extractColorName(variant, product.title, product.handle);
       const diameter = extractDiameter(variant);
       const weight = extractWeight(variant, product.title);
       
+      // Log color extraction decision
+      decisionLogger?.logColorExtraction(
+        productId,
+        product.title,
+        { variantTitle: variant.title, productHandle: product.handle, options: [variant.option1, variant.option2, variant.option3].filter(Boolean) as string[] },
+        { colorName, method: colorName === 'Default' ? 'fallback' : 'extracted' },
+        colorName !== 'Default'
+      );
+      
       // Generate product_line_id with colorName for Silky detection
       const productLineId = generateProductLineId(product.title, product.handle, colorName);
+      
+      // Log product line decision
+      decisionLogger?.logProductLine(
+        productId,
+        product.title,
+        { title: product.title, handle: product.handle, colorName },
+        { productLineId, matchedPattern: productLineId.includes('dual-color') ? 'Silky color pattern' : 'title/handle pattern' }
+      );
       
       // Debug logging for color extraction issues
       console.log(`[Color] Product: "${product.title}" Handle: "${product.handle}" Variant: "${variant.title}" -> Color: "${colorName}" -> ProductLine: "${productLineId}"`);
@@ -212,13 +237,19 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       // Apply standard filtering (samples, bulk, 2.85mm)
       const filterResult = shouldIncludeVariant(weight, diameter);
       updateFilterStats(filterStats, filterResult);
+      
+      // Log filter decision
+      decisionLogger?.logFilter(
+        productId,
+        product.title,
+        { weight, diameter },
+        { included: filterResult.include, reason: filterResult.reason || 'passed all filters' }
+      );
+      
       if (!filterResult.include) {
         console.log(`[3D-Fuel] Skipping: ${product.title} - ${colorName} (${filterResult.reason})`);
         continue;
       }
-      
-      // Create unique product ID: shopify-product-variant
-      const productId = `3dfuel-${product.id}-${variant.id}`;
       
       // Skip duplicates
       if (seenIds.has(productId)) {
@@ -232,10 +263,25 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       // Get color hex - pass variant.title for embedded hex extraction (e.g., "Bone White - #F3E2C7")
       const colorHex = getColorHex(colorName, variant.title);
       
+      // Log hex lookup decision
+      decisionLogger?.logHexLookup(
+        productId,
+        product.title,
+        { colorName, variantTitle: variant.title },
+        { colorHex, source: colorHex ? (variant.title.includes('#') ? 'embedded in title' : 'COLOR_HEX_MAP') : 'not found' }
+      );
+      
       // Build display title matching page format: "Product Line, Color Name, 1.75mm"
       // This ensures DB title matches what Post Sync Check finds on the page
       const productLine = extractProductLine(product.title);
       const displayTitle = `${productLine}, ${colorName}, 1.75mm`;
+      
+      // Log title format decision
+      decisionLogger?.logTitleFormat(
+        productId,
+        { originalTitle: product.title, productLine, colorName },
+        { formattedTitle: displayTitle }
+      );
       
       variants.push({
         productId,
@@ -262,6 +308,13 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
   logFilterStats('3D-Fuel', filterStats);
   console.log(`[Step 2] Complete: ${variants.length} variants exploded`);
   console.log(`[Step 2] Product lines created: ${new Set(variants.map(v => v.productLineId)).size}`);
+  
+  // Log decision summary
+  if (decisionLogger) {
+    const summary = decisionLogger.getSummary();
+    console.log('[DecisionLogger] Summary:', JSON.stringify(summary));
+  }
+  
   return variants;
 }
 
@@ -463,6 +516,11 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
+    // Initialize decision logger for verbose sync logging
+    decisionLogger = createDecisionLogger({
+      brandSlug: BRAND_CONFIG.brandSlug,
+    });
+    
     // Parse options
     let cleanSlate = false;
     try {
@@ -480,6 +538,23 @@ Deno.serve(async (req) => {
       .maybeSingle();
     
     const brandId = brand?.id || null;
+    
+    // Create sync log entry for decision logging
+    const { data: syncLogData } = await supabase
+      .from('brand_sync_logs')
+      .insert({
+        brand_id: brandId,
+        brand_slug: BRAND_CONFIG.brandSlug,
+        sync_type: cleanSlate ? 'clean_slate' : 'incremental',
+        status: 'running',
+        triggered_by: 'edge_function',
+      })
+      .select('id')
+      .single();
+    
+    if (syncLogData?.id) {
+      decisionLogger.setSyncLogId(syncLogData.id);
+    }
     
     // Clean slate if requested
     if (cleanSlate) {
@@ -520,6 +595,26 @@ Deno.serve(async (req) => {
     console.log(`Created: ${created}, Updated: ${updated}, Errors: ${errors}`);
     console.log('='.repeat(60));
     
+    // Save decision logs to database for AI analysis
+    const { saved: logsSaved, errors: logErrors } = await decisionLogger.saveToDatabase(supabase);
+    console.log(`[DecisionLogger] Saved ${logsSaved} decision logs (${logErrors} errors)`);
+    
+    // Update sync log with completion status
+    if (decisionLogger['syncLogId']) {
+      await supabase
+        .from('brand_sync_logs')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          duration_seconds: Math.round(durationMs / 1000),
+          products_discovered: variants.length,
+          products_created: created,
+          products_updated: updated,
+          products_failed: errors,
+        })
+        .eq('id', decisionLogger['syncLogId']);
+    }
+    
     const response = buildSyncResponse(
       true,
       durationMs,
@@ -542,6 +637,23 @@ Deno.serve(async (req) => {
     console.error('[FATAL]', err);
     
     const durationMs = Date.now() - startTime;
+    
+    // Update sync log with failure status
+    if (decisionLogger?.['syncLogId']) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      await supabase
+        .from('brand_sync_logs')
+        .update({
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          duration_seconds: Math.round(durationMs / 1000),
+          error_details: { error: err.message },
+        })
+        .eq('id', decisionLogger['syncLogId']);
+    }
     
     return new Response(JSON.stringify({
       success: false,

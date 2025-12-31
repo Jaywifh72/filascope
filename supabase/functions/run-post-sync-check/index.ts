@@ -63,18 +63,81 @@ interface AIWebsiteAnalysis {
   missingReason: string;
   fixCode: string;
   colorMappings: Record<string, string>;
+  rootCause?: string;
+  wrongDecisions?: string[];
+  correctBehavior?: string;
+}
+
+interface DecisionLogEntry {
+  id: string;
+  product_id: string;
+  product_title: string;
+  decision_type: string;
+  input_data: Record<string, any>;
+  output_data: Record<string, any>;
+  decision_reason: string;
+  success: boolean;
+}
+
+/**
+ * Fetch decision logs from most recent sync for this brand
+ */
+async function fetchDecisionLogs(
+  supabase: any,
+  brandSlug: string,
+  failingProductIds: string[]
+): Promise<DecisionLogEntry[]> {
+  // Get the most recent sync log for this brand
+  const { data: recentSyncLog } = await supabase
+    .from('brand_sync_logs')
+    .select('id')
+    .eq('brand_slug', brandSlug)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .single();
+  
+  if (!recentSyncLog?.id) {
+    console.log('[PostSyncCheck] No recent sync log found for decision logs');
+    return [];
+  }
+  
+  // Fetch decision logs, prioritizing failures and logs related to failing products
+  const { data: decisionLogs, error } = await supabase
+    .from('scrape_decision_logs')
+    .select('*')
+    .eq('sync_log_id', recentSyncLog.id)
+    .order('created_at', { ascending: true })
+    .limit(200);
+  
+  if (error) {
+    console.error('[PostSyncCheck] Error fetching decision logs:', error.message);
+    return [];
+  }
+  
+  // Filter to prioritize logs related to failing products and failures
+  const relevantLogs = (decisionLogs || []).filter((log: DecisionLogEntry) => 
+    !log.success || 
+    failingProductIds.some(id => log.product_id?.includes(id)) ||
+    log.decision_type === 'color_extraction' ||
+    log.decision_type === 'product_line' ||
+    log.decision_type === 'hex_lookup'
+  );
+  
+  console.log(`[PostSyncCheck] Fetched ${relevantLogs.length} relevant decision logs`);
+  return relevantLogs.slice(0, 50); // Limit for AI context
 }
 
 /**
  * Analyze website patterns using Lovable AI (Gemini)
- * This provides intelligent insights about how the brand displays colors
+ * Enhanced with verbose sync decision logs for root cause analysis
  */
 async function analyzeWebsiteWithAI(
   brandName: string,
   brandSlug: string,
   htmlSamples: string[],
   failingChecks: CheckResult[],
-  dbColorData: Array<{ productLine: string; colors: string[] }>
+  dbColorData: Array<{ productLine: string; colors: string[] }>,
+  decisionLogs: DecisionLogEntry[] = []
 ): Promise<AIWebsiteAnalysis | null> {
   const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!lovableApiKey) {
@@ -101,43 +164,67 @@ async function analyzeWebsiteWithAI(
   const missingColorsCheck = failingChecks.find(c => c.checkName.includes('Color Names Match'));
   const missingColorsList = missingColorsCheck?.products?.map(p => p.issue).join('\n') || 'None detected';
 
-  const prompt = `You are a web scraping expert analyzing a 3D printer filament e-commerce website.
+  // Format decision logs for AI analysis
+  const decisionLogsFormatted = decisionLogs.slice(0, 20).map(log => 
+    `[${log.decision_type}] ${log.product_title || log.product_id}
+  Input: ${JSON.stringify(log.input_data)}
+  Output: ${JSON.stringify(log.output_data)}
+  Reason: ${log.decision_reason}
+  Success: ${log.success}`
+  ).join('\n\n');
+
+  // Identify failures from decision logs
+  const failedDecisions = decisionLogs.filter(l => !l.success);
+  const failedDecisionsFormatted = failedDecisions.slice(0, 10).map(log =>
+    `- [${log.decision_type}] "${log.product_title}": ${log.decision_reason}`
+  ).join('\n');
+
+  const prompt = `You are a web scraping debugging expert analyzing a 3D printer filament e-commerce website.
 
 BRAND: ${brandName} (slug: ${brandSlug})
 SYNC FUNCTION: supabase/functions/sync-${brandSlug}-products/index.ts
 DEFAULTS FILE: supabase/functions/_shared/${brandSlug}-defaults.ts
 
-FAILING CHECKS:
+## FAILING CHECKS
 ${failingChecks.map(c => `- ${c.checkName}: ${c.count} issues`).join('\n')}
 
-MISSING COLORS DETECTED:
+## MISSING COLORS DETECTED
 ${missingColorsList}
 
-SAMPLE HTML SWATCH PATTERNS FROM WEBSITE:
+## SYNC DECISION LOGS (what the scraper actually did)
+${decisionLogsFormatted || 'No decision logs available'}
+
+## FAILED DECISIONS
+${failedDecisionsFormatted || 'No explicit failures logged'}
+
+## WEBSITE HTML PATTERNS (what the website shows)
 ${swatchPatterns.join('\n---\n').slice(0, 3000)}
 
-DATABASE COLOR DATA (sample):
+## DATABASE COLOR DATA (what ended up in DB)
 ${JSON.stringify(dbColorData.slice(0, 3), null, 2)}
 
-ANALYZE AND RESPOND WITH JSON ONLY (no markdown):
+ANALYZE AND RESPOND WITH JSON ONLY (no markdown code blocks):
 {
+  "rootCause": "explanation of what went wrong based on comparing decision logs vs website patterns",
+  "wrongDecisions": ["list of specific wrong decisions from logs"],
+  "correctBehavior": "what the scraper SHOULD have done",
   "swatchType": "css-color | image-alt | cross-product-link",
   "extractionPattern": "description of the HTML pattern to extract colors",
   "missingReason": "explanation of why colors are being missed by the sync",
-  "fixCode": "TypeScript code snippet to fix extractColorName() function",
+  "fixCode": "TypeScript code snippet to fix the issue (include function name and line context)",
   "colorMappings": {
     "color name": "#hexcode"
   }
 }
 
 Focus on:
-1. How does this brand display color swatches? (CSS hex, image alt text, linked product images?)
-2. What extraction pattern should be used in the sync function?
-3. Why might the current sync be missing these specific colors?
-4. Provide hex codes for any missing colors mentioned above.`;
+1. Compare what the scraper LOGGED as its decisions vs what the website actually shows
+2. Identify the specific extraction step that went wrong (color_extraction, product_line, hex_lookup)
+3. Explain WHY the scraper made the wrong decision based on its logged input/output
+4. Provide exact code fix with context from the sync function`;
 
   try {
-    console.log("[PostSyncCheck] Calling Lovable AI for website analysis...");
+    console.log("[PostSyncCheck] Calling Lovable AI for enhanced website analysis with decision logs...");
     
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -229,19 +316,31 @@ function generateAIFixPrompt(
     aiInsightsSection = `
 ---
 
-## 🤖 AI Website Analysis Results
+## 🤖 AI Website Analysis Results (Enhanced with Sync Logs)
 
 **Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis
+${aiAnalysis.rootCause}
+` : ''}
+
+${aiAnalysis.wrongDecisions?.length ? `### Wrong Decisions Identified
+${aiAnalysis.wrongDecisions.map(d => `- ${d}`).join('\n')}
+` : ''}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected
+${aiAnalysis.correctBehavior}
+` : ''}
 
 **Extraction Pattern**:
 ${aiAnalysis.extractionPattern}
 
-**Root Cause Identified**:
+**Missing Reason**:
 ${aiAnalysis.missingReason}
 
 ### Recommended Code Fix
 
-Update the color extraction in \`_shared/${brandSlug}-defaults.ts\`:
+Update the sync logic in \`_shared/${brandSlug}-defaults.ts\`:
 
 \`\`\`typescript
 ${aiAnalysis.fixCode}
@@ -1069,14 +1168,25 @@ Deno.serve(async (req) => {
     let aiAnalysis: AIWebsiteAnalysis | null = null;
     const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
     
-    if (failingChecks.length > 0 && htmlSamples.length > 0) {
-      console.log(`[PostSyncCheck] Running AI analysis with ${htmlSamples.length} HTML samples...`);
+    // Fetch decision logs for AI analysis
+    let decisionLogs: DecisionLogEntry[] = [];
+    if (failingChecks.length > 0) {
+      const failingProductIds = failingChecks
+        .flatMap(c => c.products?.map(p => p.id) || [])
+        .filter(Boolean);
+      decisionLogs = await fetchDecisionLogs(supabase, brandSlug, failingProductIds);
+      console.log(`[PostSyncCheck] Fetched ${decisionLogs.length} decision logs for AI analysis`);
+    }
+    
+    if (failingChecks.length > 0 && (htmlSamples.length > 0 || decisionLogs.length > 0)) {
+      console.log(`[PostSyncCheck] Running enhanced AI analysis with ${htmlSamples.length} HTML samples and ${decisionLogs.length} decision logs...`);
       aiAnalysis = await analyzeWebsiteWithAI(
         brandName,
         brandSlug,
         htmlSamples,
         failingChecks,
-        dbColorData
+        dbColorData,
+        decisionLogs
       );
     }
 
