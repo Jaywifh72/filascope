@@ -200,9 +200,13 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
     const productLineId = generateProductLineId(product.title, product.handle);
     
     for (const variant of product.variants) {
-      const colorName = extractColorName(variant, product.title);
+      // Pass product.handle for improved Silky color extraction
+      const colorName = extractColorName(variant, product.title, product.handle);
       const diameter = extractDiameter(variant);
       const weight = extractWeight(variant, product.title);
+      
+      // Debug logging for color extraction issues
+      console.log(`[Color] Product: "${product.title}" Handle: "${product.handle}" Variant: "${variant.title}" -> Color: "${colorName}"`);
       
       // Apply standard filtering (samples, bulk, 2.85mm)
       const filterResult = shouldIncludeVariant(weight, diameter);
