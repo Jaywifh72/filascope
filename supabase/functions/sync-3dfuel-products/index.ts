@@ -227,8 +227,10 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       // Get color hex from the expanded color map
       const colorHex = getColorHex(colorName);
       
-      // Build display title with color: "3D-Fuel Standard PLA+ - Desert Tan"
-      const displayTitle = `3D-Fuel ${material === extractProductLine(product.title) ? material : extractProductLine(product.title)} - ${colorName}`;
+      // Build display title matching page format: "Product Line, Color Name, 1.75mm"
+      // This ensures DB title matches what Post Sync Check finds on the page
+      const productLine = extractProductLine(product.title);
+      const displayTitle = `${productLine}, ${colorName}, 1.75mm`;
       
       variants.push({
         productId,
