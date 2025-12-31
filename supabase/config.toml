@@ -395,3 +395,6 @@ verify_jwt = false
 
 [functions.sync-fillamentum-products]
 verify_jwt = false
+
+[functions.sync-formfutura-products]
+verify_jwt = false
