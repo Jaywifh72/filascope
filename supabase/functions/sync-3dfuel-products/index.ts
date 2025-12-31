@@ -203,17 +203,26 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       continue;
     }
     
-    // CRITICAL FIX: Detect multi-material products (ReFuel, etc.)
+    // CRITICAL FIX: Detect TRUE multi-material products (ReFuel ONLY)
     // ReFuel products have option1 = Material Type (e.g., "Standard PLA+", "Tough Pro PLA+")
     // and option3 = Color Name (e.g., "Natural")
-    const isMultiMaterialProduct = product.title.toLowerCase().includes('refuel') ||
-                                   product.variants.some(v => 
-                                     v.option1?.toLowerCase().includes('pla') ||
-                                     v.option1?.toLowerCase().includes('pctg') ||
-                                     v.option1?.toLowerCase().includes('petg'));
+    // IMPORTANT: Only trigger for actual ReFuel products containing "recycled" or with multiple 
+    // materials in the same Shopify product. Do NOT trigger for regular products!
+    const titleLower = product.title.toLowerCase();
+    const isReFuelProduct = titleLower.includes('refuel') && 
+                            (titleLower.includes('recycled') || titleLower.includes('re-fuel'));
+    
+    // Check if this product has variant.option1 containing different material types
+    const hasMultipleMaterialsInOption1 = product.variants.some(v => {
+      const opt = v.option1?.toLowerCase() || '';
+      return opt.includes('standard pla') || opt.includes('tough pro') || 
+             opt.includes('pro pctg') || opt.includes('pro petg');
+    });
+    
+    const isMultiMaterialProduct = isReFuelProduct && hasMultipleMaterialsInOption1;
     
     if (isMultiMaterialProduct) {
-      console.log(`[3D-Fuel] Multi-material product detected: ${product.title}`);
+      console.log(`[3D-Fuel] TRUE multi-material ReFuel product detected: ${product.title}`);
     }
     
     for (const variant of product.variants) {
@@ -320,53 +329,63 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
         { colorHex, source: colorHex ? (variant.title.includes('#') ? 'embedded in title' : 'COLOR_HEX_MAP') : 'not found' }
       );
       
-      // Build display title matching page format: "Product Line, Color Name, 1.75mm"
-      // CRITICAL FIX: For ReFuel products, use the actual material from the variant
-      let productLine = extractProductLine(product.title);
+      // CRITICAL FIX: Use ACTUAL Shopify product title instead of reconstructing
+      // This ensures DB title matches what the user sees on the product page
+      // For 3D-Fuel: Shopify titles are already in format "Product Line, Color, 1.75mm"
+      let displayTitle: string;
       
-      // For ReFuel/multi-material products, show specific material in title
-      if (isMultiMaterialProduct) {
-        if (material === 'PLA+' && product.title.toLowerCase().includes('tough pro')) {
-          productLine = 'ReFuel Tough Pro PLA+';
-        } else if (material === 'PLA+' && product.title.toLowerCase().includes('standard')) {
-          productLine = 'ReFuel Standard PLA+';
-        } else if (material === 'PLA+') {
-          // Detect from option1 if title doesn't have it
+      // Check if Shopify title is already well-formatted (contains comma and color)
+      const shopifyTitle = product.title;
+      const hasCommaFormat = shopifyTitle.includes(',');
+      
+      if (hasCommaFormat && shopifyTitle.toLowerCase().includes(colorName.toLowerCase().split(' ')[0])) {
+        // Use Shopify title directly - it's already the correct format
+        displayTitle = shopifyTitle;
+        decisionLogger?.log({
+          productId,
+          productTitle: product.title,
+          decisionType: 'title_source',
+          input: { shopifyTitle, colorName },
+          output: { displayTitle, source: 'shopify_direct' },
+          reason: 'Used Shopify title directly (already well-formatted)',
+          success: true,
+        });
+      } else {
+        // Construct title from product line + color (fallback)
+        let productLine = extractProductLine(product.title);
+        
+        // For ReFuel/multi-material products, show specific material in title
+        if (isMultiMaterialProduct) {
           if (variant.option1?.toLowerCase().includes('tough pro')) {
             productLine = 'ReFuel Tough Pro PLA+';
           } else if (variant.option1?.toLowerCase().includes('standard')) {
             productLine = 'ReFuel Standard PLA+';
+          } else if (material === 'PCTG') {
+            productLine = 'ReFuel Pro PCTG';
+          } else if (material === 'PETG') {
+            productLine = 'ReFuel PETG';
           } else {
             productLine = `ReFuel ${material}`;
           }
-        } else if (material === 'PCTG') {
-          productLine = 'ReFuel Pro PCTG';
-        } else if (material === 'PETG') {
-          productLine = 'ReFuel PETG';
-        } else {
-          productLine = `ReFuel ${material}`;
         }
-      } else if (product.title.toLowerCase().includes('refuel')) {
-        // Non-multi-material ReFuel (single material product)
-        if (product.title.toLowerCase().includes('tough pro pla')) {
-          productLine = 'ReFuel Tough Pro PLA+';
-        } else if (product.title.toLowerCase().includes('standard pla')) {
-          productLine = 'ReFuel Standard PLA+';
-        } else if (material === 'PCTG') {
-          productLine = 'ReFuel Pro PCTG';
-        } else if (material === 'PETG') {
-          productLine = 'ReFuel PETG';
-        } else {
-          productLine = `ReFuel ${material}`;
-        }
+        
+        displayTitle = `${productLine}, ${colorName}, 1.75mm`;
+        decisionLogger?.log({
+          productId,
+          productTitle: product.title,
+          decisionType: 'title_source',
+          input: { shopifyTitle, productLine, colorName },
+          output: { displayTitle, source: 'constructed' },
+          reason: `Constructed title from productLine + colorName (Shopify title not in expected format)`,
+          success: true,
+        });
       }
       
-      const displayTitle = `${productLine}, ${colorName}, 1.75mm`;
-      
-      // Log title format decision
+      // Log title format decision - extract productLine from displayTitle or use extracted
+      const extractedProductLine = extractProductLine(product.title);
       decisionLogger?.logTitleFormat(
         productId,
-        { originalTitle: product.title, productLine, colorName },
+        { originalTitle: product.title, productLine: extractedProductLine, colorName },
         { formattedTitle: displayTitle }
       );
       
