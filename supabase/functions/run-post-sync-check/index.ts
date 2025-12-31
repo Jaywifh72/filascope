@@ -34,6 +34,21 @@ interface ScrapedProductInfo {
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'overture'];
 
+// Words to filter out when extracting color names (NOT actual colors)
+const NON_COLOR_WORDS = new Set([
+  // Material types
+  'pla', 'pla+', 'petg', 'pctg', 'abs', 'asa', 'tpu', 'nylon', 'hips', 'pc', 'pa', 'cf', 'gf',
+  // Product terms
+  'filament', 'spool', 'standard', 'pro', 'silk', 'tough', 'dual', 'color', 'dual-color',
+  'workday', 'refuel', 'biome3d', 'buzzed', 'entwined', 'wound', 'landfillament',
+  // Size/weight terms
+  '1.75mm', '2.85mm', '1kg', '500g', '750g', '250g', 'kg', 'mm', 'spool',
+  // Brand terms  
+  '3d-fuel', '3dfuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'overture',
+  // Generic terms
+  'buy', 'add', 'cart', 'shop', 'view', 'select', 'choose', 'now', 'new', 'sale',
+]);
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -154,13 +169,47 @@ After making fixes:
 }
 
 /**
+ * Check if a word is a valid color name (not a product/material term)
+ */
+function isValidColorName(name: string): boolean {
+  const lower = name.toLowerCase().trim();
+  
+  // Skip empty or very short names
+  if (!lower || lower.length < 2) return false;
+  
+  // Skip non-color words
+  if (NON_COLOR_WORDS.has(lower)) return false;
+  
+  // Skip if it contains material identifiers
+  if (/\b(pla|petg|pctg|abs|asa|tpu|nylon|filament)\b/i.test(lower)) return false;
+  
+  // Skip size/weight patterns
+  if (/^\d|\d+\s*(g|kg|mm|lb)|\d+\.\d+mm/i.test(lower)) return false;
+  
+  return true;
+}
+
+/**
  * Extract product info from scraped page HTML
+ * 
+ * Key extraction strategy for 3D-Fuel and similar brands:
+ * - These brands use cross-product color swatches (links to other products)
+ * - The swatch images have alt text like "Standard PLA+, Desert Tan, 1.75mm"
+ * - We need to extract just the color name (second part of the comma-separated string)
  */
 function extractProductInfoFromHtml(html: string, markdown: string): ScrapedProductInfo {
   const result: ScrapedProductInfo = {
     pageTitle: '',
     colorSwatches: [],
     statusCode: 200,
+  };
+  
+  const addColorSwatch = (name: string) => {
+    const trimmed = name.trim();
+    if (isValidColorName(trimmed) && 
+        !result.colorSwatches.find(s => s.name.toLowerCase() === trimmed.toLowerCase())) {
+      result.colorSwatches.push({ name: trimmed });
+    }
   };
   
   // Extract page title from <h1> or meta title
@@ -176,83 +225,93 @@ function extractProductInfoFromHtml(html: string, markdown: string): ScrapedProd
     }
   }
   
-  // Extract color swatches - look for common patterns:
-  // 1. Swatch links with color names in alt text or title
-  // 2. Option selectors with color names
-  // 3. Variant buttons/links
+  // ========== PATTERN 1: 3D-Fuel cross-product swatch images ==========
+  // Format: [![Standard PLA+, Desert Tan, 1.75mm](image-url)](product-url)
+  // The alt text contains "Product Line, Color Name, Diameter"
+  const swatchAltMatches = html.matchAll(/alt="([^"]+)"[^>]*>\s*<\/a>\s*<a[^>]*href="[^"]*\/products\//gi);
+  for (const match of swatchAltMatches) {
+    const altText = match[1];
+    const parts = altText.split(',');
+    if (parts.length >= 2) {
+      // Color is the 2nd part: "Desert Tan" from "Standard PLA+, Desert Tan, 1.75mm"
+      const colorName = parts[1].trim();
+      if (colorName && !colorName.match(/\d+\.\d+mm$/i)) {
+        addColorSwatch(colorName);
+      }
+    }
+  }
   
-  // Pattern 1: Swatch images with alt text
+  // ========== PATTERN 2: Linked images with alt text containing comma-separated values ==========
+  // Broader pattern for swatch images with product info in alt text
+  const imgAltMatches = html.matchAll(/<img[^>]*alt="([^"]*,[^"]+)"[^>]*>/gi);
+  for (const match of imgAltMatches) {
+    const altText = match[1];
+    const parts = altText.split(',');
+    if (parts.length >= 2) {
+      const potentialColor = parts[1].trim();
+      // Skip if it looks like a size/diameter
+      if (!potentialColor.match(/\d+\.\d+mm$/i) && !potentialColor.match(/^\d+/)) {
+        addColorSwatch(potentialColor);
+      }
+    }
+  }
+  
+  // ========== PATTERN 3: Swatch images with class containing "swatch" ==========
   const swatchImgMatches = html.matchAll(/<img[^>]*class="[^"]*swatch[^"]*"[^>]*alt="([^"]+)"[^>]*>/gi);
   for (const match of swatchImgMatches) {
-    const name = match[1].trim();
-    if (name && !result.colorSwatches.find(s => s.name.toLowerCase() === name.toLowerCase())) {
-      result.colorSwatches.push({ name });
-    }
+    addColorSwatch(match[1]);
   }
   
-  // Pattern 2: Swatch links with title or data attributes
+  // ========== PATTERN 4: Swatch links with title attribute ==========
   const swatchLinkMatches = html.matchAll(/<a[^>]*(?:class="[^"]*swatch[^"]*"|data-option="[^"]*color[^"]*")[^>]*title="([^"]+)"[^>]*>/gi);
   for (const match of swatchLinkMatches) {
-    const name = match[1].trim();
-    if (name && !result.colorSwatches.find(s => s.name.toLowerCase() === name.toLowerCase())) {
-      result.colorSwatches.push({ name });
-    }
+    addColorSwatch(match[1]);
   }
   
-  // Pattern 3: Shopify variant options (common format)
+  // ========== PATTERN 5: Shopify variant option inputs ==========
   const variantOptionsMatch = html.match(/product-form__option[^>]*value="([^"]+)"/gi);
   if (variantOptionsMatch) {
     for (const optMatch of variantOptionsMatch) {
       const valueMatch = optMatch.match(/value="([^"]+)"/i);
       if (valueMatch) {
-        const name = valueMatch[1].trim();
-        // Filter out sizes/weights
-        if (name && 
-            !name.match(/^\d/) && 
-            !name.toLowerCase().includes('mm') && 
-            !name.toLowerCase().match(/\d+\s*(kg|g|lb)/i) &&
-            !result.colorSwatches.find(s => s.name.toLowerCase() === name.toLowerCase())) {
-          result.colorSwatches.push({ name });
-        }
+        addColorSwatch(valueMatch[1]);
       }
     }
   }
   
-  // Pattern 4: Color option labels from Shopify
+  // ========== PATTERN 6: Color option labels from Shopify ==========
   const optionLabelsMatch = html.matchAll(/<label[^>]*for="[^"]*color[^"]*"[^>]*>([^<]+)<\/label>/gi);
   for (const match of optionLabelsMatch) {
-    const name = match[1].trim();
-    if (name && !result.colorSwatches.find(s => s.name.toLowerCase() === name.toLowerCase())) {
-      result.colorSwatches.push({ name });
-    }
+    addColorSwatch(match[1]);
   }
   
-  // Pattern 5: Look for color swatch links in 3D-Fuel format
-  // They link to other products with color in the URL
-  const colorLinkMatches = html.matchAll(/<a[^>]*href="[^"]*\/products\/[^"]*-([a-z-]+)-1-75mm[^"]*"[^>]*>/gi);
+  // ========== PATTERN 7: Links to color variant products (URL-based) ==========
+  // Parse URLs like /products/standard-pla-1-75mm-desert-tan
+  const colorLinkMatches = html.matchAll(/href="[^"]*\/products\/[^"]*-([a-z][a-z-]*)-1-75mm"[^>]*/gi);
   for (const match of colorLinkMatches) {
     if (match[1]) {
-      // Convert slug to title case: "desert-tan" -> "Desert Tan"
       const colorSlug = match[1];
       const name = colorSlug
         .split('-')
         .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
-      if (name && !result.colorSwatches.find(s => s.name.toLowerCase() === name.toLowerCase())) {
-        result.colorSwatches.push({ name });
-      }
+      addColorSwatch(name);
     }
   }
   
-  // Pattern 6: Parse markdown for color names (as fallback)
-  if (result.colorSwatches.length === 0 && markdown) {
-    // Look for bullet lists with color names
-    const bulletMatches = markdown.matchAll(/^\s*[-*]\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*$/gm);
-    for (const match of bulletMatches) {
-      const name = match[1].trim();
-      // Basic filter for non-color words
-      if (name && !['Shop', 'Buy', 'Add', 'View', 'Select', 'Choose'].includes(name)) {
-        result.colorSwatches.push({ name });
+  // ========== PATTERN 8: Alternative URL format - color at end ==========
+  // Parse URLs like /products/pro-pctg-coyote-brown-1-75mm
+  const altColorLinkMatches = html.matchAll(/href="[^"]*\/products\/[a-z-]+-([a-z][a-z-]+)-1-75mm"/gi);
+  for (const match of altColorLinkMatches) {
+    if (match[1]) {
+      const colorSlug = match[1];
+      // Filter out material names that might appear before 1-75mm
+      if (!colorSlug.match(/^(pla|petg|pctg|abs|asa|tpu)$/i)) {
+        const name = colorSlug
+          .split('-')
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        addColorSwatch(name);
       }
     }
   }
@@ -273,9 +332,77 @@ function normalizeTitle(title: string): string {
 }
 
 /**
+ * Extract the key components from a title for comparison
+ * DB format: "3D-Fuel Standard PLA+ - Desert Tan"
+ * Page format: "Standard PLA+, Desert Tan, 1.75mm"
+ */
+function extractTitleComponents(title: string): { productLine: string; color: string } | null {
+  const lower = title.toLowerCase();
+  
+  // DB format: "Brand Product Line - Color"
+  const dbMatch = lower.match(/(?:3d-?fuel\s+)?(.+?)\s*-\s*(.+)$/);
+  if (dbMatch) {
+    return {
+      productLine: dbMatch[1].trim(),
+      color: dbMatch[2].trim(),
+    };
+  }
+  
+  // Page format: "Product Line, Color, 1.75mm"
+  const pageMatch = lower.match(/^(.+?),\s*(.+?),\s*[\d.]+mm$/);
+  if (pageMatch) {
+    return {
+      productLine: pageMatch[1].trim(),
+      color: pageMatch[2].trim(),
+    };
+  }
+  
+  // Simpler comma format: "Product Line, Color"
+  const simpleMatch = lower.match(/^(.+?),\s*(.+)$/);
+  if (simpleMatch && !simpleMatch[2].includes('mm')) {
+    return {
+      productLine: simpleMatch[1].trim(),
+      color: simpleMatch[2].trim(),
+    };
+  }
+  
+  return null;
+}
+
+/**
+ * Check if two titles are equivalent despite different formats
+ */
+function titlesAreEquivalent(dbTitle: string, pageTitle: string): boolean {
+  const dbParts = extractTitleComponents(dbTitle);
+  const pageParts = extractTitleComponents(pageTitle);
+  
+  if (dbParts && pageParts) {
+    // Check if product lines match (one contains the other)
+    const lineMatch = dbParts.productLine.includes(pageParts.productLine) || 
+                      pageParts.productLine.includes(dbParts.productLine);
+    
+    // Check if colors match (one contains the other, or exact match after normalization)
+    const dbColor = dbParts.color.replace(/[^a-z0-9]/g, '');
+    const pageColor = pageParts.color.replace(/[^a-z0-9]/g, '');
+    const colorMatch = dbColor === pageColor || 
+                       dbColor.includes(pageColor) || 
+                       pageColor.includes(dbColor);
+    
+    return lineMatch && colorMatch;
+  }
+  
+  return false;
+}
+
+/**
  * Calculate title similarity (0-100%)
  */
 function titleSimilarity(a: string, b: string): number {
+  // First try structured comparison
+  if (titlesAreEquivalent(a, b)) {
+    return 85; // High enough to pass the 60% threshold
+  }
+  
   const normA = normalizeTitle(a);
   const normB = normalizeTitle(b);
   
