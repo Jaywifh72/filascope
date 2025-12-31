@@ -3,17 +3,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
-// Brands with dedicated high-fidelity sync functions
+// Brands with dedicated high-fidelity sync functions (use exact database slugs)
 const BRAND_SPECIFIC_FUNCTIONS = [
-  '3d-fuel', '3dhojor', '3dxtech', 'anycubic', 'atomic', 'azurefilm', 'cc3d',
-  'colorfabb', 'creality', 'duramic', 'eryone', 'esun', 'extrudr',
+  '3d-fuel', '3dhojor', '3dxtech', 'anycubic', 'atomic-filament', 'azurefilm', 'cc3d',
+  'colorfabb', 'creality', 'duramic-3d', 'eryone', 'esun', 'extrudr',
   'fiberlogy', 'fillamentum', 'flashforge', 'formfutura', 'fusion-filaments',
-  'geeetech', 'gizmodorks', 'hatchbox', 'ic3d', 'kingroon', 'matter3d',
-  'ninjatek', 'numakers', 'overture', 'paramount', 'polymaker',
-  'protopasta', 'prusament', 'pushplastic', 'recreus', 'sirayatech',
-  'sovol', 'spectrum', 'sunlu', 'treed', 'ultimaker', 'voxelpla',
+  'geeetech', 'gizmo-dorks', 'hatchbox', 'ic3d-printers', 'kingroon', 'matter3d',
+  'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker',
+  'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'siraya-tech',
+  'sovol', 'spectrum-filaments', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla',
   'yousu', 'ziro'
 ];
+
+// Mapping from database slugs to edge function names (when they differ)
+const SLUG_TO_FUNCTION_MAP: Record<string, string> = {
+  'atomic-filament': 'atomic',
+  'proto-pasta': 'protopasta',
+  'push-plastic': 'pushplastic',
+  'siraya-tech': 'sirayatech',
+  'duramic-3d': 'duramic',
+  'paramount-3d': 'paramount',
+  'ic3d-printers': 'ic3d',
+  'treed-filaments': 'treed',
+  'spectrum-filaments': 'spectrum',
+  'gizmo-dorks': 'gizmodorks',
+};
+
+// Normalize database slug to edge function name
+const normalizeSlugForFunction = (brandSlug: string): string => {
+  return SLUG_TO_FUNCTION_MAP[brandSlug] || brandSlug;
+};
 
 // Special brands with unique sync mechanisms
 const SPECIAL_BRANDS = ['bambu-lab', 'elegoo'];
@@ -165,7 +184,8 @@ export function useBrandSyncManager() {
 
       if (syncType === 'specific') {
         // Brand-specific high-fidelity sync function
-        const functionName = `sync-${options.brandSlug}-products`;
+        const functionSlug = normalizeSlugForFunction(options.brandSlug);
+        const functionName = `sync-${functionSlug}-products`;
         setProgress({ stage: `Calling ${functionName}`, current: 15, total: 100 });
         
         const response = await supabase.functions.invoke(functionName, {
