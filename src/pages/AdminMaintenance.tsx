@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle, Store, Sparkles, ClipboardCheck, BarChart3 } from "lucide-react";
+import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle, Store, Sparkles, ClipboardCheck, BarChart3, Wand2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -24,6 +24,7 @@ import { ColorVariantAuditPanel } from "@/components/admin/ColorVariantAuditPane
 import { ElegooSyncDashboard } from "@/components/admin/ElegooSyncDashboard";
 import { BrandCategoryTabs } from "@/components/admin/BrandCategoryTabs";
 import { EnrichmentDashboard } from "@/components/admin/EnrichmentDashboard";
+import { BrandSyncManager } from "@/components/admin/BrandSyncManager";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 import { useActiveScrapeJob } from "@/hooks/useActiveScrapeJob";
@@ -323,10 +324,14 @@ const AdminMaintenance = () => {
 
       {/* Tabs for Brand Scrapers */}
       <Tabs defaultValue="all-brands" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 max-w-2xl">
+        <TabsList className="grid w-full grid-cols-6 max-w-3xl">
           <TabsTrigger value="all-brands" className="flex items-center gap-2">
             <Store className="w-4 h-4" />
             All Brands
+          </TabsTrigger>
+          <TabsTrigger value="sync-manager" className="flex items-center gap-2">
+            <Wand2 className="w-4 h-4" />
+            Sync Manager
           </TabsTrigger>
           <TabsTrigger value="enrichment" className="flex items-center gap-2">
             <Sparkles className="w-4 h-4" />
@@ -349,6 +354,11 @@ const AdminMaintenance = () => {
         {/* All Brands Tab - Dynamic Brand Management */}
         <TabsContent value="all-brands" className="space-y-6 mt-6">
           <BrandCategoryTabs />
+        </TabsContent>
+
+        {/* Sync Manager Tab - Execute brand sync pipelines */}
+        <TabsContent value="sync-manager" className="space-y-6 mt-6">
+          <BrandSyncManager />
         </TabsContent>
 
         {/* Enrichment Tab - Color, TDS, Regional Pricing */}
