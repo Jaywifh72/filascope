@@ -2,41 +2,13 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-
-// Brands with dedicated high-fidelity sync functions (use exact database slugs)
-const BRAND_SPECIFIC_FUNCTIONS = [
-  '3d-fuel', '3dhojor', '3dxtech', 'anycubic', 'atomic-filament', 'azurefilm', 'cc3d',
-  'colorfabb', 'creality', 'duramic-3d', 'eryone', 'esun', 'extrudr',
-  'fiberlogy', 'fillamentum', 'flashforge', 'formfutura', 'fusion-filaments',
-  'geeetech', 'gizmo-dorks', 'hatchbox', 'ic3d-printers', 'kingroon', 'matter3d',
-  'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker',
-  'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'siraya-tech',
-  'sovol', 'spectrum-filaments', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla',
-  'yousu', 'ziro'
-];
-
-// Mapping from database slugs to edge function names (when they differ)
-const SLUG_TO_FUNCTION_MAP: Record<string, string> = {
-  '3d-fuel': '3dfuel',
-  'atomic-filament': 'atomic',
-  'proto-pasta': 'protopasta',
-  'push-plastic': 'pushplastic',
-  'siraya-tech': 'sirayatech',
-  'duramic-3d': 'duramic',
-  'paramount-3d': 'paramount',
-  'ic3d-printers': 'ic3d',
-  'treed-filaments': 'treed',
-  'spectrum-filaments': 'spectrum',
-  'gizmo-dorks': 'gizmodorks',
-};
-
-// Normalize database slug to edge function name
-const normalizeSlugForFunction = (brandSlug: string): string => {
-  return SLUG_TO_FUNCTION_MAP[brandSlug] || brandSlug;
-};
-
-// Special brands with unique sync mechanisms
-const SPECIAL_BRANDS = ['bambu-lab', 'elegoo'];
+import {
+  BRAND_SPECIFIC_FUNCTIONS,
+  SPECIAL_BRANDS,
+  normalizeSlugForFunction,
+  hasBrandSpecificFunction as checkHasBrandSpecificFunction,
+  detectSyncType,
+} from "@/lib/brand-sync-config";
 
 export interface SyncOptions {
   brandSlug: string;
@@ -107,14 +79,12 @@ export function useBrandSyncManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const detectSyncFunction = useCallback((brandSlug: string): 'specific' | 'special' | 'generic' => {
-    if (SPECIAL_BRANDS.includes(brandSlug)) return 'special';
-    if (BRAND_SPECIFIC_FUNCTIONS.includes(brandSlug)) return 'specific';
-    return 'generic';
+  const localDetectSyncFunction = useCallback((brandSlug: string): 'specific' | 'special' | 'generic' => {
+    return detectSyncType(brandSlug);
   }, []);
 
-  const hasBrandSpecificFunction = useCallback((brandSlug: string): boolean => {
-    return BRAND_SPECIFIC_FUNCTIONS.includes(brandSlug);
+  const localHasBrandSpecificFunction = useCallback((brandSlug: string): boolean => {
+    return checkHasBrandSpecificFunction(brandSlug);
   }, []);
 
   const deleteAllProducts = useCallback(async (brandName: string): Promise<{ success: boolean; deleted: number }> => {
@@ -174,7 +144,7 @@ export function useBrandSyncManager() {
 
       setProgress({ stage: 'Invoking sync function', current: 10, total: 100 });
 
-      const syncType = detectSyncFunction(options.brandSlug);
+      const syncType = localDetectSyncFunction(options.brandSlug);
       let data: any;
       let fnError: any;
 
@@ -267,7 +237,7 @@ export function useBrandSyncManager() {
     } finally {
       setIsLoading(false);
     }
-  }, [detectSyncFunction, deleteAllProducts, queryClient, toast]);
+  }, [localDetectSyncFunction, deleteAllProducts, queryClient, toast]);
 
   const reset = useCallback(() => {
     setIsLoading(false);
@@ -280,8 +250,8 @@ export function useBrandSyncManager() {
   return {
     executeSync,
     deleteAllProducts,
-    detectSyncFunction,
-    hasBrandSpecificFunction,
+    detectSyncFunction: localDetectSyncFunction,
+    hasBrandSpecificFunction: localHasBrandSpecificFunction,
     isLoading,
     isDeleting,
     progress,
