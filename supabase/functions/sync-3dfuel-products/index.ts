@@ -135,6 +135,7 @@ async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
         titleLower.includes('nozzle') ||
         titleLower.includes('sheet') ||
         titleLower.includes('sample coil') ||
+        titleLower.includes('sample coils') ||
         titleLower.includes('sample pack') ||
         (titleLower.includes('coil') && titleLower.includes('50g'));
       
@@ -172,7 +173,7 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
     for (const variant of product.variants) {
       const colorName = extractColorName(variant, product.title);
       const diameter = extractDiameter(variant);
-      const weight = extractWeight(variant);
+      const weight = extractWeight(variant, product.title);
       
       // Skip small weight variants (samples, coils, etc.)
       if (weight > 0 && weight < MIN_WEIGHT_GRAMS) {
