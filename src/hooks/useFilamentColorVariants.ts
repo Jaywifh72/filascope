@@ -76,6 +76,22 @@ export function getBaseProductName(title: string): string {
     }
   }
 
+  // EXTRUDR PATTERN: Handle "Extrudr [ProductLine] [Color] ral [code]" format
+  const extrudrMatch = normalizedTitle.match(/^(Extrudr\s+(?:[\w-]+\s+)*(?:PLA|PETG|ABS|ASA|PA\d*|PC|TPU|FLEX|PCTG|GreenTEC|BioFusion|FLAX|PEARL)(?:\s+(?:CF|GF|Pro|Basic|NX2|MATT|Hard|Medium|Semisoft))*)\s+.+\s+ral\s+\d+$/i);
+  if (extrudrMatch) {
+    return extrudrMatch[1].trim();
+  }
+
+  // AZUREFILM PATTERN: Handle "[Material] [ProductLine] filament [Color]" format
+  const azurefilmFilamentMatch = normalizedTitle.match(/^((?:PLA|PETG|ABS|ASA|TPU|Flexible\s+\d+A)(?:\s+(?:Matte|Silk|Original|Hyper\s*Speed|HS|Lumos|CMYK)(?:\s+(?:Dual\s+Color|Rainbow|Litho))?)?)\s+(?:filament\s+)?(.+)$/i);
+  if (azurefilmFilamentMatch) {
+    const basePart = azurefilmFilamentMatch[1].trim();
+    const remainder = azurefilmFilamentMatch[2].trim();
+    if (!remainder.match(/\d+-pack|Sample|plate|Magnetic|drill/i)) {
+      return basePart;
+    }
+  }
+
   // AMOLEN PATTERN - Handle "Material ProductLine [Filament] [Size] [Color]" format
   // Must come BEFORE other patterns to correctly extract product lines like "PLA Matte Triple"
   const amelonProductLines = [

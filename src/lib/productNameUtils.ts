@@ -200,7 +200,28 @@ export const getBaseProductName = (title: string, material?: string | null): str
     }
   }
 
-  // AMOLEN PATTERN: Handle "Material ProductLine [Filament] [Size] [Color]" format
+  // EXTRUDR PATTERN: Handle "Extrudr [ProductLine] [Color] ral [code]" format
+  // Examples: "Extrudr GreenTEC Pro Black ral 9017" → "Extrudr GreenTEC Pro"
+  //           "Extrudr DuraPro ABS CF Black ral 9017" → "Extrudr DuraPro ABS CF"
+  const extrudrMatch = normalizedTitle.match(/^(Extrudr\s+(?:[\w-]+\s+)*(?:PLA|PETG|ABS|ASA|PA\d*|PC|TPU|FLEX|PCTG|GreenTEC|BioFusion|FLAX|PEARL)(?:\s+(?:CF|GF|Pro|Basic|NX2|MATT|Hard|Medium|Semisoft))*)\s+.+\s+ral\s+\d+$/i);
+  if (extrudrMatch) {
+    return extrudrMatch[1].trim();
+  }
+
+  // AZUREFILM PATTERN: Handle "[Material] [ProductLine] filament [Color]" format
+  // Examples: "PLA Matte HS filament Army Green" → "PLA Matte HS"
+  //           "PETG Hyper Speed filament Light Grey" → "PETG Hyper Speed"
+  //           "ASA filament Dark Blue" → "ASA"
+  const azurefilmFilamentMatch = normalizedTitle.match(/^((?:PLA|PETG|ABS|ASA|TPU|Flexible\s+\d+A)(?:\s+(?:Matte|Silk|Original|Hyper\s*Speed|HS|Lumos|CMYK)(?:\s+(?:Dual\s+Color|Rainbow|Litho))?)?)\s+(?:filament\s+)?(.+)$/i);
+  if (azurefilmFilamentMatch) {
+    const basePart = azurefilmFilamentMatch[1].trim();
+    const remainder = azurefilmFilamentMatch[2].trim();
+    // Only return base if remainder looks like a color (not a pack descriptor)
+    if (!remainder.match(/\d+-pack|Sample|plate|Magnetic|drill/i)) {
+      return basePart;
+    }
+  }
+
   // Examples: "PLA Basic-High Speed 1.75mm, 1 KG Carrot Orange" → "PLA Basic-High Speed"
   //           "PLA Matte Dual Filament 1.75mm, 1 KG Purple & Blue" → "PLA Matte Dual"
   //           "PLA Matte Triple Filament 1.75mm, 1KG/2.2LB White Pink Purple" → "PLA Matte Triple"
