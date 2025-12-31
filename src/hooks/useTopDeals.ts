@@ -21,12 +21,13 @@ export function useTopDeals() {
   return useQuery({
     queryKey: ["top-deals"],
     queryFn: async () => {
-      // Get filaments with prices
+      // Get filaments with prices (excluding small/sample spools)
       const { data: filaments, error: filamentsError } = await supabase
         .from("filaments")
         .select("id, product_title, vendor, material, featured_image, variant_price, net_weight_g, product_url")
         .not("variant_price", "is", null)
         .gt("variant_price", 0)
+        .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude small/sample spools
         .order("updated_at", { ascending: false })
         .limit(200);
 

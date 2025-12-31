@@ -44,6 +44,7 @@ export function useSimilarFilaments(
           .eq("material", material)
           .neq("id", filamentId)
           .not("vendor", "eq", vendor || "")
+          .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude small/sample spools
           .limit(5);
 
         // Filter by similar color family if available

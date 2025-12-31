@@ -34,7 +34,9 @@ const Deals = () => {
           <div className="text-center py-12 text-muted-foreground">Loading deals...</div>
         ) : deals && deals.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {deals.map((deal) => {
+            {deals
+              .filter((deal) => !deal.filament?.net_weight_g || deal.filament.net_weight_g >= 300) // Exclude small/sample spools
+              .map((deal) => {
               const discount = deal.original_price 
                 ? Math.round(((deal.original_price - deal.deal_price) / deal.original_price) * 100)
                 : 0;
