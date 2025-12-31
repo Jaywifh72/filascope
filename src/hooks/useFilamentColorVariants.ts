@@ -56,6 +56,26 @@ export function getBaseProductName(title: string): string {
     .replace(/\s+Refill\s*$/gi, '')
     .trim();
   
+  // 3D-FUEL PATTERN: Handle comma-separated format "ProductLine Material, Color, Size"
+  // Examples: "Standard PLA+, Desert Tan, 1.75mm" → "Standard PLA+"
+  //           "Tough Pro PLA+, Almond, 1.75mm" → "Tough Pro PLA+"
+  //           "Silk PLA+, Silky Black Hills Gold, 1.75mm" → "Silk PLA+"
+  const threeDFuelProductLines = [
+    'Dual-Color Silk', 'Dual Color Silk',
+    'Tough Pro', 'Standard', 'Silk', 'Pro',
+  ];
+  
+  for (const productLine of threeDFuelProductLines) {
+    const regex = new RegExp(
+      `^(${productLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+(?:PLA\\+?|PETG|PCTG|ABS|TPU|ASA|PC)),\\s*.+$`,
+      'i'
+    );
+    const match = normalizedTitle.match(regex);
+    if (match) {
+      return match[1].trim();
+    }
+  }
+
   // AMOLEN PATTERN - Handle "Material ProductLine [Filament] [Size] [Color]" format
   // Must come BEFORE other patterns to correctly extract product lines like "PLA Matte Triple"
   const amelonProductLines = [
