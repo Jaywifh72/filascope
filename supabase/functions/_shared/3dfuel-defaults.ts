@@ -459,12 +459,33 @@ export function extractColorName(variant: any, productTitle: string, productHand
     if (title.toLowerCase() === 'default title') {
       // Fall through to other methods
     } else {
-      // Handle "Color / Weight" format
+      // Handle "/" separated formats
       if (title.includes('/')) {
-        const colorPart = title.split('/')[0].trim();
-        // Make sure it's not a weight/diameter value
+        const parts = title.split('/').map((p: string) => p.trim());
+        
+        // 3-part format: "Material / Size / Color" (e.g., "Silk PLA+ / 1kg 1.75mm Spool / Silky Lagoon")
+        if (parts.length >= 3) {
+          // Last part is typically the color
+          const lastPart = parts[parts.length - 1];
+          // Verify it's not a weight/size value
+          if (lastPart && !lastPart.match(/^\d/) && 
+              !lastPart.toLowerCase().includes('mm') &&
+              !lastPart.toLowerCase().match(/\d+\s*(g|kg|spool)/i)) {
+            // Also check it's not a product line term
+            if (!PRODUCT_LINE_TERMS.has(lastPart.toLowerCase())) {
+              console.log(`[Color] Extracted from 3-part variant title: "${lastPart}"`);
+              return lastPart;
+            }
+          }
+        }
+        
+        // 2-part format: "Color / Weight" (e.g., "Desert Tan / 1kg")
+        const colorPart = parts[0];
         if (colorPart && !colorPart.match(/^\d/) && !colorPart.toLowerCase().includes('mm')) {
-          return colorPart;
+          // Check if first part is a product line term (means color is likely elsewhere)
+          if (!PRODUCT_LINE_TERMS.has(colorPart.toLowerCase())) {
+            return colorPart;
+          }
         }
       }
       
