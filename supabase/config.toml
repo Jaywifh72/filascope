@@ -401,3 +401,6 @@ verify_jwt = false
 
 [functions.sync-fusion-filaments-products]
 verify_jwt = false
+
+[functions.sync-geeetech-products]
+verify_jwt = false
