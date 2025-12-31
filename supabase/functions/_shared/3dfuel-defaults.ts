@@ -287,9 +287,9 @@ export function cleanProductTitle(title: string, colorName: string): string {
 }
 
 /**
- * Extract weight from variant or product
+ * Extract weight from variant or product title
  */
-export function extractWeight(variant: any): number {
+export function extractWeight(variant: any, productTitle?: string): number {
   const options = [variant.option1, variant.option2, variant.option3].filter(Boolean);
   
   for (const opt of options) {
@@ -300,6 +300,19 @@ export function extractWeight(variant: any): number {
       return parseInt(gMatch[1], 10);
     }
     const kgMatch = lower.match(/(\d+(?:\.\d+)?)\s*kg\b/);
+    if (kgMatch) {
+      return parseFloat(kgMatch[1]) * 1000;
+    }
+  }
+  
+  // Check product title for weight (catches "Pro PCTG Sample Coils, 1.75mm, 50g")
+  if (productTitle) {
+    const titleLower = productTitle.toLowerCase();
+    const gMatch = titleLower.match(/(\d+(?:\.\d+)?)\s*g\b/);
+    if (gMatch) {
+      return parseInt(gMatch[1], 10);
+    }
+    const kgMatch = titleLower.match(/(\d+(?:\.\d+)?)\s*kg\b/);
     if (kgMatch) {
       return parseFloat(kgMatch[1]) * 1000;
     }
