@@ -5,6 +5,12 @@ import {
   YOUSU_COLLECTION_URLS,
   getYousuProductUrl,
 } from '../_shared/yousu-defaults.ts';
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

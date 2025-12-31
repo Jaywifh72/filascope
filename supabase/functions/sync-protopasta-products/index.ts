@@ -24,6 +24,12 @@ import {
   extractProtoPastaDiameter,
   getProtoPastaColorHex,
 } from '../_shared/protopasta-defaults.ts';
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -147,12 +153,9 @@ async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
 
 // ============= STEP 2: EXPLODE VARIANTS =============
 
-// Minimum weight threshold to filter out sample coils (50g, 100g, etc.)
-const MIN_WEIGHT_GRAMS = 300;
-
 function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
   const variants: ProductVariant[] = [];
-  let skippedLowWeight = 0;
+  const filterStats = createFilterStats();
 
   console.log('[Proto-Pasta] Step 2: Exploding color variants...');
 
@@ -177,10 +180,11 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
       const weightGrams = extractProtoPastaWeight(variantTitle || product.title);
       const diameterMm = extractProtoPastaDiameter(variantTitle || product.title);
 
-      // Skip sample coils and low-weight variants
-      if (weightGrams && weightGrams < MIN_WEIGHT_GRAMS) {
-        console.log(`[Proto-Pasta] Skipping low-weight variant: ${fullTitle} (${weightGrams}g)`);
-        skippedLowWeight++;
+      // Apply standard filters (exclude bulk >1.4kg, samples <300g, 2.85mm)
+      const filterResult = shouldIncludeVariant(weightGrams, diameterMm);
+      if (!filterResult.include) {
+        updateFilterStats(filterStats, filterResult);
+        console.log(`[Proto-Pasta] Skipping: ${fullTitle} - ${filterResult.reason}`);
         continue;
       }
 
@@ -191,8 +195,8 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
         titleLower.includes('sample pack') ||
         (titleLower.includes('coil') && !titleLower.includes('spool'))
       ) {
+        updateFilterStats(filterStats, { include: false, reason: 'Sample product' });
         console.log(`[Proto-Pasta] Skipping sample product: ${fullTitle}`);
-        skippedLowWeight++;
         continue;
       }
 
@@ -230,7 +234,8 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
     }
   }
 
-  console.log(`[Proto-Pasta] Total variants exploded: ${variants.length} (skipped ${skippedLowWeight} low-weight/sample products)`);
+  logFilterStats('Proto-Pasta', filterStats);
+  console.log(`[Proto-Pasta] Total variants exploded: ${variants.length}`);
   return variants;
 }
 

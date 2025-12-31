@@ -22,6 +22,12 @@ import {
   NINJATEK_TDS_URLS,
   type ProductLine,
 } from '../_shared/ninjatek-defaults.ts';
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
