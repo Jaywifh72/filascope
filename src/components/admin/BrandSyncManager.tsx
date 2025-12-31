@@ -341,11 +341,21 @@ export function BrandSyncManager() {
               <div className="mt-4 pt-4 border-t border-border">
                 <div className="text-sm font-medium mb-2">Field Coverage</div>
                 <div className="flex flex-wrap gap-2">
-                  {Object.entries(result.fieldCoverage).map(([field, percent]) => (
-                    <Badge key={field} variant="outline" className="text-xs">
-                      {field}: {typeof percent === 'number' ? `${percent}%` : percent}
-                    </Badge>
-                  ))}
+                {Object.entries(result.fieldCoverage).map(([field, value]) => {
+                    let displayValue: string;
+                    if (typeof value === 'number') {
+                      displayValue = `${value}%`;
+                    } else if (value && typeof value === 'object' && 'percent' in value) {
+                      displayValue = `${(value as { percent: number }).percent}%`;
+                    } else {
+                      displayValue = String(value);
+                    }
+                    return (
+                      <Badge key={field} variant="outline" className="text-xs">
+                        {field}: {displayValue}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </div>
             )}

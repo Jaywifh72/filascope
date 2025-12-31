@@ -46,7 +46,7 @@ export interface SyncResult {
     errors: number;
     total: number;
   };
-  fieldCoverage?: Record<string, number>;
+  fieldCoverage?: Record<string, number | { count: number; percent: number }>;
   duration_ms?: number;
 }
 
