@@ -6,6 +6,12 @@ import {
   getHatchboxProductUrl,
 } from '../_shared/hatchbox-defaults.ts';
 import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
+import {
   buildFieldCoverage,
   createProductResult,
   buildSyncResponse,
@@ -142,6 +148,7 @@ async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
 
 function processVariants(products: ShopifyProduct[]): ProductVariant[] {
   const variants: ProductVariant[] = [];
+  const filterStats = createFilterStats();
   
   console.log('[Step 2] Processing Shopify products into variants...');
   
@@ -176,6 +183,14 @@ function processVariants(products: ShopifyProduct[]): ProductVariant[] {
         diameter = 2.85;
       }
       
+      // Apply standard filtering (samples, bulk, 2.85mm)
+      const filterResult = shouldIncludeVariant(weight, diameter);
+      updateFilterStats(filterStats, filterResult);
+      if (!filterResult.include) {
+        console.log(`[Hatchbox] Skipping: ${product.title} - ${colorName} (${filterResult.reason})`);
+        continue;
+      }
+      
       variants.push({
         productId: `hatchbox-${product.id}-${variant.id}`,
         variantId: String(variant.id),
@@ -195,6 +210,7 @@ function processVariants(products: ShopifyProduct[]): ProductVariant[] {
     }
   }
   
+  logFilterStats('Hatchbox', filterStats);
   console.log(`[Step 2] Processed ${variants.length} variants from ${products.length} products`);
   return variants;
 }

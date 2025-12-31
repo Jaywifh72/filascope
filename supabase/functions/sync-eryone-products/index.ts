@@ -1,5 +1,11 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
+import {
   enrichEryoneProduct,
   getEryoneColorHex,
   normalizeEryoneMaterial,
@@ -109,6 +115,7 @@ Deno.serve(async (req) => {
       
       // Process each product with variant explosion
       const productsToProcess = limit ? filamentProducts.slice(0, limit) : filamentProducts;
+      const filterStats = createFilterStats();
       
       for (const product of productsToProcess) {
         try {
@@ -126,6 +133,28 @@ Deno.serve(async (req) => {
             const colorName = variantTitle !== 'Default Title' && variantTitle !== 'Default'
               ? variantTitle
               : extractColorFromTitle(product.title);
+            
+            // Extract weight (default 1kg = 1000g)
+            let weight = 1000;
+            const weightMatch = fullTitle.match(/(\d+(?:\.\d+)?)\s*kg/i);
+            if (weightMatch) {
+              weight = parseFloat(weightMatch[1]) * 1000;
+            }
+            const gMatch = fullTitle.match(/(\d+)\s*g(?!ram)/i);
+            if (gMatch && !fullTitle.match(/\d+\s*kg/i)) {
+              weight = parseInt(gMatch[1]);
+            }
+            
+            // Check for 2.85mm diameter
+            const is285 = fullTitle.includes('2.85') || fullTitle.includes('3mm');
+            
+            // Apply standard filtering (samples, bulk, 2.85mm)
+            const filterResult = shouldIncludeVariant(weight, is285 ? 2.85 : 1.75);
+            updateFilterStats(filterStats, filterResult);
+            if (!filterResult.include) {
+              console.log(`[Eryone] Skipping: ${fullTitle} (${filterResult.reason})`);
+              continue;
+            }
             
             // Find variant-specific image
             const variantImage = images.find((img: any) => 
@@ -217,6 +246,7 @@ Deno.serve(async (req) => {
         }
       }
       
+      logFilterStats('Eryone', filterStats);
       console.log(`[Step 1] Complete - Created: ${result.stats.productsCreated}, Updated: ${result.stats.productsUpdated}, Failed: ${result.stats.productsFailed}`);
     }
 

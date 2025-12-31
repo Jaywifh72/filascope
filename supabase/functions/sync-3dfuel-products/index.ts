@@ -29,14 +29,18 @@ import {
   createProductResult,
   type SyncProductResult,
 } from '../_shared/sync-response-builder.ts';
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+  is285mmDiameter,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Site-wide weight threshold - exclude samples and small coils
-const MIN_WEIGHT_GRAMS = 300;
 
 // ============================================================================
 // INTERFACES
@@ -179,7 +183,7 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
   
   const variants: ProcessedVariant[] = [];
   const seenIds = new Set<string>();
-  let skippedLowWeight = 0;
+  const filterStats = createFilterStats();
   
   for (const product of products) {
     // Extract product-level info once (shared across all color variants)
@@ -193,10 +197,11 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       const diameter = extractDiameter(variant);
       const weight = extractWeight(variant, product.title);
       
-      // Skip small weight variants (samples, coils, etc.)
-      if (weight > 0 && weight < MIN_WEIGHT_GRAMS) {
-        console.log(`[Variant Explosion] Skipping low-weight variant: ${product.title} - ${colorName} (${weight}g)`);
-        skippedLowWeight++;
+      // Apply standard filtering (samples, bulk, 2.85mm)
+      const filterResult = shouldIncludeVariant(weight, diameter);
+      updateFilterStats(filterStats, filterResult);
+      if (!filterResult.include) {
+        console.log(`[3D-Fuel] Skipping: ${product.title} - ${colorName} (${filterResult.reason})`);
         continue;
       }
       
@@ -240,7 +245,8 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
     }
   }
   
-  console.log(`[Step 2] Complete: ${variants.length} variants exploded (${skippedLowWeight} low-weight variants filtered)`);
+  logFilterStats('3D-Fuel', filterStats);
+  console.log(`[Step 2] Complete: ${variants.length} variants exploded`);
   console.log(`[Step 2] Product lines created: ${new Set(variants.map(v => v.productLineId)).size}`);
   return variants;
 }

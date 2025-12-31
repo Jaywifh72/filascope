@@ -18,6 +18,14 @@ import {
   getCrealityColorHex,
   CREALITY_STORE_INFO,
 } from '../_shared/creality-defaults.ts';
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+  extractWeightFromText,
+  is285mmDiameter,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -185,6 +193,7 @@ Deno.serve(async (req) => {
     
     const discoveredProducts: ProductData[] = [];
     let scrapeCount = 0;
+    const filterStats = createFilterStats();
     
     for (const productUrl of discoveredUrls) {
       if (scrapeCount >= limit) break;
@@ -316,6 +325,18 @@ Deno.serve(async (req) => {
             continue;
           }
           
+          // Extract weight for filtering
+          const weight = extractWeightFromText(title) || 1000;
+          const is285 = is285mmDiameter(title);
+          
+          // Apply standard filtering (samples, bulk, 2.85mm)
+          const filterResult = shouldIncludeVariant(weight, is285 ? 2.85 : 1.75);
+          updateFilterStats(filterStats, filterResult);
+          if (!filterResult.include) {
+            console.log(`[Creality] Skipping: ${title} - ${colorName} (${filterResult.reason})`);
+            continue;
+          }
+          
           discoveredProducts.push({
             productId,
             title: colorName ? `${title} - ${colorName}` : title,
@@ -340,6 +361,7 @@ Deno.serve(async (req) => {
       }
     }
     
+    logFilterStats('Creality', filterStats);
     console.log(`[Step 3] Scraped ${stats.scraped} products, ${discoveredProducts.length} variants`);
 
     // =========================================================================
