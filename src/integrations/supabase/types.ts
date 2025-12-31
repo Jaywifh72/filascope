@@ -525,6 +525,109 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_scraper_profiles: {
+        Row: {
+          analysis_confidence: number | null
+          analysis_notes: string | null
+          brand_id: string | null
+          brand_slug: string
+          color_extraction_rules: Json | null
+          color_hex_mappings: Json | null
+          created_at: string | null
+          created_by: string | null
+          discovered_colors: Json | null
+          discovered_product_lines: Json | null
+          id: string
+          last_analyzed_at: string | null
+          last_updated_by: string | null
+          material_patterns: Json | null
+          price_interpretation: string | null
+          product_line_extraction_rules: Json | null
+          product_line_synonyms: Json | null
+          product_structure: string | null
+          sample_products: Json | null
+          special_cases: Json | null
+          swatch_type: string | null
+          title_format_pattern: string | null
+          updated_at: string | null
+          variant_schema: Json | null
+        }
+        Insert: {
+          analysis_confidence?: number | null
+          analysis_notes?: string | null
+          brand_id?: string | null
+          brand_slug: string
+          color_extraction_rules?: Json | null
+          color_hex_mappings?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          discovered_colors?: Json | null
+          discovered_product_lines?: Json | null
+          id?: string
+          last_analyzed_at?: string | null
+          last_updated_by?: string | null
+          material_patterns?: Json | null
+          price_interpretation?: string | null
+          product_line_extraction_rules?: Json | null
+          product_line_synonyms?: Json | null
+          product_structure?: string | null
+          sample_products?: Json | null
+          special_cases?: Json | null
+          swatch_type?: string | null
+          title_format_pattern?: string | null
+          updated_at?: string | null
+          variant_schema?: Json | null
+        }
+        Update: {
+          analysis_confidence?: number | null
+          analysis_notes?: string | null
+          brand_id?: string | null
+          brand_slug?: string
+          color_extraction_rules?: Json | null
+          color_hex_mappings?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          discovered_colors?: Json | null
+          discovered_product_lines?: Json | null
+          id?: string
+          last_analyzed_at?: string | null
+          last_updated_by?: string | null
+          material_patterns?: Json | null
+          price_interpretation?: string | null
+          product_line_extraction_rules?: Json | null
+          product_line_synonyms?: Json | null
+          product_structure?: string | null
+          sample_products?: Json | null
+          special_cases?: Json | null
+          swatch_type?: string | null
+          title_format_pattern?: string | null
+          updated_at?: string | null
+          variant_schema?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_scraper_profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "automated_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_scraper_profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_scraper_profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_sync_logs: {
         Row: {
           brand_id: string | null
