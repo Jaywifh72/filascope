@@ -407,3 +407,6 @@ verify_jwt = false
 
 [functions.sync-ic3d-products]
 verify_jwt = false
+
+[functions.sync-overture-products]
+verify_jwt = false
