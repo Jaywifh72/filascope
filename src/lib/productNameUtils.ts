@@ -177,6 +177,29 @@ export const getBaseProductName = (title: string, material?: string | null): str
     }
   }
   
+  // 3D-FUEL PATTERN: Handle comma-separated format "ProductLine Material, Color, Size"
+  // Examples: "Standard PLA+, Desert Tan, 1.75mm" → "Standard PLA+"
+  //           "Tough Pro PLA+, Almond, 1.75mm" → "Tough Pro PLA+"
+  //           "Silk PLA+, Silky Black Hills Gold, 1.75mm" → "Silk PLA+"
+  //           "Pro PCTG, Desert Tan, 1.75mm" → "Pro PCTG"
+  //           "Dual-Color Silk PLA+, Silky Lagoon, 1.75mm" → "Dual-Color Silk PLA+"
+  const threeDFuelProductLines = [
+    'Dual-Color Silk', 'Dual Color Silk',
+    'Tough Pro', 'Standard', 'Silk', 'Pro',
+  ];
+  
+  for (const productLine of threeDFuelProductLines) {
+    // Match: ProductLine + Material + comma + anything (color, size)
+    const regex = new RegExp(
+      `^(${productLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+(?:PLA\\+?|PETG|PCTG|ABS|TPU|ASA|PC)),\\s*.+$`,
+      'i'
+    );
+    const match = normalizedTitle.match(regex);
+    if (match) {
+      return match[1].trim();
+    }
+  }
+
   // AMOLEN PATTERN: Handle "Material ProductLine [Filament] [Size] [Color]" format
   // Examples: "PLA Basic-High Speed 1.75mm, 1 KG Carrot Orange" → "PLA Basic-High Speed"
   //           "PLA Matte Dual Filament 1.75mm, 1 KG Purple & Blue" → "PLA Matte Dual"
