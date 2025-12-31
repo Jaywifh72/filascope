@@ -24,24 +24,43 @@ export const BRAND_CONFIG = {
 // 3D-FUEL PRODUCT LINE PATTERNS
 // ============================================================================
 
-// Used to extract the base product line from product titles (without color)
-export const PRODUCT_LINE_PATTERNS: Array<{ pattern: RegExp; line: string }> = [
-  // Pro/Advanced lines
-  { pattern: /\bTough Pro PLA\+?/i, line: 'Tough Pro PLA+' },
-  { pattern: /\bStandard PLA\+/i, line: 'Standard PLA+' },
-  { pattern: /\bStandard PLA(?!\+)/i, line: 'Standard PLA' },
-  { pattern: /\bPro PCTG/i, line: 'Pro PCTG' },
-  { pattern: /\bPro HT\s*PLA/i, line: 'Pro HT PLA' },
-  { pattern: /\bPro PLA/i, line: 'Pro PLA' },
-  { pattern: /\bWorkDay ABS/i, line: 'WorkDay ABS' },
-  { pattern: /\bWorkDay PETG/i, line: 'WorkDay PETG' },
-  // Specialty lines
-  { pattern: /\bBiome3D/i, line: 'Biome3D' },
-  { pattern: /\bBuzzed/i, line: 'Buzzed' },
-  { pattern: /\bEntwined/i, line: 'Entwined' },
-  { pattern: /\bWound Up/i, line: 'Wound Up' },
-  { pattern: /\bLandfill/i, line: 'Landfill' },
-  { pattern: /\bc2renew|C2\s*Renew/i, line: 'C2 Renew' },
+// Used to extract the base product line from product titles/handles (without color)
+// CRITICAL: Order matters - more specific patterns must come first
+export const PRODUCT_LINE_PATTERNS: Array<{ pattern: RegExp; line: string; handlePattern?: RegExp }> = [
+  // Non-filament products (to be filtered out)
+  { pattern: /\b3D\s*Clean\b/i, line: '3D Clean', handlePattern: /3d-clean/i },
+  
+  // Specialty/Composite lines (must match before generic materials)
+  { pattern: /\bPET-CF\b|\bPET CF\b/i, line: 'PET-CF', handlePattern: /pet-cf/i },
+  { pattern: /\bPLA-CF\b|\bPLA CF\b/i, line: 'PLA-CF', handlePattern: /pla-cf/i },
+  { pattern: /\bDual[\s-]*Color[\s-]*Silk/i, line: 'Dual Color Silk PLA', handlePattern: /dual-color-silk/i },
+  { pattern: /\bBiome3D/i, line: 'Biome3D', handlePattern: /biome3d/i },
+  { pattern: /\bBuzzed/i, line: 'Buzzed', handlePattern: /buzzed/i },
+  { pattern: /\bEntwined/i, line: 'Entwined', handlePattern: /entwined/i },
+  { pattern: /\bWound\s*Up/i, line: 'Wound Up', handlePattern: /wound-?up/i },
+  { pattern: /\bLandfillament/i, line: 'Landfillament', handlePattern: /landfill/i },
+  { pattern: /\bc2renew|C2\s*Renew/i, line: 'C2 Renew', handlePattern: /c2renew/i },
+  { pattern: /\bReFuel\b/i, line: 'ReFuel PETG', handlePattern: /refuel/i },
+  
+  // Pro/Advanced lines (specific variants first)
+  { pattern: /\bTough Pro PLA\+/i, line: 'Tough Pro PLA+', handlePattern: /tough-pro-pla/i },
+  { pattern: /\bTough Pro PLA\b/i, line: 'Tough Pro PLA+', handlePattern: /tough-pro-pla/i },
+  { pattern: /\bStandard PLA\+/i, line: 'Standard PLA+', handlePattern: /standard-pla/i },
+  { pattern: /\bStandard PLA\b(?!\+)/i, line: 'Standard PLA', handlePattern: /standard-pla/i },
+  { pattern: /\bPro PCTG/i, line: 'Pro PCTG', handlePattern: /pro-pctg/i },
+  { pattern: /\bPro HT[\s-]*PLA/i, line: 'Pro HT PLA', handlePattern: /pro-ht-pla|htpla/i },
+  { pattern: /\bPro PETG/i, line: 'Pro PETG', handlePattern: /pro-petg/i },
+  { pattern: /\bPro ABS/i, line: 'Pro ABS', handlePattern: /pro-abs/i },
+  { pattern: /\bPro ASA/i, line: 'Pro ASA', handlePattern: /pro-asa/i },
+  { pattern: /\bPro PLA/i, line: 'Pro PLA', handlePattern: /pro-pla/i },
+  
+  // WorkDay lines
+  { pattern: /\bWorkDay ABS/i, line: 'WorkDay ABS', handlePattern: /workday-abs/i },
+  { pattern: /\bWorkDay PETG/i, line: 'WorkDay PETG', handlePattern: /workday-petg/i },
+  { pattern: /\bWorkDay PLA/i, line: 'WorkDay PLA', handlePattern: /workday-pla/i },
+  
+  // Silk variants
+  { pattern: /\bSilk PLA/i, line: 'Silk PLA', handlePattern: /silk-pla/i },
 ];
 
 // ============================================================================
@@ -510,10 +529,25 @@ export function extractDiameter(variant: any): number {
  * Generate product line ID for grouping color variants together
  * 
  * CRITICAL: This must strip the color name to ensure all colors of the same product
- * share the same product_line_id
+ * share the same product_line_id. Uses product HANDLE for accurate product identification.
  */
-export function generateProductLineId(productTitle: string, colorName?: string): string {
-  // Start with the product line
+export function generateProductLineId(productTitle: string, productHandle?: string): string {
+  // Method 1: Use product handle for more accurate product identification
+  if (productHandle) {
+    for (const { handlePattern, line } of PRODUCT_LINE_PATTERNS) {
+      if (handlePattern && handlePattern.test(productHandle)) {
+        const base = line
+          .replace(/\s+/g, '-')
+          .toLowerCase()
+          .replace(/[^a-z0-9-]+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        return `3dfuel__${base}`;
+      }
+    }
+  }
+  
+  // Method 2: Fall back to title-based extraction
   const productLine = extractProductLine(productTitle);
   
   // Create clean base ID from product line only (no color)
@@ -534,7 +568,22 @@ export function generateProductLineId(productTitle: string, colorName?: string):
     base = material.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   }
   
-  return `3dfuel-${base}`;
+  return `3dfuel__${base}`;
+}
+
+/**
+ * Check if a product is a non-filament product (accessories, cleaning compounds)
+ */
+export function isNonFilament(productTitle: string, productHandle: string): boolean {
+  const handle = productHandle.toLowerCase();
+  const title = productTitle.toLowerCase();
+  
+  // 3D Clean is a cleaning compound, not a filament
+  if (handle.includes('3d-clean') || title.includes('3d clean')) {
+    return true;
+  }
+  
+  return false;
 }
 
 /**
