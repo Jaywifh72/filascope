@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle, Store, Sparkles, ClipboardCheck, BarChart3, Wand2 } from "lucide-react";
+import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle, Store, Sparkles, ClipboardCheck, BarChart3, Wand2, Brain } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -25,6 +25,7 @@ import { ElegooSyncDashboard } from "@/components/admin/ElegooSyncDashboard";
 import { BrandCategoryTabs } from "@/components/admin/BrandCategoryTabs";
 import { EnrichmentDashboard } from "@/components/admin/EnrichmentDashboard";
 import { BrandSyncManager } from "@/components/admin/BrandSyncManager";
+import { ScraperProfilesPanel } from "@/components/admin/ScraperProfilesPanel";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 import { useActiveScrapeJob } from "@/hooks/useActiveScrapeJob";
@@ -324,7 +325,7 @@ const AdminMaintenance = () => {
 
       {/* Tabs for Brand Scrapers */}
       <Tabs defaultValue="all-brands" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 max-w-3xl">
+        <TabsList className="grid w-full grid-cols-7 max-w-4xl">
           <TabsTrigger value="all-brands" className="flex items-center gap-2">
             <Store className="w-4 h-4" />
             All Brands
@@ -332,6 +333,10 @@ const AdminMaintenance = () => {
           <TabsTrigger value="sync-manager" className="flex items-center gap-2">
             <Wand2 className="w-4 h-4" />
             Sync Manager
+          </TabsTrigger>
+          <TabsTrigger value="ai-profiles" className="flex items-center gap-2">
+            <Brain className="w-4 h-4" />
+            AI Profiles
           </TabsTrigger>
           <TabsTrigger value="enrichment" className="flex items-center gap-2">
             <Sparkles className="w-4 h-4" />
@@ -359,6 +364,11 @@ const AdminMaintenance = () => {
         {/* Sync Manager Tab - Execute brand sync pipelines */}
         <TabsContent value="sync-manager" className="space-y-6 mt-6">
           <BrandSyncManager />
+        </TabsContent>
+
+        {/* AI Profiles Tab - Manage AI-generated scraper profiles */}
+        <TabsContent value="ai-profiles" className="space-y-6 mt-6">
+          <ScraperProfilesPanel />
         </TabsContent>
 
         {/* Enrichment Tab - Color, TDS, Regional Pricing */}

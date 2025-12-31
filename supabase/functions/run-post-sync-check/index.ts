@@ -23,6 +23,7 @@ interface PostSyncCheckReport {
   scrapedProducts: number;
   scrapeErrors: string[];
   aiFixPrompt: string | null;
+  profileUpdated?: boolean;
 }
 
 interface ScrapedProductInfo {
@@ -1407,6 +1408,67 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Self-healing: Update brand profile with AI discoveries
+    let profileUpdated = false;
+    if (aiAnalysis?.colorMappings && Object.keys(aiAnalysis.colorMappings).length > 0) {
+      try {
+        console.log(`[PostSyncCheck] Self-healing: Updating brand profile with ${Object.keys(aiAnalysis.colorMappings).length} new color mappings...`);
+        
+        // Check if profile exists
+        const { data: existingProfile } = await supabase
+          .from('brand_scraper_profiles')
+          .select('id, color_hex_mappings')
+          .eq('brand_slug', brandSlug)
+          .maybeSingle();
+        
+        if (existingProfile) {
+          // Merge new color mappings with existing ones
+          const mergedMappings = {
+            ...(existingProfile.color_hex_mappings || {}),
+            ...aiAnalysis.colorMappings,
+          };
+          
+          const { error: updateError } = await supabase
+            .from('brand_scraper_profiles')
+            .update({
+              color_hex_mappings: mergedMappings,
+              analysis_notes: aiAnalysis.rootCause 
+                ? `Last auto-update: ${aiAnalysis.rootCause.slice(0, 200)}`
+                : null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existingProfile.id);
+          
+          if (!updateError) {
+            profileUpdated = true;
+            console.log(`[PostSyncCheck] Self-healing: Brand profile updated successfully`);
+          } else {
+            console.error(`[PostSyncCheck] Self-healing error:`, updateError.message);
+          }
+        } else {
+          // Create new profile with discovered mappings
+          const { error: insertError } = await supabase
+            .from('brand_scraper_profiles')
+            .insert({
+              brand_slug: brandSlug,
+              color_hex_mappings: aiAnalysis.colorMappings,
+              swatch_type: aiAnalysis.swatchType || 'unknown',
+              analysis_notes: `Auto-created from Post Sync Check: ${aiAnalysis.rootCause?.slice(0, 200) || 'AI analysis'}`,
+              analysis_confidence: 0.5, // Lower confidence for auto-created
+            });
+          
+          if (!insertError) {
+            profileUpdated = true;
+            console.log(`[PostSyncCheck] Self-healing: Created new brand profile`);
+          } else {
+            console.error(`[PostSyncCheck] Self-healing insert error:`, insertError.message);
+          }
+        }
+      } catch (err) {
+        console.error(`[PostSyncCheck] Self-healing exception:`, err);
+      }
+    }
+
     // Generate AI fix prompt if there are issues (now with AI analysis)
     const aiFixPrompt = generateAIFixPrompt(brandName, brandSlug, checks, totalProducts || 0, aiAnalysis);
 
@@ -1420,7 +1482,8 @@ Deno.serve(async (req) => {
       scrapedProducts: scrapedCount,
       scrapeErrors,
       aiFixPrompt,
-    };
+      profileUpdated, // Include in report
+    } as PostSyncCheckReport;
 
     console.log(`[PostSyncCheck] Completed: ${overallStatus} (${failCount} fails, ${warnCount} warnings)`);
 
