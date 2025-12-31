@@ -5,6 +5,13 @@ import {
   HATCHBOX_STORE_INFO,
   getHatchboxProductUrl,
 } from '../_shared/hatchbox-defaults.ts';
+import {
+  buildFieldCoverage,
+  createProductResult,
+  buildSyncResponse,
+  type SyncProductResult,
+  type RichSyncResponse,
+} from '../_shared/sync-response-builder.ts';
 
 // ============================================================================
 // TYPES
@@ -58,7 +65,7 @@ interface ProductVariant {
   diameter: number;
 }
 
-interface SyncResult {
+interface StepResult {
   step: string;
   success: boolean;
   count?: number;
@@ -193,19 +200,20 @@ function processVariants(products: ShopifyProduct[]): ProductVariant[] {
 }
 
 // ============================================================================
-// STEP 3: UPSERT WITH ENRICHMENTS
+// STEP 3: UPSERT WITH ENRICHMENTS (now tracks per-product results)
 // ============================================================================
 
 async function upsertVariants(
   supabase: any,
   variants: ProductVariant[],
   brandId: string | null
-): Promise<{ created: number; updated: number; errors: number }> {
+): Promise<{ created: number; updated: number; errors: number; products: SyncProductResult[] }> {
   console.log('[Step 3] Upserting variants with brand-specific enrichments...');
   
   let created = 0;
   let updated = 0;
   let errors = 0;
+  const products: SyncProductResult[] = [];
   
   for (const variant of variants) {
     try {
@@ -219,6 +227,13 @@ async function upsertVariants(
       // Skip accessories that slipped through
       if (enrichment.is_accessory) {
         console.log(`[Step 3] Skipping accessory: ${variant.title}`);
+        products.push(createProductResult(
+          variant.productId,
+          variant.title,
+          'skipped',
+          {},
+          'Accessory product'
+        ));
         continue;
       }
       
@@ -269,8 +284,21 @@ async function upsertVariants(
         if (error) {
           console.error(`[Step 3] Error updating ${variant.title}:`, error.message);
           errors++;
+          products.push(createProductResult(
+            variant.productId,
+            variant.title,
+            'error',
+            filamentData,
+            error.message
+          ));
         } else {
           updated++;
+          products.push(createProductResult(
+            variant.productId,
+            variant.title,
+            'updated',
+            filamentData
+          ));
         }
       } else {
         // Insert
@@ -281,18 +309,38 @@ async function upsertVariants(
         if (error) {
           console.error(`[Step 3] Error inserting ${variant.title}:`, error.message);
           errors++;
+          products.push(createProductResult(
+            variant.productId,
+            variant.title,
+            'error',
+            filamentData,
+            error.message
+          ));
         } else {
           created++;
+          products.push(createProductResult(
+            variant.productId,
+            variant.title,
+            'created',
+            filamentData
+          ));
         }
       }
     } catch (err) {
       console.error(`[Step 3] Exception processing ${variant.title}:`, err);
       errors++;
+      products.push(createProductResult(
+        variant.productId,
+        variant.title,
+        'error',
+        {},
+        err instanceof Error ? err.message : String(err)
+      ));
     }
   }
   
   console.log(`[Step 3] Upsert complete: ${created} created, ${updated} updated, ${errors} errors`);
-  return { created, updated, errors };
+  return { created, updated, errors, products };
 }
 
 // ============================================================================
@@ -454,7 +502,8 @@ Deno.serve(async (req) => {
   }
   
   const startTime = Date.now();
-  const results: SyncResult[] = [];
+  const stepResults: StepResult[] = [];
+  let allProducts: SyncProductResult[] = [];
   
   try {
     console.log('='.repeat(60));
@@ -496,7 +545,7 @@ Deno.serve(async (req) => {
       
       const deletedCount = deleted?.length || 0;
       console.log(`[Pre-Step] Deleted ${deletedCount} existing products`);
-      results.push({ step: 'clean_slate', success: true, count: deletedCount });
+      stepResults.push({ step: 'clean_slate', success: true, count: deletedCount });
     }
     
     // Step 1: Fetch products
@@ -504,25 +553,26 @@ Deno.serve(async (req) => {
     if (!options.skipFetch) {
       try {
         products = await fetchShopifyProducts();
-        results.push({ step: 'fetch', success: true, count: products.length });
+        stepResults.push({ step: 'fetch', success: true, count: products.length });
       } catch (err) {
         const error = err instanceof Error ? err.message : String(err);
         console.error('[Step 1] Fetch failed:', error);
-        results.push({ step: 'fetch', success: false, error });
+        stepResults.push({ step: 'fetch', success: false, error });
         throw err;
       }
     } else {
       console.log('[Step 1] Skipping fetch (skipFetch=true)');
-      results.push({ step: 'fetch', success: true, count: 0, details: 'skipped' });
+      stepResults.push({ step: 'fetch', success: true, count: 0, details: 'skipped' });
     }
     
     // Step 2: Process variants
     const variants = processVariants(products);
-    results.push({ step: 'process', success: true, count: variants.length });
+    stepResults.push({ step: 'process', success: true, count: variants.length });
     
     // Step 3: Upsert with enrichments
     const upsertResult = await upsertVariants(supabase, variants, brandId);
-    results.push({
+    allProducts = upsertResult.products;
+    stepResults.push({
       step: 'upsert',
       success: upsertResult.errors === 0,
       count: upsertResult.created + upsertResult.updated,
@@ -531,7 +581,7 @@ Deno.serve(async (req) => {
     
     // Step 4: Verify TDS URLs
     const tdsResult = await verifyTdsUrls(supabase);
-    results.push({
+    stepResults.push({
       step: 'verify_tds',
       success: true,
       count: tdsResult.verified,
@@ -540,7 +590,7 @@ Deno.serve(async (req) => {
     
     // Step 5: Fix duplicate hex codes
     const hexResult = await fixDuplicateHexCodes(supabase);
-    results.push({
+    stepResults.push({
       step: 'fix_duplicates',
       success: true,
       count: hexResult.fixed,
@@ -548,28 +598,34 @@ Deno.serve(async (req) => {
     
     // Step 6: Update brand stats
     await updateBrandStats(supabase);
-    results.push({ step: 'update_stats', success: true });
+    stepResults.push({ step: 'update_stats', success: true });
+    
+    // Step 7: Calculate field coverage from database
+    const fieldCoverage = await buildFieldCoverage(supabase, 'Hatchbox');
     
     const duration = Date.now() - startTime;
     console.log('='.repeat(60));
     console.log(`Hatchbox Sync Complete in ${duration}ms`);
     console.log('='.repeat(60));
     
+    // Build rich response using shared utility
+    const response = buildSyncResponse(
+      true,
+      duration,
+      {
+        totalDiscovered: variants.length,
+        created: upsertResult.created,
+        updated: upsertResult.updated,
+        skipped: allProducts.filter(p => p.action === 'skipped').length,
+        errors: upsertResult.errors,
+      },
+      allProducts,
+      fieldCoverage,
+      stepResults
+    );
+    
     return new Response(
-      JSON.stringify({
-        success: true,
-        duration_ms: duration,
-        results,
-        summary: {
-          products_fetched: products.length,
-          variants_processed: variants.length,
-          created: upsertResult.created,
-          updated: upsertResult.updated,
-          errors: upsertResult.errors,
-          tds_verified: tdsResult.verified,
-          duplicates_fixed: hexResult.fixed,
-        },
-      }),
+      JSON.stringify(response),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -583,8 +639,24 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: false,
         duration_ms: Date.now() - startTime,
-        results,
+        results: stepResults,
+        products: allProducts,
         error,
+        summary: {
+          totalDiscovered: 0,
+          created: 0,
+          updated: 0,
+          skipped: 0,
+          errors: 1,
+        },
+        fieldCoverage: {
+          images: { count: 0, percent: 0 },
+          prices: { count: 0, percent: 0 },
+          tds: { count: 0, percent: 0 },
+          colors: { count: 0, percent: 0 },
+          mpn: { count: 0, percent: 0 },
+          specifications: { count: 0, percent: 0 },
+        },
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -23,7 +23,8 @@ export interface SyncResult {
     updated: number;
     skipped: number;
     errors: number;
-    total: number;
+    total?: number;
+    totalDiscovered?: number;
   };
   products?: any[];
   fieldCoverage?: any;

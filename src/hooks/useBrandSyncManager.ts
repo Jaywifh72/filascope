@@ -35,6 +35,32 @@ export interface SyncProgress {
   message?: string;
 }
 
+export interface SyncProductResult {
+  productId: string;
+  title: string;
+  action: 'created' | 'updated' | 'skipped' | 'error';
+  reason?: string;
+  fields: {
+    image: boolean;
+    price: boolean;
+    tds: boolean;
+    colorHex: boolean;
+    mpn: boolean;
+    specifications: boolean;
+  };
+  price?: number;
+  compareAtPrice?: number;
+}
+
+export interface FieldCoverageResult {
+  images: { count: number; percent: number };
+  prices: { count: number; percent: number };
+  tds: { count: number; percent: number };
+  colors: { count: number; percent: number };
+  mpn: { count: number; percent: number };
+  specifications: { count: number; percent: number };
+}
+
 export interface SyncResult {
   success: boolean;
   jobId?: string;
@@ -44,9 +70,11 @@ export interface SyncResult {
     updated: number;
     skipped: number;
     errors: number;
-    total: number;
+    total?: number;
+    totalDiscovered?: number;
   };
-  fieldCoverage?: Record<string, number | { count: number; percent: number }>;
+  products?: SyncProductResult[];
+  fieldCoverage?: FieldCoverageResult;
   duration_ms?: number;
 }
 
@@ -175,7 +203,15 @@ export function useBrandSyncManager() {
         success: data?.success ?? true,
         jobId: data?.jobId,
         message: data?.message,
-        summary: data?.summary,
+        summary: data?.summary ? {
+          created: data.summary.created ?? 0,
+          updated: data.summary.updated ?? 0,
+          skipped: data.summary.skipped ?? 0,
+          errors: data.summary.errors ?? 0,
+          total: data.summary.total ?? data.summary.totalDiscovered,
+          totalDiscovered: data.summary.totalDiscovered ?? data.summary.total,
+        } : undefined,
+        products: data?.products,
         fieldCoverage: data?.fieldCoverage,
         duration_ms: data?.duration_ms,
       };
