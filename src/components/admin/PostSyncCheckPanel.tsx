@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   CheckCircle2, 
   XCircle, 
@@ -10,7 +11,9 @@ import {
   ChevronDown,
   Download,
   ClipboardCheck,
-  ExternalLink
+  ExternalLink,
+  Sparkles,
+  Copy
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -32,6 +35,7 @@ interface PostSyncCheckReport {
   overallStatus: 'pass' | 'warning' | 'fail';
   scrapedProducts: number;
   scrapeErrors: string[];
+  aiFixPrompt: string | null;
 }
 
 interface PostSyncCheckPanelProps {
@@ -44,6 +48,7 @@ export function PostSyncCheckPanel({ brandSlug, brandName, disabled }: PostSyncC
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<PostSyncCheckReport | null>(null);
   const [expandedChecks, setExpandedChecks] = useState<Set<string>>(new Set());
+  const [isPromptExpanded, setIsPromptExpanded] = useState(false);
 
   const runCheck = async () => {
     setIsLoading(true);
@@ -101,6 +106,17 @@ export function PostSyncCheckPanel({ brandSlug, brandName, disabled }: PostSyncC
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const copyPrompt = async () => {
+    if (!report?.aiFixPrompt) return;
+    
+    try {
+      await navigator.clipboard.writeText(report.aiFixPrompt);
+      toast.success("AI fix prompt copied to clipboard");
+    } catch (error) {
+      toast.error("Failed to copy prompt");
+    }
   };
 
   const getStatusIcon = (status: 'pass' | 'fail' | 'warning') => {
@@ -237,6 +253,42 @@ export function PostSyncCheckPanel({ brandSlug, brandName, disabled }: PostSyncC
                 <div>...and {report.scrapeErrors.length - 3} more</div>
               )}
             </div>
+          )}
+
+          {/* AI Fix Prompt Section */}
+          {report.aiFixPrompt && (
+            <Collapsible 
+              open={isPromptExpanded} 
+              onOpenChange={setIsPromptExpanded}
+              className="border border-purple-500/30 rounded-lg bg-purple-500/5"
+            >
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-purple-500/10 rounded-lg transition-colors">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-500" />
+                  <span className="font-medium text-sm">AI Fix Prompt</span>
+                  <Badge variant="secondary" className="text-xs bg-purple-500/20 text-purple-300">
+                    Ready for Opus 4.5
+                  </Badge>
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isPromptExpanded ? 'rotate-180' : ''}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3">
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Copy this prompt and paste it into Lovable to automatically fix the sync issues:
+                  </p>
+                  <Textarea 
+                    value={report.aiFixPrompt} 
+                    readOnly 
+                    className="min-h-[300px] font-mono text-xs bg-background"
+                  />
+                  <Button onClick={copyPrompt} size="sm" className="w-full">
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy Prompt to Clipboard
+                  </Button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           )}
         </div>
       )}

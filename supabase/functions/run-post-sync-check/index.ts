@@ -22,6 +22,124 @@ interface PostSyncCheckReport {
   overallStatus: 'pass' | 'warning' | 'fail';
   scrapedProducts: number;
   scrapeErrors: string[];
+  aiFixPrompt: string | null;
+}
+
+function generateAIFixPrompt(
+  brand: string, 
+  brandSlug: string, 
+  checks: CheckResult[], 
+  totalProducts: number
+): string | null {
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  if (failedChecks.length === 0 && warningChecks.length === 0) {
+    return null;
+  }
+
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  const prompt = `## Fix Post Sync Check Issues for ${brand}
+
+The Post Sync Check for ${brand} found the following issues that need to be fixed in the sync function.
+
+### Summary
+- **Brand**: ${brand} (slug: ${brandSlug})
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+
+---
+
+## Required Actions
+
+### 1. Update the sync function
+File: \`supabase/functions/sync-${brandSlug}-products/index.ts\`
+
+### 2. For Weight/Diameter Filtering Issues (Bulk, Sample, 2.85mm products)
+
+The sync function should use the shared \`variant-filters.ts\` utility to properly filter variants:
+
+\`\`\`typescript
+import { shouldIncludeVariant, createFilterStats, updateFilterStats, logFilterStats } from '../_shared/variant-filters.ts';
+
+// In explodeVariants() or where variants are processed:
+const filterResult = shouldIncludeVariant(weightGrams, diameterMm);
+if (!filterResult.include) {
+  console.log(\`[${brand}] Skipping variant: \${filterResult.reason}\`);
+  updateFilterStats(stats, filterResult);
+  continue;
+}
+\`\`\`
+
+**Filter Constants** (from variant-filters.ts):
+- MIN_WEIGHT_GRAMS = 300 (excludes sample coils)
+- MAX_WEIGHT_GRAMS = 1400 (excludes bulk/industrial spools)
+- STANDARD_DIAMETER_MM = 1.75 (excludes 2.85mm/3.0mm)
+
+### 3. For Color Hex Issues
+
+- Check the color extraction logic in the sync function
+- Verify brand-specific color maps in \`../_shared/${brandSlug}-defaults.ts\`
+- Consider adding missing colors to the shared color-mapping repository
+- Ensure \`extractColorFromVariant()\` is properly parsing variant titles
+
+### 4. For URL/Scrape Validation Issues
+
+- Verify URL construction logic (correct domain, path encoding)
+- Check for regional URL variants if applicable
+- Ensure product handles are properly slugified
+
+---
+
+## Verification Steps
+
+After making fixes:
+1. Run a **Clean Slate** sync for ${brand}
+2. Run **Post Sync Check** again to verify all issues are resolved
+3. Spot-check a few product pages to confirm data accuracy
+
+---
+
+## Notes
+- The \`product_line_id\` should exclude color names to properly group variants
+- All products should have valid \`color_hex\` values for UI swatches
+- TDS URLs should follow brand-specific patterns from the defaults file`;
+
+  return prompt;
 }
 
 Deno.serve(async (req) => {
@@ -353,6 +471,9 @@ Deno.serve(async (req) => {
     if (failCount > 0) overallStatus = "fail";
     else if (warnCount > 0) overallStatus = "warning";
 
+    // Generate AI fix prompt if there are issues
+    const aiFixPrompt = generateAIFixPrompt(brandName, brandSlug, checks, totalProducts || 0);
+
     const report: PostSyncCheckReport = {
       generatedAt: new Date().toISOString(),
       brand: brandName,
@@ -362,6 +483,7 @@ Deno.serve(async (req) => {
       overallStatus,
       scrapedProducts: scrapedCount,
       scrapeErrors,
+      aiFixPrompt,
     };
 
     console.log(`[PostSyncCheck] Completed: ${overallStatus} (${failCount} fails, ${warnCount} warnings)`);
