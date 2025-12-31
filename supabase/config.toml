@@ -1,5 +1,8 @@
 project_id = "cfqfavmhdbyjzejipiwa"
 
+[functions.sync-spectrum-products]
+verify_jwt = false
+
 [functions.sync-3dhojor-products]
 verify_jwt = false
 
