@@ -237,11 +237,11 @@ async function upsertVariants(
     const batch = variants.slice(i, i + batchSize);
     
     const records = batch.map(variant => {
-      // Apply brand-specific enrichments
+      // Apply brand-specific enrichments - CRITICAL: pass variant.color for color_hex mapping
       const enriched = enrichPushPlasticProduct(
         variant.title,
         variant.material,
-        null // Let enrichment find color hex
+        variant.color  // Pass color name for proper hex lookup
       );
       
       const settings = enriched.printSettings;
