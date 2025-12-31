@@ -48,7 +48,8 @@ export const PRODUCT_LINE_PATTERNS: Array<{ pattern: RegExp; line: string; handl
   { pattern: /\bDual[\s-]*Color[\s-]*Silk/i, line: 'Dual Color Silk PLA', handlePattern: /dual-color-silk|silk-pla-silky/i },
   { pattern: /\bBiome3D/i, line: 'Biome3D', handlePattern: /biome3d/i },
   { pattern: /\bBuzzed/i, line: 'Buzzed', handlePattern: /buzzed/i },
-  { pattern: /\bEntwined/i, line: 'Entwined', handlePattern: /entwined/i },
+  // Entwined was rebranded to "Entwined v2Hemp" - title must match exactly
+  { pattern: /\bEntwined/i, line: 'Entwined v2Hemp', handlePattern: /entwined/i },
   { pattern: /\bWound\s*Up/i, line: 'Wound Up', handlePattern: /wound-?up/i },
   { pattern: /\bLandfillament/i, line: 'Landfillament', handlePattern: /landfill/i },
   { pattern: /\bc2renew|C2\s*Renew/i, line: 'C2 Renew', handlePattern: /c2renew/i },
@@ -601,26 +602,49 @@ export function extractColorName(variant: any, productTitle: string, productHand
 }
 
 /**
- * Get hex color from color name using brand-specific mapping
+ * Extract hex color code embedded in product title
+ * Some 3D-Fuel products include the exact hex: "Bone White - #F3E2C7"
  */
-export function getColorHex(colorName: string): string | null {
+export function extractHexFromTitle(title: string): string | null {
+  const hexPattern = /#([A-Fa-f0-9]{6})\b/;
+  const match = title.match(hexPattern);
+  if (match) {
+    return `#${match[1].toUpperCase()}`;
+  }
+  return null;
+}
+
+/**
+ * Get hex color from color name using brand-specific mapping
+ * Priority: embedded hex in title > exact map match > partial match
+ */
+export function getColorHex(colorName: string, variantTitle?: string): string | null {
   if (!colorName || colorName === 'Default') return null;
+  
+  // Priority 1: Check for embedded hex code in variant title (e.g., "Bone White - #F3E2C7")
+  if (variantTitle) {
+    const embeddedHex = extractHexFromTitle(variantTitle);
+    if (embeddedHex) {
+      console.log(`[ColorHex] Found embedded hex in title: "${variantTitle}" -> ${embeddedHex}`);
+      return embeddedHex;
+    }
+  }
   
   const normalized = colorName.toLowerCase().trim();
   
-  // Check exact match first
+  // Priority 2: Check exact match
   if (COLOR_HEX_MAP[normalized]) {
     return COLOR_HEX_MAP[normalized];
   }
   
-  // Check partial matches (color name contains key or key contains color name)
+  // Priority 3: Check partial matches (color name contains key or key contains color name)
   for (const [key, hex] of Object.entries(COLOR_HEX_MAP)) {
     if (normalized.includes(key) || key.includes(normalized)) {
       return hex;
     }
   }
   
-  // Check word-by-word matching for multi-word colors
+  // Priority 4: Check word-by-word matching for multi-word colors
   const words = normalized.split(/\s+/);
   for (const word of words) {
     if (word.length > 3 && COLOR_HEX_MAP[word]) {
@@ -667,7 +691,14 @@ export function extractDiameter(variant: any): number {
  * because 3D-Fuel rebranded some products (e.g., "Tough Pro PLA+") but kept old
  * handles (e.g., "pro-pla-*"). Title is the source of truth for the actual product name.
  */
-export function generateProductLineId(productTitle: string, productHandle?: string): string {
+export function generateProductLineId(productTitle: string, productHandle?: string, colorName?: string): string {
+  // Method 0 (HIGHEST PRIORITY): Color-name based grouping for Dual Color Silk
+  // If color starts with "Silky", it's ALWAYS a Dual Color Silk product regardless of handle
+  if (colorName && colorName.toLowerCase().startsWith('silky')) {
+    console.log(`[ProductLineId] Silky color detected: "${colorName}" -> 3dfuel__dual-color-silk-pla`);
+    return '3dfuel__dual-color-silk-pla';
+  }
+  
   // Method 1 (PRIORITY): Use product TITLE for accurate product identification
   // This handles rebranded products where title says "Tough Pro PLA+" but handle says "pro-pla-*"
   for (const { pattern, line } of PRODUCT_LINE_PATTERNS) {
