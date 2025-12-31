@@ -196,8 +196,6 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
     // Extract product-level info once (shared across all color variants)
     const material = extractMaterial(product.title);
     const finishType = extractFinish(product.title);
-    // Generate product_line_id using HANDLE for accurate product identification (no color)
-    const productLineId = generateProductLineId(product.title, product.handle);
     
     for (const variant of product.variants) {
       // Pass product.handle for improved Silky color extraction
@@ -205,8 +203,11 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       const diameter = extractDiameter(variant);
       const weight = extractWeight(variant, product.title);
       
+      // Generate product_line_id with colorName for Silky detection
+      const productLineId = generateProductLineId(product.title, product.handle, colorName);
+      
       // Debug logging for color extraction issues
-      console.log(`[Color] Product: "${product.title}" Handle: "${product.handle}" Variant: "${variant.title}" -> Color: "${colorName}"`);
+      console.log(`[Color] Product: "${product.title}" Handle: "${product.handle}" Variant: "${variant.title}" -> Color: "${colorName}" -> ProductLine: "${productLineId}"`);
       
       // Apply standard filtering (samples, bulk, 2.85mm)
       const filterResult = shouldIncludeVariant(weight, diameter);
@@ -228,8 +229,8 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       // Find matching image (by color name if possible)
       let imageUrl = product.images[0]?.src || null;
       
-      // Get color hex from the expanded color map
-      const colorHex = getColorHex(colorName);
+      // Get color hex - pass variant.title for embedded hex extraction (e.g., "Bone White - #F3E2C7")
+      const colorHex = getColorHex(colorName, variant.title);
       
       // Build display title matching page format: "Product Line, Color Name, 1.75mm"
       // This ensures DB title matches what Post Sync Check finds on the page
