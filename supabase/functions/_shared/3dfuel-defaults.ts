@@ -21,6 +21,30 @@ export const BRAND_CONFIG = {
 };
 
 // ============================================================================
+// 3D-FUEL PRODUCT LINE PATTERNS
+// ============================================================================
+
+// Used to extract the base product line from product titles (without color)
+export const PRODUCT_LINE_PATTERNS: Array<{ pattern: RegExp; line: string }> = [
+  // Pro/Advanced lines
+  { pattern: /\bTough Pro PLA\+?/i, line: 'Tough Pro PLA+' },
+  { pattern: /\bStandard PLA\+/i, line: 'Standard PLA+' },
+  { pattern: /\bStandard PLA(?!\+)/i, line: 'Standard PLA' },
+  { pattern: /\bPro PCTG/i, line: 'Pro PCTG' },
+  { pattern: /\bPro HT\s*PLA/i, line: 'Pro HT PLA' },
+  { pattern: /\bPro PLA/i, line: 'Pro PLA' },
+  { pattern: /\bWorkDay ABS/i, line: 'WorkDay ABS' },
+  { pattern: /\bWorkDay PETG/i, line: 'WorkDay PETG' },
+  // Specialty lines
+  { pattern: /\bBiome3D/i, line: 'Biome3D' },
+  { pattern: /\bBuzzed/i, line: 'Buzzed' },
+  { pattern: /\bEntwined/i, line: 'Entwined' },
+  { pattern: /\bWound Up/i, line: 'Wound Up' },
+  { pattern: /\bLandfill/i, line: 'Landfill' },
+  { pattern: /\bc2renew|C2\s*Renew/i, line: 'C2 Renew' },
+];
+
+// ============================================================================
 // 3D-FUEL MATERIAL PATTERNS
 // ============================================================================
 
@@ -58,75 +82,253 @@ export const MATERIAL_PATTERNS: Array<{ pattern: RegExp; material: string; finis
 ];
 
 // ============================================================================
-// 3D-FUEL COLOR MAPPING (Brand-specific colors)
+// 3D-FUEL COLOR MAPPING (Comprehensive brand-specific colors)
 // ============================================================================
 
 export const COLOR_HEX_MAP: Record<string, string> = {
-  // Military/Tactical (3D-Fuel specialty)
-  'coyote': '8B5A2B',
-  'coyote brown': '8B5A2B',
-  'coyote tan': '8B5A2B',
-  'desert tan': 'C19A6B',
-  'desert': 'C19A6B',
-  'ranger green': '4A5D23',
-  'flat dark earth': 'A67B5B',
-  'fde': 'A67B5B',
-  'od green': '3D4C2D',
-  'olive drab': '3D4C2D',
-  'battleship grey': '6D6E6A',
-  'battleship gray': '6D6E6A',
-  'tactical black': '1C1C1C',
-  'midnight bronze': '4A3728',
+  // Military/Tactical (3D-Fuel specialty line)
+  'coyote': '#8B5A2B',
+  'coyote brown': '#8B5A2B',
+  'coyote tan': '#8B5A2B',
+  'desert tan': '#C4A77D',
+  'desert': '#C4A77D',
+  'ranger green': '#4A5D23',
+  'flat dark earth': '#A67B5B',
+  'fde': '#A67B5B',
+  'od green': '#3D4C2D',
+  'olive drab': '#3D4C2D',
+  'olive drab green': '#3D4C2D',
+  'battleship grey': '#6D6E6A',
+  'battleship gray': '#6D6E6A',
+  'tactical black': '#1C1C1C',
+  'midnight bronze': '#4A3728',
+  'foliage green': '#667C4C',
+  'wolf grey': '#6B6B6B',
+  'wolf gray': '#6B6B6B',
+  'gunmetal': '#2C3539',
+  'graphite': '#383838',
   
   // Nature-inspired
-  'lava': 'FF4500',
-  'ocean': '006994',
-  'arctic': 'E0FFFF',
-  'volcano': 'CF1020',
-  'glacier': 'DFFFFE',
-  'sunshine': 'FFD700',
-  'meadow': '7CFC00',
-  'storm': '4F5D75',
-  'snow': 'FFFAFA',
-  'iron': '48494B',
+  'lava': '#FF4500',
+  'ocean': '#006994',
+  'ocean blue': '#006994',
+  'arctic': '#E0FFFF',
+  'arctic white': '#F0F8FF',
+  'volcano': '#CF1020',
+  'volcano red': '#CF1020',
+  'glacier': '#DFFFFE',
+  'glacier blue': '#DFFFFE',
+  'sunshine': '#FFD700',
+  'sunshine yellow': '#FFD700',
+  'meadow': '#7CFC00',
+  'meadow green': '#7CFC00',
+  'storm': '#4F5D75',
+  'storm grey': '#4F5D75',
+  'storm gray': '#4F5D75',
+  'snow': '#FFFAFA',
+  'snow white': '#FFFAFA',
+  'iron': '#48494B',
+  'iron grey': '#48494B',
+  'iron gray': '#48494B',
+  'midnight': '#191970',
+  'midnight blue': '#191970',
+  'sky': '#87CEEB',
+  'sky blue': '#87CEEB',
+  'forest': '#228B22',
+  'forest green': '#228B22',
+  'fire': '#FF4500',
+  'fire red': '#B22222',
+  'fire engine red': '#CE2029',
+  'sunset': '#FA8072',
+  'sunset orange': '#FA8072',
   
   // Industrial/Safety
-  'safety orange': 'FF6700',
-  'high vis yellow': 'DDFF00',
-  'electric blue': '0892D0',
+  'safety orange': '#FF6700',
+  'safety yellow': '#F0E130',
+  'high vis yellow': '#DDFF00',
+  'high visibility yellow': '#DDFF00',
+  'electric blue': '#0892D0',
+  'neon green': '#39FF14',
+  'neon pink': '#FF6EC7',
+  'neon orange': '#FF5F1F',
+  'traffic orange': '#FF5500',
+  'traffic yellow': '#FFD800',
   
   // Recycled/Eco line colors
-  'coffee brown': '6F4E37',
-  'hemp green': '7B8B6F',
-  'natural hemp': 'C3B091',
-  'recycled grey': '808080',
-  'recycled gray': '808080',
-  'eco natural': 'F5F5DC',
+  'coffee brown': '#6F4E37',
+  'coffee': '#6F4E37',
+  'hemp green': '#7B8B6F',
+  'hemp': '#7B8B6F',
+  'natural hemp': '#C3B091',
+  'recycled grey': '#808080',
+  'recycled gray': '#808080',
+  'eco natural': '#F5F5DC',
   
-  // Standard colors
-  'standard black': '1A1A1A',
-  'standard white': 'FAFAFA',
-  'standard grey': '808080',
-  'standard gray': '808080',
-  'tough black': '1A1A1A',
-  'tough white': 'FAFAFA',
-  'tough grey': '808080',
-  'tough gray': '808080',
+  // Standard colors (various names)
+  'standard black': '#1A1A1A',
+  'standard white': '#FAFAFA',
+  'standard grey': '#808080',
+  'standard gray': '#808080',
+  'tough black': '#1A1A1A',
+  'tough white': '#FAFAFA',
+  'tough grey': '#808080',
+  'tough gray': '#808080',
+  'basic black': '#1A1A1A',
+  'basic white': '#FAFAFA',
   
-  // Basic colors
-  'black': '1A1A1A',
-  'white': 'FFFFFF',
-  'grey': '808080',
-  'gray': '808080',
-  'red': 'DC2626',
-  'blue': '2563EB',
-  'green': '16A34A',
-  'yellow': 'EAB308',
-  'orange': 'EA580C',
-  'purple': '9333EA',
-  'pink': 'EC4899',
-  'brown': '92400E',
-  'natural': 'F5F5DC',
+  // Primary colors
+  'black': '#1A1A1A',
+  'jet black': '#0A0A0A',
+  'true black': '#000000',
+  'white': '#FFFFFF',
+  'pure white': '#FFFFFF',
+  'pearl white': '#F0EAD6',
+  'grey': '#808080',
+  'gray': '#808080',
+  'silver': '#C0C0C0',
+  'silver grey': '#C0C0C0',
+  'silver gray': '#C0C0C0',
+  
+  // Reds
+  'red': '#DC2626',
+  'bright red': '#FF0000',
+  'dark red': '#8B0000',
+  'crimson': '#DC143C',
+  'maroon': '#800000',
+  'burgundy': '#800020',
+  'scarlet': '#FF2400',
+  'ruby': '#E0115F',
+  'blood red': '#660000',
+  
+  // Oranges
+  'orange': '#EA580C',
+  'bright orange': '#FF6600',
+  'dark orange': '#CC5500',
+  'tangerine': '#FF9966',
+  'coral': '#FF7F50',
+  'peach': '#FFCBA4',
+  'apricot': '#FBCEB1',
+  'burnt orange': '#CC5500',
+  
+  // Yellows
+  'yellow': '#EAB308',
+  'bright yellow': '#FFFF00',
+  'gold': '#FFD700',
+  'golden': '#FFD700',
+  'mustard': '#FFDB58',
+  'lemon': '#FFF44F',
+  'canary': '#FFEF00',
+  'amber': '#FFBF00',
+  
+  // Greens
+  'green': '#16A34A',
+  'bright green': '#00FF00',
+  'dark green': '#006400',
+  'lime': '#00FF00',
+  'lime green': '#32CD32',
+  'olive': '#808000',
+  'olive green': '#6B8E23',
+  'mint': '#98FF98',
+  'mint green': '#98FF98',
+  'teal': '#008080',
+  'emerald': '#50C878',
+  'jade': '#00A86B',
+  'sage': '#9DC183',
+  'sage green': '#9DC183',
+  'hunter green': '#355E3B',
+  'army green': '#4B5320',
+  'kelly green': '#4CBB17',
+  
+  // Blues
+  'blue': '#2563EB',
+  'bright blue': '#0000FF',
+  'dark blue': '#00008B',
+  'light blue': '#ADD8E6',
+  'navy': '#000080',
+  'navy blue': '#000080',
+  'royal blue': '#4169E1',
+  'cobalt': '#0047AB',
+  'cobalt blue': '#0047AB',
+  'aqua': '#00FFFF',
+  'cyan': '#00FFFF',
+  'turquoise': '#40E0D0',
+  'sapphire': '#0F52BA',
+  'azure': '#007FFF',
+  'cerulean': '#007BA7',
+  'steel blue': '#4682B4',
+  'powder blue': '#B0E0E6',
+  'cornflower': '#6495ED',
+  'cornflower blue': '#6495ED',
+  'pacific blue': '#1CA9C9',
+  
+  // Purples
+  'purple': '#9333EA',
+  'bright purple': '#BF00FF',
+  'dark purple': '#301934',
+  'violet': '#8B00FF',
+  'lavender': '#E6E6FA',
+  'lilac': '#C8A2C8',
+  'magenta': '#FF00FF',
+  'fuchsia': '#FF00FF',
+  'plum': '#DDA0DD',
+  'grape': '#6F2DA8',
+  'orchid': '#DA70D6',
+  'mauve': '#E0B0FF',
+  'indigo': '#4B0082',
+  'amethyst': '#9966CC',
+  
+  // Pinks
+  'pink': '#EC4899',
+  'bright pink': '#FF69B4',
+  'hot pink': '#FF69B4',
+  'light pink': '#FFB6C1',
+  'salmon': '#FA8072',
+  'rose': '#FF007F',
+  'blush': '#DE5D83',
+  'bubblegum': '#FFC1CC',
+  'magenta pink': '#FF00FF',
+  
+  // Browns
+  'brown': '#92400E',
+  'dark brown': '#5C4033',
+  'light brown': '#C4A484',
+  'chocolate': '#7B3F00',
+  'tan': '#D2B48C',
+  'beige': '#F5F5DC',
+  'khaki': '#C3B091',
+  'taupe': '#483C32',
+  'walnut': '#773F1A',
+  'mahogany': '#C04000',
+  'chestnut': '#954535',
+  'bronze': '#CD7F32',
+  'copper': '#B87333',
+  'mocha': '#967969',
+  'espresso': '#4E3524',
+  
+  // Neutrals and special
+  'natural': '#F5F5DC',
+  'neutral': '#F5F5DC',
+  'translucent': '#FFFFFF',
+  'clear': '#FFFFFF',
+  'transparent': '#FFFFFF',
+  'glow': '#7FFF00',
+  'glow green': '#7FFF00',
+  'ivory': '#FFFFF0',
+  'cream': '#FFFDD0',
+  'bone': '#E3DAC9',
+  'charcoal': '#36454F',
+  'slate': '#708090',
+  'ash': '#B2BEB5',
+  'ash grey': '#B2BEB5',
+  'ash gray': '#B2BEB5',
+  
+  // Multi-color/Special effects
+  'rainbow': '#FF0000',
+  'galaxy': '#1B0533',
+  'space': '#2D3436',
+  'marble': '#E8E4E1',
+  'wood': '#DEB887',
+  'woodgrain': '#DEB887',
 };
 
 // ============================================================================
@@ -147,6 +349,20 @@ export const FINISH_PATTERNS: Array<{ pattern: RegExp; finish: string }> = [
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+/**
+ * Extract product line from product title (without color)
+ */
+export function extractProductLine(title: string): string {
+  for (const { pattern, line } of PRODUCT_LINE_PATTERNS) {
+    if (pattern.test(title)) {
+      return line;
+    }
+  }
+  // Fallback: try to extract something meaningful
+  const material = extractMaterial(title);
+  return material;
+}
 
 /**
  * Extract material type from product title
@@ -182,52 +398,82 @@ export function extractFinish(title: string): string {
 }
 
 /**
- * Extract color name from variant title or option
+ * Extract color name from Shopify variant
+ * 
+ * 3D-Fuel uses variant.title format: "Color Name / Weight" or "Color Name"
+ * Sometimes uses option1/option2/option3 format
  */
 export function extractColorName(variant: any, productTitle: string): string {
-  // Check variant options first
-  if (variant.option1) {
-    const opt = variant.option1.toLowerCase();
-    // Skip diameter values
-    if (!opt.includes('mm') && !opt.includes('1.75') && !opt.includes('2.85')) {
-      return variant.option1;
+  // Method 1: Parse variant.title (e.g., "Desert Tan / 1kg" or "Coyote Brown / 500g")
+  if (variant.title && typeof variant.title === 'string') {
+    const title = variant.title.trim();
+    
+    // Handle "Color / Weight" format
+    if (title.includes('/')) {
+      const colorPart = title.split('/')[0].trim();
+      // Make sure it's not a weight/diameter value
+      if (colorPart && !colorPart.match(/^\d/) && !colorPart.toLowerCase().includes('mm')) {
+        return colorPart;
+      }
     }
-  }
-  if (variant.option2) {
-    const opt = variant.option2.toLowerCase();
-    if (!opt.includes('mm') && !opt.includes('1.75') && !opt.includes('2.85')) {
-      return variant.option2;
-    }
-  }
-  if (variant.option3) {
-    const opt = variant.option3.toLowerCase();
-    if (!opt.includes('mm') && !opt.includes('1.75') && !opt.includes('2.85')) {
-      return variant.option3;
+    
+    // Handle single value (just color name, no weight)
+    if (!title.includes('/') && !title.match(/^\d/) && !title.toLowerCase().includes('mm') && !title.toLowerCase().includes('kg') && !title.toLowerCase().includes('g ')) {
+      return title;
     }
   }
   
-  // Fall back to parsing from title
-  const match = productTitle.match(/[-–]\s*(.+?)(?:\s+\d|$)/i);
-  return match ? match[1].trim() : 'Default';
+  // Method 2: Check variant options (option1, option2, option3)
+  const options = [variant.option1, variant.option2, variant.option3].filter(Boolean);
+  for (const opt of options) {
+    const optLower = opt.toLowerCase();
+    // Skip diameter and weight values
+    if (optLower.includes('mm') || optLower.includes('1.75') || optLower.includes('2.85') || 
+        optLower.match(/^\d+\s*(g|kg)/i)) {
+      continue;
+    }
+    return opt;
+  }
+  
+  // Method 3: Extract from product title (last resort)
+  // Pattern: "Product Name - Color Name" or "Product Name, Color"
+  const dashMatch = productTitle.match(/[-–]\s*([^,\d]+?)(?:\s*,|\s*$)/);
+  if (dashMatch && dashMatch[1]) {
+    const extracted = dashMatch[1].trim();
+    // Make sure it's not a material or weight
+    if (!extracted.match(/^(pla|petg|abs|pctg|tpu|nylon|\d)/i)) {
+      return extracted;
+    }
+  }
+  
+  return 'Default';
 }
 
 /**
  * Get hex color from color name using brand-specific mapping
  */
 export function getColorHex(colorName: string): string | null {
-  if (!colorName) return null;
+  if (!colorName || colorName === 'Default') return null;
   
   const normalized = colorName.toLowerCase().trim();
   
-  // Check brand-specific map first
+  // Check exact match first
   if (COLOR_HEX_MAP[normalized]) {
     return COLOR_HEX_MAP[normalized];
   }
   
-  // Check partial matches
+  // Check partial matches (color name contains key or key contains color name)
   for (const [key, hex] of Object.entries(COLOR_HEX_MAP)) {
     if (normalized.includes(key) || key.includes(normalized)) {
       return hex;
+    }
+  }
+  
+  // Check word-by-word matching for multi-word colors
+  const words = normalized.split(/\s+/);
+  for (const word of words) {
+    if (word.length > 3 && COLOR_HEX_MAP[word]) {
+      return COLOR_HEX_MAP[word];
     }
   }
   
@@ -238,7 +484,7 @@ export function getColorHex(colorName: string): string | null {
  * Extract diameter from variant or default
  */
 export function extractDiameter(variant: any): number {
-  const options = [variant.option1, variant.option2, variant.option3].filter(Boolean);
+  const options = [variant.option1, variant.option2, variant.option3, variant.title].filter(Boolean);
   
   for (const opt of options) {
     const lower = opt.toLowerCase();
@@ -261,28 +507,49 @@ export function extractDiameter(variant: any): number {
 }
 
 /**
- * Generate product line ID for grouping variants
+ * Generate product line ID for grouping color variants together
+ * 
+ * CRITICAL: This must strip the color name to ensure all colors of the same product
+ * share the same product_line_id
  */
-export function generateProductLineId(productTitle: string): string {
-  // Remove color, weight, diameter variations to get base product
-  let base = productTitle
-    .replace(/\s*[-–]\s*.+$/, '') // Remove color suffix
-    .replace(/\s+\d+g\b/gi, '')    // Remove weight
-    .replace(/\s+\d+kg\b/gi, '')   // Remove weight
-    .replace(/\s+(1\.75|2\.85)\s*mm/gi, '') // Remove diameter
-    .replace(/\s+/g, '-')          // Spaces to dashes
+export function generateProductLineId(productTitle: string, colorName?: string): string {
+  // Start with the product line
+  const productLine = extractProductLine(productTitle);
+  
+  // Create clean base ID from product line only (no color)
+  let base = productLine
+    .replace(/\s+/g, '-')
     .toLowerCase()
     .trim();
+  
+  // Remove any trailing punctuation
+  base = base.replace(/[-,]+$/, '');
+  
+  // Ensure we have a valid ID
+  base = base.replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  
+  if (!base || base.length < 2) {
+    // Fallback: use material
+    const material = extractMaterial(productTitle);
+    base = material.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  }
   
   return `3dfuel-${base}`;
 }
 
 /**
- * Clean product title for display
+ * Clean product title for display - includes color name
  */
 export function cleanProductTitle(title: string, colorName: string): string {
-  // Keep material and color, format nicely
+  const productLine = extractProductLine(title);
   const material = extractMaterial(title);
+  
+  // Format: "3D-Fuel Product Line Material - Color"
+  // e.g., "3D-Fuel Standard PLA+ - Desert Tan"
+  if (productLine !== material) {
+    return `3D-Fuel ${productLine} - ${colorName}`;
+  }
+  
   return `3D-Fuel ${material} - ${colorName}`;
 }
 
@@ -290,7 +557,7 @@ export function cleanProductTitle(title: string, colorName: string): string {
  * Extract weight from variant or product title
  */
 export function extractWeight(variant: any, productTitle?: string): number {
-  const options = [variant.option1, variant.option2, variant.option3].filter(Boolean);
+  const options = [variant.option1, variant.option2, variant.option3, variant.title].filter(Boolean);
   
   for (const opt of options) {
     const lower = opt.toLowerCase();
@@ -327,6 +594,33 @@ export function extractWeight(variant: any, productTitle?: string): number {
 }
 
 /**
+ * Determine color family from color name
+ */
+export function getColorFamily(colorName: string): string {
+  if (!colorName) return 'Other';
+  
+  const lower = colorName.toLowerCase();
+  
+  // Map to standard color families
+  if (lower.includes('black') || lower.includes('midnight') || lower.includes('tactical') || lower.includes('charcoal')) return 'Black';
+  if (lower.includes('white') || lower.includes('snow') || lower.includes('arctic') || lower.includes('ivory') || lower.includes('cream')) return 'White';
+  if (lower.includes('grey') || lower.includes('gray') || lower.includes('silver') || lower.includes('battleship') || lower.includes('gunmetal') || lower.includes('graphite') || lower.includes('slate') || lower.includes('ash')) return 'Gray';
+  if (lower.includes('red') || lower.includes('crimson') || lower.includes('maroon') || lower.includes('scarlet') || lower.includes('ruby') || lower.includes('volcano') || lower.includes('fire') || lower.includes('blood')) return 'Red';
+  if (lower.includes('orange') || lower.includes('tangerine') || lower.includes('coral') || lower.includes('peach') || lower.includes('apricot') || lower.includes('sunset') || lower.includes('lava')) return 'Orange';
+  if (lower.includes('yellow') || lower.includes('gold') || lower.includes('sunshine') || lower.includes('mustard') || lower.includes('lemon') || lower.includes('canary') || lower.includes('amber')) return 'Yellow';
+  if (lower.includes('green') || lower.includes('olive') || lower.includes('lime') || lower.includes('mint') || lower.includes('teal') || lower.includes('emerald') || lower.includes('jade') || lower.includes('sage') || lower.includes('forest') || lower.includes('meadow') || lower.includes('ranger') || lower.includes('foliage') || lower.includes('army') || lower.includes('hunter') || lower.includes('kelly') || lower.includes('hemp')) return 'Green';
+  if (lower.includes('blue') || lower.includes('navy') || lower.includes('cobalt') || lower.includes('aqua') || lower.includes('cyan') || lower.includes('turquoise') || lower.includes('sapphire') || lower.includes('azure') || lower.includes('ocean') || lower.includes('glacier') || lower.includes('sky') || lower.includes('cerulean') || lower.includes('steel') || lower.includes('powder') || lower.includes('cornflower') || lower.includes('pacific')) return 'Blue';
+  if (lower.includes('purple') || lower.includes('violet') || lower.includes('lavender') || lower.includes('lilac') || lower.includes('plum') || lower.includes('grape') || lower.includes('orchid') || lower.includes('mauve') || lower.includes('indigo') || lower.includes('amethyst') || lower.includes('galaxy')) return 'Purple';
+  if (lower.includes('pink') || lower.includes('salmon') || lower.includes('rose') || lower.includes('blush') || lower.includes('bubblegum') || lower.includes('magenta') || lower.includes('fuchsia')) return 'Pink';
+  if (lower.includes('brown') || lower.includes('tan') || lower.includes('beige') || lower.includes('khaki') || lower.includes('taupe') || lower.includes('walnut') || lower.includes('mahogany') || lower.includes('chestnut') || lower.includes('bronze') || lower.includes('copper') || lower.includes('mocha') || lower.includes('espresso') || lower.includes('chocolate') || lower.includes('coyote') || lower.includes('desert') || lower.includes('coffee') || lower.includes('fde') || lower.includes('flat dark earth')) return 'Brown';
+  if (lower.includes('natural') || lower.includes('neutral') || lower.includes('bone')) return 'Natural';
+  if (lower.includes('translucent') || lower.includes('clear') || lower.includes('transparent')) return 'Translucent';
+  if (lower.includes('glow')) return 'Glow';
+  
+  return 'Other';
+}
+
+/**
  * Build TDS URL based on product handle
  */
 export function buildTdsUrl(productHandle: string): string | null {
@@ -344,15 +638,17 @@ export function enrichVariant(variant: any, product: any): Record<string, any> {
   const material = extractMaterial(product.title);
   const finish = extractFinish(product.title);
   const diameter = extractDiameter(variant);
-  const weight = extractWeight(variant);
+  const weight = extractWeight(variant, product.title);
   const colorHex = getColorHex(colorName);
-  const productLineId = generateProductLineId(product.title);
+  const productLineId = generateProductLineId(product.title, colorName);
+  const colorFamily = getColorFamily(colorName);
   
   return {
     material,
     finish_type: finish,
-    color_family: colorName,
-    color_hex: colorHex ? `#${colorHex}` : null,
+    color_family: colorFamily,
+    color_name: colorName,
+    color_hex: colorHex,
     diameter_nominal_mm: diameter,
     net_weight_g: weight,
     product_line_id: productLineId,

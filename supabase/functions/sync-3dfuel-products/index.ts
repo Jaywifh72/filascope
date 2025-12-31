@@ -19,6 +19,8 @@ import {
   extractWeight,
   getColorHex,
   generateProductLineId,
+  extractProductLine,
+  getColorFamily,
   enrichVariant,
 } from '../_shared/3dfuel-defaults.ts';
 import { 
@@ -180,6 +182,12 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
   let skippedLowWeight = 0;
   
   for (const product of products) {
+    // Extract product-level info once (shared across all color variants)
+    const material = extractMaterial(product.title);
+    const finishType = extractFinish(product.title);
+    // Generate product_line_id WITHOUT color - this groups all colors together
+    const productLineId = generateProductLineId(product.title);
+    
     for (const variant of product.variants) {
       const colorName = extractColorName(variant, product.title);
       const diameter = extractDiameter(variant);
@@ -204,14 +212,15 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       // Find matching image (by color name if possible)
       let imageUrl = product.images[0]?.src || null;
       
+      // Get color hex from the expanded color map
       const colorHex = getColorHex(colorName);
-      const material = extractMaterial(product.title);
-      const finishType = extractFinish(product.title);
-      const productLineId = generateProductLineId(product.title);
+      
+      // Build display title with color: "3D-Fuel Standard PLA+ - Desert Tan"
+      const displayTitle = `3D-Fuel ${material === extractProductLine(product.title) ? material : extractProductLine(product.title)} - ${colorName}`;
       
       variants.push({
         productId,
-        title: `3D-Fuel ${material} - ${colorName}`,
+        title: displayTitle,
         handle: product.handle,
         variantId: variant.id,
         sku: variant.sku || '',
@@ -225,13 +234,14 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
         finishType,
         diameter,
         weight,
-        colorHex: colorHex ? `#${colorHex}` : null,
-        productLineId,
+        colorHex,  // Now properly mapped from expanded COLOR_HEX_MAP
+        productLineId,  // Now correctly shared across all colors
       });
     }
   }
   
   console.log(`[Step 2] Complete: ${variants.length} variants exploded (${skippedLowWeight} low-weight variants filtered)`);
+  console.log(`[Step 2] Product lines created: ${new Set(variants.map(v => v.productLineId)).size}`);
   return variants;
 }
 
@@ -274,7 +284,7 @@ async function upsertVariants(
         featured_image: variant.imageUrl,
         material: variant.material,
         finish_type: variant.finishType,
-        color_family: variant.colorName,
+        color_family: getColorFamily(variant.colorName),  // Use proper color family, not raw color name
         color_hex: variant.colorHex,
         diameter_nominal_mm: variant.diameter,
         net_weight_g: variant.weight,
