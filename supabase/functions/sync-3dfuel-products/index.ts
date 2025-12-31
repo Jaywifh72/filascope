@@ -33,6 +33,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Site-wide weight threshold - exclude samples and small coils
+const MIN_WEIGHT_GRAMS = 300;
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -126,12 +129,14 @@ async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
         titleLower.includes('pctg') ||
         titleLower.includes('nylon');
       
-      // Exclude accessories
+      // Exclude accessories and samples
       const isAccessory = 
         titleLower.includes('spool holder') ||
         titleLower.includes('nozzle') ||
         titleLower.includes('sheet') ||
-        titleLower.includes('sample');
+        titleLower.includes('sample coil') ||
+        titleLower.includes('sample pack') ||
+        (titleLower.includes('coil') && titleLower.includes('50g'));
       
       return isFilament && !isAccessory;
     });
@@ -161,11 +166,20 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
   
   const variants: ProcessedVariant[] = [];
   const seenIds = new Set<string>();
+  let skippedLowWeight = 0;
   
   for (const product of products) {
     for (const variant of product.variants) {
       const colorName = extractColorName(variant, product.title);
       const diameter = extractDiameter(variant);
+      const weight = extractWeight(variant);
+      
+      // Skip small weight variants (samples, coils, etc.)
+      if (weight > 0 && weight < MIN_WEIGHT_GRAMS) {
+        console.log(`[Variant Explosion] Skipping low-weight variant: ${product.title} - ${colorName} (${weight}g)`);
+        skippedLowWeight++;
+        continue;
+      }
       
       // Create unique product ID: shopify-product-variant
       const productId = `3dfuel-${product.id}-${variant.id}`;
@@ -182,7 +196,6 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       const colorHex = getColorHex(colorName);
       const material = extractMaterial(product.title);
       const finishType = extractFinish(product.title);
-      const weight = extractWeight(variant);
       const productLineId = generateProductLineId(product.title);
       
       variants.push({
@@ -207,7 +220,7 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
     }
   }
   
-  console.log(`[Step 2] Complete: ${variants.length} variants exploded`);
+  console.log(`[Step 2] Complete: ${variants.length} variants exploded (${skippedLowWeight} low-weight variants filtered)`);
   return variants;
 }
 
