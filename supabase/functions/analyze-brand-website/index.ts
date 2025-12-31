@@ -1,0 +1,393 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
+
+interface AnalysisRequest {
+  brandSlug: string;
+  forceRefresh?: boolean;
+}
+
+interface ShopifyProduct {
+  id: number;
+  title: string;
+  handle: string;
+  vendor: string;
+  product_type: string;
+  variants: Array<{
+    id: number;
+    title: string;
+    option1: string | null;
+    option2: string | null;
+    option3: string | null;
+    price: string;
+    sku: string | null;
+  }>;
+  options: Array<{ name: string; values: string[] }>;
+  images: Array<{ src: string; alt: string | null }>;
+}
+
+async function callLovableAI(prompt: string): Promise<string> {
+  if (!LOVABLE_API_KEY) {
+    throw new Error('LOVABLE_API_KEY is not configured');
+  }
+
+  const response = await fetch(AI_GATEWAY_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { 
+          role: 'system', 
+          content: `You are an expert at analyzing e-commerce websites, specifically 3D printer filament stores. Your job is to understand how products are structured and provide extraction rules for automated scraping. Be precise and focus on patterns, not individual examples.`
+        },
+        { role: 'user', content: prompt }
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error('Rate limit exceeded');
+    }
+    if (response.status === 402) {
+      throw new Error('Payment required');
+    }
+    const errorText = await response.text();
+    throw new Error(`AI gateway error: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+async function fetchShopifyProducts(baseUrl: string, limit = 10): Promise<ShopifyProduct[]> {
+  try {
+    const url = `${baseUrl}/products.json?limit=${limit}`;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (compatible; FilamentScraper/1.0)'
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch products: ${response.status}`);
+      return [];
+    }
+    
+    const data = await response.json();
+    return data.products || [];
+  } catch (error) {
+    console.error('Error fetching Shopify products:', error);
+    return [];
+  }
+}
+
+async function fetchProductPageHTML(url: string): Promise<string | null> {
+  if (!FIRECRAWL_API_KEY) {
+    console.warn('FIRECRAWL_API_KEY not configured, skipping HTML analysis');
+    return null;
+  }
+
+  try {
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['html'],
+        onlyMainContent: true,
+        waitFor: 2000,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Firecrawl error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.data?.html || null;
+  } catch (error) {
+    console.error('Error fetching HTML:', error);
+    return null;
+  }
+}
+
+function extractSwatchInfo(html: string): { type: string; count: number; samples: string[] } {
+  const samples: string[] = [];
+  let type = 'none';
+  let count = 0;
+
+  // Look for color swatch patterns
+  const cssSwatchMatch = html.match(/background-color:\s*(#[0-9A-Fa-f]{6}|rgb\([^)]+\))/gi);
+  const cssCount = cssSwatchMatch?.length ?? 0;
+  if (cssCount > 0) {
+    type = 'css_color';
+    count = cssCount;
+    samples.push(...(cssSwatchMatch?.slice(0, 5) ?? []));
+  }
+
+  // Look for image alt text swatches
+  const imgAltMatch = html.match(/<img[^>]*alt="([^"]*(?:color|swatch|filament)[^"]*)"[^>]*>/gi);
+  const imgCount = imgAltMatch?.length ?? 0;
+  if (imgCount > cssCount) {
+    type = 'image_alt';
+    count = imgCount;
+    samples.push(...(imgAltMatch?.slice(0, 5) ?? []));
+  }
+
+  // Look for cross-product links (common in Shopify stores)
+  const linkMatch = html.match(/<a[^>]*href="\/products\/[^"]*"[^>]*>.*?<img[^>]*alt="[^"]*"[^>]*>.*?<\/a>/gis);
+  const linkCount = linkMatch?.length ?? 0;
+  if (linkCount > Math.max(cssCount, imgCount)) {
+    type = 'cross_product_link';
+    count = linkCount;
+    samples.push(...(linkMatch?.slice(0, 3).map(l => l.slice(0, 200)) ?? []));
+  }
+
+  return { type, count, samples };
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { brandSlug, forceRefresh = false }: AnalysisRequest = await req.json();
+
+    if (!brandSlug) {
+      return new Response(
+        JSON.stringify({ error: 'brandSlug is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Get brand info
+    const { data: brand, error: brandError } = await supabase
+      .from('automated_brands')
+      .select('*')
+      .eq('brand_slug', brandSlug)
+      .single();
+
+    if (brandError || !brand) {
+      return new Response(
+        JSON.stringify({ error: `Brand not found: ${brandSlug}` }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check for existing profile
+    const { data: existingProfile } = await supabase
+      .from('brand_scraper_profiles')
+      .select('*')
+      .eq('brand_slug', brandSlug)
+      .single();
+
+    // Skip if recently analyzed (within 24 hours) unless forced
+    if (existingProfile && !forceRefresh) {
+      const lastAnalyzed = new Date(existingProfile.last_analyzed_at || 0);
+      const hoursSinceAnalysis = (Date.now() - lastAnalyzed.getTime()) / (1000 * 60 * 60);
+      if (hoursSinceAnalysis < 24) {
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            profile: existingProfile,
+            message: 'Using cached profile (analyzed within 24 hours)'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    console.log(`Analyzing brand: ${brand.display_name} (${brandSlug})`);
+
+    // Step 1: Fetch sample products from Shopify JSON
+    const products = await fetchShopifyProducts(brand.base_url, 10);
+    if (products.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Could not fetch products from brand website' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Fetched ${products.length} sample products`);
+
+    // Step 2: Fetch HTML from a sample product page for swatch analysis
+    const sampleProductUrl = `${brand.base_url}/products/${products[0].handle}`;
+    const productHtml = await fetchProductPageHTML(sampleProductUrl);
+    const swatchInfo = productHtml ? extractSwatchInfo(productHtml) : { type: 'none', count: 0, samples: [] };
+
+    // Step 3: Prepare data for AI analysis
+    const sampleProductsData = products.slice(0, 5).map(p => ({
+      title: p.title,
+      handle: p.handle,
+      productType: p.product_type,
+      options: p.options,
+      variantSamples: p.variants.slice(0, 3).map(v => ({
+        title: v.title,
+        option1: v.option1,
+        option2: v.option2,
+        option3: v.option3,
+        sku: v.sku
+      }))
+    }));
+
+    // Step 4: AI Analysis
+    const analysisPrompt = `Analyze this 3D printer filament e-commerce website to understand its product architecture.
+
+BRAND: ${brand.display_name}
+WEBSITE: ${brand.base_url}
+PLATFORM: ${brand.platform_type}
+
+SAMPLE PRODUCTS (Shopify JSON):
+${JSON.stringify(sampleProductsData, null, 2)}
+
+SWATCH DETECTION FROM HTML:
+- Type detected: ${swatchInfo.type}
+- Count: ${swatchInfo.count}
+${swatchInfo.samples.length > 0 ? `- Samples: ${swatchInfo.samples.join('\n')}` : ''}
+
+Analyze and respond with this exact JSON structure:
+{
+  "productStructure": "one_product_per_color" | "multi_color_variants" | "hybrid",
+  "variantSchema": {
+    "option1": "what option1 represents (color/material/diameter/weight/size)",
+    "option2": "what option2 represents or null",
+    "option3": "what option3 represents or null"
+  },
+  "swatchType": "css_color" | "image_alt" | "cross_product_link" | "none",
+  "titleFormatPattern": "description of title format, e.g., 'ProductLine, Color, Diameter' or 'ProductLine - Color (Weight)'",
+  "colorExtractionRules": [
+    "Rule 1: Primary method to extract color",
+    "Rule 2: Fallback method",
+    "..."
+  ],
+  "productLineExtractionRules": [
+    "Rule 1: How to identify product line from title",
+    "Rule 2: How to identify from handle",
+    "..."
+  ],
+  "discoveredProductLines": ["Standard PLA", "Pro PETG", "..."],
+  "discoveredColors": [
+    {"name": "Natural", "hex": "#F5F5DC"},
+    {"name": "Matte Black", "hex": "#1A1A1A"},
+    "..."
+  ],
+  "materialPatterns": {
+    "PLA": ["pla", "standard pla", "pla+"],
+    "PETG": ["petg", "workday petg"],
+    "..."
+  },
+  "specialCases": [
+    "Any special handling notes, e.g., 'ReFuel products have multiple materials in one Shopify product'",
+    "..."
+  ],
+  "analysisConfidence": 0.0 to 1.0,
+  "analysisNotes": "Summary of key findings and any uncertainties"
+}
+
+Be precise and derive rules from the actual data, not assumptions.`;
+
+    console.log('Calling AI for analysis...');
+    const aiResponse = await callLovableAI(analysisPrompt);
+    
+    // Parse AI response
+    let analysis;
+    try {
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        analysis = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found in AI response');
+      }
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', parseError);
+      console.log('AI Response:', aiResponse);
+      return new Response(
+        JSON.stringify({ error: 'Failed to parse AI analysis', rawResponse: aiResponse.slice(0, 500) }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Step 5: Upsert the profile
+    const profileData = {
+      brand_slug: brandSlug,
+      brand_id: brand.id,
+      product_structure: analysis.productStructure || 'multi_color_variants',
+      variant_schema: analysis.variantSchema || {},
+      swatch_type: analysis.swatchType || swatchInfo.type || 'none',
+      title_format_pattern: analysis.titleFormatPattern || null,
+      color_extraction_rules: analysis.colorExtractionRules || [],
+      product_line_extraction_rules: analysis.productLineExtractionRules || [],
+      price_interpretation: 'per_spool',
+      product_line_synonyms: {},
+      color_hex_mappings: analysis.discoveredColors?.reduce((acc: Record<string, string>, c: any) => {
+        if (c.name && c.hex) acc[c.name.toLowerCase()] = c.hex;
+        return acc;
+      }, {}) || {},
+      material_patterns: analysis.materialPatterns || {},
+      discovered_product_lines: analysis.discoveredProductLines || [],
+      discovered_colors: analysis.discoveredColors || [],
+      special_cases: analysis.specialCases || [],
+      last_analyzed_at: new Date().toISOString(),
+      analysis_confidence: analysis.analysisConfidence || 0.7,
+      sample_products: sampleProductsData,
+      analysis_notes: analysis.analysisNotes || null,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data: profile, error: upsertError } = await supabase
+      .from('brand_scraper_profiles')
+      .upsert(profileData, { onConflict: 'brand_slug' })
+      .select()
+      .single();
+
+    if (upsertError) {
+      console.error('Failed to save profile:', upsertError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to save profile', details: upsertError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Profile saved for ${brandSlug} with confidence ${analysis.analysisConfidence}`);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        profile,
+        message: `Brand profile ${existingProfile ? 'updated' : 'created'} successfully`
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Error in analyze-brand-website:', error);
+    return new Response(
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
