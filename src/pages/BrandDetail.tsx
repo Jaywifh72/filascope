@@ -391,6 +391,7 @@ const BrandDetail = () => {
         .from("filaments")
         .select("*")
         .eq("vendor", decodedBrand)
+        .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude small/sample spools
         .order("product_title");
 
       if (error) throw error;

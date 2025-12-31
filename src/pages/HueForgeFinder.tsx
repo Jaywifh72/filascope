@@ -51,6 +51,7 @@ export default function HueForgeFinder() {
         .from('filaments')
         .select('id, product_title, vendor, material, color_family, color_hex, transmission_distance, variant_price, net_weight_g, featured_image, product_handle')
         .not('transmission_distance', 'is', null)
+        .or('net_weight_g.is.null,net_weight_g.gte.300') // Exclude small/sample spools
         .order('transmission_distance', { ascending: true });
       
       if (error) throw error;

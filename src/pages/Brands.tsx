@@ -177,8 +177,9 @@ const Brands = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("filaments")
-        .select("vendor, spool_material, transmission_distance, high_speed_capable, color_hex")
+        .select("vendor, spool_material, transmission_distance, high_speed_capable, color_hex, net_weight_g")
         .not("vendor", "is", null)
+        .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude small/sample spools
         .limit(10000); // Override default 1000 row limit
       
       if (error) throw error;
