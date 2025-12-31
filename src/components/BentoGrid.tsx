@@ -44,6 +44,7 @@ const BentoGrid = () => {
         .select("*")
         .not("value_score", "is", null)
         .not("featured_image", "is", null)
+        .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude small/sample spools
         .order("value_score", { ascending: false })
         .limit(20); // Fetch more to filter by region
       
@@ -67,6 +68,7 @@ const BentoGrid = () => {
         .from("filaments")
         .select("*")
         .not("variant_price", "is", null)
+        .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude small/sample spools
         .order("variant_price", { ascending: true })
         .limit(30); // Fetch more to filter by region
       
@@ -90,6 +92,7 @@ const BentoGrid = () => {
         .from("filaments")
         .select("*")
         .not("featured_image", "is", null)
+        .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude small/sample spools
         .order("created_at", { ascending: false })
         .limit(20); // Fetch more to filter by region
       
