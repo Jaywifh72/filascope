@@ -5,6 +5,8 @@
  * and comprehensive TDS PDFs for all materials.
  */
 
+import { getColorHex as getSharedColorHex } from './color-mapping.ts';
+
 // ============================================================================
 // PRINT SETTINGS BY MATERIAL
 // ============================================================================
@@ -626,16 +628,22 @@ export const PUSHPLASTIC_COLOR_MAPPING: Record<string, string> = {
 export function getPushPlasticColorHex(colorName: string): string | null {
   const normalizedName = colorName.toLowerCase().trim();
   
-  // Direct match
+  // Direct match in brand-specific map
   if (PUSHPLASTIC_COLOR_MAPPING[normalizedName]) {
     return PUSHPLASTIC_COLOR_MAPPING[normalizedName];
   }
   
-  // Partial match
+  // Partial match in brand-specific map
   for (const [key, hex] of Object.entries(PUSHPLASTIC_COLOR_MAPPING)) {
     if (normalizedName.includes(key) || key.includes(normalizedName)) {
       return hex;
     }
+  }
+  
+  // Fallback to shared color mapping
+  const sharedHex = getSharedColorHex(normalizedName);
+  if (sharedHex) {
+    return sharedHex.startsWith('#') ? sharedHex : `#${sharedHex}`;
   }
   
   return null;
@@ -745,10 +753,17 @@ export interface PushPlasticEnrichmentResult {
   cleanedTitle: string;
 }
 
+/**
+ * Enrich a Push Plastic product with brand-specific defaults.
+ * 
+ * @param title - Full product title
+ * @param existingMaterial - Material if already known
+ * @param colorName - Color name extracted from variant (CRITICAL: must be passed for color_hex to work)
+ */
 export function enrichPushPlasticProduct(
   title: string,
   existingMaterial?: string | null,
-  existingColorHex?: string | null
+  colorName?: string | null
 ): PushPlasticEnrichmentResult {
   const material = normalizePushPlasticMaterial(title, existingMaterial);
   const finishType = extractPushPlasticFinishType(title, material);
@@ -757,10 +772,14 @@ export function enrichPushPlasticProduct(
   const tdsUrl = getPushPlasticTdsUrl(settingsKey);
   const cleanedTitle = cleanPushPlasticTitle(title);
   
-  // Try to extract color from title
-  let colorHex = existingColorHex;
+  // Get color hex from the passed color name (primary method)
+  let colorHex: string | null = null;
+  if (colorName) {
+    colorHex = getPushPlasticColorHex(colorName);
+  }
+  
+  // Fallback: try to extract color from title
   if (!colorHex) {
-    // Extract color name from title (after material)
     const titleWords = cleanedTitle.split(' ');
     for (let i = 0; i < titleWords.length; i++) {
       const colorAttempt = titleWords.slice(i).join(' ').toLowerCase();

@@ -12,6 +12,8 @@
  * - TDS documents hosted at /assets/tds/{SKU}-tds.pdf
  */
 
+import { getColorHex as getSharedColorHex } from './color-mapping.ts';
+
 // ============================================================================
 // MATERIAL NORMALIZATION
 // ============================================================================
@@ -451,21 +453,35 @@ const TREED_COLOR_MAPPING: Record<string, string> = {
 export function getTreeDColorHex(colorName: string): string | null {
   const normalizedColor = colorName.toLowerCase().trim();
   
-  // Direct match
+  // Direct match in brand-specific map
   if (TREED_COLOR_MAPPING[normalizedColor]) {
     return TREED_COLOR_MAPPING[normalizedColor];
   }
   
-  // Try translating Italian
+  // Try translating Italian first
   const englishColor = translateItalianColor(normalizedColor);
   if (TREED_COLOR_MAPPING[englishColor]) {
     return TREED_COLOR_MAPPING[englishColor];
   }
   
-  // Partial match
+  // Partial match in brand-specific map
   for (const [key, hex] of Object.entries(TREED_COLOR_MAPPING)) {
     if (normalizedColor.includes(key) || key.includes(normalizedColor)) {
       return hex;
+    }
+  }
+  
+  // Fallback to shared color mapping
+  const sharedHex = getSharedColorHex(normalizedColor);
+  if (sharedHex) {
+    return sharedHex.startsWith('#') ? sharedHex : `#${sharedHex}`;
+  }
+  
+  // Try English translation with shared mapping
+  if (englishColor !== normalizedColor) {
+    const sharedHexEnglish = getSharedColorHex(englishColor);
+    if (sharedHexEnglish) {
+      return sharedHexEnglish.startsWith('#') ? sharedHexEnglish : `#${sharedHexEnglish}`;
     }
   }
   
@@ -505,9 +521,16 @@ export interface TreeDEnrichmentResult {
   colorHex: string | null;
 }
 
+/**
+ * Enrich a TreeD product with brand-specific defaults.
+ * 
+ * @param title - Full product title
+ * @param colorName - Color name extracted from variant (CRITICAL for color_hex)
+ * @param existingMaterial - Material if already known
+ */
 export function enrichTreeDProduct(
   title: string,
-  colorName?: string,
+  colorName?: string | null,
   existingMaterial?: string | null
 ): TreeDEnrichmentResult {
   // Normalize material
@@ -523,11 +546,14 @@ export function enrichTreeDProduct(
   // Clean title
   const cleanedTitle = cleanTreeDTitle(title);
   
-  // Generate product line ID
+  // Generate product line ID (color-independent for proper grouping)
   const productLineId = generateTreeDProductLineId(title, finalMaterial);
   
-  // Get color hex
-  const colorHex = colorName ? getTreeDColorHex(colorName) : null;
+  // Get color hex - try brand-specific first
+  let colorHex: string | null = null;
+  if (colorName) {
+    colorHex = getTreeDColorHex(colorName);
+  }
   
   return {
     material: finalMaterial,

@@ -14,6 +14,8 @@
  * - Electrically Conductive PLA
  */
 
+import { getColorHex as getSharedColorHex } from './color-mapping.ts';
+
 // ============= PRINT SETTINGS =============
 
 export interface PrintSettings {
@@ -421,10 +423,73 @@ export const PROTOPASTA_COLOR_MAPPING: Record<string, string> = {
   'grey': '#808080',
 };
 
+/**
+ * Extract color name from variant title (e.g., "500g" -> null, "Empire Strikes Black" -> "Empire Strikes Black")
+ */
+function extractColorFromVariant(variantTitle: string): string | null {
+  if (!variantTitle) return null;
+  
+  // Skip weight-only variants
+  if (/^\d+\s*(?:g|kg)\s*$/i.test(variantTitle.trim())) {
+    return null;
+  }
+  
+  // Handle "Color / Weight" format
+  if (variantTitle.includes('/')) {
+    const parts = variantTitle.split('/').map(p => p.trim());
+    for (const part of parts) {
+      if (part && !/^\d+\s*(?:g|kg)\s*$/i.test(part)) {
+        return part;
+      }
+    }
+  }
+  
+  // Handle "Color - Weight" format
+  if (variantTitle.includes(' - ')) {
+    const parts = variantTitle.split(' - ').map(p => p.trim());
+    for (const part of parts) {
+      if (part && !/^\d+\s*(?:g|kg)\s*$/i.test(part)) {
+        return part;
+      }
+    }
+  }
+  
+  // If not a weight pattern, return as-is
+  if (!/^\d+\s*(?:g|kg)\s*$/i.test(variantTitle.trim())) {
+    return variantTitle.trim();
+  }
+  
+  return null;
+}
+
 export function getProtoPastaColorHex(colorName: string): string | null {
   if (!colorName) return null;
-  const normalized = colorName.toLowerCase().trim();
-  return PROTOPASTA_COLOR_MAPPING[normalized] || null;
+  
+  // Extract color from variant title first
+  const extractedColor = extractColorFromVariant(colorName);
+  if (!extractedColor) return null;
+  
+  const normalized = extractedColor.toLowerCase().trim();
+  
+  // Try brand-specific map first
+  if (PROTOPASTA_COLOR_MAPPING[normalized]) {
+    return PROTOPASTA_COLOR_MAPPING[normalized];
+  }
+  
+  // Partial match in brand-specific map
+  for (const [key, hex] of Object.entries(PROTOPASTA_COLOR_MAPPING)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return hex;
+    }
+  }
+  
+  // Fallback to shared color mapping
+  const sharedHex = getSharedColorHex(normalized);
+  if (sharedHex) {
+    return sharedHex.startsWith('#') ? sharedHex : `#${sharedHex}`;
+  }
+  
+  return null;
 }
 
 // ============= TITLE CLEANING =============
