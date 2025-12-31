@@ -1,8 +1,14 @@
 import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useBrandSync, SyncOptions, SyncResult } from './useBrandSync';
 import { useStartBambuScrapeJob, useBambuScrapeJob } from './useBambuScrapeJob';
 import { useElegooSync } from './useElegooSync';
 import { useActiveElegooSyncJob, ElegooSyncJob } from './useActiveElegooSyncJob';
+import {
+  SPECIAL_BRANDS,
+  hasBrandSpecificFunction,
+  getEdgeFunctionName,
+} from '@/lib/brand-sync-config';
 
 export type BrandType = 'bambu-lab' | 'elegoo' | 'generic';
 
@@ -12,6 +18,7 @@ export interface UnifiedSyncOptions {
   materialFilter?: string;
   regions?: string[];
   materials?: string[]; // For Bambu Lab material selection
+  limit?: number;
 }
 
 export interface UnifiedSyncProgress {
@@ -68,17 +75,17 @@ export interface UnifiedSyncResult {
   message?: string;
 }
 
-// Brands that use specialized sync backends
-const SPECIALIZED_BRANDS: Record<string, BrandType> = {
-  'bambu-lab': 'bambu-lab',
-  'elegoo': 'elegoo',
-};
+// Determine brand type for specialized UI handling
+function getBrandType(brandSlug: string): BrandType {
+  if (SPECIAL_BRANDS.includes(brandSlug as any)) {
+    return brandSlug as BrandType;
+  }
+  return 'generic';
+}
 
 export function useBrandSyncRouter(brandSlug: string) {
   const [currentJobId, setCurrentJobId] = useState<string | null>(null);
-  const [brandType, setBrandType] = useState<BrandType>(() => 
-    SPECIALIZED_BRANDS[brandSlug] || 'generic'
-  );
+  const [brandType, setBrandType] = useState<BrandType>(() => getBrandType(brandSlug));
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,7 +102,7 @@ export function useBrandSyncRouter(brandSlug: string) {
 
   // Unified sync function
   const sync = useCallback(async (options: UnifiedSyncOptions): Promise<UnifiedSyncResult> => {
-    const type = SPECIALIZED_BRANDS[options.brandSlug] || 'generic';
+    const type = getBrandType(options.brandSlug);
     setBrandType(type);
     setError(null);
     setIsStarting(true);
@@ -131,7 +138,42 @@ export function useBrandSyncRouter(brandSlug: string) {
         }
 
         default: {
-          // Generic brand sync
+          // Check if brand has a dedicated sync function
+          if (hasBrandSpecificFunction(options.brandSlug)) {
+            const functionName = getEdgeFunctionName(options.brandSlug);
+            
+            const { data, error: fnError } = await supabase.functions.invoke(functionName, {
+              body: {
+                dryRun: options.dryRun,
+                materialFilter: options.materialFilter,
+                limit: options.limit,
+                regions: options.regions,
+              },
+            });
+            
+            if (fnError) throw fnError;
+            
+            const total = data?.summary?.total ?? data?.summary?.totalDiscovered ?? 0;
+            return {
+              success: data?.success ?? true,
+              jobId: data?.jobId || null,
+              brandType: 'generic',
+              summary: data?.summary ? {
+                created: data.summary.created ?? 0,
+                updated: data.summary.updated ?? 0,
+                skipped: data.summary.skipped ?? 0,
+                errors: data.summary.errors ?? 0,
+                total: total,
+                totalDiscovered: data.summary.totalDiscovered ?? total,
+              } : undefined,
+              products: data?.products,
+              fieldCoverage: data?.fieldCoverage,
+              duration_ms: data?.duration_ms,
+              message: data?.message,
+            };
+          }
+
+          // Generic fallback for brands without dedicated functions
           const syncOptions: SyncOptions = {
             brandSlug: options.brandSlug,
             dryRun: options.dryRun,
