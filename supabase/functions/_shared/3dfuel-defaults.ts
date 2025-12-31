@@ -421,24 +421,47 @@ export function extractFinish(title: string): string {
  * 
  * 3D-Fuel uses variant.title format: "Color Name / Weight" or "Color Name"
  * Sometimes uses option1/option2/option3 format
+ * 
+ * Enhanced to handle edge cases like:
+ * - "Desert Tan / 1kg"
+ * - "Coyote Brown - 500g"
+ * - Single values without separators
+ * - Extracting from product handle when variant fails
  */
-export function extractColorName(variant: any, productTitle: string): string {
+export function extractColorName(variant: any, productTitle: string, productHandle?: string): string {
   // Method 1: Parse variant.title (e.g., "Desert Tan / 1kg" or "Coyote Brown / 500g")
   if (variant.title && typeof variant.title === 'string') {
     const title = variant.title.trim();
     
-    // Handle "Color / Weight" format
-    if (title.includes('/')) {
-      const colorPart = title.split('/')[0].trim();
-      // Make sure it's not a weight/diameter value
-      if (colorPart && !colorPart.match(/^\d/) && !colorPart.toLowerCase().includes('mm')) {
-        return colorPart;
+    // Skip "Default Title" placeholder
+    if (title.toLowerCase() === 'default title') {
+      // Fall through to other methods
+    } else {
+      // Handle "Color / Weight" format
+      if (title.includes('/')) {
+        const colorPart = title.split('/')[0].trim();
+        // Make sure it's not a weight/diameter value
+        if (colorPart && !colorPart.match(/^\d/) && !colorPart.toLowerCase().includes('mm')) {
+          return colorPart;
+        }
       }
-    }
-    
-    // Handle single value (just color name, no weight)
-    if (!title.includes('/') && !title.match(/^\d/) && !title.toLowerCase().includes('mm') && !title.toLowerCase().includes('kg') && !title.toLowerCase().includes('g ')) {
-      return title;
+      
+      // Handle "Color - Weight" format (some products use dashes)
+      if (title.includes(' - ')) {
+        const parts = title.split(' - ');
+        const colorPart = parts[0].trim();
+        if (colorPart && !colorPart.match(/^\d/) && !colorPart.toLowerCase().match(/\d+\s*(g|kg)/i)) {
+          return colorPart;
+        }
+      }
+      
+      // Handle single value (just color name, no weight)
+      if (!title.includes('/') && !title.includes(' - ') && 
+          !title.match(/^\d/) && 
+          !title.toLowerCase().includes('mm') && 
+          !title.toLowerCase().match(/\d+\s*(kg|g|lb)/i)) {
+        return title;
+      }
     }
   }
   
@@ -446,15 +469,34 @@ export function extractColorName(variant: any, productTitle: string): string {
   const options = [variant.option1, variant.option2, variant.option3].filter(Boolean);
   for (const opt of options) {
     const optLower = opt.toLowerCase();
-    // Skip diameter and weight values
-    if (optLower.includes('mm') || optLower.includes('1.75') || optLower.includes('2.85') || 
+    // Skip diameter, weight values, and "Default Title"
+    if (optLower === 'default title' ||
+        optLower.includes('mm') || 
+        optLower.includes('1.75') || 
+        optLower.includes('2.85') || 
         optLower.match(/^\d+\s*(g|kg)/i)) {
       continue;
     }
     return opt;
   }
   
-  // Method 3: Extract from product title (last resort)
+  // Method 3: Extract from product handle (e.g., "standard-pla-1-75mm-desert-tan")
+  if (productHandle) {
+    const handleLower = productHandle.toLowerCase();
+    // Common pattern: material-size-color at the end
+    const colorMatch = handleLower.match(/1-75mm-([a-z-]+)$/);
+    if (colorMatch && colorMatch[1]) {
+      // Convert slug to title case: "desert-tan" -> "Desert Tan"
+      const colorSlug = colorMatch[1];
+      const colorName = colorSlug
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      return colorName;
+    }
+  }
+  
+  // Method 4: Extract from product title (last resort)
   // Pattern: "Product Name - Color Name" or "Product Name, Color"
   const dashMatch = productTitle.match(/[-–]\s*([^,\d]+?)(?:\s*,|\s*$)/);
   if (dashMatch && dashMatch[1]) {

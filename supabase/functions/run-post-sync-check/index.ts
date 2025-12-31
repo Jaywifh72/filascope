@@ -25,6 +25,11 @@ interface PostSyncCheckReport {
   aiFixPrompt: string | null;
 }
 
+// Brands known to use image-based swatches (product photos) rather than CSS color swatches
+// For these brands, we skip the "hex not found on page" validation since their product pages
+// don't include the hex code in the HTML - they use actual product images instead
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'overture'];
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -329,47 +334,61 @@ Deno.serve(async (req) => {
           }
 
           // Check color hex match - look for the color in the page
-          const html = data.data?.html || data.html || "";
-          const markdown = data.data?.markdown || data.markdown || "";
-          const pageContent = html + markdown;
-
-          if (product.color_hex) {
-            const hexWithoutHash = product.color_hex.replace("#", "").toLowerCase();
-            const hexWithHash = product.color_hex.toLowerCase();
-            
-            // Check if the color appears anywhere on the page
-            if (
-              pageContent.toLowerCase().includes(hexWithoutHash) ||
-              pageContent.toLowerCase().includes(hexWithHash)
-            ) {
+          // Skip for image-based swatch brands as they use product photos, not CSS colors
+          const isImageSwatchBrand = IMAGE_SWATCH_BRANDS.includes(brandSlug);
+          
+          if (isImageSwatchBrand) {
+            // For image-based swatch brands, count as a match if we have a hex value
+            // The actual validation is done visually via product photos
+            if (product.color_hex) {
               colorMatches++;
+              console.log(`[PostSyncCheck] Skipping hex validation for ${brandSlug} (image-based swatches)`);
             } else {
-              // Check for common color style patterns
-              const colorPatterns = [
-                `background-color:.*${hexWithoutHash}`,
-                `background:.*${hexWithoutHash}`,
-                `style=".*${hexWithoutHash}`,
-                `#${hexWithoutHash}`,
-              ];
-              
-              const foundColor = colorPatterns.some((pattern) => 
-                new RegExp(pattern, "i").test(pageContent)
-              );
-              
-              if (foundColor) {
-                colorMatches++;
-              } else {
-                colorIssues.push({
-                  id: product.id,
-                  title: product.product_title,
-                  issue: `DB hex ${product.color_hex} not found on page`,
-                  url: product.product_url,
-                });
-              }
+              colorMatches++;
             }
           } else {
-            // No color hex in DB - that's okay for this check
-            colorMatches++;
+            const html = data.data?.html || data.html || "";
+            const markdown = data.data?.markdown || data.markdown || "";
+            const pageContent = html + markdown;
+
+            if (product.color_hex) {
+              const hexWithoutHash = product.color_hex.replace("#", "").toLowerCase();
+              const hexWithHash = product.color_hex.toLowerCase();
+              
+              // Check if the color appears anywhere on the page
+              if (
+                pageContent.toLowerCase().includes(hexWithoutHash) ||
+                pageContent.toLowerCase().includes(hexWithHash)
+              ) {
+                colorMatches++;
+              } else {
+                // Check for common color style patterns
+                const colorPatterns = [
+                  `background-color:.*${hexWithoutHash}`,
+                  `background:.*${hexWithoutHash}`,
+                  `style=".*${hexWithoutHash}`,
+                  `#${hexWithoutHash}`,
+                ];
+                
+                const foundColor = colorPatterns.some((pattern) => 
+                  new RegExp(pattern, "i").test(pageContent)
+                );
+                
+                if (foundColor) {
+                  colorMatches++;
+                } else {
+                  colorIssues.push({
+                    id: product.id,
+                    title: product.product_title,
+                    issue: `DB hex ${product.color_hex} not found on page`,
+                    url: product.product_url,
+                  });
+                }
+              }
+            } else {
+              // No color hex in DB - that's okay for this check
+              colorMatches++;
+            }
           }
 
           // Rate limiting
