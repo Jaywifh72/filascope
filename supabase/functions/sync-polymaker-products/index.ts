@@ -11,6 +11,12 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
+import {
   enrichPolymakerProduct,
   cleanPolymakerTitle,
   isFilamentProduct,
@@ -189,6 +195,7 @@ function explodeVariants(
   regionalPrices: Map<string, { priceCad: number; urlCa: string }>
 ): ProductVariant[] {
   const variants: ProductVariant[] = [];
+  const filterStats = createFilterStats();
   
   for (const product of products) {
     // Group variants by color (option3 typically)
@@ -201,12 +208,17 @@ function explodeVariants(
       // option3 = Color
       const color = variant.option3 || variant.title.split(' / ').pop() || 'Default';
       
-      // Skip non-1.75mm and non-1kg variants for now (consolidate to standard)
-      const diameter = variant.option1?.toLowerCase() || '';
-      const weight = variant.option2?.toLowerCase() || '';
+      // Extract diameter and weight for filtering
+      const diameterStr = variant.option1?.toLowerCase() || '';
+      const diameterMm = diameterStr.includes('2.85') || diameterStr.includes('3mm') ? 2.85 : 1.75;
+      const weightKg = extractWeightKg(variant.option2 || product.title);
+      const weightGrams = Math.round(weightKg * 1000);
       
-      // Only process 1.75mm variants
-      if (diameter.includes('2.85') || diameter.includes('3mm')) {
+      // Apply standard filtering (samples, bulk, 2.85mm)
+      const filterResult = shouldIncludeVariant(weightGrams, diameterMm);
+      updateFilterStats(filterStats, filterResult);
+      if (!filterResult.include) {
+        console.log(`[Polymaker] Skipping: ${product.title} - ${color} (${filterResult.reason})`);
         continue;
       }
       
@@ -285,6 +297,7 @@ function explodeVariants(
     }
   }
   
+  logFilterStats('Polymaker', filterStats);
   console.log(`[Polymaker] Exploded to ${variants.length} color variants`);
   return variants;
 }

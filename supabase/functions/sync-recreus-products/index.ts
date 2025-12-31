@@ -6,6 +6,12 @@ import {
   getRecreousColorHex,
   normalizeRecreousMaterial,
 } from '../_shared/recreus-defaults.ts';
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -149,6 +155,7 @@ async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
 
 function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
   const variants: ProductVariant[] = [];
+  const filterStats = createFilterStats();
   
   for (const product of products) {
     for (const variant of product.variants) {
@@ -160,6 +167,14 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
       let color = parsed.color;
       if (!color && variant.option1 && !/default|title/i.test(variant.option1)) {
         color = variant.option1;
+      }
+      
+      // Apply standard filtering (samples, bulk, 2.85mm)
+      const filterResult = shouldIncludeVariant(parsed.weight || variant.grams, parsed.diameter);
+      updateFilterStats(filterStats, filterResult);
+      if (!filterResult.include) {
+        console.log(`[Recreus] Skipping: ${product.title} - ${color} (${filterResult.reason})`);
+        continue;
       }
       
       // Find matching image
@@ -194,6 +209,7 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
     }
   }
   
+  logFilterStats('Recreus', filterStats);
   console.log(`Exploded ${products.length} products into ${variants.length} variants`);
   return variants;
 }

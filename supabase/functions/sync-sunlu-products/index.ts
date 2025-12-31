@@ -5,6 +5,12 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
+import {
   enrichSunluProduct,
   getSunluColorHex,
   parseSunluVariant,
@@ -148,8 +154,12 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
   
   const variants: ProductVariant[] = [];
   const seenColorWeightCombos = new Map<string, ProductVariant>();
+  const filterStats = createFilterStats();
   
   for (const product of products) {
+    // Check for 2.85mm diameter at product level
+    const is285 = product.title.includes('2.85') || product.title.includes('3mm');
+    
     for (const variant of product.variants) {
       // Parse variant title (e.g., "Red / US" or "Black / 1KG")
       const parsed = parseSunluVariant(variant.title);
@@ -157,6 +167,14 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
       // Also check option1/option2 for color
       const color = parsed.color || variant.option1 || null;
       const weight = parsed.weight || extractWeightFromTitle(product.title, variant.title);
+      
+      // Apply standard filtering (samples, bulk, 2.85mm)
+      const filterResult = shouldIncludeVariant(weight || 1000, is285 ? 2.85 : 1.75);
+      updateFilterStats(filterStats, filterResult);
+      if (!filterResult.include) {
+        console.log(`[Sunlu] Skipping: ${product.title} - ${color} (${filterResult.reason})`);
+        continue;
+      }
       
       // Find matching image
       let imageUrl: string | null = null;
@@ -194,6 +212,7 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
     }
   }
   
+  logFilterStats('Sunlu', filterStats);
   console.log(`[Step 2] Complete: ${variants.length} unique variants extracted`);
   return variants;
 }

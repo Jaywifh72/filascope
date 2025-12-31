@@ -16,6 +16,14 @@ import {
   cleanFlashforgeTitle,
   getFlashforgeColorHex,
 } from '../_shared/flashforge-defaults.ts';
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+  extractWeightFromText,
+  is285mmDiameter,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -158,12 +166,26 @@ Deno.serve(async (req) => {
       console.log(`Filtered to ${filamentProducts.length} filament products`);
       
       stats.discovered = filamentProducts.length;
+      const filterStats = createFilterStats();
       
       // Process each product's variants
       for (const product of filamentProducts.slice(0, limit)) {
         for (const variant of product.variants) {
           try {
             const colorName = extractColorFromVariant(variant.title);
+            
+            // Extract weight and diameter for filtering
+            const weight = extractWeightFromText(product.title) || 1000;
+            const is285 = is285mmDiameter(product.title);
+            
+            // Apply standard filtering (samples, bulk, 2.85mm)
+            const filterResult = shouldIncludeVariant(weight, is285 ? 2.85 : 1.75);
+            updateFilterStats(filterStats, filterResult);
+            if (!filterResult.include) {
+              console.log(`[Flashforge] Skipping: ${product.title} - ${colorName} (${filterResult.reason})`);
+              continue;
+            }
+            
             const enrichment = enrichFlashforgeProduct(product.title, colorName);
             
             // Generate unique product_id for this variant
@@ -250,6 +272,8 @@ Deno.serve(async (req) => {
           }
         }
       }
+      
+      logFilterStats('Flashforge', filterStats);
       
       details.step1 = { 
         productsFound: products.length,
