@@ -25,9 +25,13 @@ interface PostSyncCheckReport {
   aiFixPrompt: string | null;
 }
 
+interface ScrapedProductInfo {
+  pageTitle: string;
+  colorSwatches: Array<{ name: string; hex?: string }>;
+  statusCode: number;
+}
+
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
-// For these brands, we skip the "hex not found on page" validation since their product pages
-// don't include the hex code in the HTML - they use actual product images instead
 const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'overture'];
 
 function generateAIFixPrompt(
@@ -94,39 +98,48 @@ ${detailedIssues}
 ### 1. Update the sync function
 File: \`supabase/functions/sync-${brandSlug}-products/index.ts\`
 
-### 2. For Weight/Diameter Filtering Issues (Bulk, Sample, 2.85mm products)
+### 2. For Title Mismatch Issues
+The sync function must extract titles from the actual product page, not construct them from variants:
+- Use Firecrawl to scrape the product page and extract the <h1> title
+- Store this exact title in product_title to ensure consistency across Filament Cards, Detail pages, and Buy Now pages
 
-The sync function should use the shared \`variant-filters.ts\` utility to properly filter variants:
+### 3. For Color Count Mismatch Issues
+The website shows more color swatches than exist in the database. This means:
+- The sync function is missing color variants from the website
+- 3D-Fuel and similar brands show color swatches as LINKS TO OTHER PRODUCTS (cross-linking)
+- The sync must parse color swatches from HTML and create proper product groupings
+
+### 4. For Missing Color Names
+Colors exist on the website but not in the database:
+- Add missing colors to the brand's color hex map in \`_shared/${brandSlug}-defaults.ts\`
+- Ensure \`extractColorFromVariant()\` properly parses swatch names from the page
+
+### 5. For Weight/Diameter Filtering Issues
+
+Use the shared \`variant-filters.ts\` utility:
 
 \`\`\`typescript
-import { shouldIncludeVariant, createFilterStats, updateFilterStats, logFilterStats } from '../_shared/variant-filters.ts';
+import { shouldIncludeVariant } from '../_shared/variant-filters.ts';
 
-// In explodeVariants() or where variants are processed:
 const filterResult = shouldIncludeVariant(weightGrams, diameterMm);
 if (!filterResult.include) {
-  console.log(\`[${brand}] Skipping variant: \${filterResult.reason}\`);
-  updateFilterStats(stats, filterResult);
+  console.log(\`Skipping variant: \${filterResult.reason}\`);
   continue;
 }
 \`\`\`
 
-**Filter Constants** (from variant-filters.ts):
-- MIN_WEIGHT_GRAMS = 300 (excludes sample coils)
-- MAX_WEIGHT_GRAMS = 1400 (excludes bulk/industrial spools)
+**Filter Constants**:
+- MIN_WEIGHT_GRAMS = 300 (excludes samples)
+- MAX_WEIGHT_GRAMS = 1400 (excludes bulk)
 - STANDARD_DIAMETER_MM = 1.75 (excludes 2.85mm/3.0mm)
 
-### 3. For Color Hex Issues
+---
 
-- Check the color extraction logic in the sync function
-- Verify brand-specific color maps in \`../_shared/${brandSlug}-defaults.ts\`
-- Consider adding missing colors to the shared color-mapping repository
-- Ensure \`extractColorFromVariant()\` is properly parsing variant titles
+## The Three Consistency Rules
 
-### 4. For URL/Scrape Validation Issues
-
-- Verify URL construction logic (correct domain, path encoding)
-- Check for regional URL variants if applicable
-- Ensure product handles are properly slugified
+1. **Names Match**: Filament Card title = Filament Detail title = Product Page <h1>
+2. **Color Count Match**: Number of swatches on website = Number of variants in DB per product_line_id
+3. **Color Names Match**: Swatch names on website = color names in DB for each product_line
 
 ---
 
@@ -135,16 +148,153 @@ if (!filterResult.include) {
 After making fixes:
 1. Run a **Clean Slate** sync for ${brand}
 2. Run **Post Sync Check** again to verify all issues are resolved
-3. Spot-check a few product pages to confirm data accuracy
-
----
-
-## Notes
-- The \`product_line_id\` should exclude color names to properly group variants
-- All products should have valid \`color_hex\` values for UI swatches
-- TDS URLs should follow brand-specific patterns from the defaults file`;
+3. Spot-check a few product pages to confirm data accuracy`;
 
   return prompt;
+}
+
+/**
+ * Extract product info from scraped page HTML
+ */
+function extractProductInfoFromHtml(html: string, markdown: string): ScrapedProductInfo {
+  const result: ScrapedProductInfo = {
+    pageTitle: '',
+    colorSwatches: [],
+    statusCode: 200,
+  };
+  
+  // Extract page title from <h1> or meta title
+  const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+  if (h1Match) {
+    result.pageTitle = h1Match[1].trim();
+  } else {
+    // Try to get from <title> tag
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    if (titleMatch) {
+      // Clean up title (often has "– Brand Name" suffix)
+      result.pageTitle = titleMatch[1].split('–')[0].split('|')[0].trim();
+    }
+  }
+  
+  // Extract color swatches - look for common patterns:
+  // 1. Swatch links with color names in alt text or title
+  // 2. Option selectors with color names
+  // 3. Variant buttons/links
+  
+  // Pattern 1: Swatch images with alt text
+  const swatchImgMatches = html.matchAll(/<img[^>]*class="[^"]*swatch[^"]*"[^>]*alt="([^"]+)"[^>]*>/gi);
+  for (const match of swatchImgMatches) {
+    const name = match[1].trim();
+    if (name && !result.colorSwatches.find(s => s.name.toLowerCase() === name.toLowerCase())) {
+      result.colorSwatches.push({ name });
+    }
+  }
+  
+  // Pattern 2: Swatch links with title or data attributes
+  const swatchLinkMatches = html.matchAll(/<a[^>]*(?:class="[^"]*swatch[^"]*"|data-option="[^"]*color[^"]*")[^>]*title="([^"]+)"[^>]*>/gi);
+  for (const match of swatchLinkMatches) {
+    const name = match[1].trim();
+    if (name && !result.colorSwatches.find(s => s.name.toLowerCase() === name.toLowerCase())) {
+      result.colorSwatches.push({ name });
+    }
+  }
+  
+  // Pattern 3: Shopify variant options (common format)
+  const variantOptionsMatch = html.match(/product-form__option[^>]*value="([^"]+)"/gi);
+  if (variantOptionsMatch) {
+    for (const optMatch of variantOptionsMatch) {
+      const valueMatch = optMatch.match(/value="([^"]+)"/i);
+      if (valueMatch) {
+        const name = valueMatch[1].trim();
+        // Filter out sizes/weights
+        if (name && 
+            !name.match(/^\d/) && 
+            !name.toLowerCase().includes('mm') && 
+            !name.toLowerCase().match(/\d+\s*(kg|g|lb)/i) &&
+            !result.colorSwatches.find(s => s.name.toLowerCase() === name.toLowerCase())) {
+          result.colorSwatches.push({ name });
+        }
+      }
+    }
+  }
+  
+  // Pattern 4: Color option labels from Shopify
+  const optionLabelsMatch = html.matchAll(/<label[^>]*for="[^"]*color[^"]*"[^>]*>([^<]+)<\/label>/gi);
+  for (const match of optionLabelsMatch) {
+    const name = match[1].trim();
+    if (name && !result.colorSwatches.find(s => s.name.toLowerCase() === name.toLowerCase())) {
+      result.colorSwatches.push({ name });
+    }
+  }
+  
+  // Pattern 5: Look for color swatch links in 3D-Fuel format
+  // They link to other products with color in the URL
+  const colorLinkMatches = html.matchAll(/<a[^>]*href="[^"]*\/products\/[^"]*-([a-z-]+)-1-75mm[^"]*"[^>]*>/gi);
+  for (const match of colorLinkMatches) {
+    if (match[1]) {
+      // Convert slug to title case: "desert-tan" -> "Desert Tan"
+      const colorSlug = match[1];
+      const name = colorSlug
+        .split('-')
+        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      if (name && !result.colorSwatches.find(s => s.name.toLowerCase() === name.toLowerCase())) {
+        result.colorSwatches.push({ name });
+      }
+    }
+  }
+  
+  // Pattern 6: Parse markdown for color names (as fallback)
+  if (result.colorSwatches.length === 0 && markdown) {
+    // Look for bullet lists with color names
+    const bulletMatches = markdown.matchAll(/^\s*[-*]\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*$/gm);
+    for (const match of bulletMatches) {
+      const name = match[1].trim();
+      // Basic filter for non-color words
+      if (name && !['Shop', 'Buy', 'Add', 'View', 'Select', 'Choose'].includes(name)) {
+        result.colorSwatches.push({ name });
+      }
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Normalize a title for comparison (lowercase, remove extra spaces/punctuation)
+ */
+function normalizeTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[™®©]/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/[,\-–—]/g, ' ')
+    .trim();
+}
+
+/**
+ * Calculate title similarity (0-100%)
+ */
+function titleSimilarity(a: string, b: string): number {
+  const normA = normalizeTitle(a);
+  const normB = normalizeTitle(b);
+  
+  if (normA === normB) return 100;
+  
+  // Check if one contains the other
+  if (normA.includes(normB) || normB.includes(normA)) {
+    const longer = normA.length > normB.length ? normA : normB;
+    const shorter = normA.length > normB.length ? normB : normA;
+    return Math.round((shorter.length / longer.length) * 100);
+  }
+  
+  // Word-based similarity
+  const wordsA = new Set(normA.split(' ').filter(w => w.length > 2));
+  const wordsB = new Set(normB.split(' ').filter(w => w.length > 2));
+  const intersection = [...wordsA].filter(w => wordsB.has(w));
+  const union = new Set([...wordsA, ...wordsB]);
+  
+  return Math.round((intersection.length / union.size) * 100);
 }
 
 Deno.serve(async (req) => {
@@ -235,7 +385,7 @@ Deno.serve(async (req) => {
       .select("id, product_title, net_weight_g")
       .ilike("vendor", brandName)
       .lt("net_weight_g", 300)
-      .gt("net_weight_g", 0) // Exclude null/0
+      .gt("net_weight_g", 0)
       .limit(20);
 
     if (sampleError) {
@@ -254,28 +404,50 @@ Deno.serve(async (req) => {
       })),
     });
 
-    // ============= SCRAPE-BASED CHECKS =============
-    // Get a sample of products with product URLs for validation
-    const { data: sampleForScrape } = await supabase
+    // ============= SCRAPE-BASED VALIDATION =============
+    
+    // Get product lines with their representative products for validation
+    const { data: productLinesData } = await supabase
       .from("filaments")
       .select("id, product_title, product_url, color_hex, product_line_id")
       .ilike("vendor", brandName)
       .not("product_url", "is", null)
-      .limit(Math.min(sampleSize, 10));
+      .not("product_line_id", "is", null);
+
+    // Group by product_line_id
+    const productLineGroups: Record<string, typeof productLinesData> = {};
+    for (const product of productLinesData || []) {
+      const lineId = product.product_line_id!;
+      if (!productLineGroups[lineId]) {
+        productLineGroups[lineId] = [];
+      }
+      productLineGroups[lineId].push(product);
+    }
+
+    // Select sample product lines for validation
+    const productLineIds = Object.keys(productLineGroups);
+    const sampleLineIds = productLineIds.slice(0, Math.min(sampleSize, 10));
+
+    console.log(`[PostSyncCheck] Validating ${sampleLineIds.length} product lines out of ${productLineIds.length}`);
 
     let scrapedCount = 0;
-    let urlsValid = 0;
-    let colorMatches = 0;
+    const titleIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+    const colorCountIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+    const colorNameIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
     const urlIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
-    const colorIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
 
     const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
     
-    if (firecrawlApiKey && sampleForScrape?.length) {
-      console.log(`[PostSyncCheck] Scraping ${sampleForScrape.length} sample products`);
+    if (firecrawlApiKey && sampleLineIds.length > 0) {
+      console.log(`[PostSyncCheck] Scraping ${sampleLineIds.length} product lines for validation`);
 
-      for (const product of sampleForScrape) {
-        if (!product.product_url) continue;
+      for (const lineId of sampleLineIds) {
+        const variants = productLineGroups[lineId];
+        if (!variants || variants.length === 0) continue;
+
+        // Use the first variant's URL as representative
+        const representative = variants[0];
+        if (!representative.product_url) continue;
 
         try {
           const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
@@ -285,189 +457,207 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              url: product.product_url,
+              url: representative.product_url,
               formats: ["html", "markdown"],
               onlyMainContent: false,
-              waitFor: 2000,
+              waitFor: 2500,
             }),
           });
 
           if (!response.ok) {
             const errorText = await response.text();
-            console.error(`[PostSyncCheck] Firecrawl error for ${product.product_url}:`, errorText);
+            console.error(`[PostSyncCheck] Firecrawl error for ${representative.product_url}:`, errorText);
             urlIssues.push({
-              id: product.id,
-              title: product.product_title,
+              id: representative.id,
+              title: representative.product_title,
               issue: `HTTP ${response.status}`,
-              url: product.product_url,
+              url: representative.product_url,
             });
-            scrapeErrors.push(`${product.product_title}: HTTP ${response.status}`);
+            scrapeErrors.push(`${lineId}: HTTP ${response.status}`);
             continue;
           }
 
           const data = await response.json();
           scrapedCount++;
 
-          // Check if page loaded successfully
+          const html = data.data?.html || data.html || "";
+          const markdown = data.data?.markdown || data.markdown || "";
           const metadata = data.data?.metadata || data.metadata;
           const statusCode = metadata?.statusCode;
-          
-          if (statusCode === 200) {
-            urlsValid++;
-          } else if (statusCode === 404) {
+
+          // Check URL validity
+          if (statusCode === 404) {
             urlIssues.push({
-              id: product.id,
-              title: product.product_title,
+              id: representative.id,
+              title: representative.product_title,
               issue: "Page not found (404)",
-              url: product.product_url,
+              url: representative.product_url,
             });
-          } else if (statusCode) {
-            urlIssues.push({
-              id: product.id,
-              title: product.product_title,
-              issue: `HTTP ${statusCode}`,
-              url: product.product_url,
-            });
-          } else {
-            // No status code means it loaded
-            urlsValid++;
+            continue;
           }
 
-          // Check color hex match - look for the color in the page
-          // Skip for image-based swatch brands as they use product photos, not CSS colors
-          const isImageSwatchBrand = IMAGE_SWATCH_BRANDS.includes(brandSlug);
+          // Extract product info from the page
+          const pageInfo = extractProductInfoFromHtml(html, markdown);
           
-          if (isImageSwatchBrand) {
-            // For image-based swatch brands, count as a match if we have a hex value
-            // The actual validation is done visually via product photos
-            if (product.color_hex) {
-              colorMatches++;
-              console.log(`[PostSyncCheck] Skipping hex validation for ${brandSlug} (image-based swatches)`);
-            } else {
-              colorMatches++;
+          // ========== CHECK A: TITLE ACCURACY ==========
+          if (pageInfo.pageTitle) {
+            const similarity = titleSimilarity(representative.product_title, pageInfo.pageTitle);
+            console.log(`[PostSyncCheck] Title check: DB="${representative.product_title}" vs Page="${pageInfo.pageTitle}" (${similarity}% match)`);
+            
+            if (similarity < 60) {
+              titleIssues.push({
+                id: representative.id,
+                title: representative.product_title,
+                issue: `DB title doesn't match page. Page shows: "${pageInfo.pageTitle}" (${similarity}% similarity)`,
+                url: representative.product_url,
+              });
             }
-          } else {
-            const html = data.data?.html || data.html || "";
-            const markdown = data.data?.markdown || data.markdown || "";
-            const pageContent = html + markdown;
+          }
 
-            if (product.color_hex) {
-              const hexWithoutHash = product.color_hex.replace("#", "").toLowerCase();
-              const hexWithHash = product.color_hex.toLowerCase();
-              
-              // Check if the color appears anywhere on the page
-              if (
-                pageContent.toLowerCase().includes(hexWithoutHash) ||
-                pageContent.toLowerCase().includes(hexWithHash)
-              ) {
-                colorMatches++;
-              } else {
-                // Check for common color style patterns
-                const colorPatterns = [
-                  `background-color:.*${hexWithoutHash}`,
-                  `background:.*${hexWithoutHash}`,
-                  `style=".*${hexWithoutHash}`,
-                  `#${hexWithoutHash}`,
-                ];
-                
-                const foundColor = colorPatterns.some((pattern) => 
-                  new RegExp(pattern, "i").test(pageContent)
-                );
-                
-                if (foundColor) {
-                  colorMatches++;
-                } else {
-                  colorIssues.push({
-                    id: product.id,
-                    title: product.product_title,
-                    issue: `DB hex ${product.color_hex} not found on page`,
-                    url: product.product_url,
-                  });
+          // ========== CHECK B: COLOR COUNT VALIDATION ==========
+          const dbColorCount = variants.length;
+          const pageColorCount = pageInfo.colorSwatches.length;
+          
+          console.log(`[PostSyncCheck] Color count: DB=${dbColorCount} vs Page=${pageColorCount} for ${lineId}`);
+          
+          // Only flag if page has significantly more colors (2+ difference)
+          // Some pages may not expose all swatches in HTML
+          if (pageColorCount > 0 && pageColorCount > dbColorCount + 1) {
+            colorCountIssues.push({
+              id: representative.id,
+              title: lineId,
+              issue: `Website shows ${pageColorCount} colors, database has only ${dbColorCount} (missing ${pageColorCount - dbColorCount})`,
+              url: representative.product_url,
+            });
+          }
+
+          // ========== CHECK C: COLOR NAME MATCHING ==========
+          if (pageInfo.colorSwatches.length > 0) {
+            const dbColorNames = new Set(
+              variants
+                .map(v => {
+                  // Extract color name from product title
+                  const title = v.product_title.toLowerCase();
+                  const parts = title.split(',');
+                  if (parts.length >= 2) {
+                    return parts[1].trim();
+                  }
+                  return '';
+                })
+                .filter(Boolean)
+            );
+
+            const pageColorNames = new Set(
+              pageInfo.colorSwatches.map(s => s.name.toLowerCase())
+            );
+
+            // Find colors on page that aren't in DB
+            const missingColors: string[] = [];
+            for (const pageColor of pageColorNames) {
+              let found = false;
+              for (const dbColor of dbColorNames) {
+                // Fuzzy match - check if one contains the other
+                if (dbColor.includes(pageColor) || pageColor.includes(dbColor) ||
+                    normalizeTitle(dbColor) === normalizeTitle(pageColor)) {
+                  found = true;
+                  break;
                 }
               }
-            } else {
-              // No color hex in DB - that's okay for this check
-              colorMatches++;
+              if (!found) {
+                missingColors.push(pageColor);
+              }
+            }
+
+            if (missingColors.length > 0) {
+              console.log(`[PostSyncCheck] Missing colors for ${lineId}: ${missingColors.join(', ')}`);
+              colorNameIssues.push({
+                id: representative.id,
+                title: lineId,
+                issue: `Colors on website not in DB: ${missingColors.slice(0, 5).join(', ')}${missingColors.length > 5 ? ` (+${missingColors.length - 5} more)` : ''}`,
+                url: representative.product_url,
+              });
             }
           }
 
           // Rate limiting
           await new Promise((resolve) => setTimeout(resolve, 1500));
         } catch (error) {
-          console.error(`[PostSyncCheck] Error scraping ${product.product_url}:`, error);
-          scrapeErrors.push(`${product.product_title}: ${error instanceof Error ? error.message : "Unknown error"}`);
+          console.error(`[PostSyncCheck] Error scraping ${representative.product_url}:`, error);
+          scrapeErrors.push(`${lineId}: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
       }
     }
 
-    // Add scrape-based check results
+    // ============= ADD SCRAPE-BASED CHECK RESULTS =============
+
     if (scrapedCount > 0) {
+      // Check A: Title Accuracy
+      checks.push({
+        checkName: "Title Accuracy (DB matches Page)",
+        status: titleIssues.length === 0 ? "pass" : titleIssues.length <= 1 ? "warning" : "fail",
+        count: scrapedCount - titleIssues.length,
+        details: `${scrapedCount - titleIssues.length}/${scrapedCount} product titles match their Buy Now pages`,
+        products: titleIssues.length > 0 ? titleIssues : undefined,
+      });
+
+      // Check B: Color Count Validation  
+      checks.push({
+        checkName: "Color Count Match (DB vs Website)",
+        status: colorCountIssues.length === 0 ? "pass" : colorCountIssues.length <= 1 ? "warning" : "fail",
+        count: scrapedCount - colorCountIssues.length,
+        details: `${scrapedCount - colorCountIssues.length}/${scrapedCount} product lines have correct color counts`,
+        products: colorCountIssues.length > 0 ? colorCountIssues : undefined,
+      });
+
+      // Check C: Color Name Matching
+      checks.push({
+        checkName: "Color Names Match (DB has all website colors)",
+        status: colorNameIssues.length === 0 ? "pass" : colorNameIssues.length <= 1 ? "warning" : "fail",
+        count: scrapedCount - colorNameIssues.length,
+        details: `${scrapedCount - colorNameIssues.length}/${scrapedCount} product lines have all colors from website`,
+        products: colorNameIssues.length > 0 ? colorNameIssues : undefined,
+      });
+
+      // URL Validity Check
       checks.push({
         checkName: "Buy Now URLs Valid",
         status: urlIssues.length === 0 ? "pass" : urlIssues.length <= 1 ? "warning" : "fail",
-        count: urlsValid,
-        details: `${urlsValid}/${scrapedCount} URLs returned valid pages`,
+        count: scrapedCount - urlIssues.length,
+        details: `${scrapedCount - urlIssues.length}/${scrapedCount} URLs returned valid pages`,
         products: urlIssues.length > 0 ? urlIssues : undefined,
-      });
-
-      checks.push({
-        checkName: "Color Hex Match",
-        status: colorIssues.length === 0 ? "pass" : colorIssues.length <= 1 ? "warning" : "fail",
-        count: colorMatches,
-        details: `${colorMatches}/${scrapedCount} products have matching colors`,
-        products: colorIssues.length > 0 ? colorIssues : undefined,
       });
     } else if (!firecrawlApiKey) {
       checks.push({
         checkName: "Scrape Validation",
         status: "warning",
         count: 0,
-        details: "Firecrawl API key not configured - skipping URL and color validation",
+        details: "Firecrawl API key not configured - skipping Title, Color Count, and Color Name validation",
       });
     }
 
-    // ============= SWATCH ACCURACY CHECK =============
-    // Compare color variant counts per product line
-    const { data: productLines } = await supabase
-      .from("filaments")
-      .select("product_line_id")
-      .ilike("vendor", brandName)
-      .not("product_line_id", "is", null);
-
-    const uniqueProductLines = [...new Set(productLines?.map((p) => p.product_line_id))];
-    
+    // ============= SWATCH UNIQUENESS CHECK =============
     let swatchIssues: Array<{ id: string; title: string; issue: string }> = [];
     
-    if (uniqueProductLines.length > 0) {
-      // Check for duplicate hex codes within product lines
-      for (const productLineId of uniqueProductLines.slice(0, 5)) {
-        const { data: variants } = await supabase
-          .from("filaments")
-          .select("id, product_title, color_hex")
-          .eq("product_line_id", productLineId)
-          .ilike("vendor", brandName);
+    // Check for duplicate hex codes within product lines
+    for (const lineId of productLineIds.slice(0, 10)) {
+      const variants = productLineGroups[lineId];
+      if (!variants || variants.length <= 1) continue;
 
-        if (variants && variants.length > 1) {
-          // Count hex codes
-          const hexCounts: Record<string, number> = {};
-          for (const v of variants) {
-            if (v.color_hex) {
-              const hex = v.color_hex.toLowerCase();
-              hexCounts[hex] = (hexCounts[hex] || 0) + 1;
-            }
-          }
+      const hexCounts: Record<string, number> = {};
+      for (const v of variants) {
+        if (v.color_hex) {
+          const hex = v.color_hex.toLowerCase();
+          hexCounts[hex] = (hexCounts[hex] || 0) + 1;
+        }
+      }
 
-          // Find duplicates
-          for (const [hex, count] of Object.entries(hexCounts)) {
-            if (count > 1) {
-              const dupes = variants.filter((v) => v.color_hex?.toLowerCase() === hex);
-              swatchIssues.push({
-                id: dupes[0].id,
-                title: `${productLineId}: ${hex}`,
-                issue: `${count} variants share same hex code`,
-              });
-            }
-          }
+      for (const [hex, count] of Object.entries(hexCounts)) {
+        if (count > 1) {
+          swatchIssues.push({
+            id: variants[0].id,
+            title: `${lineId}: ${hex}`,
+            issue: `${count} variants share same hex code`,
+          });
         }
       }
     }
