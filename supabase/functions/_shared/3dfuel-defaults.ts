@@ -53,7 +53,9 @@ export const PRODUCT_LINE_PATTERNS: Array<{ pattern: RegExp; line: string; handl
   { pattern: /\bWound\s*Up/i, line: 'Wound Up', handlePattern: /wound-?up/i },
   { pattern: /\bLandfillament/i, line: 'Landfillament', handlePattern: /landfill/i },
   { pattern: /\bc2renew|C2\s*Renew/i, line: 'C2 Renew', handlePattern: /c2renew/i },
-  { pattern: /\bReFuel\b/i, line: 'ReFuel PETG', handlePattern: /refuel/i },
+  // REMOVED: ReFuel pattern was incorrectly forcing ALL ReFuel products to PETG
+  // ReFuel products have different materials (PLA+, PCTG, PETG) and need material-aware handling
+  // See generateProductLineId() for proper ReFuel handling
   
   // Pro/Advanced lines (specific variants first)
   // Tough Pro PLA+ MUST match before Pro PLA - these products were rebranded but handles still use pro-pla-*
@@ -690,13 +692,42 @@ export function extractDiameter(variant: any): number {
  * IMPORTANT: Title-based matching is now prioritized over handle-based matching
  * because 3D-Fuel rebranded some products (e.g., "Tough Pro PLA+") but kept old
  * handles (e.g., "pro-pla-*"). Title is the source of truth for the actual product name.
+ * 
+ * CRITICAL FIX: ReFuel products come in different materials (PLA+, PCTG, PETG) and
+ * MUST be grouped by material type, not just "refuel". Each material is a distinct
+ * product line with its own URL and variants.
  */
 export function generateProductLineId(productTitle: string, productHandle?: string, colorName?: string): string {
+  const titleLower = productTitle.toLowerCase();
+  const handleLower = productHandle?.toLowerCase() || '';
+  
   // Method 0 (HIGHEST PRIORITY): Color-name based grouping for Dual Color Silk
   // If color starts with "Silky", it's ALWAYS a Dual Color Silk product regardless of handle
   if (colorName && colorName.toLowerCase().startsWith('silky')) {
     console.log(`[ProductLineId] Silky color detected: "${colorName}" -> 3dfuel__dual-color-silk-pla`);
     return '3dfuel__dual-color-silk-pla';
+  }
+  
+  // Method 0.5 (CRITICAL FIX): ReFuel products MUST be grouped by material type
+  // ReFuel comes in PLA+, PCTG, and PETG variants - each is a separate product
+  if (titleLower.includes('refuel') || handleLower.includes('refuel')) {
+    // Detect the actual material from the product title
+    const material = extractMaterial(productTitle);
+    const materialSlug = material.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-');
+    
+    // Special handling for PLA+ variants (Standard PLA+ vs Tough Pro PLA+)
+    if (titleLower.includes('tough pro pla') || titleLower.includes('tough pro pla+')) {
+      console.log(`[ProductLineId] ReFuel Tough Pro PLA+ detected: "${productTitle}" -> 3dfuel__refuel-tough-pro-pla`);
+      return '3dfuel__refuel-tough-pro-pla';
+    }
+    if (titleLower.includes('standard pla') || (titleLower.includes('pla+') && !titleLower.includes('tough'))) {
+      console.log(`[ProductLineId] ReFuel Standard PLA+ detected: "${productTitle}" -> 3dfuel__refuel-standard-pla`);
+      return '3dfuel__refuel-standard-pla';
+    }
+    
+    // For PCTG, PETG, and other materials
+    console.log(`[ProductLineId] ReFuel ${material} detected: "${productTitle}" -> 3dfuel__refuel-${materialSlug}`);
+    return `3dfuel__refuel-${materialSlug}`;
   }
   
   // Method 1 (PRIORITY): Use product TITLE for accurate product identification
