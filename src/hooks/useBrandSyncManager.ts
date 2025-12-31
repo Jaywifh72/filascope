@@ -17,6 +17,7 @@ const BRAND_SPECIFIC_FUNCTIONS = [
 
 // Mapping from database slugs to edge function names (when they differ)
 const SLUG_TO_FUNCTION_MAP: Record<string, string> = {
+  '3d-fuel': '3dfuel',
   'atomic-filament': 'atomic',
   'proto-pasta': 'protopasta',
   'push-plastic': 'pushplastic',
