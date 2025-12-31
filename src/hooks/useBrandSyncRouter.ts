@@ -24,6 +24,32 @@ export interface UnifiedSyncProgress {
   totalRegions?: number;
 }
 
+export interface SyncProductResultData {
+  productId: string;
+  title: string;
+  action: 'created' | 'updated' | 'skipped' | 'error';
+  reason?: string;
+  fields: {
+    image: boolean;
+    price: boolean;
+    tds: boolean;
+    colorHex: boolean;
+    mpn: boolean;
+    specifications: boolean;
+  };
+  price?: number;
+  compareAtPrice?: number;
+}
+
+export interface FieldCoverageData {
+  images: { count: number; percent: number };
+  prices: { count: number; percent: number };
+  tds: { count: number; percent: number };
+  colors: { count: number; percent: number };
+  mpn: { count: number; percent: number };
+  specifications: { count: number; percent: number };
+}
+
 export interface UnifiedSyncResult {
   success: boolean;
   jobId: string | null;
@@ -34,7 +60,11 @@ export interface UnifiedSyncResult {
     skipped: number;
     errors: number;
     total: number;
+    totalDiscovered?: number;
   };
+  products?: SyncProductResultData[];
+  fieldCoverage?: FieldCoverageData;
+  duration_ms?: number;
   message?: string;
 }
 
@@ -111,11 +141,22 @@ export function useBrandSyncRouter(brandSlug: string) {
           };
           const result = await genericSync.syncBrand(syncOptions);
           setCurrentJobId(result.jobId || null);
+          const total = result.summary?.total ?? result.summary?.totalDiscovered ?? 0;
           return {
             success: result.success,
             jobId: result.jobId || null,
             brandType: 'generic',
-            summary: result.summary,
+            summary: result.summary ? {
+              created: result.summary.created,
+              updated: result.summary.updated,
+              skipped: result.summary.skipped,
+              errors: result.summary.errors,
+              total: total,
+              totalDiscovered: result.summary.totalDiscovered ?? total,
+            } : undefined,
+            products: result.products,
+            fieldCoverage: result.fieldCoverage,
+            duration_ms: result.duration_ms,
             message: result.message,
           };
         }

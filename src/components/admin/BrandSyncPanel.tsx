@@ -145,6 +145,34 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
 
     // Transform API response to BrandSyncResult format
     if (result.success && result.summary) {
+      // Map field coverage - handle both old flat format and new rich format
+      const mapFieldCoverage = (fc: any) => {
+        if (!fc) return {
+          images: { count: 0, percent: 0 },
+          prices: { count: 0, percent: 0 },
+          tds: { count: 0, percent: 0 },
+          colors: { count: 0, percent: 0 },
+          mpn: { count: 0, percent: 0 },
+          specifications: { count: 0, percent: 0 },
+        };
+        
+        // If already in rich format, use directly
+        if (fc.images && typeof fc.images === 'object' && 'percent' in fc.images) {
+          return fc;
+        }
+        
+        // Convert flat percentage format to rich format
+        const total = result.summary?.totalDiscovered || result.summary?.total || 1;
+        return {
+          images: { count: Math.round((fc.images || 0) * total / 100), percent: fc.images || 0 },
+          prices: { count: Math.round((fc.prices || 0) * total / 100), percent: fc.prices || 0 },
+          tds: { count: Math.round((fc.tds || 0) * total / 100), percent: fc.tds || 0 },
+          colors: { count: Math.round((fc.colors || 0) * total / 100), percent: fc.colors || 0 },
+          mpn: { count: Math.round((fc.mpn || 0) * total / 100), percent: fc.mpn || 0 },
+          specifications: { count: Math.round((fc.specifications || 0) * total / 100), percent: fc.specifications || 0 },
+        };
+      };
+
       const syncResultData: BrandSyncResult = {
         success: true,
         jobId: result.jobId || '',
@@ -152,23 +180,16 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
         platform: brand.platform_type,
         dryRun,
         summary: {
-          totalDiscovered: result.summary.total ?? 0,
+          totalDiscovered: result.summary.totalDiscovered ?? result.summary.total ?? 0,
           created: result.summary.created ?? 0,
           updated: result.summary.updated ?? 0,
           skipped: result.summary.skipped ?? 0,
           errors: result.summary.errors ?? 0,
         },
-        products: [],
+        products: result.products || [],
         regionBreakdown: [],
-        fieldCoverage: {
-          images: { count: 0, percent: 0 },
-          prices: { count: 0, percent: 0 },
-          tds: { count: 0, percent: 0 },
-          colors: { count: 0, percent: 0 },
-          mpn: { count: 0, percent: 0 },
-          specifications: { count: 0, percent: 0 },
-        },
-        duration_ms: 0,
+        fieldCoverage: mapFieldCoverage(result.fieldCoverage),
+        duration_ms: result.duration_ms || 0,
         startedAt: new Date().toISOString(),
         completedAt: new Date().toISOString(),
       };
