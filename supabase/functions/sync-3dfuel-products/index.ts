@@ -192,6 +192,10 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
   const seenIds = new Set<string>();
   const filterStats = createFilterStats();
   
+  // CRITICAL: Track unique variants by hash to prevent duplicates
+  // Hash = productLineId|colorName|weight to catch same color appearing twice
+  const processedHashes = new Set<string>();
+  
   for (const product of products) {
     // Skip non-filament products (3D Clean, etc.)
     if (isNonFilament(product.title, product.handle)) {
@@ -199,40 +203,67 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       continue;
     }
     
-    // Extract product-level info once (shared across all color variants)
-    const material = extractMaterial(product.title);
-    const finishType = extractFinish(product.title);
+    // CRITICAL FIX: Detect multi-material products (ReFuel, etc.)
+    // ReFuel products have option1 = Material Type (e.g., "Standard PLA+", "Tough Pro PLA+")
+    // and option3 = Color Name (e.g., "Natural")
+    const isMultiMaterialProduct = product.title.toLowerCase().includes('refuel') ||
+                                   product.variants.some(v => 
+                                     v.option1?.toLowerCase().includes('pla') ||
+                                     v.option1?.toLowerCase().includes('pctg') ||
+                                     v.option1?.toLowerCase().includes('petg'));
+    
+    if (isMultiMaterialProduct) {
+      console.log(`[3D-Fuel] Multi-material product detected: ${product.title}`);
+    }
     
     for (const variant of product.variants) {
-      const productId = `3dfuel-${product.id}-${variant.id}`;
+      // CRITICAL: For multi-material products, extract material from option1
+      // and color from option3 instead of the normal flow
+      let material: string;
+      let colorName: string;
+      let productLineId: string;
       
-      // Pass product.handle for improved Silky color extraction
-      const colorName = extractColorName(variant, product.title, product.handle);
+      if (isMultiMaterialProduct && variant.option1) {
+        // Multi-material handling: option1 = material, option3 = color
+        material = extractMaterialFromOption(variant.option1, product.title);
+        colorName = variant.option3?.trim() || extractColorName(variant, product.title, product.handle);
+        
+        // Generate material-specific product line ID
+        productLineId = generateProductLineIdForMultiMaterial(product.title, material, product.handle);
+        
+        console.log(`[3D-Fuel] Multi-material: option1="${variant.option1}" -> material="${material}", option3="${variant.option3}" -> color="${colorName}"`);
+      } else {
+        // Normal single-material product handling
+        material = extractMaterial(product.title);
+        colorName = extractColorName(variant, product.title, product.handle);
+        productLineId = generateProductLineId(product.title, product.handle, colorName);
+      }
+      
+      const finishType = extractFinish(product.title);
       const diameter = extractDiameter(variant);
       const weight = extractWeight(variant, product.title);
+      
+      const productId = `3dfuel-${product.id}-${variant.id}`;
       
       // Log color extraction decision
       decisionLogger?.logColorExtraction(
         productId,
         product.title,
         { variantTitle: variant.title, productHandle: product.handle, options: [variant.option1, variant.option2, variant.option3].filter(Boolean) as string[] },
-        { colorName, method: colorName === 'Default' ? 'fallback' : 'extracted' },
+        { colorName, method: isMultiMaterialProduct ? 'multi-material (option3)' : (colorName === 'Default' ? 'fallback' : 'extracted') },
         colorName !== 'Default'
       );
-      
-      // Generate product_line_id with colorName for Silky detection
-      const productLineId = generateProductLineId(product.title, product.handle, colorName);
       
       // Log product line decision
       decisionLogger?.logProductLine(
         productId,
         product.title,
         { title: product.title, handle: product.handle, colorName },
-        { productLineId, matchedPattern: productLineId.includes('dual-color') ? 'Silky color pattern' : 'title/handle pattern' }
+        { productLineId, matchedPattern: isMultiMaterialProduct ? `multi-material: ${material}` : 'title/handle pattern' }
       );
       
       // Debug logging for color extraction issues
-      console.log(`[Color] Product: "${product.title}" Handle: "${product.handle}" Variant: "${variant.title}" -> Color: "${colorName}" -> ProductLine: "${productLineId}"`);
+      console.log(`[Color] Product: "${product.title}" Handle: "${product.handle}" Variant: "${variant.title}" -> Material: "${material}" Color: "${colorName}" -> ProductLine: "${productLineId}"`);
       
       // Apply standard filtering (samples, bulk, 2.85mm)
       const filterResult = shouldIncludeVariant(weight, diameter);
@@ -251,7 +282,25 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
         continue;
       }
       
-      // Skip duplicates
+      // CRITICAL: Deduplication by hash to prevent duplicate color entries
+      // This catches cases where the same color appears multiple times under different SKUs
+      const variantHash = `${productLineId}|${colorName.toLowerCase()}|${weight}`;
+      if (processedHashes.has(variantHash)) {
+        console.log(`[3D-Fuel] Skipping duplicate: ${variantHash}`);
+        decisionLogger?.log({
+          productId,
+          productTitle: product.title,
+          decisionType: 'filter',
+          input: { variantHash, colorName, productLineId, weight },
+          output: { included: false },
+          reason: 'Duplicate variant hash (same color/weight/line)',
+          success: false,
+        });
+        continue;
+      }
+      processedHashes.add(variantHash);
+      
+      // Skip duplicates by product ID (older check)
       if (seenIds.has(productId)) {
         continue;
       }
@@ -272,13 +321,33 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       );
       
       // Build display title matching page format: "Product Line, Color Name, 1.75mm"
-      // CRITICAL FIX: For ReFuel products, use the actual material from the product title
-      // ReFuel products have different materials (PLA+, PCTG, PETG) and must show the correct one
+      // CRITICAL FIX: For ReFuel products, use the actual material from the variant
       let productLine = extractProductLine(product.title);
       
-      // For ReFuel products, append material to the product line for clarity
-      if (product.title.toLowerCase().includes('refuel')) {
-        // Extract material and create proper product line
+      // For ReFuel/multi-material products, show specific material in title
+      if (isMultiMaterialProduct) {
+        if (material === 'PLA+' && product.title.toLowerCase().includes('tough pro')) {
+          productLine = 'ReFuel Tough Pro PLA+';
+        } else if (material === 'PLA+' && product.title.toLowerCase().includes('standard')) {
+          productLine = 'ReFuel Standard PLA+';
+        } else if (material === 'PLA+') {
+          // Detect from option1 if title doesn't have it
+          if (variant.option1?.toLowerCase().includes('tough pro')) {
+            productLine = 'ReFuel Tough Pro PLA+';
+          } else if (variant.option1?.toLowerCase().includes('standard')) {
+            productLine = 'ReFuel Standard PLA+';
+          } else {
+            productLine = `ReFuel ${material}`;
+          }
+        } else if (material === 'PCTG') {
+          productLine = 'ReFuel Pro PCTG';
+        } else if (material === 'PETG') {
+          productLine = 'ReFuel PETG';
+        } else {
+          productLine = `ReFuel ${material}`;
+        }
+      } else if (product.title.toLowerCase().includes('refuel')) {
+        // Non-multi-material ReFuel (single material product)
         if (product.title.toLowerCase().includes('tough pro pla')) {
           productLine = 'ReFuel Tough Pro PLA+';
         } else if (product.title.toLowerCase().includes('standard pla')) {
@@ -307,7 +376,7 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
         handle: product.handle,
         variantId: variant.id,
         sku: variant.sku || '',
-        price: parseFloat(variant.price) || 0,
+        price: parseFloat(variant.price) || 0,  // Use actual variant price
         compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
         available: variant.available,
         imageUrl,
@@ -317,8 +386,8 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
         finishType,
         diameter,
         weight,
-        colorHex,  // Now properly mapped from expanded COLOR_HEX_MAP
-        productLineId,  // Now correctly using handle-based detection
+        colorHex,
+        productLineId,
       });
     }
   }
@@ -326,6 +395,7 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
   logFilterStats('3D-Fuel', filterStats);
   console.log(`[Step 2] Complete: ${variants.length} variants exploded`);
   console.log(`[Step 2] Product lines created: ${new Set(variants.map(v => v.productLineId)).size}`);
+  console.log(`[Step 2] Deduplication: ${processedHashes.size} unique hashes processed`);
   
   // Log decision summary
   if (decisionLogger) {
@@ -334,6 +404,55 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
   }
   
   return variants;
+}
+
+/**
+ * Extract material from variant option1 (for multi-material products like ReFuel)
+ */
+function extractMaterialFromOption(option1: string, productTitle: string): string {
+  const opt = option1.toLowerCase();
+  
+  if (opt.includes('tough pro pla') || opt.includes('tough pro pla+')) return 'PLA+';
+  if (opt.includes('standard pla') || opt.includes('standard pla+')) return 'PLA+';
+  if (opt.includes('pctg') || opt.includes('pro pctg')) return 'PCTG';
+  if (opt.includes('petg') || opt.includes('pro petg')) return 'PETG';
+  if (opt.includes('pla+')) return 'PLA+';
+  if (opt.includes('pla')) return 'PLA';
+  if (opt.includes('abs')) return 'ABS';
+  if (opt.includes('asa')) return 'ASA';
+  
+  // Fallback to product title extraction
+  return extractMaterial(productTitle);
+}
+
+/**
+ * Generate product line ID for multi-material products
+ * These products need material-specific grouping to prevent cross-contamination
+ */
+function generateProductLineIdForMultiMaterial(productTitle: string, material: string, productHandle?: string): string {
+  const titleLower = productTitle.toLowerCase();
+  
+  // ReFuel products - create specific line IDs based on material
+  if (titleLower.includes('refuel')) {
+    const materialSlug = material.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    
+    // Detect specific PLA+ variants
+    if (material === 'PLA+') {
+      // Check if we can determine Tough Pro vs Standard from title
+      if (titleLower.includes('tough pro')) {
+        return '3dfuel__refuel-tough-pro-pla';
+      } else if (titleLower.includes('standard')) {
+        return '3dfuel__refuel-standard-pla';
+      }
+      // Fallback - will need to be determined from option1 at variant level
+      return '3dfuel__refuel-pla';
+    }
+    
+    return `3dfuel__refuel-${materialSlug}`;
+  }
+  
+  // For other multi-material products, fall back to standard logic
+  return generateProductLineId(productTitle, productHandle);
 }
 
 // ============================================================================

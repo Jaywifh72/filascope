@@ -14,7 +14,11 @@ export type DecisionType =
   | 'material'
   | 'finish'
   | 'weight'
-  | 'diameter';
+  | 'diameter'
+  | 'material_separation'
+  | 'price_validation'
+  | 'deduplication'
+  | 'multi_material';
 
 export interface DecisionLog {
   productId: string;

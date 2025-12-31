@@ -422,11 +422,29 @@ if (!filterResult.include) {
 
 ---
 
-## The Three Consistency Rules
+## The Seven Consistency Rules (Updated)
 
 1. **Names Match**: Filament Card title = Filament Detail title = Product Page <h1>
 2. **Color Count Match**: Number of swatches on website = Number of variants in DB per product_line_id
 3. **Color Names Match**: Swatch names on website = color names in DB for each product_line
+4. **Price Match**: DB price matches website price for the specific variant (within 5%)
+5. **Material Separation**: Each product_line_id contains ONLY ONE material type
+6. **No Duplicate Hex**: Each product_line_id has unique hex codes (no duplicates)
+7. **URL Consistency**: All variants in a product_line_id point to the same base product URL
+
+---
+
+## Multi-Material Product Handling (CRITICAL)
+
+Some products like ReFuel contain multiple materials in ONE Shopify product:
+- option1 = Material Type (e.g., "Standard PLA+", "Tough Pro PLA+", "Pro PCTG")
+- option3 = Color Name (e.g., "Natural")
+
+The sync MUST:
+1. Detect multi-material products by checking if option1 contains material names
+2. Create SEPARATE product_line_ids for each material (e.g., 3dfuel__refuel-standard-pla, 3dfuel__refuel-tough-pro-pla)
+3. Extract color from option3, NOT option1
+4. Use deduplication hash (productLineId|colorName|weight) to prevent duplicate entries
 
 ---
 
@@ -1170,15 +1188,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ============= SWATCH UNIQUENESS CHECK =============
+    // ============= SWATCH UNIQUENESS CHECK (CRITICAL) =============
+    // Duplicate hex codes within same product line indicates data corruption
     let swatchIssues: Array<{ id: string; title: string; issue: string }> = [];
     
     // Check for duplicate hex codes within product lines
-    for (const lineId of productLineIds.slice(0, 10)) {
+    for (const lineId of productLineIds.slice(0, 20)) { // Check more lines
       const variants = productLineGroups[lineId];
       if (!variants || variants.length <= 1) continue;
 
       const hexCounts: Record<string, number> = {};
+      const nullHexCount = variants.filter(v => !v.color_hex).length;
+      
       for (const v of variants) {
         if (v.color_hex) {
           const hex = v.color_hex.toLowerCase();
@@ -1191,20 +1212,105 @@ Deno.serve(async (req) => {
           swatchIssues.push({
             id: variants[0].id,
             title: `${lineId}: ${hex}`,
-            issue: `${count} variants share same hex code`,
+            issue: `CRITICAL: ${count} variants share same hex code - causes UI to show wrong color count`,
           });
         }
+      }
+      
+      // Also flag missing hex codes as a data quality issue
+      if (nullHexCount > 0 && nullHexCount < variants.length) {
+        swatchIssues.push({
+          id: variants[0].id,
+          title: `${lineId}`,
+          issue: `${nullHexCount}/${variants.length} variants missing color_hex`,
+        });
       }
     }
 
     checks.push({
-      checkName: "Swatch Uniqueness",
-      status: swatchIssues.length === 0 ? "pass" : swatchIssues.length <= 2 ? "warning" : "fail",
+      checkName: "Swatch Uniqueness (No Duplicate Hex)",
+      status: swatchIssues.length === 0 ? "pass" : "fail", // CRITICAL - always fail on duplicates
       count: swatchIssues.length,
       details: swatchIssues.length === 0 
         ? "No duplicate hex codes within product lines" 
-        : `${swatchIssues.length} duplicate hex codes found`,
+        : `CRITICAL: ${swatchIssues.length} duplicate/missing hex codes found - causes wrong color counts in UI`,
       products: swatchIssues.length > 0 ? swatchIssues : undefined,
+    });
+
+    // ============= PRICE CONSISTENCY CHECK (NEW) =============
+    // Validate DB prices are reasonable (not $0 or suspicious values)
+    const { data: priceCheckData } = await supabase
+      .from("filaments")
+      .select("id, product_title, variant_price, product_url")
+      .ilike("vendor", brandName)
+      .or("variant_price.is.null,variant_price.eq.0,variant_price.lt.5,variant_price.gt.100");
+
+    const priceIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+    for (const p of priceCheckData || []) {
+      let issue = '';
+      if (p.variant_price === null) issue = 'Price is NULL';
+      else if (p.variant_price === 0) issue = 'Price is $0';
+      else if (p.variant_price < 5) issue = `Price too low: $${p.variant_price}`;
+      else if (p.variant_price > 100) issue = `Price unusually high: $${p.variant_price}`;
+      
+      if (issue) {
+        priceIssues.push({
+          id: p.id,
+          title: p.product_title,
+          issue,
+          url: p.product_url || undefined,
+        });
+      }
+    }
+
+    checks.push({
+      checkName: "Price Validity",
+      status: priceIssues.length === 0 ? "pass" : priceIssues.length <= 3 ? "warning" : "fail",
+      count: priceIssues.length,
+      details: priceIssues.length === 0 
+        ? "All prices are in valid range ($5-$100)" 
+        : `${priceIssues.length} products have suspicious prices`,
+      products: priceIssues.length > 0 ? priceIssues : undefined,
+    });
+
+    // ============= PRODUCT LINE CONSISTENCY CHECK (NEW) =============
+    // Each product_line_id should have consistent product URLs pointing to same base product
+    const urlConsistencyIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+    
+    for (const lineId of productLineIds.slice(0, 15)) {
+      const variants = productLineGroups[lineId];
+      if (!variants || variants.length <= 1) continue;
+      
+      const urls = variants.map(v => v.product_url).filter(Boolean);
+      const uniqueBaseUrls = new Set(urls.map(url => {
+        // Extract base URL without query params
+        try {
+          const parsed = new URL(url!);
+          return parsed.pathname;
+        } catch {
+          return url;
+        }
+      }));
+      
+      // All variants in same product line should point to same base URL
+      if (uniqueBaseUrls.size > 1) {
+        urlConsistencyIssues.push({
+          id: variants[0].id,
+          title: lineId,
+          issue: `${uniqueBaseUrls.size} different URLs in same product line - possible grouping error`,
+          url: variants[0].product_url || undefined,
+        });
+      }
+    }
+
+    checks.push({
+      checkName: "Product Line URL Consistency",
+      status: urlConsistencyIssues.length === 0 ? "pass" : urlConsistencyIssues.length <= 1 ? "warning" : "fail",
+      count: urlConsistencyIssues.length,
+      details: urlConsistencyIssues.length === 0 
+        ? "All product lines have consistent URLs" 
+        : `${urlConsistencyIssues.length} product lines have mixed URLs`,
+      products: urlConsistencyIssues.length > 0 ? urlConsistencyIssues : undefined,
     });
 
     // Calculate overall status
