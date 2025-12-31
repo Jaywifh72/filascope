@@ -493,6 +493,49 @@ export function getAtomicColorHex(colorName: string): string | null {
 }
 
 // ============================================================================
+// ACCESSORY/NON-FILAMENT DETECTION
+// ============================================================================
+
+/**
+ * Patterns for detecting non-filament products (apparel, samples, accessories)
+ */
+const ATOMIC_ACCESSORY_PATTERNS: RegExp[] = [
+  // Apparel
+  /\bshirt\b/i,
+  /\bt-shirt\b/i,
+  /\bhoodie\b/i,
+  /\bbeanie\b/i,
+  /\bhat\b/i,
+  /\bcap\b/i,
+  /\bbackpack\b/i,
+  /\bbag\b/i,
+  // Accessories
+  /\bspool\s*holder\b/i,
+  /\bnozzle\b/i,
+  /\bsheet\b/i,
+  /\btools?\b/i,
+  // Samples and kits
+  /\bsample\s*coil\s*pack\b/i,
+  /\bsample\s*pack\b/i,
+  /\bsample\s*coils?\b/i,
+  /\bdiy\s*assembly\s*kit\b/i,
+  // Small weights (sample coils are typically 50g)
+  /\b50g\b/i,
+  /\b100g\b/i,
+];
+
+/**
+ * Check if a product is an accessory, apparel, or sample (non-filament)
+ */
+export function isAtomicAccessory(title: string): boolean {
+  if (!title) return false;
+  return ATOMIC_ACCESSORY_PATTERNS.some(pattern => pattern.test(title));
+}
+
+// Minimum weight threshold for filaments (exclude sample coils)
+export const ATOMIC_MIN_WEIGHT_GRAMS = 300;
+
+// ============================================================================
 // MAIN POST-PROCESSING FUNCTION
 // ============================================================================
 

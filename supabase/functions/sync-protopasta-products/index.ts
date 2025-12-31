@@ -147,8 +147,12 @@ async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
 
 // ============= STEP 2: EXPLODE VARIANTS =============
 
+// Minimum weight threshold to filter out sample coils (50g, 100g, etc.)
+const MIN_WEIGHT_GRAMS = 300;
+
 function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
   const variants: ProductVariant[] = [];
+  let skippedLowWeight = 0;
 
   console.log('[Proto-Pasta] Step 2: Exploding color variants...');
 
@@ -163,14 +167,37 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
       const price = parseFloat(variant.price);
       if (isNaN(price) || price <= 0) continue;
 
-      // Create unique product ID
-      const productId = `${product.id}_${variant.id}`;
-
       // Build full title
       const variantTitle = variant.title !== 'Default Title' ? variant.title : '';
       const fullTitle = variantTitle
         ? `${product.title} - ${variantTitle}`
         : product.title;
+
+      // Extract weight and diameter from variant title
+      const weightGrams = extractProtoPastaWeight(variantTitle || product.title);
+      const diameterMm = extractProtoPastaDiameter(variantTitle || product.title);
+
+      // Skip sample coils and low-weight variants
+      if (weightGrams && weightGrams < MIN_WEIGHT_GRAMS) {
+        console.log(`[Proto-Pasta] Skipping low-weight variant: ${fullTitle} (${weightGrams}g)`);
+        skippedLowWeight++;
+        continue;
+      }
+
+      // Also skip if title explicitly mentions sample/coil patterns
+      const titleLower = fullTitle.toLowerCase();
+      if (
+        titleLower.includes('sample coil') ||
+        titleLower.includes('sample pack') ||
+        (titleLower.includes('coil') && !titleLower.includes('spool'))
+      ) {
+        console.log(`[Proto-Pasta] Skipping sample product: ${fullTitle}`);
+        skippedLowWeight++;
+        continue;
+      }
+
+      // Create unique product ID
+      const productId = `${product.id}_${variant.id}`;
 
       // Find variant-specific image
       let imageUrl = primaryImage;
@@ -182,10 +209,6 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
           imageUrl = variantImage.src;
         }
       }
-
-      // Extract weight and diameter from variant title
-      const weightGrams = extractProtoPastaWeight(variantTitle || product.title);
-      const diameterMm = extractProtoPastaDiameter(variantTitle || product.title);
 
       variants.push({
         productId,
@@ -207,7 +230,7 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
     }
   }
 
-  console.log(`[Proto-Pasta] Total variants exploded: ${variants.length}`);
+  console.log(`[Proto-Pasta] Total variants exploded: ${variants.length} (skipped ${skippedLowWeight} low-weight/sample products)`);
   return variants;
 }
 
