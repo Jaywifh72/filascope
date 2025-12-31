@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 // Brands with dedicated high-fidelity sync functions
 const BRAND_SPECIFIC_FUNCTIONS = [
-  '3dhojor', '3dxtech', 'anycubic', 'atomic', 'azurefilm', 'cc3d',
+  '3d-fuel', '3dhojor', '3dxtech', 'anycubic', 'atomic', 'azurefilm', 'cc3d',
   'colorfabb', 'creality', 'duramic', 'eryone', 'esun', 'extrudr',
   'fiberlogy', 'fillamentum', 'flashforge', 'formfutura', 'fusion-filaments',
   'geeetech', 'gizmodorks', 'hatchbox', 'ic3d', 'kingroon', 'matter3d',

@@ -129,15 +129,25 @@ async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
         titleLower.includes('pctg') ||
         titleLower.includes('nylon');
       
-      // Exclude accessories and samples
+      // Exclude accessories, apparel, and samples
       const isAccessory = 
+        // Accessories
         titleLower.includes('spool holder') ||
         titleLower.includes('nozzle') ||
         titleLower.includes('sheet') ||
+        // Apparel
+        titleLower.includes('t-shirt') ||
+        titleLower.includes('hoodie') ||
+        titleLower.includes('beanie') ||
+        titleLower.includes('hat') ||
+        titleLower.includes('backpack') ||
+        // Samples and kits
         titleLower.includes('sample coil') ||
         titleLower.includes('sample coils') ||
         titleLower.includes('sample pack') ||
-        (titleLower.includes('coil') && titleLower.includes('50g'));
+        titleLower.includes('diy assembly kit') ||
+        titleLower.includes('50g') ||
+        (titleLower.includes('coil') && !titleLower.includes('spool'));
       
       return isFilament && !isAccessory;
     });
