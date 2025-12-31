@@ -360,16 +360,20 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'woodgrain': '#DEB887',
   
   // Dual-Color Silk PLA+ colors (10 dual-tone shimmer variants)
+  // Each must have UNIQUE hex to avoid swatch uniqueness failures
   'silky lagoon': '#2DD4BF',
   'silky blushing violet': '#DDA0DD',
   'silky blue orange theory': '#4169E1',
   'silky lemon lime': '#BFFF00',
   'silky mixed berry': '#8B008B',
   'silky vine leaf green': '#228B22',
-  'silky black hills gold': '#FFD700',
+  'silky black hills gold': '#DAA520',  // Goldenrod (was #FFD700, conflicted with 'gold')
   'silky crimson tide': '#DC143C',
   'silky copper canyon': '#B87333',
   'silky purple rain': '#9370DB',
+  'silky goldenrod': '#FFD700',  // Pure gold
+  'silky silverbell': '#C0C0C0',  // Silver
+  'silky royal navy blue': '#000080',  // Navy blue
 };
 
 // ============================================================================
@@ -451,6 +455,14 @@ export function extractFinish(title: string): string {
  * - Extracting from product handle when variant fails
  */
 export function extractColorName(variant: any, productTitle: string, productHandle?: string): string {
+  // Special handling for Entwined products - they come in one color (natural hemp)
+  // Product titles like "Entwined, 1.75mm" or "Entwined Hemp Filled PLA, 1.75mm"
+  if (productTitle.toLowerCase().includes('entwined')) {
+    // Entwined hemp filament is always natural/hemp colored
+    console.log(`[Color] Entwined product detected, returning "Natural" as color`);
+    return 'Natural';
+  }
+  
   // Method 1: Parse variant.title (e.g., "Desert Tan / 1kg" or "Coyote Brown / 500g")
   if (variant.title && typeof variant.title === 'string') {
     const title = variant.title.trim();
