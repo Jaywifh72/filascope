@@ -57,6 +57,7 @@ export interface SyncResult {
   success: boolean;
   jobId?: string;
   message?: string;
+  timedOut?: boolean;
   summary?: {
     created: number;
     updated: number;
@@ -224,8 +225,27 @@ export function useBrandSyncManager() {
       return syncResult;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Sync failed';
+      const isTimeout = message.toLowerCase().includes('timeout') || 
+                        message.includes('Failed to send a request');
+      
       setError(message);
       setProgress(null);
+      
+      if (isTimeout) {
+        const timedOutResult: SyncResult = {
+          success: false,
+          timedOut: true,
+          message: 'The sync request timed out on the client side, but may have completed in the background. Run Post Sync Check to verify.',
+        };
+        setResult(timedOutResult);
+        
+        toast({
+          title: "Request Timed Out",
+          description: "The sync may have completed in the background. Run Post Sync Check to verify.",
+        });
+        
+        return timedOutResult;
+      }
       
       toast({
         title: "Sync Failed",

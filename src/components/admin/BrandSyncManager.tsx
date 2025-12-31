@@ -367,8 +367,19 @@ export function BrandSyncManager() {
           </div>
         )}
 
-        {/* Post Sync Check - shown after sync completes */}
-        {result?.success && selectedBrand && (
+        {/* Timeout Warning */}
+        {result?.timedOut && (
+          <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-sm">
+            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+            <span>
+              The sync request timed out on the client side but likely completed in the background. 
+              Run <strong>Post Sync Check</strong> below to verify the data.
+            </span>
+          </div>
+        )}
+
+        {/* Post Sync Check - shown after sync completes or times out */}
+        {(result?.success || result?.timedOut) && selectedBrand && (
           <PostSyncCheckPanel 
             brandSlug={selectedBrand.brand_slug}
             brandName={selectedBrand.brand_name}
