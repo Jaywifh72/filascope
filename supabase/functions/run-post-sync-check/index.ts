@@ -27,9 +27,17 @@ interface PostSyncCheckReport {
 
 interface ScrapedProductInfo {
   pageTitle: string;
-  colorSwatches: Array<{ name: string; hex?: string }>;
+  colorSwatches: Array<{ name: string; hex?: string; productUrl?: string }>;
   statusCode: number;
 }
+
+// Product line synonyms for title matching (handles "Entwined" vs "Entwined v2Hemp")
+const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
+  'entwined': ['entwined hemp', 'entwined v2hemp', 'entwined v2 hemp'],
+  'pet-cf': ['petcf', 'pet cf'],
+  'pla-cf': ['placf', 'pla cf'],
+  'dual color silk': ['dual-color silk', 'dual color silk pla', 'dual-color-silk-pla'],
+};
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'overture'];
@@ -197,18 +205,21 @@ function isValidColorName(name: string): boolean {
  * - The swatch images have alt text like "Standard PLA+, Desert Tan, 1.75mm"
  * - We need to extract just the color name (second part of the comma-separated string)
  */
-function extractProductInfoFromHtml(html: string, markdown: string): ScrapedProductInfo {
+function extractProductInfoFromHtml(html: string, markdown: string, currentProductUrl?: string): ScrapedProductInfo {
   const result: ScrapedProductInfo = {
     pageTitle: '',
     colorSwatches: [],
     statusCode: 200,
   };
   
-  const addColorSwatch = (name: string) => {
+  // Extract current product line slug from URL to filter swatches
+  const currentLineSlug = currentProductUrl ? extractProductLineSlugFromUrl(currentProductUrl) : null;
+  
+  const addColorSwatch = (name: string, productUrl?: string) => {
     const trimmed = name.trim();
     if (isValidColorName(trimmed) && 
         !result.colorSwatches.find(s => s.name.toLowerCase() === trimmed.toLowerCase())) {
-      result.colorSwatches.push({ name: trimmed });
+      result.colorSwatches.push({ name: trimmed, productUrl });
     }
   };
   
@@ -225,24 +236,29 @@ function extractProductInfoFromHtml(html: string, markdown: string): ScrapedProd
     }
   }
   
-  // ========== PATTERN 1: 3D-Fuel cross-product swatch images ==========
-  // Format: [![Standard PLA+, Desert Tan, 1.75mm](image-url)](product-url)
-  // The alt text contains "Product Line, Color Name, Diameter"
-  const swatchAltMatches = html.matchAll(/alt="([^"]+)"[^>]*>\s*<\/a>\s*<a[^>]*href="[^"]*\/products\//gi);
-  for (const match of swatchAltMatches) {
-    const altText = match[1];
+  // ========== PATTERN 1: Linked images with href and alt text ==========
+  // Captures both the product URL and color info from swatch links
+  // Pattern: <a href="/products/xxx"><img alt="Product Line, Color, 1.75mm"></a>
+  const linkedSwatchPattern = /<a[^>]*href="([^"]*\/products\/[^"]+)"[^>]*>(?:\s*<[^>]*>)*\s*<img[^>]*alt="([^"]+)"[^>]*>/gi;
+  for (const match of html.matchAll(linkedSwatchPattern)) {
+    const productUrl = match[1];
+    const altText = match[2];
     const parts = altText.split(',');
     if (parts.length >= 2) {
       // Color is the 2nd part: "Desert Tan" from "Standard PLA+, Desert Tan, 1.75mm"
       const colorName = parts[1].trim();
       if (colorName && !colorName.match(/\d+\.\d+mm$/i)) {
-        addColorSwatch(colorName);
+        // Only add if swatch is from the SAME product line
+        const swatchLineSlug = extractProductLineSlugFromUrl(productUrl);
+        if (!currentLineSlug || !swatchLineSlug || productLinesMatch(currentLineSlug, swatchLineSlug)) {
+          addColorSwatch(colorName, productUrl);
+        }
       }
     }
   }
   
   // ========== PATTERN 2: Linked images with alt text containing comma-separated values ==========
-  // Broader pattern for swatch images with product info in alt text
+  // Fallback for when pattern 1 doesn't match
   const imgAltMatches = html.matchAll(/<img[^>]*alt="([^"]*,[^"]+)"[^>]*>/gi);
   for (const match of imgAltMatches) {
     const altText = match[1];
@@ -285,38 +301,53 @@ function extractProductInfoFromHtml(html: string, markdown: string): ScrapedProd
     addColorSwatch(match[1]);
   }
   
-  // ========== PATTERN 7: Links to color variant products (URL-based) ==========
-  // Parse URLs like /products/standard-pla-1-75mm-desert-tan
-  const colorLinkMatches = html.matchAll(/href="[^"]*\/products\/[^"]*-([a-z][a-z-]*)-1-75mm"[^>]*/gi);
-  for (const match of colorLinkMatches) {
-    if (match[1]) {
-      const colorSlug = match[1];
-      const name = colorSlug
-        .split('-')
-        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      addColorSwatch(name);
-    }
-  }
-  
-  // ========== PATTERN 8: Alternative URL format - color at end ==========
-  // Parse URLs like /products/pro-pctg-coyote-brown-1-75mm
-  const altColorLinkMatches = html.matchAll(/href="[^"]*\/products\/[a-z-]+-([a-z][a-z-]+)-1-75mm"/gi);
-  for (const match of altColorLinkMatches) {
-    if (match[1]) {
-      const colorSlug = match[1];
-      // Filter out material names that might appear before 1-75mm
-      if (!colorSlug.match(/^(pla|petg|pctg|abs|asa|tpu)$/i)) {
-        const name = colorSlug
-          .split('-')
-          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        addColorSwatch(name);
-      }
-    }
-  }
-  
   return result;
+}
+
+/**
+ * Extract product line slug from a product URL
+ * e.g., "/products/dual-color-silk-pla-silky-lagoon-1-75mm" -> "dual-color-silk-pla"
+ */
+function extractProductLineSlugFromUrl(url: string): string | null {
+  // Match URL pattern and extract the base product line
+  const match = url.match(/\/products\/([a-z0-9-]+)-[a-z0-9-]+-1-75mm/i);
+  if (match) {
+    return match[1];
+  }
+  
+  // Try simpler extraction - get everything before the last color-like segment
+  const simpleMatch = url.match(/\/products\/([a-z-]+)(?:-[a-z]+-1-75mm|-1-75mm-[a-z-]+)/i);
+  if (simpleMatch) {
+    return simpleMatch[1];
+  }
+  
+  return null;
+}
+
+/**
+ * Check if two product line slugs match (same product line)
+ */
+function productLinesMatch(slug1: string, slug2: string): boolean {
+  if (slug1 === slug2) return true;
+  
+  // Normalize both
+  const norm1 = slug1.toLowerCase().replace(/-/g, ' ').trim();
+  const norm2 = slug2.toLowerCase().replace(/-/g, ' ').trim();
+  
+  if (norm1 === norm2) return true;
+  
+  // Check if one contains the other
+  if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
+  
+  // Check synonyms
+  for (const [canonical, synonyms] of Object.entries(PRODUCT_LINE_SYNONYMS)) {
+    const allVariants = [canonical, ...synonyms];
+    const match1 = allVariants.some(v => norm1.includes(v) || v.includes(norm1));
+    const match2 = allVariants.some(v => norm2.includes(v) || v.includes(norm2));
+    if (match1 && match2) return true;
+  }
+  
+  return false;
 }
 
 /**
@@ -370,6 +401,26 @@ function extractTitleComponents(title: string): { productLine: string; color: st
 }
 
 /**
+ * Normalize a product line name to canonical form
+ */
+function normalizeProductLine(line: string): string {
+  const lower = line.toLowerCase().trim();
+  
+  // Check synonyms first
+  for (const [canonical, synonyms] of Object.entries(PRODUCT_LINE_SYNONYMS)) {
+    if (synonyms.some(s => lower.includes(s)) || lower.includes(canonical)) {
+      return canonical;
+    }
+  }
+  
+  // Remove common suffixes/prefixes and normalize
+  return lower
+    .replace(/\bv2\s*hemp\b/i, 'hemp')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * Check if two titles are equivalent despite different formats
  */
 function titlesAreEquivalent(dbTitle: string, pageTitle: string): boolean {
@@ -377,9 +428,13 @@ function titlesAreEquivalent(dbTitle: string, pageTitle: string): boolean {
   const pageParts = extractTitleComponents(pageTitle);
   
   if (dbParts && pageParts) {
-    // Check if product lines match (one contains the other)
-    const lineMatch = dbParts.productLine.includes(pageParts.productLine) || 
-                      pageParts.productLine.includes(dbParts.productLine);
+    // Normalize product lines for comparison (handles Entwined vs Entwined v2Hemp)
+    const dbLine = normalizeProductLine(dbParts.productLine);
+    const pageLine = normalizeProductLine(pageParts.productLine);
+    
+    const lineMatch = dbLine.includes(pageLine) || 
+                      pageLine.includes(dbLine) ||
+                      dbLine === pageLine;
     
     // Check if colors match (one contains the other, or exact match after normalization)
     const dbColor = dbParts.color.replace(/[^a-z0-9]/g, '');
@@ -623,8 +678,8 @@ Deno.serve(async (req) => {
             continue;
           }
 
-          // Extract product info from the page
-          const pageInfo = extractProductInfoFromHtml(html, markdown);
+          // Extract product info from the page, passing URL for product line filtering
+          const pageInfo = extractProductInfoFromHtml(html, markdown, representative.product_url);
           
           // ========== CHECK A: TITLE ACCURACY ==========
           if (pageInfo.pageTitle) {
