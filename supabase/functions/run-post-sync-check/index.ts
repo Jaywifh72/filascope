@@ -639,6 +639,10 @@ function isValidColorName(name: string): boolean {
     'you may also', 'customers also', 'recommended for',
     // Product features mistaken for colors
     'estimated delivery', 'ships from', 'days to ship',
+    // Anycubic promotional items / accessories (extracted from upsell widgets)
+    'detergent container', 'power adapter', 'washing tray', 
+    'motherboard', 'curing table', 'wash & cure', 'wash and cure',
+    'cure machine', 'get 1 free', 'free gift', 'wash cure',
   ];
   if (nonColorPhrases.some(phrase => lower.includes(phrase))) return false;
   
@@ -840,19 +844,24 @@ function extractProductInfoFromHtml(html: string, markdown: string, currentProdu
     .replace(/<div[^>]*id="[^"]*nestscale[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
     .replace(/<div[^>]*class="[^"]*nestscale[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
     .replace(/<section[^>]*class="[^"]*frequently-bought[^"]*"[^>]*>[\s\S]*?<\/section>/gi, '')
-    .replace(/<div[^>]*class="[^"]*frequently-bought[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+    .replace(/<div[^>]*class="[^"]*frequently-bought[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
+    // Anycubic: Remove product recommendations sections that contain accessory upsells
+    .replace(/<product-recommendations[^>]*>[\s\S]*?<\/product-recommendations>/gi, '')
+    .replace(/<div[^>]*class="[^"]*complementary[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
+    .replace(/<div[^>]*class="[^"]*upsell[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
   
   // Try to find the main variant-picker element
   const variantPickerMatch = scopedHtml.match(/<variant-picker[^>]*>[\s\S]*?<\/variant-picker>/i);
   const colorPickerHtml = variantPickerMatch ? variantPickerMatch[0] : scopedHtml;
   
-  // STRICT: Only extract colors from fieldsets with "Color:" legend
+  // STRICT: Only extract colors from fieldsets with "Color:" or "Theme:" legend
   // This prevents extracting "black" or other colors from Delivery Option fieldsets, image galleries, etc.
-  const colorFieldsetMatch = colorPickerHtml.match(/<fieldset[^>]*>[\s\S]*?<legend[^>]*>\s*Color:?\s*<\/legend>[\s\S]*?<\/fieldset>/gi);
+  // Theme: is used by Anycubic for bundle deals
+  const colorFieldsetMatch = colorPickerHtml.match(/<fieldset[^>]*>[\s\S]*?<legend[^>]*>\s*(?:Color|Theme):?\s*<\/legend>[\s\S]*?<\/fieldset>/gi);
   
   if (colorFieldsetMatch) {
     for (const fieldset of colorFieldsetMatch) {
-      // Extract sr-only spans from labels within this Color fieldset ONLY
+      // Extract sr-only spans from labels within this Color/Theme fieldset ONLY
       const srOnlyInFieldset = fieldset.matchAll(/<label[^>]*>[\s\S]*?<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi);
       for (const match of srOnlyInFieldset) {
         addColorSwatch(match[1]);
@@ -865,6 +874,24 @@ function extractProductInfoFromHtml(html: string, markdown: string, currentProdu
     for (const match of srOnlyColorMatches) {
       addColorSwatch(match[1]);
     }
+  }
+  
+  // ========== PATTERN 8: Anycubic tooltip-based color swatches ==========
+  // Anycubic uses bt-tooltip__inner spans for color names
+  // Pattern: <label data-color="blue"><span class="bt-tooltip__inner">Blue</span>
+  const tooltipColorMatches = colorPickerHtml.matchAll(
+    /<label[^>]*data-color="[^"]*"[^>]*>[\s\S]*?<span[^>]*class="[^"]*bt-tooltip__inner[^"]*"[^>]*>([^<]+)<\/span>/gi
+  );
+  for (const match of tooltipColorMatches) {
+    addColorSwatch(match[1]);
+  }
+  
+  // Also try variant-radios pattern (Anycubic specific)
+  const variantRadiosMatch = colorPickerHtml.matchAll(
+    /<variant-radios[^>]*>[\s\S]*?<label[^>]*>[\s\S]*?<span[^>]*class="[^"]*tooltip[^"]*"[^>]*>([^<]+)<\/span>/gi
+  );
+  for (const match of variantRadiosMatch) {
+    addColorSwatch(match[1]);
   }
   
   console.log(`[PostSyncCheck] Found ${result.colorSwatches.length} swatches for product line "${currentProductLine}"`);
