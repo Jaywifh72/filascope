@@ -230,6 +230,9 @@ async function upsertVariants(
       
       // Debug logging for Very Peri to diagnose hex lookup
       if (variant.color?.toLowerCase().includes('peri')) {
+        // Hex dump to reveal invisible Unicode characters
+        const charCodes = variant.color.split('').map(c => c.charCodeAt(0).toString(16).padStart(4, '0'));
+        console.log(`[DEBUG] Very Peri hex dump:`, charCodes.join(' '));
         console.log(`[DEBUG] Very Peri color processing:`, {
           rawColor: variant.color,
           enrichedHex: enrichment.color_hex,
