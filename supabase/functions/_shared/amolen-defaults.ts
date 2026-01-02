@@ -95,6 +95,11 @@ export function isAmolenVarietyPack(title: string): boolean {
 // ============================================================================
 
 const AMOLEN_MATERIAL_PATTERNS: Array<{ pattern: RegExp; material: string }> = [
+  // Engineering materials - must come FIRST (before base materials)
+  { pattern: /\bpeba\b/i, material: 'PEBA' },
+  { pattern: /carbon\s*fiber|\bcf\b/i, material: 'PLA-CF' },
+  { pattern: /\basa\b/i, material: 'ASA' },
+  { pattern: /\babs\b/i, material: 'ABS' },
   // Most specific first - high speed
   { pattern: /pla\s*hs|high\s*speed\s*pla/i, material: 'PLA-HS' },
   // Silk variations
@@ -181,6 +186,30 @@ const AMOLEN_PRINT_SETTINGS: Record<string, PrintSettings> = {
     bed_temp_min_c: 45,
     bed_temp_max_c: 60,
   },
+  'PLA-CF': {
+    nozzle_temp_min_c: 200,
+    nozzle_temp_max_c: 230,
+    bed_temp_min_c: 50,
+    bed_temp_max_c: 60,
+  },
+  'PEBA': {
+    nozzle_temp_min_c: 210,
+    nozzle_temp_max_c: 240,
+    bed_temp_min_c: 40,
+    bed_temp_max_c: 60,
+  },
+  'ASA': {
+    nozzle_temp_min_c: 230,
+    nozzle_temp_max_c: 260,
+    bed_temp_min_c: 90,
+    bed_temp_max_c: 110,
+  },
+  'ABS': {
+    nozzle_temp_min_c: 220,
+    nozzle_temp_max_c: 250,
+    bed_temp_min_c: 90,
+    bed_temp_max_c: 110,
+  },
   'PETG': {
     nozzle_temp_min_c: 230,
     nozzle_temp_max_c: 250,
@@ -207,36 +236,90 @@ export function generateAmolenProductLineId(title: string, material: string): st
   const lower = title.toLowerCase();
   const materialSlug = material.toLowerCase().replace(/[^a-z0-9]/g, '-');
   
-  // Variety/Sample packs
+  // === ENGINEERING MATERIALS (separate from PLA!) ===
+  if (/\bpeba\b/i.test(lower)) return `amolen__peba__standard`;
+  
+  // Carbon Fiber variants - MUST be separate product lines
+  if (/carbon\s*fiber|\bcf\b/i.test(lower)) {
+    if (/pla/i.test(lower)) return `amolen__pla-cf__standard`;
+    if (/petg/i.test(lower)) return `amolen__petg-cf__standard`;
+    return `amolen__${materialSlug}-cf__standard`;
+  }
+  
+  // === VARIETY/SAMPLE PACKS ===
   if (isAmolenVarietyPack(title)) {
     if (/silk.*quad|quad.*silk/i.test(lower)) return `amolen__pla__silk-quad-variety`;
     if (/silk/i.test(lower)) return `amolen__pla__silk-variety-pack`;
+    if (/glow/i.test(lower)) return `amolen__pla__glow-variety-pack`;
     if (/all.*in.*one|sample.*pack/i.test(lower)) return `amolen__pla__all-in-one-sample`;
+    if (/tpu/i.test(lower)) return `amolen__tpu-95a__variety-pack`;
     return `amolen__${materialSlug}__variety-pack`;
   }
   
-  // Silk variants - most specific first
-  if (/silk.*tri|tri.*color.*silk/i.test(lower)) return `amolen__pla__silk-tri`;
-  if (/silk.*dual|dual.*color.*silk/i.test(lower)) return `amolen__pla__silk-dual`;
-  if (/silk.*rainbow/i.test(lower)) return `amolen__pla__silk-rainbow`;
-  if (/silk.*galaxy/i.test(lower)) return `amolen__pla__silk-galaxy`;
-  if (/\bsilk\b/i.test(lower)) return `amolen__pla__silk`;
+  // === SILK VARIANTS (Most specific first) ===
+  if (/\bsilk\b/i.test(lower)) {
+    // S-Series (distinct product line)
+    if (/s-series|s\s+series/i.test(lower)) {
+      if (/glow/i.test(lower)) return `amolen__pla__silk-s-glow`;
+      return `amolen__pla__silk-s-series`;
+    }
+    // Basic Glow (different from regular basic)
+    if (/glow/i.test(lower)) return `amolen__pla__silk-basic-glow`;
+    // Color combinations
+    if (/tri|triple/i.test(lower)) return `amolen__pla__silk-tri`;
+    if (/dual/i.test(lower)) return `amolen__pla__silk-dual`;
+    if (/rainbow/i.test(lower)) return `amolen__pla__silk-rainbow`;
+    if (/galaxy/i.test(lower)) return `amolen__pla__silk-galaxy`;
+    // Regular silk basic
+    return `amolen__pla__silk-basic`;
+  }
   
-  // Special finishes
+  // === MATTE VARIANTS ===
+  if (/\bmatte\b/i.test(lower)) {
+    if (/dual/i.test(lower)) return `amolen__pla__matte-dual`;
+    if (/rainbow/i.test(lower)) return `amolen__pla__matte-rainbow`;
+    return `amolen__pla__matte-basic`;
+  }
+  
+  // === SPECIAL FINISHES ===
+  // Crystal/Transparent
+  if (/crystal|transparent|translucent/i.test(lower)) {
+    if (/petg/i.test(lower)) return `amolen__petg__transparent`;
+    return `amolen__pla__crystal`;
+  }
+  
+  // Marble
   if (/marble/i.test(lower)) return `amolen__pla__marble`;
-  if (/\bmatte\b/i.test(lower)) return `amolen__pla__matte`;
+  // Wood
   if (/wood/i.test(lower)) return `amolen__pla__wood`;
-  if (/glow.*dark|gitd/i.test(lower)) return `amolen__pla__glow-in-dark`;
+  
+  // Glow (non-silk)
+  if (/glow.*dark|gitd/i.test(lower)) {
+    if (/s-series/i.test(lower)) return `amolen__pla__glow-s-series`;
+    return `amolen__pla__glow-in-dark`;
+  }
+  
+  // Color change
   if (/uv.*change/i.test(lower)) return `amolen__pla-plus__uv-color-change`;
   if (/temp.*change|thermochromic/i.test(lower)) return `amolen__pla-plus__temp-change`;
-  if (/shimmer/i.test(lower)) return `amolen__pla__shimmer`;
+  
+  // Sparkle/Shimmer
+  if (/shimmer|shiny/i.test(lower)) return `amolen__pla__shimmer`;
   if (/sparkle|glitter/i.test(lower)) return `amolen__pla__sparkle`;
   
-  // Base materials
+  // === HIGH SPEED ===
+  if (/high\s*speed|\bhs\b/i.test(lower)) return `amolen__pla__high-speed`;
+  
+  // === BASE MATERIALS ===
   if (material === 'PETG') return `amolen__petg__standard`;
   if (material === 'TPU-95A') return `amolen__tpu-95a__standard`;
   if (material === 'PLA+') return `amolen__pla-plus__standard`;
+  if (material === 'PEBA') return `amolen__peba__standard`;
+  if (material === 'ASA') return `amolen__asa__standard`;
+  if (material === 'ABS') return `amolen__abs__standard`;
+  if (material === 'PLA-CF') return `amolen__pla-cf__standard`;
   
+  // === DEFAULT PLA ===
   return `amolen__pla__standard`;
 }
 
@@ -251,10 +334,16 @@ export function cleanAmolenTitle(title: string): string {
     .replace(/\b1\.75\s*mm\b/gi, '')
     .replace(/\b1\s*KG\b/gi, '')
     .replace(/\b1000\s*g\b/gi, '')
+    .replace(/\b2\.2\s*lb\b/gi, '')
     .replace(/\bFilament\b/gi, '')
     .replace(/\bfor\s+3D\s+Print(er|ing)?\b/gi, '')
     .replace(/U\.S\.\s*to\s*U\.S\.?/gi, '')
     .replace(/China\s*to\s*U\.S\..*$/gi, '')
+    .replace(/,\s*$/g, '')  // Remove trailing comma
+    .replace(/\s*,\s*-\s*/g, ' - ')  // Fix ", -" artifacts
+    .replace(/\s*-\s*,\s*/g, ' - ')  // Fix "- ," artifacts
+    .replace(/\s+-\s*$/g, '')  // Remove trailing dash
+    .replace(/^\s*-\s+/g, '')  // Remove leading dash
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -310,6 +399,30 @@ const AMOLEN_COLOR_HEX_MAP: Record<string, string> = {
   'pink': '#EC4899',
   'brown': '#92400E',
   
+  // PEBA colors (new)
+  'peba blue': '#4169E1',
+  'peba white': '#FFFFFF',
+  'peba black': '#1A1A1A',
+  
+  // Carbon Fiber (new)
+  'carbon fiber brown': '#8B4513',
+  'carbon fiber black': '#2D2D2D',
+  
+  // High Speed colors (new)
+  'paper white': '#FAFAFA',
+  'quartz white': '#F8F8F8',
+  'porcelain white': '#F5F5F5',
+  'chestnut brown': '#954535',
+  'carrot orange': '#ED9121',
+  'real gold': '#FFD700',
+  
+  // Crystal/Transparent (new)
+  'blue white': '#B0C4DE',
+  'crystal blue': '#ADD8E6',
+  'crystal clear': '#E8E8E8',
+  'red white': '#FFB6C1',
+  'blue pink white': '#DDA0DD',
+  
   // Silk colors
   'silk gold': '#FFD700',
   'silk silver': '#C0C0C0',
@@ -320,6 +433,8 @@ const AMOLEN_COLOR_HEX_MAP: Record<string, string> = {
   'silk green': '#3CB371',
   'silk purple': '#9932CC',
   'silk pink': '#FF69B4',
+  'silk white': '#FFFAFA',
+  'silk coffee gold': '#8B6914',
   'gold': '#FFD700',
   'silver': '#C0C0C0',
   'copper': '#B87333',
@@ -334,6 +449,7 @@ const AMOLEN_COLOR_HEX_MAP: Record<string, string> = {
   'red gold': '#CD5C5C',
   'red black': '#8B0000',
   'rainbow': '#FF6B6B',
+  'brown white': '#D2B48C',
   
   // Matte colors
   'matte black': '#2D2D2D',
