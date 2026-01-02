@@ -5,6 +5,7 @@ import {
   extract3DHOJORColorFromVariant,
   extract3DHOJORRegion,
   get3DHOJORColorHex,
+  clean3DHOJORTitle,
   HOJOR_STORE_INFO,
 } from '../_shared/3dhojor-defaults.ts';
 
@@ -251,10 +252,11 @@ async function upsertVariants(
         }
       }
       
-      // Build product_title with color appended for proper swatch display
+      // Clean title by removing brand name, then append color for swatch display
+      const cleanedTitle = clean3DHOJORTitle(variant.productTitle);
       const displayTitle = variant.color 
-        ? `${variant.productTitle} - ${variant.color}`
-        : variant.productTitle;
+        ? `${cleanedTitle} - ${variant.color}`
+        : cleanedTitle;
       
       const filamentData = {
         product_id: variant.productId,
