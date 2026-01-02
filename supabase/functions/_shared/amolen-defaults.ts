@@ -307,8 +307,20 @@ export function generateAmolenProductLineId(title: string, material: string): st
     return `amolen__pla__silk-basic`;
   }
   
+  // === STEP 4B: BULK PACKS (4KG+) ===
+  // Multi-spool bundles should be separate from individual spools
+  if (/4\s*kg|8\.8\s*lb|4x\s*1kg/i.test(lower)) {
+    if (/matte.*rainbow|rainbow.*matte/i.test(lower)) return `amolen__pla__matte-rainbow-bulk`;
+    if (/silk.*rainbow|rainbow.*silk/i.test(lower)) return `amolen__pla__silk-rainbow-bulk`;
+    if (/matte/i.test(lower)) return `amolen__pla__matte-bulk`;
+    if (/silk/i.test(lower)) return `amolen__pla__silk-bulk`;
+    return `amolen__pla__bulk-pack`;
+  }
+  
   // === STEP 5: MATTE VARIANTS ===
   if (/\bmatte\b/i.test(lower)) {
+    // Matte Triple is distinct from Matte Basic (3-color gradient vs single color)
+    if (/triple|tri-color/i.test(lower)) return `amolen__pla__matte-triple`;
     if (/dual/i.test(lower)) return `amolen__pla__matte-dual`;
     if (/rainbow/i.test(lower)) return `amolen__pla__matte-rainbow`;
     return `amolen__pla__matte-basic`;

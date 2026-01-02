@@ -70,9 +70,16 @@ const NON_COLOR_WORDS = new Set([
   // Size/weight terms
   '1.75mm', '2.85mm', '1kg', '500g', '750g', '250g', 'kg', 'mm', 'spool',
   // Brand terms  
-  '3d-fuel', '3dfuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'overture',
+  '3d-fuel', '3dfuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'overture', 'amolen',
   // Generic terms
   'buy', 'add', 'cart', 'shop', 'view', 'select', 'choose', 'now', 'new', 'sale',
+  // Product features/packaging (frequently misidentified as colors)
+  'vacuum', 'bags', 'bag', 'matte', 'surface', 'texture', 'finish',
+  'glossy', 'shiny', 'package', 'packaging', 'roll',
+  'printing', 'print', 'printer', '3d', 'quality',
+  'material', 'diameter', 'weight', 'net', 'gross', 'tolerance',
+  'temperature', 'nozzle', 'bed', 'settings', 'recommended',
+  'uv', 'change', 'glow', 'dark', 'flexible', 'basic',
 ]);
 
 interface AIWebsiteAnalysis {
@@ -1100,7 +1107,7 @@ Deno.serve(async (req) => {
     // Get product lines with their representative products for validation
     const { data: productLinesData } = await supabase
       .from("filaments")
-      .select("id, product_title, product_url, color_hex, product_line_id")
+      .select("id, product_title, product_url, color_hex, product_line_id, color_family")
       .ilike("vendor", brandName)
       .not("product_url", "is", null)
       .not("product_line_id", "is", null);
@@ -1272,11 +1279,26 @@ Deno.serve(async (req) => {
               variants
                 .map(v => {
                   // Extract color name from product title
+                  // Handles both "Title, Color" and "Title - Color" formats
                   const title = v.product_title.toLowerCase();
+                  
+                  // Try " - " format first (Amolen uses this)
+                  const dashMatch = title.match(/\s+-\s+([^-]+)$/);
+                  if (dashMatch) {
+                    return dashMatch[1].trim();
+                  }
+                  
+                  // Fallback to comma format
                   const parts = title.split(',');
                   if (parts.length >= 2) {
                     return parts[1].trim();
                   }
+                  
+                  // Also check color_family as fallback
+                  if (v.color_family) {
+                    return v.color_family.toLowerCase();
+                  }
+                  
                   return '';
                 })
                 .filter(Boolean)
