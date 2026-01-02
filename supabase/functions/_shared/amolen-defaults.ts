@@ -100,6 +100,13 @@ const AMOLEN_MATERIAL_PATTERNS: Array<{ pattern: RegExp; material: string }> = [
   { pattern: /carbon\s*fiber|\bcf\b/i, material: 'PLA-CF' },
   { pattern: /\basa\b/i, material: 'ASA' },
   { pattern: /\babs\b/i, material: 'ABS' },
+  
+  // TPU MUST come BEFORE glow/specialty patterns (prevents cross-material grouping)
+  { pattern: /\btpu\b/i, material: 'TPU-95A' },
+  
+  // PETG MUST come BEFORE transparent patterns
+  { pattern: /\bpetg\b/i, material: 'PETG' },
+  
   // Most specific first - high speed
   { pattern: /pla\s*hs|high\s*speed\s*pla/i, material: 'PLA-HS' },
   // Silk variations
@@ -111,13 +118,11 @@ const AMOLEN_MATERIAL_PATTERNS: Array<{ pattern: RegExp; material: string }> = [
   { pattern: /marble.*pla|pla.*marble/i, material: 'PLA' },
   { pattern: /matte.*pla|pla.*matte/i, material: 'PLA' },
   { pattern: /wood.*pla|pla.*wood/i, material: 'PLA-Wood' },
-  { pattern: /glow.*dark|gitd/i, material: 'PLA' },
+  { pattern: /glow.*dark|gitd/i, material: 'PLA' },  // Now safe - TPU already checked
   // UV/Temperature change
   { pattern: /uv.*change|color.*chang/i, material: 'PLA+' },
   { pattern: /temp.*change|thermochromic/i, material: 'PLA+' },
-  // Base materials
-  { pattern: /\bpetg\b/i, material: 'PETG' },
-  { pattern: /\btpu\b/i, material: 'TPU-95A' },
+  // Base PLA - last resort
   { pattern: /\bpla\b/i, material: 'PLA' },
 ];
 
@@ -244,6 +249,8 @@ export function generateAmolenProductLineId(title: string, material: string): st
   // TPU must be checked EARLY - before crystal/transparent check
   if (material === 'TPU-95A' || /\btpu\b/i.test(lower)) {
     if (isAmolenVarietyPack(title)) return `amolen__tpu-95a__variety-pack`;
+    if (/glow.*dark|gitd/i.test(lower)) return `amolen__tpu-95a__glow`;  // TPU Glow separate
+    if (/rainbow/i.test(lower)) return `amolen__tpu-95a__rainbow`;  // TPU Rainbow separate
     if (/transparent|translucent|clear/i.test(lower)) return `amolen__tpu-95a__transparent`;
     return `amolen__tpu-95a__standard`;
   }
@@ -251,6 +258,7 @@ export function generateAmolenProductLineId(title: string, material: string): st
   // PETG must be checked EARLY - before transparent check
   if (material === 'PETG' || /\bpetg\b/i.test(lower)) {
     if (isAmolenVarietyPack(title)) return `amolen__petg__variety-pack`;
+    if (/rainbow/i.test(lower)) return `amolen__petg__rainbow`;  // PETG Rainbow separate
     if (/transparent|translucent/i.test(lower)) return `amolen__petg__transparent`;
     if (/carbon\s*fiber|\bcf\b/i.test(lower)) return `amolen__petg-cf__standard`;
     return `amolen__petg__standard`;
@@ -273,6 +281,8 @@ export function generateAmolenProductLineId(title: string, material: string): st
   
   // === STEP 3: PLA+ HIGH-SPEED (must be separate from PLA high-speed) ===
   if (/high\s*speed|\bhs\b/i.test(lower)) {
+    // Dual Color High Speed is separate from regular High Speed
+    if (/dual.*color|dual-color/i.test(lower)) return `amolen__pla__high-speed-dual`;
     if (material === 'PLA+' || /pla\s*plus|pla\+/i.test(lower)) {
       return `amolen__pla-plus__high-speed`;
     }
@@ -358,14 +368,18 @@ export function cleanAmolenTitle(title: string): string {
     .replace(/\bfor\s+3D\s+Print(er|ing)?\b/gi, '')
     .replace(/U\.S\.\s*to\s*U\.S\.?/gi, '')
     .replace(/China\s*to\s*U\.S\..*$/gi, '')
-    // Fix common artifacts
-    .replace(/\s*,\s*\/\s*-\s*/g, ' - ')  // ", / -" -> " - "
-    .replace(/\s*\/\s*-\s*/g, ' - ')       // "/ -" -> " - "
-    .replace(/\s*,\s*-\s*/g, ' - ')        // ", -" -> " - "
-    .replace(/\s*-\s*,\s*/g, ' - ')        // "- ," -> " - "
+    // More aggressive artifact removal
+    .replace(/\s*,\s*\/\s*-\s*/g, ' - ')   // ", / -" -> " - "
+    .replace(/\s*\/\s*-\s*/g, ' - ')        // "/ -" -> " - "
+    .replace(/\s*,\s*-\s*/g, ' - ')         // ", -" -> " - "
+    .replace(/\s*-\s*,\s*/g, ' - ')         // "- ," -> " - "
+    .replace(/\s*,\s*\/\s*/g, ' ')          // ", /" -> space
+    .replace(/\s*\/\s*,\s*/g, ' ')          // "/ ," -> space
+    .replace(/\s+,\s+/g, ' ')               // " , " -> space
     .replace(/,\s*$/g, '')                  // Remove trailing comma
     .replace(/\s+-\s*$/g, '')               // Remove trailing dash
     .replace(/^\s*-\s+/g, '')               // Remove leading dash
+    .replace(/\s*-\s+-\s*/g, ' - ')         // "- -" -> single dash
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -373,6 +387,14 @@ export function cleanAmolenTitle(title: string): string {
 // ============================================================================
 // COLOR EXTRACTION
 // ============================================================================
+
+// Invalid color names to filter out
+const AMOLEN_INVALID_COLORS = [
+  'default title',
+  'default',
+  'none',
+  'n/a',
+];
 
 /**
  * Extract color from Amolen variant, skipping delivery options
@@ -392,8 +414,11 @@ export function extractAmolenColorFromVariant(
   // Check each option, skip delivery options
   for (const opt of [option1, option2, option3]) {
     if (opt && !isAmolenDeliveryOption(opt)) {
+      const normalized = opt.trim().toLowerCase();
+      // Skip invalid color names
+      if (AMOLEN_INVALID_COLORS.includes(normalized)) continue;
       // Filter out size/weight values
-      if (!/^\d+\s*(g|kg|lb)/i.test(opt) && !/^default$/i.test(opt)) {
+      if (!/^\d+\s*(g|kg|lb)/i.test(opt)) {
         return opt.trim();
       }
     }
@@ -551,6 +576,22 @@ const AMOLEN_COLOR_HEX_MAP: Record<string, string> = {
   'midnight blue': '#191970',
   'ocean breeze': '#4682B4',
   'sunset gold': '#DAA520',
+  
+  // TPU Glow colors
+  'tpu glow green': '#39FF14',
+  'tpu glow blue': '#00BFFF',
+  'tpu glow orange': '#FF6600',
+  
+  // PETG Rainbow
+  'multicolor rainbow': '#FF6B6B',
+  'petg rainbow': '#FF6B6B',
+  
+  // TPU Rainbow combinations
+  'blue green orange translucent rainbow': '#2E8B57',
+  'pink blue green orange transparent rainbow': '#DA70D6',
+  'purple pink orange green rainbow': '#9932CC',
+  'red green purple orange translucent rainbow': '#CD5C5C',
+  'yellow green orange transparent rainbow': '#FFD700',
 };
 
 export function getAmolenColorHex(colorName: string): string | null {
