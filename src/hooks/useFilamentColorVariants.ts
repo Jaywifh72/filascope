@@ -362,8 +362,16 @@ function extractPrusamentProductLine(title: string): { productLine: string; colo
 }
 
 // Extract color name from color_family field (strips material prefix)
+// For rainbow/gradient products, return the full color_family as it IS the color identifier
 function extractColorFromFamily(colorFamily: string | null): string | null {
   if (!colorFamily) return null;
+  
+  // For rainbow/gradient products, the color_family IS the distinguishing color
+  // e.g., "Sunset Rainbow", "Candy Rainbow", "Galaxy Rainbow" - these are unique colors
+  if (/rainbow|gradient|tri-?color|multicolor|dual.?color/i.test(colorFamily)) {
+    return colorFamily.trim();
+  }
+  
   // Strip material prefixes like "PETG ", "PLA ", etc.
   return colorFamily.replace(/^(PLA|PETG|ABS|TPU|TPE|ASA|PA\d*|PC|HIPS|PVA|Nylon)\s+/i, '').trim() || null;
 }
@@ -409,10 +417,16 @@ function deduplicateColorVariants(variants: Filament[], baseName: string): Filam
       } else {
         colorKey = variant.color_hex?.toLowerCase() || variant.id;
       }
+    } else if (colorName) {
+      // Use extracted color name (normalized for deduplication)
+      colorKey = normalizeColorName(colorName, vendor);
+    } else if (variant.color_family) {
+      // Fallback to color_family directly for rainbow/specialty products
+      // where color extraction from title may fail
+      colorKey = variant.color_family.toLowerCase();
     } else {
-      colorKey = colorName 
-        ? normalizeColorName(colorName, vendor) 
-        : (variant.color_hex?.toLowerCase() || variant.id);
+      // Last resort: use hex or id
+      colorKey = variant.color_hex?.toLowerCase() || variant.id;
     }
     
     if (!seenColors.has(colorKey)) {

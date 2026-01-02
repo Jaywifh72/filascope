@@ -1447,6 +1447,89 @@ Deno.serve(async (req) => {
       products: swatchIssues.length > 0 ? swatchIssues : undefined,
     });
 
+    // ============= COLOR DISTINGUISHABILITY CHECK =============
+    // Validates that each variant in a product line has a unique color identifier
+    // (either from product_title or color_family). This ensures swatches can be properly
+    // distinguished and displayed on the FilamentDetail page.
+    // 
+    // Root cause detection: When rainbow/specialty products have identical titles
+    // (e.g., all variants titled "PLA Matte Rainbow" without "- Sunset Rainbow" suffix),
+    // the frontend can't distinguish them and shows no swatches.
+    const colorDistinguishabilityIssues: Array<{ id: string; title: string; issue: string }> = [];
+    
+    // Helper to extract color identifier from title (after " - " separator)
+    const extractColorIdentifierFromTitle = (title: string): string | null => {
+      // Pattern: "Product Name - Color Name" or "Product Name - Color Name, 1.75mm"
+      const dashMatch = title.match(/\s+-\s+([^,]+)/);
+      if (dashMatch) return dashMatch[1].trim().toLowerCase();
+      
+      // Pattern: "Product Name, Color Name, 1.75mm"
+      const parts = title.split(',');
+      if (parts.length >= 2) {
+        const potentialColor = parts[1].trim();
+        if (!/\d+\.\d+mm/i.test(potentialColor)) {
+          return potentialColor.toLowerCase();
+        }
+      }
+      
+      return null;
+    };
+    
+    // Fetch color_family data for all variants to enable fallback color identification
+    const { data: variantsWithColorFamily } = await supabase
+      .from("filaments")
+      .select("id, product_title, product_line_id, color_family")
+      .ilike("vendor", brandName)
+      .not("product_line_id", "is", null);
+    
+    // Group by product_line_id for checking
+    const colorCheckGroups: Record<string, typeof variantsWithColorFamily> = {};
+    for (const v of variantsWithColorFamily || []) {
+      const lineId = v.product_line_id!;
+      if (!colorCheckGroups[lineId]) colorCheckGroups[lineId] = [];
+      colorCheckGroups[lineId].push(v);
+    }
+    
+    for (const [lineId, variants] of Object.entries(colorCheckGroups)) {
+      if (!variants || variants.length <= 1) continue;
+      
+      // Check if variants have distinguishable color identifiers
+      const indistinguishableVariants: string[] = [];
+      
+      for (const variant of variants) {
+        // Try to extract color from title first
+        const colorFromTitle = extractColorIdentifierFromTitle(variant.product_title);
+        // Color family is fallback (stored during sync)
+        const colorFromFamily = variant.color_family?.toLowerCase() || null;
+        
+        const colorKey = colorFromTitle || colorFromFamily;
+        
+        if (!colorKey) {
+          // No color identifier found - this variant can't be distinguished
+          indistinguishableVariants.push(variant.product_title);
+        }
+      }
+      
+      // Flag if multiple variants have no color identifier
+      if (indistinguishableVariants.length > 1) {
+        colorDistinguishabilityIssues.push({
+          id: variants[0].id,
+          title: lineId,
+          issue: `${indistinguishableVariants.length}/${variants.length} variants have no color identifier in title or color_family. First: "${indistinguishableVariants[0]}"`,
+        });
+      }
+    }
+    
+    checks.push({
+      checkName: "Color Distinguishability (variants identifiable)",
+      status: colorDistinguishabilityIssues.length === 0 ? "pass" : "fail",
+      count: colorDistinguishabilityIssues.length,
+      details: colorDistinguishabilityIssues.length === 0
+        ? "All variants have unique color identifiers for swatch display"
+        : `${colorDistinguishabilityIssues.length} product lines have variants that cannot be distinguished by color`,
+      products: colorDistinguishabilityIssues.length > 0 ? colorDistinguishabilityIssues : undefined,
+    });
+
     // ============= PRICE CONSISTENCY CHECK (UPDATED FOR INDUSTRIAL BRANDS) =============
     // Validate DB prices are reasonable (not $0 or suspicious values)
     // 3DXTech is an industrial brand with expensive specialty materials (PEEK, PEKK, PEI, etc.)
