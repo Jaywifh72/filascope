@@ -266,6 +266,9 @@ function explodeVariants(products: ShopifyProduct[]): { variants: ProductVariant
         }
       }
 
+      // Build variant-specific URL with query parameter for accurate live price fetching
+      const variantSpecificUrl = `${productUrl}?variant=${variant.id}`;
+
       variants.push({
         productId: `3dxtech-${product.id}-${variant.id}`,
         title: product.title,
@@ -274,7 +277,7 @@ function explodeVariants(products: ShopifyProduct[]): { variants: ProductVariant
         sku: variant.sku || null,
         barcode: variant.barcode || null,
         imageUrl,
-        productUrl,
+        productUrl: variantSpecificUrl,
         handle: product.handle,
         diameter,
         weight,
