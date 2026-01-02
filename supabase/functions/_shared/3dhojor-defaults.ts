@@ -177,6 +177,22 @@ export function generate3DHOJORProductLineId(title: string, material: string): s
 }
 
 // ============================================================================
+// STRING SANITIZATION (fixes invisible Unicode from Shopify)
+// ============================================================================
+
+function sanitizeString(str: string): string {
+  if (!str) return '';
+  return str
+    // Replace all Unicode whitespace variants with regular space
+    .replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
+    // Remove zero-width characters
+    .replace(/[\u200B-\u200D\uFEFF\u00AD]/g, '')
+    // Normalize multiple spaces to single space
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// ============================================================================
 // COLOR MAPPING
 // ============================================================================
 
@@ -317,8 +333,11 @@ const HOJOR_COLOR_MAPPING: Record<string, string> = {
 export function get3DHOJORColorHex(colorName: string): string | null {
   if (!colorName) return null;
   
+  // CRITICAL: Sanitize invisible Unicode characters from Shopify data
+  const sanitized = sanitizeString(colorName);
+  
   // Normalize and strip material prefixes
-  let normalized = colorName.toLowerCase().trim();
+  let normalized = sanitized.toLowerCase().trim();
   
   // Strip common material prefixes that appear in color names
   // e.g., "PLA Very Peri" → "very peri", "PLA Lite Black" → "black"
@@ -408,8 +427,11 @@ export function extract3DHOJORRegion(variantTitle: string): string | null {
 }
 
 export function extract3DHOJORColorFromVariant(variantTitle: string): string | null {
+  // CRITICAL: Sanitize invisible Unicode characters from Shopify data
+  const sanitized = sanitizeString(variantTitle);
+  
   // Variant format: "Region / Size / Color" or "Size / Color"
-  const parts = variantTitle.split('/').map(p => p.trim());
+  const parts = sanitized.split('/').map(p => p.trim());
   
   // Last part is usually the color
   if (parts.length >= 2) {
