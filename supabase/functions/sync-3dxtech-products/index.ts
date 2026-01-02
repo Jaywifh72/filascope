@@ -194,12 +194,27 @@ function explodeVariants(products: ShopifyProduct[]): { variants: ProductVariant
       if (seenColors.get(product.id)?.has(colorLower)) continue;
       seenColors.get(product.id)?.add(colorLower);
       
-      // Parse diameter - prefer 1.75mm
-      let diameter = 1.75;
+      // Parse diameter - check title, handle, and variant options for 2.85mm
+      const extractDiameter = (text: string): number | null => {
+        if (/2\.85\s*mm|3\.0\s*mm|3mm/i.test(text)) return 2.85;
+        if (/1\.75\s*mm/i.test(text)) return 1.75;
+        return null;
+      };
+      
+      // Check multiple sources for diameter
+      const titleDiameter = extractDiameter(product.title);
+      const handleDiameter = extractDiameter(product.handle);
+      const variantTitleDiameter = extractDiameter(variant.title);
+      let variantOptionDiameter: number | null = null;
       if (variant.option2) {
         const diamMatch = variant.option2.match(/([\d.]+)\s*mm/i);
-        if (diamMatch) diameter = parseFloat(diamMatch[1]);
+        if (diamMatch) variantOptionDiameter = parseFloat(diamMatch[1]);
       }
+      
+      // Use detected 2.85mm from any source, otherwise default to 1.75mm
+      const diameter = [titleDiameter, handleDiameter, variantTitleDiameter, variantOptionDiameter].includes(2.85) 
+        ? 2.85 
+        : (variantOptionDiameter || 1.75);
       
       // Parse weight
       let weight = 1000; // Default 1kg
