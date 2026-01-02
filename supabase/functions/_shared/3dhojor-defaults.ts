@@ -116,7 +116,10 @@ export function generate3DHOJORProductLineId(title: string, material: string): s
   const lowerTitle = title.toLowerCase();
   const materialSlug = material.toLowerCase().replace(/[^a-z0-9]/g, '-');
   
-  // Silk variants
+  // Silk variants - ORDER MATTERS (most specific first)
+  if (/silk.*rainbow|rainbow.*silk/i.test(lowerTitle)) {
+    return `3dhojor__pla__silk-rainbow`;
+  }
   if (/silk.*tri|tri.*color.*silk/i.test(lowerTitle)) {
     return `3dhojor__pla__silk-tri`;
   }
@@ -127,8 +130,8 @@ export function generate3DHOJORProductLineId(title: string, material: string): s
     return `3dhojor__pla__silk`;
   }
   
-  // Crystal Rainbow
-  if (/crystal.*rainbow|rainbow.*pla/i.test(lowerTitle)) {
+  // Crystal Rainbow (non-silk)
+  if (/crystal.*rainbow|transparent.*rainbow/i.test(lowerTitle)) {
     return `3dhojor__pla__crystal-rainbow`;
   }
   
@@ -140,12 +143,19 @@ export function generate3DHOJORProductLineId(title: string, material: string): s
     return `3dhojor__pla__matte`;
   }
   
+  // Wood-like PLA - must come before generic PLA check
+  if (/wood[-\s]?like|wood\s*pla/i.test(lowerTitle)) {
+    return `3dhojor__pla__wood`;
+  }
+  
+  // Rapid PLA (High-Speed) - detect by title, not just material
+  if (/rapid\s*pla|pla\s*hs|high\s*speed/i.test(lowerTitle)) {
+    return `3dhojor__pla-hs__rapid`;
+  }
+  
   // PLA variants
   if (/pla[\s-]*lite/i.test(lowerTitle)) {
     return `3dhojor__pla__lite`;
-  }
-  if (/pla\s*hs|high\s*speed/i.test(lowerTitle)) {
-    return `3dhojor__pla-hs__standard`;
   }
   if (/pla\s*pro|pla\+|pla\s*plus/i.test(lowerTitle)) {
     return `3dhojor__pla-plus__pro`;
@@ -157,6 +167,9 @@ export function generate3DHOJORProductLineId(title: string, material: string): s
   }
   if (material === 'TPU-95A') {
     return `3dhojor__tpu-95a__standard`;
+  }
+  if (material === 'PLA-HS') {
+    return `3dhojor__pla-hs__rapid`;
   }
   
   // Default basic PLA
