@@ -225,9 +225,22 @@ function processVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       }
       
       // Extract color for non-variety products
-      const color = isAmolenVarietyPack(product.title) 
+      let color = isAmolenVarietyPack(product.title) 
         ? null 
         : extractAmolenColorFromVariant(variant.option1, variant.option2, variant.option3, product.title);
+      
+      // For rainbow/gradient products with no variant color, extract from product title
+      // e.g., "PETG Transparent Rainbow Filament" → "Transparent Rainbow"
+      if (!color && !isAmolenVarietyPack(product.title)) {
+        const rainbowMatch = product.title.match(/\b((?:Transparent|Pastel|Matte|Silk)\s+Rainbow[^,]*?)\s*(?:Filament|1\.75|,|$)/i);
+        if (rainbowMatch) {
+          color = rainbowMatch[1].trim();
+        } else if (/rainbow/i.test(product.title)) {
+          // Generic rainbow fallback
+          const genericMatch = product.title.match(/\b(\w+\s+Rainbow)\b/i);
+          color = genericMatch ? genericMatch[1].trim() : 'Rainbow';
+        }
+      }
       
       // Create unique key for deduplication
       const dedupeKey = `${product.id}-${colorKey}`;
@@ -280,12 +293,22 @@ async function upsertVariants(
       
       // Construct display title
       // For variety packs: use cleaned title as-is
+      // For rainbow/gradient products: title already includes the color, don't duplicate
       // For regular products: append color for swatch display
-      const displayTitle = enrichment.is_variety_pack
-        ? cleanAmolenTitle(variant.productTitle)
-        : variant.color 
-          ? `${cleanAmolenTitle(variant.productTitle)} - ${variant.color}`
-          : cleanAmolenTitle(variant.productTitle);
+      const isRainbowProduct = /\brainbow\b/i.test(variant.productTitle);
+      let displayTitle: string;
+      
+      if (enrichment.is_variety_pack) {
+        displayTitle = cleanAmolenTitle(variant.productTitle);
+      } else if (isRainbowProduct) {
+        // Rainbow products: use cleaned title as-is (title already has "Transparent Rainbow" etc.)
+        displayTitle = cleanAmolenTitle(variant.productTitle);
+      } else if (variant.color) {
+        // Regular products: append color for swatch identification
+        displayTitle = `${cleanAmolenTitle(variant.productTitle)} - ${variant.color}`;
+      } else {
+        displayTitle = cleanAmolenTitle(variant.productTitle);
+      }
       
       const filamentData = {
         product_id: variant.productId,
