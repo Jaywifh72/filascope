@@ -8,12 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Wand2, ChevronDown, Loader2, CheckCircle2, XCircle, AlertTriangle, Trash2, Zap, Settings2 } from "lucide-react";
+import { Wand2, ChevronDown, Loader2, CheckCircle2, XCircle, AlertTriangle, Trash2, Zap, Settings2, Info, Ban, Sparkles, Filter } from "lucide-react";
 import { useBrandSyncManager } from "@/hooks/useBrandSyncManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Slider } from "@/components/ui/slider";
 import { PostSyncCheckPanel } from "./PostSyncCheckPanel";
+import { BRAND_SYNC_DOCS, SHARED_FILTER_RULES } from "@/config/brand-sync-docs";
 
 interface Brand {
   id: string;
@@ -33,6 +34,7 @@ export function BrandSyncManager() {
   const [materialFilter, setMaterialFilter] = useState("");
   const [limit, setLimit] = useState<number>(100);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [syncDocsOpen, setSyncDocsOpen] = useState(false);
 
   const {
     executeSync,
@@ -183,6 +185,102 @@ export function BrandSyncManager() {
               <span className="font-medium">Last Sync:</span> {formatLastSync(selectedBrand.last_scrape_at)}
             </div>
           </div>
+        )}
+
+        {/* Brand-Specific Sync Logic Documentation */}
+        {selectedBrand && (
+          <Collapsible open={syncDocsOpen} onOpenChange={setSyncDocsOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2 w-full justify-start">
+                <ChevronDown className={`w-4 h-4 transition-transform ${syncDocsOpen ? 'rotate-180' : ''}`} />
+                <Info className="w-4 h-4" />
+                <span>Sync Logic Notes</span>
+                {BRAND_SYNC_DOCS[selectedBrandSlug]?.exclusions && (
+                  <Badge variant="destructive" className="ml-2">
+                    {BRAND_SYNC_DOCS[selectedBrandSlug].exclusions!.length} exclusions
+                  </Badge>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-3 space-y-4">
+              <div className="bg-muted/30 rounded-lg p-4 space-y-4 text-sm">
+                {/* Brand-Specific Exclusions */}
+                {BRAND_SYNC_DOCS[selectedBrandSlug]?.exclusions && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium flex items-center gap-2 text-destructive">
+                      <Ban className="w-4 h-4" />
+                      Product Exclusions
+                    </h4>
+                    <div className="space-y-1.5 ml-6">
+                      {BRAND_SYNC_DOCS[selectedBrandSlug].exclusions!.map((e) => (
+                        <div key={e.name} className="flex items-start gap-2">
+                          <XCircle className="w-3.5 h-3.5 text-destructive mt-0.5 shrink-0" />
+                          <div>
+                            <span className="font-medium">{e.name}</span>
+                            <span className="text-muted-foreground"> — {e.reason}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Brand-Specific Behaviors */}
+                {BRAND_SYNC_DOCS[selectedBrandSlug]?.specialBehaviors && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium flex items-center gap-2 text-blue-500">
+                      <Sparkles className="w-4 h-4" />
+                      Special Behaviors
+                    </h4>
+                    <div className="space-y-1.5 ml-6">
+                      {BRAND_SYNC_DOCS[selectedBrandSlug].specialBehaviors!.map((b) => (
+                        <div key={b.name} className="flex items-start gap-2">
+                          <Zap className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
+                          <div>
+                            <span className="font-medium">{b.name}</span>
+                            <span className="text-muted-foreground"> — {b.description}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Brand-Specific Notes */}
+                {BRAND_SYNC_DOCS[selectedBrandSlug]?.notes && (
+                  <div className="space-y-1.5 ml-6 text-muted-foreground">
+                    {BRAND_SYNC_DOCS[selectedBrandSlug].notes!.map((note, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className="text-xs">•</span>
+                        <span>{note}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* No docs available */}
+                {!BRAND_SYNC_DOCS[selectedBrandSlug] && (
+                  <p className="text-muted-foreground italic">No brand-specific documentation available.</p>
+                )}
+
+                {/* Shared Filter Rules - Always shown */}
+                <div className="space-y-2 pt-3 border-t border-border">
+                  <h4 className="font-medium flex items-center gap-2 text-muted-foreground">
+                    <Filter className="w-4 h-4" />
+                    Standard Filters (All Brands)
+                  </h4>
+                  <div className="space-y-1 ml-6 text-muted-foreground">
+                    {SHARED_FILTER_RULES.map((rule) => (
+                      <div key={rule.name} className="flex items-start gap-2">
+                        <span className="text-xs">•</span>
+                        <span><span className="font-medium">{rule.name}:</span> {rule.description}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
 
         {/* Basic Options */}
