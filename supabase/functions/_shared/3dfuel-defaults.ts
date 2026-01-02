@@ -391,6 +391,7 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'almond': '#EFDECD',
   'warm bisque': '#FFE4C4',
   'island fuchsia': '#C54B8C',
+  'island fuschia': '#C54B8C',  // Typo in 3D-Fuel's Shopify data for Tough Pro PLA+
 };
 
 // ============================================================================
