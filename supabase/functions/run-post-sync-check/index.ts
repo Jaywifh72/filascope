@@ -878,25 +878,33 @@ Deno.serve(async (req) => {
       })),
     });
 
-    // Check 3: Sample Products (<300g)
-    const { data: sampleProducts, error: sampleError } = await supabase
+    // Check 3: Sample Products (<300g) - exclude premium materials that legitimately come in small spools
+    const { data: sampleProductsRaw, error: sampleError } = await supabase
       .from("filaments")
-      .select("id, product_title, net_weight_g")
+      .select("id, product_title, net_weight_g, material")
       .ilike("vendor", brandName)
       .lt("net_weight_g", 300)
       .gt("net_weight_g", 0)
-      .limit(20);
+      .limit(50);
 
     if (sampleError) {
       console.error("[PostSyncCheck] Sample check error:", sampleError);
     }
 
+    // Filter out premium materials that legitimately come in 250g spools (PEI, PEEK, PEKK, ESD, TPI, etc.)
+    const premiumMaterialPattern = /^(PEI|PEEK|PEKK|ESD-|TPI|PSU|PPS|PPSU|CeramiX|CARBONX.*PEKK|FIBREX.*PEI)/i;
+    const sampleProducts = (sampleProductsRaw || []).filter(p => {
+      const isPremium = premiumMaterialPattern.test(p.material || '') || 
+                        premiumMaterialPattern.test(p.product_title || '');
+      return !isPremium;
+    }).slice(0, 20);
+
     checks.push({
       checkName: "No Sample Products (<300g)",
-      status: (sampleProducts?.length || 0) === 0 ? "pass" : "fail",
-      count: sampleProducts?.length || 0,
-      details: sampleProducts?.length ? `Found ${sampleProducts.length} sample/mini products` : undefined,
-      products: sampleProducts?.map((p) => ({
+      status: sampleProducts.length === 0 ? "pass" : "fail",
+      count: sampleProducts.length,
+      details: sampleProducts.length ? `Found ${sampleProducts.length} sample/mini products (premium materials excluded)` : undefined,
+      products: sampleProducts.map((p) => ({
         id: p.id,
         title: p.product_title,
         issue: `Weight: ${p.net_weight_g}g`,
