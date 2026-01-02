@@ -239,8 +239,8 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
         material = extractMaterialFromOption(variant.option1, product.title);
         colorName = variant.option3?.trim() || extractColorName(variant, product.title, product.handle);
         
-        // Generate material-specific product line ID
-        productLineId = generateProductLineIdForMultiMaterial(product.title, material, product.handle);
+        // Generate material-specific product line ID - pass option1 for accurate material detection
+        productLineId = generateProductLineIdForMultiMaterial(product.title, material, variant.option1, product.handle);
         
         console.log(`[3D-Fuel] Multi-material: option1="${variant.option1}" -> material="${material}", option3="${variant.option3}" -> color="${colorName}"`);
       } else {
@@ -450,25 +450,37 @@ function extractMaterialFromOption(option1: string, productTitle: string): strin
  * Generate product line ID for multi-material products
  * These products need material-specific grouping to prevent cross-contamination
  */
-function generateProductLineIdForMultiMaterial(productTitle: string, material: string, productHandle?: string): string {
+/**
+ * Generate product line ID for multi-material products
+ * These products need material-specific grouping to prevent cross-contamination
+ * 
+ * CRITICAL: For ReFuel products, variantOption1 contains the ACTUAL material selection
+ * e.g., "Standard PLA+" or "Tough Pro PLA+" - we MUST use this, not the title
+ */
+function generateProductLineIdForMultiMaterial(
+  productTitle: string, 
+  material: string, 
+  variantOption1: string | null,
+  productHandle?: string
+): string {
   const titleLower = productTitle.toLowerCase();
+  const option1Lower = (variantOption1 || '').toLowerCase();
   
-  // ReFuel products - create specific line IDs based on material
+  // ReFuel products - use option1 to determine EXACT material variant
   if (titleLower.includes('refuel')) {
-    const materialSlug = material.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    
-    // Detect specific PLA+ variants
-    if (material === 'PLA+') {
-      // Check if we can determine Tough Pro vs Standard from title
-      if (titleLower.includes('tough pro')) {
-        return '3dfuel__refuel-tough-pro-pla';
-      } else if (titleLower.includes('standard')) {
-        return '3dfuel__refuel-standard-pla';
-      }
-      // Fallback - will need to be determined from option1 at variant level
-      return '3dfuel__refuel-pla';
+    // CRITICAL: Check option1 FIRST as it contains the specific material choice
+    if (option1Lower.includes('tough pro')) {
+      return '3dfuel__refuel-tough-pro-pla';
+    } else if (option1Lower.includes('standard pla') || option1Lower.includes('standard')) {
+      return '3dfuel__refuel-standard-pla';
+    } else if (option1Lower.includes('pctg') || material === 'PCTG') {
+      return '3dfuel__refuel-pctg';
+    } else if (option1Lower.includes('petg') || material === 'PETG') {
+      return '3dfuel__refuel-petg';
     }
     
+    // Fallback for unknown ReFuel materials
+    const materialSlug = material.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     return `3dfuel__refuel-${materialSlug}`;
   }
   
