@@ -66,11 +66,12 @@ export const DXTECH_MATERIAL_PATTERNS: MaterialPattern[] = [
   { pattern: /abs[- ]?cf|carbonx.*abs/i, material: 'ABS-CF', isAbrasive: true, enclosureRequired: true, isConductive: false },
   { pattern: /pla[- ]?cf|carbonx.*pla/i, material: 'PLA-CF', isAbrasive: true, enclosureRequired: false, isConductive: false },
 
-  // Glass Fiber Reinforced (FibreX line)
+  // Glass Fiber Reinforced (FibreX line) - Note: pattern includes + for "ABS+GF" format
   { pattern: /pa[- ]?6[- ]?gf|nylon[- ]?6[- ]?gf|fibrex.*pa[- ]?6/i, material: 'PA6-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
   { pattern: /pa[- ]?12[- ]?gf|nylon[- ]?12[- ]?gf|fibrex.*pa[- ]?12/i, material: 'PA12-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
-  { pattern: /abs[- ]?gf|fibrex.*abs/i, material: 'ABS-GF', isAbrasive: true, enclosureRequired: true, isConductive: false },
-  { pattern: /pp[- ]?gf|fibrex.*pp/i, material: 'PP-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
+  { pattern: /abs[+\- ]?gf|fibrex.*abs/i, material: 'ABS-GF', isAbrasive: true, enclosureRequired: true, isConductive: false },
+  { pattern: /pp[+\- ]?gf|fibrex.*pp/i, material: 'PP-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
+  { pattern: /tpu[+\- ]?gf/i, material: 'TPU-GF', isAbrasive: true, enclosureRequired: false, isConductive: false, hardness: '95A' },
 
   // Flame Retardant (Firewire line)
   { pattern: /fr[- ]?pc[- ]?abs/i, material: 'FR-PC-ABS', isAbrasive: false, enclosureRequired: true, isConductive: false },
@@ -100,9 +101,10 @@ export const DXTECH_MATERIAL_PATTERNS: MaterialPattern[] = [
   { pattern: /\bmts\b|mid[- ]?temp[- ]?support/i, material: 'MTS', isAbrasive: false, enclosureRequired: false, isConductive: false },
   { pattern: /\bpva\b/i, material: 'PVA', isAbrasive: false, enclosureRequired: false, isConductive: false },
 
-  // Standard Materials
+  // Standard Materials - PCTG must come BEFORE PETG to prevent false matches
   { pattern: /pa[- ]?12|nylon[- ]?12/i, material: 'PA12', isAbrasive: false, enclosureRequired: false, isConductive: false },
   { pattern: /pa[- ]?6|nylon[- ]?6|\bnylon\b/i, material: 'PA6', isAbrasive: false, enclosureRequired: false, isConductive: false },
+  { pattern: /pctg|max[- ]?g.*pctg/i, material: 'PCTG', isAbrasive: false, enclosureRequired: false, isConductive: false },
   { pattern: /petg|max[- ]?g/i, material: 'PETG', isAbrasive: false, enclosureRequired: false, isConductive: false },
   { pattern: /pla[- ]?tough|tough[- ]?pla/i, material: 'PLA-Tough', isAbrasive: false, enclosureRequired: false, isConductive: false },
   { pattern: /rpetg|recycled[- ]?petg/i, material: 'rPETG', isAbrasive: false, enclosureRequired: false, isConductive: false },
@@ -220,6 +222,7 @@ export const DXTECH_PRINT_SETTINGS: Record<string, PrintSettings> = {
   'OBC': { nozzleTempMin: 180, nozzleTempMax: 210, bedTempMin: 30, bedTempMax: 50 },
 
   // Standard
+  'PCTG': { nozzleTempMin: 235, nozzleTempMax: 255, bedTempMin: 70, bedTempMax: 85 },
   'PETG': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 70, bedTempMax: 85 },
   'rPETG': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 70, bedTempMax: 85 },
   'PLA': { nozzleTempMin: 190, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 65 },
