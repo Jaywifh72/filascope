@@ -361,6 +361,13 @@ function extractPrusamentProductLine(title: string): { productLine: string; colo
   return null;
 }
 
+// Extract color name from color_family field (strips material prefix)
+function extractColorFromFamily(colorFamily: string | null): string | null {
+  if (!colorFamily) return null;
+  // Strip material prefixes like "PETG ", "PLA ", etc.
+  return colorFamily.replace(/^(PLA|PETG|ABS|TPU|TPE|ASA|PA\d*|PC|HIPS|PVA|Nylon)\s+/i, '').trim() || null;
+}
+
 function deduplicateColorVariants(variants: Filament[], baseName: string): Filament[] {
   const seenColors = new Set<string>();
   const result: Filament[] = [];
@@ -383,7 +390,9 @@ function deduplicateColorVariants(variants: Filament[], baseName: string): Filam
   });
   
   for (const variant of sorted) {
-    const colorName = getColorFromTitle(variant.product_title, baseName);
+    // Try title extraction first, then fallback to color_family
+    const colorName = getColorFromTitle(variant.product_title, baseName) 
+      || extractColorFromFamily(variant.color_family);
     const hasColorHex = variant.color_hex && variant.color_hex.length > 0;
     
     // Skip variants with no color identifier - these are likely bulk packs
