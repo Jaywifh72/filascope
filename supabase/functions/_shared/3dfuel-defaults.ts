@@ -805,6 +805,23 @@ export function isNonFilament(productTitle: string, productHandle: string): bool
     return true;
   }
   
+  // EXCLUSION: All ReFuel products (recycled material, no color selection)
+  if (title.includes('refuel') || handle.includes('refuel')) {
+    return true;
+  }
+  
+  // EXCLUSION: Protosthetics PETG Natural
+  if (title.includes('petg') && title.includes('natural') && 
+      (handle.includes('protosthetics') || title.includes('protosthetics'))) {
+    return true;
+  }
+  
+  // EXCLUSION: Entwined v2Hemp Natural
+  if ((title.includes('entwined') || handle.includes('entwined')) && 
+      title.includes('natural')) {
+    return true;
+  }
+  
   return false;
 }
 
