@@ -1076,9 +1076,23 @@ Deno.serve(async (req) => {
           const pageInfo = extractProductInfoFromHtml(html, markdown, representative.product_url);
           
           // ========== CHECK A: TITLE ACCURACY ==========
+          // For brands that add color suffixes to titles (like 3DXTech), strip the color
+          // before comparing to the page H1 which typically shows just the product name
           if (pageInfo.pageTitle) {
-            const similarity = titleSimilarity(representative.product_title, pageInfo.pageTitle);
-            console.log(`[PostSyncCheck] Title check: DB="${representative.product_title}" vs Page="${pageInfo.pageTitle}" (${similarity}% match)`);
+            // Extract color from the representative's title (usually after " - ")
+            const colorMatch = representative.product_title.match(/\s+-\s+([^-]+)$/);
+            const extractedColor = colorMatch ? colorMatch[1].trim() : '';
+            
+            // Create base title without color suffix for comparison
+            let dbBaseTitle = representative.product_title;
+            if (extractedColor) {
+              // Remove the color suffix for comparison
+              const colorPattern = new RegExp(`\\s*[-–]\\s*${extractedColor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+              dbBaseTitle = representative.product_title.replace(colorPattern, '').trim();
+            }
+            
+            const similarity = titleSimilarity(dbBaseTitle, pageInfo.pageTitle);
+            console.log(`[PostSyncCheck] Title check: DB="${dbBaseTitle}" (color: "${extractedColor}") vs Page="${pageInfo.pageTitle}" (${similarity}% match)`);
             
             if (similarity < 60) {
               titleIssues.push({
@@ -1288,13 +1302,18 @@ Deno.serve(async (req) => {
       products: swatchIssues.length > 0 ? swatchIssues : undefined,
     });
 
-    // ============= PRICE CONSISTENCY CHECK (NEW) =============
+    // ============= PRICE CONSISTENCY CHECK (UPDATED FOR INDUSTRIAL BRANDS) =============
     // Validate DB prices are reasonable (not $0 or suspicious values)
+    // 3DXTech is an industrial brand with expensive specialty materials (PEEK, PEKK, PEI, etc.)
+    // Standard threshold is $200, but for industrial brands we use $600
+    const isIndustrialBrand = brandSlug === '3dxtech';
+    const priceUpperThreshold = isIndustrialBrand ? 600 : 200;
+    
     const { data: priceCheckData } = await supabase
       .from("filaments")
       .select("id, product_title, variant_price, product_url")
       .ilike("vendor", brandName)
-      .or("variant_price.is.null,variant_price.eq.0,variant_price.lt.5,variant_price.gt.200");
+      .or(`variant_price.is.null,variant_price.eq.0,variant_price.lt.5,variant_price.gt.${priceUpperThreshold}`);
 
     const priceIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
     for (const p of priceCheckData || []) {
@@ -1302,7 +1321,7 @@ Deno.serve(async (req) => {
       if (p.variant_price === null) issue = 'Price is NULL';
       else if (p.variant_price === 0) issue = 'Price is $0';
       else if (p.variant_price < 5) issue = `Price too low: $${p.variant_price}`;
-      else if (p.variant_price > 200) issue = `Price unusually high: $${p.variant_price}`;
+      else if (p.variant_price > priceUpperThreshold) issue = `Price unusually high: $${p.variant_price}`;
       
       if (issue) {
         priceIssues.push({
@@ -1319,7 +1338,7 @@ Deno.serve(async (req) => {
       status: priceIssues.length === 0 ? "pass" : priceIssues.length <= 3 ? "warning" : "fail",
       count: priceIssues.length,
       details: priceIssues.length === 0 
-        ? "All prices are in valid range ($5-$200)" 
+        ? `All prices are in valid range ($5-$${priceUpperThreshold})` 
         : `${priceIssues.length} products have suspicious prices`,
       products: priceIssues.length > 0 ? priceIssues : undefined,
     });
