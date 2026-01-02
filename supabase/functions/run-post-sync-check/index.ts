@@ -289,6 +289,93 @@ Focus on:
   }
 }
 
+// AI Role definitions based on issue types
+const AI_ROLES = {
+  dataEngineer: {
+    title: 'Lead Data Engineer',
+    triggers: ['bulk', 'sample', '2.85mm', 'weight', 'diameter', 'filtering'],
+    capabilities: [
+      'Data validation pipeline design and implementation',
+      'Schema optimization and filtering logic',
+      'Weight/diameter constraint enforcement',
+      'Database query optimization',
+      'Bulk data processing strategies'
+    ]
+  },
+  scrapingEngineer: {
+    title: 'Senior Web Scraping Engineer',
+    triggers: ['title', 'url', 'scrape', 'page', 'consistency', 'mismatch'],
+    capabilities: [
+      'HTML parsing and DOM traversal',
+      'Shopify/e-commerce site structure analysis',
+      'Anti-bot detection avoidance strategies',
+      'Dynamic content extraction',
+      'Rate limiting and retry strategies'
+    ]
+  },
+  colorSpecialist: {
+    title: 'Color Data Specialist',
+    triggers: ['color', 'swatch', 'hex', 'uniqueness'],
+    capabilities: [
+      'Color name extraction and normalization',
+      'Hex code mapping and validation',
+      'Swatch architecture analysis (CSS vs image-based)',
+      'Cross-product color linking logic',
+      'Color family categorization'
+    ]
+  },
+  pricingAnalyst: {
+    title: 'E-Commerce Pricing Analyst',
+    triggers: ['price', 'validity', 'currency'],
+    capabilities: [
+      'Price extraction and validation',
+      'Currency conversion and normalization',
+      'Compare-at-price logic',
+      'Price anomaly detection',
+      'Multi-region pricing strategies'
+    ]
+  },
+  architect: {
+    title: 'Chief Technical Architect',
+    triggers: [], // Fallback for mixed issues
+    capabilities: [
+      'Full-stack web development',
+      'Database architecture and optimization',
+      'Web scraping automation',
+      'Data quality and validation',
+      'System integration and debugging'
+    ]
+  }
+};
+
+/**
+ * Determine the best AI role based on failing check types
+ */
+function determineAIRole(checks: CheckResult[]): { title: string; capabilities: string[] } {
+  const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
+  const checkNames = failingChecks.map(c => c.checkName.toLowerCase()).join(' ');
+  
+  // Count matches for each role
+  const roleScores: Record<string, number> = {};
+  
+  for (const [key, role] of Object.entries(AI_ROLES)) {
+    roleScores[key] = role.triggers.filter(t => 
+      checkNames.includes(t.toLowerCase())
+    ).length;
+  }
+  
+  // Find role with highest score, default to architect for ties/none
+  const bestRole = Object.entries(roleScores)
+    .sort((a, b) => b[1] - a[1])
+    .find(([key, score]) => score > 0);
+  
+  if (bestRole) {
+    return AI_ROLES[bestRole[0] as keyof typeof AI_ROLES];
+  }
+  
+  return AI_ROLES.architect; // Fallback
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -302,6 +389,34 @@ function generateAIFixPrompt(
   if (failedChecks.length === 0 && warningChecks.length === 0) {
     return null;
   }
+  
+  // Determine the best AI role for this specific set of issues
+  const role = determineAIRole(checks);
+  
+  // Build role preamble section
+  const roleSection = `You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database and comparison platform.
+
+### CORE CAPABILITIES YOU MUST APPLY
+
+${role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n')}
+
+### HOW YOU APPROACH PROBLEMS
+
+- **Think Modularly**: Break complex features into discrete, testable components.
+- **Anticipate Scale**: Design for growth with proper indexing and optimization.
+- **Prioritize Data Quality**: Scraped data must be accurate, consistent, and complete.
+- **Iterate Strategically**: Clarify scope first, then execute methodically.
+
+### CONSTRAINTS & GUARDRAILS
+
+- Always check robots.txt and terms of service before scraping
+- Keep Edge Functions under 10 second execution time
+- Never expose scraping URLs or API keys in frontend code
+- Test changes with sample data before full sync
+
+---
+
+`;
 
   const issuesSummary = [
     ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
@@ -376,7 +491,7 @@ ${Object.entries(aiAnalysis.colorMappings || {}).map(([name, hex]) => `'${name.t
 ---`;
   }
 
-  const prompt = `## Fix Post Sync Check Issues for ${brand}
+  const prompt = `${roleSection}## Fix Post Sync Check Issues for ${brand}
 
 The Post Sync Check for ${brand} found the following issues that need to be fixed in the sync function.
 
