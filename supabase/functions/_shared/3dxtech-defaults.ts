@@ -67,11 +67,13 @@ export const DXTECH_MATERIAL_PATTERNS: MaterialPattern[] = [
   { pattern: /pla[- ]?cf|carbonx.*pla/i, material: 'PLA-CF', isAbrasive: true, enclosureRequired: false, isConductive: false },
 
   // Glass Fiber Reinforced (FibreX line) - Note: pattern includes + for "ABS+GF" and "GF+PA6" formats
+  // IMPORTANT: PPA-GF must be detected BEFORE PP-GF to prevent false matches (PPA != PP)
   // IMPORTANT: GF+PA6 (OBSIDIAN GF) must be detected BEFORE PA6-CF patterns
+  { pattern: /ppa[+\- ]?gf|fibrex.*ppa/i, material: 'PPA-GF', isAbrasive: true, enclosureRequired: true, isConductive: false },
   { pattern: /gf\+?pa6|obsidian.*gf|pa6[- ]?gf|nylon[- ]?6[- ]?gf|fibrex.*pa[- ]?6/i, material: 'PA6-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
   { pattern: /pa[- ]?12[- ]?gf|nylon[- ]?12[- ]?gf|fibrex.*pa[- ]?12/i, material: 'PA12-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
   { pattern: /abs[+\- ]?gf|fibrex.*abs/i, material: 'ABS-GF', isAbrasive: true, enclosureRequired: true, isConductive: false },
-  { pattern: /pp[+\- ]?gf|fibrex.*pp/i, material: 'PP-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
+  { pattern: /pp[+\- ]?gf|fibrex.*pp(?!a)/i, material: 'PP-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
   { pattern: /tpu[+\- ]?gf/i, material: 'TPU-GF', isAbrasive: true, enclosureRequired: false, isConductive: false, hardness: '95A' },
   { pattern: /pei[- ]?gf|fibrex.*pei/i, material: 'PEI-GF', isAbrasive: true, enclosureRequired: true, isConductive: false },
 
@@ -199,6 +201,7 @@ export const DXTECH_PRINT_SETTINGS: Record<string, PrintSettings> = {
   'PLA-CF': { nozzleTempMin: 210, nozzleTempMax: 240, bedTempMin: 50, bedTempMax: 65 },
 
   // Glass Fiber Composites
+  'PPA-GF': { nozzleTempMin: 280, nozzleTempMax: 320, bedTempMin: 100, bedTempMax: 120 },
   'PA6-GF': { nozzleTempMin: 255, nozzleTempMax: 285, bedTempMin: 70, bedTempMax: 90 },
   'PA12-GF': { nozzleTempMin: 245, nozzleTempMax: 275, bedTempMin: 70, bedTempMax: 90 },
   'ABS-GF': { nozzleTempMin: 245, nozzleTempMax: 275, bedTempMin: 100, bedTempMax: 110 },
@@ -274,7 +277,10 @@ export function generate3DXTechProductLineId(title: string, material: string): s
   let series = 'standard';
   
   // TRITON series = Stratasys-compatible products (separate from standard)
-  if (/triton/i.test(titleLower)) series = 'triton';
+  // Handle Triton ABS-BAS as distinct series from regular Triton ABS
+  // BAS = Blend ABS for Stratasys - different formulation
+  if (/triton.*\babs\b.*\bbas\b|triton.*\bbas\b/i.test(titleLower)) series = 'triton-bas';
+  else if (/triton/i.test(titleLower)) series = 'triton';
   else if (/3dxstat|esd/i.test(titleLower)) series = '3dxstat';
   else if (/carbonx|carbon[- ]?x/i.test(titleLower)) series = 'carbonx';
   else if (/fibrex|fibre[- ]?x/i.test(titleLower)) series = 'fibrex';
