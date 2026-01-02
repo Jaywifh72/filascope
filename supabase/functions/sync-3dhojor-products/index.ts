@@ -4,6 +4,7 @@ import {
   get3DHOJORProductUrl,
   extract3DHOJORColorFromVariant,
   extract3DHOJORRegion,
+  get3DHOJORColorHex,
   HOJOR_STORE_INFO,
 } from '../_shared/3dhojor-defaults.ts';
 
@@ -227,6 +228,26 @@ async function upsertVariants(
         null
       );
       
+      // Debug logging for Very Peri to diagnose hex lookup
+      if (variant.color?.toLowerCase().includes('peri')) {
+        console.log(`[DEBUG] Very Peri color processing:`, {
+          rawColor: variant.color,
+          enrichedHex: enrichment.color_hex,
+          productLineId: enrichment.product_line_id,
+          directLookup: get3DHOJORColorHex(variant.color || ''),
+        });
+      }
+      
+      // Determine final color_hex with fallback for known problematic colors
+      let finalColorHex = enrichment.color_hex;
+      if (!finalColorHex && variant.color) {
+        const lowerColor = variant.color.toLowerCase();
+        if (lowerColor.includes('very peri') || lowerColor.includes('veri peri')) {
+          console.log(`[FALLBACK] Applying Very Peri hex directly for: ${variant.color}`);
+          finalColorHex = '#6667AB';
+        }
+      }
+      
       const filamentData = {
         product_id: variant.productId,
         product_title: variant.productTitle,
@@ -242,7 +263,7 @@ async function upsertVariants(
         material: enrichment.material,
         finish_type: enrichment.finish_type,
         product_line_id: enrichment.product_line_id,
-        color_hex: enrichment.color_hex,
+        color_hex: finalColorHex,
         color_family: variant.color,
         diameter_nominal_mm: enrichment.diameter_nominal_mm,
         net_weight_g: 1000,
@@ -424,6 +445,13 @@ Deno.serve(async (req) => {
     }
     
     console.log(`[3DHOJOR Sync] Starting sync with options:`, options);
+    
+    // DEPLOY CHECK: Test that shared module is correctly bundled
+    console.log('[DEPLOY CHECK] Testing get3DHOJORColorHex:', {
+      'PLA Very Peri': get3DHOJORColorHex('PLA Very Peri'),
+      'very peri': get3DHOJORColorHex('very peri'),
+      'pla lite black': get3DHOJORColorHex('pla lite black'),
+    });
     
     // Get brand ID
     const { data: brand } = await supabase
