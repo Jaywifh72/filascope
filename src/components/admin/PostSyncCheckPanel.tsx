@@ -217,7 +217,8 @@ export function PostSyncCheckPanel({ brandSlug, brandName, disabled }: PostSyncC
             c.checkName.includes("URL") || 
             c.checkName.includes("Color") || 
             c.checkName.includes("Swatch") ||
-            c.checkName.includes("Scrape")
+            c.checkName.includes("Scrape") ||
+            c.checkName.includes("Title")
           ) && (
             <div className="space-y-2">
               <div className="text-sm font-medium text-muted-foreground">
@@ -228,7 +229,8 @@ export function PostSyncCheckPanel({ brandSlug, brandName, disabled }: PostSyncC
                   c.checkName.includes("URL") || 
                   c.checkName.includes("Color") || 
                   c.checkName.includes("Swatch") ||
-                  c.checkName.includes("Scrape")
+                  c.checkName.includes("Scrape") ||
+                  c.checkName.includes("Title")
                 )
                 .map((check) => (
                   <CheckResultRow
