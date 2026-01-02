@@ -1318,6 +1318,16 @@ Deno.serve(async (req) => {
           'pet-cf', 'pla-cf', 'pro-ht-pla', 'htpla'
         ];
         
+        // Pattern aliases for rebranded products - map old patterns to canonical pattern
+        // 3D-Fuel rebranded "Pro PLA" to "Tough Pro PLA+" but kept legacy URLs
+        const patternAliases: Record<string, string> = {
+          'pro-pla': 'tough-pro-pla',
+          'pro-pla-filament': 'tough-pro-pla',
+          'copy-of-pro-pla': 'tough-pro-pla',
+          'copy-of-pro': 'tough-pro-pla',
+          'copy-of': 'tough-pro-pla', // 3D-Fuel copy-of URLs are rebranded Tough Pro
+        };
+        
         const handlePatterns = urls.map(url => {
           try {
             const parsed = new URL(url!);
@@ -1326,13 +1336,16 @@ Deno.serve(async (req) => {
             // Match against known product line prefixes first
             for (const pattern of knownPatterns) {
               if (handle.startsWith(pattern)) {
-                return pattern;
+                // Apply alias if it exists, otherwise use the pattern
+                return patternAliases[pattern] || pattern;
               }
             }
             
             // Fallback: take first 2 segments only (more conservative)
             const parts = handle.split('-');
-            return parts.slice(0, 2).join('-');
+            const fallbackPattern = parts.slice(0, 2).join('-');
+            // Also check fallback against aliases
+            return patternAliases[fallbackPattern] || fallbackPattern;
           } catch {
             return '';
           }
