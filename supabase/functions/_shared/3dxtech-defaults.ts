@@ -66,12 +66,14 @@ export const DXTECH_MATERIAL_PATTERNS: MaterialPattern[] = [
   { pattern: /abs[- ]?cf|carbonx.*abs/i, material: 'ABS-CF', isAbrasive: true, enclosureRequired: true, isConductive: false },
   { pattern: /pla[- ]?cf|carbonx.*pla/i, material: 'PLA-CF', isAbrasive: true, enclosureRequired: false, isConductive: false },
 
-  // Glass Fiber Reinforced (FibreX line) - Note: pattern includes + for "ABS+GF" format
-  { pattern: /pa[- ]?6[- ]?gf|nylon[- ]?6[- ]?gf|fibrex.*pa[- ]?6/i, material: 'PA6-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
+  // Glass Fiber Reinforced (FibreX line) - Note: pattern includes + for "ABS+GF" and "GF+PA6" formats
+  // IMPORTANT: GF+PA6 (OBSIDIAN GF) must be detected BEFORE PA6-CF patterns
+  { pattern: /gf\+?pa6|obsidian.*gf|pa6[- ]?gf|nylon[- ]?6[- ]?gf|fibrex.*pa[- ]?6/i, material: 'PA6-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
   { pattern: /pa[- ]?12[- ]?gf|nylon[- ]?12[- ]?gf|fibrex.*pa[- ]?12/i, material: 'PA12-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
   { pattern: /abs[+\- ]?gf|fibrex.*abs/i, material: 'ABS-GF', isAbrasive: true, enclosureRequired: true, isConductive: false },
   { pattern: /pp[+\- ]?gf|fibrex.*pp/i, material: 'PP-GF', isAbrasive: true, enclosureRequired: false, isConductive: false },
   { pattern: /tpu[+\- ]?gf/i, material: 'TPU-GF', isAbrasive: true, enclosureRequired: false, isConductive: false, hardness: '95A' },
+  { pattern: /pei[- ]?gf|fibrex.*pei/i, material: 'PEI-GF', isAbrasive: true, enclosureRequired: true, isConductive: false },
 
   // Flame Retardant (Firewire line)
   { pattern: /fr[- ]?pc[- ]?abs/i, material: 'FR-PC-ABS', isAbrasive: false, enclosureRequired: true, isConductive: false },
@@ -87,9 +89,12 @@ export const DXTECH_MATERIAL_PATTERNS: MaterialPattern[] = [
   { pattern: /\bhips\b/i, material: 'HIPS', isAbrasive: false, enclosureRequired: true, isConductive: false },
 
   // Specialty Materials
+  // AmideX Nylon 12 is PA12, NOT PA6-66 - check for "nylon 12" or "nylon12" with amidex
+  { pattern: /amidex.*nylon[- ]?12|nylon[- ]?12.*amidex/i, material: 'PA12', isAbrasive: false, enclosureRequired: false, isConductive: false },
   { pattern: /pa[- ]?6[- ]?66|nylon[- ]?6[- ]?66|amidex/i, material: 'PA6-66', isAbrasive: false, enclosureRequired: false, isConductive: false },
   { pattern: /pa[- ]?6[- ]?wear|wearx/i, material: 'PA6-Wear', isAbrasive: false, enclosureRequired: false, isConductive: false },
-  { pattern: /obsidian|pa[- ]?6[- ]?cf[- ]?v2/i, material: 'PA6-CF', isAbrasive: true, enclosureRequired: false, isConductive: false },
+  // Obsidian CF only (GF versions handled above in Glass Fiber section)
+  { pattern: /obsidian.*cf|pa[- ]?6[- ]?cf[- ]?v2/i, material: 'PA6-CF', isAbrasive: true, enclosureRequired: false, isConductive: false },
   { pattern: /htn/i, material: 'HTN', isAbrasive: false, enclosureRequired: true, isConductive: false },
   { pattern: /\bpp\b|polypropylene|hyperlite/i, material: 'PP', isAbrasive: false, enclosureRequired: false, isConductive: false },
   { pattern: /simubone/i, material: 'SimuBone', isAbrasive: false, enclosureRequired: false, isConductive: false },
