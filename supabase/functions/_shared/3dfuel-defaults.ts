@@ -386,6 +386,11 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'silky goldenrod': '#FFD700',  // Pure gold
   'silky silverbell': '#C0C0C0',  // Silver
   'silky royal navy blue': '#000080',  // Navy blue
+  
+  // Missing colors identified by Post Sync Check
+  'almond': '#EFDECD',
+  'warm bisque': '#FFE4C4',
+  'island fuchsia': '#C54B8C',
 };
 
 // ============================================================================
