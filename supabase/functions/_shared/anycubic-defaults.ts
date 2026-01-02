@@ -280,7 +280,10 @@ export const PROMOTIONAL_PATTERNS = [
 // Products that are NOT filaments - should be excluded from sync
 export const ANYCUBIC_NON_FILAMENT_SLUGS = [
   'filament-prize-claim',
+  'filament-prize',
+  'prize-claim',
   'filament-hub',
+  'products-filament-hub',
   'spring-steel',
   'magnetic-platform',
   'wash-cure',
@@ -290,6 +293,7 @@ export const ANYCUBIC_NON_FILAMENT_SLUGS = [
   'extruder',
   'buildplate',
   'build-plate',
+  'cleaning-filament', // maintenance product, not regular filament
 ];
 
 const ANYCUBIC_TITLE_NOISE = [
@@ -385,12 +389,19 @@ export function generateAnycubicProductLineId(title: string, material?: string |
   // Build product line ID from material + product line
   let baseId = 'anycubic';
   
-  // Add material
+  // Add material - PRESERVE the + symbol by converting to 'plus' to distinguish PLA+ from PLA
   const normalizedMaterial = normalizeAnycubicMaterial(title);
   if (normalizedMaterial) {
-    baseId += `__${normalizedMaterial.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+    // Convert + to 'plus' so PLA+ becomes 'plaplus' and PLA stays 'pla'
+    const materialSlug = normalizedMaterial.toLowerCase()
+      .replace(/\+/g, 'plus')
+      .replace(/[^a-z0-9]/g, '');
+    baseId += `__${materialSlug}`;
   } else if (material) {
-    baseId += `__${material.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+    const materialSlug = material.toLowerCase()
+      .replace(/\+/g, 'plus')
+      .replace(/[^a-z0-9]/g, '');
+    baseId += `__${materialSlug}`;
   } else {
     // If we can't detect a material, return unclassified for review
     return 'anycubic__unclassified__needs_review';
@@ -445,6 +456,11 @@ export const ANYCUBIC_COLOR_MAPPING: Record<string, string> = {
   'space gray': '4F4F4F',
   'cement grey': '8D918D',
   'cement gray': '8D918D',
+  
+  // Missing colors from Post Sync Check
+  'tropical turquoise': '48D1CC',
+  'spring leaf': '6DBE45',
+  'peach pink': 'FFDAB9',
   
   // Common color aliases Anycubic uses
   'transparent': 'FFFFFF',
