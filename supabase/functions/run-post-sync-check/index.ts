@@ -1305,9 +1305,14 @@ Deno.serve(async (req) => {
     // ============= PRICE CONSISTENCY CHECK (UPDATED FOR INDUSTRIAL BRANDS) =============
     // Validate DB prices are reasonable (not $0 or suspicious values)
     // 3DXTech is an industrial brand with expensive specialty materials (PEEK, PEKK, PEI, etc.)
-    // Standard threshold is $200, but for industrial brands we use $600
+    // Standard threshold is $200, but for industrial brands we use $800
+    // Industrial canister/multi-pack products can reach $1600+
     const isIndustrialBrand = brandSlug === '3dxtech';
-    const priceUpperThreshold = isIndustrialBrand ? 600 : 200;
+    const priceUpperThreshold = isIndustrialBrand ? 800 : 200;
+    
+    // Helper to detect canister/multi-pack products that legitimately cost $800-$1600
+    const isCanisterProduct = (title: string): boolean => 
+      /canister|^\d+x\s*\d+|multi[- ]?pack|stratasys|10\s*kg/i.test(title);
     
     const { data: priceCheckData } = await supabase
       .from("filaments")
@@ -1321,7 +1326,14 @@ Deno.serve(async (req) => {
       if (p.variant_price === null) issue = 'Price is NULL';
       else if (p.variant_price === 0) issue = 'Price is $0';
       else if (p.variant_price < 5) issue = `Price too low: $${p.variant_price}`;
-      else if (p.variant_price > priceUpperThreshold) issue = `Price unusually high: $${p.variant_price}`;
+      else if (p.variant_price > priceUpperThreshold) {
+        // Skip flagging very high prices for industrial canister products (up to $1600)
+        if (isIndustrialBrand && p.variant_price <= 1600 && isCanisterProduct(p.product_title)) {
+          // Allow canister/multi-pack/Stratasys products up to $1600 - legitimate pricing
+          continue;
+        }
+        issue = `Price unusually high: $${p.variant_price}`;
+      }
       
       if (issue) {
         priceIssues.push({
