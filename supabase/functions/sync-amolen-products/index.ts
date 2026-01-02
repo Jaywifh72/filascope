@@ -168,13 +168,14 @@ function processVariants(products: ShopifyProduct[]): ProcessedVariant[] {
     const primaryImage = product.images?.[0]?.src || null;
     const isVarietyPack = isAmolenVarietyPack(product.title);
     
-    // For products with delivery options, prefer "China to U.S. & Worldwide" for consistent pricing
+    // For products with delivery options, prefer "U.S. to U.S." for accurate US pricing
+    // (China to U.S. variants often have different/outdated prices)
     // Group variants by color, take only one per color
     const colorVariantMap = new Map<string, ShopifyVariant>();
     
     for (const variant of product.variants) {
-      // AMOLEN-SPECIFIC: Skip "U.S. to U.S." delivery variants if China variant exists
-      // This prevents duplicate products with different prices
+      // AMOLEN-SPECIFIC: Prefer "U.S. to U.S." delivery variants for accurate US pricing
+      // The website displays US prices but China variants in JSON may have different prices
       const isUSDelivery = variant.option1?.toLowerCase().includes('u.s. to u.s.');
       const isChinaDelivery = variant.option1?.toLowerCase().includes('china');
       
@@ -193,9 +194,9 @@ function processVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       // If we already have this color, decide which variant to keep
       const existing = colorVariantMap.get(colorKey);
       if (existing) {
-        // Prefer China delivery (lower price, international)
-        const existingIsChina = existing.option1?.toLowerCase().includes('china');
-        if (isChinaDelivery && !existingIsChina) {
+        // Prefer US delivery (accurate US pricing shown on website)
+        const existingIsUS = existing.option1?.toLowerCase().includes('u.s. to u.s.');
+        if (isUSDelivery && !existingIsUS) {
           colorVariantMap.set(colorKey, variant);
         }
         // Otherwise keep existing
@@ -206,8 +207,15 @@ function processVariants(products: ShopifyProduct[]): ProcessedVariant[] {
     
     // Process the deduplicated variants
     for (const [colorKey, variant] of colorVariantMap) {
+      // Extract weight: prefer title-based extraction over variant.grams (which is often shipping weight)
+      // Product title often has weight like "1KG/2.2LB"
+      const weightFromVariantTitle = extractWeightFromText(variant.title);
+      const weightFromProductTitle = extractWeightFromText(product.title);
+      // Only use variant.grams if it's a reasonable filament weight (500g-3000g) and no title weight found
+      const isReasonableGrams = variant.grams && variant.grams >= 500 && variant.grams <= 3000;
+      const weightGrams = weightFromVariantTitle || weightFromProductTitle || (isReasonableGrams ? variant.grams : null) || 1000;
+      
       // Apply weight/diameter filters and keyword exclusion
-      const weightGrams = variant.grams || extractWeightFromText(variant.title) || 1000;
       const filterResult = shouldIncludeVariant(weightGrams, 1.75, product.title);
       updateFilterStats(filterStats, filterResult);
       
