@@ -622,8 +622,22 @@ function isValidColorName(name: string): boolean {
   // Skip empty or very short names
   if (!lower || lower.length < 2) return false;
   
+  // Skip multi-word non-color phrases (common false positives)
+  const nonColorPhrases = [
+    'vacuum bags', 'matte surface', 'eco friendly', 'high quality',
+    'free shipping', 'add to cart', 'buy now', 'in stock',
+    'go to item', 'learn more', 'view details', 'more options',
+    'payment options', 'delivery option', 'china to', 'u.s. to',
+    'sold out', 'out of stock', 'coming soon', 'pre order',
+  ];
+  if (nonColorPhrases.some(phrase => lower.includes(phrase))) return false;
+  
   // Skip non-color words
   if (NON_COLOR_WORDS.has(lower)) return false;
+  
+  // For multi-word names, check if ALL words are non-color words
+  const words = lower.split(/\s+/);
+  if (words.length > 1 && words.every(word => NON_COLOR_WORDS.has(word))) return false;
   
   // Skip if it contains material identifiers
   if (/\b(pla|petg|pctg|abs|asa|tpu|nylon|filament)\b/i.test(lower)) return false;
@@ -793,6 +807,25 @@ function extractProductInfoFromHtml(html: string, markdown: string, currentProdu
   const optionLabelsMatch = html.matchAll(/<label[^>]*for="[^"]*color[^"]*"[^>]*>([^<]+)<\/label>/gi);
   for (const match of optionLabelsMatch) {
     addColorSwatch(match[1]);
+  }
+  
+  // ========== PATTERN 7: Shopify sr-only spans in swatch labels ==========
+  // Common in modern Shopify themes like Amolen
+  // Pattern: <span class="sr-only">Color Name</span> inside variant picker labels
+  const srOnlyColorMatches = html.matchAll(/<label[^>]*(?:swatch|thumbnail-swatch)[^>]*>[\s\S]*?<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi);
+  for (const match of srOnlyColorMatches) {
+    addColorSwatch(match[1]);
+  }
+
+  // Also extract from variant-picker fieldsets with "Color:" legend
+  const colorFieldsetMatch = html.match(/<legend[^>]*>\s*Color:?\s*<\/legend>[\s\S]*?<\/fieldset>/gi);
+  if (colorFieldsetMatch) {
+    for (const fieldset of colorFieldsetMatch) {
+      const srOnlyInFieldset = fieldset.matchAll(/<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi);
+      for (const match of srOnlyInFieldset) {
+        addColorSwatch(match[1]);
+      }
+    }
   }
   
   console.log(`[PostSyncCheck] Found ${result.colorSwatches.length} swatches for product line "${currentProductLine}"`);
@@ -1242,8 +1275,17 @@ Deno.serve(async (req) => {
                 dbBaseTitle = representative.product_title.replace(colorPattern, '').trim();
               }
               
-              const similarity = titleSimilarity(dbBaseTitle, pageInfo.pageTitle);
-              console.log(`[PostSyncCheck] Title check: DB="${dbBaseTitle}" (color: "${extractedColor}") vs Page="${pageInfo.pageTitle}" (${similarity}% match)`);
+              // Strip size/weight/filament specs from page title for comparison
+              // Amolen pages include "1.75mm, 1KG/2.2LB" in H1 which isn't in DB titles
+              let pageBaseTitle = pageInfo.pageTitle
+                .replace(/\s+Filament\s*/gi, ' ')
+                .replace(/\s*,?\s*\d+\.?\d*\s*mm\s*/gi, ' ')
+                .replace(/\s*,?\s*\d+\.?\d*\s*(kg|g|lb)\s*(\/\s*\d+\.?\d*\s*(kg|g|lb))?\s*/gi, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+              
+              const similarity = titleSimilarity(dbBaseTitle, pageBaseTitle);
+              console.log(`[PostSyncCheck] Title check: DB="${dbBaseTitle}" (color: "${extractedColor}") vs Page="${pageBaseTitle}" (stripped from: "${pageInfo.pageTitle}") (${similarity}% match)`);
               
               if (similarity < 60) {
                 titleIssues.push({
