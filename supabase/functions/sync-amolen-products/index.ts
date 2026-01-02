@@ -293,16 +293,29 @@ async function upsertVariants(
       
       // Construct display title
       // For variety packs: use cleaned title as-is
-      // For rainbow/gradient products: title already includes the color, don't duplicate
+      // For rainbow/gradient products with named variants (e.g., Sunset Rainbow, Candy Rainbow):
+      //   These need the variant color appended for proper swatch display
       // For regular products: append color for swatch display
       const isRainbowProduct = /\brainbow\b/i.test(variant.productTitle);
       let displayTitle: string;
       
       if (enrichment.is_variety_pack) {
         displayTitle = cleanAmolenTitle(variant.productTitle);
-      } else if (isRainbowProduct) {
-        // Rainbow products: use cleaned title as-is (title already has "Transparent Rainbow" etc.)
-        displayTitle = cleanAmolenTitle(variant.productTitle);
+      } else if (isRainbowProduct && variant.color) {
+        // Rainbow products WITH a named variant (e.g., "Sunset Rainbow", "Candy Rainbow")
+        // These ARE distinct color variants that need color appended for swatch display
+        // Example: "PLA Matte Rainbow" + "Sunset Rainbow" = "PLA Matte Rainbow - Sunset Rainbow"
+        const cleanedTitle = cleanAmolenTitle(variant.productTitle);
+        const colorLower = variant.color.toLowerCase();
+        const titleLower = cleanedTitle.toLowerCase();
+        
+        // Only append if the color isn't already fully contained in the title
+        // e.g., "PETG Transparent Rainbow" already has the color in it
+        if (!titleLower.includes(colorLower)) {
+          displayTitle = `${cleanedTitle} - ${variant.color}`;
+        } else {
+          displayTitle = cleanedTitle;
+        }
       } else if (variant.color) {
         // Regular products: append color for swatch identification
         displayTitle = `${cleanAmolenTitle(variant.productTitle)} - ${variant.color}`;
