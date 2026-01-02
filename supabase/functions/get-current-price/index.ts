@@ -48,7 +48,6 @@ function detectCustomStorefront(url: string): 'bambulab' | 'prusa' | null {
 // always returns prices in the store's base currency (usually USD)
 function isMultiCurrencyShopifyStore(url: string): boolean {
   const multiCurrencyDomains = [
-    'amolen.com',
     'polymaker.com',
     'esun3d.com',
     'sunlu.com',
@@ -58,6 +57,16 @@ function isMultiCurrencyShopifyStore(url: string): boolean {
   ];
   const urlLower = url.toLowerCase();
   return multiCurrencyDomains.some(domain => urlLower.includes(domain));
+}
+
+// Detect stores where Shopify JSON API returns unreliable/incorrect prices
+// even for USD. These stores require Firecrawl for accurate pricing.
+function shouldAlwaysUseFirecrawl(url: string): boolean {
+  const unreliableJsonStores = [
+    'amolen.com', // JSON API returns outdated prices that don't match website
+  ];
+  const urlLower = url.toLowerCase();
+  return unreliableJsonStores.some(domain => urlLower.includes(domain));
 }
 
 // Map currency to Firecrawl location settings for proper regional pricing
@@ -637,6 +646,10 @@ serve(async (req) => {
     
     if (customStorefront) {
       console.log(`Detected custom storefront: ${customStorefront}, using Firecrawl`);
+      result = await fetchPriceWithFirecrawl(productUrl, currency);
+    } else if (shouldAlwaysUseFirecrawl(productUrl)) {
+      // Some stores have unreliable Shopify JSON API (prices don't match website)
+      console.log(`Store has unreliable JSON API, using Firecrawl for accurate pricing`);
       result = await fetchPriceWithFirecrawl(productUrl, currency);
     } else {
       // Try Shopify JSON API for standard stores
