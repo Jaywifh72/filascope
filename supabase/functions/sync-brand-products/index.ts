@@ -13,6 +13,13 @@ import {
 } from '../_shared/filament-schema.ts';
 import { validateScrapedProduct, type ScrapedProduct } from '../_shared/scraper-validation.ts';
 import { getColorHex, getColorFamily, extractColorFromTitle } from '../_shared/color-mapping.ts';
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+  extractDiameterFromText,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -917,6 +924,7 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
   const apiEndpoint = brand.api_endpoint || `${brand.base_url}/products.json`;
   const products: any[] = [];
   let page = 1;
+  const filterStats = createFilterStats();
   
   while (products.length < limit) {
     const url = `${apiEndpoint}?limit=250&page=${page}`;
@@ -985,6 +993,17 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
           
           const netWeightG = extractWeight(variantTitle, variant.grams);
           
+          // Extract diameter from title/variant for filtering
+          const diameterMm = extractDiameterFromText(variantTitle) || extractDiameterFromText(variant.option1 || '') || 1.75;
+          
+          // Apply standard variant filtering (exclude bulk >5.5kg, samples <300g, 2.85mm)
+          const filterResult = shouldIncludeVariant(netWeightG, diameterMm);
+          updateFilterStats(filterStats, filterResult);
+          if (!filterResult.include) {
+            console.log(`[shopify] Skipping variant: ${filterResult.reason} - ${variantTitle}`);
+            continue;
+          }
+          
           // Generate product line ID with weight to separate bulk packs
           const productLineId = generateProductLineId(brand.brand_slug, material, baseTitle, netWeightG);
 
@@ -1012,6 +1031,17 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
         const variant = variants[0];
         const netWeightG = extractWeight(baseTitle, variant.grams);
         const colorFamily = extractColorFamilyFromVariant(variant, product, baseTitle) || extractColorFamily(baseTitle);
+        
+        // Extract diameter from title for filtering
+        const diameterMm = extractDiameterFromText(baseTitle) || extractDiameterFromText(variant.option1 || '') || 1.75;
+        
+        // Apply standard variant filtering (exclude bulk >5.5kg, samples <300g, 2.85mm)
+        const filterResult = shouldIncludeVariant(netWeightG, diameterMm);
+        updateFilterStats(filterStats, filterResult);
+        if (!filterResult.include) {
+          console.log(`[shopify] Skipping product: ${filterResult.reason} - ${baseTitle}`);
+          continue;
+        }
         
         // Generate product line ID with weight to separate bulk packs
         const productLineId = generateProductLineId(brand.brand_slug, material, baseTitle, netWeightG);
@@ -1044,6 +1074,9 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
     // Rate limiting
     await new Promise(r => setTimeout(r, brand.rate_limit_ms || 500));
   }
+
+  // Log filter stats at the end
+  logFilterStats(brand.brand_name, filterStats);
 
   return products;
 }
