@@ -473,19 +473,62 @@ interface FilamentBase {
   wood_powder_percentage?: number | null;
   featured_image?: string | null;
   variant_available?: boolean | null;
+  product_line_id?: string | null; // Authoritative grouping from database
+}
+
+/**
+ * Convert product_line_id to a display-friendly name
+ * e.g., "amolen__pla__silk-basic" -> "PLA Silk Basic"
+ * e.g., "amolen__petg__transparent-rainbow" -> "PETG Transparent Rainbow"
+ */
+function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: string): string {
+  // product_line_id format: "vendor__material__line-name" or "vendor__material__line-name__subline"
+  const parts = productLineId.split('__');
+  
+  if (parts.length >= 3) {
+    // Extract material (uppercase) and line name (title case)
+    const material = parts[1]?.toUpperCase() || '';
+    
+    // Combine all parts after material (handles cases like "silk-basic" or "transparent-rainbow")
+    const lineParts = parts.slice(2).join(' ');
+    const lineName = lineParts
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase())
+      .trim();
+    
+    return `${material} ${lineName}`.trim();
+  }
+  
+  // Fallback to title parsing if product_line_id format is unexpected
+  return getBaseProductName(fallbackTitle);
 }
 
 /**
  * Group filaments by base product name
  * Combines color/weight variants into single entries
+ * 
+ * IMPORTANT: Uses product_line_id as the authoritative grouping key when available.
+ * This ensures FilamentCards show the same variants as FilamentDetail pages.
  */
 export function groupFilamentsByProduct<T extends FilamentBase>(filaments: T[]): GroupedFilament[] {
   const groups = new Map<string, GroupedFilament>();
   
   filaments.forEach((filament) => {
-    const baseName = getBaseProductName(filament.product_title, filament.material);
-    // Create group key that includes vendor to avoid cross-brand grouping
-    const groupKey = `${filament.vendor || 'Unknown'}::${baseName}`;
+    // PRIORITY 1: Use product_line_id if available (authoritative from database)
+    // PRIORITY 2: Fall back to title parsing only when product_line_id is NULL
+    let groupKey: string;
+    let baseName: string;
+    
+    if (filament.product_line_id) {
+      // Use product_line_id directly - this is the authoritative grouping
+      groupKey = filament.product_line_id;
+      // Convert product_line_id to display-friendly name for UI
+      baseName = formatProductLineIdForDisplay(filament.product_line_id, filament.product_title);
+    } else {
+      // Fallback: parse from title (legacy behavior for products without product_line_id)
+      baseName = getBaseProductName(filament.product_title, filament.material);
+      groupKey = `${filament.vendor || 'Unknown'}::${baseName}`;
+    }
     
     if (!groups.has(groupKey)) {
       groups.set(groupKey, {
