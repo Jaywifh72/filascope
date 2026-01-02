@@ -11,8 +11,10 @@
 // ============================================================================
 
 const HOJOR_MATERIAL_PATTERNS: Array<{ pattern: RegExp; material: string }> = [
-  { pattern: /pla\s*pro|pla\+|pla\s*plus/i, material: 'PLA+' },
-  { pattern: /pla\s*hs|pla\s*high\s*speed/i, material: 'PLA-HS' },
+  // Most specific first - high speed
+  { pattern: /pla\s*hs|pla\s*high\s*speed|rapid\s*pla/i, material: 'PLA-HS' },
+  // PLA+ must use negative lookahead to NOT match combo products like "Pro / Basic / Lite"
+  { pattern: /pla\s*pro(?!\s*\/)|pla\+|pla\s*plus/i, material: 'PLA+' },
   { pattern: /pla[\s-]*lite/i, material: 'PLA' },
   { pattern: /\bpetg\b/i, material: 'PETG' },
   { pattern: /tpu\s*95a?/i, material: 'TPU-95A' },
@@ -169,7 +171,12 @@ const HOJOR_COLOR_MAPPING: Record<string, string> = {
   // Basic colors
   'black': '#1A1A1A',
   'white': '#FFFFFF',
-  'cold white': '#F5F5F5',
+  'cold white': '#F8F8FF',
+  'milky white': '#FFFAF0',
+  'bone white': '#F9F6EE',
+  'warm white': '#FAF0E6',
+  'matte milky white': '#FAF8F5',
+  'matte cold white': '#F0F0F5',
   'grey': '#808080',
   'gray': '#808080',
   'light gray': '#C0C0C0',
@@ -196,7 +203,6 @@ const HOJOR_COLOR_MAPPING: Record<string, string> = {
   'almond yellow': '#FFEBCD',
   'light khaki': '#F0E68C',
   'morandi purple': '#9B8AA5',
-  'milky white': '#FFFAF0',
   'lake blue': '#6495ED',
   'rose gold': '#B76E79',
   'sage': '#9CAF88',
@@ -285,6 +291,14 @@ const HOJOR_COLOR_MAPPING: Record<string, string> = {
   'peach': '#FFCBA4',
   'apricot': '#FBCEB1',
   'mint': '#98FF98',
+  
+  // Missing colors from Post Sync Check
+  'very peri': '#6667AB',
+  'veri peri': '#6667AB',
+  'silk bronze': '#CD7F32',
+  'bronze': '#CD7F32',
+  'natural': '#F5F5DC',
+  'petg natural': '#E8E8E8',
 };
 
 export function get3DHOJORColorHex(colorName: string): string | null {
@@ -368,10 +382,24 @@ export function extract3DHOJORColorFromVariant(variantTitle: string): string | n
   // Last part is usually the color
   if (parts.length >= 2) {
     const lastPart = parts[parts.length - 1];
-    // Filter out size indicators
-    if (!/^\d+\s*(g|kg)$/i.test(lastPart) && !/^(US|CA|DE|EU|UK)$/i.test(lastPart)) {
-      return lastPart;
+    
+    // Filter out non-color values
+    if (
+      /^\d+\s*(g|kg)$/i.test(lastPart) ||           // Size like "1KG"
+      /^(US|CA|DE|EU|UK)$/i.test(lastPart) ||       // Region
+      /^\d+\s*\*\s*\d+/i.test(lastPart) ||          // Multi-pack like "2*1KG"
+      /^(default|title|option)/i.test(lastPart)     // Default Shopify values
+    ) {
+      // Try the second-to-last part
+      if (parts.length >= 3) {
+        const secondLast = parts[parts.length - 2];
+        if (!/^\d+/.test(secondLast) && !/^(US|CA|DE|EU|UK)$/i.test(secondLast)) {
+          return secondLast;
+        }
+      }
+      return null;
     }
+    return lastPart;
   }
   
   return null;

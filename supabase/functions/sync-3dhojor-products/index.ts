@@ -106,6 +106,18 @@ async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
       const title = p.title.toLowerCase();
       const productType = (p.product_type || '').toLowerCase();
       
+      // Skip combo/bundle products that list multiple types
+      if (/pro\s*\/\s*basic\s*\/|basic\s*\/\s*lite|multiple.*types/i.test(title)) {
+        console.log(`[Step 1] Skipping combo product: ${p.title}`);
+        return false;
+      }
+      
+      // Skip multi-pack products (2+ rolls = bulk, exceeds weight filter)
+      if (/^\d+\s*rolls?|pack\s*of\s*\d|\d+\s*\*\s*\d+/i.test(title)) {
+        console.log(`[Step 1] Skipping multi-pack: ${p.title}`);
+        return false;
+      }
+      
       // Must contain filament-related keywords
       const isFilament = 
         title.includes('pla') ||
@@ -147,6 +159,12 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
     for (const variant of product.variants) {
       const color = extract3DHOJORColorFromVariant(variant.title);
       const region = extract3DHOJORRegion(variant.title);
+      
+      // Skip if color is obviously invalid (numbers, multi-pack quantities)
+      if (!color || /^\d+\s*\*?\s*\d*\s*(kg|g)?$/i.test(color)) {
+        console.log(`[Step 2] Skipping variant with invalid color: ${variant.title}`);
+        continue;
+      }
       
       // Create unique key for deduplication (product + color)
       const colorKey = `${product.id}-${(color || 'default').toLowerCase()}`;
