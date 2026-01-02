@@ -317,14 +317,33 @@ const HOJOR_COLOR_MAPPING: Record<string, string> = {
 export function get3DHOJORColorHex(colorName: string): string | null {
   if (!colorName) return null;
   
-  const normalized = colorName.toLowerCase().trim();
+  // Normalize and strip material prefixes
+  let normalized = colorName.toLowerCase().trim();
   
-  // Direct match
+  // Strip common material prefixes that appear in color names
+  // e.g., "PLA Very Peri" → "very peri", "PLA Lite Black" → "black"
+  normalized = normalized
+    .replace(/^pla\s*(lite|pro|\+)?\s*/i, '')
+    .replace(/^petg\s*/i, '')
+    .replace(/^tpu\s*(95a?)?\s*/i, '')
+    .replace(/^silk\s*/i, '')
+    .replace(/^matte\s*/i, '')
+    .trim();
+  
+  // Direct match first (most reliable)
   if (HOJOR_COLOR_MAPPING[normalized]) {
     return HOJOR_COLOR_MAPPING[normalized];
   }
   
-  // Partial match - check if color name contains any mapping key
+  // Try with "silk " or "matte " prefix for specialty colors
+  if (HOJOR_COLOR_MAPPING[`silk ${normalized}`]) {
+    return HOJOR_COLOR_MAPPING[`silk ${normalized}`];
+  }
+  if (HOJOR_COLOR_MAPPING[`matte ${normalized}`]) {
+    return HOJOR_COLOR_MAPPING[`matte ${normalized}`];
+  }
+  
+  // Partial match fallback
   for (const [key, hex] of Object.entries(HOJOR_COLOR_MAPPING)) {
     if (normalized.includes(key) || key.includes(normalized)) {
       return hex;
