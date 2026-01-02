@@ -265,7 +265,9 @@ export function generate3DXTechProductLineId(title: string, material: string): s
   // Determine series/brand line
   let series = 'standard';
   
-  if (/3dxstat|esd/i.test(titleLower)) series = '3dxstat';
+  // TRITON series = Stratasys-compatible products (separate from standard)
+  if (/triton/i.test(titleLower)) series = 'triton';
+  else if (/3dxstat|esd/i.test(titleLower)) series = '3dxstat';
   else if (/carbonx|carbon[- ]?x/i.test(titleLower)) series = 'carbonx';
   else if (/fibrex|fibre[- ]?x/i.test(titleLower)) series = 'fibrex';
   else if (/thermax/i.test(titleLower)) series = 'thermax';
