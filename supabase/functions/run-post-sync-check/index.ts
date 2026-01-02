@@ -715,7 +715,18 @@ function extractProductInfoFromHtml(html: string, markdown: string, currentProdu
   let currentProductLine: string | null = null;
   
   const addColorSwatch = (name: string, productUrl?: string) => {
-    const trimmed = name.trim();
+    let trimmed = name.trim();
+    
+    // Decode common HTML entities before storing/comparing
+    trimmed = trimmed
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .trim();
+    
     if (isValidColorName(trimmed) && 
         !result.colorSwatches.find(s => s.name.toLowerCase() === trimmed.toLowerCase())) {
       result.colorSwatches.push({ name: trimmed, productUrl });
@@ -835,20 +846,24 @@ function extractProductInfoFromHtml(html: string, markdown: string, currentProdu
   const variantPickerMatch = scopedHtml.match(/<variant-picker[^>]*>[\s\S]*?<\/variant-picker>/i);
   const colorPickerHtml = variantPickerMatch ? variantPickerMatch[0] : scopedHtml;
   
-  // Extract sr-only spans only from the scoped color picker HTML
-  const srOnlyColorMatches = colorPickerHtml.matchAll(/<label[^>]*(?:swatch|thumbnail-swatch)[^>]*>[\s\S]*?<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi);
-  for (const match of srOnlyColorMatches) {
-    addColorSwatch(match[1]);
-  }
-
-  // Also extract from variant-picker fieldsets with "Color:" legend (scoped)
+  // STRICT: Only extract colors from fieldsets with "Color:" legend
+  // This prevents extracting "black" or other colors from Delivery Option fieldsets, image galleries, etc.
   const colorFieldsetMatch = colorPickerHtml.match(/<fieldset[^>]*>[\s\S]*?<legend[^>]*>\s*Color:?\s*<\/legend>[\s\S]*?<\/fieldset>/gi);
+  
   if (colorFieldsetMatch) {
     for (const fieldset of colorFieldsetMatch) {
-      const srOnlyInFieldset = fieldset.matchAll(/<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi);
+      // Extract sr-only spans from labels within this Color fieldset ONLY
+      const srOnlyInFieldset = fieldset.matchAll(/<label[^>]*>[\s\S]*?<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi);
       for (const match of srOnlyInFieldset) {
         addColorSwatch(match[1]);
       }
+    }
+  } else {
+    // Fallback: If no Color fieldset found, try swatch labels but be more careful
+    // Only extract from explicit swatch labels (not generic spans)
+    const srOnlyColorMatches = colorPickerHtml.matchAll(/<label[^>]*(?:swatch|thumbnail-swatch|color-swatch)[^>]*>[\s\S]*?<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi);
+    for (const match of srOnlyColorMatches) {
+      addColorSwatch(match[1]);
     }
   }
   
