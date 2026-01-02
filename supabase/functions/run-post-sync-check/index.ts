@@ -629,6 +629,16 @@ function isValidColorName(name: string): boolean {
     'go to item', 'learn more', 'view details', 'more options',
     'payment options', 'delivery option', 'china to', 'u.s. to',
     'sold out', 'out of stock', 'coming soon', 'pre order',
+    // Pricing and cart elements
+    'sale price', 'regular price', 'compare at price', 'total price',
+    'add selected', 'this item', 'order within',
+    // Navigation elements
+    'skip to content', 'skip to main', 'skip to product',
+    // Related products sections (NestScale, Frequently Bought Together)
+    'frequently bought', 'bought together', 'related products',
+    'you may also', 'customers also', 'recommended for',
+    // Product features mistaken for colors
+    'estimated delivery', 'ships from', 'days to ship',
   ];
   if (nonColorPhrases.some(phrase => lower.includes(phrase))) return false;
   
@@ -811,14 +821,28 @@ function extractProductInfoFromHtml(html: string, markdown: string, currentProdu
   
   // ========== PATTERN 7: Shopify sr-only spans in swatch labels ==========
   // Common in modern Shopify themes like Amolen
-  // Pattern: <span class="sr-only">Color Name</span> inside variant picker labels
-  const srOnlyColorMatches = html.matchAll(/<label[^>]*(?:swatch|thumbnail-swatch)[^>]*>[\s\S]*?<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi);
+  // SCOPED: Only extract from the main variant-picker, NOT from NestScale or "Frequently Bought Together"
+  
+  // First, try to isolate the main product's variant picker (exclude third-party apps)
+  // Remove NestScale product variant sections and "Frequently Bought Together" before extraction
+  let scopedHtml = html
+    .replace(/<div[^>]*id="[^"]*nestscale[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
+    .replace(/<div[^>]*class="[^"]*nestscale[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '')
+    .replace(/<section[^>]*class="[^"]*frequently-bought[^"]*"[^>]*>[\s\S]*?<\/section>/gi, '')
+    .replace(/<div[^>]*class="[^"]*frequently-bought[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+  
+  // Try to find the main variant-picker element
+  const variantPickerMatch = scopedHtml.match(/<variant-picker[^>]*>[\s\S]*?<\/variant-picker>/i);
+  const colorPickerHtml = variantPickerMatch ? variantPickerMatch[0] : scopedHtml;
+  
+  // Extract sr-only spans only from the scoped color picker HTML
+  const srOnlyColorMatches = colorPickerHtml.matchAll(/<label[^>]*(?:swatch|thumbnail-swatch)[^>]*>[\s\S]*?<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi);
   for (const match of srOnlyColorMatches) {
     addColorSwatch(match[1]);
   }
 
-  // Also extract from variant-picker fieldsets with "Color:" legend
-  const colorFieldsetMatch = html.match(/<legend[^>]*>\s*Color:?\s*<\/legend>[\s\S]*?<\/fieldset>/gi);
+  // Also extract from variant-picker fieldsets with "Color:" legend (scoped)
+  const colorFieldsetMatch = colorPickerHtml.match(/<fieldset[^>]*>[\s\S]*?<legend[^>]*>\s*Color:?\s*<\/legend>[\s\S]*?<\/fieldset>/gi);
   if (colorFieldsetMatch) {
     for (const fieldset of colorFieldsetMatch) {
       const srOnlyInFieldset = fieldset.matchAll(/<span[^>]*class="[^"]*sr-only[^"]*"[^>]*>([^<]+)<\/span>/gi);
