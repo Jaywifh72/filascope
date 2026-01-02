@@ -1309,20 +1309,30 @@ Deno.serve(async (req) => {
       
       if (isCrossProductSwatchBrand) {
         // For cross-product brands: Check if URLs belong to same product LINE (pattern-based)
-        // Extract handle patterns: "standard-pla-*", "tough-pro-pla-*", etc.
+        // Use known product line prefixes to avoid false positives from color names in URLs
+        const knownPatterns = [
+          'tough-pro-pla', 'standard-pla', 'pro-pctg', 'pro-petg',
+          'pro-pla', 'pro-abs', 'pro-asa', 'workday-petg', 'workday-abs',
+          'workday-pla', 'silk-pla', 'dual-color-silk', 'biome3d', 'buzzed',
+          'entwined', 'wound-up', 'landfillament', 'c2renew', 'refuel',
+          'pet-cf', 'pla-cf', 'pro-ht-pla', 'htpla'
+        ];
+        
         const handlePatterns = urls.map(url => {
           try {
             const parsed = new URL(url!);
             const handle = parsed.pathname.split('/products/')[1] || '';
-            // Extract pattern: remove color suffix, keep product line prefix
-            // e.g., "standard-pla-desert-tan-1-75mm" -> "standard-pla"
-            const parts = handle.split('-');
-            // Find where diameter starts (1-75mm or similar)
-            const diamIdx = parts.findIndex(p => /^\d/.test(p));
-            if (diamIdx > 2) {
-              return parts.slice(0, Math.min(diamIdx - 1, 3)).join('-');
+            
+            // Match against known product line prefixes first
+            for (const pattern of knownPatterns) {
+              if (handle.startsWith(pattern)) {
+                return pattern;
+              }
             }
-            return parts.slice(0, 3).join('-');
+            
+            // Fallback: take first 2 segments only (more conservative)
+            const parts = handle.split('-');
+            return parts.slice(0, 2).join('-');
           } catch {
             return '';
           }
