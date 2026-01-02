@@ -341,12 +341,14 @@ export function get3DHOJORColorHex(colorName: string): string | null {
   
   // Strip common material prefixes that appear in color names
   // e.g., "PLA Very Peri" → "very peri", "PLA Lite Black" → "black"
+  // Also strip "basic" prefix: "basic cold white" → "cold white"
   normalized = normalized
     .replace(/^pla\s*(lite|pro|\+)?\s*/i, '')
     .replace(/^petg\s*/i, '')
     .replace(/^tpu\s*(95a?)?\s*/i, '')
     .replace(/^silk\s*/i, '')
     .replace(/^matte\s*/i, '')
+    .replace(/^basic\s*/i, '')  // Strip "basic" prefix to fix "basic cold white" → "cold white"
     .trim();
   
   // Direct match first (most reliable)
@@ -362,8 +364,12 @@ export function get3DHOJORColorHex(colorName: string): string | null {
     return HOJOR_COLOR_MAPPING[`matte ${normalized}`];
   }
   
-  // Partial match fallback
-  for (const [key, hex] of Object.entries(HOJOR_COLOR_MAPPING)) {
+  // Partial match fallback - sort by key length (descending) to prioritize longer matches
+  // This ensures "cold white" is matched before "white"
+  const sortedEntries = Object.entries(HOJOR_COLOR_MAPPING)
+    .sort((a, b) => b[0].length - a[0].length);
+  
+  for (const [key, hex] of sortedEntries) {
     if (normalized.includes(key) || key.includes(normalized)) {
       return hex;
     }
