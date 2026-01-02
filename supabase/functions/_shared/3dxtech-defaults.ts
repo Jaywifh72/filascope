@@ -15,7 +15,25 @@ interface MaterialPattern {
 }
 
 // Material patterns ordered by specificity (most specific first)
+// CRITICAL: ESD Materials MUST be checked FIRST to prevent base material patterns from matching
 export const DXTECH_MATERIAL_PATTERNS: MaterialPattern[] = [
+  // ESD Materials (3DXSTAT line) - Static Dissipative - MUST BE FIRST
+  // These patterns must come before their base material equivalents (e.g., ESD-PEI before PEI)
+  { pattern: /esd[- ]?pekk/i, material: 'ESD-PEKK', isAbrasive: true, enclosureRequired: true, isConductive: true },
+  // ESD-PEI-1010: Match "ESD-PEI 1010", "ESD-PEI Ultem 1010", "Triton ESD-PEI Ultem 1010"
+  { pattern: /esd[- ]?pei[- ]?1010|esd[- ]?pei[- ]?ultem[- ]?1010|esd[- ]?ultem[- ]?1010|triton[- ]?esd[- ]?1010/i, material: 'ESD-PEI-1010', isAbrasive: true, enclosureRequired: true, isConductive: true },
+  { pattern: /esd[- ]?pei[- ]?9085|esd[- ]?ultem[- ]?9085/i, material: 'ESD-PEI-9085', isAbrasive: true, enclosureRequired: true, isConductive: true },
+  { pattern: /esd[- ]?pei|esd[- ]?ultem/i, material: 'ESD-PEI', isAbrasive: true, enclosureRequired: true, isConductive: true },
+  { pattern: /esd[- ]?pps/i, material: 'ESD-PPS', isAbrasive: true, enclosureRequired: true, isConductive: true },
+  { pattern: /esd[- ]?pvdf/i, material: 'ESD-PVDF', isAbrasive: true, enclosureRequired: true, isConductive: true },
+  { pattern: /esd[- ]?pc[- ]?abs/i, material: 'ESD-PC-ABS', isAbrasive: true, enclosureRequired: true, isConductive: true },
+  { pattern: /esd[- ]?pc/i, material: 'ESD-PC', isAbrasive: true, enclosureRequired: true, isConductive: true },
+  { pattern: /esd[- ]?petg/i, material: 'ESD-PETG', isAbrasive: true, enclosureRequired: false, isConductive: true },
+  { pattern: /esd[- ]?abs/i, material: 'ESD-ABS', isAbrasive: true, enclosureRequired: true, isConductive: true },
+  { pattern: /esd[- ]?pla/i, material: 'ESD-PLA', isAbrasive: true, enclosureRequired: false, isConductive: true },
+  { pattern: /esd[- ]?tpu/i, material: 'ESD-TPU', isAbrasive: true, enclosureRequired: false, isConductive: true, hardness: '90A' },
+  { pattern: /esd[- ]?pa[- ]?12|esd[- ]?nylon[- ]?12/i, material: 'ESD-PA12', isAbrasive: true, enclosureRequired: false, isConductive: true },
+
   // High-Performance Polymers (THERMAX line)
   { pattern: /pekk[- ]?[ac]?[- ]?cf/i, material: 'PEKK-CF', isAbrasive: true, enclosureRequired: true, isConductive: false },
   { pattern: /peek[- ]?cf/i, material: 'PEEK-CF', isAbrasive: true, enclosureRequired: true, isConductive: false },
@@ -37,21 +55,6 @@ export const DXTECH_MATERIAL_PATTERNS: MaterialPattern[] = [
   { pattern: /pps/i, material: 'PPS', isAbrasive: false, enclosureRequired: true, isConductive: false },
   { pattern: /ppe[- ]?ps/i, material: 'PPE-PS', isAbrasive: false, enclosureRequired: true, isConductive: false },
   { pattern: /pvdf/i, material: 'PVDF', isAbrasive: false, enclosureRequired: true, isConductive: false },
-
-  // ESD Materials (3DXSTAT line) - Static Dissipative
-  { pattern: /esd[- ]?pekk/i, material: 'ESD-PEKK', isAbrasive: true, enclosureRequired: true, isConductive: true },
-  { pattern: /esd[- ]?pei[- ]?1010/i, material: 'ESD-PEI-1010', isAbrasive: true, enclosureRequired: true, isConductive: true },
-  { pattern: /esd[- ]?pei[- ]?9085/i, material: 'ESD-PEI-9085', isAbrasive: true, enclosureRequired: true, isConductive: true },
-  { pattern: /esd[- ]?pei/i, material: 'ESD-PEI', isAbrasive: true, enclosureRequired: true, isConductive: true },
-  { pattern: /esd[- ]?pps/i, material: 'ESD-PPS', isAbrasive: true, enclosureRequired: true, isConductive: true },
-  { pattern: /esd[- ]?pvdf/i, material: 'ESD-PVDF', isAbrasive: true, enclosureRequired: true, isConductive: true },
-  { pattern: /esd[- ]?pc[- ]?abs/i, material: 'ESD-PC-ABS', isAbrasive: true, enclosureRequired: true, isConductive: true },
-  { pattern: /esd[- ]?pc/i, material: 'ESD-PC', isAbrasive: true, enclosureRequired: true, isConductive: true },
-  { pattern: /esd[- ]?petg/i, material: 'ESD-PETG', isAbrasive: true, enclosureRequired: false, isConductive: true },
-  { pattern: /esd[- ]?abs/i, material: 'ESD-ABS', isAbrasive: true, enclosureRequired: true, isConductive: true },
-  { pattern: /esd[- ]?pla/i, material: 'ESD-PLA', isAbrasive: true, enclosureRequired: false, isConductive: true },
-  { pattern: /esd[- ]?tpu/i, material: 'ESD-TPU', isAbrasive: true, enclosureRequired: false, isConductive: true, hardness: '90A' },
-  { pattern: /esd[- ]?pa[- ]?12|esd[- ]?nylon[- ]?12/i, material: 'ESD-PA12', isAbrasive: true, enclosureRequired: false, isConductive: true },
 
   // Carbon Fiber Reinforced (CarbonX line)
   { pattern: /pc[- ]?abs[- ]?cf|carbonx.*pc[- ]?abs/i, material: 'PC-ABS-CF', isAbrasive: true, enclosureRequired: true, isConductive: false },
@@ -102,10 +105,11 @@ export const DXTECH_MATERIAL_PATTERNS: MaterialPattern[] = [
   { pattern: /simubone/i, material: 'SimuBone', isAbrasive: false, enclosureRequired: false, isConductive: false },
   { pattern: /obc|evolv3d/i, material: 'OBC', isAbrasive: false, enclosureRequired: false, isConductive: false },
 
-  // Support Materials
+  // Support Materials - HTS1/MTS1 patterns (with optional trailing number)
   { pattern: /usm|aquatek/i, material: 'USM', isAbrasive: false, enclosureRequired: false, isConductive: false },
-  { pattern: /\bhts\b|high[- ]?temp[- ]?support/i, material: 'HTS', isAbrasive: false, enclosureRequired: true, isConductive: false },
-  { pattern: /\bmts\b|mid[- ]?temp[- ]?support/i, material: 'MTS', isAbrasive: false, enclosureRequired: false, isConductive: false },
+  { pattern: /\bhts1?\b|high[- ]?temp[- ]?support/i, material: 'HTS', isAbrasive: false, enclosureRequired: true, isConductive: false },
+  { pattern: /\bmts1?\b|mid[- ]?temp[- ]?support/i, material: 'MTS', isAbrasive: false, enclosureRequired: false, isConductive: false },
+  { pattern: /\bpes\b|polyethersulfone/i, material: 'PES', isAbrasive: false, enclosureRequired: true, isConductive: false },
   { pattern: /\bpva\b/i, material: 'PVA', isAbrasive: false, enclosureRequired: false, isConductive: false },
 
   // Standard Materials - PCTG must come BEFORE PETG to prevent false matches
@@ -237,11 +241,12 @@ export const DXTECH_PRINT_SETTINGS: Record<string, PrintSettings> = {
   'PLA-Tough': { nozzleTempMin: 200, nozzleTempMax: 230, bedTempMin: 50, bedTempMax: 65 },
   'TPU': { nozzleTempMin: 220, nozzleTempMax: 250, bedTempMin: 40, bedTempMax: 60 },
 
-  // Support
+  // Support Materials
   'USM': { nozzleTempMin: 190, nozzleTempMax: 220, bedTempMin: 45, bedTempMax: 60 },
   'PVA': { nozzleTempMin: 180, nozzleTempMax: 210, bedTempMin: 45, bedTempMax: 60 },
   'HTS': { nozzleTempMin: 280, nozzleTempMax: 320, bedTempMin: 100, bedTempMax: 130 },
   'MTS': { nozzleTempMin: 240, nozzleTempMax: 270, bedTempMin: 80, bedTempMax: 100 },
+  'PES': { nozzleTempMin: 340, nozzleTempMax: 380, bedTempMin: 120, bedTempMax: 150 },
 };
 
 export function get3DXTechPrintSettings(material: string): PrintSettings | null {
