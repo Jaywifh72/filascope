@@ -251,9 +251,14 @@ async function upsertVariants(
         }
       }
       
+      // Build product_title with color appended for proper swatch display
+      const displayTitle = variant.color 
+        ? `${variant.productTitle} - ${variant.color}`
+        : variant.productTitle;
+      
       const filamentData = {
         product_id: variant.productId,
-        product_title: variant.productTitle,
+        product_title: displayTitle,
         product_handle: variant.handle,
         vendor: HOJOR_STORE_INFO.vendor,
         brand_id: brandId,
