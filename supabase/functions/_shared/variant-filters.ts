@@ -5,6 +5,7 @@
  * - Exclude samples: weight < 300g
  * - Exclude bulk spools: weight > 1400g
  * - Exclude non-standard diameters: 2.85mm / 3.0mm (focus on 1.75mm consumer market)
+ * - Exclude products with "Sample" or "Pack" in title
  * 
  * Usage:
  * import { shouldIncludeVariant, extractWeightFromText, extractDiameterFromText } from '../_shared/variant-filters.ts';
@@ -26,6 +27,40 @@ export const STANDARD_DIAMETER_MM = 1.75;
 /** Non-standard diameters to exclude */
 export const EXCLUDED_DIAMETERS_MM = [2.85, 3.0];
 
+/** Keywords that indicate sample/variety products to exclude */
+export const EXCLUDED_TITLE_KEYWORDS = [
+  'sample',
+  'pack',
+  'variety',
+  'bundle',
+  'combo',
+  'starter kit',
+  'trial'
+];
+
+// ============================================================================
+// KEYWORD FILTER FUNCTION
+// ============================================================================
+
+/**
+ * Checks if a product title contains excluded keywords (samples, packs, etc.)
+ * @param title - Product title to check
+ * @returns Object with exclude boolean and matched keyword
+ */
+export function hasExcludedKeyword(title: string): { exclude: boolean; keyword?: string } {
+  if (!title) return { exclude: false };
+  
+  const lowerTitle = title.toLowerCase();
+  
+  for (const keyword of EXCLUDED_TITLE_KEYWORDS) {
+    if (lowerTitle.includes(keyword)) {
+      return { exclude: true, keyword };
+    }
+  }
+  
+  return { exclude: false };
+}
+
 // ============================================================================
 // MAIN FILTER FUNCTION
 // ============================================================================
@@ -36,16 +71,29 @@ export interface FilterResult {
 }
 
 /**
- * Determines whether a variant should be included in sync based on weight and diameter.
+ * Determines whether a variant should be included in sync based on weight, diameter, and title.
  * 
  * @param weightGrams - Net weight in grams (null if unknown)
  * @param diameterMm - Filament diameter in mm (null if unknown)
+ * @param title - Optional product/variant title to check for excluded keywords
  * @returns FilterResult with include boolean and optional reason for exclusion
  */
 export function shouldIncludeVariant(
   weightGrams: number | null | undefined,
-  diameterMm: number | null | undefined
+  diameterMm: number | null | undefined,
+  title?: string
 ): FilterResult {
+  // Check for excluded keywords first (sample, pack, variety, etc.)
+  if (title) {
+    const keywordCheck = hasExcludedKeyword(title);
+    if (keywordCheck.exclude) {
+      return {
+        include: false,
+        reason: `Excluded keyword: "${keywordCheck.keyword}" in title`
+      };
+    }
+  }
+
   // Check minimum weight (exclude samples)
   if (weightGrams !== null && weightGrams !== undefined && weightGrams > 0 && weightGrams < MIN_WEIGHT_GRAMS) {
     return { 
@@ -218,6 +266,7 @@ export interface FilterStats {
   excludedLowWeight: number;
   excludedBulk: number;
   excludedDiameter: number;
+  excludedKeyword: number;
 }
 
 /**
@@ -229,6 +278,7 @@ export function createFilterStats(): FilterStats {
     excludedLowWeight: 0,
     excludedBulk: 0,
     excludedDiameter: 0,
+    excludedKeyword: 0,
   };
 }
 
@@ -238,6 +288,8 @@ export function createFilterStats(): FilterStats {
 export function updateFilterStats(stats: FilterStats, result: FilterResult): void {
   if (result.include) {
     stats.included++;
+  } else if (result.reason?.includes('keyword')) {
+    stats.excludedKeyword++;
   } else if (result.reason?.includes('Sample') || result.reason?.includes('minimum')) {
     stats.excludedLowWeight++;
   } else if (result.reason?.includes('Bulk') || result.reason?.includes('maximum')) {
@@ -251,8 +303,11 @@ export function updateFilterStats(stats: FilterStats, result: FilterResult): voi
  * Logs filter stats summary.
  */
 export function logFilterStats(brandName: string, stats: FilterStats): void {
-  const total = stats.included + stats.excludedLowWeight + stats.excludedBulk + stats.excludedDiameter;
+  const total = stats.included + stats.excludedLowWeight + stats.excludedBulk + stats.excludedDiameter + stats.excludedKeyword;
   console.log(`[${brandName}] Filtering: ${stats.included}/${total} included`);
+  if (stats.excludedKeyword > 0) {
+    console.log(`[${brandName}]   - ${stats.excludedKeyword} excluded (sample/pack keywords)`);
+  }
   if (stats.excludedLowWeight > 0) {
     console.log(`[${brandName}]   - ${stats.excludedLowWeight} excluded (samples <${MIN_WEIGHT_GRAMS}g)`);
   }

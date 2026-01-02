@@ -996,8 +996,8 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
           // Extract diameter from title/variant for filtering
           const diameterMm = extractDiameterFromText(variantTitle) || extractDiameterFromText(variant.option1 || '') || 1.75;
           
-          // Apply standard variant filtering (exclude bulk >5.5kg, samples <300g, 2.85mm)
-          const filterResult = shouldIncludeVariant(netWeightG, diameterMm);
+          // Apply standard variant filtering (exclude bulk >5.5kg, samples <300g, 2.85mm, excluded keywords)
+          const filterResult = shouldIncludeVariant(netWeightG, diameterMm, variantTitle);
           updateFilterStats(filterStats, filterResult);
           if (!filterResult.include) {
             console.log(`[shopify] Skipping variant: ${filterResult.reason} - ${variantTitle}`);
@@ -1035,8 +1035,8 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
         // Extract diameter from title for filtering
         const diameterMm = extractDiameterFromText(baseTitle) || extractDiameterFromText(variant.option1 || '') || 1.75;
         
-        // Apply standard variant filtering (exclude bulk >5.5kg, samples <300g, 2.85mm)
-        const filterResult = shouldIncludeVariant(netWeightG, diameterMm);
+        // Apply standard variant filtering (exclude bulk >5.5kg, samples <300g, 2.85mm, excluded keywords)
+        const filterResult = shouldIncludeVariant(netWeightG, diameterMm, baseTitle);
         updateFilterStats(filterStats, filterResult);
         if (!filterResult.include) {
           console.log(`[shopify] Skipping product: ${filterResult.reason} - ${baseTitle}`);

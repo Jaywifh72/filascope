@@ -148,8 +148,8 @@ Deno.serve(async (req) => {
             // Check for 2.85mm diameter
             const is285 = fullTitle.includes('2.85') || fullTitle.includes('3mm');
             
-            // Apply standard filtering (samples, bulk, 2.85mm)
-            const filterResult = shouldIncludeVariant(weight, is285 ? 2.85 : 1.75);
+            // Apply standard filtering (samples, bulk, 2.85mm, excluded keywords)
+            const filterResult = shouldIncludeVariant(weight, is285 ? 2.85 : 1.75, fullTitle);
             updateFilterStats(filterStats, filterResult);
             if (!filterResult.include) {
               console.log(`[Eryone] Skipping: ${fullTitle} (${filterResult.reason})`);

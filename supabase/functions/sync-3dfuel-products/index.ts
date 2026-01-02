@@ -276,8 +276,8 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
       // Debug logging for color extraction issues
       console.log(`[Color] Product: "${product.title}" Handle: "${product.handle}" Variant: "${variant.title}" -> Material: "${material}" Color: "${colorName}" -> ProductLine: "${productLineId}"`);
       
-      // Apply standard filtering (samples, bulk, 2.85mm)
-      const filterResult = shouldIncludeVariant(weight, diameter);
+      // Apply standard filtering (samples, bulk, 2.85mm, excluded keywords)
+      const filterResult = shouldIncludeVariant(weight, diameter, product.title);
       updateFilterStats(filterStats, filterResult);
       
       // Log filter decision

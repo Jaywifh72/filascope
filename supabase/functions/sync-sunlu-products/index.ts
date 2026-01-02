@@ -168,8 +168,8 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
       const color = parsed.color || variant.option1 || null;
       const weight = parsed.weight || extractWeightFromTitle(product.title, variant.title);
       
-      // Apply standard filtering (samples, bulk, 2.85mm)
-      const filterResult = shouldIncludeVariant(weight || 1000, is285 ? 2.85 : 1.75);
+      // Apply standard filtering (samples, bulk, 2.85mm, excluded keywords)
+      const filterResult = shouldIncludeVariant(weight || 1000, is285 ? 2.85 : 1.75, product.title);
       updateFilterStats(filterStats, filterResult);
       if (!filterResult.include) {
         console.log(`[Sunlu] Skipping: ${product.title} - ${color} (${filterResult.reason})`);

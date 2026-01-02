@@ -198,8 +198,8 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
                        extractPushPlasticDiameter(variant.title) || 
                        1.75;
       
-      // Apply standard filters (exclude bulk >1.4kg, samples <300g, 2.85mm)
-      const filterResult = shouldIncludeVariant(weight, diameter);
+      // Apply standard filters (exclude bulk >1.4kg, samples <300g, 2.85mm, excluded keywords)
+      const filterResult = shouldIncludeVariant(weight, diameter, product.title);
       if (!filterResult.include) {
         updateFilterStats(filterStats, filterResult);
         console.log(`[Push Plastic] Skipping: ${product.title} - ${color} - ${filterResult.reason}`);

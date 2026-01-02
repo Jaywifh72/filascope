@@ -183,8 +183,8 @@ function processVariants(products: ShopifyProduct[]): ProductVariant[] {
         diameter = 2.85;
       }
       
-      // Apply standard filtering (samples, bulk, 2.85mm)
-      const filterResult = shouldIncludeVariant(weight, diameter);
+      // Apply standard filtering (samples, bulk, 2.85mm, excluded keywords)
+      const filterResult = shouldIncludeVariant(weight, diameter, product.title);
       updateFilterStats(filterStats, filterResult);
       if (!filterResult.include) {
         console.log(`[Hatchbox] Skipping: ${product.title} - ${colorName} (${filterResult.reason})`);

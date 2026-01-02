@@ -541,7 +541,7 @@ Use the shared \`variant-filters.ts\` utility:
 \`\`\`typescript
 import { shouldIncludeVariant } from '../_shared/variant-filters.ts';
 
-const filterResult = shouldIncludeVariant(weightGrams, diameterMm);
+const filterResult = shouldIncludeVariant(weightGrams, diameterMm, productTitle);
 if (!filterResult.include) {
   console.log(\`Skipping variant: \${filterResult.reason}\`);
   continue;
@@ -550,8 +550,9 @@ if (!filterResult.include) {
 
 **Filter Constants**:
 - MIN_WEIGHT_GRAMS = 300 (excludes samples)
-- MAX_WEIGHT_GRAMS = 1400 (excludes bulk)
+- MAX_WEIGHT_GRAMS = 5500 (excludes bulk)
 - STANDARD_DIAMETER_MM = 1.75 (excludes 2.85mm/3.0mm)
+- EXCLUDED_TITLE_KEYWORDS = ['sample', 'pack', 'variety', 'bundle', 'combo', 'starter kit', 'trial']
 
 ---
 
