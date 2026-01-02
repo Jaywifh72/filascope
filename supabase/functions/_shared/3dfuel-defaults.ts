@@ -42,6 +42,7 @@ export const PRODUCT_LINE_PATTERNS: Array<{ pattern: RegExp; line: string; handl
   { pattern: /\b3D\s*Clean\b/i, line: '3D Clean', handlePattern: /3d-clean/i },
   
   // Specialty/Composite lines (must match before generic materials)
+  { pattern: /\bProtosthetics?\s*PETG\b/i, line: 'Protosthetics PETG', handlePattern: /protosthetics?-petg/i },
   { pattern: /\bPET-CF\b|\bPET CF\b/i, line: 'PET-CF', handlePattern: /pet-cf/i },
   { pattern: /\bPLA-CF\b|\bPLA CF\b/i, line: 'PLA-CF', handlePattern: /pla-cf/i },
   // Dual Color Silk MUST match before regular Silk PLA - include silk-pla-silky handles

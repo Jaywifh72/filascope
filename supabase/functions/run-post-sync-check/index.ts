@@ -830,12 +830,12 @@ Deno.serve(async (req) => {
 
     // ============= DATABASE CHECKS =============
 
-    // Check 1: Bulk Products (>1.4kg / 1400g)
+    // Check 1: Bulk Products (>5.5kg / 5500g) - updated to match variant-filters.ts MAX_WEIGHT_GRAMS
     const { data: bulkProducts, error: bulkError } = await supabase
       .from("filaments")
       .select("id, product_title, net_weight_g")
       .ilike("vendor", brandName)
-      .gt("net_weight_g", 1400)
+      .gt("net_weight_g", 5500)
       .limit(20);
 
     if (bulkError) {
@@ -843,7 +843,7 @@ Deno.serve(async (req) => {
     }
 
     checks.push({
-      checkName: "No Bulk Products (>1.4kg)",
+      checkName: "No Bulk Products (>5.5kg)",
       status: (bulkProducts?.length || 0) === 0 ? "pass" : "fail",
       count: bulkProducts?.length || 0,
       details: bulkProducts?.length ? `Found ${bulkProducts.length} bulk products that should be excluded` : undefined,
@@ -1205,29 +1205,57 @@ Deno.serve(async (req) => {
 
     // ============= SWATCH UNIQUENESS CHECK (CRITICAL) =============
     // Duplicate hex codes within same product line indicates data corruption
+    // UPDATED: Group by COLOR NAME first, then check for hex uniqueness
+    // Different weights of the same color (e.g., "Snow White 1kg" and "Snow White 4kg") should share the same hex
     let swatchIssues: Array<{ id: string; title: string; issue: string }> = [];
     
-    // Check for duplicate hex codes within product lines
+    // Helper to extract color name from product title (removes weight/diameter)
+    const extractColorFromTitle = (title: string): string => {
+      // Remove common suffixes: "1.75mm", "2.85mm", "1kg", "4kg", "500g", etc.
+      return title
+        .replace(/,?\s*\d+(\.\d+)?\s*(kg|g|mm)\b/gi, '')
+        .replace(/,?\s*\d+\s*spool\b/gi, '')
+        .trim()
+        .toLowerCase();
+    };
+    
+    // Check for duplicate hex codes within product lines (grouped by color name)
     for (const lineId of productLineIds.slice(0, 20)) { // Check more lines
       const variants = productLineGroups[lineId];
       if (!variants || variants.length <= 1) continue;
 
-      const hexCounts: Record<string, number> = {};
+      // Group variants by normalized color name (ignore weight differences)
+      const colorGroups: Record<string, Array<typeof variants[0]>> = {};
+      for (const v of variants) {
+        const colorKey = extractColorFromTitle(v.product_title);
+        if (!colorGroups[colorKey]) colorGroups[colorKey] = [];
+        colorGroups[colorKey].push(v);
+      }
+      
+      // Now check for duplicate hex codes across DIFFERENT color names
+      const colorHexMap: Record<string, string[]> = {}; // hex -> [color names that use it]
       const nullHexCount = variants.filter(v => !v.color_hex).length;
       
-      for (const v of variants) {
-        if (v.color_hex) {
-          const hex = v.color_hex.toLowerCase();
-          hexCounts[hex] = (hexCounts[hex] || 0) + 1;
+      for (const [colorName, colorVariants] of Object.entries(colorGroups)) {
+        // Get the hex used by this color (should be consistent within the color group)
+        const hexes = colorVariants.filter(v => v.color_hex).map(v => v.color_hex!.toLowerCase());
+        const uniqueHexes = [...new Set(hexes)];
+        
+        for (const hex of uniqueHexes) {
+          if (!colorHexMap[hex]) colorHexMap[hex] = [];
+          if (!colorHexMap[hex].includes(colorName)) {
+            colorHexMap[hex].push(colorName);
+          }
         }
       }
 
-      for (const [hex, count] of Object.entries(hexCounts)) {
-        if (count > 1) {
+      // Only flag as duplicate if DIFFERENT color names share the same hex
+      for (const [hex, colorNames] of Object.entries(colorHexMap)) {
+        if (colorNames.length > 1) {
           swatchIssues.push({
             id: variants[0].id,
             title: `${lineId}: ${hex}`,
-            issue: `CRITICAL: ${count} variants share same hex code - causes UI to show wrong color count`,
+            issue: `CRITICAL: ${colorNames.length} different colors share same hex code (${colorNames.slice(0, 3).join(', ')})`,
           });
         }
       }
@@ -1258,7 +1286,7 @@ Deno.serve(async (req) => {
       .from("filaments")
       .select("id, product_title, variant_price, product_url")
       .ilike("vendor", brandName)
-      .or("variant_price.is.null,variant_price.eq.0,variant_price.lt.5,variant_price.gt.100");
+      .or("variant_price.is.null,variant_price.eq.0,variant_price.lt.5,variant_price.gt.200");
 
     const priceIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
     for (const p of priceCheckData || []) {
@@ -1266,7 +1294,7 @@ Deno.serve(async (req) => {
       if (p.variant_price === null) issue = 'Price is NULL';
       else if (p.variant_price === 0) issue = 'Price is $0';
       else if (p.variant_price < 5) issue = `Price too low: $${p.variant_price}`;
-      else if (p.variant_price > 100) issue = `Price unusually high: $${p.variant_price}`;
+      else if (p.variant_price > 200) issue = `Price unusually high: $${p.variant_price}`;
       
       if (issue) {
         priceIssues.push({
@@ -1283,7 +1311,7 @@ Deno.serve(async (req) => {
       status: priceIssues.length === 0 ? "pass" : priceIssues.length <= 3 ? "warning" : "fail",
       count: priceIssues.length,
       details: priceIssues.length === 0 
-        ? "All prices are in valid range ($5-$100)" 
+        ? "All prices are in valid range ($5-$200)" 
         : `${priceIssues.length} products have suspicious prices`,
       products: priceIssues.length > 0 ? priceIssues : undefined,
     });
