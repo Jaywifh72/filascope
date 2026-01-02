@@ -170,6 +170,27 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
       'No TDS documents available',
     ],
   },
+  
+  '3dxtech': {
+    exclusions: [
+      { name: 'Nozzles & Accessories', reason: 'Non-filament products' },
+      { name: 'Pellets (25kg)', reason: 'Industrial pellet feedstock' },
+      { name: '2.85mm Diameter Variants', reason: 'Non-standard diameter (1.75mm only)' },
+      { name: '10kg Bulk Spools', reason: 'Exceeds consumer spool limit (>5.5kg)' },
+    ],
+    specialBehaviors: [
+      { name: 'Premium Material Small Spools', description: 'PEEK/PEKK/PEI/CeramiX 250g spools bypass sample filter due to high material cost ($200-$525).' },
+      { name: 'TRITON Series Separation', description: 'Stratasys-compatible TRITON products grouped separately from standard materials.' },
+      { name: 'Industrial Pricing Valid', description: 'High prices are normal for premium polymers (PEEK, PEKK, PEI, ESD materials).' },
+      { name: 'ESD Material Detection', description: '3DXSTAT line flagged as static-dissipative with is_conductive property.' },
+      { name: 'Composite Material Flags', description: 'CarbonX (CF) and FibreX (GF) flagged as is_nozzle_abrasive.' },
+    ],
+    notes: [
+      'Premium industrial manufacturer - aerospace/electronics focus',
+      '40+ material types including high-performance polymers',
+      'US-based manufacturing with extensive TDS library',
+    ],
+  },
 };
 
 // Shared filter rules applied to ALL brands

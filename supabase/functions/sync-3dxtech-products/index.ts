@@ -4,11 +4,26 @@ import {
   enrich3DXTechProduct,
   DXTECH_STORE_INFO,
 } from "../_shared/3dxtech-defaults.ts";
+import {
+  shouldIncludeVariant,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from "../_shared/variant-filters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Premium materials sold in small spools (250g) due to high cost - bypass sample filter
+const PREMIUM_SMALL_SPOOL_MATERIALS = [
+  'PEEK', 'PEEK-CF', 'PEEK-GF', 
+  'PEKK', 'PEKK-CF',
+  'PEI', 'PEI-1010', 'PEI-9085', 'PEI-CF', 'PEI-1010-CF', 'PEI-9085-CF', 'PEI-GF',
+  'ESD-PEI', 'ESD-PEI-1010', 'ESD-PEI-9085', 'ESD-PEKK',
+  'CeramiX', 'TPI', 'PPS', 'PPS-CF', 'PPSU', 'PPSU-CF',
+];
 
 const SHOPIFY_BASE_URL = DXTECH_STORE_INFO.baseUrl;
 const VENDOR_NAME = DXTECH_STORE_INFO.vendorName;
@@ -160,10 +175,12 @@ async function fetchShopifyProducts(): Promise<{ products: ShopifyProduct[]; res
 // ============================================================================
 
 function explodeVariants(products: ShopifyProduct[]): { variants: ProductVariant[]; result: SyncResult } {
-  console.log('Step 2: Exploding variants...');
+  console.log('Step 2: Exploding variants with filtering...');
   
   const variants: ProductVariant[] = [];
   const seenColors = new Map<number, Set<string>>(); // Track colors per product
+  const filterStats = createFilterStats();
+  let skippedByFilter = 0;
 
   for (const product of products) {
     const productUrl = `${SHOPIFY_BASE_URL}/products/${product.handle}`;
@@ -191,6 +208,27 @@ function explodeVariants(products: ShopifyProduct[]): { variants: ProductVariant
       const gMatch = weightOption.match(/([\d.]+)\s*g(?!k)/i);
       if (kgMatch) weight = Math.round(parseFloat(kgMatch[1]) * 1000);
       else if (gMatch) weight = Math.round(parseFloat(gMatch[1]));
+      
+      // Get enrichment to check material for premium whitelist
+      const enrichment = enrich3DXTechProduct(product.title, null, color);
+      const isPremiumMaterial = PREMIUM_SMALL_SPOOL_MATERIALS.includes(enrichment.material);
+      
+      // Apply variant filtering - but allow premium materials in small spools
+      let filterResult = shouldIncludeVariant(weight, diameter);
+      
+      // Override sample exclusion for premium materials (they legitimately come in 250g)
+      if (!filterResult.include && filterResult.reason?.includes('Sample') && isPremiumMaterial) {
+        console.log(`  Allowing premium material small spool: ${product.title} (${enrichment.material}, ${weight}g)`);
+        filterResult = { include: true };
+      }
+      
+      updateFilterStats(filterStats, filterResult);
+      
+      if (!filterResult.include) {
+        console.log(`  Skipping: ${product.title} - ${filterResult.reason}`);
+        skippedByFilter++;
+        continue;
+      }
       
       // Get color-specific image
       let imageUrl: string | null = null;
@@ -230,7 +268,9 @@ function explodeVariants(products: ShopifyProduct[]): { variants: ProductVariant
     }
   }
 
-  console.log(`  Exploded to ${variants.length} variants`);
+  // Log filter stats
+  logFilterStats('3DXTech', filterStats);
+  console.log(`  Exploded to ${variants.length} variants (skipped ${skippedByFilter} by filter)`);
   
   return {
     variants,
@@ -238,7 +278,7 @@ function explodeVariants(products: ShopifyProduct[]): { variants: ProductVariant
       step: 'explode_variants',
       success: true,
       count: variants.length,
-      details: `Created ${variants.length} variant rows from ${products.length} products`
+      details: `Created ${variants.length} variant rows from ${products.length} products (skipped ${skippedByFilter} by filter)`
     }
   };
 }
@@ -267,10 +307,11 @@ async function upsertVariants(
       const colorHex = enrichment.colorHex || getColorHex(variant.color);
       const colorFamily = getColorFamily(variant.color);
       
-      // Build full title with color
-      const fullTitle = variant.color !== 'Default' && variant.color !== 'Natural' && !variant.title.includes(variant.color)
-        ? `${VENDOR_NAME} ${variant.title} - ${variant.color}`
-        : `${VENDOR_NAME} ${variant.title}`;
+      // Build full title with color - use Shopify title directly, only add color suffix if needed
+      const titleHasColor = variant.title.toLowerCase().includes(variant.color.toLowerCase());
+      const fullTitle = variant.color !== 'Default' && !titleHasColor
+        ? `${variant.title} - ${variant.color}`
+        : variant.title;
 
       // Check if exists
       const { data: existing } = await supabase
