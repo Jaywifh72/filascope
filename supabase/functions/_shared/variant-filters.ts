@@ -18,7 +18,7 @@
 export const MIN_WEIGHT_GRAMS = 300;
 
 /** Maximum weight in grams - exclude bulk spools (2.5kg, 5kg, 10kg, etc.) */
-export const MAX_WEIGHT_GRAMS = 1400;
+export const MAX_WEIGHT_GRAMS = 5500;  // Supports up to 5kg consumer spools (4kg at $91.60 is better value)
 
 /** Standard consumer filament diameter */
 export const STANDARD_DIAMETER_MM = 1.75;
