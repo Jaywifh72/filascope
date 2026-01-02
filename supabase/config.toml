@@ -422,3 +422,6 @@ verify_jwt = true
 
 [functions.analyze-brand-website]
 verify_jwt = true
+
+[functions.admin-create-user]
+verify_jwt = true
