@@ -118,11 +118,12 @@ async function fetchShopifyProducts(): Promise<{ products: ShopifyProduct[]; res
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    // Filter for filament products only (exclude nozzles, accessories, pellets)
+    // Filter for filament products only (exclude nozzles, accessories, pellets, legacy products)
     const filamentProducts = allProducts.filter(p => {
       const titleLower = p.title?.toLowerCase() || '';
       const typeLower = p.product_type?.toLowerCase() || '';
       const tagsStr = Array.isArray(p.tags) ? p.tags.join(' ').toLowerCase() : (p.tags || '').toLowerCase();
+      const handleLower = p.handle?.toLowerCase() || '';
       
       // Exclude non-filament products
       const isExcluded = 
@@ -135,6 +136,9 @@ async function fetchShopifyProducts(): Promise<{ products: ShopifyProduct[]; res
         typeLower.includes('nozzle') ||
         typeLower.includes('accessory');
       
+      // Exclude legacy Obsidian V1 product (replaced by V2)
+      const isLegacyObsidian = handleLower === 'obsidian-pa6-cf-1';
+      
       // Include if it's a filament/reel
       const isFilament = 
         typeLower.includes('reel') || 
@@ -142,7 +146,7 @@ async function fetchShopifyProducts(): Promise<{ products: ShopifyProduct[]; res
         tagsStr.includes('filament') ||
         tagsStr.includes('reel');
       
-      return isFilament && !isExcluded;
+      return isFilament && !isExcluded && !isLegacyObsidian;
     });
 
     console.log(`  Filtered to ${filamentProducts.length} filament products`);

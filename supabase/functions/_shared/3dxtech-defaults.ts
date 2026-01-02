@@ -63,7 +63,7 @@ export const DXTECH_MATERIAL_PATTERNS: MaterialPattern[] = [
   { pattern: /htn[- ]?cf/i, material: 'HTN-CF', isAbrasive: true, enclosureRequired: true, isConductive: false },
   { pattern: /petg[- ]?cf|carbonx.*petg/i, material: 'PETG-CF', isAbrasive: true, enclosureRequired: false, isConductive: false },
   { pattern: /asa[- ]?cf|carbonx.*asa/i, material: 'ASA-CF', isAbrasive: true, enclosureRequired: true, isConductive: false },
-  { pattern: /abs[- ]?cf|carbonx.*abs/i, material: 'ABS-CF', isAbrasive: true, enclosureRequired: true, isConductive: false },
+  { pattern: /abs[+\- ]?cf|carbonx.*abs/i, material: 'ABS-CF', isAbrasive: true, enclosureRequired: true, isConductive: false },
   { pattern: /pla[- ]?cf|carbonx.*pla/i, material: 'PLA-CF', isAbrasive: true, enclosureRequired: false, isConductive: false },
 
   // Glass Fiber Reinforced (FibreX line) - Note: pattern includes + for "ABS+GF" and "GF+PA6" formats
@@ -294,9 +294,15 @@ export function generate3DXTechProductLineId(title: string, material: string): s
   else if (/evolv3d/i.test(titleLower)) series = 'evolv3d';
 
   // Normalize material for ID
-  const materialSlug = material.toLowerCase()
+  let materialSlug = material.toLowerCase()
     .replace(/[- ]+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
+  
+  // TPU: include hardness grade to separate 85A vs 95A into distinct product lines
+  const tpuHardnessMatch = titleLower.match(/tpu[- ]?\(?(\d+a)\)?/i);
+  if (tpuHardnessMatch && material.toUpperCase() === 'TPU') {
+    materialSlug = `tpu-${tpuHardnessMatch[1].toLowerCase()}`;
+  }
 
   return `3dxtech__${materialSlug}__${series}`;
 }
