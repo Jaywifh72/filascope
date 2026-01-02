@@ -43,6 +43,23 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'overture'];
 
+// Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
+const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
+
+// Page titles that indicate the scraper was blocked (not real title mismatches)
+const SCRAPER_BLOCKED_TITLES = [
+  'shopping cart',
+  'access denied',
+  'please verify',
+  'captcha',
+  'robot',
+  '403 forbidden',
+  'blocked',
+  'verification required',
+  'just a moment',
+  'cloudflare',
+];
+
 // Words to filter out when extracting color names (NOT actual colors)
 const NON_COLOR_WORDS = new Set([
   // Material types
@@ -1079,28 +1096,40 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           if (pageInfo.pageTitle) {
-            // Extract color from the representative's title (usually after " - ")
-            const colorMatch = representative.product_title.match(/\s+-\s+([^-]+)$/);
-            const extractedColor = colorMatch ? colorMatch[1].trim() : '';
+            // Check if scraper was blocked (page shows "Shopping Cart", "Access Denied", etc.)
+            const pageTitleLower = pageInfo.pageTitle.toLowerCase().trim();
+            const isScraperBlocked = SCRAPER_BLOCKED_TITLES.some(t => 
+              pageTitleLower.includes(t) || pageTitleLower === t
+            );
             
-            // Create base title without color suffix for comparison
-            let dbBaseTitle = representative.product_title;
-            if (extractedColor) {
-              // Remove the color suffix for comparison
-              const colorPattern = new RegExp(`\\s*[-–]\\s*${extractedColor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
-              dbBaseTitle = representative.product_title.replace(colorPattern, '').trim();
-            }
-            
-            const similarity = titleSimilarity(dbBaseTitle, pageInfo.pageTitle);
-            console.log(`[PostSyncCheck] Title check: DB="${dbBaseTitle}" (color: "${extractedColor}") vs Page="${pageInfo.pageTitle}" (${similarity}% match)`);
-            
-            if (similarity < 60) {
-              titleIssues.push({
-                id: representative.id,
-                title: representative.product_title,
-                issue: `DB title doesn't match page. Page shows: "${pageInfo.pageTitle}" (${similarity}% similarity)`,
-                url: representative.product_url,
-              });
+            if (isScraperBlocked) {
+              console.log(`[PostSyncCheck] Skipping title check for ${lineId} - scraper appears blocked (page shows: "${pageInfo.pageTitle}")`);
+              scrapeErrors.push(`${lineId}: Scraper blocked - page shows "${pageInfo.pageTitle}" instead of product`);
+              // Don't add to titleIssues - this is a scraper issue, not a real title mismatch
+            } else {
+              // Extract color from the representative's title (usually after " - ")
+              const colorMatch = representative.product_title.match(/\s+-\s+([^-]+)$/);
+              const extractedColor = colorMatch ? colorMatch[1].trim() : '';
+              
+              // Create base title without color suffix for comparison
+              let dbBaseTitle = representative.product_title;
+              if (extractedColor) {
+                // Remove the color suffix for comparison
+                const colorPattern = new RegExp(`\\s*[-–]\\s*${extractedColor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+                dbBaseTitle = representative.product_title.replace(colorPattern, '').trim();
+              }
+              
+              const similarity = titleSimilarity(dbBaseTitle, pageInfo.pageTitle);
+              console.log(`[PostSyncCheck] Title check: DB="${dbBaseTitle}" (color: "${extractedColor}") vs Page="${pageInfo.pageTitle}" (${similarity}% match)`);
+              
+              if (similarity < 60) {
+                titleIssues.push({
+                  id: representative.id,
+                  title: representative.product_title,
+                  issue: `DB title doesn't match page. Page shows: "${pageInfo.pageTitle}" (${similarity}% similarity)`,
+                  url: representative.product_url,
+                });
+              }
             }
           }
 

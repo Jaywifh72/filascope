@@ -310,6 +310,14 @@ function CheckResultRow({
   getStatusIcon: (status: 'pass' | 'fail' | 'warning') => React.ReactNode;
 }) {
   const hasProducts = check.products && check.products.length > 0;
+  
+  // Detect if title issues are due to scraper blocking
+  const isScraperBlocked = check.checkName.includes("Title") && 
+    check.products?.some(p => 
+      p.issue.toLowerCase().includes("shopping cart") ||
+      p.issue.toLowerCase().includes("access denied") ||
+      p.issue.toLowerCase().includes("captcha")
+    );
 
   return (
     <div className="bg-background rounded-lg border border-border">
@@ -335,6 +343,15 @@ function CheckResultRow({
           )}
         </div>
       </div>
+      
+      {isScraperBlocked && (
+        <div className="px-3 pb-2">
+          <p className="text-xs text-yellow-500 flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            Website may be blocking the scraper (redirecting to Shopping Cart) - false positive
+          </p>
+        </div>
+      )}
 
       {expanded && hasProducts && (
         <div className="border-t border-border p-3 space-y-2 max-h-48 overflow-y-auto">
