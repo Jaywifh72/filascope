@@ -180,8 +180,8 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
       const weightGrams = extractProtoPastaWeight(variantTitle || product.title);
       const diameterMm = extractProtoPastaDiameter(variantTitle || product.title);
 
-      // Apply standard filters (exclude bulk >1.4kg, samples <300g, 2.85mm)
-      const filterResult = shouldIncludeVariant(weightGrams, diameterMm);
+      // Apply standard filters (exclude bulk >1.4kg, samples <300g, 2.85mm, excluded keywords)
+      const filterResult = shouldIncludeVariant(weightGrams, diameterMm, fullTitle);
       if (!filterResult.include) {
         updateFilterStats(filterStats, filterResult);
         console.log(`[Proto-Pasta] Skipping: ${fullTitle} - ${filterResult.reason}`);

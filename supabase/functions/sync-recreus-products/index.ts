@@ -169,8 +169,8 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
         color = variant.option1;
       }
       
-      // Apply standard filtering (samples, bulk, 2.85mm)
-      const filterResult = shouldIncludeVariant(parsed.weight || variant.grams, parsed.diameter);
+      // Apply standard filtering (samples, bulk, 2.85mm, excluded keywords)
+      const filterResult = shouldIncludeVariant(parsed.weight || variant.grams, parsed.diameter, product.title);
       updateFilterStats(filterStats, filterResult);
       if (!filterResult.include) {
         console.log(`[Recreus] Skipping: ${product.title} - ${color} (${filterResult.reason})`);

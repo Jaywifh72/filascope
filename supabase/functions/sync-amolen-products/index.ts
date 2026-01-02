@@ -206,9 +206,9 @@ function processVariants(products: ShopifyProduct[]): ProcessedVariant[] {
     
     // Process the deduplicated variants
     for (const [colorKey, variant] of colorVariantMap) {
-      // Apply weight/diameter filters
+      // Apply weight/diameter filters and keyword exclusion
       const weightGrams = variant.grams || extractWeightFromText(variant.title) || 1000;
-      const filterResult = shouldIncludeVariant(weightGrams, 1.75);
+      const filterResult = shouldIncludeVariant(weightGrams, 1.75, product.title);
       updateFilterStats(filterStats, filterResult);
       
       if (!filterResult.include) {

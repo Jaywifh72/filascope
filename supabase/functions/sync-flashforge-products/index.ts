@@ -178,8 +178,8 @@ Deno.serve(async (req) => {
             const weight = extractWeightFromText(product.title) || 1000;
             const is285 = is285mmDiameter(product.title);
             
-            // Apply standard filtering (samples, bulk, 2.85mm)
-            const filterResult = shouldIncludeVariant(weight, is285 ? 2.85 : 1.75);
+            // Apply standard filtering (samples, bulk, 2.85mm, excluded keywords)
+            const filterResult = shouldIncludeVariant(weight, is285 ? 2.85 : 1.75, product.title);
             updateFilterStats(filterStats, filterResult);
             if (!filterResult.include) {
               console.log(`[Flashforge] Skipping: ${product.title} - ${colorName} (${filterResult.reason})`);

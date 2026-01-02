@@ -222,8 +222,8 @@ function explodeVariants(product: ShopifyProduct): Array<{
       if (matchingVariant) {
         const weight = extractOvertureWeight(product.title, matchingVariant.title);
         
-        // Apply standard filters (exclude bulk >1.4kg, samples <300g, 2.85mm)
-        const filterResult = shouldIncludeVariant(weight, 1.75); // Overture is 1.75mm only
+        // Apply standard filters (exclude bulk >1.4kg, samples <300g, 2.85mm, excluded keywords)
+        const filterResult = shouldIncludeVariant(weight, 1.75, product.title); // Overture is 1.75mm only
         if (!filterResult.include) {
           updateFilterStats(filterStats, filterResult);
           console.log(`[Overture] Skipping: ${product.title} - ${color} - ${filterResult.reason}`);
@@ -253,7 +253,7 @@ function explodeVariants(product: ShopifyProduct): Array<{
     const variant = product.variants[0];
     const weight = extractOvertureWeight(product.title, variant.title);
     
-    const filterResult = shouldIncludeVariant(weight, 1.75);
+    const filterResult = shouldIncludeVariant(weight, 1.75, product.title);
     if (filterResult.include) {
       const productId = `overture-${product.handle}`;
       

@@ -214,8 +214,8 @@ function explodeVariants(
       const weightKg = extractWeightKg(variant.option2 || product.title);
       const weightGrams = Math.round(weightKg * 1000);
       
-      // Apply standard filtering (samples, bulk, 2.85mm)
-      const filterResult = shouldIncludeVariant(weightGrams, diameterMm);
+      // Apply standard filtering (samples, bulk, 2.85mm, excluded keywords)
+      const filterResult = shouldIncludeVariant(weightGrams, diameterMm, product.title);
       updateFilterStats(filterStats, filterResult);
       if (!filterResult.include) {
         console.log(`[Polymaker] Skipping: ${product.title} - ${color} (${filterResult.reason})`);

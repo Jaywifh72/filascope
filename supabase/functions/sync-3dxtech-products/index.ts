@@ -233,10 +233,10 @@ function explodeVariants(products: ShopifyProduct[]): { variants: ProductVariant
       const isPremiumMaterial = PREMIUM_SMALL_SPOOL_MATERIALS.includes(enrichment.material);
       
       // Apply variant filtering - but allow premium materials in small spools
-      let filterResult = shouldIncludeVariant(weight, diameter);
+      let filterResult = shouldIncludeVariant(weight, diameter, product.title);
       
-      // Override sample exclusion for premium materials (they legitimately come in 250g)
-      if (!filterResult.include && filterResult.reason?.includes('Sample') && isPremiumMaterial) {
+      // Override sample/pack exclusion for premium materials (they legitimately come in 250g)
+      if (!filterResult.include && (filterResult.reason?.includes('Sample') || filterResult.reason?.includes('keyword')) && isPremiumMaterial) {
         console.log(`  Allowing premium material small spool: ${product.title} (${enrichment.material}, ${weight}g)`);
         filterResult = { include: true };
       }
