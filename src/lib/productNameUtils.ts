@@ -212,12 +212,25 @@ export const getBaseProductName = (title: string, material?: string | null): str
   // Examples: "PLA Matte HS filament Army Green" → "PLA Matte HS"
   //           "PETG Hyper Speed filament Light Grey" → "PETG Hyper Speed"
   //           "ASA filament Dark Blue" → "ASA"
+  // IMPORTANT: Must NOT match Amolen product line suffixes like "Transparent Rainbow"
   const azurefilmFilamentMatch = normalizedTitle.match(/^((?:PLA|PETG|ABS|ASA|TPU|Flexible\s+\d+A)(?:\s+(?:Matte|Silk|Original|Hyper\s*Speed|HS|Lumos|CMYK)(?:\s+(?:Dual\s+Color|Rainbow|Litho))?)?)\s+(?:filament\s+)?(.+)$/i);
   if (azurefilmFilamentMatch) {
     const basePart = azurefilmFilamentMatch[1].trim();
     const remainder = azurefilmFilamentMatch[2].trim();
-    // Only return base if remainder looks like a color (not a pack descriptor)
-    if (!remainder.match(/\d+-pack|Sample|plate|Magnetic|drill/i)) {
+    
+    // DON'T match if remainder looks like an Amolen product line suffix (not just a color)
+    // These are distinct product lines, not color variants
+    const amelonProductLineSuffixes = [
+      'Transparent Rainbow', 'Matte Rainbow', 'Silk Rainbow', 'Crystal Rainbow',
+      'Glow in the Dark', 'Glow-in-the-Dark', 'GITD',
+      'Galaxy', 'Marble', 'Crystal-Transparent', 'Crystal Transparent',
+    ];
+    const isAmolenProductLine = amelonProductLineSuffixes.some(suffix => 
+      remainder.toLowerCase().startsWith(suffix.toLowerCase())
+    );
+    
+    // Only return base if remainder looks like a color (not a pack descriptor or product line)
+    if (!isAmolenProductLine && !remainder.match(/\d+-pack|Sample|plate|Magnetic|drill/i)) {
       return basePart;
     }
   }

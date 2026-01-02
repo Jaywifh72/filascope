@@ -582,9 +582,12 @@ const AMOLEN_COLOR_HEX_MAP: Record<string, string> = {
   'tpu glow blue': '#00BFFF',
   'tpu glow orange': '#FF6600',
   
-  // PETG Rainbow
+  // PETG Rainbow / Transparent Rainbow
   'multicolor rainbow': '#FF6B6B',
   'petg rainbow': '#FF6B6B',
+  'transparent rainbow': '#FF6B6B',
+  'petg transparent rainbow': '#FF6B6B',
+  'pastel berry rainbow': '#E6A8D7',  // Pastel/berry tones
   
   // TPU Rainbow combinations
   'blue green orange translucent rainbow': '#2E8B57',
