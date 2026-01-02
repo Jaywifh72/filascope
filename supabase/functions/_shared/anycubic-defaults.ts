@@ -263,7 +263,7 @@ export function normalizeAnycubicMaterial(title: string): string | null {
 
 export const PROMOTIONAL_PATTERNS = [
   /christmas\s*(?:bulk\s*)?sale/gi,
-  /buy\s*\d+[,\s]*get\s*\d+\s*free/gi,
+  /buy\s*\d+[,\s]*get\s*\d+\s*(?:free|special)/gi,
   /bulk\s*(?:sale|deal)/gi,
   /special\s*offer/gi,
   /limited\s*(?:time\s*)?(?:offer|deal)/gi,
@@ -273,6 +273,23 @@ export const PROMOTIONAL_PATTERNS = [
   /\d+-\d+kg\s*deals?/gi,
   /multi.?pack/gi,
   /bundle\s*deal/gi,
+  /mixed\s*color\s*deals?/gi,
+  /christmas\s*box/gi,
+];
+
+// Products that are NOT filaments - should be excluded from sync
+export const ANYCUBIC_NON_FILAMENT_SLUGS = [
+  'filament-prize-claim',
+  'filament-hub',
+  'spring-steel',
+  'magnetic-platform',
+  'wash-cure',
+  'accessories',
+  'nozzle',
+  'hotend',
+  'extruder',
+  'buildplate',
+  'build-plate',
 ];
 
 const ANYCUBIC_TITLE_NOISE = [
@@ -345,6 +362,14 @@ const ANYCUBIC_PRODUCT_LINES = [
 ];
 
 /**
+ * Check if a product handle/URL is a non-filament product
+ */
+export function isNonFilamentProduct(handle: string): boolean {
+  const handleLower = handle.toLowerCase();
+  return ANYCUBIC_NON_FILAMENT_SLUGS.some(slug => handleLower.includes(slug));
+}
+
+/**
  * Generate product_line_id for Anycubic products (matches Amolen approach)
  */
 export function generateAnycubicProductLineId(title: string, material?: string | null): string {
@@ -352,7 +377,7 @@ export function generateAnycubicProductLineId(title: string, material?: string |
   
   // Promotional products get unique IDs to prevent incorrect grouping
   if (isPromotionalProduct(title)) {
-    const promoMatch = title.match(/christmas\s*bulk\s*sale|flash\s*sale|buy\s*\d+.*get\s*\d+|bulk\s*deal/i);
+    const promoMatch = title.match(/christmas\s*bulk\s*sale|flash\s*sale|buy\s*\d+.*get\s*\d+|bulk\s*deal|mixed\s*color/i);
     const promoSuffix = promoMatch ? `_promo_${promoMatch[0].toLowerCase().replace(/\s+/g, '_').substring(0, 20)}` : '_promo';
     return `anycubic_${cleanedTitle.replace(/[^a-z0-9]/g, '_').substring(0, 30)}${promoSuffix}`;
   }
@@ -363,15 +388,20 @@ export function generateAnycubicProductLineId(title: string, material?: string |
   // Add material
   const normalizedMaterial = normalizeAnycubicMaterial(title);
   if (normalizedMaterial) {
-    baseId += `_${normalizedMaterial.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+    baseId += `__${normalizedMaterial.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
   } else if (material) {
-    baseId += `_${material.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+    baseId += `__${material.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+  } else {
+    // If we can't detect a material, return unclassified for review
+    return 'anycubic__unclassified__needs_review';
   }
   
   // Add finish type
   const finishType = extractFinishType(title);
   if (finishType !== 'Standard') {
-    baseId += `_${finishType.toLowerCase().replace(/\s+/g, '')}`;
+    baseId += `__${finishType.toLowerCase().replace(/\s+/g, '')}`;
+  } else {
+    baseId += '__standard';
   }
   
   // Check for high speed

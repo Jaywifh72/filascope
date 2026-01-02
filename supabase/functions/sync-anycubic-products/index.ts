@@ -25,6 +25,8 @@ import {
   normalizeAnycubicMaterial,
   getAnycubicColorHex,
   generateAnycubicProductLineId,
+  isNonFilamentProduct,
+  isPromotionalProduct,
 } from '../_shared/anycubic-defaults.ts';
 import { getColorHex, getColorFamily } from '../_shared/color-mapping.ts';
 
