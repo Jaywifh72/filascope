@@ -40,10 +40,18 @@ const FETCH_BATCH_SIZE = 5;
 // Batch size for database upserts
 const DB_BATCH_SIZE = 100;
 
+// Firecrawl API for HTML scraping
+const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
+
 interface SyncRequest {
   dryRun?: boolean;
   cleanSlate?: boolean;
   limit?: number;
+}
+
+interface ScrapedPageData {
+  pageTitle: string | null;
+  colorSwatches: string[];
 }
 
 interface VariantResult {
@@ -446,11 +454,100 @@ async function runSync(
 interface FetchProductResult {
   product: any;
   variants: VariantResult[];
+  scrapedData: ScrapedPageData | null;
+}
+
+/**
+ * Scrape the product page HTML using Firecrawl to extract display title and color swatches
+ */
+async function scrapeProductPage(productUrl: string): Promise<ScrapedPageData> {
+  if (!FIRECRAWL_API_KEY) {
+    console.log('[ANYCUBIC-SYNC] No Firecrawl key, skipping HTML scrape');
+    return { pageTitle: null, colorSwatches: [] };
+  }
+
+  try {
+    console.log(`[ANYCUBIC-SYNC] Scraping HTML: ${productUrl}`);
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: productUrl,
+        formats: ['html'],
+        waitFor: 2000,
+        onlyMainContent: false,
+      }),
+    });
+
+    if (!response.ok) {
+      console.log(`[ANYCUBIC-SYNC] Firecrawl HTTP ${response.status}`);
+      return { pageTitle: null, colorSwatches: [] };
+    }
+
+    const data = await response.json();
+    const html = data.data?.html || '';
+
+    // Extract page title from <h1> - the main product name
+    const h1Match = html.match(/<h1[^>]*class="[^"]*product[^"]*"[^>]*>([^<]+)<\/h1>/i) ||
+                    html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+    const pageTitle = h1Match ? h1Match[1].trim() : null;
+
+    // Extract color swatches from various patterns
+    const colorSwatches: string[] = [];
+    
+    // Pattern 1: Color option values (most reliable for Anycubic)
+    const optionMatches = html.matchAll(/data-option-value=["']([^"']+)["']/gi);
+    for (const match of optionMatches) {
+      const value = match[1].trim();
+      // Filter out non-colors (weights, sizes)
+      if (!value.match(/^\d+(\.\d+)?\s*(kg|g|mm)$/i) && 
+          !value.match(/^(1\.75|2\.85)\s*mm$/i) &&
+          value.length > 1) {
+        colorSwatches.push(value);
+      }
+    }
+
+    // Pattern 2: Swatch elements with title or aria-label
+    const swatchMatches = html.matchAll(/class="[^"]*swatch[^"]*"[^>]*(?:title|aria-label)=["']([^"']+)["']/gi);
+    for (const match of swatchMatches) {
+      colorSwatches.push(match[1].trim());
+    }
+
+    // Pattern 3: Color fieldset options
+    const colorFieldMatch = html.match(/<fieldset[^>]*data-option-name=["']Color["'][^>]*>([\s\S]*?)<\/fieldset>/i);
+    if (colorFieldMatch) {
+      const colorFieldHtml = colorFieldMatch[1];
+      const labelMatches = colorFieldHtml.matchAll(/(?:value|title|aria-label)=["']([^"']+)["']/gi);
+      for (const match of labelMatches) {
+        const value = match[1].trim();
+        if (value.length > 1 && !value.match(/^\d/)) {
+          colorSwatches.push(value);
+        }
+      }
+    }
+
+    // Deduplicate
+    const uniqueSwatches = [...new Set(colorSwatches)];
+    
+    console.log(`[ANYCUBIC-SYNC] Scraped title: "${pageTitle}", swatches: ${uniqueSwatches.length}`);
+    
+    return {
+      pageTitle,
+      colorSwatches: uniqueSwatches,
+    };
+  } catch (error) {
+    console.error('[ANYCUBIC-SYNC] Firecrawl error:', error);
+    return { pageTitle: null, colorSwatches: [] };
+  }
 }
 
 /**
  * Fetch a single product from Shopify with multi-region fallback and decision logging
  * Tries US store first, falls back to CA if 404
+ * Also scrapes the product page HTML for display title and color swatches
  */
 async function fetchProduct(
   whitelistProduct: typeof ANYCUBIC_PRODUCT_WHITELIST[0],
@@ -492,6 +589,13 @@ async function fetchProduct(
   if (!product) {
     throw new Error(`Product not found on any store`);
   }
+
+  // Scrape the product page HTML for display title and color swatches
+  const productPageUrl = `${sourceStore.baseUrl}/products/${whitelistProduct.handle}`;
+  const scrapedData = await scrapeProductPage(productPageUrl);
+
+  // Use whitelist displayName as the canonical title (from spreadsheet)
+  const displayTitle = whitelistProduct.displayName;
 
   const defaultImage = product.images?.[0]?.src || product.image?.src || null;
   const productLineId = `anycubic__${whitelistProduct.productLineSlug.replace(/-/g, '')}`;
@@ -555,7 +659,7 @@ async function fetchProduct(
     variants.push({
       productId: String(product.id),
       variantId: String(variant.id),
-      title: product.title,
+      title: displayTitle,  // Use canonical display name from whitelist
       colorName,
       price: parseFloat(variant.price) || 0,
       compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
@@ -570,7 +674,7 @@ async function fetchProduct(
     });
   }
 
-  return { product, variants };
+  return { product, variants, scrapedData };
 }
 
 /**
