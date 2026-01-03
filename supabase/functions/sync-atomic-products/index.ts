@@ -188,11 +188,28 @@ async function scrapeProductPage(
       }
     }
     
-    // Extract color swatch hex if present
+    // Extract color swatch hex - try multiple patterns
     let colorHex: string | null = null;
-    const swatchMatch = html.match(/background-color:\s*#([A-Fa-f0-9]{6})/i);
-    if (swatchMatch) {
-      colorHex = swatchMatch[1].toUpperCase();
+    const swatchPatterns = [
+      // Shopify variant swatch background-color
+      /background-color:\s*#([A-Fa-f0-9]{6})/i,
+      // CSS variable swatch
+      /--swatch-color:\s*#([A-Fa-f0-9]{6})/i,
+      // Data attribute swatch
+      /data-color="#([A-Fa-f0-9]{6})"/i,
+      /data-swatch-color="#([A-Fa-f0-9]{6})"/i,
+      // Inline style hex
+      /style="[^"]*(?:background-)?color:\s*#([A-Fa-f0-9]{6})[^"]*"/i,
+      // Shopify product swatch meta
+      /"swatch_color":\s*"#([A-Fa-f0-9]{6})"/i,
+    ];
+    
+    for (const pattern of swatchPatterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) {
+        colorHex = match[1].toUpperCase();
+        break;
+      }
     }
     
     // Extract main product image - try multiple patterns for Shopify themes
