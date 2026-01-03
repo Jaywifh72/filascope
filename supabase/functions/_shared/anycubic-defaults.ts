@@ -500,7 +500,7 @@ export const ANYCUBIC_COLOR_MAPPING: Record<string, string> = {
   'cement grey': '8D918D',
   'cement gray': '8D918D',
   
-  // Colors from Post Sync Check
+  // Colors from Post Sync Check (interstellar violet already at line 478)
   'tropical turquoise': '48D1CC',
   'spring leaf': '6DBE45',
   'peach pink': 'FFDAB9',
@@ -511,6 +511,8 @@ export const ANYCUBIC_COLOR_MAPPING: Record<string, string> = {
   'texture silver': 'C0C0C0',
   'dark grey': '404040',
   'dark gray': '404040',
+  'grey': '808080',
+  'gray': '808080',
   'cream': 'FFFDD0',
   'beige': 'F5F5DC',
   'peanut brown': 'B5651D',
@@ -528,10 +530,21 @@ export const ANYCUBIC_COLOR_MAPPING: Record<string, string> = {
   'galaxy box': '4B0082',
   
   // Metal colors
+  'metal copper': 'B87333',
+  'copper': 'B87333',
   'metal champaign': 'D4AF37',
   'metal champagne': 'D4AF37',
   'champaign': 'D4AF37',
   'champagne': 'D4AF37',
+  
+  // PLA Silk colors from Post Sync Check
+  'rainbow': 'FF0000',
+  'white': 'FFFFFF',
+  'metal blue': '4682B4',
+  'silver': 'C0C0C0',
+  'gold': 'D4AF37',
+  'bronze': 'CD7F32',
+  'rose gold': 'B76E79',
   
   // Common color aliases Anycubic uses
   'transparent': 'FFFFFF',
