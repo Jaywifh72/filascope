@@ -41,7 +41,8 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 };
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'overture'];
+// Also includes cross-product swatch brands where each color is a separate product URL
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'overture', 'anycubic'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
