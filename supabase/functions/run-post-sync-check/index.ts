@@ -2860,6 +2860,149 @@ Deno.serve(async (req) => {
       products: urlConsistencyIssues.length > 0 ? urlConsistencyIssues : undefined,
     });
 
+    // ============= HEX-COLOR ACCURACY CHECK (NEW) =============
+    // Validates that color_hex matches the color name in product_title/color_family
+    // Flags products where the hex is obviously wrong for the stated color (e.g., gold with blue hex)
+    
+    /**
+     * Extract the primary color name from product title or color_family
+     */
+    function extractPrimaryColor(title: string, colorFamily?: string | null): string | null {
+      const colorPatterns = [
+        'gold', 'yellow', 'orange', 'red', 'pink', 'purple', 'blue', 
+        'cyan', 'teal', 'green', 'brown', 'black', 'white', 'gray', 
+        'grey', 'silver', 'bronze', 'copper', 'beige', 'natural'
+      ];
+      
+      const text = (title + ' ' + (colorFamily || '')).toLowerCase();
+      
+      // Skip gift cards, bundles, multi-color products (rainbow, gradient, galaxy, etc.)
+      if (text.includes('gift card') || text.includes('rainbow') || 
+          text.includes('gradient') || text.includes('galaxy') || 
+          text.includes('multicolor') || text.includes('multi-color') ||
+          text.includes('dual color') || text.includes('dual-color') ||
+          text.includes('chameleon') || text.includes('shift')) {
+        return null;
+      }
+      
+      for (const color of colorPatterns) {
+        if (text.includes(color)) return color;
+      }
+      return null;
+    }
+
+    /**
+     * Convert hex to RGB
+     */
+    function hexToRgbLocal(hex: string): { r: number; g: number; b: number } | null {
+      const clean = hex.replace('#', '');
+      if (clean.length !== 6) return null;
+      
+      const r = parseInt(clean.substring(0, 2), 16);
+      const g = parseInt(clean.substring(2, 4), 16);
+      const b = parseInt(clean.substring(4, 6), 16);
+      
+      if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
+      return { r, g, b };
+    }
+
+    /**
+     * Validate hex matches expected color family using RGB analysis
+     */
+    function isHexValidForColorName(hex: string, colorName: string): boolean {
+      const rgb = hexToRgbLocal(hex);
+      if (!rgb) return true; // Can't validate, assume OK
+      
+      const { r, g, b } = rgb;
+      const brightness = (r + g + b) / 3;
+      
+      switch (colorName) {
+        case 'gold':
+        case 'yellow':
+          // Gold/Yellow should have high R+G, low B
+          return r > 150 && g > 100 && b < r - 50;
+        case 'blue':
+        case 'cyan':
+          // Blue should have high B, lower R
+          return b > r && b > 100;
+        case 'red':
+          // Red should have high R, low G+B
+          return r > 150 && r > g + 50 && r > b + 50;
+        case 'green':
+        case 'teal':
+          // Green/Teal should have high G
+          return g > r && g > 80;
+        case 'black':
+          // Black should be dark
+          return brightness < 80;
+        case 'white':
+          // White should be bright
+          return brightness > 200;
+        case 'pink':
+          // Pink should have high R and some B
+          return r > 150 && b > 100 && r > g;
+        case 'purple':
+          // Purple should have high R and B, lower G
+          return r > 80 && b > 80 && b > g;
+        case 'orange':
+          // Orange should have high R, medium G, low B
+          return r > 180 && g > 60 && g < 180 && b < 100;
+        case 'brown':
+          // Brown is dark orange/red
+          return r > g && g > b && brightness < 150;
+        case 'gray':
+        case 'grey':
+          // Gray should have similar RGB values (not saturated)
+          return Math.abs(r - g) < 40 && Math.abs(g - b) < 40 && Math.abs(r - b) < 40;
+        case 'silver':
+          // Silver is bright gray
+          return Math.abs(r - g) < 40 && Math.abs(g - b) < 40 && brightness > 160;
+        case 'bronze':
+        case 'copper':
+          // Bronze/copper is warm metallic (reddish-brown)
+          return r > g && g > b && r > 120;
+        default:
+          return true;
+      }
+    }
+
+    // Run hex-color accuracy check
+    const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+
+    const { data: allProductsForColorCheck } = await supabase
+      .from("filaments")
+      .select("id, product_title, color_hex, color_family, product_url")
+      .ilike("vendor", brandName)
+      .not("color_hex", "is", null);
+
+    for (const product of allProductsForColorCheck || []) {
+      const colorName = extractPrimaryColor(product.product_title, product.color_family);
+      if (!colorName || !product.color_hex) continue;
+      
+      const isValid = isHexValidForColorName(product.color_hex, colorName);
+      if (!isValid) {
+        colorMismatches.push({
+          id: product.id,
+          title: product.product_title,
+          issue: `Hex ${product.color_hex} doesn't match color "${colorName}" - swatch shows wrong color`,
+          url: product.product_url || undefined,
+        });
+      }
+    }
+
+    checks.push({
+      checkName: "Hex-Color Accuracy",
+      status: colorMismatches.length === 0 ? "pass" : 
+              colorMismatches.length <= 5 ? "warning" : "fail",
+      count: (allProductsForColorCheck?.length || 0) - colorMismatches.length,
+      details: colorMismatches.length === 0 
+        ? `All ${allProductsForColorCheck?.length || 0} products have hex codes matching their color names` 
+        : `${colorMismatches.length} products have hex codes that don't match their stated color`,
+      products: colorMismatches.length > 0 ? colorMismatches.slice(0, 15) : undefined,
+    });
+
+    console.log(`[PostSyncCheck] Hex-Color Accuracy: ${colorMismatches.length} mismatches found`);
+
     // Calculate overall status
     const failCount = checks.filter((c) => c.status === "fail").length;
     const warnCount = checks.filter((c) => c.status === "warning").length;
