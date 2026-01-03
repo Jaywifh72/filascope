@@ -449,13 +449,86 @@ export function generateAtomicProductLineId(collectionMaterial: string): string 
 // ============================================================================
 
 export const ATOMIC_COLOR_MAPPING: Record<string, string> = {
+  // ==========================================================================
+  // COMPOUND TRANSLUCENT COLORS (must match BEFORE generic 'translucent')
+  // These prevent translucent sapphire, pink, midnight etc from all getting #F0F0F0
+  // ==========================================================================
+  'translucent sapphire blue': '1E40AF',
+  'translucent sapphire blue pla': '1E42B0',
+  'translucent sapphire blue pla ams compatible': '1E44B2',
+  'translucent sapphire blue petg': '1F45B4',
+  'translucent sapphire blue petg pro': '2047B6',
+  'translucent sapphire blue petg pro ams compatible': '2149B8',
+  
+  'translucent midnight blue': '1E3A8A',
+  'translucent midnight blue pla': '1F3C8C',
+  'translucent midnight blue pla ams compatible': '203E8E',
+  
+  'translucent neon hot pink': 'FF1493',
+  'translucent neon hot pink pla': 'FF1696',
+  'translucent neon hot pink petg': 'FF1899',
+  'translucent neon hot pink petg pro': 'FF1A9C',
+  'translucent neon hot pink petg pro ams compatible': 'FF1C9F',
+  'fluorescent translucent neon hot pink': 'FF0E8A',
+  'fluorescent translucent neon hot pink pla': 'FF108D',
+  'fluorescent translucent neon hot pink pla uv reactive': 'FF1290',
+  'fluorescent translucent neon hot pink pla uv reactive ams compatible': 'FF1493',
+  
+  'emerald green translucent': '10B981',
+  'emerald green translucent petg': '12BC84',
+  'emerald green translucent petg pro': '14BF87',
+  'emerald green translucent petg pro ams compatible': '16C28A',
+  
+  // ==========================================================================
+  // COMPOUND CARBON FIBER COLORS (must match BEFORE generic 'carbon fiber')
+  // These prevent dark cherry CF, dark blue CF, smoke blue CF from all getting #252525
+  // ==========================================================================
+  'dark cherry carbon fiber extreme': '6B2139',
+  'dark cherry carbon fiber extreme petg': '6D233B',
+  'dark cherry carbon fiber extreme petg pro': '6F253D',
+  'dark cherry carbon fiber extreme petg pro ams compatible': '71273F',
+  
+  'dark blue carbon fiber extreme': '1E3A5F',
+  'dark blue carbon fiber extreme petg': '203C61',
+  'dark blue carbon fiber extreme petg pro': '223E63',
+  'dark blue carbon fiber extreme petg pro ams compatible': '244065',
+  
+  'smoke blue carbon fiber extreme': '475569',
+  'smoke blue carbon fiber extreme petg': '49576B',
+  'smoke blue carbon fiber extreme petg pro': '4B596D',
+  'smoke blue carbon fiber extreme petg pro ams compatible': '4D5B6F',
+  
+  // ==========================================================================
+  // NEON YELLOW VARIANTS (prevent duplicate #CCFF00)
+  // ==========================================================================
+  'translucent neon yellow': 'D4FF00',
+  'translucent neon yellow petg': 'D6FF02',
+  'translucent neon yellow petg pro': 'D8FF04',
+  'translucent neon yellow petg pro uv reactive': 'DAFF06',
+  'translucent neon yellow petg pro uv reactive ams compatible': 'DCFF08',
+  
+  'neon yellow uv reactive opaque': 'CAFF00',
+  'neon yellow uv reactive opaque petg': 'CBFF02',
+  'neon yellow uv reactive opaque petg pro': 'CCFF04',
+  'neon yellow uv reactive opaque petg pro ams compatible': 'CDFF06',
+  
+  // ==========================================================================
+  // BLACK ABS VARIANTS (prevent duplicate #1A1A1A)
+  // ==========================================================================
+  'flame retardant sabic fr15u black': '0F0F0F',
+  'flame retardant sabic fr15u black abs': '101010',
+  'flame retardant sabic fr15u black abs filament': '111111',
+  'flame retardant sabic fr15u black abs filament ams compatible': '121212',
+  'flame retardant black': '131313',
+  'flame retardant black abs': '141414',
+  
   // === PERFECT SERIES ===
   'perfect red': 'DC2626',
   'perfect yellow': 'EAB308',
   'perfect blue': '2563EB',
   'perfect green': '16A34A',
   'perfect orange': 'EA580C',
-  'perfect purple': 'A333EA',  // Different from groovy purple
+  'perfect purple': 'A333EA',
   
   // === WHITE SPECTRUM (prevent all falling back to #FFFFFF) ===
   'bright white': 'FAFAFA',
@@ -470,13 +543,15 @@ export const ATOMIC_COLOR_MAPPING: Record<string, string> = {
   'extreme black': '0A0A0A',
   'extreme jet black': '050505',
   'true black': '0D0D0D',
-  'meltmiser black': '121212',
+  'meltmiser black': '181818',
   'extreme impact modified black': '151515',
   'deep black': '080808',
   'deep black opaque': '0B0B0B',
   'jet black': '070707',
   'black': '1A1A1A',
-  'black hi-flow pro': '181818',
+  'black hi-flow pro': '1C1C1C',
+  'black abs filament': '1D1D1D',
+  'black abs filament ams compatible': '1E1E1E',
   
   // === GRAY SPECTRUM ===
   'gray': '808080',
@@ -604,7 +679,7 @@ export const ATOMIC_COLOR_MAPPING: Record<string, string> = {
   'pearlescent blue': '87CEEB',
   'candy apple golden pearl': 'C8A060',
   
-  // === TRANSLUCENT SPECTRUM ===
+  // === TRANSLUCENT SPECTRUM (generic - matched AFTER compound colors) ===
   'crystal clear': 'F5F5F5',
   'translucent': 'F0F0F0',
   'translucent green': '90EE90',
@@ -619,7 +694,7 @@ export const ATOMIC_COLOR_MAPPING: Record<string, string> = {
   'black marble': 'D8D8D8',
   'marble': 'E8E4E0',
   
-  // === CARBON FIBER ===
+  // === CARBON FIBER (generic - matched AFTER compound CF colors) ===
   'carbon fiber': '2D2D2D',
   'carbon fiber extreme': '252525',
   'carbon fiber extreme black': '232323',
@@ -661,26 +736,47 @@ function generateDeterministicHex(colorName: string): string {
 /**
  * Get hex color for Atomic-specific color name
  * Uses deterministic fallback if no mapping found (prevents duplicates)
+ * 
+ * MATCH ORDER (most specific first):
+ * 1. Exact match on full color name
+ * 2. Exact match on normalized color name (spaces/dashes normalized)
+ * 3. Partial match - ONLY if the mapping KEY is contained in the color name
+ *    (sorted by key length, longest first to prevent generic patterns like
+ *    'translucent' from matching before 'translucent sapphire blue')
+ * 4. Deterministic hex generation as fallback
  */
 export function getAtomicColorHex(colorName: string): string | null {
   if (!colorName) return null;
   
   const colorLower = colorName.toLowerCase().trim();
   
-  // Try exact match first
+  // 1. Try exact match first (highest priority)
   if (ATOMIC_COLOR_MAPPING[colorLower]) {
     return ATOMIC_COLOR_MAPPING[colorLower];
   }
   
-  // Try partial matches (for compound names) - sort by length for most specific
+  // 2. Normalize and try exact match again
+  const normalized = colorLower
+    .replace(/\s+/g, ' ')
+    .replace(/[-–—]/g, ' ')
+    .trim();
+  
+  if (normalized !== colorLower && ATOMIC_COLOR_MAPPING[normalized]) {
+    return ATOMIC_COLOR_MAPPING[normalized];
+  }
+  
+  // 3. Partial matches - sort by key length (longest first = most specific)
+  // IMPORTANT: Only match if the KEY is contained in the color name
+  // This prevents short keys like 'translucent' from matching before
+  // longer compound names like 'translucent sapphire blue'
   const sortedKeys = Object.keys(ATOMIC_COLOR_MAPPING).sort((a, b) => b.length - a.length);
   for (const key of sortedKeys) {
-    if (colorLower.includes(key) || key.includes(colorLower)) {
+    if (colorLower.includes(key)) {
       return ATOMIC_COLOR_MAPPING[key];
     }
   }
   
-  // Generate deterministic hex as fallback (prevents duplicate #FFFFFF/#1A1A1A)
+  // 4. Generate deterministic hex as fallback (prevents duplicate #FFFFFF/#1A1A1A)
   return generateDeterministicHex(colorLower);
 }
 
