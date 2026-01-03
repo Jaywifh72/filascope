@@ -23,9 +23,9 @@ import {
 // Brand-specific filters and helpers for non-filament products
 import {
   isNonFilamentProduct as isAnycubicNonFilament,
-  isPromotionalProduct as isAnycubicPromoProduct,
   getAnycubicColorHex,
   cleanAnycubicTitle,
+  generateAnycubicProductLineId,
 } from '../_shared/anycubic-defaults.ts';
 
 const corsHeaders = {
@@ -961,10 +961,7 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
           console.log(`[shopify] Skipping Anycubic non-filament: ${product.handle}`);
           continue;
         }
-        if (isAnycubicPromoProduct(product.title || '')) {
-          console.log(`[shopify] Skipping Anycubic promotional: ${product.title}`);
-          continue;
-        }
+        // Promotional products are now processed normally - stripPromotionalFromTitle() handles grouping
       }
       
       // Filter for filament products (generic check)
@@ -1034,7 +1031,13 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
           }
           
           // Generate product line ID with weight to separate bulk packs
-          const productLineId = generateProductLineId(brand.brand_slug, material, baseTitle, netWeightG);
+          // Use Anycubic-specific function for consistent + to 'plus' normalization
+          let productLineId: string;
+          if (brand.brand_slug === 'anycubic') {
+            productLineId = generateAnycubicProductLineId(variantTitle, material);
+          } else {
+            productLineId = generateProductLineId(brand.brand_slug, material, baseTitle, netWeightG);
+          }
 
           products.push({
             // CRITICAL: Unique product_id per variant for separate database rows
@@ -1073,7 +1076,12 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
         }
         
         // Generate product line ID with weight to separate bulk packs
-        const productLineId = generateProductLineId(brand.brand_slug, material, baseTitle, netWeightG);
+        let productLineId: string;
+        if (brand.brand_slug === 'anycubic') {
+          productLineId = generateAnycubicProductLineId(baseTitle, material);
+        } else {
+          productLineId = generateProductLineId(brand.brand_slug, material, baseTitle, netWeightG);
+        }
 
         products.push({
           productId: String(product.id),
