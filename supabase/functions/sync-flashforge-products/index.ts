@@ -513,7 +513,7 @@ Deno.serve(async (req) => {
       await supabase.from('brand_sync_logs').insert({
         brand_slug: 'flashforge',
         sync_type: 'full_sync',
-        status: stats.errors > 0 ? 'completed_with_errors' : 'completed',
+        status: stats.errors > 0 ? 'partial' : 'completed',
         triggered_by: 'manual',
         products_discovered: stats.discovered,
         products_created: stats.created,
