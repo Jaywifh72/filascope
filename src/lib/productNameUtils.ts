@@ -213,24 +213,26 @@ export const getBaseProductName = (title: string, material?: string | null): str
   //           "PETG Hyper Speed filament Light Grey" → "PETG Hyper Speed"
   //           "ASA filament Dark Blue" → "ASA"
   // IMPORTANT: Must NOT match Amolen product line suffixes like "Transparent Rainbow"
-  const azurefilmFilamentMatch = normalizedTitle.match(/^((?:PLA|PETG|ABS|ASA|TPU|Flexible\s+\d+A)(?:\s+(?:Matte|Silk|Original|Hyper\s*Speed|HS|Lumos|CMYK)(?:\s+(?:Dual\s+Color|Rainbow|Litho))?)?)\s+(?:filament\s+)?(.+)$/i);
+  // AZUREFILM PATTERN: Handle "[Material] [ProductLine] filament [Color]" format
+  // NOTE: High Speed and High-Speed are product lines, NOT colors
+  const azurefilmFilamentMatch = normalizedTitle.match(/^((?:PLA|PETG|ABS|ASA|TPU|Flexible\s+\d+A)(?:\s+(?:Matte|Silk|Original|Hyper\s*Speed|High[- ]?Speed|HS|Lumos|CMYK|Basic|Plus|Pro)(?:\s+(?:Dual\s+Color|Rainbow|Litho))?)?)\s+(?:filament\s+)?(.+)$/i);
   if (azurefilmFilamentMatch) {
     const basePart = azurefilmFilamentMatch[1].trim();
     const remainder = azurefilmFilamentMatch[2].trim();
     
-    // DON'T match if remainder looks like an Amolen product line suffix (not just a color)
-    // These are distinct product lines, not color variants
-    const amelonProductLineSuffixes = [
+    // DON'T match if remainder looks like a product line suffix (not just a color)
+    const productLineSuffixes = [
       'Transparent Rainbow', 'Matte Rainbow', 'Silk Rainbow', 'Crystal Rainbow',
       'Glow in the Dark', 'Glow-in-the-Dark', 'GITD',
       'Galaxy', 'Marble', 'Crystal-Transparent', 'Crystal Transparent',
+      'High Speed', 'High-Speed',  // These are product lines, not colors!
     ];
-    const isAmolenProductLine = amelonProductLineSuffixes.some(suffix => 
+    const isProductLine = productLineSuffixes.some(suffix => 
       remainder.toLowerCase().startsWith(suffix.toLowerCase())
     );
     
     // Only return base if remainder looks like a color (not a pack descriptor or product line)
-    if (!isAmolenProductLine && !remainder.match(/\d+-pack|Sample|plate|Magnetic|drill/i)) {
+    if (!isProductLine && !remainder.match(/\d+-pack|Sample|plate|Magnetic|drill/i)) {
       return basePart;
     }
   }
@@ -482,11 +484,13 @@ interface FilamentBase {
  * e.g., "amolen__petg__transparent-rainbow" -> "PETG Transparent Rainbow"
  */
 function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: string): string {
-  // product_line_id format: "vendor__material__line-name" or "vendor__material__line-name__subline"
+  // product_line_id format varies by brand:
+  // - Amolen/etc: "vendor__material__line-name" (3+ parts)
+  // - Anycubic: "vendor__slug" (2 parts)
   const parts = productLineId.split('__');
   
   if (parts.length >= 3) {
-    // Extract material (uppercase) and line name (title case)
+    // 3+ part format: Extract material (uppercase) and line name (title case)
     const material = parts[1]?.toUpperCase() || '';
     
     // Combine all parts after material (handles cases like "silk-basic" or "transparent-rainbow")
@@ -499,8 +503,18 @@ function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: str
     return `${material} ${lineName}`.trim();
   }
   
-  // Fallback to title parsing if product_line_id format is unexpected
-  return getBaseProductName(fallbackTitle);
+  // 2-part format (Anycubic, etc.): "vendor__slug"
+  // The fallbackTitle IS the correct product_title from the database (already scraped from H1)
+  // Just clean up brand prefix and common suffixes - DO NOT call getBaseProductName which strips product lines
+  const cleaned = fallbackTitle
+    .replace(/^(Anycubic|Polymaker|Hatchbox|Sunlu|Elegoo|Creality)\s+/gi, '')
+    .replace(/\s+Filament\s*$/i, '')
+    .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')  // Remove diameter
+    .replace(/\s*,?\s*\d+\.?\d*\s*kg\b/gi, '')  // Remove weight
+    .replace(/\s*,?\s*\d+\.?\d*\s*lb\b/gi, '')
+    .trim();
+  
+  return cleaned || fallbackTitle;
 }
 
 /**

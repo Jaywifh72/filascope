@@ -83,11 +83,15 @@ export function getBaseProductName(title: string): string {
   }
 
   // AZUREFILM PATTERN: Handle "[Material] [ProductLine] filament [Color]" format
-  const azurefilmFilamentMatch = normalizedTitle.match(/^((?:PLA|PETG|ABS|ASA|TPU|Flexible\s+\d+A)(?:\s+(?:Matte|Silk|Original|Hyper\s*Speed|HS|Lumos|CMYK)(?:\s+(?:Dual\s+Color|Rainbow|Litho))?)?)\s+(?:filament\s+)?(.+)$/i);
+  // NOTE: High Speed and High-Speed are product lines, NOT colors
+  const azurefilmFilamentMatch = normalizedTitle.match(/^((?:PLA|PETG|ABS|ASA|TPU|Flexible\s+\d+A)(?:\s+(?:Matte|Silk|Original|Hyper\s*Speed|High[- ]?Speed|HS|Lumos|CMYK|Basic|Plus|Pro)(?:\s+(?:Dual\s+Color|Rainbow|Litho))?)?)\s+(?:filament\s+)?(.+)$/i);
   if (azurefilmFilamentMatch) {
     const basePart = azurefilmFilamentMatch[1].trim();
     const remainder = azurefilmFilamentMatch[2].trim();
-    if (!remainder.match(/\d+-pack|Sample|plate|Magnetic|drill/i)) {
+    // Don't match if remainder is a product line suffix, not a color
+    const productLineSuffixes = ['high speed', 'high-speed', 'glow in the dark', 'galaxy', 'marble'];
+    const isProductLine = productLineSuffixes.some(s => remainder.toLowerCase().startsWith(s));
+    if (!isProductLine && !remainder.match(/\d+-pack|Sample|plate|Magnetic|drill/i)) {
       return basePart;
     }
   }
@@ -102,6 +106,8 @@ export function getBaseProductName(title: string): string {
     'Matte Rainbow', 'Matte Triple', 'Matte Dual', 'Matte Basic', 'Matte Tri-Color',
     'Silk Rainbow', 'Silk Triple', 'Silk Dual', 'Silk Starry', 'Silk Tri-Color',
     'Transparent Rainbow', 'Crystal-Transparent',
+    // Anycubic/general product lines
+    'High Speed', 'High-Speed',
     // Base patterns last
     'Matte', 'Silk', 'Marble', 'Marble Texture', 'Sparkle', 'Galaxy', 'Glow in the Dark', 'Glow',
     'Wood', 'Carbon Fiber', 'Metal', 'Transparent', 'Clear',
