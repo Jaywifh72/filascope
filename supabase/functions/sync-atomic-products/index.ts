@@ -239,17 +239,19 @@ Deno.serve(async (req) => {
     // =========================================================================
     // STEP 2: Scrape H1 titles + product page details via Firecrawl
     // CRITICAL: H1 titles are the source of truth for product_title
+    // OPTIMIZED: Parallel batch processing to prevent timeouts
     // =========================================================================
     if ((tasks.includes('scrape-details') || scrapeDetails) && firecrawlKey) {
       console.log('[ATOMIC-SYNC] Step 2: Scraping H1 titles and product details via Firecrawl...');
       console.log('[ATOMIC-SYNC] 🎯 H1 TITLE PRIORITY RULE: product_title MUST match page <h1>');
+      console.log('[ATOMIC-SYNC] ⚡ Using parallel batch processing (5 concurrent requests)');
 
       const { data: filaments, error: fetchError } = await supabase
         .from('filaments')
         .select('id, product_title, product_url, tds_url, color_hex, nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, bed_temp_max_c')
         .ilike('vendor', '%atomic%')
         .not('product_url', 'is', null)
-        .limit(Math.min(limit, 50));
+        .limit(Math.min(limit, 100));
 
       if (fetchError) {
         console.error('[ATOMIC-SYNC] Failed to fetch filaments:', fetchError.message);
@@ -267,27 +269,49 @@ Deno.serve(async (req) => {
           uniqueProductUrls.get(baseUrl)!.push(f);
         }
 
-        console.log(`[ATOMIC-SYNC] ${uniqueProductUrls.size} unique product pages to scrape`);
+        const urlEntries = Array.from(uniqueProductUrls.entries());
+        const BATCH_SIZE = 5;
+        const totalBatches = Math.ceil(urlEntries.length / BATCH_SIZE);
+        
+        console.log(`[ATOMIC-SYNC] ${urlEntries.length} unique product pages → ${totalBatches} batches of ${BATCH_SIZE}`);
         let h1TitlesUpdated = 0;
 
-        for (const [productUrl, relatedFilaments] of uniqueProductUrls) {
-          try {
-            // STEP 2A: Scrape H1 title (source of truth)
-            const scrapedH1 = await scrapeAtomicPageH1(productUrl, firecrawlKey);
+        // Process in parallel batches
+        for (let batchIdx = 0; batchIdx < totalBatches; batchIdx++) {
+          const batchStart = batchIdx * BATCH_SIZE;
+          const batch = urlEntries.slice(batchStart, batchStart + BATCH_SIZE);
+          
+          console.log(`[ATOMIC-SYNC] Processing batch ${batchIdx + 1}/${totalBatches} (${batch.length} URLs)...`);
+          
+          // Scrape all URLs in this batch in parallel
+          const batchResults = await Promise.all(
+            batch.map(async ([productUrl, relatedFilaments]) => {
+              try {
+                // Scrape H1 title and details in one combined call
+                const scrapedH1 = await scrapeAtomicPageH1(productUrl, firecrawlKey);
+                const details = await scrapeAtomicProductDetails(productUrl, firecrawlKey);
+                
+                return { productUrl, relatedFilaments, scrapedH1, details, error: null };
+              } catch (err) {
+                console.error(`[ATOMIC-SYNC] Error scraping ${productUrl}:`, err);
+                return { productUrl, relatedFilaments, scrapedH1: null, details: null, error: err };
+              }
+            })
+          );
+          
+          // Process results from this batch
+          for (const { productUrl, relatedFilaments, scrapedH1, details, error } of batchResults) {
+            if (error) continue;
             
+            // STEP 2A: Update H1 titles
             if (scrapedH1) {
-              // Update all variants with this product URL to use the H1 title
               for (const filament of relatedFilaments) {
                 const currentTitle = filament.product_title;
-                
-                // Check if title needs updating (H1 is different from current)
                 const normalizedH1 = scrapedH1.toLowerCase().replace(/\s+/g, ' ').trim();
                 const normalizedCurrent = currentTitle.toLowerCase().replace(/\s+/g, ' ').trim();
                 
                 if (normalizedH1 !== normalizedCurrent) {
-                  console.log(`[ATOMIC-SYNC] Title mismatch for ${filament.id}:`);
-                  console.log(`[ATOMIC-SYNC]   DB: "${currentTitle}"`);
-                  console.log(`[ATOMIC-SYNC]   H1: "${scrapedH1}" ✓`);
+                  console.log(`[ATOMIC-SYNC] Title mismatch: "${currentTitle.slice(0, 40)}" → "${scrapedH1.slice(0, 40)}"`);
                   
                   if (!dryRun) {
                     const { error: titleError } = await supabase
@@ -314,101 +338,83 @@ Deno.serve(async (req) => {
               }
             }
             
-            // STEP 2B: Scrape additional details (TDS, temps, colors)
-            const needsDetailScraping = relatedFilaments.some(f => !f.tds_url || !f.color_hex || !f.nozzle_temp_min_c);
-            if (needsDetailScraping || forceEnrichment) {
-              const details = await scrapeAtomicProductDetails(productUrl, firecrawlKey);
+            // STEP 2B: Apply scraped details
+            if (details) {
+              detailsScraped++;
               
-              if (details) {
-                detailsScraped++;
+              for (const filament of relatedFilaments) {
+                const changes: string[] = [];
+                const updateData: Record<string, any> = {};
+
+                if (!filament.tds_url && details.tdsUrl) {
+                  updateData.tds_url = details.tdsUrl;
+                  changes.push(`TDS: scraped from page`);
+                  tdsFound++;
+                }
+
+                if (!filament.nozzle_temp_min_c && details.printingTempMin) {
+                  updateData.nozzle_temp_min_c = details.printingTempMin;
+                  changes.push(`nozzle_min: ${details.printingTempMin}`);
+                }
+                if (!filament.nozzle_temp_max_c && details.printingTempMax) {
+                  updateData.nozzle_temp_max_c = details.printingTempMax;
+                  changes.push(`nozzle_max: ${details.printingTempMax}`);
+                }
+                if (!filament.bed_temp_min_c && details.bedTempMin) {
+                  updateData.bed_temp_min_c = details.bedTempMin;
+                  changes.push(`bed_min: ${details.bedTempMin}`);
+                }
+                if (!filament.bed_temp_max_c && details.bedTempMax) {
+                  updateData.bed_temp_max_c = details.bedTempMax;
+                  changes.push(`bed_max: ${details.bedTempMax}`);
+                }
                 
-                for (const filament of relatedFilaments) {
-                  const changes: string[] = [];
-                  const updateData: Record<string, any> = {};
+                if (Object.keys(updateData).some(k => k.includes('temp'))) {
+                  settingsApplied++;
+                }
 
-                  // TDS URL
-                  if (!filament.tds_url && details.tdsUrl) {
-                    updateData.tds_url = details.tdsUrl;
-                    changes.push(`TDS: scraped from page`);
-                    tdsFound++;
-                  }
+                if (!filament.color_hex && details.colorHex) {
+                  updateData.color_hex = details.colorHex;
+                  changes.push(`color: scraped → ${details.colorHex}`);
+                  colorsFixed++;
+                }
 
-                  // Print settings
-                  if (!filament.nozzle_temp_min_c && details.printingTempMin) {
-                    updateData.nozzle_temp_min_c = details.printingTempMin;
-                    changes.push(`nozzle_min: ${details.printingTempMin}`);
-                  }
-                  if (!filament.nozzle_temp_max_c && details.printingTempMax) {
-                    updateData.nozzle_temp_max_c = details.printingTempMax;
-                    changes.push(`nozzle_max: ${details.printingTempMax}`);
-                  }
-                  if (!filament.bed_temp_min_c && details.bedTempMin) {
-                    updateData.bed_temp_min_c = details.bedTempMin;
-                    changes.push(`bed_min: ${details.bedTempMin}`);
-                  }
-                  if (!filament.bed_temp_max_c && details.bedTempMax) {
-                    updateData.bed_temp_max_c = details.bedTempMax;
-                    changes.push(`bed_max: ${details.bedTempMax}`);
-                  }
+                if (details.density) updateData.density_g_cm3 = details.density;
+                if (details.dryingTemp) updateData.drying_temp_c = details.dryingTemp;
+                if (details.dryingTime) updateData.drying_time_hours = details.dryingTime;
+
+                if (Object.keys(updateData).length > 0 && !dryRun) {
+                  updateData.updated_at = new Date().toISOString();
                   
-                  if (Object.keys(updateData).some(k => k.includes('temp'))) {
-                    settingsApplied++;
-                  }
+                  const { error: updateError } = await supabase
+                    .from('filaments')
+                    .update(updateData)
+                    .eq('id', filament.id);
 
-                  // Color hex
-                  if (!filament.color_hex && details.colorHex) {
-                    updateData.color_hex = details.colorHex;
-                    changes.push(`color: scraped → ${details.colorHex}`);
-                    colorsFixed++;
-                  }
-
-                  // Density
-                  if (details.density) {
-                    updateData.density_g_cm3 = details.density;
-                  }
-
-                  // Drying info
-                  if (details.dryingTemp) {
-                    updateData.drying_temp_c = details.dryingTemp;
-                  }
-                  if (details.dryingTime) {
-                    updateData.drying_time_hours = details.dryingTime;
-                  }
-
-                  // Apply updates
-                  if (Object.keys(updateData).length > 0 && !dryRun) {
-                    updateData.updated_at = new Date().toISOString();
-                    
-                    const { error: updateError } = await supabase
-                      .from('filaments')
-                      .update(updateData)
-                      .eq('id', filament.id);
-
-                    if (updateError) {
-                      console.error(`[ATOMIC-SYNC] Update failed for ${filament.id}:`, updateError.message);
-                    } else if (changes.length > 0) {
-                      enrichmentResults.push({
-                        id: filament.id,
-                        title: filament.product_title,
-                        changes,
-                        tdsFound: !!updateData.tds_url,
-                        settingsApplied: Object.keys(updateData).some(k => k.includes('temp')),
-                        colorFixed: !!updateData.color_hex,
-                      });
-                    }
+                  if (updateError) {
+                    console.error(`[ATOMIC-SYNC] Update failed for ${filament.id}:`, updateError.message);
+                  } else if (changes.length > 0) {
+                    enrichmentResults.push({
+                      id: filament.id,
+                      title: filament.product_title,
+                      changes,
+                      tdsFound: !!updateData.tds_url,
+                      settingsApplied: Object.keys(updateData).some(k => k.includes('temp')),
+                      colorFixed: !!updateData.color_hex,
+                    });
                   }
                 }
               }
             }
-            
-            // Rate limit
-            await new Promise(r => setTimeout(r, 2000));
-          } catch (err) {
-            console.error(`[ATOMIC-SYNC] Error scraping ${productUrl}:`, err);
+          }
+          
+          // Small delay between batches to avoid rate limiting
+          if (batchIdx < totalBatches - 1) {
+            await new Promise(r => setTimeout(r, 500));
           }
         }
         
-        console.log(`[ATOMIC-SYNC] H1 titles updated: ${h1TitlesUpdated}`);
+        console.log(`[ATOMIC-SYNC] ✅ H1 titles updated: ${h1TitlesUpdated}, Details scraped: ${detailsScraped}`);
       }
     } else if (!firecrawlKey) {
       console.warn('[ATOMIC-SYNC] FIRECRAWL_API_KEY not configured - skipping H1 title and product page scraping');
