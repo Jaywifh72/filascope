@@ -1277,6 +1277,45 @@ Deno.serve(async (req) => {
       })),
     });
 
+    // Check: No Gift/Non-Filament Products
+    // Detect products with excluded keywords that shouldn't be in the database
+    const excludedKeywords = ['gift card', 'gift', '3d pen', 'arch support', 'insoles'];
+    let nonFilamentProducts: Array<{ id: string; product_title: string; matched_keyword: string }> = [];
+
+    for (const keyword of excludedKeywords) {
+      const { data: matchedProducts } = await supabase
+        .from("filaments")
+        .select("id, product_title")
+        .ilike("vendor", brandName)
+        .ilike("product_title", `%${keyword}%`)
+        .limit(20);
+      
+      if (matchedProducts && matchedProducts.length > 0) {
+        nonFilamentProducts.push(...matchedProducts.map(p => ({
+          id: p.id,
+          product_title: p.product_title,
+          matched_keyword: keyword,
+        })));
+      }
+    }
+
+    // Deduplicate by id (in case same product matches multiple keywords)
+    const uniqueNonFilament = [...new Map(nonFilamentProducts.map(p => [p.id, p])).values()];
+
+    checks.push({
+      checkName: "No Gift/Non-Filament Products",
+      status: uniqueNonFilament.length === 0 ? "pass" : "fail",
+      count: uniqueNonFilament.length,
+      details: uniqueNonFilament.length 
+        ? `Found ${uniqueNonFilament.length} non-filament products that should be deleted` 
+        : "No gift cards, 3D pens, or other non-filament products found",
+      products: uniqueNonFilament.slice(0, 15).map((p) => ({
+        id: p.id,
+        title: p.product_title,
+        issue: `Contains excluded keyword: "${p.matched_keyword}"`,
+      })),
+    });
+
     // Check: Product Images Coverage
     // Verify that products have featured_image populated for detail page display
     const { data: allProductsForImages } = await supabase
