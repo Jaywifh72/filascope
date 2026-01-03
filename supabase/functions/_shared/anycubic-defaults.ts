@@ -2,12 +2,47 @@
  * ANYCUBIC BRAND-SPECIFIC DEFAULTS
  * 
  * Centralized configuration for Anycubic filament syncing including:
+ * - Product whitelist for curated catalog
  * - TDS URL patterns for automatic discovery
  * - Default print settings by material type
  * - Finish type extraction logic
  * - Material normalization mapping
  * - Title cleaning patterns
  */
+
+// ============================================================================
+// PRODUCT WHITELIST - The 19 official Anycubic filament product lines
+// These are the ONLY products that should be synced
+// ============================================================================
+
+export interface AnycubicWhitelistProduct {
+  name: string;
+  handle: string;
+  material: string;
+  finishType: string;
+}
+
+export const ANYCUBIC_PRODUCT_WHITELIST: AnycubicWhitelistProduct[] = [
+  { name: 'PLA Basic Refill', handle: 'pla-basic-refill', material: 'PLA+', finishType: 'Standard' },
+  { name: 'PETG', handle: 'petg', material: 'PETG', finishType: 'Standard' },
+  { name: 'PLA Basic', handle: 'pla-filament', material: 'PLA+', finishType: 'Standard' },
+  { name: 'PLA+ Filament', handle: 'pla-plus-filament', material: 'PLA+', finishType: 'Standard' },
+  { name: 'PLA High Speed', handle: 'high-speed-pla-filament', material: 'PLA+', finishType: 'Standard' },
+  { name: 'PLA Silk', handle: 'silk-pla-filament', material: 'PLA', finishType: 'Silk' },
+  { name: 'PLA Special', handle: 'pla-special', material: 'PLA+', finishType: 'Standard' },
+  { name: 'PLA Glow', handle: 'pla-glow', material: 'PLA-Glow', finishType: 'Glow' },
+  { name: 'PC Filament', handle: 'pc-filament', material: 'PC', finishType: 'Standard' },
+  { name: 'ASA Filament', handle: 'asa-filament', material: 'ASA', finishType: 'Standard' },
+  { name: 'PETG Translucent', handle: 'petg-translucent', material: 'PETG', finishType: 'Standard' },
+  { name: 'PLA+ Refill', handle: 'pla-plus-refill', material: 'PLA+', finishType: 'Standard' },
+  { name: 'PLA Silk Dual/Tri-Color', handle: 'pla-silk-dual-tri-color-filament', material: 'PLA', finishType: 'Silk' },
+  { name: 'PLA Marble', handle: 'pla-marble', material: 'PLA', finishType: 'Marble' },
+  { name: 'PLA Galaxy', handle: 'pla-galaxy', material: 'PLA+', finishType: 'Sparkle' },
+  { name: 'TPU Filament', handle: 'tpu-filament', material: 'TPU', finishType: 'Standard' },
+  { name: 'ABS Filament', handle: 'abs-filament', material: 'ABS', finishType: 'Standard' },
+  { name: 'PLA Metal', handle: 'pla-metal-filament', material: 'PLA', finishType: 'Standard' },
+  { name: 'PLA Matte', handle: 'matte-pla-filament', material: 'PLA', finishType: 'Matte' },
+];
 
 // ============================================================================
 // TDS URL PATTERNS - Known Anycubic TDS locations on nice-cdn.com
