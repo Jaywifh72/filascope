@@ -1510,12 +1510,17 @@ Deno.serve(async (req) => {
             // Semantic color aliases - page colors that match DB colors semantically
             const COLOR_SEMANTIC_ALIASES: Record<string, string[]> = {
               'multi': ['rainbow', 'multicolor', 'multi-color', 'gradient'],
-              'gray': ['silver', 'grey', 'metal silver'],
-              'brown': ['copper', 'bronze'],
+              'gray': ['silver', 'grey', 'metal silver', 'translucent grey', 'translucent gray'],
+              'brown': ['copper', 'bronze', 'translucent brown'],
               'gold': ['champagne', 'champaign'],
-              'green': ['spring leaf', 'olive', 'olive green'],
-              'blue': ['metal blue', 'steel blue', 'cyan'],
-              'pink': ['magenta', 'rose'],
+              'green': ['spring leaf', 'olive', 'olive green', 'translucent olive', 'translucent olive green'],
+              'blue': ['metal blue', 'steel blue', 'cyan', 'translucent blue'],
+              'pink': ['magenta', 'rose', 'translucent pink'],
+              'orange': ['translucent orange'],
+              'purple': ['violet', 'translucent purple'],
+              'red': ['translucent red'],
+              'yellow': ['translucent yellow'],
+              'clear': ['translucent', 'translucent white', 'translucent clear', 'transparent'],
             };
 
             // Get all possible alias matches for a color
