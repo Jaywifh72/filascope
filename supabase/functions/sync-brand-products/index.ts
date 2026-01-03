@@ -20,6 +20,11 @@ import {
   logFilterStats,
   extractDiameterFromText,
 } from '../_shared/variant-filters.ts';
+// Brand-specific filters for non-filament products
+import {
+  isNonFilamentProduct as isAnycubicNonFilament,
+  isPromotionalProduct as isAnycubicPromoProduct,
+} from '../_shared/anycubic-defaults.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -942,7 +947,19 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
     if (!data.products || data.products.length === 0) break;
 
     for (const product of data.products) {
-      // Filter for filament products
+      // BRAND-SPECIFIC FILTERING (check product handle/URL before generic filter)
+      if (brand.brand_slug === 'anycubic') {
+        if (isAnycubicNonFilament(product.handle || '')) {
+          console.log(`[shopify] Skipping Anycubic non-filament: ${product.handle}`);
+          continue;
+        }
+        if (isAnycubicPromoProduct(product.title || '')) {
+          console.log(`[shopify] Skipping Anycubic promotional: ${product.title}`);
+          continue;
+        }
+      }
+      
+      // Filter for filament products (generic check)
       if (!isFilamentProduct(product)) continue;
       
       // Apply material filter if specified
@@ -1923,16 +1940,22 @@ function isFilamentProduct(product: any): boolean {
   const title = (product.title || '').toLowerCase();
   const type = (product.product_type || '').toLowerCase();
   const tags = (product.tags || []).join(' ').toLowerCase();
+  const handle = (product.handle || '').toLowerCase();
   
   const filamentKeywords = ['filament', 'pla', 'petg', 'abs', 'tpu', 'asa', 'nylon', 'pa', 'pc', 'cf'];
-  const excludeKeywords = ['resin', 'printer', 'accessory', 'part', 'nozzle', 'bed', 'hotend'];
+  const excludeKeywords = [
+    'resin', 'printer', 'accessory', 'part', 'nozzle', 'bed', 'hotend',
+    // Non-filament patterns that might have "filament" in title
+    'filament hub', 'filament-hub', 'prize', 'claim', 'gift card', 'voucher',
+    'spring steel', 'magnetic platform', 'build plate', 'wash cure'
+  ];
   
   const hasFilamentKeyword = filamentKeywords.some(k => 
     title.includes(k) || type.includes(k) || tags.includes(k)
   );
   
   const hasExcludeKeyword = excludeKeywords.some(k => 
-    title.includes(k) || type.includes(k)
+    title.includes(k) || type.includes(k) || handle.includes(k)
   );
   
   return hasFilamentKeyword && !hasExcludeKeyword;
