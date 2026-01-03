@@ -89,17 +89,30 @@ async function scrapeCollectionProducts(
     const data = await response.json();
     const allLinks = data.data?.links || data.links || [];
     
-    // Filter to only product URLs (not collection pages, pages, etc.)
+    // Filter to only product URLs
+    // Note: Shopify URLs may be /collections/xxx/products/yyy OR /products/yyy
     const productUrls = allLinks.filter((url: string) => {
-      if (!url.includes('atomicfilament.com/products/')) return false;
-      if (url.includes('/collections/')) return false;
-      if (url.includes('?variant=')) return false; // Skip variant URLs, use base product
+      // Must be atomicfilament.com
+      if (!url.includes('atomicfilament.com')) return false;
+      // Must contain /products/ somewhere
+      if (!url.includes('/products/')) return false;
+      // Skip variant URLs (we want base product)
+      if (url.includes('?variant=')) return false;
       return true;
     });
     
-    // Deduplicate
-    const uniqueUrls = [...new Set(productUrls)] as string[];
-    console.log(`[ATOMIC-SYNC] Found ${uniqueUrls.length} products in collection`);
+    // Normalize URLs to base /products/xxx format and deduplicate
+    const normalizedUrls = productUrls.map((url: string) => {
+      const match = url.match(/\/products\/([^?#\/]+)/);
+      if (match) {
+        return `https://atomicfilament.com/products/${match[1]}`;
+      }
+      return url;
+    });
+    
+    const uniqueUrls = [...new Set(normalizedUrls)] as string[];
+    const collectionName = collectionUrl.split('/').pop() || 'unknown';
+    console.log(`[ATOMIC-SYNC] Found ${uniqueUrls.length} products in ${collectionName}`);
     
     return uniqueUrls;
   } catch (err) {
