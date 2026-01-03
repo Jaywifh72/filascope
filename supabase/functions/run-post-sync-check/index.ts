@@ -1494,14 +1494,33 @@ Deno.serve(async (req) => {
               pageInfo.colorSwatches.map(s => s.name.toLowerCase())
             );
 
+            // Helper to normalize grey/gray spelling differences
+            const normalizeColorSpelling = (color: string): string => {
+              return color
+                .toLowerCase()
+                .replace(/\bgrey\b/g, 'gray')
+                .replace(/\bcolour\b/g, 'color')
+                .trim();
+            };
+
             // Find colors on page that aren't in DB
             const missingColors: string[] = [];
             for (const pageColor of pageColorNames) {
               let found = false;
+              const normalizedPageColor = normalizeColorSpelling(pageColor);
+              // Extract base color from compound names (e.g., "texture grey" -> "gray")
+              const basePageColor = normalizedPageColor.split(' ').pop() || normalizedPageColor;
+              
               for (const dbColor of dbColorNames) {
-                // Fuzzy match - check if one contains the other
-                if (dbColor.includes(pageColor) || pageColor.includes(dbColor) ||
-                    normalizeTitle(dbColor) === normalizeTitle(pageColor)) {
+                const normalizedDbColor = normalizeColorSpelling(dbColor);
+                
+                // Fuzzy match with normalized values
+                if (normalizedDbColor.includes(normalizedPageColor) || 
+                    normalizedPageColor.includes(normalizedDbColor) ||
+                    normalizeTitle(normalizedDbColor) === normalizeTitle(normalizedPageColor) ||
+                    // Also check base color extraction (e.g., "texture grey" matches "gray")
+                    normalizedDbColor === basePageColor ||
+                    normalizedDbColor.includes(basePageColor)) {
                   found = true;
                   break;
                 }
