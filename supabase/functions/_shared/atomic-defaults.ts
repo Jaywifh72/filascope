@@ -453,6 +453,31 @@ export const ATOMIC_COLOR_MAPPING: Record<string, string> = {
   // COMPOUND TRANSLUCENT COLORS (must match BEFORE generic 'translucent')
   // These prevent translucent sapphire, pink, midnight etc from all getting #F0F0F0
   // ==========================================================================
+  
+  // === TRANSLUCENT SMOKE BLACK (prevent falling back to #F0F0F0) ===
+  'translucent smoke black': '505050',
+  'translucent smoke black pla': '525252',
+  'translucent smoke black pla ams compatible': '545454',
+  'translucent smoke black petg': '565656',
+  'translucent smoke black petg pro': '585858',
+  'translucent smoke black petg pro ams compatible': '5A5A5A',
+  'smoke black translucent': '5C5C5C',
+  
+  // === AQUA TRANSLUCENT (prevent falling back to #F0F0F0) ===
+  'aqua translucent': '00C8D0',
+  'aqua translucent petg': '00CAD2',
+  'aqua translucent petg pro': '00CCD4',
+  'aqua translucent petg pro ams compatible': '00CED6',
+  'translucent aqua': '00D0D8',
+  
+  // === EXTREME TRANSLUCENT FLUORESCENT NEON GREEN (prevent #F0F0F0) ===
+  'extreme translucent fluorescent neon green': '33FF11',
+  'extreme translucent fluorescent neon green petg': '35FF13',
+  'extreme translucent fluorescent neon green petg uv reactive': '37FF15',
+  'extreme translucent fluorescent neon green petg uv reactive ams compatible': '39FF17',
+  'fluorescent translucent neon green': '3BFF19',
+  'extreme translucent fluorescent neon green petg pro': '3DFF1B',
+  
   'translucent sapphire blue': '1E40AF',
   'translucent sapphire blue pla': '1E42B0',
   'translucent sapphire blue pla ams compatible': '1E44B2',
@@ -549,9 +574,16 @@ export const ATOMIC_COLOR_MAPPING: Record<string, string> = {
   'deep black opaque': '0B0B0B',
   'jet black': '070707',
   'black': '1A1A1A',
+  'black pla': '1A1A1A',
+  'black pla filament': '191919',
+  'black pla filament ams compatible': '181818',
   'black hi-flow pro': '1C1C1C',
-  'black abs filament': '1D1D1D',
-  'black abs filament ams compatible': '1E1E1E',
+  'black hi-flow pro pla': '1B1B1B',
+  'black hi-flow pro pla ams compatible': '1D1D1D',
+  'black hi-flow pro petg': '1E1E1E',
+  'black hi-flow pro abs': '1F1F1F',
+  'black abs filament': '202020',
+  'black abs filament ams compatible': '212121',
   
   // === GRAY SPECTRUM ===
   'gray': '808080',
