@@ -198,12 +198,21 @@ export function extractFinishType(title: string): FinishType {
 // ============================================================================
 
 const ANYCUBIC_MATERIAL_MAPPING: Record<string, string> = {
-  // PLA variants
+  // PLA+ variants - most specific first
   'pla basic': 'PLA+',
+  'pla basic refill': 'PLA+',
+  'pla+ refill': 'PLA+',
   'pla+': 'PLA+',
   'pla pro': 'PLA+',
   'high speed pla': 'PLA+',
   'hs pla': 'PLA+',
+  
+  // PLA Galaxy and Special are PLA+ products  
+  'pla galaxy': 'PLA+',
+  'pla special': 'PLA+',
+  'pla special filament': 'PLA+',
+  
+  // Regular PLA specialty finishes
   'silk pla': 'PLA',
   'matte pla': 'PLA',
   'marble pla': 'PLA',
@@ -227,6 +236,10 @@ const ANYCUBIC_MATERIAL_MAPPING: Record<string, string> = {
   
   // ASA
   'asa': 'ASA',
+  
+  // PC (Polycarbonate)
+  'pc filament': 'PC',
+  'polycarbonate': 'PC',
 };
 
 /**
@@ -285,6 +298,7 @@ export const ANYCUBIC_NON_FILAMENT_SLUGS = [
   'filament-hub',
   'products-filament-hub',
   'spring-steel',
+  'spring-steel-magnetic',
   'magnetic-platform',
   'wash-cure',
   'accessories',
@@ -294,6 +308,10 @@ export const ANYCUBIC_NON_FILAMENT_SLUGS = [
   'buildplate',
   'build-plate',
   'cleaning-filament', // maintenance product, not regular filament
+  '10th-anniversary-gift', // promotional gift
+  '10th-anniversary',
+  'gift-card',
+  'voucher',
 ];
 
 const ANYCUBIC_TITLE_NOISE = [
@@ -375,6 +393,7 @@ export function isNonFilamentProduct(handle: string): boolean {
 
 /**
  * Generate product_line_id for Anycubic products (matches Amolen approach)
+ * PRIORITY: Use DB material field if available (more reliable than title parsing)
  */
 export function generateAnycubicProductLineId(title: string, material?: string | null): string {
   const cleanedTitle = cleanAnycubicTitle(title).toLowerCase();
@@ -389,22 +408,28 @@ export function generateAnycubicProductLineId(title: string, material?: string |
   // Build product line ID from material + product line
   let baseId = 'anycubic';
   
-  // Add material - PRESERVE the + symbol by converting to 'plus' to distinguish PLA+ from PLA
-  const normalizedMaterial = normalizeAnycubicMaterial(title);
-  if (normalizedMaterial) {
-    // Convert + to 'plus' so PLA+ becomes 'plaplus' and PLA stays 'pla'
-    const materialSlug = normalizedMaterial.toLowerCase()
-      .replace(/\+/g, 'plus')
-      .replace(/[^a-z0-9]/g, '');
-    baseId += `__${materialSlug}`;
-  } else if (material) {
+  // PRIORITY 1: Use the DB material field if provided (it's more reliable than title parsing)
+  // This ensures PLA+ products with titles like "PLA Galaxy" get correct IDs
+  if (material) {
     const materialSlug = material.toLowerCase()
       .replace(/\+/g, 'plus')
+      .replace(/-/g, '') // PLA-Glow -> PLAGlow -> plaglow
       .replace(/[^a-z0-9]/g, '');
     baseId += `__${materialSlug}`;
   } else {
-    // If we can't detect a material, return unclassified for review
-    return 'anycubic__unclassified__needs_review';
+    // PRIORITY 2: Fall back to title parsing only when DB material is not available
+    const normalizedMaterial = normalizeAnycubicMaterial(title);
+    if (normalizedMaterial) {
+      // Convert + to 'plus' so PLA+ becomes 'plaplus' and PLA stays 'pla'
+      const materialSlug = normalizedMaterial.toLowerCase()
+        .replace(/\+/g, 'plus')
+        .replace(/-/g, '')
+        .replace(/[^a-z0-9]/g, '');
+      baseId += `__${materialSlug}`;
+    } else {
+      // If we can't detect a material, return unclassified for review
+      return 'anycubic__unclassified__needs_review';
+    }
   }
   
   // Add finish type
@@ -457,10 +482,38 @@ export const ANYCUBIC_COLOR_MAPPING: Record<string, string> = {
   'cement grey': '8D918D',
   'cement gray': '8D918D',
   
-  // Missing colors from Post Sync Check
+  // Colors from Post Sync Check
   'tropical turquoise': '48D1CC',
   'spring leaf': '6DBE45',
   'peach pink': 'FFDAB9',
+  
+  // Missing PETG colors
+  'texture grey': '8B8B8B',
+  'texture gray': '8B8B8B',
+  'texture silver': 'C0C0C0',
+  'dark grey': '404040',
+  'dark gray': '404040',
+  'cream': 'FFFDD0',
+  'beige': 'F5F5DC',
+  'peanut brown': 'B5651D',
+  'forest green': '228B22',
+  'lime green': '32CD32',
+  
+  // Missing PLA+ colors
+  'cyan': '00FFFF',
+  'brown': '8B4513',
+  
+  // Galaxy colors
+  'galaxy green': '2E8B57',
+  'galaxy blue': '1E3A5F',
+  'galaxy purple': '4B0082',
+  'galaxy box': '4B0082',
+  
+  // Metal colors
+  'metal champaign': 'D4AF37',
+  'metal champagne': 'D4AF37',
+  'champaign': 'D4AF37',
+  'champagne': 'D4AF37',
   
   // Common color aliases Anycubic uses
   'transparent': 'FFFFFF',
