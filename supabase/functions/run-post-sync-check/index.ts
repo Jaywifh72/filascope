@@ -1503,6 +1503,31 @@ Deno.serve(async (req) => {
                 .trim();
             };
 
+            // Semantic color aliases - page colors that match DB colors semantically
+            const COLOR_SEMANTIC_ALIASES: Record<string, string[]> = {
+              'multi': ['rainbow', 'multicolor', 'multi-color', 'gradient'],
+              'gray': ['silver', 'grey', 'metal silver'],
+              'brown': ['copper', 'bronze'],
+              'gold': ['champagne', 'champaign'],
+              'green': ['spring leaf', 'olive', 'olive green'],
+              'blue': ['metal blue', 'steel blue', 'cyan'],
+              'pink': ['magenta', 'rose'],
+            };
+
+            // Get all possible alias matches for a color
+            const getColorAliases = (color: string): string[] => {
+              const normalized = normalizeColorSpelling(color);
+              const results = [normalized];
+              
+              for (const [canonical, aliases] of Object.entries(COLOR_SEMANTIC_ALIASES)) {
+                if (aliases.includes(normalized) || normalized === canonical || normalized.includes(canonical)) {
+                  results.push(canonical, ...aliases);
+                }
+              }
+              
+              return results;
+            };
+
             // Find colors on page that aren't in DB
             const missingColors: string[] = [];
             for (const pageColor of pageColorNames) {
@@ -1510,9 +1535,11 @@ Deno.serve(async (req) => {
               const normalizedPageColor = normalizeColorSpelling(pageColor);
               // Extract base color from compound names (e.g., "texture grey" -> "gray")
               const basePageColor = normalizedPageColor.split(' ').pop() || normalizedPageColor;
+              const pageAliases = getColorAliases(pageColor);
               
               for (const dbColor of dbColorNames) {
                 const normalizedDbColor = normalizeColorSpelling(dbColor);
+                const dbAliases = getColorAliases(dbColor);
                 
                 // Fuzzy match with normalized values
                 if (normalizedDbColor.includes(normalizedPageColor) || 
@@ -1520,7 +1547,11 @@ Deno.serve(async (req) => {
                     normalizeTitle(normalizedDbColor) === normalizeTitle(normalizedPageColor) ||
                     // Also check base color extraction (e.g., "texture grey" matches "gray")
                     normalizedDbColor === basePageColor ||
-                    normalizedDbColor.includes(basePageColor)) {
+                    normalizedDbColor.includes(basePageColor) ||
+                    // Check semantic aliases (e.g., "rainbow" matches "multi")
+                    pageAliases.some(pa => dbAliases.includes(pa)) ||
+                    pageAliases.some(pa => normalizedDbColor.includes(pa)) ||
+                    dbAliases.some(da => normalizedPageColor.includes(da))) {
                   found = true;
                   break;
                 }
