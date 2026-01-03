@@ -424,67 +424,24 @@ export function is285mmDiameter(title: string): boolean {
 }
 
 // ============================================================================
-// PRODUCT LINE ID GENERATION (Matches Anycubic/Amolen approach)
+// PRODUCT LINE ID GENERATION - SIMPLIFIED (Collection-based only)
 // ============================================================================
 
 /**
  * Generate product_line_id for Atomic Filament products
- * Groups products by material + finish type, separating bulk/promotional items
- * IMPORTANT: CF materials (e.g., ABS-CF) already encode the "Carbon Fiber" nature,
- * so we don't add a separate Carbon Fiber finish suffix
+ * 
+ * SIMPLIFIED: Only 5 possible values based on collection:
+ * - atomic-filament__pla
+ * - atomic-filament__petg
+ * - atomic-filament__abs
+ * - atomic-filament__asa
+ * - atomic-filament__pla-silk
+ * 
+ * @param collectionMaterial - The material from the collection whitelist
  */
-export function generateAtomicProductLineId(title: string, material?: string | null): string {
-  const cleanedTitle = cleanAtomicTitle(title).toLowerCase();
-  
-  // Build product line ID from material + product line
-  let baseId = 'atomic-filament';
-  
-  // Add material (using normalized material from title first)
-  const normalizedMaterial = normalizeAtomicMaterial(title);
-  const finalMaterial = normalizedMaterial || material;
-  
-  if (finalMaterial) {
-    baseId += `__${finalMaterial.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-  }
-  
-  // Add finish type ONLY if:
-  // 1. It's not "Standard"
-  // 2. It's not "Carbon Fiber" (already encoded in material like ABS-CF, PLA-CF)
-  const finishType = extractFinishType(title);
-  if (finishType !== 'Standard' && finishType !== 'Carbon Fiber') {
-    baseId += `__${finishType.toLowerCase().replace(/\s+/g, '-')}`;
-  }
-  
-  // MeltMiser is a distinct product line
-  if (cleanedTitle.includes('meltmiser')) {
-    baseId += '__meltmiser';
-  }
-  
-  // Check for PETG PRO (distinct line)
-  if (cleanedTitle.includes('petg pro')) {
-    baseId = baseId.replace('__petg', '__petg-pro');
-  }
-  
-  // Separate 2.85mm products
-  if (is285mmDiameter(title)) {
-    baseId += '__2.85mm';
-  }
-  
-  // Bulk/promotional products get isolated
-  if (isPromotionalProduct(title)) {
-    if (/\d+\s*pack/i.test(title)) {
-      const packMatch = title.match(/(\d+)\s*pack/i);
-      if (packMatch) {
-        baseId += `__${packMatch[1]}pack`;
-      }
-    } else if (/3\.5\s*kg/i.test(title)) {
-      baseId += '__3.5kg';
-    } else if (/short\s*spool/i.test(title)) {
-      baseId += '__short-spool';
-    }
-  }
-  
-  return baseId;
+export function generateAtomicProductLineId(collectionMaterial: string): string {
+  const materialSlug = collectionMaterial.toLowerCase().replace(/\s+/g, '-');
+  return `atomic-filament__${materialSlug}`;
 }
 
 // ============================================================================
@@ -757,7 +714,8 @@ export function enrichAtomicProduct(
   const finishType = extractFinishType(title);
   const material = existingMaterial || normalizeAtomicMaterial(title);
   const cleanedTitle = cleanAtomicTitle(title);
-  const productLineId = generateAtomicProductLineId(title, material);
+  // Use the material for product_line_id (simplified approach)
+  const productLineId = generateAtomicProductLineId(material || 'pla');
   
   // Get TDS URL if not already present
   let tdsUrl = existingTds;
