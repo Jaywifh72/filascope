@@ -486,19 +486,23 @@ interface FilamentBase {
 function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: string): string {
   // product_line_id format varies by brand:
   // - Amolen/etc: "vendor__material__line-name" (3+ parts)
-  // - Anycubic/Atomic: "vendor__slug" (2 parts) - use fallbackTitle
+  // - Anycubic: "vendor__slug" (2 parts) - use fallbackTitle
+  // - Atomic: "atomic-filament__material" (2 parts) - extract material as display name
   const parts = productLineId.split('__');
   
-  // ATOMIC FILAMENT: Always use the cleaned fallbackTitle (DB product_title)
-  // This preserves important descriptors like "Translucent", "Sparkle", specialty color names
-  if (parts[0] === 'atomic-filament') {
-    return fallbackTitle
-      .replace(/\s+Filament\s*$/i, '')
-      .replace(/\s*AMS\s*Compatible\s*$/i, '')
-      .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')  // Remove diameter
-      .replace(/\s*,?\s*\d+\.?\d*\s*kg\b/gi, '')  // Remove weight
-      .replace(/\s*,?\s*\d+\.?\d*\s*lb\b/gi, '')
-      .trim() || fallbackTitle;
+  // ATOMIC FILAMENT: Extract product line name from the 2-part ID
+  // Format: "atomic-filament__pla" → "PLA", "atomic-filament__pla-silk" → "PLA Silk"
+  // This ensures card titles show "PLA", "PETG", "PLA Silk" instead of individual product names
+  if (parts[0] === 'atomic-filament' && parts.length === 2) {
+    const materialSlug = parts[1]; // e.g., "pla", "pla-silk", "petg", "abs", "asa"
+    
+    // Convert slug to display name
+    const displayName = materialSlug
+      .replace(/-/g, ' ')
+      .toUpperCase()
+      .replace('SILK', 'Silk'); // "PLA SILK" → "PLA Silk"
+    
+    return displayName;
   }
   
   if (parts.length >= 3) {
