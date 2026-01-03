@@ -36,8 +36,8 @@ export const ANYCUBIC_PRODUCT_WHITELIST: AnycubicWhitelistProduct[] = [
   { name: 'PLA High Speed', displayName: 'PLA High Speed', handle: 'high-speed-pla-filament', url: 'https://store.anycubic.com/products/high-speed-pla-filament', material: 'PLA+', finishType: 'Standard', productLineSlug: 'pla-high-speed' },
   
   // Specialty PLA finishes
-  { name: 'PLA Silk', displayName: 'PLA Silk', handle: 'silk-pla-filament', url: 'https://store.anycubic.com/products/silk-pla-filament', material: 'PLA', finishType: 'Silk', productLineSlug: 'pla-silk' },
-  { name: 'PLA Silk Dual/Tri-Color', displayName: 'PLA Silk Dual/Tri-Color', handle: 'pla-silk-dual-tri-color-filament', url: 'https://ca.anycubic.com/products/pla-silk-dual-tri-color-filament', material: 'PLA', finishType: 'Silk', productLineSlug: 'pla-silk-multicolor' },
+  { name: 'PLA Silk', displayName: 'Silk PLA Filament', handle: 'silk-pla-filament', url: 'https://store.anycubic.com/products/silk-pla-filament', material: 'PLA', finishType: 'Silk', productLineSlug: 'pla-silk' },
+  { name: 'PLA Silk Dual/Tri-Color', displayName: 'PLA Silk Dual/Tri-Color Filament', handle: 'pla-silk-dual-tri-color-filament', url: 'https://ca.anycubic.com/products/pla-silk-dual-tri-color-filament', material: 'PLA', finishType: 'Silk', productLineSlug: 'pla-silk-multicolor' },
   { name: 'PLA Special', displayName: 'PLA Special', handle: 'pla-special', url: 'https://ca.anycubic.com/products/pla-special', material: 'PLA+', finishType: 'Standard', productLineSlug: 'pla-special' },
   { name: 'PLA Glow', displayName: 'PLA Glow', handle: 'pla-glow', url: 'https://store.anycubic.com/products/pla-glow', material: 'PLA-Glow', finishType: 'Glow', productLineSlug: 'pla-glow' },
   { name: 'PLA Marble', displayName: 'PLA Marble', handle: 'pla-marble', url: 'https://store.anycubic.com/products/pla-marble', material: 'PLA', finishType: 'Marble', productLineSlug: 'pla-marble' },
