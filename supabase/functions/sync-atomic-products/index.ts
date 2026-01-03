@@ -290,9 +290,9 @@ Deno.serve(async (req) => {
       // Use defaults
     }
 
-    const { dryRun = false, limit = 500 } = body;
+    const { dryRun = false } = body;
     
-    console.log(`[ATOMIC-SYNC] Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}, Limit: ${limit}`);
+    console.log(`[ATOMIC-SYNC] Mode: ${dryRun ? 'DRY RUN' : 'LIVE'} (no limit - all products)`);
     console.log('[ATOMIC-SYNC] Collections to sync:');
     ATOMIC_COLLECTION_WHITELIST.forEach(c => {
       console.log(`  - ${c.displayMaterial}: ${c.collectionUrl}`);
@@ -366,7 +366,7 @@ Deno.serve(async (req) => {
     console.log('[ATOMIC-SYNC] STEP 3: Scraping product pages for H1 titles');
     
     const productsToInsert: any[] = [];
-    const productEntries = Array.from(uniqueProducts.entries()).slice(0, limit);
+    const productEntries = Array.from(uniqueProducts.entries());
     const BATCH_SIZE = 5;
     const totalBatches = Math.ceil(productEntries.length / BATCH_SIZE);
     
