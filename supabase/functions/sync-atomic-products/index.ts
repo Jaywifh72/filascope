@@ -465,6 +465,16 @@ Deno.serve(async (req) => {
         
         const title = pageData.h1Title || productUrl.split('/products/')[1]?.replace(/-/g, ' ') || 'Unknown';
         
+        // Override product_line_id for Silky/Silk products (title-based detection)
+        let productLineId = product.productLineId;
+        let material = product.material;
+        
+        if (title.toLowerCase().includes('silky') || title.toLowerCase().includes('silk')) {
+          productLineId = 'atomic-filament__pla-silk';
+          material = 'PLA Silk';
+          console.log(`[ATOMIC-SYNC] → Overriding to PLA Silk: ${title.slice(0, 50)}`);
+        }
+        
         // Filter non-filament products
         if (isAtomicNonFilamentProduct(title) || isAtomicSampleProduct(title) || is285mmDiameter(title)) {
           console.log(`[ATOMIC-SYNC] Filtered: ${title.slice(0, 50)}`);
@@ -497,8 +507,8 @@ Deno.serve(async (req) => {
           vendor: 'Atomic Filament',
           product_title: title,
           product_url: productUrl,
-          material: product.material,
-          product_line_id: product.productLineId,
+          material: material,
+          product_line_id: productLineId,
           color_family: colorFamily,
           color_hex: colorHex || null,
           featured_image: pageData.imageUrl || null,
