@@ -392,18 +392,35 @@ export function isNonFilamentProduct(handle: string): boolean {
 }
 
 /**
+ * Strip promotional text from title BEFORE generating product_line_id
+ * This ensures promotional products group with their regular counterparts
+ */
+function stripPromotionalFromTitle(title: string): string {
+  return title
+    .replace(/\s*-?\s*buy\s+\d+[,\s]*get\s+\d+(\s+free)?/gi, '')
+    .replace(/\s*-?\s*flash\s+(deal|sale)/gi, '')
+    .replace(/\s*-?\s*christmas\s+(box|sale|deal|bulk)/gi, '')
+    .replace(/\s*-?\s*b2g1/gi, '')
+    .replace(/\s*-?\s*promo(tion)?/gi, '')
+    .replace(/\s*-?\s*special\s+offer/gi, '')
+    .replace(/\s*-?\s*limited\s+(time\s+)?offer/gi, '')
+    .replace(/\s*-?\s*bulk\s+(sale|deal)/gi, '')
+    .replace(/\s*-?\s*mixed\s+color\s*deals?/gi, '')
+    .trim();
+}
+
+/**
  * Generate product_line_id for Anycubic products (matches Amolen approach)
  * PRIORITY: Use DB material field if available (more reliable than title parsing)
+ * 
+ * CRITICAL: Promotional products now group with regular products!
+ * "PLA Silk - Buy 2, Get 1 Free" -> anycubic__pla__silk (same as regular PLA Silk)
  */
 export function generateAnycubicProductLineId(title: string, material?: string | null): string {
-  const cleanedTitle = cleanAnycubicTitle(title).toLowerCase();
-  
-  // Promotional products get unique IDs to prevent incorrect grouping
-  if (isPromotionalProduct(title)) {
-    const promoMatch = title.match(/christmas\s*bulk\s*sale|flash\s*sale|buy\s*\d+.*get\s*\d+|bulk\s*deal|mixed\s*color/i);
-    const promoSuffix = promoMatch ? `_promo_${promoMatch[0].toLowerCase().replace(/\s+/g, '_').substring(0, 20)}` : '_promo';
-    return `anycubic_${cleanedTitle.replace(/[^a-z0-9]/g, '_').substring(0, 30)}${promoSuffix}`;
-  }
+  // CRITICAL: Strip promotional text FIRST, before any other processing
+  // This ensures promotional variants group correctly with regular products
+  const strippedTitle = stripPromotionalFromTitle(title);
+  const cleanedTitle = cleanAnycubicTitle(strippedTitle).toLowerCase();
   
   // Build product line ID from material + product line
   let baseId = 'anycubic';
@@ -418,7 +435,8 @@ export function generateAnycubicProductLineId(title: string, material?: string |
     baseId += `__${materialSlug}`;
   } else {
     // PRIORITY 2: Fall back to title parsing only when DB material is not available
-    const normalizedMaterial = normalizeAnycubicMaterial(title);
+    // Use stripped title to avoid detecting promo text as material
+    const normalizedMaterial = normalizeAnycubicMaterial(strippedTitle);
     if (normalizedMaterial) {
       // Convert + to 'plus' so PLA+ becomes 'plaplus' and PLA stays 'pla'
       const materialSlug = normalizedMaterial.toLowerCase()
@@ -432,8 +450,8 @@ export function generateAnycubicProductLineId(title: string, material?: string |
     }
   }
   
-  // Add finish type
-  const finishType = extractFinishType(title);
+  // Add finish type (use stripped title to avoid promo text)
+  const finishType = extractFinishType(strippedTitle);
   if (finishType !== 'Standard') {
     baseId += `__${finishType.toLowerCase().replace(/\s+/g, '')}`;
   } else {
