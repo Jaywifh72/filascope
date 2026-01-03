@@ -175,8 +175,8 @@ Deno.serve(async (req) => {
         // Get product image (first one or variant-specific)
         const defaultImage = product.images?.[0]?.src || product.image?.src || null;
         
-        // Generate product_line_id using whitelist data
-        const productLineId = `anycubic__${whitelistProduct.material.toLowerCase().replace(/[^a-z0-9]/g, '')}__${whitelistProduct.finishType.toLowerCase().replace(/\s+/g, '')}`;
+        // Generate product_line_id using whitelist productLineSlug (unique per product)
+        const productLineId = `anycubic__${whitelistProduct.productLineSlug.replace(/-/g, '')}`;
         
         // Process each variant (color)
         for (const variant of product.variants || []) {
