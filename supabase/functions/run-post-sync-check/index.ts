@@ -2866,29 +2866,83 @@ Deno.serve(async (req) => {
     
     /**
      * Extract the primary color name from product title or color_family
+     * Uses position-based priority and excludes modifiers/negatives
      */
     function extractPrimaryColor(title: string, colorFamily?: string | null): string | null {
       const colorPatterns = [
         'gold', 'yellow', 'orange', 'red', 'pink', 'purple', 'blue', 
         'cyan', 'teal', 'green', 'brown', 'black', 'white', 'gray', 
-        'grey', 'silver', 'bronze', 'copper', 'beige', 'natural'
+        'grey', 'silver', 'bronze', 'copper', 'beige', 'natural', 'indigo',
+        'lilac', 'violet', 'olive', 'maroon', 'navy', 'crimson', 'coral'
       ];
       
-      const text = (title + ' ' + (colorFamily || '')).toLowerCase();
+      let text = (title + ' ' + (colorFamily || '')).toLowerCase();
       
       // Skip gift cards, bundles, multi-color products (rainbow, gradient, galaxy, etc.)
-      if (text.includes('gift card') || text.includes('rainbow') || 
-          text.includes('gradient') || text.includes('galaxy') || 
-          text.includes('multicolor') || text.includes('multi-color') ||
-          text.includes('dual color') || text.includes('dual-color') ||
-          text.includes('chameleon') || text.includes('shift')) {
-        return null;
+      const skipPatterns = [
+        'gift card', 'rainbow', 'gradient', 'galaxy', 'multicolor', 'multi-color',
+        'dual color', 'dual-color', 'chameleon', 'shade-shifting', 'groovy',
+        'illusion', 'cosmic', 'nebula', 'aurora', 'tri-color', 'tricolor'
+      ];
+      for (const skip of skipPatterns) {
+        if (text.includes(skip)) return null;
       }
       
-      for (const color of colorPatterns) {
-        if (text.includes(color)) return color;
+      // Skip negative patterns - "NO YELLOW HUE" should NOT match yellow
+      const negativePatterns = ['no yellow', 'no blue', 'no red', 'no green', 'no color'];
+      for (const neg of negativePatterns) {
+        if (text.includes(neg)) return null;
       }
-      return null;
+      
+      // Remove color MODIFIERS that indicate shimmer/effect, not base color
+      // "golden sparkle" = sparkle effect, NOT gold color
+      // "golden blood diamond" = red, NOT gold
+      const modifierPatterns = [
+        'golden sparkle', 'golden blood', 'golden diamond', 'gold flake',
+        'silver sparkle', 'silver flake', 'copper sparkle', 'copper flake',
+        'bronze sparkle', 'bronze flake'
+      ];
+      for (const mod of modifierPatterns) {
+        text = text.replace(mod, '');
+      }
+      
+      // Handle compound specialty colors FIRST (before single-word detection)
+      const compoundColors: Record<string, string> = {
+        'olive drab': 'green',           // Olive drab IS green
+        'smoke black': 'gray',           // Smoke black is translucent gray
+        'translucent black': 'gray',     // Translucent black appears gray
+        'translucent smoke': 'gray',     // Smoke variants are gray
+        'black marble': 'gray',          // Marble has gray veins
+        'blood diamond': 'red',          // Blood diamond is red
+        'offshore mist': 'blue',         // Mist is blue-ish
+        'electric blue': 'blue',         // Electric blue IS blue
+        'pastel lilac': 'purple',        // Lilac IS purple
+        'gun metal': 'gray',             // Gun metal is gray
+        'gunmetal': 'gray',              // Gun metal is gray
+      };
+      for (const [compound, baseColor] of Object.entries(compoundColors)) {
+        if (text.includes(compound)) return baseColor;
+      }
+      
+      // Find ALL colors with their positions and return the FIRST one found
+      // This ensures "Indigo Golden Sparkle" returns "indigo" (pos 0) not "gold" (pos 7)
+      const matches: Array<{ color: string; index: number }> = [];
+      for (const color of colorPatterns) {
+        const idx = text.indexOf(color);
+        if (idx !== -1) {
+          // Make sure it's a word boundary (not part of another word)
+          const beforeChar = idx > 0 ? text[idx - 1] : ' ';
+          const afterChar = idx + color.length < text.length ? text[idx + color.length] : ' ';
+          if ((beforeChar === ' ' || beforeChar === '-' || beforeChar === '/') &&
+              (afterChar === ' ' || afterChar === '-' || afterChar === '/' || afterChar === ',')) {
+            matches.push({ color, index: idx });
+          }
+        }
+      }
+      
+      // Sort by position and return the first color found
+      matches.sort((a, b) => a.index - b.index);
+      return matches[0]?.color || null;
     }
 
     /**
@@ -2908,13 +2962,16 @@ Deno.serve(async (req) => {
 
     /**
      * Validate hex matches expected color family using RGB analysis
+     * More lenient for translucent and specialty variants
      */
-    function isHexValidForColorName(hex: string, colorName: string): boolean {
+    function isHexValidForColorName(hex: string, colorName: string, productTitle?: string): boolean {
       const rgb = hexToRgbLocal(hex);
       if (!rgb) return true; // Can't validate, assume OK
       
       const { r, g, b } = rgb;
       const brightness = (r + g + b) / 3;
+      const titleLower = (productTitle || '').toLowerCase();
+      const isTranslucent = titleLower.includes('translucent') || titleLower.includes('smoke') || titleLower.includes('clear');
       
       switch (colorName) {
         case 'gold':
@@ -2923,44 +2980,59 @@ Deno.serve(async (req) => {
           return r > 150 && g > 100 && b < r - 50;
         case 'blue':
         case 'cyan':
+        case 'navy':
           // Blue should have high B, lower R
-          return b > r && b > 100;
+          return b > r && b > 80;
+        case 'indigo':
+          // Indigo is blue-purple, high B and some R
+          return b > 80 && (b > g || r > 60);
         case 'red':
+        case 'crimson':
+        case 'maroon':
           // Red should have high R, low G+B
-          return r > 150 && r > g + 50 && r > b + 50;
+          return r > 120 && r > g && r > b;
         case 'green':
         case 'teal':
-          // Green/Teal should have high G
-          return g > r && g > 80;
+        case 'olive':
+          // Green/Teal should have high G (relaxed for olive tones)
+          return g >= r - 30 && g > 60;
         case 'black':
-          // Black should be dark
-          return brightness < 80;
+          // Black should be dark, but translucent black can be lighter
+          if (isTranslucent) return brightness < 150;
+          return brightness < 100;
         case 'white':
-          // White should be bright
-          return brightness > 200;
+        case 'natural':
+          // White/natural should be bright (relaxed)
+          return brightness > 180;
         case 'pink':
+        case 'coral':
           // Pink should have high R and some B
-          return r > 150 && b > 100 && r > g;
+          return r > 120 && r > g;
         case 'purple':
+        case 'violet':
+        case 'lilac':
           // Purple should have high R and B, lower G
-          return r > 80 && b > 80 && b > g;
+          return (r > 60 || b > 60) && b >= g - 30;
         case 'orange':
           // Orange should have high R, medium G, low B
-          return r > 180 && g > 60 && g < 180 && b < 100;
+          return r > 150 && g > 40 && b < 150;
         case 'brown':
           // Brown is dark orange/red
-          return r > g && g > b && brightness < 150;
+          return r > g && brightness < 180;
         case 'gray':
         case 'grey':
-          // Gray should have similar RGB values (not saturated)
-          return Math.abs(r - g) < 40 && Math.abs(g - b) < 40 && Math.abs(r - b) < 40;
+          // Gray should have similar RGB values (not saturated) - very relaxed
+          return Math.abs(r - g) < 60 && Math.abs(g - b) < 60 && Math.abs(r - b) < 60;
         case 'silver':
           // Silver is bright gray
-          return Math.abs(r - g) < 40 && Math.abs(g - b) < 40 && brightness > 160;
+          return Math.abs(r - g) < 50 && Math.abs(g - b) < 50 && brightness > 140;
         case 'bronze':
         case 'copper':
           // Bronze/copper is warm metallic (reddish-brown)
-          return r > g && g > b && r > 120;
+          return r > g && r > 100;
+        case 'beige':
+          // Beige is warm light color
+          return brightness > 150 && r >= g;
         default:
           return true;
       }
@@ -2979,7 +3051,7 @@ Deno.serve(async (req) => {
       const colorName = extractPrimaryColor(product.product_title, product.color_family);
       if (!colorName || !product.color_hex) continue;
       
-      const isValid = isHexValidForColorName(product.color_hex, colorName);
+      const isValid = isHexValidForColorName(product.color_hex, colorName, product.product_title);
       if (!isValid) {
         colorMismatches.push({
           id: product.id,
