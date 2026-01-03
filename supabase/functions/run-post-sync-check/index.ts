@@ -1797,6 +1797,144 @@ Deno.serve(async (req) => {
       products: colorDistinguishabilityIssues.length > 0 ? colorDistinguishabilityIssues : undefined,
     });
 
+    // ============= ANYCUBIC-SPECIFIC CHECK: H1 Title Match =============
+    // Validates that Anycubic product_title in DB matches the <h1> from whitelist URLs
+    // This enforces the "H1 Title Priority" rule documented in brand-sync-docs.ts
+    if (brandSlug === 'anycubic' && firecrawlApiKey) {
+      console.log('[PostSyncCheck] Running Anycubic H1 Title Match validation...');
+      
+      // Anycubic whitelist URLs mapped to product_line_id
+      const ANYCUBIC_WHITELIST_URLS: Record<string, { url: string; expectedTitle: string }> = {
+        'anycubic__plabasicrefill': { url: 'https://store.anycubic.com/products/pla-basic-refill', expectedTitle: 'PLA Basic Refill' },
+        'anycubic__plabasic': { url: 'https://store.anycubic.com/products/pla-filament', expectedTitle: 'PLA Basic' },
+        'anycubic__plaplus': { url: 'https://store.anycubic.com/products/pla-plus-filament', expectedTitle: 'PLA+ Filament' },
+        'anycubic__plaplusrefill': { url: 'https://store.anycubic.com/products/pla-plus-refill', expectedTitle: 'PLA+ Refill' },
+        'anycubic__plahighspeed': { url: 'https://store.anycubic.com/products/high-speed-pla-filament', expectedTitle: 'High Speed PLA' },
+        'anycubic__plasilk': { url: 'https://store.anycubic.com/products/silk-pla-filament', expectedTitle: 'Silk PLA Filament' },
+        'anycubic__plasilkmulticolor': { url: 'https://ca.anycubic.com/products/pla-silk-dual-tri-color-filament', expectedTitle: 'PLA Silk Dual/Tri-Color Filament' },
+        'anycubic__plaspecial': { url: 'https://ca.anycubic.com/products/pla-special', expectedTitle: 'PLA Special' },
+        'anycubic__plaglow': { url: 'https://store.anycubic.com/products/pla-glow', expectedTitle: 'PLA Glow' },
+        'anycubic__plamarble': { url: 'https://store.anycubic.com/products/pla-marble', expectedTitle: 'PLA Marble' },
+        'anycubic__plagalaxy': { url: 'https://store.anycubic.com/products/pla-galaxy', expectedTitle: 'PLA Galaxy' },
+        'anycubic__plamatte': { url: 'https://store.anycubic.com/products/matte-pla-filament', expectedTitle: 'Matte PLA Filament' },
+        'anycubic__plametal': { url: 'https://store.anycubic.com/products/pla-metal-filament', expectedTitle: 'PLA Metal' },
+        'anycubic__petg': { url: 'https://ca.anycubic.com/products/petg', expectedTitle: 'PETG' },
+        'anycubic__petgtranslucent': { url: 'https://ca.anycubic.com/products/petg-translucent', expectedTitle: 'PETG Translucent' },
+        'anycubic__abs': { url: 'https://store.anycubic.com/products/abs-filament', expectedTitle: 'ABS Filament' },
+        'anycubic__asa': { url: 'https://store.anycubic.com/products/asa-filament', expectedTitle: 'ASA Filament' },
+        'anycubic__pc': { url: 'https://store.anycubic.com/products/pc-filament', expectedTitle: 'PC Filament' },
+        'anycubic__tpu': { url: 'https://store.anycubic.com/products/tpu-filament', expectedTitle: 'TPU Filament' },
+      };
+
+      const anycubicH1Issues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+      let anycubicCheckedCount = 0;
+
+      // Get unique Anycubic product lines from DB (use variantsWithColorFamily already fetched)
+      const anycubicProductLines = [...new Set(
+        (variantsWithColorFamily || [])
+          .map(f => f.product_line_id)
+          .filter(Boolean)
+      )] as string[];
+
+      for (const productLineId of anycubicProductLines.slice(0, 10)) { // Check up to 10 product lines
+        const whitelistEntry = ANYCUBIC_WHITELIST_URLS[productLineId];
+        if (!whitelistEntry) continue;
+
+        // Get representative DB title for this product line
+        const dbFilament = (variantsWithColorFamily || []).find(f => f.product_line_id === productLineId);
+        if (!dbFilament) continue;
+
+        const dbTitle = dbFilament.product_title;
+
+        try {
+          // Scrape the whitelist URL to get the actual H1 title
+          const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${firecrawlApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: whitelistEntry.url,
+              formats: ['html'],
+              onlyMainContent: false,
+              waitFor: 2000,
+            }),
+          });
+
+          if (!scrapeResponse.ok) {
+            console.log(`[PostSyncCheck] Anycubic H1 check: Failed to scrape ${whitelistEntry.url}`);
+            continue;
+          }
+
+          const scrapeData = await scrapeResponse.json();
+          const html = scrapeData.data?.html || scrapeData.html || '';
+
+          // Extract H1 from scraped HTML
+          const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+          const scrapedH1 = h1Match ? h1Match[1].trim() : null;
+
+          if (!scrapedH1) {
+            console.log(`[PostSyncCheck] Anycubic H1 check: No H1 found on ${whitelistEntry.url}`);
+            continue;
+          }
+
+          anycubicCheckedCount++;
+
+          // Normalize titles for comparison (strip promotional text, specs, "Filament")
+          const normalizeForComparison = (title: string): string => {
+            return title
+              .replace(/\s*-?\s*buy\s+\d+[,\s]*get\s+\d+(\s+free)?/gi, '')
+              .replace(/\s*-?\s*flash\s+(deal|sale)/gi, '')
+              .replace(/\s*-?\s*christmas\s+(box|sale|deal|bulk)/gi, '')
+              .replace(/\s*-?\s*b2g1/gi, '')
+              .replace(/\s+Filament\s*/gi, ' ')
+              .replace(/\s*,?\s*\d+\.?\d*\s*mm\s*/gi, ' ')
+              .replace(/\s*,?\s*\d+\.?\d*\s*(kg|g|lb)\s*(\/\s*\d+\.?\d*\s*(kg|g|lb))?\s*/gi, '')
+              .replace(/\s+/g, ' ')
+              .trim()
+              .toLowerCase();
+          };
+
+          const normalizedDb = normalizeForComparison(dbTitle);
+          const normalizedH1 = normalizeForComparison(scrapedH1);
+
+          // Calculate similarity
+          const similarity = titleSimilarity(normalizedDb, normalizedH1);
+
+          console.log(`[PostSyncCheck] Anycubic H1 check: "${productLineId}" DB="${normalizedDb}" H1="${normalizedH1}" (${similarity}%)`);
+
+          if (similarity < 70) {
+            anycubicH1Issues.push({
+              id: dbFilament.id,
+              title: dbTitle,
+              issue: `DB title doesn't match page H1. Page shows: "${scrapedH1}" (${similarity}% similarity)`,
+              url: whitelistEntry.url,
+            });
+          }
+
+          // Rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error(`[PostSyncCheck] Anycubic H1 check error for ${productLineId}:`, error);
+        }
+      }
+
+      if (anycubicCheckedCount > 0) {
+        checks.push({
+          checkName: "Anycubic H1 Title Match (DB vs Whitelist URL)",
+          status: anycubicH1Issues.length === 0 ? "pass" : anycubicH1Issues.length <= 1 ? "warning" : "fail",
+          count: anycubicCheckedCount - anycubicH1Issues.length,
+          details: anycubicH1Issues.length === 0
+            ? `${anycubicCheckedCount}/${anycubicCheckedCount} Anycubic product titles match their whitelist page <h1> tags`
+            : `${anycubicH1Issues.length} Anycubic titles don't match their canonical Buy Now page H1`,
+          products: anycubicH1Issues.length > 0 ? anycubicH1Issues : undefined,
+        });
+      }
+
+      console.log(`[PostSyncCheck] Anycubic H1 Title Match complete: ${anycubicCheckedCount} checked, ${anycubicH1Issues.length} issues`);
+    }
+
     // ============= PRICE CONSISTENCY CHECK (UPDATED FOR INDUSTRIAL BRANDS) =============
     // Validate DB prices are reasonable (not $0 or suspicious values)
     // 3DXTech is an industrial brand with expensive specialty materials (PEEK, PEKK, PEI, etc.)

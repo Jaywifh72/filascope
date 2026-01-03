@@ -91,14 +91,24 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
   },
   
   'anycubic': {
+    exclusions: [
+      { name: 'Promotional Bundles', reason: 'Buy 2 Get 1, Flash Sale, Christmas Box variants filtered from product IDs and titles' },
+      { name: 'Non-Filament Products', reason: 'Filament Hub accessories, prize claims, dryers excluded via ANYCUBIC_NON_FILAMENT_SLUGS' },
+      { name: 'Non-Standard Sizes', reason: '2.85mm diameter and non-consumer weights excluded' },
+    ],
     specialBehaviors: [
-      { name: 'Multi-Region Support', description: 'Syncs US, CA, UK, EU regional stores with URL transformation.' },
-      { name: 'High-Speed Detection', description: 'Identifies high-speed PLA variants.' },
-      { name: 'Brand-Level Availability', description: 'Uses BRAND_REGIONAL_STORES for regional filtering.' },
+      { name: 'H1 Title Priority (Critical)', description: 'Product titles MUST be scraped from the <h1> tag on the Buy Now page URL. Shopify JSON title is never used. Whitelist displayName is fallback only if scrape fails.' },
+      { name: 'Whitelist-Only Architecture', description: '19 official product lines defined in ANYCUBIC_PRODUCT_WHITELIST. Only these products are synced.' },
+      { name: 'Multi-Region Fallback', description: 'US store checked first, then CA store for products like PETG and PLA Special that are CA-only.' },
+      { name: 'Scraped Color Swatches', description: 'Colors extracted from page HTML (data-option-value, fieldset) rather than Shopify variant titles.' },
+      { name: 'Product Line ID Generation', description: 'Uses productLineSlug from whitelist (e.g., pla-high-speed → anycubic__plahighspeed).' },
+      { name: 'Promotional Text Stripping', description: 'Flash Sale, Buy X Get Y, Christmas Sale text stripped from titles and IDs.' },
     ],
     notes: [
-      'Shopify API pipeline',
-      'Regional URL transformation (e.g., ca.anycubic.com)',
+      'CRITICAL: product_title must match page <h1> exactly - this is the "Names Match" consistency rule',
+      'Firecrawl HTML scraping used for display titles and color swatches',
+      'Shopify JSON API used only for variant metadata (prices, availability, images)',
+      'Whitelist URL field is the canonical "Buy Now" page for title verification',
     ],
   },
   
