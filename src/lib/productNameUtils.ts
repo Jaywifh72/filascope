@@ -486,8 +486,20 @@ interface FilamentBase {
 function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: string): string {
   // product_line_id format varies by brand:
   // - Amolen/etc: "vendor__material__line-name" (3+ parts)
-  // - Anycubic: "vendor__slug" (2 parts)
+  // - Anycubic/Atomic: "vendor__slug" (2 parts) - use fallbackTitle
   const parts = productLineId.split('__');
+  
+  // ATOMIC FILAMENT: Always use the cleaned fallbackTitle (DB product_title)
+  // This preserves important descriptors like "Translucent", "Sparkle", specialty color names
+  if (parts[0] === 'atomic-filament') {
+    return fallbackTitle
+      .replace(/\s+Filament\s*$/i, '')
+      .replace(/\s*AMS\s*Compatible\s*$/i, '')
+      .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')  // Remove diameter
+      .replace(/\s*,?\s*\d+\.?\d*\s*kg\b/gi, '')  // Remove weight
+      .replace(/\s*,?\s*\d+\.?\d*\s*lb\b/gi, '')
+      .trim() || fallbackTitle;
+  }
   
   if (parts.length >= 3) {
     // 3+ part format: Extract material (uppercase) and line name (title case)
