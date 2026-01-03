@@ -20,10 +20,12 @@ import {
   logFilterStats,
   extractDiameterFromText,
 } from '../_shared/variant-filters.ts';
-// Brand-specific filters for non-filament products
+// Brand-specific filters and helpers for non-filament products
 import {
   isNonFilamentProduct as isAnycubicNonFilament,
   isPromotionalProduct as isAnycubicPromoProduct,
+  getAnycubicColorHex,
+  cleanAnycubicTitle,
 } from '../_shared/anycubic-defaults.ts';
 
 const corsHeaders = {
@@ -997,13 +999,17 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
             continue; // Skip duplicate color
           }
           seenColors.add(colorKey);
-          const colorHex = extractColorHexFromVariant(variant, product, baseTitle);
+          const colorHex = extractColorHexFromVariant(variant, product, baseTitle, brand.brand_slug);
           const colorFamily = extractColorFamilyFromVariant(variant, product, baseTitle) || extractColorFamily(baseTitle);
           
           // CRITICAL: Use base Shopify title for product_title (matches page H1)
+          // For Anycubic: Strip promotional text for cleaner titles
           // Color is stored separately in color_family/color_hex fields
           // This ensures DB title = Page H1 title (Names Match consistency rule)
-          const variantTitle = baseTitle;
+          let variantTitle = baseTitle;
+          if (brand.brand_slug === 'anycubic') {
+            variantTitle = cleanAnycubicTitle(baseTitle);
+          }
           
           // Find variant-specific image (match by variant_id or color name)
           const variantImage = findVariantImage(product, variant, colorName);
@@ -1076,7 +1082,7 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
           barcode: variant.barcode || null,
           material,
           colorFamily,
-          colorHex: extractColorHexFromVariant(variant, product, baseTitle),
+          colorHex: extractColorHexFromVariant(variant, product, baseTitle, brand.brand_slug),
           netWeightG,
           productLineId,
         });
@@ -1098,8 +1104,8 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
   return products;
 }
 
-// Extract color hex from Shopify variant options - enhanced with color-mapping and fallback
-function extractColorHexFromVariant(variant: any, product: any, title: string): string | null {
+// Extract color hex from Shopify variant options - enhanced with brand-specific and generic color-mapping
+function extractColorHexFromVariant(variant: any, product: any, title: string, brandSlug?: string): string | null {
   // Check variant options for color
   const colorOption = variant.option1 || variant.option2 || variant.option3;
   
@@ -1111,7 +1117,16 @@ function extractColorHexFromVariant(variant: any, product: any, title: string): 
     }
   }
   
-  // Second try: Extract from variant option using color-mapping (exact match first)
+  // BRAND-SPECIFIC LOOKUP FIRST (CRITICAL FIX)
+  // This ensures Anycubic colors like "tropical turquoise" get correct hex codes
+  if (colorOption && brandSlug === 'anycubic') {
+    const anycubicHex = getAnycubicColorHex(colorOption);
+    if (anycubicHex) {
+      return anycubicHex.startsWith('#') ? anycubicHex : `#${anycubicHex}`;
+    }
+  }
+  
+  // Second try: Extract from variant option using generic color-mapping (exact match first)
   if (colorOption) {
     const hex = getColorHex(colorOption);
     if (hex) {
