@@ -195,11 +195,36 @@ async function scrapeProductPage(
       colorHex = swatchMatch[1].toUpperCase();
     }
     
-    // Extract main product image
+    // Extract main product image - try multiple patterns for Shopify themes
     let imageUrl: string | null = null;
-    const imgMatch = html.match(/<img[^>]*class="[^"]*product[^"]*image[^"]*"[^>]*src="([^"]+)"/i);
-    if (imgMatch) {
-      imageUrl = imgMatch[1];
+    const imagePatterns = [
+      // Pattern 1: Image with image-magnify-lightbox class (Atomic specific)
+      /<img[^>]*class="[^"]*image-magnify-lightbox[^"]*"[^>]*src="([^"]+)"/i,
+      // Pattern 2: Shopify product__media structure
+      /<div[^>]*class="[^"]*product__media[^"]*"[^>]*>\s*<img[^>]*src="([^"]+)"/i,
+      // Pattern 3: atomicfilament.com CDN image (reliable fallback)
+      /src="(https:\/\/atomicfilament\.com\/cdn\/shop\/(?:files|products)\/[^"]+)"/i,
+      // Pattern 4: Generic Shopify CDN image
+      /src="(https:\/\/[^"]+\.shopify\.com\/[^"]*\/(?:files|products)\/[^"]+\.(jpg|png|webp)[^"]*)"/i,
+      // Pattern 5: Original pattern for other themes
+      /<img[^>]*class="[^"]*product[^"]*image[^"]*"[^>]*src="([^"]+)"/i,
+    ];
+    
+    for (const pattern of imagePatterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) {
+        const candidateUrl = match[1]
+          .replace(/&amp;/g, '&')
+          .replace(/&width=\d+/, '&width=1200');
+        
+        // Skip loading spinners, icons, or SVGs
+        if (!candidateUrl.includes('spinner') && 
+            !candidateUrl.includes('icon') && 
+            !candidateUrl.endsWith('.svg')) {
+          imageUrl = candidateUrl;
+          break;
+        }
+      }
     }
     
     // Extract price - JSON-LD first (most reliable for Shopify)
