@@ -13,6 +13,13 @@
  * - ABS: https://atomicfilament.com/collections/abs-3d-filament
  * - ASA: https://atomicfilament.com/collections/asa-free-us-shipping
  * - PLA Silk: https://atomicfilament.com/collections/silky-pla
+ * 
+ * ROBUSTNESS FEATURES:
+ * - Safe delete pattern (delete AFTER successful scraping)
+ * - Minimum product threshold safety check
+ * - Brand sync log integration for audit trail
+ * - JSON-LD priority for price extraction
+ * - Correct response structure for frontend
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
@@ -24,6 +31,7 @@ import {
   isAtomicNonFilamentProduct,
   isAtomicSampleProduct,
   is285mmDiameter,
+  extractFinishType,
 } from '../_shared/atomic-defaults.ts';
 import { getColorHex, getColorFamily } from '../_shared/color-mapping.ts';
 
@@ -31,6 +39,9 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Safety threshold - Atomic should have at least 50 products
+const MINIMUM_PRODUCTS_THRESHOLD = 50;
 
 interface SyncRequest {
   dryRun?: boolean;
@@ -123,6 +134,7 @@ async function scrapeCollectionProducts(
 
 /**
  * Scrape H1 title, price, and details from a product page
+ * Price extraction prioritizes JSON-LD for reliability
  */
 async function scrapeProductPage(
   productUrl: string,
@@ -190,28 +202,48 @@ async function scrapeProductPage(
       imageUrl = imgMatch[1];
     }
     
-    // Extract price - look for sale price first, then regular price
+    // Extract price - JSON-LD first (most reliable for Shopify)
     let price: number | null = null;
-    const pricePatterns = [
-      // Shopify sale price pattern
-      /<span[^>]*class="[^"]*price-item--sale[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
-      /<span[^>]*class="[^"]*price-item--regular[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
-      /<span[^>]*class="[^"]*price-item--last[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
-      // Generic price patterns
-      /<span[^>]*class="[^"]*price[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
-      /class="[^"]*price[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)/i,
-      // JSON-LD or metadata
-      /"price":\s*"?([\d,]+\.?\d*)"?/i,
-      /"full_price":\s*"?\$?\s*([\d,]+\.?\d*)"?/i,
-    ];
     
-    for (const pattern of pricePatterns) {
-      const match = html.match(pattern);
-      if (match?.[1]) {
-        const parsedPrice = parseFloat(match[1].replace(/,/g, ''));
-        if (!isNaN(parsedPrice) && parsedPrice > 0 && parsedPrice < 500) { // Sanity check
-          price = parsedPrice;
-          break;
+    // Try JSON-LD first
+    const jsonLdMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([^<]+)<\/script>/i);
+    if (jsonLdMatch) {
+      try {
+        const jsonLd = JSON.parse(jsonLdMatch[1]);
+        if (jsonLd['@type'] === 'Product' && jsonLd.offers?.price) {
+          const parsedPrice = parseFloat(jsonLd.offers.price);
+          if (!isNaN(parsedPrice) && parsedPrice > 0 && parsedPrice < 500) {
+            price = parsedPrice;
+          }
+        }
+      } catch (e) {
+        // Fall through to regex patterns
+      }
+    }
+    
+    // If JSON-LD didn't work, use regex patterns
+    if (!price) {
+      const pricePatterns = [
+        // Shopify sale price pattern
+        /<span[^>]*class="[^"]*price-item--sale[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
+        /<span[^>]*class="[^"]*price-item--regular[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
+        /<span[^>]*class="[^"]*price-item--last[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
+        // Generic price patterns
+        /<span[^>]*class="[^"]*price[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
+        /class="[^"]*price[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)/i,
+        // JSON metadata fallback
+        /"price":\s*"?([\d,]+\.?\d*)"?/i,
+        /"full_price":\s*"?\$?\s*([\d,]+\.?\d*)"?/i,
+      ];
+      
+      for (const pattern of pricePatterns) {
+        const match = html.match(pattern);
+        if (match?.[1]) {
+          const parsedPrice = parseFloat(match[1].replace(/,/g, ''));
+          if (!isNaN(parsedPrice) && parsedPrice > 0 && parsedPrice < 500) {
+            price = parsedPrice;
+            break;
+          }
         }
       }
     }
@@ -271,11 +303,14 @@ Deno.serve(async (req) => {
   console.log('[ATOMIC-SYNC] 🚀 ATOMIC FILAMENT SYNC - SIMPLIFIED 5-COLLECTION APPROACH');
   console.log('[ATOMIC-SYNC] ═══════════════════════════════════════════════════════');
 
+  let syncLogId: string | null = null;
+  let supabase: ReturnType<typeof createClient> | null = null;
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY') || Deno.env.get('FIRECRAWL_API_KEY_1');
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    supabase = createClient(supabaseUrl, supabaseKey);
 
     if (!firecrawlKey) {
       return new Response(JSON.stringify({ 
@@ -337,31 +372,30 @@ Deno.serve(async (req) => {
     });
 
     // =========================================================================
-    // STEP 1: CLEAN SLATE - Delete all existing Atomic products
+    // STEP 0: Create sync log entry for audit trail
     // =========================================================================
-    console.log('[ATOMIC-SYNC] ─────────────────────────────────────────────────────');
-    console.log('[ATOMIC-SYNC] STEP 1: Clean slate - removing all existing Atomic products');
-    
-    if (!dryRun) {
-      const { error: deleteError } = await supabase
-        .from('filaments')
-        .delete()
-        .ilike('vendor', '%atomic%');
+    if (!dryRun && supabase) {
+      const { data: logEntry } = await supabase
+        .from('brand_sync_logs')
+        .insert({
+          brand_slug: 'atomic-filament',
+          sync_type: 'clean_slate',
+          status: 'running',
+          started_at: new Date().toISOString(),
+          triggered_by: 'admin_ui',
+        })
+        .select('id')
+        .single() as { data: { id: string } | null };
       
-      if (deleteError) {
-        console.error('[ATOMIC-SYNC] Delete error:', deleteError.message);
-      } else {
-        console.log(`[ATOMIC-SYNC] Deleted existing Atomic products`);
-      }
-    } else {
-      console.log('[ATOMIC-SYNC] [DRY-RUN] Would delete all existing Atomic products');
+      syncLogId = logEntry?.id || null;
+      console.log(`[ATOMIC-SYNC] Created sync log: ${syncLogId}`);
     }
 
     // =========================================================================
-    // STEP 2: DISCOVER products from each collection
+    // STEP 1: DISCOVER products from each collection (NO DELETE YET)
     // =========================================================================
     console.log('[ATOMIC-SYNC] ─────────────────────────────────────────────────────');
-    console.log('[ATOMIC-SYNC] STEP 2: Discovering products from 5 collections');
+    console.log('[ATOMIC-SYNC] STEP 1: Discovering products from 5 collections');
     
     const allDiscoveredProducts: DiscoveredProduct[] = [];
     
@@ -398,10 +432,10 @@ Deno.serve(async (req) => {
     console.log(`\n[ATOMIC-SYNC] Total unique products discovered: ${uniqueProducts.size}`);
 
     // =========================================================================
-    // STEP 3: SCRAPE each product page for H1 title and details
+    // STEP 2: SCRAPE each product page for H1 title and details
     // =========================================================================
     console.log('[ATOMIC-SYNC] ─────────────────────────────────────────────────────');
-    console.log('[ATOMIC-SYNC] STEP 3: Scraping product pages for H1 titles');
+    console.log('[ATOMIC-SYNC] STEP 2: Scraping product pages for H1 titles');
     
     const productsToInsert: any[] = [];
     const productEntries = Array.from(uniqueProducts.entries());
@@ -455,7 +489,10 @@ Deno.serve(async (req) => {
         // Get TDS URL
         const tdsMatch = matchAtomicTds(title);
         
-        // Create product record
+        // Extract finish type
+        const finishType = extractFinishType(title);
+        
+        // Create product record (NO retail_price_usd - column doesn't exist)
         const productData = {
           vendor: 'Atomic Filament',
           product_title: title,
@@ -467,8 +504,8 @@ Deno.serve(async (req) => {
           featured_image: pageData.imageUrl || null,
           diameter_nominal_mm: 1.75,
           net_weight_g: 1000,
-          variant_price: pageData.price || null,  // Price from page
-          retail_price_usd: pageData.price || null,  // Also store in retail_price_usd
+          variant_price: pageData.price || null,
+          finish_type: finishType || null,
           tds_url: tdsMatch?.url || null,
           nozzle_temp_min_c: printSettings?.nozzleTempMin || null,
           nozzle_temp_max_c: printSettings?.nozzleTempMax || null,
@@ -492,10 +529,72 @@ Deno.serve(async (req) => {
     console.log(`\n[ATOMIC-SYNC] Scraped: ${scraped}, Filtered: ${filtered}, To insert: ${productsToInsert.length}`);
 
     // =========================================================================
-    // STEP 4: INSERT products into database
+    // STEP 3: SAFETY CHECK - Ensure we have enough products before deleting
     // =========================================================================
     console.log('[ATOMIC-SYNC] ─────────────────────────────────────────────────────');
-    console.log('[ATOMIC-SYNC] STEP 4: Inserting products into database');
+    console.log('[ATOMIC-SYNC] STEP 3: Safety validation');
+    
+    if (productsToInsert.length < MINIMUM_PRODUCTS_THRESHOLD) {
+      const errorMessage = `Only ${productsToInsert.length} products found (expected ${MINIMUM_PRODUCTS_THRESHOLD}+). Aborting to preserve existing data.`;
+      console.error(`[ATOMIC-SYNC] ❌ Safety check FAILED: ${errorMessage}`);
+      
+      // Update sync log as failed
+      if (syncLogId && supabase) {
+        await supabase.from('brand_sync_logs').update({
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          duration_seconds: Math.round((Date.now() - startTime) / 1000),
+          products_discovered: uniqueProducts.size,
+          products_created: 0,
+          products_failed: 0,
+          error_details: { error: errorMessage },
+        }).eq('id', syncLogId);
+      }
+      
+      return new Response(JSON.stringify({
+        success: false,
+        error: errorMessage,
+        summary: {
+          totalDiscovered: uniqueProducts.size,
+          created: 0,
+          updated: 0,
+          skipped: filtered,
+          errors: 0,
+        },
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    console.log(`[ATOMIC-SYNC] ✓ Safety check passed: ${productsToInsert.length} products ready`);
+
+    // =========================================================================
+    // STEP 4: DELETE old products (only AFTER successful scraping)
+    // =========================================================================
+    console.log('[ATOMIC-SYNC] ─────────────────────────────────────────────────────');
+    console.log('[ATOMIC-SYNC] STEP 4: Clean slate - removing existing Atomic products');
+    
+    if (!dryRun) {
+      const { error: deleteError } = await supabase
+        .from('filaments')
+        .delete()
+        .ilike('vendor', '%atomic%');
+      
+      if (deleteError) {
+        console.error('[ATOMIC-SYNC] Delete error:', deleteError.message);
+      } else {
+        console.log(`[ATOMIC-SYNC] Deleted existing Atomic products`);
+      }
+    } else {
+      console.log('[ATOMIC-SYNC] [DRY-RUN] Would delete all existing Atomic products');
+    }
+
+    // =========================================================================
+    // STEP 5: INSERT products into database
+    // =========================================================================
+    console.log('[ATOMIC-SYNC] ─────────────────────────────────────────────────────');
+    console.log('[ATOMIC-SYNC] STEP 5: Inserting products into database');
     
     let inserted = 0;
     let errors = 0;
@@ -520,6 +619,21 @@ Deno.serve(async (req) => {
       console.log(`[ATOMIC-SYNC] Inserted: ${inserted}, Errors: ${errors}`);
     } else if (dryRun) {
       console.log(`[ATOMIC-SYNC] [DRY-RUN] Would insert ${productsToInsert.length} products`);
+      inserted = productsToInsert.length; // For dry run response
+    }
+
+    // =========================================================================
+    // STEP 6: Update sync log with results
+    // =========================================================================
+    if (syncLogId && supabase) {
+      await supabase.from('brand_sync_logs').update({
+        status: errors > 0 ? 'partial' : 'completed',
+        completed_at: new Date().toISOString(),
+        duration_seconds: Math.round((Date.now() - startTime) / 1000),
+        products_discovered: uniqueProducts.size,
+        products_created: inserted,
+        products_failed: errors,
+      }).eq('id', syncLogId);
     }
 
     // =========================================================================
@@ -543,26 +657,49 @@ Deno.serve(async (req) => {
       console.log(`  - ${lineId}: ${count}`);
     }
 
+    // Return response with CORRECT structure for frontend
     return new Response(JSON.stringify({
       success: true,
       dryRun,
       summary: {
-        collectionsProcessed: ATOMIC_COLLECTION_WHITELIST.length,
-        productsDiscovered: uniqueProducts.size,
-        productsFiltered: filtered,
-        productsInserted: inserted,
-        productsByCollection: productLineCounts,
-        duration: `${duration}s`,
+        totalDiscovered: uniqueProducts.size,
+        created: inserted,
+        updated: 0,
+        skipped: filtered,
+        errors: errors,
       },
+      // Legacy fields for backwards compatibility
+      collectionsProcessed: ATOMIC_COLLECTION_WHITELIST.length,
+      productsByCollection: productLineCounts,
+      duration: `${duration}s`,
+      duration_ms: Date.now() - startTime,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('[ATOMIC-SYNC] Fatal error:', error);
+    
+    // Update sync log on failure
+    if (syncLogId && supabase) {
+      await supabase.from('brand_sync_logs').update({
+        status: 'failed',
+        completed_at: new Date().toISOString(),
+        duration_seconds: Math.round((Date.now() - startTime) / 1000),
+        error_details: { error: error instanceof Error ? error.message : 'Unknown error' },
+      }).eq('id', syncLogId);
+    }
+    
     return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
+      summary: {
+        totalDiscovered: 0,
+        created: 0,
+        updated: 0,
+        skipped: 0,
+        errors: 1,
+      },
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
