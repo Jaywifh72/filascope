@@ -113,13 +113,29 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
   },
   
   'atomic-filament': {
+    exclusions: [
+      { name: 'Short Spools (70% min)', reason: 'Partial/clearance spools excluded from standard catalog' },
+      { name: '3.5KG Jumbo Rolls', reason: 'Bulk variants linked separately from standard 1KG products' },
+      { name: 'Sample Coils', reason: 'Sample products excluded by global filter' },
+      { name: '2.85mm Diameter', reason: 'Non-standard diameter separated from 1.75mm products' },
+      { name: '10-Pack Bundles', reason: 'Bulk packs excluded by global filter' },
+    ],
     specialBehaviors: [
-      { name: 'US-Made Focus', description: 'Emphasizes domestic manufacturing status.' },
-      { name: 'Specialty Color Mapping', description: 'Maps unique color names to hex values.' },
+      { name: 'H1 Title Priority (Critical)', description: 'Product titles MUST be scraped from the <h1> tag on the product page URL. Shopify JSON title is never used.' },
+      { name: 'Collection-Based Discovery', description: 'Products discovered from 5 material collection URLs (PLA, PETG, ABS, ASA, PLA Silk).' },
+      { name: 'US-Made Focus', description: 'All products manufactured in Indiana, USA.' },
+      { name: 'Specialty Color Mapping', description: 'Unique color names (Perfect Red, MeltMiser, Extreme Impact) mapped to hex values.' },
+      { name: 'AMS Compatible Variants', description: 'Most 1KG spools labeled as AMS Compatible in title.' },
+      { name: 'Carbon Fiber Separation', description: 'CF-PLA, CF-PETG, CF-ABS, CF-ASA have separate product_line_ids.' },
+      { name: 'MeltMiser Line', description: 'Premium high-temp products grouped under meltmiser product_line_id.' },
+      { name: 'PETG Pro Line', description: 'PETG Pro products grouped separately from standard PETG.' },
     ],
     notes: [
-      'Shopify API pipeline',
-      'Premium US-based manufacturer',
+      'CRITICAL: product_title must match page <h1> exactly - this is the "Names Match" consistency rule',
+      'Firecrawl HTML scraping used for display titles from product pages',
+      'Shopify JSON API used only for variant metadata (prices, availability, images)',
+      'Collection URLs are the canonical source for product discovery',
+      '5 official material collections: PLA, PETG, ABS, ASA, PLA Silk',
     ],
   },
   

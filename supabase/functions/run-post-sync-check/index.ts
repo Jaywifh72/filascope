@@ -1935,6 +1935,139 @@ Deno.serve(async (req) => {
       console.log(`[PostSyncCheck] Anycubic H1 Title Match complete: ${anycubicCheckedCount} checked, ${anycubicH1Issues.length} issues`);
     }
 
+    // ============= ATOMIC-SPECIFIC CHECK: H1 Title Match =============
+    // Validates that Atomic Filament product_title in DB matches the <h1> from product URLs
+    // This enforces the "H1 Title Priority" rule documented in brand-sync-docs.ts
+    if (brandSlug === 'atomic-filament' && firecrawlApiKey) {
+      console.log('[PostSyncCheck] Running Atomic Filament H1 Title Match validation...');
+      
+      const atomicH1Issues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+      let atomicCheckedCount = 0;
+
+      // Fetch Atomic filaments with product_url (separate query since variantsWithColorFamily doesn't include it)
+      const { data: atomicFilaments } = await supabase
+        .from('filaments')
+        .select('id, product_title, product_url')
+        .eq('vendor', brandName)
+        .not('product_url', 'is', null)
+        .limit(20);
+      
+      // Group by unique product URL (variants share same page)
+      const uniqueUrls = new Map<string, { id: string; product_title: string; product_url: string }>();
+      for (const product of atomicFilaments || []) {
+        const baseUrl = product.product_url?.split('?')[0];
+        if (baseUrl && !uniqueUrls.has(baseUrl)) {
+          uniqueUrls.set(baseUrl, product as { id: string; product_title: string; product_url: string });
+        }
+        if (uniqueUrls.size >= 10) break;
+      }
+
+      for (const [productUrl, dbFilament] of uniqueUrls) {
+        const dbTitle = dbFilament.product_title;
+
+        try {
+          // Scrape the product URL to get the actual H1 title
+          const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${firecrawlApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: productUrl,
+              formats: ['html'],
+              onlyMainContent: false,
+              waitFor: 2000,
+            }),
+          });
+
+          if (!scrapeResponse.ok) {
+            console.log(`[PostSyncCheck] Atomic H1 check: Failed to scrape ${productUrl}`);
+            continue;
+          }
+
+          const scrapeData = await scrapeResponse.json();
+          const html = scrapeData.data?.html || scrapeData.html || '';
+
+          // Extract H1 from scraped HTML - multiple patterns for Atomic's Shopify theme
+          const h1Patterns = [
+            /<h1[^>]*class="[^"]*product-title[^"]*"[^>]*>([^<]+)<\/h1>/i,
+            /<h1[^>]*class="[^"]*product__title[^"]*"[^>]*>([^<]+)<\/h1>/i,
+            /<h1[^>]*>([^<]+)<\/h1>/i,
+          ];
+          
+          let scrapedH1: string | null = null;
+          for (const pattern of h1Patterns) {
+            const match = html.match(pattern);
+            if (match?.[1]) {
+              scrapedH1 = match[1].trim()
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'");
+              break;
+            }
+          }
+
+          if (!scrapedH1) {
+            console.log(`[PostSyncCheck] Atomic H1 check: No H1 found on ${productUrl}`);
+            continue;
+          }
+
+          atomicCheckedCount++;
+
+          // Normalize titles for comparison
+          const normalizeForComparison = (title: string): string => {
+            return title
+              .replace(/\s+Filament\s*/gi, ' ')
+              .replace(/\s*,?\s*\d+\.?\d*\s*mm\s*/gi, ' ')
+              .replace(/\s*,?\s*\d+\.?\d*\s*(kg|g|lb)\s*(\/\s*\d+\.?\d*\s*(kg|g|lb))?\s*/gi, '')
+              .replace(/\s*AMS\s*Compatible\s*/gi, ' ')
+              .replace(/\s+/g, ' ')
+              .trim()
+              .toLowerCase();
+          };
+
+          const normalizedDb = normalizeForComparison(dbTitle);
+          const normalizedH1 = normalizeForComparison(scrapedH1);
+
+          // Calculate similarity
+          const similarity = titleSimilarity(normalizedDb, normalizedH1);
+
+          console.log(`[PostSyncCheck] Atomic H1 check: DB="${normalizedDb}" H1="${normalizedH1}" (${similarity}%)`);
+
+          if (similarity < 70) {
+            atomicH1Issues.push({
+              id: dbFilament.id,
+              title: dbTitle,
+              issue: `DB title doesn't match page H1. Page shows: "${scrapedH1}" (${similarity}% similarity)`,
+              url: productUrl,
+            });
+          }
+
+          // Rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+        } catch (error) {
+          console.error(`[PostSyncCheck] Atomic H1 check error for ${productUrl}:`, error);
+        }
+      }
+
+      if (atomicCheckedCount > 0) {
+        checks.push({
+          checkName: "Atomic H1 Title Match (DB vs Product Page)",
+          status: atomicH1Issues.length === 0 ? "pass" : atomicH1Issues.length <= 1 ? "warning" : "fail",
+          count: atomicCheckedCount - atomicH1Issues.length,
+          details: atomicH1Issues.length === 0
+            ? `${atomicCheckedCount}/${atomicCheckedCount} Atomic product titles match their page <h1> tags`
+            : `${atomicH1Issues.length} Atomic titles don't match their product page H1`,
+          products: atomicH1Issues.length > 0 ? atomicH1Issues : undefined,
+        });
+      }
+
+      console.log(`[PostSyncCheck] Atomic H1 Title Match complete: ${atomicCheckedCount} checked, ${atomicH1Issues.length} issues`);
+    }
+
     // ============= UI DISPLAY NAME MATCH CHECK =============
     // CRITICAL: This check validates what the FRONTEND will actually show to users.
     // It simulates the formatProductLineIdForDisplay() logic from productNameUtils.ts

@@ -24,8 +24,72 @@ import {
   getAtomicColorHex,
   generateAtomicProductLineId,
   cleanAtomicTitle,
+  ATOMIC_COLLECTION_WHITELIST,
 } from '../_shared/atomic-defaults.ts';
 import { getColorHex, getColorFamily } from '../_shared/color-mapping.ts';
+
+// ============================================================================
+// H1 TITLE SCRAPING - Critical for "Names Match" consistency rule
+// ============================================================================
+
+/**
+ * Scrape the <h1> tag from an Atomic product page
+ * This is the source of truth for product_title (NOT Shopify JSON)
+ */
+async function scrapeAtomicPageH1(productUrl: string, firecrawlKey: string): Promise<string | null> {
+  try {
+    console.log(`[ATOMIC-H1] Scraping H1 from ${productUrl}`);
+    
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: productUrl,
+        formats: ['html'],
+        onlyMainContent: false,
+        waitFor: 2000,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`[ATOMIC-H1] Firecrawl error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const html = data.data?.html || data.html || '';
+    
+    // Extract H1 tag - multiple patterns for Atomic's Shopify theme
+    const h1Patterns = [
+      /<h1[^>]*class="[^"]*product-title[^"]*"[^>]*>([^<]+)<\/h1>/i,
+      /<h1[^>]*class="[^"]*product__title[^"]*"[^>]*>([^<]+)<\/h1>/i,
+      /<h1[^>]*>([^<]+)<\/h1>/i,
+    ];
+    
+    for (const pattern of h1Patterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) {
+        const h1 = match[1].trim()
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
+        console.log(`[ATOMIC-H1] Found H1: "${h1}"`);
+        return h1;
+      }
+    }
+    
+    console.warn(`[ATOMIC-H1] No H1 found on ${productUrl}`);
+    return null;
+  } catch (err) {
+    console.error(`[ATOMIC-H1] Error scraping ${productUrl}:`, err);
+    return null;
+  }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -173,10 +237,12 @@ Deno.serve(async (req) => {
     }
 
     // =========================================================================
-    // STEP 2: Scrape product page details via Firecrawl (TDS, colors, specs)
+    // STEP 2: Scrape H1 titles + product page details via Firecrawl
+    // CRITICAL: H1 titles are the source of truth for product_title
     // =========================================================================
     if ((tasks.includes('scrape-details') || scrapeDetails) && firecrawlKey) {
-      console.log('[ATOMIC-SYNC] Step 2: Scraping product page details via Firecrawl...');
+      console.log('[ATOMIC-SYNC] Step 2: Scraping H1 titles and product details via Firecrawl...');
+      console.log('[ATOMIC-SYNC] 🎯 H1 TITLE PRIORITY RULE: product_title MUST match page <h1>');
 
       const { data: filaments, error: fetchError } = await supabase
         .from('filaments')
@@ -188,7 +254,7 @@ Deno.serve(async (req) => {
       if (fetchError) {
         console.error('[ATOMIC-SYNC] Failed to fetch filaments:', fetchError.message);
       } else {
-        console.log(`[ATOMIC-SYNC] Found ${filaments?.length || 0} filaments for detail scraping`);
+        console.log(`[ATOMIC-SYNC] Found ${filaments?.length || 0} filaments for H1 + detail scraping`);
         
         // Group filaments by unique product page
         const uniqueProductUrls = new Map<string, typeof filaments>();
@@ -202,90 +268,134 @@ Deno.serve(async (req) => {
         }
 
         console.log(`[ATOMIC-SYNC] ${uniqueProductUrls.size} unique product pages to scrape`);
+        let h1TitlesUpdated = 0;
 
         for (const [productUrl, relatedFilaments] of uniqueProductUrls) {
-          const needsScraping = relatedFilaments.some(f => !f.tds_url || !f.color_hex || !f.nozzle_temp_min_c);
-          if (!needsScraping && !forceEnrichment) continue;
-
           try {
-            const details = await scrapeAtomicProductDetails(productUrl, firecrawlKey);
+            // STEP 2A: Scrape H1 title (source of truth)
+            const scrapedH1 = await scrapeAtomicPageH1(productUrl, firecrawlKey);
             
-            if (details) {
-              detailsScraped++;
-              
+            if (scrapedH1) {
+              // Update all variants with this product URL to use the H1 title
               for (const filament of relatedFilaments) {
-                const changes: string[] = [];
-                const updateData: Record<string, any> = {};
-
-                // TDS URL
-                if (!filament.tds_url && details.tdsUrl) {
-                  updateData.tds_url = details.tdsUrl;
-                  changes.push(`TDS: scraped from page`);
-                  tdsFound++;
-                }
-
-                // Print settings
-                if (!filament.nozzle_temp_min_c && details.printingTempMin) {
-                  updateData.nozzle_temp_min_c = details.printingTempMin;
-                  changes.push(`nozzle_min: ${details.printingTempMin}`);
-                }
-                if (!filament.nozzle_temp_max_c && details.printingTempMax) {
-                  updateData.nozzle_temp_max_c = details.printingTempMax;
-                  changes.push(`nozzle_max: ${details.printingTempMax}`);
-                }
-                if (!filament.bed_temp_min_c && details.bedTempMin) {
-                  updateData.bed_temp_min_c = details.bedTempMin;
-                  changes.push(`bed_min: ${details.bedTempMin}`);
-                }
-                if (!filament.bed_temp_max_c && details.bedTempMax) {
-                  updateData.bed_temp_max_c = details.bedTempMax;
-                  changes.push(`bed_max: ${details.bedTempMax}`);
-                }
+                const currentTitle = filament.product_title;
                 
-                if (Object.keys(updateData).some(k => k.includes('temp'))) {
-                  settingsApplied++;
-                }
-
-                // Color hex
-                if (!filament.color_hex && details.colorHex) {
-                  updateData.color_hex = details.colorHex;
-                  changes.push(`color: scraped → ${details.colorHex}`);
-                  colorsFixed++;
-                }
-
-                // Density
-                if (details.density) {
-                  updateData.density_g_cm3 = details.density;
-                }
-
-                // Drying info
-                if (details.dryingTemp) {
-                  updateData.drying_temp_c = details.dryingTemp;
-                }
-                if (details.dryingTime) {
-                  updateData.drying_time_hours = details.dryingTime;
-                }
-
-                // Apply updates
-                if (Object.keys(updateData).length > 0 && !dryRun) {
-                  updateData.updated_at = new Date().toISOString();
+                // Check if title needs updating (H1 is different from current)
+                const normalizedH1 = scrapedH1.toLowerCase().replace(/\s+/g, ' ').trim();
+                const normalizedCurrent = currentTitle.toLowerCase().replace(/\s+/g, ' ').trim();
+                
+                if (normalizedH1 !== normalizedCurrent) {
+                  console.log(`[ATOMIC-SYNC] Title mismatch for ${filament.id}:`);
+                  console.log(`[ATOMIC-SYNC]   DB: "${currentTitle}"`);
+                  console.log(`[ATOMIC-SYNC]   H1: "${scrapedH1}" ✓`);
                   
-                  const { error: updateError } = await supabase
-                    .from('filaments')
-                    .update(updateData)
-                    .eq('id', filament.id);
+                  if (!dryRun) {
+                    const { error: titleError } = await supabase
+                      .from('filaments')
+                      .update({ 
+                        product_title: scrapedH1,
+                        updated_at: new Date().toISOString(),
+                      })
+                      .eq('id', filament.id);
+                    
+                    if (!titleError) {
+                      h1TitlesUpdated++;
+                      enrichmentResults.push({
+                        id: filament.id,
+                        title: scrapedH1,
+                        changes: [`title: H1 → "${scrapedH1}"`],
+                        tdsFound: false,
+                        settingsApplied: false,
+                        colorFixed: false,
+                      });
+                    }
+                  }
+                }
+              }
+            }
+            
+            // STEP 2B: Scrape additional details (TDS, temps, colors)
+            const needsDetailScraping = relatedFilaments.some(f => !f.tds_url || !f.color_hex || !f.nozzle_temp_min_c);
+            if (needsDetailScraping || forceEnrichment) {
+              const details = await scrapeAtomicProductDetails(productUrl, firecrawlKey);
+              
+              if (details) {
+                detailsScraped++;
+                
+                for (const filament of relatedFilaments) {
+                  const changes: string[] = [];
+                  const updateData: Record<string, any> = {};
 
-                  if (updateError) {
-                    console.error(`[ATOMIC-SYNC] Update failed for ${filament.id}:`, updateError.message);
-                  } else if (changes.length > 0) {
-                    enrichmentResults.push({
-                      id: filament.id,
-                      title: filament.product_title,
-                      changes,
-                      tdsFound: !!updateData.tds_url,
-                      settingsApplied: Object.keys(updateData).some(k => k.includes('temp')),
-                      colorFixed: !!updateData.color_hex,
-                    });
+                  // TDS URL
+                  if (!filament.tds_url && details.tdsUrl) {
+                    updateData.tds_url = details.tdsUrl;
+                    changes.push(`TDS: scraped from page`);
+                    tdsFound++;
+                  }
+
+                  // Print settings
+                  if (!filament.nozzle_temp_min_c && details.printingTempMin) {
+                    updateData.nozzle_temp_min_c = details.printingTempMin;
+                    changes.push(`nozzle_min: ${details.printingTempMin}`);
+                  }
+                  if (!filament.nozzle_temp_max_c && details.printingTempMax) {
+                    updateData.nozzle_temp_max_c = details.printingTempMax;
+                    changes.push(`nozzle_max: ${details.printingTempMax}`);
+                  }
+                  if (!filament.bed_temp_min_c && details.bedTempMin) {
+                    updateData.bed_temp_min_c = details.bedTempMin;
+                    changes.push(`bed_min: ${details.bedTempMin}`);
+                  }
+                  if (!filament.bed_temp_max_c && details.bedTempMax) {
+                    updateData.bed_temp_max_c = details.bedTempMax;
+                    changes.push(`bed_max: ${details.bedTempMax}`);
+                  }
+                  
+                  if (Object.keys(updateData).some(k => k.includes('temp'))) {
+                    settingsApplied++;
+                  }
+
+                  // Color hex
+                  if (!filament.color_hex && details.colorHex) {
+                    updateData.color_hex = details.colorHex;
+                    changes.push(`color: scraped → ${details.colorHex}`);
+                    colorsFixed++;
+                  }
+
+                  // Density
+                  if (details.density) {
+                    updateData.density_g_cm3 = details.density;
+                  }
+
+                  // Drying info
+                  if (details.dryingTemp) {
+                    updateData.drying_temp_c = details.dryingTemp;
+                  }
+                  if (details.dryingTime) {
+                    updateData.drying_time_hours = details.dryingTime;
+                  }
+
+                  // Apply updates
+                  if (Object.keys(updateData).length > 0 && !dryRun) {
+                    updateData.updated_at = new Date().toISOString();
+                    
+                    const { error: updateError } = await supabase
+                      .from('filaments')
+                      .update(updateData)
+                      .eq('id', filament.id);
+
+                    if (updateError) {
+                      console.error(`[ATOMIC-SYNC] Update failed for ${filament.id}:`, updateError.message);
+                    } else if (changes.length > 0) {
+                      enrichmentResults.push({
+                        id: filament.id,
+                        title: filament.product_title,
+                        changes,
+                        tdsFound: !!updateData.tds_url,
+                        settingsApplied: Object.keys(updateData).some(k => k.includes('temp')),
+                        colorFixed: !!updateData.color_hex,
+                      });
+                    }
                   }
                 }
               }
@@ -297,9 +407,11 @@ Deno.serve(async (req) => {
             console.error(`[ATOMIC-SYNC] Error scraping ${productUrl}:`, err);
           }
         }
+        
+        console.log(`[ATOMIC-SYNC] H1 titles updated: ${h1TitlesUpdated}`);
       }
     } else if (!firecrawlKey) {
-      console.warn('[ATOMIC-SYNC] FIRECRAWL_API_KEY not configured - skipping product page scraping');
+      console.warn('[ATOMIC-SYNC] FIRECRAWL_API_KEY not configured - skipping H1 title and product page scraping');
     }
 
     // =========================================================================
