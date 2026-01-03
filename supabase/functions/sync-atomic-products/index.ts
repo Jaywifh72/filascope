@@ -433,6 +433,46 @@ Deno.serve(async (req) => {
           }
           
           console.log(`[ATOMIC-SYNC] Metallic PLA fix: ${(metallicProducts?.length || 0) + (plaMetalProducts?.length || 0)} products checked`);
+          
+          // STEP 1E: Universal material and product_line_id correction
+          // This ensures ALL products have correct materials based on title, overriding any collection-based assignments
+          console.log('[ATOMIC-SYNC] Step 1E: Universal material and product_line_id correction...');
+          
+          const { data: allAtomicProducts } = await supabase
+            .from('filaments')
+            .select('id, product_title, material, product_line_id')
+            .ilike('vendor', '%atomic%');
+          
+          let materialFixes = 0;
+          let productLineFixes = 0;
+          
+          for (const p of allAtomicProducts || []) {
+            const correctMaterial = normalizeAtomicMaterial(p.product_title);
+            const correctProductLineId = generateAtomicProductLineId(p.product_title, correctMaterial);
+            
+            const updates: Record<string, any> = {};
+            
+            // Fix material if different
+            if (correctMaterial && correctMaterial !== p.material) {
+              updates.material = correctMaterial;
+              materialFixes++;
+              console.log(`[ATOMIC-SYNC] Material fix: ${p.material} → ${correctMaterial} for "${p.product_title.slice(0, 50)}"`);
+            }
+            
+            // Fix product_line_id if different
+            if (correctProductLineId && correctProductLineId !== p.product_line_id) {
+              updates.product_line_id = correctProductLineId;
+              productLineFixes++;
+              console.log(`[ATOMIC-SYNC] Product line fix: ${p.product_line_id} → ${correctProductLineId}`);
+            }
+            
+            if (Object.keys(updates).length > 0 && !dryRun) {
+              updates.updated_at = new Date().toISOString();
+              await supabase.from('filaments').update(updates).eq('id', p.id);
+            }
+          }
+          
+          console.log(`[ATOMIC-SYNC] Step 1E complete: ${materialFixes} material fixes, ${productLineFixes} product_line_id fixes`);
         } else {
           const errorText = await syncResponse.text();
           console.error('[ATOMIC-SYNC] Base sync failed:', errorText);

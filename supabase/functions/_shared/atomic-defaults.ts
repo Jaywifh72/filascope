@@ -212,12 +212,19 @@ const FINISH_PATTERNS: Array<{ pattern: RegExp; finish: FinishType }> = [
 
 /**
  * Extract finish type from product title
+ * IMPORTANT: "Gun Metal" is a COLOR name, not a metallic finish
  */
 export function extractFinishType(title: string): FinishType {
   if (!title) return 'Standard';
   
+  // Exclude "gun metal" from metallic detection - it's a color, not a finish
+  // Also exclude color names that happen to contain finish-like words
+  const titleForFinish = title
+    .replace(/\bgun\s*metal\s*(?:gray|grey)?\b/gi, '')  // Gun Metal Gray is a color
+    .replace(/\bgun\s*metal\b/gi, '');                   // Gun Metal is a color
+  
   for (const { pattern, finish } of FINISH_PATTERNS) {
-    if (pattern.test(title)) {
+    if (pattern.test(titleForFinish)) {
       return finish;
     }
   }
@@ -230,6 +237,29 @@ export function extractFinishType(title: string): FinishType {
 // ============================================================================
 
 const ATOMIC_MATERIAL_MAPPING: Record<string, string> = {
+  // CARBON FIBER COMPOSITES - Must come FIRST (longest/most specific patterns)
+  // These prevent base materials from matching before CF detection
+  'carbon fiber ultra black abs': 'ABS-CF',
+  'carbon fiber black abs': 'ABS-CF',
+  'carbon fiber extreme black abs': 'ABS-CF',
+  'carbon fiber abs': 'ABS-CF',
+  'cf abs': 'ABS-CF',
+  'carbon fiber black asa': 'ASA-CF',
+  'carbon fiber asa': 'ASA-CF',
+  'cf asa': 'ASA-CF',
+  'carbon fiber extreme black pla': 'PLA-CF',
+  'carbon fiber black pla': 'PLA-CF',
+  'carbon fiber pla': 'PLA-CF',
+  'cf pla': 'PLA-CF',
+  'carbon fiber extreme black petg': 'PETG-CF',
+  'carbon fiber extreme petg': 'PETG-CF',
+  'carbon fiber petg': 'PETG-CF',
+  'cf petg': 'PETG-CF',
+  'carbon fiber nuclear nylon': 'Nylon-CF',
+  'nuclear nylon': 'Nylon-CF',  // Atomic's branded CF Nylon product
+  'carbon fiber nylon': 'Nylon-CF',
+  'cf nylon': 'Nylon-CF',
+  
   // PLA variants with finishes (must come before base 'pla')
   'metallic pla': 'PLA',  // Metallic is a FINISH, not a material variant
   'silky pla': 'PLA',     // Silk is a FINISH, not a material variant
@@ -266,31 +296,27 @@ const ATOMIC_MATERIAL_MAPPING: Record<string, string> = {
   'nylon': 'Nylon',
   'pa12': 'Nylon',
   'pa': 'Nylon',
-  
-  // Atomic Filament branded Carbon Fiber Nylon (Nuclear Nylon)
-  'carbon fiber nuclear nylon': 'Nylon-CF',
-  'nuclear nylon': 'Nylon-CF',  // Atomic's branded CF Nylon product
-  
-  // Carbon Fiber composites
-  'carbon fiber pla': 'PLA-CF',
-  'cf pla': 'PLA-CF',
-  'carbon fiber petg': 'PETG-CF',
-  'cf petg': 'PETG-CF',
-  'carbon fiber abs': 'ABS-CF',
-  'cf abs': 'ABS-CF',
-  'carbon fiber asa': 'ASA-CF',
-  'cf asa': 'ASA-CF',
-  'carbon fiber nylon': 'Nylon-CF',
-  'cf nylon': 'Nylon-CF',
 };
 
 /**
  * Normalize material name for Atomic Filament products
+ * PRIORITY: Carbon Fiber composites > Plus variants > Base materials
  */
 export function normalizeAtomicMaterial(title: string): string | null {
   if (!title) return null;
   
   const titleLower = title.toLowerCase();
+  
+  // FIRST: Check for Carbon Fiber composites (highest priority)
+  // This must happen BEFORE base material fallbacks
+  if (titleLower.includes('carbon fiber') || titleLower.includes(' cf ') || titleLower.startsWith('cf ')) {
+    if (titleLower.includes('pla')) return 'PLA-CF';
+    if (titleLower.includes('petg')) return 'PETG-CF';
+    if (titleLower.includes('abs')) return 'ABS-CF';
+    if (titleLower.includes('asa')) return 'ASA-CF';
+    if (titleLower.includes('nylon') || titleLower.includes('nuclear')) return 'Nylon-CF';
+    return 'PLA-CF'; // Default CF to PLA-CF if base material unclear
+  }
   
   // Sort by length (longest first) for most specific match
   const sortedMappings = Object.entries(ATOMIC_MATERIAL_MAPPING)
@@ -302,7 +328,10 @@ export function normalizeAtomicMaterial(title: string): string | null {
     }
   }
   
-  // Fallback: basic material detection
+  // Fallback: basic material detection (order matters - plus variants first)
+  if (titleLower.includes('pla+') || titleLower.includes('pla plus')) return 'PLA+';
+  if (titleLower.includes('petg+') || titleLower.includes('petg plus') || titleLower.includes('petg pro')) return 'PETG+';
+  if (titleLower.includes('abs+') || titleLower.includes('abs plus')) return 'ABS+';
   if (titleLower.includes('pla')) return 'PLA';
   if (titleLower.includes('petg')) return 'PETG';
   if (titleLower.includes('abs')) return 'ABS';
@@ -401,6 +430,8 @@ export function is285mmDiameter(title: string): boolean {
 /**
  * Generate product_line_id for Atomic Filament products
  * Groups products by material + finish type, separating bulk/promotional items
+ * IMPORTANT: CF materials (e.g., ABS-CF) already encode the "Carbon Fiber" nature,
+ * so we don't add a separate Carbon Fiber finish suffix
  */
 export function generateAtomicProductLineId(title: string, material?: string | null): string {
   const cleanedTitle = cleanAtomicTitle(title).toLowerCase();
@@ -408,17 +439,19 @@ export function generateAtomicProductLineId(title: string, material?: string | n
   // Build product line ID from material + product line
   let baseId = 'atomic-filament';
   
-  // Add material
+  // Add material (using normalized material from title first)
   const normalizedMaterial = normalizeAtomicMaterial(title);
-  if (normalizedMaterial) {
-    baseId += `__${normalizedMaterial.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-  } else if (material) {
-    baseId += `__${material.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+  const finalMaterial = normalizedMaterial || material;
+  
+  if (finalMaterial) {
+    baseId += `__${finalMaterial.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
   }
   
-  // Add finish type
+  // Add finish type ONLY if:
+  // 1. It's not "Standard"
+  // 2. It's not "Carbon Fiber" (already encoded in material like ABS-CF, PLA-CF)
   const finishType = extractFinishType(title);
-  if (finishType !== 'Standard') {
+  if (finishType !== 'Standard' && finishType !== 'Carbon Fiber') {
     baseId += `__${finishType.toLowerCase().replace(/\s+/g, '-')}`;
   }
   
