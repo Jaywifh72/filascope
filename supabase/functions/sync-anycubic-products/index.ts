@@ -594,8 +594,14 @@ async function fetchProduct(
   const productPageUrl = `${sourceStore.baseUrl}/products/${whitelistProduct.handle}`;
   const scrapedData = await scrapeProductPage(productPageUrl);
 
-  // Use whitelist displayName as the canonical title (from spreadsheet)
-  const displayTitle = whitelistProduct.displayName;
+  // PRIORITY: Use scraped page title from <h1>, fallback to whitelist displayName
+  const displayTitle = scrapedData?.pageTitle || whitelistProduct.displayName;
+  
+  console.log(`[ANYCUBIC-SYNC] ${whitelistProduct.handle}:`);
+  console.log(`  - Scraped H1: "${scrapedData?.pageTitle || 'N/A'}"`);
+  console.log(`  - Whitelist name: "${whitelistProduct.displayName}"`);
+  console.log(`  - Final title: "${displayTitle}" (source: ${scrapedData?.pageTitle ? 'scraped' : 'whitelist'})`);
+  console.log(`  - Scraped swatches: ${scrapedData?.colorSwatches?.length || 0} colors`);
 
   const defaultImage = product.images?.[0]?.src || product.image?.src || null;
   const productLineId = `anycubic__${whitelistProduct.productLineSlug.replace(/-/g, '')}`;
@@ -610,21 +616,58 @@ async function fetchProduct(
   );
 
   const variants: VariantResult[] = [];
+  
+  // Build map of scraped swatches for color matching
+  const scrapedSwatches = scrapedData?.colorSwatches || [];
 
-  for (const variant of product.variants || []) {
-    const colorName = extractColorFromVariantTitle(variant.title);
+  for (let idx = 0; idx < (product.variants || []).length; idx++) {
+    const variant = product.variants[idx];
     
-    // Log color extraction
+    // PRIORITY: Try to match color from scraped swatches first
+    let colorName: string;
+    let colorSource: string;
+    
+    // Parse color from variant title as baseline
+    const parsedColor = extractColorFromVariantTitle(variant.title);
+    
+    // Method 1: Find matching scraped swatch by name (case-insensitive)
+    const matchedSwatch = scrapedSwatches.find(
+      swatch => swatch.toLowerCase() === parsedColor.toLowerCase()
+    );
+    
+    if (matchedSwatch) {
+      // Use exact case from scraped swatch
+      colorName = matchedSwatch;
+      colorSource = 'scraped_swatch_match';
+    } else if (scrapedSwatches.length > 0 && idx < scrapedSwatches.length) {
+      // Method 2: Use swatch by index position if counts roughly match
+      const variantCount = product.variants.length;
+      const swatchCount = scrapedSwatches.length;
+      // If swatch count is within 20% of variant count, use index matching
+      if (Math.abs(variantCount - swatchCount) <= Math.max(1, variantCount * 0.2)) {
+        colorName = scrapedSwatches[idx];
+        colorSource = 'scraped_swatch_index';
+      } else {
+        colorName = parsedColor;
+        colorSource = 'variant_title_fallback';
+      }
+    } else {
+      // Fallback to parsed variant title
+      colorName = parsedColor;
+      colorSource = 'variant_title_fallback';
+    }
+    
+    // Log color extraction with source
     logger.logColorExtraction(
       String(variant.id),
       product.title,
       { 
         variantTitle: variant.title, 
         productHandle: whitelistProduct.handle,
-        options: variant.options || []
+        options: [`scrapedSwatches: ${scrapedSwatches.join(', ')}`, `index: ${idx}`]
       },
-      { colorName, method: 'variant_title_parse' },
-      colorName !== 'Unknown'
+      { colorName, method: colorSource },
+      colorSource.startsWith('scraped')
     );
 
     // Get color hex
@@ -659,7 +702,7 @@ async function fetchProduct(
     variants.push({
       productId: String(product.id),
       variantId: String(variant.id),
-      title: displayTitle,  // Use canonical display name from whitelist
+      title: displayTitle,  // Use scraped page title or whitelist displayName
       colorName,
       price: parseFloat(variant.price) || 0,
       compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
