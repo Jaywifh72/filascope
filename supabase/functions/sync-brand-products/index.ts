@@ -1000,10 +1000,10 @@ async function scrapeShopify(brand: BrandConfig, materialFilter?: string, limit 
           const colorHex = extractColorHexFromVariant(variant, product, baseTitle);
           const colorFamily = extractColorFamilyFromVariant(variant, product, baseTitle) || extractColorFamily(baseTitle);
           
-          // Build variant-specific title (include color if not already in title)
-          const variantTitle = colorName && !baseTitle.toLowerCase().includes(colorName.toLowerCase())
-            ? `${baseTitle} ${colorName}`
-            : baseTitle;
+          // CRITICAL: Use base Shopify title for product_title (matches page H1)
+          // Color is stored separately in color_family/color_hex fields
+          // This ensures DB title = Page H1 title (Names Match consistency rule)
+          const variantTitle = baseTitle;
           
           // Find variant-specific image (match by variant_id or color name)
           const variantImage = findVariantImage(product, variant, colorName);

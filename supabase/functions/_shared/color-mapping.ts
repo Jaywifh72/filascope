@@ -1259,6 +1259,7 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'silk white': 'White',
   'ivory': 'White',
   'cream': 'White',
+  'jade white': 'White',
   
   // Grays
   'grey': 'Gray',
@@ -1273,6 +1274,10 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'cement grey': 'Gray',
   'matte grey': 'Gray',
   'silk silver': 'Gray',
+  'texture grey': 'Gray',
+  'texture gray': 'Gray',
+  'koala grey': 'Gray',
+  'koala gray': 'Gray',
   
   // Reds
   'red': 'Red',
@@ -1293,12 +1298,17 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'coral': 'Orange',
   'salmon': 'Orange',
   'peach': 'Orange',
+  'vibrant orange': 'Orange',
+  'carrot orange': 'Orange',
+  'peach fuzz': 'Orange',
   
   // Yellows
   'yellow': 'Yellow',
   'neon yellow': 'Yellow',
   'tangerine yellow': 'Yellow',
   'lemon': 'Yellow',
+  'cream yellow': 'Yellow',
+  'cheese yellow': 'Yellow',
   
   // Golds
   'gold': 'Gold',
@@ -1309,6 +1319,10 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'champagne gold': 'Gold',
   'pale gold': 'Gold',
   'mustard': 'Yellow',
+  'metal champagne': 'Gold',
+  'metal champaign': 'Gold',
+  'champagne': 'Gold',
+  'champaign': 'Gold',
   
   // Greens
   'green': 'Green',
@@ -1326,6 +1340,10 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'grass green': 'Green',
   'army green': 'Green',
   'bambu green': 'Green',
+  'spring leaf': 'Green',
+  'matcha green': 'Green',
+  'matcha': 'Green',
+  'galaxy green': 'Green',
   
   // Blues
   'blue': 'Blue',
@@ -1348,6 +1366,10 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'cyan': 'Blue',
   'aqua': 'Blue',
   'turquoise': 'Blue',
+  'tropical turquoise': 'Blue',
+  'haze blue': 'Blue',
+  'phantom blue': 'Blue',
+  'galaxy blue': 'Blue',
   
   // Purples
   'purple': 'Purple',
@@ -1358,6 +1380,9 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'indigo': 'Purple',
   'magenta': 'Purple',
   'plum': 'Purple',
+  'interstellar violet': 'Purple',
+  'pale violet': 'Purple',
+  'galaxy purple': 'Purple',
   
   // Pinks
   'pink': 'Pink',
@@ -1366,6 +1391,7 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'hot pink': 'Pink',
   'rose': 'Pink',
   'fuchsia': 'Pink',
+  'peach pink': 'Pink',
   
   // Browns
   'brown': 'Brown',
@@ -1381,10 +1407,14 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'silk copper': 'Brown',
   'bronze': 'Brown',
   'silk bronze': 'Brown',
+  'metal copper': 'Brown',
+  'peanut brown': 'Brown',
+  'galaxy brown': 'Brown',
   
   // Transparent/Clear
   'transparent': 'Clear',
   'translucent': 'Clear',
+  'translucent white': 'Clear',
   'clear': 'Clear',
   'crystal clear': 'Clear',
   'ultra clear': 'Clear',
