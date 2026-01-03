@@ -282,7 +282,7 @@ export const PROMOTIONAL_PATTERNS = [
   /limited\s*(?:time\s*)?(?:offer|deal)/gi,
   /hot\s*deal/gi,
   /best\s*seller/gi,
-  /flash\s*sale/gi,
+  /flash\s*(?:sale|deal)/gi,
   /\d+-\d+kg\s*deals?/gi,
   /multi.?pack/gi,
   /bundle\s*deal/gi,
@@ -572,6 +572,16 @@ export const ANYCUBIC_COLOR_MAPPING: Record<string, string> = {
   'transparent': 'FFFFFF',
   'clear': 'FFFFFF',
   'natural': 'F5F5DC',
+  
+  // Translucent variants (from Post Sync Check)
+  'translucent orange': 'FF6600',
+  'translucent olive': '808000',
+  'translucent': 'FFFFFF',
+  'olive': '808000',
+  'olive green': '808000',
+  'orange': 'FF6600',
+  'translucentorange': 'FF6600',
+  'translucentolive': '808000',
   
   // No-space variants (for robust matching)
   'texturesilver': 'C0C0C0',
