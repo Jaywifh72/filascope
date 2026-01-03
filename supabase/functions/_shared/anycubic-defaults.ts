@@ -312,6 +312,9 @@ export const ANYCUBIC_NON_FILAMENT_SLUGS = [
   '10th-anniversary',
   'gift-card',
   'voucher',
+  'price-difference-payment-link', // utility payment item
+  'price-difference', // utility payment item
+  'payment-link', // utility payment item
 ];
 
 const ANYCUBIC_TITLE_NOISE = [
