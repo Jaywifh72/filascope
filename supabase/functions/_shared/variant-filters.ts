@@ -38,6 +38,7 @@ export const EXCLUDED_TITLE_KEYWORDS = [
   'trial',
   // === Non-filament products ===
   'gift card',        // Gift cards are not filaments
+  'gift',             // Gift promotions (e.g., "PLA Gift - Black")
   '3d pen',           // 3D pens are not filaments
   'arch support',     // 3D printed products, not filaments
   'insoles',          // 3D printed products, not filaments
