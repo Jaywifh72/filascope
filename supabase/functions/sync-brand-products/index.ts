@@ -1121,6 +1121,7 @@ function extractColorHexFromVariant(variant: any, product: any, title: string, b
   // This ensures Anycubic colors like "tropical turquoise" get correct hex codes
   if (colorOption && brandSlug === 'anycubic') {
     const anycubicHex = getAnycubicColorHex(colorOption);
+    console.log(`[anycubic-color-debug] Raw: "${colorOption}" -> Hex: ${anycubicHex || 'NULL (will fallback to generic/deterministic)'}`);
     if (anycubicHex) {
       return anycubicHex.startsWith('#') ? anycubicHex : `#${anycubicHex}`;
     }
