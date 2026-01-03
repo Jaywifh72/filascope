@@ -188,29 +188,11 @@ async function scrapeProductPage(
       }
     }
     
-    // Extract color swatch hex - try multiple patterns
-    let colorHex: string | null = null;
-    const swatchPatterns = [
-      // Shopify variant swatch background-color
-      /background-color:\s*#([A-Fa-f0-9]{6})/i,
-      // CSS variable swatch
-      /--swatch-color:\s*#([A-Fa-f0-9]{6})/i,
-      // Data attribute swatch
-      /data-color="#([A-Fa-f0-9]{6})"/i,
-      /data-swatch-color="#([A-Fa-f0-9]{6})"/i,
-      // Inline style hex
-      /style="[^"]*(?:background-)?color:\s*#([A-Fa-f0-9]{6})[^"]*"/i,
-      // Shopify product swatch meta
-      /"swatch_color":\s*"#([A-Fa-f0-9]{6})"/i,
-    ];
-    
-    for (const pattern of swatchPatterns) {
-      const match = html.match(pattern);
-      if (match?.[1]) {
-        colorHex = match[1].toUpperCase();
-        break;
-      }
-    }
+    // NOTE: Swatch extraction disabled for Atomic Filament
+    // The HTML contains brand color (#0E88AD) in CSS variables that incorrectly
+    // matches swatch patterns. Atomic uses image-based swatches, not CSS colors.
+    // Color hex is determined by getAtomicColorHex() using the color name instead.
+    const colorHex: string | null = null;
     
     // Extract main product image - try multiple patterns for Shopify themes
     let imageUrl: string | null = null;
@@ -527,10 +509,13 @@ Deno.serve(async (req) => {
         // Extract color from title
         const colorName = extractColorFromTitle(title, product.material);
         
-        // Get color hex (from page swatch, Atomic mapping, or generic mapping)
-        let colorHex = pageData.colorHex || 
-                       getAtomicColorHex(colorName) || 
-                       getColorHex(colorName);
+        // Get color hex - use Atomic mapping first, then generic mapping
+        // NOTE: pageData.colorHex is intentionally NOT used - it contains brand color #0E88AD
+        const atomicHex = getAtomicColorHex(colorName);
+        const genericHex = getColorHex(colorName);
+        const colorHex = atomicHex || genericHex;
+        
+        console.log(`[ATOMIC-COLOR] "${colorName}" -> ${colorHex ? '#' + colorHex : 'UNMAPPED'} (atomic: ${atomicHex || 'null'}, generic: ${genericHex || 'null'})`);
         
         // Get color family
         const colorFamily = getColorFamily(colorName) || colorName;
