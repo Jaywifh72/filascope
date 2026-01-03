@@ -879,6 +879,9 @@ export const ATOMIC_EXCLUDED_PRODUCT_PATTERNS: string[] = [
   '10 pack',
   '10-pack',
   '70% min',  // Short spools
+  // Non-filament products (gift cards, etc.)
+  'gift card',
+  'gift',
 ];
 
 /**
