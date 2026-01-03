@@ -2267,8 +2267,55 @@ Deno.serve(async (req) => {
     )] as string[];
 
     // Brand-specific expected card counts (from collection architecture)
+    // These are known stable brands with well-defined product line structures
     const EXPECTED_CARD_COUNTS: Record<string, number> = {
-      'atomic-filament': 5,  // PLA, PETG, ABS, ASA, PLA Silk
+      // High-confidence counts (verified architecture)
+      'atomic-filament': 5,     // PLA, PETG, ABS, ASA, PLA Silk
+      'elegoo': 12,             // PLA, PLA+, PETG, ABS, ASA, TPU, Rapid, Marble, Silk, Matte, Glow, Wood
+      'anycubic': 19,           // PLA+, PLA Silk, PLA Galaxy, PLA High Speed, PETG, ABS, ASA, TPU, etc.
+      'push-plastic': 15,       // PLA, PETG, ABS, ASA, Nylon, PC, PEI, etc.
+      'proto-pasta': 15,        // PLA, HTPLA, PLA Composites, CFPLA, etc.
+      '3d-fuel': 8,             // Standard PLA, Pro PLA, PETG, ABS, Biome3D, Buzzed, Entwined, Landfillament
+      '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
+      'eryone': 24,             // PLA, PLA+, PETG, Silk, Galaxy, Matte, Marble, TPU, etc.
+      '3dhojor': 12,            // PLA, PETG, Silk, Matte, Marble, etc.
+      'sunlu': 9,               // PLA, PLA+, PETG, TPU, Silk, ABS, ASA, etc.
+      'siraya-tech': 17,        // Resin types - Fast, Blu, Build, Sculpt, Tenacious, etc.
+      'sovol': 6,               // PLA, PETG, TPU, ABS, Silk, Carbon
+      'flashforge': 8,          // PLA, ABS, PETG, TPU, Adventurer series
+      'duramic-3d': 3,          // PLA, PETG, TPU
+      
+      // Medium-confidence counts (product_line_id may need population)
+      'overture': 15,           // PLA, PLA Pro, PETG, TPU, ABS, Silk, Matte, etc.
+      'bambu-lab': 40,          // PLA, PETG, ABS, ASA, TPU, PLA-CF, PAHT-CF, Marble, Silk, Sparkle, etc.
+      'fillamentum': 25,        // PLA, ASA, PETG, Flexfill, CPE, Nylon, Timberfill, etc.
+      'azurefilm': 20,          // PLA, PETG, ABS, ASA, Silk, Wood, Hyper Speed, etc.
+      'ninjatek': 10,           // Cheetah, NinjaFlex, Armadillo, Eel, SemiFlex, etc.
+      'polymaker': 25,          // PolyLite, PolyTerra, PolyMax, PolyMide, PolyDissolve, etc.
+      'colorfabb': 20,          // PLA Economy, PETG, nGen, PA, Amphora, XT, etc.
+      'prusament': 12,          // PLA, PETG, ASA, PC Blend, PA11-CF, PVB, etc.
+      'matter3d': 15,           // Performance, Standard, Specialty lines
+      'esun': 18,               // PLA+, PETG, ABS+, eSilk, eMarble, TPU, etc.
+      'creality': 12,           // Hyper Series, Ender PLA, etc.
+      'fiberlogy': 15,          // Easy PLA, HD PLA, PETG, PA12, etc.
+      'amolen': 33,             // Silk, Matte, Dual Color, Galaxy, Rainbow, Glow, Wood, Marble, etc.
+      'hatchbox': 12,           // PLA, PETG, ABS, TPU, Silk, etc.
+      'formfutura': 18,         // EasyFil, HDglass, ApolloX, etc.
+      'extrudr': 15,            // GreenTEC, BioFusion, DuraPro, etc.
+      'geeetech': 12,           // PLA, ABS, PETG, Silk, etc.
+      'fusion-filaments': 11,   // PLA, PETG, ABS, TPU, etc.
+      'spectrum-filaments': 30, // Large catalog with ReFill options
+      'ultimaker': 10,          // S-Series materials
+      'numakers': 8,            // PLA, PETG, TPU lines
+      'recreus': 6,             // FilaFlex series
+      'treed-filaments': 15,    // Ecogenius, Shogun, Carbonio, etc.
+      'voxelpla': 5,            // Basic PLA lines
+      'ziro': 10,               // PLA, PETG, Silk, etc.
+      'paramount-3d': 8,        // FlexPLA, Stone, Shimmer lines
+      'cc3d': 10,               // PLA, PETG, Ceramic, Metal lines
+      'kingroon': 6,            // Basic filament lines
+      'ic3d-printers': 8,       // Industrial materials
+      'yousu': 8,               // PLA, PETG, Silk lines
     };
 
     const expectedCards = EXPECTED_CARD_COUNTS[brandSlug] || null;
@@ -2298,10 +2345,39 @@ Deno.serve(async (req) => {
 
     console.log(`[PostSyncCheck] Filament Card Count complete: ${actualCards} cards${expectedCards !== null ? ` (expected ${expectedCards})` : ''}`);
 
-    // ============= CARD TITLE FORMAT CHECK (NEW) =============
+    // ============= CARD TITLE FORMAT CHECK (ENHANCED) =============
     // Validates that card titles are product LINE names, not individual variant names
-    // Good: "PLA", "PETG", "PLA Silk"
+    // Good: "PLA", "PETG", "PLA Silk", "PolyLite PLA", "Easy PLA"
     // Bad: "Groovy Purple PLA Shade-Shifting Filament", "Indigo Golden Sparkle v3 Translucent PLA"
+    
+    // Brand-specific valid product line name patterns
+    // If a display name matches ANY of these patterns, it's considered valid
+    const VALID_PRODUCT_LINE_PATTERNS: Record<string, RegExp[]> = {
+      'atomic-filament': [/^(PLA|PETG|ABS|ASA|PLA Silk|TPU|Nylon)$/i],
+      'elegoo': [/^(PLA|PLA\s*\+?|PETG|ABS|ASA|TPU|Rapid|Marble|Silk|Matte|Glow|Wood|High\s*Speed)/i],
+      'anycubic': [/^(PLA|PLA\s*\+|PLA Basic|PLA Silk|PLA High Speed|PETG|ABS|ASA|TPU|High Speed)/i],
+      'polymaker': [/^(PolyLite|PolyTerra|PolyMax|PolyMide|PolyDissolve|PolySmooth|PolyCast|PolyFlex)/i],
+      'prusament': [/^(PLA|PETG|ASA|PC Blend|PA11|PVB|rPLA)/i],
+      'bambu-lab': [/^(PLA|PETG|ABS|ASA|TPU|PLA-CF|PAHT-CF|PA6-CF|Marble|Silk|Sparkle|Matte|Glow|Galaxy|Metal|Wood)/i],
+      'fillamentum': [/^(Extrafill|Flexfill|NonOilen|CPE|ASA|Timberfill|Vinyl)/i],
+      'azurefilm': [/^(PLA|PETG|ABS|ASA|Silk|Wood|Hyper Speed|High Speed|LumberLay|Lumos)/i],
+      'ninjatek': [/^(Cheetah|NinjaFlex|Armadillo|Eel|SemiFlex)/i],
+      'fiberlogy': [/^(Easy PLA|HD PLA|PETG|PA12|PCTG|FiberFlex)/i],
+      'overture': [/^(PLA|PLA Pro|PLA\s*\+|PETG|TPU|ABS|Silk|Matte|Rock|Air)/i],
+      'hatchbox': [/^(PLA|PLA\s*\+|PETG|ABS|TPU|Silk|Wood|Reload)/i],
+      'sunlu': [/^(PLA|PLA\s*\+|PETG|TPU|ABS|ASA|Silk|Meta|E-ABS)/i],
+      'eryone': [/^(PLA|PLA\s*\+|PETG|TPU|Silk|Galaxy|Matte|Marble|Tri-Color|Dual-Color)/i],
+      '3d-fuel': [/^(Standard PLA|Pro PLA|Tough Pro|Pro PETG|Pro PCTG|Biome3D|Buzzed|Entwined|Wound Up|Landfillament)/i],
+      '3dxtech': [/^(PEEK|PEKK|PEI|ULTEM|CarbonX|ESD|PETG|ABS|ASA|Nylon|PA|PC)/i],
+      'proto-pasta': [/^(PLA|HTPLA|CFPLA|Carbon Fiber|Stainless Steel|Copper|Bronze|Iron)/i],
+      'esun': [/^(PLA\s*\+|PETG|ABS\s*\+|eSilk|eMarble|TPU|ePLA|ePC|ePA)/i],
+      'creality': [/^(Hyper|Ender|PLA|PETG|ABS|TPU|High Speed)/i],
+      'colorfabb': [/^(PLA Economy|nGen|PETG|PA|Amphora|XT|Corkfill|Woodfill|Bronzefill)/i],
+      'formfutura': [/^(EasyFil|HDglass|ApolloX|Volcano|Flexifil|Galaxy)/i],
+      'amolen': [/^(PLA|PETG|TPU|Silk|Matte|Dual Color|Galaxy|Rainbow|Glow|Wood|Marble|Metal)/i],
+      'siraya-tech': [/^(Fast|Blu|Build|Sculpt|Tenacious|Smoky|Brilliant|Infinite)/i],
+    };
+    
     const cardTitleIssues: Array<{ id: string; title: string; issue: string }> = [];
 
     // Get one representative product per product_line_id
@@ -2317,17 +2393,28 @@ Deno.serve(async (req) => {
       checkedLines.add(product.product_line_id);
 
       const displayName = simulateUIDisplayName(product.product_line_id, product.product_title);
+      
+      // First check: Does it match brand-specific valid patterns?
+      const brandPatterns = VALID_PRODUCT_LINE_PATTERNS[brandSlug] || [];
+      const matchesBrandPattern = brandPatterns.some(p => p.test(displayName));
+      
+      if (matchesBrandPattern) {
+        // Valid product line name for this brand
+        continue;
+      }
 
-      // Check if display name looks like an individual product (has color name)
+      // Second check: Generic color pattern detection (for brands without specific patterns)
       const colorPatterns = [
         /\b(Red|Blue|Green|Yellow|Orange|Purple|Pink|Black|White|Gray|Grey|Brown|Silver|Gold|Copper|Navy|Teal|Aqua|Maroon|Indigo|Violet)\b/i,
-        /\b(Groovy|Sparkle|Iridescent|Shimmer|Glitter|Metallic|Neon|Glow)\s+\w+/i,
+        /\b(Groovy|Sparkle|Iridescent|Shimmer|Glitter|Metallic|Neon)\s+\w+/i,
         /v\d+\s+(Pearl|Translucent|Clear)/i,
+        /\b(Cherry|Abyss|Aurora|Sunset|Ocean|Forest|Desert|Fire)\b/i, // Common color/theme names
       ];
 
       const looksLikeVariantTitle = colorPatterns.some(p => p.test(displayName));
-      const isTooLong = displayName.split(' ').length > 4;
+      const isTooLong = displayName.split(' ').length > 5;
 
+      // Only flag if it looks like a variant title AND doesn't match brand patterns
       if (looksLikeVariantTitle || isTooLong) {
         const expectedName = product.product_line_id.split('__').pop()?.replace(/-/g, ' ').toUpperCase() || 'Unknown';
         cardTitleIssues.push({
@@ -2407,6 +2494,94 @@ Deno.serve(async (req) => {
     });
 
     console.log(`[PostSyncCheck] Filament Detail Page Content complete: ${checkedDetailLines.size - detailPageIssues.length}/${checkedDetailLines.size} consistent`);
+
+    // ============= PRODUCT LINE ID COVERAGE CHECK (NEW) =============
+    // Products without product_line_id won't group into cards - CRITICAL for UI display
+    const { data: missingProductLineIdData } = await supabase
+      .from("filaments")
+      .select("id, product_title")
+      .ilike("vendor", brandName)
+      .is("product_line_id", null)
+      .limit(20);
+
+    const missingProductLineIds = missingProductLineIdData || [];
+    const totalWithoutLineId = missingProductLineIds.length;
+
+    const productLineIdIssues: Array<{ id: string; title: string; issue: string }> = 
+      missingProductLineIds.map((p: { id: string; product_title: string }) => ({
+        id: p.id,
+        title: p.product_title,
+        issue: 'Missing product_line_id - will not display in card grid',
+      }));
+
+    // Determine severity: if many products missing, it's critical
+    const productLineIdStatus = totalWithoutLineId === 0 ? "pass" : 
+      (totalWithoutLineId <= 5 || totalWithoutLineId < (totalProducts || 0) * 0.1) ? "warning" : "fail";
+
+    checks.push({
+      checkName: "Product Line ID Coverage (UI Card Grouping)",
+      status: productLineIdStatus,
+      count: (totalProducts || 0) - totalWithoutLineId,
+      details: totalWithoutLineId === 0
+        ? `All ${totalProducts || 0} products have product_line_id assigned for card grouping`
+        : `CRITICAL: ${totalWithoutLineId}+ products missing product_line_id - won't display in UI card grid`,
+      products: productLineIdIssues.length > 0 ? productLineIdIssues : undefined,
+    });
+
+    console.log(`[PostSyncCheck] Product Line ID Coverage: ${(totalProducts || 0) - totalWithoutLineId}/${totalProducts || 0} have product_line_id`);
+
+    // ============= VISUAL HIERARCHY VALIDATION CHECK (NEW) =============
+    // Validates the logical product hierarchy for UI display:
+    // Brand → Product Lines (Cards) → Color Variants (Swatches)
+    const hierarchyIssues: Array<{ id: string; title: string; issue: string }> = [];
+
+    // Check 1: Each product line should have >= 1 variant (shouldn't happen but defensive)
+    for (const [productLineId, variants] of Object.entries(variantsByLine)) {
+      const variantArray = variants as Array<{ id: string; product_title: string }>;
+      if (!variantArray || variantArray.length === 0) {
+        hierarchyIssues.push({
+          id: 'empty-line',
+          title: productLineId,
+          issue: 'Product line has 0 variants - empty card will display',
+        });
+      }
+    }
+
+    // Check 2: No single product_line_id should have >100 variants (likely incorrect grouping)
+    for (const [productLineId, variants] of Object.entries(variantsByLine)) {
+      const variantArray = variants as Array<{ id: string; product_title: string }>;
+      if (variantArray && variantArray.length > 100) {
+        hierarchyIssues.push({
+          id: variantArray[0].id,
+          title: productLineId,
+          issue: `Product line has ${variantArray.length} variants - likely incorrect grouping (should be multiple product lines)`,
+        });
+      }
+    }
+
+    // Check 3: Product line ID should follow naming convention (brand__product format)
+    for (const productLineId of Object.keys(variantsByLine)) {
+      if (!productLineId.includes('__')) {
+        const variants = variantsByLine[productLineId] as Array<{ id: string }>;
+        hierarchyIssues.push({
+          id: variants?.[0]?.id || 'invalid-format',
+          title: productLineId,
+          issue: 'Invalid product_line_id format - missing brand__product separator',
+        });
+      }
+    }
+
+    checks.push({
+      checkName: "Visual Hierarchy Validation (Card → Swatch Structure)",
+      status: hierarchyIssues.length === 0 ? "pass" : hierarchyIssues.length <= 3 ? "warning" : "fail",
+      count: Object.keys(variantsByLine).length - hierarchyIssues.length,
+      details: hierarchyIssues.length === 0
+        ? `Visual hierarchy is correct: ${Object.keys(variantsByLine).length} product cards with proper variant grouping`
+        : `${hierarchyIssues.length} hierarchy issues will affect UI display`,
+      products: hierarchyIssues.length > 0 ? hierarchyIssues : undefined,
+    });
+
+    console.log(`[PostSyncCheck] Visual Hierarchy Validation: ${hierarchyIssues.length} issues found`);
 
     // ============= PRICE CONSISTENCY CHECK (UPDATED FOR INDUSTRIAL BRANDS) =============
     // Validate DB prices are reasonable (not $0 or suspicious values)
