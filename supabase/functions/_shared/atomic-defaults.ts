@@ -8,7 +8,30 @@
  * - Material normalization mapping
  * - Title cleaning patterns
  * - Brand-specific color mapping
+ * - Collection-based product discovery whitelist
  */
+
+// ============================================================================
+// COLLECTION WHITELIST - Official material collection URLs from spreadsheet
+// ============================================================================
+
+export interface AtomicCollectionConfig {
+  material: string;
+  collectionUrl: string;
+  displayMaterial: string;
+}
+
+/**
+ * Official Atomic Filament collection URLs for product discovery
+ * These are the canonical sources for each material type
+ */
+export const ATOMIC_COLLECTION_WHITELIST: AtomicCollectionConfig[] = [
+  { material: 'PLA', collectionUrl: 'https://atomicfilament.com/collections/opaque-pla-filaments-1', displayMaterial: 'PLA' },
+  { material: 'PETG', collectionUrl: 'https://atomicfilament.com/collections/petg-3d-printer-filament-us-made-with-free-shipping', displayMaterial: 'PETG' },
+  { material: 'ABS', collectionUrl: 'https://atomicfilament.com/collections/abs-3d-filament', displayMaterial: 'ABS' },
+  { material: 'ASA', collectionUrl: 'https://atomicfilament.com/collections/asa-free-us-shipping', displayMaterial: 'ASA' },
+  { material: 'PLA Silk', collectionUrl: 'https://atomicfilament.com/collections/silky-pla', displayMaterial: 'PLA Silk' },
+];
 
 // ============================================================================
 // TDS URL PATTERNS - Known Atomic Filament TDS locations
