@@ -565,7 +565,66 @@ AND product_line_id LIKE '%pla%silk%promo%';
 
 ` : '';
 
-  const prompt = `${roleSection}## Fix Post Sync Check Issues for ${brand}
+  // Available APIs and Tools section
+  const availableToolsSection = `
+---
+
+## Available APIs and Tools
+
+The following external APIs are pre-configured and available as environment variables in edge functions:
+
+### Firecrawl API (\`FIRECRAWL_API_KEY\`)
+
+A powerful web scraping and crawling API that is **already configured** and available. Use it for:
+- **Scrape**: Extract content from a single URL (HTML, markdown, screenshots, links)
+- **Map**: Quickly discover all URLs on a website (fast sitemap generation)
+- **Search**: Perform web search with optional content scraping
+- **Crawl**: Recursively scrape all pages on a website
+
+**Usage in Edge Functions:**
+
+\`\`\`typescript
+const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+
+// Scrape a single product page to get H1 title
+const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+  method: 'POST',
+  headers: {
+    'Authorization': \`Bearer \${firecrawlApiKey}\`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    url: productUrl,
+    formats: ['html'],
+    onlyMainContent: false,
+    waitFor: 2000,  // Wait for JS to load
+  }),
+});
+
+const data = await response.json();
+const html = data.data?.html || '';
+
+// Extract H1 title
+const h1Match = html.match(/<h1[^>]*>([^<]+)<\\/h1>/i);
+const pageTitle = h1Match?.[1]?.trim() || null;
+\`\`\`
+
+**Key Parameters:**
+- \`formats\`: 'html' | 'markdown' | 'screenshot' | 'links' | 'rawHtml'
+- \`onlyMainContent\`: true to exclude headers/footers (default: false for full page)
+- \`waitFor\`: milliseconds to wait for dynamic content (default: 0)
+
+**Best Practices:**
+- Use **parallel batching** (5-10 concurrent requests) for multiple URLs to avoid timeout
+- Add **timeout protection** for large syncs (50+ products)
+- Cache scraped HTML in decision logs for debugging
+- Always access response data via \`data.data?.field\` (nested structure)
+
+---
+
+`;
+
+  const prompt = `${roleSection}${availableToolsSection}## Fix Post Sync Check Issues for ${brand}
 
 The Post Sync Check for ${brand} found the following issues that need to be fixed in the sync function.
 
