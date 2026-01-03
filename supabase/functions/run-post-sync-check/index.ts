@@ -1409,6 +1409,10 @@ Deno.serve(async (req) => {
                 dbBaseTitle = representative.product_title.replace(colorPattern, '').trim();
               }
               
+              // ALSO strip "Filament" from DB title for fair comparison
+              // DB titles often include "Filament" suffix (e.g., "PLA+ Filament") which page titles also have
+              dbBaseTitle = dbBaseTitle.replace(/\s+Filament\s*/gi, ' ').replace(/\s+/g, ' ').trim();
+              
               // Strip promotional text and size/weight/filament specs from page title for comparison
               // Anycubic pages include "Buy 2, Get 1 Free" or "Flash Sale" in H1
               // Amolen pages include "1.75mm, 1KG/2.2LB" in H1 which isn't in DB titles
@@ -1852,7 +1856,9 @@ Deno.serve(async (req) => {
     const urlConsistencyIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
     
     // Check if this brand uses cross-product swatch architecture
-    const isCrossProductSwatchBrand = IMAGE_SWATCH_BRANDS.includes(brandSlug);
+    // Include Anycubic since they group products across promotional and regular URLs
+    const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic'];
+    const isCrossProductSwatchBrand = CROSS_PRODUCT_URL_BRANDS.includes(brandSlug);
     
     for (const lineId of productLineIds.slice(0, 15)) {
       const variants = productLineGroups[lineId];
