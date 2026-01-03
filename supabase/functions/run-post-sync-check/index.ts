@@ -2150,6 +2150,18 @@ Deno.serve(async (req) => {
     const simulateUIDisplayName = (productLineId: string, productTitle: string): string => {
       const parts = productLineId.split('__');
       
+      // ATOMIC FILAMENT: Always use the cleaned fallbackTitle (DB product_title)
+      // This preserves important descriptors like "Translucent", "Sparkle", specialty color names
+      if (parts[0] === 'atomic-filament') {
+        return productTitle
+          .replace(/\s+Filament\s*$/i, '')
+          .replace(/\s*AMS\s*Compatible\s*$/i, '')
+          .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')  // Remove diameter
+          .replace(/\s*,?\s*\d+\.?\d*\s*kg\b/gi, '')  // Remove weight
+          .replace(/\s*,?\s*\d+\.?\d*\s*lb\b/gi, '')
+          .trim() || productTitle;
+      }
+      
       if (parts.length >= 3) {
         // 3+ part format: "vendor__material__line-name"
         const material = parts[1]?.toUpperCase() || '';

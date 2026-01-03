@@ -230,7 +230,15 @@ export function extractFinishType(title: string): FinishType {
 // ============================================================================
 
 const ATOMIC_MATERIAL_MAPPING: Record<string, string> = {
-  // PLA variants
+  // PLA variants with finishes (must come before base 'pla')
+  'metallic pla': 'PLA',  // Metallic is a FINISH, not a material variant
+  'silky pla': 'PLA',     // Silk is a FINISH, not a material variant
+  'translucent pla': 'PLA',  // Translucent is a FINISH
+  'sparkle pla': 'PLA',   // Sparkle is a FINISH
+  'glow pla': 'PLA',      // Glow is a FINISH
+  'matte pla': 'PLA',     // Matte is a FINISH
+  
+  // Base PLA variants
   'pla': 'PLA',
   'pla+': 'PLA+',
   'pla plus': 'PLA+',
