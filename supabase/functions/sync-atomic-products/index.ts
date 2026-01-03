@@ -25,6 +25,9 @@ import {
   generateAtomicProductLineId,
   cleanAtomicTitle,
   ATOMIC_COLLECTION_WHITELIST,
+  isAtomicNonFilamentProduct,
+  isAtomicSampleProduct,
+  is285mmDiameter,
 } from '../_shared/atomic-defaults.ts';
 import { getColorHex, getColorFamily } from '../_shared/color-mapping.ts';
 
@@ -202,6 +205,59 @@ Deno.serve(async (req) => {
     let detailsScraped = 0;
     let tdsParsed = 0;
     let productLineIdsSet = 0;
+
+    // =========================================================================
+    // STEP 0: Pre-filter database to remove non-filament products
+    // This cleans up any existing shirts, samples, 2.85mm products BEFORE sync
+    // =========================================================================
+    if (tasks.includes('sync')) {
+      console.log('[ATOMIC-SYNC] Step 0: Pre-filtering non-filament products from database...');
+      
+      const { data: toCheck, error: fetchErr } = await supabase
+        .from('filaments')
+        .select('id, product_title')
+        .ilike('vendor', '%atomic%');
+      
+      if (fetchErr) {
+        console.error('[ATOMIC-SYNC] Pre-filter fetch error:', fetchErr.message);
+      } else {
+        let deleted = 0;
+        const toDelete: string[] = [];
+        
+        for (const f of toCheck || []) {
+          const title = f.product_title;
+          if (
+            isAtomicNonFilamentProduct(title) ||
+            isAtomicSampleProduct(title) ||
+            is285mmDiameter(title)
+          ) {
+            toDelete.push(f.id);
+            console.log(`[ATOMIC-SYNC] Marking for deletion: ${title.slice(0, 50)}`);
+          }
+        }
+        
+        // Delete in batches of 50
+        if (toDelete.length > 0 && !dryRun) {
+          for (let i = 0; i < toDelete.length; i += 50) {
+            const batch = toDelete.slice(i, i + 50);
+            const { error: delErr } = await supabase
+              .from('filaments')
+              .delete()
+              .in('id', batch);
+            
+            if (delErr) {
+              console.error('[ATOMIC-SYNC] Batch delete error:', delErr.message);
+            } else {
+              deleted += batch.length;
+            }
+          }
+        } else if (dryRun && toDelete.length > 0) {
+          console.log(`[ATOMIC-SYNC] [DRY-RUN] Would delete ${toDelete.length} non-filament products`);
+        }
+        
+        console.log(`[ATOMIC-SYNC] Pre-filtered ${deleted} non-filament products (shirts, samples, 2.85mm)`);
+      }
+    }
 
     // =========================================================================
     // STEP 1: Run base sync (if requested)

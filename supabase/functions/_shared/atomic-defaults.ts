@@ -502,6 +502,63 @@ export const ATOMIC_COLOR_MAPPING: Record<string, string> = {
   'translucent red': 'FF6B6B',
   'translucent orange': 'FFB347',
   'translucent yellow': 'FFFF99',
+  
+  // ===== NEW: Missing specialty colors from Post Sync Check =====
+  
+  // Illusion/Iridescent series (critical for Color Distinguishability)
+  'illusion cherry': 'DC2626',
+  'illusion cherry iridescent': 'DC2626',
+  'illusion blue': '3B82F6',
+  'illusion green': '22C55E',
+  'illusion blue iridescent': '3B82F6',
+  
+  // Mysterious Abyss series
+  'mysterious abyss': '1E3A5F',
+  'mysterious abyss v2': '1E3A5F',
+  'mysterious abyss v2 pearl': '2D4A6A',
+  'mysterious abyss pearl': '2D4A6A',
+  
+  // Indigo Golden Sparkle series
+  'indigo golden sparkle': '4B0082',
+  'indigo golden sparkle v3': '4B0082',
+  'indigo golden sparkle translucent': '5B1092',
+  
+  // Chameleon/Shade-shifting
+  'chameleon coastline': '0EA5E9',
+  'shade shifting': '8B5CF6',
+  'coastline': '0EA5E9',
+  
+  // Bug Eyes specialty
+  'bug eyes': '22C55E',
+  
+  // Offshore/Silky series
+  'offshore mist': '93C5FD',
+  'off shore mist': '93C5FD',
+  'silky offshore mist': '93C5FD',
+  'silky periwinkle': '8B8BB4',
+  'periwinkle': '8B8BB4',
+  
+  // Bubblegum/Rose gold
+  'bubblegum': 'FF69B4',
+  'iridescent bubblegum': 'FF69B4',
+  'rose gold': 'B76E79',
+  'rose gold metallic': 'B76E79',
+  'rose gold metallic translucent': 'C87F89',
+  
+  // Carbon Fiber Extreme series
+  'carbon fiber dark cherry': '4A1522',
+  'extreme petg': '1F2937',
+  'stone gray carbon fiber': '6B7280',
+  'stone gray': '6B7280',
+  
+  // Additional standard colors
+  'shamrock': '16A34A',
+  'shamrock sparkle': '16A34A',
+  'micropolitan bright white': 'FAFAFA',
+  'bright white': 'FAFAFA',
+  'groovy purple': '9333EA',
+  'atomic orange': 'FF6B35',
+  'atomic blue': '0066CC',
 };
 
 /**
@@ -537,6 +594,9 @@ const ATOMIC_ACCESSORY_PATTERNS: RegExp[] = [
   /\bnozzle\b/i,
   /\bsheet\b/i,
   /\btools?\b/i,
+  /\bams\s*compatible\s*spool--empty\b/i,
+  /\bempty\s*spool\b/i,
+  /\bspool--empty\b/i,
   // Samples and kits
   /\bsample\s*coil\s*pack\b/i,
   /\bsample\s*pack\b/i,
@@ -557,6 +617,61 @@ export function isAtomicAccessory(title: string): boolean {
 
 // Minimum weight threshold for filaments (exclude sample coils)
 export const ATOMIC_MIN_WEIGHT_GRAMS = 300;
+
+// ============================================================================
+// ENHANCED NON-FILAMENT DETECTION (for sync pre-filtering)
+// ============================================================================
+
+/**
+ * ATOMIC-SPECIFIC EXCLUSION PATTERNS
+ * Products matching these patterns should be excluded from the filament catalog
+ */
+export const ATOMIC_EXCLUDED_PRODUCT_PATTERNS: string[] = [
+  'brand shirt',
+  'shirt -',
+  't-shirt',
+  'tee shirt',
+  'empty spool',
+  'spool--empty',
+  'ams compatible spool--empty',
+  'sample coil pack',
+  'short spool',
+  '10 pack',
+  '10-pack',
+  '70% min',  // Short spools
+];
+
+/**
+ * Check if a product should be excluded from Atomic Filament sync
+ * (non-filament products like shirts, accessories, sample packs, bulk bundles)
+ */
+export function isAtomicNonFilamentProduct(title: string): boolean {
+  if (!title) return false;
+  const titleLower = title.toLowerCase();
+  
+  // Check pattern-based exclusions
+  if (ATOMIC_EXCLUDED_PRODUCT_PATTERNS.some(pattern => titleLower.includes(pattern))) {
+    return true;
+  }
+  
+  // Also use the accessory detection
+  return isAtomicAccessory(title);
+}
+
+/**
+ * Check if a product is a sample coil (should be excluded)
+ * Separate from accessory detection for clarity
+ */
+export function isAtomicSampleProduct(title: string): boolean {
+  if (!title) return false;
+  const titleLower = title.toLowerCase();
+  
+  return (
+    titleLower.includes('sample coil') ||
+    titleLower.includes('sample pack') ||
+    /coil\s*pack/i.test(title)
+  );
+}
 
 // ============================================================================
 // MAIN POST-PROCESSING FUNCTION

@@ -2294,7 +2294,8 @@ Deno.serve(async (req) => {
     
     // Check if this brand uses cross-product swatch architecture
     // Include Anycubic since they group products across promotional and regular URLs
-    const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic'];
+    // Include Atomic Filament since each color variant IS a different product with its own URL
+    const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic', 'atomic-filament'];
     const isCrossProductSwatchBrand = CROSS_PRODUCT_URL_BRANDS.includes(brandSlug);
     
     for (const lineId of productLineIds.slice(0, 15)) {
@@ -2318,6 +2319,11 @@ Deno.serve(async (req) => {
           'petg', 'petg-plus', 'petg-translucent',
           'abs', 'abs-plus', 'abs-filament',
           'tpu', 'high-speed', 'pla-cf', 'petg-cf',
+          // Atomic Filament patterns (each color is a separate product)
+          'atomic', 'meltmiser', 'petg-pro', 'extreme', 
+          'illusion', 'mysterious-abyss', 'chameleon', 'sparkle',
+          'carbon-fiber', 'silky', 'silk', 'translucent', 'metallic',
+          'sample-coil', 'neon', 'uv-reactive', 'glow',
         ];
         
         // Pattern aliases for rebranded products - map old patterns to canonical pattern

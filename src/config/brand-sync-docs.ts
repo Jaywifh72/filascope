@@ -114,17 +114,22 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
   
   'atomic-filament': {
     exclusions: [
-      { name: 'Short Spools (70% min)', reason: 'Partial/clearance spools excluded from standard catalog' },
+      { name: 'Sample Coils', reason: 'Products with "Sample Coil" in title - small test quantities excluded via isAtomicSampleProduct()' },
+      { name: 'Sample Coil Packs', reason: 'Multi-sample variety packs (e.g., NEON Sample Pack)' },
+      { name: 'Short Spools (70% min)', reason: 'Partial/clearance spools excluded via isAtomicNonFilamentProduct()' },
+      { name: '10-Pack Bundles', reason: 'Bulk multi-packs (e.g., 10 Pack Carbon Fiber PLA) excluded' },
       { name: '3.5KG Jumbo Rolls', reason: 'Bulk variants linked separately from standard 1KG products' },
-      { name: 'Sample Coils', reason: 'Sample products excluded by global filter' },
-      { name: '2.85mm Diameter', reason: 'Non-standard diameter separated from 1.75mm products' },
-      { name: '10-Pack Bundles', reason: 'Bulk packs excluded by global filter' },
+      { name: '2.85mm Diameter', reason: 'Non-standard diameter separated from 1.75mm products via is285mmDiameter()' },
+      { name: 'Brand Shirts', reason: 'Non-filament merchandise (t-shirts, apparel) detected via isAtomicNonFilamentProduct()' },
+      { name: 'Empty AMS Spools', reason: 'Non-filament accessories (AMS Compatible Spool--Empty)' },
     ],
     specialBehaviors: [
       { name: 'H1 Title Priority (Critical)', description: 'Product titles MUST be scraped from the <h1> tag on the product page URL. Shopify JSON title is never used.' },
+      { name: 'Pre-Filter Cleanup', description: 'Sync function deletes non-filament products from DB before processing using isAtomicNonFilamentProduct() and isAtomicSampleProduct().' },
       { name: 'Collection-Based Discovery', description: 'Products discovered from 5 material collection URLs (PLA, PETG, ABS, ASA, PLA Silk).' },
+      { name: 'Per-Color Product Pages', description: 'Each color variant is a separate product URL. Multiple URLs per product_line_id is EXPECTED behavior.' },
       { name: 'US-Made Focus', description: 'All products manufactured in Indiana, USA.' },
-      { name: 'Specialty Color Mapping', description: 'Unique color names (Perfect Red, MeltMiser, Extreme Impact) mapped to hex values.' },
+      { name: 'Specialty Color Mapping', description: 'Unique color names (Illusion Cherry, Mysterious Abyss, Chameleon Coastline, Bug Eyes) mapped to hex values.' },
       { name: 'AMS Compatible Variants', description: 'Most 1KG spools labeled as AMS Compatible in title.' },
       { name: 'Carbon Fiber Separation', description: 'CF-PLA, CF-PETG, CF-ABS, CF-ASA have separate product_line_ids.' },
       { name: 'MeltMiser Line', description: 'Premium high-temp products grouped under meltmiser product_line_id.' },
@@ -136,6 +141,7 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
       'Shopify JSON API used only for variant metadata (prices, availability, images)',
       'Collection URLs are the canonical source for product discovery',
       '5 official material collections: PLA, PETG, ABS, ASA, PLA Silk',
+      'URL Consistency check shows multiple URLs per product_line - this is EXPECTED for Atomic architecture',
     ],
   },
   
