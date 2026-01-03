@@ -1409,9 +1409,19 @@ Deno.serve(async (req) => {
                 dbBaseTitle = representative.product_title.replace(colorPattern, '').trim();
               }
               
-              // Strip size/weight/filament specs from page title for comparison
+              // Strip promotional text and size/weight/filament specs from page title for comparison
+              // Anycubic pages include "Buy 2, Get 1 Free" or "Flash Sale" in H1
               // Amolen pages include "1.75mm, 1KG/2.2LB" in H1 which isn't in DB titles
               let pageBaseTitle = pageInfo.pageTitle
+                // Strip promotional text FIRST (Anycubic-style promotions)
+                .replace(/\s*-?\s*buy\s+\d+[,\s]*get\s+\d+(\s+free)?/gi, '')
+                .replace(/\s*-?\s*flash\s+(deal|sale)/gi, '')
+                .replace(/\s*-?\s*christmas\s+(box|sale|deal|bulk)/gi, '')
+                .replace(/\s*-?\s*b2g1/gi, '')
+                .replace(/\s*-?\s*promo(tion)?/gi, '')
+                .replace(/\s*-?\s*special\s+offer/gi, '')
+                .replace(/\s*-?\s*limited\s+(time\s+)?offer/gi, '')
+                // Then strip size/weight specs
                 .replace(/\s+Filament\s*/gi, ' ')
                 .replace(/\s*,?\s*\d+\.?\d*\s*mm\s*/gi, ' ')
                 .replace(/\s*,?\s*\d+\.?\d*\s*(kg|g|lb)\s*(\/\s*\d+\.?\d*\s*(kg|g|lb))?\s*/gi, '')
