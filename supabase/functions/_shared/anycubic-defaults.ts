@@ -537,30 +537,100 @@ export const ANYCUBIC_COLOR_MAPPING: Record<string, string> = {
   'champaign': 'D4AF37',
   'champagne': 'D4AF37',
   
-  // PLA Silk colors from Post Sync Check
+// PLA Silk colors from Post Sync Check
   'rainbow': 'FF0000',
+  'silk rainbow': 'FF0000',
   'white': 'FFFFFF',
+  'silk white': 'FFFFFF',
   'metal blue': '4682B4',
+  'silk metal blue': '4682B4',
   'silver': 'C0C0C0',
+  'silk silver': 'C0C0C0',
   'gold': 'D4AF37',
+  'silk gold': 'D4AF37',
   'bronze': 'CD7F32',
+  'silk bronze': 'CD7F32',
   'rose gold': 'B76E79',
+  'silk rose gold': 'B76E79',
+  'pink': 'FFC0CB',
+  'silk pink': 'FFC0CB',
+  'purple': '9333EA',
+  'silk purple': '9333EA',
+  'black': '1A1A1A',
+  'silk black': '1A1A1A',
+  'blue': '2563EB',
+  'silk blue': '2563EB',
+  'red': 'DC2626',
+  'silk red': 'DC2626',
+  'green': '16A34A',
+  'silk green': '16A34A',
+  
+  // Missing colors from Post Sync Check
+  'magenta': 'FF00FF',
   
   // Common color aliases Anycubic uses
   'transparent': 'FFFFFF',
   'clear': 'FFFFFF',
   'natural': 'F5F5DC',
+  
+  // No-space variants (for robust matching)
+  'texturesilver': 'C0C0C0',
+  'texturegrey': '8B8B8B',
+  'texturegray': '8B8B8B',
+  'darkgrey': '404040',
+  'darkgray': '404040',
+  'metalcopper': 'B87333',
+  'metalchampagne': 'D4AF37',
+  'rosegold': 'B76E79',
+  'metalblue': '4682B4',
+  'silkrainbow': 'FF0000',
+  'silksilver': 'C0C0C0',
+  'silkpink': 'FFC0CB',
+  'silkpurple': '9333EA',
 };
 
 /**
  * Get hex color for Anycubic-specific color name
  * Returns null if not found (falls back to generic color mapping)
+ * 
+ * ENHANCED: Handles whitespace variations by:
+ * 1. Direct lookup with normalized spacing
+ * 2. No-space variant lookup (e.g., "texture grey" -> "texturegrey")
+ * 3. Partial matching for compound colors
  */
 export function getAnycubicColorHex(colorName: string): string | null {
   if (!colorName) return null;
   
-  const colorLower = colorName.toLowerCase().trim();
-  return ANYCUBIC_COLOR_MAPPING[colorLower] || null;
+  // Normalize: lowercase, trim, collapse multiple spaces
+  const colorLower = colorName.toLowerCase().trim().replace(/\s+/g, ' ');
+  
+  // Direct lookup first (most common case)
+  if (ANYCUBIC_COLOR_MAPPING[colorLower]) {
+    return ANYCUBIC_COLOR_MAPPING[colorLower];
+  }
+  
+  // Try no-space variant (e.g., "texture grey" -> "texturegrey")
+  const noSpaces = colorLower.replace(/\s+/g, '');
+  if (ANYCUBIC_COLOR_MAPPING[noSpaces]) {
+    return ANYCUBIC_COLOR_MAPPING[noSpaces];
+  }
+  
+  // Try matching without prefixes (e.g., "silk " prefix)
+  const withoutSilk = colorLower.replace(/^silk\s+/i, '');
+  if (withoutSilk !== colorLower && ANYCUBIC_COLOR_MAPPING[withoutSilk]) {
+    return ANYCUBIC_COLOR_MAPPING[withoutSilk];
+  }
+  
+  // Try partial matching by checking if any key is contained in the color name
+  // Sort by length (longest first) for most specific match
+  const sortedKeys = Object.keys(ANYCUBIC_COLOR_MAPPING).sort((a, b) => b.length - a.length);
+  for (const key of sortedKeys) {
+    if (colorLower.includes(key) || key.includes(colorLower)) {
+      return ANYCUBIC_COLOR_MAPPING[key];
+    }
+  }
+  
+  return null;
 }
 
 // ============================================================================
