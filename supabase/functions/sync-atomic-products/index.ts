@@ -315,6 +315,49 @@ Deno.serve(async (req) => {
               console.log(`[ATOMIC-SYNC] Post-sync cleaned ${toDeletePost.length} non-filament products`);
             }
           }
+          
+          // STEP 1C: Fix cross-material grouping - delete duplicate PA records when PA-CF exists
+          console.log('[ATOMIC-SYNC] Step 1C: Fixing cross-material grouping for CF products...');
+          
+          const { data: cfNylonProducts } = await supabase
+            .from('filaments')
+            .select('id, product_title, material')
+            .ilike('vendor', '%atomic%')
+            .or('product_title.ilike.%carbon fiber%nylon%,product_title.ilike.%nuclear nylon%');
+          
+          if (cfNylonProducts && cfNylonProducts.length > 0) {
+            // Group by normalized title
+            const titleGroups = new Map<string, typeof cfNylonProducts>();
+            for (const p of cfNylonProducts) {
+              const key = p.product_title.toLowerCase().trim();
+              if (!titleGroups.has(key)) titleGroups.set(key, []);
+              titleGroups.get(key)!.push(p);
+            }
+            
+            // Delete PA duplicates when PA-CF version exists
+            for (const [title, products] of titleGroups) {
+              if (products.length > 1) {
+                const hasPACF = products.some(p => p.material === 'PA-CF' || p.material === 'Nylon-CF');
+                if (hasPACF && !dryRun) {
+                  const toDelete = products.filter(p => p.material !== 'PA-CF' && p.material !== 'Nylon-CF');
+                  for (const p of toDelete) {
+                    await supabase.from('filaments').delete().eq('id', p.id);
+                    console.log(`[ATOMIC-SYNC] Deleted duplicate PA record for CF product: ${p.product_title.slice(0, 50)}`);
+                  }
+                }
+              }
+            }
+            
+            // Also fix any Carbon Fiber Nylon products that have wrong material
+            for (const p of cfNylonProducts) {
+              if (p.material !== 'PA-CF' && p.material !== 'Nylon-CF' && !dryRun) {
+                await supabase.from('filaments')
+                  .update({ material: 'Nylon-CF', updated_at: new Date().toISOString() })
+                  .eq('id', p.id);
+                console.log(`[ATOMIC-SYNC] Fixed material to Nylon-CF: ${p.product_title.slice(0, 50)}`);
+              }
+            }
+          }
         } else {
           const errorText = await syncResponse.text();
           console.error('[ATOMIC-SYNC] Base sync failed:', errorText);

@@ -259,6 +259,10 @@ const ATOMIC_MATERIAL_MAPPING: Record<string, string> = {
   'pa12': 'Nylon',
   'pa': 'Nylon',
   
+  // Atomic Filament branded Carbon Fiber Nylon (Nuclear Nylon)
+  'carbon fiber nuclear nylon': 'Nylon-CF',
+  'nuclear nylon': 'Nylon-CF',  // Atomic's branded CF Nylon product
+  
   // Carbon Fiber composites
   'carbon fiber pla': 'PLA-CF',
   'cf pla': 'PLA-CF',
