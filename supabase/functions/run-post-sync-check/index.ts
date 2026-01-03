@@ -2150,16 +2150,16 @@ Deno.serve(async (req) => {
     const simulateUIDisplayName = (productLineId: string, productTitle: string): string => {
       const parts = productLineId.split('__');
       
-      // ATOMIC FILAMENT: Always use the cleaned fallbackTitle (DB product_title)
-      // This preserves important descriptors like "Translucent", "Sparkle", specialty color names
-      if (parts[0] === 'atomic-filament') {
-        return productTitle
-          .replace(/\s+Filament\s*$/i, '')
-          .replace(/\s*AMS\s*Compatible\s*$/i, '')
-          .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')  // Remove diameter
-          .replace(/\s*,?\s*\d+\.?\d*\s*kg\b/gi, '')  // Remove weight
-          .replace(/\s*,?\s*\d+\.?\d*\s*lb\b/gi, '')
-          .trim() || productTitle;
+      // ATOMIC FILAMENT: Extract product line name from the 2-part ID
+      // Format: "atomic-filament__pla" → "PLA", "atomic-filament__pla-silk" → "PLA Silk"
+      // This ensures card titles show "PLA", "PETG", "PLA Silk" instead of individual product names
+      if (parts[0] === 'atomic-filament' && parts.length === 2) {
+        const materialSlug = parts[1]; // e.g., "pla", "pla-silk", "petg", "abs", "asa"
+        const displayName = materialSlug
+          .replace(/-/g, ' ')
+          .toUpperCase()
+          .replace('SILK', 'Silk'); // "PLA SILK" → "PLA Silk"
+        return displayName;
       }
       
       if (parts.length >= 3) {
@@ -2250,6 +2250,163 @@ Deno.serve(async (req) => {
     });
     
     console.log(`[PostSyncCheck] UI Display Name Match complete: ${checkedProductLines.size} checked, ${uiDisplayIssues.length} issues`);
+
+    // ============= FILAMENT CARD COUNT CHECK (NEW) =============
+    // Validates the number of distinct product cards that will display in the UI
+    // This catches grouping issues like PLA Silk merged with PLA
+    const { data: cardCountData } = await supabase
+      .from("filaments")
+      .select("product_line_id")
+      .ilike("vendor", brandName)
+      .not("product_line_id", "is", null);
+
+    const uniqueProductLineIds: string[] = [...new Set(
+      (cardCountData || [])
+        .map((f: { product_line_id: string }) => f.product_line_id)
+        .filter(Boolean)
+    )] as string[];
+
+    // Brand-specific expected card counts (from collection architecture)
+    const EXPECTED_CARD_COUNTS: Record<string, number> = {
+      'atomic-filament': 5,  // PLA, PETG, ABS, ASA, PLA Silk
+    };
+
+    const expectedCards = EXPECTED_CARD_COUNTS[brandSlug] || null;
+    const actualCards = uniqueProductLineIds.length;
+    const cardCountIssues: Array<{ id: string; title: string; issue: string }> = [];
+
+    if (expectedCards !== null && actualCards !== expectedCards) {
+      cardCountIssues.push({
+        id: 'card-count-mismatch',
+        title: `Expected ${expectedCards} cards, found ${actualCards}`,
+        issue: `Missing product lines: ${expectedCards - actualCards} cards. Likely grouping issue (e.g., PLA Silk merged with PLA). Found: ${uniqueProductLineIds.join(', ')}`,
+      });
+      console.log(`[PostSyncCheck] Card Count: Found product_line_ids: ${uniqueProductLineIds.join(', ')}`);
+    }
+
+    checks.push({
+      checkName: "Filament Card Count (UI Cards Displayed)",
+      status: cardCountIssues.length === 0 ? "pass" : "fail",
+      count: actualCards,
+      details: expectedCards !== null
+        ? (cardCountIssues.length === 0
+            ? `✓ ${actualCards} distinct product cards will display (expected ${expectedCards})`
+            : `CRITICAL: ${actualCards} cards found, expected ${expectedCards}`)
+        : `${actualCards} distinct product cards will display`,
+      products: cardCountIssues.length > 0 ? cardCountIssues : undefined,
+    });
+
+    console.log(`[PostSyncCheck] Filament Card Count complete: ${actualCards} cards${expectedCards !== null ? ` (expected ${expectedCards})` : ''}`);
+
+    // ============= CARD TITLE FORMAT CHECK (NEW) =============
+    // Validates that card titles are product LINE names, not individual variant names
+    // Good: "PLA", "PETG", "PLA Silk"
+    // Bad: "Groovy Purple PLA Shade-Shifting Filament", "Indigo Golden Sparkle v3 Translucent PLA"
+    const cardTitleIssues: Array<{ id: string; title: string; issue: string }> = [];
+
+    // Get one representative product per product_line_id
+    const { data: representativeProducts } = await supabase
+      .from("filaments")
+      .select("id, product_title, product_line_id")
+      .ilike("vendor", brandName)
+      .not("product_line_id", "is", null);
+
+    const checkedLines = new Set<string>();
+    for (const product of representativeProducts || []) {
+      if (checkedLines.has(product.product_line_id)) continue;
+      checkedLines.add(product.product_line_id);
+
+      const displayName = simulateUIDisplayName(product.product_line_id, product.product_title);
+
+      // Check if display name looks like an individual product (has color name)
+      const colorPatterns = [
+        /\b(Red|Blue|Green|Yellow|Orange|Purple|Pink|Black|White|Gray|Grey|Brown|Silver|Gold|Copper|Navy|Teal|Aqua|Maroon|Indigo|Violet)\b/i,
+        /\b(Groovy|Sparkle|Iridescent|Shimmer|Glitter|Metallic|Neon|Glow)\s+\w+/i,
+        /v\d+\s+(Pearl|Translucent|Clear)/i,
+      ];
+
+      const looksLikeVariantTitle = colorPatterns.some(p => p.test(displayName));
+      const isTooLong = displayName.split(' ').length > 4;
+
+      if (looksLikeVariantTitle || isTooLong) {
+        const expectedName = product.product_line_id.split('__').pop()?.replace(/-/g, ' ').toUpperCase() || 'Unknown';
+        cardTitleIssues.push({
+          id: product.id,
+          title: displayName,
+          issue: `Card shows individual variant name instead of product line. Expected: "${expectedName}"`,
+        });
+      }
+    }
+
+    checks.push({
+      checkName: "Card Title Format (Product Line Names)",
+      status: cardTitleIssues.length === 0 ? "pass" : cardTitleIssues.length <= 2 ? "warning" : "fail",
+      count: checkedLines.size - cardTitleIssues.length,
+      details: cardTitleIssues.length === 0
+        ? `All ${checkedLines.size} cards show clean product line names`
+        : `CRITICAL: ${cardTitleIssues.length} cards show individual variant names instead of product lines`,
+      products: cardTitleIssues.length > 0 ? cardTitleIssues : undefined,
+    });
+
+    console.log(`[PostSyncCheck] Card Title Format complete: ${checkedLines.size - cardTitleIssues.length}/${checkedLines.size} correct`);
+
+    // ============= FILAMENT DETAIL PAGE CONTENT CHECK (NEW) =============
+    // Validates that each product_line_id has consistent variant data
+    const { data: detailPageVariants } = await supabase
+      .from("filaments")
+      .select("id, product_title, product_line_id, material, color_hex")
+      .ilike("vendor", brandName)
+      .not("product_line_id", "is", null);
+
+    const detailPageIssues: Array<{ id: string; title: string; issue: string }> = [];
+    const checkedDetailLines = new Set<string>();
+
+    // Group variants by product_line_id
+    const variantsByLine: Record<string, Array<{ id: string; product_title: string; material: string | null; color_hex: string | null }>> = {};
+    for (const variant of detailPageVariants || []) {
+      const lineId = variant.product_line_id;
+      if (!variantsByLine[lineId]) variantsByLine[lineId] = [];
+      variantsByLine[lineId].push(variant);
+    }
+
+    for (const [productLineId, variants] of Object.entries(variantsByLine)) {
+      if (checkedDetailLines.has(productLineId) || variants.length === 0) continue;
+      checkedDetailLines.add(productLineId);
+
+      // Check: All variants should have same material
+      const materials = [...new Set(variants.map(v => v.material).filter(Boolean))];
+      if (materials.length > 1) {
+        detailPageIssues.push({
+          id: variants[0].id,
+          title: productLineId,
+          issue: `Mixed materials in same product line: ${materials.join(', ')}. Detail page will show inconsistent data.`,
+        });
+      }
+
+      // Check: Variants should have color data for swatches
+      const variantsWithColors = variants.filter(v => v.color_hex);
+      const colorCoverage = Math.round((variantsWithColors.length / variants.length) * 100);
+
+      if (colorCoverage < 50 && variants.length > 1) {
+        detailPageIssues.push({
+          id: variants[0].id,
+          title: productLineId,
+          issue: `Only ${colorCoverage}% of variants have color_hex. Detail page swatches will be incomplete.`,
+        });
+      }
+    }
+
+    checks.push({
+      checkName: "Filament Detail Page Content (Variant Consistency)",
+      status: detailPageIssues.length === 0 ? "pass" : "fail",
+      count: checkedDetailLines.size - detailPageIssues.length,
+      details: detailPageIssues.length === 0
+        ? `All ${checkedDetailLines.size} product lines have consistent variant data for detail pages`
+        : `${detailPageIssues.length} product lines have issues that will affect detail page display`,
+      products: detailPageIssues.length > 0 ? detailPageIssues : undefined,
+    });
+
+    console.log(`[PostSyncCheck] Filament Detail Page Content complete: ${checkedDetailLines.size - detailPageIssues.length}/${checkedDetailLines.size} consistent`);
 
     // ============= PRICE CONSISTENCY CHECK (UPDATED FOR INDUSTRIAL BRANDS) =============
     // Validate DB prices are reasonable (not $0 or suspicious values)
