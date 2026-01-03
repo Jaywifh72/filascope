@@ -448,6 +448,47 @@ export function generateAtomicProductLineId(collectionMaterial: string): string 
 // ATOMIC-SPECIFIC COLOR MAPPING - EXPANDED WITH UNIQUE HEX CODES
 // ============================================================================
 
+/**
+ * COLOR FAMILY DEFAULTS - Semantic fallback when no exact mapping exists
+ * This prevents colors like "True Gold v2" from getting random hashes
+ */
+export const ATOMIC_COLOR_FAMILY_DEFAULTS: Record<string, string> = {
+  'gold': 'D4AF37',
+  'yellow': 'FFD700',
+  'orange': 'FF8C00',
+  'red': 'DC143C',
+  'pink': 'FF69B4',
+  'purple': '9400D3',
+  'violet': '8B00FF',
+  'blue': '4169E1',
+  'green': '228B22',
+  'teal': '008080',
+  'cyan': '00CED1',
+  'turquoise': '40E0D0',
+  'brown': '8B4513',
+  'tan': 'D2B48C',
+  'khaki': 'C3B091',
+  'beige': 'F5F5DC',
+  'peach': 'FFCBA4',
+  'coral': 'FF7F50',
+  'lilac': 'C8A2C8',
+  'lavender': 'E6E6FA',
+  'silver': 'C0C0C0',
+  'bronze': 'CD7F32',
+  'copper': 'B87333',
+  'olive': '6B8E23',
+  'cream': 'FFFDD0',
+  'ivory': 'FFFFF0',
+  'magenta': 'FF00FF',
+  'maroon': '800000',
+  'navy': '000080',
+  'indigo': '4B0082',
+  'mint': '98FF98',
+  'sage': 'BCB88A',
+  'tiffany': '0ABAB5',
+  'chartreuse': '7FFF00',
+};
+
 export const ATOMIC_COLOR_MAPPING: Record<string, string> = {
   // ==========================================================================
   // COMPOUND TRANSLUCENT COLORS (must match BEFORE generic 'translucent')
@@ -672,12 +713,67 @@ export const ATOMIC_COLOR_MAPPING: Record<string, string> = {
   'neon yellow': 'CCFF00',
   'translucent yellow': 'FFFF99',
   
+  // === TRUE GOLD SERIES (prevents blue hex!) ===
+  'true gold': 'D4AF37',
+  'true gold v2': 'D6B139',
+  'true gold v3': 'D8B33B',
+  'true gold pla': 'D4AF37',
+  'true gold v2 pla': 'D6B139',
+  'true gold v2 pla ams compatible': 'D8B33D',
+  'true gold petg': 'DAB53F',
+  'true gold v2 petg': 'DCB741',
+  'true gold v2 petg pro': 'DEB943',
+  'true gold v2 petg pro ams compatible': 'E0BB45',
+  
+  // === SILKY ELECTRIC BLUE (prevents pink hash!) ===
+  'silky electric blue': '2566ED',
+  'silky electric blue v2': '2769F0',
+  'silky electric blue pla': '2A6CF3',
+  'silky electric blue v2 pla': '2D6FF6',
+  'silky electric blue v2 pla filament': '3072F9',
+  'silky electric blue v2 pla filament ams compatible': '3375FC',
+  
   // === PINK SPECTRUM ===
   'neon pink': 'FF6EC7',
   'bubblegum': 'FF69B4',
   'iridescent bubblegum': 'FF6DB8',
   'uv reactive pink': 'FF1493',
   'translucent flamingo sunset': 'FF6080',
+  'hot pink': 'FF69B4',
+  'hot pink pla': 'FF6BB8',
+  'hot pink pla filament': 'FF6DBC',
+  'hot pink pla filament ams compatible': 'FF6FC0',
+  'hot pink opaque': 'FF71C4',
+  'hot pink opaque petg': 'FF73C8',
+  'hot pink opaque petg pro': 'FF75CC',
+  'hot pink opaque petg pro ams compatible': 'FF77D0',
+  
+  // === PEACH SERIES ===
+  'pearly peach': 'FFCBA4',
+  'pearly peach pla': 'FFCDAA',
+  'pearly peach pla filament': 'FFCFA0',
+  'pearly peach pla filament ams compatible': 'FFD1B0',
+  'pearly peach translucent': 'FFD3B6',
+  'pearly peach translucent pla': 'FFD5BC',
+  
+  // === TURQUOISE SERIES (prevents orange hash!) ===
+  'turquoise': '40E0D0',
+  'turquoise pla': '42E2D4',
+  'turquoise pla filament': '44E4D8',
+  'turquoise pla filament ams compatible': '46E6DC',
+  
+  // === KHAKI/EARTH TONES ===
+  'khaki': 'C3B091',
+  'khaki pla': 'C5B295',
+  'khaki pla filament': 'C7B499',
+  'khaki pla filament ams compatible': 'C9B69D',
+  
+  // === OLIVE SERIES ===
+  'olive drab green': '6B8E23',
+  'olive drab green pla': '6D9027',
+  'olive drab green pla ams compatible': '6F922B',
+  'olive drab green pla filament': '71942F',
+  'olive drab': '6B8E23',
   
   // === ROSE GOLD SERIES ===
   'rose gold': 'B76E79',
@@ -808,7 +904,17 @@ export function getAtomicColorHex(colorName: string): string | null {
     }
   }
   
-  // 4. Generate deterministic hex as fallback (prevents duplicate #FFFFFF/#1A1A1A)
+  // 4. SEMANTIC FALLBACK: Try to extract base color family and use sensible default
+  // This prevents "True Gold v2 PLA" from getting a random blue hash
+  for (const [family, hex] of Object.entries(ATOMIC_COLOR_FAMILY_DEFAULTS)) {
+    if (colorLower.includes(family)) {
+      console.log(`[ATOMIC-COLOR] Semantic fallback: "${colorName}" → ${family} → #${hex}`);
+      return hex;
+    }
+  }
+  
+  // 5. Generate deterministic hex as absolute last resort (prevents duplicate #FFFFFF/#1A1A1A)
+  console.log(`[ATOMIC-COLOR] No mapping found for "${colorName}", using deterministic fallback`);
   return generateDeterministicHex(colorLower);
 }
 
