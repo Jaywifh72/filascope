@@ -23,23 +23,35 @@ export interface AnycubicWhitelistProduct {
   productLineSlug: string; // Unique identifier for each product line
 }
 
-// 15 active products (removed 4 that return 404: petg, pla-special, petg-translucent, pla-silk-dual-tri-color-filament)
+// Full 19 official Anycubic filament product lines
+// Some products (PETG, PLA Special, etc.) are only on CA store - sync uses multi-region fallback
 export const ANYCUBIC_PRODUCT_WHITELIST: AnycubicWhitelistProduct[] = [
+  // Core PLA products
   { name: 'PLA Basic Refill', handle: 'pla-basic-refill', material: 'PLA+', finishType: 'Standard', productLineSlug: 'pla-basic-refill' },
   { name: 'PLA Basic', handle: 'pla-filament', material: 'PLA+', finishType: 'Standard', productLineSlug: 'pla-basic' },
   { name: 'PLA+ Filament', handle: 'pla-plus-filament', material: 'PLA+', finishType: 'Standard', productLineSlug: 'plaplus' },
-  { name: 'PLA High Speed', handle: 'high-speed-pla-filament', material: 'PLA+', finishType: 'Standard', productLineSlug: 'pla-high-speed' },
-  { name: 'PLA Silk', handle: 'silk-pla-filament', material: 'PLA', finishType: 'Silk', productLineSlug: 'pla-silk' },
-  { name: 'PLA Glow', handle: 'pla-glow', material: 'PLA-Glow', finishType: 'Glow', productLineSlug: 'pla-glow' },
-  { name: 'PC Filament', handle: 'pc-filament', material: 'PC', finishType: 'Standard', productLineSlug: 'pc' },
-  { name: 'ASA Filament', handle: 'asa-filament', material: 'ASA', finishType: 'Standard', productLineSlug: 'asa' },
   { name: 'PLA+ Refill', handle: 'pla-plus-refill', material: 'PLA+', finishType: 'Standard', productLineSlug: 'plaplus-refill' },
+  { name: 'PLA High Speed', handle: 'high-speed-pla-filament', material: 'PLA+', finishType: 'Standard', productLineSlug: 'pla-high-speed' },
+  
+  // Specialty PLA finishes
+  { name: 'PLA Silk', handle: 'silk-pla-filament', material: 'PLA', finishType: 'Silk', productLineSlug: 'pla-silk' },
+  { name: 'PLA Silk Dual/Tri-Color', handle: 'pla-silk-dual-tri-color-filament', material: 'PLA', finishType: 'Silk', productLineSlug: 'pla-silk-multicolor' },
+  { name: 'PLA Special', handle: 'pla-special', material: 'PLA+', finishType: 'Standard', productLineSlug: 'pla-special' },
+  { name: 'PLA Glow', handle: 'pla-glow', material: 'PLA-Glow', finishType: 'Glow', productLineSlug: 'pla-glow' },
   { name: 'PLA Marble', handle: 'pla-marble', material: 'PLA', finishType: 'Marble', productLineSlug: 'pla-marble' },
   { name: 'PLA Galaxy', handle: 'pla-galaxy', material: 'PLA+', finishType: 'Sparkle', productLineSlug: 'pla-galaxy' },
-  { name: 'TPU Filament', handle: 'tpu-filament', material: 'TPU', finishType: 'Standard', productLineSlug: 'tpu' },
-  { name: 'ABS Filament', handle: 'abs-filament', material: 'ABS', finishType: 'Standard', productLineSlug: 'abs' },
-  { name: 'PLA Metal', handle: 'pla-metal-filament', material: 'PLA', finishType: 'Standard', productLineSlug: 'pla-metal' },
   { name: 'PLA Matte', handle: 'matte-pla-filament', material: 'PLA', finishType: 'Matte', productLineSlug: 'pla-matte' },
+  { name: 'PLA Metal', handle: 'pla-metal-filament', material: 'PLA', finishType: 'Standard', productLineSlug: 'pla-metal' },
+  
+  // PETG products (some CA-only)
+  { name: 'PETG', handle: 'petg', material: 'PETG', finishType: 'Standard', productLineSlug: 'petg' },
+  { name: 'PETG Translucent', handle: 'petg-translucent', material: 'PETG', finishType: 'Translucent', productLineSlug: 'petg-translucent' },
+  
+  // Engineering materials
+  { name: 'ABS Filament', handle: 'abs-filament', material: 'ABS', finishType: 'Standard', productLineSlug: 'abs' },
+  { name: 'ASA Filament', handle: 'asa-filament', material: 'ASA', finishType: 'Standard', productLineSlug: 'asa' },
+  { name: 'PC Filament', handle: 'pc-filament', material: 'PC', finishType: 'Standard', productLineSlug: 'pc' },
+  { name: 'TPU Filament', handle: 'tpu-filament', material: 'TPU', finishType: 'Standard', productLineSlug: 'tpu' },
 ];
 
 // ============================================================================
