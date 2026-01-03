@@ -122,12 +122,17 @@ async function scrapeCollectionProducts(
 }
 
 /**
- * Scrape H1 title and details from a product page
+ * Scrape H1 title, price, and details from a product page
  */
 async function scrapeProductPage(
   productUrl: string,
   firecrawlKey: string
-): Promise<{ h1Title: string | null; colorHex: string | null; imageUrl: string | null }> {
+): Promise<{ 
+  h1Title: string | null; 
+  colorHex: string | null; 
+  imageUrl: string | null;
+  price: number | null;
+}> {
   try {
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
@@ -144,7 +149,7 @@ async function scrapeProductPage(
     });
 
     if (!response.ok) {
-      return { h1Title: null, colorHex: null, imageUrl: null };
+      return { h1Title: null, colorHex: null, imageUrl: null, price: null };
     }
 
     const data = await response.json();
@@ -185,40 +190,73 @@ async function scrapeProductPage(
       imageUrl = imgMatch[1];
     }
     
-    return { h1Title, colorHex, imageUrl };
+    // Extract price - look for sale price first, then regular price
+    let price: number | null = null;
+    const pricePatterns = [
+      // Shopify sale price pattern
+      /<span[^>]*class="[^"]*price-item--sale[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
+      /<span[^>]*class="[^"]*price-item--regular[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
+      /<span[^>]*class="[^"]*price-item--last[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
+      // Generic price patterns
+      /<span[^>]*class="[^"]*price[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)\s*<\/span>/i,
+      /class="[^"]*price[^"]*"[^>]*>\s*\$?\s*([\d,]+\.?\d*)/i,
+      // JSON-LD or metadata
+      /"price":\s*"?([\d,]+\.?\d*)"?/i,
+      /"full_price":\s*"?\$?\s*([\d,]+\.?\d*)"?/i,
+    ];
+    
+    for (const pattern of pricePatterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) {
+        const parsedPrice = parseFloat(match[1].replace(/,/g, ''));
+        if (!isNaN(parsedPrice) && parsedPrice > 0 && parsedPrice < 500) { // Sanity check
+          price = parsedPrice;
+          break;
+        }
+      }
+    }
+    
+    return { h1Title, colorHex, imageUrl, price };
   } catch (err) {
     console.error(`[ATOMIC-SYNC] Error scraping product page:`, err);
-    return { h1Title: null, colorHex: null, imageUrl: null };
+    return { h1Title: null, colorHex: null, imageUrl: null, price: null };
   }
 }
 
 /**
  * Extract color name from product title
- * E.g., "Navy Blue PETG PRO" -> "Navy Blue"
+ * Preserves specialty descriptors like "Shade-Shifting", "Translucent", "UV Reactive"
+ * E.g., "Groovy Purple PLA Shade-Shifting Filament AMS Compatible" -> "Groovy Purple Shade-Shifting"
  */
 function extractColorFromTitle(title: string, material: string): string {
   if (!title) return 'Unknown';
   
-  // Remove material and common suffixes
+  // Remove AMS Compatible suffix first
   let colorName = title
-    .replace(/\bpla\b/gi, '')
-    .replace(/\bpetg\b/gi, '')
-    .replace(/\babs\b/gi, '')
-    .replace(/\basa\b/gi, '')
-    .replace(/\bsilk\b/gi, '')
-    .replace(/\bpro\b/gi, '')
-    .replace(/\bplus\b/gi, '')
-    .replace(/\bfilament\b/gi, '')
-    .replace(/\b3d\b/gi, '')
-    .replace(/\bprinter\b/gi, '')
-    .replace(/\batomic\b/gi, '')
+    .replace(/\s*AMS\s*Compatible\s*/gi, '')
+    .replace(/\s*Filament\s*/gi, '')
     .replace(/\b1\.75\s*mm\b/gi, '')
     .replace(/\b2\.85\s*mm\b/gi, '')
-    .replace(/\b1\s*kg\b/gi, '')
-    .trim();
+    .replace(/\b1\s*KG\b/gi, '')
+    .replace(/\b-?\s*1\s*KG\b/gi, '');
   
-  // Clean up extra spaces and dashes
-  colorName = colorName.replace(/\s+/g, ' ').replace(/^[-\s]+|[-\s]+$/g, '').trim();
+  // Remove material keywords but preserve finish/specialty descriptors
+  colorName = colorName
+    .replace(/\bPLA\b/gi, '')
+    .replace(/\bPETG\b/gi, '')
+    .replace(/\bABS\b/gi, '')
+    .replace(/\bASA\b/gi, '')
+    .replace(/\bPRO\b/gi, '')
+    .replace(/\bPLUS\b/gi, '')
+    .replace(/\b3D\b/gi, '')
+    .replace(/\bPRINTER\b/gi, '')
+    .replace(/\bATOMIC\b/gi, '');
+  
+  // Clean up extra spaces, dashes, and punctuation
+  colorName = colorName
+    .replace(/\s+/g, ' ')
+    .replace(/^[-–,\s]+|[-–,\s]+$/g, '')
+    .trim();
   
   return colorName || 'Standard';
 }
@@ -429,6 +467,8 @@ Deno.serve(async (req) => {
           featured_image: pageData.imageUrl || null,
           diameter_nominal_mm: 1.75,
           net_weight_g: 1000,
+          variant_price: pageData.price || null,  // Price from page
+          retail_price_usd: pageData.price || null,  // Also store in retail_price_usd
           tds_url: tdsMatch?.url || null,
           nozzle_temp_min_c: printSettings?.nozzleTempMin || null,
           nozzle_temp_max_c: printSettings?.nozzleTempMax || null,
