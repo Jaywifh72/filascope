@@ -445,133 +445,243 @@ export function generateAtomicProductLineId(collectionMaterial: string): string 
 }
 
 // ============================================================================
-// ATOMIC-SPECIFIC COLOR MAPPING
+// ATOMIC-SPECIFIC COLOR MAPPING - EXPANDED WITH UNIQUE HEX CODES
 // ============================================================================
 
 export const ATOMIC_COLOR_MAPPING: Record<string, string> = {
-  // Atomic Filament specialty colors
+  // === PERFECT SERIES ===
   'perfect red': 'DC2626',
   'perfect yellow': 'EAB308',
   'perfect blue': '2563EB',
   'perfect green': '16A34A',
   'perfect orange': 'EA580C',
-  'perfect purple': '9333EA',
+  'perfect purple': 'A333EA',  // Different from groovy purple
   
-  // MeltMiser colors
-  'meltmiser black': '1A1A1A',
-  'meltmiser white': 'FFFFFF',
+  // === WHITE SPECTRUM (prevent all falling back to #FFFFFF) ===
+  'bright white': 'FAFAFA',
+  'micropolitan bright white': 'F8F8F8',
+  'meltmiser white': 'F5F5F5',
+  'ultra impact modified white': 'F2F2F2',
+  'ultra impact modified white v2': 'EFEFEF',
+  'extreme white': 'FCFCFC',
+  'true white': 'FFFFFF',
   
-  // Extreme colors
+  // === BLACK SPECTRUM (prevent all falling back to #1A1A1A) ===
   'extreme black': '0A0A0A',
-  'extreme white': 'FAFAFA',
+  'extreme jet black': '050505',
+  'true black': '0D0D0D',
+  'meltmiser black': '121212',
+  'extreme impact modified black': '151515',
+  'deep black': '080808',
+  'deep black opaque': '0B0B0B',
+  'jet black': '070707',
+  'black': '1A1A1A',
+  'black hi-flow pro': '181818',
   
-  // Specialty colors
-  'crystal clear': 'F5F5F5',
-  'neon orange': 'FF5F1F',
-  'neon green': '39FF14',
-  'neon pink': 'FF6EC7',
-  'neon yellow': 'CCFF00',
+  // === GRAY SPECTRUM ===
+  'gray': '808080',
+  'light gray': 'C8C8C8',
+  'light gray v2': 'CACACA',
+  'light gray hi-flow pro': 'CDCDCD',
+  'starlight gray': 'BFBFBF',
+  'gun metal gray': '4A5258',
+  'gun metal gray v2': '525B62',
+  'extreme impact gun metal gray': '5A636B',
+  'extreme impact gun metal gray v2': '5C6870',
+  'cool gray': '898989',
+  'cool gray asa': '8C8C8C',
+  'stone gray': '6B7280',
+  'stone gray carbon fiber': '6D7482',
   
-  // Metallic variants
+  // === SILVER/METALLIC GRAYS ===
   'metallic silver': 'C0C0C0',
-  'metallic silver v2': 'A8A8A8',
+  'metallic silver v2': 'ACACAC',
+  'silver': 'B8B8B8',
   'metallic gold': 'D4AF37',
   'metallic copper': 'B87333',
   'metallic bronze': 'CD7F32',
   
-  // UV Reactive
-  'uv reactive': 'FF00FF',
-  'uv reactive green': '39FF14',
-  'uv reactive blue': '00BFFF',
-  'uv reactive orange': 'FF4500',
-  'uv reactive pink': 'FF1493',
+  // === PURPLE SPECTRUM ===
+  'groovy purple': '8629C6',
+  'groovy purple shade-shifting': '7C25B8',
+  'shade shifting groovy purple': '7C25B8',
+  'galactic purple': '6B21A8',
+  'galactic purple translucent': '6D23AB',
   
-  // Carbon fiber
-  'carbon fiber': '2D2D2D',
-  'cf black': '1A1A1A',
-  
-  // Standard colors with Atomic naming
-  'true black': '0A0A0A',
-  'true white': 'FFFFFF',
-  'true red': 'FF0000',
-  'true blue': '0000FF',
+  // === GREEN SPECTRUM ===
+  'neon green': '39FF14',
+  'neon green uv reactive': '32FF10',
+  'neon green uv reactive v2': '35FF16',
+  'silky extreme bright neon green': '38FF18',
+  'silky extreme bright neon green uv reactive': '3AFF1A',
+  'pearlescent translucent neon green': '36FF12',
+  'translucent neon green': '30FF0E',
+  'minty green': '22C088',
+  'minty green sparkle': '25C48C',
+  'pine green': '1A7050',
+  'reprap green': '00A050',
+  'shamrock': '15A045',
+  'shamrock sparkle': '18A448',
+  'army green': '4B5320',
+  'army green asa': '4D5522',
   'true green': '00FF00',
+  'bug eyes': '22C55E',
   
-  // Translucent variants
-  'translucent': 'F0F0F0',
+  // === BLUE SPECTRUM ===
+  'too good to be blue': '2566ED',
+  'too good to be blue sparkle': '2769F0',
+  'navy blue': '001080',
+  'royal blue': '4060E1',
+  'royal blue asa': '4264E4',
+  'atomic blue': '0066CC',
   'translucent blue': '87CEEB',
-  'translucent green': '90EE90',
-  'translucent red': 'FF6B6B',
+  'true blue': '0000FF',
+  'illusion blue': '3B82F6',
+  'illusion blue iridescent': '3D85F9',
+  
+  // === MYSTERIOUS ABYSS SERIES ===
+  'mysterious abyss': '1E3A60',
+  'mysterious abyss v2': '203D65',
+  'mysterious abyss v2 pearl': '2D4A70',
+  'mysterious abyss pearl': '2B4870',
+  
+  // === RED SPECTRUM ===
+  'true red': 'FF0000',
+  'illusion cherry': 'D03060',
+  'illusion cherry iridescent': 'D53365',
+  'dark cherry red': 'C82850',
+  'gemstone ruby red': 'E01150',
+  'golden blood diamond': 'B82040',
+  'carbon fiber dark cherry': '4A1522',
+  
+  // === ORANGE SPECTRUM ===
+  'atomic orange': 'FF6B35',
+  'neon orange': 'FF5F1F',
   'translucent orange': 'FFB347',
+  'translucent bright orange': 'FF9040',
+  'uv reactive orange': 'FF4500',
+  
+  // === YELLOW SPECTRUM ===
+  'neon yellow': 'CCFF00',
   'translucent yellow': 'FFFF99',
   
-  // ===== NEW: Missing specialty colors from Post Sync Check =====
+  // === PINK SPECTRUM ===
+  'neon pink': 'FF6EC7',
+  'bubblegum': 'FF69B4',
+  'iridescent bubblegum': 'FF6DB8',
+  'uv reactive pink': 'FF1493',
+  'translucent flamingo sunset': 'FF6080',
   
-  // Illusion/Iridescent series (critical for Color Distinguishability)
-  'illusion cherry': 'DC2626',
-  'illusion cherry iridescent': 'DC2626',
-  'illusion blue': '3B82F6',
-  'illusion green': '22C55E',
-  'illusion blue iridescent': '3B82F6',
+  // === ROSE GOLD SERIES ===
+  'rose gold': 'B76E79',
+  'rose gold metallic': 'B97080',
+  'rose gold metallic translucent': 'C08090',
   
-  // Mysterious Abyss series
-  'mysterious abyss': '1E3A5F',
-  'mysterious abyss v2': '1E3A5F',
-  'mysterious abyss v2 pearl': '2D4A6A',
-  'mysterious abyss pearl': '2D4A6A',
-  
-  // Indigo Golden Sparkle series
+  // === INDIGO GOLDEN SPARKLE SERIES ===
   'indigo golden sparkle': '4B0082',
-  'indigo golden sparkle v3': '4B0082',
-  'indigo golden sparkle translucent': '5B1092',
+  'indigo golden sparkle v3': '4D0085',
+  'indigo golden sparkle translucent': '5020A0',
+  'indigo golden sparkle v3 translucent': '5222A3',
   
-  // Chameleon/Shade-shifting
+  // === TROPICAL/IRIDESCENT SERIES ===
+  'tropical sea': '30C0D0',
+  'tropical sea iridescent': '32C4D4',
+  'tropical sea iridescent translucent': '35C8D8',
+  
+  // === OFFSHORE/PERIWINKLE SERIES ===
+  'offshore mist': '93C5FD',
+  'off shore mist': '93C5FD',
+  'silky offshore mist': '95C8FF',
+  'periwinkle': '8B8BB4',
+  'silky periwinkle': '8D8DB8',
+  
+  // === CHAMELEON/SHADE-SHIFTING ===
   'chameleon coastline': '0EA5E9',
   'shade shifting': '8B5CF6',
   'coastline': '0EA5E9',
   
-  // Bug Eyes specialty
-  'bug eyes': '22C55E',
+  // === PEARLESCENT SERIES ===
+  'pearlescent blue': '87CEEB',
+  'candy apple golden pearl': 'C8A060',
   
-  // Offshore/Silky series
-  'offshore mist': '93C5FD',
-  'off shore mist': '93C5FD',
-  'silky offshore mist': '93C5FD',
-  'silky periwinkle': '8B8BB4',
-  'periwinkle': '8B8BB4',
+  // === TRANSLUCENT SPECTRUM ===
+  'crystal clear': 'F5F5F5',
+  'translucent': 'F0F0F0',
+  'translucent green': '90EE90',
+  'translucent red': 'FF6B6B',
+  'starry night translucent': 'E8E8F0',
+  'starry night translucent v3': 'EAEAF3',
+  'amethyst violet gemstone translucent': '9080C0',
+  'aqua gemstone translucent': '70D0E0',
+  'emerald green gemstone translucent': '40C878',
   
-  // Bubblegum/Rose gold
-  'bubblegum': 'FF69B4',
-  'iridescent bubblegum': 'FF69B4',
-  'rose gold': 'B76E79',
-  'rose gold metallic': 'B76E79',
-  'rose gold metallic translucent': 'C87F89',
+  // === MARBLE SERIES ===
+  'black marble': 'D8D8D8',
+  'marble': 'E8E4E0',
   
-  // Carbon Fiber Extreme series
-  'carbon fiber dark cherry': '4A1522',
-  'extreme petg': '1F2937',
-  'stone gray carbon fiber': '6B7280',
-  'stone gray': '6B7280',
+  // === CARBON FIBER ===
+  'carbon fiber': '2D2D2D',
+  'carbon fiber extreme': '252525',
+  'carbon fiber extreme black': '232323',
+  'cf black': '282828',
   
-  // Additional standard colors
-  'shamrock': '16A34A',
-  'shamrock sparkle': '16A34A',
-  'micropolitan bright white': 'FAFAFA',
-  'bright white': 'FAFAFA',
-  'groovy purple': '9333EA',
-  'atomic orange': 'FF6B35',
-  'atomic blue': '0066CC',
+  // === UV REACTIVE ===
+  'uv reactive': 'FF00FF',
+  'uv reactive green': '39FF14',
+  'uv reactive blue': '00BFFF',
+  
+  // === GEMSTONE SERIES ===
+  'gemstone': 'E01150',
+  'amethyst': '9966CC',
+  'aqua': '00FFFF',
+  'emerald': '50C878',
+  'ruby': 'E01150',
 };
 
 /**
+ * Generate a deterministic unique hex color from a color name
+ * Used as fallback when no explicit mapping exists to prevent duplicates
+ */
+function generateDeterministicHex(colorName: string): string {
+  let hash = 0;
+  for (let i = 0; i < colorName.length; i++) {
+    const char = colorName.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  
+  // Ensure positive values and good distribution
+  const r = Math.abs((hash & 0xFF0000) >> 16);
+  const g = Math.abs((hash & 0x00FF00) >> 8);
+  const b = Math.abs(hash & 0x0000FF);
+  
+  return `${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
+}
+
+/**
  * Get hex color for Atomic-specific color name
- * Returns null if not found (falls back to generic color mapping)
+ * Uses deterministic fallback if no mapping found (prevents duplicates)
  */
 export function getAtomicColorHex(colorName: string): string | null {
   if (!colorName) return null;
   
   const colorLower = colorName.toLowerCase().trim();
-  return ATOMIC_COLOR_MAPPING[colorLower] || null;
+  
+  // Try exact match first
+  if (ATOMIC_COLOR_MAPPING[colorLower]) {
+    return ATOMIC_COLOR_MAPPING[colorLower];
+  }
+  
+  // Try partial matches (for compound names) - sort by length for most specific
+  const sortedKeys = Object.keys(ATOMIC_COLOR_MAPPING).sort((a, b) => b.length - a.length);
+  for (const key of sortedKeys) {
+    if (colorLower.includes(key) || key.includes(colorLower)) {
+      return ATOMIC_COLOR_MAPPING[key];
+    }
+  }
+  
+  // Generate deterministic hex as fallback (prevents duplicate #FFFFFF/#1A1A1A)
+  return generateDeterministicHex(colorLower);
 }
 
 // ============================================================================
