@@ -1511,13 +1511,13 @@ Deno.serve(async (req) => {
             const COLOR_SEMANTIC_ALIASES: Record<string, string[]> = {
               'multi': ['rainbow', 'multicolor', 'multi-color', 'gradient'],
               'gray': ['silver', 'grey', 'metal silver', 'translucent grey', 'translucent gray'],
-              'brown': ['copper', 'bronze', 'translucent brown'],
+              'brown': ['copper', 'bronze', 'translucent brown', 'beige', 'walnut', 'wood'],
               'gold': ['champagne', 'champaign'],
               'green': ['spring leaf', 'olive', 'olive green', 'translucent olive', 'translucent olive green'],
-              'blue': ['metal blue', 'steel blue', 'cyan', 'translucent blue'],
-              'pink': ['magenta', 'rose', 'translucent pink'],
+              'blue': ['metal blue', 'steel blue', 'cyan', 'translucent blue', 'tropical turquoise', 'turquoise', 'teal'],
+              'pink': ['magenta', 'rose', 'translucent pink', 'peach'],
               'orange': ['translucent orange'],
-              'purple': ['violet', 'translucent purple'],
+              'purple': ['violet', 'translucent purple', 'interstellar violet'],
               'red': ['translucent red'],
               'yellow': ['translucent yellow'],
               'clear': ['translucent', 'translucent white', 'translucent clear', 'transparent'],
@@ -1875,21 +1875,38 @@ Deno.serve(async (req) => {
         // For cross-product brands: Check if URLs belong to same product LINE (pattern-based)
         // Use known product line prefixes to avoid false positives from color names in URLs
         const knownPatterns = [
+          // 3D-Fuel patterns
           'tough-pro-pla', 'standard-pla', 'pro-pctg', 'pro-petg',
           'pro-pla', 'pro-abs', 'pro-asa', 'workday-petg', 'workday-abs',
           'workday-pla', 'silk-pla', 'dual-color-silk', 'biome3d', 'buzzed',
           'entwined', 'wound-up', 'landfillament', 'c2renew', 'refuel',
-          'pet-cf', 'pla-cf', 'pro-ht-pla', 'htpla'
+          'pet-cf', 'pla-cf', 'pro-ht-pla', 'htpla',
+          // Anycubic patterns
+          'pla-plus', 'pla-basic', 'pla-galaxy', 'pla-silk',
+          'petg', 'petg-plus', 'petg-translucent',
+          'abs', 'abs-plus', 'abs-filament',
+          'tpu', 'high-speed', 'pla-cf', 'petg-cf',
         ];
         
         // Pattern aliases for rebranded products - map old patterns to canonical pattern
-        // 3D-Fuel rebranded "Pro PLA" to "Tough Pro PLA+" but kept legacy URLs
         const patternAliases: Record<string, string> = {
+          // 3D-Fuel: rebranded "Pro PLA" to "Tough Pro PLA+" but kept legacy URLs
           'pro-pla': 'tough-pro-pla',
           'pro-pla-filament': 'tough-pro-pla',
           'copy-of-pro-pla': 'tough-pro-pla',
           'copy-of-pro': 'tough-pro-pla',
-          'copy-of': 'tough-pro-pla', // 3D-Fuel copy-of URLs are rebranded Tough Pro
+          'copy-of': 'tough-pro-pla',
+          // Anycubic: PLA+ variants all map to canonical 'pla-plus'
+          'pla-basic': 'pla-plus',
+          'pla-basic-refill': 'pla-plus',
+          'pla-basic-special': 'pla-plus',
+          'pla-plus-filament': 'pla-plus',
+          'pla-plus-refill': 'pla-plus',
+          'pla-plus-filament-b2g1': 'pla-plus',
+          'pla-filament': 'pla-plus',
+          'pla-filament-multi': 'pla-plus',
+          'high-speed-pla': 'pla-plus',
+          'high-speed-pla-filament': 'pla-plus',
         };
         
         const handlePatterns = urls.map(url => {
