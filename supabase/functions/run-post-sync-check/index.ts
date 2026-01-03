@@ -1784,7 +1784,7 @@ Deno.serve(async (req) => {
     const colorDistinguishabilityIssues: Array<{ id: string; title: string; issue: string }> = [];
     
     // Helper to extract color identifier from title (after " - " separator)
-    const extractColorIdentifierFromTitle = (title: string): string | null => {
+    const extractColorIdentifierFromTitle = (title: string, brand?: string): string | null => {
       // Pattern: "Product Name - Color Name" or "Product Name - Color Name, 1.75mm"
       const dashMatch = title.match(/\s+-\s+([^,]+)/);
       if (dashMatch) return dashMatch[1].trim().toLowerCase();
@@ -1795,6 +1795,16 @@ Deno.serve(async (req) => {
         const potentialColor = parts[1].trim();
         if (!/\d+\.\d+mm/i.test(potentialColor)) {
           return potentialColor.toLowerCase();
+        }
+      }
+      
+      // Pattern (Atomic Filament): "Color Name Material Filament AMS Compatible"
+      // E.g., "Illusion Cherry Iridescent PLA Filament AMS Compatible"
+      // E.g., "Mysterious Abyss v2 Pearl PETG PRO AMS Compatible"
+      if (brand === 'atomic-filament') {
+        const atomicPattern = title.match(/^(.+?)\s+(PLA|PETG|ABS|TPU|ASA|Nylon|PA|PC)\b/i);
+        if (atomicPattern) {
+          return atomicPattern[1].trim().toLowerCase();
         }
       }
       
@@ -1823,8 +1833,8 @@ Deno.serve(async (req) => {
       const indistinguishableVariants: string[] = [];
       
       for (const variant of variants) {
-        // Try to extract color from title first
-        const colorFromTitle = extractColorIdentifierFromTitle(variant.product_title);
+        // Try to extract color from title first (pass brand slug for brand-specific patterns)
+        const colorFromTitle = extractColorIdentifierFromTitle(variant.product_title, brandSlug);
         // Color family is fallback (stored during sync)
         const colorFromFamily = variant.color_family?.toLowerCase() || null;
         
