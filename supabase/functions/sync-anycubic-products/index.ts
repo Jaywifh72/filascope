@@ -245,12 +245,35 @@ async function runSync(
   let errors = 0;
   const allFilamentData: FilamentData[] = [];
 
+  // Helper to update progress in brand_sync_logs
+  const updateProgress = async (stage: string, current: number, total: number, message?: string) => {
+    if (!syncLogId) return;
+    await supabase
+      .from('brand_sync_logs')
+      .update({
+        products_processed: {
+          stage,
+          current,
+          total,
+          message,
+          productsProcessed,
+          variantsFound,
+          created,
+          updated,
+          errors,
+        },
+      })
+      .eq('id', syncLogId);
+  };
+
   try {
     // =========================================================================
     // STEP 0: Clean Slate (if requested)
     // =========================================================================
     if (cleanSlate && !dryRun) {
       console.log('[ANYCUBIC-SYNC] Step 0: Clean slate - deleting existing Anycubic products...');
+      await updateProgress('Deleting existing products', 0, 100, 'Clean slate mode');
+      
       const { error: deleteError, count } = await supabase
         .from('filaments')
         .delete()
@@ -268,16 +291,18 @@ async function runSync(
     // =========================================================================
     const productLimit = limit || ANYCUBIC_PRODUCT_WHITELIST.length;
     const productsToProcess = ANYCUBIC_PRODUCT_WHITELIST.slice(0, productLimit);
+    const totalBatches = Math.ceil(productsToProcess.length / FETCH_BATCH_SIZE);
     
     console.log(`[ANYCUBIC-SYNC] Step 1: Processing ${productsToProcess.length} whitelisted products in parallel batches of ${FETCH_BATCH_SIZE}...`);
+    await updateProgress('Fetching products', 0, totalBatches, `Processing ${productsToProcess.length} products`);
 
     // Process in parallel batches
     for (let i = 0; i < productsToProcess.length; i += FETCH_BATCH_SIZE) {
       const batch = productsToProcess.slice(i, Math.min(i + FETCH_BATCH_SIZE, productsToProcess.length));
       const batchNum = Math.floor(i / FETCH_BATCH_SIZE) + 1;
-      const totalBatches = Math.ceil(productsToProcess.length / FETCH_BATCH_SIZE);
       
       console.log(`[ANYCUBIC-SYNC] Fetching batch ${batchNum}/${totalBatches}: ${batch.map(p => p.handle).join(', ')}`);
+      await updateProgress('Fetching products', batchNum, totalBatches, `Batch ${batchNum}/${totalBatches}: ${batch.map(p => p.displayName).join(', ')}`);
 
       // Fetch all products in this batch in parallel
       const results = await Promise.allSettled(
@@ -322,12 +347,15 @@ async function runSync(
     // STEP 2: Batch upsert to database
     // =========================================================================
     if (!dryRun && allFilamentData.length > 0) {
+      const dbTotalBatches = Math.ceil(allFilamentData.length / DB_BATCH_SIZE);
       console.log(`[ANYCUBIC-SYNC] Step 2: Batch upserting ${allFilamentData.length} variants in batches of ${DB_BATCH_SIZE}...`);
+      await updateProgress('Saving to database', 0, dbTotalBatches, `Upserting ${allFilamentData.length} variants`);
 
       for (let i = 0; i < allFilamentData.length; i += DB_BATCH_SIZE) {
         const batch = allFilamentData.slice(i, Math.min(i + DB_BATCH_SIZE, allFilamentData.length));
         const batchNum = Math.floor(i / DB_BATCH_SIZE) + 1;
-        const totalBatches = Math.ceil(allFilamentData.length / DB_BATCH_SIZE);
+
+        await updateProgress('Saving to database', batchNum, dbTotalBatches, `Database batch ${batchNum}/${dbTotalBatches}`);
 
         // Check which product_ids already exist
         const productIds = batch.map(f => f.product_id);
@@ -371,7 +399,7 @@ async function runSync(
           }
         }
 
-        console.log(`[ANYCUBIC-SYNC] Batch ${batchNum}/${totalBatches}: ${toInsert.length} inserted, ${toUpdate.length} updated`);
+        console.log(`[ANYCUBIC-SYNC] Batch ${batchNum}/${dbTotalBatches}: ${toInsert.length} inserted, ${toUpdate.length} updated`);
       }
     }
 

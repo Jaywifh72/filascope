@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -25,6 +25,11 @@ export interface SyncProgress {
   current: number;
   total: number;
   message?: string;
+  productsProcessed?: number;
+  variantsFound?: number;
+  created?: number;
+  updated?: number;
+  errors?: number;
 }
 
 export interface SyncProductResult {
@@ -77,8 +82,110 @@ export function useBrandSyncManager() {
   const [progress, setProgress] = useState<SyncProgress | null>(null);
   const [result, setResult] = useState<SyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeSyncLogId, setActiveSyncLogId] = useState<string | null>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Stop polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, []);
+
+  // Poll for sync progress from brand_sync_logs
+  const startPolling = useCallback((syncLogId: string, brandSlug: string) => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+
+    const pollProgress = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('brand_sync_logs')
+          .select('*')
+          .eq('id', syncLogId)
+          .single();
+
+        if (error) {
+          console.error('[useBrandSyncManager] Poll error:', error);
+          return;
+        }
+
+        if (!data) return;
+
+        // Parse progress from products_processed JSON field
+        const progressData = data.products_processed as unknown as SyncProgress | null;
+        
+        if (progressData && typeof progressData === 'object') {
+          setProgress({
+            stage: progressData.stage || 'Processing',
+            current: progressData.current || 0,
+            total: progressData.total || 100,
+            message: progressData.message,
+            productsProcessed: progressData.productsProcessed,
+            variantsFound: progressData.variantsFound,
+            created: progressData.created,
+            updated: progressData.updated,
+            errors: progressData.errors,
+          });
+        }
+
+        // Check if sync completed
+        if (data.status === 'completed' || data.status === 'failed' || data.status === 'partial') {
+          // Stop polling
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+          
+          setIsLoading(false);
+          setActiveSyncLogId(null);
+          
+          const syncResult: SyncResult = {
+            success: data.status === 'completed',
+            jobId: data.id,
+            message: data.status === 'completed' ? 'Sync completed successfully' : 'Sync failed',
+            summary: {
+              created: data.products_created || 0,
+              updated: data.products_updated || 0,
+              skipped: 0,
+              errors: data.products_failed || 0,
+              total: data.products_discovered || 0,
+              totalDiscovered: data.products_discovered || 0,
+            },
+            duration_ms: (data.duration_seconds || 0) * 1000,
+          };
+
+          setResult(syncResult);
+          setProgress({ stage: 'Complete', current: 100, total: 100 });
+
+          // Invalidate queries
+          queryClient.invalidateQueries({ queryKey: ['brand-data-quality', brandSlug] });
+          queryClient.invalidateQueries({ queryKey: ['all-brands-data-quality'] });
+          queryClient.invalidateQueries({ queryKey: ['automated-brands'] });
+
+          toast({
+            title: data.status === 'completed' ? "Sync Complete" : "Sync Failed",
+            description: `Created: ${data.products_created || 0}, Updated: ${data.products_updated || 0}, Errors: ${data.products_failed || 0}`,
+            variant: data.status === 'completed' ? 'default' : 'destructive',
+          });
+        }
+      } catch (err) {
+        console.error('[useBrandSyncManager] Poll error:', err);
+      }
+    };
+
+    // Poll every 1.5 seconds
+    pollingRef.current = setInterval(pollProgress, 1500);
+    
+    // Also poll immediately
+    pollProgress();
+  }, [queryClient, toast]);
 
   const localDetectSyncFunction = useCallback((brandSlug: string): 'specific' | 'special' | 'generic' => {
     return detectSyncType(brandSlug);
@@ -131,19 +238,13 @@ export function useBrandSyncManager() {
     setIsLoading(true);
     setError(null);
     setResult(null);
-    setProgress({ stage: 'Starting', current: 0, total: 100 });
+    setProgress({ stage: 'Starting sync...', current: 0, total: 100 });
 
     try {
-      // Clean slate: delete existing products first
-      if (options.cleanSlate) {
-        setProgress({ stage: 'Deleting existing products', current: 5, total: 100 });
-        const deleteResult = await deleteAllProducts(options.brandName);
-        if (!deleteResult.success) {
-          throw new Error('Failed to delete existing products');
-        }
-      }
-
-      setProgress({ stage: 'Invoking sync function', current: 10, total: 100 });
+      // Clean slate is handled by the edge function now, don't delete here
+      // This prevents the double-delete race condition
+      
+      setProgress({ stage: 'Invoking sync function', current: 5, total: 100 });
 
       const syncType = localDetectSyncFunction(options.brandSlug);
       let data: any;
@@ -158,11 +259,12 @@ export function useBrandSyncManager() {
         // Brand-specific high-fidelity sync function
         const functionSlug = normalizeSlugForFunction(options.brandSlug);
         const functionName = `sync-${functionSlug}-products`;
-        setProgress({ stage: `Calling ${functionName}`, current: 15, total: 100 });
+        setProgress({ stage: `Calling ${functionName}`, current: 10, total: 100 });
         
         const response = await supabase.functions.invoke(functionName, {
           body: {
             dryRun: options.dryRun,
+            cleanSlate: options.cleanSlate,
             materialFilter: options.materialFilter,
             limit: options.limit,
             regions: options.regions,
@@ -172,12 +274,13 @@ export function useBrandSyncManager() {
         fnError = response.error;
       } else {
         // Generic fallback
-        setProgress({ stage: 'Calling sync-brand-products', current: 15, total: 100 });
+        setProgress({ stage: 'Calling sync-brand-products', current: 10, total: 100 });
         
         const response = await supabase.functions.invoke('sync-brand-products', {
           body: {
             brandSlug: options.brandSlug,
             dryRun: options.dryRun,
+            cleanSlate: options.cleanSlate,
             materialFilter: options.materialFilter,
             regions: options.regions,
             limit: options.limit,
@@ -189,6 +292,21 @@ export function useBrandSyncManager() {
 
       if (fnError) throw fnError;
 
+      // For background sync functions, start polling for progress
+      if (data?.syncLogId) {
+        setActiveSyncLogId(data.syncLogId);
+        setProgress({ stage: 'Sync started - monitoring progress...', current: 15, total: 100 });
+        startPolling(data.syncLogId, options.brandSlug);
+        
+        // Return immediately - the polling will update state
+        return {
+          success: true,
+          jobId: data.syncLogId,
+          message: 'Sync started in background',
+        };
+      }
+
+      // For synchronous syncs (like dry run or generic), handle normally
       setProgress({ stage: 'Complete', current: 100, total: 100 });
 
       const syncResult: SyncResult = {
@@ -209,6 +327,7 @@ export function useBrandSyncManager() {
       };
 
       setResult(syncResult);
+      setIsLoading(false);
 
       // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['brand-data-quality', options.brandSlug] });
@@ -230,6 +349,7 @@ export function useBrandSyncManager() {
       
       setError(message);
       setProgress(null);
+      setIsLoading(false);
       
       if (isTimeout) {
         const timedOutResult: SyncResult = {
@@ -254,17 +374,20 @@ export function useBrandSyncManager() {
       });
 
       return { success: false, message };
-    } finally {
-      setIsLoading(false);
     }
-  }, [localDetectSyncFunction, deleteAllProducts, queryClient, toast]);
+  }, [localDetectSyncFunction, startPolling, queryClient, toast]);
 
   const reset = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
     setIsLoading(false);
     setIsDeleting(false);
     setProgress(null);
     setResult(null);
     setError(null);
+    setActiveSyncLogId(null);
   }, []);
 
   return {
@@ -278,5 +401,6 @@ export function useBrandSyncManager() {
     result,
     error,
     reset,
+    activeSyncLogId,
   };
 }

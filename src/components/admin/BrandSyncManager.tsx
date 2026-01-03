@@ -387,12 +387,45 @@ export function BrandSyncManager() {
 
         {/* Progress */}
         {progress && (
-          <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+          <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium">{progress.stage}</span>
-              <span className="text-muted-foreground">{progress.current}%</span>
+              <span className="text-muted-foreground">
+                {progress.total > 0 
+                  ? `${Math.round((progress.current / progress.total) * 100)}%`
+                  : `${progress.current}%`
+                }
+              </span>
             </div>
-            <Progress value={progress.current} className="h-2" />
+            <Progress 
+              value={progress.total > 0 
+                ? Math.round((progress.current / progress.total) * 100)
+                : progress.current
+              } 
+              className="h-2" 
+            />
+            {progress.message && (
+              <p className="text-xs text-muted-foreground">{progress.message}</p>
+            )}
+            {(progress.productsProcessed !== undefined || progress.variantsFound !== undefined) && (
+              <div className="flex gap-4 text-xs text-muted-foreground">
+                {progress.productsProcessed !== undefined && (
+                  <span>Products: {progress.productsProcessed}</span>
+                )}
+                {progress.variantsFound !== undefined && (
+                  <span>Variants: {progress.variantsFound}</span>
+                )}
+                {progress.created !== undefined && progress.created > 0 && (
+                  <span className="text-green-500">Created: {progress.created}</span>
+                )}
+                {progress.updated !== undefined && progress.updated > 0 && (
+                  <span className="text-blue-500">Updated: {progress.updated}</span>
+                )}
+                {progress.errors !== undefined && progress.errors > 0 && (
+                  <span className="text-destructive">Errors: {progress.errors}</span>
+                )}
+              </div>
+            )}
           </div>
         )}
 
