@@ -600,6 +600,26 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   '肤色': 'FFCBA4',
   '青色': '00FFFF',
 
+  // ==================== ANYCUBIC SPECIFIC COLORS ====================
+  'tropical turquoise': '48D1CC',
+  'spring leaf': '6DBE45',
+  'interstellar violet': 'EE82EE',
+  'jade white': 'E8F5E9',
+  'vibrant orange': 'FF6600',
+  'pale violet': 'DDA0DD',
+  'peach pink': 'FFDAB9',
+  'texture grey': '8B8B8B',
+  'texture gray': '8B8B8B',
+  'texture silver': 'C0C0C0',
+  'metal copper': 'B87333',
+  'metal champaign': 'D4AF37',
+  'metal champagne': 'D4AF37',
+  'peanut brown': 'B5651D',
+  'galaxy green': '2E8B57',
+  'galaxy blue': '1E3A5F',
+  'galaxy purple': '4B0082',
+  'translucent white': 'FFFFFF',
+
   // ==================== GERMAN COLORS (Recycling Fabrik/EU brands) ====================
   'schwarz': '1A1A1A',
   'weiß': 'FFFFFF',
