@@ -1935,6 +1935,108 @@ Deno.serve(async (req) => {
       console.log(`[PostSyncCheck] Anycubic H1 Title Match complete: ${anycubicCheckedCount} checked, ${anycubicH1Issues.length} issues`);
     }
 
+    // ============= UI DISPLAY NAME MATCH CHECK =============
+    // CRITICAL: This check validates what the FRONTEND will actually show to users.
+    // It simulates the formatProductLineIdForDisplay() logic from productNameUtils.ts
+    // and compares against the actual product_title in the database.
+    //
+    // This catches frontend rendering bugs (e.g., "PLA High Speed" showing as just "PLA")
+    // that occur due to mismatches between product_line_id format and display logic.
+    const uiDisplayIssues: Array<{ id: string; title: string; issue: string }> = [];
+    
+    // Simulate formatProductLineIdForDisplay logic (from src/lib/productNameUtils.ts)
+    const simulateUIDisplayName = (productLineId: string, productTitle: string): string => {
+      const parts = productLineId.split('__');
+      
+      if (parts.length >= 3) {
+        // 3+ part format: "vendor__material__line-name"
+        const material = parts[1]?.toUpperCase() || '';
+        const lineParts = parts.slice(2).join(' ');
+        const lineName = lineParts
+          .replace(/-/g, ' ')
+          .replace(/\b\w/g, (c: string) => c.toUpperCase())
+          .trim();
+        return `${material} ${lineName}`.trim();
+      }
+      
+      // 2-part format: Use product title with minimal cleanup
+      return productTitle
+        .replace(/^(Anycubic|Polymaker|Hatchbox|Sunlu|Elegoo|Creality)\s+/gi, '')
+        .replace(/\s+Filament\s*$/i, '')
+        .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')
+        .replace(/\s*,?\s*\d+\.?\d*\s*kg\b/gi, '')
+        .replace(/\s*,?\s*\d+\.?\d*\s*lb\b/gi, '')
+        .trim() || productTitle;
+    };
+    
+    // Get products with product_line_id
+    const { data: uiCheckProducts } = await supabase
+      .from("filaments")
+      .select("id, product_title, product_line_id")
+      .ilike("vendor", brandName)
+      .not("product_line_id", "is", null);
+    
+    // Group by product_line_id and check one representative per group
+    const checkedProductLines = new Set<string>();
+    
+    for (const product of uiCheckProducts || []) {
+      if (!product.product_line_id || checkedProductLines.has(product.product_line_id)) continue;
+      checkedProductLines.add(product.product_line_id);
+      
+      const uiDisplayName = simulateUIDisplayName(product.product_line_id, product.product_title);
+      
+      // Normalize for comparison (strip color suffix from DB title, common specs)
+      const normalizeForUICheck = (title: string): string => {
+        return title
+          .replace(/\s*-\s+[A-Za-z][A-Za-z\s]+$/g, '') // Strip " - Color Name" suffix
+          .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')
+          .replace(/\s*,?\s*\d+\.?\d*\s*kg\b/gi, '')
+          .replace(/\s*,?\s*\d+\.?\d*\s*lb\b/gi, '')
+          .replace(/\s+Filament\b/gi, '')
+          .replace(/^(Anycubic|Polymaker|Hatchbox|Sunlu|Elegoo|Creality)\s+/gi, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .toLowerCase();
+      };
+      
+      const normalizedUI = normalizeForUICheck(uiDisplayName);
+      const normalizedDB = normalizeForUICheck(product.product_title);
+      
+      // Check if UI display is significantly different from DB title
+      // This catches bugs like "PLA High Speed" → "PLA" in the UI
+      if (normalizedUI !== normalizedDB) {
+        // Calculate how much was lost
+        const uiWords = new Set(normalizedUI.split(' '));
+        const dbWords = new Set(normalizedDB.split(' '));
+        const missingWords = [...dbWords].filter(w => !uiWords.has(w) && w.length > 2);
+        
+        // Only flag if significant words are missing (like "high", "speed", "silk", etc.)
+        const significantMissingWords = missingWords.filter(w => 
+          ['high', 'speed', 'silk', 'matte', 'marble', 'glow', 'galaxy', 'metal', 'plus', 'basic', 'special', 'translucent'].includes(w)
+        );
+        
+        if (significantMissingWords.length > 0) {
+          uiDisplayIssues.push({
+            id: product.id,
+            title: product.product_title,
+            issue: `UI will show "${uiDisplayName}" but DB has "${product.product_title}". Missing: ${significantMissingWords.join(', ')}`,
+          });
+        }
+      }
+    }
+    
+    checks.push({
+      checkName: "UI Display Name Match (Frontend Rendering)",
+      status: uiDisplayIssues.length === 0 ? "pass" : uiDisplayIssues.length <= 2 ? "warning" : "fail",
+      count: checkedProductLines.size - uiDisplayIssues.length,
+      details: uiDisplayIssues.length === 0
+        ? `${checkedProductLines.size} product lines will display correctly in the UI`
+        : `CRITICAL: ${uiDisplayIssues.length} products will show incorrect names in FilamentCard/FilamentDetail`,
+      products: uiDisplayIssues.length > 0 ? uiDisplayIssues : undefined,
+    });
+    
+    console.log(`[PostSyncCheck] UI Display Name Match complete: ${checkedProductLines.size} checked, ${uiDisplayIssues.length} issues`);
+
     // ============= PRICE CONSISTENCY CHECK (UPDATED FOR INDUSTRIAL BRANDS) =============
     // Validate DB prices are reasonable (not $0 or suspicious values)
     // 3DXTech is an industrial brand with expensive specialty materials (PEEK, PEKK, PEI, etc.)
