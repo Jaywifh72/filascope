@@ -573,15 +573,24 @@ export const ANYCUBIC_COLOR_MAPPING: Record<string, string> = {
   'clear': 'FFFFFF',
   'natural': 'F5F5DC',
   
-  // Translucent variants (from Post Sync Check)
+  // Translucent variants (complete set from Post Sync Check)
   'translucent orange': 'FF6600',
   'translucent olive': '808000',
+  'translucent grey': '8B8B8B',
+  'translucent gray': '808080',
+  'translucent brown': '8B4513',
+  'translucent purple': '9333EA',
+  'translucent blue': '2563EB',
+  'translucent green': '16A34A',
+  'translucent pink': 'FFC0CB',
+  'translucent red': 'DC2626',
+  'translucent yellow': 'FFC72C',
+  'translucent white': 'FFFFFF',
+  'translucent clear': 'FFFFFF',
   'translucent': 'FFFFFF',
   'olive': '808000',
   'olive green': '808000',
   'orange': 'FF6600',
-  'translucentorange': 'FF6600',
-  'translucentolive': '808000',
   
   // No-space variants (for robust matching)
   'texturesilver': 'C0C0C0',
@@ -595,8 +604,19 @@ export const ANYCUBIC_COLOR_MAPPING: Record<string, string> = {
   'metalblue': '4682B4',
   'silkrainbow': 'FF0000',
   'silksilver': 'C0C0C0',
+  'silkcopper': 'B87333',
   'silkpink': 'FFC0CB',
   'silkpurple': '9333EA',
+  'translucentorange': 'FF6600',
+  'translucentolive': '808000',
+  'translucentgrey': '8B8B8B',
+  'translucentgray': '808080',
+  'translucentbrown': '8B4513',
+  'translucentpurple': '9333EA',
+  'translucentblue': '2563EB',
+  'translucentgreen': '16A34A',
+  'translucentpink': 'FFC0CB',
+  'springleaf': '00A86B',
 };
 
 /**
@@ -629,6 +649,18 @@ export function getAnycubicColorHex(colorName: string): string | null {
   const withoutSilk = colorLower.replace(/^silk\s+/i, '');
   if (withoutSilk !== colorLower && ANYCUBIC_COLOR_MAPPING[withoutSilk]) {
     return ANYCUBIC_COLOR_MAPPING[withoutSilk];
+  }
+  
+  // Try matching without "translucent" prefix and look up the base color
+  const withoutTranslucent = colorLower.replace(/^translucent\s+/i, '');
+  if (withoutTranslucent !== colorLower && ANYCUBIC_COLOR_MAPPING[withoutTranslucent]) {
+    return ANYCUBIC_COLOR_MAPPING[withoutTranslucent];
+  }
+  
+  // Try matching without "texture" prefix
+  const withoutTexture = colorLower.replace(/^texture\s+/i, '');
+  if (withoutTexture !== colorLower && ANYCUBIC_COLOR_MAPPING[withoutTexture]) {
+    return ANYCUBIC_COLOR_MAPPING[withoutTexture];
   }
   
   // Try partial matching by checking if any key is contained in the color name
