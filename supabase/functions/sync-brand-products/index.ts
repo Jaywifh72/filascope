@@ -300,7 +300,13 @@ Deno.serve(async (req) => {
 
   try {
     const body: SyncRequest = await req.json();
-    const { brandSlug, dryRun = true, materialFilter, regions, tasks = ['products'], limit = 100, background = false } = body;
+    let { brandSlug, dryRun = true, materialFilter, regions, tasks = ['products'], limit = 100, background = false } = body;
+    
+    // Anycubic has many color variants per product line - increase limit to ensure complete coverage
+    if (brandSlug === 'anycubic' && limit <= 100) {
+      limit = 200;
+      console.log(`[sync-brand-products] Increased limit to ${limit} for Anycubic (many color variants)`);
+    }
 
     if (!brandSlug) {
       return new Response(
