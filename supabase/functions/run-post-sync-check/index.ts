@@ -401,6 +401,19 @@ function generateAIFixPrompt(
   // Determine the best AI role for this specific set of issues
   const role = determineAIRole(checks);
   
+  // Determine brand-specific sync file path
+  const hasDedicatedSyncFunction = [
+    'anycubic', 'amolen', 'polymaker', 'hatchbox', '3d-fuel', 'sunlu', 
+    'eryone', 'overture', 'push-plastic', 'proto-pasta', '3dxtech', 
+    'ninjatek', 'fiberlogy', 'colorfabb', 'prusament'
+  ].includes(brandSlug);
+  
+  const syncFilePath = hasDedicatedSyncFunction 
+    ? `supabase/functions/sync-${brandSlug}-products/index.ts`
+    : `supabase/functions/sync-brand-products/index.ts`;
+  
+  const defaultsFilePath = `supabase/functions/_shared/${brandSlug}-defaults.ts`;
+  
   // Build role preamble section
   const roleSection = `You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database and comparison platform.
 
@@ -499,6 +512,59 @@ ${Object.entries(aiAnalysis.colorMappings || {}).map(([name, hex]) => `'${name.t
 ---`;
   }
 
+  // Build promotional product guidance if relevant
+  const hasPromotionalIssues = [...failedChecks, ...warningChecks].some(c => 
+    c.products?.some(p => 
+      p.title?.toLowerCase().includes('buy') || 
+      p.title?.toLowerCase().includes('flash') || 
+      p.title?.toLowerCase().includes('promo') ||
+      p.issue?.toLowerCase().includes('promo')
+    )
+  );
+
+  const promotionalSection = hasPromotionalIssues ? `
+### 6. For Promotional Product Grouping Issues
+
+Promotional products (Buy X Get Y, Flash Sale, etc.) should:
+- **Group with regular products** of the same type (NOT separate product_line_ids!)
+- Have promotional text stripped BEFORE generating product_line_id
+- Use the base product title (e.g., "PLA Silk" not "PLA Silk - Buy 2, Get 1 Free")
+
+**Fix Pattern**:
+\`\`\`typescript
+// In ${defaultsFilePath}, add stripPromotionalFromTitle():
+function stripPromotionalFromTitle(title: string): string {
+  return title
+    .replace(/\\s*-?\\s*buy\\s+\\d+[,\\s]*get\\s+\\d+(\\s+free)?/gi, '')
+    .replace(/\\s*-?\\s*flash\\s+(deal|sale)/gi, '')
+    .replace(/\\s*-?\\s*christmas\\s+(box|sale|deal|bulk)/gi, '')
+    .replace(/\\s*-?\\s*b2g1/gi, '')
+    .trim();
+}
+
+// Then use it in generateProductLineId() BEFORE any other processing:
+const strippedTitle = stripPromotionalFromTitle(title);
+const cleanedTitle = cleanTitle(strippedTitle).toLowerCase();
+\`\`\`
+
+**Database Cleanup SQL** (run after deploying fix):
+\`\`\`sql
+-- Normalize promotional product_line_ids to their base products
+UPDATE filaments 
+SET product_line_id = REGEXP_REPLACE(product_line_id, '_promo_[^_]+$', ''),
+    updated_at = NOW()
+WHERE vendor ILIKE '%${brand}%'
+AND product_line_id ~ '_promo_';
+
+-- Example: Normalize PLA Silk promo to regular PLA Silk
+UPDATE filaments 
+SET product_line_id = '${brandSlug}__pla__silk'
+WHERE vendor ILIKE '%${brand}%'
+AND product_line_id LIKE '%pla%silk%promo%';
+\`\`\`
+
+` : '';
+
   const prompt = `${roleSection}## Fix Post Sync Check Issues for ${brand}
 
 The Post Sync Check for ${brand} found the following issues that need to be fixed in the sync function.
@@ -524,7 +590,8 @@ ${aiInsightsSection}
 ## Required Actions
 
 ### 1. Update the sync function
-File: \`supabase/functions/sync-${brandSlug}-products/index.ts\`
+File: \`${syncFilePath}\`
+${hasDedicatedSyncFunction ? '' : `\n(Note: ${brand} uses the generic sync function. Consider checking if brand-specific defaults file exists at \`${defaultsFilePath}\`)`}
 
 ### 2. For Title Mismatch Issues
 The sync function must extract titles from the actual product page, not construct them from variants:
@@ -539,7 +606,7 @@ The website shows more color swatches than exist in the database. This means:
 
 ### 4. For Missing Color Names
 Colors exist on the website but not in the database:
-- Add missing colors to the brand's color hex map in \`_shared/${brandSlug}-defaults.ts\`
+- Add missing colors to the brand's color hex map in \`${defaultsFilePath}\`
 - Ensure \`extractColorFromVariant()\` properly parses swatch names from the page
 
 ### 5. For Weight/Diameter Filtering Issues
@@ -561,7 +628,7 @@ if (!filterResult.include) {
 - MAX_WEIGHT_GRAMS = 5500 (excludes bulk)
 - STANDARD_DIAMETER_MM = 1.75 (excludes 2.85mm/3.0mm)
 - EXCLUDED_TITLE_KEYWORDS = ['sample', 'pack', 'variety', 'bundle', 'combo', 'starter kit', 'trial']
-
+${promotionalSection}
 ---
 
 ## The Five Consistency Rules
