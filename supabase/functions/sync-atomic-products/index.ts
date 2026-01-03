@@ -358,6 +358,81 @@ Deno.serve(async (req) => {
               }
             }
           }
+          
+          // STEP 1D: Fix metallic PLA material assignments
+          // For Atomic, "Metallic" is a FINISH (cosmetic), not a material additive like metal powder
+          console.log('[ATOMIC-SYNC] Step 1D: Fixing metallic PLA material assignments...');
+          
+          const { data: metallicProducts } = await supabase
+            .from('filaments')
+            .select('id, product_title, material, finish_type')
+            .ilike('vendor', '%atomic%')
+            .ilike('product_title', '%metallic%pla%');
+          
+          for (const p of metallicProducts || []) {
+            if (p.material !== 'PLA' && !dryRun) {
+              await supabase.from('filaments')
+                .update({ 
+                  material: 'PLA',
+                  finish_type: 'Metallic',
+                  updated_at: new Date().toISOString() 
+                })
+                .eq('id', p.id);
+              console.log(`[ATOMIC-SYNC] Fixed material to PLA (metallic finish): ${p.product_title.slice(0, 50)}`);
+            } else if (p.material === 'PLA' && p.finish_type !== 'Metallic' && !dryRun) {
+              // Material is correct but finish type needs updating
+              await supabase.from('filaments')
+                .update({ 
+                  finish_type: 'Metallic',
+                  updated_at: new Date().toISOString() 
+                })
+                .eq('id', p.id);
+              console.log(`[ATOMIC-SYNC] Set finish to Metallic: ${p.product_title.slice(0, 50)}`);
+            }
+          }
+          
+          // Also fix products with material = 'Other' that contain 'PLA' in title
+          const { data: otherMaterialProducts } = await supabase
+            .from('filaments')
+            .select('id, product_title, material')
+            .ilike('vendor', '%atomic%')
+            .eq('material', 'Other')
+            .ilike('product_title', '%pla%');
+          
+          for (const p of otherMaterialProducts || []) {
+            const correctMaterial = normalizeAtomicMaterial(p.product_title) || 'PLA';
+            if (!dryRun) {
+              await supabase.from('filaments')
+                .update({ 
+                  material: correctMaterial,
+                  updated_at: new Date().toISOString() 
+                })
+                .eq('id', p.id);
+              console.log(`[ATOMIC-SYNC] Fixed material from 'Other' to '${correctMaterial}': ${p.product_title.slice(0, 50)}`);
+            }
+          }
+          
+          // Fix products with material = 'PLA-Metal' that are actually metallic PLA finish
+          const { data: plaMetalProducts } = await supabase
+            .from('filaments')
+            .select('id, product_title, material')
+            .ilike('vendor', '%atomic%')
+            .eq('material', 'PLA-Metal');
+          
+          for (const p of plaMetalProducts || []) {
+            if (!dryRun) {
+              await supabase.from('filaments')
+                .update({ 
+                  material: 'PLA',
+                  finish_type: 'Metallic',
+                  updated_at: new Date().toISOString() 
+                })
+                .eq('id', p.id);
+              console.log(`[ATOMIC-SYNC] Fixed PLA-Metal to PLA (metallic finish): ${p.product_title.slice(0, 50)}`);
+            }
+          }
+          
+          console.log(`[ATOMIC-SYNC] Metallic PLA fix: ${(metallicProducts?.length || 0) + (plaMetalProducts?.length || 0)} products checked`);
         } else {
           const errorText = await syncResponse.text();
           console.error('[ATOMIC-SYNC] Base sync failed:', errorText);
@@ -627,10 +702,13 @@ Deno.serve(async (req) => {
           changes.push(`finish: ${enrichment.finishType}`);
         }
 
-        // Material normalization
-        if (!filament.material && enrichment.material && tasks.includes('enrich')) {
-          updateData.material = enrichment.material;
-          changes.push(`material: ${enrichment.material}`);
+        // Material normalization - ALWAYS apply for Atomic to override incorrect generic assignments
+        if (tasks.includes('enrich')) {
+          const atomicMaterial = normalizeAtomicMaterial(filament.product_title);
+          if (atomicMaterial && filament.material !== atomicMaterial) {
+            updateData.material = atomicMaterial;
+            changes.push(`material: ${filament.material} → ${atomicMaterial}`);
+          }
         }
 
         // Product line ID (always update to ensure grouping consistency)
