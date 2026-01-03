@@ -28,7 +28,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ANYCUBIC_STORE_URL = 'https://store.anycubic.com';
+// Multi-region store support - US first, fallback to CA
+const ANYCUBIC_STORES = [
+  { region: 'US', baseUrl: 'https://store.anycubic.com' },
+  { region: 'CA', baseUrl: 'https://ca.anycubic.com' },
+];
 const VENDOR_NAME = 'Anycubic';
 
 // Parallel batch size for fetching products
@@ -445,41 +449,59 @@ interface FetchProductResult {
 }
 
 /**
- * Fetch a single product from Shopify with decision logging
+ * Fetch a single product from Shopify with multi-region fallback and decision logging
+ * Tries US store first, falls back to CA if 404
  */
 async function fetchProduct(
   whitelistProduct: typeof ANYCUBIC_PRODUCT_WHITELIST[0],
   logger: ReturnType<typeof createDecisionLogger>
 ): Promise<FetchProductResult> {
-  const productJsonUrl = `${ANYCUBIC_STORE_URL}/products/${whitelistProduct.handle}.json`;
+  let product: any = null;
+  let sourceStore = ANYCUBIC_STORES[0]; // Default to US
   
-  const response = await fetch(productJsonUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; FilaScopeBot/1.0)',
-      'Accept': 'application/json',
-    },
-  });
+  // Try each store until we get a successful response
+  for (const store of ANYCUBIC_STORES) {
+    const productJsonUrl = `${store.baseUrl}/products/${whitelistProduct.handle}.json`;
+    
+    try {
+      const response = await fetch(productJsonUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; FilaScopeBot/1.0)',
+          'Accept': 'application/json',
+        },
+      });
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
+      if (response.ok) {
+        const data = await response.json();
+        product = data.product;
+        if (product) {
+          sourceStore = store;
+          console.log(`[ANYCUBIC-SYNC] Found ${whitelistProduct.handle} on ${store.region} store`);
+          break;
+        }
+      } else if (response.status === 404) {
+        console.log(`[ANYCUBIC-SYNC] ${whitelistProduct.handle} not found on ${store.region} store (404), trying next...`);
+      } else {
+        console.log(`[ANYCUBIC-SYNC] ${whitelistProduct.handle} HTTP ${response.status} on ${store.region} store`);
+      }
+    } catch (error) {
+      console.log(`[ANYCUBIC-SYNC] ${whitelistProduct.handle} fetch error on ${store.region}:`, error);
+    }
   }
 
-  const data = await response.json();
-  const product = data.product;
-  
   if (!product) {
-    throw new Error('No product data in response');
+    throw new Error(`Product not found on any store`);
   }
 
   const defaultImage = product.images?.[0]?.src || product.image?.src || null;
   const productLineId = `anycubic__${whitelistProduct.productLineSlug.replace(/-/g, '')}`;
 
-  // Log product line decision
+  // Log product line decision (include source region in matchedPattern)
   logger.logProductLine(
     String(product.id),
     product.title,
     { title: product.title, handle: whitelistProduct.handle },
-    { productLineId, matchedPattern: `whitelist:${whitelistProduct.productLineSlug}` },
+    { productLineId, matchedPattern: `whitelist:${whitelistProduct.productLineSlug}@${sourceStore.region}` },
     true
   );
 
@@ -527,7 +549,8 @@ async function fetchProduct(
     const printSettings = ANYCUBIC_PRINT_SETTINGS[whitelistProduct.material] || 
                          ANYCUBIC_PRINT_SETTINGS['PLA'] || null;
 
-    const productUrl = `${ANYCUBIC_STORE_URL}/products/${whitelistProduct.handle}?variant=${variant.id}`;
+    // Use the source store URL for the product link
+    const productUrl = `${sourceStore.baseUrl}/products/${whitelistProduct.handle}?variant=${variant.id}`;
 
     variants.push({
       productId: String(product.id),
