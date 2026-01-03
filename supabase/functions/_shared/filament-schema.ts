@@ -1778,6 +1778,31 @@ export function extractWeight(title: string, variantGrams?: number): number | nu
 }
 
 /**
+ * Strip promotional text from product names to ensure clean product_line_id generation
+ * Handles patterns like "Buy 2, Get 1 Free", "Flash Deal", "Promo", etc.
+ */
+function stripPromotionalText(name: string): string {
+  const promoPatterns = [
+    /\s*-?\s*buy\s+\d+[,\s]+get\s+\d+(\s+free)?/gi,
+    /\s*-?\s*flash\s+(deal|sale)/gi,
+    /\s*-?\s*promo(tion)?/gi,
+    /\s*-?\s*special\s+offer/gi,
+    /\s*-?\s*limited\s+(time\s+)?offer/gi,
+    /\s*-?\s*christmas\s+(box|sale|deal)/gi,
+    /\s*-?\s*holiday\s+(special|sale|deal)/gi,
+    /\s*-?\s*black\s+friday/gi,
+    /\s*-?\s*cyber\s+monday/gi,
+    /\s*-?\s*b2g1/gi,  // Common abbreviation for Buy 2 Get 1
+  ];
+  
+  let cleaned = name;
+  for (const pattern of promoPatterns) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+  return cleaned.trim();
+}
+
+/**
  * Generate consistent product line ID for grouping variants
  * 
  * @param brandSlug - Brand identifier (e.g., 'amolen')
@@ -1794,7 +1819,9 @@ export function generateProductLineId(
   const normalizedBrand = brandSlug.toLowerCase().replace(/\s+/g, '-');
   const normalizedMaterial = (material || 'unknown').toLowerCase().replace(/\s+/g, '-');
   
-  const productType = extractProductType(productName);
+  // Strip promotional text BEFORE extracting product type
+  const cleanedProductName = stripPromotionalText(productName);
+  const productType = extractProductType(cleanedProductName);
   
   // Separate bulk packs (4kg+) from single-spool color variants
   // This prevents bulk packs from appearing as color swatches

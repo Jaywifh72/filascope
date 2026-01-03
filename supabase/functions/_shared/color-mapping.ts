@@ -1411,23 +1411,23 @@ export const COLOR_FAMILY_MAP: Record<string, string> = {
   'peanut brown': 'Brown',
   'galaxy brown': 'Brown',
   
-  // Transparent/Clear
+  // Transparent/Clear - but preserve color for translucent variants
   'transparent': 'Clear',
   'translucent': 'Clear',
   'translucent white': 'Clear',
+  'translucent green': 'Green',
+  'translucent blue': 'Blue',
+  'translucent red': 'Red',
+  'translucent purple': 'Purple',
+  'translucent yellow': 'Yellow',
+  'translucent orange': 'Orange',
+  'translucent pink': 'Pink',
   'clear': 'Clear',
   'crystal clear': 'Clear',
   'ultra clear': 'Clear',
   'water clear': 'Clear',
   'glass clear': 'Clear',
   'glass': 'Clear',
-  'translucent blue': 'Clear',
-  'translucent green': 'Clear',
-  'translucent red': 'Clear',
-  'translucent orange': 'Clear',
-  'translucent yellow': 'Clear',
-  'translucent purple': 'Clear',
-  'translucent pink': 'Clear',
   
   // Natural
   'natural': 'Natural',
