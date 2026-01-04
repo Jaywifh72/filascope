@@ -251,8 +251,8 @@ export function useBrandSyncManager() {
       let fnError: any;
 
       if (syncType === 'special') {
-        // Special handling for Bambu Lab and Elegoo - they have their own UI
-        throw new Error(`${options.brandSlug} has a dedicated sync tab. Please use the ${options.brandSlug === 'bambu-lab' ? 'Bambu Lab' : 'Elegoo'} tab instead.`);
+        // Special handling for Elegoo - they have their own UI
+        throw new Error(`${options.brandSlug} has a dedicated sync tab. Please use the Elegoo tab instead.`);
       }
 
       if (syncType === 'specific') {
