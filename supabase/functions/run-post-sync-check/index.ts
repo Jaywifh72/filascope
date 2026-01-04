@@ -2855,6 +2855,16 @@ Deno.serve(async (req) => {
         
         const uniquePatterns = new Set(handlePatterns);
         
+        // === SKIP URL CONSISTENCY FOR ATOMIC FILAMENT ===
+        // Atomic Filament has 57+ different product URLs grouped into 5 product_line_ids
+        // Each color variant IS a completely separate Shopify product with its own URL
+        // This is by design - the product_line_id groups them correctly
+        const skipUrlCheckBrands = ['atomic-filament'];
+        if (skipUrlCheckBrands.includes(brandSlug)) {
+          // Skip - expected architecture for this brand
+          continue;
+        }
+        
         // Only flag if there are DIFFERENT product line patterns (not just different colors)
         if (uniquePatterns.size > 2) {
           urlConsistencyIssues.push({
@@ -2958,6 +2968,13 @@ Deno.serve(async (req) => {
         'pastel lilac': 'purple',        // Lilac IS purple
         'gun metal': 'gray',             // Gun metal is gray
         'gunmetal': 'gray',              // Gun metal is gray
+        
+        // === ATOMIC FILAMENT SPECIALTY COLORS ===
+        'rose gold': 'pink',             // Rose gold is pink-metallic, not gold
+        'pearly peach': 'orange',        // Peach IS orange family
+        'salmon': 'pink',                // Salmon is pink/coral family
+        'starlight gray': 'gray',        // Starlight gray IS gray
+        'starlight grey': 'gray',        // Alternate spelling
       };
       for (const [compound, baseColor] of Object.entries(compoundColors)) {
         if (text.includes(compound)) return baseColor;
@@ -3012,6 +3029,21 @@ Deno.serve(async (req) => {
       const titleLower = (productTitle || '').toLowerCase();
       const isTranslucent = titleLower.includes('translucent') || titleLower.includes('smoke') || titleLower.includes('clear');
       
+      // === SPECIAL HANDLING FOR COMPOUND SPECIALTY COLORS ===
+      // These specialty colors don't fit standard categories - validate more leniently
+      if (titleLower.includes('rose gold')) {
+        // Rose gold: pink-ish metallic (high R, medium-high G, some B)
+        return r > 120 && r > b - 30;
+      }
+      if (titleLower.includes('pearly peach') || (titleLower.includes('peach') && !titleLower.includes('peachy'))) {
+        // Peach: light orange/pink (warm color, high brightness)
+        return r > 150 && g > 100 && brightness > 150;
+      }
+      if (titleLower.includes('starlight')) {
+        // Starlight variants - metallic effects, allow any gray-ish color
+        return Math.abs(r - g) < 80 && Math.abs(g - b) < 80;
+      }
+      
       switch (colorName) {
         case 'gold':
         case 'yellow':
@@ -3041,8 +3073,8 @@ Deno.serve(async (req) => {
           return brightness < 100;
         case 'white':
         case 'natural':
-          // White/natural should be bright (relaxed)
-          return brightness > 180;
+          // White/natural should be bright (relaxed for cream/ivory variants)
+          return brightness > 170;
         case 'pink':
         case 'coral':
           // Pink should have high R and some B

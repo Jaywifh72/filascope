@@ -453,6 +453,15 @@ export function generateAtomicProductLineId(collectionMaterial: string): string 
  * This prevents colors like "True Gold v2" from getting random hashes
  */
 export const ATOMIC_COLOR_FAMILY_DEFAULTS: Record<string, string> = {
+  // === BASE COLORS (CRITICAL - prevent falling through to deterministic hash) ===
+  'white': 'FAFAFA',        // Pure white
+  'black': '1A1A1A',        // Pure black
+  'natural': 'F5F0E0',      // Off-white/cream for natural filaments
+  'clear': 'F0F0F0',        // Clear/transparent
+  'gray': '808080',         // Mid gray
+  'grey': '808080',         // Mid gray (alternate spelling)
+  
+  // === STANDARD COLORS ===
   'gold': 'D4AF37',
   'yellow': 'FFD700',
   'orange': 'FF8C00',
