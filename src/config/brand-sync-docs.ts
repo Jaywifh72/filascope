@@ -146,12 +146,32 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
   },
   
   'azurefilm': {
+    exclusions: [
+      { name: '2.85mm Diameter Variants', reason: 'Non-standard diameter (1.75mm only) via is285mmDiameter()' },
+      { name: 'Sample Products (<300g)', reason: 'Small test quantities excluded via shouldIncludeVariant()' },
+      { name: 'Bulk Products (>5.5kg)', reason: 'Industrial bulk spools excluded via MAX_WEIGHT_GRAMS' },
+      { name: '3D Pens & Gift Cards', reason: 'Non-filament products excluded via isAzureFilmNonFilament()' },
+      { name: 'Unlisted Categories', reason: 'Only 8 whitelisted categories synced (ABS, ASA, CF, PCTG, PETG, PLA, LumberLay, Support)' },
+    ],
     specialBehaviors: [
-      { name: 'European Pricing', description: 'EUR-based pricing with conversion.' },
+      { name: 'Category-Based Discovery', description: 'Products discovered from 8 whitelisted category URLs, not site-wide mapping.' },
+      { name: 'H1 Title Priority', description: 'Product titles scraped from <h1> tag on product page via Firecrawl.' },
+      { name: 'EUR→USD Conversion', description: 'Converts prices at 1.08 rate from European store.' },
+      { name: 'WooCommerce Platform', description: 'Firecrawl HTML pipeline for WooCommerce store (not Shopify).' },
+      { name: 'Safe Delete Pattern', description: 'Requires 50+ products discovered before clean slate deletion.' },
+      { name: 'Material-Based Product Line IDs', description: 'Groups by material and line (e.g., azurefilm__pla__original, azurefilm__petg__standard).' },
+      { name: 'Color Extraction from Title', description: 'Extracts color name from product title suffix.' },
+      { name: 'Carbon Fiber Material Detection', description: 'CF products normalized to appropriate base material (PAHT-CF, PLA-CF, PETG-CF).' },
+      { name: 'LumberLay Wood Filament', description: 'Wood-composite materials categorized under LumberLay product line.' },
+      { name: 'Support Material Detection', description: 'PVA and BVOH support materials properly categorized.' },
     ],
     notes: [
-      'European manufacturer',
-      'Shopify-based store',
+      'European manufacturer based in Slovenia',
+      'WooCommerce platform (corrected from Shopify)',
+      '8 category whitelist: ABS, ASA, Carbon Fiber, PCTG, PETG, PLA, LumberLay, Support',
+      'Firecrawl HTML scraping for product discovery and title extraction',
+      'URL Consistency check skipped (cross-product swatch architecture)',
+      'Expected ~12 product line cards in UI',
     ],
   },
   
