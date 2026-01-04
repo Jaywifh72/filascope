@@ -517,6 +517,39 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
   
   console.log(`[BambuLab] CDN URL pattern matching found ${colorImageMap.size} color-image mappings`);
   
+  // ========== PATTERN 0 (HIGHEST PRIORITY): Color Selector <li value="ColorName (SKU)"> ==========
+  // Bambu Lab's color selector uses this structure:
+  // <li value="Gold (13405)" class="...property_selector..."><img src="https://store.bblcdn.com/s7/...">
+  // This is the MOST RELIABLE pattern - directly maps color name to its swatch image
+  
+  // Pattern: <li value="ColorName (optional SKU)"> followed by <img src="...">
+  // Match the li element and extract color from value attribute, then find img inside
+  const colorSelectorRegex = /<li[^>]*value="([^"]+)"[^>]*>[\s\S]*?<img[^>]*src="(https:\/\/store\.bblcdn\.com[^"]+)"[^>]*>/gi;
+  let colorSelectorMatches = 0;
+  
+  for (const match of html.matchAll(colorSelectorRegex)) {
+    const rawValue = match[1].trim(); // e.g., "Gold (13405)" or "Titan Gray"
+    const imageUrl = match[2];
+    
+    // Extract clean color name - remove SKU in parentheses if present
+    const colorName = rawValue.replace(/\s*\([^)]+\)$/, '').trim();
+    
+    // Validate color name
+    if (!colorName || colorName.length < 2) continue;
+    if (/^[0-9]+$/.test(colorName)) continue; // Just numbers
+    if (/^[a-f0-9]{8,}$/i.test(colorName)) continue; // GUID
+    if (!isValidColorName(colorName)) continue;
+    
+    const colorKey = colorName.toLowerCase().replace(/\s+/g, ' ').trim();
+    
+    // IMPORTANT: Prioritize this over CDN filename patterns - overwrite if exists
+    colorImageMap.set(colorKey, imageUrl);
+    colorSelectorMatches++;
+    console.log(`[BambuLab] Color selector: "${colorName}" -> ${imageUrl.substring(0, 70)}...`);
+  }
+  
+  console.log(`[BambuLab] Color selector pattern found ${colorSelectorMatches} color-image mappings`);
+  
   // ========== PATTERN 1: Extract images from variant gallery/picker HTML ==========
   // Look for patterns like: <img src="...Black.png..." alt="Black">
   const imgPatterns = [
@@ -532,6 +565,7 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
       
       if (alt && isValidColorName(alt) && src && !src.includes('logo')) {
         const colorKey = alt.toLowerCase();
+        // Don't overwrite color selector mappings
         if (!colorImageMap.has(colorKey)) {
           colorImageMap.set(colorKey, src);
         }
