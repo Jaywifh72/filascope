@@ -43,22 +43,30 @@ const corsHeaders = {
 // USD pricing (store shows USD prices on collection)
 const USD_RATE = 1.0;
 
+// ========== IMAGE TYPE DOCUMENTATION ==========
+// Bambu Lab CDN has two image types:
+// - S7 CDN (store.bblcdn.com/s7/): Small color swatch thumbnails (~50x50px) used in color picker UI
+// - S5 CDN (store.bblcdn.com/s5/): Full product gallery images (1920px) shown when a color is selected
+//
+// CRITICAL: We must use S5 gallery images, NOT S7 swatch thumbnails!
+// S5 URLs have __op__resize parameters for image processing (e.g., __op__resize,m_lfit,w_1920)
+
 // ========== ABS FALLBACK IMAGE MAPPING ==========
-// When scraping fails for ABS (JS-rendered color picker), use these known images
-// Source: https://us.store.bambulab.com/products/abs-filament (manually extracted)
+// When scraping fails for ABS (JS-rendered color picker), use S5 gallery images
+// Source: https://us.store.bambulab.com/products/abs-filament (manually extracted gallery images)
 const ABS_COLOR_IMAGES: Record<string, string> = {
-  'silver': 'https://store.bblcdn.com/s7/default/69834a7536c540e489913a0f8e707e5e/ABSsilver.png',
-  'black': 'https://store.bblcdn.com/s7/default/cfdefec225e6430c82cbe2f8766b6f70/ABS_Black.png',
-  'white': 'https://store.bblcdn.com/s7/default/1ad485ff4a72413b90e944ffde4fa861/ABS_White.png',
-  'bambu green': 'https://store.bblcdn.com/s7/default/910be80e4fcf43ddbd66c40773ecce0f/ABSbambugreen.png',
-  'orange': 'https://store.bblcdn.com/s7/default/25d7b833bf694c70b9ef3cd649f3cf36/ABSorange.png',
-  'red': 'https://store.bblcdn.com/s7/default/95bd38c6dc604bdab7b3d2fc7b67e0ee/ABS_Red.png',
-  'blue': 'https://store.bblcdn.com/s7/default/3b2f526b80734e429d9a424e07f3c36b/ABS_Blue.png',
-  'olive': 'https://store.bblcdn.com/s7/default/e45f66c840c7454b860b0ffb17787dda/80cf6768c03d129dfa6a01ac67a5b402.jpg',
-  'tangerine yellow': 'https://store.bblcdn.com/s7/default/599d443346194649beee96e12f32d074/7376d19b161f2a93a4051e47289d0505.jpg',
-  'azure': 'https://store.bblcdn.com/s7/default/1de0e532e21642e1a4a857c6e01fa1d3/0be9a584b30358020d8706f2aa8ec9c2.jpg',
-  'navy blue': 'https://store.bblcdn.com/s7/default/a840092ea2804025a123e115128c1299/000878ce6144c05ffac949f66b05a18b.jpg',
-  'purple': 'https://store.bblcdn.com/s7/default/a840092ea2804025a123e115128c1299/ABS_Purple.jpg',
+  'silver': 'https://store.bblcdn.com/s5/default/69834a7536c540e489913a0f8e707e5e.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+  'black': 'https://store.bblcdn.com/s5/default/cfdefec225e6430c82cbe2f8766b6f70.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+  'white': 'https://store.bblcdn.com/s5/default/1ad485ff4a72413b90e944ffde4fa861.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+  'bambu green': 'https://store.bblcdn.com/s5/default/910be80e4fcf43ddbd66c40773ecce0f.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+  'orange': 'https://store.bblcdn.com/s5/default/25d7b833bf694c70b9ef3cd649f3cf36.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+  'red': 'https://store.bblcdn.com/s5/default/95bd38c6dc604bdab7b3d2fc7b67e0ee.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+  'blue': 'https://store.bblcdn.com/s5/default/3b2f526b80734e429d9a424e07f3c36b.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+  'olive': 'https://store.bblcdn.com/s5/default/80cf6768c03d129dfa6a01ac67a5b402.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+  'tangerine yellow': 'https://store.bblcdn.com/s5/default/7376d19b161f2a93a4051e47289d0505.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+  'azure': 'https://store.bblcdn.com/s5/default/0be9a584b30358020d8706f2aa8ec9c2.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+  'navy blue': 'https://store.bblcdn.com/s5/default/000878ce6144c05ffac949f66b05a18b.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+  'purple': 'https://store.bblcdn.com/s5/default/a840092ea2804025a123e115128c1299.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
 };
 
 interface DiscoveredProduct {
@@ -424,217 +432,197 @@ function findBestImageForColor(colorKey: string, colorImageMap: Map<string, stri
 }
 
 /**
- * Extract color variants with their associated images from __NEXT_DATA__ JSON
- * Bambu Lab stores variant images in the page props
+ * Helper to extract color name from a CDN image filename
+ * e.g., "PLA_Matte_Black.png" -> "black" or "matte black"
+ */
+function extractColorFromFilename(filename: string): string | null {
+  // Remove extension and query params
+  const clean = filename
+    .replace(/\.(png|jpg|jpeg|webp).*$/i, '')
+    .replace(/^(pla|petg|abs|tpu|pa|pc|asa|pva)[-_]?/i, '')
+    .replace(/^(matte|silk|basic|tough|hf|translucent|cf|gf)[-_]?/i, '')
+    .replace(/[-_]+/g, ' ')
+    .trim()
+    .toLowerCase();
+  
+  // Skip GUIDs and generic names
+  if (!clean || clean.length < 3 || /^\d+$/.test(clean) || /^[a-f0-9]{8,}$/i.test(clean)) {
+    return null;
+  }
+  if (/spool|web|product|filament|original|v\d|_\d/i.test(clean)) {
+    return null;
+  }
+  
+  return clean;
+}
+
+/**
+ * Extract color variants with their associated S5 GALLERY images from HTML and __NEXT_DATA__
  * 
- * Enhanced Pattern: Also extracts all CDN images and matches them to color names
- * based on URL patterns like "PLA_Tough_Black.png" or "ABS-Red-1kg.webp"
+ * CRITICAL: We must extract S5 CDN images (product gallery photos), NOT S7 swatch thumbnails!
+ * - S5 CDN (store.bblcdn.com/s5/): Full product photos shown when color is selected (1920px)
+ * - S7 CDN (store.bblcdn.com/s7/): Tiny swatch thumbnails in color picker UI (~50x50px)
+ * 
+ * Strategy:
+ * 1. Build a map of S5 gallery images by extracting GUID and color patterns from URLs
+ * 2. Extract color names from color selector elements
+ * 3. Match colors to S5 images using GUID-based matching
+ * 4. Fall back to S7 swatch only if NO S5 image found
  */
 function extractColorVariantsWithImages(html: string, markdown: string, productUrl: string): ColorVariantData[] {
   const variants: ColorVariantData[] = [];
   const seenColors = new Set<string>();
   
-  // Build a map of color names to images from HTML patterns
-  const colorImageMap = new Map<string, string>();
+  // Build separate maps for S5 (gallery) and S7 (swatch) images
+  const s5GalleryImages = new Map<string, string>(); // color -> S5 gallery URL
+  const s7SwatchImages = new Map<string, string>();  // color -> S7 swatch URL (fallback only)
+  const guidToS5Image = new Map<string, string>();   // GUID -> S5 URL (for matching)
+  const colorImageMap = new Map<string, string>();   // Combined map for fallback matching
   
-  // ========== ENHANCED PATTERN: Extract ALL CDN images and match by color name in URL ==========
-  // Bambu Lab images follow naming patterns like:
-  // - https://store.bblcdn.com/.../PLA_Tough_Black.png
-  // - https://store.bblcdn.com/.../PLA-Matte_Ivory-White.png
-  // - https://store.bblcdn.com/.../PETG-Basic-Blue.jpg
-  const cdnImageMatches = html.matchAll(/https:\/\/store\.bblcdn\.com[^"'\s<>]+\.(?:png|jpg|jpeg|webp)/gi);
-  const allCdnImages = [...new Set([...cdnImageMatches].map(m => m[0]))]; // Dedupe
+  // ========== STEP 1: Extract ALL S5 gallery images (priority) ==========
+  // S5 images are full product photos with __op__resize parameters
+  // Pattern: https://store.bblcdn.com/s5/default/GUID.jpg__op__resize,m_lfit,w_1920...
+  const s5ImageMatches = html.matchAll(/https:\/\/store\.bblcdn\.com\/s5\/[^"'\s<>]+\.(?:jpg|png|jpeg|webp)(?:__op__[^"'\s<>]*)?/gi);
+  const allS5Images = [...new Set([...s5ImageMatches].map(m => m[0]))];
   
-  // Filter to likely PRODUCT images - more permissive now
-  // EXCLUDE: logos, icons, banners, shipping, badges, thumbnails
-  // INCLUDE: filament spools, material images, product shots
-  const productImages = allCdnImages.filter(url => {
-    const lower = url.toLowerCase();
-    const filename = lower.split('/').pop() || '';
-    
+  console.log(`[BambuLab] Found ${allS5Images.length} S5 gallery images`);
+  
+  // Build GUID -> S5 URL map (GUIDs are 32-char hex strings)
+  for (const s5Url of allS5Images) {
     // Exclude non-product images
-    if (lower.includes('logo') || lower.includes('icon') || lower.includes('banner') ||
-        lower.includes('badge') || lower.includes('shipping') || lower.includes('cart') ||
-        lower.includes('checkout') || lower.includes('nav')) {
-      return false;
+    if (s5Url.toLowerCase().includes('logo') || s5Url.toLowerCase().includes('icon')) continue;
+    
+    // Extract GUID from URL like /s5/default/GUID.jpg
+    const guidMatch = s5Url.match(/\/s5\/default\/([a-f0-9]{32})/i);
+    if (guidMatch) {
+      const guid = guidMatch[1].toLowerCase();
+      guidToS5Image.set(guid, s5Url);
     }
     
-    // Include if filename has color indicators or is a spool image
-    // Many Bambu Lab images have color names in the filename like "PLA-Matte_Ivory-White.png"
-    const colorIndicators = [
-      'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink',
-      'grey', 'gray', 'brown', 'tan', 'gold', 'silver', 'jade', 'ivory', 'charcoal',
-      'coral', 'cyan', 'navy', 'olive', 'maroon', 'salmon', 'lime', 'clear', 'natural',
-      'magenta', 'teal', 'cream', 'bronze', 'copper', 'beige', 'slate', 'scarlet',
-      'lemon', 'grass', 'sakura', 'marine', 'midnight', 'mandarin', 'caramel', 'plum',
-      'nardo', 'desert', 'terracotta', 'latte', 'bone', 'ash', 'apple', 'chocolate',
-      'ice', 'sky', 'dark', 'cold', 'warm', 'matte', 'silk', 'translucent', 'galaxy',
-      'rainbow', 'gradient', 'multicolor', 'dual'
-    ];
-    
-    // Check if filename contains any color indicator
-    for (const indicator of colorIndicators) {
-      if (filename.includes(indicator)) return true;
-    }
-    
-    // Also include spool images and material-specific images
-    if (filename.includes('spool') || filename.includes('spl') ||
-        filename.includes('pla') || filename.includes('petg') || filename.includes('abs') ||
-        filename.includes('tpu') || filename.includes('pa-') || filename.includes('pa_') ||
-        filename.includes('pc_') || filename.includes('pc-') || filename.includes('asa')) {
-      return true;
-    }
-    
-    return false;
-  });
-  
-  console.log(`[BambuLab] Found ${allCdnImages.length} total CDN images, ${productImages.length} likely product images`);
-  
-  // Enhanced color matching: match compound colors in filenames
-  // Example: "PLA-Matte_Ivory-White.png" should map to "Matte Ivory White"
-  // Example: "PLA-Basic_Blue-Gray.png" should map to "Blue Gray"
-  // Example: "PETG_Jade_White.png" should map to "Jade White"
-  
-  for (const imageUrl of productImages) {
-    const filename = (imageUrl.split('/').pop() || '').toLowerCase();
-    
-    // Remove file extension and common prefixes
-    const cleanFilename = filename
-      .replace(/\.(png|jpg|jpeg|webp).*$/, '') // Remove extension and params
-      .replace(/^(pla|petg|abs|tpu|pa|pc|asa|pva)[-_]?/i, '') // Remove material prefix
-      .replace(/^(matte|silk|basic|tough|hf|translucent|cf|gf)[-_]?/i, '') // Remove type prefix
-      .replace(/[-_]+/g, ' ') // Convert separators to spaces
-      .trim();
-    
-    // Skip generic/non-color filenames
-    if (!cleanFilename || cleanFilename.length < 3 || 
-        /^\d+$/.test(cleanFilename) || // Just numbers
-        /^[a-f0-9]{8,}$/i.test(cleanFilename) || // GUID
-        /spool|web|product|filament|original|v\d|_\d/i.test(cleanFilename)) {
-      continue;
-    }
-    
-    // This is likely a color-specific image - store the extracted color name
-    // The key should match what we'll look up later (lowercase, normalized)
-    const colorKey = cleanFilename.toLowerCase().replace(/\s+/g, ' ').trim();
-    
-    if (colorKey.length >= 3 && !colorImageMap.has(colorKey)) {
-      colorImageMap.set(colorKey, imageUrl);
-      console.log(`[BambuLab] Mapped color "${colorKey}" to image: ${imageUrl.substring(0, 80)}...`);
-    }
-    
-    // Also store individual color components for partial matching
-    // e.g., "ivory white" -> store both "ivory white" AND "ivory" AND "white" 
-    const colorWords = colorKey.split(' ').filter(w => w.length >= 3);
-    for (const word of colorWords) {
-      if (!colorImageMap.has(word) && !['the', 'and', 'for', 'spl', 'web'].includes(word)) {
-        colorImageMap.set(word, imageUrl);
+    // Also try to extract color from filename patterns
+    const filenameMatch = s5Url.match(/\/([^/]+)\.(jpg|png|jpeg|webp)/i);
+    if (filenameMatch) {
+      const colorFromFile = extractColorFromFilename(filenameMatch[1]);
+      if (colorFromFile) {
+        s5GalleryImages.set(colorFromFile, s5Url);
+        colorImageMap.set(colorFromFile, s5Url);
       }
     }
   }
   
-  console.log(`[BambuLab] CDN URL pattern matching found ${colorImageMap.size} color-image mappings`);
-  
-  // ========== PATTERN 0 (HIGHEST PRIORITY): Color Selector <li value="ColorName (SKU)"> ==========
-  // Bambu Lab's color selector uses this structure:
-  // <li value="Gold (13405)" class="...property_selector..."><img src="https://store.bblcdn.com/s7/...">
-  // This is the MOST RELIABLE pattern - directly maps color name to its swatch image
-  
-  // Pattern: <li value="ColorName (optional SKU)"> followed by <img src="...">
-  // Match the li element and extract color from value attribute, then find img inside
-  const colorSelectorRegex = /<li[^>]*value="([^"]+)"[^>]*>[\s\S]*?<img[^>]*src="(https:\/\/store\.bblcdn\.com[^"]+)"[^>]*>/gi;
-  let colorSelectorMatches = 0;
+  // ========== STEP 2: Extract S7 swatch images and map via GUID ==========
+  // Parse color selector elements: <li value="ColorName (SKU)"> followed by <img src="s7/...">
+  const colorSelectorRegex = /<li[^>]*value="([^"]+)"[^>]*>[\s\S]*?<img[^>]*src="(https:\/\/store\.bblcdn\.com\/s7[^"]+)"[^>]*>/gi;
+  let s7ColorMatches = 0;
   
   for (const match of html.matchAll(colorSelectorRegex)) {
     const rawValue = match[1].trim(); // e.g., "Gold (13405)" or "Titan Gray"
-    const imageUrl = match[2];
+    const s7SwatchUrl = match[2];
     
     // Extract clean color name - remove SKU in parentheses if present
     const colorName = rawValue.replace(/\s*\([^)]+\)$/, '').trim();
     
     // Validate color name
     if (!colorName || colorName.length < 2) continue;
-    if (/^[0-9]+$/.test(colorName)) continue; // Just numbers
-    if (/^[a-f0-9]{8,}$/i.test(colorName)) continue; // GUID
+    if (/^[0-9]+$/.test(colorName)) continue;
+    if (/^[a-f0-9]{8,}$/i.test(colorName)) continue;
     if (!isValidColorName(colorName)) continue;
     
     const colorKey = colorName.toLowerCase().replace(/\s+/g, ' ').trim();
+    s7ColorMatches++;
     
-    // IMPORTANT: Prioritize this over CDN filename patterns - overwrite if exists
-    colorImageMap.set(colorKey, imageUrl);
-    colorSelectorMatches++;
-    console.log(`[BambuLab] Color selector: "${colorName}" -> ${imageUrl.substring(0, 70)}...`);
+    // Store S7 swatch as fallback (but we'll try to find S5 first)
+    s7SwatchImages.set(colorKey, s7SwatchUrl);
+    
+    // Try to find corresponding S5 gallery image via GUID
+    // S7 URL format: /s7/default/GUID/filename.png
+    const s7GuidMatch = s7SwatchUrl.match(/\/s7\/default\/([a-f0-9]{32})/i);
+    if (s7GuidMatch) {
+      const guid = s7GuidMatch[1].toLowerCase();
+      
+      // Check if we have an S5 image with same GUID
+      if (guidToS5Image.has(guid)) {
+        const s5Url = guidToS5Image.get(guid)!;
+        s5GalleryImages.set(colorKey, s5Url);
+        colorImageMap.set(colorKey, s5Url);
+        console.log(`[BambuLab] Matched color "${colorKey}" to S5 gallery via GUID`);
+      }
+    }
+    
+    // If no S5 match found, still add S7 to colorImageMap as fallback
+    if (!colorImageMap.has(colorKey)) {
+      colorImageMap.set(colorKey, s7SwatchUrl);
+    }
   }
   
-  console.log(`[BambuLab] Color selector pattern found ${colorSelectorMatches} color-image mappings`);
+  console.log(`[BambuLab] Found ${s7ColorMatches} colors from selector, ${s5GalleryImages.size} matched to S5 images`);
   
-  // ========== PATTERN 1: Extract images from variant gallery/picker HTML ==========
-  // Look for patterns like: <img src="...Black.png..." alt="Black">
-  const imgPatterns = [
-    /<img[^>]*src="(https:\/\/store\.bblcdn\.com[^"]+)"[^>]*alt="([A-Z][a-zA-Z\s]+)"[^>]*>/gi,
-    /<img[^>]*alt="([A-Z][a-zA-Z\s]+)"[^>]*src="(https:\/\/store\.bblcdn\.com[^"]+)"[^>]*>/gi,
+  // ========== STEP 3: Enhanced CDN filename matching ==========
+  // For colors not matched by GUID, try filename pattern matching with S5 images
+  const allCdnImages = [...allS5Images]; // Start with S5 images
+  
+  // Color indicators for filename matching
+  const colorIndicators = [
+    'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink',
+    'grey', 'gray', 'brown', 'tan', 'gold', 'silver', 'jade', 'ivory', 'charcoal',
+    'coral', 'cyan', 'navy', 'olive', 'maroon', 'salmon', 'lime', 'clear', 'natural',
+    'magenta', 'teal', 'cream', 'bronze', 'copper', 'beige', 'slate', 'scarlet',
+    'lemon', 'grass', 'sakura', 'marine', 'midnight', 'mandarin', 'caramel', 'plum',
+    'nardo', 'desert', 'terracotta', 'latte', 'bone', 'ash', 'apple', 'chocolate',
+    'ice', 'sky', 'dark', 'cold', 'warm', 'candy', 'titan'
   ];
   
-  for (const pattern of imgPatterns) {
-    const matches = html.matchAll(pattern);
-    for (const match of matches) {
-      const src = match[1].includes('bblcdn.com') ? match[1] : match[2];
-      const alt = match[1].includes('bblcdn.com') ? match[2] : match[1];
-      
-      if (alt && isValidColorName(alt) && src && !src.includes('logo')) {
-        const colorKey = alt.toLowerCase();
-        // Don't overwrite color selector mappings
-        if (!colorImageMap.has(colorKey)) {
-          colorImageMap.set(colorKey, src);
-        }
+  for (const imageUrl of allCdnImages) {
+    const filename = (imageUrl.split('/').pop() || '').toLowerCase();
+    const cleanFilename = filename
+      .replace(/\.(png|jpg|jpeg|webp).*$/, '')
+      .replace(/^(pla|petg|abs|tpu|pa|pc|asa|pva)[-_]?/i, '')
+      .replace(/^(matte|silk|basic|tough|hf|translucent|cf|gf)[-_]?/i, '')
+      .replace(/[-_]+/g, ' ')
+      .trim();
+    
+    if (!cleanFilename || cleanFilename.length < 3) continue;
+    if (/^\d+$/.test(cleanFilename) || /^[a-f0-9]{8,}$/i.test(cleanFilename)) continue;
+    
+    const colorKey = cleanFilename.toLowerCase().replace(/\s+/g, ' ').trim();
+    
+    // Only add if it looks like a color and we don't have it yet
+    const hasColorIndicator = colorIndicators.some(c => colorKey.includes(c));
+    if (hasColorIndicator && !colorImageMap.has(colorKey)) {
+      colorImageMap.set(colorKey, imageUrl);
+    }
+    
+    // Also store individual words for partial matching
+    const colorWords = colorKey.split(' ').filter(w => w.length >= 3 && colorIndicators.includes(w));
+    for (const word of colorWords) {
+      if (!colorImageMap.has(word)) {
+        colorImageMap.set(word, imageUrl);
       }
     }
   }
   
-  // ========== PATTERN 2: Try to find variant data in JSON-LD or embedded scripts ==========
-  const scriptMatches = html.matchAll(/<script[^>]*>([^<]*variant[^<]*image[^<]*)<\/script>/gi);
-  for (const scriptMatch of scriptMatches) {
-    try {
-      // Look for variant objects with image URLs
-      const variantImages = scriptMatch[1].matchAll(/"(?:title|name)":\s*"([^"]+)"[^}]*"(?:image|src|featured_image)":\s*(?:\{[^}]*"src":\s*)?"([^"]+)"/gi);
-      for (const vm of variantImages) {
-        const colorName = vm[1];
-        const imageUrl = vm[2];
-        if (isValidColorName(colorName) && imageUrl && !imageUrl.includes('logo')) {
-          const colorKey = colorName.toLowerCase();
-          if (!colorImageMap.has(colorKey)) {
-            colorImageMap.set(colorKey, imageUrl.replace(/^\/\//, 'https://'));
-          }
-        }
-      }
-    } catch (e) {
-      // Continue
-    }
-  }
+  console.log(`[BambuLab] Total color-image mappings: ${colorImageMap.size}`);
   
-  // Try __NEXT_DATA__ JSON first (most reliable for color-image mapping)
+  // ========== STEP 4: Extract images from __NEXT_DATA__ ==========
   const nextDataMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([^<]+)<\/script>/i);
   if (nextDataMatch) {
     try {
       const nextData = JSON.parse(nextDataMatch[1]);
-      // Navigate to product variants in Next.js page props - check multiple paths
       const productVariants = nextData?.props?.pageProps?.product?.variants || 
                               nextData?.props?.pageProps?.data?.product?.variants ||
                               nextData?.props?.pageProps?.initialData?.product?.variants || [];
       
-      // Also check for images in product.images array with position/alt mapping
-      const productImages = nextData?.props?.pageProps?.product?.images ||
-                            nextData?.props?.pageProps?.data?.product?.images || [];
+      const productImagesFromJson = nextData?.props?.pageProps?.product?.images ||
+                                    nextData?.props?.pageProps?.data?.product?.images || [];
       
-      // Build a position-to-image map
-      const positionImageMap = new Map<number, string>();
-      for (const img of productImages) {
-        if (img.position !== undefined && img.src) {
-          positionImageMap.set(img.position, img.src.replace(/^\/\//, 'https://'));
-        }
-        // Also try alt text matching
+      // Add alt text mappings from product images
+      for (const img of productImagesFromJson) {
         if (img.alt && img.src && isValidColorName(img.alt)) {
-          colorImageMap.set(img.alt.toLowerCase(), img.src.replace(/^\/\//, 'https://'));
+          const imgUrl = img.src.replace(/^\/\//, 'https://');
+          // Prefer S5 images
+          if (imgUrl.includes('/s5/') || !colorImageMap.has(img.alt.toLowerCase())) {
+            colorImageMap.set(img.alt.toLowerCase(), imgUrl);
+          }
         }
       }
       
@@ -642,29 +630,32 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
         const colorName = v?.option1 || v?.selectedOptions?.[0]?.value || v?.title;
         if (!colorName || !isValidColorName(colorName)) continue;
         
-        // Skip duplicates
         const colorKey = colorName.toLowerCase();
         if (seenColors.has(colorKey)) continue;
         seenColors.add(colorKey);
         
-        // Get image URL - check multiple possible locations
-        let imageUrl = v?.image?.src || v?.featured_image?.src || v?.featured_image || null;
+        // Get image URL - prioritize S5 gallery images
+        let imageUrl = s5GalleryImages.get(colorKey) || null;
         
-        // Try position mapping
-        if (!imageUrl && v?.image_id) {
-          const posImg = positionImageMap.get(v.image_id);
-          if (posImg) imageUrl = posImg;
+        // Try variant's own image (may be S5)
+        if (!imageUrl) {
+          const variantImg = v?.image?.src || v?.featured_image?.src || v?.featured_image;
+          if (variantImg && typeof variantImg === 'string') {
+            imageUrl = variantImg.replace(/^\/\//, 'https://');
+          }
         }
         
-        // Try color name mapping from HTML patterns - use flexible matching
+        // Try flexible matching from colorImageMap
         if (!imageUrl) {
           imageUrl = findBestImageForColor(colorKey, colorImageMap);
         }
         
-        // Clean up image URL (remove query params that might cause issues)
-        if (imageUrl && typeof imageUrl === 'string') {
-          // Ensure HTTPS
-          imageUrl = imageUrl.replace(/^\/\//, 'https://');
+        // Last resort: S7 swatch (not ideal but better than nothing)
+        if (!imageUrl && s7SwatchImages.has(colorKey)) {
+          imageUrl = s7SwatchImages.get(colorKey) || null;
+          if (imageUrl) {
+            console.log(`[BambuLab] WARNING: Using S7 swatch for "${colorKey}" (no S5 found)`);
+          }
         }
         
         variants.push({
@@ -676,27 +667,35 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
       
       if (variants.length > 0) {
         console.log(`[BambuLab] Extracted ${variants.length} color variants from __NEXT_DATA__`);
-        const withImages = variants.filter(v => v.imageUrl).length;
-        console.log(`[BambuLab] ${withImages}/${variants.length} variants have color-specific images`);
+        const withS5 = variants.filter(v => v.imageUrl?.includes('/s5/')).length;
+        const withS7 = variants.filter(v => v.imageUrl?.includes('/s7/')).length;
+        console.log(`[BambuLab] Images: ${withS5} S5 gallery, ${withS7} S7 swatch, ${variants.length - withS5 - withS7} other`);
         return variants;
       }
     } catch (e) {
-      // JSON parse failed, continue with fallback methods
       console.log(`[BambuLab] __NEXT_DATA__ parse failed, using HTML fallback`);
     }
   }
   
-  // Fallback: Use extractColorsFromPageContent and check colorImageMap for images
+  // ========== STEP 5: Fallback to HTML color extraction ==========
   const colorNames = extractColorsFromPageContent(markdown, html);
   for (const colorName of colorNames) {
     const colorKey = colorName.toLowerCase();
     if (seenColors.has(colorKey)) continue;
     seenColors.add(colorKey);
     
+    // Prioritize S5 gallery image
+    let imageUrl = s5GalleryImages.get(colorKey) || findBestImageForColor(colorKey, colorImageMap) || null;
+    
+    // Last resort: S7 swatch
+    if (!imageUrl && s7SwatchImages.has(colorKey)) {
+      imageUrl = s7SwatchImages.get(colorKey) || null;
+    }
+    
     variants.push({
       colorName,
       colorHex: getBambuLabColorHex(colorName) || getColorHex(colorName) || null,
-      imageUrl: findBestImageForColor(colorKey, colorImageMap),
+      imageUrl,
     });
   }
   
