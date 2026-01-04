@@ -52,13 +52,25 @@ export const BAMBULAB_SAFE_DELETE_THRESHOLD = 100; // Bambu Lab has 300+ filamen
 // NON-FILAMENT FILTER
 // ============================================================================
 
+// WHITELIST: These are VALID filament products despite containing excluded keywords
+const FILAMENT_WHITELIST_PATTERNS = [
+  /tpu\s*(for\s*)?ams/i,      // TPU for AMS is a valid filament
+  /epla[- ]?hs/i,             // ePLA-HS is valid
+  /pet[- ]?cf/i,              // PET-CF is valid
+  /support.*for.*pla/i,       // Support materials are valid
+  /support.*for.*abs/i,
+  /support.*for.*pa/i,
+  /support.*for.*pet/i,
+  /\bpva\b/i,                 // PVA is valid
+];
+
 const NON_FILAMENT_PATTERNS = [
   // 3D Printers (very important to exclude!)
   /\b(?:x1c?|p1[sp]?|a1\s*(?:mini)?)\b/i,  // X1, X1C, P1S, P1P, A1, A1 Mini
   /3d\s*printer/i,
   
-  // Accessories and parts
-  /\bams\b(?!\s*compatible|\s*ready)/i, // AMS but not "AMS compatible"
+  // Accessories and parts - but NOT "AMS" in product names like "TPU for AMS"
+  /\bams\s*(?:lite|hub|unit|system)\b/i, // AMS hardware, not filament products
   /\bnozzle/i,
   /\bhotend/i,
   /\bextruder/i,
@@ -126,6 +138,13 @@ export function isBambuLabNonFilament(title: string): boolean {
   if (!title) return true;
   
   const t = title.toLowerCase();
+  
+  // WHITELIST CHECK FIRST: These are valid filaments despite containing excluded keywords
+  for (const pattern of FILAMENT_WHITELIST_PATTERNS) {
+    if (pattern.test(t)) {
+      return false; // IS a valid filament
+    }
+  }
   
   // Must contain "filament" or material keywords to be valid
   const hasFilamentKeyword = /filament|pla|petg|abs|asa|tpu|pa|pc|pps|support|pva/i.test(t);
@@ -1048,11 +1067,79 @@ export const EXCLUDED_COLOR_PATTERNS = [
   /high\s*flow/i,
   /high\s*speed/i,
   /for\s*ams/i,
+  
+  // Sentence fragments (junk from markdown parsing)
+  /\b(of|the|and|in|is|a|an|for|to|with|when|used|your|prints?)\b.*\b(of|the|and|in|is|a|an|for|to|with|when|used|your|prints?)\b/i,
+  /welcome\s*code/i,
+  /matte\s*finish/i,
+  /matte\s*achieve/i,
+  /achieve\s*a/i,
+  /transitions?/i,
+  /appearance/i,
+  /vibrant/i,
+  /perspectives/i,
+  /retains?/i,
+  /familiar/i,
+  /segment/i,
+  /variation/i,
+  /depending/i,
+  /available/i,
+  /achieve/i,
+  /texture/i,
+  /smooth/i,
+  /layer/i,
+  /printing/i,
+  /printed/i,
+  /quality/i,
+  /excellent/i,
+  /perfect/i,
+  /ideal/i,
+  /suitable/i,
+  /compatible/i,
+  /recommended/i,
+  
+  // Multi-word phrases that aren't colors
+  /per\s*spool/i,
+  /in\s*one/i,
+  /one\s*spool/i,
+  /\boptions?\b/i,
+  /\bsuit\b/i,
 ];
 
+// Known valid color words for strict validation
+const KNOWN_COLOR_WORDS = new Set([
+  'black', 'white', 'gray', 'grey', 'red', 'blue', 'green', 'yellow', 'orange', 
+  'purple', 'pink', 'brown', 'gold', 'silver', 'jade', 'sky', 'coral', 'mint', 
+  'ivory', 'beige', 'charcoal', 'tan', 'teal', 'cyan', 'magenta', 'olive', 
+  'navy', 'lime', 'lavender', 'peach', 'rose', 'salmon', 'turquoise', 'crimson', 
+  'scarlet', 'wine', 'cream', 'natural', 'clear', 'translucent', 'matte', 'silk', 
+  'glow', 'galaxy', 'sparkle', 'cobalt', 'indigo', 'maroon', 'hot', 'pumpkin', 
+  'sunflower', 'bright', 'cocoa', 'light', 'dark', 'copper', 'bronze', 'bone',
+  'slate', 'terracotta', 'grass', 'mandarin', 'lilac', 'sakura', 'water',
+]);
+
 export function isValidColorName(text: string): boolean {
-  if (!text || text.length < 2 || text.length > 50) return false;
-  return !EXCLUDED_COLOR_PATTERNS.some(pattern => pattern.test(text));
+  if (!text || text.length < 2 || text.length > 30) return false;
+  
+  // Check against excluded patterns first
+  if (EXCLUDED_COLOR_PATTERNS.some(pattern => pattern.test(text))) {
+    return false;
+  }
+  
+  // Must not contain newlines or excessive spaces (scraped junk)
+  if (/[\n\r]|\s{3,}/.test(text)) return false;
+  
+  // Must not look like a sentence (multiple common words)
+  const words = text.toLowerCase().split(/\s+/);
+  if (words.length > 3) return false; // Colors are at most 3 words
+  
+  // At least one word should be a known color word
+  const hasKnownColor = words.some(word => KNOWN_COLOR_WORDS.has(word));
+  
+  // If it's a single capitalized word or compound color, allow it
+  const isProperColorFormat = /^[A-Z][a-z]+(\s+[A-Z][a-z]+){0,2}$/.test(text);
+  
+  return hasKnownColor || isProperColorFormat;
 }
 
 // ============================================================================
