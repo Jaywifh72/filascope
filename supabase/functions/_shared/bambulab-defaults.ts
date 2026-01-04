@@ -863,13 +863,60 @@ export function enrichBambuLabProduct(
 // ============================================================================
 
 export const BAMBULAB_COLOR_HEX_MAP: Record<string, string> = {
-  // Unique Bambu Lab color names
+  // ===== Bambu Lab Unique Named Colors =====
   'jade white': '00A86B',
   'jade': '00A86B',
   'bambu green': '00AE42',
-  'sky': '87CEEB',
   'sky blue': '87CEEB',
-  // Basic colors
+  'sky': '87CEEB',
+  
+  // ===== Matte PLA Specific Colors =====
+  'matte ivory white': 'F5F5DC',
+  'matte charcoal': '36454F',
+  'matte black': '1A1A1A',
+  'matte white': 'FFFFFF',
+  'matte dark gray': '4A4A4A',
+  'matte light gray': 'D3D3D3',
+  'matte blue gray': '6699CC',
+  'matte terracotta': 'E2725B',
+  'matte grass green': '7CFC00',
+  'matte mandarin orange': 'FF8C00',
+  'matte lilac purple': 'C8A2C8',
+  'matte sakura pink': 'FFB7C5',
+  
+  // ===== Specific Named Colors (from Bambu Lab website) =====
+  'cobalt blue': '0047AB',
+  'indigo purple': '4B0082',
+  'maroon red': '800000',
+  'hot pink': 'FF69B4',
+  'pumpkin orange': 'FF7518',
+  'sunflower yellow': 'FFDA03',
+  'bright green': '66FF00',
+  'cocoa brown': 'D2691E',
+  'light gray': 'D3D3D3',
+  'dark gray': '4A4A4A',
+  'blue gray': '6699CC',
+  'coral': 'FF7F50',
+  'lavender': 'E6E6FA',
+  'mint': '98FF98',
+  'peach': 'FFCBA4',
+  'rose': 'FF007F',
+  'salmon': 'FA8072',
+  'teal': '008080',
+  'turquoise': '40E0D0',
+  'cyan': '00FFFF',
+  'magenta': 'FF00FF',
+  'olive': '808000',
+  'navy': '000080',
+  'lime': '00FF00',
+  'crimson': 'DC143C',
+  'scarlet': 'FF2400',
+  'slate': '708090',
+  'wine': '722F37',
+  'bone': 'E3DAC9',
+  'cream': 'FFFDD0',
+  
+  // ===== Basic Colors =====
   'black': '1A1A1A',
   'white': 'FFFFFF',
   'gray': '808080',
@@ -882,30 +929,75 @@ export const BAMBULAB_COLOR_HEX_MAP: Record<string, string> = {
   'purple': '9333EA',
   'pink': 'EC4899',
   'brown': '92400E',
-  // Specialty colors
+  
+  // ===== Specialty Colors =====
   'natural': 'F5F5DC',
   'ivory': 'FFFFF0',
   'beige': 'D4C4A8',
   'charcoal': '36454F',
   'tan': 'D2B48C',
-  // Translucent
+  
+  // ===== Translucent =====
   'translucent': 'FFFFFF',
   'clear': 'FFFFFF',
   'water clear': 'F0FFFF',
-  // Metallic
+  'translucent blue': '87CEEB',
+  'translucent green': '90EE90',
+  'translucent orange': 'FFA500',
+  'translucent red': 'FF6B6B',
+  'translucent yellow': 'FFFF99',
+  
+  // ===== Metallic =====
   'gold': 'D4AF37',
   'silver': 'C0C0C0',
   'copper': 'B87333',
   'bronze': 'CD7F32',
-  // Support materials
+  
+  // ===== Support Materials =====
   'support white': 'FFFFFF',
   'support black': '1A1A1A',
+  
+  // ===== Galaxy/Sparkle variants =====
+  'galaxy black': '1A1A1A',
+  'galaxy blue': '1E3A5F',
+  'galaxy purple': '4B0082',
+  
+  // ===== Glow variants =====
+  'glow green': '39FF14',
+  'glow blue': '00FFFF',
+  'glow orange': 'FF6600',
+  
+  // ===== Silk variants =====
+  'silk gold': 'D4AF37',
+  'silk silver': 'C0C0C0',
+  'silk copper': 'B87333',
+  'silk red': 'CC2936',
+  'silk blue': '4169E1',
+  'silk green': '228B22',
+  'silk purple': '800080',
+  'silk pink': 'FF69B4',
 };
 
 export function getBambuLabColorHex(colorName: string | null): string | null {
   if (!colorName) return null;
   const normalized = colorName.toLowerCase().trim();
-  return BAMBULAB_COLOR_HEX_MAP[normalized] || null;
+  
+  // Exact match first
+  if (BAMBULAB_COLOR_HEX_MAP[normalized]) {
+    return BAMBULAB_COLOR_HEX_MAP[normalized];
+  }
+  
+  // Prioritized partial match (longest keys first to prevent generic terms matching first)
+  const sortedKeys = Object.keys(BAMBULAB_COLOR_HEX_MAP)
+    .sort((a, b) => b.length - a.length);
+  
+  for (const key of sortedKeys) {
+    if (normalized.includes(key)) {
+      return BAMBULAB_COLOR_HEX_MAP[key];
+    }
+  }
+  
+  return null;
 }
 
 // ============================================================================
@@ -913,20 +1005,53 @@ export function getBambuLabColorHex(colorName: string | null): string | null {
 // ============================================================================
 
 export const EXCLUDED_COLOR_PATTERNS = [
+  // Bundle/pack promotional text
   /set\s*of\s*\d+/i,
+  /\d+\s*pack/i,
+  /starter\s*kit/i,
+  /combo/i,
+  /bundle/i,
+  /variety/i,
+  
+  // Promotional accessories
   /coaster/i,
   /holder/i,
   /clock\s*kit/i,
   /modular/i,
-  /bundle/i,
-  /\d+\s*pack/i,
   /accessory/i,
-  /starter\s*kit/i,
-  /combo/i,
-  /variety/i,
+  
+  // Navigation/UI text that may appear in scraped content
+  /quick\s*add/i,
+  /bulk\s*savings/i,
+  /related\s*models/i,
+  /discover\s*more/i,
+  /shipping/i,
+  /order\s*info/i,
+  /add\s*to\s*cart/i,
+  /buy\s*now/i,
+  /out\s*of\s*stock/i,
+  /coming\s*soon/i,
+  /pre[\s-]*order/i,
+  /free\s*shipping/i,
+  /select\s*option/i,
+  /choose\s*color/i,
+  /color\s*options/i,
+  
+  // Size/weight text
+  /\d+\s*g\b/i,
+  /\d+\s*kg\b/i,
+  /\d+\s*mm\b/i,
+  
+  // Brand/product descriptors
+  /bambu\s*lab/i,
+  /filament/i,
+  /high\s*flow/i,
+  /high\s*speed/i,
+  /for\s*ams/i,
 ];
 
 export function isValidColorName(text: string): boolean {
+  if (!text || text.length < 2 || text.length > 50) return false;
   return !EXCLUDED_COLOR_PATTERNS.some(pattern => pattern.test(text));
 }
 
