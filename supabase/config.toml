@@ -1,5 +1,8 @@
 project_id = "cfqfavmhdbyjzejipiwa"
 
+[functions.sync-bambulab-products]
+verify_jwt = false
+
 [functions.sync-spectrum-products]
 verify_jwt = false
 

@@ -2,8 +2,125 @@
  * BAMBU LAB BRAND-SPECIFIC DEFAULTS
  * 
  * Enrichment logic for finish_type and product_line_id population.
- * Integrates with existing Bambu Lab scrapers (scrape-bambu-pla, sync-bambulab-colors).
+ * Integrates with sync-bambulab-products edge function.
+ * 
+ * Platform: Shopify (Regional stores)
+ * Currency: CAD (syncing from Canadian store for stability)
+ * Diameter: 1.75mm only
  */
+
+// ============================================================================
+// STORE INFO
+// ============================================================================
+
+export const BAMBULAB_STORE_INFO = {
+  vendor: 'Bambu Lab',
+  platform: 'shopify',
+  baseUrl: 'https://ca.store.bambulab.com',
+  productsUrl: 'https://ca.store.bambulab.com/collections/bambu-lab-3d-printer-filament',
+  currency: 'CAD',
+  region: 'CA',
+  defaultDiameter: 1.75,
+  notes: 'Chinese manufacturer with global regional stores. Syncing from CA store for consistent pricing.',
+};
+
+// ============================================================================
+// CATEGORY WHITELIST (Single collection URL for all filaments)
+// ============================================================================
+
+export interface BambuLabCategoryConfig {
+  material: string;
+  categoryUrl: string;
+  displayMaterial: string;
+}
+
+export const BAMBULAB_CATEGORY_WHITELIST: BambuLabCategoryConfig[] = [
+  { 
+    material: 'All Filaments', 
+    categoryUrl: 'https://ca.store.bambulab.com/collections/bambu-lab-3d-printer-filament',
+    displayMaterial: 'All' 
+  },
+];
+
+// ============================================================================
+// SAFE DELETE THRESHOLD
+// ============================================================================
+
+export const BAMBULAB_SAFE_DELETE_THRESHOLD = 100; // Bambu Lab has 300+ filament variants
+
+// ============================================================================
+// NON-FILAMENT FILTER
+// ============================================================================
+
+const NON_FILAMENT_PATTERNS = [
+  // 3D Printers (very important to exclude!)
+  /\b(?:x1c?|p1[sp]?|a1\s*(?:mini)?)\b/i,  // X1, X1C, P1S, P1P, A1, A1 Mini
+  /3d\s*printer/i,
+  
+  // Accessories and parts
+  /\bams\b(?!\s*compatible|\s*ready)/i, // AMS but not "AMS compatible"
+  /\bnozzle/i,
+  /\bhotend/i,
+  /\bextruder/i,
+  /\bbuild\s*plate/i,
+  /\btextured.*plate/i,
+  /\bpei\b/i,
+  /\bcover\b/i,
+  /\benclosure\b/i,
+  /\baccessor/i,
+  /\btool(?:head|kit|box)?\b/i,
+  /\bspare\s*part/i,
+  /\bupgrade/i,
+  /\bdesiccant/i,
+  /\bdry.*box/i,
+  /\bvacuum.*bag/i,
+  /\bstorage/i,
+  /\bspool\s*holder/i,
+  /\bcable/i,
+  /\bpower\s*supply/i,
+  /\bcamera/i,
+  /\bscreen/i,
+  /\bdisplay/i,
+  /\bmotor/i,
+  /\bbearing/i,
+  /\bbelt/i,
+  /\bbed\s*(?:sheet|sticker)/i,
+  /\bglue\s*stick/i,
+  /\bscraper/i,
+  
+  // Bundle/pack products
+  /super\s*pack/i,
+  /starter\s*(?:kit|pack)/i,
+  /multi[\s-]*pack/i,
+  /variety\s*pack/i,
+  /bundle/i,
+  
+  // Gift cards
+  /gift\s*card/i,
+  /voucher/i,
+];
+
+export function isBambuLabNonFilament(title: string): boolean {
+  if (!title) return true;
+  
+  const t = title.toLowerCase();
+  
+  // Must contain "filament" or material keywords to be valid
+  const hasFilamentKeyword = /filament|pla|petg|abs|asa|tpu|pa|pc|pps|support|pva/i.test(t);
+  
+  for (const pattern of NON_FILAMENT_PATTERNS) {
+    if (pattern.test(t)) {
+      return true;
+    }
+  }
+  
+  // If it doesn't contain any filament keywords, it's likely not a filament
+  if (!hasFilamentKeyword) {
+    return true;
+  }
+  
+  return false;
+}
 
 // ============================================================================
 // PRODUCT LINE DEFINITIONS (45+ distinct product lines)

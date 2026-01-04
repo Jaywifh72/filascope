@@ -3,7 +3,7 @@
 
 // Brands with dedicated high-fidelity sync functions (use exact database slugs)
 export const BRAND_SPECIFIC_FUNCTIONS = [
-  '3d-fuel', '3dhojor', '3dxtech', 'amolen', 'anycubic', 'atomic-filament', 'azurefilm', 'cc3d',
+  '3d-fuel', '3dhojor', '3dxtech', 'amolen', 'anycubic', 'atomic-filament', 'azurefilm', 'bambu-lab', 'cc3d',
   'colorfabb', 'creality', 'duramic-3d', 'eryone', 'esun', 'extrudr',
   'fiberlogy', 'fillamentum', 'flashforge', 'formfutura', 'fusion-filaments',
   'geeetech', 'gizmo-dorks', 'hatchbox', 'ic3d-printers', 'kingroon', 'matter3d',
@@ -17,6 +17,7 @@ export const BRAND_SPECIFIC_FUNCTIONS = [
 export const SLUG_TO_FUNCTION_MAP: Record<string, string> = {
   '3d-fuel': '3dfuel',
   'atomic-filament': 'atomic',
+  'bambu-lab': 'bambulab',
   'proto-pasta': 'protopasta',
   'push-plastic': 'pushplastic',
   'siraya-tech': 'sirayatech',
@@ -29,7 +30,7 @@ export const SLUG_TO_FUNCTION_MAP: Record<string, string> = {
 };
 
 // Special brands with unique sync mechanisms (have dedicated UI tabs)
-export const SPECIAL_BRANDS = ['bambu-lab', 'elegoo'] as const;
+export const SPECIAL_BRANDS = ['elegoo'] as const;
 
 // Normalize database slug to edge function name
 export function normalizeSlugForFunction(brandSlug: string): string {
