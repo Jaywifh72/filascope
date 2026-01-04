@@ -154,7 +154,12 @@ export function getAzureFilmPrintSettings(material: string, isHighSpeed?: boolea
 // ============================================================================
 
 export function generateAzureFilmProductLineId(title: string, material: string): string {
-  const mat = material.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  // Fix: Normalize material to remove invalid characters and trailing dashes
+  const mat = material.toLowerCase()
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  
   const finish = extractAzureFilmFinishType(title);
   
   // Detect product line variants
@@ -236,6 +241,23 @@ export const AZUREFILM_COLOR_MAPPING: Record<string, string> = {
   'beige': 'D7CCC8',
   'natural': 'F5F5DC',
   
+  // Missing standard colors
+  'nature': 'F5F5DC',      // Same as natural
+  'natur': 'F5F5DC',       // German spelling
+  'marble': 'E0E0E0',      // Grey-white marble effect
+  'sage': '9DC183',        // Sage green/grey
+  'off-white': 'FAF9F6',   // Slightly cream white
+  
+  // Distinct grey shades (CRITICAL: prevent duplicate hex)
+  'dark grey': '4A4A4A',   // Darker than standard grey
+  'light grey': 'A8A8A8',  // Lighter than standard grey  
+  'shark grey': '5C5C5C',  // Distinct shark grey
+  
+  // Glitter/Effect variants (CRITICAL: distinct from solid colors)
+  'glitter black': '2D2D2D', // Slightly different from solid black
+  'glitter silver': 'B8B8B8', // Distinct from solid silver
+  'glitter gold': 'CFB53B',   // Distinct from solid gold
+  
   // Metallic
   'gold': 'D4AF37',
   'gold 18k': 'C5A028',
@@ -259,6 +281,7 @@ export const AZUREFILM_COLOR_MAPPING: Record<string, string> = {
   'mint': '98FF98',
   'olive': '808000',
   'forest green': '228B22',
+  'grass green': '4CAF50',  // Distinct from standard green
   
   // Reds/Pinks
   'dark red': 'B71C1C',
@@ -267,6 +290,7 @@ export const AZUREFILM_COLOR_MAPPING: Record<string, string> = {
   'magenta': 'E91E63',
   'rose': 'FF007F',
   'coral': 'FF7F50',
+  'tiger orange': 'FF8C00', // Distinct from standard orange
   
   // Neon colors
   'neon green': '39FF14',
@@ -292,7 +316,7 @@ export const AZUREFILM_COLOR_MAPPING: Record<string, string> = {
   'skin 3': 'C68642',
   'skin 4': '8D5524',
   
-  // LumberLay wood colors
+  // LumberLay wood colors (EXPANDED)
   'green poplar': '6B8E23',
   'white wood': 'DEB887',
   'cherry': '9B111E',
@@ -300,11 +324,16 @@ export const AZUREFILM_COLOR_MAPPING: Record<string, string> = {
   'oak': 'C19A6B',
   'olive wood': '808000',
   'bamboo': 'E3DEB3',
+  'pine': 'C9A65F',          // Light pine wood
+  'cork': 'D4A76A',          // Cork color
+  'black ebony': '3C2415',   // Dark ebony wood
+  'grey oak': '8B8378',      // Grey-toned oak (distinct from standard oak)
   
   // Translucent/Lumos
   'transparent': 'FFFFFF',
   'translucent': 'F5F5F5',
   'clear': 'FFFFFF',
+  'litho white': 'F8F8FF',   // Ghost white for lithophane
   
   // Special effects
   'rainbow': 'FF69B4',
@@ -325,9 +354,11 @@ export const AZUREFILM_COLOR_MAPPING: Record<string, string> = {
   'maroon': '800000',
   'burgundy': '800020',
   'peach': 'FFCBA4',
+  'pearly peach': 'FFDAB9', // Distinct from standard peach
   'apricot': 'FBCEB1',
   'mustard': 'FFDB58',
   'khaki': 'C3B091',
+  'rose gold': 'B76E79',     // Distinct metallic rose
 };
 
 export function getAzureFilmColorHex(colorName: string): string | null {
@@ -335,19 +366,23 @@ export function getAzureFilmColorHex(colorName: string): string | null {
   
   const normalized = colorName.toLowerCase().trim();
   
-  // Direct match
+  // Direct match first (highest priority)
   if (AZUREFILM_COLOR_MAPPING[normalized]) {
     return AZUREFILM_COLOR_MAPPING[normalized];
   }
   
-  // Partial match
-  for (const [key, hex] of Object.entries(AZUREFILM_COLOR_MAPPING)) {
-    if (normalized.includes(key) || key.includes(normalized)) {
-      return hex;
+  // Prioritized partial match - LONGEST KEYS FIRST
+  // This ensures "dark grey" matches before "grey", "glitter black" before "black"
+  const sortedKeys = Object.keys(AZUREFILM_COLOR_MAPPING)
+    .sort((a, b) => b.length - a.length);
+    
+  for (const key of sortedKeys) {
+    if (normalized.includes(key)) {
+      return AZUREFILM_COLOR_MAPPING[key];
     }
   }
   
-  // Word-based match
+  // Word-based match as fallback
   const words = normalized.split(/[\s-]+/);
   for (const word of words) {
     if (word.length > 2 && AZUREFILM_COLOR_MAPPING[word]) {
@@ -384,7 +419,10 @@ export function cleanAzureFilmTitle(title: string): string {
 // ============================================================================
 
 const NON_FILAMENT_PATTERNS = [
-  // Printer accessories
+  // Printer bed accessories
+  /blue\s*tape/i,
+  /kapton.*tape/i,
+  /adhesive\s*tape/i,
   /pei\s*plate/i,
   /magnetic\s*platform/i,
   /glass\s*plate/i,
@@ -396,6 +434,7 @@ const NON_FILAMENT_PATTERNS = [
   /tool/i,
   /master\s*spool\s*only/i,
   /gift\s*card/i,
+  /gift\b/i,
   /voucher/i,
   /3d\s*printer(?!\s*filament)/i,
   /scanner/i,
@@ -406,10 +445,15 @@ const NON_FILAMENT_PATTERNS = [
   /drybox/i,
   /dry\s*box/i,
   
+  // Unset placeholder products
+  /^unset\s/i,
+  /\bunset\b/i,
+  
   // Bundle/Pack products (not individual spools)
   /super\s*pack/i,           // "SUPER PACK PLA MIX"
   /\b\d+[\s-]*pack\b/i,      // "10-pack", "3-pack", "4-pack"
   /multi[\s-]*pack/i,        // "multi-pack"
+  /\+\s*(?:\d+x\s*)?master\s*spool/i, // Bundle with master spool
   
   // Magnets and other accessories
   /neodymium\s*magnet/i,

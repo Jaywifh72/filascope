@@ -174,7 +174,7 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
       '8 category whitelist: ABS, ASA, Carbon Fiber, PCTG, PETG, PLA, LumberLay, Support',
       'Firecrawl HTML scraping for product discovery and title extraction',
       'URL Consistency check skipped (cross-product swatch architecture)',
-      'Expected ~12 product line cards in UI',
+      'Expected ~18-20 product line cards in UI (distinct lines: Plus, Prime, HS, Original, Silk, etc.)',
     ],
   },
   
