@@ -48,12 +48,19 @@ interface DiscoveredProduct {
   collectionTitle: string;
 }
 
+// Color variant with associated image
+interface ColorVariantData {
+  colorName: string;
+  colorHex: string | null;
+  imageUrl: string | null;
+}
+
 interface ScrapedProduct {
   url: string;
   h1Title: string;
   price: number | null;
-  imageUrl: string | null;
-  colorOptions: string[];
+  imageUrl: string | null;  // Fallback/default image
+  colorVariants: ColorVariantData[];  // Color-specific data with images
   weightGrams: number;
   available: boolean;
 }
@@ -340,6 +347,70 @@ function extractColorsFromPageContent(markdown: string, html: string = ''): stri
   return colors;
 }
 
+/**
+ * Extract color variants with their associated images from __NEXT_DATA__ JSON
+ * Bambu Lab stores variant images in the page props
+ */
+function extractColorVariantsWithImages(html: string, markdown: string): ColorVariantData[] {
+  const variants: ColorVariantData[] = [];
+  const seenColors = new Set<string>();
+  
+  // Try __NEXT_DATA__ JSON first (most reliable for color-image mapping)
+  const nextDataMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([^<]+)<\/script>/i);
+  if (nextDataMatch) {
+    try {
+      const nextData = JSON.parse(nextDataMatch[1]);
+      // Navigate to product variants in Next.js page props
+      const productVariants = nextData?.props?.pageProps?.product?.variants || 
+                              nextData?.props?.pageProps?.data?.product?.variants || [];
+      
+      for (const v of productVariants) {
+        const colorName = v?.option1 || v?.selectedOptions?.[0]?.value || v?.title;
+        if (!colorName || !isValidColorName(colorName)) continue;
+        
+        // Skip duplicates
+        const colorKey = colorName.toLowerCase();
+        if (seenColors.has(colorKey)) continue;
+        seenColors.add(colorKey);
+        
+        // Get image URL - check multiple possible locations
+        let imageUrl = v?.image?.src || v?.featured_image?.src || v?.featured_image || null;
+        
+        // Clean up image URL (remove query params that might cause issues)
+        if (imageUrl && typeof imageUrl === 'string') {
+          // Ensure HTTPS
+          imageUrl = imageUrl.replace(/^\/\//, 'https://');
+        }
+        
+        variants.push({
+          colorName: colorName.trim(),
+          colorHex: getBambuLabColorHex(colorName) || getColorHex(colorName) || null,
+          imageUrl,
+        });
+      }
+      
+      if (variants.length > 0) {
+        console.log(`[BambuLab] Extracted ${variants.length} color variants with images from __NEXT_DATA__`);
+        return variants;
+      }
+    } catch (e) {
+      // JSON parse failed, continue with fallback methods
+    }
+  }
+  
+  // Fallback: Use extractColorsFromPageContent and assign no specific images
+  const colorNames = extractColorsFromPageContent(markdown, html);
+  for (const colorName of colorNames) {
+    variants.push({
+      colorName,
+      colorHex: getBambuLabColorHex(colorName) || getColorHex(colorName) || null,
+      imageUrl: null, // Will use fallback image from product
+    });
+  }
+  
+  return variants;
+}
+
 // Helper to get default color for single-color products (e.g., CF, GF, PVA)
 function getDefaultColorForProduct(title: string): string | null {
   const t = title.toLowerCase();
@@ -376,8 +447,8 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
       body: JSON.stringify({
         url,
         formats: ['markdown', 'html'],
-        onlyMainContent: true,
-        waitFor: 5000, // Increased from 3000ms for JS-heavy pages like ABS
+        onlyMainContent: false, // Need full page for __NEXT_DATA__
+        waitFor: 5000,
       }),
     });
     
@@ -415,7 +486,7 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
       price = parseFloat(priceMatch[1]);
     }
     
-    // Extract image URL with multiple patterns (HTML priority)
+    // Extract fallback/default image URL
     let imageUrl: string | null = null;
     
     // Pattern 1: og:image meta tag (most reliable for product images)
@@ -450,20 +521,21 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
       }
     }
     
-    // Extract color options using STRICT patterns from HTML and markdown
-    let colorOptions = extractColorsFromPageContent(markdown, html);
+    // Extract color variants with their associated images
+    let colorVariants = extractColorVariantsWithImages(html, markdown);
     
     // ABS fallback: If scraping returns 0 colors for ABS, use hardcoded known colors
-    // The ABS page uses a fully JS-rendered color picker that scraping can't capture
-    if (colorOptions.length === 0 && /\babs-filament\b/i.test(url)) {
-      colorOptions = [
-        'Black', 'White', 'Grey', 'Red', 'Orange', 'Yellow', 
-        'Green', 'Blue', 'Brown', 'Beige', 'Bambu Green'
-      ];
-      console.log(`[BambuLab] Using fallback colors for ABS (JS-rendered picker): ${colorOptions.join(', ')}`);
+    if (colorVariants.length === 0 && /\babs-filament\b/i.test(url)) {
+      const absColors = ['Black', 'White', 'Grey', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Brown', 'Beige', 'Bambu Green'];
+      colorVariants = absColors.map(colorName => ({
+        colorName,
+        colorHex: getBambuLabColorHex(colorName) || getColorHex(colorName) || null,
+        imageUrl: null,
+      }));
+      console.log(`[BambuLab] Using fallback colors for ABS (JS-rendered picker): ${absColors.join(', ')}`);
     }
     
-    console.log(`[BambuLab] Extracted ${colorOptions.length} colors from ${url}: ${colorOptions.slice(0, 5).join(', ')}${colorOptions.length > 5 ? '...' : ''}`);
+    console.log(`[BambuLab] Extracted ${colorVariants.length} color variants from ${url}: ${colorVariants.slice(0, 5).map(v => v.colorName).join(', ')}${colorVariants.length > 5 ? '...' : ''}`);
     
     // Extract weight (default 1000g for Bambu Lab spools)
     const weightGrams = extractWeightFromText(markdown) || 1000;
@@ -477,7 +549,7 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
       h1Title,
       price,
       imageUrl,
-      colorOptions,
+      colorVariants,
       weightGrams,
       available,
     };
@@ -529,8 +601,10 @@ async function scrapeProductPages(
 // ============================================================================
 
 interface ProcessedProduct {
-  h1Title: string;
+  productTitle: string;  // Full title with color (e.g., "PLA Tough+ Black")
+  baseTitle: string;     // Base H1 title without color (e.g., "PLA Tough+")
   colorName: string | null;
+  colorHex: string | null;
   price: number | null;
   imageUrl: string | null;
   productUrl: string;
@@ -582,13 +656,26 @@ function processScrapedProducts(products: ScrapedProduct[], decisionLogger: Retu
       weightGrams = 1000;
     }
     
-    // If product has color options, create a variant for each
-    // Otherwise, try to assign a default color for single-color products
-    let colors: (string | null)[] = product.colorOptions.length > 0 
-      ? product.colorOptions 
-      : [getDefaultColorForProduct(product.h1Title) || null];
+    // Use color variants from scraping (which now include color-specific images)
+    // If no colors found, try to assign a default color for single-color products
+    let colorVariantsToProcess: ColorVariantData[] = product.colorVariants.length > 0 
+      ? product.colorVariants 
+      : [{
+          colorName: getDefaultColorForProduct(product.h1Title) || '',
+          colorHex: null,
+          imageUrl: null,
+        }].filter(v => v.colorName);  // Remove if no default color
     
-    for (const colorName of colors) {
+    // If still no variants, create one without a color name
+    if (colorVariantsToProcess.length === 0) {
+      colorVariantsToProcess = [{
+        colorName: '',
+        colorHex: null,
+        imageUrl: null,
+      }];
+    }
+    
+    for (const colorVariant of colorVariantsToProcess) {
       // Apply variant filters
       const filterResult = shouldIncludeVariant(weightGrams, 1.75, product.h1Title);
       updateFilterStats(filterStats, filterResult);
@@ -601,11 +688,23 @@ function processScrapedProducts(products: ScrapedProduct[], decisionLogger: Retu
       
       decisionLogger.logFilter(product.url, product.h1Title, { weight: weightGrams, diameter: 1.75 }, { included: true, reason: 'passed all filters' });
       
+      // Build full product title with color appended
+      // e.g., "PLA Tough+" + "Black" -> "PLA Tough+ Black"
+      const colorName = colorVariant.colorName || null;
+      const productTitle = colorName 
+        ? `${product.h1Title} ${colorName}`.trim()
+        : product.h1Title;
+      
+      // Use color-specific image if available, otherwise fall back to product default
+      const imageUrl = colorVariant.imageUrl || product.imageUrl;
+      
       processed.push({
-        h1Title: product.h1Title,
+        productTitle,
+        baseTitle: product.h1Title,
         colorName,
+        colorHex: colorVariant.colorHex,
         price: product.price,
-        imageUrl: product.imageUrl,
+        imageUrl,
         productUrl: product.url,
         weightGrams,
         available: product.available,
@@ -725,7 +824,7 @@ Deno.serve(async (req) => {
             errors: 0,
           },
           sampleProducts: processedProducts.slice(0, 10).map(p => ({
-            title: p.h1Title,
+            title: p.productTitle,
             color: p.colorName,
             price: p.price,
             weight: p.weightGrams,
@@ -766,13 +865,14 @@ Deno.serve(async (req) => {
     for (const product of processedProducts) {
       try {
         // Enrich product with material info, finish type, etc.
-        const config = getBambuLabProductLineConfig(product.h1Title);
-        const enrichment = enrichBambuLabProduct(product.h1Title);
+        // Use baseTitle for enrichment (material detection) but productTitle for display
+        const config = getBambuLabProductLineConfig(product.baseTitle);
+        const enrichment = enrichBambuLabProduct(product.baseTitle);
         
-        // Get color hex - prioritize brand-specific map, then generic
-        let colorHex = product.colorName ? getBambuLabColorHex(product.colorName) : null;
+        // Use color hex from processing (already resolved), or fallback
+        let colorHex = product.colorHex;
         if (!colorHex && product.colorName) {
-          colorHex = getColorHex(product.colorName);
+          colorHex = getBambuLabColorHex(product.colorName) || getColorHex(product.colorName);
         }
         const colorFamily = product.colorName ? getColorFamily(product.colorName) : null;
         
@@ -790,9 +890,9 @@ Deno.serve(async (req) => {
         else if (plId.includes('pva')) material = 'PVA';
         else if (plId.includes('support')) material = 'Support';
         
-        // Build product record
+        // Build product record with full title including color
         const productRecord = {
-          product_title: product.h1Title,
+          product_title: product.productTitle,  // Full title with color (e.g., "PLA Tough+ Black")
           vendor: BAMBULAB_STORE_INFO.vendor,
           material,
           finish_type: enrichment.finishType,
@@ -816,7 +916,7 @@ Deno.serve(async (req) => {
         productsToInsert.push(productRecord);
         
       } catch (error) {
-        console.error(`[BambuLab] Error processing ${product.h1Title}:`, error);
+        console.error(`[BambuLab] Error processing ${product.productTitle}:`, error);
         errors++;
       }
     }
