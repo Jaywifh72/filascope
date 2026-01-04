@@ -377,7 +377,7 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
         url,
         formats: ['markdown', 'html'],
         onlyMainContent: true,
-        waitFor: 3000,
+        waitFor: 5000, // Increased from 3000ms for JS-heavy pages like ABS
       }),
     });
     

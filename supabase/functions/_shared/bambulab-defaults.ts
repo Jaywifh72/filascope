@@ -960,6 +960,8 @@ export const BAMBULAB_COLOR_HEX_MAP: Record<string, string> = {
   'beige': 'D4C4A8',
   'charcoal': '36454F',
   'tan': 'D2B48C',
+  'plum': '8E4585',
+  'matte plum': '8E4585',
   
   // ===== Translucent =====
   'translucent': 'FFFFFF',
