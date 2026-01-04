@@ -3263,10 +3263,14 @@ Deno.serve(async (req) => {
       // If a product line has only 1 variant but should have multiple colors, flag it
       // This is a heuristic: most filament product lines have 5+ color variants
       if (variants.length === 1) {
-        // Skip single-color products (CF, GF, specialty materials)
-        const isSingleColorProduct = /-(cf|gf|pva|support|ht-|pa6|pps|peek|pei)/i.test(lineId) ||
-                                     lineId.includes('carbon') || 
-                                     lineId.includes('support');
+        // Skip single-color products (CF, GF, specialty materials, support, aero, etc.)
+        // These legitimately only come in 1 color
+        const isSingleColorProduct = /-(cf|gf|pva|support|ht-|pa6|pps|peek|pei|aero)/i.test(lineId) ||
+                                     /\b(carbon|glass|support|aero)\b/i.test(lineId) ||
+                                     lineId.includes('support-') ||
+                                     lineId.includes('paht-cf') ||
+                                     lineId.includes('pa-cf') ||
+                                     lineId.includes('asa-aero');
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
