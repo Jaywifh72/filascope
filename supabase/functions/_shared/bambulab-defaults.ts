@@ -1150,6 +1150,9 @@ const KNOWN_COLOR_WORDS = new Set([
   'glow', 'galaxy', 'sparkle', 'cobalt', 'indigo', 'maroon', 'hot', 'pumpkin', 
   'sunflower', 'bright', 'cocoa', 'light', 'dark', 'copper', 'bronze', 'bone',
   'slate', 'terracotta', 'grass', 'mandarin', 'lilac', 'sakura', 'water',
+  // Bambu Lab specific color modifiers
+  'mistletoe', 'bambu', 'coffee', 'azure', 'scarlet', 'vermillion', 'apricot',
+  'champagne', 'emerald', 'ruby', 'sapphire', 'arctic', 'lemon', 'army', 'khaki',
 ]);
 
 export function isValidColorName(text: string): boolean {

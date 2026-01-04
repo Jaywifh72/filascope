@@ -246,6 +246,28 @@ function extractColorsFromPageContent(markdown: string, html: string = ''): stri
     }
   }
   
+  // Pattern H7 (BAMBU LAB SPECIFIC): Variant selector <li value="ColorName (SKU)">
+  // Example: <li value="Jade White (10100)" class="w-[42px] h-[42px] ... rounded-full">
+  const liValueMatches = html.matchAll(/<li[^>]*value="([^"]+)"[^>]*class="[^"]*rounded-full[^"]*"/gi);
+  for (const match of liValueMatches) {
+    const fullValue = match[1];
+    // Strip SKU from "Jade White (10100)" -> "Jade White"
+    const colorName = fullValue.replace(/\s*\(\d+\)$/, '').trim();
+    if (colorName && isValidColorName(colorName) && !colors.includes(colorName)) {
+      colors.push(colorName);
+    }
+  }
+  
+  // Pattern H8 (FALLBACK): Any <li value="ColorName"> or <li value="ColorName (SKU)">
+  // More lenient pattern for edge cases
+  const liValueFallback = html.matchAll(/<li[^>]*value="([A-Z][a-zA-Z\s]+)(?:\s*\([^)]+\))?"/gi);
+  for (const match of liValueFallback) {
+    const colorName = match[1].trim();
+    if (colorName && isValidColorName(colorName) && !colors.includes(colorName)) {
+      colors.push(colorName);
+    }
+  }
+  
   // ============ MARKDOWN PATTERNS (FALLBACK) ============
   
   // Pattern M1: "Color : ColorName (SKU)" - primary pattern
