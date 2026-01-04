@@ -1022,29 +1022,70 @@ export const BAMBULAB_COLOR_HEX_MAP: Record<string, string> = {
   'emerald green': '50C878',
   'ruby red': 'E0115F',
   'sapphire blue': '0F52BA',
+  
+  // ===== British spelling variants (grey -> gray) =====
+  'blue grey': '6699CC',
+  'dark grey': '4A4A4A',
+  'light grey': 'D3D3D3',
+  'ash grey': '8A8A8A',
+  'charcoal grey': '36454F',
+  'nardo grey': '8A8A8A',
+  'iron grey': '52595D',
+  'lava grey': '59595B',
+  'slate grey': '708090',
+  
+  // ===== Translucent compound colors (only ones not already defined above) =====
+  'translucent light blue': 'ADD8E6',
+  'translucent pink': 'FFB6C1',
+  'translucent brown': 'D2691E',
+  'translucent purple': 'DDA0DD',
+  'translucent white': 'F5F5F5',
+  'translucent black': '2F2F2F',
 };
 
 export function getBambuLabColorHex(colorName: string | null): string | null {
   if (!colorName) return null;
-  const normalized = colorName.toLowerCase().trim();
+  let normalized = colorName.toLowerCase().trim();
   
   // 1. Exact match first (highest priority)
   if (BAMBULAB_COLOR_HEX_MAP[normalized]) {
     return BAMBULAB_COLOR_HEX_MAP[normalized];
   }
   
+  // 2. Normalize British -> American spelling and try exact match
+  const americanized = normalized.replace(/grey/g, 'gray');
+  if (BAMBULAB_COLOR_HEX_MAP[americanized]) {
+    return BAMBULAB_COLOR_HEX_MAP[americanized];
+  }
+  
+  // 3. For translucent/matte/silk compounds, try matching WITHOUT the modifier
+  const modifiersToStrip = ['translucent', 'matte', 'silk', 'metallic', 'glow'];
+  for (const modifier of modifiersToStrip) {
+    if (normalized.startsWith(modifier + ' ')) {
+      const colorPart = normalized.substring(modifier.length + 1);
+      if (BAMBULAB_COLOR_HEX_MAP[colorPart]) {
+        return BAMBULAB_COLOR_HEX_MAP[colorPart];
+      }
+      // Also try americanized version
+      const americanColor = colorPart.replace(/grey/g, 'gray');
+      if (BAMBULAB_COLOR_HEX_MAP[americanColor]) {
+        return BAMBULAB_COLOR_HEX_MAP[americanColor];
+      }
+    }
+  }
+  
   // Sort keys by length (longest first) to prevent short keys from matching before specific ones
   const sortedKeys = Object.keys(BAMBULAB_COLOR_HEX_MAP)
     .sort((a, b) => b.length - a.length);
   
-  // 2. Starts-with or ends-with match (e.g., "gold" should match "gold", not get contaminated by "gilded rose")
+  // 4. Starts-with or ends-with match (e.g., "gold" should match "gold", not get contaminated by "gilded rose")
   for (const key of sortedKeys) {
     if (normalized.startsWith(key + ' ') || normalized.endsWith(' ' + key) || normalized === key) {
       return BAMBULAB_COLOR_HEX_MAP[key];
     }
   }
   
-  // 3. Word-boundary match (e.g., "titan gray" matches "gray" as a word, not partial)
+  // 5. Word-boundary match (e.g., "titan gray" matches "gray" as a word, not partial)
   for (const key of sortedKeys) {
     // Escape special regex chars in key
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1054,7 +1095,7 @@ export function getBambuLabColorHex(colorName: string | null): string | null {
     }
   }
   
-  // 4. Fallback: Contains match (least priority, may cause cross-contamination)
+  // 6. Fallback: Contains match (least priority, may cause cross-contamination)
   for (const key of sortedKeys) {
     if (normalized.includes(key)) {
       return BAMBULAB_COLOR_HEX_MAP[key];
