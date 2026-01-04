@@ -3318,9 +3318,13 @@ Deno.serve(async (req) => {
 
     console.log(`[PostSyncCheck] Color Variant Count: ${variantCountIssues.length} issues found`);
 
-    // ============= COLOR-SPECIFIC IMAGE CHECK (NEW) =============
+    // ============= COLOR-SPECIFIC IMAGE CHECK (ENHANCED) =============
     // For product lines with multiple color variants, verify each color has a unique image
     // (not all variants sharing the same generic product image)
+    // 
+    // BAMBU LAB SPECIAL CHECK: Verify S5 gallery images (not S7 swatch thumbnails)
+    // - S5 CDN (store.bblcdn.com/s5/): Full product photos (CORRECT)
+    // - S7 CDN (store.bblcdn.com/s7/): Tiny swatch thumbnails (WRONG)
     const colorImageIssues: Array<{ id: string; title: string; issue: string }> = [];
     
     // Group by product_line_id to check image uniqueness within each line
@@ -3355,6 +3359,32 @@ Deno.serve(async (req) => {
       const imagesWithValues = variants.map(v => v.featured_image).filter(Boolean);
       const uniqueImages = new Set(imagesWithValues);
       
+      // BAMBU LAB SPECIFIC: Check if using S7 swatch thumbnails instead of S5 gallery images
+      if (brandSlug === 'bambu-lab') {
+        const s7SwatchImages = imagesWithValues.filter(img => img?.includes('store.bblcdn.com/s7/'));
+        const s5GalleryImages = imagesWithValues.filter(img => img?.includes('store.bblcdn.com/s5/'));
+        
+        // Flag if using S7 swatches (tiny thumbnails) - these are wrong!
+        if (s7SwatchImages.length > 0 && s5GalleryImages.length === 0) {
+          colorImageIssues.push({
+            id: lineId,
+            title: lineId,
+            issue: `CRITICAL: Using S7 swatch thumbnails (~50px) instead of S5 product gallery images (1920px). All ${s7SwatchImages.length} images are wrong type.`,
+          });
+          continue; // Skip other checks for this line
+        }
+        
+        // Warn if mixed S7/S5 (some colors have wrong images)
+        if (s7SwatchImages.length > 0 && s5GalleryImages.length > 0) {
+          colorImageIssues.push({
+            id: lineId,
+            title: lineId,
+            issue: `Mixed image types: ${s5GalleryImages.length} S5 gallery (correct), ${s7SwatchImages.length} S7 swatch (wrong). Fix S7 images.`,
+          });
+          continue;
+        }
+      }
+      
       // If all variants share the same image, flag it
       if (uniqueImages.size === 1 && variants.length >= 3) {
         colorImageIssues.push({
@@ -3379,8 +3409,8 @@ Deno.serve(async (req) => {
       status: colorImageIssues.length === 0 ? "pass" : colorImageIssues.length <= 3 ? "warning" : "fail",
       count: Object.keys(productsByLineForImageCheck).length - colorImageIssues.length,
       details: colorImageIssues.length === 0
-        ? `All multi-color product lines have unique images per color variant`
-        : `${colorImageIssues.length} product lines have shared/generic images across color variants`,
+        ? `All multi-color product lines have unique images per color variant${brandSlug === 'bambu-lab' ? ' (S5 gallery verified)' : ''}`
+        : `${colorImageIssues.length} product lines have image issues`,
       products: colorImageIssues.length > 0 ? colorImageIssues.slice(0, 15) : undefined,
     });
     

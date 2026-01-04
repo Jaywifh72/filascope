@@ -178,6 +178,33 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
     ],
   },
   
+  'bambu-lab': {
+    exclusions: [
+      { name: 'MakerWorld Models', reason: 'Non-filament products (clock kit, door stopper, coaster holder) filtered via nonColorPhrases in isValidColorName()' },
+      { name: 'Promotional Bundles', reason: 'Refill bundles and multi-packs excluded from product_line_id generation' },
+    ],
+    specialBehaviors: [
+      { name: 'S5 Product Gallery Images (CRITICAL)', description: 'Featured images MUST use S5 CDN URLs (store.bblcdn.com/s5/) NOT S7 swatch thumbnails (store.bblcdn.com/s7/). S5 images are 1920px full product photos, S7 are ~50px color swatches. The sync extracts S5 images via GUID matching between S7 swatches and S5 gallery.' },
+      { name: 'Next.js Platform', description: 'Bambu Lab uses custom Next.js, not Shopify. Product data is in __NEXT_DATA__ JSON embedded in page HTML.' },
+      { name: 'Color Selector Pattern', description: 'Colors extracted from <li value="ColorName (SKU)"> elements with rounded-full CSS class. SKU in parentheses is stripped.' },
+      { name: 'GUID-Based Image Matching', description: 'S7 swatch URLs contain GUIDs (32-char hex). Matching S5 gallery images found by GUID lookup in page HTML.' },
+      { name: 'ABS Hardcoded Fallback', description: 'ABS product uses hardcoded COLOR_IMAGES map due to JS-rendered picker. Images are S5 gallery URLs.' },
+      { name: 'Product Line ID Format', description: 'Uses bambulab__material__line format (e.g., bambulab__pla__silk, bambulab__petg__hf, bambulab__asa__aero).' },
+      { name: 'H1 Title Priority', description: 'Product titles scraped from <h1> tag on product page. Base title stored without color suffix.' },
+      { name: 'USD Pricing', description: 'Uses us.store.bambulab.com for USD prices and product discovery.' },
+      { name: 'Firecrawl HTML Scraping', description: '5-second waitFor for JS content to load. Both HTML and markdown formats requested.' },
+    ],
+    notes: [
+      'CRITICAL: featured_image must use S5 CDN (store.bblcdn.com/s5/) NOT S7 CDN (store.bblcdn.com/s7/)',
+      'S5 URLs have __op__resize parameters (e.g., __op__resize,m_lfit,w_1920__op__format,f_auto)',
+      'S7 URLs are tiny swatch thumbnails (~50x50px) inside color picker UI elements',
+      '39 product lines across PLA, PETG, ABS, ASA, TPU, PA, PC, PPS, PVA materials',
+      'Safe delete threshold: 30 products minimum before clean slate deletion',
+      'Specialty materials (CF, GF, Support, PVA) are single-color products - whitelisted in variant count check',
+      'Color extraction uses isValidColorName() with nonColorPhrases to filter MakerWorld model names',
+    ],
+  },
+  
   'cc3d': {
     specialBehaviors: [
       { name: 'WooCommerce Multi-Category Scrape', description: 'Scrapes 18 category pages from cc3dglobal.com.' },
