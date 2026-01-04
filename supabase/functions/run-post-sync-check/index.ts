@@ -3265,12 +3265,16 @@ Deno.serve(async (req) => {
       if (variants.length === 1) {
         // Skip single-color products (CF, GF, specialty materials, support, aero, etc.)
         // These legitimately only come in 1 color
-        const isSingleColorProduct = /-(cf|gf|pva|support|ht-|pa6|pps|peek|pei|aero)/i.test(lineId) ||
-                                     /\b(carbon|glass|support|aero)\b/i.test(lineId) ||
+        // Use [_-] to match both hyphens (3d-fuel) and underscores (bambulab__pva__standard)
+        const isSingleColorProduct = /[_-](cf|gf|pva|support|ht|pa6|pps|peek|pei|aero)[_-]?/i.test(lineId) ||
+                                     /\b(carbon|glass|support|aero|composite)\b/i.test(lineId) ||
+                                     lineId.includes('__support__') ||
                                      lineId.includes('support-') ||
+                                     lineId.includes('__pva__') ||
                                      lineId.includes('paht-cf') ||
                                      lineId.includes('pa-cf') ||
-                                     lineId.includes('asa-aero');
+                                     lineId.includes('asa-aero') ||
+                                     lineId.includes('__asa__aero');
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
