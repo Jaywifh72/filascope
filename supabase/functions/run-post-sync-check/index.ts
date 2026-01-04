@@ -770,6 +770,9 @@ function isValidColorName(name: string): boolean {
     'detergent container', 'power adapter', 'washing tray', 
     'motherboard', 'curing table', 'wash & cure', 'wash and cure',
     'cure machine', 'get 1 free', 'free gift', 'wash cure',
+    // Bambu Lab promotional bundles/kits
+    'set of', 'coaster holder', 'clock kit', 'modular clock',
+    'starter kit', 'bundle', 'combo pack', 'sample set',
   ];
   if (nonColorPhrases.some(phrase => lower.includes(phrase))) return false;
   
