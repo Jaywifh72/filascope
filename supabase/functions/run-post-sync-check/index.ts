@@ -3164,6 +3164,135 @@ Deno.serve(async (req) => {
 
     console.log(`[PostSyncCheck] Hex-Color Accuracy: ${colorMismatches.length} mismatches found`);
 
+    // ============= LOGO IMAGE DETECTION CHECK (NEW) =============
+    // Flag when many products share the same image URL (indicates logo fallback, not real product images)
+    const { data: allProductsForImageCheck } = await supabase
+      .from("filaments")
+      .select("id, product_title, featured_image")
+      .ilike("vendor", brandName);
+
+    const imageUrlCounts: Record<string, number> = {};
+    for (const product of allProductsForImageCheck || []) {
+      if (product.featured_image) {
+        imageUrlCounts[product.featured_image] = (imageUrlCounts[product.featured_image] || 0) + 1;
+      }
+    }
+
+    const totalProductsWithImages = (allProductsForImageCheck || []).filter(p => p.featured_image).length;
+    const totalProductsCount = allProductsForImageCheck?.length || 0;
+    const uniqueImageCount = Object.keys(imageUrlCounts).length;
+    
+    // Find the most common image
+    const sortedImageCounts = Object.entries(imageUrlCounts).sort((a, b) => b[1] - a[1]);
+    const mostCommonImage = sortedImageCounts[0];
+    
+    const logoImageIssues: Array<{ id: string; title: string; issue: string }> = [];
+    
+    // Issue 1: Check if most products share the same image (indicates logo)
+    const isLogoImage = mostCommonImage && (
+      mostCommonImage[0].toLowerCase().includes('logo') || 
+      mostCommonImage[1] > totalProductsCount * 0.5
+    );
+    
+    if (isLogoImage) {
+      logoImageIssues.push({
+        id: 'shared-logo-image',
+        title: 'Shared Logo Image Detected',
+        issue: `${mostCommonImage[1]}/${totalProductsCount} products share the same image URL (likely a logo, not product images)`,
+      });
+    }
+    
+    // Issue 2: Check if too many products are missing images entirely
+    const missingImageCount = totalProductsCount - totalProductsWithImages;
+    if (missingImageCount > totalProductsCount * 0.3) {
+      logoImageIssues.push({
+        id: 'missing-images',
+        title: 'Missing Product Images',
+        issue: `${missingImageCount}/${totalProductsCount} products have no featured_image`,
+      });
+    }
+    
+    // Issue 3: Check image uniqueness ratio (for color variants, each should ideally have a unique image)
+    const imageUniquenessRatio = uniqueImageCount / Math.max(totalProductsCount, 1);
+    if (totalProductsCount > 10 && imageUniquenessRatio < 0.3 && !isLogoImage) {
+      logoImageIssues.push({
+        id: 'low-image-variety',
+        title: 'Low Image Variety',
+        issue: `Only ${uniqueImageCount} unique images across ${totalProductsCount} products (${Math.round(imageUniquenessRatio * 100)}% uniqueness)`,
+      });
+    }
+
+    checks.push({
+      checkName: "Product Image Quality (Logo Detection)",
+      status: logoImageIssues.length === 0 ? "pass" : logoImageIssues.length === 1 ? "warning" : "fail",
+      count: uniqueImageCount,
+      details: logoImageIssues.length === 0
+        ? `${uniqueImageCount} unique product images across ${totalProductsCount} products`
+        : `CRITICAL: ${logoImageIssues.length} image quality issues detected`,
+      products: logoImageIssues.length > 0 ? logoImageIssues : undefined,
+    });
+
+    console.log(`[PostSyncCheck] Product Image Quality: ${uniqueImageCount} unique images, ${logoImageIssues.length} issues`);
+
+    // ============= COLOR VARIANT COUNT PER PRODUCT LINE CHECK (NEW) =============
+    // Validates that each product_line_id has the expected number of color variants
+    // This catches sync issues where only 1 row per product is created instead of 1 row per color
+    const variantCountIssues: Array<{ id: string; title: string; issue: string }> = [];
+    
+    // Group products by product_line_id and count
+    const productsByLineForCount: Record<string, Array<{ id: string; product_title: string; color_hex: string | null }>> = {};
+    for (const variant of detailPageVariants || []) {
+      const lineId = variant.product_line_id;
+      if (!productsByLineForCount[lineId]) productsByLineForCount[lineId] = [];
+      productsByLineForCount[lineId].push({
+        id: variant.id,
+        product_title: variant.product_title,
+        color_hex: variant.color_hex,
+      });
+    }
+
+    // Check each product line for suspiciously low variant counts
+    for (const [lineId, variants] of Object.entries(productsByLineForCount)) {
+      // If a product line has only 1 variant but should have multiple colors, flag it
+      // This is a heuristic: most filament product lines have 5+ color variants
+      if (variants.length === 1) {
+        // Skip single-color products (CF, GF, specialty materials)
+        const isSingleColorProduct = /-(cf|gf|pva|support|ht-|pa6|pps|peek|pei)/i.test(lineId) ||
+                                     lineId.includes('carbon') || 
+                                     lineId.includes('support');
+        
+        if (!isSingleColorProduct) {
+          variantCountIssues.push({
+            id: variants[0].id,
+            title: lineId,
+            issue: `Only 1 variant in DB - sync likely created 1 row per product instead of 1 row per color`,
+          });
+        }
+      }
+      
+      // Also flag if many variants in a product line share NULL color_hex (missing color data)
+      const variantsWithNullHex = variants.filter(v => !v.color_hex);
+      if (variantsWithNullHex.length > variants.length * 0.5 && variants.length > 1) {
+        variantCountIssues.push({
+          id: variants[0].id,
+          title: lineId,
+          issue: `${variantsWithNullHex.length}/${variants.length} variants missing color_hex - color swatches won't display`,
+        });
+      }
+    }
+
+    checks.push({
+      checkName: "Color Variant Count per Product Line",
+      status: variantCountIssues.length === 0 ? "pass" : variantCountIssues.length <= 3 ? "warning" : "fail",
+      count: Object.keys(productsByLineForCount).length - variantCountIssues.length,
+      details: variantCountIssues.length === 0
+        ? `All ${Object.keys(productsByLineForCount).length} product lines have proper color variant counts`
+        : `CRITICAL: ${variantCountIssues.length} product lines have variant count issues - swatches won't display correctly`,
+      products: variantCountIssues.length > 0 ? variantCountIssues.slice(0, 15) : undefined,
+    });
+
+    console.log(`[PostSyncCheck] Color Variant Count: ${variantCountIssues.length} issues found`);
+
     // Calculate overall status
     const failCount = checks.filter((c) => c.status === "fail").length;
     const warnCount = checks.filter((c) => c.status === "warning").length;
