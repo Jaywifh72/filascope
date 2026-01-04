@@ -64,7 +64,7 @@ const NON_FILAMENT_PATTERNS = [
   /\bextruder/i,
   /\bbuild\s*plate/i,
   /\btextured.*plate/i,
-  /\bpei\b/i,
+  /\bpei\s*(?:plate|sheet)/i,
   /\bcover\b/i,
   /\benclosure\b/i,
   /\baccessor/i,
@@ -88,6 +88,25 @@ const NON_FILAMENT_PATTERNS = [
   /\bglue\s*stick/i,
   /\bscraper/i,
   
+  // More specific exclusions (matching AzureFilm patterns)
+  /\bhardened\s*steel\s*nozzle/i,
+  /\bwiper\s*blade/i,
+  /\bglass\s*plate/i,
+  /\bcarbon\s*plate/i,
+  /\bpurge\s*wiper/i,
+  /\bcutter\s*blade/i,
+  /\bspool\s*adapter/i,
+  /\bptfe\s*tube/i,
+  /\bmatrix\s*tray/i,
+  /\bheated\s*bed/i,
+  /\bwifi\s*module/i,
+  /\bsd\s*card/i,
+  /\bmicro\s*sd/i,
+  /\blcd\s*screen/i,
+  /\btouch\s*screen/i,
+  /\bfilter\s*cartridge/i,
+  /\bair\s*filter/i,
+  
   // Bundle/pack products
   /super\s*pack/i,
   /starter\s*(?:kit|pack)/i,
@@ -95,9 +114,12 @@ const NON_FILAMENT_PATTERNS = [
   /variety\s*pack/i,
   /bundle/i,
   
-  // Gift cards
+  // Gift cards and non-product items
   /gift\s*card/i,
   /voucher/i,
+  /\b3d\s*pen\b/i,
+  /\barch\s*support/i,
+  /\binsoles?\b/i,
 ];
 
 export function isBambuLabNonFilament(title: string): boolean {
