@@ -451,7 +451,17 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
     }
     
     // Extract color options using STRICT patterns from HTML and markdown
-    const colorOptions = extractColorsFromPageContent(markdown, html);
+    let colorOptions = extractColorsFromPageContent(markdown, html);
+    
+    // ABS fallback: If scraping returns 0 colors for ABS, use hardcoded known colors
+    // The ABS page uses a fully JS-rendered color picker that scraping can't capture
+    if (colorOptions.length === 0 && /\babs-filament\b/i.test(url)) {
+      colorOptions = [
+        'Black', 'White', 'Grey', 'Red', 'Orange', 'Yellow', 
+        'Green', 'Blue', 'Brown', 'Beige', 'Bambu Green'
+      ];
+      console.log(`[BambuLab] Using fallback colors for ABS (JS-rendered picker): ${colorOptions.join(', ')}`);
+    }
     
     console.log(`[BambuLab] Extracted ${colorOptions.length} colors from ${url}: ${colorOptions.slice(0, 5).join(', ')}${colorOptions.length > 5 ? '...' : ''}`);
     
