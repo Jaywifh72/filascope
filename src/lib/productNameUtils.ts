@@ -514,6 +514,8 @@ function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: str
     const lineName = lineParts
       .replace(/-/g, ' ')
       .replace(/\b\w/g, c => c.toUpperCase())
+      // Fix capitalization for abbreviations like "HS" (Matte Hs → Matte HS)
+      .replace(/\bHs\b/g, 'HS')
       .trim();
     
     return `${material} ${lineName}`.trim();

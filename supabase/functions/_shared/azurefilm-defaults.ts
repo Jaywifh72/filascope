@@ -169,6 +169,8 @@ export function generateAzureFilmProductLineId(title: string, material: string):
   else if (/original/i.test(title)) lineVariant = 'original';
   else if (/prime/i.test(title)) lineVariant = 'prime';
   else if (/plus/i.test(title)) lineVariant = 'plus';
+  // CRITICAL: Detect "Matte HS" BEFORE generic "HS" to create separate product line
+  else if (/matte\s*hs/i.test(title)) lineVariant = 'matte-hs';
   else if (/hyper\s*speed|hs\b/i.test(title)) lineVariant = 'hyper-speed';
   else if (/cmyk|lithophane/i.test(title)) lineVariant = 'cmyk';
   else if (/lumberlay/i.test(title)) lineVariant = 'lumberlay';
