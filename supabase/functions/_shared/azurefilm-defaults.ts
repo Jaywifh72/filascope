@@ -384,6 +384,7 @@ export function cleanAzureFilmTitle(title: string): string {
 // ============================================================================
 
 const NON_FILAMENT_PATTERNS = [
+  // Printer accessories
   /pei\s*plate/i,
   /magnetic\s*platform/i,
   /glass\s*plate/i,
@@ -399,12 +400,21 @@ const NON_FILAMENT_PATTERNS = [
   /3d\s*printer(?!\s*filament)/i,
   /scanner/i,
   /cleaning/i,
-  /kit/i,
   /upgrade/i,
   /spare\s*part/i,
   /accessory/i,
   /drybox/i,
   /dry\s*box/i,
+  
+  // Bundle/Pack products (not individual spools)
+  /super\s*pack/i,           // "SUPER PACK PLA MIX"
+  /\b\d+[\s-]*pack\b/i,      // "10-pack", "3-pack", "4-pack"
+  /multi[\s-]*pack/i,        // "multi-pack"
+  
+  // Magnets and other accessories
+  /neodymium\s*magnet/i,
+  /round\s*magnet/i,
+  /\bmagnet\b/i,
 ];
 
 export function isAzureFilmNonFilament(title: string): boolean {
@@ -426,7 +436,26 @@ export function isAzureFilmNonFilament(title: string): boolean {
 export function extractAzureFilmWeight(title: string, variant?: string): number {
   const text = `${title} ${variant || ''}`;
   
+  // Check for pack counts FIRST (N-pack = N x 1kg spools)
+  const packMatch = text.match(/(\d+)[\s-]*pack/i);
+  if (packMatch) {
+    const packCount = parseInt(packMatch[1], 10);
+    return packCount * 1000; // Each spool is 1kg
+  }
+  
+  // Check for "Sample" keyword - samples are typically 50g
+  if (/\bsample\b/i.test(text)) {
+    // Check if there's an explicit weight mentioned
+    const explicitWeight = text.match(/(\d+)\s*g\b/i);
+    if (explicitWeight) {
+      return parseInt(explicitWeight[1], 10);
+    }
+    return 50; // Default sample weight
+  }
+  
   // Check for specific weights
+  if (/50\s*g\b/i.test(text)) return 50;
+  if (/100\s*g\b/i.test(text)) return 100;
   if (/250\s*g/i.test(text)) return 250;
   if (/500\s*g/i.test(text)) return 500;
   if (/750\s*g/i.test(text)) return 750;
