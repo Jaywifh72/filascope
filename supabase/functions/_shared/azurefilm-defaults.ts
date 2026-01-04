@@ -367,7 +367,8 @@ export const AZUREFILM_COLOR_MAPPING: Record<string, string> = {
 export function getAzureFilmColorHex(colorName: string): string | null {
   if (!colorName) return null;
   
-  const normalized = colorName.toLowerCase().trim();
+  // CRITICAL: Normalize ALL whitespace (including internal double spaces from title extraction)
+  const normalized = colorName.toLowerCase().trim().replace(/\s+/g, ' ');
   
   // Direct match first (highest priority)
   if (AZUREFILM_COLOR_MAPPING[normalized]) {
@@ -669,6 +670,13 @@ export function extractColorFromAzureFilmTitle(title: string): string | null {
     .replace(/refill/gi, '')
     .replace(/master\s*spool/gi, '')
     .trim();
+  
+  // SPECIAL CASE: Handle "Glitter filament [Color]" pattern FIRST
+  // Title: "ABS PLUS Glitter filament Black" → should return "Glitter Black", not "Black"
+  const glitterFilamentMatch = cleaned.match(/\b(glitter)\s+filament\s+(black|silver|gold|blue|green|red|white)$/i);
+  if (glitterFilamentMatch) {
+    return `${glitterFilamentMatch[1]} ${glitterFilamentMatch[2]}`;
+  }
   
   // Try to extract color from the end of the title (most common pattern)
   // CRITICAL: Effect/compound patterns MUST come first to capture "Glitter Black" before "Black"
