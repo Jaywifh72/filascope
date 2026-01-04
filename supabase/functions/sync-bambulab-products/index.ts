@@ -348,6 +348,64 @@ function extractColorsFromPageContent(markdown: string, html: string = ''): stri
 }
 
 /**
+ * Find the best image match for a color name using flexible matching.
+ * Handles compound color names like "Matte Apple Green" by trying:
+ * 1. Exact match: "matte apple green"
+ * 2. Stripped prefix match: "apple green" (without Matte/Silk/etc.)
+ * 3. Last word match: "green"
+ * 4. First significant word match: "apple"
+ */
+function findBestImageForColor(colorKey: string, colorImageMap: Map<string, string>): string | null {
+  // Normalize the color key
+  const normalized = colorKey.toLowerCase().replace(/\s+/g, ' ').trim();
+  
+  // 1. Exact match
+  if (colorImageMap.has(normalized)) {
+    return colorImageMap.get(normalized) || null;
+  }
+  
+  // 2. Strip common prefixes (Matte, Silk, Translucent, etc.) and try again
+  const strippedPrefixes = normalized
+    .replace(/^(matte|silk|translucent|basic|tough|galaxy)\s+/i, '')
+    .trim();
+  if (strippedPrefixes !== normalized && colorImageMap.has(strippedPrefixes)) {
+    return colorImageMap.get(strippedPrefixes) || null;
+  }
+  
+  // 3. Try partial matching - look for keys that contain significant parts of the color
+  const words = normalized.split(' ').filter(w => w.length >= 3);
+  
+  // Try compound matches first (e.g., "ivory white" for "matte ivory white")
+  for (let i = 0; i < words.length - 1; i++) {
+    const compound = `${words[i]} ${words[i + 1]}`;
+    if (colorImageMap.has(compound)) {
+      return colorImageMap.get(compound) || null;
+    }
+  }
+  
+  // 4. Try individual significant words (prioritize later words which are usually the actual color)
+  for (let i = words.length - 1; i >= 0; i--) {
+    const word = words[i];
+    // Skip common prefixes/modifiers
+    if (['matte', 'silk', 'basic', 'dark', 'light', 'translucent', 'tough', 'galaxy'].includes(word)) {
+      continue;
+    }
+    if (colorImageMap.has(word)) {
+      return colorImageMap.get(word) || null;
+    }
+  }
+  
+  // 5. Last resort: check if any map key is contained in the color name
+  for (const [key, url] of colorImageMap.entries()) {
+    if (normalized.includes(key) && key.length >= 4) {
+      return url;
+    }
+  }
+  
+  return null;
+}
+
+/**
  * Extract color variants with their associated images from __NEXT_DATA__ JSON
  * Bambu Lab stores variant images in the page props
  * 
@@ -364,67 +422,95 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
   // ========== ENHANCED PATTERN: Extract ALL CDN images and match by color name in URL ==========
   // Bambu Lab images follow naming patterns like:
   // - https://store.bblcdn.com/.../PLA_Tough_Black.png
-  // - https://store.bblcdn.com/.../ABS_Red_1kg.webp
+  // - https://store.bblcdn.com/.../PLA-Matte_Ivory-White.png
   // - https://store.bblcdn.com/.../PETG-Basic-Blue.jpg
   const cdnImageMatches = html.matchAll(/https:\/\/store\.bblcdn\.com[^"'\s<>]+\.(?:png|jpg|jpeg|webp)/gi);
-  const allCdnImages = [...cdnImageMatches].map(m => m[0]);
+  const allCdnImages = [...new Set([...cdnImageMatches].map(m => m[0]))]; // Dedupe
   
-  // Filter to likely product images (not logos, icons, banners)
+  // Filter to likely PRODUCT images - more permissive now
+  // EXCLUDE: logos, icons, banners, shipping, badges, thumbnails
+  // INCLUDE: filament spools, material images, product shots
   const productImages = allCdnImages.filter(url => {
     const lower = url.toLowerCase();
-    return !lower.includes('logo') && 
-           !lower.includes('icon') && 
-           !lower.includes('banner') &&
-           !lower.includes('badge') &&
-           !lower.includes('shipping') &&
-           !lower.includes('thumbnail') &&
-           // Likely product images contain material or filament keywords OR are in product folders
-           (lower.includes('filament') || 
-            lower.includes('pla') || 
-            lower.includes('petg') || 
-            lower.includes('abs') ||
-            lower.includes('tpu') ||
-            lower.includes('pa') ||
-            lower.includes('pc') ||
-            lower.includes('asa') ||
-            lower.includes('pva') ||
-            lower.includes('/product') ||
-            lower.includes('_spool') ||
-            lower.includes('-spool'));
+    const filename = lower.split('/').pop() || '';
+    
+    // Exclude non-product images
+    if (lower.includes('logo') || lower.includes('icon') || lower.includes('banner') ||
+        lower.includes('badge') || lower.includes('shipping') || lower.includes('cart') ||
+        lower.includes('checkout') || lower.includes('nav')) {
+      return false;
+    }
+    
+    // Include if filename has color indicators or is a spool image
+    // Many Bambu Lab images have color names in the filename like "PLA-Matte_Ivory-White.png"
+    const colorIndicators = [
+      'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink',
+      'grey', 'gray', 'brown', 'tan', 'gold', 'silver', 'jade', 'ivory', 'charcoal',
+      'coral', 'cyan', 'navy', 'olive', 'maroon', 'salmon', 'lime', 'clear', 'natural',
+      'magenta', 'teal', 'cream', 'bronze', 'copper', 'beige', 'slate', 'scarlet',
+      'lemon', 'grass', 'sakura', 'marine', 'midnight', 'mandarin', 'caramel', 'plum',
+      'nardo', 'desert', 'terracotta', 'latte', 'bone', 'ash', 'apple', 'chocolate',
+      'ice', 'sky', 'dark', 'cold', 'warm', 'matte', 'silk', 'translucent', 'galaxy',
+      'rainbow', 'gradient', 'multicolor', 'dual'
+    ];
+    
+    // Check if filename contains any color indicator
+    for (const indicator of colorIndicators) {
+      if (filename.includes(indicator)) return true;
+    }
+    
+    // Also include spool images and material-specific images
+    if (filename.includes('spool') || filename.includes('spl') ||
+        filename.includes('pla') || filename.includes('petg') || filename.includes('abs') ||
+        filename.includes('tpu') || filename.includes('pa-') || filename.includes('pa_') ||
+        filename.includes('pc_') || filename.includes('pc-') || filename.includes('asa')) {
+      return true;
+    }
+    
+    return false;
   });
   
   console.log(`[BambuLab] Found ${allCdnImages.length} total CDN images, ${productImages.length} likely product images`);
   
-  // Common color names to search for in URLs
-  const colorKeywords = [
-    'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink',
-    'grey', 'gray', 'brown', 'beige', 'tan', 'gold', 'silver', 'bronze', 'copper',
-    'cyan', 'magenta', 'teal', 'navy', 'olive', 'maroon', 'coral', 'salmon', 'lime',
-    'jade', 'ivory', 'cream', 'charcoal', 'slate', 'natural', 'clear', 'transparent',
-    'bambu green', 'jade white', 'cold white', 'warm white', 'midnight blue'
-  ];
+  // Enhanced color matching: match compound colors in filenames
+  // Example: "PLA-Matte_Ivory-White.png" should map to "Matte Ivory White"
+  // Example: "PLA-Basic_Blue-Gray.png" should map to "Blue Gray"
+  // Example: "PETG_Jade_White.png" should map to "Jade White"
   
-  // Match CDN images to colors based on URL patterns
   for (const imageUrl of productImages) {
-    // Extract the filename portion for matching
-    const urlLower = imageUrl.toLowerCase();
-    const filename = urlLower.split('/').pop() || '';
+    const filename = (imageUrl.split('/').pop() || '').toLowerCase();
     
-    for (const color of colorKeywords) {
-      // Match color as whole word or with separators: black, _black_, -black-, black.png
-      const colorSlug = color.replace(/\s+/g, '[_\\-\\s]?');
-      const colorPattern = new RegExp(`(?:^|[_\\-])${colorSlug}(?:[_\\-]|\\.|$)`, 'i');
-      
-      if (colorPattern.test(filename)) {
-        // Normalize the color name for the map key
-        const normalizedColor = color.toLowerCase();
-        
-        // Only add if not already present (first match wins, as it's usually higher quality)
-        if (!colorImageMap.has(normalizedColor)) {
-          colorImageMap.set(normalizedColor, imageUrl);
-          console.log(`[BambuLab] Matched CDN image to color "${color}": ${imageUrl.substring(0, 80)}...`);
-        }
-        break; // Move to next image once matched
+    // Remove file extension and common prefixes
+    const cleanFilename = filename
+      .replace(/\.(png|jpg|jpeg|webp).*$/, '') // Remove extension and params
+      .replace(/^(pla|petg|abs|tpu|pa|pc|asa|pva)[-_]?/i, '') // Remove material prefix
+      .replace(/^(matte|silk|basic|tough|hf|translucent|cf|gf)[-_]?/i, '') // Remove type prefix
+      .replace(/[-_]+/g, ' ') // Convert separators to spaces
+      .trim();
+    
+    // Skip generic/non-color filenames
+    if (!cleanFilename || cleanFilename.length < 3 || 
+        /^\d+$/.test(cleanFilename) || // Just numbers
+        /^[a-f0-9]{8,}$/i.test(cleanFilename) || // GUID
+        /spool|web|product|filament|original|v\d|_\d/i.test(cleanFilename)) {
+      continue;
+    }
+    
+    // This is likely a color-specific image - store the extracted color name
+    // The key should match what we'll look up later (lowercase, normalized)
+    const colorKey = cleanFilename.toLowerCase().replace(/\s+/g, ' ').trim();
+    
+    if (colorKey.length >= 3 && !colorImageMap.has(colorKey)) {
+      colorImageMap.set(colorKey, imageUrl);
+      console.log(`[BambuLab] Mapped color "${colorKey}" to image: ${imageUrl.substring(0, 80)}...`);
+    }
+    
+    // Also store individual color components for partial matching
+    // e.g., "ivory white" -> store both "ivory white" AND "ivory" AND "white" 
+    const colorWords = colorKey.split(' ').filter(w => w.length >= 3);
+    for (const word of colorWords) {
+      if (!colorImageMap.has(word) && !['the', 'and', 'for', 'spl', 'web'].includes(word)) {
+        colorImageMap.set(word, imageUrl);
       }
     }
   }
@@ -518,9 +604,9 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
           if (posImg) imageUrl = posImg;
         }
         
-        // Try color name mapping from HTML patterns
+        // Try color name mapping from HTML patterns - use flexible matching
         if (!imageUrl) {
-          imageUrl = colorImageMap.get(colorKey) || null;
+          imageUrl = findBestImageForColor(colorKey, colorImageMap);
         }
         
         // Clean up image URL (remove query params that might cause issues)
@@ -558,7 +644,7 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
     variants.push({
       colorName,
       colorHex: getBambuLabColorHex(colorName) || getColorHex(colorName) || null,
-      imageUrl: colorImageMap.get(colorKey) || null,
+      imageUrl: findBestImageForColor(colorKey, colorImageMap),
     });
   }
   
