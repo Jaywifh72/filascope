@@ -489,11 +489,19 @@ Deno.serve(async (req) => {
         
         const title = pageData.h1Title || productUrl.split('/products/')[1]?.replace(/-/g, ' ') || 'Unknown';
         
-        // Override product_line_id for Silky/Silk products (title-based detection)
+        // Override product_line_id for specialty products (title-based detection)
         let productLineId = product.productLineId;
         let material = product.material;
         
-        if (title.toLowerCase().includes('silky') || title.toLowerCase().includes('silk')) {
+        // Hi-Flow Pro is a distinct product line (prevents duplicate hex with regular PLA Black)
+        if (title.toLowerCase().includes('hi-flow') || title.toLowerCase().includes('hiflow')) {
+          const baseMaterial = product.material.toUpperCase();
+          productLineId = `atomic-filament__${baseMaterial.toLowerCase()}-hi-flow-pro`;
+          material = `${baseMaterial} Hi-Flow Pro`;
+          console.log(`[ATOMIC-SYNC] → Overriding to Hi-Flow Pro: ${title.slice(0, 50)}`);
+        }
+        // Silky/Silk products are their own product line
+        else if (title.toLowerCase().includes('silky') || title.toLowerCase().includes('silk')) {
           productLineId = 'atomic-filament__pla-silk';
           material = 'PLA Silk';
           console.log(`[ATOMIC-SYNC] → Overriding to PLA Silk: ${title.slice(0, 50)}`);
