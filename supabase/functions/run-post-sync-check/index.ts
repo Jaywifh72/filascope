@@ -2418,7 +2418,7 @@ Deno.serve(async (req) => {
       'overture': 15,           // PLA, PLA Pro, PETG, TPU, ABS, Silk, Matte, etc.
       'bambu-lab': 40,          // PLA, PETG, ABS, ASA, TPU, PLA-CF, PAHT-CF, Marble, Silk, Sparkle, etc.
       'fillamentum': 25,        // PLA, ASA, PETG, Flexfill, CPE, Nylon, Timberfill, etc.
-      'azurefilm': 20,          // PLA, PETG, ABS, ASA, Silk, Wood, Hyper Speed, etc.
+      'azurefilm': 12,          // ABS, ASA, Carbon Fiber (PAHT-CF, PET-CF), PCTG, PETG (Original, Hyper Speed, Silk), PLA (Original, Silk, Matte, etc.), LumberLay, Support
       'ninjatek': 10,           // Cheetah, NinjaFlex, Armadillo, Eel, SemiFlex, etc.
       'polymaker': 25,          // PolyLite, PolyTerra, PolyMax, PolyMide, PolyDissolve, etc.
       'colorfabb': 20,          // PLA Economy, PETG, nGen, PA, Amphora, XT, etc.
@@ -2859,7 +2859,7 @@ Deno.serve(async (req) => {
         // Atomic Filament has 57+ different product URLs grouped into 5 product_line_ids
         // Each color variant IS a completely separate Shopify product with its own URL
         // This is by design - the product_line_id groups them correctly
-        const skipUrlCheckBrands = ['atomic-filament'];
+        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm'];
         if (skipUrlCheckBrands.includes(brandSlug)) {
           // Skip - expected architecture for this brand
           continue;

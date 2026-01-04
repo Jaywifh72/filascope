@@ -550,3 +550,85 @@ export const AZUREFILM_STORE_INFO = {
   firecrawlWaitTime: 3000,
   notes: 'Slovenian eco-friendly brand with Master Spool refill system',
 };
+
+// ============================================================================
+// CATEGORY WHITELIST (For focused sync)
+// ============================================================================
+
+export interface AzureFilmCategoryConfig {
+  material: string;
+  categoryUrl: string;
+  displayMaterial: string;
+}
+
+export const AZUREFILM_CATEGORY_WHITELIST: AzureFilmCategoryConfig[] = [
+  { material: 'ABS', categoryUrl: 'https://azurefilm.com/product-category/3d-filaments/abs-filaments/', displayMaterial: 'ABS' },
+  { material: 'ASA', categoryUrl: 'https://azurefilm.com/product-category/3d-filaments/asa-filaments/', displayMaterial: 'ASA' },
+  { material: 'Carbon Fiber', categoryUrl: 'https://azurefilm.com/product-category/3d-filaments/carbon-fiber-filaments/', displayMaterial: 'Carbon Fiber' },
+  { material: 'PCTG', categoryUrl: 'https://azurefilm.com/product-category/3d-filaments/pctg-filaments/', displayMaterial: 'PCTG' },
+  { material: 'PETG', categoryUrl: 'https://azurefilm.com/product-category/3d-filaments/petg-filaments/', displayMaterial: 'PETG' },
+  { material: 'PLA', categoryUrl: 'https://azurefilm.com/product-category/3d-filaments/pla-filaments/', displayMaterial: 'PLA' },
+  { material: 'LumberLay', categoryUrl: 'https://azurefilm.com/product-category/3d-filaments/lumberlay-filaments/', displayMaterial: 'LumberLay (Wood)' },
+  { material: 'Support', categoryUrl: 'https://azurefilm.com/product-category/3d-filaments/support-filaments/', displayMaterial: 'Support' },
+];
+
+// ============================================================================
+// COLOR EXTRACTION FROM TITLE
+// ============================================================================
+
+export function extractColorFromAzureFilmTitle(title: string): string | null {
+  if (!title) return null;
+  
+  // Common patterns in AzureFilm titles:
+  // "PLA Original filament Black" -> "Black"
+  // "PETG filament Sky Blue" -> "Sky Blue"
+  // "PLA Silk filament Gold" -> "Gold"
+  
+  // Remove common prefixes
+  let cleaned = title
+    .replace(/azurefilm/gi, '')
+    .replace(/filament/gi, '')
+    .replace(/1\.75\s*mm/gi, '')
+    .replace(/\d+\s*g\b/gi, '')
+    .replace(/refill/gi, '')
+    .replace(/master\s*spool/gi, '')
+    .trim();
+  
+  // Try to extract color from the end of the title (most common pattern)
+  const colorPatterns = [
+    // Two-word colors
+    /\b(light\s+(?:blue|green|red|pink|grey|gray)|dark\s+(?:blue|green|red|brown|grey|gray)|sky\s+blue|ocean\s+blue|royal\s+blue|forest\s+green|mint\s+green|neon\s+(?:green|yellow|orange|pink|blue)|pastel\s+(?:pink|blue|green|yellow|purple|orange)|(?:green|white|olive)\s+(?:poplar|wood)|gold\s+(?:18k|24k))$/i,
+    // Single word colors at end
+    /\b(black|white|red|blue|green|yellow|orange|purple|pink|grey|gray|brown|gold|silver|bronze|copper|natural|transparent|translucent|clear|cream|ivory|charcoal|turquoise|teal|cyan|violet|lavender|magenta|coral|navy|beige|maroon|burgundy|cherry|walnut|oak|bamboo|rainbow|sunset|galaxy)$/i,
+  ];
+  
+  for (const pattern of colorPatterns) {
+    const match = cleaned.match(pattern);
+    if (match) {
+      return match[1].trim();
+    }
+  }
+  
+  // Fallback: check if last word is a known color
+  const words = cleaned.split(/\s+/);
+  const lastWord = words[words.length - 1]?.toLowerCase();
+  if (lastWord && AZUREFILM_COLOR_MAPPING[lastWord]) {
+    return words[words.length - 1];
+  }
+  
+  // Check last two words
+  if (words.length >= 2) {
+    const lastTwo = `${words[words.length - 2]} ${words[words.length - 1]}`.toLowerCase();
+    if (AZUREFILM_COLOR_MAPPING[lastTwo]) {
+      return `${words[words.length - 2]} ${words[words.length - 1]}`;
+    }
+  }
+  
+  return null;
+}
+
+// ============================================================================
+// SAFE DELETE THRESHOLD
+// ============================================================================
+
+export const AZUREFILM_SAFE_DELETE_THRESHOLD = 50; // Minimum products required before clean slate delete

@@ -1,474 +1,573 @@
+/**
+ * AZUREFILM SYNC FUNCTION
+ * 
+ * 5-step architecture matching Atomic Filament:
+ * Step 0: Create sync log entry
+ * Step 1: Discover products from category pages
+ * Step 2: Scrape each product page for H1 title and details
+ * Step 3: Safety validation (minimum product threshold)
+ * Step 4: Clean slate deletion
+ * Step 5: Insert products with enrichment
+ * 
+ * Categories synced (whitelist):
+ * - ABS, ASA, Carbon Fiber, PCTG, PETG, PLA, LumberLay, Support
+ */
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import {
-  enrichAzureFilmProduct,
-  isAzureFilmNonFilament,
-  cleanAzureFilmTitle,
-  getAzureFilmColorHex,
-  extractAzureFilmWeight,
-  isAzureFilmRefill,
+import { 
+  AZUREFILM_CATEGORY_WHITELIST, 
+  AZUREFILM_SAFE_DELETE_THRESHOLD,
   AZUREFILM_STORE_INFO,
+  enrichAzureFilmProduct,
+  extractColorFromAzureFilmTitle,
+  getAzureFilmColorHex,
+  isAzureFilmNonFilament,
 } from '../_shared/azurefilm-defaults.ts';
+import { 
+  shouldIncludeVariant, 
+  is285mmDiameter,
+  extractWeightFromText,
+  createFilterStats,
+  updateFilterStats,
+  logFilterStats,
+} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface SyncResult {
-  success: boolean;
-  productsDiscovered: number;
-  productsCreated: number;
-  productsUpdated: number;
-  productsFailed: number;
-  productsSkipped: number;
-  duplicatesFixed: number;
-  errors: string[];
-  duration: number;
+// EUR to USD exchange rate
+const EUR_TO_USD_RATE = 1.08;
+
+interface DiscoveredProduct {
+  url: string;
+  category: string;
+  material: string;
 }
 
 interface ScrapedProduct {
   url: string;
-  title: string;
+  h1Title: string;
   price: number | null;
-  compareAtPrice: number | null;
+  priceEur: number | null;
   imageUrl: string | null;
-  colors: string[];
-  weights: number[];
-  isRefill: boolean;
+  category: string;
+  material: string;
+}
+
+interface SyncResult {
+  success: boolean;
+  summary: {
+    totalDiscovered: number;
+    created: number;
+    updated: number;
+    skipped: number;
+    errors: number;
+  };
+  categoriesProcessed: number;
+  productsByCategory: Record<string, number>;
+  duration: string;
+  duration_ms: number;
 }
 
 // ============================================================================
-// STEP 1: DISCOVER PRODUCT URLS
+// STEP 1: DISCOVER PRODUCTS FROM CATEGORY PAGES
 // ============================================================================
 
-async function discoverProductUrls(firecrawlKey: string): Promise<string[]> {
-  console.log('Step 1: Discovering product URLs via Firecrawl map...');
+async function discoverProductsFromCategories(firecrawlKey: string): Promise<DiscoveredProduct[]> {
+  const allProducts: DiscoveredProduct[] = [];
+  const seenUrls = new Set<string>();
   
-  const response = await fetch('https://api.firecrawl.dev/v1/map', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${firecrawlKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      url: AZUREFILM_STORE_INFO.productsUrl,
-      limit: 500,
-      includeSubdomains: false,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Firecrawl map failed: ${error}`);
-  }
-
-  const data = await response.json();
-  const allUrls: string[] = data.links || [];
+  console.log(`[AzureFilm] Discovering products from ${AZUREFILM_CATEGORY_WHITELIST.length} categories...`);
   
-  // Filter for product URLs only
-  const productUrls = allUrls.filter((url: string) => {
-    // AzureFilm product URLs typically contain /product/
-    return url.includes('/product/') && 
-           !url.includes('/cart') && 
-           !url.includes('/checkout') &&
-           !url.includes('/account') &&
-           !url.includes('/page/');
-  });
-  
-  // Deduplicate
-  const uniqueUrls = [...new Set(productUrls)];
-  
-  console.log(`Discovered ${uniqueUrls.length} product URLs from ${allUrls.length} total links`);
-  return uniqueUrls;
-}
-
-// ============================================================================
-// STEP 2: SCRAPE INDIVIDUAL PRODUCT PAGES
-// ============================================================================
-
-async function scrapeProductPage(url: string, firecrawlKey: string): Promise<ScrapedProduct | null> {
-  try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${firecrawlKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url,
-        formats: ['markdown', 'html'],
-        waitFor: AZUREFILM_STORE_INFO.firecrawlWaitTime,
-        onlyMainContent: true,
-      }),
-    });
-
-    if (!response.ok) {
-      console.error(`Failed to scrape ${url}: ${response.status}`);
-      return null;
-    }
-
-    const data = await response.json();
-    const markdown = data.data?.markdown || data.markdown || '';
-    const html = data.data?.html || data.html || '';
-
-    // Extract title
-    const titleMatch = markdown.match(/^#\s*(.+?)(?:\n|$)/m) || 
-                       html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-    const title = titleMatch ? titleMatch[1].trim() : '';
+  // Process categories in batches of 3 for parallel efficiency
+  const batchSize = 3;
+  for (let i = 0; i < AZUREFILM_CATEGORY_WHITELIST.length; i += batchSize) {
+    const batch = AZUREFILM_CATEGORY_WHITELIST.slice(i, i + batchSize);
     
-    if (!title || isAzureFilmNonFilament(title)) {
-      console.log(`Skipping non-filament: ${title || url}`);
-      return null;
-    }
-
-    // Extract price (EUR)
-    const priceMatch = markdown.match(/€\s*(\d+[.,]\d{2})/i) ||
-                       html.match(/class="[^"]*price[^"]*"[^>]*>.*?€\s*(\d+[.,]\d{2})/i);
-    const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : null;
-
-    // Extract compare-at price (strikethrough price)
-    const compareMatch = markdown.match(/~~€\s*(\d+[.,]\d{2})~~/i) ||
-                         html.match(/<del[^>]*>.*?€\s*(\d+[.,]\d{2})/i);
-    const compareAtPrice = compareMatch ? parseFloat(compareMatch[1].replace(',', '.')) : null;
-
-    // Extract image
-    const imageMatch = html.match(/class="[^"]*product[^"]*image[^"]*"[^>]*src="([^"]+)"/i) ||
-                       html.match(/<img[^>]+src="([^"]+)"[^>]*alt="[^"]*(?:pla|petg|abs|tpu|filament)/i) ||
-                       markdown.match(/!\[.*?\]\(([^)]+azurefilm[^)]+\.(?:jpg|png|webp))/i);
-    const imageUrl = imageMatch ? imageMatch[1] : null;
-
-    // Extract colors from variant options or title
-    const colors: string[] = [];
-    
-    // Look for color options in WooCommerce structure
-    const colorOptionMatch = html.match(/data-attribute_pa_color[^>]*>([^<]+)</gi) ||
-                             html.match(/class="[^"]*color[^"]*"[^>]*>([^<]+)</gi);
-    if (colorOptionMatch) {
-      colorOptionMatch.forEach((match: string) => {
-        const colorText = match.replace(/<[^>]+>/g, '').trim();
-        if (colorText && colorText.length > 1) {
-          colors.push(colorText);
+    const batchResults = await Promise.all(
+      batch.map(async (category) => {
+        try {
+          console.log(`[AzureFilm] Scraping category: ${category.material}`);
+          
+          const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${firecrawlKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: category.categoryUrl,
+              formats: ['html', 'links'],
+              onlyMainContent: false,
+              waitFor: 3000,
+            }),
+          });
+          
+          if (!response.ok) {
+            console.error(`[AzureFilm] Failed to scrape ${category.material}: ${response.status}`);
+            return [];
+          }
+          
+          const data = await response.json();
+          const links = data.data?.links || [];
+          
+          // Filter for product links
+          const productLinks = links.filter((link: string) => 
+            link.includes('/product/') && 
+            !link.includes('/product-category/') &&
+            link.startsWith('https://azurefilm.com')
+          );
+          
+          console.log(`[AzureFilm] Found ${productLinks.length} products in ${category.material}`);
+          
+          return productLinks.map((url: string) => ({
+            url,
+            category: category.displayMaterial,
+            material: category.material,
+          }));
+        } catch (error) {
+          console.error(`[AzureFilm] Error scraping ${category.material}:`, error);
+          return [];
         }
-      });
-    }
+      })
+    );
     
-    // Extract color from title if no variants found
-    if (colors.length === 0) {
-      const titleColor = extractColorFromTitle(title);
-      if (titleColor) colors.push(titleColor);
-    }
-    
-    // Default to single color if none found
-    if (colors.length === 0) {
-      colors.push('Default');
-    }
-
-    // Extract weights
-    const weights: number[] = [];
-    const weightMatches = markdown.matchAll(/(\d+)\s*g(?:ram)?s?\b/gi);
-    for (const match of weightMatches) {
-      const weight = parseInt(match[1]);
-      if ([250, 500, 750, 1000, 2000, 3000].includes(weight)) {
-        weights.push(weight);
+    // Flatten and deduplicate
+    for (const results of batchResults) {
+      for (const product of results) {
+        if (!seenUrls.has(product.url)) {
+          seenUrls.add(product.url);
+          allProducts.push(product);
+        }
       }
     }
     
-    // Default to 1000g if no weight found
-    if (weights.length === 0) {
-      weights.push(1000);
+    // Small delay between batches to respect rate limits
+    if (i + batchSize < AZUREFILM_CATEGORY_WHITELIST.length) {
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
-
-    const isRefill = isAzureFilmRefill(title);
-
-    return {
-      url,
-      title,
-      price,
-      compareAtPrice,
-      imageUrl,
-      colors: [...new Set(colors)],
-      weights: [...new Set(weights)],
-      isRefill,
-    };
-  } catch (error) {
-    console.error(`Error scraping ${url}:`, error);
-    return null;
   }
+  
+  console.log(`[AzureFilm] Total unique products discovered: ${allProducts.length}`);
+  return allProducts;
 }
 
-function extractColorFromTitle(title: string): string | null {
-  // Common color words to look for
-  const colorWords = [
-    'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 
-    'pink', 'grey', 'gray', 'brown', 'gold', 'silver', 'bronze', 'copper',
-    'natural', 'transparent', 'clear', 'neon', 'pastel', 'skin',
-    'rainbow', 'galaxy', 'sunset', 'cherry', 'walnut', 'oak', 'olive'
-  ];
+// ============================================================================
+// STEP 2: SCRAPE PRODUCT PAGES
+// ============================================================================
+
+async function scrapeProductPages(
+  products: DiscoveredProduct[], 
+  firecrawlKey: string
+): Promise<ScrapedProduct[]> {
+  const scrapedProducts: ScrapedProduct[] = [];
+  const batchSize = 5; // Parallel batch size
   
-  const lowerTitle = title.toLowerCase();
+  console.log(`[AzureFilm] Scraping ${products.length} product pages...`);
   
-  for (const color of colorWords) {
-    if (lowerTitle.includes(color)) {
-      // Try to get the full color description
-      const regex = new RegExp(`(\\w+\\s+)?${color}(\\s+\\w+)?`, 'i');
-      const match = lowerTitle.match(regex);
-      if (match) {
-        return match[0].trim();
+  for (let i = 0; i < products.length; i += batchSize) {
+    const batch = products.slice(i, i + batchSize);
+    
+    const batchResults = await Promise.all(
+      batch.map(async (product) => {
+        try {
+          const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${firecrawlKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: product.url,
+              formats: ['html'],
+              onlyMainContent: false,
+              waitFor: 2000,
+            }),
+          });
+          
+          if (!response.ok) {
+            console.error(`[AzureFilm] Failed to scrape ${product.url}: ${response.status}`);
+            return null;
+          }
+          
+          const data = await response.json();
+          const html = data.data?.html || '';
+          
+          // Extract H1 title
+          const h1Match = html.match(/<h1[^>]*class="[^"]*product_title[^"]*"[^>]*>([^<]+)<\/h1>/i) ||
+                          html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+          const h1Title = h1Match?.[1]?.trim() || '';
+          
+          if (!h1Title) {
+            console.warn(`[AzureFilm] No H1 found for ${product.url}`);
+            return null;
+          }
+          
+          // Extract price (WooCommerce pattern)
+          // Pattern 1: <span class="woocommerce-Price-amount">€17.50</span>
+          // Pattern 2: data-price="17.50"
+          let priceEur: number | null = null;
+          
+          // Try JSON-LD first
+          const jsonLdMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+          if (jsonLdMatch) {
+            for (const match of jsonLdMatch) {
+              try {
+                const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
+                const jsonData = JSON.parse(jsonContent);
+                if (jsonData.offers?.price) {
+                  priceEur = parseFloat(jsonData.offers.price);
+                  break;
+                }
+                if (jsonData['@graph']) {
+                  for (const item of jsonData['@graph']) {
+                    if (item.offers?.price) {
+                      priceEur = parseFloat(item.offers.price);
+                      break;
+                    }
+                  }
+                }
+              } catch {
+                // Continue to next pattern
+              }
+            }
+          }
+          
+          // Fallback: WooCommerce price pattern
+          if (!priceEur) {
+            const priceMatch = html.match(/class="woocommerce-Price-amount[^"]*"[^>]*>.*?([0-9]+[.,][0-9]{2})/i);
+            if (priceMatch) {
+              priceEur = parseFloat(priceMatch[1].replace(',', '.'));
+            }
+          }
+          
+          // Extract featured image
+          let imageUrl: string | null = null;
+          const imageMatch = html.match(/class="[^"]*woocommerce-product-gallery__image[^"]*"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/i) ||
+                             html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i) ||
+                             html.match(/class="[^"]*product[^"]*image[^"]*"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/i);
+          if (imageMatch) {
+            imageUrl = imageMatch[1];
+          }
+          
+          return {
+            url: product.url,
+            h1Title,
+            price: priceEur ? priceEur * EUR_TO_USD_RATE : null,
+            priceEur,
+            imageUrl,
+            category: product.category,
+            material: product.material,
+          };
+        } catch (error) {
+          console.error(`[AzureFilm] Error scraping ${product.url}:`, error);
+          return null;
+        }
+      })
+    );
+    
+    // Filter out failures
+    for (const result of batchResults) {
+      if (result) {
+        scrapedProducts.push(result);
       }
     }
+    
+    // Progress logging
+    if ((i + batchSize) % 20 === 0 || i + batchSize >= products.length) {
+      console.log(`[AzureFilm] Scraped ${Math.min(i + batchSize, products.length)}/${products.length} products`);
+    }
+    
+    // Small delay between batches
+    if (i + batchSize < products.length) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
   }
   
-  return null;
+  console.log(`[AzureFilm] Successfully scraped ${scrapedProducts.length} products`);
+  return scrapedProducts;
 }
 
 // ============================================================================
-// STEP 3: GENERATE PRODUCT ID
+// STEP 5: INSERT PRODUCTS
 // ============================================================================
 
-function generateProductId(url: string, color: string, weight: number): string {
-  // Extract slug from URL
-  const urlMatch = url.match(/\/product\/([^\/]+)/);
-  const slug = urlMatch ? urlMatch[1] : url.split('/').pop() || 'unknown';
-  
-  const colorSlug = color.toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .substring(0, 30);
-  
-  return `azurefilm_${slug}_${colorSlug}_${weight}g`;
+function generateProductId(url: string): string {
+  // Generate stable ID from URL
+  // e.g., "https://azurefilm.com/product/pla-original-filament-black/" -> "azurefilm-pla-original-filament-black"
+  const urlPath = url.replace('https://azurefilm.com/product/', '').replace(/\/$/, '');
+  return `azurefilm-${urlPath}`;
 }
 
 // ============================================================================
-// MAIN SYNC FUNCTION
+// MAIN HANDLER
 // ============================================================================
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-
+  
   const startTime = Date.now();
-  const result: SyncResult = {
-    success: false,
-    productsDiscovered: 0,
-    productsCreated: 0,
-    productsUpdated: 0,
-    productsFailed: 0,
-    productsSkipped: 0,
-    duplicatesFixed: 0,
-    errors: [],
-    duration: 0,
-  };
-
+  
   try {
-    // Parse request options
-    const body = await req.json().catch(() => ({}));
-    const cleanSlate = body.cleanSlate === true;
-    const limit = body.limit || 500;
-
-    console.log(`Starting AzureFilm sync (cleanSlate: ${cleanSlate}, limit: ${limit})`);
-
     // Initialize clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
-
+    
     if (!firecrawlKey) {
       throw new Error('FIRECRAWL_API_KEY not configured');
     }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get brand ID
-    const { data: brand } = await supabase
-      .from('automated_brands')
-      .select('id')
-      .eq('brand_slug', 'azurefilm')
-      .single();
-
-    const brandId = brand?.id || null;
-
-    // ========================================================================
-    // STEP 1: OPTIONAL CLEAN SLATE
-    // ========================================================================
     
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Parse request body
+    const body = await req.json().catch(() => ({}));
+    const cleanSlate = body.cleanSlate === true;
+    
+    console.log(`[AzureFilm] Starting sync (cleanSlate: ${cleanSlate})`);
+    
+    // ========================================================================
+    // STEP 0: Create sync log entry
+    // ========================================================================
+    const { data: syncLog, error: syncLogError } = await supabase
+      .from('brand_sync_logs')
+      .insert({
+        brand_slug: 'azurefilm',
+        sync_type: cleanSlate ? 'clean_slate' : 'incremental',
+        status: 'running',
+        started_at: new Date().toISOString(),
+        triggered_by: 'manual',
+      })
+      .select('id')
+      .single();
+    
+    if (syncLogError) {
+      console.error('[AzureFilm] Failed to create sync log:', syncLogError);
+    }
+    const syncLogId = syncLog?.id;
+    
+    // ========================================================================
+    // STEP 1: Discover products from category pages
+    // ========================================================================
+    const discoveredProducts = await discoverProductsFromCategories(firecrawlKey);
+    
+    if (discoveredProducts.length === 0) {
+      throw new Error('No products discovered from category pages');
+    }
+    
+    // ========================================================================
+    // STEP 2: Scrape product pages for H1 titles and details
+    // ========================================================================
+    const scrapedProducts = await scrapeProductPages(discoveredProducts, firecrawlKey);
+    
+    // ========================================================================
+    // STEP 3: Safety validation
+    // ========================================================================
+    if (scrapedProducts.length < AZUREFILM_SAFE_DELETE_THRESHOLD) {
+      throw new Error(
+        `Safety check failed: Only ${scrapedProducts.length} products scraped, ` +
+        `minimum ${AZUREFILM_SAFE_DELETE_THRESHOLD} required for clean slate sync`
+      );
+    }
+    
+    console.log(`[AzureFilm] Safety check passed: ${scrapedProducts.length} products (threshold: ${AZUREFILM_SAFE_DELETE_THRESHOLD})`);
+    
+    // ========================================================================
+    // STEP 4: Clean slate deletion (if enabled)
+    // ========================================================================
     if (cleanSlate) {
-      console.log('Performing clean slate deletion...');
-      const { error: deleteError } = await supabase
+      console.log('[AzureFilm] Performing clean slate deletion...');
+      
+      const { error: deleteError, count: deleteCount } = await supabase
         .from('filaments')
         .delete()
         .ilike('vendor', 'azurefilm');
-
+      
       if (deleteError) {
-        console.error('Clean slate deletion failed:', deleteError);
-      } else {
-        console.log('Deleted existing AzureFilm products');
+        console.error('[AzureFilm] Delete error:', deleteError);
+        throw new Error(`Failed to delete existing products: ${deleteError.message}`);
       }
+      
+      console.log(`[AzureFilm] Deleted ${deleteCount || 0} existing products`);
     }
-
-    // ========================================================================
-    // STEP 2: DISCOVER PRODUCT URLS
-    // ========================================================================
     
-    const productUrls = await discoverProductUrls(firecrawlKey);
-    result.productsDiscovered = productUrls.length;
-
-    if (productUrls.length === 0) {
-      throw new Error('No product URLs discovered');
-    }
-
     // ========================================================================
-    // STEP 3: SCRAPE AND PROCESS PRODUCTS
+    // STEP 5: Insert products with enrichment
     // ========================================================================
+    const filterStats = createFilterStats();
+    const productsToInsert: any[] = [];
+    const productsByCategory: Record<string, number> = {};
+    let skipped = 0;
+    let errors = 0;
     
-    const productsToUpsert: any[] = [];
-    const limitedUrls = productUrls.slice(0, limit);
-
-    console.log(`Scraping ${limitedUrls.length} product pages...`);
-
-    for (let i = 0; i < limitedUrls.length; i++) {
-      const url = limitedUrls[i];
-      
-      // Rate limiting
-      if (i > 0) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-
-      console.log(`[${i + 1}/${limitedUrls.length}] Scraping: ${url}`);
-      
-      const product = await scrapeProductPage(url, firecrawlKey);
-      
-      if (!product) {
-        result.productsSkipped++;
-        continue;
-      }
-
-      // Create variant-exploded rows
-      for (const color of product.colors) {
-        for (const weight of product.weights) {
-          const enrichment = enrichAzureFilmProduct(product.title, color);
-          
-          if (enrichment.isNonFilament) {
-            result.productsSkipped++;
-            continue;
-          }
-
-          const productId = generateProductId(product.url, color, weight);
-          
-          productsToUpsert.push({
-            product_id: productId,
-            product_title: product.title,
-            vendor: AZUREFILM_STORE_INFO.vendor,
-            brand_id: brandId,
-            product_url: product.url,
-            featured_image: product.imageUrl,
-            variant_price: product.price,
-            variant_compare_at_price: product.compareAtPrice,
-            variant_available: true,
-            material: enrichment.material,
-            finish_type: enrichment.finishType,
-            product_line_id: enrichment.productLineId,
-            color_hex: enrichment.colorHex || getAzureFilmColorHex(color),
-            nozzle_temp_min_c: enrichment.nozzleTempMin,
-            nozzle_temp_max_c: enrichment.nozzleTempMax,
-            bed_temp_min_c: enrichment.bedTempMin,
-            bed_temp_max_c: enrichment.bedTempMax,
-            tds_url: enrichment.tdsUrl,
-            net_weight_g: weight,
-            diameter_nominal_mm: enrichment.diameterNominalMm,
-            is_nozzle_abrasive: enrichment.isAbrasive,
-            high_speed_capable: enrichment.highSpeedCapable,
-            auto_created: true,
-            auto_updated: true,
-            last_scraped_at: new Date().toISOString(),
-            sync_status: 'synced',
-          });
+    for (const product of scrapedProducts) {
+      try {
+        // Check for non-filament
+        if (isAzureFilmNonFilament(product.h1Title)) {
+          console.log(`[AzureFilm] Skipping non-filament: ${product.h1Title}`);
+          skipped++;
+          continue;
         }
+        
+        // Check for 2.85mm diameter
+        if (is285mmDiameter(product.h1Title)) {
+          console.log(`[AzureFilm] Skipping 2.85mm product: ${product.h1Title}`);
+          skipped++;
+          continue;
+        }
+        
+        // Extract weight and apply filter
+        const weightGrams = extractWeightFromText(product.h1Title) || 1000;
+        const filterResult = shouldIncludeVariant(weightGrams, 1.75, product.h1Title);
+        updateFilterStats(filterStats, filterResult);
+        
+        if (!filterResult.include) {
+          console.log(`[AzureFilm] Filtering out: ${product.h1Title} (${filterResult.reason})`);
+          skipped++;
+          continue;
+        }
+        
+        // Enrich product
+        const colorName = extractColorFromAzureFilmTitle(product.h1Title);
+        const enrichment = enrichAzureFilmProduct(product.h1Title, colorName);
+        
+        if (enrichment.isNonFilament) {
+          skipped++;
+          continue;
+        }
+        
+        // Get color hex
+        const colorHex = colorName ? getAzureFilmColorHex(colorName) : null;
+        
+        // Generate stable product ID
+        const productId = generateProductId(product.url);
+        
+        // Build product record
+        const productRecord = {
+          id: productId,
+          product_title: product.h1Title,
+          vendor: AZUREFILM_STORE_INFO.vendor,
+          material: enrichment.material,
+          finish_type: enrichment.finishType,
+          product_line_id: enrichment.productLineId,
+          color_family: colorName,
+          color_hex: colorHex,
+          variant_price: product.price,
+          price_eur: product.priceEur,
+          featured_image: product.imageUrl,
+          product_url: product.url,
+          net_weight_g: weightGrams,
+          diameter_nominal_mm: 1.75,
+          nozzle_temp_min_c: enrichment.nozzleTempMin,
+          nozzle_temp_max_c: enrichment.nozzleTempMax,
+          bed_temp_min_c: enrichment.bedTempMin,
+          bed_temp_max_c: enrichment.bedTempMax,
+          tds_url: enrichment.tdsUrl,
+          is_nozzle_abrasive: enrichment.isAbrasive,
+          high_speed_capable: enrichment.highSpeedCapable,
+          auto_created: true,
+          auto_updated: true,
+          last_scraped_at: new Date().toISOString(),
+        };
+        
+        productsToInsert.push(productRecord);
+        
+        // Track by category
+        productsByCategory[product.category] = (productsByCategory[product.category] || 0) + 1;
+        
+      } catch (error) {
+        console.error(`[AzureFilm] Error processing ${product.url}:`, error);
+        errors++;
       }
     }
-
-    // ========================================================================
-    // STEP 4: UPSERT TO DATABASE
-    // ========================================================================
     
-    console.log(`Upserting ${productsToUpsert.length} products...`);
-
-    const batchSize = 50;
-    for (let i = 0; i < productsToUpsert.length; i += batchSize) {
-      const batch = productsToUpsert.slice(i, i + batchSize);
+    logFilterStats('AzureFilm', filterStats);
+    
+    // Batch insert
+    console.log(`[AzureFilm] Inserting ${productsToInsert.length} products...`);
+    
+    let created = 0;
+    const insertBatchSize = 50;
+    
+    for (let i = 0; i < productsToInsert.length; i += insertBatchSize) {
+      const batch = productsToInsert.slice(i, i + insertBatchSize);
       
-      const { error: upsertError, data: upsertData } = await supabase
+      const { error: insertError, count } = await supabase
         .from('filaments')
-        .upsert(batch, {
-          onConflict: 'product_id',
+        .upsert(batch, { 
+          onConflict: 'id',
           ignoreDuplicates: false,
-        })
-        .select('id');
-
-      if (upsertError) {
-        console.error(`Batch upsert error:`, upsertError);
-        result.productsFailed += batch.length;
-        result.errors.push(`Batch ${i / batchSize + 1}: ${upsertError.message}`);
+        });
+      
+      if (insertError) {
+        console.error(`[AzureFilm] Insert batch error:`, insertError);
+        errors += batch.length;
       } else {
-        // Count creates vs updates (simplified - count as created if we got data back)
-        result.productsCreated += upsertData?.length || 0;
+        created += batch.length;
       }
     }
-
-    // Adjust counts
-    result.productsUpdated = productsToUpsert.length - result.productsCreated - result.productsFailed;
-    if (result.productsUpdated < 0) result.productsUpdated = 0;
-
-    // ========================================================================
-    // STEP 5: UPDATE BRAND STATS AND FIX DUPLICATES
-    // ========================================================================
     
-    console.log('Updating brand statistics...');
-
-    // Update brand product counts
-    await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'azurefilm' });
-    await supabase.rpc('update_brand_enrichment_counts', { p_brand_slug: 'azurefilm' });
-
-    // Fix duplicate hex codes
-    const { data: duplicates } = await supabase.rpc('find_duplicate_hexes', {
-      p_vendor: 'AzureFilm',
-    });
-
-    if (duplicates && duplicates.length > 0) {
-      console.log(`Found ${duplicates.length} duplicate hex entries to review`);
-      result.duplicatesFixed = duplicates.length;
+    console.log(`[AzureFilm] Inserted ${created} products`);
+    
+    // ========================================================================
+    // Update sync log
+    // ========================================================================
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    
+    if (syncLogId) {
+      await supabase
+        .from('brand_sync_logs')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          duration_seconds: parseFloat(duration),
+          products_discovered: discoveredProducts.length,
+          products_created: created,
+          products_updated: 0,
+          notes: `Categories: ${AZUREFILM_CATEGORY_WHITELIST.map(c => c.material).join(', ')}`,
+        })
+        .eq('id', syncLogId);
     }
-
-    // Update automated_brands
-    await supabase
-      .from('automated_brands')
-      .update({
-        last_scrape_at: new Date().toISOString(),
-        scraping_active: false,
-      })
-      .eq('brand_slug', 'azurefilm');
-
-    result.success = true;
-    result.duration = Date.now() - startTime;
-
-    console.log('=== SYNC COMPLETE ===');
-    console.log(`Duration: ${result.duration}ms`);
-    console.log(`Discovered: ${result.productsDiscovered}`);
-    console.log(`Created: ${result.productsCreated}`);
-    console.log(`Updated: ${result.productsUpdated}`);
-    console.log(`Skipped: ${result.productsSkipped}`);
-    console.log(`Failed: ${result.productsFailed}`);
-
+    
+    // ========================================================================
+    // Return result
+    // ========================================================================
+    const result: SyncResult = {
+      success: true,
+      summary: {
+        totalDiscovered: discoveredProducts.length,
+        created,
+        updated: 0,
+        skipped,
+        errors,
+      },
+      categoriesProcessed: AZUREFILM_CATEGORY_WHITELIST.length,
+      productsByCategory,
+      duration: `${duration}s`,
+      duration_ms: Date.now() - startTime,
+    };
+    
+    console.log(`[AzureFilm] Sync completed in ${duration}s`);
+    console.log(`[AzureFilm] Summary:`, JSON.stringify(result.summary));
+    
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-
+    
   } catch (error) {
-    console.error('Sync failed:', error);
-    result.errors.push(error instanceof Error ? error.message : 'Unknown error');
-    result.duration = Date.now() - startTime;
-
-    return new Response(JSON.stringify(result), {
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.error('[AzureFilm] Sync failed:', error);
+    
+    return new Response(JSON.stringify({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      duration: `${duration}s`,
+      duration_ms: Date.now() - startTime,
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
