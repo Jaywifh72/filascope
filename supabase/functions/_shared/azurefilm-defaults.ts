@@ -249,14 +249,17 @@ export const AZUREFILM_COLOR_MAPPING: Record<string, string> = {
   'off-white': 'FAF9F6',   // Slightly cream white
   
   // Distinct grey shades (CRITICAL: prevent duplicate hex)
-  'dark grey': '4A4A4A',   // Darker than standard grey
-  'light grey': 'A8A8A8',  // Lighter than standard grey  
-  'shark grey': '5C5C5C',  // Distinct shark grey
+  'dark grey': '424242',   // Much darker than standard grey
+  'light grey': 'BDBDBD',  // Much lighter than standard grey  
+  'shark grey': '546E7A',  // Blue-grey tone, distinct from grey
   
   // Glitter/Effect variants (CRITICAL: distinct from solid colors)
-  'glitter black': '2D2D2D', // Slightly different from solid black
+  'glitter black': '282828', // Slightly lighter than solid black (1A1A1A)
   'glitter silver': 'B8B8B8', // Distinct from solid silver
   'glitter gold': 'CFB53B',   // Distinct from solid gold
+  'glitter blue': '2979FF',   // Distinct from standard blue
+  'glitter green': '00C853',  // Distinct from standard green
+  'glitter red': 'FF1744',    // Distinct from standard red
   
   // Metallic
   'gold': 'D4AF37',
@@ -281,7 +284,7 @@ export const AZUREFILM_COLOR_MAPPING: Record<string, string> = {
   'mint': '98FF98',
   'olive': '808000',
   'forest green': '228B22',
-  'grass green': '4CAF50',  // Distinct from standard green
+  'grass green': '43A047',  // Distinct from standard green (2E7D32)
   
   // Reds/Pinks
   'dark red': 'B71C1C',
@@ -290,7 +293,7 @@ export const AZUREFILM_COLOR_MAPPING: Record<string, string> = {
   'magenta': 'E91E63',
   'rose': 'FF007F',
   'coral': 'FF7F50',
-  'tiger orange': 'FF8C00', // Distinct from standard orange
+  'tiger orange': 'E65100', // Darker/different from orange (FF6D00)
   
   // Neon colors
   'neon green': '39FF14',
@@ -329,11 +332,11 @@ export const AZUREFILM_COLOR_MAPPING: Record<string, string> = {
   'black ebony': '3C2415',   // Dark ebony wood
   'grey oak': '8B8378',      // Grey-toned oak (distinct from standard oak)
   
-  // Translucent/Lumos
-  'transparent': 'FFFFFF',
-  'translucent': 'F5F5F5',
-  'clear': 'FFFFFF',
-  'litho white': 'F8F8FF',   // Ghost white for lithophane
+  // Translucent/Lumos - use distinct hex values for each
+  'transparent': 'E3F2FD',   // Very light blue tint to differentiate from white
+  'translucent': 'ECEFF1',   // Very light grey tint
+  'clear': 'F5F5F5',         // Slightly off-white
+  'litho white': 'FAFAFA',   // Ghost white for lithophane (distinct from pure white)
   
   // Special effects
   'rainbow': 'FF69B4',

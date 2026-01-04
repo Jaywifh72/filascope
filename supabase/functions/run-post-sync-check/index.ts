@@ -1871,9 +1871,24 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Brands where Refill + Standard spool variants share the same color hex (by design)
+      // For these brands, duplicates like "PETG Black" and "Refill PETG Black" are EXPECTED
+      const refillDuplicateExpectedBrands = ['azurefilm'];
+      const isRefillBrand = refillDuplicateExpectedBrands.includes(brandSlug);
+      
       // Only flag as duplicate if DIFFERENT color names share the same hex
       for (const [hex, colorNames] of Object.entries(colorHexMap)) {
         if (colorNames.length > 1) {
+          // For refill brands, check if duplicates are just Refill vs Standard variants
+          if (isRefillBrand) {
+            const hasRefill = colorNames.some(name => /refill/i.test(name));
+            const hasNonRefill = colorNames.some(name => !/refill/i.test(name));
+            if (hasRefill && hasNonRefill && colorNames.length === 2) {
+              // This is expected - skip this duplicate (Refill + Spool same color)
+              continue;
+            }
+          }
+          
           swatchIssues.push({
             id: variants[0].id,
             title: `${lineId}: ${hex}`,
@@ -2418,7 +2433,7 @@ Deno.serve(async (req) => {
       'overture': 15,           // PLA, PLA Pro, PETG, TPU, ABS, Silk, Matte, etc.
       'bambu-lab': 40,          // PLA, PETG, ABS, ASA, TPU, PLA-CF, PAHT-CF, Marble, Silk, Sparkle, etc.
       'fillamentum': 25,        // PLA, ASA, PETG, Flexfill, CPE, Nylon, Timberfill, etc.
-      'azurefilm': 20,          // ABS (Plus, Prime), ASA (Standard, Prime), Carbon Fiber (PAHT-CF, PET-CF), PCTG (Standard, Translucent), PETG (Standard, Hyper Speed, Translucent), PLA (Original, Standard, Hyper Speed, Silk, Translucent, Strongman), LumberLay, PVA
+      'azurefilm': 19,          // ABS (Plus, Prime), ASA (Standard, Prime), Carbon Fiber (PAHT-CF, PET-CF), PCTG (Standard, Translucent), PETG (Hyper Speed, Translucent), PLA (Original, Standard, Hyper Speed, Silk, Translucent, Strongman), LumberLay, PVA - Note: PETG Standard doesn't exist, all PETG is Hyper Speed
       'ninjatek': 10,           // Cheetah, NinjaFlex, Armadillo, Eel, SemiFlex, etc.
       'polymaker': 25,          // PolyLite, PolyTerra, PolyMax, PolyMide, PolyDissolve, etc.
       'colorfabb': 20,          // PLA Economy, PETG, nGen, PA, Amphora, XT, etc.
