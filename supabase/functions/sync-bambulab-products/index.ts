@@ -351,18 +351,75 @@ function extractColorsFromPageContent(markdown: string, html: string = ''): stri
  * Extract color variants with their associated images from __NEXT_DATA__ JSON
  * Bambu Lab stores variant images in the page props
  */
-function extractColorVariantsWithImages(html: string, markdown: string): ColorVariantData[] {
+function extractColorVariantsWithImages(html: string, markdown: string, productUrl: string): ColorVariantData[] {
   const variants: ColorVariantData[] = [];
   const seenColors = new Set<string>();
+  
+  // Build a map of color names to images from HTML patterns
+  const colorImageMap = new Map<string, string>();
+  
+  // Pattern 1: Extract images from variant gallery/picker HTML
+  // Look for patterns like: <img src="...Black.png..." alt="Black">
+  const imgPatterns = [
+    /<img[^>]*src="(https:\/\/store\.bblcdn\.com[^"]+)"[^>]*alt="([A-Z][a-zA-Z\s]+)"[^>]*>/gi,
+    /<img[^>]*alt="([A-Z][a-zA-Z\s]+)"[^>]*src="(https:\/\/store\.bblcdn\.com[^"]+)"[^>]*>/gi,
+  ];
+  
+  for (const pattern of imgPatterns) {
+    const matches = html.matchAll(pattern);
+    for (const match of matches) {
+      const src = match[1].includes('bblcdn.com') ? match[1] : match[2];
+      const alt = match[1].includes('bblcdn.com') ? match[2] : match[1];
+      
+      if (alt && isValidColorName(alt) && src && !src.includes('logo')) {
+        colorImageMap.set(alt.toLowerCase(), src);
+      }
+    }
+  }
+  
+  // Pattern 2: Try to find variant data in JSON-LD or embedded scripts
+  const scriptMatches = html.matchAll(/<script[^>]*>([^<]*variant[^<]*image[^<]*)<\/script>/gi);
+  for (const scriptMatch of scriptMatches) {
+    try {
+      // Look for variant objects with image URLs
+      const variantImages = scriptMatch[1].matchAll(/"(?:title|name)":\s*"([^"]+)"[^}]*"(?:image|src|featured_image)":\s*(?:\{[^}]*"src":\s*)?"([^"]+)"/gi);
+      for (const vm of variantImages) {
+        const colorName = vm[1];
+        const imageUrl = vm[2];
+        if (isValidColorName(colorName) && imageUrl && !imageUrl.includes('logo')) {
+          colorImageMap.set(colorName.toLowerCase(), imageUrl.replace(/^\/\//, 'https://'));
+        }
+      }
+    } catch (e) {
+      // Continue
+    }
+  }
   
   // Try __NEXT_DATA__ JSON first (most reliable for color-image mapping)
   const nextDataMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([^<]+)<\/script>/i);
   if (nextDataMatch) {
     try {
       const nextData = JSON.parse(nextDataMatch[1]);
-      // Navigate to product variants in Next.js page props
+      // Navigate to product variants in Next.js page props - check multiple paths
       const productVariants = nextData?.props?.pageProps?.product?.variants || 
-                              nextData?.props?.pageProps?.data?.product?.variants || [];
+                              nextData?.props?.pageProps?.data?.product?.variants ||
+                              nextData?.props?.pageProps?.initialData?.product?.variants || [];
+      
+      // Also check for images in product.images array with position/alt mapping
+      const productImages = nextData?.props?.pageProps?.product?.images ||
+                            nextData?.props?.pageProps?.data?.product?.images || [];
+      
+      // Build a position-to-image map
+      const positionImageMap = new Map<number, string>();
+      for (const img of productImages) {
+        if (img.position !== undefined && img.src) {
+          positionImageMap.set(img.position, img.src.replace(/^\/\//, 'https://'));
+        }
+        // Also try alt text matching
+        if (img.alt && img.src && isValidColorName(img.alt)) {
+          colorImageMap.set(img.alt.toLowerCase(), img.src.replace(/^\/\//, 'https://'));
+        }
+      }
       
       for (const v of productVariants) {
         const colorName = v?.option1 || v?.selectedOptions?.[0]?.value || v?.title;
@@ -375,6 +432,17 @@ function extractColorVariantsWithImages(html: string, markdown: string): ColorVa
         
         // Get image URL - check multiple possible locations
         let imageUrl = v?.image?.src || v?.featured_image?.src || v?.featured_image || null;
+        
+        // Try position mapping
+        if (!imageUrl && v?.image_id) {
+          const posImg = positionImageMap.get(v.image_id);
+          if (posImg) imageUrl = posImg;
+        }
+        
+        // Try color name mapping from HTML patterns
+        if (!imageUrl) {
+          imageUrl = colorImageMap.get(colorKey) || null;
+        }
         
         // Clean up image URL (remove query params that might cause issues)
         if (imageUrl && typeof imageUrl === 'string') {
@@ -390,21 +458,28 @@ function extractColorVariantsWithImages(html: string, markdown: string): ColorVa
       }
       
       if (variants.length > 0) {
-        console.log(`[BambuLab] Extracted ${variants.length} color variants with images from __NEXT_DATA__`);
+        console.log(`[BambuLab] Extracted ${variants.length} color variants from __NEXT_DATA__`);
+        const withImages = variants.filter(v => v.imageUrl).length;
+        console.log(`[BambuLab] ${withImages}/${variants.length} variants have color-specific images`);
         return variants;
       }
     } catch (e) {
       // JSON parse failed, continue with fallback methods
+      console.log(`[BambuLab] __NEXT_DATA__ parse failed, using HTML fallback`);
     }
   }
   
-  // Fallback: Use extractColorsFromPageContent and assign no specific images
+  // Fallback: Use extractColorsFromPageContent and check colorImageMap for images
   const colorNames = extractColorsFromPageContent(markdown, html);
   for (const colorName of colorNames) {
+    const colorKey = colorName.toLowerCase();
+    if (seenColors.has(colorKey)) continue;
+    seenColors.add(colorKey);
+    
     variants.push({
       colorName,
       colorHex: getBambuLabColorHex(colorName) || getColorHex(colorName) || null,
-      imageUrl: null, // Will use fallback image from product
+      imageUrl: colorImageMap.get(colorKey) || null,
     });
   }
   
@@ -522,7 +597,7 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
     }
     
     // Extract color variants with their associated images
-    let colorVariants = extractColorVariantsWithImages(html, markdown);
+    let colorVariants = extractColorVariantsWithImages(html, markdown, url);
     
     // ABS fallback: If scraping returns 0 colors for ABS, use hardcoded known colors
     if (colorVariants.length === 0 && /\babs-filament\b/i.test(url)) {

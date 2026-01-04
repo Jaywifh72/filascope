@@ -83,13 +83,13 @@ export function getBaseProductName(title: string): string {
   }
 
   // AZUREFILM PATTERN: Handle "[Material] [ProductLine] filament [Color]" format
-  // NOTE: High Speed and High-Speed are product lines, NOT colors
-  const azurefilmFilamentMatch = normalizedTitle.match(/^((?:PLA|PETG|ABS|ASA|TPU|Flexible\s+\d+A)(?:\s+(?:Matte|Silk|Original|Hyper\s*Speed|High[- ]?Speed|HS|Lumos|CMYK|Basic|Plus|Pro)(?:\s+(?:Dual\s+Color|Rainbow|Litho))?)?)\s+(?:filament\s+)?(.+)$/i);
+  // NOTE: High Speed, High-Speed, Tough+, etc. are product lines, NOT colors
+  const azurefilmFilamentMatch = normalizedTitle.match(/^((?:PLA|PETG|ABS|ASA|TPU|Flexible\s+\d+A)(?:\s+(?:Matte|Silk|Original|Hyper\s*Speed|High[- ]?Speed|HS|Lumos|CMYK|Basic|Plus|Pro|Tough\+?)(?:\s+(?:Dual\s+Color|Rainbow|Litho))?)?)\s+(?:filament\s+)?(.+)$/i);
   if (azurefilmFilamentMatch) {
     const basePart = azurefilmFilamentMatch[1].trim();
     const remainder = azurefilmFilamentMatch[2].trim();
     // Don't match if remainder is a product line suffix, not a color
-    const productLineSuffixes = ['high speed', 'high-speed', 'glow in the dark', 'galaxy', 'marble'];
+    const productLineSuffixes = ['high speed', 'high-speed', 'glow in the dark', 'galaxy', 'marble', 'tough', 'translucent', 'aero', 'hf', 'cf', 'gf', 'wood', 'metal', 'sparkle'];
     const isProductLine = productLineSuffixes.some(s => remainder.toLowerCase().startsWith(s));
     if (!isProductLine && !remainder.match(/\d+-pack|Sample|plate|Magnetic|drill/i)) {
       return basePart;
@@ -176,6 +176,21 @@ export function getBaseProductName(title: string): string {
     if (match2) {
       return match2[1].trim();
     }
+  }
+  
+  // BAMBU LAB PATTERN: Handle product lines like "PLA Tough+", "PLA Basic", "PETG HF", "PLA Matte"
+  // These MUST be matched before the simple material match to avoid "Tough+" being stripped as color
+  const bambuProductLines = [
+    'Tough\\+?', 'Basic', 'Matte', 'Silk', 'Silk\\+', 'Translucent', 'Wood', 'Metal', 
+    'Galaxy', 'Glow', 'Sparkle', 'Aero', 'HF', 'HS', 'CF', 'GF',
+  ];
+  const bambuLinePattern = new RegExp(
+    `^((?:PLA|PETG|ABS|ASA|TPU|PC|PA|PET|PPS)(?:-(?:CF|GF))?\\s+(?:${bambuProductLines.join('|')}))$`,
+    'i'
+  );
+  const bambuLineMatch = cleanedForParsing.match(bambuLinePattern);
+  if (bambuLineMatch) {
+    return bambuLineMatch[1].trim();
   }
   
   // Simple material match for Anycubic: "[Anycubic] Material [Filament] Color"
