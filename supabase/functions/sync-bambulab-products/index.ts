@@ -106,7 +106,7 @@ async function discoverProductsFromShopify(): Promise<ShopifyProduct[]> {
   console.log(`[BambuLab] Discovering products from Shopify JSON API...`);
   
   while (true) {
-    const url = `${BAMBULAB_STORE_INFO.productsUrl}/products.json?limit=${limit}&page=${page}`;
+    const url = `${BAMBULAB_STORE_INFO.baseUrl}/products.json?limit=${limit}&page=${page}`;
     console.log(`[BambuLab] Fetching page ${page}: ${url}`);
     
     try {
