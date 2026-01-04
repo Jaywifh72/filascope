@@ -1104,6 +1104,35 @@ export const EXCLUDED_COLOR_PATTERNS = [
   /one\s*spool/i,
   /\boptions?\b/i,
   /\bsuit\b/i,
+  
+  // UI/Form labels that appear in scraped markdown
+  /^add$/i,
+  /^type$/i,
+  /^size$/i,
+  /^quantity$/i,
+  /^refill$/i,
+  /^color$/i,
+  /^weight$/i,
+  /^material$/i,
+  /^region$/i,
+  /^country$/i,
+  /^states?$/i,
+  /^features?$/i,
+  /^description$/i,
+  /^specifications?$/i,
+  /^details?$/i,
+  /united\s*states/i,
+  /product\s*features/i,
+  /^select$/i,
+  /^choose$/i,
+  /^buy$/i,
+  /^cart$/i,
+  /^checkout$/i,
+  /^shipping$/i,
+  /^delivery$/i,
+  /^stock$/i,
+  /^available$/i,
+  /^sold\s*out$/i,
 ];
 
 // Known valid color words for strict validation
@@ -1133,13 +1162,16 @@ export function isValidColorName(text: string): boolean {
   const words = text.toLowerCase().split(/\s+/);
   if (words.length > 3) return false; // Colors are at most 3 words
   
-  // At least one word should be a known color word
+  // MUST have at least one known color word (strict validation)
   const hasKnownColor = words.some(word => KNOWN_COLOR_WORDS.has(word));
+  if (!hasKnownColor) {
+    return false; // Reject if no known color word
+  }
   
-  // If it's a single capitalized word or compound color, allow it
+  // Must also be in proper color format (capitalized words)
   const isProperColorFormat = /^[A-Z][a-z]+(\s+[A-Z][a-z]+){0,2}$/.test(text);
   
-  return hasKnownColor || isProperColorFormat;
+  return isProperColorFormat;
 }
 
 // ============================================================================
