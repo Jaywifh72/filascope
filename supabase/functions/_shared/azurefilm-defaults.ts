@@ -671,10 +671,24 @@ export function extractColorFromAzureFilmTitle(title: string): string | null {
     .trim();
   
   // Try to extract color from the end of the title (most common pattern)
+  // CRITICAL: Effect/compound patterns MUST come first to capture "Glitter Black" before "Black"
   const colorPatterns = [
-    // Two-word colors
+    // EFFECT + COLOR patterns (MUST be first - prioritized matching)
+    /\b(glitter\s+(?:black|silver|gold|blue|green|red|white))$/i,
+    /\b(tiger\s+(?:orange|black))$/i,
+    /\b(shark\s+(?:grey|gray))$/i,
+    /\b(litho\s+white)$/i,
+    /\b(grass\s+green)$/i,
+    /\b(lipstick\s+red)$/i,
+    /\b(off[\s-]?white)$/i,
+    
+    // LumberLay two-word wood colors
+    /\b(grey\s+oak|black\s+ebony|white\s+wood|green\s+poplar|olive\s+wood)$/i,
+    
+    // Two-word colors (existing)
     /\b(light\s+(?:blue|green|red|pink|grey|gray)|dark\s+(?:blue|green|red|brown|grey|gray)|sky\s+blue|ocean\s+blue|royal\s+blue|forest\s+green|mint\s+green|neon\s+(?:green|yellow|orange|pink|blue)|pastel\s+(?:pink|blue|green|yellow|purple|orange)|(?:green|white|olive)\s+(?:poplar|wood)|gold\s+(?:18k|24k))$/i,
-    // Single word colors at end
+    
+    // Single word colors at end (LAST - fallback)
     /\b(black|white|red|blue|green|yellow|orange|purple|pink|grey|gray|brown|gold|silver|bronze|copper|natural|transparent|translucent|clear|cream|ivory|charcoal|turquoise|teal|cyan|violet|lavender|magenta|coral|navy|beige|maroon|burgundy|cherry|walnut|oak|bamboo|rainbow|sunset|galaxy)$/i,
   ];
   
