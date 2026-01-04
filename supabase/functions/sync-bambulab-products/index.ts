@@ -890,9 +890,10 @@ Deno.serve(async (req) => {
         else if (plId.includes('pva')) material = 'PVA';
         else if (plId.includes('support')) material = 'Support';
         
-        // Build product record with full title including color
+        // Build product record - use baseTitle for product_title (matches page H1)
+        // Color is stored separately in color_family field
         const productRecord = {
-          product_title: product.productTitle,  // Full title with color (e.g., "PLA Tough+ Black")
+          product_title: product.baseTitle,  // H1 title without color (e.g., "PLA Tough+")
           vendor: BAMBULAB_STORE_INFO.vendor,
           material,
           finish_type: enrichment.finishType,
