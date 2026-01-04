@@ -681,7 +681,8 @@ export function extractBambuLabFinishType(title: string): FinishType {
 // ============================================================================
 
 export function generateBambuLabProductLineId(slugOrTitle: string): string {
-  const normalized = slugOrTitle.toLowerCase().replace(/\s+/g, '-');
+  // Normalize: lowercase, spaces to dashes, slashes to dashes, strip parentheses
+  const normalized = slugOrTitle.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-').replace(/[()]/g, '');
   
   // Try exact match first
   if (BAMBULAB_PRODUCT_LINES[normalized]) {
@@ -784,8 +785,8 @@ export function getBambuLabProductLineConfig(slugOrTitle: string): {
   isFlexible: boolean;
   isLightweight: boolean;
 } {
-  // Normalize: lowercase, spaces to dashes, and SLASHES to dashes (critical for "PLA/PETG")
-  const normalized = slugOrTitle.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
+  // Normalize: lowercase, spaces to dashes, slashes to dashes, strip parentheses (critical for "Support for PLA (New Version)")
+  const normalized = slugOrTitle.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-').replace(/[()]/g, '');
   
   // Try exact match
   if (BAMBULAB_PRODUCT_LINES[normalized]) {
