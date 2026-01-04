@@ -2596,7 +2596,7 @@ Deno.serve(async (req) => {
     // Validates that each product_line_id has consistent variant data
     const { data: detailPageVariants } = await supabase
       .from("filaments")
-      .select("id, product_title, product_line_id, material, color_hex")
+      .select("id, product_title, product_line_id, material, color_hex, color_family, featured_image")
       .ilike("vendor", brandName)
       .not("product_line_id", "is", null);
 
@@ -2604,7 +2604,7 @@ Deno.serve(async (req) => {
     const checkedDetailLines = new Set<string>();
 
     // Group variants by product_line_id
-    const variantsByLine: Record<string, Array<{ id: string; product_title: string; material: string | null; color_hex: string | null }>> = {};
+    const variantsByLine: Record<string, Array<{ id: string; product_title: string; material: string | null; color_hex: string | null; color_family: string | null; featured_image: string | null }>> = {};
     for (const variant of detailPageVariants || []) {
       const lineId = variant.product_line_id;
       if (!variantsByLine[lineId]) variantsByLine[lineId] = [];
@@ -3222,7 +3222,9 @@ Deno.serve(async (req) => {
     
     // Issue 3: Check image uniqueness ratio (for color variants, each should ideally have a unique image)
     // Whitelist brands that use product-level images (not color-level images) - this is expected behavior
-    const PRODUCT_LEVEL_IMAGE_BRANDS = ['bambu lab', 'bambulab', 'atomic filament', 'azurefilm'];
+    // Brands that use product-level images (not color-level images) - this is expected behavior
+    // Note: Bambu Lab DOES have color-specific images so it's no longer whitelisted
+    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
@@ -3315,6 +3317,74 @@ Deno.serve(async (req) => {
     });
 
     console.log(`[PostSyncCheck] Color Variant Count: ${variantCountIssues.length} issues found`);
+
+    // ============= COLOR-SPECIFIC IMAGE CHECK (NEW) =============
+    // For product lines with multiple color variants, verify each color has a unique image
+    // (not all variants sharing the same generic product image)
+    const colorImageIssues: Array<{ id: string; title: string; issue: string }> = [];
+    
+    // Group by product_line_id to check image uniqueness within each line
+    const productsByLineForImageCheck: Record<string, Array<{
+      id: string;
+      product_title: string;
+      color_family: string | null;
+      featured_image: string | null;
+    }>> = {};
+    
+    for (const variant of detailPageVariants || []) {
+      const lineId = variant.product_line_id;
+      if (!productsByLineForImageCheck[lineId]) productsByLineForImageCheck[lineId] = [];
+      productsByLineForImageCheck[lineId].push({
+        id: variant.id,
+        product_title: variant.product_title,
+        color_family: variant.color_family,
+        featured_image: variant.featured_image,
+      });
+    }
+    
+    // Check each product line with 3+ color variants
+    for (const [lineId, variants] of Object.entries(productsByLineForImageCheck)) {
+      if (variants.length < 3) continue; // Skip small variant sets
+      
+      // Skip known single-color product types (CF, GF, etc.)
+      const isSingleColorProduct = /[_-](cf|gf|pva|support|ht|pa6|pps|peek|pei|aero)[_-]?/i.test(lineId) ||
+                                   /\b(carbon|glass|support|aero|composite)\b/i.test(lineId);
+      if (isSingleColorProduct) continue;
+      
+      // Count unique images (excluding null/undefined)
+      const imagesWithValues = variants.map(v => v.featured_image).filter(Boolean);
+      const uniqueImages = new Set(imagesWithValues);
+      
+      // If all variants share the same image, flag it
+      if (uniqueImages.size === 1 && variants.length >= 3) {
+        colorImageIssues.push({
+          id: lineId,
+          title: lineId,
+          issue: `All ${variants.length} color variants share the same image (expected unique images per color)`,
+        });
+      }
+      
+      // Also flag if less than 50% of variants have unique images for larger sets
+      else if (uniqueImages.size < variants.length * 0.5 && variants.length >= 5 && imagesWithValues.length >= 3) {
+        colorImageIssues.push({
+          id: lineId,
+          title: lineId,
+          issue: `Only ${uniqueImages.size}/${variants.length} variants have unique images - colors may show wrong product photos`,
+        });
+      }
+    }
+    
+    checks.push({
+      checkName: "Color-Specific Images",
+      status: colorImageIssues.length === 0 ? "pass" : colorImageIssues.length <= 3 ? "warning" : "fail",
+      count: Object.keys(productsByLineForImageCheck).length - colorImageIssues.length,
+      details: colorImageIssues.length === 0
+        ? `All multi-color product lines have unique images per color variant`
+        : `${colorImageIssues.length} product lines have shared/generic images across color variants`,
+      products: colorImageIssues.length > 0 ? colorImageIssues.slice(0, 15) : undefined,
+    });
+    
+    console.log(`[PostSyncCheck] Color-Specific Images: ${colorImageIssues.length} issues found`);
 
     // Calculate overall status
     const failCount = checks.filter((c) => c.status === "fail").length;

@@ -350,6 +350,9 @@ function extractColorsFromPageContent(markdown: string, html: string = ''): stri
 /**
  * Extract color variants with their associated images from __NEXT_DATA__ JSON
  * Bambu Lab stores variant images in the page props
+ * 
+ * Enhanced Pattern: Also extracts all CDN images and matches them to color names
+ * based on URL patterns like "PLA_Tough_Black.png" or "ABS-Red-1kg.webp"
  */
 function extractColorVariantsWithImages(html: string, markdown: string, productUrl: string): ColorVariantData[] {
   const variants: ColorVariantData[] = [];
@@ -358,7 +361,77 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
   // Build a map of color names to images from HTML patterns
   const colorImageMap = new Map<string, string>();
   
-  // Pattern 1: Extract images from variant gallery/picker HTML
+  // ========== ENHANCED PATTERN: Extract ALL CDN images and match by color name in URL ==========
+  // Bambu Lab images follow naming patterns like:
+  // - https://store.bblcdn.com/.../PLA_Tough_Black.png
+  // - https://store.bblcdn.com/.../ABS_Red_1kg.webp
+  // - https://store.bblcdn.com/.../PETG-Basic-Blue.jpg
+  const cdnImageMatches = html.matchAll(/https:\/\/store\.bblcdn\.com[^"'\s<>]+\.(?:png|jpg|jpeg|webp)/gi);
+  const allCdnImages = [...cdnImageMatches].map(m => m[0]);
+  
+  // Filter to likely product images (not logos, icons, banners)
+  const productImages = allCdnImages.filter(url => {
+    const lower = url.toLowerCase();
+    return !lower.includes('logo') && 
+           !lower.includes('icon') && 
+           !lower.includes('banner') &&
+           !lower.includes('badge') &&
+           !lower.includes('shipping') &&
+           !lower.includes('thumbnail') &&
+           // Likely product images contain material or filament keywords OR are in product folders
+           (lower.includes('filament') || 
+            lower.includes('pla') || 
+            lower.includes('petg') || 
+            lower.includes('abs') ||
+            lower.includes('tpu') ||
+            lower.includes('pa') ||
+            lower.includes('pc') ||
+            lower.includes('asa') ||
+            lower.includes('pva') ||
+            lower.includes('/product') ||
+            lower.includes('_spool') ||
+            lower.includes('-spool'));
+  });
+  
+  console.log(`[BambuLab] Found ${allCdnImages.length} total CDN images, ${productImages.length} likely product images`);
+  
+  // Common color names to search for in URLs
+  const colorKeywords = [
+    'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink',
+    'grey', 'gray', 'brown', 'beige', 'tan', 'gold', 'silver', 'bronze', 'copper',
+    'cyan', 'magenta', 'teal', 'navy', 'olive', 'maroon', 'coral', 'salmon', 'lime',
+    'jade', 'ivory', 'cream', 'charcoal', 'slate', 'natural', 'clear', 'transparent',
+    'bambu green', 'jade white', 'cold white', 'warm white', 'midnight blue'
+  ];
+  
+  // Match CDN images to colors based on URL patterns
+  for (const imageUrl of productImages) {
+    // Extract the filename portion for matching
+    const urlLower = imageUrl.toLowerCase();
+    const filename = urlLower.split('/').pop() || '';
+    
+    for (const color of colorKeywords) {
+      // Match color as whole word or with separators: black, _black_, -black-, black.png
+      const colorSlug = color.replace(/\s+/g, '[_\\-\\s]?');
+      const colorPattern = new RegExp(`(?:^|[_\\-])${colorSlug}(?:[_\\-]|\\.|$)`, 'i');
+      
+      if (colorPattern.test(filename)) {
+        // Normalize the color name for the map key
+        const normalizedColor = color.toLowerCase();
+        
+        // Only add if not already present (first match wins, as it's usually higher quality)
+        if (!colorImageMap.has(normalizedColor)) {
+          colorImageMap.set(normalizedColor, imageUrl);
+          console.log(`[BambuLab] Matched CDN image to color "${color}": ${imageUrl.substring(0, 80)}...`);
+        }
+        break; // Move to next image once matched
+      }
+    }
+  }
+  
+  console.log(`[BambuLab] CDN URL pattern matching found ${colorImageMap.size} color-image mappings`);
+  
+  // ========== PATTERN 1: Extract images from variant gallery/picker HTML ==========
   // Look for patterns like: <img src="...Black.png..." alt="Black">
   const imgPatterns = [
     /<img[^>]*src="(https:\/\/store\.bblcdn\.com[^"]+)"[^>]*alt="([A-Z][a-zA-Z\s]+)"[^>]*>/gi,
@@ -372,12 +445,15 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
       const alt = match[1].includes('bblcdn.com') ? match[2] : match[1];
       
       if (alt && isValidColorName(alt) && src && !src.includes('logo')) {
-        colorImageMap.set(alt.toLowerCase(), src);
+        const colorKey = alt.toLowerCase();
+        if (!colorImageMap.has(colorKey)) {
+          colorImageMap.set(colorKey, src);
+        }
       }
     }
   }
   
-  // Pattern 2: Try to find variant data in JSON-LD or embedded scripts
+  // ========== PATTERN 2: Try to find variant data in JSON-LD or embedded scripts ==========
   const scriptMatches = html.matchAll(/<script[^>]*>([^<]*variant[^<]*image[^<]*)<\/script>/gi);
   for (const scriptMatch of scriptMatches) {
     try {
@@ -387,7 +463,10 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
         const colorName = vm[1];
         const imageUrl = vm[2];
         if (isValidColorName(colorName) && imageUrl && !imageUrl.includes('logo')) {
-          colorImageMap.set(colorName.toLowerCase(), imageUrl.replace(/^\/\//, 'https://'));
+          const colorKey = colorName.toLowerCase();
+          if (!colorImageMap.has(colorKey)) {
+            colorImageMap.set(colorKey, imageUrl.replace(/^\/\//, 'https://'));
+          }
         }
       }
     } catch (e) {
