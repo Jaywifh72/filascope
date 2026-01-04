@@ -158,7 +158,7 @@ async function discoverProductsFromCollection(firecrawlKey: string): Promise<Dis
 function extractColorsFromPageContent(markdown: string): string[] {
   const colors: string[] = [];
   
-  // ONLY extract from explicit "Color : ColorName (SKU)" pattern - this is the authoritative source
+  // Pattern 1: "Color : ColorName (SKU)" - primary pattern
   const colorLabelMatches = markdown.matchAll(/Color\s*:\s*([^(]+?)\s*\(/gi);
   for (const match of colorLabelMatches) {
     const colorName = match[1].trim();
@@ -167,7 +167,7 @@ function extractColorsFromPageContent(markdown: string): string[] {
     }
   }
   
-  // Try "Selected: ColorName" pattern as backup
+  // Pattern 2: "Selected: ColorName" - backup pattern
   const selectedMatches = markdown.matchAll(/Selected\s*:\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g);
   for (const match of selectedMatches) {
     const colorName = match[1].trim();
@@ -176,7 +176,41 @@ function extractColorsFromPageContent(markdown: string): string[] {
     }
   }
   
+  // Pattern 3: Color options list (e.g., "- White\n- Black\n- Red")
+  const colorListMatches = markdown.matchAll(/^[\s-]*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*$/gm);
+  for (const match of colorListMatches) {
+    const colorName = match[1].trim();
+    if (isValidColorName(colorName) && !colors.includes(colorName)) {
+      colors.push(colorName);
+    }
+  }
+  
   return colors;
+}
+
+// Helper to get default color for single-color products (e.g., CF, GF, PVA)
+function getDefaultColorForProduct(title: string): string | null {
+  const t = title.toLowerCase();
+  
+  // Carbon fiber products are typically black
+  if (/-cf\b|carbon\s*fiber/i.test(t)) return 'Black';
+  
+  // Glass fiber products are typically natural/tan
+  if (/-gf\b|glass\s*fiber/i.test(t)) return 'Natural';
+  
+  // PC is typically clear
+  if (/\bpc\b/.test(t) && !/pc-cf|pc-gf/i.test(t)) return 'Clear';
+  
+  // PVA support is white
+  if (/\bpva\b/i.test(t)) return 'White';
+  
+  // Generic support materials are white
+  if (/\bsupport\b/i.test(t)) return 'White';
+  
+  // PPS-CF is black
+  if (/pps-cf/i.test(t)) return 'Black';
+  
+  return null;
 }
 
 async function scrapeProductPage(url: string, firecrawlKey: string): Promise<ScrapedProduct | null> {
@@ -359,8 +393,10 @@ function processScrapedProducts(products: ScrapedProduct[], decisionLogger: Retu
     }
     
     // If product has color options, create a variant for each
-    // Otherwise, create a single entry
-    const colors = product.colorOptions.length > 0 ? product.colorOptions : [null];
+    // Otherwise, try to assign a default color for single-color products
+    let colors: (string | null)[] = product.colorOptions.length > 0 
+      ? product.colorOptions 
+      : [getDefaultColorForProduct(product.h1Title) || null];
     
     for (const colorName of colors) {
       // Apply variant filters

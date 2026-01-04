@@ -755,13 +755,13 @@ export function generateBambuLabProductLineId(slugOrTitle: string): string {
   if (/pps[- ]?cf/i.test(t)) return 'bambulab__pps-cf__composite';
   
   // Support materials (order matters - most specific first)
-  if (/support.*pla.*petg/i.test(t)) return 'bambulab__support__pla-petg';
+  if (/support.*(?:pla.*\/.*petg|pla.*and.*petg|pla\/petg)/i.test(t)) return 'bambulab__support__pla-petg';
   if (/support.*pa.*pet/i.test(t)) return 'bambulab__support__pa-pet';
-  if (/support.*pla.*new\s*version|support.*\(new\s*version\)/i.test(t)) return 'bambulab__support__pla-new';
-  if (/support.*pla/i.test(t)) return 'bambulab__support__pla';
+  if (/support.*(?:pla.*\(new|pla.*new\s*version)/i.test(t)) return 'bambulab__support__pla-new';
   if (/support.*abs/i.test(t)) return 'bambulab__support__abs';
   if (/support[- ]?g\b/i.test(t)) return 'bambulab__support__g';
   if (/support[- ]?w\b/i.test(t)) return 'bambulab__support__w';
+  if (/support.*pla/i.test(t)) return 'bambulab__support__pla';
   if (/\bsupport\b/i.test(t)) return 'bambulab__support__pla';
   
   // PVA
@@ -883,7 +883,7 @@ export function enrichBambuLabProduct(
 
 export const BAMBULAB_COLOR_HEX_MAP: Record<string, string> = {
   // ===== Bambu Lab Unique Named Colors =====
-  'jade white': '00A86B',
+  'jade white': 'F7F8F4', // Off-white with slight jade tint (NOT jade green)
   'jade': '00A86B',
   'bambu green': '00AE42',
   'sky blue': '87CEEB',
