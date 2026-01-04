@@ -25,10 +25,12 @@ import {
 import { 
   shouldIncludeVariant, 
   extractWeightFromText,
+  is285mmDiameter,
   createFilterStats,
   updateFilterStats,
   logFilterStats,
 } from '../_shared/variant-filters.ts';
+import { createDecisionLogger } from '../_shared/decision-logger.ts';
 import { getColorHex, getColorFamily } from '../_shared/color-mapping.ts';
 
 const corsHeaders = {
@@ -298,15 +300,48 @@ interface ProcessedProduct {
   available: boolean;
 }
 
-function processScrapedProducts(products: ScrapedProduct[]): ProcessedProduct[] {
+function processScrapedProducts(products: ScrapedProduct[], decisionLogger: ReturnType<typeof createDecisionLogger>): ProcessedProduct[] {
   const processed: ProcessedProduct[] = [];
   const filterStats = createFilterStats();
   
   for (const product of products) {
     // Skip non-filament products
     if (isBambuLabNonFilament(product.h1Title)) {
+      decisionLogger.logFilter(product.url, product.h1Title, { weight: 0, diameter: 1.75 }, { included: false, reason: 'non-filament detected' });
       console.log(`[BambuLab] Skipping non-filament: ${product.h1Title}`);
       continue;
+    }
+    
+    // Skip 2.85mm diameter products (Bambu Lab only sells 1.75mm but check title anyway)
+    if (is285mmDiameter(product.h1Title)) {
+      decisionLogger.logFilter(product.url, product.h1Title, { weight: 0, diameter: 2.85 }, { included: false, reason: '2.85mm diameter detected' });
+      console.log(`[BambuLab] Skipping 2.85mm product: ${product.h1Title}`);
+      continue;
+    }
+    
+    // Determine weight with sample/pack detection
+    let weightGrams = extractWeightFromText(product.h1Title) || product.weightGrams;
+    
+    // If no weight found and "Sample" in title, assume sample weight
+    if (!weightGrams && /\bsample\b/i.test(product.h1Title)) {
+      weightGrams = 50;
+      decisionLogger.logFilter(product.url, product.h1Title, { weight: 50, diameter: 1.75 }, { included: false, reason: 'sample product detected (50g)' });
+      console.log(`[BambuLab] Detected sample product (50g): ${product.h1Title}`);
+      continue; // Skip samples
+    }
+    
+    // Check for pack count (N-pack = N x 1kg)
+    if (!weightGrams) {
+      const packMatch = product.h1Title.match(/(\d+)[\s-]*pack/i);
+      if (packMatch) {
+        weightGrams = parseInt(packMatch[1], 10) * 1000;
+        console.log(`[BambuLab] Detected ${packMatch[1]}-pack (${weightGrams}g): ${product.h1Title}`);
+      }
+    }
+    
+    // Default to 1kg only for non-sample, non-pack products
+    if (!weightGrams) {
+      weightGrams = 1000;
     }
     
     // If product has color options, create a variant for each
@@ -315,13 +350,16 @@ function processScrapedProducts(products: ScrapedProduct[]): ProcessedProduct[] 
     
     for (const colorName of colors) {
       // Apply variant filters
-      const filterResult = shouldIncludeVariant(product.weightGrams, 1.75, product.h1Title);
+      const filterResult = shouldIncludeVariant(weightGrams, 1.75, product.h1Title);
       updateFilterStats(filterStats, filterResult);
       
       if (!filterResult.include) {
+        decisionLogger.logFilter(product.url, product.h1Title, { weight: weightGrams, diameter: 1.75 }, { included: false, reason: filterResult.reason || 'filter failed' });
         console.log(`[BambuLab] Filtering: ${product.h1Title} (${filterResult.reason})`);
         continue;
       }
+      
+      decisionLogger.logFilter(product.url, product.h1Title, { weight: weightGrams, diameter: 1.75 }, { included: true, reason: 'passed all filters' });
       
       processed.push({
         h1Title: product.h1Title,
@@ -329,7 +367,7 @@ function processScrapedProducts(products: ScrapedProduct[]): ProcessedProduct[] 
         price: product.price,
         imageUrl: product.imageUrl,
         productUrl: product.url,
-        weightGrams: product.weightGrams,
+        weightGrams,
         available: product.available,
       });
     }
@@ -413,18 +451,18 @@ Deno.serve(async (req) => {
     }
     
     // ========================================================================
-    // STEP 3: Process and filter products
+    // STEP 3: Process and filter products (with decision logging)
     // ========================================================================
-    const processedProducts = processScrapedProducts(scrapedProducts);
+    const decisionLogger = createDecisionLogger({ brandSlug: 'bambu-lab', syncLogId: syncLogId || undefined });
+    const processedProducts = processScrapedProducts(scrapedProducts, decisionLogger);
     
     // ========================================================================
-    // STEP 4: Safety validation
+    // STEP 4: Safety validation (STRICT - throw error if below threshold)
     // ========================================================================
     if (processedProducts.length < BAMBULAB_SAFE_DELETE_THRESHOLD) {
-      console.warn(
-        `[BambuLab] Warning: Only ${processedProducts.length} products processed, ` +
-        `below threshold of ${BAMBULAB_SAFE_DELETE_THRESHOLD}. ` +
-        `Proceeding anyway as this may be expected for first sync.`
+      throw new Error(
+        `Safety check failed: Only ${processedProducts.length} products processed, ` +
+        `minimum ${BAMBULAB_SAFE_DELETE_THRESHOLD} required for clean slate sync`
       );
     }
     
