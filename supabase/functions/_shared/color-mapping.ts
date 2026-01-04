@@ -605,6 +605,9 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   'spring leaf': '6DBE45',
   'interstellar violet': 'EE82EE',
   'jade white': 'E8F5E9',
+  'jade': '00A86B',           // Standalone jade (Bambu Lab)
+  'jade green': '00A86B',
+  'sky': '87CEEB',            // Standalone sky (Bambu Lab)
   'vibrant orange': 'FF6600',
   'pale violet': 'DDA0DD',
   'peach pink': 'FFDAB9',

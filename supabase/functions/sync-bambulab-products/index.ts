@@ -21,6 +21,8 @@ import {
   generateBambuLabProductLineId,
   getBambuLabProductLineConfig,
   enrichBambuLabProduct,
+  getBambuLabColorHex,
+  isValidColorName,
 } from '../_shared/bambulab-defaults.ts';
 import { 
   shouldIncludeVariant, 
@@ -220,7 +222,8 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
       if (matches) {
         for (const match of matches) {
           const normalized = match.charAt(0).toUpperCase() + match.slice(1).toLowerCase();
-          if (!colorOptions.includes(normalized)) {
+          // Filter out promotional text that matches color patterns
+          if (!colorOptions.includes(normalized) && isValidColorName(normalized)) {
             colorOptions.push(normalized);
           }
         }
@@ -529,8 +532,11 @@ Deno.serve(async (req) => {
         const config = getBambuLabProductLineConfig(product.h1Title);
         const enrichment = enrichBambuLabProduct(product.h1Title);
         
-        // Get color hex
-        const colorHex = product.colorName ? getColorHex(product.colorName) : null;
+        // Get color hex - prioritize brand-specific map, then generic
+        let colorHex = product.colorName ? getBambuLabColorHex(product.colorName) : null;
+        if (!colorHex && product.colorName) {
+          colorHex = getColorHex(product.colorName);
+        }
         const colorFamily = product.colorName ? getColorFamily(product.colorName) : null;
         
         // Determine material from product line ID

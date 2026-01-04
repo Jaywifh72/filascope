@@ -559,6 +559,16 @@ export const BAMBULAB_PRODUCT_LINES: Record<string, {
     isFlexible: false,
     isLightweight: false,
   },
+  'support-for-pla-new': {
+    productLineId: 'bambulab__support__pla-new',
+    material: 'Support',
+    finishType: 'Standard',
+    isAbrasive: false,
+    enclosureRequired: false,
+    highSpeedCapable: false,
+    isFlexible: false,
+    isLightweight: false,
+  },
   'support-for-pla-petg': {
     productLineId: 'bambulab__support__pla-petg',
     material: 'Support',
@@ -725,9 +735,10 @@ export function generateBambuLabProductLineId(slugOrTitle: string): string {
   // PPS-CF
   if (/pps[- ]?cf/i.test(t)) return 'bambulab__pps-cf__composite';
   
-  // Support materials
+  // Support materials (order matters - most specific first)
   if (/support.*pla.*petg/i.test(t)) return 'bambulab__support__pla-petg';
   if (/support.*pa.*pet/i.test(t)) return 'bambulab__support__pa-pet';
+  if (/support.*pla.*new\s*version|support.*\(new\s*version\)/i.test(t)) return 'bambulab__support__pla-new';
   if (/support.*pla/i.test(t)) return 'bambulab__support__pla';
   if (/support.*abs/i.test(t)) return 'bambulab__support__abs';
   if (/support[- ]?g\b/i.test(t)) return 'bambulab__support__g';
@@ -845,6 +856,78 @@ export function enrichBambuLabProduct(
     isNozzleAbrasive: config.isAbrasive,
     highSpeedCapable: config.highSpeedCapable,
   };
+}
+
+// ============================================================================
+// BAMBU LAB COLOR HEX MAP (Brand-specific colors)
+// ============================================================================
+
+export const BAMBULAB_COLOR_HEX_MAP: Record<string, string> = {
+  // Unique Bambu Lab color names
+  'jade white': '00A86B',
+  'jade': '00A86B',
+  'bambu green': '00AE42',
+  'sky': '87CEEB',
+  'sky blue': '87CEEB',
+  // Basic colors
+  'black': '1A1A1A',
+  'white': 'FFFFFF',
+  'gray': '808080',
+  'grey': '808080',
+  'red': 'DC2626',
+  'orange': 'EA580C',
+  'yellow': 'EAB308',
+  'green': '16A34A',
+  'blue': '2563EB',
+  'purple': '9333EA',
+  'pink': 'EC4899',
+  'brown': '92400E',
+  // Specialty colors
+  'natural': 'F5F5DC',
+  'ivory': 'FFFFF0',
+  'beige': 'D4C4A8',
+  'charcoal': '36454F',
+  'tan': 'D2B48C',
+  // Translucent
+  'translucent': 'FFFFFF',
+  'clear': 'FFFFFF',
+  'water clear': 'F0FFFF',
+  // Metallic
+  'gold': 'D4AF37',
+  'silver': 'C0C0C0',
+  'copper': 'B87333',
+  'bronze': 'CD7F32',
+  // Support materials
+  'support white': 'FFFFFF',
+  'support black': '1A1A1A',
+};
+
+export function getBambuLabColorHex(colorName: string | null): string | null {
+  if (!colorName) return null;
+  const normalized = colorName.toLowerCase().trim();
+  return BAMBULAB_COLOR_HEX_MAP[normalized] || null;
+}
+
+// ============================================================================
+// EXCLUDED COLOR PATTERNS (promotional text, not colors)
+// ============================================================================
+
+export const EXCLUDED_COLOR_PATTERNS = [
+  /set\s*of\s*\d+/i,
+  /coaster/i,
+  /holder/i,
+  /clock\s*kit/i,
+  /modular/i,
+  /bundle/i,
+  /\d+\s*pack/i,
+  /accessory/i,
+  /starter\s*kit/i,
+  /combo/i,
+  /variety/i,
+];
+
+export function isValidColorName(text: string): boolean {
+  return !EXCLUDED_COLOR_PATTERNS.some(pattern => pattern.test(text));
 }
 
 // ============================================================================
