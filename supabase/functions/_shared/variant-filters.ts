@@ -36,6 +36,12 @@ export const EXCLUDED_TITLE_KEYWORDS = [
   'combo',
   'starter kit',
   'trial',
+  // === Bundle/Pack products ===
+  'super pack',       // AzureFilm bulk bundles (SUPER PACK PLA MIX)
+  'multipack',        // Multi-spool bundles
+  '10-pack',          // 10-spool bundles
+  '5-pack',           // 5-spool bundles
+  '4-pack',           // 4-spool bundles
   // === Non-filament products ===
   'gift card',        // Gift cards are not filaments
   'gift',             // Gift promotions (e.g., "PLA Gift - Black")

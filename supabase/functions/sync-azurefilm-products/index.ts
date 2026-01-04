@@ -406,7 +406,7 @@ Deno.serve(async (req) => {
     
     for (const product of scrapedProducts) {
       try {
-        // Check for non-filament
+        // FIRST: Check for non-filament (before any other processing)
         if (isAzureFilmNonFilament(product.h1Title)) {
           console.log(`[AzureFilm] Skipping non-filament: ${product.h1Title}`);
           skipped++;
@@ -420,8 +420,32 @@ Deno.serve(async (req) => {
           continue;
         }
         
-        // Extract weight and apply filter
-        const weightGrams = extractWeightFromText(product.h1Title) || 1000;
+        // Extract weight with improved detection
+        // - Detects pack counts (10-pack = 10000g)
+        // - Detects "Sample" keyword (defaults to 50g)
+        // - Falls back to explicit weight patterns
+        let weightGrams = extractWeightFromText(product.h1Title);
+        
+        // If no weight found and "Sample" in title, assume sample weight
+        if (!weightGrams && /\bsample\b/i.test(product.h1Title)) {
+          weightGrams = 50;
+          console.log(`[AzureFilm] Detected sample product (50g): ${product.h1Title}`);
+        }
+        
+        // Check for pack count (N-pack = N x 1kg)
+        if (!weightGrams) {
+          const packMatch = product.h1Title.match(/(\d+)[\s-]*pack/i);
+          if (packMatch) {
+            weightGrams = parseInt(packMatch[1], 10) * 1000;
+            console.log(`[AzureFilm] Detected ${packMatch[1]}-pack (${weightGrams}g): ${product.h1Title}`);
+          }
+        }
+        
+        // Default to 1kg only for non-sample, non-pack products
+        if (!weightGrams) {
+          weightGrams = 1000;
+        }
+        
         const filterResult = shouldIncludeVariant(weightGrams, 1.75, product.h1Title);
         updateFilterStats(filterStats, filterResult);
         

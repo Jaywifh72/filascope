@@ -148,8 +148,11 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
   'azurefilm': {
     exclusions: [
       { name: '2.85mm Diameter Variants', reason: 'Non-standard diameter (1.75mm only) via is285mmDiameter()' },
-      { name: 'Sample Products (<300g)', reason: 'Small test quantities excluded via shouldIncludeVariant()' },
+      { name: 'Sample Products (<300g)', reason: 'Small test quantities excluded via shouldIncludeVariant() - "Sample" in title defaults to 50g' },
       { name: 'Bulk Products (>5.5kg)', reason: 'Industrial bulk spools excluded via MAX_WEIGHT_GRAMS' },
+      { name: 'N-Pack Products', reason: 'Multi-pack bundles (10-pack, 4-pack) detected as N x 1000g, excluded as bulk or via isAzureFilmNonFilament()' },
+      { name: 'SUPER PACK Products', reason: 'Bundle products excluded via /super\\s*pack/i pattern in NON_FILAMENT_PATTERNS' },
+      { name: 'Magnets & Accessories', reason: 'Non-filament products excluded via /magnet/i and other NON_FILAMENT_PATTERNS' },
       { name: '3D Pens & Gift Cards', reason: 'Non-filament products excluded via isAzureFilmNonFilament()' },
       { name: 'Unlisted Categories', reason: 'Only 8 whitelisted categories synced (ABS, ASA, CF, PCTG, PETG, PLA, LumberLay, Support)' },
     ],
