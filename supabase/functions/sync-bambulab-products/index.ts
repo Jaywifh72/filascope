@@ -317,6 +317,26 @@ function extractColorsFromPageContent(markdown: string, html: string = ''): stri
     }
   }
   
+  // ============ JSON DATA PATTERN (for JS-rendered color pickers) ============
+  // Pattern J1: Extract from __NEXT_DATA__ or similar embedded JSON
+  const nextDataMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([^<]+)<\/script>/i);
+  if (nextDataMatch && colors.length === 0) {
+    try {
+      const nextData = JSON.parse(nextDataMatch[1]);
+      // Navigate to product variants in Next.js page props
+      const variants = nextData?.props?.pageProps?.product?.variants || 
+                       nextData?.props?.pageProps?.data?.product?.variants || [];
+      for (const variant of variants) {
+        const colorName = variant?.option1 || variant?.selectedOptions?.[0]?.value || variant?.title;
+        if (colorName && isValidColorName(colorName) && !colors.includes(colorName)) {
+          colors.push(colorName);
+        }
+      }
+    } catch (e) {
+      // JSON parse failed, continue with other methods
+    }
+  }
+  
   return colors;
 }
 

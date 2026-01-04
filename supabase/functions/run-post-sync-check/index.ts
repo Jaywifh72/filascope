@@ -3213,8 +3213,15 @@ Deno.serve(async (req) => {
     }
     
     // Issue 3: Check image uniqueness ratio (for color variants, each should ideally have a unique image)
+    // Whitelist brands that use product-level images (not color-level images) - this is expected behavior
+    const PRODUCT_LEVEL_IMAGE_BRANDS = ['bambu lab', 'bambulab', 'atomic filament', 'azurefilm'];
+    const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
+      brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
+      brandSlug?.toLowerCase().includes(b.replace(' ', ''))
+    );
+    
     const imageUniquenessRatio = uniqueImageCount / Math.max(totalProductsCount, 1);
-    if (totalProductsCount > 10 && imageUniquenessRatio < 0.3 && !isLogoImage) {
+    if (totalProductsCount > 10 && imageUniquenessRatio < 0.3 && !isLogoImage && !isProductLevelImageBrand) {
       logoImageIssues.push({
         id: 'low-image-variety',
         title: 'Low Image Variety',
