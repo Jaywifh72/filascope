@@ -154,11 +154,101 @@ async function discoverProductsFromCollection(firecrawlKey: string): Promise<Dis
 // STEP 2: SCRAPE PRODUCT PAGES FOR DETAILS
 // ============================================================================
 
-// Helper to extract colors from "Color : ColorName (SKU)" pattern (Bambu Lab specific)
-function extractColorsFromPageContent(markdown: string): string[] {
+/**
+ * Extract colors from both HTML and markdown content
+ * Bambu Lab uses button elements and JSON-LD for color options
+ */
+function extractColorsFromPageContent(markdown: string, html: string = ''): string[] {
   const colors: string[] = [];
   
-  // Pattern 1: "Color : ColorName (SKU)" - primary pattern
+  // ============ HTML PATTERNS (PRIORITY) ============
+  
+  // Pattern H1: Button/option elements with color in aria-label or data-* attributes
+  // <button aria-label="Color: White">
+  const ariaMatches = html.matchAll(/aria-label="(?:Color|Colour|Select):\s*([^"]+)"/gi);
+  for (const match of ariaMatches) {
+    const colorName = match[1].trim();
+    if (isValidColorName(colorName) && !colors.includes(colorName)) {
+      colors.push(colorName);
+    }
+  }
+  
+  // Pattern H2: Option/variant buttons with title attribute
+  // <button title="White">
+  const titleMatches = html.matchAll(/<(?:button|div|span)[^>]*title="([A-Z][a-z]+(?:\s+[A-Za-z]+){0,2})"[^>]*(?:class="[^"]*(?:variant|swatch|option|color)[^"]*")/gi);
+  for (const match of titleMatches) {
+    const colorName = match[1].trim();
+    if (isValidColorName(colorName) && !colors.includes(colorName)) {
+      colors.push(colorName);
+    }
+  }
+  
+  // Pattern H3: JSON-LD structured data (Shopify/Next.js stores)
+  const jsonLdMatches = html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+  for (const jsonLdMatch of jsonLdMatches) {
+    try {
+      const jsonData = JSON.parse(jsonLdMatch[1]);
+      // Check for color options in product offers
+      if (jsonData['@type'] === 'Product' && jsonData.offers) {
+        const offers = Array.isArray(jsonData.offers) ? jsonData.offers : [jsonData.offers];
+        for (const offer of offers) {
+          if (offer.name && isValidColorName(offer.name)) {
+            const colorName = offer.name.trim();
+            if (!colors.includes(colorName)) {
+              colors.push(colorName);
+            }
+          }
+        }
+      }
+      // Check for variant options
+      if (jsonData.hasVariant) {
+        for (const variant of jsonData.hasVariant) {
+          if (variant.name && isValidColorName(variant.name)) {
+            const colorName = variant.name.trim();
+            if (!colors.includes(colorName)) {
+              colors.push(colorName);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // JSON parse failed, continue
+    }
+  }
+  
+  // Pattern H4: Variant swatch images with alt text containing color
+  // <img alt="White" class="swatch-image">
+  const imgSwatchMatches = html.matchAll(/<img[^>]*alt="([A-Z][a-z]+(?:\s+[A-Za-z]+){0,2})"[^>]*class="[^"]*(?:swatch|variant|option)[^"]*"/gi);
+  for (const match of imgSwatchMatches) {
+    const colorName = match[1].trim();
+    if (isValidColorName(colorName) && !colors.includes(colorName)) {
+      colors.push(colorName);
+    }
+  }
+  
+  // Pattern H5: Bambu Lab variant picker options (Next.js)
+  // <span class="variant-option">White</span>
+  const variantSpanMatches = html.matchAll(/<span[^>]*class="[^"]*(?:variant|option|color|swatch)[^"]*"[^>]*>([A-Z][a-z]+(?:\s+[A-Za-z]+){0,2})<\/span>/gi);
+  for (const match of variantSpanMatches) {
+    const colorName = match[1].trim();
+    if (isValidColorName(colorName) && !colors.includes(colorName)) {
+      colors.push(colorName);
+    }
+  }
+  
+  // Pattern H6: Data attributes with color values
+  // <div data-color="White">
+  const dataColorMatches = html.matchAll(/data-(?:color|variant|option)="([A-Z][a-z]+(?:\s+[A-Za-z]+){0,2})"/gi);
+  for (const match of dataColorMatches) {
+    const colorName = match[1].trim();
+    if (isValidColorName(colorName) && !colors.includes(colorName)) {
+      colors.push(colorName);
+    }
+  }
+  
+  // ============ MARKDOWN PATTERNS (FALLBACK) ============
+  
+  // Pattern M1: "Color : ColorName (SKU)" - primary pattern
   const colorLabelMatches = markdown.matchAll(/Color\s*:\s*([^(]+?)\s*\(/gi);
   for (const match of colorLabelMatches) {
     const colorName = match[1].trim();
@@ -167,7 +257,7 @@ function extractColorsFromPageContent(markdown: string): string[] {
     }
   }
   
-  // Pattern 2: "Selected: ColorName" - backup pattern
+  // Pattern M2: "Selected: ColorName" - backup pattern
   const selectedMatches = markdown.matchAll(/Selected\s*:\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g);
   for (const match of selectedMatches) {
     const colorName = match[1].trim();
@@ -176,7 +266,7 @@ function extractColorsFromPageContent(markdown: string): string[] {
     }
   }
   
-  // Pattern 3: Color options list (e.g., "- White\n- Black\n- Red")
+  // Pattern M3: Color options list (e.g., "- White\n- Black\n- Red")
   const colorListMatches = markdown.matchAll(/^[\s-]*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*$/gm);
   for (const match of colorListMatches) {
     const colorName = match[1].trim();
@@ -263,15 +353,43 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
       price = parseFloat(priceMatch[1]);
     }
     
-    // Extract image URL
+    // Extract image URL with multiple patterns (HTML priority)
     let imageUrl: string | null = null;
-    const imgMatch = markdown.match(/!\[.*?\]\((https:\/\/store\.bblcdn\.com[^)]+)\)/);
-    if (imgMatch) {
-      imageUrl = imgMatch[1];
+    
+    // Pattern 1: og:image meta tag (most reliable for product images)
+    const ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i) ||
+                         html.match(/<meta[^>]*content="([^"]+)"[^>]*property="og:image"/i);
+    if (ogImageMatch && !ogImageMatch[1].includes('logo')) {
+      imageUrl = ogImageMatch[1];
     }
     
-    // Extract color options using STRICT patterns only
-    const colorOptions = extractColorsFromPageContent(markdown);
+    // Pattern 2: Product gallery images from HTML
+    if (!imageUrl) {
+      const galleryMatch = html.match(/data-(?:zoom-image|large-image|src)="(https:\/\/[^"]*(?:product|filament)[^"]+\.(?:jpg|jpeg|png|webp))"/i);
+      if (galleryMatch) {
+        imageUrl = galleryMatch[1];
+      }
+    }
+    
+    // Pattern 3: Main product image from img tags
+    if (!imageUrl) {
+      const mainImgMatch = html.match(/<img[^>]*class="[^"]*(?:product|main|featured|hero)[^"]*"[^>]*src="([^"]+)"/i) ||
+                           html.match(/<img[^>]*src="([^"]+)"[^>]*class="[^"]*(?:product|main|featured|hero)[^"]*"/i);
+      if (mainImgMatch && !mainImgMatch[1].includes('logo')) {
+        imageUrl = mainImgMatch[1];
+      }
+    }
+    
+    // Pattern 4: Bambu Lab CDN images from markdown (fallback)
+    if (!imageUrl) {
+      const imgMatch = markdown.match(/!\[.*?\]\((https:\/\/store\.bblcdn\.com[^)]+)\)/);
+      if (imgMatch && !imgMatch[1].includes('logo')) {
+        imageUrl = imgMatch[1];
+      }
+    }
+    
+    // Extract color options using STRICT patterns from HTML and markdown
+    const colorOptions = extractColorsFromPageContent(markdown, html);
     
     console.log(`[BambuLab] Extracted ${colorOptions.length} colors from ${url}: ${colorOptions.slice(0, 5).join(', ')}${colorOptions.length > 5 ? '...' : ''}`);
     
