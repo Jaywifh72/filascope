@@ -43,6 +43,24 @@ const corsHeaders = {
 // USD pricing (store shows USD prices on collection)
 const USD_RATE = 1.0;
 
+// ========== ABS FALLBACK IMAGE MAPPING ==========
+// When scraping fails for ABS (JS-rendered color picker), use these known images
+// Source: https://us.store.bambulab.com/products/abs-filament (manually extracted)
+const ABS_COLOR_IMAGES: Record<string, string> = {
+  'silver': 'https://store.bblcdn.com/s7/default/69834a7536c540e489913a0f8e707e5e/ABSsilver.png',
+  'black': 'https://store.bblcdn.com/s7/default/cfdefec225e6430c82cbe2f8766b6f70/ABS_Black.png',
+  'white': 'https://store.bblcdn.com/s7/default/1ad485ff4a72413b90e944ffde4fa861/ABS_White.png',
+  'bambu green': 'https://store.bblcdn.com/s7/default/910be80e4fcf43ddbd66c40773ecce0f/ABSbambugreen.png',
+  'orange': 'https://store.bblcdn.com/s7/default/25d7b833bf694c70b9ef3cd649f3cf36/ABSorange.png',
+  'red': 'https://store.bblcdn.com/s7/default/95bd38c6dc604bdab7b3d2fc7b67e0ee/ABS_Red.png',
+  'blue': 'https://store.bblcdn.com/s7/default/3b2f526b80734e429d9a424e07f3c36b/ABS_Blue.png',
+  'olive': 'https://store.bblcdn.com/s7/default/e45f66c840c7454b860b0ffb17787dda/80cf6768c03d129dfa6a01ac67a5b402.jpg',
+  'tangerine yellow': 'https://store.bblcdn.com/s7/default/599d443346194649beee96e12f32d074/7376d19b161f2a93a4051e47289d0505.jpg',
+  'azure': 'https://store.bblcdn.com/s7/default/1de0e532e21642e1a4a857c6e01fa1d3/0be9a584b30358020d8706f2aa8ec9c2.jpg',
+  'navy blue': 'https://store.bblcdn.com/s7/default/a840092ea2804025a123e115128c1299/000878ce6144c05ffac949f66b05a18b.jpg',
+  'purple': 'https://store.bblcdn.com/s7/default/a840092ea2804025a123e115128c1299/ABS_Purple.jpg',
+};
+
 interface DiscoveredProduct {
   url: string;
   collectionTitle: string;
@@ -798,15 +816,16 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
     // Extract color variants with their associated images
     let colorVariants = extractColorVariantsWithImages(html, markdown, url);
     
-    // ABS fallback: If scraping returns 0 colors for ABS, use hardcoded known colors
+    // ABS fallback: If scraping returns 0 colors for ABS, use hardcoded known colors WITH images
     if (colorVariants.length === 0 && /\babs-filament\b/i.test(url)) {
-      const absColors = ['Black', 'White', 'Grey', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Brown', 'Beige', 'Bambu Green'];
+      const absColors = ['Black', 'White', 'Silver', 'Red', 'Orange', 'Tangerine Yellow', 
+                         'Bambu Green', 'Olive', 'Blue', 'Azure', 'Navy Blue', 'Purple'];
       colorVariants = absColors.map(colorName => ({
         colorName,
         colorHex: getBambuLabColorHex(colorName) || getColorHex(colorName) || null,
-        imageUrl: null,
+        imageUrl: ABS_COLOR_IMAGES[colorName.toLowerCase()] || null,
       }));
-      console.log(`[BambuLab] Using fallback colors for ABS (JS-rendered picker): ${absColors.join(', ')}`);
+      console.log(`[BambuLab] Using fallback colors WITH IMAGES for ABS: ${absColors.join(', ')}`);
     }
     
     console.log(`[BambuLab] Extracted ${colorVariants.length} color variants from ${url}: ${colorVariants.slice(0, 5).map(v => v.colorName).join(', ')}${colorVariants.length > 5 ? '...' : ''}`);
