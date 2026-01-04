@@ -773,6 +773,14 @@ function isValidColorName(name: string): boolean {
     // Bambu Lab promotional bundles/kits
     'set of', 'coaster holder', 'clock kit', 'modular clock',
     'starter kit', 'bundle', 'combo pack', 'sample set',
+    // MakerWorld model names (from "Related Models" sections on Bambu Lab pages)
+    'door stopper', 'damper', 'puck', 'türstopper',
+    'floor sign', 'wet floor', 'caution wet',
+    'garden hose', 'coupling fittings',
+    'phone cage', 'phone photography',
+    'filament spool', 'spool winder',
+    'hot air balloon', 'tolerance test',
+    'ultramax engine', 'engine block',
   ];
   if (nonColorPhrases.some(phrase => lower.includes(phrase))) return false;
   
