@@ -192,57 +192,126 @@ export function PostSyncCheckPanel({ brandSlug, brandName, disabled }: PostSyncC
             </div>
           </div>
 
-          {/* Database Checks Section */}
-          <div className="space-y-2">
-            <div className="text-sm font-medium text-muted-foreground">Database Checks</div>
-            {report.checks
-              .filter((c) => 
-                c.checkName.includes("Bulk") || 
-                c.checkName.includes("2.85") || 
-                c.checkName.includes("Sample")
+          {/* Categorize all checks */}
+          {(() => {
+            // Database Quality Checks
+            const databaseChecks = report.checks.filter(c =>
+              ['Bulk', '2.85', '3.0mm', 'Sample', 'Gift', 'Non-Filament', 'Images', 'Cross-Material', 'Price Validity'].some(
+                keyword => c.checkName.includes(keyword)
               )
-              .map((check) => (
-                <CheckResultRow
-                  key={check.checkName}
-                  check={check}
-                  expanded={expandedChecks.has(check.checkName)}
-                  onToggle={() => toggleCheck(check.checkName)}
-                  getStatusIcon={getStatusIcon}
-                />
-              ))}
-          </div>
+            );
 
-          {/* Scrape Validation Section */}
-          {report.checks.some((c) => 
-            c.checkName.includes("URL") || 
-            c.checkName.includes("Color") || 
-            c.checkName.includes("Swatch") ||
-            c.checkName.includes("Scrape") ||
-            c.checkName.includes("Title")
-          ) && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground">
-                Scrape Validation {report.scrapedProducts > 0 && `(${report.scrapedProducts} sampled)`}
-              </div>
-              {report.checks
-                .filter((c) => 
-                  c.checkName.includes("URL") || 
-                  c.checkName.includes("Color") || 
-                  c.checkName.includes("Swatch") ||
-                  c.checkName.includes("Scrape") ||
-                  c.checkName.includes("Title")
-                )
-                .map((check) => (
-                  <CheckResultRow
-                    key={check.checkName}
-                    check={check}
-                    expanded={expandedChecks.has(check.checkName)}
-                    onToggle={() => toggleCheck(check.checkName)}
-                    getStatusIcon={getStatusIcon}
-                  />
-                ))}
-            </div>
-          )}
+            // Data Consistency Checks
+            const consistencyChecks = report.checks.filter(c =>
+              ['Swatch', 'Distinguishability', 'Hex-Color', 'Product Line'].some(
+                keyword => c.checkName.includes(keyword)
+              ) && !c.checkName.includes('Title') && !c.checkName.includes('Color Count') && !c.checkName.includes('Color Names')
+            );
+
+            // Scrape Validation Checks
+            const scrapeChecks = report.checks.filter(c =>
+              ['Title Accuracy', 'Color Count', 'Color Names', 'Buy Now', 'H1 Title', 'DB matches'].some(
+                keyword => c.checkName.includes(keyword)
+              )
+            );
+
+            // UI Display Checks
+            const uiChecks = report.checks.filter(c =>
+              ['UI Display', 'Card Count', 'Card Title', 'Detail Page', 'Visual Hierarchy', 'Filament Card', 'Filament Detail'].some(
+                keyword => c.checkName.includes(keyword)
+              )
+            );
+
+            // Catch-all: checks not in any category above
+            const categorizedIds = new Set([...databaseChecks, ...consistencyChecks, ...scrapeChecks, ...uiChecks].map(c => c.checkName));
+            const otherChecks = report.checks.filter(c => !categorizedIds.has(c.checkName));
+
+            return (
+              <>
+                {/* Database Quality Checks */}
+                {databaseChecks.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">Database Quality</div>
+                    {databaseChecks.map((check) => (
+                      <CheckResultRow
+                        key={check.checkName}
+                        check={check}
+                        expanded={expandedChecks.has(check.checkName)}
+                        onToggle={() => toggleCheck(check.checkName)}
+                        getStatusIcon={getStatusIcon}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Data Consistency Checks */}
+                {consistencyChecks.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">Data Consistency</div>
+                    {consistencyChecks.map((check) => (
+                      <CheckResultRow
+                        key={check.checkName}
+                        check={check}
+                        expanded={expandedChecks.has(check.checkName)}
+                        onToggle={() => toggleCheck(check.checkName)}
+                        getStatusIcon={getStatusIcon}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Scrape Validation Checks */}
+                {scrapeChecks.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">
+                      Scrape Validation {report.scrapedProducts > 0 && `(${report.scrapedProducts} sampled)`}
+                    </div>
+                    {scrapeChecks.map((check) => (
+                      <CheckResultRow
+                        key={check.checkName}
+                        check={check}
+                        expanded={expandedChecks.has(check.checkName)}
+                        onToggle={() => toggleCheck(check.checkName)}
+                        getStatusIcon={getStatusIcon}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* UI Display Checks */}
+                {uiChecks.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">UI Display Validation</div>
+                    {uiChecks.map((check) => (
+                      <CheckResultRow
+                        key={check.checkName}
+                        check={check}
+                        expanded={expandedChecks.has(check.checkName)}
+                        onToggle={() => toggleCheck(check.checkName)}
+                        getStatusIcon={getStatusIcon}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Other Checks (catch-all) */}
+                {otherChecks.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">Other Checks</div>
+                    {otherChecks.map((check) => (
+                      <CheckResultRow
+                        key={check.checkName}
+                        check={check}
+                        expanded={expandedChecks.has(check.checkName)}
+                        onToggle={() => toggleCheck(check.checkName)}
+                        getStatusIcon={getStatusIcon}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            );
+          })()}
 
           {/* Scrape Errors */}
           {report.scrapeErrors.length > 0 && (
