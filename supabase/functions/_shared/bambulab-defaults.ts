@@ -894,10 +894,48 @@ export const BAMBULAB_COLOR_HEX_MAP: Record<string, string> = {
   'sky blue': '87CEEB',
   'sky': '87CEEB',
   
-  // ===== Matte PLA Specific Colors =====
-  'matte ivory white': 'F5F5DC',
+  // ===== Matte PLA Specific Colors (DISTINCT hex codes to prevent duplicates) =====
+  'matte ivory white': 'FFFEF0', // Slightly warmer than standard ivory
   'matte charcoal': '36454F',
   'matte black': '1A1A1A',
+  'matte scarlet red': 'FF2400',     // Bright scarlet
+  'matte dark red': '8B0000',        // Dark maroon
+  'matte apple green': '8DB600',     // Apple green (yellow-tinted)
+  'matte dark green': '006400',      // Dark forest green
+  'matte ice blue': 'B0E0E6',        // Powder blue / ice blue
+  'matte marine blue': '007BA7',     // Cerulean / marine blue
+  'matte dark blue': '00008B',       // Dark navy blue
+  'matte latte brown': 'C19A6B',     // Latte / camel brown
+  'matte dark brown': '654321',      // Dark brown
+  'matte ash gray': 'B2BEB5',        // Ash gray (lighter)
+  'matte ash grey': 'B2BEB5',        // British spelling
+  'matte nardo gray': '6E6E6E',      // Nardo gray (Audi color)
+  'matte nardo grey': '6E6E6E',      // British spelling
+  
+  // ===== PLA Silk+ Specific Colors (DISTINCT hex codes) =====
+  'silk+ blue': '4169E1',            // Royal blue for silk
+  'silk+ baby blue': 'ADD8E6',       // Light baby blue
+  'baby blue': '89CFF0',             // Standard baby blue
+  
+  // ===== PETG HF Specific Colors (DISTINCT hex codes) =====
+  'hf lime green': 'C7EA46',         // Lime green (yellow-green)
+  'lime green': 'C7EA46',
+  'hf green': '228B22',              // Forest green
+  'forest green': '228B22',
+  'hf forest green': '006400',       // Dark forest green
+  'hf lake blue': '4682B4',          // Steel blue / lake blue
+  'lake blue': '4682B4',
+  'hf blue': '2563EB',               // Standard blue
+  
+  // ===== PLA Translucent Specific Colors =====
+  'translucent ice blue': 'B0E0E6',  // Ice blue translucent
+  'translucent teal': '20B2AA',      // Light sea green / teal
+  
+  // ===== PLA-CF Specific Colors (DISTINCT hex codes) =====
+  'jeans blue': '1560BD',            // Jeans / denim blue
+  'pla-cf jeans blue': '1560BD',
+  'royal blue': '4169E1',            // Royal blue
+  'pla-cf royal blue': '4169E1',
   'matte white': 'FFFFFF',
   'matte dark gray': '4A4A4A',
   'matte light gray': 'D3D3D3',
