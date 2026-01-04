@@ -1000,21 +1000,61 @@ export const BAMBULAB_COLOR_HEX_MAP: Record<string, string> = {
   'silk green': '228B22',
   'silk purple': '800080',
   'silk pink': 'FF69B4',
+  
+  // ===== Bambu Lab Specific Named Colors (from website) =====
+  'gilded rose': 'B76E79',        // Rose gold, not magenta
+  'candy red': 'E2252B',
+  'titan gray': '708090',
+  'titan grey': '708090',
+  'blue hawaii': '00CED1',
+  'mystic magenta': 'FF00FF',
+  'aurora purple': '9370DB',
+  'phantom blue': '191970',
+  'matte dark charcoal': '36454F',
+  'matte lilac': 'C8A2C8',
+  'polar white': 'F8F8FF',
+  'arctic white': 'F0F8FF',
+  'lemon yellow': 'FFF44F',
+  'army green': '4B5320',
+  'khaki': 'C3B091',
+  'coffee': '6F4E37',
+  'champagne': 'F7E7CE',
+  'emerald green': '50C878',
+  'ruby red': 'E0115F',
+  'sapphire blue': '0F52BA',
 };
 
 export function getBambuLabColorHex(colorName: string | null): string | null {
   if (!colorName) return null;
   const normalized = colorName.toLowerCase().trim();
   
-  // Exact match first
+  // 1. Exact match first (highest priority)
   if (BAMBULAB_COLOR_HEX_MAP[normalized]) {
     return BAMBULAB_COLOR_HEX_MAP[normalized];
   }
   
-  // Prioritized partial match (longest keys first to prevent generic terms matching first)
+  // Sort keys by length (longest first) to prevent short keys from matching before specific ones
   const sortedKeys = Object.keys(BAMBULAB_COLOR_HEX_MAP)
     .sort((a, b) => b.length - a.length);
   
+  // 2. Starts-with or ends-with match (e.g., "gold" should match "gold", not get contaminated by "gilded rose")
+  for (const key of sortedKeys) {
+    if (normalized.startsWith(key + ' ') || normalized.endsWith(' ' + key) || normalized === key) {
+      return BAMBULAB_COLOR_HEX_MAP[key];
+    }
+  }
+  
+  // 3. Word-boundary match (e.g., "titan gray" matches "gray" as a word, not partial)
+  for (const key of sortedKeys) {
+    // Escape special regex chars in key
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escapedKey}\\b`, 'i');
+    if (regex.test(normalized)) {
+      return BAMBULAB_COLOR_HEX_MAP[key];
+    }
+  }
+  
+  // 4. Fallback: Contains match (least priority, may cause cross-contamination)
   for (const key of sortedKeys) {
     if (normalized.includes(key)) {
       return BAMBULAB_COLOR_HEX_MAP[key];
