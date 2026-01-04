@@ -784,7 +784,8 @@ export function getBambuLabProductLineConfig(slugOrTitle: string): {
   isFlexible: boolean;
   isLightweight: boolean;
 } {
-  const normalized = slugOrTitle.toLowerCase().replace(/\s+/g, '-');
+  // Normalize: lowercase, spaces to dashes, and SLASHES to dashes (critical for "PLA/PETG")
+  const normalized = slugOrTitle.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
   
   // Try exact match
   if (BAMBULAB_PRODUCT_LINES[normalized]) {
@@ -800,9 +801,12 @@ export function getBambuLabProductLineConfig(slugOrTitle: string): {
     };
   }
   
-  // Try partial matches
-  for (const [key, config] of Object.entries(BAMBULAB_PRODUCT_LINES)) {
+  // Try partial matches - SORT BY LENGTH (longest first) to prevent short-key false positives
+  // e.g., "support-for-pla-petg" must match before "support-for-pla"
+  const sortedKeys = Object.keys(BAMBULAB_PRODUCT_LINES).sort((a, b) => b.length - a.length);
+  for (const key of sortedKeys) {
     if (normalized.includes(key)) {
+      const config = BAMBULAB_PRODUCT_LINES[key];
       return {
         productLineId: config.productLineId,
         finishType: config.finishType,
