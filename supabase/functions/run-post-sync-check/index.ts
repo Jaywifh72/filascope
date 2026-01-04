@@ -2399,7 +2399,7 @@ Deno.serve(async (req) => {
     // These are known stable brands with well-defined product line structures
     const EXPECTED_CARD_COUNTS: Record<string, number> = {
       // High-confidence counts (verified architecture)
-      'atomic-filament': 5,     // PLA, PETG, ABS, ASA, PLA Silk
+      'atomic-filament': 6,     // PLA, PETG, ABS, ASA, PLA Silk, Hi-Flow Pro PLA
       'elegoo': 12,             // PLA, PLA+, PETG, ABS, ASA, TPU, Rapid, Marble, Silk, Matte, Glow, Wood
       'anycubic': 19,           // PLA+, PLA Silk, PLA Galaxy, PLA High Speed, PETG, ABS, ASA, TPU, etc.
       'push-plastic': 15,       // PLA, PETG, ABS, ASA, Nylon, PC, PEI, etc.
