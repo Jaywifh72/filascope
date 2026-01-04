@@ -46,7 +46,7 @@ export const BAMBULAB_CATEGORY_WHITELIST: BambuLabCategoryConfig[] = [
 // SAFE DELETE THRESHOLD
 // ============================================================================
 
-export const BAMBULAB_SAFE_DELETE_THRESHOLD = 100; // Bambu Lab has 300+ filament variants
+export const BAMBULAB_SAFE_DELETE_THRESHOLD = 30; // Bambu Lab has ~40 distinct product lines
 
 // ============================================================================
 // NON-FILAMENT FILTER
