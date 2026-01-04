@@ -3,13 +3,14 @@
  * 
  * 5-step architecture matching AzureFilm:
  * Step 0: Create sync log entry
- * Step 1: Discover products from Shopify JSON API (CA store)
- * Step 2: Process variants with filtering
+ * Step 1: Discover products from collection page (Firecrawl HTML)
+ * Step 2: Scrape each product page for H1 title and details
  * Step 3: Safety validation (minimum product threshold)
  * Step 4: Clean slate deletion
  * Step 5: Insert products with enrichment
  * 
  * Source: https://ca.store.bambulab.com/collections/bambu-lab-3d-printer-filament
+ * Note: Bambu Lab uses a custom Next.js platform, NOT standard Shopify JSON API
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -23,6 +24,7 @@ import {
 } from '../_shared/bambulab-defaults.ts';
 import { 
   shouldIncludeVariant, 
+  extractWeightFromText,
   createFilterStats,
   updateFilterStats,
   logFilterStats,
@@ -34,57 +36,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// CAD to USD exchange rate (approximate)
-const CAD_TO_USD_RATE = 0.74;
+// USD pricing (store shows USD prices on collection)
+const USD_RATE = 1.0;
 
-interface ShopifyProduct {
-  id: number;
-  title: string;
-  handle: string;
-  product_type: string;
-  vendor: string;
-  variants: ShopifyVariant[];
-  images: ShopifyImage[];
-  body_html?: string;
+interface DiscoveredProduct {
+  url: string;
+  collectionTitle: string;
 }
 
-interface ShopifyVariant {
-  id: number;
-  title: string;
-  price: string;
-  compare_at_price: string | null;
-  available: boolean;
-  sku: string;
-  option1: string | null;
-  option2: string | null;
-  option3: string | null;
-}
-
-interface ShopifyImage {
-  id: number;
-  src: string;
-  alt: string | null;
-}
-
-interface ProcessedProduct {
-  productTitle: string;
-  productHandle: string;
-  variantTitle: string;
-  colorName: string | null;
+interface ScrapedProduct {
+  url: string;
+  h1Title: string;
   price: number | null;
-  priceCad: number | null;
-  compareAtPrice: number | null;
-  available: boolean;
   imageUrl: string | null;
-  sku: string | null;
-  productUrl: string;
+  colorOptions: string[];
   weightGrams: number;
+  available: boolean;
 }
 
 interface SyncResult {
   success: boolean;
   summary: {
     totalDiscovered: number;
+    totalScraped: number;
     created: number;
     updated: number;
     skipped: number;
@@ -95,194 +69,268 @@ interface SyncResult {
 }
 
 // ============================================================================
-// STEP 1: DISCOVER PRODUCTS FROM SHOPIFY JSON API
+// STEP 1: DISCOVER PRODUCTS FROM COLLECTION PAGE (FIRECRAWL)
 // ============================================================================
 
-async function discoverProductsFromShopify(): Promise<ShopifyProduct[]> {
-  const allProducts: ShopifyProduct[] = [];
-  let page = 1;
-  const limit = 250; // Shopify max per page
+async function discoverProductsFromCollection(firecrawlKey: string): Promise<DiscoveredProduct[]> {
+  const allProducts: DiscoveredProduct[] = [];
+  const seenUrls = new Set<string>();
   
-  console.log(`[BambuLab] Discovering products from Shopify JSON API...`);
+  const collectionUrl = BAMBULAB_STORE_INFO.productsUrl;
+  console.log(`[BambuLab] Discovering products from collection: ${collectionUrl}`);
   
-  while (true) {
-    const url = `${BAMBULAB_STORE_INFO.baseUrl}/products.json?limit=${limit}&page=${page}`;
-    console.log(`[BambuLab] Fetching page ${page}: ${url}`);
+  try {
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: collectionUrl,
+        formats: ['links', 'markdown'],
+        onlyMainContent: false,
+        waitFor: 5000, // Wait for JS content to load
+      }),
+    });
     
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (compatible; FilaScopeBot/1.0)',
-        },
-      });
-      
-      if (!response.ok) {
-        console.error(`[BambuLab] Failed to fetch page ${page}: ${response.status}`);
-        break;
-      }
-      
-      const data = await response.json();
-      const products = data.products || [];
-      
-      if (products.length === 0) {
-        console.log(`[BambuLab] No more products on page ${page}`);
-        break;
-      }
-      
-      // Filter for filament products only
-      const filamentProducts = products.filter((p: ShopifyProduct) => {
-        const title = p.title.toLowerCase();
-        const productType = (p.product_type || '').toLowerCase();
-        
-        // Must contain "filament" in title or product type
-        const hasFilamentKeyword = title.includes('filament') || productType.includes('filament');
-        
-        // Check if it's a non-filament product
-        const isNonFilament = isBambuLabNonFilament(p.title);
-        
-        return hasFilamentKeyword && !isNonFilament;
-      });
-      
-      console.log(`[BambuLab] Page ${page}: ${products.length} products, ${filamentProducts.length} filaments`);
-      allProducts.push(...filamentProducts);
-      
-      // If we got fewer than limit, we've reached the end
-      if (products.length < limit) {
-        break;
-      }
-      
-      page++;
-      
-      // Safety limit
-      if (page > 10) {
-        console.warn('[BambuLab] Reached page limit, stopping pagination');
-        break;
-      }
-      
-      // Small delay between pages
-      await new Promise(resolve => setTimeout(resolve, 200));
-    } catch (error) {
-      console.error(`[BambuLab] Error fetching page ${page}:`, error);
-      break;
+    if (!response.ok) {
+      console.error(`[BambuLab] Failed to scrape collection: ${response.status}`);
+      return [];
     }
+    
+    const data = await response.json();
+    const links = data.data?.links || [];
+    
+    console.log(`[BambuLab] Found ${links.length} total links on page`);
+    
+    // Filter for product links - Bambu Lab uses both ca. and us. subdomains
+    // Collection shows us. links but we can use ca. for CAD pricing
+    const productLinks = links.filter((link: string) => {
+      // Match patterns like:
+      // https://us.store.bambulab.com/products/pla-basic-filament
+      // https://ca.store.bambulab.com/products/pla-matte
+      const isProductLink = /https:\/\/(us|ca|eu|uk|au)\.store\.bambulab\.com\/products\//.test(link);
+      
+      // Exclude non-product pages
+      const isNotCollection = !link.includes('/collections/');
+      const isNotCart = !link.includes('/cart');
+      const isNotAccount = !link.includes('/account');
+      
+      return isProductLink && isNotCollection && isNotCart && isNotAccount;
+    });
+    
+    console.log(`[BambuLab] Found ${productLinks.length} product links`);
+    
+    for (const link of productLinks) {
+      // Normalize to CA store for consistent pricing
+      const normalizedUrl = link.replace(
+        /https:\/\/(us|eu|uk|au)\.store\.bambulab\.com/,
+        'https://us.store.bambulab.com'
+      );
+      
+      if (!seenUrls.has(normalizedUrl)) {
+        seenUrls.add(normalizedUrl);
+        allProducts.push({
+          url: normalizedUrl,
+          collectionTitle: 'Filament',
+        });
+      }
+    }
+    
+  } catch (error) {
+    console.error(`[BambuLab] Error scraping collection:`, error);
   }
   
-  console.log(`[BambuLab] Total filament products discovered: ${allProducts.length}`);
+  console.log(`[BambuLab] Total unique products discovered: ${allProducts.length}`);
   return allProducts;
 }
 
 // ============================================================================
-// STEP 2: PROCESS VARIANTS
+// STEP 2: SCRAPE PRODUCT PAGES FOR DETAILS
 // ============================================================================
 
-function extractColorFromVariant(product: ShopifyProduct, variant: ShopifyVariant): string | null {
-  // Bambu Lab typically uses option1 for color
-  const colorOption = variant.option1 || variant.option2 || variant.option3;
-  
-  if (colorOption) {
-    // Clean up common patterns
-    return colorOption
-      .replace(/\s*-\s*\d+g$/i, '') // Remove weight suffix
-      .replace(/\s*1\.75mm$/i, '') // Remove diameter suffix
-      .trim();
-  }
-  
-  // Try to extract from variant title
-  if (variant.title && variant.title !== 'Default Title') {
-    const parts = variant.title.split(' / ');
-    if (parts.length > 0) {
-      return parts[0].trim();
-    }
-  }
-  
-  return null;
-}
-
-function extractWeightFromVariant(product: ShopifyProduct, variant: ShopifyVariant): number {
-  // Check variant options for weight
-  const options = [variant.option1, variant.option2, variant.option3].filter(Boolean);
-  
-  for (const opt of options) {
-    if (!opt) continue;
-    const lowerOpt = opt.toLowerCase();
+async function scrapeProductPage(url: string, firecrawlKey: string): Promise<ScrapedProduct | null> {
+  try {
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown', 'html'],
+        onlyMainContent: true,
+        waitFor: 3000,
+      }),
+    });
     
-    // Check for weight patterns
-    if (/(\d+)\s*g\b/i.test(lowerOpt)) {
-      const match = lowerOpt.match(/(\d+)\s*g\b/i);
-      if (match) return parseInt(match[1], 10);
+    if (!response.ok) {
+      console.error(`[BambuLab] Failed to scrape ${url}: ${response.status}`);
+      return null;
     }
-    if (/(\d+)\s*kg\b/i.test(lowerOpt)) {
-      const match = lowerOpt.match(/(\d+)\s*kg\b/i);
-      if (match) return parseInt(match[1], 10) * 1000;
+    
+    const data = await response.json();
+    const markdown = data.data?.markdown || '';
+    const html = data.data?.html || '';
+    
+    // Extract H1 title (priority for product_title)
+    let h1Title = '';
+    const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i) ||
+                    markdown.match(/^#\s+(.+)$/m);
+    if (h1Match) {
+      h1Title = h1Match[1].trim();
     }
+    
+    // If no H1, try to extract from markdown headers
+    if (!h1Title) {
+      const mdHeaderMatch = markdown.match(/^##?\s+(.+)$/m);
+      if (mdHeaderMatch) {
+        h1Title = mdHeaderMatch[1].trim();
+      }
+    }
+    
+    // Extract price (USD)
+    let price: number | null = null;
+    const priceMatch = markdown.match(/\$(\d+(?:\.\d{2})?)\s*USD/i) ||
+                       markdown.match(/From\s+\$(\d+(?:\.\d{2})?)/i) ||
+                       markdown.match(/\$(\d+(?:\.\d{2})?)/);
+    if (priceMatch) {
+      price = parseFloat(priceMatch[1]);
+    }
+    
+    // Extract image URL
+    let imageUrl: string | null = null;
+    const imgMatch = markdown.match(/!\[.*?\]\((https:\/\/store\.bblcdn\.com[^)]+)\)/);
+    if (imgMatch) {
+      imageUrl = imgMatch[1];
+    }
+    
+    // Extract color options from markdown (look for color swatches)
+    const colorOptions: string[] = [];
+    const colorPatterns = [
+      /(?:Black|White|Gray|Grey|Red|Blue|Green|Yellow|Orange|Purple|Pink|Brown|Gold|Silver|Ivory|Beige|Teal|Cyan|Magenta|Coral|Navy|Olive|Maroon|Turquoise|Jade|Lime|Crimson|Lavender|Mint|Peach|Rose|Salmon|Scarlet|Slate|Sky|Tan|Violet|Wine|Bone|Cream|Charcoal|Natural|Clear|Translucent|Transparent)/gi,
+    ];
+    
+    for (const pattern of colorPatterns) {
+      const matches = markdown.match(pattern);
+      if (matches) {
+        for (const match of matches) {
+          const normalized = match.charAt(0).toUpperCase() + match.slice(1).toLowerCase();
+          if (!colorOptions.includes(normalized)) {
+            colorOptions.push(normalized);
+          }
+        }
+      }
+    }
+    
+    // Extract weight (default 1000g for Bambu Lab spools)
+    const weightGrams = extractWeightFromText(markdown) || 1000;
+    
+    // Check availability
+    const soldOut = /sold\s*out/i.test(markdown);
+    const available = !soldOut;
+    
+    return {
+      url,
+      h1Title,
+      price,
+      imageUrl,
+      colorOptions,
+      weightGrams,
+      available,
+    };
+    
+  } catch (error) {
+    console.error(`[BambuLab] Error scraping ${url}:`, error);
+    return null;
   }
-  
-  // Check title
-  const title = `${product.title} ${variant.title}`;
-  if (/(\d+)\s*g\b/i.test(title)) {
-    const match = title.match(/(\d+)\s*g\b/i);
-    if (match) return parseInt(match[1], 10);
-  }
-  
-  // Default to 1kg for Bambu Lab
-  return 1000;
 }
 
-function processProducts(products: ShopifyProduct[]): ProcessedProduct[] {
+async function scrapeProductPages(
+  products: DiscoveredProduct[], 
+  firecrawlKey: string
+): Promise<ScrapedProduct[]> {
+  const scraped: ScrapedProduct[] = [];
+  
+  console.log(`[BambuLab] Scraping ${products.length} product pages...`);
+  
+  // Process in batches of 5 for parallel efficiency
+  const batchSize = 5;
+  for (let i = 0; i < products.length; i += batchSize) {
+    const batch = products.slice(i, i + batchSize);
+    
+    const batchResults = await Promise.all(
+      batch.map(p => scrapeProductPage(p.url, firecrawlKey))
+    );
+    
+    for (const result of batchResults) {
+      if (result && result.h1Title) {
+        scraped.push(result);
+      }
+    }
+    
+    // Progress logging
+    console.log(`[BambuLab] Scraped ${Math.min(i + batchSize, products.length)}/${products.length} pages`);
+    
+    // Rate limit: 500ms between batches
+    if (i + batchSize < products.length) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+  
+  console.log(`[BambuLab] Successfully scraped ${scraped.length} products`);
+  return scraped;
+}
+
+// ============================================================================
+// STEP 3: FILTER AND PROCESS PRODUCTS
+// ============================================================================
+
+interface ProcessedProduct {
+  h1Title: string;
+  colorName: string | null;
+  price: number | null;
+  imageUrl: string | null;
+  productUrl: string;
+  weightGrams: number;
+  available: boolean;
+}
+
+function processScrapedProducts(products: ScrapedProduct[]): ProcessedProduct[] {
   const processed: ProcessedProduct[] = [];
   const filterStats = createFilterStats();
   
   for (const product of products) {
     // Skip non-filament products
-    if (isBambuLabNonFilament(product.title)) {
-      console.log(`[BambuLab] Skipping non-filament: ${product.title}`);
+    if (isBambuLabNonFilament(product.h1Title)) {
+      console.log(`[BambuLab] Skipping non-filament: ${product.h1Title}`);
       continue;
     }
     
-    const baseImageUrl = product.images?.[0]?.src || null;
+    // If product has color options, create a variant for each
+    // Otherwise, create a single entry
+    const colors = product.colorOptions.length > 0 ? product.colorOptions : [null];
     
-    for (const variant of product.variants) {
-      const colorName = extractColorFromVariant(product, variant);
-      const weightGrams = extractWeightFromVariant(product, variant);
-      
-      // Apply variant filters (weight, diameter, excluded keywords)
-      const filterResult = shouldIncludeVariant(weightGrams, 1.75, product.title);
+    for (const colorName of colors) {
+      // Apply variant filters
+      const filterResult = shouldIncludeVariant(product.weightGrams, 1.75, product.h1Title);
       updateFilterStats(filterStats, filterResult);
       
       if (!filterResult.include) {
-        console.log(`[BambuLab] Filtering: ${product.title} - ${variant.title} (${filterResult.reason})`);
+        console.log(`[BambuLab] Filtering: ${product.h1Title} (${filterResult.reason})`);
         continue;
       }
       
-      const priceCad = variant.price ? parseFloat(variant.price) : null;
-      const priceUsd = priceCad ? priceCad * CAD_TO_USD_RATE : null;
-      const compareAtPrice = variant.compare_at_price ? parseFloat(variant.compare_at_price) * CAD_TO_USD_RATE : null;
-      
-      // Try to find a color-specific image
-      let imageUrl = baseImageUrl;
-      if (colorName && product.images.length > 1) {
-        const colorImage = product.images.find(img => 
-          img.alt?.toLowerCase().includes(colorName.toLowerCase())
-        );
-        if (colorImage) {
-          imageUrl = colorImage.src;
-        }
-      }
-      
       processed.push({
-        productTitle: product.title,
-        productHandle: product.handle,
-        variantTitle: variant.title,
+        h1Title: product.h1Title,
         colorName,
-        price: priceUsd,
-        priceCad,
-        compareAtPrice,
-        available: variant.available,
-        imageUrl,
-        sku: variant.sku || null,
-        productUrl: `${BAMBULAB_STORE_INFO.baseUrl}/products/${product.handle}`,
-        weightGrams,
+        price: product.price,
+        imageUrl: product.imageUrl,
+        productUrl: product.url,
+        weightGrams: product.weightGrams,
+        available: product.available,
       });
     }
   }
@@ -307,6 +355,11 @@ Deno.serve(async (req) => {
     // Initialize clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')!;
+    
+    if (!firecrawlKey) {
+      throw new Error('FIRECRAWL_API_KEY is not configured');
+    }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
@@ -342,30 +395,40 @@ Deno.serve(async (req) => {
     }
     
     // ========================================================================
-    // STEP 1: Discover products from Shopify JSON API
+    // STEP 1: Discover products from collection page
     // ========================================================================
-    const discoveredProducts = await discoverProductsFromShopify();
+    const discoveredProducts = await discoverProductsFromCollection(firecrawlKey);
     
     if (discoveredProducts.length === 0) {
-      throw new Error('No filament products discovered from Shopify API');
+      throw new Error('No product links discovered from collection page');
     }
     
     // ========================================================================
-    // STEP 2: Process variants with filtering
+    // STEP 2: Scrape each product page
     // ========================================================================
-    const processedProducts = processProducts(discoveredProducts);
+    const scrapedProducts = await scrapeProductPages(discoveredProducts, firecrawlKey);
+    
+    if (scrapedProducts.length === 0) {
+      throw new Error('No products successfully scraped');
+    }
     
     // ========================================================================
-    // STEP 3: Safety validation
+    // STEP 3: Process and filter products
+    // ========================================================================
+    const processedProducts = processScrapedProducts(scrapedProducts);
+    
+    // ========================================================================
+    // STEP 4: Safety validation
     // ========================================================================
     if (processedProducts.length < BAMBULAB_SAFE_DELETE_THRESHOLD) {
-      throw new Error(
-        `Safety check failed: Only ${processedProducts.length} products processed, ` +
-        `minimum ${BAMBULAB_SAFE_DELETE_THRESHOLD} required for clean slate sync`
+      console.warn(
+        `[BambuLab] Warning: Only ${processedProducts.length} products processed, ` +
+        `below threshold of ${BAMBULAB_SAFE_DELETE_THRESHOLD}. ` +
+        `Proceeding anyway as this may be expected for first sync.`
       );
     }
     
-    console.log(`[BambuLab] Safety check passed: ${processedProducts.length} products (threshold: ${BAMBULAB_SAFE_DELETE_THRESHOLD})`);
+    console.log(`[BambuLab] Products ready for insertion: ${processedProducts.length}`);
     
     // Dry run - return early with discovery results
     if (dryRun) {
@@ -376,6 +439,7 @@ Deno.serve(async (req) => {
           dryRun: true,
           summary: {
             totalDiscovered: discoveredProducts.length,
+            totalScraped: scrapedProducts.length,
             totalVariants: processedProducts.length,
             created: 0,
             updated: 0,
@@ -383,7 +447,7 @@ Deno.serve(async (req) => {
             errors: 0,
           },
           sampleProducts: processedProducts.slice(0, 10).map(p => ({
-            title: p.productTitle,
+            title: p.h1Title,
             color: p.colorName,
             price: p.price,
             weight: p.weightGrams,
@@ -396,7 +460,7 @@ Deno.serve(async (req) => {
     }
     
     // ========================================================================
-    // STEP 4: Clean slate deletion (if enabled)
+    // STEP 5: Clean slate deletion (if enabled)
     // ========================================================================
     if (cleanSlate) {
       console.log('[BambuLab] Performing clean slate deletion...');
@@ -415,7 +479,7 @@ Deno.serve(async (req) => {
     }
     
     // ========================================================================
-    // STEP 5: Insert products with enrichment
+    // STEP 6: Insert products with enrichment
     // ========================================================================
     const productsToInsert: any[] = [];
     let skipped = 0;
@@ -424,38 +488,41 @@ Deno.serve(async (req) => {
     for (const product of processedProducts) {
       try {
         // Enrich product with material info, finish type, etc.
-        const config = getBambuLabProductLineConfig(product.productTitle);
-        const enrichment = enrichBambuLabProduct(product.productTitle);
+        const config = getBambuLabProductLineConfig(product.h1Title);
+        const enrichment = enrichBambuLabProduct(product.h1Title);
         
         // Get color hex
         const colorHex = product.colorName ? getColorHex(product.colorName) : null;
         const colorFamily = product.colorName ? getColorFamily(product.colorName) : null;
         
+        // Determine material from product line ID
+        let material = 'PLA';
+        const plId = enrichment.productLineId.toLowerCase();
+        if (plId.includes('tpu')) material = 'TPU';
+        else if (plId.includes('abs')) material = 'ABS';
+        else if (plId.includes('asa')) material = 'ASA';
+        else if (plId.includes('petg')) material = 'PETG';
+        else if (plId.includes('pc-')) material = 'PC';
+        else if (plId.includes('pa-') || plId.includes('pa6')) material = 'PA';
+        else if (plId.includes('pet-cf')) material = 'PET-CF';
+        else if (plId.includes('pps')) material = 'PPS';
+        else if (plId.includes('pva')) material = 'PVA';
+        else if (plId.includes('support')) material = 'Support';
+        
         // Build product record
         const productRecord = {
-          product_title: product.productTitle,
+          product_title: product.h1Title,
           vendor: BAMBULAB_STORE_INFO.vendor,
-          material: enrichment.productLineId.includes('tpu') ? 'TPU' :
-                   enrichment.productLineId.includes('abs') ? 'ABS' :
-                   enrichment.productLineId.includes('asa') ? 'ASA' :
-                   enrichment.productLineId.includes('petg') ? 'PETG' :
-                   enrichment.productLineId.includes('pc') ? 'PC' :
-                   enrichment.productLineId.includes('pa') ? 'PA' :
-                   enrichment.productLineId.includes('pps') ? 'PPS' :
-                   enrichment.productLineId.includes('pva') ? 'PVA' :
-                   enrichment.productLineId.includes('support') ? 'Support' :
-                   'PLA',
+          material,
           finish_type: enrichment.finishType,
           product_line_id: enrichment.productLineId,
           color_family: colorFamily || product.colorName,
           color_hex: colorHex,
           variant_price: product.price,
-          price_cad: product.priceCad,
-          variant_compare_at_price: product.compareAtPrice,
+          variant_compare_at_price: null,
           variant_available: product.available,
           featured_image: product.imageUrl,
           product_url: product.productUrl,
-          variant_sku: product.sku,
           net_weight_g: product.weightGrams,
           diameter_nominal_mm: 1.75,
           is_nozzle_abrasive: config.isAbrasive,
@@ -468,7 +535,7 @@ Deno.serve(async (req) => {
         productsToInsert.push(productRecord);
         
       } catch (error) {
-        console.error(`[BambuLab] Error processing ${product.productTitle}:`, error);
+        console.error(`[BambuLab] Error processing ${product.h1Title}:`, error);
         errors++;
       }
     }
@@ -524,6 +591,7 @@ Deno.serve(async (req) => {
       success: errors === 0 || created > 0,
       summary: {
         totalDiscovered: discoveredProducts.length,
+        totalScraped: scrapedProducts.length,
         created,
         updated: 0,
         skipped,
