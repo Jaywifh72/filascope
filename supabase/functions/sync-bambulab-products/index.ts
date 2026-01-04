@@ -154,6 +154,26 @@ async function discoverProductsFromCollection(firecrawlKey: string): Promise<Dis
 // STEP 2: SCRAPE PRODUCT PAGES FOR DETAILS
 // ============================================================================
 
+// Helper to extract color from "Color : ColorName (SKU)" pattern
+function extractColorFromPageContent(markdown: string): string | null {
+  // Look for "Color : ColorName (SKU)" pattern (Bambu Lab specific format)
+  const colorLabelMatch = markdown.match(/Color\s*:\s*([^(]+)\s*\(/i);
+  if (colorLabelMatch) {
+    const colorName = colorLabelMatch[1].trim();
+    if (isValidColorName(colorName)) {
+      return colorName;
+    }
+  }
+  
+  // Try "Selected: ColorName" pattern
+  const selectedMatch = markdown.match(/Selected\s*:\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
+  if (selectedMatch && isValidColorName(selectedMatch[1])) {
+    return selectedMatch[1];
+  }
+  
+  return null;
+}
+
 async function scrapeProductPage(url: string, firecrawlKey: string): Promise<ScrapedProduct | null> {
   try {
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
@@ -211,21 +231,38 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
       imageUrl = imgMatch[1];
     }
     
-    // Extract color options from markdown (look for color swatches)
+    // Extract color options using multiple strategies
     const colorOptions: string[] = [];
+    
+    // Strategy 1: Look for "Color : ColorName" pattern specific to Bambu Lab
+    const primaryColor = extractColorFromPageContent(markdown);
+    if (primaryColor) {
+      colorOptions.push(primaryColor);
+    }
+    
+    // Strategy 2: Extract from color-related HTML/markdown patterns
+    // Look for color variant links or buttons
+    const colorVariantMatches = markdown.matchAll(/(?:color|variant)[:\s]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})/gi);
+    for (const match of colorVariantMatches) {
+      const colorName = match[1].trim();
+      if (!colorOptions.includes(colorName) && isValidColorName(colorName)) {
+        colorOptions.push(colorName);
+      }
+    }
+    
+    // Strategy 3: Parse standalone color words (more permissive but filtered)
     const colorPatterns = [
-      /(?:Black|White|Gray|Grey|Red|Blue|Green|Yellow|Orange|Purple|Pink|Brown|Gold|Silver|Ivory|Beige|Teal|Cyan|Magenta|Coral|Navy|Olive|Maroon|Turquoise|Jade|Lime|Crimson|Lavender|Mint|Peach|Rose|Salmon|Scarlet|Slate|Sky|Tan|Violet|Wine|Bone|Cream|Charcoal|Natural|Clear|Translucent|Transparent)/gi,
+      /\b(Jade\s*White|Bambu\s*Green|Sky\s*Blue|Cobalt\s*Blue|Indigo\s*Purple|Maroon\s*Red|Hot\s*Pink|Pumpkin\s*Orange|Sunflower\s*Yellow|Bright\s*Green|Cocoa\s*Brown|Light\s*Gray|Dark\s*Gray|Blue\s*Gray|Matte\s*[A-Z][a-z]+|Silk\s*[A-Z][a-z]+|Galaxy\s*[A-Z][a-z]+|Glow\s*[A-Z][a-z]+)\b/g,
+      /\b(Black|White|Gray|Grey|Red|Blue|Green|Yellow|Orange|Purple|Pink|Brown|Gold|Silver|Ivory|Beige|Teal|Cyan|Magenta|Coral|Navy|Olive|Turquoise|Jade|Lime|Lavender|Mint|Peach|Rose|Salmon|Charcoal|Natural|Clear|Translucent)\b/g,
     ];
     
     for (const pattern of colorPatterns) {
-      const matches = markdown.match(pattern);
-      if (matches) {
-        for (const match of matches) {
-          const normalized = match.charAt(0).toUpperCase() + match.slice(1).toLowerCase();
-          // Filter out promotional text that matches color patterns
-          if (!colorOptions.includes(normalized) && isValidColorName(normalized)) {
-            colorOptions.push(normalized);
-          }
+      const matches = markdown.matchAll(pattern);
+      for (const match of matches) {
+        const colorName = match[1] || match[0];
+        const normalized = colorName.trim();
+        if (!colorOptions.includes(normalized) && isValidColorName(normalized)) {
+          colorOptions.push(normalized);
         }
       }
     }
