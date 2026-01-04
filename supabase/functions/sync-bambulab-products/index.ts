@@ -268,6 +268,26 @@ function extractColorsFromPageContent(markdown: string, html: string = ''): stri
     }
   }
   
+  // Pattern H9: Button elements with value or data-value attribute (for ABS and other products)
+  // Example: <button value="Black" class="...">
+  const buttonValueMatches = html.matchAll(/<button[^>]*(?:value|data-value)="([A-Z][a-zA-Z\s]+)"[^>]*>/gi);
+  for (const match of buttonValueMatches) {
+    const colorName = match[1].trim();
+    if (colorName && isValidColorName(colorName) && !colors.includes(colorName)) {
+      colors.push(colorName);
+    }
+  }
+  
+  // Pattern H10: Dropdown/select option elements
+  // Example: <option value="Black">Black</option>
+  const optionMatches = html.matchAll(/<option[^>]*value="([A-Z][a-zA-Z\s]+)"[^>]*>/gi);
+  for (const match of optionMatches) {
+    const colorName = match[1].trim();
+    if (colorName && isValidColorName(colorName) && !colors.includes(colorName)) {
+      colors.push(colorName);
+    }
+  }
+  
   // ============ MARKDOWN PATTERNS (FALLBACK) ============
   
   // Pattern M1: "Color : ColorName (SKU)" - primary pattern
@@ -747,7 +767,7 @@ Deno.serve(async (req) => {
           material,
           finish_type: enrichment.finishType,
           product_line_id: enrichment.productLineId,
-          color_family: colorFamily || product.colorName,
+          color_family: product.colorName || colorFamily,
           color_hex: colorHex,
           variant_price: product.price,
           variant_compare_at_price: null,
