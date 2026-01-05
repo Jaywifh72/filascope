@@ -3378,6 +3378,10 @@ Deno.serve(async (req) => {
     // BAMBU LAB SPECIAL CHECK: Verify S5 gallery images (not S7 swatch thumbnails)
     // - S5 CDN (store.bblcdn.com/s5/): Full product photos (CORRECT)
     // - S7 CDN (store.bblcdn.com/s7/): Tiny swatch thumbnails (WRONG)
+    // 
+    // TIERED S5 REQUIREMENT (Bambu Lab only):
+    // - Tier 1: Single-color products (1-2 variants, CF/GF/Support/PVA) - S7 acceptable
+    // - Tier 2: Multi-color products (3+ variants) - S5 REQUIRED (flag if using S7)
     const colorImageIssues: Array<{ id: string; title: string; issue: string }> = [];
     
     // Group by product_line_id to check image uniqueness within each line
@@ -3401,11 +3405,19 @@ Deno.serve(async (req) => {
     
     // Check each product line with 3+ color variants
     for (const [lineId, variants] of Object.entries(productsByLineForImageCheck)) {
-      if (variants.length < 3) continue; // Skip small variant sets
+      if (variants.length < 3) continue; // Skip small variant sets - S7 acceptable for 1-2 variants
       
-      // Skip known single-color product types (CF, GF, etc.)
+      // Skip known single-color product types (CF, GF, etc.) - S7 acceptable
+      // These legitimately only come in 1-2 colors, so swatch thumbnails are fine
       const isSingleColorProduct = /[_-](cf|gf|pva|support|ht|pa6|pps|peek|pei|aero)[_-]?/i.test(lineId) ||
-                                   /\b(carbon|glass|support|aero|composite)\b/i.test(lineId);
+                                   /\b(carbon|glass|support|aero|composite)\b/i.test(lineId) ||
+                                   lineId.includes('__support__') ||
+                                   lineId.includes('support-') ||
+                                   lineId.includes('__pva__') ||
+                                   lineId.includes('paht-cf') ||
+                                   lineId.includes('pa-cf') ||
+                                   lineId.includes('asa-aero') ||
+                                   lineId.includes('__asa__aero');
       if (isSingleColorProduct) continue;
       
       // Count unique images (excluding null/undefined)
@@ -3413,11 +3425,12 @@ Deno.serve(async (req) => {
       const uniqueImages = new Set(imagesWithValues);
       
       // BAMBU LAB SPECIFIC: Check if using S7 swatch thumbnails instead of S5 gallery images
+      // Only flag multi-color products (3+ variants) - single-color products can use S7
       if (brandSlug === 'bambu-lab') {
         const s7SwatchImages = imagesWithValues.filter(img => img?.includes('store.bblcdn.com/s7/'));
         const s5GalleryImages = imagesWithValues.filter(img => img?.includes('store.bblcdn.com/s5/'));
         
-        // Flag if using S7 swatches (tiny thumbnails) - these are wrong!
+        // Flag if using S7 swatches (tiny thumbnails) for multi-color products - these need S5!
         if (s7SwatchImages.length > 0 && s5GalleryImages.length === 0) {
           colorImageIssues.push({
             id: lineId,
