@@ -105,15 +105,18 @@ const BAMBULAB_KNOWN_PRODUCTS = [
 ];
 
 async function fetchProductsViaFirecrawl(baseUrl: string, productsPath: string = '/collections/all', brandSlug?: string): Promise<{ products: any[], html: string | null }> {
+  console.log(`[fetchProductsViaFirecrawl] Called with baseUrl=${baseUrl}, productsPath=${productsPath}, brandSlug=${brandSlug}`);
+  
   // Special handling for Bambu Lab - their collection pages are fully JS-rendered
   if (brandSlug === 'bambu-lab') {
-    console.log('Using hardcoded product list for Bambu Lab (JS-rendered collection pages)');
+    console.log('[fetchProductsViaFirecrawl] Using hardcoded product list for Bambu Lab');
     const products = BAMBULAB_KNOWN_PRODUCTS.slice(0, 10).map(slug => ({
       handle: slug,
       title: slug.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
       variants: [],
       options: [],
     }));
+    console.log(`[fetchProductsViaFirecrawl] Returning ${products.length} hardcoded products:`, products.map(p => p.handle));
     return { products, html: null };
   }
 
@@ -328,7 +331,7 @@ serve(async (req) => {
     
     // Fallback to Firecrawl for non-Shopify stores or if Shopify JSON failed
     if (products.length === 0) {
-      console.log(`Shopify JSON unavailable, using Firecrawl for ${brandSlug}`);
+      console.log(`[Main] Shopify JSON unavailable or not Shopify platform, using Firecrawl for ${brandSlug}`);
       isShopify = false;
       
       // Determine collection path based on brand
@@ -337,19 +340,22 @@ serve(async (req) => {
         collectionPath = '/collections/filament';
       }
       
+      console.log(`[Main] Calling fetchProductsViaFirecrawl with brandSlug=${brandSlug}`);
       const firecrawlResult = await fetchProductsViaFirecrawl(brand.base_url, collectionPath, brandSlug);
       products = firecrawlResult.products;
       productHtml = firecrawlResult.html;
+      console.log(`[Main] fetchProductsViaFirecrawl returned ${products.length} products`);
     }
     
     if (products.length === 0) {
+      console.error(`[Main] No products found for ${brandSlug} after all attempts`);
       return new Response(
         JSON.stringify({ error: 'Could not fetch products from brand website (tried Shopify JSON and Firecrawl)' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Fetched ${products.length} sample products (source: ${isShopify ? 'Shopify JSON' : 'Firecrawl'})`);
+    console.log(`[Main] Fetched ${products.length} sample products (source: ${isShopify ? 'Shopify JSON' : 'Firecrawl'}):`, products.map((p: any) => p.handle));
 
     // Step 2: Fetch HTML from a sample product page for swatch analysis (if not already fetched)
     if (!productHtml && products[0]?.handle) {
