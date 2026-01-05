@@ -2649,7 +2649,7 @@ Deno.serve(async (req) => {
     // Validates that each product_line_id has consistent variant data
     const { data: detailPageVariants } = await supabase
       .from("filaments")
-      .select("id, product_title, product_line_id, material, color_hex, color_family, featured_image")
+      .select("id, product_title, product_line_id, material, color_hex, color_family, featured_image, product_url")
       .ilike("vendor", brandName)
       .not("product_line_id", "is", null);
 
@@ -2657,7 +2657,7 @@ Deno.serve(async (req) => {
     const checkedDetailLines = new Set<string>();
 
     // Group variants by product_line_id
-    const variantsByLine: Record<string, Array<{ id: string; product_title: string; material: string | null; color_hex: string | null; color_family: string | null; featured_image: string | null }>> = {};
+    const variantsByLine: Record<string, Array<{ id: string; product_title: string; material: string | null; color_hex: string | null; color_family: string | null; featured_image: string | null; product_url: string | null }>> = {};
     for (const variant of detailPageVariants || []) {
       const lineId = variant.product_line_id;
       if (!variantsByLine[lineId]) variantsByLine[lineId] = [];
@@ -3425,28 +3425,27 @@ Deno.serve(async (req) => {
       const uniqueImages = new Set(imagesWithValues);
       
       // BAMBU LAB SPECIFIC: Check if using S7 swatch thumbnails instead of S5 gallery images
-      // TEMPORARILY: Show as INFO instead of CRITICAL while S5 image extraction is in progress
-      // S7 swatch thumbnails (~50px) work but S5 gallery images (1920px) are preferred
-      // TODO: Once S5 mappings are complete, change back to CRITICAL for S7-only products
+      // S5 gallery images (1920px) are REQUIRED - S7 swatch thumbnails (~50px) are NOT acceptable
       if (brandSlug === 'bambu-lab') {
         const s7SwatchImages = imagesWithValues.filter(img => img?.includes('store.bblcdn.com/s7/'));
         const s5GalleryImages = imagesWithValues.filter(img => img?.includes('store.bblcdn.com/s5/'));
         
-        // INFO (not critical) if using S7 swatches - acceptable temporarily
-        // S5 images require manual extraction via browser DevTools (cannot be scraped)
+        // CRITICAL: Multi-color products MUST use S5 gallery images
         if (s7SwatchImages.length > 0 && s5GalleryImages.length === 0) {
-          // Don't add to colorImageIssues - S7 is temporarily acceptable
-          // Just log for tracking purposes
-          console.log(`[INFO] ${lineId}: Using S7 swatch images (${s7SwatchImages.length} variants) - S5 preferred but not required`);
-          continue; // Skip other checks - S7 is acceptable for now
+          colorImageIssues.push({
+            id: lineId,
+            title: lineId,
+            issue: `CRITICAL: Using S7 swatch thumbnails (~50px) instead of S5 product gallery images (1920px). All ${s7SwatchImages.length} images are wrong type.`,
+          });
+          continue; // Skip other checks for this line
         }
         
-        // Warn if mixed S7/S5 (some colors have wrong images) - still worth noting
+        // Warn if mixed S7/S5 (some colors have wrong images)
         if (s7SwatchImages.length > 0 && s5GalleryImages.length > 0) {
           colorImageIssues.push({
             id: lineId,
             title: lineId,
-            issue: `Mixed: ${s5GalleryImages.length} S5 gallery, ${s7SwatchImages.length} S7 swatch. S5 preferred for consistency.`,
+            issue: `Mixed image types: ${s5GalleryImages.length} S5 gallery (correct), ${s7SwatchImages.length} S7 swatch (wrong). Fix S7 images.`,
           });
           continue;
         }
@@ -3482,6 +3481,56 @@ Deno.serve(async (req) => {
     });
     
     console.log(`[PostSyncCheck] Color-Specific Images: ${colorImageIssues.length} issues found`);
+
+    // ========== BAMBU LAB SPECIFIC: Variant URL Parameter Check ==========
+    // Verify that Bambu Lab products have variant-specific URLs with ?id= parameter
+    // This ensures "Buy Now" links go directly to the selected color variant
+    if (brandSlug === 'bambu-lab') {
+      const variantUrlIssues: { id: string; title: string; issue: string }[] = [];
+      const checkedLineIds = new Set<string>();
+      
+      for (const variant of detailPageVariants || []) {
+        const lineId = variant.product_line_id || 'unknown';
+        if (checkedLineIds.has(lineId)) continue;
+        checkedLineIds.add(lineId);
+        
+        // Get all products in this line
+        const lineProducts = (detailPageVariants || []).filter((p: typeof variant) => p.product_line_id === lineId);
+        const productsWithVariantUrl = lineProducts.filter((p: typeof variant) => {
+          const url = p.product_url || '';
+          return url.includes('?id=') || url.includes('&id=');
+        });
+        
+        // If no products in this line have variant URLs, flag it
+        if (productsWithVariantUrl.length === 0 && lineProducts.length > 0) {
+          variantUrlIssues.push({
+            id: lineId,
+            title: lineProducts[0]?.product_title || lineId,
+            issue: `No variant ID in URL. Buy Now links will go to default color instead of selected variant. (${lineProducts.length} variants affected)`,
+          });
+        }
+        // If only some products have variant URLs, flag partial issue
+        else if (productsWithVariantUrl.length < lineProducts.length && productsWithVariantUrl.length > 0) {
+          variantUrlIssues.push({
+            id: lineId,
+            title: lineProducts[0]?.product_title || lineId,
+            issue: `Partial variant URLs: ${productsWithVariantUrl.length}/${lineProducts.length} have ?id= parameter.`,
+          });
+        }
+      }
+      
+      checks.push({
+        checkName: "Variant URL Parameters (Bambu Lab)",
+        status: variantUrlIssues.length === 0 ? "pass" : variantUrlIssues.length <= 3 ? "warning" : "fail",
+        count: checkedLineIds.size - variantUrlIssues.length,
+        details: variantUrlIssues.length === 0
+          ? "All products have variant-specific URLs (e.g., ?id=VARIANT_ID) for direct Buy Now linking"
+          : `${variantUrlIssues.length} product lines missing variant ID in URL`,
+        products: variantUrlIssues.length > 0 ? variantUrlIssues.slice(0, 10) : undefined,
+      });
+      
+      console.log(`[PostSyncCheck] Variant URL Parameters: ${variantUrlIssues.length} issues found`);
+    }
 
     // Calculate overall status
     const failCount = checks.filter((c) => c.status === "fail").length;
