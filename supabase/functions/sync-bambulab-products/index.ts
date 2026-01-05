@@ -70,17 +70,38 @@ function s5Url(guid: string): string {
 
 // ========== HARDCODED S5 PRODUCT IMAGES ==========
 // These are manually extracted gallery images for each product line and color.
-// S5 images are loaded via JavaScript and cannot be scraped from static HTML.
+// S5 images are loaded via JavaScript and CANNOT be scraped from static HTML.
 // 
-// HOW TO UPDATE:
-// 1. Visit the product page in browser (e.g., https://us.store.bambulab.com/products/pla-basic-filament)
-// 2. Click on a color swatch
-// 3. Right-click the main product gallery image and "Copy Image Address"
-// 4. The URL should start with https://store.bblcdn.com/s5/
-// 5. Extract the GUID (32-char hex string after /s5/default/) and add below
+// ╔══════════════════════════════════════════════════════════════════════════════╗
+// ║                    MANUAL S5 GUID EXTRACTION PROCESS                        ║
+// ╠══════════════════════════════════════════════════════════════════════════════╣
+// ║ 1. Open product page: https://us.store.bambulab.com/products/{product-slug} ║
+// ║ 2. Open DevTools (F12) → Network tab                                        ║
+// ║ 3. Filter by "s5" in the search box                                         ║
+// ║ 4. Click each color swatch one by one                                       ║
+// ║ 5. Find request to: store.bblcdn.com/s5/default/{GUID}.jpg                  ║
+// ║ 6. Copy the 32-character GUID                                               ║
+// ║ 7. Add below using: 'color name': s5Url('GUID'),                           ║
+// ╚══════════════════════════════════════════════════════════════════════════════╝
 //
-// Format: 'product-slug' -> { 'color name': S5_URL }
+// KNOWN LIMITATIONS (DO NOT ATTEMPT):
+// - Firecrawl waitFor does NOT help - S5 images require actual clicks
+// - __NEXT_DATA__ JSON does NOT contain S5 image GUIDs
+// - Variant IDs (?id= param) also cannot be scraped - accepted limitation
+//
+// Format: 'product-slug' -> { 'color name': s5Url('GUID') }
+// Run Post Sync Check to identify which products still need S5 images.
+//
+// CURRENT STATUS (Updated 2026-01-05):
+// ✅ COMPLETE: abs-filament, pla-tough-upgrade, petg-hf, petg-translucent (43 colors)
+// ⏳ PENDING:  pla-basic-filament, pla-matte, pla-silk-upgrade, pla-translucent, etc. (~124 colors)
+
 const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
+  
+  // ══════════════════════════════════════════════════════════════════════════════
+  // COMPLETE - S5 Images Verified ✅
+  // ══════════════════════════════════════════════════════════════════════════════
+  
   // ========== ABS (12 COLORS - VERIFIED) ==========
   'abs-filament': {
     'silver': s5Url('69834a7536c540e489913a0f8e707e5e'),
@@ -97,7 +118,7 @@ const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
     'purple': s5Url('a840092ea2804025a123e115128c1299'),
   },
   
-  // ========== PLA TOUGH+ (8 COLORS - FROM scrape-bambu-pla) ==========
+  // ========== PLA TOUGH+ (8 COLORS - VERIFIED) ==========
   'pla-tough-upgrade': {
     'black': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(1).jpg',
     'white': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(2).jpg',
@@ -109,7 +130,7 @@ const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
     'red': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(8).jpg',
   },
   
-  // ========== PETG HF (14 COLORS - FROM scrape-bambu-pla) ==========
+  // ========== PETG HF (14 COLORS - VERIFIED) ==========
   'petg-hf': {
     'black': 'https://store.bblcdn.com/s5/default/6583fc4c677b47c78a79b5af54707241.jpg',
     'white': 'https://store.bblcdn.com/s5/default/6f0f3ffb6bdb459f97d0f44a6d83fbf6.jpg',
@@ -127,7 +148,7 @@ const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
     'blue': 'https://store.bblcdn.com/s5/default/729f2d6de88b4001938dcf49c97c2d8c.jpg',
   },
   
-  // ========== PETG TRANSLUCENT (9 COLORS - FROM scrape-bambu-pla) ==========
+  // ========== PETG TRANSLUCENT (9 COLORS - VERIFIED) ==========
   'petg-translucent': {
     'translucent teal': 'https://store.bblcdn.com/s5/default/ffa37db2ff474b71b142f6f3225c7ded.jpg',
     'translucent light blue': 'https://store.bblcdn.com/s5/default/2e8d7b9c2a4147da979f544f73f85fb5.jpg',
@@ -140,8 +161,148 @@ const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
     'translucent purple': 'https://store.bblcdn.com/s5/default/d437c0bf73fa4bbdadf3b3a8f139e8b0.jpg',
   },
   
-  // Note: Additional products (PLA Basic, PLA Matte, PLA Silk, etc.) need manual S5 extraction.
-  // Run Post Sync Check to identify which products still need S5 images.
+  // ══════════════════════════════════════════════════════════════════════════════
+  // PENDING - Need Manual S5 GUID Extraction ⏳
+  // Use DevTools Network tab to capture GUIDs when clicking color swatches
+  // ══════════════════════════════════════════════════════════════════════════════
+  
+  // ========== PLA BASIC (30 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-basic-filament
+  // Known colors: Jade White, Ivory White, Black, Beige, Silver, Orange, Yellow, 
+  //               Green, Grass Green, Mint Green, Lake Blue, Blue, Light Blue,
+  //               Navy Blue, Lavender, Purple, Magenta, Sakura Pink, Red, 
+  //               Wine Red, Pink, Brown, Camel, Coffee, Chocolate, Gray, 
+  //               Dark Gray, Olive, Bamboo Green, Mandarin Orange
+  'pla-basic-filament': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+    // Example: 'jade white': s5Url('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'),
+  },
+  
+  // ========== PLA MATTE (24 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-matte
+  // Known colors: Charcoal, Dark Gray, Ash Gray, Silver, Ivory White, Lilac, 
+  //               Sakura Pink, Coral Pink, Candy, Mandarin Orange, Lemon Yellow,
+  //               Light Green, Teal, Aquamarine, Gray Blue, Lake Blue, Prussian Blue,
+  //               Ink Blue, Deep Blue, Lavender, Purple, Wine Red, Scarlet Red, Brown
+  'pla-matte': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PLA SILK+ (13 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-silk-upgrade
+  // Known colors: White, Black, Pink, Red, Orange, Yellow, Gold, Cyan, 
+  //               Blue, Dark Blue, Green, Purple, Silver
+  'pla-silk-upgrade': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PLA TRANSLUCENT (10 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-translucent
+  'pla-translucent': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PLA SILK MULTI-COLOR (5 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-silk-multicolor
+  'pla-silk-multicolor': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PLA BASIC GRADIENT (3 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-basic-gradient
+  'pla-basic-gradient': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PLA SPARKLE (6 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-sparkle
+  'pla-sparkle': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PLA METAL (5 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-metal
+  'pla-metal': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PLA GALAXY (3 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-galaxy
+  'pla-galaxy': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PLA WOOD (4 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-wood
+  'pla-wood': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PLA GLOW (5 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-glow
+  'pla-glow': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PLA MARBLE (2 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-marble
+  'pla-marble': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PLA-CF (7 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pla-cf
+  'pla-cf': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PETG BASIC (10 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/petg-basic
+  'petg-basic': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== SUPPORT FOR PLA (2 COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/support-for-pla
+  'support-for-pla': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== SUPPORT W (1 COLOR - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/support-w
+  'support-w': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== TPU 95A (COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/tpu-95a
+  'tpu-95a': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== ASA (COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/asa
+  'asa': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PAHT-CF (COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/paht-cf
+  'paht-cf': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PA6-CF (COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pa6-cf
+  'pa6-cf': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
+  
+  // ========== PET-CF (COLORS - PENDING) ==========
+  // URL: https://us.store.bambulab.com/products/pet-cf
+  'pet-cf': {
+    // TODO: Extract S5 GUIDs via DevTools Network tab
+  },
 };
 
 // Legacy fallback - keeping for backwards compatibility
