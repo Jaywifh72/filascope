@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   ArrowLeft, FileText, Download, ExternalLink, 
-  BookOpen, Code, Database, Shield, Zap, ListChecks, Loader2
+  BookOpen, Code, Database, Shield, Zap, ListChecks, Loader2, Terminal
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ interface DocItem {
   description: string;
   path: string;
   icon: React.ElementType;
-  category: "architecture" | "guides" | "api" | "data";
+  category: "architecture" | "guides" | "api" | "data" | "scripts";
   date?: string;
   vendor?: string; // For data exports
 }
@@ -62,6 +62,14 @@ const docs: DocItem[] = [
     category: "data",
     date: "December 25, 2024",
     vendor: "Elegoo"
+  },
+  {
+    title: "Bambu Lab S5 Image Extractor",
+    description: "Puppeteer script to extract S5 gallery image GUIDs from Bambu Lab product pages. Run locally with Node.js.",
+    path: "/docs/bambulab-s5-extractor.js",
+    icon: Terminal,
+    category: "scripts",
+    date: "January 5, 2026"
   }
 ];
 
@@ -131,14 +139,16 @@ const AdminDocs = () => {
     architecture: Database,
     guides: BookOpen,
     api: Code,
-    data: Database
+    data: Database,
+    scripts: Terminal
   };
 
   const categoryLabels = {
     architecture: "Architecture",
     guides: "Guides",
     api: "API Reference",
-    data: "Data Exports"
+    data: "Data Exports",
+    scripts: "Scripts & Tools"
   };
 
   const groupedDocs = docs.reduce((acc, doc) => {
@@ -164,13 +174,13 @@ const AdminDocs = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-5 gap-4 mb-8">
           <Card className="p-4 bg-card border-border">
             <div className="flex items-center gap-3">
               <Database className="w-5 h-5 text-cyan-500" />
               <div>
                 <p className="text-2xl font-bold text-foreground">{docs.filter(d => d.category === 'architecture').length}</p>
-                <p className="text-xs text-muted-foreground">Architecture Docs</p>
+                <p className="text-xs text-muted-foreground">Architecture</p>
               </div>
             </div>
           </Card>
@@ -188,7 +198,7 @@ const AdminDocs = () => {
               <Code className="w-5 h-5 text-purple-500" />
               <div>
                 <p className="text-2xl font-bold text-foreground">{docs.filter(d => d.category === 'api').length}</p>
-                <p className="text-xs text-muted-foreground">API References</p>
+                <p className="text-xs text-muted-foreground">API Refs</p>
               </div>
             </div>
           </Card>
@@ -198,6 +208,15 @@ const AdminDocs = () => {
               <div>
                 <p className="text-2xl font-bold text-foreground">{docs.filter(d => d.category === 'data').length}</p>
                 <p className="text-xs text-muted-foreground">Data Exports</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4 bg-card border-border">
+            <div className="flex items-center gap-3">
+              <Terminal className="w-5 h-5 text-rose-500" />
+              <div>
+                <p className="text-2xl font-bold text-foreground">{docs.filter(d => d.category === 'scripts').length}</p>
+                <p className="text-xs text-muted-foreground">Scripts</p>
               </div>
             </div>
           </Card>
