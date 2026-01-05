@@ -81,7 +81,7 @@ function s5Url(guid: string): string {
 //
 // Format: 'product-slug' -> { 'color name': S5_URL }
 const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
-  // ========== ABS (VERIFIED) ==========
+  // ========== ABS (12 COLORS - VERIFIED) ==========
   'abs-filament': {
     'silver': s5Url('69834a7536c540e489913a0f8e707e5e'),
     'black': s5Url('cfdefec225e6430c82cbe2f8766b6f70'),
@@ -97,7 +97,50 @@ const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
     'purple': s5Url('a840092ea2804025a123e115128c1299'),
   },
   
-  // Note: Additional product images should be extracted manually and added here.
+  // ========== PLA TOUGH+ (8 COLORS - FROM scrape-bambu-pla) ==========
+  'pla-tough-upgrade': {
+    'black': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(1).jpg',
+    'white': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(2).jpg',
+    'yellow': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(3).jpg',
+    'orange': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(4).jpg',
+    'gray': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(5).jpg',
+    'silver': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(6).jpg',
+    'cyan': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(7).jpg',
+    'red': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(8).jpg',
+  },
+  
+  // ========== PETG HF (14 COLORS - FROM scrape-bambu-pla) ==========
+  'petg-hf-filament': {
+    'black': 'https://store.bblcdn.com/s5/default/6583fc4c677b47c78a79b5af54707241.jpg',
+    'white': 'https://store.bblcdn.com/s5/default/6f0f3ffb6bdb459f97d0f44a6d83fbf6.jpg',
+    'red': 'https://store.bblcdn.com/s5/default/7de1911f91d34be280040a4ef84fdbd2.jpg',
+    'gray': 'https://store.bblcdn.com/s5/default/22729c93daef4e0293f50584690457d0.jpg',
+    'dark gray': 'https://store.bblcdn.com/s5/default/d96a3ffe711444f0a4d4b734f1519537.jpg',
+    'cream': 'https://store.bblcdn.com/s5/default/132b2c639d284831ad3a65a5a2450ab3.jpg',
+    'yellow': 'https://store.bblcdn.com/s5/default/695dad0142ca4d0c8ca64cd2cf5eaa6f.jpg',
+    'orange': 'https://store.bblcdn.com/s5/default/048a5c2661644b849a6a955ccde1a877.jpg',
+    'peanut brown': 'https://store.bblcdn.com/s5/default/a27c74b9bf7741b581ac70bfcb5e82f9.jpg',
+    'lime green': 'https://store.bblcdn.com/s5/default/3eeb673909be49ae8cb99bd18f365614.jpg',
+    'green': 'https://store.bblcdn.com/s5/default/9bd37be5d1b24bfb940af905904e7145.jpg',
+    'forest green': 'https://store.bblcdn.com/s5/default/327777e6ed004cb0820532eb7e263a2d.jpg',
+    'lake blue': 'https://store.bblcdn.com/s5/default/88d2cf2480094d6cbbba24a6751eb943.jpg',
+    'blue': 'https://store.bblcdn.com/s5/default/729f2d6de88b4001938dcf49c97c2d8c.jpg',
+  },
+  
+  // ========== PETG TRANSLUCENT (9 COLORS - FROM scrape-bambu-pla) ==========
+  'petg-translucent': {
+    'translucent teal': 'https://store.bblcdn.com/s5/default/ffa37db2ff474b71b142f6f3225c7ded.jpg',
+    'translucent light blue': 'https://store.bblcdn.com/s5/default/2e8d7b9c2a4147da979f544f73f85fb5.jpg',
+    'clear': 'https://store.bblcdn.com/s5/default/1a74ea492a6f4b8ea23c7d84b145d316.png',
+    'translucent gray': 'https://store.bblcdn.com/s5/default/18fb283d551c418f9246a22beec492ce.jpg',
+    'translucent olive': 'https://store.bblcdn.com/s5/default/8534fe998fa145aeb6599bf16827cf58.jpg',
+    'translucent brown': 'https://store.bblcdn.com/s5/default/2c6abde5b9bd4184a9a1ecf31be06500.jpg',
+    'translucent orange': 'https://store.bblcdn.com/s5/default/6415b5d6fb1a473490a0eb605d9d59b0.jpg',
+    'translucent pink': 'https://store.bblcdn.com/s5/default/3c06d1d78c3c40239fc582a8bd5a5261.jpg',
+    'translucent purple': 'https://store.bblcdn.com/s5/default/d437c0bf73fa4bbdadf3b3a8f139e8b0.jpg',
+  },
+  
+  // Note: Additional products (PLA Basic, PLA Matte, PLA Silk, etc.) need manual S5 extraction.
   // Run Post Sync Check to identify which products still need S5 images.
 };
 
