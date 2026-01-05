@@ -110,7 +110,7 @@ const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
   },
   
   // ========== PETG HF (14 COLORS - FROM scrape-bambu-pla) ==========
-  'petg-hf-filament': {
+  'petg-hf': {
     'black': 'https://store.bblcdn.com/s5/default/6583fc4c677b47c78a79b5af54707241.jpg',
     'white': 'https://store.bblcdn.com/s5/default/6f0f3ffb6bdb459f97d0f44a6d83fbf6.jpg',
     'red': 'https://store.bblcdn.com/s5/default/7de1911f91d34be280040a4ef84fdbd2.jpg',
