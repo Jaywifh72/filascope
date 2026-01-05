@@ -376,44 +376,92 @@ const BRAND_LESSONS_LEARNED: Record<string, {
   failedApproaches: string[];
   currentStatus: Record<string, string>;
   keyFiles: string[];
+  extractionPriority?: string[];
+  manualExtractionProcess?: string[];
+  productSlugReference?: Record<string, string>;
   lastUpdated: string;
 }> = {
   'bambu-lab': {
     platform: 'Custom Next.js storefront (NOT Shopify) - us.store.bambulab.com',
     knownLimitations: [
-      'S5 gallery images are loaded dynamically via JavaScript when clicking color swatches - CANNOT be scraped with Firecrawl',
-      'Variant IDs (?id= parameters) require JavaScript interaction - NOT available in static HTML',
-      '__NEXT_DATA__ JSON does NOT contain S5 image GUIDs or variant IDs for Buy Now links',
-      'Static HTML only contains S7 swatch thumbnails (~50x50px) - these are NOT product images',
-      'Collection pages do not expose individual product variant data',
-      'No public Shopify JSON API (products.json) exists for this store'
+      '❌ S5 gallery images are loaded dynamically via JavaScript when clicking color swatches - CANNOT be scraped with Firecrawl',
+      '❌ Variant IDs (?id= parameters) require JavaScript interaction - NOT available in static HTML',
+      '❌ __NEXT_DATA__ JSON does NOT contain S5 image GUIDs or variant IDs for Buy Now links',
+      '❌ Static HTML only contains S7 swatch thumbnails (~50x50px) - these are NOT product images',
+      '❌ Collection pages do not expose individual product variant data',
+      '❌ No public Shopify JSON API (products.json) exists for this store'
     ],
     workingSolutions: [
-      'Use hardcoded S5_PRODUCT_IMAGES mapping in sync-bambulab-products/index.ts (lines 83-180)',
-      'Product slugs extracted from collection page HTML reliably work for product URLs',
-      'Firecrawl with waitFor:2000 successfully extracts H1 titles and basic product info',
-      'Color names can be extracted from __NEXT_DATA__ productOptions array',
-      'Manual browser DevTools (Network tab) extraction for S5 GUIDs is the ONLY reliable method',
-      's5Url() helper function generates correct CDN URLs from GUIDs'
+      '✅ Use hardcoded S5_PRODUCT_IMAGES mapping in sync-bambulab-products/index.ts (lines 99-305)',
+      '✅ Product slugs extracted from collection page HTML reliably work for product URLs',
+      '✅ Firecrawl with waitFor:2000 successfully extracts H1 titles and basic product info',
+      '✅ Color names can be extracted from __NEXT_DATA__ productOptions array',
+      '✅ Manual browser DevTools (Network tab) extraction for S5 GUIDs is the ONLY reliable method',
+      '✅ s5Url() helper function generates correct CDN URLs from GUIDs'
     ],
     failedApproaches: [
-      'Attempting to scrape __NEXT_DATA__ for variant IDs - data structure does not contain them',
-      'Using Firecrawl waitFor for dynamic S5 images - still returns only S7 swatch URLs',
-      'Treating Bambu Lab as Shopify store - no /products.json or /collections.json APIs exist',
-      'Trying to extract variant IDs from HTML data attributes - IDs are injected by JavaScript',
-      'Using wrong product slugs (e.g., "petg-hf-filament" instead of "petg-hf") breaks S5 mapping'
+      '⚠️ Attempting to scrape __NEXT_DATA__ for variant IDs - data structure does not contain them',
+      '⚠️ Using Firecrawl waitFor for dynamic S5 images - still returns only S7 swatch URLs',
+      '⚠️ Treating Bambu Lab as Shopify store - no /products.json or /collections.json APIs exist',
+      '⚠️ Trying to extract variant IDs from HTML data attributes - IDs are injected by JavaScript',
+      '⚠️ Using wrong product slugs (e.g., "petg-hf-filament" instead of "petg-hf") breaks S5 mapping'
     ],
     currentStatus: {
-      's5ImagesPopulated': 'ABS (12), PLA Tough+ (8), PETG HF (14), PETG Translucent (9) = 43 colors total',
-      's5ImagesPending': 'PLA Basic (30), PLA Matte (24), PLA Silk (13), PLA Translucent (10), PLA Silk Multi-Color (5), PLA Basic Gradient (3), PLA Sparkle (6), PLA Metal (5), PLA Galaxy (3), Support for PLA (2), Support W (1)',
+      's5ImagesComplete': 'ABS (12), PLA Tough+ (8), PETG HF (14), PETG Translucent (9) = 43 colors ✅',
+      's5ImagesPending': 'PLA Basic (30), PLA Matte (24), PLA Silk+ (13), PLA Translucent (10), PLA Silk Multi-Color (5), PLA Basic Gradient (3), PLA Sparkle (6), PLA Metal (5), PLA Galaxy (3), PLA Wood (4), Support for PLA (2), Support W (1), PA6-GF (8), ABS-GF (8), PAHT-CF (3), PET-CF (2), PETG-CF (3), PETG Basic (4), ASA (5), TPU 95A HF (7), PA-CF (3), PC (3) = ~145 colors ⏳',
       'variantUrls': 'WARNING status - requires manual extraction or browser automation (accepted limitation)',
-      'totalProductCount': '227 filament variants in database'
+      'totalProductCount': '227 filament variants in database',
+      'completionPercentage': '~23% S5 coverage (43/188 multi-color products)'
     },
     keyFiles: [
       'supabase/functions/sync-bambulab-products/index.ts - Main sync function with S5_PRODUCT_IMAGES constant',
       'supabase/functions/_shared/bambulab-defaults.ts - COLOR_HEX_MAP and brand configuration',
-      'S5_PRODUCT_IMAGES constant (lines 83-180) - Hardcoded S5 image GUID mappings by product slug'
+      'S5_PRODUCT_IMAGES constant (lines 99-305) - Hardcoded S5 image GUID mappings by product slug'
     ],
+    extractionPriority: [
+      '1. PLA Basic (30 colors) - highest impact, most popular product',
+      '2. PLA Matte (24 colors) - second highest color count',
+      '3. PLA Silk+ (13 colors) - popular specialty line',
+      '4. PLA Translucent (10 colors)',
+      '5. Remaining specialty lines (~68 colors total)'
+    ],
+    manualExtractionProcess: [
+      '1. Open product page: https://us.store.bambulab.com/products/{product-slug}',
+      '2. Open DevTools (F12) → Network tab',
+      '3. Filter by "s5" in the search box',
+      '4. Click each color swatch one by one',
+      '5. Find request to: store.bblcdn.com/s5/default/{GUID}.jpg',
+      '6. Copy the 32-character GUID',
+      '7. Add to S5_PRODUCT_IMAGES: \'color name\': s5Url(\'GUID\'),'
+    ],
+    productSlugReference: {
+      'abs-filament': 'ABS',
+      'pla-basic-filament': 'PLA Basic',
+      'pla-matte': 'PLA Matte',
+      'pla-silk-upgrade': 'PLA Silk+',
+      'pla-translucent': 'PLA Translucent',
+      'pla-tough-upgrade': 'PLA Tough+',
+      'petg-hf': 'PETG HF',
+      'petg-translucent': 'PETG Translucent',
+      'petg-basic': 'PETG Basic',
+      'pla-silk-multicolor': 'PLA Silk Multi-Color',
+      'pla-basic-gradient': 'PLA Basic Gradient',
+      'pla-sparkle': 'PLA Sparkle',
+      'pla-metal': 'PLA Metal',
+      'pla-galaxy': 'PLA Galaxy',
+      'pla-wood': 'PLA Wood',
+      'support-for-pla': 'Support for PLA',
+      'support-w': 'Support W',
+      'asa': 'ASA',
+      'tpu-95a-hf': 'TPU 95A HF',
+      'pa6-gf': 'PA6-GF',
+      'abs-gf': 'ABS-GF',
+      'paht-cf': 'PAHT-CF',
+      'pet-cf': 'PET-CF',
+      'petg-cf': 'PETG-CF',
+      'pa-cf': 'PA-CF',
+      'pc': 'PC'
+    },
     lastUpdated: '2026-01-05'
   }
 };
