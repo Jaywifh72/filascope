@@ -96,7 +96,27 @@ async function fetchShopifyProducts(baseUrl: string, limit = 10): Promise<Shopif
 }
 
 // Non-Shopify brands (like Bambu Lab) need alternative product discovery
-async function fetchProductsViaFirecrawl(baseUrl: string, productsPath: string = '/collections/all'): Promise<{ products: any[], html: string | null }> {
+// Bambu Lab's collection pages are fully JS-rendered, so we use known product slugs
+const BAMBULAB_KNOWN_PRODUCTS = [
+  'pla-basic-filament', 'pla-matte', 'pla-silk-upgrade', 'pla-translucent',
+  'petg-hf', 'petg-translucent', 'abs-filament', 'pla-tough-upgrade',
+  'pla-sparkle', 'pla-metal', 'pla-galaxy', 'pla-wood', 'asa',
+  'tpu-95a-hf', 'pla-cf', 'petg-cf', 'pa6-gf', 'abs-gf'
+];
+
+async function fetchProductsViaFirecrawl(baseUrl: string, productsPath: string = '/collections/all', brandSlug?: string): Promise<{ products: any[], html: string | null }> {
+  // Special handling for Bambu Lab - their collection pages are fully JS-rendered
+  if (brandSlug === 'bambu-lab') {
+    console.log('Using hardcoded product list for Bambu Lab (JS-rendered collection pages)');
+    const products = BAMBULAB_KNOWN_PRODUCTS.slice(0, 10).map(slug => ({
+      handle: slug,
+      title: slug.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+      variants: [],
+      options: [],
+    }));
+    return { products, html: null };
+  }
+
   if (!FIRECRAWL_API_KEY) {
     console.warn('FIRECRAWL_API_KEY not configured');
     return { products: [], html: null };
@@ -135,13 +155,12 @@ async function fetchProductsViaFirecrawl(baseUrl: string, productsPath: string =
       return match ? match[1] : null;
     }).filter(Boolean))];
 
-    // Extract product info from __NEXT_DATA__ if available (for Next.js sites like Bambu Lab)
+    // Extract product info from __NEXT_DATA__ if available (for Next.js sites)
     let nextDataProducts: any[] = [];
     const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
     if (nextDataMatch) {
       try {
         const nextData = JSON.parse(nextDataMatch[1]);
-        // Try to find products in various Next.js data structures
         const pageProps = nextData?.props?.pageProps;
         if (pageProps?.products) {
           nextDataProducts = pageProps.products;
@@ -318,7 +337,7 @@ serve(async (req) => {
         collectionPath = '/collections/filament';
       }
       
-      const firecrawlResult = await fetchProductsViaFirecrawl(brand.base_url, collectionPath);
+      const firecrawlResult = await fetchProductsViaFirecrawl(brand.base_url, collectionPath, brandSlug);
       products = firecrawlResult.products;
       productHtml = firecrawlResult.html;
     }
