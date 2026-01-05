@@ -3519,13 +3519,15 @@ Deno.serve(async (req) => {
         }
       }
       
+      // NOTE: Variant IDs are loaded dynamically via JavaScript and cannot be scraped from static HTML.
+      // This check is informational only - variant URL extraction requires browser automation.
       checks.push({
         checkName: "Variant URL Parameters (Bambu Lab)",
-        status: variantUrlIssues.length === 0 ? "pass" : variantUrlIssues.length <= 3 ? "warning" : "fail",
+        status: variantUrlIssues.length === 0 ? "pass" : "warning", // WARNING only - cannot be scraped
         count: checkedLineIds.size - variantUrlIssues.length,
         details: variantUrlIssues.length === 0
           ? "All products have variant-specific URLs (e.g., ?id=VARIANT_ID) for direct Buy Now linking"
-          : `${variantUrlIssues.length} product lines missing variant ID in URL`,
+          : `${variantUrlIssues.length} product lines missing variant ID (variant IDs require JavaScript extraction - not available via static scraping)`,
         products: variantUrlIssues.length > 0 ? variantUrlIssues.slice(0, 10) : undefined,
       });
       
