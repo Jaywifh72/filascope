@@ -95,6 +95,80 @@ async function fetchShopifyProducts(baseUrl: string, limit = 10): Promise<Shopif
   }
 }
 
+// Non-Shopify brands (like Bambu Lab) need alternative product discovery
+async function fetchProductsViaFirecrawl(baseUrl: string, productsPath: string = '/collections/all'): Promise<{ products: any[], html: string | null }> {
+  if (!FIRECRAWL_API_KEY) {
+    console.warn('FIRECRAWL_API_KEY not configured');
+    return { products: [], html: null };
+  }
+
+  try {
+    const url = `${baseUrl}${productsPath}`;
+    console.log(`Fetching products via Firecrawl: ${url}`);
+    
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['html'],
+        onlyMainContent: false,
+        waitFor: 3000,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Firecrawl error: ${response.status}`);
+      return { products: [], html: null };
+    }
+
+    const data = await response.json();
+    const html = data.data?.html || '';
+    
+    // Extract product links and titles from HTML
+    const productLinks = html.match(/href="\/products\/([^"]+)"/gi) || [];
+    const uniqueSlugs = [...new Set(productLinks.map((link: string) => {
+      const match = link.match(/href="\/products\/([^"?]+)/i);
+      return match ? match[1] : null;
+    }).filter(Boolean))];
+
+    // Extract product info from __NEXT_DATA__ if available (for Next.js sites like Bambu Lab)
+    let nextDataProducts: any[] = [];
+    const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
+    if (nextDataMatch) {
+      try {
+        const nextData = JSON.parse(nextDataMatch[1]);
+        // Try to find products in various Next.js data structures
+        const pageProps = nextData?.props?.pageProps;
+        if (pageProps?.products) {
+          nextDataProducts = pageProps.products;
+        } else if (pageProps?.initialProducts) {
+          nextDataProducts = pageProps.initialProducts;
+        }
+      } catch (e) {
+        console.log('Could not parse __NEXT_DATA__');
+      }
+    }
+
+    // Build product list from discovered slugs
+    const products = (uniqueSlugs as string[]).slice(0, 10).map((slug) => ({
+      handle: slug,
+      title: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      variants: [],
+      options: [],
+    }));
+
+    console.log(`Found ${products.length} products via Firecrawl`);
+    return { products, html };
+  } catch (error) {
+    console.error('Error fetching via Firecrawl:', error);
+    return { products: [], html: null };
+  }
+}
+
 async function fetchProductPageHTML(url: string): Promise<string | null> {
   if (!FIRECRAWL_API_KEY) {
     console.warn('FIRECRAWL_API_KEY not configured, skipping HTML analysis');
@@ -223,29 +297,55 @@ serve(async (req) => {
 
     console.log(`Analyzing brand: ${brand.display_name} (${brandSlug})`);
 
-    // Step 1: Fetch sample products from Shopify JSON
-    const products = await fetchShopifyProducts(brand.base_url, 10);
+    // Step 1: Fetch sample products - try Shopify JSON first, then Firecrawl fallback
+    let products: any[] = [];
+    let productHtml: string | null = null;
+    let isShopify = brand.platform_type === 'shopify';
+    
+    // Try Shopify JSON API first (only for Shopify stores)
+    if (isShopify) {
+      products = await fetchShopifyProducts(brand.base_url, 10);
+    }
+    
+    // Fallback to Firecrawl for non-Shopify stores or if Shopify JSON failed
+    if (products.length === 0) {
+      console.log(`Shopify JSON unavailable, using Firecrawl for ${brandSlug}`);
+      isShopify = false;
+      
+      // Determine collection path based on brand
+      let collectionPath = '/collections/all';
+      if (brandSlug === 'bambu-lab') {
+        collectionPath = '/collections/filament';
+      }
+      
+      const firecrawlResult = await fetchProductsViaFirecrawl(brand.base_url, collectionPath);
+      products = firecrawlResult.products;
+      productHtml = firecrawlResult.html;
+    }
+    
     if (products.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'Could not fetch products from brand website' }),
+        JSON.stringify({ error: 'Could not fetch products from brand website (tried Shopify JSON and Firecrawl)' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Fetched ${products.length} sample products`);
+    console.log(`Fetched ${products.length} sample products (source: ${isShopify ? 'Shopify JSON' : 'Firecrawl'})`);
 
-    // Step 2: Fetch HTML from a sample product page for swatch analysis
-    const sampleProductUrl = `${brand.base_url}/products/${products[0].handle}`;
-    const productHtml = await fetchProductPageHTML(sampleProductUrl);
+    // Step 2: Fetch HTML from a sample product page for swatch analysis (if not already fetched)
+    if (!productHtml && products[0]?.handle) {
+      const sampleProductUrl = `${brand.base_url}/products/${products[0].handle}`;
+      productHtml = await fetchProductPageHTML(sampleProductUrl);
+    }
     const swatchInfo = productHtml ? extractSwatchInfo(productHtml) : { type: 'none', count: 0, samples: [] };
 
     // Step 3: Prepare data for AI analysis
     const sampleProductsData = products.slice(0, 5).map(p => ({
       title: p.title,
       handle: p.handle,
-      productType: p.product_type,
-      options: p.options,
-      variantSamples: p.variants.slice(0, 3).map(v => ({
+      productType: p.product_type || 'filament',
+      options: p.options || [],
+      variantSamples: (p.variants || []).slice(0, 3).map((v: any) => ({
         title: v.title,
         option1: v.option1,
         option2: v.option2,
@@ -255,13 +355,14 @@ serve(async (req) => {
     }));
 
     // Step 4: AI Analysis
+    const dataSource = isShopify ? 'Shopify JSON API' : 'Firecrawl HTML Scrape';
     const analysisPrompt = `Analyze this 3D printer filament e-commerce website to understand its product architecture.
 
 BRAND: ${brand.display_name}
 WEBSITE: ${brand.base_url}
-PLATFORM: ${brand.platform_type}
+PLATFORM: ${brand.platform_type}${brand.platform_type !== 'shopify' ? ' (custom platform, NOT Shopify)' : ''}
 
-SAMPLE PRODUCTS (Shopify JSON):
+SAMPLE PRODUCTS (from ${dataSource}):
 ${JSON.stringify(sampleProductsData, null, 2)}
 
 SWATCH DETECTION FROM HTML:
