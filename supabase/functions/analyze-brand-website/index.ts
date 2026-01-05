@@ -359,7 +359,12 @@ serve(async (req) => {
 
     // Step 2: Fetch HTML from a sample product page for swatch analysis (if not already fetched)
     if (!productHtml && products[0]?.handle) {
-      const sampleProductUrl = `${brand.base_url}/products/${products[0].handle}`;
+      // Use US store URL for Bambu Lab (their base_url may not have regional subdomain)
+      const productBaseUrl = brandSlug === 'bambu-lab' 
+        ? 'https://us.store.bambulab.com' 
+        : brand.base_url;
+      const sampleProductUrl = `${productBaseUrl}/products/${products[0].handle}`;
+      console.log(`[Main] Fetching product HTML from: ${sampleProductUrl}`);
       productHtml = await fetchProductPageHTML(sampleProductUrl);
     }
     const swatchInfo = productHtml ? extractSwatchInfo(productHtml) : { type: 'none', count: 0, samples: [] };
