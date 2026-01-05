@@ -109,11 +109,12 @@ interface DiscoveredProduct {
   collectionTitle: string;
 }
 
-// Color variant with associated image
+// Color variant with associated image and variant ID for URL
 interface ColorVariantData {
   colorName: string;
   colorHex: string | null;
   imageUrl: string | null;
+  variantId: string | null;  // Shopify/Bambu variant ID for ?id= URL parameter
 }
 
 interface ScrapedProduct {
@@ -723,17 +724,30 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
         if (seenColors.has(colorKey)) continue;
         seenColors.add(colorKey);
         
+        // Extract variant ID for URL parameter (e.g., ?id=624467991622688780)
+        const variantId = v?.id?.toString() || null;
+        
         // Get image URL - PRIORITY ORDER:
-        // 1. Hardcoded S5_PRODUCT_IMAGES (most reliable - manually extracted)
-        // 2. S5 gallery images found in HTML (rarely available - JS-loaded)
-        // 3. S5 from __NEXT_DATA__ images
-        // 4. S7 swatch as last resort (with warning)
+        // 1. Variant's featured_image from __NEXT_DATA__ (S5 gallery image)
+        // 2. Hardcoded S5_PRODUCT_IMAGES fallback
+        // 3. S5 from HTML
+        // 4. S7 swatch as last resort
         
         let imageUrl: string | null = null;
         let imageSource = 'none';
         
-        // PRIORITY 1: Check hardcoded S5 mapping FIRST
-        if (productSlug) {
+        // PRIORITY 1: Variant's own featured_image from __NEXT_DATA__ (most accurate - S5 gallery)
+        const variantFeaturedImg = v?.featured_image?.src || v?.featured_image;
+        if (variantFeaturedImg && typeof variantFeaturedImg === 'string') {
+          const variantImgUrl = variantFeaturedImg.replace(/^\/\//, 'https://');
+          if (variantImgUrl.includes('/s5/')) {
+            imageUrl = variantImgUrl;
+            imageSource = 'variant_featured_s5';
+          }
+        }
+        
+        // PRIORITY 2: Check hardcoded S5 mapping
+        if (!imageUrl && productSlug) {
           const hardcodedS5 = getHardcodedS5Image(productSlug, colorName);
           if (hardcodedS5) {
             imageUrl = hardcodedS5;
@@ -741,26 +755,25 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
           }
         }
         
-        // PRIORITY 2: S5 from HTML
+        // PRIORITY 3: S5 from HTML
         if (!imageUrl) {
           imageUrl = s5GalleryImages.get(colorKey) || null;
           if (imageUrl) imageSource = 'html_s5';
         }
         
-        // PRIORITY 3: Try variant's own image (may be S5)
+        // PRIORITY 4: Try variant's image.src (may be S5)
         if (!imageUrl) {
-          const variantImg = v?.image?.src || v?.featured_image?.src || v?.featured_image;
+          const variantImg = v?.image?.src;
           if (variantImg && typeof variantImg === 'string') {
             const variantImgUrl = variantImg.replace(/^\/\//, 'https://');
-            // Only use if it's an S5 image
             if (variantImgUrl.includes('/s5/')) {
               imageUrl = variantImgUrl;
-              imageSource = 'variant_s5';
+              imageSource = 'variant_image_s5';
             }
           }
         }
         
-        // PRIORITY 4: Try flexible matching from colorImageMap (may include S5)
+        // PRIORITY 5: Try flexible matching from colorImageMap (may include S5)
         if (!imageUrl) {
           const matched = findBestImageForColor(colorKey, colorImageMap);
           if (matched && matched.includes('/s5/')) {
@@ -774,7 +787,7 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
           imageUrl = s7SwatchImages.get(colorKey) || null;
           if (imageUrl) {
             imageSource = 's7_swatch';
-            console.log(`[BambuLab] WARNING: Using S7 swatch for "${colorKey}" - add to S5_PRODUCT_IMAGES['${productSlug}']`);
+            console.log(`[BambuLab] WARNING: Using S7 swatch for "${colorKey}" - S5 extraction failed`);
           }
         }
         
@@ -782,6 +795,7 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
           colorName: colorName.trim(),
           colorHex: getBambuLabColorHex(colorName) || getColorHex(colorName) || null,
           imageUrl,
+          variantId,
         });
       }
       
@@ -845,6 +859,7 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
       colorName,
       colorHex: getBambuLabColorHex(colorName) || getColorHex(colorName) || null,
       imageUrl,
+      variantId: null,  // No variant ID available from HTML fallback
     });
   }
   
@@ -972,6 +987,7 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
         colorName,
         colorHex: getBambuLabColorHex(colorName) || getColorHex(colorName) || null,
         imageUrl: ABS_COLOR_IMAGES[colorName.toLowerCase()] || null,
+        variantId: null,  // No variant ID in fallback
       }));
       console.log(`[BambuLab] Using fallback colors WITH IMAGES for ABS: ${absColors.join(', ')}`);
     }
@@ -1049,6 +1065,7 @@ interface ProcessedProduct {
   price: number | null;
   imageUrl: string | null;
   productUrl: string;
+  variantId: string | null;  // Shopify variant ID for ?id= URL parameter
   weightGrams: number;
   available: boolean;
 }
@@ -1105,6 +1122,7 @@ function processScrapedProducts(products: ScrapedProduct[], decisionLogger: Retu
           colorName: getDefaultColorForProduct(product.h1Title) || '',
           colorHex: null,
           imageUrl: null,
+          variantId: null,
         }].filter(v => v.colorName);  // Remove if no default color
     
     // If still no variants, create one without a color name
@@ -1113,6 +1131,7 @@ function processScrapedProducts(products: ScrapedProduct[], decisionLogger: Retu
         colorName: '',
         colorHex: null,
         imageUrl: null,
+        variantId: null,
       }];
     }
     
@@ -1147,6 +1166,7 @@ function processScrapedProducts(products: ScrapedProduct[], decisionLogger: Retu
         price: product.price,
         imageUrl,
         productUrl: product.url,
+        variantId: colorVariant.variantId,  // Pass through variant ID for URL
         weightGrams,
         available: product.available,
       });
@@ -1331,6 +1351,12 @@ Deno.serve(async (req) => {
         else if (plId.includes('pva')) material = 'PVA';
         else if (plId.includes('support')) material = 'Support';
         
+        // Build variant-specific product URL with ?id= parameter
+        // This ensures "Buy Now" links go directly to the selected color variant
+        const variantUrl = product.variantId 
+          ? `${product.productUrl}?id=${product.variantId}`
+          : product.productUrl;
+        
         // Build product record - use baseTitle for product_title (matches page H1)
         // Color is stored separately in color_family field
         const productRecord = {
@@ -1345,7 +1371,7 @@ Deno.serve(async (req) => {
           variant_compare_at_price: null,
           variant_available: product.available,
           featured_image: product.imageUrl,
-          product_url: product.productUrl,
+          product_url: variantUrl,  // Variant-specific URL with ?id= parameter
           net_weight_g: product.weightGrams,
           diameter_nominal_mm: 1.75,
           is_nozzle_abrasive: config.isAbrasive,
