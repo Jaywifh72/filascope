@@ -11,6 +11,12 @@
  * 
  * Source: https://ca.store.bambulab.com/collections/bambu-lab-3d-printer-filament
  * Note: Bambu Lab uses a custom Next.js platform, NOT standard Shopify JSON API
+ * 
+ * CRITICAL IMAGE REQUIREMENT:
+ * - S5 CDN (store.bblcdn.com/s5/): Full product photos (1920px) - MUST USE THESE
+ * - S7 CDN (store.bblcdn.com/s7/): Tiny swatch thumbnails (~50px) - DO NOT USE
+ * - S5 images are loaded dynamically via JavaScript, not in static HTML
+ * - Must use hardcoded S5_PRODUCT_IMAGES mapping for reliable image extraction
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -50,24 +56,53 @@ const USD_RATE = 1.0;
 //
 // CRITICAL: We must use S5 gallery images, NOT S7 swatch thumbnails!
 // S5 URLs have __op__resize parameters for image processing (e.g., __op__resize,m_lfit,w_1920)
+//
+// PROBLEM: S5 images are loaded dynamically via JavaScript when a color is clicked.
+// Firecrawl captures static HTML which only contains S7 swatch URLs.
+// SOLUTION: Use hardcoded S5_PRODUCT_IMAGES mapping for each product line and color.
 
-// ========== ABS FALLBACK IMAGE MAPPING ==========
-// When scraping fails for ABS (JS-rendered color picker), use S5 gallery images
-// Source: https://us.store.bambulab.com/products/abs-filament (manually extracted gallery images)
-const ABS_COLOR_IMAGES: Record<string, string> = {
-  'silver': 'https://store.bblcdn.com/s5/default/69834a7536c540e489913a0f8e707e5e.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
-  'black': 'https://store.bblcdn.com/s5/default/cfdefec225e6430c82cbe2f8766b6f70.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
-  'white': 'https://store.bblcdn.com/s5/default/1ad485ff4a72413b90e944ffde4fa861.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
-  'bambu green': 'https://store.bblcdn.com/s5/default/910be80e4fcf43ddbd66c40773ecce0f.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
-  'orange': 'https://store.bblcdn.com/s5/default/25d7b833bf694c70b9ef3cd649f3cf36.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
-  'red': 'https://store.bblcdn.com/s5/default/95bd38c6dc604bdab7b3d2fc7b67e0ee.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
-  'blue': 'https://store.bblcdn.com/s5/default/3b2f526b80734e429d9a424e07f3c36b.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
-  'olive': 'https://store.bblcdn.com/s5/default/80cf6768c03d129dfa6a01ac67a5b402.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
-  'tangerine yellow': 'https://store.bblcdn.com/s5/default/7376d19b161f2a93a4051e47289d0505.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
-  'azure': 'https://store.bblcdn.com/s5/default/0be9a584b30358020d8706f2aa8ec9c2.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
-  'navy blue': 'https://store.bblcdn.com/s5/default/000878ce6144c05ffac949f66b05a18b.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
-  'purple': 'https://store.bblcdn.com/s5/default/a840092ea2804025a123e115128c1299.jpg__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80',
+// Standard S5 image URL suffix for quality/format
+const S5_PARAMS = '__op__resize,m_lfit,w_1920__op__format,f_auto__op__quality,q_80';
+
+function s5Url(guid: string): string {
+  return `https://store.bblcdn.com/s5/default/${guid}.jpg${S5_PARAMS}`;
+}
+
+// ========== HARDCODED S5 PRODUCT IMAGES ==========
+// These are manually extracted gallery images for each product line and color.
+// S5 images are loaded via JavaScript and cannot be scraped from static HTML.
+// 
+// HOW TO UPDATE:
+// 1. Visit the product page in browser (e.g., https://us.store.bambulab.com/products/pla-basic-filament)
+// 2. Click on a color swatch
+// 3. Right-click the main product gallery image and "Copy Image Address"
+// 4. The URL should start with https://store.bblcdn.com/s5/
+// 5. Extract the GUID (32-char hex string after /s5/default/) and add below
+//
+// Format: 'product-slug' -> { 'color name': S5_URL }
+const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
+  // ========== ABS (VERIFIED) ==========
+  'abs-filament': {
+    'silver': s5Url('69834a7536c540e489913a0f8e707e5e'),
+    'black': s5Url('cfdefec225e6430c82cbe2f8766b6f70'),
+    'white': s5Url('1ad485ff4a72413b90e944ffde4fa861'),
+    'bambu green': s5Url('910be80e4fcf43ddbd66c40773ecce0f'),
+    'orange': s5Url('25d7b833bf694c70b9ef3cd649f3cf36'),
+    'red': s5Url('95bd38c6dc604bdab7b3d2fc7b67e0ee'),
+    'blue': s5Url('3b2f526b80734e429d9a424e07f3c36b'),
+    'olive': s5Url('80cf6768c03d129dfa6a01ac67a5b402'),
+    'tangerine yellow': s5Url('7376d19b161f2a93a4051e47289d0505'),
+    'azure': s5Url('0be9a584b30358020d8706f2aa8ec9c2'),
+    'navy blue': s5Url('000878ce6144c05ffac949f66b05a18b'),
+    'purple': s5Url('a840092ea2804025a123e115128c1299'),
+  },
+  
+  // Note: Additional product images should be extracted manually and added here.
+  // Run Post Sync Check to identify which products still need S5 images.
 };
+
+// Legacy fallback - keeping for backwards compatibility
+const ABS_COLOR_IMAGES = S5_PRODUCT_IMAGES['abs-filament'] || {};
 
 interface DiscoveredProduct {
   url: string;
@@ -457,21 +492,76 @@ function extractColorFromFilename(filename: string): string | null {
 }
 
 /**
+ * Get S5 gallery image from hardcoded mapping
+ * S5 images are loaded via JavaScript and cannot be scraped - we must use hardcoded mappings.
+ * 
+ * @param productSlug - Product slug from URL (e.g., 'pla-basic-filament')
+ * @param colorName - Color name (e.g., 'Jade White')
+ * @returns S5 gallery URL or null if not found
+ */
+function getHardcodedS5Image(productSlug: string, colorName: string): string | null {
+  const normalizedSlug = productSlug.toLowerCase();
+  const normalizedColor = colorName.toLowerCase().trim();
+  
+  const productImages = S5_PRODUCT_IMAGES[normalizedSlug];
+  if (!productImages) {
+    return null;
+  }
+  
+  // Try exact match first
+  if (productImages[normalizedColor]) {
+    return productImages[normalizedColor];
+  }
+  
+  // Try partial matches (for compound color names like "Matte Charcoal" -> "charcoal")
+  for (const [colorKey, url] of Object.entries(productImages)) {
+    // Check if the color name contains the key or vice versa
+    if (normalizedColor.includes(colorKey) || colorKey.includes(normalizedColor)) {
+      return url;
+    }
+    // Check for last word match (e.g., "jade white" matches "white")
+    const lastWord = normalizedColor.split(' ').pop() || '';
+    if (lastWord && colorKey === lastWord) {
+      return url;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Extract product slug from URL
+ * e.g., 'https://us.store.bambulab.com/products/pla-basic-filament' -> 'pla-basic-filament'
+ */
+function extractProductSlug(productUrl: string): string {
+  const match = productUrl.match(/\/products\/([^/?#]+)/i);
+  return match ? match[1].toLowerCase() : '';
+}
+
+/**
  * Extract color variants with their associated S5 GALLERY images from HTML and __NEXT_DATA__
  * 
- * CRITICAL: We must extract S5 CDN images (product gallery photos), NOT S7 swatch thumbnails!
+ * CRITICAL: We must use S5 CDN images (product gallery photos), NOT S7 swatch thumbnails!
  * - S5 CDN (store.bblcdn.com/s5/): Full product photos shown when color is selected (1920px)
  * - S7 CDN (store.bblcdn.com/s7/): Tiny swatch thumbnails in color picker UI (~50x50px)
  * 
  * Strategy:
- * 1. Build a map of S5 gallery images by extracting GUID and color patterns from URLs
- * 2. Extract color names from color selector elements
- * 3. Match colors to S5 images using GUID-based matching
- * 4. Fall back to S7 swatch only if NO S5 image found
+ * 1. FIRST check hardcoded S5_PRODUCT_IMAGES mapping (most reliable)
+ * 2. Try to find S5 images in HTML (rarely works - they're JS-loaded)
+ * 3. Extract color names from color selector elements
+ * 4. Fall back to S7 swatch only if NO S5 image found (with warning)
  */
 function extractColorVariantsWithImages(html: string, markdown: string, productUrl: string): ColorVariantData[] {
   const variants: ColorVariantData[] = [];
   const seenColors = new Set<string>();
+  
+  // Get product slug for hardcoded S5 lookup
+  const productSlug = extractProductSlug(productUrl);
+  const hasHardcodedImages = productSlug && S5_PRODUCT_IMAGES[productSlug];
+  
+  if (hasHardcodedImages) {
+    console.log(`[BambuLab] Using hardcoded S5 images for: ${productSlug}`);
+  }
   
   // Build separate maps for S5 (gallery) and S7 (swatch) images
   const s5GalleryImages = new Map<string, string>(); // color -> S5 gallery URL
@@ -479,13 +569,12 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
   const guidToS5Image = new Map<string, string>();   // GUID -> S5 URL (for matching)
   const colorImageMap = new Map<string, string>();   // Combined map for fallback matching
   
-  // ========== STEP 1: Extract ALL S5 gallery images (priority) ==========
-  // S5 images are full product photos with __op__resize parameters
-  // Pattern: https://store.bblcdn.com/s5/default/GUID.jpg__op__resize,m_lfit,w_1920...
+  // ========== STEP 1: Extract ALL S5 gallery images from HTML (if any) ==========
+  // Note: S5 images are usually JS-loaded, so this often finds 0 images
   const s5ImageMatches = html.matchAll(/https:\/\/store\.bblcdn\.com\/s5\/[^"'\s<>]+\.(?:jpg|png|jpeg|webp)(?:__op__[^"'\s<>]*)?/gi);
   const allS5Images = [...new Set([...s5ImageMatches].map(m => m[0]))];
   
-  console.log(`[BambuLab] Found ${allS5Images.length} S5 gallery images`);
+  console.log(`[BambuLab] Found ${allS5Images.length} S5 gallery images in HTML`);
   
   // Build GUID -> S5 URL map (GUIDs are 32-char hex strings)
   for (const s5Url of allS5Images) {
@@ -634,27 +723,58 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
         if (seenColors.has(colorKey)) continue;
         seenColors.add(colorKey);
         
-        // Get image URL - prioritize S5 gallery images
-        let imageUrl = s5GalleryImages.get(colorKey) || null;
+        // Get image URL - PRIORITY ORDER:
+        // 1. Hardcoded S5_PRODUCT_IMAGES (most reliable - manually extracted)
+        // 2. S5 gallery images found in HTML (rarely available - JS-loaded)
+        // 3. S5 from __NEXT_DATA__ images
+        // 4. S7 swatch as last resort (with warning)
         
-        // Try variant's own image (may be S5)
-        if (!imageUrl) {
-          const variantImg = v?.image?.src || v?.featured_image?.src || v?.featured_image;
-          if (variantImg && typeof variantImg === 'string') {
-            imageUrl = variantImg.replace(/^\/\//, 'https://');
+        let imageUrl: string | null = null;
+        let imageSource = 'none';
+        
+        // PRIORITY 1: Check hardcoded S5 mapping FIRST
+        if (productSlug) {
+          const hardcodedS5 = getHardcodedS5Image(productSlug, colorName);
+          if (hardcodedS5) {
+            imageUrl = hardcodedS5;
+            imageSource = 'hardcoded_s5';
           }
         }
         
-        // Try flexible matching from colorImageMap
+        // PRIORITY 2: S5 from HTML
         if (!imageUrl) {
-          imageUrl = findBestImageForColor(colorKey, colorImageMap);
+          imageUrl = s5GalleryImages.get(colorKey) || null;
+          if (imageUrl) imageSource = 'html_s5';
         }
         
-        // Last resort: S7 swatch (not ideal but better than nothing)
+        // PRIORITY 3: Try variant's own image (may be S5)
+        if (!imageUrl) {
+          const variantImg = v?.image?.src || v?.featured_image?.src || v?.featured_image;
+          if (variantImg && typeof variantImg === 'string') {
+            const variantImgUrl = variantImg.replace(/^\/\//, 'https://');
+            // Only use if it's an S5 image
+            if (variantImgUrl.includes('/s5/')) {
+              imageUrl = variantImgUrl;
+              imageSource = 'variant_s5';
+            }
+          }
+        }
+        
+        // PRIORITY 4: Try flexible matching from colorImageMap (may include S5)
+        if (!imageUrl) {
+          const matched = findBestImageForColor(colorKey, colorImageMap);
+          if (matched && matched.includes('/s5/')) {
+            imageUrl = matched;
+            imageSource = 'colormap_s5';
+          }
+        }
+        
+        // LAST RESORT: S7 swatch (not ideal - tiny thumbnails)
         if (!imageUrl && s7SwatchImages.has(colorKey)) {
           imageUrl = s7SwatchImages.get(colorKey) || null;
           if (imageUrl) {
-            console.log(`[BambuLab] WARNING: Using S7 swatch for "${colorKey}" (no S5 found)`);
+            imageSource = 's7_swatch';
+            console.log(`[BambuLab] WARNING: Using S7 swatch for "${colorKey}" - add to S5_PRODUCT_IMAGES['${productSlug}']`);
           }
         }
         
@@ -669,7 +789,12 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
         console.log(`[BambuLab] Extracted ${variants.length} color variants from __NEXT_DATA__`);
         const withS5 = variants.filter(v => v.imageUrl?.includes('/s5/')).length;
         const withS7 = variants.filter(v => v.imageUrl?.includes('/s7/')).length;
-        console.log(`[BambuLab] Images: ${withS5} S5 gallery, ${withS7} S7 swatch, ${variants.length - withS5 - withS7} other`);
+        const withHardcoded = variants.filter(v => {
+          if (!v.imageUrl || !productSlug) return false;
+          const hardcoded = getHardcodedS5Image(productSlug, v.colorName);
+          return hardcoded && v.imageUrl === hardcoded;
+        }).length;
+        console.log(`[BambuLab] Images: ${withHardcoded} hardcoded S5, ${withS5 - withHardcoded} other S5, ${withS7} S7 swatch, ${variants.length - withS5 - withS7} other`);
         return variants;
       }
     } catch (e) {
@@ -684,12 +809,36 @@ function extractColorVariantsWithImages(html: string, markdown: string, productU
     if (seenColors.has(colorKey)) continue;
     seenColors.add(colorKey);
     
-    // Prioritize S5 gallery image
-    let imageUrl = s5GalleryImages.get(colorKey) || findBestImageForColor(colorKey, colorImageMap) || null;
+    // PRIORITY ORDER for image assignment (same as __NEXT_DATA__ path)
+    let imageUrl: string | null = null;
     
-    // Last resort: S7 swatch
+    // 1. Check hardcoded S5 mapping FIRST (most reliable)
+    if (productSlug) {
+      const hardcodedS5 = getHardcodedS5Image(productSlug, colorName);
+      if (hardcodedS5) {
+        imageUrl = hardcodedS5;
+      }
+    }
+    
+    // 2. Try S5 from HTML
+    if (!imageUrl) {
+      imageUrl = s5GalleryImages.get(colorKey) || null;
+    }
+    
+    // 3. Try flexible matching (prefer S5)
+    if (!imageUrl) {
+      const matched = findBestImageForColor(colorKey, colorImageMap);
+      if (matched && matched.includes('/s5/')) {
+        imageUrl = matched;
+      }
+    }
+    
+    // 4. Last resort: S7 swatch
     if (!imageUrl && s7SwatchImages.has(colorKey)) {
       imageUrl = s7SwatchImages.get(colorKey) || null;
+      if (imageUrl) {
+        console.log(`[BambuLab] WARNING: Using S7 swatch for "${colorKey}" - add to S5_PRODUCT_IMAGES['${productSlug}']`);
+      }
     }
     
     variants.push({

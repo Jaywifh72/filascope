@@ -521,6 +521,59 @@ ${Object.entries(aiAnalysis.colorMappings || {}).map(([name, hex]) => `'${name.t
       p.issue?.toLowerCase().includes('promo')
     )
   );
+  
+  // Check for Bambu Lab S5 image issues
+  const hasBambuLabS5Issues = brandSlug === 'bambu-lab' && [...failedChecks, ...warningChecks].some(c =>
+    c.checkName === 'Color-Specific Images' && 
+    c.products?.some(p => p.issue?.toLowerCase().includes('s7') || p.issue?.toLowerCase().includes('s5'))
+  );
+  
+  const bambuLabS5Section = hasBambuLabS5Issues ? `
+### 7. For Bambu Lab S5 Gallery Image Issues (CRITICAL)
+
+The Post Sync Check detected products using S7 swatch thumbnails instead of S5 gallery images.
+
+**WHY THIS IS CRITICAL:**
+- S7 images are tiny (~50x50px) color swatch thumbnails from the color picker UI
+- S5 images are full product gallery photos (1920px) shown when a color is selected
+- Users expect to see the actual product photo, not a tiny swatch icon
+
+**WHY S5 IMAGES CANNOT BE SCRAPED:**
+- S5 gallery images are loaded dynamically via JavaScript when clicking a color swatch
+- Firecrawl captures static HTML which only contains S7 swatch URLs
+- The \`sync-bambulab-products\` function cannot extract S5 images automatically
+
+**THE SOLUTION: Hardcoded S5_PRODUCT_IMAGES Mapping**
+
+The sync function uses a hardcoded \`S5_PRODUCT_IMAGES\` constant in \`supabase/functions/sync-bambulab-products/index.ts\`.
+
+**Manual S5 Image Extraction Process:**
+
+1. Open the product page in a browser (e.g., https://us.store.bambulab.com/products/pla-basic-filament)
+2. Open browser DevTools (F12) → Network tab
+3. Click on each color swatch one by one
+4. Look for image requests to \`store.bblcdn.com/s5/default/GUID.jpg\`
+5. Copy the GUID (32-character hex string)
+6. Add to \`S5_PRODUCT_IMAGES\` constant:
+
+\`\`\`typescript
+// In supabase/functions/sync-bambulab-products/index.ts
+const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
+  'pla-basic-filament': {
+    'jade white': s5Url('7a8d8c5b6e4f4c2a9b1e3d5f7a9c2b4e'),
+    'ivory white': s5Url('c4b7b9d8e3a54f6b8c1d2e4f6a8b9c1d'),
+    // ... add more colors
+  },
+  // ... add more products
+};
+\`\`\`
+
+**After Adding S5 Mappings:**
+1. Deploy the updated edge function
+2. Run a Clean Slate sync for Bambu Lab
+3. Run Post Sync Check to verify S5 images are now used
+
+` : '';
 
   const promotionalSection = hasPromotionalIssues ? `
 ### 6. For Promotional Product Grouping Issues
@@ -687,7 +740,7 @@ if (!filterResult.include) {
 - MAX_WEIGHT_GRAMS = 5500 (excludes bulk)
 - STANDARD_DIAMETER_MM = 1.75 (excludes 2.85mm/3.0mm)
 - EXCLUDED_TITLE_KEYWORDS = ['sample', 'pack', 'variety', 'bundle', 'combo', 'starter kit', 'trial']
-${promotionalSection}
+${promotionalSection}${bambuLabS5Section}
 ---
 
 ## The Five Consistency Rules
