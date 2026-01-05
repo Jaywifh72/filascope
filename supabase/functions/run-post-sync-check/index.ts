@@ -601,7 +601,7 @@ ${lessons.failedApproaches.map(f => `- ⚠️ ${f}`).join('\n')}
 
 | Category | Status |
 |----------|--------|
-| **Populated** | ${lessons.currentStatus.s5ImagesPopulated} |
+| **Populated** | ${lessons.currentStatus.s5ImagesComplete} |
 | **Pending** | ${lessons.currentStatus.s5ImagesPending} |
 | **Variant URLs** | ${lessons.currentStatus.variantUrls} |
 | **Total Products** | ${lessons.currentStatus.totalProductCount} |
