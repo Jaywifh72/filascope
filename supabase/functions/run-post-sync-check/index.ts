@@ -3200,7 +3200,7 @@ Deno.serve(async (req) => {
     const EXPECTED_CARD_COUNTS: Record<string, number> = {
       // High-confidence counts (verified architecture)
       'atomic-filament': 6,     // PLA, PETG, ABS, ASA, PLA Silk, Hi-Flow Pro PLA
-      'elegoo': 12,             // PLA, PLA+, PETG, ABS, ASA, TPU, Rapid, Marble, Silk, Matte, Glow, Wood
+      'elegoo': 13,             // PLA Standard, Silk, Matte, Sparkle, Galaxy, Marble, Metal, Wood, PLA-CF, PETG Pro, PETG-CF, PETG-GF, Rapid PETG
       'anycubic': 19,           // PLA+, PLA Silk, PLA Galaxy, PLA High Speed, PETG, ABS, ASA, TPU, etc.
       'push-plastic': 15,       // PLA, PETG, ABS, ASA, Nylon, PC, PEI, etc.
       'proto-pasta': 15,        // PLA, HTPLA, PLA Composites, CFPLA, etc.
@@ -3741,7 +3741,11 @@ Deno.serve(async (req) => {
       const skipPatterns = [
         'gift card', 'rainbow', 'gradient', 'galaxy', 'multicolor', 'multi-color',
         'dual color', 'dual-color', 'chameleon', 'shade-shifting', 'groovy',
-        'illusion', 'cosmic', 'nebula', 'aurora', 'tri-color', 'tricolor'
+        'illusion', 'cosmic', 'nebula', 'aurora', 'tri-color', 'tricolor',
+        // Elegoo dual-color silk patterns
+        'yellow purple', 'blue green', 'blue purple', 'black green', 'black red',
+        'black purple', 'green red', 'blue magenta', 'blue green orange',
+        'blue purple black', 'coral pink'
       ];
       for (const skip of skipPatterns) {
         if (text.includes(skip)) return null;
