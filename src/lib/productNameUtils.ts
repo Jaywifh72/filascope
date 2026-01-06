@@ -222,6 +222,7 @@ export const getBaseProductName = (title: string, material?: string | null): str
     
     // DON'T match if remainder looks like a product line suffix (not just a color)
     const productLineSuffixes = [
+      'Basic',  // Prevents "PLA Basic" → "PLA" stripping
       'Transparent Rainbow', 'Matte Rainbow', 'Silk Rainbow', 'Crystal Rainbow',
       'Glow in the Dark', 'Glow-in-the-Dark', 'GITD',
       'Galaxy', 'Marble', 'Crystal-Transparent', 'Crystal Transparent',
