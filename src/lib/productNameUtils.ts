@@ -512,12 +512,21 @@ function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: str
     
     // Combine all parts after material (handles cases like "silk-basic" or "transparent-rainbow")
     const lineParts = parts.slice(2).join(' ');
-    const lineName = lineParts
+    let lineName = lineParts
       .replace(/-/g, ' ')
       .replace(/\b\w/g, c => c.toUpperCase())
       // Fix capitalization for abbreviations like "HS" (Matte Hs → Matte HS)
       .replace(/\bHs\b/g, 'HS')
       .trim();
+    
+    // Remove category suffixes that shouldn't be displayed (e.g., "composite", "standard")
+    // These are internal grouping tags, not part of the product name
+    lineName = lineName.replace(/\b(Composite|Standard)\b/gi, '').trim();
+    
+    // If lineName is now empty (e.g., "bambulab__abs-gf__composite"), just return material
+    if (!lineName) {
+      return material;
+    }
     
     return `${material} ${lineName}`.trim();
   }
