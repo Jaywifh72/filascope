@@ -428,8 +428,9 @@ const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
     'white': 'https://store.bblcdn.com/s5/default/de2c87dc362a4fbba85e893ef033f64e.png',
   },
   
-  // ========== TPU 90A (7 COLORS) ==========
+  // ========== TPU 85A (2 COLORS) ==========
   'tpu-85a-tpu-90a': {
+    // Colors scraped from this page go to either 85a or 90a based on TPU_HARDNESS_MAP
     'frozen': 'https://store.bblcdn.com/s5/default/65d73fc03c7c4ef5a5f82ecda434d172/TPU_90_Frozen.jpg',
     'blaze': 'https://store.bblcdn.com/s5/default/a09b4a9822744b92ab48369ef33bd7fd/TPU_90_Blaze.jpg',
     'white': 'https://store.bblcdn.com/s5/default/4ac3c59e99f94ddd829c3e985babf67b/TPU_90_White.jpg',
@@ -877,6 +878,26 @@ function getCSVWhitelistedColors(productSlug: string): string[] {
   ]);
   return [...allColors];
 }
+
+// ========== TPU HARDNESS GRADE MAPPING ==========
+// Bambu Lab sells TPU 85A and 90A on the same product page, but they are different
+// hardness grades that should be displayed as separate product cards.
+// This mapping determines which product line each color belongs to.
+const TPU_HARDNESS_MAP: Record<string, '85a' | '90a'> = {
+  // TPU 85A colors (softer, more flexible)
+  'neon orange': '85a',
+  'light cyan': '85a',
+  // TPU 90A colors (standard flexibility)
+  'frozen': '90a',
+  'blaze': '90a',
+  'white': '90a',
+  'black': '90a',
+  'grape jelly': '90a',
+  'crystal blue': '90a',
+  'cocoa brown': '90a',
+  'flesh': '90a',
+  'lime green': '90a',
+};
 
 interface DiscoveredProduct {
   url: string;
@@ -2204,14 +2225,45 @@ Deno.serve(async (req) => {
           }
         }
         
+        // ========== TPU 85A/90A SPLITTING ==========
+        // The product page "TPU 85A / TPU 90A" contains both hardness grades.
+        // We need to assign each color to the correct product line based on TPU_HARDNESS_MAP.
+        let finalProductLineId = enrichment.productLineId;
+        let finalProductTitle = product.baseTitle;
+        let finalMaterial = material;
+        
+        // Check if this is the combined TPU 85A/90A product page
+        if (productSlug === 'tpu-85a-tpu-90a' && product.colorName) {
+          const normalizedColor = product.colorName.toLowerCase().trim();
+          const hardnessGrade = TPU_HARDNESS_MAP[normalizedColor];
+          
+          if (hardnessGrade === '85a') {
+            finalProductLineId = 'bambulab__tpu__85a';
+            finalProductTitle = 'TPU 85A';
+            finalMaterial = 'TPU-85A';
+            console.log(`[BambuLab] TPU split: ${product.colorName} → TPU 85A`);
+          } else if (hardnessGrade === '90a') {
+            finalProductLineId = 'bambulab__tpu__90a';
+            finalProductTitle = 'TPU 90A';
+            finalMaterial = 'TPU-90A';
+            console.log(`[BambuLab] TPU split: ${product.colorName} → TPU 90A`);
+          } else {
+            // Default unmapped colors to 90A (more common)
+            finalProductLineId = 'bambulab__tpu__90a';
+            finalProductTitle = 'TPU 90A';
+            finalMaterial = 'TPU-90A';
+            console.log(`[BambuLab] TPU split: ${product.colorName} → TPU 90A (default)`);
+          }
+        }
+        
         // Build product record - use baseTitle for product_title (matches page H1)
         // Color is stored separately in color_family field
         const productRecord = {
-          product_title: product.baseTitle,  // H1 title without color (e.g., "PLA Tough+")
+          product_title: finalProductTitle,  // H1 title without color (e.g., "PLA Tough+")
           vendor: BAMBULAB_STORE_INFO.vendor,
-          material,
+          material: finalMaterial,
           finish_type: enrichment.finishType,
-          product_line_id: enrichment.productLineId,
+          product_line_id: finalProductLineId,
           color_family: product.colorName || colorFamily,
           color_hex: colorHex,
           variant_price: product.price,
