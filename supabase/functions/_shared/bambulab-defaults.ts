@@ -392,7 +392,7 @@ export const BAMBULAB_PRODUCT_LINES: Record<string, {
     isLightweight: false,
   },
   'tpu-85a': {
-    productLineId: 'bambulab__tpu__85a-90a',
+    productLineId: 'bambulab__tpu__85a',
     material: 'TPU-85A',
     finishType: 'Standard',
     isAbrasive: false,
@@ -402,7 +402,7 @@ export const BAMBULAB_PRODUCT_LINES: Record<string, {
     isLightweight: false,
   },
   'tpu-90a': {
-    productLineId: 'bambulab__tpu__85a-90a',
+    productLineId: 'bambulab__tpu__90a',
     material: 'TPU-90A',
     finishType: 'Standard',
     isAbrasive: false,
@@ -725,8 +725,8 @@ export function generateBambuLabProductLineId(slugOrTitle: string): string {
   
   // TPU variants
   if (/tpu.*95a/i.test(t)) return 'bambulab__tpu__95a-hf';
-  if (/tpu.*85a/i.test(t)) return 'bambulab__tpu__85a-90a';
-  if (/tpu.*90a/i.test(t)) return 'bambulab__tpu__85a-90a';
+  if (/tpu.*85a/i.test(t)) return 'bambulab__tpu__85a';
+  if (/tpu.*90a/i.test(t)) return 'bambulab__tpu__90a';
   if (/tpu.*ams/i.test(t)) return 'bambulab__tpu__ams';
   if (/\btpu\b/i.test(t)) return 'bambulab__tpu__95a-hf';
   
