@@ -355,6 +355,18 @@ const AI_ROLES = {
       'Color variant ID extraction for Buy Now links'
     ]
   },
+  colorFabbSpecialist: {
+    title: 'ColorFabb Integration Specialist',
+    triggers: ['colorfabb', 'magento', 'varioshore', 'lw-pla', 'ngen', 'bronzefill', 'corkfill'],
+    capabilities: [
+      'Magento 2 (Adobe Commerce) platform analysis (NOT Shopify)',
+      'CSV-seeded sync pipeline architecture',
+      'Premium Dutch filament material classification',
+      'Specialty material handling (LW-PLA, varioShore TPU, fills)',
+      'Firecrawl HTML scraping for TDS extraction',
+      'Complex product line normalization (24+ lines)'
+    ]
+  },
   architect: {
     title: 'Chief Technical Architect',
     triggers: [], // Fallback for mixed issues
@@ -467,6 +479,81 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'pc': 'PC'
     },
     lastUpdated: '2026-01-05'
+  },
+  'colorfabb': {
+    platform: 'Magento 2 (Adobe Commerce) - colorfabb.us (NOT Shopify)',
+    knownLimitations: [
+      '❌ No Shopify JSON APIs (/products.json) exist - this is Magento 2',
+      '❌ TDS PDFs are in expandable "Downloads" tab - may require waitFor if scraping',
+      '❌ Prices embedded in data-price-amount attributes, not visible text',
+      '❌ Variant options are complex Magento dropdowns, not Shopify-style variants',
+      '❌ Category pages use AJAX pagination - cannot scrape all products in one request'
+    ],
+    workingSolutions: [
+      '✅ Use COLORFABB_PRODUCT_SEED (75 products) from CSV as primary data source',
+      '✅ All product URLs, images, prices, and SKUs come from hardcoded CSV seed',
+      '✅ enrichColorFabbProduct() handles material classification for 24+ lines',
+      '✅ Hardcoded COLORFABB_TDS_PATTERNS provides TDS URLs by product line',
+      '✅ COLORFABB_COLOR_MAPPING provides hex codes for common colors',
+      '✅ Optional Firecrawl scraping for TDS extraction from individual pages',
+      '✅ Clean slate sync deletes existing and re-inserts from seed for consistency'
+    ],
+    failedApproaches: [
+      '⚠️ Attempting Shopify /products.json API - store is Magento, not Shopify',
+      '⚠️ Scraping product listings from category pages - AJAX pagination blocks this',
+      '⚠️ Upsert on product_id - no unique constraint exists, use delete-then-insert',
+      '⚠️ Extracting prices from visible text - use data-price-amount attribute instead'
+    ],
+    currentStatus: {
+      'seedProducts': '75 products from CSV (colorfabb.us store)',
+      'productLines': '24 unique product lines',
+      'materialsNormalized': 'varioShore TPU, LW-PLA, nGen, HT, ASA, PA, fills, economy lines',
+      'colorsWithHex': 'Most common colors mapped (40+ in COLORFABB_COLOR_MAPPING)',
+      'tdsUrlsCovered': 'Major product lines have hardcoded TDS patterns'
+    },
+    keyFiles: [
+      'supabase/functions/sync-colorfabb-products/index.ts - Main sync function',
+      'supabase/functions/_shared/colorfabb-defaults.ts - CSV seed, color mappings, TDS patterns',
+      'COLORFABB_PRODUCT_SEED constant - 75 products with URLs, prices, images, SKUs',
+      'enrichColorFabbProduct() - Material classification and print settings',
+      'COLORFABB_COLOR_MAPPING - Hex codes for common colors'
+    ],
+    extractionPriority: [
+      '1. TDS URLs for products missing them (optional Firecrawl scrape)',
+      '2. Color hex codes for specialty colors not in mapping',
+      '3. New products added to colorfabb.us store (requires CSV update)'
+    ],
+    manualExtractionProcess: [
+      '1. Export new products from ColorFabb store admin or scrape manually',
+      '2. Update COLORFABB_PRODUCT_SEED in colorfabb-defaults.ts',
+      '3. Add new colors to COLORFABB_COLOR_MAPPING if needed',
+      '4. Add new materials to MATERIAL_PATTERNS regex',
+      '5. Run clean slate sync to refresh all data'
+    ],
+    productSlugReference: {
+      'pla-economy': 'PLA Economy',
+      'petg-economy': 'PETG Economy',
+      'ngen': 'nGen (Amphora AM3300)',
+      'ngen-flex': 'nGen Flex',
+      'ht': 'HT (Amphora AM1800)',
+      'asa': 'ASA',
+      'pa': 'PA (Nylon)',
+      'varioshore-tpu': 'varioShore TPU',
+      'lw-pla': 'LW-PLA (Lightweight)',
+      'lw-pla-ht': 'LW-PLA HT (High Temp)',
+      'lw-asa': 'LW-ASA',
+      'pla-high-speed-pro': 'PLA High Speed Pro',
+      'bronzefill': 'bronzeFill',
+      'copperfill': 'copperFill',
+      'steelfill': 'steelFill',
+      'brassfill': 'brassFill',
+      'woodfill': 'woodFill',
+      'corkfill': 'corkFill',
+      'bamboofill': 'bambooFill',
+      'stonefill': 'stoneFill',
+      'allpha': 'allPHA'
+    },
+    lastUpdated: '2026-01-06'
   }
 };
 
@@ -474,9 +561,12 @@ const BRAND_LESSONS_LEARNED: Record<string, {
  * Determine the best AI role based on failing check types and brand
  */
 function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: string; capabilities: string[] } {
-  // Prioritize Bambu Lab specialist for Bambu Lab brand
+  // Prioritize brand-specific specialists
   if (brandSlug === 'bambu-lab') {
     return AI_ROLES.bambuLabSpecialist;
+  }
+  if (brandSlug === 'colorfabb') {
+    return AI_ROLES.colorFabbSpecialist;
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -735,6 +825,276 @@ After making fixes:
 *Last Updated: ${lessons.lastUpdated}*`;
 }
 
+/**
+ * Generate ColorFabb-specific AI Fix Prompt with Magento platform context
+ */
+function generateColorFabbFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const lessons = BRAND_LESSONS_LEARNED['colorfabb'];
+  const role = AI_ROLES.colorFabbSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  // AI insights section
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    aiInsightsSection = `
+---
+
+## AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis
+${aiAnalysis.rootCause}
+` : ''}
+
+${aiAnalysis.wrongDecisions?.length ? `### Wrong Decisions Identified
+${aiAnalysis.wrongDecisions.map(d => `- ${d}`).join('\n')}
+` : ''}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected
+${aiAnalysis.correctBehavior}
+` : ''}
+
+---`;
+  }
+
+  return `You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database.
+
+## CRITICAL PLATFORM CONTEXT
+
+**Platform**: ${lessons.platform}
+**This is NOT a Shopify store** - do NOT use Shopify JSON APIs, /products.json, or Shopify-specific patterns.
+
+---
+
+## CORE CAPABILITIES
+
+${role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n')}
+
+---
+
+## CSV-SEEDED SYNC ARCHITECTURE
+
+ColorFabb sync uses a **hardcoded CSV seed** as the primary data source:
+
+1. **COLORFABB_PRODUCT_SEED** (75 products) in \`colorfabb-defaults.ts\` contains:
+   - Product names, URLs, images, prices (USD), SKUs
+   - Data sourced from colorfabb.us store export
+   
+2. **enrichColorFabbProduct()** enriches each seed product with:
+   - Material classification (24+ product lines)
+   - Finish type detection (Silk, Matte, etc.)
+   - product_line_id generation
+   - Print settings (temps, speeds)
+   - TDS URL from hardcoded patterns
+   
+3. **COLORFABB_COLOR_MAPPING** provides hex codes for colors
+
+This architecture ensures stable, consistent data without relying on scraping Magento pages.
+
+---
+
+## KNOWN LIMITATIONS (DO NOT ATTEMPT THESE)
+
+${lessons.knownLimitations.map(l => `- ${l}`).join('\n')}
+
+---
+
+## WORKING SOLUTIONS (USE THESE APPROACHES)
+
+${lessons.workingSolutions.map(s => `- ${s}`).join('\n')}
+
+---
+
+## FAILED APPROACHES (AVOID REPEATING)
+
+${lessons.failedApproaches.map(f => `- ${f}`).join('\n')}
+
+---
+
+## CURRENT SYNC STATUS
+
+| Category | Status |
+|----------|--------|
+| **Seed Products** | ${lessons.currentStatus.seedProducts} |
+| **Product Lines** | ${lessons.currentStatus.productLines} |
+| **Materials** | ${lessons.currentStatus.materialsNormalized} |
+| **Colors** | ${lessons.currentStatus.colorsWithHex} |
+| **TDS URLs** | ${lessons.currentStatus.tdsUrlsCovered} |
+
+---
+
+## KEY FILES FOR COLORFABB
+
+${lessons.keyFiles.map(f => `- \`${f}\``).join('\n')}
+
+---
+
+## Fix Post Sync Check Issues for ColorFabb
+
+### Summary
+- **Brand**: ${brand} (slug: colorfabb)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+${aiInsightsSection}
+
+---
+
+## Required Actions for ColorFabb
+
+### 1. For Missing Products
+
+If products are missing, they need to be added to the CSV seed:
+
+\`\`\`typescript
+// In colorfabb-defaults.ts, add to COLORFABB_PRODUCT_SEED:
+{
+  productName: 'New Product Line Color',
+  color: 'Color Name',
+  priceUsd: 34.95,
+  productUrl: 'https://colorfabb.us/new-product-line-color.html',
+  imageUrl: 'https://colorfabb.us/media/catalog/product/...',
+  sku: 'SKU-123',
+},
+\`\`\`
+
+### 2. For Missing Color Hex Codes
+
+Add new colors to COLORFABB_COLOR_MAPPING:
+
+\`\`\`typescript
+// In colorfabb-defaults.ts:
+export const COLORFABB_COLOR_MAPPING: Record<string, string> = {
+  // ... existing colors ...
+  'new color': '#HEXCODE',
+};
+\`\`\`
+
+### 3. For Material Classification Issues
+
+Update MATERIAL_PATTERNS regex or enrichColorFabbProduct() logic:
+
+\`\`\`typescript
+// In colorfabb-defaults.ts:
+const MATERIAL_PATTERNS: Record<string, RegExp> = {
+  // ... existing patterns ...
+  'New Material': /new[\\s-]?material/i,
+};
+\`\`\`
+
+### 4. For TDS URL Issues
+
+Add TDS patterns for product lines:
+
+\`\`\`typescript
+// In colorfabb-defaults.ts:
+export const COLORFABB_TDS_PATTERNS: Record<string, string> = {
+  // ... existing patterns ...
+  'new-product-line': 'https://colorfabb.com/media/...',
+};
+\`\`\`
+
+### 5. For Card Count Mismatch
+
+The expected card count should match unique product_line_id values.
+Current: 24 product lines expected (update EXPECTED_CARD_COUNTS if needed).
+
+---
+
+## Optional: Firecrawl TDS Extraction
+
+If TDS URLs are not in hardcoded patterns, you can optionally scrape them:
+
+\`\`\`typescript
+const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+if (firecrawlApiKey) {
+  const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    method: 'POST',
+    headers: {
+      'Authorization': \`Bearer \${firecrawlApiKey}\`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      url: productUrl,
+      formats: ['html'],
+      waitFor: 2000, // Wait for Magento AJAX to load Downloads tab
+    }),
+  });
+  const data = await response.json();
+  const html = data.data?.html || '';
+  
+  // Extract TDS PDF link from Downloads section
+  const tdsMatch = html.match(/href="([^"]+\\.pdf)"/i);
+  if (tdsMatch) {
+    const tdsUrl = tdsMatch[1];
+  }
+}
+\`\`\`
+
+---
+
+## Product Line Reference
+
+| Slug | Display Name |
+|------|--------------|
+${Object.entries(lessons.productSlugReference || {}).slice(0, 15).map(([slug, name]) => `| ${slug} | ${name} |`).join('\n')}
+
+---
+
+## Verification Steps
+
+After making fixes:
+1. Run a **Clean Slate** sync for ColorFabb
+2. Run **Post Sync Check** again to verify issues are resolved
+3. Verify product cards display correctly with proper colors and materials
+
+---
+
+*Last Updated: ${lessons.lastUpdated}*`;
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -752,6 +1112,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for Bambu Lab
   if (brandSlug === 'bambu-lab') {
     return generateBambuLabFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for ColorFabb
+  if (brandSlug === 'colorfabb') {
+    return generateColorFabbFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
@@ -2936,7 +3301,17 @@ Deno.serve(async (req) => {
       'proto-pasta': [/^(PLA|HTPLA|CFPLA|Carbon Fiber|Stainless Steel|Copper|Bronze|Iron)/i],
       'esun': [/^(PLA\s*\+|PETG|ABS\s*\+|eSilk|eMarble|TPU|ePLA|ePC|ePA)/i],
       'creality': [/^(Hyper|Ender|PLA|PETG|ABS|TPU|High Speed)/i],
-      'colorfabb': [/^(PLA Economy|nGen|PETG|PA|Amphora|XT|Corkfill|Woodfill|Bronzefill)/i],
+      'colorfabb': [
+        /^(varioShore|LW[- ]?PLA|LW[- ]?ASA)/i,           // Lightweight/specialty foaming materials
+        /^(PLA (High Speed Pro|Economy|Silk|Semi[- ]?Matte)|PLA-HP)/i, // PLA variants
+        /^(PETG (Economy|Semi[- ]?Matte))/i,              // PETG variants
+        /^(nGen|nGen[- ]?Flex|nGen[- ]?CF)/i,             // nGen family (Amphora)
+        /^(HT|XT|XT[- ]?CF)/i,                            // High-temp Amphora
+        /^(ASA|PA|PA[- ]?CF)/i,                           // Engineering materials
+        /^(bronze[Ff]ill|copper[Ff]ill|steel[Ff]ill|brass[Ff]ill)/i, // Metal fills
+        /^(wood[Ff]ill|cork[Ff]ill|bamboo[Ff]ill|stone[Ff]ill)/i,    // Natural fills
+        /^(allPHA)/i,                                      // Biodegradable
+      ],
       'formfutura': [/^(EasyFil|HDglass|ApolloX|Volcano|Flexifil|Galaxy)/i],
       'amolen': [/^(PLA|PETG|TPU|Silk|Matte|Dual Color|Galaxy|Rainbow|Glow|Wood|Marble|Metal)/i],
       'siraya-tech': [/^(Fast|Blu|Build|Sculpt|Tenacious|Smoky|Brilliant|Infinite)/i],
