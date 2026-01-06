@@ -546,9 +546,10 @@ function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: str
       .replace(/\bHs\b/g, 'HS')
       .trim();
     
-    // Remove category suffixes that shouldn't be displayed (e.g., "composite", "standard")
+    // Remove category suffixes that shouldn't be displayed (e.g., "composite", "standard", "metallic")
     // These are internal grouping tags, not part of the product name
-    lineName = lineName.replace(/\b(Composite|Standard)\b/gi, '').trim();
+    // Also removes redundant suffixes when material slug already contains the info (e.g., "pla-metal" + "metallic")
+    lineName = lineName.replace(/\b(Composite|Standard|Metallic|Silk|Galaxy|Marble|Matte|Sparkle|Wood|Carbon Fiber|Glass Fiber)\b/gi, '').trim();
     
     // If lineName is now empty (e.g., "bambulab__abs-gf__composite"), just return material
     if (!lineName) {
