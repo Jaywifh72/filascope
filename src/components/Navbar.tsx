@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogIn, LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import filascopeLogo from "@/assets/filascope-logo.png";
+import filascopeLogo from "@/assets/filascope-logo-wide.png";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { TrendingTriggerButton } from "@/components/TrendingTriggerButton";
