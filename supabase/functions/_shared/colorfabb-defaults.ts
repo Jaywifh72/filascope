@@ -185,9 +185,9 @@ const MATERIAL_PATTERNS: Array<{ pattern: RegExp; info: MaterialInfo }> = [
   // Glow fill → PLA-Glow
   { pattern: /\bglowfill\b/i, info: { normalized: 'PLA-Glow', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   
-  // Co-polyesters (Eastman Amphora based)
-  { pattern: /\bngen[- ]?flex\b/i, info: { normalized: 'nGen-Flex', baseType: 'PETG', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: true, highSpeedCapable: false } },
-  { pattern: /\bngen\b/i, info: { normalized: 'nGen', baseType: 'PETG', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  // Co-polyesters (Eastman Amphora based) → Copolyester material
+  { pattern: /\bngen[- ]?flex\b/i, info: { normalized: 'Copolyester', baseType: 'PETG', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: true, highSpeedCapable: false } },
+  { pattern: /\bngen\b/i, info: { normalized: 'Copolyester', baseType: 'PETG', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   { pattern: /\bxt\b(?![- ]?cf)/i, info: { normalized: 'Copolyester', baseType: 'PETG', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   { pattern: /\bht\b(?![- ]?pla)/i, info: { normalized: 'Copolyester', baseType: 'PETG', isAbrasive: false, enclosureRequired: true, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   
