@@ -848,6 +848,36 @@ function getVariantUrl(productSlug: string, colorName: string): string {
 // Legacy fallback - keeping for backwards compatibility
 const ABS_COLOR_IMAGES = S5_PRODUCT_IMAGES['abs-filament'] || {};
 
+// ========== CSV-BASED PRODUCT WHITELIST ==========
+// Only products with S5 images and variant IDs from CSV data will be synced.
+// This ensures high-quality images and complete variant coverage.
+// Products discovered from collection page are filtered against this whitelist.
+const CSV_PRODUCT_SLUGS = Object.keys(S5_PRODUCT_IMAGES);
+
+/**
+ * Check if a product URL is in the CSV whitelist
+ * Only products with S5_PRODUCT_IMAGES entries will be synced
+ */
+function isProductInCSVWhitelist(productUrl: string): boolean {
+  const slug = extractProductSlug(productUrl);
+  return CSV_PRODUCT_SLUGS.includes(slug);
+}
+
+/**
+ * Get whitelisted colors for a product slug from CSV data
+ * Returns union of colors from S5_PRODUCT_IMAGES and BAMBULAB_VARIANT_IDS
+ */
+function getCSVWhitelistedColors(productSlug: string): string[] {
+  const s5Colors = Object.keys(S5_PRODUCT_IMAGES[productSlug] || {});
+  const variantColors = Object.keys(BAMBULAB_VARIANT_IDS[productSlug] || {});
+  // Union of both sets (normalize to lowercase)
+  const allColors = new Set([
+    ...s5Colors.map(c => c.toLowerCase().trim()),
+    ...variantColors.map(c => c.toLowerCase().trim()),
+  ]);
+  return [...allColors];
+}
+
 interface DiscoveredProduct {
   url: string;
   collectionTitle: string;
@@ -1858,6 +1888,11 @@ function processScrapedProducts(products: ScrapedProduct[], decisionLogger: Retu
       weightGrams = 1000;
     }
     
+    // Get product slug for CSV filtering
+    const productSlug = extractProductSlug(product.url);
+    const csvWhitelistedColors = getCSVWhitelistedColors(productSlug);
+    const hasCSVColors = csvWhitelistedColors.length > 0;
+    
     // Use color variants from scraping (which now include color-specific images)
     // If no colors found, try to assign a default color for single-color products
     let colorVariantsToProcess: ColorVariantData[] = product.colorVariants.length > 0 
@@ -1877,6 +1912,32 @@ function processScrapedProducts(products: ScrapedProduct[], decisionLogger: Retu
         imageUrl: null,
         variantId: null,
       }];
+    }
+    
+    // ========== CSV COLOR WHITELIST FILTER ==========
+    // Only sync colors that exist in S5_PRODUCT_IMAGES or BAMBULAB_VARIANT_IDS
+    if (hasCSVColors) {
+      const originalCount = colorVariantsToProcess.length;
+      colorVariantsToProcess = colorVariantsToProcess.filter(variant => {
+        const normalizedColor = variant.colorName.toLowerCase().trim();
+        const isInCSV = csvWhitelistedColors.some(c => 
+          c === normalizedColor || 
+          normalizedColor.includes(c) || 
+          c.includes(normalizedColor)
+        );
+        if (!isInCSV && variant.colorName) {
+          console.log(`[BambuLab] Skipping non-CSV color "${variant.colorName}" for ${productSlug}`);
+          decisionLogger.logFilter(product.url, product.h1Title, { weight: weightGrams, diameter: 1.75 }, { 
+            included: false, 
+            reason: `color "${variant.colorName}" not in CSV whitelist` 
+          });
+        }
+        return isInCSV || !variant.colorName; // Allow empty color names through
+      });
+      
+      if (originalCount > colorVariantsToProcess.length) {
+        console.log(`[BambuLab] CSV color filter: ${colorVariantsToProcess.length}/${originalCount} colors for ${productSlug}`);
+      }
     }
     
     for (const colorVariant of colorVariantsToProcess) {
@@ -1986,9 +2047,28 @@ Deno.serve(async (req) => {
     }
     
     // ========================================================================
-    // STEP 2: Scrape each product page
+    // STEP 1.5: Filter discovered products against CSV whitelist
+    // Only products with S5_PRODUCT_IMAGES entries will be synced
     // ========================================================================
-    const scrapedProducts = await scrapeProductPages(discoveredProducts, firecrawlKey);
+    const whitelistedProducts = discoveredProducts.filter(product => {
+      const slug = extractProductSlug(product.url);
+      const isWhitelisted = CSV_PRODUCT_SLUGS.includes(slug);
+      if (!isWhitelisted) {
+        console.log(`[BambuLab] Skipping non-CSV product: ${slug}`);
+      }
+      return isWhitelisted;
+    });
+    
+    console.log(`[BambuLab] CSV whitelist filter: ${whitelistedProducts.length}/${discoveredProducts.length} products accepted`);
+    
+    if (whitelistedProducts.length === 0) {
+      throw new Error('No CSV-whitelisted products found - check S5_PRODUCT_IMAGES slugs match collection page');
+    }
+    
+    // ========================================================================
+    // STEP 2: Scrape each product page (only whitelisted products)
+    // ========================================================================
+    const scrapedProducts = await scrapeProductPages(whitelistedProducts, firecrawlKey);
     
     if (scrapedProducts.length === 0) {
       throw new Error('No products successfully scraped');
