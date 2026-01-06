@@ -4,7 +4,7 @@
 // Brands with dedicated high-fidelity sync functions (use exact database slugs)
 export const BRAND_SPECIFIC_FUNCTIONS = [
   '3d-fuel', '3dhojor', '3dxtech', 'amolen', 'anycubic', 'atomic-filament', 'azurefilm', 'bambu-lab', 'cc3d',
-  'colorfabb', 'creality', 'duramic-3d', 'eryone', 'esun', 'extrudr',
+  'colorfabb', 'creality', 'duramic-3d', 'elegoo', 'eryone', 'esun', 'extrudr',
   'fiberlogy', 'fillamentum', 'flashforge', 'formfutura', 'fusion-filaments',
   'geeetech', 'gizmo-dorks', 'hatchbox', 'ic3d-printers', 'kingroon', 'matter3d',
   'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker',
@@ -27,10 +27,12 @@ export const SLUG_TO_FUNCTION_MAP: Record<string, string> = {
   'treed-filaments': 'treed',
   'spectrum-filaments': 'spectrum',
   'gizmo-dorks': 'gizmodorks',
+  'elegoo': 'elegoo-ca',
 };
 
 // Special brands with unique sync mechanisms (have dedicated UI tabs)
-export const SPECIAL_BRANDS = ['elegoo'] as const;
+// Note: Elegoo moved to BRAND_SPECIFIC_FUNCTIONS with CSV-seeded sync
+export const SPECIAL_BRANDS: readonly string[] = [];
 
 // Normalize database slug to edge function name
 export function normalizeSlugForFunction(brandSlug: string): string {
