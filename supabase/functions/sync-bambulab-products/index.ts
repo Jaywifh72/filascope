@@ -1771,9 +1771,13 @@ async function scrapeProductPage(url: string, firecrawlKey: string): Promise<Scr
     // Extract weight (default 1000g for Bambu Lab spools)
     const weightGrams = extractWeightFromText(markdown) || 1000;
     
-    // Check availability
-    const soldOut = /sold\s*out/i.test(markdown);
-    const available = !soldOut;
+    // Check availability - default to true for Bambu Lab products
+    // Only mark unavailable if explicitly "Sold Out" (with exact casing pattern)
+    // Avoid false positives from general text containing "sold out"
+    const soldOutIndicator = /(?:^|\s|>)Sold\s*Out(?:\s|<|$)/i.test(markdown) || 
+                              /class="[^"]*sold-out[^"]*"/i.test(html) ||
+                              /data-availability="sold-out"/i.test(html);
+    const available = !soldOutIndicator;
     
     return {
       url,
