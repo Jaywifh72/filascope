@@ -332,8 +332,9 @@ export function generateColorFabbProductLineId(title: string, material: string):
   if (/\bxt\b/i.test(t) && !/cf/i.test(t)) return `colorfabb__xt__standard`;
   if (/\bht\b/i.test(t) && !/pla/i.test(t)) return `colorfabb__ht__high-temp`;
   
-  // PLA variants
-  if (/high\s*speed\s*pro|pla[- ]?hp/i.test(t)) return `colorfabb__pla-hp__high-speed`;
+  // PLA High Speed variants - KEEP SEPARATE (different formulations)
+  if (/pla[- ]?hp\b/i.test(t)) return `colorfabb__pla-hp__high-speed`;
+  if (/high\s*speed\s*pro/i.test(t)) return `colorfabb__pla-high-speed-pro__high-speed`;
   if (/pla\s*silk/i.test(t)) return `colorfabb__pla-silk__silk`;
   if (/pla[\/]?pha/i.test(t)) return `colorfabb__pla-pha__standard`;
   if (/rpla/i.test(t)) return `colorfabb__rpla__recycled`;
