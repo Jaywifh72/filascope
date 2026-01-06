@@ -195,6 +195,10 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
       { name: 'H1 Title Priority', description: 'Product titles scraped from <h1> tag on product page. Base title stored without color suffix.' },
       { name: 'USD Pricing', description: 'Uses us.store.bambulab.com for USD prices and product discovery.' },
       { name: 'Firecrawl HTML Scraping', description: '5-second waitFor for JS content to load. Both HTML and markdown formats requested.' },
+      { name: 'Variant-Specific Buy Now URLs (NEW)', description: 'Each color variant stores its own product_url with ?id=VARIANT_ID parameter. This ensures Buy Now buttons open directly to the selected color, not the default variant.' },
+      { name: 'BAMBULAB_VARIANT_IDS Mapping', description: 'Hardcoded mapping in update-bambulab-urls/index.ts maps product slugs and color names to Bambu Lab variant IDs. Run this function after sync to backfill URLs.' },
+      { name: 'Variant ID Format', description: 'URLs use format: us.store.bambulab.com/products/{slug}?id={variant_id}. Variant IDs are 17-digit numeric strings (e.g., 43115681841392).' },
+      { name: 'PRODUCT_LINE_SLUG_MAP Format', description: 'Maps product_line_id (bambulab__material__variant) to product slugs. Keys use double underscores matching database format.' },
     ],
     notes: [
       'CRITICAL: S5 images are JS-loaded and cannot be scraped. Use S5_PRODUCT_IMAGES hardcoded mapping!',
@@ -205,6 +209,9 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
       '39 product lines across PLA, PETG, ABS, ASA, TPU, PA, PC, PPS, PVA materials',
       'Safe delete threshold: 30 products minimum before clean slate deletion',
       'Specialty materials (CF, GF, Support, PVA) are single-color products - whitelisted in variant count check',
+      'Variant URLs: Each color variant has its own product_url with ?id= parameter for direct Buy Now linking',
+      'Run update-bambulab-urls edge function after clean slate sync to backfill variant URLs',
+      '~250 color variants have mapped variant IDs covering all major product lines',
     ],
   },
   
