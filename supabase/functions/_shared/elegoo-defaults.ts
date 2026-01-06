@@ -295,6 +295,13 @@ export const ELEGOO_COLOR_MAPPING: Record<string, string> = {
   // Wood colors
   'wood filled': 'C19A6B',
   'wood': 'C19A6B',
+  'oak wood': 'D4A76A',
+  'light brown': 'D4A76A',
+  'teak wood': 'A67B5B',
+  'medium brown': 'A67B5B',
+  'walnut wood': '5C4033',
+  'rosewood': '65000B',
+  'tan birch': 'E3C9A6',
   
   // Fiber colors
   'carbon fiber black': '1A1A1A',
@@ -498,8 +505,13 @@ export const ELEGOO_PRODUCT_SEED: ElegooProductSeed[] = [
   { material: 'PLA', filamentLine: 'PLA Metal', color: 'Metal Blue', productUrl: 'https://ca.elegoo.com/products/pla-metal-filament-1-75-mm-colored-1-kg?variant=50560730136854', imageUrl: 'https://ca.elegoo.com/cdn/shop/files/1024_a16bde5f-881e-4c9b-bc8c-e440a4befbce.jpg' },
   { material: 'PLA', filamentLine: 'PLA Metal', color: 'Metal Green', productUrl: 'https://ca.elegoo.com/products/pla-metal-filament-1-75-mm-colored-1-kg?variant=50560730169622', imageUrl: 'https://ca.elegoo.com/cdn/shop/files/1024_ebc9dea7-f903-497d-a873-2ccfb8239e80.jpg' },
 
-  // PLA Wood (1 color)
-  { material: 'PLA', filamentLine: 'PLA Wood', color: 'Wood filled', productUrl: 'https://ca.elegoo.com/collections/pla-filament/products/pla-wood', imageUrl: 'https://ca.elegoo.com/cdn/shop/files/PLA_1KG_64302e95-6afc-4813-9806-176d1a0a7aab.jpg' },
+  // PLA Wood (5 individual colors - extracted from product images, bundled variants filtered out)
+  { material: 'PLA', filamentLine: 'PLA Wood', color: 'Wood filled', productUrl: 'https://ca.elegoo.com/products/pla-wood?variant=50612304249110', imageUrl: 'https://cdn.shopify.com/s/files/1/0766/0902/8374/files/PLA_1KG_64302e95-6afc-4813-9806-176d1a0a7aab.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Wood', color: 'Oak Wood', productUrl: 'https://ca.elegoo.com/products/pla-wood', imageUrl: 'https://cdn.shopify.com/s/files/1/0766/0902/8374/files/PLA_1KG_Oak_Wood-Light_Brow.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Wood', color: 'Teak Wood', productUrl: 'https://ca.elegoo.com/products/pla-wood', imageUrl: 'https://cdn.shopify.com/s/files/1/0766/0902/8374/files/PLA_1KG_Teak_Wood-Medium_Brown.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Wood', color: 'Walnut Wood', productUrl: 'https://ca.elegoo.com/products/pla-wood', imageUrl: 'https://cdn.shopify.com/s/files/1/0766/0902/8374/files/PLA_1KG_Walnut_Wood.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Wood', color: 'Rosewood', productUrl: 'https://ca.elegoo.com/products/pla-wood', imageUrl: 'https://cdn.shopify.com/s/files/1/0766/0902/8374/files/PLA_1KG_Rosewood.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Wood', color: 'Tan Birch', productUrl: 'https://ca.elegoo.com/products/pla-wood', imageUrl: 'https://cdn.shopify.com/s/files/1/0766/0902/8374/files/PLA_1KG_Tan_Birch.jpg' },
 
   // PLA-CF (1 color)
   { material: 'PLA', filamentLine: 'PLA-CF', color: 'Carbon Fiber Black', productUrl: 'https://ca.elegoo.com/collections/pla-filament/products/pla-cf-filament-1-75mm-black-1kg', imageUrl: 'https://ca.elegoo.com/cdn/shop/files/PLA-CF_Filament_-_Model.jpg' },
