@@ -217,6 +217,7 @@ const BAMBULAB_VARIANT_IDS: Record<string, Record<string, string>> = {
     'tangerine yellow': '46311958282480',
     'orange': '46130970886384',
     'red': '43115678925040',
+    'purple': '46541030916336',
   },
   // ========== ASA ==========
   'asa-filament': {
