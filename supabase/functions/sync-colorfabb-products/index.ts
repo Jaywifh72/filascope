@@ -151,25 +151,27 @@ Deno.serve(async (req) => {
     // =========================================================================
     // STEP 4: Batch Upsert Products
     // =========================================================================
-    console.log(`[ColorFabb] Upserting ${productsToUpsert.length} products...`);
+    console.log(`[ColorFabb] Inserting ${productsToUpsert.length} products...`);
 
     if (productsToUpsert.length > 0) {
-      // Batch upsert in chunks of 50
+      // Batch insert in chunks of 50 (no upsert since no unique constraint on product_id)
       const chunkSize = 50;
       for (let i = 0; i < productsToUpsert.length; i += chunkSize) {
         const chunk = productsToUpsert.slice(i, i + chunkSize);
         
-        const { error: upsertError, data: upsertData } = await supabase
+        // Use insert with conflict handling via delete-then-insert pattern
+        const { error: insertError, data: insertData } = await supabase
           .from('filaments')
-          .upsert(chunk, { onConflict: 'product_id' })
+          .insert(chunk)
           .select('id');
 
-        if (upsertError) {
-          console.error(`[ColorFabb] Batch upsert error:`, upsertError);
+        if (insertError) {
+          console.error(`[ColorFabb] Batch insert error:`, insertError);
           stats.errors += chunk.length;
+          stats.errorDetails.push(insertError.message);
         } else {
-          stats.created += (upsertData?.length || 0);
-          console.log(`[ColorFabb] Upserted batch ${Math.floor(i / chunkSize) + 1}: ${upsertData?.length || 0} products`);
+          stats.created += (insertData?.length || 0);
+          console.log(`[ColorFabb] Inserted batch ${Math.floor(i / chunkSize) + 1}: ${insertData?.length || 0} products`);
         }
       }
     }

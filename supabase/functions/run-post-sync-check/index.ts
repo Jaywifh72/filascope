@@ -2856,7 +2856,7 @@ Deno.serve(async (req) => {
       'azurefilm': 19,          // ABS (Plus, Prime), ASA (Standard, Prime), Carbon Fiber (PAHT-CF, PET-CF), PC-ABS, PCTG (Standard, Translucent), PETG (Hyper Speed, Translucent), PLA (Original, Standard, Matte HS, Silk, Translucent, Strongman), LumberLay, PVA
       'ninjatek': 10,           // Cheetah, NinjaFlex, Armadillo, Eel, SemiFlex, etc.
       'polymaker': 25,          // PolyLite, PolyTerra, PolyMax, PolyMide, PolyDissolve, etc.
-      'colorfabb': 20,          // PLA Economy, PETG, nGen, PA, Amphora, XT, etc.
+      'colorfabb': 24,          // varioShore TPU, LW-PLA, LW-PLA-HT, LW-ASA, PLA High Speed Pro, PLA-HP, PLA Silk, nGen, nGen Flex, HT, ASA, PETG Economy, PLA Economy, PA, Amphora, XT, bronzeFill, copperFill, steelFill, corkFill, woodFill, bamboFill, stoneFill, allPHA
       'prusament': 12,          // PLA, PETG, ASA, PC Blend, PA11-CF, PVB, etc.
       'matter3d': 15,           // Performance, Standard, Specialty lines
       'esun': 18,               // PLA+, PETG, ABS+, eSilk, eMarble, TPU, etc.
