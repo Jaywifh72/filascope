@@ -708,6 +708,10 @@ const BAMBULAB_VARIANT_IDS: Record<string, Record<string, string>> = {
   },
   // ========== PETG TRANSLUCENT ==========
   'petg-translucent': {
+    'clear': '46311961984240',
+    'translucent gray': '46311963196656',
+    'translucent light blue': '46311962508528',
+    'translucent teal': '46311962279152',
     'translucent olive': '46334027956464',
     'translucent brown': '46352469885168',
     'translucent orange': '46311964246256',
@@ -716,6 +720,7 @@ const BAMBULAB_VARIANT_IDS: Record<string, Record<string, string>> = {
   },
   // ========== PETG-CF ==========
   'petg-cf': {
+    'indigo blue': '44180162150640',
     'brick red': '44180162117872',
     'malachite green': '44180162183408',
     'violet purple': '44180162085104',
@@ -732,6 +737,18 @@ const BAMBULAB_VARIANT_IDS: Record<string, Record<string, string>> = {
     'white': '45444547969264',
     'gray': '45444548002032',
     'black': '45444548034800',
+  },
+  // ========== PA6-CF ==========
+  'pa6-cf': {
+    'black': '45444548067568',
+  },
+  // ========== PAHT-CF ==========
+  'paht-cf': {
+    'black': '44142217371888',
+  },
+  // ========== PET-CF ==========
+  'pet-cf': {
+    'black': '44142217404656',
   },
   // ========== PPA-CF ==========
   'ppa-cf': {
@@ -796,8 +813,11 @@ const BAMBULAB_VARIANT_IDS: Record<string, Record<string, string>> = {
   },
   // ========== TPU FOR AMS ==========
   'tpu-for-ams': {
+    'blue': '46779647361264',
     'gray': '46779647459568',
     'black': '46779647492336',
+    'orange': '46779647525104',
+    'bambu green': '46779647557872',
     'yellow': '46779647328496',
     'red': '46779647295728',
     'neon green': '46779647394032',
@@ -2068,9 +2088,28 @@ Deno.serve(async (req) => {
         
         // Build variant-specific product URL with ?id= parameter
         // This ensures "Buy Now" links go directly to the selected color variant
-        const variantUrl = product.variantId 
-          ? `${product.productUrl}?id=${product.variantId}`
-          : product.productUrl;
+        // PRIORITY ORDER:
+        // 1. Use scraped variantId from __NEXT_DATA__ (if available)
+        // 2. Look up from BAMBULAB_VARIANT_IDS hardcoded mapping
+        // 3. Fall back to base product URL without variant ID
+        
+        // Extract product slug from URL for variant ID lookup
+        const productSlugMatch = product.productUrl.match(/\/products\/([^\/\?]+)/);
+        const productSlug = productSlugMatch ? productSlugMatch[1] : null;
+        
+        let variantUrl = product.productUrl;
+        
+        if (product.variantId) {
+          // Use scraped variant ID
+          variantUrl = `${product.productUrl}?id=${product.variantId}`;
+        } else if (productSlug && product.colorName) {
+          // Look up from hardcoded BAMBULAB_VARIANT_IDS mapping
+          const normalizedColor = product.colorName.toLowerCase().trim();
+          const mappedVariantId = BAMBULAB_VARIANT_IDS[productSlug]?.[normalizedColor];
+          if (mappedVariantId) {
+            variantUrl = `https://us.store.bambulab.com/products/${productSlug}?id=${mappedVariantId}`;
+          }
+        }
         
         // Build product record - use baseTitle for product_title (matches page H1)
         // Color is stored separately in color_family field
