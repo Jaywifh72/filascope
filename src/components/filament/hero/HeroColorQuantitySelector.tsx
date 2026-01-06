@@ -9,6 +9,7 @@ interface ColorVariant {
   color_family: string | null;
   product_title: string;
   net_weight_g: number | null;
+  product_url?: string | null;
 }
 
 interface SpoolWeight {
