@@ -1,6 +1,6 @@
-// ELEGOO CA STORE SYNC (CSV-SEEDED)
+// ELEGOO CA STORE SYNC (CSV-SEEDED + SHOPIFY API PRICES)
 // Platform: Shopify (ca.elegoo.com)
-// Sync Type: CSV seed from elegoo-defaults.ts (~130 products)
+// Sync Type: CSV seed enriched with live Shopify API data for prices + H1 titles
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
@@ -9,6 +9,8 @@ import {
   ELEGOO_PRODUCT_SEED,
   shouldExcludeProduct,
   cleanColorName,
+  normalizeElegooProductUrl,
+  getUniqueBaseProductUrls,
 } from '../_shared/elegoo-defaults.ts';
 
 const corsHeaders = {
@@ -23,6 +25,86 @@ interface SyncStats {
   skipped: number;
   errors: number;
   filtered: number;
+  pricesFetched: number;
+}
+
+interface ShopifyVariant {
+  id: number;
+  title: string;
+  price: string;
+  sku: string;
+  option1: string | null;
+  option2: string | null;
+  option3: string | null;
+}
+
+interface ShopifyProduct {
+  id: number;
+  title: string;
+  handle: string;
+  variants: ShopifyVariant[];
+}
+
+// Fetch Shopify product data for prices and H1 titles
+async function fetchShopifyProductData(baseUrls: string[]): Promise<{
+  priceMap: Map<string, number>;
+  titleMap: Map<string, string>;
+}> {
+  const priceMap = new Map<string, number>();
+  const titleMap = new Map<string, string>();
+  
+  // Process in batches of 5 to avoid rate limiting
+  const batchSize = 5;
+  for (let i = 0; i < baseUrls.length; i += batchSize) {
+    const batch = baseUrls.slice(i, i + batchSize);
+    
+    await Promise.all(batch.map(async (baseUrl) => {
+      try {
+        const jsonUrl = `${baseUrl}.json`;
+        const response = await fetch(jsonUrl, {
+          headers: { 'Accept': 'application/json' },
+        });
+        
+        if (!response.ok) {
+          console.warn(`Failed to fetch ${jsonUrl}: ${response.status}`);
+          return;
+        }
+        
+        const data = await response.json();
+        const product: ShopifyProduct = data.product;
+        
+        if (!product) {
+          console.warn(`No product data at ${jsonUrl}`);
+          return;
+        }
+        
+        // Store H1 title for this base URL
+        titleMap.set(baseUrl, product.title);
+        
+        // Map variant prices by variant ID
+        for (const variant of product.variants) {
+          const variantUrl = `${baseUrl}?variant=${variant.id}`;
+          const price = parseFloat(variant.price);
+          if (!isNaN(price)) {
+            priceMap.set(variantUrl, price);
+            // Also map by variant ID alone for fallback
+            priceMap.set(String(variant.id), price);
+          }
+        }
+        
+        console.log(`Fetched ${product.title}: ${product.variants.length} variants`);
+      } catch (error) {
+        console.error(`Error fetching ${baseUrl}:`, error);
+      }
+    }));
+    
+    // Small delay between batches
+    if (i + batchSize < baseUrls.length) {
+      await new Promise(r => setTimeout(r, 200));
+    }
+  }
+  
+  return { priceMap, titleMap };
 }
 
 Deno.serve(async (req) => {
@@ -38,6 +120,7 @@ Deno.serve(async (req) => {
     skipped: 0,
     errors: 0,
     filtered: 0,
+    pricesFetched: 0,
   };
 
   try {
@@ -60,7 +143,16 @@ Deno.serve(async (req) => {
 
     console.log(`Starting Elegoo CA sync - cleanSlate: ${cleanSlate}, limit: ${limit}`);
 
-    // STEP 1: Optional clean slate - delete existing Elegoo products
+    // STEP 1: Fetch Shopify API data for prices and H1 titles
+    console.log('Fetching Shopify product data for prices and titles...');
+    const baseUrls = getUniqueBaseProductUrls(ELEGOO_PRODUCT_SEED);
+    console.log(`Found ${baseUrls.length} unique product URLs to fetch`);
+    
+    const { priceMap, titleMap } = await fetchShopifyProductData(baseUrls);
+    stats.pricesFetched = priceMap.size;
+    console.log(`Fetched prices for ${priceMap.size} variants, titles for ${titleMap.size} products`);
+
+    // STEP 2: Optional clean slate - delete existing Elegoo products
     if (cleanSlate) {
       console.log('Clean slate mode: Deleting existing Elegoo products...');
       const { error: deleteError } = await supabase
@@ -75,7 +167,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // STEP 2: Fetch existing products for deduplication
+    // STEP 3: Fetch existing products for deduplication
     const { data: existingProducts } = await supabase
       .from('filaments')
       .select('product_id')
@@ -84,7 +176,7 @@ Deno.serve(async (req) => {
     const existingIds = new Set(existingProducts?.map(p => p.product_id) || []);
     console.log(`Found ${existingIds.size} existing Elegoo products`);
 
-    // STEP 3: Process CSV seed data
+    // STEP 4: Process CSV seed data with Shopify enrichment
     const productsToInsert: any[] = [];
     let processedCount = 0;
 
@@ -114,17 +206,28 @@ Deno.serve(async (req) => {
         continue;
       }
       
-      // Build product title
-      const productTitle = `${seed.filamentLine} ${cleanedColor}`;
+      // Normalize URL for consistency
+      const normalizedUrl = normalizeElegooProductUrl(seed.productUrl);
+      const baseUrl = normalizedUrl.split('?')[0];
+      
+      // Get H1 title from Shopify API (fallback to filament line)
+      const shopifyTitle = titleMap.get(baseUrl) || seed.filamentLine;
+      
+      // Get price from Shopify API
+      const variantId = normalizedUrl.match(/variant=(\d+)/)?.[1];
+      let price: number | null = null;
+      if (variantId) {
+        price = priceMap.get(normalizedUrl) || priceMap.get(variantId) || null;
+      }
       
       // Get print settings
       const settings = enriched.printSettings;
       
       const filamentData = {
         product_id: productId,
-        product_title: productTitle,
+        product_title: shopifyTitle,  // Use Shopify H1 title
         vendor: ELEGOO_STORE_INFO.vendor,
-        product_url: seed.productUrl,
+        product_url: normalizedUrl,  // Use normalized URL
         featured_image: seed.imageUrl,
         material: enriched.material,
         finish_type: enriched.finishType,
@@ -133,6 +236,8 @@ Deno.serve(async (req) => {
         color_family: cleanedColor,
         diameter_nominal_mm: ELEGOO_STORE_INFO.defaultDiameter,
         net_weight_g: ELEGOO_STORE_INFO.defaultWeight,
+        price_cad: price,  // CAD price from Shopify API
+        variant_price: price,
         nozzle_temp_min_c: settings?.nozzleTempMin || null,
         nozzle_temp_max_c: settings?.nozzleTempMax || null,
         bed_temp_min_c: settings?.bedTempMin || null,
@@ -151,7 +256,7 @@ Deno.serve(async (req) => {
 
     console.log(`Prepared ${productsToInsert.length} products for insertion`);
 
-    // STEP 4: Batch insert products
+    // STEP 5: Batch insert products
     if (productsToInsert.length > 0) {
       const batchSize = 50;
       for (let i = 0; i < productsToInsert.length; i += batchSize) {
@@ -171,7 +276,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // STEP 5: Update automated_brands table
+    // STEP 6: Update automated_brands table
     const { error: brandUpdateError } = await supabase
       .from('automated_brands')
       .update({
@@ -184,14 +289,14 @@ Deno.serve(async (req) => {
       console.error('Error updating brand stats:', brandUpdateError);
     }
 
-    // STEP 6: Update product counts via RPC
+    // STEP 7: Update product counts via RPC
     try {
       await supabase.rpc('update_brand_product_counts');
     } catch (rpcError) {
       console.error('Error updating product counts:', rpcError);
     }
 
-    // STEP 7: Fix duplicate hex codes
+    // STEP 8: Fix duplicate hex codes
     try {
       const { data: duplicates } = await supabase
         .from('filaments')
@@ -237,9 +342,9 @@ Deno.serve(async (req) => {
     const summary = {
       success: true,
       brand: 'Elegoo',
-      source: 'CSV Seed (ca.elegoo.com)',
+      source: 'CSV Seed + Shopify API (ca.elegoo.com)',
       stats,
-      message: `Synced ${stats.created} Elegoo products from CSV seed`,
+      message: `Synced ${stats.created} Elegoo products with ${stats.pricesFetched} prices fetched`,
     };
 
     console.log('Sync complete:', summary);
