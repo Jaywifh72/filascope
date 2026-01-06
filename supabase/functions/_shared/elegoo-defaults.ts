@@ -171,7 +171,7 @@ export function getElegooPrintSettings(material: string, filamentLine: string): 
   return settings[normalizedMat] || settings['PLA'];
 }
 
-// Color to hex mappings for Elegoo colors (~70 colors)
+// Color to hex mappings for Elegoo colors (~100 colors)
 export const ELEGOO_COLOR_MAPPING: Record<string, string> = {
   // Standard colors
   'black': '1A1A1A',
@@ -201,7 +201,7 @@ export const ELEGOO_COLOR_MAPPING: Record<string, string> = {
   'wood color': 'C19A6B',
   'bronze filled': 'CD7F32',
   
-  // Silk colors
+  // Silk colors - full names
   'silk gold': 'D4AF37',
   'silk silver grey': 'C0C0C0',
   'silk silver gray': 'C0C0C0',
@@ -211,16 +211,33 @@ export const ELEGOO_COLOR_MAPPING: Record<string, string> = {
   'silk mint green': '98FB98',
   'silk coral pink': 'FF7F7F',
   'silk red': 'DC143C',
-  'silk green red': '4CAF50', // dual color - use primary
+  'silk green red': '4CAF50',
   'silk black purple': '301934',
   'silk black red': '3D0000',
-  'silk blue magenta': '8B008B',
+  'silk blue magenta': '9932CC',
   'silk blue green': '008B8B',
   'silk blue green orange': '00CED1',
   'silk blue purple black': '4B0082',
   'silk blue purple': '6A5ACD',
   'silk yellow purple': 'DA70D6',
   'silk black green': '013220',
+  
+  // Base color fallbacks (for stripping prefix)
+  'gold': 'D4AF37',
+  'silver': 'C0C0C0',
+  'copper': 'B87333',
+  'holly green': '2E8B57',
+  'coral pink': 'FF7F7F',
+  'green red': '4CAF50',
+  'black purple': '301934',
+  'black red': '3D0000',
+  'blue magenta': '9932CC',
+  'blue green': '008B8B',
+  'blue green orange': '00CED1',
+  'blue purple black': '4B0082',
+  'blue purple': '6A5ACD',
+  'yellow purple': 'DA70D6',
+  'black green': '013220',
   
   // Matte colors
   'matte black': '2B2B2B',
@@ -247,26 +264,37 @@ export const ELEGOO_COLOR_MAPPING: Record<string, string> = {
   'sparkle turquoise': '40E0D0',
   'sparkle purplish grey': '7D7D8A',
   'sparkle purplish gray': '7D7D8A',
+  'turquoise': '40E0D0',
+  'purplish grey': '7D7D8A',
+  'purplish gray': '7D7D8A',
+  'dark grey': '3C3C3C',
+  'dark gray': '3C3C3C',
   
   // Galaxy colors
   'galaxy black': '0D0D0D',
   'galaxy purple': '4A0080',
   'galaxy peacock blue': '006666',
+  'peacock blue': '006666',
   
   // Marble colors
   'marble': 'E8E8E8',
   'marble brick red': 'CB4154',
   'marble cement grey': 'A8A8A8',
   'marble cement gray': 'A8A8A8',
+  'brick red': 'CB4154',
+  'cement grey': 'A8A8A8',
+  'cement gray': 'A8A8A8',
   
   // Metal colors
   'metal gold': 'CFB53B',
   'metal bronze': 'CD7F32',
   'metal blue': '4A6FA5',
   'metal green': '4A7C59',
+  'bronze': 'CD7F32',
   
   // Wood colors
   'wood filled': 'C19A6B',
+  'wood': 'C19A6B',
   
   // Fiber colors
   'carbon fiber black': '1A1A1A',
@@ -283,7 +311,6 @@ export const ELEGOO_COLOR_MAPPING: Record<string, string> = {
   
   // PETG Pro colors
   'olive green': '6B8E23',
-  'silver': 'C0C0C0',
   'burgundy red': '800020',
   'light blue': 'ADD8E6',
   
@@ -300,10 +327,70 @@ export const ELEGOO_COLOR_MAPPING: Record<string, string> = {
   'turquoise green': '00C78C',
 };
 
-// Get hex code for a color
+// Get hex code for a color with enhanced fallback lookup
 export function getElegooColorHex(color: string): string | null {
   const normalized = color.toLowerCase().trim();
-  return ELEGOO_COLOR_MAPPING[normalized] || null;
+  
+  // Direct lookup
+  if (ELEGOO_COLOR_MAPPING[normalized]) {
+    return ELEGOO_COLOR_MAPPING[normalized];
+  }
+  
+  // Try without prefix (e.g., "Silk Gold" -> "gold")
+  const prefixes = ['silk ', 'matte ', 'sparkle ', 'galaxy ', 'marble ', 'metal ', 'carbon fiber ', 'glass fiber '];
+  for (const prefix of prefixes) {
+    if (normalized.startsWith(prefix)) {
+      const baseColor = normalized.substring(prefix.length);
+      if (ELEGOO_COLOR_MAPPING[baseColor]) {
+        return ELEGOO_COLOR_MAPPING[baseColor];
+      }
+    }
+  }
+  
+  // Try base color extraction (e.g., "Silk Blue Magenta" -> try "blue magenta", then "blue")
+  const words = normalized.split(' ');
+  if (words.length >= 2) {
+    // Try last word
+    const lastWord = words[words.length - 1];
+    if (ELEGOO_COLOR_MAPPING[lastWord]) {
+      return ELEGOO_COLOR_MAPPING[lastWord];
+    }
+    // Try last two words
+    if (words.length >= 3) {
+      const lastTwo = words.slice(-2).join(' ');
+      if (ELEGOO_COLOR_MAPPING[lastTwo]) {
+        return ELEGOO_COLOR_MAPPING[lastTwo];
+      }
+    }
+  }
+  
+  return null;
+}
+
+// Normalize product URL to consistent format
+export function normalizeElegooProductUrl(url: string): string {
+  // Convert /collections/xxx/products/... to /products/...
+  return url.replace(/\/collections\/[^/]+\/products\//, '/products/');
+}
+
+// Clean display color - strip line prefix for proper title display
+export function cleanDisplayColor(color: string, filamentLine: string): string {
+  // For specialty lines, remove the line type prefix from the color
+  // e.g., "Silk Gold" for "PLA Silk" line -> display as "Gold" in title would be confusing
+  // BUT we want to keep full color in color_family for display
+  return color;
+}
+
+// Get unique base product URLs for Shopify API fetching
+export function getUniqueBaseProductUrls(seeds: ElegooProductSeed[]): string[] {
+  const baseUrls = new Set<string>();
+  for (const seed of seeds) {
+    // Normalize and extract base product URL without variant
+    const normalized = normalizeElegooProductUrl(seed.productUrl);
+    const baseUrl = normalized.split('?')[0];
+    baseUrls.add(baseUrl);
+  }
+  return Array.from(baseUrls);
 }
 
 // Main enrichment function
