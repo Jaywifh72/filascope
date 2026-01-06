@@ -281,21 +281,48 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
         <CardContent className="space-y-4">
           {/* Progress Bar (when syncing) */}
           {isActive && activeProgress && (
-            <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {activeProgress.stage}
-                  {activeProgress.currentRegion && ` (${activeProgress.currentRegion})`}
-                  {activeProgress.currentProduct && ` - ${activeProgress.currentProduct}`}
-                </span>
-                <span className="font-medium">{activeProgressPercent}%</span>
+            <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
+              {/* Header with stage and percentage */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <span className="font-medium text-sm">
+                    {activeProgress.stage}
+                    {activeProgress.currentRegion && ` • ${activeProgress.currentRegion}`}
+                  </span>
+                </div>
+                <Badge variant="secondary" className="tabular-nums">
+                  {activeProgressPercent}%
+                </Badge>
               </div>
-              <Progress value={activeProgressPercent} className="h-2" />
-              <p className="text-xs text-muted-foreground">
-                {activeProgress.productsProcessed} / {activeProgress.totalProducts} products
-                {activeProgress.totalRegions && activeProgress.totalRegions > 1 && 
-                  ` • ${activeProgress.regionsProcessed || 0}/${activeProgress.totalRegions} regions`}
-              </p>
+              
+              {/* Progress bar */}
+              <div className="space-y-1">
+                <Progress value={activeProgressPercent} className="h-3" />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{activeProgress.productsProcessed} of {activeProgress.totalProducts} products</span>
+                  <span>{activeProgress.totalProducts - activeProgress.productsProcessed} remaining</span>
+                </div>
+              </div>
+              
+              {/* Current product being processed */}
+              {activeProgress.currentProduct && (
+                <div className="text-xs text-muted-foreground bg-background/50 rounded px-3 py-2 truncate">
+                  Processing: {activeProgress.currentProduct}
+                </div>
+              )}
+              
+              {/* Region progress */}
+              {activeProgress.totalRegions && activeProgress.totalRegions > 1 && (
+                <div className="flex items-center gap-2 pt-2 border-t text-xs text-muted-foreground">
+                  <Globe className="w-3 h-3" />
+                  <span>Region {(activeProgress.regionsProcessed || 0) + 1} of {activeProgress.totalRegions}</span>
+                  {activeProgress.currentRegion && (
+                    <Badge variant="outline" className="text-xs">{activeProgress.currentRegion}</Badge>
+                  )}
+                </div>
+              )}
+              
             </div>
           )}
 

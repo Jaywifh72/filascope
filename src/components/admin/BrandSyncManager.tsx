@@ -387,42 +387,80 @@ export function BrandSyncManager() {
 
         {/* Progress */}
         {progress && (
-          <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">{progress.stage}</span>
-              <span className="text-muted-foreground">
+          <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
+            {/* Header with stage and percentage */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span className="font-medium">{progress.stage}</span>
+              </div>
+              <Badge variant="secondary" className="tabular-nums">
                 {progress.total > 0 
                   ? `${Math.round((progress.current / progress.total) * 100)}%`
                   : `${progress.current}%`
                 }
-              </span>
+              </Badge>
             </div>
-            <Progress 
-              value={progress.total > 0 
-                ? Math.round((progress.current / progress.total) * 100)
-                : progress.current
-              } 
-              className="h-2" 
-            />
+            
+            {/* Progress bar with gradient */}
+            <div className="space-y-1">
+              <Progress 
+                value={progress.total > 0 
+                  ? Math.round((progress.current / progress.total) * 100)
+                  : progress.current
+                } 
+                className="h-3" 
+              />
+              {progress.total > 0 && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{progress.current} of {progress.total} items</span>
+                  <span>
+                    {progress.total - progress.current} remaining
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            {/* Current operation message */}
             {progress.message && (
-              <p className="text-xs text-muted-foreground">{progress.message}</p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-background/50 rounded px-3 py-2">
+                <span className="truncate">{progress.message}</span>
+              </div>
             )}
-            {(progress.productsProcessed !== undefined || progress.variantsFound !== undefined) && (
-              <div className="flex gap-4 text-xs text-muted-foreground">
+            
+            {/* Live stats grid */}
+            {(progress.productsProcessed !== undefined || progress.variantsFound !== undefined || 
+              progress.created !== undefined || progress.updated !== undefined || progress.errors !== undefined) && (
+              <div className="grid grid-cols-5 gap-2 pt-2 border-t">
                 {progress.productsProcessed !== undefined && (
-                  <span>Products: {progress.productsProcessed}</span>
+                  <div className="text-center p-2 bg-background/50 rounded">
+                    <div className="text-lg font-semibold tabular-nums">{progress.productsProcessed}</div>
+                    <div className="text-xs text-muted-foreground">Processed</div>
+                  </div>
                 )}
                 {progress.variantsFound !== undefined && (
-                  <span>Variants: {progress.variantsFound}</span>
+                  <div className="text-center p-2 bg-background/50 rounded">
+                    <div className="text-lg font-semibold tabular-nums">{progress.variantsFound}</div>
+                    <div className="text-xs text-muted-foreground">Variants</div>
+                  </div>
                 )}
-                {progress.created !== undefined && progress.created > 0 && (
-                  <span className="text-green-500">Created: {progress.created}</span>
+                {progress.created !== undefined && (
+                  <div className="text-center p-2 bg-green-500/10 rounded">
+                    <div className="text-lg font-semibold tabular-nums text-green-600">{progress.created}</div>
+                    <div className="text-xs text-green-600/80">Created</div>
+                  </div>
                 )}
-                {progress.updated !== undefined && progress.updated > 0 && (
-                  <span className="text-blue-500">Updated: {progress.updated}</span>
+                {progress.updated !== undefined && (
+                  <div className="text-center p-2 bg-blue-500/10 rounded">
+                    <div className="text-lg font-semibold tabular-nums text-blue-600">{progress.updated}</div>
+                    <div className="text-xs text-blue-600/80">Updated</div>
+                  </div>
                 )}
-                {progress.errors !== undefined && progress.errors > 0 && (
-                  <span className="text-destructive">Errors: {progress.errors}</span>
+                {progress.errors !== undefined && (
+                  <div className="text-center p-2 bg-destructive/10 rounded">
+                    <div className="text-lg font-semibold tabular-nums text-destructive">{progress.errors}</div>
+                    <div className="text-xs text-destructive/80">Errors</div>
+                  </div>
                 )}
               </div>
             )}
@@ -432,60 +470,129 @@ export function BrandSyncManager() {
         {/* Results */}
         {result && (
           <div className={`p-4 rounded-lg border ${result.success ? 'bg-green-500/10 border-green-500/20' : 'bg-destructive/10 border-destructive/20'}`}>
-            <div className="flex items-center gap-2 mb-3">
-              {result.success ? (
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
-              ) : (
-                <XCircle className="w-5 h-5 text-destructive" />
-              )}
-              <span className="font-medium">
-                {result.success ? 'Sync Completed' : 'Sync Failed'}
-              </span>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                {result.success ? (
+                  <CheckCircle2 className="w-6 h-6 text-green-500" />
+                ) : (
+                  <XCircle className="w-6 h-6 text-destructive" />
+                )}
+                <div>
+                  <span className="font-semibold text-lg">
+                    {result.success ? 'Sync Completed Successfully' : 'Sync Failed'}
+                  </span>
+                  {result.summary && (
+                    <p className="text-sm text-muted-foreground">
+                      {(result.summary.created || 0) + (result.summary.updated || 0)} products synced
+                      {result.summary.total && ` of ${result.summary.total} discovered`}
+                    </p>
+                  )}
+                </div>
+              </div>
               {result.duration_ms != null && (
-                <span className="text-muted-foreground text-sm">
-                  ({(result.duration_ms / 1000).toFixed(1)}s)
-                </span>
+                <Badge variant="outline" className="tabular-nums">
+                  {(result.duration_ms / 1000).toFixed(1)}s
+                </Badge>
               )}
             </div>
             
+            {/* Summary Stats */}
             {result.summary && (
-              <div className="grid grid-cols-4 gap-4 text-sm">
-                <div>
-                  <div className="text-muted-foreground">Created</div>
-                  <div className="text-lg font-semibold text-green-600">{result.summary.created}</div>
+              <div className="grid grid-cols-5 gap-3 mb-4">
+                {result.summary.total !== undefined && (
+                  <div className="text-center p-3 bg-background/50 rounded-lg border">
+                    <div className="text-2xl font-bold tabular-nums">{result.summary.total}</div>
+                    <div className="text-xs text-muted-foreground">Discovered</div>
+                  </div>
+                )}
+                <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                  <div className="text-2xl font-bold tabular-nums text-green-600">{result.summary.created || 0}</div>
+                  <div className="text-xs text-green-600/80">Created</div>
                 </div>
-                <div>
-                  <div className="text-muted-foreground">Updated</div>
-                  <div className="text-lg font-semibold text-blue-600">{result.summary.updated}</div>
+                <div className="text-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                  <div className="text-2xl font-bold tabular-nums text-blue-600">{result.summary.updated || 0}</div>
+                  <div className="text-xs text-blue-600/80">Updated</div>
                 </div>
-                <div>
-                  <div className="text-muted-foreground">Skipped</div>
-                  <div className="text-lg font-semibold text-muted-foreground">{result.summary.skipped}</div>
+                <div className="text-center p-3 bg-muted/50 rounded-lg border">
+                  <div className="text-2xl font-bold tabular-nums text-muted-foreground">{result.summary.skipped || 0}</div>
+                  <div className="text-xs text-muted-foreground">Skipped</div>
                 </div>
-                <div>
-                  <div className="text-muted-foreground">Errors</div>
-                  <div className="text-lg font-semibold text-destructive">{result.summary.errors}</div>
+                <div className="text-center p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                  <div className="text-2xl font-bold tabular-nums text-destructive">{result.summary.errors || 0}</div>
+                  <div className="text-xs text-destructive/80">Errors</div>
                 </div>
               </div>
             )}
 
-            {result.fieldCoverage && Object.keys(result.fieldCoverage).length > 0 && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <div className="text-sm font-medium mb-2">Field Coverage</div>
-                <div className="flex flex-wrap gap-2">
-                {Object.entries(result.fieldCoverage).map(([field, value]) => {
-                    let displayValue: string;
-                    if (typeof value === 'number') {
-                      displayValue = `${value}%`;
-                    } else if (value && typeof value === 'object' && 'percent' in value) {
-                      displayValue = `${(value as { percent: number }).percent}%`;
-                    } else {
-                      displayValue = String(value);
-                    }
+            {/* Success Rate Bar */}
+            {result.summary && (result.summary.total || (result.summary.created || 0) + (result.summary.updated || 0) + (result.summary.skipped || 0) + (result.summary.errors || 0)) > 0 && (
+              <div className="mb-4 space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Success Rate</span>
+                  <span>
+                    {(() => {
+                      const total = result.summary.total || ((result.summary.created || 0) + (result.summary.updated || 0) + (result.summary.skipped || 0) + (result.summary.errors || 0));
+                      const success = (result.summary.created || 0) + (result.summary.updated || 0);
+                      return total > 0 ? `${Math.round((success / total) * 100)}%` : '0%';
+                    })()}
+                  </span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+                  {(() => {
+                    const total = result.summary.total || ((result.summary.created || 0) + (result.summary.updated || 0) + (result.summary.skipped || 0) + (result.summary.errors || 0));
+                    const created = result.summary.created || 0;
+                    const updated = result.summary.updated || 0;
+                    const skipped = result.summary.skipped || 0;
+                    const errors = result.summary.errors || 0;
                     return (
-                      <Badge key={field} variant="outline" className="text-xs">
-                        {field}: {displayValue}
-                      </Badge>
+                      <>
+                        {created > 0 && <div className="h-full bg-green-500" style={{ width: `${(created / total) * 100}%` }} />}
+                        {updated > 0 && <div className="h-full bg-blue-500" style={{ width: `${(updated / total) * 100}%` }} />}
+                        {skipped > 0 && <div className="h-full bg-muted-foreground/30" style={{ width: `${(skipped / total) * 100}%` }} />}
+                        {errors > 0 && <div className="h-full bg-destructive" style={{ width: `${(errors / total) * 100}%` }} />}
+                      </>
+                    );
+                  })()}
+                </div>
+                <div className="flex gap-4 text-xs">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full"></span> Created</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 bg-blue-500 rounded-full"></span> Updated</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 bg-muted-foreground/30 rounded-full"></span> Skipped</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 bg-destructive rounded-full"></span> Errors</span>
+                </div>
+              </div>
+            )}
+
+            {/* Field Coverage */}
+            {result.fieldCoverage && Object.keys(result.fieldCoverage).length > 0 && (
+              <div className="pt-4 border-t border-border space-y-3">
+                <div className="text-sm font-medium">Field Coverage</div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {Object.entries(result.fieldCoverage).map(([field, value]) => {
+                    let percent: number;
+                    let count: number | undefined;
+                    if (typeof value === 'number') {
+                      percent = value;
+                    } else if (value && typeof value === 'object' && 'percent' in value) {
+                      percent = (value as { percent: number; count?: number }).percent;
+                      count = (value as { count?: number }).count;
+                    } else {
+                      percent = 0;
+                    }
+                    const colorClass = percent >= 90 ? 'text-green-600' : percent >= 70 ? 'text-yellow-600' : 'text-destructive';
+                    return (
+                      <div key={field} className="flex items-center justify-between p-2 bg-background/50 rounded border">
+                        <span className="text-sm capitalize">{field}</span>
+                        <div className="flex items-center gap-2">
+                          {count !== undefined && (
+                            <span className="text-xs text-muted-foreground">{count}</span>
+                          )}
+                          <Badge variant="outline" className={`tabular-nums ${colorClass}`}>
+                            {percent}%
+                          </Badge>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -493,7 +600,7 @@ export function BrandSyncManager() {
             )}
 
             {result.message && !result.summary && (
-              <p className="text-sm text-muted-foreground">{result.message}</p>
+              <p className="text-sm text-muted-foreground mt-2">{result.message}</p>
             )}
           </div>
         )}
