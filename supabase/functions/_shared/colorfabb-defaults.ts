@@ -86,25 +86,44 @@ export const COLORFABB_PRODUCT_SEED: ColorFabbProductSeed[] = [
   { material: 'PLA-HP', filamentLine: 'PLA-HP', color: 'SILVER', productName: 'PLA-HP SILVER', productUrl: 'https://colorfabb.us/pla-hp-silver', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla-hp_silver.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030036', priceUsd: 31.32 },
   { material: 'PLA-HP', filamentLine: 'PLA-HP', color: 'BLACK', productName: 'PLA-HP BLACK', productUrl: 'https://colorfabb.us/pla-hp-black', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla-hp_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030035', priceUsd: 31.32 },
   
-  // PLA Silk
+  // PLA Silk - Multiple colors
   { material: 'PLA Silk', filamentLine: 'PLA Silk', color: 'RED', productName: 'PLA SILK RED', productUrl: 'https://colorfabb.us/pla-silk-red', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_silk_red.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '010039', priceUsd: 34.04 },
+  { material: 'PLA Silk', filamentLine: 'PLA Silk', color: 'SILVER', productName: 'PLA SILK SILVER', productUrl: 'https://colorfabb.us/pla-silk-silver', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_silk_silver.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '010040', priceUsd: 34.04 },
+  { material: 'PLA Silk', filamentLine: 'PLA Silk', color: 'GOLD', productName: 'PLA SILK GOLD', productUrl: 'https://colorfabb.us/pla-silk-gold', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_silk_gold.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '010041', priceUsd: 34.04 },
   
   // Vibers PLA → PLA material
   { material: 'PLA', filamentLine: 'Vibers PLA', color: 'PASTEL ORANGE', productName: 'VIBERS PLA PASTEL ORANGE', productUrl: 'https://colorfabb.us/vibers-pla-pastel-orange', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_vibers_pastel-orange.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030027', priceUsd: 43.56 },
   { material: 'PLA', filamentLine: 'Vibers PLA', color: 'PASTEL PURPLE', productName: 'VIBERS PLA PASTEL PURPLE', productUrl: 'https://colorfabb.us/vibers-pla-pastel-purple', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_vibers_pastel-purple.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030028', priceUsd: 43.56 },
   { material: 'PLA', filamentLine: 'Vibers PLA', color: 'PASTEL GREEN', productName: 'VIBERS PLA PASTEL GREEN', productUrl: 'https://colorfabb.us/vibers-pla-pastel-green', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_vibers_pastel-green.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030029', priceUsd: 43.56 },
   
-  // PLA Economy
+  // PLA Economy - Multiple colors
   { material: 'PLA Economy', filamentLine: 'PLA Economy', color: 'BLACK', productName: 'PLA ECONOMY BLACK', productUrl: 'https://colorfabb.us/pla-economy-black', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_economy_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '010074', priceUsd: 24.95 },
+  { material: 'PLA Economy', filamentLine: 'PLA Economy', color: 'WHITE', productName: 'PLA ECONOMY WHITE', productUrl: 'https://colorfabb.us/pla-economy-white', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_economy_white.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '010075', priceUsd: 24.95 },
+  { material: 'PLA Economy', filamentLine: 'PLA Economy', color: 'GRAY', productName: 'PLA ECONOMY GRAY', productUrl: 'https://colorfabb.us/pla-economy-gray', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_economy_gray.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '010076', priceUsd: 24.95 },
   
-  // ASA
+  // ASA - Multiple colors
   { material: 'ASA', filamentLine: 'ASA', color: 'BLACK', productName: 'ASA BLACK', productUrl: 'https://colorfabb.us/asa-black', imageUrl: 'https://colorfabb.us/media/catalog/product/a/s/asa_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: null, priceUsd: 37.50 },
+  { material: 'ASA', filamentLine: 'ASA', color: 'WHITE', productName: 'ASA WHITE', productUrl: 'https://colorfabb.us/asa-white', imageUrl: 'https://colorfabb.us/media/catalog/product/a/s/asa_white.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: null, priceUsd: 37.50 },
+  { material: 'ASA', filamentLine: 'ASA', color: 'GRAY', productName: 'ASA GRAY', productUrl: 'https://colorfabb.us/asa-gray', imageUrl: 'https://colorfabb.us/media/catalog/product/a/s/asa_gray.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: null, priceUsd: 37.50 },
   
-  // PETG Economy
+  // PETG Economy - Multiple colors
   { material: 'PETG Economy', filamentLine: 'PETG Economy', color: 'CLEAR', productName: 'PETG ECONOMY CLEAR', productUrl: 'https://colorfabb.us/petg-economy-clear', imageUrl: 'https://colorfabb.us/media/catalog/product/p/e/petg-economy_clear.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020040', priceUsd: 24.95 },
+  { material: 'PETG Economy', filamentLine: 'PETG Economy', color: 'BLACK', productName: 'PETG ECONOMY BLACK', productUrl: 'https://colorfabb.us/petg-economy-black', imageUrl: 'https://colorfabb.us/media/catalog/product/p/e/petg-economy_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020041', priceUsd: 24.95 },
+  { material: 'PETG Economy', filamentLine: 'PETG Economy', color: 'WHITE', productName: 'PETG ECONOMY WHITE', productUrl: 'https://colorfabb.us/petg-economy-white', imageUrl: 'https://colorfabb.us/media/catalog/product/p/e/petg-economy_white.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020042', priceUsd: 24.95 },
   
-  // nGen (Copolyester - Eastman Amphora based)
+  // nGen (Copolyester - Eastman Amphora based) - Multiple colors
   { material: 'Copolyester', filamentLine: 'nGen', color: 'BLACK', productName: 'NGEN BLACK', productUrl: 'https://colorfabb.us/ngen-black', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020014', priceUsd: 32.98 },
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'WHITE', productName: 'NGEN WHITE', productUrl: 'https://colorfabb.us/ngen-white', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_white.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020015', priceUsd: 32.98 },
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'CLEAR', productName: 'NGEN CLEAR', productUrl: 'https://colorfabb.us/ngen-clear', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_clear.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020016', priceUsd: 32.98 },
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'RED', productName: 'NGEN RED', productUrl: 'https://colorfabb.us/ngen-red', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_red.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020017', priceUsd: 32.98 },
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'ORANGE', productName: 'NGEN ORANGE', productUrl: 'https://colorfabb.us/ngen-orange', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_orange.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020018', priceUsd: 32.98 },
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'YELLOW', productName: 'NGEN YELLOW', productUrl: 'https://colorfabb.us/ngen-yellow', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_yellow.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020019', priceUsd: 32.98 },
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'GREEN', productName: 'NGEN GREEN', productUrl: 'https://colorfabb.us/ngen-green', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_green.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020020', priceUsd: 32.98 },
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'LIGHT BLUE', productName: 'NGEN LIGHT BLUE', productUrl: 'https://colorfabb.us/ngen-light-blue', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_light-blue.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020021', priceUsd: 32.98 },
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'DARK BLUE', productName: 'NGEN DARK BLUE', productUrl: 'https://colorfabb.us/ngen-dark-blue', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_dark-blue.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020022', priceUsd: 32.98 },
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'PURPLE', productName: 'NGEN PURPLE', productUrl: 'https://colorfabb.us/ngen-purple', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_purple.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020023', priceUsd: 32.98 },
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'PINK', productName: 'NGEN PINK', productUrl: 'https://colorfabb.us/ngen-pink', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_pink.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020024', priceUsd: 32.98 },
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'GRAY', productName: 'NGEN GRAY', productUrl: 'https://colorfabb.us/ngen-gray', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_gray.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020025', priceUsd: 32.98 },
   
   // HT (Copolyester - Eastman Amphora based - High Temp variant)
   { material: 'Copolyester', filamentLine: 'HT', color: 'BLACK', productName: 'HT BLACK', productUrl: 'https://colorfabb.us/ht-black', imageUrl: 'https://colorfabb.us/media/catalog/product/c/o/colorfabb_ht_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020034', priceUsd: 39.21 },
@@ -626,6 +645,8 @@ export const COLORFABB_COLOR_MAPPING: Record<string, string> = {
   'copper': 'B87333',
   'steel': '71797E',
   'brass': 'B5A642',
+  'gold': 'FFD700',
+  'dark blue': '00008B',
   
   // Wood/natural tones
   'wood': 'DEB887',
