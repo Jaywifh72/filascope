@@ -361,45 +361,57 @@ const BAMBULAB_VARIANT_IDS: Record<string, Record<string, string>> = {
 };
 
 // Product slug mappings for product_line_id normalization
+// Maps product_line_id (double underscore format) to product slug for variant lookup
 const PRODUCT_LINE_SLUG_MAP: Record<string, string> = {
-  'bambulab-pla-basic': 'pla-basic-filament',
-  'bambulab-pla-matte': 'pla-matte',
-  'bambulab-pla-silk': 'pla-silk-upgrade',
-  'bambulab-pla-silk+': 'pla-silk-upgrade',
-  'bambulab-pla-translucent': 'pla-translucent',
-  'bambulab-pla-tough': 'pla-tough-upgrade',
-  'bambulab-pla-tough+': 'pla-tough-upgrade',
-  'bambulab-pla-gradient': 'pla-basic-gradient',
-  'bambulab-pla-wood': 'pla-wood',
-  'bambulab-pla-marble': 'pla-marble',
-  'bambulab-pla-metal': 'pla-metal',
-  'bambulab-pla-silk-multi-color': 'pla-silk-multi-color',
-  'bambulab-pla-galaxy': 'pla-galaxy',
-  'bambulab-pla-glow': 'pla-glow',
-  'bambulab-pla-sparkle': 'pla-sparkle',
-  'bambulab-pla-cf': 'pla-cf',
-  'bambulab-pla-aero': 'pla-aero',
-  'bambulab-abs': 'abs-filament',
-  'bambulab-asa': 'asa-filament',
-  'bambulab-asa-aero': 'asa-aero',
-  'bambulab-abs-gf': 'abs-gf',
-  'bambulab-asa-cf': 'asa-cf',
-  'bambulab-petg-hf': 'petg-hf',
-  'bambulab-petg-translucent': 'petg-translucent',
-  'bambulab-petg-cf': 'petg-cf',
-  'bambulab-pa6-gf': 'pa6-gf',
-  'bambulab-ppa-cf': 'ppa-cf',
-  'bambulab-pc': 'pc-filament',
-  'bambulab-pc-fr': 'pc-fr',
-  'bambulab-pps-cf': 'pps-cf',
-  'bambulab-pva': 'pva',
-  'bambulab-support-pla-petg': 'support-for-pla-petg',
-  'bambulab-support-pla': 'support-for-pla-new',
-  'bambulab-support-pa-pet': 'support-for-pa-pet',
-  'bambulab-support-abs': 'support-for-abs',
-  'bambulab-tpu-85a-90a': 'tpu-85a-tpu-90a',
-  'bambulab-tpu-95a-hf': 'tpu-95a-hf',
-  'bambulab-tpu-ams': 'tpu-for-ams',
+  // PLA variants
+  'bambulab__pla__basic': 'pla-basic-filament',
+  'bambulab__pla__matte': 'pla-matte',
+  'bambulab__pla__silk': 'pla-silk-upgrade',
+  'bambulab__pla__translucent': 'pla-translucent',
+  'bambulab__pla__tough': 'pla-tough-upgrade',
+  'bambulab__pla__basic-gradient': 'pla-basic-gradient',
+  'bambulab__pla__wood': 'pla-wood',
+  'bambulab__pla__marble': 'pla-marble',
+  'bambulab__pla__metal': 'pla-metal',
+  'bambulab__pla__silk-multicolor': 'pla-silk-multi-color',
+  'bambulab__pla__galaxy': 'pla-galaxy',
+  'bambulab__pla__glow': 'pla-glow',
+  'bambulab__pla__sparkle': 'pla-sparkle',
+  'bambulab__pla__aero': 'pla-aero',
+  // PLA-CF
+  'bambulab__pla-cf__composite': 'pla-cf',
+  // ABS variants
+  'bambulab__abs__standard': 'abs-filament',
+  'bambulab__abs-gf__composite': 'abs-gf',
+  // ASA variants
+  'bambulab__asa__standard': 'asa-filament',
+  'bambulab__asa__aero': 'asa-aero',
+  'bambulab__asa-cf__composite': 'asa-cf',
+  // PETG variants
+  'bambulab__petg__hf': 'petg-hf',
+  'bambulab__petg__translucent': 'petg-translucent',
+  'bambulab__petg-cf__composite': 'petg-cf',
+  // PA variants
+  'bambulab__pa-gf__pa6': 'pa6-gf',
+  'bambulab__pa-cf__pa6': 'pa6-cf',
+  'bambulab__pa-cf__paht': 'paht-cf',
+  'bambulab__pa-cf__ppa': 'ppa-cf',
+  // PC variants
+  'bambulab__pc__standard': 'pc-filament',
+  'bambulab__pc__fr': 'pc-fr',
+  // Other composites
+  'bambulab__pps-cf__composite': 'pps-cf',
+  'bambulab__pet-cf__composite': 'pet-cf',
+  // Support materials
+  'bambulab__pva__standard': 'pva',
+  'bambulab__support__pla-petg': 'support-for-pla-petg',
+  'bambulab__support__pla-new': 'support-for-pla-new',
+  'bambulab__support__pa-pet': 'support-for-pa-pet',
+  'bambulab__support__abs': 'support-for-abs',
+  // TPU variants
+  'bambulab__tpu__85a-90a': 'tpu-85a-tpu-90a',
+  'bambulab__tpu__95a-hf': 'tpu-95a-hf',
+  'bambulab__tpu__ams': 'tpu-for-ams',
 };
 
 function normalizeColorName(colorFamily: string | null, productTitle: string): string {
