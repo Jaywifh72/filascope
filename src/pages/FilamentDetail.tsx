@@ -560,6 +560,7 @@ const FilamentDetail = () => {
             color_family: v.color_family,
             product_title: v.product_title,
             net_weight_g: v.net_weight_g,
+            product_url: v.product_url,
           }))}
           onSelectColor={(variant) => {
             const fullVariant = colorVariants.find(v => v.id === variant.id);
@@ -569,8 +570,11 @@ const FilamentDetail = () => {
           rawPricePerKg={rawPricePerKg}
           rawPricePerSpool={rawPricePerSpool}
           hasActualRegionalPrice={hasActualRegionalPrice}
-          affiliateUrl={getAffiliateUrl(regionalPriceData.regionalUrl || pricingFilament.product_url || '', pricingFilament.vendor)}
-          productUrl={regionalPriceData.regionalUrl || pricingFilament.product_url || ''}
+          affiliateUrl={getAffiliateUrl(
+            selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || '', 
+            pricingFilament.vendor
+          )}
+          productUrl={selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || ''}
           originalUsUrl={regionalPriceData.fallbackUrl || pricingFilament.product_url || undefined}
           retailerName={pricingFilament.vendor || undefined}
           retailerCount={retailers.length}
