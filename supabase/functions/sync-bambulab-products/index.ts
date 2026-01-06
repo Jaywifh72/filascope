@@ -527,6 +527,8 @@ const BAMBULAB_VARIANT_IDS: Record<string, Record<string, string>> = {
     'matte ash gray': '43135539871984',
     'matte nardo gray': '563882858931896371',
     'matte charcoal': '43135540003056',
+    'matte ivory white': '43197757661424',
+    'matte bone white': '46334124245232',
   },
   // ========== PLA SILK+ ==========
   'pla-silk-upgrade': {
@@ -538,6 +540,11 @@ const BAMBULAB_VARIANT_IDS: Record<string, Record<string, string>> = {
     'rose gold': '542547831280767036',
     'pink': '542547831280767054',
     'champagne': '542547831280767060',
+    'gold': '46334133027056',
+    'titan gray': '46334134927600',
+    'silver': '46334136008944',
+    'white': '46334134010096',
+    'candy red': '46334130188528',
   },
   // ========== PLA TRANSLUCENT ==========
   'pla-translucent': {
@@ -640,6 +647,7 @@ const BAMBULAB_VARIANT_IDS: Record<string, Record<string, string>> = {
     'royal blue': '44235357094128',
     'iris purple': '44235357126896',
     'lava gray': '44083777601776',
+    'burgundy red': '44148855603440',
   },
   // ========== PLA AERO ==========
   'pla-aero': {
@@ -660,6 +668,7 @@ const BAMBULAB_VARIANT_IDS: Record<string, Record<string, string>> = {
     'tangerine yellow': '46311958282480',
     'orange': '46130970886384',
     'red': '43115678925040',
+    'purple': '46541030916336',
   },
   // ========== ASA ==========
   'asa-filament': {
