@@ -89,7 +89,7 @@ export function getBaseProductName(title: string): string {
     const basePart = azurefilmFilamentMatch[1].trim();
     const remainder = azurefilmFilamentMatch[2].trim();
     // Don't match if remainder is a product line suffix, not a color
-    const productLineSuffixes = ['high speed', 'high-speed', 'glow in the dark', 'galaxy', 'marble', 'tough', 'translucent', 'aero', 'hf', 'cf', 'gf', 'wood', 'metal', 'sparkle'];
+    const productLineSuffixes = ['basic', 'high speed', 'high-speed', 'glow in the dark', 'galaxy', 'marble', 'tough', 'translucent', 'aero', 'hf', 'cf', 'gf', 'wood', 'metal', 'sparkle'];
     const isProductLine = productLineSuffixes.some(s => remainder.toLowerCase().startsWith(s));
     if (!isProductLine && !remainder.match(/\d+-pack|Sample|plate|Magnetic|drill/i)) {
       return basePart;
