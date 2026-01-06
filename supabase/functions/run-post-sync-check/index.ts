@@ -3079,6 +3079,20 @@ Deno.serve(async (req) => {
     const simulateUIDisplayName = (productLineId: string, productTitle: string): string => {
       const parts = productLineId.split('__');
       
+      // ELEGOO: Use the database product_title directly (from Shopify H1)
+      // The product_title is the authoritative source, not the product_line_id
+      // This ensures card titles match detail page titles exactly
+      if (parts[0] === 'elegoo' && productTitle) {
+        // Clean the title - remove brand name, "Filament" suffix, and weight/diameter specs
+        const cleaned = productTitle
+          .replace(/^Elegoo\s+/gi, '')
+          .replace(/\s+Filament\s*$/i, '')
+          .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')
+          .replace(/\s*,?\s*\d+\.?\d*\s*kg\b/gi, '')
+          .trim();
+        return cleaned || productTitle;
+      }
+      
       // ATOMIC FILAMENT: Extract product line name from the 2-part ID
       // Format: "atomic-filament__pla" → "PLA", "atomic-filament__pla-silk" → "PLA Silk"
       // This ensures card titles show "PLA", "PETG", "PLA Silk" instead of individual product names
