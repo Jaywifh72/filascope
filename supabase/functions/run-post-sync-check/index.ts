@@ -397,26 +397,30 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       '✅ Firecrawl with waitFor:2000 successfully extracts H1 titles and basic product info',
       '✅ Color names can be extracted from __NEXT_DATA__ productOptions array',
       '✅ Manual browser DevTools (Network tab) extraction for S5 GUIDs is the ONLY reliable method',
-      '✅ s5Url() helper function generates correct CDN URLs from GUIDs'
+      '✅ s5Url() helper function generates correct CDN URLs from GUIDs',
+      '✅ Use BAMBULAB_VARIANT_IDS mapping in update-bambulab-urls/index.ts for variant-specific Buy Now links',
+      '✅ Run update-bambulab-urls edge function after sync to populate ?id= parameters'
     ],
     failedApproaches: [
       '⚠️ Attempting to scrape __NEXT_DATA__ for variant IDs - data structure does not contain them',
       '⚠️ Using Firecrawl waitFor for dynamic S5 images - still returns only S7 swatch URLs',
       '⚠️ Treating Bambu Lab as Shopify store - no /products.json or /collections.json APIs exist',
       '⚠️ Trying to extract variant IDs from HTML data attributes - IDs are injected by JavaScript',
-      '⚠️ Using wrong product slugs (e.g., "petg-hf-filament" instead of "petg-hf") breaks S5 mapping'
+      '⚠️ Using wrong product slugs (e.g., "petg-hf-filament" instead of "petg-hf") breaks S5 mapping',
+      '⚠️ Using wrong PRODUCT_LINE_SLUG_MAP key format (use bambulab__material__variant, not bambulab-material)'
     ],
     currentStatus: {
       's5ImagesComplete': 'ABS (12), PLA Tough+ (8), PETG HF (14), PETG Translucent (9) = 43 colors ✅',
       's5ImagesPending': 'PLA Basic (30), PLA Matte (24), PLA Silk+ (13), PLA Translucent (10), PLA Silk Multi-Color (5), PLA Basic Gradient (3), PLA Sparkle (6), PLA Metal (5), PLA Galaxy (3), PLA Wood (4), Support for PLA (2), Support W (1), PA6-GF (8), ABS-GF (8), PAHT-CF (3), PET-CF (2), PETG-CF (3), PETG Basic (4), ASA (5), TPU 95A HF (7), PA-CF (3), PC (3) = ~145 colors ⏳',
-      'variantUrls': 'WARNING status - requires manual extraction or browser automation (accepted limitation)',
+      'variantUrls': 'Managed via BAMBULAB_VARIANT_IDS mapping - run update-bambulab-urls to populate',
       'totalProductCount': '227 filament variants in database',
       'completionPercentage': '~23% S5 coverage (43/188 multi-color products)'
     },
     keyFiles: [
       'supabase/functions/sync-bambulab-products/index.ts - Main sync function with S5_PRODUCT_IMAGES constant',
       'supabase/functions/_shared/bambulab-defaults.ts - COLOR_HEX_MAP and brand configuration',
-      'S5_PRODUCT_IMAGES constant (lines 99-305) - Hardcoded S5 image GUID mappings by product slug'
+      'S5_PRODUCT_IMAGES constant (lines 99-305) - Hardcoded S5 image GUID mappings by product slug',
+      'supabase/functions/update-bambulab-urls/index.ts - Variant ID mapping and URL update function'
     ],
     extractionPriority: [
       '1. PLA Basic (30 colors) - highest impact, most popular product',
@@ -3834,56 +3838,155 @@ Deno.serve(async (req) => {
     
     console.log(`[PostSyncCheck] Color-Specific Images: ${colorImageIssues.length} issues found`);
 
-    // ========== BAMBU LAB SPECIFIC: Variant URL Parameter Check ==========
-    // Verify that Bambu Lab products have variant-specific URLs with ?id= parameter
+    // ========== BAMBU LAB SPECIFIC: Variant URL Parameter Check (ENHANCED) ==========
+    // Verify that every Bambu Lab color variant has a variant-specific URL with ?id= parameter
     // This ensures "Buy Now" links go directly to the selected color variant
     if (brandSlug === 'bambu-lab') {
       const variantUrlIssues: { id: string; title: string; issue: string }[] = [];
-      const checkedLineIds = new Set<string>();
+      const variantUrlStats = {
+        totalVariants: 0,
+        variantsWithUrl: 0,
+        variantsMissingUrl: 0,
+        productLinesChecked: new Set<string>(),
+      };
+      
+      // Check EVERY variant individually (not just product lines)
+      for (const variant of detailPageVariants || []) {
+        variantUrlStats.totalVariants++;
+        const url = variant.product_url || '';
+        const hasVariantId = url.includes('?id=') || url.includes('&id=');
+        
+        if (hasVariantId) {
+          variantUrlStats.variantsWithUrl++;
+        } else {
+          variantUrlStats.variantsMissingUrl++;
+        }
+        
+        variantUrlStats.productLinesChecked.add(variant.product_line_id || 'unknown');
+      }
+      
+      // Group by product line for detailed issue reporting
+      const productLineStats: Record<string, { total: number; withUrl: number; missingColors: string[] }> = {};
       
       for (const variant of detailPageVariants || []) {
         const lineId = variant.product_line_id || 'unknown';
-        if (checkedLineIds.has(lineId)) continue;
-        checkedLineIds.add(lineId);
-        
-        // Get all products in this line
-        const lineProducts = (detailPageVariants || []).filter((p: typeof variant) => p.product_line_id === lineId);
-        const productsWithVariantUrl = lineProducts.filter((p: typeof variant) => {
-          const url = p.product_url || '';
-          return url.includes('?id=') || url.includes('&id=');
-        });
-        
-        // If no products in this line have variant URLs, flag it
-        if (productsWithVariantUrl.length === 0 && lineProducts.length > 0) {
-          variantUrlIssues.push({
-            id: lineId,
-            title: lineProducts[0]?.product_title || lineId,
-            issue: `No variant ID in URL. Buy Now links will go to default color instead of selected variant. (${lineProducts.length} variants affected)`,
-          });
+        if (!productLineStats[lineId]) {
+          productLineStats[lineId] = { total: 0, withUrl: 0, missingColors: [] };
         }
-        // If only some products have variant URLs, flag partial issue
-        else if (productsWithVariantUrl.length < lineProducts.length && productsWithVariantUrl.length > 0) {
+        productLineStats[lineId].total++;
+        
+        const url = variant.product_url || '';
+        const hasVariantId = url.includes('?id=') || url.includes('&id=');
+        
+        if (hasVariantId) {
+          productLineStats[lineId].withUrl++;
+        } else {
+          productLineStats[lineId].missingColors.push(variant.color_family || 'Unknown');
+        }
+      }
+      
+      // Report product lines with missing variant URLs
+      for (const [lineId, stats] of Object.entries(productLineStats)) {
+        if (stats.withUrl < stats.total) {
+          const coveragePercent = Math.round((stats.withUrl / stats.total) * 100);
           variantUrlIssues.push({
             id: lineId,
-            title: lineProducts[0]?.product_title || lineId,
-            issue: `Partial variant URLs: ${productsWithVariantUrl.length}/${lineProducts.length} have ?id= parameter.`,
+            title: lineId.replace('bambulab__', '').replace(/__/g, ' ').toUpperCase(),
+            issue: `${stats.withUrl}/${stats.total} variants have ?id= (${coveragePercent}%). Missing: ${stats.missingColors.slice(0, 5).join(', ')}${stats.missingColors.length > 5 ? '...' : ''}`,
           });
         }
       }
       
-      // NOTE: Variant IDs are loaded dynamically via JavaScript and cannot be scraped from static HTML.
-      // This check is informational only - variant URL extraction requires browser automation.
+      // Calculate overall coverage percentage
+      const coveragePercent = variantUrlStats.totalVariants > 0 
+        ? Math.round((variantUrlStats.variantsWithUrl / variantUrlStats.totalVariants) * 100)
+        : 0;
+      
+      // Determine status based on coverage
+      let variantUrlStatus: 'pass' | 'warning' | 'fail' = 'pass';
+      if (coveragePercent < 50) variantUrlStatus = 'fail';
+      else if (coveragePercent < 100) variantUrlStatus = 'warning';
+      
       checks.push({
         checkName: "Variant URL Parameters (Bambu Lab)",
-        status: variantUrlIssues.length === 0 ? "pass" : "warning", // WARNING only - cannot be scraped
-        count: checkedLineIds.size - variantUrlIssues.length,
-        details: variantUrlIssues.length === 0
-          ? "All products have variant-specific URLs (e.g., ?id=VARIANT_ID) for direct Buy Now linking"
-          : `${variantUrlIssues.length} product lines missing variant ID (variant IDs require JavaScript extraction - not available via static scraping)`,
-        products: variantUrlIssues.length > 0 ? variantUrlIssues.slice(0, 10) : undefined,
+        status: variantUrlStatus,
+        count: variantUrlStats.variantsWithUrl,
+        details: coveragePercent === 100
+          ? `All ${variantUrlStats.totalVariants} variants have ?id= parameter for direct Buy Now linking`
+          : `${variantUrlStats.variantsWithUrl}/${variantUrlStats.totalVariants} variants have ?id= parameter (${coveragePercent}% coverage). Run update-bambulab-urls to fix.`,
+        products: variantUrlIssues.length > 0 ? variantUrlIssues.slice(0, 15) : undefined,
       });
       
-      console.log(`[PostSyncCheck] Variant URL Parameters: ${variantUrlIssues.length} issues found`);
+      console.log(`[PostSyncCheck] Variant URL Parameters: ${variantUrlStats.variantsWithUrl}/${variantUrlStats.totalVariants} (${coveragePercent}%)`);
+      
+      // ========== BAMBU LAB: Filament Detail Page Display Validation ==========
+      // Validates what users actually see on the Filament Detail page for each product line
+      const detailPageIssues: { id: string; title: string; issue: string }[] = [];
+      
+      // Group by product_line_id to simulate FilamentDetail page
+      const variantsByLine: Record<string, Array<{
+        id: string;
+        product_line_id: string;
+        product_title: string;
+        color_family: string | null;
+        featured_image: string | null;
+        product_url: string | null;
+      }>> = {};
+      for (const variant of detailPageVariants || []) {
+        const lineId = variant.product_line_id || 'unknown';
+        if (!variantsByLine[lineId]) variantsByLine[lineId] = [];
+        variantsByLine[lineId].push(variant);
+      }
+      
+      for (const [lineId, lineVariants] of Object.entries(variantsByLine)) {
+        if (!lineVariants || lineVariants.length === 0) continue;
+        
+        // Check 1: Every variant should have a unique featured_image (for multi-color lines)
+        if (lineVariants.length > 2) {
+          const imagesSet = new Set(lineVariants.map(v => v.featured_image).filter(Boolean));
+          if (imagesSet.size === 1) {
+            detailPageIssues.push({
+              id: lineId,
+              title: lineVariants[0]?.product_title || lineId,
+              issue: `All ${lineVariants.length} colors share same image - color selection won't update photo`,
+            });
+          }
+        }
+        
+        // Check 2: Every variant should have a product_url
+        const variantsWithoutUrl = lineVariants.filter(v => !v.product_url);
+        if (variantsWithoutUrl.length > 0) {
+          detailPageIssues.push({
+            id: lineId,
+            title: lineVariants[0]?.product_title || lineId,
+            issue: `${variantsWithoutUrl.length}/${lineVariants.length} variants have no product_url - Buy Now button will fail`,
+          });
+        }
+        
+        // Check 3: Featured images should be S5 (1920px) not S7 (thumbnails) for multi-color lines
+        if (lineVariants.length > 2) {
+          const s7Variants = lineVariants.filter(v => v.featured_image?.includes('/s7/'));
+          if (s7Variants.length > 0) {
+            detailPageIssues.push({
+              id: lineId,
+              title: lineVariants[0]?.product_title || lineId,
+              issue: `${s7Variants.length} variants using S7 thumbnails (50px) instead of S5 gallery images (1920px)`,
+            });
+          }
+        }
+      }
+      
+      checks.push({
+        checkName: "Filament Detail Page Display (Bambu Lab)",
+        status: detailPageIssues.length === 0 ? "pass" : detailPageIssues.length <= 3 ? "warning" : "fail",
+        count: Object.keys(variantsByLine).length - detailPageIssues.length,
+        details: detailPageIssues.length === 0
+          ? `All ${Object.keys(variantsByLine).length} product lines display correctly with unique images and valid Buy Now URLs per color`
+          : `${detailPageIssues.length} product lines have display issues`,
+        products: detailPageIssues.length > 0 ? detailPageIssues.slice(0, 15) : undefined,
+      });
+      
+      console.log(`[PostSyncCheck] Filament Detail Page Display: ${detailPageIssues.length} issues found`);
     }
 
     // Calculate overall status
