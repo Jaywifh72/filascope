@@ -95,13 +95,13 @@ export const COLORFABB_PRODUCT_SEED: ColorFabbProductSeed[] = [
   { material: 'Vibers PLA', filamentLine: 'Vibers PLA', color: 'PASTEL GREEN', productName: 'VIBERS PLA PASTEL GREEN', productUrl: 'https://colorfabb.us/vibers-pla-pastel-green', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_vibers_pastel-green.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030029', priceUsd: 43.56 },
   
   // PLA Economy
-  { material: 'PLA Economy', filamentLine: 'PLA Economy', color: 'BLACK', productName: 'PLA ECONOMY BLACK', productUrl: 'https://colorfabb.us/pla-economy-black', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_economy_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: null, priceUsd: null },
+  { material: 'PLA Economy', filamentLine: 'PLA Economy', color: 'BLACK', productName: 'PLA ECONOMY BLACK', productUrl: 'https://colorfabb.us/pla-economy-black', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_economy_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '010074', priceUsd: 24.95 },
   
   // ASA
   { material: 'ASA', filamentLine: 'ASA', color: 'BLACK', productName: 'ASA BLACK', productUrl: 'https://colorfabb.us/asa-black', imageUrl: 'https://colorfabb.us/media/catalog/product/a/s/asa_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: null, priceUsd: 37.50 },
   
   // PETG Economy
-  { material: 'PETG Economy', filamentLine: 'PETG Economy', color: 'CLEAR', productName: 'PETG ECONOMY CLEAR', productUrl: 'https://colorfabb.us/petg-economy-clear', imageUrl: 'https://colorfabb.us/media/catalog/product/p/e/petg-economy_clear.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: null, priceUsd: null },
+  { material: 'PETG Economy', filamentLine: 'PETG Economy', color: 'CLEAR', productName: 'PETG ECONOMY CLEAR', productUrl: 'https://colorfabb.us/petg-economy-clear', imageUrl: 'https://colorfabb.us/media/catalog/product/p/e/petg-economy_clear.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020040', priceUsd: 24.95 },
   
   // nGen (Copolyester - Eastman Amphora based)
   { material: 'Copolyester', filamentLine: 'nGen', color: 'BLACK', productName: 'NGEN BLACK', productUrl: 'https://colorfabb.us/ngen-black', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020014', priceUsd: 32.98 },
@@ -115,10 +115,10 @@ export const COLORFABB_PRODUCT_SEED: ColorFabbProductSeed[] = [
   { material: 'Copolyester', filamentLine: 'XT', color: 'WHITE', productName: 'XT WHITE', productUrl: 'https://colorfabb.us/xt-white', imageUrl: 'https://colorfabb.us/media/catalog/product/x/t/xt_white.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020002', priceUsd: 35.71 },
   { material: 'Copolyester', filamentLine: 'XT', color: 'BLACK', productName: 'XT BLACK', productUrl: 'https://colorfabb.us/xt-black', imageUrl: 'https://colorfabb.us/media/catalog/product/x/t/xt_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020010', priceUsd: 35.71 },
   { material: 'Copolyester', filamentLine: 'XT', color: 'LIGHT GRAY', productName: 'XT LIGHT GRAY', productUrl: 'https://colorfabb.us/xt-light-gray', imageUrl: 'https://colorfabb.us/media/catalog/product/x/t/xt_light-gray.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020030', priceUsd: 35.73 },
-  { material: 'Copolyester', filamentLine: 'XT', color: 'DARK GRAY', productName: 'XT DARK GRAY', productUrl: 'https://colorfabb.us/xt-dark-gray', imageUrl: 'https://colorfabb.us/media/catalog/product/x/t/xt_dark-gray.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: null, priceUsd: null },
+  { material: 'Copolyester', filamentLine: 'XT', color: 'DARK GRAY', productName: 'XT DARK GRAY', productUrl: 'https://colorfabb.us/xt-dark-gray', imageUrl: 'https://colorfabb.us/media/catalog/product/x/t/xt_dark-gray.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020031', priceUsd: 35.73 },
   
   // XT-CF20 (Copolyester + Carbon Fiber)
-  { material: 'Copolyester', filamentLine: 'XT-CF20', color: 'BLACK', productName: 'XT-CF20', productUrl: 'https://colorfabb.us/xt-cf20', imageUrl: 'https://colorfabb.us/media/catalog/product/x/t/xt_cf20.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: null, priceUsd: null },
+  { material: 'Copolyester', filamentLine: 'XT-CF20', color: 'BLACK', productName: 'XT-CF20', productUrl: 'https://colorfabb.us/xt-cf20', imageUrl: 'https://colorfabb.us/media/catalog/product/x/t/xt_cf20.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020036', priceUsd: 65.00 },
   
   // Specialty Fills
   { material: 'steelFill', filamentLine: 'steelFill', color: 'STEEL', productName: 'STEELFILL', productUrl: 'https://colorfabb.us/steelfill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_steelfill.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030008', priceUsd: 62.97 },
@@ -132,7 +132,7 @@ export const COLORFABB_PRODUCT_SEED: ColorFabbProductSeed[] = [
   { material: 'stoneFill', filamentLine: 'stoneFill', color: 'LIGHT GRAY', productName: 'STONEFILL LIGHT GRAY', productUrl: 'https://colorfabb.us/stonefill-light-gray', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_stonefill_light-gray.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030023', priceUsd: 43.84 },
   
   // allPHA
-  { material: 'allPHA', filamentLine: 'allPHA', color: 'NATURAL', productName: 'ALLPHA NATURAL', productUrl: 'https://colorfabb.us/allpha-natural', imageUrl: null, sku: null, priceUsd: null },
+  { material: 'allPHA', filamentLine: 'allPHA', color: 'NATURAL', productName: 'ALLPHA NATURAL', productUrl: 'https://colorfabb.us/allpha-natural', imageUrl: 'https://colorfabb.us/media/catalog/product/a/l/allpha_natural.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '070001', priceUsd: 38.07 },
   { material: 'allPHA', filamentLine: 'allPHA', color: 'BLACK', productName: 'ALLPHA BLACK', productUrl: 'https://colorfabb.us/allpha-black', imageUrl: 'https://colorfabb.us/media/catalog/product/a/l/allpha_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '070002', priceUsd: 38.07 },
   { material: 'allPHA', filamentLine: 'allPHA', color: 'WHITE', productName: 'ALLPHA WHITE', productUrl: 'https://colorfabb.us/allpha-white', imageUrl: 'https://colorfabb.us/media/catalog/product/a/l/allpha_white.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '070003', priceUsd: 38.07 },
   

@@ -4057,7 +4057,7 @@ Deno.serve(async (req) => {
       // If a product line has only 1 variant but should have multiple colors, flag it
       // This is a heuristic: most filament product lines have 5+ color variants
       if (variants.length === 1) {
-        // Skip single-color products (CF, GF, specialty materials, support, aero, etc.)
+        // Skip single-color products (CF, GF, specialty materials, support, aero, fills, etc.)
         // These legitimately only come in 1 color
         // Use [_-] to match both hyphens (3d-fuel) and underscores (bambulab__pva__standard)
         const isSingleColorProduct = /[_-](cf|gf|pva|support|ht|pa6|pps|peek|pei|aero)[_-]?/i.test(lineId) ||
@@ -4068,7 +4068,17 @@ Deno.serve(async (req) => {
                                      lineId.includes('paht-cf') ||
                                      lineId.includes('pa-cf') ||
                                      lineId.includes('asa-aero') ||
-                                     lineId.includes('__asa__aero');
+                                     lineId.includes('__asa__aero') ||
+                                     // ColorFabb specialty fills - each is a single unique color/material
+                                     lineId.includes('__bronzefill') ||
+                                     lineId.includes('__copperfill') ||
+                                     lineId.includes('__steelfill') ||
+                                     lineId.includes('__brassfill') ||
+                                     lineId.includes('__woodfill') ||
+                                     lineId.includes('__corkfill') ||
+                                     lineId.includes('__bamboofill') ||
+                                     lineId.includes('__glowfill') ||
+                                     lineId.includes('__xt-cf20');
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
@@ -4148,7 +4158,17 @@ Deno.serve(async (req) => {
                                    lineId.includes('paht-cf') ||
                                    lineId.includes('pa-cf') ||
                                    lineId.includes('asa-aero') ||
-                                   lineId.includes('__asa__aero');
+                                   lineId.includes('__asa__aero') ||
+                                   // ColorFabb specialty fills - each is a single unique color/material
+                                   lineId.includes('__bronzefill') ||
+                                   lineId.includes('__copperfill') ||
+                                   lineId.includes('__steelfill') ||
+                                   lineId.includes('__brassfill') ||
+                                   lineId.includes('__woodfill') ||
+                                   lineId.includes('__corkfill') ||
+                                   lineId.includes('__bamboofill') ||
+                                   lineId.includes('__glowfill') ||
+                                   lineId.includes('__xt-cf20');
       if (isSingleColorProduct) continue;
       
       // Count unique images (excluding null/undefined)
