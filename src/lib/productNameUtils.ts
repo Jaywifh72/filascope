@@ -508,7 +508,34 @@ function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: str
   
   if (parts.length >= 3) {
     // 3+ part format: Extract material (uppercase) and line name (title case)
-    const material = parts[1]?.toUpperCase() || '';
+    // Handle hyphenated material slugs (e.g., "pla-metal", "petg-cf", "rapid-petg")
+    let materialSlug = parts[1] || '';
+    let material = '';
+    
+    // Check if material slug contains composite suffixes (CF, GF)
+    const compositeSuffixes = ['-cf', '-gf'];
+    const hasCompositeSuffix = compositeSuffixes.some(s => materialSlug.toLowerCase().endsWith(s));
+    
+    if (hasCompositeSuffix) {
+      // Keep composite suffix with hyphen: "petg-cf" → "PETG-CF"
+      material = materialSlug.toUpperCase();
+    } else if (materialSlug.includes('-')) {
+      // Convert hyphen to space for display: "pla-metal" → "PLA Metal", "rapid-petg" → "Rapid PETG"
+      material = materialSlug
+        .split('-')
+        .map((word, idx) => {
+          const upper = word.toUpperCase();
+          // Keep material abbreviations uppercase (PLA, PETG, ABS, etc.)
+          if (['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PC', 'PA', 'PAHT'].includes(upper)) {
+            return upper;
+          }
+          // Title case for other words
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        })
+        .join(' ');
+    } else {
+      material = materialSlug.toUpperCase();
+    }
     
     // Combine all parts after material (handles cases like "silk-basic" or "transparent-rainbow")
     const lineParts = parts.slice(2).join(' ');
