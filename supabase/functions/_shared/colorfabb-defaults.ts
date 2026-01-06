@@ -89,10 +89,10 @@ export const COLORFABB_PRODUCT_SEED: ColorFabbProductSeed[] = [
   // PLA Silk
   { material: 'PLA Silk', filamentLine: 'PLA Silk', color: 'RED', productName: 'PLA SILK RED', productUrl: 'https://colorfabb.us/pla-silk-red', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_silk_red.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '010039', priceUsd: 34.04 },
   
-  // Vibers PLA
-  { material: 'Vibers PLA', filamentLine: 'Vibers PLA', color: 'PASTEL ORANGE', productName: 'VIBERS PLA PASTEL ORANGE', productUrl: 'https://colorfabb.us/vibers-pla-pastel-orange', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_vibers_pastel-orange.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030027', priceUsd: 43.56 },
-  { material: 'Vibers PLA', filamentLine: 'Vibers PLA', color: 'PASTEL PURPLE', productName: 'VIBERS PLA PASTEL PURPLE', productUrl: 'https://colorfabb.us/vibers-pla-pastel-purple', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_vibers_pastel-purple.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030028', priceUsd: 43.56 },
-  { material: 'Vibers PLA', filamentLine: 'Vibers PLA', color: 'PASTEL GREEN', productName: 'VIBERS PLA PASTEL GREEN', productUrl: 'https://colorfabb.us/vibers-pla-pastel-green', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_vibers_pastel-green.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030029', priceUsd: 43.56 },
+  // Vibers PLA → PLA material
+  { material: 'PLA', filamentLine: 'Vibers PLA', color: 'PASTEL ORANGE', productName: 'VIBERS PLA PASTEL ORANGE', productUrl: 'https://colorfabb.us/vibers-pla-pastel-orange', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_vibers_pastel-orange.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030027', priceUsd: 43.56 },
+  { material: 'PLA', filamentLine: 'Vibers PLA', color: 'PASTEL PURPLE', productName: 'VIBERS PLA PASTEL PURPLE', productUrl: 'https://colorfabb.us/vibers-pla-pastel-purple', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_vibers_pastel-purple.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030028', priceUsd: 43.56 },
+  { material: 'PLA', filamentLine: 'Vibers PLA', color: 'PASTEL GREEN', productName: 'VIBERS PLA PASTEL GREEN', productUrl: 'https://colorfabb.us/vibers-pla-pastel-green', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_vibers_pastel-green.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030029', priceUsd: 43.56 },
   
   // PLA Economy
   { material: 'PLA Economy', filamentLine: 'PLA Economy', color: 'BLACK', productName: 'PLA ECONOMY BLACK', productUrl: 'https://colorfabb.us/pla-economy-black', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_economy_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '010074', priceUsd: 24.95 },
@@ -106,9 +106,9 @@ export const COLORFABB_PRODUCT_SEED: ColorFabbProductSeed[] = [
   // nGen (Copolyester - Eastman Amphora based)
   { material: 'Copolyester', filamentLine: 'nGen', color: 'BLACK', productName: 'NGEN BLACK', productUrl: 'https://colorfabb.us/ngen-black', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020014', priceUsd: 32.98 },
   
-  // HT
-  { material: 'HT', filamentLine: 'HT', color: 'BLACK', productName: 'HT BLACK', productUrl: 'https://colorfabb.us/ht-black', imageUrl: 'https://colorfabb.us/media/catalog/product/c/o/colorfabb_ht_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020034', priceUsd: 39.21 },
-  { material: 'HT', filamentLine: 'HT', color: 'CLEAR', productName: 'HT CLEAR', productUrl: 'https://colorfabb.us/ht-clear', imageUrl: 'https://colorfabb.us/media/catalog/product/c/o/colorfabb_ht_clear.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020032', priceUsd: 39.21 },
+  // HT (Copolyester - Eastman Amphora based - High Temp variant)
+  { material: 'Copolyester', filamentLine: 'HT', color: 'BLACK', productName: 'HT BLACK', productUrl: 'https://colorfabb.us/ht-black', imageUrl: 'https://colorfabb.us/media/catalog/product/c/o/colorfabb_ht_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020034', priceUsd: 39.21 },
+  { material: 'Copolyester', filamentLine: 'HT', color: 'CLEAR', productName: 'HT CLEAR', productUrl: 'https://colorfabb.us/ht-clear', imageUrl: 'https://colorfabb.us/media/catalog/product/c/o/colorfabb_ht_clear.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020032', priceUsd: 39.21 },
   
   // XT (Copolyester - Eastman Amphora based)
   { material: 'Copolyester', filamentLine: 'XT', color: 'LIGHT BLUE', productName: 'XT LIGHT-BLUE', productUrl: 'https://colorfabb.us/xt-light-blue', imageUrl: 'https://colorfabb.us/media/catalog/product/x/t/xt_light-blue.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020008', priceUsd: 35.71 },
@@ -120,21 +120,24 @@ export const COLORFABB_PRODUCT_SEED: ColorFabbProductSeed[] = [
   // XT-CF20 (Copolyester + Carbon Fiber)
   { material: 'Copolyester', filamentLine: 'XT-CF20', color: 'BLACK', productName: 'XT-CF20', productUrl: 'https://colorfabb.us/xt-cf20', imageUrl: 'https://colorfabb.us/media/catalog/product/x/t/xt_cf20.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020036', priceUsd: 65.00 },
   
-  // Specialty Fills
-  { material: 'steelFill', filamentLine: 'steelFill', color: 'STEEL', productName: 'STEELFILL', productUrl: 'https://colorfabb.us/steelfill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_steelfill.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030008', priceUsd: 62.97 },
-  { material: 'copperFill', filamentLine: 'copperFill', color: 'COPPER', productName: 'COPPERFILL', productUrl: 'https://colorfabb.us/copperfill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_copperfill.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030004', priceUsd: 62.97 },
-  { material: 'bronzeFill', filamentLine: 'bronzeFill', color: 'BRONZE', productName: 'BRONZEFILL', productUrl: 'https://colorfabb.us/bronzefill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_bronzefill.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030001', priceUsd: 62.97 },
-  { material: 'glowFill', filamentLine: 'glowFill', color: 'GLOW', productName: 'GLOWFILL', productUrl: 'https://colorfabb.us/glowfill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_glowfill_1_day-night.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030005', priceUsd: 42.34 },
-  { material: 'woodFill', filamentLine: 'woodFill', color: 'WOOD', productName: 'WOODFILL', productUrl: 'https://colorfabb.us/woodfill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla-woodfill.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030002', priceUsd: 45.84 },
-  { material: 'corkFill', filamentLine: 'corkFill', color: 'CORK', productName: 'CORKFILL', productUrl: 'https://colorfabb.us/corkfill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_corkfill.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030007', priceUsd: 37.21 },
-  { material: 'stoneFill', filamentLine: 'stoneFill', color: 'RED BRICK', productName: 'STONEFILL RED BRICK', productUrl: 'https://colorfabb.us/stonefill-red-brick', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_stonefill_red-brick.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030025', priceUsd: 43.84 },
-  { material: 'stoneFill', filamentLine: 'stoneFill', color: 'MOSS GREEN', productName: 'STONEFILL MOSS GREEN', productUrl: 'https://colorfabb.us/stonefill-moss-green', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_stonefill_moss-green.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030026', priceUsd: 43.84 },
-  { material: 'stoneFill', filamentLine: 'stoneFill', color: 'LIGHT GRAY', productName: 'STONEFILL LIGHT GRAY', productUrl: 'https://colorfabb.us/stonefill-light-gray', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_stonefill_light-gray.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030023', priceUsd: 43.84 },
+  // Specialty Metal Fills (keep as PLA-Metal for filtering)
+  { material: 'PLA-Metal', filamentLine: 'steelFill', color: 'STEEL', productName: 'STEELFILL', productUrl: 'https://colorfabb.us/steelfill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_steelfill.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030008', priceUsd: 62.97 },
+  { material: 'PLA-Metal', filamentLine: 'copperFill', color: 'COPPER', productName: 'COPPERFILL', productUrl: 'https://colorfabb.us/copperfill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_copperfill.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030004', priceUsd: 62.97 },
+  { material: 'PLA-Metal', filamentLine: 'bronzeFill', color: 'BRONZE', productName: 'BRONZEFILL', productUrl: 'https://colorfabb.us/bronzefill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_bronzefill.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030001', priceUsd: 62.97 },
+  // Glow Fill → PLA-Glow
+  { material: 'PLA-Glow', filamentLine: 'glowFill', color: 'GLOW', productName: 'GLOWFILL', productUrl: 'https://colorfabb.us/glowfill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_glowfill_1_day-night.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030005', priceUsd: 42.34 },
+  // Wood/Cork Fills → PLA-Wood
+  { material: 'PLA-Wood', filamentLine: 'woodFill', color: 'WOOD', productName: 'WOODFILL', productUrl: 'https://colorfabb.us/woodfill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla-woodfill.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030002', priceUsd: 45.84 },
+  { material: 'PLA-Wood', filamentLine: 'corkFill', color: 'CORK', productName: 'CORKFILL', productUrl: 'https://colorfabb.us/corkfill', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_corkfill.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030007', priceUsd: 37.21 },
+  // Stone Fills → PLA-Stone
+  { material: 'PLA-Stone', filamentLine: 'stoneFill', color: 'RED BRICK', productName: 'STONEFILL RED BRICK', productUrl: 'https://colorfabb.us/stonefill-red-brick', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_stonefill_red-brick.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030025', priceUsd: 43.84 },
+  { material: 'PLA-Stone', filamentLine: 'stoneFill', color: 'MOSS GREEN', productName: 'STONEFILL MOSS GREEN', productUrl: 'https://colorfabb.us/stonefill-moss-green', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_stonefill_moss-green.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030026', priceUsd: 43.84 },
+  { material: 'PLA-Stone', filamentLine: 'stoneFill', color: 'LIGHT GRAY', productName: 'STONEFILL LIGHT GRAY', productUrl: 'https://colorfabb.us/stonefill-light-gray', imageUrl: 'https://colorfabb.us/media/catalog/product/p/l/pla_stonefill_light-gray.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '030023', priceUsd: 43.84 },
   
-  // allPHA
-  { material: 'allPHA', filamentLine: 'allPHA', color: 'NATURAL', productName: 'ALLPHA NATURAL', productUrl: 'https://colorfabb.us/allpha-natural', imageUrl: 'https://colorfabb.us/media/catalog/product/a/l/allpha_natural.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '070001', priceUsd: 38.07 },
-  { material: 'allPHA', filamentLine: 'allPHA', color: 'BLACK', productName: 'ALLPHA BLACK', productUrl: 'https://colorfabb.us/allpha-black', imageUrl: 'https://colorfabb.us/media/catalog/product/a/l/allpha_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '070002', priceUsd: 38.07 },
-  { material: 'allPHA', filamentLine: 'allPHA', color: 'WHITE', productName: 'ALLPHA WHITE', productUrl: 'https://colorfabb.us/allpha-white', imageUrl: 'https://colorfabb.us/media/catalog/product/a/l/allpha_white.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '070003', priceUsd: 38.07 },
+  // allPHA → PHA material
+  { material: 'PHA', filamentLine: 'allPHA', color: 'NATURAL', productName: 'ALLPHA NATURAL', productUrl: 'https://colorfabb.us/allpha-natural', imageUrl: 'https://colorfabb.us/media/catalog/product/a/l/allpha_natural.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '070001', priceUsd: 38.07 },
+  { material: 'PHA', filamentLine: 'allPHA', color: 'BLACK', productName: 'ALLPHA BLACK', productUrl: 'https://colorfabb.us/allpha-black', imageUrl: 'https://colorfabb.us/media/catalog/product/a/l/allpha_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '070002', priceUsd: 38.07 },
+  { material: 'PHA', filamentLine: 'allPHA', color: 'WHITE', productName: 'ALLPHA WHITE', productUrl: 'https://colorfabb.us/allpha-white', imageUrl: 'https://colorfabb.us/media/catalog/product/a/l/allpha_white.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '070003', priceUsd: 38.07 },
   
   // PA
   { material: 'PA', filamentLine: 'PA', color: 'BLUE METAL DETECTABLE', productName: 'PA BLUE METAL DETECTABLE', productUrl: 'https://colorfabb.us/pa-blue-metal-detectable', imageUrl: 'https://colorfabb.us/media/catalog/product/p/a/pa_blue-metal-detectable.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '060013', priceUsd: 42.50 },
@@ -166,26 +169,27 @@ const MATERIAL_PATTERNS: Array<{ pattern: RegExp; info: MaterialInfo }> = [
   { pattern: /\bxt[- ]?cf\s*20\b/i, info: { normalized: 'XT-CF20', baseType: 'PETG', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   { pattern: /\bpa[- ]?cf\b/i, info: { normalized: 'PA-CF', baseType: 'PA', isAbrasive: true, enclosureRequired: true, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   
-  // Metal fills (abrasive)
-  { pattern: /\bbronzefill\b/i, info: { normalized: 'bronzeFill', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
-  { pattern: /\bcopperfill\b/i, info: { normalized: 'copperFill', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
-  { pattern: /\bsteelfill\b/i, info: { normalized: 'steelFill', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
-  { pattern: /\bbrassfill\b/i, info: { normalized: 'brassFill', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  // Metal fills (abrasive) → PLA-Metal
+  { pattern: /\bbronzefill\b/i, info: { normalized: 'PLA-Metal', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  { pattern: /\bcopperfill\b/i, info: { normalized: 'PLA-Metal', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  { pattern: /\bsteelfill\b/i, info: { normalized: 'PLA-Metal', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  { pattern: /\bbrassfill\b/i, info: { normalized: 'PLA-Metal', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   
-  // Natural fills (mildly abrasive)
-  { pattern: /\bwoodfill\b/i, info: { normalized: 'woodFill', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
-  { pattern: /\bcorkfill\b/i, info: { normalized: 'corkFill', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
-  { pattern: /\bbamboofill\b/i, info: { normalized: 'bambooFill', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
-  { pattern: /\bstonefill\b/i, info: { normalized: 'stoneFill', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  // Natural fills (mildly abrasive) → PLA-Wood
+  { pattern: /\bwoodfill\b/i, info: { normalized: 'PLA-Wood', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  { pattern: /\bcorkfill\b/i, info: { normalized: 'PLA-Wood', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  { pattern: /\bbamboofill\b/i, info: { normalized: 'PLA-Wood', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  // Stone fill → PLA-Stone
+  { pattern: /\bstonefill\b/i, info: { normalized: 'PLA-Stone', baseType: 'PLA', isAbrasive: true, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   
-  // Glow fill
-  { pattern: /\bglowfill\b/i, info: { normalized: 'glowFill', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  // Glow fill → PLA-Glow
+  { pattern: /\bglowfill\b/i, info: { normalized: 'PLA-Glow', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   
   // Co-polyesters (Eastman Amphora based)
   { pattern: /\bngen[- ]?flex\b/i, info: { normalized: 'nGen-Flex', baseType: 'PETG', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: true, highSpeedCapable: false } },
   { pattern: /\bngen\b/i, info: { normalized: 'nGen', baseType: 'PETG', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
-  { pattern: /\bxt\b(?![- ]?cf)/i, info: { normalized: 'XT', baseType: 'PETG', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
-  { pattern: /\bht\b(?![- ]?pla)/i, info: { normalized: 'HT', baseType: 'PETG', isAbrasive: false, enclosureRequired: true, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  { pattern: /\bxt\b(?![- ]?cf)/i, info: { normalized: 'Copolyester', baseType: 'PETG', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  { pattern: /\bht\b(?![- ]?pla)/i, info: { normalized: 'Copolyester', baseType: 'PETG', isAbrasive: false, enclosureRequired: true, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   
   // PLA variants
   { pattern: /\bpla[- ]?hp\b/i, info: { normalized: 'PLA-HP', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: true } },
@@ -193,13 +197,13 @@ const MATERIAL_PATTERNS: Array<{ pattern: RegExp; info: MaterialInfo }> = [
   { pattern: /\bpla\s*silk\b/i, info: { normalized: 'PLA Silk', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   { pattern: /\bpla[\/]?pha\b/i, info: { normalized: 'PLA/PHA', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   { pattern: /\brpla\b/i, info: { normalized: 'rPLA', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
-  { pattern: /\bvibers\b/i, info: { normalized: 'Vibers PLA', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  { pattern: /\bvibers\b/i, info: { normalized: 'PLA', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   { pattern: /\bregrind\b/i, info: { normalized: 'PLA Regrind', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   { pattern: /\beconomy\s*pla\b|\bpla\s*economy\b/i, info: { normalized: 'PLA Economy', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   { pattern: /\bsemi[- ]?matte\s*pla\b|\bpla\s*semi[- ]?matte\b/i, info: { normalized: 'PLA Semi-Matte', baseType: 'PLA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   
-  // PHA
-  { pattern: /\ballpha\b/i, info: { normalized: 'allPHA', baseType: 'PHA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
+  // PHA → allPHA products use PHA material
+  { pattern: /\ballpha\b/i, info: { normalized: 'PHA', baseType: 'PHA', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: false, highSpeedCapable: false } },
   
   // TPU variants
   { pattern: /\btpu\s*85\s*a\b/i, info: { normalized: 'TPU 85A', baseType: 'TPU', isAbrasive: false, enclosureRequired: false, isFoaming: false, isFlexible: true, highSpeedCapable: false } },
@@ -391,18 +395,23 @@ export const COLORFABB_TDS_PATTERNS: Record<string, string> = {
   'LW-ASA': `${TDS_URL_BASE}/TDS_E_ColorFabb_LW-ASA.pdf`,
   'varioShore TPU': `${TDS_URL_BASE}/TDS_E_ColorFabb_varioShore_TPU.pdf`,
   
-  // Specialty fills
+  // Specialty fills - with new material name mappings
+  'PLA-Metal': `${TDS_URL_BASE}/TDS_E_ColorFabb_bronzeFill.pdf`,
   'bronzeFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_bronzeFill.pdf`,
   'copperFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_copperFill.pdf`,
   'steelFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_steelFill.pdf`,
   'brassFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_brassFill.pdf`,
+  'PLA-Wood': `${TDS_URL_BASE}/TDS_E_ColorFabb_woodFill.pdf`,
   'woodFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_woodFill.pdf`,
   'corkFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_corkFill.pdf`,
   'bambooFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_bambooFill.pdf`,
+  'PLA-Glow': `${TDS_URL_BASE}/TDS_E_ColorFabb_glowFill.pdf`,
   'glowFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_glowFill.pdf`,
+  'PLA-Stone': `${TDS_URL_BASE}/TDS_E_ColorFabb_stoneFill.pdf`,
   'stoneFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_stoneFill.pdf`,
   
-  // Co-polyesters
+  // Co-polyesters (Copolyester material)
+  'Copolyester': `${TDS_URL_BASE}/TDS_E_ColorFabb_nGen.pdf`,
   'nGen': `${TDS_URL_BASE}/TDS_E_ColorFabb_nGen.pdf`,
   'nGen-CF10': `${TDS_URL_BASE}/TDS_E_ColorFabb_nGen_CF10.pdf`,
   'nGen-Flex': `${TDS_URL_BASE}/TDS_E_ColorFabb_nGen_Flex.pdf`,
@@ -425,6 +434,7 @@ export const COLORFABB_TDS_PATTERNS: Record<string, string> = {
   'TPU 95A': `${TDS_URL_BASE}/TDS_E_ColorFabb_TPU_95A.pdf`,
   
   // PHA
+  'PHA': `${TDS_URL_BASE}/TDS_E_ColorFabb_allPHA.pdf`,
   'allPHA': `${TDS_URL_BASE}/TDS_E_ColorFabb_allPHA.pdf`,
 };
 
@@ -464,18 +474,23 @@ export const COLORFABB_PRINT_SETTINGS: Record<string, PrintSettings> = {
   'LW-ASA': { nozzleTempMin: 230, nozzleTempMax: 270, bedTempMin: 90, bedTempMax: 110 },
   'varioShore TPU': { nozzleTempMin: 200, nozzleTempMax: 250, bedTempMin: 25, bedTempMax: 50, printSpeedMax: 40 },
   
-  // Specialty fills
+  // Specialty fills - mapped to new material names
+  'PLA-Metal': { nozzleTempMin: 195, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
   'bronzeFill': { nozzleTempMin: 195, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
   'copperFill': { nozzleTempMin: 195, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
   'steelFill': { nozzleTempMin: 195, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
   'brassFill': { nozzleTempMin: 195, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
+  'PLA-Wood': { nozzleTempMin: 190, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
   'woodFill': { nozzleTempMin: 190, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
   'corkFill': { nozzleTempMin: 190, nozzleTempMax: 210, bedTempMin: 50, bedTempMax: 60 },
   'bambooFill': { nozzleTempMin: 195, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
+  'PLA-Glow': { nozzleTempMin: 195, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
   'glowFill': { nozzleTempMin: 195, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
+  'PLA-Stone': { nozzleTempMin: 195, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
   'stoneFill': { nozzleTempMin: 195, nozzleTempMax: 220, bedTempMin: 50, bedTempMax: 60 },
   
-  // Co-polyesters
+  // Co-polyesters (Copolyester material)
+  'Copolyester': { nozzleTempMin: 240, nozzleTempMax: 260, bedTempMin: 60, bedTempMax: 85 },
   'nGen': { nozzleTempMin: 220, nozzleTempMax: 240, bedTempMin: 75, bedTempMax: 85 },
   'nGen-CF10': { nozzleTempMin: 240, nozzleTempMax: 260, bedTempMin: 75, bedTempMax: 85 },
   'nGen-Flex': { nozzleTempMin: 220, nozzleTempMax: 240, bedTempMin: 75, bedTempMax: 85 },
@@ -500,6 +515,7 @@ export const COLORFABB_PRINT_SETTINGS: Record<string, PrintSettings> = {
   'TPU 95A': { nozzleTempMin: 215, nozzleTempMax: 235, bedTempMin: 25, bedTempMax: 50, printSpeedMax: 40 },
   
   // PHA
+  'PHA': { nozzleTempMin: 180, nozzleTempMax: 200, bedTempMin: 50, bedTempMax: 60 },
   'allPHA': { nozzleTempMin: 180, nozzleTempMax: 200, bedTempMin: 50, bedTempMax: 60 },
 };
 
