@@ -213,11 +213,28 @@ Deno.serve(async (req) => {
       // Get H1 title from Shopify API (fallback to filament line)
       const shopifyTitle = titleMap.get(baseUrl) || seed.filamentLine;
       
-      // Get price from Shopify API
+      // Get price from Shopify API with fallback for missing variant IDs
       const variantId = normalizedUrl.match(/variant=(\d+)/)?.[1];
       let price: number | null = null;
+      
       if (variantId) {
+        // Direct variant lookup
         price = priceMap.get(normalizedUrl) || priceMap.get(variantId) || null;
+      } else {
+        // Fallback: Find first variant price for this base URL (for seed entries missing variant ID)
+        const baseUrl = normalizedUrl.split('?')[0];
+        for (const [key, val] of priceMap.entries()) {
+          if (key.startsWith(baseUrl) && key.includes('variant=')) {
+            price = val;
+            console.log(`[Price Fallback] ${cleanedColor}: using first variant price ${price}`);
+            break;
+          }
+        }
+      }
+      
+      // Debug: Log if color hex is null
+      if (!enriched.colorHex) {
+        console.warn(`[Color Hex Missing] "${cleanedColor}" (original: "${seed.color}")`);
       }
       
       // Get print settings

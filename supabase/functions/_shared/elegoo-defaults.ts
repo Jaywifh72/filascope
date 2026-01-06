@@ -313,6 +313,7 @@ export const ELEGOO_COLOR_MAPPING: Record<string, string> = {
   'olive green': '6B8E23',
   'burgundy red': '800020',
   'light blue': 'ADD8E6',
+  'silver grey': 'C0C0C0',  // Fallback for "silk silver grey" prefix strip
   
   // PC colors
   'clear black': '1A1A1A',
