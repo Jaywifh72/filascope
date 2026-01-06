@@ -249,7 +249,7 @@ Deno.serve(async (req) => {
         material: enriched.material,
         finish_type: enriched.finishType,
         product_line_id: enriched.productLineId,
-        color_hex: enriched.colorHex,
+        color_hex: enriched.colorHex ? `#${enriched.colorHex}` : null,
         color_family: cleanedColor,
         diameter_nominal_mm: ELEGOO_STORE_INFO.defaultDiameter,
         net_weight_g: ELEGOO_STORE_INFO.defaultWeight,
@@ -324,10 +324,11 @@ Deno.serve(async (req) => {
       if (duplicates && duplicates.length > 0) {
         const hexCounts: Record<string, string[]> = {};
         for (const prod of duplicates) {
-          const hex = prod.color_hex?.toUpperCase();
-          if (hex) {
-            if (!hexCounts[hex]) hexCounts[hex] = [];
-            hexCounts[hex].push(prod.id);
+          // Strip # prefix for comparison, normalize to uppercase
+          const rawHex = prod.color_hex?.replace('#', '').toUpperCase();
+          if (rawHex && rawHex.length === 6) {
+            if (!hexCounts[rawHex]) hexCounts[rawHex] = [];
+            hexCounts[rawHex].push(prod.id);
           }
         }
         
@@ -342,7 +343,8 @@ Deno.serve(async (req) => {
               const newR = Math.min(255, r + variation).toString(16).padStart(2, '0');
               const newG = Math.min(255, g + variation).toString(16).padStart(2, '0');
               const newB = Math.min(255, b + variation).toString(16).padStart(2, '0');
-              const newHex = `${newR}${newG}${newB}`.toUpperCase();
+              // Add # prefix when saving back
+              const newHex = `#${newR}${newG}${newB}`.toUpperCase();
               
               await supabase
                 .from('filaments')
