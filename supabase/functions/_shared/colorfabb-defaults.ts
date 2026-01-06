@@ -103,8 +103,8 @@ export const COLORFABB_PRODUCT_SEED: ColorFabbProductSeed[] = [
   // PETG Economy
   { material: 'PETG Economy', filamentLine: 'PETG Economy', color: 'CLEAR', productName: 'PETG ECONOMY CLEAR', productUrl: 'https://colorfabb.us/petg-economy-clear', imageUrl: 'https://colorfabb.us/media/catalog/product/p/e/petg-economy_clear.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: null, priceUsd: null },
   
-  // nGen
-  { material: 'nGen', filamentLine: 'nGen', color: 'BLACK', productName: 'NGEN BLACK', productUrl: 'https://colorfabb.us/ngen-black', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020014', priceUsd: 32.98 },
+  // nGen (Copolyester - Eastman Amphora based)
+  { material: 'Copolyester', filamentLine: 'nGen', color: 'BLACK', productName: 'NGEN BLACK', productUrl: 'https://colorfabb.us/ngen-black', imageUrl: 'https://colorfabb.us/media/catalog/product/n/g/ngen_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020014', priceUsd: 32.98 },
   
   // HT
   { material: 'HT', filamentLine: 'HT', color: 'BLACK', productName: 'HT BLACK', productUrl: 'https://colorfabb.us/ht-black', imageUrl: 'https://colorfabb.us/media/catalog/product/c/o/colorfabb_ht_black.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=500&width=500&canvas=500:500', sku: '020034', priceUsd: 39.21 },
